@@ -4,6 +4,7 @@
 .env.*.local
 backend/.env
 web-app/.env
+DEPLOY_SECRETS.md
 
 # Python
 __pycache__/

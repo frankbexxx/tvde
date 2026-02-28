@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str | None = None
 
     ENV: str = "dev"
+    ENABLE_DEV_TOOLS: bool = False  # When True, /dev/seed and /dev/tokens work in production (for field validation)
 
     # Future: confirm PaymentIntent at accept (frontend 3DS). When True, accept_trip
     # returns payment_intent_client_secret for frontend confirmation. Default False.

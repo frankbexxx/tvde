@@ -28,7 +28,7 @@ from app.services.trips import (
 
 
 def _require_dev() -> None:
-    if settings.ENV != "dev":
+    if settings.ENV != "dev" and not settings.ENABLE_DEV_TOOLS:
         raise HTTPException(status_code=404)
 
 

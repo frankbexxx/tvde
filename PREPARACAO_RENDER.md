@@ -68,6 +68,7 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 | `OTP_SECRET` | Gera outro segredo (ex: `openssl rand -hex 16`) |
 | `STRIPE_SECRET_KEY` | `sk_test_...` (do Stripe Dashboard) |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_placeholder` (temporário — atualizas no Passo 3) |
+| `ENABLE_DEV_TOOLS` | `true` (permite Seed e Tokens em produção — para validação em campo) |
 
 5. Clica **Create Web Service**.
 6. Espera o deploy terminar. O backend exige `STRIPE_WEBHOOK_SECRET` em produção — usamos placeholder para o primeiro deploy. No Passo 3 substituímos pelo valor real do Stripe.
@@ -137,6 +138,11 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 - **Frontend:** `https://tvde-app.onrender.com` (ou o nome que escolheste)
 - **Backend:** `https://tvde-api.onrender.com`
 - **Health check:** `https://tvde-api.onrender.com/health`
+
+**URLs em produção (atual):**
+
+- **Backend:** `https://tvde-api-fd2z.onrender.com`
+- **Health check:** `https://tvde-api-fd2z.onrender.com/health`
 
 ### Stripe
 
