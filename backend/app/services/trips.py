@@ -516,7 +516,8 @@ def complete_trip(
             ) from e
 
         try:
-            if settings.ENV == "dev":
+            # Dev or ENABLE_DEV_TOOLS (field validation): use test card, no frontend payment flow.
+            if settings.ENV == "dev" or settings.ENABLE_DEV_TOOLS:
                 confirm_payment_intent(
                     payment.stripe_payment_intent_id,
                     payment_method="pm_card_visa",
