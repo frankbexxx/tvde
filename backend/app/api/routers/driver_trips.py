@@ -1,0 +1,156 @@
+from typing import List
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.api.deps import UserContext, get_db, require_role
+from app.models.enums import Role
+from app.schemas.trip import (
+    TripAvailableItem,
+    TripCompletionRequest,
+    TripDetailResponse,
+    TripHistoryItem,
+    TripStatusResponse,
+)
+from app.api.serializers import (
+    trip_to_detail,
+    trip_to_history_item,
+    trip_to_status_response,
+)
+from app.services.trips import (
+    accept_trip as accept_trip_service,
+    cancel_trip_by_driver,
+    complete_trip as complete_trip_service,
+    list_available_trips as list_available_trips_service,
+    get_trip_for_driver,
+    list_completed_trips_for_driver,
+    mark_trip_arriving as mark_trip_arriving_service,
+    start_trip as start_trip_service,
+)
+
+
+router = APIRouter(prefix="/driver/trips", tags=["driver"])
+
+
+@router.get("/history", response_model=List[TripHistoryItem])
+async def trip_history(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> List[TripHistoryItem]:
+    """Completed trips for driver. Read-only."""
+    trips = list_completed_trips_for_driver(db=db, driver_id=user.user_id)
+    return [trip_to_history_item(t, include_stripe_pi=False) for t in trips]
+
+
+@router.get("/available", response_model=List[TripAvailableItem])
+async def list_available_trips(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> List[TripAvailableItem]:
+    trips = list_available_trips_service(
+        db=db,
+        driver_id=user.user_id,
+    )
+    return [
+        TripAvailableItem(
+            trip_id=str(trip.id),
+            origin_lat=float(trip.origin_lat),
+            origin_lng=float(trip.origin_lng),
+            destination_lat=float(trip.destination_lat),
+            destination_lng=float(trip.destination_lng),
+            estimated_price=float(trip.estimated_price),
+        )
+        for trip in trips
+    ]
+
+
+@router.get("/{trip_id}", response_model=TripDetailResponse)
+async def get_trip_detail(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> TripDetailResponse:
+    """Full trip detail for driver (must be assigned). Read-only."""
+    trip = get_trip_for_driver(
+        db=db,
+        driver_id=user.user_id,
+        trip_id=trip_id.strip(),
+    )
+    return trip_to_detail(trip, include_stripe_pi=False)
+
+
+@router.post("/{trip_id}/accept", response_model=TripStatusResponse)
+async def accept_trip(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    trip, client_secret = accept_trip_service(
+        db=db,
+        driver_id=user.user_id,
+        trip_id=trip_id.strip(),
+    )
+    return trip_to_status_response(
+        trip,
+        include_stripe_pi=False,
+        payment_intent_client_secret=client_secret,
+    )
+
+
+@router.post("/{trip_id}/arriving", response_model=TripStatusResponse)
+async def mark_arriving(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    trip = mark_trip_arriving_service(
+        db=db,
+        driver_id=user.user_id,
+        trip_id=trip_id.strip(),
+    )
+    return trip_to_status_response(trip, include_stripe_pi=False)
+
+
+@router.post("/{trip_id}/start", response_model=TripStatusResponse)
+async def start_trip(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    trip = start_trip_service(
+        db=db,
+        driver_id=user.user_id,
+        trip_id=trip_id.strip(),
+    )
+    return trip_to_status_response(trip, include_stripe_pi=False)
+
+
+@router.post("/{trip_id}/complete", response_model=TripStatusResponse)
+async def complete_trip(
+    trip_id: str,
+    payload: TripCompletionRequest,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    _ = payload  # final_price sera tratado na fase de pagamentos
+    trip = complete_trip_service(
+        db=db,
+        driver_id=user.user_id,
+        trip_id=trip_id.strip(),
+    )
+    return trip_to_status_response(trip, include_stripe_pi=False)
+
+
+@router.post("/{trip_id}/cancel", response_model=TripStatusResponse)
+async def cancel_trip(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    trip = cancel_trip_by_driver(
+        db=db,
+        driver_id=user.user_id,
+        trip_id=trip_id.strip(),
+    )
+    return trip_to_status_response(trip, include_stripe_pi=False)
+

@@ -1,0 +1,36 @@
+# Environment and secrets — NUNCA commitar
+.env
+.env.local
+.env.*.local
+backend/.env
+web-app/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+*.egg-info/
+.eggs/
+
+# Node
+node_modules/
+web-app/node_modules/
+web-app/dist/
+
+# IDE and OS
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs and temp
+*.log
+logs/
+tmp/
+temp/
