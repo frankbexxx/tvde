@@ -153,6 +153,10 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 
 - No Render: Dashboard → serviço → **Logs** para ver erros e output do backend.
 
+### DATABASE_URL
+
+- Se a password do PostgreSQL tiver `@`, o backend codifica-a automaticamente. Não é preciso alterar manualmente.
+
 ---
 
 ## Checklist final
