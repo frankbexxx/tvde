@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Index, Integer, String, func
+from sqlalchemy import DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -28,7 +28,3 @@ class InteractionLog(Base):
     new_state: Mapped[str | None] = mapped_column(String(32), nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     payment_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
-
-
-Index("ix_interaction_logs_timestamp", InteractionLog.timestamp)
-Index("ix_interaction_logs_trip_id", InteractionLog.trip_id)

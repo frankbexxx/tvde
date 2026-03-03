@@ -26,6 +26,8 @@ import app.db.models  # noqa: F401
 from app.core.config import settings
 from sqlalchemy import text
 
+from sqlalchemy.exc import ProgrammingError
+
 from app.db.base import Base
 from app.db.session import engine
 
@@ -83,7 +85,12 @@ app.openapi = custom_openapi
 @app.on_event("startup")
 def on_startup() -> None:
     print("ENGINE URL:", engine.url)
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except ProgrammingError as e:
+        if "already exists" not in str(e):
+            raise
+        print("⚠️  Schema: some objects already exist (ok)")
     _dev_add_columns_if_missing()
 
     # Validate Stripe webhook secret (required in non-dev environments).
