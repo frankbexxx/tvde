@@ -69,6 +69,31 @@ export function DevTools({
     }
   }
 
+  const handleExportLogs = async () => {
+    if (!tokens?.admin) return
+    setStatus('A exportar logs...')
+    addLog('Clique: Export logs', 'action')
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
+      const res = await fetch(`${API_BASE}/admin/export-logs?format=csv`, {
+        headers: { Authorization: `Bearer ${tokens.admin}` },
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `interaction_logs_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      addLog('Logs exportados', 'success')
+      setStatus('Pronto')
+    } catch (err) {
+      addLog(`Erro Export: ${errMsg(err)}`, 'error')
+      setStatus('Erro')
+    }
+  }
+
   const handleSeed = async () => {
     setStatus('A executar seed...')
     addLog('Clique: Seed', 'action')
@@ -112,6 +137,12 @@ export function DevTools({
                 className="px-3 py-1.5 text-sm bg-orange-200 rounded-lg hover:bg-orange-300"
               >
                 Timeouts
+              </button>
+              <button
+                onClick={handleExportLogs}
+                className="px-3 py-1.5 text-sm bg-sky-200 rounded-lg hover:bg-sky-300"
+              >
+                Export logs
               </button>
             </>
           )}

@@ -1,9 +1,12 @@
+import time
 from typing import List
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_db, require_role
+from app.db.models.trip import Trip
 from app.models.enums import Role
 from app.schemas.trip import (
     TripCancelRequest,
@@ -14,6 +17,7 @@ from app.schemas.trip import (
     TripStatusResponse,
 )
 from app.api.serializers import trip_to_detail, trip_to_history_item
+from app.services.interaction_logging import log_interaction
 from app.services.trips import (
     cancel_trip_by_passenger,
     create_trip as create_trip_service,
@@ -56,12 +60,25 @@ async def create_trip(
     user: UserContext = Depends(require_role(Role.passenger)),
     db: Session = Depends(get_db),
 ) -> TripCreateResponse:
+    t0 = time.perf_counter()
     trip, eta = create_trip_service(
         db=db,
         passenger_id=user.user_id,
         payload=payload,
     )
+    latency_ms = int((time.perf_counter() - t0) * 1000)
     payment = trip.payment
+    log_interaction(
+        db=db,
+        user_id=user.user_id,
+        role="passenger",
+        action="request_trip",
+        trip_id=str(trip.id),
+        previous_state=None,
+        new_state=trip.status.value,
+        latency_ms=latency_ms,
+        payment_status=payment.status.value if payment else None,
+    )
     return TripCreateResponse(
         trip_id=str(trip.id),
         status=trip.status,
@@ -83,12 +100,27 @@ async def cancel_trip(
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
     _ = payload
+    tid = trip_id.strip()
+    prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    t0 = time.perf_counter()
     trip = cancel_trip_by_passenger(
         db=db,
         passenger_id=user.user_id,
-        trip_id=trip_id.strip(),
+        trip_id=tid,
     )
+    latency_ms = int((time.perf_counter() - t0) * 1000)
     payment = trip.payment
+    log_interaction(
+        db=db,
+        user_id=user.user_id,
+        role="passenger",
+        action="cancel_trip",
+        trip_id=str(trip.id),
+        previous_state=prev.status.value if prev else None,
+        new_state=trip.status.value,
+        latency_ms=latency_ms,
+        payment_status=payment.status.value if payment else None,
+    )
     return TripStatusResponse(
         trip_id=str(trip.id),
         status=trip.status,

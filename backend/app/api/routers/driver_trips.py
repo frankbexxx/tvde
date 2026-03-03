@@ -1,9 +1,12 @@
+import time
 from typing import List
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_db, require_role
+from app.db.models.trip import Trip
 from app.models.enums import Role
 from app.schemas.trip import (
     TripAvailableItem,
@@ -17,6 +20,7 @@ from app.api.serializers import (
     trip_to_history_item,
     trip_to_status_response,
 )
+from app.services.interaction_logging import log_interaction
 from app.services.trips import (
     accept_trip as accept_trip_service,
     cancel_trip_by_driver,
@@ -85,10 +89,26 @@ async def accept_trip(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
+    tid = trip_id.strip()
+    prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    t0 = time.perf_counter()
     trip, client_secret = accept_trip_service(
         db=db,
         driver_id=user.user_id,
-        trip_id=trip_id.strip(),
+        trip_id=tid,
+    )
+    latency_ms = int((time.perf_counter() - t0) * 1000)
+    payment = trip.payment
+    log_interaction(
+        db=db,
+        user_id=user.user_id,
+        role="driver",
+        action="accept_trip",
+        trip_id=str(trip.id),
+        previous_state=prev.status.value if prev else None,
+        new_state=trip.status.value,
+        latency_ms=latency_ms,
+        payment_status=payment.status.value if payment else None,
     )
     return trip_to_status_response(
         trip,
@@ -103,10 +123,26 @@ async def mark_arriving(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
+    tid = trip_id.strip()
+    prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    t0 = time.perf_counter()
     trip = mark_trip_arriving_service(
         db=db,
         driver_id=user.user_id,
-        trip_id=trip_id.strip(),
+        trip_id=tid,
+    )
+    latency_ms = int((time.perf_counter() - t0) * 1000)
+    payment = trip.payment
+    log_interaction(
+        db=db,
+        user_id=user.user_id,
+        role="driver",
+        action="arriving",
+        trip_id=str(trip.id),
+        previous_state=prev.status.value if prev else None,
+        new_state=trip.status.value,
+        latency_ms=latency_ms,
+        payment_status=payment.status.value if payment else None,
     )
     return trip_to_status_response(trip, include_stripe_pi=False)
 
@@ -117,10 +153,26 @@ async def start_trip(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
+    tid = trip_id.strip()
+    prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    t0 = time.perf_counter()
     trip = start_trip_service(
         db=db,
         driver_id=user.user_id,
-        trip_id=trip_id.strip(),
+        trip_id=tid,
+    )
+    latency_ms = int((time.perf_counter() - t0) * 1000)
+    payment = trip.payment
+    log_interaction(
+        db=db,
+        user_id=user.user_id,
+        role="driver",
+        action="start_trip",
+        trip_id=str(trip.id),
+        previous_state=prev.status.value if prev else None,
+        new_state=trip.status.value,
+        latency_ms=latency_ms,
+        payment_status=payment.status.value if payment else None,
     )
     return trip_to_status_response(trip, include_stripe_pi=False)
 
@@ -133,10 +185,26 @@ async def complete_trip(
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
     _ = payload  # final_price sera tratado na fase de pagamentos
+    tid = trip_id.strip()
+    prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    t0 = time.perf_counter()
     trip = complete_trip_service(
         db=db,
         driver_id=user.user_id,
-        trip_id=trip_id.strip(),
+        trip_id=tid,
+    )
+    latency_ms = int((time.perf_counter() - t0) * 1000)
+    payment = trip.payment
+    log_interaction(
+        db=db,
+        user_id=user.user_id,
+        role="driver",
+        action="complete_trip",
+        trip_id=str(trip.id),
+        previous_state=prev.status.value if prev else None,
+        new_state=trip.status.value,
+        latency_ms=latency_ms,
+        payment_status=payment.status.value if payment else None,
     )
     return trip_to_status_response(trip, include_stripe_pi=False)
 
@@ -147,10 +215,26 @@ async def cancel_trip(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
+    tid = trip_id.strip()
+    prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    t0 = time.perf_counter()
     trip = cancel_trip_by_driver(
         db=db,
         driver_id=user.user_id,
-        trip_id=trip_id.strip(),
+        trip_id=tid,
+    )
+    latency_ms = int((time.perf_counter() - t0) * 1000)
+    payment = trip.payment
+    log_interaction(
+        db=db,
+        user_id=user.user_id,
+        role="driver",
+        action="cancel_trip",
+        trip_id=str(trip.id),
+        previous_state=prev.status.value if prev else None,
+        new_state=trip.status.value,
+        latency_ms=latency_ms,
+        payment_status=payment.status.value if payment else None,
     )
     return trip_to_status_response(trip, include_stripe_pi=False)
 

@@ -35,6 +35,14 @@ Referência de todos os ficheiros de documentação do projeto.
 
 ---
 
+## Observabilidade
+
+| Ficheiro | Propósito |
+|----------|-----------|
+| [INTERACTION_LOGGING.md](INTERACTION_LOGGING.md) | Telemetria comportamental — export de logs (request_trip, accept, complete, etc.) |
+
+---
+
 ## Referência técnica
 
 | Ficheiro | Propósito |
