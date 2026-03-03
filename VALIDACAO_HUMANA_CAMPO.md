@@ -54,6 +54,14 @@ Quando terminares, tens:
 
 ---
 
+## Resultado da Validação (28/02/2026)
+
+- **4 telemóveis** em rede aberta (dados móveis, Wi‑Fi desligado)
+- **1 motorista + 3 passageiros**
+- **100% positivo** — fluxo completo operacional após Seed/refresh
+
+---
+
 ## FASE A — Teste Humano Ampliado
 
 ### Regras

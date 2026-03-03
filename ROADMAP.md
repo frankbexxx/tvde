@@ -5,8 +5,10 @@
 - Backend funcional
 - Stripe authorization + capture funcional
 - Webhook como fonte de verdade
-- Web Test Console operacional
-- Tokens dev ativos
+- Web App operacional (React + Vite)
+- Deploy no Render (backend, frontend, PostgreSQL)
+- Validação em campo concluída (4 dispositivos, rede móvel)
+- Tokens dev ativos (ENABLE_DEV_TOOLS para Seed em produção)
 - State machine estável
 
 ---

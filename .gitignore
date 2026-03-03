@@ -36,3 +36,6 @@ desktop.ini
 logs/
 tmp/
 temp/
+
+# Archive (imagens e assets de sessão — opcional manter local)
+archive/cursor_images/

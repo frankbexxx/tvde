@@ -2,6 +2,8 @@
 
 Manual completo e extensivo, passo a passo, para testar toda a aplicação. Inclui todos os passos, mesmo os óbvios.
 
+**Teste no Render (produção):** Ver [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md) para deploy e teste em https://tvde-app.onrender.com.
+
 ---
 
 # PARTE I — PREPARAÇÃO

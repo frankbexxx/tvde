@@ -2,6 +2,8 @@
 
 App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React e Stripe.
 
+**Estado:** MVP validado em campo (4 dispositivos, rede móvel, fluxo completo operacional).
+
 ## Estrutura
 
 - `backend/` — API FastAPI, PostgreSQL, Stripe
@@ -9,11 +11,13 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 
 ## Início rápido
 
-1. **Backend:** Ver `backend/` e `GUIA_TESTES.md`
+1. **Local:** Ver `GUIA_TESTES.md`
 2. **Deploy:** Ver `PREPARACAO_RENDER.md`
 3. **Validação humana:** Ver `VALIDACAO_HUMANA_CAMPO.md`
 
 ## Documentação
+
+Ver **[DOCS_INDEX.md](DOCS_INDEX.md)** para índice completo.
 
 | Ficheiro | Descrição |
 |----------|-----------|

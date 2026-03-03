@@ -112,7 +112,12 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 
 5. Clica **Create Static Site**.
 6. Espera o build terminar.
-7. Copia o **URL** do site (ex: `https://tvde-app.onrender.com`).
+7. **Redirects/Rewrites** (obrigatório para SPA): No serviço **tvde-app** → **Settings** → secção **Redirects/Rewrites** → **Add Rule**:
+   - **Source:** `/*`
+   - **Destination:** `/index.html`
+   - **Action:** Rewrite
+   (Isto evita 404 ao recarregar em `/passenger` ou `/driver`.)
+8. Copia o **URL** do site (ex: `https://tvde-app.onrender.com`).
 
 ---
 
@@ -165,5 +170,6 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 - [ ] Backend deployado e a responder em `/health`
 - [ ] Stripe webhook criado e secret configurado
 - [ ] Frontend deployado com `VITE_API_URL` correto
+- [ ] Redirects/Rewrites: `/*` → `/index.html` (Rewrite) para SPA
 - [ ] Seed executado com sucesso
 - [ ] Fluxo completo testado (passageiro + motorista)

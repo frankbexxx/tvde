@@ -1,6 +1,6 @@
-# Índice da Documentação — Ride Sharing Backend
+# Índice da Documentação — TVDE
 
-Este documento referencia todos os ficheiros de documentação do projeto e o seu propósito.
+Referência de todos os ficheiros de documentação do projeto.
 
 ---
 
@@ -8,29 +8,65 @@ Este documento referencia todos os ficheiros de documentação do projeto e o se
 
 | Ficheiro | Propósito |
 |----------|-----------|
-| [PROJECT.md](PROJECT.md) | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento, princípios orientadores |
-| [ROADMAP.md](ROADMAP.md) | Etapas de implementação (1–6), decisões entre etapas, próximos passos |
-| [BACKEND_STATUS.md](BACKEND_STATUS.md) | Estado técnico atual: auth, trips, Stripe, eventos, config, o que está pronto vs. por implementar |
-| [TESTE_STRIPE_COMPLETO.md](TESTE_STRIPE_COMPLETO.md) | **Guia completo de testes** — fluxo Stripe end-to-end, OTP, assign, accept, arriving, start, complete, webhook, troubleshooting |
-| [SESSAO_PROXIMA.md](SESSAO_PROXIMA.md) | Handoff entre sessões — onde paramos, próximas ações, ficheiros chave |
-| [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da base de dados (reflete modelos SQLAlchemy) |
+| [README.md](README.md) | Entrada do projeto — estrutura, início rápido |
+| [PROJECT.md](PROJECT.md) | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento |
+| [ROADMAP.md](ROADMAP.md) | Etapas de implementação, princípios, restrições técnicas |
+| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff entre sessões — estado atual, próximas ações |
+
+---
+
+## Deploy e operação
+
+| Ficheiro | Propósito |
+|----------|-----------|
+| [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md) | Deploy no Render — PostgreSQL, backend, Stripe webhook, frontend |
+| [VALIDACAO_HUMANA_CAMPO.md](VALIDACAO_HUMANA_CAMPO.md) | Teste humano em campo — preparação, cenários, observação |
+| [CRIAR_REPO_GITHUB.md](CRIAR_REPO_GITHUB.md) | Criação do repositório GitHub e acesso de parceiros |
+
+---
+
+## Testes e guias
+
+| Ficheiro | Propósito |
+|----------|-----------|
+| [GUIA_TESTES.md](GUIA_TESTES.md) | Manual de testes passo a passo (local e Render) |
+| [TESTE_STRIPE_COMPLETO.md](TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe end-to-end, troubleshooting |
+| [BACKEND_STATUS.md](BACKEND_STATUS.md) | Estado técnico do backend — auth, trips, Stripe, endpoints |
+
+---
+
+## Referência técnica
+
+| Ficheiro | Propósito |
+|----------|-----------|
+| [CIRCUITOS_APP.md](CIRCUITOS_APP.md) | Diagramas — arquitetura, state machine, fluxos |
+| [ETAPA_OPERACIONAL_FLUXO.md](ETAPA_OPERACIONAL_FLUXO.md) | Timeouts, disponibilidade, dispatch — especificação |
+| [STRIPE_CONFIRMACAO_FUTURA.md](STRIPE_CONFIRMACAO_FUTURA.md) | Estratégias de confirmação de pagamento (futuro) |
+| [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da base de dados |
+
+---
+
+## Outros
+
+| Ficheiro | Propósito |
+|----------|-----------|
+| [TEMPLATE.md](TEMPLATE.md) | Template para novos documentos |
+| [RESUMO_TECNICO_PROJETO.md](RESUMO_TECNICO_PROJETO.md) | Resumo técnico consolidado |
 
 ---
 
 ## Fluxo recomendado para novos devs
 
-1. Ler **PROJECT.md** — entender o produto e o modelo
-2. Ler **ROADMAP.md** — ver o que já foi feito e o que falta
-3. Consultar **BACKEND_STATUS.md** — estado técnico detalhado
-4. Seguir **TESTE_STRIPE_COMPLETO.md** — arrancar ambiente e testar fluxo completo
+1. **README.md** — visão geral e estrutura
+2. **PROJECT.md** — produto e modelo
+3. **PREPARACAO_RENDER.md** — deploy (ou **GUIA_TESTES.md** para local)
+4. **PROXIMA_SESSAO.md** — estado atual e próximos passos
 
 ---
 
 ## Documentos arquivados
 
-Os seguintes documentos foram arquivados em `archive_support/` por estarem desatualizados ou redundantes:
-
-| Ficheiro arquivado | Motivo |
-|--------------------|--------|
-| `archive_support/runbook_testes_local.md` | Substituído por TESTE_STRIPE_COMPLETO.md (fluxo completo) e BACKEND_STATUS.md |
-| `archive_support/runbook_tecnico_local.md` | Substituído por TESTE_STRIPE_COMPLETO.md; estado desatualizado |
+| Localização | Conteúdo |
+|-------------|----------|
+| `archive_support/` | Runbooks e manuais desatualizados |
+| `archive/` | Screenshots, PDFs, imagens de sessão |

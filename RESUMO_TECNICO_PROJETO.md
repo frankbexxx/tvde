@@ -25,7 +25,7 @@ APP/
 │   │   │       ├── admin.py
 │   │   │       ├── admin_ws.py
 │   │   │       ├── auth.py          # OTP request/verify
-│   │   │       ├── dev_tools.py     # Reset, seed, tokens, auto-trip (ENV=dev)
+│   │   │       ├── dev_tools.py     # Reset, seed, tokens, auto-trip (ENV=dev ou ENABLE_DEV_TOOLS)
 │   │   │       ├── driver_trips.py  # Driver: available, accept, arriving, start, complete, cancel
 │   │   │       ├── health.py
 │   │   │       ├── passenger_trips.py  # Passenger: create, cancel
@@ -64,7 +64,7 @@ APP/
 | Router | Prefixo | Tags | Descrição |
 |--------|---------|------|-----------|
 | `health` | — | — | Health check |
-| `dev_tools` | `/dev` | dev | Reset, seed, tokens, auto-trip, list trips |
+| `dev_tools` | `/dev` | dev ou ENABLE_DEV_TOOLS | Reset, seed, tokens, auto-trip, list trips |
 | `auth` | `/auth` | auth | OTP request, OTP verify |
 | `passenger_trips` | `/trips` | passenger | Create trip, cancel trip |
 | `driver_trips` | `/driver/trips` | driver | Available, accept, arriving, start, complete, cancel |
@@ -448,7 +448,7 @@ requested → assigned → accepted → arriving → ongoing → completed
 | `app/api/routers/webhooks/stripe.py` | Webhook; só `payment_intent.succeeded` para succeeded |
 | `app/core/pricing.py` | calculate_price, calculate_driver_payout |
 | `app/core/config.py` | Settings (DATABASE_URL, JWT, OTP, STRIPE, ENV) |
-| `app/api/routers/dev_tools.py` | Reset, seed, tokens, auto-trip, list trips |
+| `app/api/routers/dev_tools.py` | Reset, seed, tokens, auto-trip (ENV=dev ou ENABLE_DEV_TOOLS) |
 | `app/api/deps.py` | get_db, get_current_user, require_role |
 | `app/events/dispatcher.py` | emit() → AuditEvent + realtime publish |
 

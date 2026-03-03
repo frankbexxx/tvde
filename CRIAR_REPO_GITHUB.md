@@ -14,7 +14,7 @@ O projeto já está preparado localmente (`.gitignore`, `README`, etc.). O Git f
 
 1. Abre o browser e vai a [https://github.com/new](https://github.com/new)
 2. Preenche:
-   - **Repository name:** `tvde` (ou o nome que preferires)
+   - **Repository name:** `tvde`
    - **Description:** (opcional) "Ride sharing MVP"
    - **Visibility:** **Private**
    - **NÃO** marques "Add a README file"
@@ -34,7 +34,6 @@ git branch -M main
 git push -u origin main
 ```
 
-*(Substitui `tvde` pelo nome do repo se usaste outro.)*
 
 Se pedir autenticação:
 - **Username:** `frankbexxx`
@@ -47,7 +46,7 @@ Se pedir autenticação:
 1. No repositório, vai a **Settings** (tab do repo)
 2. No menu esquerdo, clica em **Collaborators** (ou **Collaborators and teams**)
 3. Clica **Add people**
-4. Escreve o **username GitHub** do teu parceiro
+4. Escreve o username: **ventosferteis**
 5. Escolhe a permissão (sugestão: **Write** para poder fazer push)
 6. Clica **Add** — o parceiro recebe um convite por email
 
@@ -66,6 +65,6 @@ Se pedir autenticação:
 
 O parceiro deve:
 
-1. Clonar o repo: `git clone https://github.com/frankbexxx/tvde.git`
+1. Clonar o repo: `git clone https://github.com/frankbexxx/tvde.git` (ou `git@github.com:frankbexxx/tvde.git` com SSH)
 2. Criar `backend/.env` a partir de `backend/.env.example` (pedir os valores sensíveis por canal seguro)
 3. Seguir o `GUIA_TESTES.md` para correr localmente

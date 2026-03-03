@@ -99,12 +99,11 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ## Estado atual de testes
 
-**Testes concluídos com sucesso** (sessão de 22/02/2025):
+**Testes concluídos com sucesso:**
 - Fluxo completo: Pedir viagem → Assign (ou auto-dispatch) → Accept → Arriving → Start → Complete
-- Auto-trip
-- Run timeouts
-- Seed (repõe `is_available` em drivers existentes)
+- Auto-trip, Run timeouts, Seed
 - Vista Passageiro e Motorista funcionais
+- **Validação em campo (28/02/2026):** 4 telemóveis, rede móvel (dados móveis, sem Wi‑Fi), 1 motorista + 3 passageiros — 100% positivo
 
 ---
 
@@ -127,7 +126,7 @@ O sistema está num **MVP validável** — fluxo técnico e operacional completo
 - **Operacional:** Disponibilidade, timeouts, dispatch, proteção contra race
 - **UX:** Web app com log e estado em tempo real, guia de testes para não-técnicos
 
-O próximo passo natural é **validação em contexto real** (telemóvel, utilizadores reais) e **decisão sobre confirmação** — quando o preço passa a ser definitivo (ver STRIPE_CONFIRMACAO_FUTURA.md). A introdução de Stripe Connect ou confirmação no accept deve ser feita depois dessa decisão.
+A **validação em contexto real** foi concluída com sucesso (4 dispositivos, rede móvel). Próximo passo natural: **decisão sobre confirmação** — quando o preço passa a ser definitivo (ver STRIPE_CONFIRMACAO_FUTURA.md). A introdução de Stripe Connect ou confirmação no accept deve ser feita depois dessa decisão.
 
 ---
 
@@ -135,11 +134,8 @@ O próximo passo natural é **validação em contexto real** (telemóvel, utiliz
 
 ## Recomendação
 
-**Prioridade 1 — Validação e estabilização**
-1. Validar UX em telemóvel (responsive, fluxo real)
-2. Validar fluxo humano completo: passageiro cria → motorista completa (sem Auto-trip)
-3. Verificar system-health em cenários reais (stuck_payments, stuck_trips)
-4. Documentar edge cases encontrados
+**Prioridade 1 — Concluída**
+- Validação em campo: 4 dispositivos, rede móvel, fluxo completo — 100% positivo
 
 **Prioridade 2 — Melhorias incrementais (se necessário)**
 1. Ajustes de UI/UX na Web App
