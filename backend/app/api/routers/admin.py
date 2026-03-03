@@ -85,7 +85,7 @@ async def run_timeouts_admin(
     return RunTimeoutsResponse(**counts)
 
 
-@router.get("/export-logs")
+@router.get("/export-logs", response_model=None)
 async def export_interaction_logs(
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
