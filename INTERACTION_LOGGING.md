@@ -49,6 +49,13 @@ Sistema mínimo de observação: quem clicou, o que aconteceu, quanto tempo, est
 
 **Frontend:** Após Seed, expande Dev → **Export logs** — descarrega CSV automaticamente.
 
+**Nome do ficheiro:** `interaction_logs_{deviceId}_run{seq}_{date}.csv`  
+Exemplo: `interaction_logs_a3f2b1c8_run3_2026-02-22.csv`
+
+- **deviceId:** 8 caracteres, único por dispositivo (localStorage)
+- **run:** Sequencial por dispositivo (1, 2, 3…); incrementa em cada export
+- **Reset run:** Botão em Dev para reiniciar a sequência (próximo export será run 1)
+
 **Endpoint:** `GET /admin/export-logs` (requer token admin)
 
 - **JSON:** `GET /admin/export-logs` (por defeito)

@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { assignTripAdmin, runTimeoutsAdmin } from '../../api/trips'
 import { apiFetch, API_BASE } from '../../api/client'
+import { getExportFilename, getDeviceId, getCurrentRun, resetRun } from '../../utils/exportLogs'
 
 function errMsg(err: unknown): string {
   const e = err as { detail?: string; message?: string }
@@ -23,6 +24,7 @@ export function DevTools({
   const { tokens } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const [open, setOpen] = useState(false)
+  const [, setResetKey] = useState(0) // force re-render after Reset run
 
   const handleAssign = async () => {
     if (!lastCreatedTripId || !tokens?.admin) return
@@ -82,7 +84,7 @@ export function DevTools({
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `interaction_logs_${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = getExportFilename()
       a.click()
       URL.revokeObjectURL(url)
       addLog('Logs exportados', 'success')
@@ -91,6 +93,13 @@ export function DevTools({
       addLog(`Erro Export: ${errMsg(err)}`, 'error')
       setStatus('Erro')
     }
+  }
+
+  const handleResetRun = () => {
+    resetRun()
+    setResetKey((k) => k + 1)
+    addLog(`Run resetado (device ${getDeviceId()})`, 'info')
+    setStatus('Pronto')
   }
 
   const handleSeed = async () => {
@@ -142,6 +151,13 @@ export function DevTools({
                 className="px-3 py-1.5 text-sm bg-sky-200 rounded-lg hover:bg-sky-300"
               >
                 Export logs
+              </button>
+              <button
+                onClick={handleResetRun}
+                className="px-3 py-1.5 text-sm bg-slate-200 rounded-lg hover:bg-slate-300"
+                title={`Device ${getDeviceId()}, run ${getCurrentRun()}`}
+              >
+                Reset run
               </button>
             </>
           )}
