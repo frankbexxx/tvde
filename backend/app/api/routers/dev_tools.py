@@ -4,7 +4,7 @@ All endpoints return 404 when ENV != "dev".
 """
 import random
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session, joinedload
 
@@ -101,6 +101,65 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
         "admin_id": str(admin.id),
         "driver_id": str(driver_user.id),
     }
+
+
+@router.post("/seed-simulator")
+async def dev_seed_simulator(
+    db: Session = Depends(get_db),
+    passengers: int = Query(20, ge=1, le=100),
+    drivers: int = Query(8, ge=1, le=50),
+) -> dict:
+    """
+    Cria N passageiros e M motoristas para o simulador de tráfego.
+    Retorna listas de tokens (um por bot).
+    """
+    _require_dev()
+
+    def get_or_create_user(phone: str, role: Role) -> User:
+        user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+        if not user:
+            user = User(
+                role=role,
+                name=phone,
+                phone=phone,
+                status=UserStatus.active,
+            )
+            db.add(user)
+            db.flush()
+        return user
+
+    def make_token(user: User) -> str:
+        data = create_access_token(subject=str(user.id), role=user.role.value)
+        return data["token"]
+
+    passenger_tokens = []
+    for i in range(1, passengers + 1):
+        phone = f"+3519123456{i:02d}"
+        user = get_or_create_user(phone, Role.passenger)
+        db.refresh(user)
+        passenger_tokens.append(make_token(user))
+
+    driver_tokens = []
+    for i in range(1, drivers + 1):
+        phone = f"+3519111111{i:02d}"
+        user = get_or_create_user(phone, Role.driver)
+        driver_profile = db.execute(
+            select(Driver).where(Driver.user_id == user.id)
+        ).scalar_one_or_none()
+        if not driver_profile:
+            driver_profile = Driver(
+                user_id=user.id,
+                status=DriverStatus.approved,
+                commission_percent=15,
+            )
+            db.add(driver_profile)
+        else:
+            driver_profile.is_available = True
+        db.refresh(user)
+        driver_tokens.append(make_token(user))
+
+    db.commit()
+    return {"passenger_tokens": passenger_tokens, "driver_tokens": driver_tokens}
 
 
 @router.post("/tokens")
