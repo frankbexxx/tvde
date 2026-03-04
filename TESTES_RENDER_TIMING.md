@@ -127,6 +127,31 @@ Testes para validar timings e comportamento quando o backend no Render Free Tier
 - **Logs:** `logs/interaction_logs_84a6815c_run1_2026-03-04.csv`, `logs/interaction_logs_84a6815c_run2_2026-03-04.csv`
 - **Dormancy nos logs (run2):** passageiro `dormancy_enter` 10:39:12 → `dormancy_exit` 10:40:37 (~1,5 min); motorista fez accept/arriving/start entretanto; ao acordar, estado correcto
 
-### Teste 4 — _pendente_
+### Teste 4 — 04/03/2026
+- ✅ Concluído
+- **Dispositivos:** PC (84062059), Tablet (3ccebe47), Telemóvel (84a6815c)
+- **Logs:** `logs/interaction_logs_84062059_run1_2026-03-04.csv`, `interaction_logs_3ccebe47_run2_2026-03-04.csv`, `interaction_logs_84a6815c_run3_2026-03-04.csv`
 
-### Conclusões — _a preencher no fim_
+**Experiência 1 — PC (passageiro + motorista):**
+- Pediu viagem no PC, aceitou como motorista no PC
+- Ao voltar à vista Passageiro: **faltava botão Cancelar**
+- **A melhorar:** Passageiro deveria poder cancelar até entrar na viatura (estados `accepted`, `arriving`)
+
+**Experiência 2 — 3 dispositivos em sincronia:**
+- Dois pedidos (Telemóvel + Tablet) → ambas as viagens apareceram na aba Motorista
+- Ao aceitar uma viagem, a outra desapareceu da lista (motorista ocupado)
+- Passageiros em estados diferentes: um "Motorista a caminho" (aceite), outro "Motorista atribuído" (à espera)
+- Ao concluir a primeira viagem, a segunda reapareceu em todos os dispositivos
+- Fluxo correcto
+
+**Reset run** no fim.
+
+---
+
+### Conclusões — 04/03/2026
+
+- **Testes 1–4:** Concluídos com sucesso
+- **Cold start:** ~2 s no telemóvel; request_trip rápido (25–71 ms) quando backend acordado
+- **Dormancy:** Auto-refresh funciona — ao voltar à app, estado actualizado
+- **Multi-dispositivo:** Sincronia correcta; viagens concorrentes bem geridas
+- **A implementar:** Botão Cancelar para passageiro em `accepted` e `arriving` (até entrar na viatura)

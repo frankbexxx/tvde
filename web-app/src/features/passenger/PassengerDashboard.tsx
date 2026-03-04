@@ -138,7 +138,7 @@ export function PassengerDashboard() {
     ? 'Pedir viagem'
     : activeTrip?.status === 'completed'
       ? 'Pedir nova viagem'
-      : activeTrip?.status === 'requested' || activeTrip?.status === 'assigned'
+      : ['requested', 'assigned', 'accepted', 'arriving'].includes(activeTrip?.status ?? '')
         ? 'Cancelar'
         : null
 
