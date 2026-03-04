@@ -97,3 +97,27 @@ Testes para validar timings e comportamento quando o backend no Render Free Tier
 | 4 | Análise de timings nos logs | No fim |
 
 **Nota:** O Teste 1 pode ser feito em 2 dispositivos em paralelo (passageiro + motorista). Os Testes 2 e 3 podem ser feitos em cada dispositivo separadamente.
+
+---
+
+## Resultados
+
+*(Registar após cada teste. No fim, adicionar Conclusões.)*
+
+### Teste 1 — 04/03/2026
+- ✅ Concluído
+- Runs normais executadas, espera 15+ min para Render adormecer
+
+### Teste 2 — 04/03/2026
+- ✅ Concluído
+- **Dispositivo:** Telemóvel (deviceId 84a6815c)
+- **Carregamento:** ~2 s com reload
+- **Pedir viagem:** Demorou um pouco a clicar; assim que pediu → "Motorista atribuído" imediato
+- **Log:** `logs/interaction_logs_84a6815c_run1_2026-03-04.csv`
+- **Latência request_trip:** 25 ms (backend já acordado)
+
+### Teste 3 — _pendente_
+
+### Teste 4 — _pendente_
+
+### Conclusões — _a preencher no fim_
