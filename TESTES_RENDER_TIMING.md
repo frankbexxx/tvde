@@ -87,6 +87,39 @@ Testes para validar timings e comportamento quando o backend no Render Free Tier
 
 ---
 
+## Teste 5 — Regressão (passageiro cancela após aceite)
+
+**Objetivo:** Confirmar que, quando o passageiro cancela após o motorista aceitar, o motorista volta à lista e vê a nova viagem.
+
+**Sequência:**
+1. Passageiro pede viagem.
+2. Motorista aceita (estado "A caminho do passageiro").
+3. Passageiro cancela (botão Cancelar visível em accepted/arriving).
+4. **Motorista:** deve voltar automaticamente à lista de viagens disponíveis (não ficar em "cancelled").
+5. Passageiro pede nova viagem.
+6. **Motorista:** deve ver a nova viagem na lista.
+
+**Resultado esperado:** Motorista não fica preso na vista da viagem cancelada; polling detecta `cancelled` e limpa `activeTripId`.
+
+---
+
+## Teste 6 — Fricção de rede e Stripe imperfeito
+
+**Objetivo:** Validar comportamento com rede instável e payment em "processing". Ver [VALIDACAO_HUMANA_CAMPO.md](VALIDACAO_HUMANA_CAMPO.md).
+
+**6a — Fricção de rede**
+- Durante o fluxo: desliga dados do motorista 10 s, faz refresh, alterna entre apps.
+- **Pergunta:** O sistema mantém coerência? O utilizador sente controlo ou ansiedade?
+
+**6b — Stripe imperfeito**
+1. [Stripe Dashboard](https://dashboard.stripe.com) → Webhooks → remove temporariamente o URL
+2. Completa a viagem na app
+3. O payment fica "processing" no backend
+4. **Observa:** O passageiro percebe? Ou assume que pagou e acabou?
+5. Reativa o webhook no Stripe
+
+---
+
 ## Resumo
 
 | Teste | Descrição | Quando |
@@ -95,6 +128,8 @@ Testes para validar timings e comportamento quando o backend no Render Free Tier
 | 2 | Cold start (abrir após dormir) | Após Teste 1 |
 | 3 | Dormancy (trocar app, voltar) | A qualquer momento |
 | 4 | Análise de timings nos logs | No fim |
+| 5 | Regressão: passageiro cancela → motorista volta à lista | Após correções |
+| 6 | Fricção de rede + Stripe imperfeito | Validação humana |
 
 **Nota:** O Teste 1 pode ser feito em 2 dispositivos em paralelo (passageiro + motorista). Os Testes 2 e 3 podem ser feitos em cada dispositivo separadamente.
 
@@ -146,12 +181,22 @@ Testes para validar timings e comportamento quando o backend no Render Free Tier
 
 **Reset run** no fim.
 
+### Teste 5 — 04/03/2026
+- ✅ Concluído
+- Passageiro cancelou após aceite → motorista voltou à lista; nova viagem visível
+
+### Teste 6 — 04/03/2026
+- **6a:** ✅ Concluído (fricção de rede)
+- **6b (Stripe):** ✅ Concluído — webhook corrigido; entregas `payment_intent.succeeded` agora 200 OK
+- **6b (fricção de rede):** Ao desligar wifi e dados após o motorista aceitar, o passageiro passava para "sem viagem activa"; retoma "em viagem" ao reconectar. **Corrigido:** passageiro vê agora "Sem conectividade" offline e "A verificar..." quando há falha temporária.
+
 ---
 
 ### Conclusões — 04/03/2026
 
-- **Testes 1–4:** Concluídos com sucesso
+- **Testes 1–6:** Concluídos com sucesso
+- **Teste 6:** Webhook Stripe corrigido (200 OK); fricção de rede: passageiro vê "Sem conectividade" offline e "A verificar..." em falhas temporárias; recupera ao reconectar
 - **Cold start:** ~2 s no telemóvel; request_trip rápido (25–71 ms) quando backend acordado
 - **Dormancy:** Auto-refresh funciona — ao voltar à app, estado actualizado
 - **Multi-dispositivo:** Sincronia correcta; viagens concorrentes bem geridas
-- **A implementar:** Botão Cancelar para passageiro em `accepted` e `arriving` (até entrar na viatura)
+- **Implementado:** Botão Cancelar em `accepted` e `arriving`; motorista volta à lista quando passageiro cancela

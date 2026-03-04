@@ -5,6 +5,7 @@ import { useActiveTrip } from '../../context/ActiveTripContext'
 import { createTrip, getTripHistory, getTripDetail, cancelTrip } from '../../api/trips'
 import type { TripDetailResponse, TripHistoryItem } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
@@ -47,6 +48,7 @@ export function PassengerDashboard() {
     3000
   )
 
+  const isOnline = useOnlineStatus()
   const { data: activeTrip } = usePolling<TripDetailResponse | null>(
     () =>
       activeTripId && token
@@ -127,7 +129,11 @@ export function PassengerDashboard() {
 
   const statusConfig = activeTrip?.status
     ? STATUS_CONFIG[activeTrip.status] ?? { label: activeTrip.status, variant: 'idle' as const }
-    : { label: 'Sem viagem ativa', variant: 'idle' as const }
+    : activeTripId && !isOnline
+      ? { label: 'Sem conectividade', variant: 'idle' as const }
+      : activeTripId
+        ? { label: 'A verificar...', variant: 'idle' as const }
+        : { label: 'Sem viagem ativa', variant: 'idle' as const }
 
   const showPrimaryButton =
     !activeTripId ||
