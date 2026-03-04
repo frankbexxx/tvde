@@ -30,6 +30,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | Ficheiro | Propósito |
 |----------|-----------|
 | [GUIA_TESTES.md](GUIA_TESTES.md) | Manual de testes passo a passo (local e Render) |
+| [TESTES_RENDER_TIMING.md](TESTES_RENDER_TIMING.md) | Testes cold start e dormancy no Render (timings, logs) |
 | [TESTE_STRIPE_COMPLETO.md](TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe end-to-end, troubleshooting |
 | [BACKEND_STATUS.md](BACKEND_STATUS.md) | Estado técnico do backend — auth, trips, Stripe, endpoints |
 
