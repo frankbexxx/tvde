@@ -82,8 +82,8 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ### Web App
 - React + Vite + TypeScript, Tailwind
-- Passenger: pedir viagem, viagem ativa, histórico, cancelar
-- Driver: lista available, Accept, Arriving, Start, Complete, Cancel, histórico
+- Passenger: pedir viagem, viagem ativa, histórico, cancelar (até entrar na viatura); "Sem conectividade" / "A verificar..." quando offline ou falha temporária
+- Driver: lista available, Accept, Arriving, Start, Complete, Cancel, histórico; volta à lista quando passageiro cancela
 - DevTools: Seed, Auto-trip, Run timeouts, Assign
 - Painel direito: log sequencial, estado em tempo real, vista, copiar log
 - Role derivado do URL (`/driver` → motorista, `/passenger` → passageiro)
@@ -104,6 +104,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - Auto-trip, Run timeouts, Seed
 - Vista Passageiro e Motorista funcionais
 - **Validação em campo (28/02/2026):** 4 telemóveis, rede móvel (dados móveis, sem Wi‑Fi), 1 motorista + 3 passageiros — 100% positivo
+- **Testes Render (04/03/2026):** Testes 1–6 concluídos — cold start, dormancy, multi-dispositivo, regressão (cancelar), fricção de rede, Stripe webhook. Ver [TESTES_RENDER_TIMING.md](TESTES_RENDER_TIMING.md)
 
 ---
 

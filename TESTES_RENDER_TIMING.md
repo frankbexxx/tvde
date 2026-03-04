@@ -6,6 +6,8 @@ Testes para validar timings e comportamento quando o backend no Render Free Tier
 
 **Logs:** Cada dispositivo exporta com nome único (`interaction_logs_{deviceId}_run{seq}_{date}.csv`). Ver [INTERACTION_LOGGING.md](INTERACTION_LOGGING.md).
 
+**Resumo dos resultados (04/03/2026):** Todos os 6 testes concluídos. Cold start ~2 s; dormancy com auto-refresh; multi-dispositivo sincronizado; passageiro pode cancelar até entrar; motorista volta à lista ao cancelamento; webhook Stripe 200 OK; offline mostra "Sem conectividade" e recupera ao reconectar.
+
 ---
 
 ## Teste 1 — Runs normais (deixar Render adormecer)
