@@ -116,7 +116,16 @@ Testes para validar timings e comportamento quando o backend no Render Free Tier
 - **Log:** `logs/interaction_logs_84a6815c_run1_2026-03-04.csv`
 - **Latência request_trip:** 25 ms (backend já acordado)
 
-### Teste 3 — _pendente_
+### Teste 3 — 04/03/2026
+- ✅ Concluído
+- **Dispositivo:** Tablet (deviceId 84a6815c)
+- **Experiência 1:** Passageiro e motorista no tablet — fluxo normal
+- **Experiência 2:** Passageiro no tablet, motorista no telemóvel
+  - Tablet deixado adormecido uns segundos
+  - Motorista (telemóvel) executou ACEITAR → Cheguei → Iniciar viagem (até "em viagem")
+  - Ao voltar ao tablet: **estava tudo normal** — estado actualizado automaticamente
+- **Logs:** `logs/interaction_logs_84a6815c_run1_2026-03-04.csv`, `logs/interaction_logs_84a6815c_run2_2026-03-04.csv`
+- **Dormancy nos logs (run2):** passageiro `dormancy_enter` 10:39:12 → `dormancy_exit` 10:40:37 (~1,5 min); motorista fez accept/arriving/start entretanto; ao acordar, estado correcto
 
 ### Teste 4 — _pendente_
 
