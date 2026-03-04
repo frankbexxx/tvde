@@ -18,7 +18,6 @@ from app.api.routers import (
     health,
     logs,
     passenger_trips,
-    realtime,
     ws,
 )
 from app.api.routers.webhooks import stripe as stripe_webhook
@@ -115,7 +114,6 @@ app.include_router(auth.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
 app.include_router(admin.router)
-app.include_router(realtime.router)
 app.include_router(ws.router)
 app.include_router(admin_ws.router)
 app.include_router(stripe_webhook.router)

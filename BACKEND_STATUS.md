@@ -177,9 +177,7 @@
       - Subscreve ao `hub` e mantém a ligação até o cliente fechar.  
     - `/ws/admin/trips` (`admin_ws.py`):  
       - Exige JWT de utilizador `role=admin` e `status=active`.  
-      - Subscreve ao `admin_hub` e recebe todos os eventos de trip.  
-    - `realtime.py` (reservado):  
-      - `/trips/{trip_id}` e `/driver/trips/{trip_id}` atualmente fecham imediatamente com `Not implemented` (serão usados para tracking de localização).
+      - Subscreve ao `admin_hub` e recebe todos os eventos de trip.
 
 ### 5. Configuração, startup e Swagger
 - **Startup (`app/main.py`)**  

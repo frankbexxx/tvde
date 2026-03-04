@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { assignTripAdmin, runTimeoutsAdmin } from '../../api/trips'
-import { apiFetch } from '../../api/client'
+import { apiFetch, API_BASE } from '../../api/client'
 
 function errMsg(err: unknown): string {
   const e = err as { detail?: string; message?: string }
@@ -74,7 +74,6 @@ export function DevTools({
     setStatus('A exportar logs...')
     addLog('Clique: Export logs', 'action')
     try {
-      const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
       const res = await fetch(`${API_BASE}/admin/export-logs?format=csv`, {
         headers: { Authorization: `Bearer ${tokens.admin}` },
       })

@@ -28,8 +28,8 @@ APP/
 │   │   │       ├── dev_tools.py     # Reset, seed, tokens, auto-trip (ENV=dev ou ENABLE_DEV_TOOLS)
 │   │   │       ├── driver_trips.py  # Driver: available, accept, arriving, start, complete, cancel
 │   │   │       ├── health.py
+│   │   │       ├── logs.py         # Lifecycle (app_start, dormancy_enter, dormancy_exit)
 │   │   │       ├── passenger_trips.py  # Passenger: create, cancel
-│   │   │       ├── realtime.py
 │   │   │       ├── ws.py
 │   │   │       └── webhooks/
 │   │   │           └── stripe.py    # Webhook Stripe
@@ -64,12 +64,12 @@ APP/
 | Router | Prefixo | Tags | Descrição |
 |--------|---------|------|-----------|
 | `health` | — | — | Health check |
+| `logs` | `/logs` | logs | Lifecycle (app_start, dormancy_enter, dormancy_exit) |
 | `dev_tools` | `/dev` | dev ou ENABLE_DEV_TOOLS | Reset, seed, tokens, auto-trip, list trips |
 | `auth` | `/auth` | auth | OTP request, OTP verify |
 | `passenger_trips` | `/trips` | passenger | Create trip, cancel trip |
 | `driver_trips` | `/driver/trips` | driver | Available, accept, arriving, start, complete, cancel |
 | `admin` | — | — | Admin endpoints |
-| `realtime` | — | — | SSE |
 | `ws` | — | — | WebSocket |
 | `admin_ws` | — | — | Admin WebSocket |
 | `stripe_webhook` | `/webhooks` | webhooks | Stripe webhook |

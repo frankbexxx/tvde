@@ -128,6 +128,6 @@ UI primitives
 | `features/driver/DriverDashboard.tsx` | Refatorado |
 | `features/shared/DevTools.tsx` | Refatorado (collapsible) |
 | `components/RoleSelector.tsx` | Simplificado |
-| `routes/index.tsx` | ActivityPanel removido |
+| `routes/index.tsx` | ActivityPanel no sidebar (desktop) |
 | `hooks/usePolling.ts` | Intervalo 2500ms |
 | `index.css` | Safe area, fundo branco |
