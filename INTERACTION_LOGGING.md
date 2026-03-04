@@ -8,6 +8,8 @@ Sistema mínimo de observação: quem clicou, o que aconteceu, quanto tempo, est
 
 ## Eventos capturados
 
+### Ações de utilizador (backend)
+
 | action        | role     | descrição                    |
 |---------------|----------|------------------------------|
 | request_trip  | passenger| Pedir viagem                 |
@@ -16,6 +18,16 @@ Sistema mínimo de observação: quem clicou, o que aconteceu, quanto tempo, est
 | start_trip    | driver   | Iniciar viagem               |
 | complete_trip | driver   | Concluir viagem              |
 | cancel_trip   | passenger/driver | Cancelar            |
+
+### Ciclo de vida da app (frontend → POST /logs/lifecycle)
+
+| action         | descrição                                      |
+|----------------|------------------------------------------------|
+| app_start      | App arrancou (mount inicial)                   |
+| dormancy_enter | Tab/ecrã ficou oculto (visibility hidden)      |
+| dormancy_exit  | Tab/ecrã voltou visível (acordou)              |
+
+**Nota:** Ao acordar (`dormancy_exit`), o estado é actualizado automaticamente (refetch imediato dos dados em polling).
 
 ---
 

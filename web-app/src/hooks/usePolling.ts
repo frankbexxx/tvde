@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { VISIBILITY_VISIBLE_EVENT } from '../constants/events'
 
 const DEFAULT_POLL_INTERVAL_MS = 3000
 
 /**
  * Hook for polling. Callback is invoked immediately and then every interval.
  * Pass deps to stabilize refetch (e.g. [token]) — avoids re-running on every render.
+ * Auto-refetches when tab becomes visible again (after dormancy).
  */
 export function usePolling<T>(
   fn: () => Promise<T>,
@@ -39,6 +41,14 @@ export function usePolling<T>(
       }
     }
   }, [enabled, refetch, intervalMs])
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (enabled) refetch()
+    }
+    window.addEventListener(VISIBILITY_VISIBLE_EVENT, onVisible)
+    return () => window.removeEventListener(VISIBILITY_VISIBLE_EVENT, onVisible)
+  }, [enabled, refetch])
 
   return { data, refetch, isLoading }
 }

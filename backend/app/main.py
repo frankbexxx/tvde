@@ -16,6 +16,7 @@ from app.api.routers import (
     dev_tools,
     driver_trips,
     health,
+    logs,
     passenger_trips,
     realtime,
     ws,
@@ -108,6 +109,7 @@ def on_startup() -> None:
         )
 
 app.include_router(health.router)
+app.include_router(logs.router)
 app.include_router(dev_tools.router)
 app.include_router(auth.router)
 app.include_router(passenger_trips.router)

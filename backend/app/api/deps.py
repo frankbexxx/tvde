@@ -11,6 +11,7 @@ from app.models.enums import Role, UserStatus
 
 
 bearer_scheme = HTTPBearer(scheme_name="BearerAuth")
+bearer_scheme_optional = HTTPBearer(scheme_name="BearerAuth", auto_error=False)
 
 
 class UserContext(BaseModel):
@@ -71,4 +72,24 @@ def require_role(*roles: Role):
         return user
 
     return _require
+
+
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme_optional),
+    db: Session = Depends(get_db),
+) -> UserContext | None:
+    """Returns user if valid Bearer token present; else None (for anonymous lifecycle logs)."""
+    if not credentials:
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+        user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if not user or user.status != UserStatus.active:
+            return None
+        return UserContext(user_id=str(user.id), role=user.role)
+    except Exception:
+        return None
 
