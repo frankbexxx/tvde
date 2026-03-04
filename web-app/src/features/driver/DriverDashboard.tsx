@@ -219,7 +219,16 @@ export function DriverDashboard() {
         )}
 
         {activeTripId && (
-          <ActiveTripSummary tripId={activeTripId} token={token!} />
+          <ActiveTripSummary
+            tripId={activeTripId}
+            token={token!}
+            onTripCancelled={() => {
+              setDriverActiveTripId(null)
+              setStatus('Pronto')
+              refetchAvailable()
+              refetchHistory()
+            }}
+          />
         )}
 
         {history && history.length > 0 && (
@@ -251,9 +260,11 @@ export function DriverDashboard() {
 function ActiveTripSummary({
   tripId,
   token,
+  onTripCancelled,
 }: {
   tripId: string
   token: string
+  onTripCancelled: () => void
 }) {
   const fetchTrip = useCallback(() => getDriverTripDetail(tripId, token), [tripId, token])
   const { data: trip } = usePolling(
@@ -263,6 +274,12 @@ function ActiveTripSummary({
     2000
   )
   const status = trip?.status ?? 'accepted'
+
+  useEffect(() => {
+    if (trip?.status === 'cancelled') {
+      onTripCancelled()
+    }
+  }, [trip?.status, onTripCancelled])
 
   const config = STATUS_CONFIG[status] ?? { label: status, variant: 'idle' as const }
 
