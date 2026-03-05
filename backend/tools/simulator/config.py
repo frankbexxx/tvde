@@ -6,7 +6,7 @@ import os
 
 API_BASE_URL = os.environ.get("TVDE_SIM_API_BASE_URL", "http://localhost:8000")
 NUMBER_PASSENGER_BOTS = int(os.environ.get("TVDE_SIM_PASSENGER_BOTS", "20"))
-NUMBER_DRIVER_BOTS = int(os.environ.get("TVDE_SIM_DRIVER_BOTS", "8"))
+NUMBER_DRIVER_BOTS = int(os.environ.get("TVDE_SIM_DRIVER_BOTS", "12"))
 MAX_ACTIVE_TRIPS = int(os.environ.get("TVDE_SIM_MAX_ACTIVE_TRIPS", "30"))
 RANDOM_SEED = os.environ.get("TVDE_SIM_RANDOM_SEED")  # None = no seed, use random
 
