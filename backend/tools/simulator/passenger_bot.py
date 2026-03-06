@@ -18,9 +18,10 @@ CANCEL_WAIT_MIN, CANCEL_WAIT_MAX = 10, 30  # seconds before optional cancel
 
 
 class PassengerBot:
-    def __init__(self, bot_id: int, token: str):
+    def __init__(self, bot_id: int, token: str, stats=None):
         self.bot_id = bot_id
         self.token = token
+        self.stats = stats
 
     def _log(self, msg: str) -> None:
         print(f"[PassengerBot {self.bot_id}] {msg}")
@@ -37,6 +38,8 @@ class PassengerBot:
                     DEST[0], DEST[1],
                 )
                 trip_id = resp.get("trip_id")
+                if self.stats:
+                    self.stats.trips_created += 1
                 self._log(f"created trip {trip_id}")
 
                 if random.random() < CANCEL_PROBABILITY:
@@ -44,9 +47,13 @@ class PassengerBot:
                     await asyncio.sleep(cancel_wait)
                     try:
                         cancel_trip(self.token, trip_id)
+                        if self.stats:
+                            self.stats.trips_cancelled += 1
                         self._log(f"cancelled trip {trip_id}")
                     except httpx.HTTPStatusError as e:
                         if e.response.status_code == 400:
+                            if self.stats:
+                                self.stats.trips_cancel_failed += 1
                             self._log(f"cancel failed (trip may be ongoing): {trip_id}")
                         else:
                             raise

@@ -24,7 +24,7 @@ from pathlib import Path
 
 import httpx
 
-_shutdown_lock = threading.Lock()
+_shutdown_lock = threading.RLock()
 _result_saved: Path | None = None
 
 from .config import (
@@ -73,16 +73,18 @@ class SimulatorStats:
 def _save_result(stats: "SimulatorStats") -> Path | None:
     """Guarda o resultado num ficheiro. Retorna o path ou None se já guardado."""
     global _result_saved
-    if _result_saved is not None:
-        return _result_saved
-    # backend/tools/simulator/simulator.py -> project root = parents[3]
-    logs_dir = Path(__file__).resolve().parents[3] / "logs"
-    logs_dir.mkdir(exist_ok=True)
-    ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    path = logs_dir / f"simulator_result_{ts}.txt"
-    path.write_text(stats.summary(), encoding="utf-8")
-    _result_saved = path
-    return path
+    with _shutdown_lock:
+        if _result_saved is not None:
+            return _result_saved
+        # backend/tools/simulator/simulator.py -> project root = parents[3]
+        logs_dir = Path(__file__).resolve().parents[3] / "logs"
+        logs_dir.mkdir(exist_ok=True)
+        ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        path = logs_dir / f"simulator_result_{ts}.txt"
+        content = stats.summary()
+        path.write_text(content, encoding="utf-8")
+        _result_saved = path
+        return path
 
 
 def _fetch_simulator_tokens() -> tuple[list[str], list[str]]:

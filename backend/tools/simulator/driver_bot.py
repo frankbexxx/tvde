@@ -4,6 +4,8 @@ Driver bot: polls available trips, accepts one, simulates human flow (arriving â
 import asyncio
 import random
 
+import httpx
+
 from .api_client import (
     list_available_trips,
     accept_trip,
@@ -19,9 +21,10 @@ NO_TRIPS_SLEEP_MIN, NO_TRIPS_SLEEP_MAX = 5, 10
 
 
 class DriverBot:
-    def __init__(self, bot_id: int, token: str):
+    def __init__(self, bot_id: int, token: str, stats=None):
         self.bot_id = bot_id
         self.token = token
+        self.stats = stats
 
     def _log(self, msg: str) -> None:
         print(f"[DriverBot {self.bot_id}] {msg}")
@@ -40,22 +43,52 @@ class DriverBot:
                 try:
                     accept_trip(self.token, trip_id)
                 except Exception as e:
+                    if self.stats:
+                        self.stats.accept_failures += 1
                     self._log(f"accept failed for {trip_id}: {e}")
                     await asyncio.sleep(1)
                     continue
 
+                if self.stats:
+                    self.stats.trips_accepted += 1
                 self._log(f"accepted trip {trip_id}")
 
                 await asyncio.sleep(random.uniform(ARRIVING_SLEEP_MIN, ARRIVING_SLEEP_MAX))
-                arriving_trip(self.token, trip_id)
+                try:
+                    arriving_trip(self.token, trip_id)
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 409:
+                        if self.stats:
+                            self.stats.driver_skipped_cancelled += 1
+                        self._log(f"trip {trip_id} cancelled by passenger, skipping")
+                        continue
+                    raise
                 self._log(f"arriving trip {trip_id}")
 
                 await asyncio.sleep(random.uniform(START_SLEEP_MIN, START_SLEEP_MAX))
-                start_trip(self.token, trip_id)
+                try:
+                    start_trip(self.token, trip_id)
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 409:
+                        if self.stats:
+                            self.stats.driver_skipped_cancelled += 1
+                        self._log(f"trip {trip_id} cancelled by passenger, skipping")
+                        continue
+                    raise
                 self._log(f"started trip {trip_id}")
 
                 await asyncio.sleep(random.uniform(COMPLETE_SLEEP_MIN, COMPLETE_SLEEP_MAX))
-                complete_trip(self.token, trip_id)
+                try:
+                    complete_trip(self.token, trip_id)
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code == 409:
+                        if self.stats:
+                            self.stats.driver_skipped_cancelled += 1
+                        self._log(f"trip {trip_id} cancelled by passenger, skipping")
+                        continue
+                    raise
+                if self.stats:
+                    self.stats.trips_completed += 1
                 self._log(f"completed trip {trip_id}")
 
             except asyncio.CancelledError:

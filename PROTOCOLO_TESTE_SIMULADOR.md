@@ -75,19 +75,24 @@ Guia exaustivo para executar um teste do simulador do zero, recolher dados e env
 
 ### Passo 3 — Stripe CLI (webhooks)
 
+> **OBRIGATÓRIO:** Cada vez que inicias o `stripe listen` (ex.: após reiniciar o PC), o secret `whsec_...` muda. Se não atualizares o `.env` e reiniciares o backend, os webhooks falham com 401 e os pagamentos não funcionam.
+
 1. Abre **nova janela** do PowerShell.
 2. Inicia o listener:
    ```
    stripe listen --forward-to localhost:8000/webhooks/stripe
    ```
 3. **Espera** até ver "Ready!" e um código `whsec_...`.
-4. **IMPORTANTE:** Copia o valor `whsec_...` e cola no `backend/.env` em `STRIPE_WEBHOOK_SECRET=whsec_...`.
-5. **Reinicia o backend** (Passo 2): na janela do uvicorn, prima Ctrl+C e volta a executar:
+4. **OBRIGATÓRIO — Atualizar o secret:**
+   - Copia o valor `whsec_...` que aparece no terminal.
+   - Abre `backend/.env` e cola em `STRIPE_WEBHOOK_SECRET=whsec_...` (substitui o valor antigo).
+   - Guarda o ficheiro.
+5. **OBRIGATÓRIO — Reiniciar o backend:** Na janela do uvicorn (Passo 2), prima Ctrl+C e volta a executar:
    ```
    uvicorn app.main:app --reload --port 8000
    ```
 6. **Deixa esta janela aberta.** O Stripe CLI deve continuar a correr.
-7. **Nuance:** Cada vez que reinicias o `stripe listen`, o `whsec_` muda. Tens de atualizar o `.env` e reiniciar o backend.
+7. **Verificação:** Se os webhooks estiverem corretos, o Stripe CLI mostrará `[200] POST ...`. Se aparecer `[401]`, o secret está errado — repete os passos 4 e 5.
 
 ---
 
@@ -248,8 +253,9 @@ Envia num único bloco (ou em partes):
 - [ ] `docker start ride_postgres` (ou criar contentor)
 - [ ] Backend: `uvicorn app.main:app --reload --port 8000`
 - [ ] Stripe CLI: `stripe listen --forward-to localhost:8000/webhooks/stripe`
-- [ ] `STRIPE_WEBHOOK_SECRET` no `.env` = valor do stripe listen
-- [ ] Reset: `curl -X POST http://localhost:8000/dev/reset`
+- [ ] **Atualizar `STRIPE_WEBHOOK_SECRET` no .env** com o `whsec_...` do stripe listen (obrigatório após reiniciar o PC ou o CLI)
+- [ ] **Reiniciar o backend** após atualizar o .env
+- [ ] Reset: `.\scripts\2_reset_db.ps1` ou `curl -X POST http://localhost:8000/dev/reset`
 - [ ] Simulador: `python run_simulator.py` (na raiz do projeto)
 - [ ] Ctrl+C para parar
 - [ ] Recolher dados (6.1–6.7)
@@ -262,7 +268,7 @@ Envia num único bloco (ou em partes):
 |----------|---------|
 | `docker: command not found` | Docker Desktop não está instalado ou não está no PATH |
 | `connection refused` ao iniciar backend | Espera 10 s após `docker start` e tenta de novo |
-| Webhooks Stripe 401 | `STRIPE_WEBHOOK_SECRET` no .env não corresponde ao do `stripe listen` |
+| Webhooks Stripe 401 | Atualiza `STRIPE_WEBHOOK_SECRET` no .env com o `whsec_...` do stripe listen e reinicia o backend |
 | 404 em /dev/reset | `ENV=dev` no .env |
 | Simulador "Failed to fetch tokens" | Backend não está a correr ou /dev/seed-simulator não disponível |
 | `ride_postgres` já existe | Usa `docker start ride_postgres` em vez de `docker run` |
