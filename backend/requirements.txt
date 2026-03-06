@@ -11,3 +11,7 @@ python-dotenv
 PyJWT
 
 stripe>=8.0.0
+
+# Testing
+pytest
+httpx

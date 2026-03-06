@@ -1,22 +1,31 @@
 import csv
 import io
-from typing import List
+import uuid
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import UserContext, get_db, require_role
+from app.db.models.driver import Driver
 from app.db.models.interaction_log import InteractionLog
+from app.db.models.trip import Trip
 from app.models.enums import Role
 from app.schemas.driver import DriverStatusResponse
-from app.schemas.system_health import RunTimeoutsResponse, SystemHealthResponse
+from app.schemas.system_health import (
+    AdminMetricsResponse,
+    RecoverDriverResponse,
+    RunTimeoutsResponse,
+    SystemHealthResponse,
+)
 from app.api.serializers import trip_to_detail, trip_to_status_response
 from app.schemas.trip import TripActiveItem, TripDetailResponse, TripStatusResponse
+from app.services.admin_metrics import get_admin_metrics
 from app.services.system_health import get_system_health
 from app.services.trip_timeouts import run_trip_timeouts
-from app.services.trips import assign_trip, get_trip_by_id
+from app.services.trips import assign_trip, cancel_trip_by_admin, get_trip_by_id
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -73,6 +82,119 @@ async def get_trip_detail_admin(
     """Full trip detail for admin (includes stripe_payment_intent_id). Read-only."""
     trip = get_trip_by_id(db=db, trip_id=trip_id.strip())
     return trip_to_detail(trip, include_stripe_pi=True)
+
+
+@router.get("/trip-debug/{trip_id}")
+async def get_trip_debug(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Debug endpoint: trip, payment, driver, passenger, interaction_logs."""
+    trip = db.execute(
+        select(Trip)
+        .options(
+            joinedload(Trip.payment),
+            joinedload(Trip.driver),  # type: ignore
+            joinedload(Trip.passenger),  # type: ignore
+        )
+        .where(Trip.id == trip_id.strip())
+    ).unique().scalar_one_or_none()
+    if not trip:
+        raise HTTPException(status_code=404, detail="not_found")
+
+    logs = db.execute(
+        select(InteractionLog)
+        .where(InteractionLog.trip_id == str(trip.id))
+        .order_by(InteractionLog.timestamp.desc())
+        .limit(20)
+    ).scalars().all()
+
+    return {
+        "trip": trip_to_detail(trip, include_stripe_pi=True).model_dump(),
+        "payment": {
+            "id": str(trip.payment.id),
+            "status": trip.payment.status.value,
+            "stripe_payment_intent_id": trip.payment.stripe_payment_intent_id,
+            "total_amount": float(trip.payment.total_amount),
+        } if trip.payment else None,
+        "driver": {
+            "driver_id": str(trip.driver.user_id),
+            "is_available": trip.driver.is_available,
+        } if trip.driver else None,
+        "passenger": {
+            "passenger_id": str(trip.passenger.id),
+        } if trip.passenger else None,
+        "interaction_logs": [
+            {
+                "timestamp": log.timestamp.isoformat() if log.timestamp else None,
+                "user_id": log.user_id,
+                "role": log.role,
+                "action": log.action,
+                "previous_state": log.previous_state,
+                "new_state": log.new_state,
+                "latency_ms": log.latency_ms,
+                "payment_status": log.payment_status,
+            }
+            for log in logs
+        ],
+    }
+
+
+@router.post("/recover-driver/{driver_id}", response_model=RecoverDriverResponse)
+async def recover_driver(
+    driver_id: str,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> RecoverDriverResponse:
+    """Force is_available=True for stuck driver (no active trip)."""
+    try:
+        driver_uuid = uuid.UUID(driver_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_driver_id")
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_uuid)
+    ).scalar_one_or_none()
+    if not driver:
+        raise HTTPException(status_code=404, detail="driver_not_found")
+    if driver.is_available:
+        return RecoverDriverResponse(driver_id=str(driver.user_id), is_available=True)
+
+    from app.models.enums import TripStatus
+    has_active = db.execute(
+        select(Trip).where(
+            Trip.driver_id == driver.user_id,
+            Trip.status.in_([TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]),
+        )
+    ).first() is not None
+    if has_active:
+        raise HTTPException(status_code=409, detail="driver_has_active_trip")
+
+    driver.is_available = True
+    db.commit()
+    db.refresh(driver)
+    return RecoverDriverResponse(driver_id=str(driver.user_id), is_available=True)
+
+
+@router.post("/cancel-trip/{trip_id}", response_model=TripStatusResponse)
+async def cancel_trip_admin(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    """Admin force cancel. Only for requested, assigned, accepted."""
+    trip = cancel_trip_by_admin(db=db, trip_id=trip_id.strip())
+    return trip_to_status_response(trip, include_stripe_pi=True)
+
+
+@router.get("/metrics", response_model=AdminMetricsResponse)
+async def get_metrics(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> AdminMetricsResponse:
+    """Basic operational metrics for admin dashboard."""
+    data = get_admin_metrics(db)
+    return AdminMetricsResponse(**data)
 
 
 @router.post("/run-timeouts", response_model=RunTimeoutsResponse)

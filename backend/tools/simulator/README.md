@@ -20,20 +20,31 @@ pip install -r tools/simulator/requirements.txt
 
 ## Execução
 
-A partir da raiz do projeto (recomendado — evita duplicação de output no Ctrl+C):
+A partir da raiz do projeto (recomendado):
 
 ```bash
 python run_simulator.py
+python run_simulator.py --scenario normal
+python run_simulator.py --scenario flash_crowd
+python run_simulator.py --scenario heavy_load
 ```
 
 Ou a partir do backend:
 
 ```bash
 cd backend
-python -m tools.simulator
+python -m tools.simulator --scenario flash_crowd
 ```
 
 Ao premir Ctrl+C, o resultado é guardado em `logs/simulator_result_{data}_{hora}.txt`.
+
+### Cenários
+
+| Cenário | Descrição |
+|---------|-----------|
+| `normal` | 20 passageiros e 8 motoristas, criação de viagens espaçada (20–120 s) |
+| `flash_crowd` | 20 passageiros criam viagens **simultaneamente** (asyncio.gather), depois motoristas processam |
+| `heavy_load` | Densidade progressiva: 0–5 min 20p/8d, 5–10 min 30p/12d, 10–20 min 50p/20d |
 
 ## Configuração
 
@@ -42,9 +53,11 @@ Editar `config.py` ou variáveis de ambiente:
 | Variável | Default | Descrição |
 |----------|---------|-----------|
 | `TVDE_SIM_API_BASE_URL` | `http://localhost:8000` | URL da API |
-| `TVDE_SIM_PASSENGER_BOTS` | `20` | Número de bots passageiros |
+| `TVDE_SIM_PASSENGER_BOTS` | `20` | Número de bots passageiros (normal) |
 | `TVDE_SIM_DRIVER_BOTS` | `12` | Número de bots motoristas |
-| `TVDE_SIM_MAX_ACTIVE_TRIPS` | `30` | (reservado) |
+| `TVDE_SIM_SCENARIO` | `normal` | normal \| flash_crowd \| heavy_load |
+| `TVDE_SIM_FLASH_CROWD_PASSENGERS` | `20` | Passageiros no flash crowd |
+| `TVDE_SIM_MAX_REQUESTS_PER_SECOND` | `0` | Rate limit (0 = sem limite) |
 | `TVDE_SIM_RANDOM_SEED` | — | Seed para reprodutibilidade |
 | `TVDE_SIM_TOKEN_PASSENGER` | — | Token override (Render) |
 | `TVDE_SIM_TOKEN_DRIVER` | — | Token override (Render) |

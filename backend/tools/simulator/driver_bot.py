@@ -3,6 +3,7 @@ Driver bot: polls available trips, accepts one, simulates human flow (arriving â
 """
 import asyncio
 import random
+from typing import TYPE_CHECKING, Optional
 
 import httpx
 
@@ -14,6 +15,9 @@ from .api_client import (
     complete_trip,
 )
 
+if TYPE_CHECKING:
+    from .metrics import SimulatorMetrics
+
 ARRIVING_SLEEP_MIN, ARRIVING_SLEEP_MAX = 10, 20  # seconds
 START_SLEEP_MIN, START_SLEEP_MAX = 10, 20
 COMPLETE_SLEEP_MIN, COMPLETE_SLEEP_MAX = 60, 120
@@ -21,10 +25,11 @@ NO_TRIPS_SLEEP_MIN, NO_TRIPS_SLEEP_MAX = 5, 10
 
 
 class DriverBot:
-    def __init__(self, bot_id: int, token: str, stats=None):
+    def __init__(self, bot_id: int, token: str, stats=None, metrics: Optional["SimulatorMetrics"] = None):
         self.bot_id = bot_id
         self.token = token
         self.stats = stats
+        self.metrics = metrics
 
     def _log(self, msg: str) -> None:
         print(f"[DriverBot {self.bot_id}] {msg}")
@@ -45,13 +50,17 @@ class DriverBot:
                 except Exception as e:
                     if self.stats:
                         self.stats.accept_failures += 1
+                    if self.metrics:
+                        self.metrics.record_accept_failure()
                     self._log(f"accept failed for {trip_id}: {e}")
                     await asyncio.sleep(1)
                     continue
 
                 if self.stats:
                     self.stats.trips_accepted += 1
-                self._log(f"accepted trip {trip_id}")
+                if self.metrics:
+                    self.metrics.record_accept(trip_id)
+                self._log(f"trip accepted {trip_id}")
 
                 await asyncio.sleep(random.uniform(ARRIVING_SLEEP_MIN, ARRIVING_SLEEP_MAX))
                 try:
@@ -60,6 +69,8 @@ class DriverBot:
                     if e.response.status_code == 409:
                         if self.stats:
                             self.stats.driver_skipped_cancelled += 1
+                        if self.metrics:
+                            self.metrics.record_driver_skipped_cancelled(trip_id)
                         self._log(f"trip {trip_id} cancelled by passenger, skipping")
                         continue
                     raise
@@ -72,6 +83,8 @@ class DriverBot:
                     if e.response.status_code == 409:
                         if self.stats:
                             self.stats.driver_skipped_cancelled += 1
+                        if self.metrics:
+                            self.metrics.record_driver_skipped_cancelled(trip_id)
                         self._log(f"trip {trip_id} cancelled by passenger, skipping")
                         continue
                     raise
@@ -84,12 +97,16 @@ class DriverBot:
                     if e.response.status_code == 409:
                         if self.stats:
                             self.stats.driver_skipped_cancelled += 1
+                        if self.metrics:
+                            self.metrics.record_driver_skipped_cancelled(trip_id)
                         self._log(f"trip {trip_id} cancelled by passenger, skipping")
                         continue
                     raise
                 if self.stats:
                     self.stats.trips_completed += 1
-                self._log(f"completed trip {trip_id}")
+                if self.metrics:
+                    self.metrics.record_complete(trip_id)
+                self._log(f"trip completed {trip_id}")
 
             except asyncio.CancelledError:
                 raise

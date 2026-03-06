@@ -1,7 +1,10 @@
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env", extra="ignore")
+
     DATABASE_URL: str
 
     JWT_SECRET_KEY: str
@@ -16,14 +19,11 @@ class Settings(BaseSettings):
 
     ENV: str = "dev"
     ENABLE_DEV_TOOLS: bool = False  # When True, /dev/seed and /dev/tokens work in production (for field validation)
+    BETA_MODE: bool = False  # When True, rate limit request_trip (5/min per user)
 
     # Future: confirm PaymentIntent at accept (frontend 3DS). When True, accept_trip
     # returns payment_intent_client_secret for frontend confirmation. Default False.
     ENABLE_CONFIRM_ON_ACCEPT: bool = False
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"  # Ignore extra fields in .env
 
 
 settings = Settings()

@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -30,17 +31,6 @@ from sqlalchemy.exc import ProgrammingError
 
 from app.db.base import Base
 from app.db.session import engine
-
-app = FastAPI(title="Ride Sharing API", version="0.1.0")
-
-# CORS for frontend on different origin (e.g. Render static site)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 def _dev_add_columns_if_missing() -> None:
@@ -80,10 +70,9 @@ def custom_openapi() -> dict:
     return app.openapi_schema
 
 
-app.openapi = custom_openapi
-
-@app.on_event("startup")
-def on_startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     print("ENGINE URL:", engine.url)
     try:
         Base.metadata.create_all(bind=engine)
@@ -93,7 +82,6 @@ def on_startup() -> None:
         print("⚠️  Schema: some objects already exist (ok)")
     _dev_add_columns_if_missing()
 
-    # Validate Stripe webhook secret (required in non-dev environments).
     if settings.ENV != "dev":
         if not settings.STRIPE_WEBHOOK_SECRET:
             raise RuntimeError(
@@ -106,6 +94,22 @@ def on_startup() -> None:
             "Webhook validation will fail. "
             "Run 'stripe listen' to get the webhook secret."
         )
+    yield
+    # Shutdown (nothing to do for now)
+
+
+app = FastAPI(title="Ride Sharing API", version="0.1.0", lifespan=lifespan)
+
+app.openapi = custom_openapi
+
+# CORS for frontend on different origin (e.g. Render static site)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(health.router)
 app.include_router(logs.router)

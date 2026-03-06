@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_db, require_role
+from app.api.rate_limit import check_request_trip_rate_limit
 from app.db.models.trip import Trip
 from app.models.enums import Role
 from app.schemas.trip import (
@@ -59,6 +60,7 @@ async def create_trip(
     payload: TripCreateRequest,
     user: UserContext = Depends(require_role(Role.passenger)),
     db: Session = Depends(get_db),
+    _rate_limit: None = Depends(check_request_trip_rate_limit),
 ) -> TripCreateResponse:
     t0 = time.perf_counter()
     trip, eta = create_trip_service(

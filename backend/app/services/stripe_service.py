@@ -62,3 +62,8 @@ def capture_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
 def retrieve_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
     """Retrieve PaymentIntent to check status (e.g. for retry logic)."""
     return stripe.PaymentIntent.retrieve(payment_intent_id)
+
+
+def cancel_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
+    """Cancel PaymentIntent (e.g. when admin cancels trip before capture)."""
+    return stripe.PaymentIntent.cancel(payment_intent_id)

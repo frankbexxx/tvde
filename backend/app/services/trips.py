@@ -20,6 +20,7 @@ from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import calculate_price
 from app.services.stripe_service import (
+    cancel_payment_intent,
     capture_payment_intent,
     confirm_payment_intent,
     create_authorization_payment_intent,
@@ -163,6 +164,55 @@ def cancel_trip_by_driver(
         _raise_not_found()
     if trip.status not in ACTIVE_DRIVER_CANCEL:
         _raise_invalid_state()
+
+    trip.status = TripStatus.cancelled
+    _set_driver_available(db, trip.driver_id)
+    db.commit()
+    db.refresh(trip)
+    emit(
+        TripStatusChangedEvent(
+            trip_id=str(trip.id),
+            status=trip.status,
+            timestamp=datetime.now(timezone.utc),
+        )
+    )
+    return trip
+
+
+ADMIN_CANCEL_ALLOWED = {
+    TripStatus.requested,
+    TripStatus.assigned,
+    TripStatus.accepted,
+}
+
+
+def cancel_trip_by_admin(
+    *,
+    db: Session,
+    trip_id: str,
+) -> Trip:
+    """Admin force cancel. Only for requested, assigned, accepted."""
+    trip = db.execute(
+        select(Trip).where(Trip.id == trip_id).options(joinedload(Trip.payment))
+    ).scalar_one_or_none()
+    if not trip:
+        _raise_not_found()
+    if trip.status not in ADMIN_CANCEL_ALLOWED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"cannot_cancel_trip_in_status_{trip.status.value}",
+        )
+
+    payment = trip.payment
+    if payment and payment.stripe_payment_intent_id:
+        try:
+            intent = retrieve_payment_intent(payment.stripe_payment_intent_id)
+            pi_status = getattr(intent, "status", None) or intent.get("status", "")
+            if pi_status in ("requires_payment_method", "requires_confirmation", "requires_action"):
+                cancel_payment_intent(payment.stripe_payment_intent_id)
+                logger.info(f"cancel_trip_by_admin: cancelled PI {payment.stripe_payment_intent_id}")
+        except Exception as e:
+            logger.warning(f"cancel_trip_by_admin: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)

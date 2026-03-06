@@ -11,7 +11,7 @@
 
 | Componente | Estado | Notas |
 |------------|--------|-------|
-| **Simulador** | OK | 20 passageiros, 8 motoristas (configurável), Ctrl+C guarda resultado |
+| **Simulador** | OK | Cenários: normal, flash_crowd, heavy_load. Métricas e latências. Ctrl+C guarda resultado |
 | **Backend (FastAPI)** | OK | ENV=dev, /dev/reset, /dev/seed-simulator, endpoints de trips |
 | **Stripe** | OK | Webhooks 200 OK, fluxo create → confirm → capture |
 | **Base de dados** | OK | PostgreSQL, trips + payments, consistência validada |
@@ -37,7 +37,20 @@ PassengerBot (cria viagem) → Backend (POST /trips)
 
 ## 2. Resultados dos testes realizados
 
-### Teste 06/03/2026 (410 s)
+### Testes de carga (06/03/2026) — com reset entre cenários
+
+| Cenário | Duração | Trips created | Trips accepted | Trips completed | Trips cancelled | Driver skipped | Peak concurrent | Avg accept latency | Avg complete latency |
+|---------|---------|---------------|----------------|-----------------|-----------------|----------------|-----------------|-------------------|----------------------|
+| **Normal** | 501 s | 66 | 27 | 10 | 12 | 5 | 40 | 95,51 s | 304,87 s |
+| **Flash crowd** | 566 s | 20 | 20 | 20 | 0 | 0 | 20 | 107,67 s | 310,07 s |
+| **Heavy load** | 1260 s | 217 | 52 | 29 | 37 | 3 | 150 | 264,86 s | 468,20 s |
+
+**Notas:**
+- Flash crowd: 20 viagens criadas simultaneamente — 100% aceites e concluídas.
+- Heavy load: 20 min, fases progressivas (20p/8d → 30p/12d → 50p/20d).
+- Em todos os cenários: **0 accept failures**, **0 cancel failed**.
+
+### Teste inicial 06/03/2026 (410 s)
 
 | Métrica | Valor |
 |---------|-------|
@@ -108,10 +121,28 @@ PassengerBot (cria viagem) → Backend (POST /trips)
 - [x] Export unified_payments.csv
 - [x] Scripts de automação (start DB, reset, collect data)
 - [x] Stripe Dashboard — transações OK e Incomplete corretas
+- [x] Testes de carga: normal, flash_crowd, heavy_load
+- [x] Heavy load 20 min — 150 viagens concorrentes no pico
 
 ---
 
-## 6. Próximos passos (opcional)
+## 6. Conclusão dos testes
+
+Os testes realizados em 06/03/2026 validam o sistema TVDE em cenários de carga variada:
+
+1. **Estabilidade:** Zero erros de aceite e zero falhas de cancelamento em todos os cenários, incluindo pico de 150 viagens concorrentes.
+
+2. **Flash crowd:** As 20 viagens criadas simultaneamente foram todas aceites e concluídas, sem conflitos (409) entre motoristas. O backend trata corretamente a contenção.
+
+3. **Heavy load:** O sistema suportou 20 minutos de carga progressiva (50 passageiros, 20 motoristas), com 217 viagens criadas e 29 concluídas. A latência de aceite aumenta com a carga (95 s → 265 s), mas sem degradação crítica.
+
+4. **Reset vs. sem reset:** Com reset entre cenários, os resultados são consistentes e isolados. Sem reset, viagens pendentes de testes anteriores são processadas (ex.: flash crowd aceitou 24 viagens quando só 20 foram criadas nesse run).
+
+5. **Prontidão para beta:** O sistema sobreviveu a 50 passageiros, 20 motoristas, flash crowd e 20 minutos de heavy load sem falhas. Tecnicamente pronto para beta público pequeno.
+
+---
+
+## 7. Próximos passos (opcional)
 
 | Item | Prioridade |
 |------|------------|
@@ -122,7 +153,7 @@ PassengerBot (cria viagem) → Backend (POST /trips)
 
 ---
 
-## 7. Referências
+## 8. Referências
 
 - **Protocolo:** [PROTOCOLO_TESTE_SIMULADOR.md](PROTOCOLO_TESTE_SIMULADOR.md)
 - **Simulador:** [backend/tools/simulator/README.md](backend/tools/simulator/README.md)
