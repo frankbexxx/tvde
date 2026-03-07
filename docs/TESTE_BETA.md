@@ -13,6 +13,21 @@ MAX_BETA_USERS=30
 DEFAULT_PASSWORD=123456
 ```
 
+**Render:** adiciona estas variáveis no Dashboard do serviço tvde-api (Environment).
+
+---
+
+## Fix: coluna requested_role em falta
+
+Se o erro `column users.requested_role does not exist` aparecer no Render, o schema update não correu. Executa no PostgreSQL do Render:
+
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS requested_role VARCHAR(32);
+ALTER TYPE user_status_enum ADD VALUE IF NOT EXISTS 'pending';
+```
+
+(Se a 2ª linha falhar com "IF NOT EXISTS" não suportado, usa só: `ALTER TYPE user_status_enum ADD VALUE 'pending';`)
+
 ---
 
 ## Fluxo no Café
