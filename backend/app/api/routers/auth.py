@@ -34,8 +34,8 @@ async def request_otp(
     db: Session = Depends(get_db),
 ) -> OtpRequestResponse:
     code = generate_otp_code()
-    if settings.ENV == "dev":
-        print(f"[DEV OTP] phone={payload.phone} code={code}")
+    if settings.ENV == "dev" or settings.ENABLE_DEV_TOOLS:
+        print(f"[OTP] phone={payload.phone} code={code}")
     expires_at = otp_expiration_time()
     code_hash = hash_otp_code(payload.phone, code)
 

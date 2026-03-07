@@ -269,6 +269,35 @@ async def dev_auto_trip(db: Session = Depends(get_db)) -> dict:
     }
 
 
+@router.post("/promote-to-driver")
+async def dev_promote_to_driver(
+    phone: str = Query(..., description="Phone number of user to promote"),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Promote user to driver (create Driver profile + set role). For beta: motoristas use own phone, then organizer calls this."""
+    _require_dev()
+    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"User with phone {phone} not found")
+    driver_profile = db.execute(
+        select(Driver).where(Driver.user_id == user.id)
+    ).scalar_one_or_none()
+    if driver_profile:
+        driver_profile.is_available = True
+        user.role = Role.driver
+        db.commit()
+        return {"status": "ok", "message": "Driver already exists", "user_id": str(user.id)}
+    user.role = Role.driver
+    driver_profile = Driver(
+        user_id=user.id,
+        status=DriverStatus.approved,
+        commission_percent=15,
+    )
+    db.add(driver_profile)
+    db.commit()
+    return {"status": "ok", "message": "User promoted to driver", "user_id": str(user.id)}
+
+
 @router.get("/trips")
 async def dev_list_trips(db: Session = Depends(get_db)) -> list[dict]:
     _require_dev()

@@ -9,8 +9,9 @@ from app.core.config import settings
 def generate_otp_code(length: int = 6) -> str:
     min_value = 10 ** (length - 1)
     max_value = (10 ** length) - 1
-    # return str(secrets.randbelow(max_value - min_value + 1) + min_value)
-    return "123456"
+    if getattr(settings, "ENABLE_DEV_TOOLS", False):
+        return "123456"  # Beta: código fixo para testadores
+    return str(secrets.randbelow(max_value - min_value + 1) + min_value)
 
 
 def hash_otp_code(phone: str, code: str) -> str:
