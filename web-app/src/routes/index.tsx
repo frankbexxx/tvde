@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext'
 
 export function AppRoutes() {
   const { pathname } = useLocation()
-  const { isLoading, betaMode, isAuthenticated, isAdmin } = useAuth()
+  const { isLoading, betaMode, isAuthenticated, isAdmin, logout } = useAuth()
 
   if (isLoading) {
     return (
@@ -36,6 +36,15 @@ export function AppRoutes() {
             >
               Log
             </a>
+            {betaMode && (
+              <button
+                type="button"
+                onClick={logout}
+                className="text-sm text-slate-500 hover:text-slate-700"
+              >
+                Sair
+              </button>
+            )}
             <RoleSelector />
           </div>
         </div>
