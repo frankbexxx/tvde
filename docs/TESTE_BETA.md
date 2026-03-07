@@ -63,6 +63,11 @@ ALTER TYPE user_status_enum ADD VALUE IF NOT EXISTS 'pending';
 | POST | /auth/login | BETA: phone + password + requested_role |
 | GET | /admin/pending-users | Lista users com status=pending |
 | POST | /admin/approve-user | Body: `{ phone }` — aprova e cria driver se pedido |
+| GET | /admin/users | Lista todos os users (gestão) |
+| POST | /admin/users/{id}/promote-driver | Promover a motorista |
+| POST | /admin/users/{id}/demote-driver | Remover motorista (passa a passageiro) |
+| PATCH | /admin/users/{id} | Body: `{ name?, phone? }` — editar nickname ou telefone |
+| DELETE | /admin/users/{id} | Eliminar user (falha se tiver viagens) |
 
 ---
 

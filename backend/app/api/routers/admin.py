@@ -66,6 +66,197 @@ async def get_pending_users(
     ]
 
 
+class AdminUserItem(BaseModel):
+    id: str
+    phone: str
+    name: str
+    role: str
+    status: str
+    requested_role: str | None
+    has_driver_profile: bool
+
+
+class AdminUserUpdateRequest(BaseModel):
+    name: str | None = None
+    phone: str | None = None
+
+
+@router.get("/users", response_model=List[AdminUserItem])
+async def list_users(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> List[AdminUserItem]:
+    """BETA: list all users for admin management."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    users = db.execute(select(User).order_by(User.created_at.desc())).scalars().all()
+    result = []
+    for u in users:
+        driver = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+        result.append(
+            AdminUserItem(
+                id=str(u.id),
+                phone=u.phone,
+                name=u.name or u.phone,
+                role=u.role.value,
+                status=u.status.value,
+                requested_role=u.requested_role,
+                has_driver_profile=driver is not None,
+            )
+        )
+    return result
+
+
+def _is_admin_phone(phone: str) -> bool:
+    admin_phone = getattr(settings, "ADMIN_PHONE", None)
+    if not admin_phone:
+        return False
+    return admin_phone.strip() == phone.strip()
+
+
+@router.post("/users/{user_id}/promote-driver")
+async def promote_user_to_driver(
+    user_id: str,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: promote user to driver (create driver_profile, set role=driver)."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    try:
+        uid = uuid.UUID(user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_user_id")
+    u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if _is_admin_phone(u.phone):
+        raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    existing = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+    if existing:
+        u.role = Role.driver
+        existing.is_available = True
+        db.commit()
+        return {"status": "ok", "message": "Driver already exists, role updated"}
+    u.role = Role.driver
+    driver = Driver(
+        user_id=u.id,
+        status=DriverStatus.approved,
+        commission_percent=15,
+    )
+    db.add(driver)
+    db.commit()
+    return {"status": "ok", "message": "User promoted to driver"}
+
+
+@router.post("/users/{user_id}/demote-driver")
+async def demote_user_from_driver(
+    user_id: str,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: remove driver role (delete driver_profile, set role=passenger)."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    try:
+        uid = uuid.UUID(user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_user_id")
+    u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if _is_admin_phone(u.phone):
+        raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    driver = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+    if not driver:
+        u.role = Role.passenger
+        db.commit()
+        return {"status": "ok", "message": "Already passenger"}
+    from app.models.enums import TripStatus
+    has_active = db.execute(
+        select(Trip).where(
+            Trip.driver_id == u.id,
+            Trip.status.in_([TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]),
+        )
+    ).first() is not None
+    if has_active:
+        raise HTTPException(status_code=409, detail="driver_has_active_trip")
+    db.delete(driver)
+    u.role = Role.passenger
+    db.commit()
+    return {"status": "ok", "message": "User demoted to passenger"}
+
+
+@router.patch("/users/{user_id}")
+async def update_user(
+    user_id: str,
+    payload: AdminUserUpdateRequest,
+    admin_user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: update user name (nickname) and/or phone."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    try:
+        uid = uuid.UUID(user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_user_id")
+    u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if _is_admin_phone(u.phone):
+        raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    if payload.name is not None:
+        name = str(payload.name).strip()
+        if len(name) < 1:
+            name = u.phone
+        u.name = name[:120]
+    if payload.phone is not None:
+        import re
+        phone = str(payload.phone).strip()
+        if not re.match(r"^\+351\d{9}$", phone):
+            raise HTTPException(status_code=400, detail="invalid_phone_format")
+        existing = db.execute(select(User).where(User.phone == phone, User.id != u.id)).scalar_one_or_none()
+        if existing:
+            raise HTTPException(status_code=409, detail="phone_already_used")
+        u.phone = phone
+    db.commit()
+    db.refresh(u)
+    return {"status": "ok", "user_id": str(u.id)}
+
+
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    admin_user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: delete user. Fails if user has trips as passenger."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    try:
+        uid = uuid.UUID(user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_user_id")
+    u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if _is_admin_phone(u.phone):
+        raise HTTPException(status_code=400, detail="cannot_delete_admin")
+    has_trips = db.execute(select(Trip).where(Trip.passenger_id == u.id).limit(1)).first() is not None
+    if has_trips:
+        raise HTTPException(
+            status_code=409,
+            detail="cannot_delete_user_with_trips",
+        )
+    driver = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+    if driver:
+        db.delete(driver)
+    db.delete(u)
+    db.commit()
+    return {"status": "ok", "message": "User deleted"}
+
+
 @router.post("/approve-user")
 async def approve_user(
     payload: ApproveUserRequest,
