@@ -41,6 +41,11 @@ class User(Base):
         nullable=False,
         comment="Account status.",
     )
+    requested_role: Mapped[Optional[str]] = mapped_column(
+        String(32),
+        nullable=True,
+        comment="BETA: passenger or driver — role requested at signup.",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

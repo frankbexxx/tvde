@@ -5,14 +5,17 @@ from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import UserContext, get_db, require_role
+from app.core.config import settings
 from app.db.models.driver import Driver
 from app.db.models.interaction_log import InteractionLog
+from app.db.models.user import User
 from app.db.models.trip import Trip
-from app.models.enums import Role
+from app.models.enums import DriverStatus, Role, UserStatus
 from app.schemas.driver import DriverStatusResponse
 from app.schemas.system_health import (
     AdminMetricsResponse,
@@ -29,6 +32,71 @@ from app.services.trips import assign_trip, cancel_trip_by_admin, get_trip_by_id
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+# --- BETA: pending users & approval ---
+
+
+class PendingUserItem(BaseModel):
+    phone: str
+    requested_role: str
+
+
+class ApproveUserRequest(BaseModel):
+    phone: str
+
+
+@router.get("/pending-users", response_model=List[PendingUserItem])
+async def get_pending_users(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> List[PendingUserItem]:
+    """BETA: list users with status=pending."""
+    if not getattr(settings, "BETA_MODE", False):
+        return []
+    users = db.execute(
+        select(User).where(User.status == UserStatus.pending)
+    ).scalars().all()
+    return [
+        PendingUserItem(
+            phone=u.phone,
+            requested_role=u.requested_role or "passenger",
+        )
+        for u in users
+    ]
+
+
+@router.post("/approve-user")
+async def approve_user(
+    payload: ApproveUserRequest,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: set user status=active; if requested_role=driver, create driver_profile."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    phone = payload.phone.strip()
+    u = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if u.status != UserStatus.pending:
+        raise HTTPException(status_code=400, detail="user_not_pending")
+    u.status = UserStatus.active
+    req_role = (u.requested_role or "passenger").lower()
+    if req_role == "driver":
+        u.role = Role.driver
+        existing = db.execute(
+            select(Driver).where(Driver.user_id == u.id)
+        ).scalar_one_or_none()
+        if not existing:
+            driver = Driver(
+                user_id=u.id,
+                status=DriverStatus.approved,
+                commission_percent=15,
+            )
+            db.add(driver)
+    db.commit()
+    return {"status": "ok", "phone": phone}
 
 
 @router.get("/system-health", response_model=SystemHealthResponse)

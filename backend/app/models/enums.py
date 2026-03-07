@@ -10,6 +10,7 @@ class Role(str, Enum):
 class UserStatus(str, Enum):
     active = "active"
     blocked = "blocked"
+    pending = "pending"  # BETA: awaiting admin approval
 
 
 class DriverStatus(str, Enum):

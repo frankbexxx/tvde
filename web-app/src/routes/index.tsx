@@ -1,12 +1,15 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { PassengerDashboard } from '../features/passenger/PassengerDashboard'
 import { DriverDashboard } from '../features/driver/DriverDashboard'
+import { AdminDashboard } from '../features/admin/AdminDashboard'
+import { LoginScreen } from '../features/auth/LoginScreen'
 import { RoleSelector } from '../components/RoleSelector'
 import { ActivityPanel } from '../components/ActivityPanel'
 import { useAuth } from '../context/AuthContext'
 
 export function AppRoutes() {
-  const { isLoading } = useAuth()
+  const { pathname } = useLocation()
+  const { isLoading, betaMode, isAuthenticated, isAdmin } = useAuth()
 
   if (isLoading) {
     return (
@@ -14,6 +17,11 @@ export function AppRoutes() {
         <p className="text-slate-500 text-base">A carregar...</p>
       </div>
     )
+  }
+
+  if (betaMode && !isAuthenticated) {
+    const requestedRole = pathname.startsWith('/driver') ? 'driver' : 'passenger'
+    return <LoginScreen requestedRole={requestedRole} />
   }
 
   return (
@@ -38,6 +46,16 @@ export function AppRoutes() {
             <Route path="/" element={<Navigate to="/passenger" replace />} />
             <Route path="/passenger" element={<PassengerDashboard />} />
             <Route path="/driver" element={<DriverDashboard />} />
+            <Route
+              path="/admin"
+              element={
+                isAdmin ? (
+                  <AdminDashboard />
+                ) : (
+                  <Navigate to="/passenger" replace />
+                )
+              }
+            />
           </Routes>
         </main>
         <ActivityPanel />

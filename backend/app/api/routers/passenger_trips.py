@@ -32,7 +32,7 @@ router = APIRouter(prefix="/trips", tags=["passenger"])
 
 @router.get("/history", response_model=List[TripHistoryItem])
 async def trip_history(
-    user: UserContext = Depends(require_role(Role.passenger)),
+    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
     db: Session = Depends(get_db),
 ) -> List[TripHistoryItem]:
     """Completed trips for passenger. Read-only."""
@@ -43,7 +43,7 @@ async def trip_history(
 @router.get("/{trip_id}", response_model=TripDetailResponse)
 async def get_trip_detail(
     trip_id: str,
-    user: UserContext = Depends(require_role(Role.passenger)),
+    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripDetailResponse:
     """Full trip detail for passenger (must own). Read-only."""
@@ -58,7 +58,7 @@ async def get_trip_detail(
 @router.post("", response_model=TripCreateResponse)
 async def create_trip(
     payload: TripCreateRequest,
-    user: UserContext = Depends(require_role(Role.passenger)),
+    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
     db: Session = Depends(get_db),
     _rate_limit: None = Depends(check_request_trip_rate_limit),
 ) -> TripCreateResponse:
@@ -98,7 +98,7 @@ async def create_trip(
 async def cancel_trip(
     trip_id: str,
     payload: TripCancelRequest,
-    user: UserContext = Depends(require_role(Role.passenger)),
+    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
     _ = payload

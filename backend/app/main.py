@@ -34,8 +34,8 @@ from app.db.session import engine
 
 
 def _dev_add_columns_if_missing() -> None:
-    """Add new columns in dev without migrations. Idempotent (PG 9.6+)."""
-    if settings.ENV != "dev":
+    """Add new columns in dev or BETA without migrations. Idempotent (PG 9.6+)."""
+    if settings.ENV != "dev" and not getattr(settings, "BETA_MODE", False):
         return
     try:
         with engine.connect() as conn:
@@ -44,11 +44,20 @@ def _dev_add_columns_if_missing() -> None:
                 "ALTER TABLE trips ADD COLUMN IF NOT EXISTS duration_min NUMERIC(8,2)",
                 "ALTER TABLE payments ADD COLUMN IF NOT EXISTS driver_payout NUMERIC(10,2)",
                 "ALTER TABLE drivers ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true NOT NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS requested_role VARCHAR(32)",
             ]:
                 conn.execute(text(stmt))
             conn.commit()
+        # ALTER TYPE ADD VALUE cannot run inside transaction on PG < 12
+        try:
+            with engine.connect().execution_options(
+                isolation_level="AUTOCOMMIT"
+            ) as conn:
+                conn.execute(text("ALTER TYPE user_status_enum ADD VALUE 'pending'"))
+        except Exception:
+            pass  # Fails if value already exists
     except Exception as e:
-        print(f"⚠️  Dev schema update (add columns): {e}")
+        print(f"[WARN] Schema update (add columns): {e}")
 
 
 def custom_openapi() -> dict:
@@ -79,7 +88,7 @@ async def lifespan(app: FastAPI):
     except ProgrammingError as e:
         if "already exists" not in str(e):
             raise
-        print("⚠️  Schema: some objects already exist (ok)")
+        print("[WARN] Schema: some objects already exist (ok)")
     _dev_add_columns_if_missing()
 
     if settings.ENV != "dev":
@@ -90,7 +99,7 @@ async def lifespan(app: FastAPI):
             )
     elif not settings.STRIPE_WEBHOOK_SECRET:
         print(
-            "⚠️  WARNING: STRIPE_WEBHOOK_SECRET not set. "
+            "[WARN] STRIPE_WEBHOOK_SECRET not set. "
             "Webhook validation will fail. "
             "Run 'stripe listen' to get the webhook secret."
         )

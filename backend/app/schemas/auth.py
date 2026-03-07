@@ -7,6 +7,7 @@ from app.models.enums import Role
 
 class OtpRequest(BaseModel):
     phone: str = Field(..., min_length=6, max_length=32)
+    requested_role: str | None = Field(None, description="BETA: passenger or driver")
 
 
 class OtpRequestResponse(BaseModel):
@@ -17,6 +18,14 @@ class OtpRequestResponse(BaseModel):
 class OtpVerifyRequest(BaseModel):
     phone: str = Field(..., min_length=6, max_length=32)
     code: str = Field(..., min_length=4, max_length=8)
+    requested_role: str | None = Field(None, description="BETA: passenger or driver")
+
+
+class LoginRequest(BaseModel):
+    """BETA: login with phone + default password."""
+    phone: str = Field(..., min_length=6, max_length=32)
+    password: str = Field(..., min_length=1)
+    requested_role: str | None = Field(None, description="passenger or driver")
 
 
 class TokenResponse(BaseModel):

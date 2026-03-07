@@ -14,20 +14,50 @@ export interface AuthTokens {
   driver: string
 }
 
+export interface ConfigResponse {
+  beta_mode: boolean
+}
+
+export async function getConfig(): Promise<ConfigResponse> {
+  return apiFetch<ConfigResponse>('/config')
+}
+
 export async function getDevTokens(): Promise<AuthTokens> {
   return apiFetch<AuthTokens>('/dev/tokens', { method: 'POST' })
 }
 
-export async function requestOtp(phone: string): Promise<{ request_id: string; expires_at: string }> {
+export async function requestOtp(
+  phone: string,
+  requestedRole?: string
+): Promise<{ request_id: string; expires_at: string }> {
   return apiFetch<{ request_id: string; expires_at: string }>('/auth/otp/request', {
     method: 'POST',
-    body: JSON.stringify({ phone }),
+    body: JSON.stringify({ phone, requested_role: requestedRole ?? undefined }),
   })
 }
 
-export async function verifyOtp(phone: string, code: string): Promise<TokenResponse> {
+export async function verifyOtp(
+  phone: string,
+  code: string,
+  requestedRole?: string
+): Promise<TokenResponse> {
   return apiFetch<TokenResponse>('/auth/otp/verify', {
     method: 'POST',
-    body: JSON.stringify({ phone, code }),
+    body: JSON.stringify({ phone, code, requested_role: requestedRole ?? undefined }),
+  })
+}
+
+export async function login(
+  phone: string,
+  password: string,
+  requestedRole?: string
+): Promise<TokenResponse> {
+  return apiFetch<TokenResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      phone,
+      password,
+      requested_role: requestedRole ?? undefined,
+    }),
   })
 }

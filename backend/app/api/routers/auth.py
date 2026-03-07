@@ -1,8 +1,9 @@
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -18,6 +19,7 @@ from app.db.models.otp import OtpCode
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
 from app.schemas.auth import (
+    LoginRequest,
     OtpRequest,
     OtpRequestResponse,
     OtpVerifyRequest,
@@ -27,20 +29,44 @@ from app.schemas.auth import (
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+BETA_PHONE_REGEX = re.compile(r"^\+351\d{9}$")
+
+
+def _normalize_phone(phone: str) -> str:
+    return phone.strip()
+
+
+def _is_beta() -> bool:
+    return getattr(settings, "BETA_MODE", False)
+
 
 @router.post("/otp/request", response_model=OtpRequestResponse)
 async def request_otp(
     payload: OtpRequest,
     db: Session = Depends(get_db),
 ) -> OtpRequestResponse:
+    phone = _normalize_phone(payload.phone)
+    if _is_beta():
+        if not BETA_PHONE_REGEX.match(phone):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
+            )
+        count = db.execute(select(func.count()).select_from(User)).scalar() or 0
+        if count >= settings.MAX_BETA_USERS:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="BETA cheio",
+            )
+
     code = generate_otp_code()
-    if settings.ENV == "dev" or settings.ENABLE_DEV_TOOLS:
-        print(f"[OTP] phone={payload.phone} code={code}")
+    if settings.ENV == "dev" or getattr(settings, "ENABLE_DEV_TOOLS", False):
+        print(f"[OTP] phone={phone} code={code}")
     expires_at = otp_expiration_time()
-    code_hash = hash_otp_code(payload.phone, code)
+    code_hash = hash_otp_code(phone, code)
 
     otp = OtpCode(
-        phone=payload.phone,
+        phone=phone,
         code_hash=code_hash,
         expires_at=expires_at,
     )
@@ -56,10 +82,11 @@ async def verify_otp(
     db: Session = Depends(get_db),
 ) -> TokenResponse:
     now = datetime.now(timezone.utc)
+    phone = _normalize_phone(payload.phone)
     otp: Optional[OtpCode] = db.execute(
         select(OtpCode)
         .where(
-            OtpCode.phone == payload.phone,
+            OtpCode.phone == phone,
             OtpCode.consumed_at.is_(None),
             OtpCode.expires_at > now,
         )
@@ -67,7 +94,7 @@ async def verify_otp(
         .limit(1)
     ).scalar_one_or_none()
 
-    if not otp or not verify_otp_code(payload.phone, payload.code, otp.code_hash):
+    if not otp or not verify_otp_code(phone, payload.code, otp.code_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_otp",
@@ -75,16 +102,43 @@ async def verify_otp(
 
     otp.consumed_at = now
 
-    user = db.execute(select(User).where(User.phone == payload.phone)).scalar_one_or_none()
+    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not user:
-        user = User(
-            role=Role.passenger,
-            name=payload.phone,
-            phone=payload.phone,
-            status=UserStatus.active,
-        )
-        db.add(user)
+        admin_phone = getattr(settings, "ADMIN_PHONE", None)
+        if _is_beta() and admin_phone and _normalize_phone(admin_phone) == phone:
+            user = User(
+                role=Role.admin,
+                name=phone,
+                phone=phone,
+                status=UserStatus.active,
+            )
+            db.add(user)
+        elif _is_beta():
+            req_role = (payload.requested_role or "passenger").lower()
+            if req_role not in ("passenger", "driver"):
+                req_role = "passenger"
+            user = User(
+                role=Role.passenger,
+                name=phone,
+                phone=phone,
+                status=UserStatus.pending,
+                requested_role=req_role,
+            )
+            db.add(user)
+        else:
+            user = User(
+                role=Role.passenger,
+                name=phone,
+                phone=phone,
+                status=UserStatus.active,
+            )
+            db.add(user)
 
+    if user.status == UserStatus.pending:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="pending_approval",
+        )
     if user.status != UserStatus.active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -104,3 +158,77 @@ async def verify_otp(
         expires_at=token_data["expires_at"],
     )
 
+
+@router.post("/login", response_model=TokenResponse)
+async def login(
+    payload: LoginRequest,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """BETA: login with phone + default password. No OTP required."""
+    if not _is_beta():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not available")
+
+    phone = _normalize_phone(payload.phone)
+    if not BETA_PHONE_REGEX.match(phone):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
+        )
+    if payload.password != getattr(settings, "DEFAULT_PASSWORD", "123456"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_credentials",
+        )
+
+    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+    if not user:
+        count = db.execute(select(func.count()).select_from(User)).scalar() or 0
+        if count >= settings.MAX_BETA_USERS:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="BETA cheio",
+            )
+        admin_phone = getattr(settings, "ADMIN_PHONE", None)
+        if admin_phone and _normalize_phone(admin_phone) == phone:
+            user = User(
+                role=Role.admin,
+                name=phone,
+                phone=phone,
+                status=UserStatus.active,
+            )
+            db.add(user)
+        else:
+            req_role = (payload.requested_role or "passenger").lower()
+            if req_role not in ("passenger", "driver"):
+                req_role = "passenger"
+            user = User(
+                role=Role.passenger,
+                name=phone,
+                phone=phone,
+                status=UserStatus.pending,
+                requested_role=req_role,
+            )
+            db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    if user.status == UserStatus.pending:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="pending_approval",
+        )
+    if user.status != UserStatus.active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="blocked",
+        )
+
+    token_data = create_access_token(subject=str(user.id), role=user.role.value)
+
+    return TokenResponse(
+        access_token=token_data["token"],
+        token_type="bearer",
+        user_id=str(user.id),
+        role=user.role,
+        expires_at=token_data["expires_at"],
+    )
