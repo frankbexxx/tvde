@@ -1,4 +1,4 @@
-import { setTheme, getTheme, type ThemeId } from "@/hooks/useTheme"
+import { useTheme, type ThemeId } from "@/hooks/useTheme"
 import { cn } from "@/lib/utils"
 
 const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
@@ -9,7 +9,7 @@ const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
 ]
 
 export function ThemeSelector() {
-  const current = getTheme()
+  const [current, setTheme] = useTheme()
 
   return (
     <div className="grid grid-cols-2 gap-2">

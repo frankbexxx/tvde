@@ -126,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setTokens(null)
     setBetaToken(null)
+    setBetaRole('passenger')
     setBetaUserId(null)
   }, [])
 
