@@ -26,8 +26,8 @@ export default {
           foreground: "hsl(var(--color-primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--color-muted))",
-          foreground: "hsl(var(--color-muted-foreground))",
+          DEFAULT: "hsl(var(--color-secondary, var(--color-muted)))",
+          foreground: "hsl(var(--color-secondary-foreground, var(--color-muted-foreground)))",
         },
         destructive: {
           DEFAULT: "hsl(var(--color-destructive))",

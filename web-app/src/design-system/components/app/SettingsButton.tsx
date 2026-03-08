@@ -24,7 +24,10 @@ export function SettingsButton() {
           <SettingsIcon />
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl min-h-[220px] safe-area-pb"
+      >
         <SheetHeader>
           <SheetTitle>Tema</SheetTitle>
         </SheetHeader>
