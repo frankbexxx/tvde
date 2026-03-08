@@ -1,7 +1,7 @@
 /**
  * Status header - top of screen, large colored badge, clear non-technical text.
- * States: requested (yellow), assigned (blue), accepted (dark blue), arriving (purple),
- * ongoing (green), completed (dark gray).
+ * requested→amber, assigned→blue, accepted/arriving→emerald, ongoing→violet,
+ * completed→slate, cancelled→gray, failed→red.
  */
 export type StatusVariant =
   | 'requested'
@@ -14,14 +14,14 @@ export type StatusVariant =
   | 'error'
 
 const VARIANT_STYLES: Record<StatusVariant, string> = {
-  requested: 'bg-amber-100 text-amber-900 border-amber-300',
-  assigned: 'bg-blue-100 text-blue-900 border-blue-300',
-  accepted: 'bg-blue-200 text-blue-950 border-blue-400',
-  arriving: 'bg-violet-100 text-violet-900 border-violet-300',
-  ongoing: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-  completed: 'bg-slate-200 text-slate-800 border-slate-400',
-  idle: 'bg-slate-100 text-slate-700 border-slate-300',
-  error: 'bg-red-100 text-red-900 border-red-300',
+  requested: 'bg-amber-50 text-amber-900 border-amber-200',
+  assigned: 'bg-blue-50 text-blue-900 border-blue-200',
+  accepted: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+  arriving: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+  ongoing: 'bg-violet-50 text-violet-900 border-violet-200',
+  completed: 'bg-slate-100 text-slate-800 border-slate-300',
+  idle: 'bg-slate-50 text-slate-600 border-slate-200',
+  error: 'bg-red-50 text-red-900 border-red-200',
 }
 
 interface StatusHeaderProps {
@@ -32,7 +32,7 @@ interface StatusHeaderProps {
 export function StatusHeader({ label, variant = 'idle' }: StatusHeaderProps) {
   return (
     <div
-      className={`rounded-xl border-2 px-4 py-4 text-center text-xl font-semibold mb-6 ${VARIANT_STYLES[variant]}`}
+      className={`rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 ${VARIANT_STYLES[variant]}`}
       role="status"
     >
       {label}
