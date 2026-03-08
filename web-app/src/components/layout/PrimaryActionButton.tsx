@@ -20,11 +20,11 @@ export function PrimaryActionButton({
   variant = 'primary',
 }: PrimaryActionButtonProps) {
   const base =
-    'w-full min-h-[48px] rounded-xl font-semibold text-lg shadow-md active:scale-[0.98] transition-transform disabled:opacity-50 disabled:active:scale-100'
+    'w-full min-h-[48px] rounded-2xl font-semibold text-lg shadow-card hover:shadow-floating active:scale-[0.98] transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100'
   const styles =
     variant === 'danger'
-      ? 'bg-red-600 text-white hover:bg-red-700'
-      : 'bg-blue-600 text-white hover:bg-blue-700'
+      ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+      : 'bg-primary text-primary-foreground hover:bg-primary/90'
 
   return (
     <button

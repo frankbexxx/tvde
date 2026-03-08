@@ -1,25 +1,37 @@
+/* Design system - @import must be first */
+@import "./design-system/tokens.css";
+@import "./design-system/themes/portugal.css";
+@import "./design-system/themes/portugal-dark.css";
+@import "./design-system/themes/minimal.css";
+@import "./design-system/themes/neon.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-  color: #213547;
-  background-color: #ffffff;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@layer base {
+  :root {
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: #ffffff;
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background: hsl(var(--color-background));
+    color: hsl(var(--color-text));
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 /* Safe area for mobile bottom buttons (notch/home indicator) */

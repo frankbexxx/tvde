@@ -1,0 +1,16 @@
+/* Design tokens - variáveis globais */
+:root {
+  --radius-base: 1rem;
+  --radius-large: 1.5rem;
+
+  --shadow-card: 0 8px 20px rgba(0, 0, 0, 0.06);
+  --shadow-floating: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+}
+
+html {
+  background: hsl(var(--color-background));
+  color: hsl(var(--color-text));
+}

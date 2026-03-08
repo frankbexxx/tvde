@@ -1,0 +1,25 @@
+/* Tema Portugal Dark */
+:root[data-theme="portugal-dark"] {
+  --color-primary: 150 55% 42%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-accent: 42 100% 60%;
+  --color-accent-foreground: 0 0% 10%;
+  --color-danger: 0 70% 55%;
+  --color-destructive: 0 70% 55%;
+  --color-destructive-foreground: 0 0% 100%;
+
+  --color-background: 222 47% 8%;
+  --color-foreground: 0 0% 98%;
+  --color-surface: 222 47% 12%;
+  --color-card: 222 47% 12%;
+  --color-card-foreground: 0 0% 98%;
+  --color-text: 0 0% 98%;
+
+  --color-muted: 222 47% 15%;
+  --color-muted-foreground: 215 20% 65%;
+  --color-border: 222 47% 20%;
+  --color-input: 222 47% 20%;
+  --color-ring: 150 55% 42%;
+  --color-popover: 222 47% 12%;
+  --color-popover-foreground: 0 0% 98%;
+}

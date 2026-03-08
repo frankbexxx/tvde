@@ -1,0 +1,25 @@
+/* Tema Minimal - neutro, limpo */
+:root[data-theme="minimal"] {
+  --color-primary: 220 14% 30%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-accent: 220 14% 45%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-danger: 0 72% 51%;
+  --color-destructive: 0 72% 51%;
+  --color-destructive-foreground: 0 0% 100%;
+
+  --color-background: 0 0% 100%;
+  --color-foreground: 220 14% 10%;
+  --color-surface: 0 0% 98%;
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 220 14% 10%;
+  --color-text: 220 14% 10%;
+
+  --color-muted: 220 14% 96%;
+  --color-muted-foreground: 220 9% 46%;
+  --color-border: 220 13% 91%;
+  --color-input: 220 13% 91%;
+  --color-ring: 220 14% 30%;
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 220 14% 10%;
+}

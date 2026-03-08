@@ -12,20 +12,20 @@ export function RoleSelector() {
     <nav className="flex gap-1">
       <Link
         to="/passenger"
-        className={`min-h-[36px] px-4 rounded-lg text-sm font-medium flex items-center ${
+        className={`min-h-[36px] px-4 rounded-xl text-sm font-medium flex items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
           isPassenger
-            ? 'bg-blue-600 text-white'
-            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
         }`}
       >
         Passageiro
       </Link>
       <Link
         to="/driver"
-        className={`min-h-[36px] px-4 rounded-lg text-sm font-medium flex items-center ${
+        className={`min-h-[36px] px-4 rounded-xl text-sm font-medium flex items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
           isDriver
-            ? 'bg-blue-600 text-white'
-            : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
         }`}
       >
         Motorista
@@ -33,10 +33,10 @@ export function RoleSelector() {
       {isAdmin && (
         <Link
           to="/admin"
-          className={`min-h-[36px] px-4 rounded-lg text-sm font-medium flex items-center ${
+          className={`min-h-[36px] px-4 rounded-xl text-sm font-medium flex items-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
             isAdminPath
-              ? 'bg-blue-600 text-white'
-              : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
           }`}
         >
           Admin

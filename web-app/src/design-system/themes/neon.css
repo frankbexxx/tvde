@@ -1,0 +1,25 @@
+/* Tema Neon - cores vibrantes */
+:root[data-theme="neon"] {
+  --color-primary: 280 100% 60%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-accent: 170 100% 50%;
+  --color-accent-foreground: 0 0% 10%;
+  --color-danger: 0 100% 50%;
+  --color-destructive: 0 100% 50%;
+  --color-destructive-foreground: 0 0% 100%;
+
+  --color-background: 240 10% 6%;
+  --color-foreground: 0 0% 98%;
+  --color-surface: 240 10% 10%;
+  --color-card: 240 10% 10%;
+  --color-card-foreground: 0 0% 98%;
+  --color-text: 0 0% 98%;
+
+  --color-muted: 240 10% 15%;
+  --color-muted-foreground: 240 5% 65%;
+  --color-border: 280 50% 25%;
+  --color-input: 280 30% 15%;
+  --color-ring: 280 100% 60%;
+  --color-popover: 240 10% 10%;
+  --color-popover-foreground: 0 0% 98%;
+}

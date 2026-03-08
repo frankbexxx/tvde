@@ -5,6 +5,7 @@ import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { RoleSelector } from '../components/RoleSelector'
 import { ActivityPanel } from '../components/ActivityPanel'
+import { SettingsButton } from '../design-system/components/app/SettingsButton'
 import { useAuth } from '../context/AuthContext'
 
 export function AppRoutes() {
@@ -13,8 +14,8 @@ export function AppRoutes() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <p className="text-slate-500 text-base">A carregar...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground text-base">A carregar...</p>
       </div>
     )
   }
@@ -25,14 +26,14 @@ export function AppRoutes() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <header className="sticky top-0 z-10 bg-white border-b border-slate-200 shrink-0">
-        <div className="flex justify-between items-center max-w-md mx-auto px-4 py-3 gap-2">
-          <h1 className="text-lg font-bold text-slate-900">TVDE</h1>
+    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto">
+      <header className="sticky top-0 z-10 bg-background border-b border-border shrink-0">
+        <div className="flex justify-between items-center px-4 py-3 gap-2">
+          <h1 className="text-lg font-bold text-foreground">TVDE</h1>
           <div className="flex items-center gap-2">
             <a
               href="#activity-log-panel"
-              className="text-sm text-slate-500 hover:text-slate-700"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Log
             </a>
@@ -40,11 +41,12 @@ export function AppRoutes() {
               <button
                 type="button"
                 onClick={logout}
-                className="text-sm text-slate-500 hover:text-slate-700"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Sair
               </button>
             )}
+            <SettingsButton />
             <RoleSelector />
           </div>
         </div>

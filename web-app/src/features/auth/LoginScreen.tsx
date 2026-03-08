@@ -42,37 +42,37 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50">
-      <div className="w-full max-w-sm bg-white rounded-xl shadow-md p-6">
-        <h1 className="text-xl font-bold text-slate-900 mb-4">TVDE BETA</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-sm bg-card rounded-2xl shadow-card p-6">
+        <h1 className="text-xl font-bold text-foreground mb-4">TVDE BETA</h1>
         <div className="flex gap-2 mb-4">
           <Link
             to="/passenger"
-            className={`flex-1 py-2 text-center text-sm font-medium rounded-lg ${
+            className={`flex-1 py-2 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
               requestedRole === 'passenger'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-200 text-slate-700'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}
           >
             Passageiro
           </Link>
           <Link
             to="/driver"
-            className={`flex-1 py-2 text-center text-sm font-medium rounded-lg ${
+            className={`flex-1 py-2 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
               requestedRole === 'driver'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-200 text-slate-700'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}
           >
             Motorista
           </Link>
         </div>
-        <p className="text-sm text-slate-600 mb-4">
+        <p className="text-sm text-muted-foreground mb-4">
           Entra com o teu telemóvel (+351...)
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1">
               Telemóvel
             </label>
             <input
@@ -81,12 +81,12 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+351912345678"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-input rounded-xl bg-background focus:ring-2 focus:ring-ring focus:border-transparent"
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
               Password
             </label>
             <input
@@ -94,18 +94,18 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-input rounded-xl bg-background focus:ring-2 focus:ring-ring focus:border-transparent"
               required
             />
-            <p className="text-xs text-slate-500 mt-1">Pré-preenchida: 123456</p>
+            <p className="text-xs text-muted-foreground mt-1">Pré-preenchida: 123456</p>
           </div>
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+            <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-xl">{error}</p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? 'A entrar...' : 'Entrar'}
           </button>

@@ -1,0 +1,26 @@
+/* Tema Portugal - default e explícito */
+:root,
+:root[data-theme="portugal"] {
+  --color-primary: 150 60% 32%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-accent: 42 100% 50%;
+  --color-accent-foreground: 0 0% 10%;
+  --color-danger: 0 70% 48%;
+  --color-destructive: 0 70% 48%;
+  --color-destructive-foreground: 0 0% 100%;
+
+  --color-background: 0 0% 98%;
+  --color-foreground: 222 47% 11%;
+  --color-surface: 0 0% 100%;
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 222 47% 11%;
+  --color-text: 222 47% 11%;
+
+  --color-muted: 210 40% 96%;
+  --color-muted-foreground: 215 16% 47%;
+  --color-border: 214 32% 91%;
+  --color-input: 214 32% 91%;
+  --color-ring: 150 60% 32%;
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 222 47% 11%;
+}
