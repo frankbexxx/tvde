@@ -9,8 +9,8 @@ interface PrimaryActionButtonProps {
 }
 
 /**
- * Fixed-bottom style primary action.
- * Full width, min 48px height, rounded-xl, light shadow, large text.
+ * Fixed-bottom style primary action. Visual focal point.
+ * Full width, min 52px height, rounded-2xl, shadow-floating, bold text.
  */
 export function PrimaryActionButton({
   children,
@@ -20,7 +20,7 @@ export function PrimaryActionButton({
   variant = 'primary',
 }: PrimaryActionButtonProps) {
   const base =
-    'w-full min-h-[48px] rounded-2xl font-semibold text-lg shadow-card hover:shadow-floating active:scale-[0.98] transition-all duration-200 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100'
+    'w-full min-h-[52px] rounded-2xl font-bold text-lg shadow-floating hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100'
   const styles =
     variant === 'danger'
       ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
