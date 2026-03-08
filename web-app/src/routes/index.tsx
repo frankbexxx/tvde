@@ -26,7 +26,7 @@ export function AppRoutes() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto">
+    <div className="min-h-screen bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto">
       <header className="sticky top-0 z-10 bg-background border-b border-border shrink-0">
         <div className="flex justify-between items-center px-4 py-3 gap-2">
           <h1 className="text-lg font-bold text-foreground">TVDE</h1>

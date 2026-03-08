@@ -12,7 +12,7 @@ export function ThemeSelector() {
   const [current, setTheme] = useTheme()
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-2 w-full max-w-[240px]">
       {THEME_OPTIONS.map(({ id, label }) => (
         <button
           key={id}

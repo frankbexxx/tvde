@@ -1,6 +1,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -8,25 +15,45 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ThemeSelector } from "./ThemeSelector"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 
 export function SettingsButton() {
   const [open, setOpen] = useState(false)
+  const isMobile = useMediaQuery("(max-width: 639px)")
+
+  const trigger = (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label="Definições"
+      className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+    >
+      <SettingsIcon />
+    </Button>
+  )
+
+  if (isMobile) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+        <DialogContent className="max-w-[280px] rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Tema</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <ThemeSelector />
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Definições"
-          className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <SettingsIcon />
-        </Button>
-      </SheetTrigger>
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl min-h-[220px] safe-area-pb"
+        className="rounded-t-2xl min-h-[180px] max-h-[80dvh] overflow-y-auto safe-area-pb"
       >
         <SheetHeader>
           <SheetTitle>Tema</SheetTitle>
