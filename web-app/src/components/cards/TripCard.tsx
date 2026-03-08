@@ -27,21 +27,21 @@ export function TripCard({
   const priceDisplay =
     price != null && price > 0 ? `${price.toFixed(2)} €` : estimateFallback ? `${estimateFallback} €` : '—'
   return (
-    <div className="rounded-2xl border-2 border-border bg-card p-4 space-y-3 shadow-card hover:shadow-floating transition-shadow duration-200">
-      <div>
-        <p className="text-sm text-muted-foreground">Origem</p>
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-2 shadow-card hover:shadow-floating transition-all duration-200">
+      <div className="space-y-0.5">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Origem</p>
         <p className="text-base font-semibold text-foreground">{pickup}</p>
       </div>
       {destination && (
-        <div>
-          <p className="text-sm text-muted-foreground">Destino</p>
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Destino</p>
           <p className="text-base font-semibold text-foreground">{destination}</p>
         </div>
       )}
       {driverName && (
-        <p className="text-base text-muted-foreground">{driverName}</p>
+        <p className="text-sm text-muted-foreground">{driverName}</p>
       )}
-      <div className="flex items-center justify-between pt-2 border-t border-border">
+      <div className="flex items-center justify-between pt-3 border-t border-border">
         <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
         {children}
       </div>

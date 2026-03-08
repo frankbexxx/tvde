@@ -25,22 +25,22 @@ export function RequestCard({
       : `${estimateFallback} €`
 
   return (
-    <div className="rounded-xl border-2 border-slate-200 bg-white p-4 space-y-4 shadow-sm">
-      <div>
-        <p className="text-sm text-slate-600">Recolha</p>
-        <p className="text-lg font-semibold text-slate-900">{pickup}</p>
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-2 shadow-card hover:shadow-floating transition-all duration-200">
+      <div className="space-y-0.5">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Recolha</p>
+        <p className="text-lg font-semibold text-foreground">{pickup}</p>
       </div>
-      <div className="flex items-center justify-between">
-        <span className="text-2xl font-bold text-emerald-700">{priceDisplay}</span>
+      <div className="flex items-center justify-between gap-4 pt-2">
+        <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
         <button
           type="button"
           onClick={onAccept}
           disabled={loading}
-          className="min-h-[48px] px-6 rounded-xl bg-emerald-600 text-white font-semibold text-lg hover:bg-emerald-700 disabled:opacity-50 active:scale-[0.98]"
+          className="min-h-[52px] px-6 rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow-floating hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
         >
           {loading ? (
             <span className="inline-flex items-center gap-2">
-              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ...
             </span>
           ) : (
