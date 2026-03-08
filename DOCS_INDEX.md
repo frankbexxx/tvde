@@ -21,7 +21,7 @@ Referência de todos os ficheiros de documentação do projeto.
 |----------|-----------|
 | [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md) | Deploy no Render — PostgreSQL, backend, Stripe webhook, frontend |
 | [VALIDACAO_HUMANA_CAMPO.md](VALIDACAO_HUMANA_CAMPO.md) | Teste humano em campo — preparação, cenários, observação |
-| [CRIAR_REPO_GITHUB.md](CRIAR_REPO_GITHUB.md) | Criação do repositório GitHub e acesso de parceiros |
+| [docs/DEBUG_BETA_RENDER.md](docs/DEBUG_BETA_RENDER.md) | Depuração modo BETA no Render |
 
 ---
 
@@ -30,10 +30,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | Ficheiro | Propósito |
 |----------|-----------|
 | [GUIA_TESTES.md](GUIA_TESTES.md) | Manual de testes passo a passo (local e Render) |
-| [GUIA_TESTE_COMPLETO_COMPANHEIRO.md](GUIA_TESTE_COMPLETO_COMPANHEIRO.md) | Guia simples para não-técnicos (passageiro + motorista) |
-| [TESTES_RENDER_TIMING.md](TESTES_RENDER_TIMING.md) | Testes cold start, dormancy, fricção de rede, Stripe — resultados 04/03 |
 | [TESTE_STRIPE_COMPLETO.md](TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe end-to-end, troubleshooting |
-| [BACKEND_STATUS.md](BACKEND_STATUS.md) | Estado técnico do backend — auth, trips, Stripe, endpoints |
 
 ---
 
@@ -49,19 +46,10 @@ Referência de todos os ficheiros de documentação do projeto.
 
 | Ficheiro | Propósito |
 |----------|-----------|
-| [CIRCUITOS_APP.md](CIRCUITOS_APP.md) | Diagramas — arquitetura, state machine, fluxos |
-| [ETAPA_OPERACIONAL_FLUXO.md](ETAPA_OPERACIONAL_FLUXO.md) | Timeouts, disponibilidade, dispatch — especificação |
-| [STRIPE_CONFIRMACAO_FUTURA.md](STRIPE_CONFIRMACAO_FUTURA.md) | Estratégias de confirmação de pagamento (futuro) |
+| [docs/STACK_TECNOLOGICO.md](docs/STACK_TECNOLOGICO.md) | Stack e convenções técnicas |
+| [docs/ESTRUTURA_GUI.md](docs/ESTRUTURA_GUI.md) | Estrutura da GUI (web e Android) |
 | [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da base de dados |
-
----
-
-## Outros
-
-| Ficheiro | Propósito |
-|----------|-----------|
-| [TEMPLATE.md](TEMPLATE.md) | Template para novos documentos |
-| [RESUMO_TECNICO_PROJETO.md](RESUMO_TECNICO_PROJETO.md) | Resumo técnico consolidado |
+| [web-app/README.md](web-app/README.md) | Web app — visão geral |
 
 ---
 
@@ -74,7 +62,7 @@ Referência de todos os ficheiros de documentação do projeto.
 
 ---
 
-## Lista completa de .md (para partilha)
+## Lista de documentos ativos
 
 | # | Ficheiro | Propósito |
 |---|----------|-----------|
@@ -85,24 +73,14 @@ Referência de todos os ficheiros de documentação do projeto.
 | 5 | [DOCS_INDEX.md](DOCS_INDEX.md) | Este índice |
 | 6 | [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md) | Deploy no Render |
 | 7 | [GUIA_TESTES.md](GUIA_TESTES.md) | Manual de testes |
-| 8 | [TESTES_RENDER_TIMING.md](TESTES_RENDER_TIMING.md) | Testes Render (resultados) |
-| 9 | [VALIDACAO_HUMANA_CAMPO.md](VALIDACAO_HUMANA_CAMPO.md) | Teste em campo |
-| 10 | [TESTE_STRIPE_COMPLETO.md](TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe |
-| 11 | [INTERACTION_LOGGING.md](INTERACTION_LOGGING.md) | Logs e telemetria |
-| 12 | [CIRCUITOS_APP.md](CIRCUITOS_APP.md) | Diagramas |
-| 13 | [ETAPA_OPERACIONAL_FLUXO.md](ETAPA_OPERACIONAL_FLUXO.md) | Timeouts e dispatch |
-| 14 | [STRIPE_CONFIRMACAO_FUTURA.md](STRIPE_CONFIRMACAO_FUTURA.md) | Confirmação de preço |
-| 15 | [BACKEND_STATUS.md](BACKEND_STATUS.md) | Estado do backend |
-| 16 | [CRIAR_REPO_GITHUB.md](CRIAR_REPO_GITHUB.md) | Repo e acesso |
-| 17 | [RESUMO_TECNICO_PROJETO.md](RESUMO_TECNICO_PROJETO.md) | Resumo técnico |
-| 18 | [TEMPLATE.md](TEMPLATE.md) | Template para novos docs |
-| 19 | [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da BD |
-| 20 | [web-app/README.md](web-app/README.md) | Web app |
-| 21 | [web-app/TESTES_OPERACIONAIS.md](web-app/TESTES_OPERACIONAIS.md) | Testes operacionais |
-| 22 | [web-app/PAINEL_ATIVIDADE.md](web-app/PAINEL_ATIVIDADE.md) | Painel de atividade |
-| 23 | [web-app/ESTRUTURA_COMPONENTES.md](web-app/ESTRUTURA_COMPONENTES.md) | Estrutura de componentes |
-
-*Nota: `archive_support/` e `archive/` contêm docs arquivados.*
+| 8 | [VALIDACAO_HUMANA_CAMPO.md](VALIDACAO_HUMANA_CAMPO.md) | Teste em campo |
+| 9 | [TESTE_STRIPE_COMPLETO.md](TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe |
+| 10 | [INTERACTION_LOGGING.md](INTERACTION_LOGGING.md) | Logs e telemetria |
+| 11 | [docs/DEBUG_BETA_RENDER.md](docs/DEBUG_BETA_RENDER.md) | Depuração BETA |
+| 12 | [docs/STACK_TECNOLOGICO.md](docs/STACK_TECNOLOGICO.md) | Stack técnico |
+| 13 | [docs/ESTRUTURA_GUI.md](docs/ESTRUTURA_GUI.md) | Estrutura da GUI |
+| 14 | [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da BD |
+| 15 | [web-app/README.md](web-app/README.md) | Web app |
 
 ---
 
@@ -110,5 +88,6 @@ Referência de todos os ficheiros de documentação do projeto.
 
 | Localização | Conteúdo |
 |-------------|----------|
+| `archive/docs_nao_essenciais/` | Docs movidos em 2026-03-08 (guias alternativos, relatórios, design system antigo, etc.) — ver README nessa pasta |
 | `archive_support/` | Runbooks e manuais desatualizados |
-| `archive/` | Screenshots, PDFs, imagens de sessão |
+| `archive/` (resto) | Screenshots, PDFs, imagens de sessão |

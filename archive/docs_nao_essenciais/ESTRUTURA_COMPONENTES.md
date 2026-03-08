@@ -83,9 +83,9 @@ UI primitives
 - Motorista: "ACEITAR" (por card) | "Cheguei" | "Iniciar viagem" | "Concluir viagem".
 - Botão principal fixo no fundo quando existe ação.
 
-### 5. Remoção de elementos técnicos
-- ActivityPanel removido da UI pública.
-- Sem IDs, logs ou JSON visíveis.
+### 5. Elementos técnicos
+- ActivityPanel no layout (sidebar direita no desktop; abaixo no mobile).
+- Sem IDs ou JSON visíveis na UI principal.
 - DevTools colapsável (▶ Dev) para testes, sem impacto na UX.
 
 ### 6. Toggle Offline (motorista)
@@ -120,7 +120,7 @@ UI primitives
 | `components/layout/PrimaryActionButton.tsx` | Novo |
 | `components/cards/TripCard.tsx` | Novo |
 | `components/cards/RequestCard.tsx` | Novo |
-| `components/ui/Badge.tsx` | Novo |
+| `components/ui/badge.tsx` | Novo |
 | `components/ui/Toggle.tsx` | Novo |
 | `components/ui/Spinner.tsx` | Novo |
 | `utils/format.ts` | Novo |
