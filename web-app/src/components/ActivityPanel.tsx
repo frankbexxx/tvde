@@ -3,10 +3,10 @@ import { useAuth } from '../context/AuthContext'
 import type { LogEntry, LogType } from '../context/ActivityLogContext'
 
 const LOG_COLORS: Record<LogType, string> = {
-  info: 'text-slate-600',
-  success: 'text-green-700',
-  error: 'text-red-700',
-  action: 'text-blue-700 font-medium',
+  info: 'text-muted-foreground',
+  success: 'text-green-600',
+  error: 'text-red-600',
+  action: 'text-primary font-medium',
 }
 
 function formatTime(ts: number) {
@@ -19,8 +19,8 @@ function formatTime(ts: number) {
 
 function LogLine({ entry }: { entry: LogEntry }) {
   return (
-    <div className="flex gap-2 text-xs py-0.5 border-b border-slate-100 last:border-0">
-      <span className="text-slate-400 shrink-0">{formatTime(entry.ts)}</span>
+    <div className="flex gap-2 py-0.5 border-b border-border/50 last:border-0 text-[11px] leading-tight">
+      <span className="text-muted-foreground shrink-0">{formatTime(entry.ts)}</span>
       <span className={LOG_COLORS[entry.type]}>{entry.msg}</span>
     </div>
   )
@@ -37,7 +37,7 @@ function CopyLogButton({ logs }: { logs: LogEntry[] }) {
   return (
     <button
       onClick={copy}
-      className="text-xs text-slate-500 hover:text-slate-700"
+      className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
       title="Copiar log"
     >
       Copiar
@@ -52,43 +52,43 @@ export function ActivityPanel() {
   return (
     <aside
       id="activity-log-panel"
-      className="w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col min-h-[200px] md:min-h-0 md:h-[calc(100vh-4rem)]"
+      className="w-full md:w-80 shrink-0 bg-card border-t md:border-t-0 md:border-l border-border/60 flex flex-col min-h-[200px] md:min-h-0 md:h-[calc(100vh-4rem)]"
     >
       {/* Vista + Live */}
-      <div className="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+      <div className="p-2.5 bg-muted/30 border-b border-border/50 flex justify-between items-center">
         <div>
-          <div className="text-xs text-slate-500 uppercase tracking-wide mb-0.5">Vista</div>
-          <div className="font-medium text-slate-700 capitalize">{role}</div>
+          <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Vista</div>
+          <div className="text-sm font-medium text-foreground capitalize">{role}</div>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-green-600">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        <div className="flex items-center gap-1.5 text-[11px] text-green-600">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
           Ao vivo
         </div>
       </div>
 
       {/* Status */}
-      <div className="p-3 bg-amber-50 border-b border-amber-200">
-        <div className="text-xs text-amber-700 uppercase tracking-wide mb-1">Estado</div>
-        <div className="font-medium text-slate-800">{status}</div>
+      <div className="p-2.5 bg-muted/20 border-b border-border/50">
+        <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Estado</div>
+        <div className="text-sm font-medium text-foreground">{status}</div>
       </div>
 
       {/* Log */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex justify-between items-center px-3 py-2 border-b border-slate-200">
-          <span className="text-slate-600 text-sm font-medium">Registo</span>
+        <div className="flex justify-between items-center px-2.5 py-1.5 border-b border-border/50">
+          <span className="text-muted-foreground text-[11px] font-medium">Registo</span>
           <div className="flex gap-2">
             <CopyLogButton logs={logs} />
             <button
               onClick={clearLogs}
-              className="text-xs text-slate-500 hover:text-slate-700"
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
             >
               Limpar
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 font-mono text-xs">
+        <div className="flex-1 overflow-y-auto p-2 font-mono text-[11px] text-muted-foreground">
           {logs.length === 0 ? (
-            <p className="text-slate-400 italic">Nenhum evento registado</p>
+            <p className="italic">Nenhum evento registado</p>
           ) : (
             [...logs].reverse().map((e) => <LogLine key={e.id} entry={e} />)
           )}
