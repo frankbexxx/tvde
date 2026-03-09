@@ -229,14 +229,14 @@ export function AdminDashboard() {
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="Nickname"
-                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                        className="w-full px-3 py-2 border rounded-lg text-base"
                       />
                       <input
                         type="tel"
                         value={editPhone}
                         onChange={(e) => setEditPhone(e.target.value)}
                         placeholder="+351912345678"
-                        className="w-full px-3 py-2 border rounded-lg text-sm"
+                        className="w-full px-3 py-2 border rounded-lg text-base"
                       />
                       <div className="flex gap-2">
                         <button

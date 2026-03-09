@@ -13,7 +13,7 @@ interface ScreenContainerProps {
  */
 export function ScreenContainer({ children, bottomButton }: ScreenContainerProps) {
   return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full bg-background">
+    <div className="min-h-dvh flex flex-col max-w-md mx-auto w-full bg-background">
       <div
         className={`flex-1 flex flex-col px-5 py-6 overflow-y-auto ${
           bottomButton ? 'pb-24' : 'pb-8'

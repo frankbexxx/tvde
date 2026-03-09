@@ -22,4 +22,7 @@
   --color-ring: 150 55% 42%;
   --color-popover: 222 47% 12%;
   --color-popover-foreground: 0 0% 98%;
+
+  --bg-atmo-mid: 222 47% 15%;
+  --bg-atmo-shape: 150 55% 42%;
 }

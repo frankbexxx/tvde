@@ -32,7 +32,7 @@ interface StatusHeaderProps {
 export function StatusHeader({ label, variant = 'idle' }: StatusHeaderProps) {
   return (
     <div
-      className={`rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 ${VARIANT_STYLES[variant]}`}
+      className={`rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 transition-colors duration-300 ${VARIANT_STYLES[variant]}`}
       role="status"
     >
       {label}

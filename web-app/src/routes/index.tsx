@@ -14,7 +14,7 @@ export function AppRoutes() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <p className="text-muted-foreground text-base">A carregar...</p>
       </div>
     )
@@ -26,8 +26,8 @@ export function AppRoutes() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto">
-      <header className="sticky top-0 z-10 bg-background border-b border-border shrink-0">
+    <div className="min-h-dvh bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0">
         <div className="flex justify-between items-center px-4 py-3 gap-2">
           <h1 className="text-lg font-bold text-foreground">TVDE</h1>
           <div className="flex items-center gap-2">

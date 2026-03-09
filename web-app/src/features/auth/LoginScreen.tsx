@@ -42,7 +42,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+    <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-background">
       <div className="w-full max-w-sm bg-card rounded-2xl shadow-card p-6">
         <h1 className="text-xl font-bold text-foreground mb-4">TVDE BETA</h1>
         <div className="flex gap-2 mb-4">
@@ -81,7 +81,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+351912345678"
-              className="w-full px-3 py-2 border border-input rounded-xl bg-background focus:ring-2 focus:ring-ring focus:border-transparent"
+              className="w-full px-3 py-2 border border-input rounded-xl bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent"
               required
             />
           </div>
@@ -94,7 +94,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-input rounded-xl bg-background focus:ring-2 focus:ring-ring focus:border-transparent"
+              className="w-full px-3 py-2 border border-input rounded-xl bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent"
               required
             />
             <p className="text-xs text-muted-foreground mt-1">Pré-preenchida: 123456</p>
