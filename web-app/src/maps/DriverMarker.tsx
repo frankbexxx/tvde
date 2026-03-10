@@ -7,13 +7,16 @@ type DriverMarkerProps = Omit<MarkerProps, 'children'> & {
 }
 
 export const DriverMarker: FC<DriverMarkerProps> = ({
-  colorClassName = 'bg-accent ring-accent/30',
+  colorClassName = 'bg-accent ring-accent/40',
   ...props
 }) => {
   return (
     <Marker anchor="center" {...props}>
-      <div className={`w-4 h-4 rounded-full ring-4 shadow-floating ${colorClassName}`} />
+      <div
+        className={`w-5 h-5 rounded-full ring-4 shadow-floating transition-transform duration-300 ease-out ${colorClassName}`}
+      />
     </Marker>
   )
 }
+
 
