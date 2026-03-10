@@ -4,9 +4,11 @@ import maplibregl from 'maplibre-gl'
 import Map from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { FeatureCollection, LineString } from 'geojson'
 import { PassengerMarker } from './PassengerMarker'
 import { DriverMarker } from './DriverMarker'
 import { RouteLine } from './RouteLine'
+import { getRoute } from '../services/routingService'
 
 type LatLng = {
   lat: number
@@ -31,6 +33,8 @@ const LISBON_CENTER: LatLng = { lat: 38.7223, lng: -9.1393 }
 export function MapView({ passengerLocation, driverLocation, route, className, overlay }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const [hasInitialFit, setHasInitialFit] = useState(false)
+  const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
+  const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
 
   const initialViewState = useMemo(
     () => ({
@@ -41,26 +45,40 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
     []
   )
 
-  // Compute simple straight-line route GeoJSON when route is provided
-  const routeGeoJSON = useMemo(() => {
-    if (!route) return null
-    return {
-      type: 'FeatureCollection' as const,
-      features: [
-        {
-          type: 'Feature' as const,
-          geometry: {
-            type: 'LineString' as const,
-            coordinates: [
-              [route.from.lng, route.from.lat],
-              [route.to.lng, route.to.lat],
-            ],
-          },
-          properties: {},
-        },
-      ],
+  // Fetch OSRM route when endpoints change (debounced by key)
+  useEffect(() => {
+    if (!route) {
+      setRouteGeometry(null)
+      setLastRouteKey(null)
+      return
     }
-  }, [route])
+
+    const key = `${route.from.lat},${route.from.lng}|${route.to.lat},${route.to.lng}`
+    if (key === lastRouteKey && routeGeometry) {
+      return
+    }
+
+    let cancelled = false
+    setLastRouteKey(key)
+
+    const fetchRoute = async () => {
+      try {
+        const geo = await getRoute(route.from, route.to)
+        if (!cancelled) {
+          setRouteGeometry(geo as FeatureCollection<LineString> | null)
+        }
+      } catch (err) {
+        console.warn('Failed to fetch route from OSRM', err)
+      }
+    }
+
+    void fetchRoute()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [route?.from.lat, route?.from.lng, route?.to.lat, route?.to.lng])
 
   // On first availability of a passenger location, gently recenter the map
   useEffect(() => {
@@ -97,11 +115,10 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
             <DriverMarker longitude={driverLocation.lng} latitude={driverLocation.lat} />
           )}
 
-          {/* Straight-line route */}
-          {routeGeoJSON && (
+          {/* OSRM route */}
+          {routeGeometry && (
             <RouteLine
-              from={route!.from}
-              to={route!.to}
+              geometry={routeGeometry}
             />
           )}
         </Map>

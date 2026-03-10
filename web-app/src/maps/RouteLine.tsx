@@ -1,52 +1,29 @@
 import type { FC } from 'react'
 import { Source, Layer } from 'react-map-gl/maplibre'
-
-type LatLng = {
-  lat: number
-  lng: number
-}
+import type { FeatureCollection, LineString } from 'geojson'
 
 export interface RouteLineProps {
   id?: string
-  from: LatLng
-  to: LatLng
+  geometry: FeatureCollection<LineString>
   sourceProps?: Record<string, unknown>
   layerProps?: Record<string, unknown>
 }
 
 export const RouteLine: FC<RouteLineProps> = ({
   id = 'route-line',
-  from,
-  to,
+  geometry,
   sourceProps,
   layerProps,
 }) => {
-  const data = {
-    type: 'FeatureCollection' as const,
-    features: [
-      {
-        type: 'Feature' as const,
-        geometry: {
-          type: 'LineString' as const,
-          coordinates: [
-            [from.lng, from.lat],
-            [to.lng, to.lat],
-          ],
-        },
-        properties: {},
-      },
-    ],
-  }
-
   return (
-    <Source id={id} type="geojson" data={data} {...(sourceProps as any)}>
+    <Source id={id} type="geojson" data={geometry as any} {...(sourceProps as any)}>
       <Layer
         id={`${id}-layer`}
         type="line"
         paint={{
-          'line-color': '#2563eb',
+          'line-color': 'hsl(280, 100%, 60%)', // approximate accent color
           'line-width': 4,
-          'line-opacity': 0.9,
+          'line-opacity': 0.85,
         } as any}
         {...(layerProps as any)}
       />
