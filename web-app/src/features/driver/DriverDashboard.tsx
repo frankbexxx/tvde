@@ -24,6 +24,7 @@ import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
 import { MapView } from '../../maps/MapView'
+import { sendDriverLocation } from '../../services/locationService'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -78,6 +79,25 @@ export function DriverDashboard() {
     !!token,
     2000
   )
+
+  // Periodically send driver location to backend when online and location is available.
+  useEffect(() => {
+    if (offline || !driverLocation) return
+
+    let cancelled = false
+    const interval = setInterval(() => {
+      if (cancelled || !driverLocation) return
+      void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
+        // Swallow errors here; ActivityPanel will still log other issues.
+        console.warn('Failed to send driver location', err)
+      })
+    }, 3000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [offline, driverLocation])
 
   useEffect(() => {
     setStoredOffline(offline)

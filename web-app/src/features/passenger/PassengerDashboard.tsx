@@ -15,6 +15,7 @@ import { Spinner } from '../../components/ui/Spinner'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
 import { MapView } from '../../maps/MapView'
+import { getDriverLocation } from '../../services/trackingService'
 
 const DEMO_ORIGIN = { lat: 38.7223, lng: -9.1393 }
 const DEMO_DEST = { lat: 38.7369, lng: -9.1386 }
@@ -43,6 +44,7 @@ export function PassengerDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const passengerLocation = useGeolocation()
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getTripHistory(token!),
@@ -158,6 +160,31 @@ export function PassengerDashboard() {
         ? handleCancel
         : handleRequestTrip
 
+  // Poll driver location for the active trip so passenger can see live movement.
+  useEffect(() => {
+    if (!activeTripId) {
+      setDriverLocation(null)
+      return
+    }
+
+    let cancelled = false
+    const interval = setInterval(() => {
+      if (cancelled) return
+      void getDriverLocation(activeTripId)
+        .then((loc) => {
+          setDriverLocation({ lat: loc.lat, lng: loc.lng })
+        })
+        .catch((err) => {
+          console.warn('Failed to fetch driver location', err)
+        })
+    }, 3000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [activeTripId])
+
   return (
     <ScreenContainer
       bottomButton={
@@ -196,14 +223,7 @@ export function PassengerDashboard() {
                 }
               : DEMO_ORIGIN)
           }
-          driverLocation={
-            activeTrip
-              ? {
-                  lat: DEMO_ORIGIN.lat,
-                  lng: DEMO_ORIGIN.lng,
-                }
-              : undefined
-          }
+          driverLocation={driverLocation ?? undefined}
           route={
             activeTrip
               ? {
