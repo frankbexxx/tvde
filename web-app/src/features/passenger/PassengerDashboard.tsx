@@ -6,6 +6,7 @@ import { createTrip, getTripHistory, getTripDetail, cancelTrip } from '../../api
 import type { TripDetailResponse, TripHistoryItem } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
@@ -13,6 +14,7 @@ import { TripCard } from '../../components/cards/TripCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
+import { MapView } from '../../maps/MapView'
 
 const DEMO_ORIGIN = { lat: 38.7223, lng: -9.1393 }
 const DEMO_DEST = { lat: 38.7369, lng: -9.1386 }
@@ -40,6 +42,7 @@ export function PassengerDashboard() {
   const activeTripId = passengerActiveTripId
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const passengerLocation = useGeolocation()
 
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getTripHistory(token!),
@@ -182,6 +185,43 @@ export function PassengerDashboard() {
 
       <div className="space-y-6 mt-6 transition-opacity duration-150">
         <StatusHeader label={statusConfig.label} variant={statusConfig.variant} />
+
+        {/* Map section – centered around passenger location when available */}
+        <MapView
+          passengerLocation={
+            passengerLocation ?? (activeTrip
+              ? {
+                  lat: activeTrip.origin_lat,
+                  lng: activeTrip.origin_lng,
+                }
+              : DEMO_ORIGIN)
+          }
+          driverLocation={
+            activeTrip
+              ? {
+                  lat: DEMO_ORIGIN.lat,
+                  lng: DEMO_ORIGIN.lng,
+                }
+              : undefined
+          }
+          route={
+            activeTrip
+              ? {
+                  from: {
+                    lat: activeTrip.origin_lat,
+                    lng: activeTrip.origin_lng,
+                  },
+                  to: {
+                    lat: activeTrip.destination_lat,
+                    lng: activeTrip.destination_lng,
+                  },
+                }
+              : {
+                  from: DEMO_ORIGIN,
+                  to: DEMO_DEST,
+                }
+          }
+        />
 
         {error && (
           <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-base">
