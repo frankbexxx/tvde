@@ -61,3 +61,40 @@ class Driver(Base):
 
 Index("ix_drivers_status", Driver.status)
 
+
+class DriverLocation(Base):
+    """
+    Last known GPS location for a driver.
+    One row per driver_id (primary key), updated frequently.
+    """
+
+    __tablename__ = "driver_locations"
+
+    driver_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("drivers.user_id", ondelete="CASCADE"),
+        primary_key=True,
+        comment="Driver user_id (matches drivers.user_id).",
+    )
+    lat: Mapped[float] = mapped_column(
+        Numeric(9, 6),
+        nullable=False,
+        comment="Last latitude reported by driver.",
+    )
+    lng: Mapped[float] = mapped_column(
+        Numeric(9, 6),
+        nullable=False,
+        comment="Last longitude reported by driver.",
+    )
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        comment="Timestamp of last location update.",
+    )
+
+    driver: Mapped["Driver"] = relationship(backref="location", uselist=False)
+
+
+Index("ix_driver_locations_driver_id", DriverLocation.driver_id)
+

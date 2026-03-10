@@ -9,6 +9,7 @@ from app.api.deps import UserContext, get_db, require_role
 from app.api.rate_limit import check_request_trip_rate_limit
 from app.db.models.trip import Trip
 from app.models.enums import Role
+from app.schemas.driver import DriverLocationResponse
 from app.schemas.trip import (
     TripCancelRequest,
     TripCreateRequest,
@@ -18,6 +19,7 @@ from app.schemas.trip import (
     TripStatusResponse,
 )
 from app.api.serializers import trip_to_detail, trip_to_history_item
+from app.services.driver_location import get_driver_location_for_trip
 from app.services.interaction_logging import log_interaction
 from app.services.trips import (
     cancel_trip_by_passenger,
@@ -53,6 +55,29 @@ async def get_trip_detail(
         trip_id=trip_id.strip(),
     )
     return trip_to_detail(trip, include_stripe_pi=False)
+
+
+@router.get("/{trip_id}/driver-location", response_model=DriverLocationResponse)
+async def get_driver_location(
+    trip_id: str,
+    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverLocationResponse:
+    """
+    Latest known driver location for a given trip.
+    - Passenger must own the trip.
+    - Only available while trip is active and driver assigned.
+    """
+    lat, lng, ts = get_driver_location_for_trip(
+        db=db,
+        passenger_id=user.user_id,
+        trip_id=trip_id.strip(),
+    )
+    return DriverLocationResponse(
+        lat=lat,
+        lng=lng,
+        timestamp=int(ts.timestamp() * 1000),
+    )
 
 
 @router.post("", response_model=TripCreateResponse)
