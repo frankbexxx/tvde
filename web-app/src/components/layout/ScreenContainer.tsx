@@ -15,8 +15,8 @@ export function ScreenContainer({ children, bottomButton }: ScreenContainerProps
   return (
     <div className="min-h-dvh flex flex-col max-w-md mx-auto w-full bg-background">
       <div
-        className={`flex-1 flex flex-col px-5 py-6 overflow-y-auto ${
-          bottomButton ? 'pb-24' : 'pb-8'
+        className={`flex-1 flex flex-col px-5 pt-6 pb-4 overflow-y-auto ${
+          bottomButton ? 'pb-20' : 'pb-8'
         }`}
       >
         {children}
