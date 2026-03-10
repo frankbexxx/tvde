@@ -14,6 +14,7 @@ import {
 } from '../../api/trips'
 import type { TripAvailableItem, TripHistoryItem } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
+import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
@@ -22,6 +23,7 @@ import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
+import { MapView } from '../../maps/MapView'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -56,6 +58,7 @@ export function DriverDashboard() {
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
+  const driverLocation = useGeolocation()
   const [offline, setOffline] = useState(getStoredOffline)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -171,6 +174,12 @@ export function DriverDashboard() {
           <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-base">
             {error}
           </div>
+        )}
+
+        {!offline && (
+          <MapView
+            driverLocation={driverLocation ?? undefined}
+          />
         )}
 
         {offline && (
