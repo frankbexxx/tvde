@@ -19,6 +19,7 @@ from app.api.routers import (
     drivers,
     health,
     logs,
+    matching,
     passenger_trips,
     ws,
 )
@@ -128,6 +129,7 @@ app.include_router(auth.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
 app.include_router(drivers.router)
+app.include_router(matching.router)
 app.include_router(admin.router)
 app.include_router(ws.router)
 app.include_router(admin_ws.router)
