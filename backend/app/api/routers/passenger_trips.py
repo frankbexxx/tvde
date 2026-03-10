@@ -70,7 +70,8 @@ async def get_driver_location(
     """
     lat, lng, ts = get_driver_location_for_trip(
         db=db,
-        passenger_id=user.user_id,
+        user_id=user.user_id,
+        role=user.role,
         trip_id=trip_id.strip(),
     )
     return DriverLocationResponse(

@@ -9,7 +9,7 @@ interface SendDriverLocationPayload {
 /**
  * Sends the driver's current location to the backend.
  *
- * Backend endpoint (to be implemented server-side):
+ * Endpoint:
  *   POST /drivers/location
  *
  * Payload:
@@ -22,10 +22,22 @@ export async function sendDriverLocation(lat: number, lng: number): Promise<void
     timestamp: Date.now(),
   }
 
-  // TODO: ensure backend route /drivers/location exists and accepts this payload.
-  await apiFetch<void>('/drivers/location', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
+  try {
+    await apiFetch<void>('/drivers/location', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  } catch (err) {
+    console.warn('sendDriverLocation failed, retrying once...', err)
+    try {
+      await apiFetch<void>('/drivers/location', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+    } catch (err2) {
+      console.warn('sendDriverLocation retry failed, giving up.', err2)
+    }
+  }
 }
+
 

@@ -9,11 +9,15 @@ export interface DriverLocationResponse {
 /**
  * Fetches the latest driver location for a given trip.
  *
- * Backend endpoint (to be implemented server-side):
+ * Endpoint:
  *   GET /trips/{tripId}/driver-location
  */
 export async function getDriverLocation(tripId: string): Promise<DriverLocationResponse> {
-  // TODO: ensure backend implements this route and response shape.
-  return apiFetch<DriverLocationResponse>(`/trips/${tripId}/driver-location`)
+  try {
+    return await apiFetch<DriverLocationResponse>(`/trips/${tripId}/driver-location`)
+  } catch (err) {
+    console.warn('getDriverLocation failed, retrying once...', err)
+    return apiFetch<DriverLocationResponse>(`/trips/${tripId}/driver-location`)
+  }
 }
 
