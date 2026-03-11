@@ -1,4 +1,4 @@
-import type { FeatureCollection, LineString } from 'geojson'
+import type { LineString } from 'geojson'
 
 export interface LatLng {
   lat: number
@@ -33,21 +33,26 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteGeometry 
     }
 
     const data = (await res.json()) as {
-      routes?: Array<{ geometry: FeatureCollection<LineString> }>
+      routes?: Array<{ geometry: LineString }>
     }
 
     const geometry = data.routes?.[0]?.geometry
-    if (!geometry) {
+    if (!geometry || geometry.type !== 'LineString' || !geometry.coordinates) {
       return null
     }
 
     const featureCollection: RouteGeometry = {
       type: 'FeatureCollection',
-      features: geometry.features.map((f) => ({
-        type: 'Feature',
-        geometry: f.geometry,
-        properties: f.properties ?? {},
-      })),
+      features: [
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: geometry.coordinates,
+          },
+          properties: {},
+        },
+      ],
     }
 
     return featureCollection
