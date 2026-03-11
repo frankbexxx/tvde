@@ -5,11 +5,17 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.db.base import Base
+from app.db.session import engine
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.user import User
-from app.db.session import SessionLocal
+from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
+
+
+# Ensure tables (including driver_locations) exist for tests.
+Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
@@ -89,7 +95,8 @@ def test_post_driver_location_invalid_latitude() -> None:
     "/drivers/location",
     json={"lat": 100.0, "lng": -8.0, "timestamp": now_ms},
   )
-  assert r.status_code == 400
+  # Pydantic schema validation will reject this as 422 (before service validation).
+  assert r.status_code == 422
 
   _reset_overrides()
   db.close()
@@ -107,7 +114,8 @@ def test_post_driver_location_invalid_longitude() -> None:
     "/drivers/location",
     json={"lat": 40.0, "lng": -200.0, "timestamp": now_ms},
   )
-  assert r.status_code == 400
+  # Pydantic schema validation will reject this as 422 (before service validation).
+  assert r.status_code == 422
 
   _reset_overrides()
   db.close()

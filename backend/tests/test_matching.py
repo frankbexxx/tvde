@@ -5,11 +5,17 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.db.base import Base
+from app.db.session import engine
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.user import User
-from app.db.session import SessionLocal
+from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
+
+
+# Ensure tables exist (including driver_locations) for tests.
+Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
@@ -66,6 +72,10 @@ def _reset_overrides() -> None:
 
 def test_matching_no_drivers() -> None:
   db = _make_db()
+  # Ensure table is empty for this test
+  db.query(DriverLocation).delete()
+  db.commit()
+
   # passenger context
   user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
   _override_dependencies(db, user_ctx)

@@ -5,12 +5,18 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.db.base import Base
+from app.db.session import engine
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.user import User
-from app.db.session import SessionLocal
+from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
+
+
+# Ensure tables exist (including driver_locations) for tests.
+Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
@@ -136,9 +142,9 @@ def test_get_driver_location_forbidden_for_other_passenger() -> None:
   driver_id = _assign_driver_and_location(db, trip_id)
 
   other_passenger = User(
-    email=f"passenger_other_{uuid.uuid4()}@example.com",
-    hashed_password="x",
     role=Role.passenger,
+    name=f"Passenger Other {uuid.uuid4()}",
+    phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
     status=UserStatus.active,
   )
   db.add(other_passenger)
