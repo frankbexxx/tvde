@@ -14,6 +14,7 @@ from app.api.routers import (
     admin,
     admin_ws,
     auth,
+    debug_routes,
     dev_tools,
     driver_trips,
     drivers,
@@ -124,6 +125,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(logs.router)
+app.include_router(debug_routes.router)
 app.include_router(dev_tools.router)
 app.include_router(auth.router)
 app.include_router(passenger_trips.router)

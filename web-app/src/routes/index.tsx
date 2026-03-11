@@ -3,6 +3,7 @@ import { PassengerDashboard } from '../features/passenger/PassengerDashboard'
 import { DriverDashboard } from '../features/driver/DriverDashboard'
 import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { LoginScreen } from '../features/auth/LoginScreen'
+import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { RoleSelector } from '../components/RoleSelector'
 import { ActivityPanel } from '../components/ActivityPanel'
 import { SettingsButton } from '../design-system/components/app/SettingsButton'
@@ -67,6 +68,7 @@ export function AppRoutes() {
                 )
               }
             />
+            <Route path="/debug/map" element={<DebugMapPage />} />
           </Routes>
         </main>
         <ActivityPanel />

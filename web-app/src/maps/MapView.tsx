@@ -117,9 +117,7 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
 
           {/* OSRM route */}
           {routeGeometry && (
-            <RouteLine
-              geometry={routeGeometry}
-            />
+            <RouteLine id="route-source" geometry={routeGeometry} />
           )}
         </Map>
       </div>
