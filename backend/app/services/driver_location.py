@@ -79,7 +79,9 @@ def upsert_driver_location(
         )
 
     loc = db.execute(
-        select(DriverLocation).where(DriverLocation.driver_id == driver_id)
+        select(DriverLocation)
+        .where(DriverLocation.driver_id == driver_id)
+        .limit(1)
     ).scalar_one_or_none()
     if loc is None:
         loc = DriverLocation(
@@ -93,6 +95,25 @@ def upsert_driver_location(
         loc.lat = lat
         loc.lng = lng
         loc.timestamp = ts
+
+    # Simple auto-dispatch for BETA/dev:
+    # If there are requested trips and the driver is available, move the
+    # oldest requested trip into the "assigned" pool so that it appears in
+    # /driver/trips/available.
+    if getattr(settings, "BETA_MODE", False) and getattr(driver, "is_available", True):
+        # Use scalar() instead of scalar_one_or_none() to avoid MultipleResultsFound
+        # if multiple rows happen to be returned in certain test setups.
+        trip = (
+            db.execute(
+                select(Trip)
+                .where(Trip.status == TripStatus.requested)
+                .order_by(Trip.created_at.asc())
+            )
+            .scalars()
+            .first()
+        )
+        if trip is not None:
+            trip.status = TripStatus.assigned
 
     db.commit()
 
