@@ -30,6 +30,12 @@ export interface MapViewProps {
 
 const LISBON_CENTER: LatLng = { lat: 38.7223, lng: -9.1393 }
 
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
+const DEFAULT_MAP_STYLE = 'https://demotiles.maplibre.org/style.json'
+const MAPTILER_STYLE = MAPTILER_KEY
+  ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`
+  : DEFAULT_MAP_STYLE
+
 export function MapView({ passengerLocation, driverLocation, route, className, overlay }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const [hasInitialFit, setHasInitialFit] = useState(false)
@@ -103,7 +109,7 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
           initialViewState={initialViewState}
           reuseMaps
           style={{ width: '100%', height: '100%' }}
-          mapStyle="https://demotiles.maplibre.org/style.json"
+          mapStyle={MAPTILER_STYLE}
         >
           {/* Passenger marker */}
           {passengerLocation && (
