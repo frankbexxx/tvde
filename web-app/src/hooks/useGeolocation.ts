@@ -7,6 +7,11 @@ type LatLng = {
 
 const METERS_THRESHOLD = 5
 
+const LISBON_FALLBACK = {
+  lat: 38.7223,
+  lng: -9.1393,
+} as const
+
 function toRadians(deg: number) {
   return (deg * Math.PI) / 180
 }
@@ -40,6 +45,7 @@ function distanceMeters(a: { lat: number; lng: number }, b: { lat: number; lng: 
 export function useGeolocation(): LatLng {
   const [position, setPosition] = useState<LatLng>(null)
   const lastPositionRef = useRef<LatLng>(null)
+  const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!('geolocation' in navigator)) {
@@ -61,12 +67,28 @@ export function useGeolocation(): LatLng {
 
       lastPositionRef.current = next
       setPosition(next)
+
+      // We have a real GPS fix – cancel any pending fallback.
+      if (fallbackTimeoutRef.current) {
+        clearTimeout(fallbackTimeoutRef.current)
+        fallbackTimeoutRef.current = null
+      }
     }
 
     const onError = (err: GeolocationPositionError) => {
       console.warn('Geolocation error:', err.code, err.message)
       // Keep last known position if any; do not throw.
     }
+
+    // If we don't get any position within 5s, fall back to Lisbon center.
+    fallbackTimeoutRef.current = setTimeout(() => {
+      if (!lastPositionRef.current) {
+        console.warn('Geolocation fallback: using Lisbon center coordinates')
+        const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+        lastPositionRef.current = fallback
+        setPosition(fallback)
+      }
+    }, 5000)
 
     const watchId = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
@@ -76,6 +98,10 @@ export function useGeolocation(): LatLng {
 
     return () => {
       navigator.geolocation.clearWatch(watchId)
+      if (fallbackTimeoutRef.current) {
+        clearTimeout(fallbackTimeoutRef.current)
+        fallbackTimeoutRef.current = null
+      }
     }
   }, [])
 
