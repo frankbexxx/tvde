@@ -132,23 +132,37 @@ def get_driver_location_for_trip(
     - If role=driver: validates that the driver is assigned to the trip.
     - Only returns location if the trip has an assigned driver and is active.
     """
-    trip = db.execute(
-        select(Trip).where(Trip.id == trip_id)
-    ).scalar_one_or_none()
+    trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one_or_none()
     if not trip:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="trip_not_found",
         )
 
-    if role == Role.passenger:
-        if str(trip.passenger_id) != str(user_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="forbidden_trip_access",
-            )
-    elif role == Role.driver:
-        if not trip.driver_id or str(trip.driver_id) != str(user_id):
+    # In closed BETA we relax strict ownership checks to simplify multi-device testing
+    # (different phones for passenger/driver, shared tokens in the web app, etc.).
+    # In non-BETA environments keep the original strict rules.
+    beta_mode = getattr(settings, "BETA_MODE", False)
+    if not beta_mode:
+        if role == Role.passenger:
+            if str(trip.passenger_id) != str(user_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="forbidden_trip_access",
+                )
+        elif role == Role.driver:
+            if not trip.driver_id or str(trip.driver_id) != str(user_id):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="forbidden_trip_access",
+                )
+    else:
+        # BETA: still block clearly unrelated passengers, but allow either the
+        # real passenger or the assigned driver, regardless of token role.
+        if (
+            str(trip.passenger_id) != str(user_id)
+            and (not trip.driver_id or str(trip.driver_id) != str(user_id))
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="forbidden_trip_access",
