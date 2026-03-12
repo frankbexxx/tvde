@@ -6,9 +6,39 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
-from app.models.enums import Role, TripStatus
+from app.models.enums import DriverStatus, Role, TripStatus
+
+
+def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
+    """
+    Ensure a Driver profile exists for the given user_id.
+
+    In BETA/dev environments we are lenient: if a user has a driver token but
+    no Driver row yet, we auto-create an approved driver profile so that
+    tracking and matching work without manual admin intervention.
+    """
+    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    if driver:
+        return driver
+
+    if getattr(settings, "BETA_MODE", False):
+        driver = Driver(
+            user_id=driver_id,
+            status=DriverStatus.approved,
+            commission_percent=15,
+        )
+        db.add(driver)
+        db.commit()
+        db.refresh(driver)
+        return driver
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="driver_not_found",
+    )
 
 
 def upsert_driver_location(
@@ -26,14 +56,7 @@ def upsert_driver_location(
     - Longitude: -180 <= lng <= 180
     - Timestamp within ±1 hour of server time (to avoid bogus values).
     """
-    driver = db.execute(
-        select(Driver).where(Driver.user_id == driver_id)
-    ).scalar_one_or_none()
-    if not driver:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="driver_not_found",
-        )
+    driver = _ensure_driver_profile(db, driver_id)
 
     if not (-90.0 <= lat <= 90.0):
         raise HTTPException(
