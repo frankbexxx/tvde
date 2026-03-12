@@ -102,7 +102,27 @@ def create_trip(
         .where(Driver.is_available == True)
     ).scalars().first()
     if available_driver is not None:
+        previous_status = trip.status
         trip.status = TripStatus.assigned
+        logger.info(
+            "create_trip: auto-assigning trip to pool",
+            extra={
+                "trip_id": str(trip.id),
+                "passenger_id": str(passenger_id),
+                "previous_status": previous_status.value,
+                "new_status": trip.status.value,
+                "auto_assign_driver_id": str(available_driver.user_id),
+            },
+        )
+    else:
+        logger.info(
+            "create_trip: no available driver at request time",
+            extra={
+                "trip_id": str(trip.id),
+                "passenger_id": str(passenger_id),
+                "status": trip.status.value,
+            },
+        )
 
     db.commit()
     db.refresh(trip)
@@ -398,12 +418,31 @@ def list_available_trips(
             detail="forbidden",
         )
     if not getattr(driver, "is_available", True):
+        logger.info(
+            "list_available_trips: driver not available",
+            extra={
+                "driver_id": str(driver_id),
+                "driver_status": driver.status.value,
+                "is_available": getattr(driver, "is_available", None),
+            },
+        )
         return []
 
-    trips = db.execute(
-        select(Trip).where(Trip.status == TripStatus.assigned)
-    ).scalars()
-    return list(trips)
+    trips = list(
+        db.execute(
+            select(Trip).where(Trip.status == TripStatus.assigned)
+        ).scalars()
+    )
+    logger.info(
+        "list_available_trips: fetched trips for driver",
+        extra={
+            "driver_id": str(driver_id),
+            "driver_status": driver.status.value,
+            "is_available": getattr(driver, "is_available", None),
+            "trip_count": len(trips),
+        },
+    )
+    return trips
 
 
 def mark_trip_arriving(

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import logging
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -10,6 +11,9 @@ from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, Role, TripStatus
+
+
+logger = logging.getLogger(__name__)
 
 
 def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
@@ -100,9 +104,8 @@ def upsert_driver_location(
     # If there are requested trips and the driver is available, move the
     # oldest requested trip into the "assigned" pool so that it appears in
     # /driver/trips/available.
-    if getattr(settings, "BETA_MODE", False) and getattr(driver, "is_available", True):
-        # Use scalar() instead of scalar_one_or_none() to avoid MultipleResultsFound
-        # if multiple rows happen to be returned in certain test setups.
+    beta_mode = getattr(settings, "BETA_MODE", False)
+    if beta_mode and getattr(driver, "is_available", True):
         trip = (
             db.execute(
                 select(Trip)
@@ -113,7 +116,26 @@ def upsert_driver_location(
             .first()
         )
         if trip is not None:
+            previous_status = trip.status
             trip.status = TripStatus.assigned
+            logger.info(
+                "upsert_driver_location: auto-dispatch trip",
+                extra={
+                    "trip_id": str(trip.id),
+                    "previous_status": previous_status.value,
+                    "new_status": trip.status.value,
+                    "driver_id": str(driver_id),
+                    "beta_mode": beta_mode,
+                },
+            )
+        else:
+            logger.info(
+                "upsert_driver_location: no requested trips to assign",
+                extra={
+                    "driver_id": str(driver_id),
+                    "beta_mode": beta_mode,
+                },
+            )
 
     db.commit()
 
@@ -134,6 +156,10 @@ def get_driver_location_for_trip(
     """
     trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one_or_none()
     if not trip:
+        logger.info(
+            "get_driver_location_for_trip: trip not found",
+            extra={"trip_id": str(trip_id), "user_id": str(user_id), "role": role.value},
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="trip_not_found",
@@ -146,12 +172,32 @@ def get_driver_location_for_trip(
     if not beta_mode:
         if role == Role.passenger:
             if str(trip.passenger_id) != str(user_id):
+                logger.info(
+                    "get_driver_location_for_trip: forbidden passenger access",
+                    extra={
+                        "trip_id": str(trip_id),
+                        "user_id": str(user_id),
+                        "role": role.value,
+                        "trip_passenger_id": str(trip.passenger_id),
+                        "trip_driver_id": str(trip.driver_id) if trip.driver_id else None,
+                    },
+                )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="forbidden_trip_access",
                 )
         elif role == Role.driver:
             if not trip.driver_id or str(trip.driver_id) != str(user_id):
+                logger.info(
+                    "get_driver_location_for_trip: forbidden driver access",
+                    extra={
+                        "trip_id": str(trip_id),
+                        "user_id": str(user_id),
+                        "role": role.value,
+                        "trip_passenger_id": str(trip.passenger_id),
+                        "trip_driver_id": str(trip.driver_id) if trip.driver_id else None,
+                    },
+                )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="forbidden_trip_access",
@@ -163,12 +209,33 @@ def get_driver_location_for_trip(
             str(trip.passenger_id) != str(user_id)
             and (not trip.driver_id or str(trip.driver_id) != str(user_id))
         ):
+            logger.info(
+                "get_driver_location_for_trip: forbidden beta access",
+                extra={
+                    "trip_id": str(trip_id),
+                    "user_id": str(user_id),
+                    "role": role.value,
+                    "trip_passenger_id": str(trip.passenger_id),
+                    "trip_driver_id": str(trip.driver_id) if trip.driver_id else None,
+                    "beta_mode": beta_mode,
+                },
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="forbidden_trip_access",
             )
 
     if not trip.driver_id:
+        logger.info(
+            "get_driver_location_for_trip: driver not assigned",
+            extra={
+                "trip_id": str(trip_id),
+                "user_id": str(user_id),
+                "role": role.value,
+                "trip_passenger_id": str(trip.passenger_id),
+                "trip_status": trip.status.value,
+            },
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="driver_not_assigned",
