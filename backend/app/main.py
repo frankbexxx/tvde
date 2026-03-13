@@ -25,6 +25,7 @@ from app.api.routers import (
     ws,
 )
 from app.api.routers.webhooks import stripe as stripe_webhook
+from app.middleware import RequestIDMiddleware
 
 import app.db.models  # noqa: F401
 from app.core.config import settings
@@ -113,6 +114,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Ride Sharing API", version="0.1.0", lifespan=lifespan)
 
 app.openapi = custom_openapi
+
+# Request ID for tracing (runs first on request)
+app.add_middleware(RequestIDMiddleware)
 
 # CORS for frontend on different origin (e.g. Render static site)
 app.add_middleware(

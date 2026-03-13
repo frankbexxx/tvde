@@ -19,6 +19,7 @@ from app.schemas.trip import TripCreateRequest
 from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import calculate_price
+from app.utils.logging import log_event
 from app.services.stripe_service import (
     cancel_payment_intent,
     capture_payment_intent,
@@ -104,6 +105,11 @@ def create_trip(
     if available_driver is not None:
         previous_status = trip.status
         trip.status = TripStatus.assigned
+        log_event(
+            "trip_auto_dispatched",
+            trip_id=trip.id,
+            driver_id=available_driver.user_id,
+        )
         logger.info(
             "create_trip: auto-assigning trip to pool",
             extra={
@@ -126,6 +132,7 @@ def create_trip(
 
     db.commit()
     db.refresh(trip)
+    log_event("trip_created", trip_id=trip.id, passenger_id=passenger_id)
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -150,10 +157,17 @@ def cancel_trip_by_passenger(
     if trip.status not in ACTIVE_PASSENGER_CANCEL:
         _raise_invalid_state()
 
+    old_status = trip.status
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
     db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -185,10 +199,17 @@ def cancel_trip_by_driver(
     if trip.status not in ACTIVE_DRIVER_CANCEL:
         _raise_invalid_state()
 
+    old_status = trip.status
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
     db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -234,10 +255,17 @@ def cancel_trip_by_admin(
         except Exception as e:
             logger.warning(f"cancel_trip_by_admin: could not cancel PI: {e}")
 
+    old_status = trip.status
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
     db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -355,6 +383,7 @@ def accept_trip(
     db.add(payment)
 
     # STEP 4: Update trip state and driver availability.
+    old_status = trip.status
     trip.driver_id = driver_id
     trip.status = TripStatus.accepted
     driver.is_available = False
@@ -362,6 +391,14 @@ def accept_trip(
     # STEP 5: Single atomic commit.
     db.commit()
     db.refresh(trip)
+
+    log_event("trip_accepted", trip_id=trip.id, driver_id=driver_id)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
 
     # STEP 6: Emit event.
     emit(
@@ -393,9 +430,16 @@ def assign_trip(
     if trip.driver_id is not None:
         _raise_invalid_state()
 
+    old_status = trip.status
     trip.status = TripStatus.assigned
     db.commit()
     db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -455,9 +499,16 @@ def mark_trip_arriving(
     if trip.status != TripStatus.accepted:
         _raise_invalid_state()
 
+    old_status = trip.status
     trip.status = TripStatus.arriving
     db.commit()
     db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -478,10 +529,17 @@ def start_trip(
     if trip.status != TripStatus.arriving:
         _raise_invalid_state()
 
+    old_status = trip.status
     trip.status = TripStatus.ongoing
     trip.started_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -655,6 +713,7 @@ def complete_trip(
         ) from e
 
     # --- Only after capture succeeds: update DB and commit ---
+    old_status = trip.status
     trip.final_price = final_price
     trip.status = TripStatus.completed
     trip.completed_at = datetime.now(timezone.utc)
@@ -666,6 +725,12 @@ def complete_trip(
     # payment.status stays processing until webhook confirms succeeded.
     db.commit()
     db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),

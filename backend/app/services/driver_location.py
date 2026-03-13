@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
+from app.utils.logging import log_event
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, Role, TripStatus
 
@@ -100,6 +101,8 @@ def upsert_driver_location(
         loc.lng = lng
         loc.timestamp = ts
 
+    log_event("driver_location_update", driver_id=driver_id, lat=lat, lng=lng)
+
     # Simple auto-dispatch for BETA/dev:
     # If there are requested trips and the driver is available, move the
     # oldest requested trip into the "assigned" pool so that it appears in
@@ -118,6 +121,11 @@ def upsert_driver_location(
         if trip is not None:
             previous_status = trip.status
             trip.status = TripStatus.assigned
+            log_event(
+                "trip_auto_dispatched",
+                trip_id=trip.id,
+                driver_id=driver_id,
+            )
             logger.info(
                 "upsert_driver_location: auto-dispatch trip",
                 extra={
@@ -260,5 +268,6 @@ def get_driver_location_for_trip(
             detail="driver_location_not_found",
         )
 
+    log_event("driver_location_requested", trip_id=trip_id, user_id=user_id)
     return float(loc.lat), float(loc.lng), loc.timestamp
 
