@@ -50,7 +50,7 @@ export function PassengerDashboard() {
     () => getTripHistory(token!),
     [token],
     !!token,
-    3000
+    10000
   )
 
   const isOnline = useOnlineStatus()
@@ -177,7 +177,7 @@ export function PassengerDashboard() {
         .catch((err) => {
           console.warn('Failed to fetch driver location', err)
         })
-    }, 3000)
+    }, 2000)
 
     return () => {
       cancelled = true

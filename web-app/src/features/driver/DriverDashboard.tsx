@@ -71,13 +71,13 @@ export function DriverDashboard() {
     () => getAvailableTrips(token!),
     [token],
     pollEnabled,
-    2000
+    3000
   )
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getDriverTripHistory(token!),
     [token],
     !!token,
-    2000
+    10000
   )
 
   // Periodically send driver location to backend when online and location is available.
