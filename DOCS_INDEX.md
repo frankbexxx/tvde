@@ -10,7 +10,7 @@ Referência de todos os ficheiros de documentação do projeto.
 |----------|-----------|
 | [README.md](README.md) | Entrada do projeto — estrutura, início rápido |
 | [PROJECT.md](PROJECT.md) | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento |
-| [ROADMAP.md](ROADMAP.md) | Etapas de implementação, princípios, restrições técnicas |
+| [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](docs/architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico — fases de estabilização, simulação, geo matching, etc. |
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff entre sessões — estado atual, próximas ações |
 
 ---
@@ -42,6 +42,16 @@ Referência de todos os ficheiros de documentação do projeto.
 
 ---
 
+## Arquitetura e prompts
+
+| Ficheiro | Propósito |
+|----------|-----------|
+| [docs/architecture/TVDE_SYSTEM_BLUEPRINT.md](docs/architecture/TVDE_SYSTEM_BLUEPRINT.md) | Blueprint do sistema — objetivos, camadas, trip lifecycle |
+| [docs/architecture/ARCHITECTURE_STATUS.md](docs/architecture/ARCHITECTURE_STATUS.md) | Estado técnico atual — backend, frontend, pipelines |
+| [docs/prompts/CURSOR_IMPLEMENTATION_PROMPTS.md](docs/prompts/CURSOR_IMPLEMENTATION_PROMPTS.md) | Índice de prompts de implementação (PROMPT_-1, 00, 1–4) |
+
+---
+
 ## Referência técnica
 
 | Ficheiro | Propósito |
@@ -68,7 +78,7 @@ Referência de todos os ficheiros de documentação do projeto.
 |---|----------|-----------|
 | 1 | [README.md](README.md) | Entrada do projeto |
 | 2 | [PROJECT.md](PROJECT.md) | Visão geral, stack, modelo |
-| 3 | [ROADMAP.md](ROADMAP.md) | Etapas e princípios |
+| 3 | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](docs/architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico |
 | 4 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff e contexto |
 | 5 | [DOCS_INDEX.md](DOCS_INDEX.md) | Este índice |
 | 6 | [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md) | Deploy no Render |
@@ -81,6 +91,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | 13 | [docs/ESTRUTURA_GUI.md](docs/ESTRUTURA_GUI.md) | Estrutura da GUI |
 | 14 | [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da BD |
 | 15 | [web-app/README.md](web-app/README.md) | Web app |
+| 16 | [scripts/README.md](scripts/README.md) | Scripts do projeto |
 
 ---
 
@@ -89,5 +100,6 @@ Referência de todos os ficheiros de documentação do projeto.
 | Localização | Conteúdo |
 |-------------|----------|
 | `archive/docs_nao_essenciais/` | Docs movidos em 2026-03-08 (guias alternativos, relatórios, design system antigo, etc.) — ver README nessa pasta |
+| `archive/docs_2026_03_22/` | Docs movidos em 2026-03-22 (arquitetura duplicada, regressão, visão produto, logs simulator) — ver README nessa pasta |
 | `archive_support/` | Runbooks e manuais desatualizados |
 | `archive/` (resto) | Screenshots, PDFs, imagens de sessão |
