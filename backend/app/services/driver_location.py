@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
 from app.utils.logging import log_event
+from app.utils.state_machine import validate_trip_transition
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, Role, TripStatus
 
@@ -120,6 +121,7 @@ def upsert_driver_location(
         )
         if trip is not None:
             previous_status = trip.status
+            validate_trip_transition(previous_status, TripStatus.assigned, trip_id=str(trip.id))
             trip.status = TripStatus.assigned
             log_event(
                 "trip_auto_dispatched",

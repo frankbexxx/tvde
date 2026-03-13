@@ -20,6 +20,7 @@ from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import calculate_price
 from app.utils.logging import log_event
+from app.utils.state_machine import validate_trip_transition
 from app.services.stripe_service import (
     cancel_payment_intent,
     capture_payment_intent,
@@ -104,6 +105,7 @@ def create_trip(
     ).scalars().first()
     if available_driver is not None:
         previous_status = trip.status
+        validate_trip_transition(previous_status, TripStatus.assigned, trip_id=str(trip.id))
         trip.status = TripStatus.assigned
         log_event(
             "trip_auto_dispatched",
@@ -158,6 +160,7 @@ def cancel_trip_by_passenger(
         _raise_invalid_state()
 
     old_status = trip.status
+    validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
@@ -200,6 +203,7 @@ def cancel_trip_by_driver(
         _raise_invalid_state()
 
     old_status = trip.status
+    validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
@@ -244,6 +248,9 @@ def cancel_trip_by_admin(
             detail=f"cannot_cancel_trip_in_status_{trip.status.value}",
         )
 
+    old_status = trip.status
+    validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
+
     payment = trip.payment
     if payment and payment.stripe_payment_intent_id:
         try:
@@ -255,7 +262,6 @@ def cancel_trip_by_admin(
         except Exception as e:
             logger.warning(f"cancel_trip_by_admin: could not cancel PI: {e}")
 
-    old_status = trip.status
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
@@ -306,6 +312,8 @@ def accept_trip(
         _raise_invalid_state()
     if trip.driver_id is not None:
         _raise_invalid_state()
+
+    validate_trip_transition(trip.status, TripStatus.accepted, trip_id=str(trip.id))
 
     # Idempotency: check if payment already exists (protect against double accept).
     existing_payment = db.execute(
@@ -430,6 +438,7 @@ def assign_trip(
     if trip.driver_id is not None:
         _raise_invalid_state()
 
+    validate_trip_transition(trip.status, TripStatus.assigned, trip_id=str(trip.id))
     old_status = trip.status
     trip.status = TripStatus.assigned
     db.commit()
@@ -499,6 +508,7 @@ def mark_trip_arriving(
     if trip.status != TripStatus.accepted:
         _raise_invalid_state()
 
+    validate_trip_transition(trip.status, TripStatus.arriving, trip_id=str(trip.id))
     old_status = trip.status
     trip.status = TripStatus.arriving
     db.commit()
@@ -529,6 +539,7 @@ def start_trip(
     if trip.status != TripStatus.arriving:
         _raise_invalid_state()
 
+    validate_trip_transition(trip.status, TripStatus.ongoing, trip_id=str(trip.id))
     old_status = trip.status
     trip.status = TripStatus.ongoing
     trip.started_at = datetime.now(timezone.utc)
@@ -567,12 +578,7 @@ def complete_trip(
     trip = _get_trip_for_driver(db=db, driver_id=driver_id, trip_id=trip_id)
     
     # Validate trip state.
-    if trip.status != TripStatus.ongoing:
-        logger.warning(
-            f"complete_trip: Invalid trip status trip_id={trip_id}, status={trip.status}, "
-            f"expected=ongoing"
-        )
-        _raise_invalid_state()
+    validate_trip_transition(trip.status, TripStatus.completed, trip_id=str(trip.id))
 
     # Payment must exist (created in accept_trip).
     payment = db.execute(
