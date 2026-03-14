@@ -90,7 +90,6 @@ async def lifespan(app: FastAPI):
     _dev = getattr(settings, "ENABLE_DEV_TOOLS", False)
     _beta = getattr(settings, "BETA_MODE", False)
     print(f"[TVDE] config ENV={_env} ENABLE_DEV_TOOLS={_dev} BETA_MODE={_beta}")
-    print("ENGINE URL:", engine.url)
     try:
         Base.metadata.create_all(bind=engine)
     except ProgrammingError as e:

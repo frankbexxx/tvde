@@ -44,9 +44,9 @@ def log(driver_id: int, msg: str) -> None:
 
 async def check_connectivity(api_base: str, verbose: bool = False) -> dict:
     """Verify we can reach the API. Returns health payload. Raises on failure."""
-    # GET /health — pedido mínimo; timeout 60s (Render cold start ~50s)
+    # GET / — pedido mínimo (Render LB usa root); timeout 60s (cold start ~50s)
     async with httpx.AsyncClient(timeout=60.0) as client:
-        r = await client.get(f"{api_base}/health")
+        r = await client.get(api_base)
         if r.status_code != 200:
             raise RuntimeError(f"Health {r.status_code}: {r.text[:200]}")
         return r.json()

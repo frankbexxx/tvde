@@ -34,7 +34,12 @@ def _fix_database_url(url: str) -> str:
 
 
 _db_url = _fix_database_url(settings.DATABASE_URL)
-engine = create_engine(_db_url, pool_pre_ping=True)
+# connect_timeout evita hang infinito se a BD estiver inacessível (ex: Render cold)
+engine = create_engine(
+    _db_url,
+    pool_pre_ping=True,
+    connect_args={"connect_timeout": 10},
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
