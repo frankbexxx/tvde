@@ -5,6 +5,12 @@
 backend/.env
 web-app/.env
 DEPLOY_SECRETS.md
+*.pem
+*.key
+*credentials*
+*secrets*.json
+unified_payments.csv
+interaction_logs*.csv
 
 # Python
 __pycache__/
@@ -39,3 +45,6 @@ temp/
 
 # Archive (imagens e assets de sessão — opcional manter local)
 archive/cursor_images/
+
+# Exports temporários — mover para archive/ periodicamente
+# unified_payments.csv, logs/*, interaction_logs*.csv

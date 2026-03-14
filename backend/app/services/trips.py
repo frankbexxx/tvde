@@ -38,11 +38,13 @@ ACTIVE_PASSENGER_CANCEL = {
     TripStatus.assigned,
     TripStatus.accepted,
     TripStatus.arriving,
+    TripStatus.ongoing,  # Allow cancel when stuck (e.g. complete failed)
 }
 
 ACTIVE_DRIVER_CANCEL = {
     TripStatus.accepted,
     TripStatus.arriving,
+    TripStatus.ongoing,
 }
 
 
@@ -152,7 +154,9 @@ def cancel_trip_by_passenger(
     trip_id: str,
 ) -> Trip:
     trip = db.execute(
-        select(Trip).where(Trip.id == trip_id, Trip.passenger_id == passenger_id)
+        select(Trip).where(Trip.id == trip_id, Trip.passenger_id == passenger_id).options(
+            joinedload(Trip.payment)
+        )
     ).scalar_one_or_none()
     if not trip:
         _raise_not_found()
@@ -161,6 +165,20 @@ def cancel_trip_by_passenger(
 
     old_status = trip.status
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
+
+    # Cancel PaymentIntent if trip has payment (accepted/arriving/ongoing)
+    payment = trip.payment
+    pi_id = (payment.stripe_payment_intent_id or "") if payment else ""
+    if payment and pi_id and not pi_id.startswith("pi_mock_"):
+        try:
+            intent = retrieve_payment_intent(pi_id)
+            pi_status = getattr(intent, "status", None) or intent.get("status", "")
+            if pi_status in ("requires_payment_method", "requires_confirmation", "requires_action", "requires_capture"):
+                cancel_payment_intent(pi_id)
+                logger.info(f"cancel_trip_by_passenger: cancelled PI {pi_id}")
+        except Exception as e:
+            logger.warning(f"cancel_trip_by_passenger: could not cancel PI: {e}")
+
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
@@ -196,7 +214,9 @@ def cancel_trip_by_driver(
     driver_id: str,
     trip_id: str,
 ) -> Trip:
-    trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one_or_none()
+    trip = db.execute(
+        select(Trip).where(Trip.id == trip_id).options(joinedload(Trip.payment))
+    ).scalar_one_or_none()
     if not trip or str(trip.driver_id) != str(driver_id):
         _raise_not_found()
     if trip.status not in ACTIVE_DRIVER_CANCEL:
@@ -204,6 +224,19 @@ def cancel_trip_by_driver(
 
     old_status = trip.status
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
+
+    payment = trip.payment
+    pi_id = (payment.stripe_payment_intent_id or "") if payment else ""
+    if payment and pi_id and not pi_id.startswith("pi_mock_"):
+        try:
+            intent = retrieve_payment_intent(pi_id)
+            pi_status = getattr(intent, "status", None) or intent.get("status", "")
+            if pi_status in ("requires_payment_method", "requires_confirmation", "requires_action", "requires_capture"):
+                cancel_payment_intent(pi_id)
+                logger.info(f"cancel_trip_by_driver: cancelled PI {pi_id}")
+        except Exception as e:
+            logger.warning(f"cancel_trip_by_driver: could not cancel PI: {e}")
+
     trip.status = TripStatus.cancelled
     _set_driver_available(db, trip.driver_id)
     db.commit()
@@ -348,28 +381,33 @@ def accept_trip(
     commission_amount = _money(total_amount * commission_rate)
     driver_amount = _money(total_amount - commission_amount)
 
-    # STEP 1: Create Stripe PaymentIntent (no confirm; status=requires_confirmation).
-    # Amount will be updated and confirmed at complete_trip.
-    try:
-        intent = create_authorization_payment_intent(
-            amount_cents=amount_cents,
-            currency="EUR",
-            metadata={"trip_id": str(trip.id)},
-        )
-        logger.info(
-            f"accept_trip: PaymentIntent created (requires_confirmation) trip_id={trip_id}, "
-            f"payment_intent_id={intent.id}"
-        )
-    except stripe.error.StripeError as e:
-        logger.error(
-            f"accept_trip: Stripe authorization failed trip_id={trip_id}, driver_id={driver_id}, "
-            f"error={str(e)}"
-        )
-        # Trip state NOT changed - remains assigned.
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail="Payment authorization failed.",
-        ) from e
+    # STEP 1: Create Stripe PaymentIntent (or mock when STRIPE_MOCK).
+    stripe_pi_id: str
+    if getattr(settings, "STRIPE_MOCK", False):
+        import uuid
+        stripe_pi_id = f"pi_mock_{uuid.uuid4().hex[:24]}"
+        logger.info(f"accept_trip: STRIPE_MOCK — fake PI trip_id={trip_id}")
+    else:
+        try:
+            intent = create_authorization_payment_intent(
+                amount_cents=amount_cents,
+                currency="EUR",
+                metadata={"trip_id": str(trip.id)},
+            )
+            stripe_pi_id = intent.id
+            logger.info(
+                f"accept_trip: PaymentIntent created (requires_confirmation) trip_id={trip_id}, "
+                f"payment_intent_id={stripe_pi_id}"
+            )
+        except stripe.error.StripeError as e:
+            logger.error(
+                f"accept_trip: Stripe authorization failed trip_id={trip_id}, driver_id={driver_id}, "
+                f"error={str(e)}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="Payment authorization failed.",
+            ) from e
 
     # STEP 2: Extract authorization expiration if available.
     # Note: This may not be available immediately after PaymentIntent creation.
@@ -385,7 +423,7 @@ def accept_trip(
         driver_amount=float(driver_amount),
         currency="EUR",
         status=PaymentStatus.processing,
-        stripe_payment_intent_id=intent.id,
+        stripe_payment_intent_id=stripe_pi_id,
         authorization_expires_at=authorization_expires_at,
     )
     db.add(payment)
@@ -418,8 +456,7 @@ def accept_trip(
     )
 
     # Future: when ENABLE_CONFIRM_ON_ACCEPT, return client_secret for frontend confirmation.
-    # Backend does NOT confirm here; frontend will confirm (3DS possible).
-    client_secret = intent.client_secret if settings.ENABLE_CONFIRM_ON_ACCEPT else None
+    client_secret = None
     return trip, client_secret
 
 
@@ -640,85 +677,87 @@ def complete_trip(
     commission_amount = _money(Decimal(str(final_price)) * commission_rate)
     driver_payout = _money(Decimal(str(final_price)) - commission_amount)
 
-    # --- Stripe: update, confirm, capture. Only commit DB after capture succeeds. ---
-    # Retry: if PI already in requires_capture (e.g. confirm succeeded, capture failed),
-    # skip update/confirm and go straight to capture.
-    intent = retrieve_payment_intent(payment.stripe_payment_intent_id)
-    pi_status = intent.status if hasattr(intent, "status") else intent.get("status")
+    # --- Stripe: update, confirm, capture. Skip when STRIPE_MOCK (simulator/testing). ---
+    stripe_mock = (
+        getattr(settings, "STRIPE_MOCK", False)
+        or (payment.stripe_payment_intent_id or "").startswith("pi_mock_")
+    )
+    if stripe_mock:
+        logger.info(f"complete_trip: STRIPE_MOCK — skipping Stripe API trip_id={trip_id}")
+    else:
+        intent = retrieve_payment_intent(payment.stripe_payment_intent_id)
+        pi_status = intent.status if hasattr(intent, "status") else intent.get("status")
 
-    if pi_status != "requires_capture":
-        # Normal flow: update amount, then confirm.
-        amount_cents = max(50, int(round(final_price * 100)))
-        try:
-            update_payment_intent_amount(
-                payment.stripe_payment_intent_id,
-                amount_cents=amount_cents,
-            )
-            logger.info(
-                f"complete_trip: PaymentIntent amount updated trip_id={trip_id}, "
-                f"final_price={final_price}"
-            )
-        except stripe.error.StripeError as e:
-            logger.error(
-                f"complete_trip: Stripe update amount failed trip_id={trip_id}, error={str(e)}"
-            )
-            db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Payment amount update failed.",
-            ) from e
-
-        try:
-            # Dev or ENABLE_DEV_TOOLS (field validation): use test card, no frontend payment flow.
-            if settings.ENV == "dev" or settings.ENABLE_DEV_TOOLS:
-                confirm_payment_intent(
+        if pi_status != "requires_capture":
+            amount_cents = max(50, int(round(final_price * 100)))
+            try:
+                update_payment_intent_amount(
                     payment.stripe_payment_intent_id,
-                    payment_method="pm_card_visa",
+                    amount_cents=amount_cents,
                 )
-            else:
-                confirm_payment_intent(payment.stripe_payment_intent_id)
+                logger.info(
+                    f"complete_trip: PaymentIntent amount updated trip_id={trip_id}, "
+                    f"final_price={final_price}"
+                )
+            except stripe.error.StripeError as e:
+                logger.error(
+                    f"complete_trip: Stripe update amount failed trip_id={trip_id}, error={str(e)}"
+                )
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Payment amount update failed.",
+                ) from e
+
+            try:
+                if settings.ENV == "dev" or settings.ENABLE_DEV_TOOLS:
+                    confirm_payment_intent(
+                        payment.stripe_payment_intent_id,
+                        payment_method="pm_card_visa",
+                    )
+                else:
+                    confirm_payment_intent(payment.stripe_payment_intent_id)
+                logger.info(
+                    f"complete_trip: PaymentIntent confirmed trip_id={trip_id}, "
+                    f"payment_intent_id={payment.stripe_payment_intent_id}"
+                )
+            except stripe.error.StripeError as e:
+                logger.error(
+                    f"complete_trip: Stripe confirm failed trip_id={trip_id}, error={str(e)}"
+                )
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Payment confirmation failed.",
+                ) from e
+        else:
+            amount_cents = intent.amount if hasattr(intent, "amount") else intent.get("amount", 0)
+            final_price = round(amount_cents / 100.0, 2)
+            commission_amount = _money(Decimal(str(final_price)) * commission_rate)
+            driver_payout = _money(Decimal(str(final_price)) - commission_amount)
             logger.info(
-                f"complete_trip: PaymentIntent confirmed trip_id={trip_id}, "
+                f"complete_trip: Retry — PI already requires_capture, skipping update/confirm "
+                f"trip_id={trip_id}"
+            )
+
+        try:
+            capture_payment_intent(payment.stripe_payment_intent_id)
+            logger.info(
+                f"complete_trip: PaymentIntent captured trip_id={trip_id}, "
                 f"payment_intent_id={payment.stripe_payment_intent_id}"
             )
         except stripe.error.StripeError as e:
             logger.error(
-                f"complete_trip: Stripe confirm failed trip_id={trip_id}, error={str(e)}"
+                f"complete_trip: Stripe capture failed trip_id={trip_id}, "
+                f"payment_intent_id={payment.stripe_payment_intent_id}, error={str(e)}"
             )
             db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Payment confirmation failed.",
+                detail="Payment capture failed.",
             ) from e
-    else:
-        # Retry: PI already confirmed, use amount from Stripe for DB consistency.
-        amount_cents = intent.amount if hasattr(intent, "amount") else intent.get("amount", 0)
-        final_price = round(amount_cents / 100.0, 2)
-        commission_amount = _money(Decimal(str(final_price)) * commission_rate)
-        driver_payout = _money(Decimal(str(final_price)) - commission_amount)
-        logger.info(
-            f"complete_trip: Retry — PI already requires_capture, skipping update/confirm "
-            f"trip_id={trip_id}"
-        )
 
-    try:
-        capture_payment_intent(payment.stripe_payment_intent_id)
-        logger.info(
-            f"complete_trip: PaymentIntent captured trip_id={trip_id}, "
-            f"payment_intent_id={payment.stripe_payment_intent_id}"
-        )
-    except stripe.error.StripeError as e:
-        logger.error(
-            f"complete_trip: Stripe capture failed trip_id={trip_id}, "
-            f"payment_intent_id={payment.stripe_payment_intent_id}, error={str(e)}"
-        )
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Payment capture failed.",
-        ) from e
-
-    # --- Only after capture succeeds: update DB and commit ---
+    # --- Only after capture succeeds (or STRIPE_MOCK): update DB and commit ---
     old_status = trip.status
     trip.final_price = final_price
     trip.status = TripStatus.completed

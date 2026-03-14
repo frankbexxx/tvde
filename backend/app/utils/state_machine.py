@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 ALLOWED_TRANSITIONS: dict[TripStatus, list[TripStatus]] = {
     TripStatus.requested: [TripStatus.assigned, TripStatus.cancelled],
     TripStatus.assigned: [TripStatus.accepted, TripStatus.cancelled],
-    TripStatus.accepted: [TripStatus.arriving],
-    TripStatus.arriving: [TripStatus.ongoing],
-    TripStatus.ongoing: [TripStatus.completed],
+    TripStatus.accepted: [TripStatus.arriving, TripStatus.cancelled],
+    TripStatus.arriving: [TripStatus.ongoing, TripStatus.cancelled],
+    TripStatus.ongoing: [TripStatus.completed, TripStatus.cancelled],
 }
 
 

@@ -31,6 +31,7 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
   isAdmin: boolean
+  loadError: string | null
   setRole: (role: Role) => void
   loadTokens: () => Promise<void>
   login: (phone: string, password: string, requestedRole?: string) => Promise<void>
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [betaUserId, setBetaUserId] = useState<string | null>(null)
   const [betaMode, setBetaMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const role = useMemo<Role>(() => {
     if (pathname.startsWith('/admin')) return 'admin'
@@ -72,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [betaMode, betaToken, tokens, role])
 
   const loadTokens = useCallback(async () => {
+    setIsLoading(true)
+    setLoadError(null)
     setStatus('A carregar...')
     try {
       const config = await getConfig()
@@ -86,12 +90,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus('Pronto')
         addLog('Tokens carregados', 'success')
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Failed to load:', err)
       setTokens(null)
       setBetaMode(false)
-      setStatus('Erro: executar Seed primeiro')
-      addLog('Falha ao carregar — executar Seed', 'error')
+      const detail =
+        err && typeof err === 'object' && 'detail' in err
+          ? String((err as { detail?: string }).detail)
+          : ''
+      const isTimeout = detail.includes('Servidor indisponível') || detail.includes('timeout')
+      const msg = isTimeout ? 'Servidor indisponível. Tenta novamente.' : 'Erro: executar Seed primeiro'
+      setLoadError(msg)
+      setStatus(msg)
+      addLog(isTimeout ? 'Timeout ao ligar ao servidor' : 'Falha ao carregar — executar Seed', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -159,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       tokens,
       isAdmin,
+      loadError,
       setRole,
       loadTokens,
       login,
@@ -173,6 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       tokens,
       isAdmin,
+      loadError,
       setRole,
       loadTokens,
       login,

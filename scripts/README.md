@@ -4,6 +4,9 @@ Scripts PowerShell e Python para automatizar o protocolo de teste. Executar a pa
 
 | Script | O que faz |
 |--------|-----------|
+| `archive_temp.ps1` | Arquivar unified_payments.csv, logs/ para archive/ e limpar tmp/, temp/. Executar periodicamente. |
+| `run_tests.ps1` | Executa pytest (backend) + test_simulator_trip (quando backend está up). Sem intervenção manual. |
+| `test_simulator_trip.py` | Teste de integração: seed → driver → criar viagem → verificar completed. |
 | `driver_simulator.py` | Simula N motoristas (location, accept, lifecycle). Requer backend com ENABLE_DEV_TOOLS. |
 | `1_start_db.ps1` | Inicia o contentor PostgreSQL (cria se não existir), espera 8 s |
 | `2_reset_db.ps1` | TRUNCATE payments, trips via `POST /dev/reset` (backend deve estar a correr) |
@@ -15,11 +18,13 @@ Scripts PowerShell e Python para automatizar o protocolo de teste. Executar a pa
 # 10 motoristas, intervalo 3s
 python scripts/driver_simulator.py --drivers 10
 
-# 50 motoristas, API no Render
+# 50 motoristas, API no Render (mesma BD que o frontend)
 API_BASE=https://tvde-api-fd2z.onrender.com python scripts/driver_simulator.py --drivers 50
 ```
 
 Requer: `pip install httpx` (ou venv do backend).
+
+**Render:** Se `complete` falhar (Stripe), define `STRIPE_MOCK=true` nas env vars do Render para o simulador funcionar sem Stripe real.
 
 ## Uso
 

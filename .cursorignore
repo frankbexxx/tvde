@@ -1,0 +1,17 @@
+# Secrets - nunca incluir em contexto
+.env
+.env.*
+backend/.env
+web-app/.env
+*.pem
+*.key
+*credentials*
+*secrets*
+unified_payments.csv
+interaction_logs*.csv
+DEPLOY_SECRETS.md
+
+# Logs e exports temporarios
+logs/
+tmp/
+temp/

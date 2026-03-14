@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     STRIPE_SECRET_KEY: str
     STRIPE_WEBHOOK_SECRET: str | None = None
+    STRIPE_MOCK: bool = False  # When True, skip Stripe API calls (simulator/testing only)
 
     ENV: str = "dev"
     ENABLE_DEV_TOOLS: bool = False  # When True, /dev/seed and /dev/tokens work in production (for field validation)

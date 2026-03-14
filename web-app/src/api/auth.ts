@@ -1,4 +1,4 @@
-import { apiFetch } from './client'
+import { apiFetch, INITIAL_LOAD_TIMEOUT_MS } from './client'
 
 export interface TokenResponse {
   access_token: string
@@ -19,11 +19,14 @@ export interface ConfigResponse {
 }
 
 export async function getConfig(): Promise<ConfigResponse> {
-  return apiFetch<ConfigResponse>('/config')
+  return apiFetch<ConfigResponse>('/config', { timeoutMs: INITIAL_LOAD_TIMEOUT_MS })
 }
 
 export async function getDevTokens(): Promise<AuthTokens> {
-  return apiFetch<AuthTokens>('/dev/tokens', { method: 'POST' })
+  return apiFetch<AuthTokens>('/dev/tokens', {
+    method: 'POST',
+    timeoutMs: INITIAL_LOAD_TIMEOUT_MS,
+  })
 }
 
 export async function requestOtp(
