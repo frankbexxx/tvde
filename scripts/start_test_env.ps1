@@ -57,16 +57,41 @@ Write-Host ""
 Write-Host "4. A iniciar frontend (nova janela)..." -ForegroundColor Yellow
 $frontendCmd = "cd `"$root\web-app`"; npm run dev"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $frontendCmd
-Start-Sleep -Seconds 5
+Start-Sleep -Seconds 8
 Write-Host ""
 
-# 5. Resumo
+# 5. Verificar frontend
+Write-Host "5. A verificar frontend..." -ForegroundColor Yellow
+$frontendOk = $false
+$maxFrontendAttempts = 4
+$frontendAttempt = 0
+while ($frontendAttempt -lt $maxFrontendAttempts) {
+    try {
+        $r = Invoke-WebRequest -Uri "http://localhost:5173" -UseBasicParsing -TimeoutSec 5
+        if ($r.StatusCode -eq 200) {
+            $frontendOk = $true
+            break
+        }
+    } catch {
+        $frontendAttempt++
+        Write-Host "   Tentativa $frontendAttempt/$maxFrontendAttempts — a aguardar..." -ForegroundColor Gray
+        Start-Sleep -Seconds 3
+    }
+}
+if (-not $frontendOk) {
+    Write-Host "AVISO: Frontend pode ainda nao estar pronto. Verifica http://localhost:5173 manualmente." -ForegroundColor Yellow
+} else {
+    Write-Host "   Frontend OK." -ForegroundColor Green
+}
+Write-Host ""
+
+# 6. Resumo
 Write-Host "=== Sistema pronto para testes ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "URLs:" -ForegroundColor Cyan
 Write-Host "  Frontend:  http://localhost:5173" -ForegroundColor White
 Write-Host "  API Docs:  http://localhost:8000/docs" -ForegroundColor White
 Write-Host ""
-Write-Host "Simulador: python scripts/driver_simulator.py --drivers 10" -ForegroundColor Gray
+Write-Host "Verificacao pre-teste: docs/testing/PRE_TEST_VERIFICATION.md" -ForegroundColor Gray
 Write-Host "Testes: docs/testing/TEST_BOOK_*.md" -ForegroundColor Gray
 Write-Host ""

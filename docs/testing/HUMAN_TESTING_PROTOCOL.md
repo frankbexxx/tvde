@@ -90,6 +90,7 @@ docs/testing/
 ├── HUMAN_TESTING_PROTOCOL.md
 ├── TESTING_RULES.md
 ├── TEST_FAILURE_PROTOCOL.md
+├── PRE_TEST_VERIFICATION.md
 ├── TEST_ENVIRONMENT_SETUP.md
 ├── TEST_STATE_DEFINITION.md
 ├── TEST_NAVIGATION_MAP.md
@@ -100,6 +101,20 @@ docs/testing/
 ```
 
 Each file has a specific role.
+
+---
+
+# Pre-Test Verification (Mandatory Gate)
+
+Defined in:
+
+```
+docs/testing/PRE_TEST_VERIFICATION.md
+```
+
+**No test may start without this verification being complete.**
+
+All services must be online and communicating. If any verification step fails: STOP. Do not proceed to test books. Fix the issue and repeat.
 
 ---
 

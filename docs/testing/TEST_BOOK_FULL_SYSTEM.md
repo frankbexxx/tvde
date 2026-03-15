@@ -4,6 +4,8 @@ Este teste verifica o **pipeline completo** da plataforma.
 
 **Test ID:** TEST-F-001
 
+**Pré-requisito:** Este teste inclui arranque completo. Após os Passos 1-6, executa `docs/testing/PRE_TEST_VERIFICATION.md` antes do Passo 7. Se qualquer verificação falhar, PARA.
+
 **Em caso de falha:** Segue `docs/testing/TEST_FAILURE_PROTOCOL.md`. Para imediatamente. Regista Test ID, Passo, Esperado, Observado.
 
 ---

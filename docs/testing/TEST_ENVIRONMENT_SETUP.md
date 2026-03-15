@@ -184,3 +184,15 @@ cd <PROJECT_ROOT>
 **Resultado esperado**
 
 Mensagem: `Sistema pronto para testes.`
+
+---
+
+## Verificação Pré-Teste (Obrigatória)
+
+Antes de executar qualquer teste, completa a verificação em:
+
+```
+docs/testing/PRE_TEST_VERIFICATION.md
+```
+
+Nenhum teste é válido sem verificação prévia aprovada.

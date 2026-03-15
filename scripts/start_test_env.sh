@@ -55,10 +55,27 @@ cd "$ROOT/web-app"
 npm run dev &
 FRONTEND_PID=$!
 cd "$ROOT"
-sleep 5
+sleep 8
 echo ""
 
-# 5. Resumo
+# 5. Verificar frontend
+echo "5. A verificar frontend..."
+frontend_ok=false
+for i in 1 2 3 4; do
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:5173 2>/dev/null | grep -q 200; then
+        echo "   Frontend OK."
+        frontend_ok=true
+        break
+    fi
+    echo "   Tentativa $i/4 — a aguardar..."
+    sleep 3
+done
+if [ "$frontend_ok" = false ]; then
+    echo "   AVISO: Frontend pode ainda nao estar pronto. Verifica http://localhost:5173 manualmente."
+fi
+echo ""
+
+# 6. Resumo
 echo "=== Sistema pronto para testes ==="
 echo ""
 echo "URLs:"
@@ -66,6 +83,6 @@ echo "  Frontend:  http://localhost:5173"
 echo "  API Docs:  http://localhost:8000/docs"
 echo ""
 echo "Para parar: kill $BACKEND_PID $FRONTEND_PID"
-echo "Simulador: python scripts/driver_simulator.py --drivers 10"
+echo "Verificacao pre-teste: docs/testing/PRE_TEST_VERIFICATION.md"
 echo "Testes: docs/testing/TEST_BOOK_*.md"
 echo ""

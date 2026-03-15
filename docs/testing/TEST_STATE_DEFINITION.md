@@ -61,9 +61,17 @@ Se já tens utilizadores aprovados com telemóvel e password conhecidos, usa ess
 
 ## Verificação Pré-Teste
 
-Antes de executar qualquer teste, o testador deve verificar:
+Antes de executar qualquer teste, o testador **deve** completar:
 
-1. O backend responde em `http://localhost:8000/docs` — confirma que a interface Swagger aparece.
-2. O frontend responde em `http://localhost:5173` — confirma que a app carrega.
-3. Consegues fazer login (BETA) ou vês o dashboard (dev).
-4. Não existe viagem ativa em curso.
+```
+docs/testing/PRE_TEST_VERIFICATION.md
+```
+
+Essa verificação confirma:
+
+1. Backend responde e API Docs visível
+2. Frontend responde e app carrega
+3. Comunicação frontend ↔ backend funciona
+4. Estado do sistema cumpre os requisitos acima (motoristas, passageiros, sem viagens bloqueantes)
+
+**Sem verificação aprovada, os testes não são válidos.**

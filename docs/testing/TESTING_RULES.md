@@ -6,6 +6,8 @@ Todas as instruções de teste devem seguir estas regras.
 
 ## Regras Obrigatórias
 
+0. **Nenhum teste pode começar sem verificação prévia aprovada.** Executa `docs/testing/PRE_TEST_VERIFICATION.md` antes de qualquer livro de teste. Se qualquer verificação falhar, PARA. Não prossigas.
+
 1. **Todos os testes devem incluir um ID único.**
    - Passageiro: TEST-P-001, TEST-P-002, ...
    - Motorista: TEST-D-001, TEST-D-002, ...

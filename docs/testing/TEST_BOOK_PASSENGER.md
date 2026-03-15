@@ -2,13 +2,15 @@
 
 Cenários de teste para a aplicação passageiro.
 
+**Pré-requisito obrigatório:** Verificação concluída em `docs/testing/PRE_TEST_VERIFICATION.md`. Se não concluíste, PARA e executa primeiro.
+
 **Em caso de falha:** Segue `docs/testing/TEST_FAILURE_PROTOCOL.md`. Para imediatamente. Regista Test ID, Passo, Esperado, Observado.
 
 ---
 
 ## TEST-P-001 — Login (BETA)
 
-**Requisitos:** BETA_MODE=true, backend e frontend a correr.
+**Requisitos:** Verificação pré-teste aprovada. BETA_MODE=true.
 
 **Passo 1**
 

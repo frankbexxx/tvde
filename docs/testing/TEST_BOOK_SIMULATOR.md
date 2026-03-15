@@ -2,6 +2,8 @@
 
 Este documento explica como executar o **simulador de motoristas**.
 
+**Pré-requisito obrigatório:** Verificação concluída em `docs/testing/PRE_TEST_VERIFICATION.md` (Passos 1-2: backend). Se o backend não responder, PARA e inicia primeiro.
+
 **Em caso de falha:** Segue `docs/testing/TEST_FAILURE_PROTOCOL.md`. Para imediatamente. Regista Test ID, Passo, Esperado, Observado.
 
 ---

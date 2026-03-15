@@ -2,13 +2,15 @@
 
 Cenários de teste para a aplicação motorista.
 
+**Pré-requisito obrigatório:** Verificação concluída em `docs/testing/PRE_TEST_VERIFICATION.md`. Se não concluíste, PARA e executa primeiro.
+
 **Em caso de falha:** Segue `docs/testing/TEST_FAILURE_PROTOCOL.md`. Para imediatamente. Regista Test ID, Passo, Esperado, Observado.
 
 ---
 
 ## TEST-D-001 — Login Motorista (BETA)
 
-**Requisitos:** BETA_MODE=true, conta de motorista aprovada.
+**Requisitos:** Verificação pré-teste aprovada. BETA_MODE=true. Conta de motorista aprovada.
 
 **Passo 1**
 
