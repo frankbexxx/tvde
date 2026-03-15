@@ -4,6 +4,20 @@ Este documento explica como iniciar todo o sistema para testes manuais.
 
 ---
 
+## Sequência completa antes de testes
+
+| # | Ação | Documento/Comando |
+|---|------|-------------------|
+| 1 | Arrancar sistema | `.\scripts\start_test_env.ps1` ou Passos 1-4 abaixo |
+| 2 | (Opcional) Reset BD | `.\scripts\2_reset_db.ps1` — para estado limpo |
+| 3 | (Obrigatório) Ter motoristas/passageiros | Seed via `POST /dev/seed` ou `driver_simulator.py` — ver `TEST_STATE_DEFINITION.md` |
+| 4 | Verificação pré-teste | `docs/testing/PRE_TEST_VERIFICATION.md` — VER-001 a VER-005 |
+| 5 | Executar testes | `docs/testing/TEST_BOOK_*.md` |
+
+Sem o passo 3, VER-005 falhará (sem motoristas/passageiros). Sem o passo 4 aprovado, os testes não são válidos.
+
+---
+
 ## Diretório do Projeto
 
 **PROJECT_ROOT** — O diretório raiz do projeto (onde se encontram as pastas `backend`, `web-app`, `scripts`).

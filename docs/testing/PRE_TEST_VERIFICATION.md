@@ -2,6 +2,8 @@
 
 **Nenhum teste pode começar sem esta verificação estar concluída.**
 
+**Antes de começar:** Confirma que completaste os passos 1-3 de `TEST_ENVIRONMENT_SETUP.md` (Sequência completa): arranque, reset (opcional), seed/simulator.
+
 Se qualquer passo falhar: **PARA**. Não prossigas para os livros de teste. Corrige o problema e repete a verificação.
 
 ---
@@ -73,7 +75,7 @@ Se estiveres em modo dev (sem login):
 
 ---
 
-## Verificação 5 — Estado do Sistema
+## VER-005 — System state
 
 Confirma que o estado do sistema cumpre os requisitos em `TEST_STATE_DEFINITION.md`:
 
