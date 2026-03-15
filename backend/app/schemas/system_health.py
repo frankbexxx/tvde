@@ -37,6 +37,9 @@ class AdminMetricsResponse(BaseModel):
     trips_requested: int = 0
     trips_ongoing: int = 0
     trips_completed_today: int = 0
+    trips_created_total: int = 0
+    trips_accepted_total: int = 0
+    trips_completed_total: int = 0
 
 
 class RecoverDriverResponse(BaseModel):

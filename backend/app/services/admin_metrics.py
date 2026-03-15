@@ -43,6 +43,14 @@ def get_admin_metrics(db: Session) -> dict:
         )
     ).scalar() or 0
 
+    trips_created_total = db.execute(select(func.count()).select_from(Trip)).scalar() or 0
+    trips_accepted_total = db.execute(
+        select(func.count()).select_from(Trip).where(Trip.driver_id.isnot(None))
+    ).scalar() or 0
+    trips_completed_total = db.execute(
+        select(func.count()).select_from(Trip).where(Trip.status == TripStatus.completed)
+    ).scalar() or 0
+
     return {
         "active_trips": active_trips,
         "drivers_available": drivers_available,
@@ -50,4 +58,7 @@ def get_admin_metrics(db: Session) -> dict:
         "trips_requested": trips_requested,
         "trips_ongoing": trips_ongoing,
         "trips_completed_today": trips_completed_today,
+        "trips_created_total": trips_created_total,
+        "trips_accepted_total": trips_accepted_total,
+        "trips_completed_total": trips_completed_total,
     }

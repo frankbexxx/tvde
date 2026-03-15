@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 import stripe
 
-from app.db.models.driver import Driver
+from app.db.models.driver import Driver, DriverLocation
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.events.dispatcher import emit
@@ -19,6 +19,7 @@ from app.schemas.trip import TripCreateRequest
 from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import calculate_price
+from app.utils.geo import haversine_km
 from app.utils.logging import log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.stripe_service import (
@@ -496,6 +497,9 @@ def assign_trip(
     return trip
 
 
+GEO_RADIUS_KM = 5.0
+
+
 def list_available_trips(
     *,
     db: Session,
@@ -523,6 +527,39 @@ def list_available_trips(
             select(Trip).where(Trip.status == TripStatus.assigned)
         ).scalars()
     )
+
+    driver_loc = db.execute(
+        select(DriverLocation).where(DriverLocation.driver_id == driver_id)
+    ).scalar_one_or_none()
+
+    if driver_loc is not None:
+        candidates: list[tuple[Trip, float]] = []
+        for trip in trips:
+            dist_km = haversine_km(
+                float(driver_loc.lat),
+                float(driver_loc.lng),
+                float(trip.origin_lat),
+                float(trip.origin_lng),
+            )
+            if dist_km <= GEO_RADIUS_KM:
+                candidates.append((trip, dist_km))
+        candidates.sort(key=lambda x: x[1])
+        trips = [t for t, _ in candidates]
+        for trip, dist_km in candidates:
+            logger.debug(
+                "list_available_trips: driver sees trip",
+                extra={
+                    "driver_id": str(driver_id),
+                    "trip_id": str(trip.id),
+                    "distance_km": round(dist_km, 2),
+                },
+            )
+    else:
+        logger.info(
+            "list_available_trips: no driver location, fallback to all trips",
+            extra={"driver_id": str(driver_id)},
+        )
+
     logger.info(
         "list_available_trips: fetched trips for driver",
         extra={
