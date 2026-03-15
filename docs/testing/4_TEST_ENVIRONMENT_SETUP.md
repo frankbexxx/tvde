@@ -43,7 +43,13 @@ Substitui `<PROJECT_ROOT>` pelo caminho real do teu projeto.
 
 ## Variáveis de Ambiente
 
-O backend usa ficheiro `backend/.env`. Deve existir com:
+O backend usa ficheiro `backend/.env`. Para criar ou adicionar chaves em falta (com valores reais, sem placeholders):
+
+```
+.\scripts\merge_env_keys.ps1
+```
+
+O script nunca sobrescreve valores existentes. O backend espera:
 
 - `DATABASE_URL` — conexão PostgreSQL
 - `JWT_SECRET_KEY`

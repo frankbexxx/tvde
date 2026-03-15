@@ -1,9 +1,15 @@
+from pathlib import Path
+
 from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
+# Resolve .env relative to backend/ (not cwd) so it works regardless of where uvicorn is started
+_BASE_DIR = Path(__file__).resolve().parents[2]  # app/core/config.py -> backend/
+_ENV_FILE = _BASE_DIR / ".env"
+
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=".env", extra="ignore")
+    model_config = ConfigDict(env_file=str(_ENV_FILE), extra="ignore")
 
     DATABASE_URL: str
 
