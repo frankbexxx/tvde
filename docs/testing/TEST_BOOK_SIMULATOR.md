@@ -2,7 +2,17 @@
 
 Este documento explica como executar o **simulador de motoristas**.
 
-**Pré-requisito obrigatório:** Verificação concluída em `docs/testing/PRE_TEST_VERIFICATION.md` (Passos 1-2: backend). Se o backend não responder, PARA e inicia primeiro.
+## PRE-TEST REQUIREMENT
+
+Verification checklist completed:
+
+- VER-001 ✔
+- VER-002 ✔
+- VER-003 ✔ (opcional para simulador contra Render)
+- VER-004 ✔ (opcional para simulador contra Render)
+- VER-005 ✔ (motoristas via seed/simulator)
+
+Para simulador local: VER-001 e VER-002 obrigatórios. Para simulador contra Render: VER-001 e VER-002 na API remota.
 
 **Em caso de falha:** Segue `docs/testing/TEST_FAILURE_PROTOCOL.md`. Para imediatamente. Regista Test ID, Passo, Esperado, Observado.
 

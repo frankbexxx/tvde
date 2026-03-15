@@ -2,7 +2,17 @@
 
 Cenários de teste para a aplicação passageiro.
 
-**Pré-requisito obrigatório:** Verificação concluída em `docs/testing/PRE_TEST_VERIFICATION.md`. Se não concluíste, PARA e executa primeiro.
+## PRE-TEST REQUIREMENT
+
+Verification checklist completed:
+
+- VER-001 ✔
+- VER-002 ✔
+- VER-003 ✔
+- VER-004 ✔
+- VER-005 ✔
+
+Se alguma não estiver marcada, executa `docs/testing/PRE_TEST_VERIFICATION.md` primeiro. PARA até concluíres.
 
 **Em caso de falha:** Segue `docs/testing/TEST_FAILURE_PROTOCOL.md`. Para imediatamente. Regista Test ID, Passo, Esperado, Observado.
 

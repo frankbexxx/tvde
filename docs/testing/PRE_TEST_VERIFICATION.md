@@ -12,7 +12,7 @@ O protocolo de testes exige que **tudo esteja online e a comunicar** antes de qu
 
 ---
 
-## Verificação 1 — Backend
+## VER-001 — Backend health
 
 Abre no browser:
 
@@ -28,7 +28,7 @@ A página mostra `{"status":"ok"}` ou similar (JSON com status).
 
 ---
 
-## Verificação 2 — API Docs
+## VER-002 — API Docs
 
 Abre no browser:
 
@@ -44,7 +44,7 @@ A interface Swagger (OpenAPI) aparece.
 
 ---
 
-## Verificação 3 — Frontend
+## VER-003 — Frontend load
 
 Abre no browser:
 
@@ -60,9 +60,9 @@ A app TVDE carrega. Vês o ecrã de login (BETA) ou "A carregar..." seguido do d
 
 ---
 
-## Verificação 4 — Comunicação Frontend ↔ Backend
+## VER-004 — API communication
 
-Com o frontend aberto (Passo 3), se tiveres login:
+Com o frontend aberto (VER-003), se tiveres login:
 
 - Introduz credenciais e faz login.
 - Se o login falhar com erro de rede ou timeout: **PARA**. O frontend não está a comunicar com o backend. Verifica CORS, URL da API no frontend, etc.
@@ -87,15 +87,33 @@ Confirma que o estado do sistema cumpre os requisitos em `TEST_STATE_DEFINITION.
 
 ## Resumo
 
-| Verificação | Passo | Condição de sucesso |
-|-------------|-------|---------------------|
-| Backend health | 1 | `http://localhost:8000/health` retorna 200 |
-| API Docs | 2 | Swagger visível em `http://localhost:8000/docs` |
-| Frontend | 3 | App carrega em `http://localhost:5173` |
-| Comunicação | 4 | Login/API sem erros de rede |
-| Estado | 5 | Requisitos de TEST_STATE_DEFINITION cumpridos |
+| ID | Verificação | Condição de sucesso |
+|----|-------------|---------------------|
+| VER-001 | Backend health | `http://localhost:8000/health` retorna 200 |
+| VER-002 | API Docs | Swagger visível em `http://localhost:8000/docs` |
+| VER-003 | Frontend load | App carrega em `http://localhost:5173` |
+| VER-004 | API communication | Login/API sem erros de rede |
+| VER-005 | System state | Requisitos de TEST_STATE_DEFINITION cumpridos |
 
 **Só quando todas as verificações passarem:** podes avançar para os livros de teste (TEST_BOOK_PASSENGER.md, etc.).
+
+---
+
+## Resultado final da verificação
+
+Se todas as verificações passaram:
+
+**STATUS: SYSTEM READY FOR TESTING**
+
+Podes avançar para os livros de teste.
+
+---
+
+Se alguma verificação falhou:
+
+**STATUS: TESTING BLOCKED**
+
+Corrige o problema. Repete a verificação. Não prossigas para os testes.
 
 ---
 
