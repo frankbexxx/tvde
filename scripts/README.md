@@ -1,6 +1,8 @@
-# Scripts de automação — Teste do Simulador
+# Scripts de automação — TVDE
 
-Scripts PowerShell e Python para automatizar o protocolo de teste. Executar a partir da raiz do projeto (`C:\dev\APP`).
+Scripts PowerShell e Python para automatizar o protocolo de teste. Executar a partir da raiz do projeto (PROJECT_ROOT).
+
+**Protocolo de testes:** `docs/testing/HUMAN_TESTING_PROTOCOL.md`
 
 | Script | O que faz |
 |--------|-----------|
@@ -31,7 +33,7 @@ Requer: `pip install httpx` (ou venv do backend).
 ## Uso
 
 ```powershell
-cd C:\dev\APP
+cd <PROJECT_ROOT>
 
 # 1. Iniciar BD
 .\scripts\1_start_db.ps1
@@ -45,6 +47,8 @@ cd C:\dev\APP
 # 6. Recolher dados
 .\scripts\3_collect_data.ps1
 ```
+
+**Arranque rápido para testes:** `.\scripts\start_test_env.ps1` (BD + backend + frontend).
 
 ## Política de execução
 

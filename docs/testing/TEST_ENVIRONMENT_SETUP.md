@@ -4,6 +4,20 @@ Este documento explica como iniciar todo o sistema para testes manuais.
 
 ---
 
+## Diretório do Projeto
+
+**PROJECT_ROOT** — O diretório raiz do projeto (onde se encontram as pastas `backend`, `web-app`, `scripts`).
+
+Para navegar para o projeto:
+
+```
+cd <PROJECT_ROOT>
+```
+
+Substitui `<PROJECT_ROOT>` pelo caminho real do teu projeto.
+
+---
+
 ## Requisitos
 
 - **Docker Desktop** — para PostgreSQL
@@ -34,6 +48,22 @@ Para BETA (login com telemóvel):
 
 ### Passo 1
 
+Navega para o diretório raiz do projeto.
+
+**Comando:**
+
+```
+cd <PROJECT_ROOT>
+```
+
+**Resultado esperado**
+
+O diretório atual é a raiz do projeto (contém as pastas `backend`, `web-app`, `scripts`).
+
+---
+
+### Passo 2
+
 Inicia o PostgreSQL.
 
 **Comando (PowerShell):**
@@ -48,13 +78,14 @@ Mensagem: `PostgreSQL pronto.`
 
 ---
 
-### Passo 2
+### Passo 3
 
 Inicia o backend.
 
-**Comando:**
+**Comando (a partir de PROJECT_ROOT):**
 
 ```
+cd <PROJECT_ROOT>
 cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -65,13 +96,14 @@ Mensagem: `Application startup complete.` e `Uvicorn running on http://0.0.0.0:8
 
 ---
 
-### Passo 3
+### Passo 4
 
-Numa nova janela de terminal, inicia o frontend.
+Numa nova janela de terminal, navega para PROJECT_ROOT e inicia o frontend.
 
 **Comando:**
 
 ```
+cd <PROJECT_ROOT>
 cd web-app
 npm run dev
 ```
@@ -82,7 +114,7 @@ Mensagem: `Local: http://localhost:5173/`
 
 ---
 
-### Passo 4
+### Passo 5
 
 Verifica o estado do backend.
 
@@ -98,7 +130,7 @@ A interface Swagger (OpenAPI) aparece.
 
 ---
 
-### Passo 5
+### Passo 6
 
 Verifica o estado do frontend.
 
@@ -114,13 +146,14 @@ A app TVDE aparece. Se BETA_MODE=true, vês o ecrã de login (Telemóvel, Passwo
 
 ---
 
-### Passo 6 (Opcional — Reset antes de testes)
+### Passo 7 (Opcional — Reset antes de testes)
 
 Se quiseres começar com base de dados limpa (sem viagens nem pagamentos):
 
-**Comando (PowerShell, na raiz do projeto):**
+**Comando (PowerShell, em PROJECT_ROOT):**
 
 ```
+cd <PROJECT_ROOT>
 .\scripts\2_reset_db.ps1
 ```
 
@@ -132,17 +165,19 @@ Mensagem: `Reset OK`
 
 ## Script Automatizado
 
-Para arranque automático:
+Para arranque automático (executar a partir de PROJECT_ROOT):
 
 **PowerShell:**
 
 ```
+cd <PROJECT_ROOT>
 .\scripts\start_test_env.ps1
 ```
 
 **Bash (Linux/macOS):**
 
 ```
+cd <PROJECT_ROOT>
 ./scripts/start_test_env.sh
 ```
 

@@ -2,9 +2,11 @@
 
 Cenários de teste para a aplicação motorista.
 
+**Em caso de falha:** Segue `docs/testing/TEST_FAILURE_PROTOCOL.md`. Para imediatamente. Regista Test ID, Passo, Esperado, Observado.
+
 ---
 
-## Teste 1 — Login Motorista (BETA)
+## TEST-D-001 — Login Motorista (BETA)
 
 **Requisitos:** BETA_MODE=true, conta de motorista aprovada.
 
@@ -28,13 +30,13 @@ http://localhost:5173/driver
 
 **Resultado esperado**
 
-O ecrã de login aparece.
+O ecrã de login aparece. Confirma que os campos "Telemóvel" e "Password" estão visíveis.
 
 ---
 
 **Passo 3**
 
-Introduz o telemóvel do motorista de teste.
+Introduz o telemóvel do motorista de teste no campo Telemóvel.
 
 **Resultado esperado**
 
@@ -44,7 +46,7 @@ O número aparece no campo.
 
 **Passo 4**
 
-Introduz a password:
+Introduz no campo Password:
 
 ```
 123456
@@ -52,7 +54,7 @@ Introduz a password:
 
 **Resultado esperado**
 
-A password aparece no campo.
+A password aparece no campo (pode estar mascarada).
 
 ---
 
@@ -62,31 +64,37 @@ Clica no botão "Entrar".
 
 **Resultado esperado**
 
-O dashboard do motorista aparece. Vês "Viagens disponíveis" ou lista vazia.
+O dashboard do motorista aparece dentro de **10 segundos**. Confirma que vês "Viagens disponíveis" ou lista vazia. Se não aparecer em 10 segundos, marcar como **FAILED**.
 
 ---
 
-## Teste 2 — Aceitar Viagem
+## TEST-D-002 — Aceitar Viagem
 
 **Requisitos:** Motorista autenticado. Pelo menos uma viagem em estado "assigned" (no pool de disponíveis).
 
 **Passo 1**
 
-Confirma que estás no dashboard do motorista.
+Confirma que estás no dashboard do motorista:
+
+```
+http://localhost:5173/driver
+```
 
 **Resultado esperado**
 
-Vês a secção de viagens disponíveis.
+A secção de viagens disponíveis está visível.
 
 ---
 
 **Passo 2**
 
-Espera até aparecer uma viagem na lista (ou cria uma como passageiro noutro dispositivo).
+Espera até **30 segundos** para aparecer uma viagem na lista.
+
+(Cria uma viagem como passageiro noutro dispositivo ou browser se necessário.)
 
 **Resultado esperado**
 
-Uma viagem aparece com botão para aceitar.
+Uma viagem aparece com botão para aceitar. Se não aparecer em 30 segundos, marcar como **FAILED**.
 
 ---
 
@@ -96,21 +104,21 @@ Clica no botão para aceitar a viagem.
 
 **Resultado esperado**
 
-A viagem passa a "ativa". O estado mostra "Motorista a caminho" ou similar. A viagem desaparece da lista de disponíveis.
+A viagem passa a "ativa" dentro de **10 segundos**. O estado mostra "Motorista a caminho" ou similar. A viagem desaparece da lista de disponíveis. Se não mudar em 10 segundos, marcar como **FAILED**.
 
 ---
 
-## Teste 3 — Ciclo de Vida da Viagem
+## TEST-D-003 — Ciclo de Vida da Viagem
 
 **Requisitos:** Motorista com viagem aceite.
 
 **Passo 1**
 
-Aceita uma viagem (Teste 2).
+Aceita uma viagem (TEST-D-002).
 
 **Resultado esperado**
 
-A viagem está ativa.
+A viagem está ativa. O estado mostra "Motorista a caminho" ou "A caminho".
 
 ---
 
@@ -120,7 +128,7 @@ Clica no botão "Cheguei".
 
 **Resultado esperado**
 
-O estado muda para "A chegar" ou "Motorista a chegar".
+O estado muda para "A chegar" ou "Motorista a chegar" dentro de **10 segundos**. Se não mudar em 10 segundos, marcar como **FAILED**.
 
 ---
 
@@ -130,38 +138,42 @@ Clica no botão "Iniciar viagem".
 
 **Resultado esperado**
 
-O estado muda para "Em viagem".
+O estado muda para "Em viagem" dentro de **10 segundos**. Se não mudar em 10 segundos, marcar como **FAILED**.
 
 ---
 
 **Passo 4**
 
-Clica no botão "Concluir".
+Clica no botão "Concluir viagem".
 
 **Resultado esperado**
 
-O estado muda para "Viagem concluída". A viagem aparece no histórico. O motorista fica disponível para novas viagens.
+O estado muda para "Viagem concluída" dentro de **10 segundos**. A viagem aparece no histórico. O motorista fica disponível para novas viagens. Se não mudar em 10 segundos, marcar como **FAILED**.
 
 ---
 
-## Teste 4 — Ver Histórico do Motorista
+## TEST-D-004 — Ver Histórico do Motorista
 
 **Requisitos:** Pelo menos uma viagem concluída pelo motorista.
 
 **Passo 1**
 
-Navega para o dashboard do motorista.
+Navega para o dashboard do motorista:
+
+```
+http://localhost:5173/driver
+```
 
 **Resultado esperado**
 
-Vês a secção "Histórico".
+A secção "Histórico" está visível.
 
 ---
 
 **Passo 2**
 
-Observa a lista de viagens.
+Confirma que a lista de viagens mostra pelo menos uma entrada concluída.
 
 **Resultado esperado**
 
-As viagens concluídas aparecem com detalhes.
+As viagens concluídas aparecem com detalhes (estado, origem, destino, etc.). Regista o número de viagens visíveis. Se a lista estiver vazia e sabes que existe pelo menos uma viagem concluída, marcar como **FAILED**.

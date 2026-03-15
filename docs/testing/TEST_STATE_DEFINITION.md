@@ -4,6 +4,8 @@ Este documento define o **estado exato do sistema** antes dos testes começarem.
 
 Os testes não devem começar a menos que o sistema corresponda a estas condições.
 
+**PROJECT_ROOT** — O diretório raiz do projeto. Ver `TEST_ENVIRONMENT_SETUP.md` para definição.
+
 ---
 
 ## Estado da Base de Dados
@@ -48,7 +50,7 @@ Se `BETA_MODE=false` e `ENV=dev`:
 
 ### Opção A — Reset + Seed (modo dev)
 
-1. Executa `.\scripts\2_reset_db.ps1` para limpar viagens e pagamentos.
+1. A partir de PROJECT_ROOT, executa `.\scripts\2_reset_db.ps1` para limpar viagens e pagamentos.
 2. Cria utilizadores via `POST /dev/seed` ou `POST /dev/seed-simulator` (via API ou simulador).
 
 ### Opção B — Utilizadores BETA existentes
@@ -59,9 +61,9 @@ Se já tens utilizadores aprovados com telemóvel e password conhecidos, usa ess
 
 ## Verificação Pré-Teste
 
-Antes de executar qualquer teste, o testador deve confirmar:
+Antes de executar qualquer teste, o testador deve verificar:
 
-1. O backend responde em `http://localhost:8000/docs`.
-2. O frontend responde em `http://localhost:5173`.
+1. O backend responde em `http://localhost:8000/docs` — confirma que a interface Swagger aparece.
+2. O frontend responde em `http://localhost:5173` — confirma que a app carrega.
 3. Consegues fazer login (BETA) ou vês o dashboard (dev).
 4. Não existe viagem ativa em curso.

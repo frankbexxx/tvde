@@ -26,8 +26,8 @@ Este documento descreve **onde o testador deve ir na interface**.
 | **Aceitar viagem** | Botão na viagem disponível | Aceita a viagem |
 | **Viagem ativa** | Após aceitar | Mostra estado (accepted, arriving, ongoing) |
 | **Marcar a chegar** | Botão "Cheguei" | Transição para arriving |
-| **Iniciar viagem** | Botão "Iniciar" | Transição para ongoing |
-| **Concluir viagem** | Botão "Concluir" | Transição para completed |
+| **Iniciar viagem** | Botão "Iniciar viagem" | Transição para ongoing |
+| **Concluir viagem** | Botão "Concluir viagem" | Transição para completed |
 | **Histórico** | Secção histórico | Lista viagens concluídas |
 | **Mudar para Passageiro** | Link "Passageiro" no header | Troca para vista passageiro |
 

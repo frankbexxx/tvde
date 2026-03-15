@@ -2,12 +2,14 @@
 # Arranque do ambiente de teste — TVDE
 # Executa: ./scripts/start_test_env.sh
 # Requer: Docker, Python, Node. Inicia BD, backend e frontend.
+# Protocolo: docs/testing/HUMAN_TESTING_PROTOCOL.md
 
 set -e
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "=== TVDE — Arranque do Ambiente de Teste ==="
+echo "PROJECT_ROOT: $ROOT"
 echo ""
 
 # 1. PostgreSQL (Docker)
@@ -64,5 +66,6 @@ echo "  Frontend:  http://localhost:5173"
 echo "  API Docs:  http://localhost:8000/docs"
 echo ""
 echo "Para parar: kill $BACKEND_PID $FRONTEND_PID"
-echo "Para simulador: python scripts/driver_simulator.py --drivers 10"
+echo "Simulador: python scripts/driver_simulator.py --drivers 10"
+echo "Testes: docs/testing/TEST_BOOK_*.md"
 echo ""
