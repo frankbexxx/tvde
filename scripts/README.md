@@ -4,6 +4,8 @@ Scripts PowerShell e Python para automatizar o protocolo de teste. Executar a pa
 
 | Script | O que faz |
 |--------|-----------|
+| `start_test_env.ps1` | Arranque completo: BD + backend + frontend. Verifica endpoints. Ver docs/testing/TEST_ENVIRONMENT_SETUP.md |
+| `start_test_env.sh` | Igual (Linux/macOS) |
 | `archive_temp.ps1` | Arquivar unified_payments.csv, logs/ para archive/ e limpar tmp/, temp/. Executar periodicamente. |
 | `run_tests.ps1` | Executa pytest (backend) + test_simulator_trip (quando backend está up). Sem intervenção manual. |
 | `test_simulator_trip.py` | Teste de integração: seed → driver → criar viagem → verificar completed. |
