@@ -15,7 +15,7 @@ from app.db.models.driver import Driver
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.user import User
 from app.db.models.trip import Trip
-from app.models.enums import DriverStatus, Role, UserStatus
+from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.schemas.driver import DriverStatusResponse
 from app.schemas.system_health import (
     AdminMetricsResponse,
@@ -327,11 +327,36 @@ async def reject_driver(
 @router.get("/trips/active", response_model=List[TripActiveItem])
 async def list_active_trips(
     user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
 ) -> List[TripActiveItem]:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented",
+    """List trips in requested, assigned, accepted, arriving, ongoing."""
+    active_statuses = (
+        TripStatus.requested,
+        TripStatus.assigned,
+        TripStatus.accepted,
+        TripStatus.arriving,
+        TripStatus.ongoing,
     )
+    trips = list(
+        db.execute(
+            select(Trip)
+            .where(Trip.status.in_(active_statuses))
+            .order_by(Trip.updated_at.desc())
+        ).scalars().all()
+    )
+    return [
+        TripActiveItem(
+            trip_id=str(t.id),
+            status=t.status,
+            passenger_id=str(t.passenger_id),
+            driver_id=str(t.driver_id) if t.driver_id else None,
+            origin_lat=float(t.origin_lat),
+            origin_lng=float(t.origin_lng),
+            destination_lat=float(t.destination_lat),
+            destination_lng=float(t.destination_lng),
+        )
+        for t in trips
+    ]
 
 
 @router.get("/trips/{trip_id}", response_model=TripDetailResponse)
