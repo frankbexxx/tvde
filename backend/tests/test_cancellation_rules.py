@@ -99,6 +99,8 @@ def test_passenger_cancel_after_accept_fee_applied(db: Session) -> None:
     assert result.status == TripStatus.cancelled
     assert result.cancellation_fee is not None
     assert result.cancellation_fee > 0
+    # Fee = max(1.50, 10.0 * 0.20) = 2.0 (variable by estimated_price)
+    assert result.cancellation_fee == 2.0
     assert result.cancelled_by == "passenger"
 
 

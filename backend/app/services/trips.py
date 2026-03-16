@@ -94,18 +94,30 @@ def _raise_not_found() -> None:
 
 def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int]:
     """
-    Estimate distance (Haversine), duration (2.5 min/km city avg), price, ETA.
+    Estimate distance, duration, price, ETA.
+    Uses OSRM when OSRM_BASE_URL is set; otherwise Haversine + 2.5 min/km.
     Returns (estimated_price, distance_km, duration_min, eta_minutes).
     """
-    distance_km = haversine_km(
+    from app.services.osrm import get_route_distance_duration
+
+    osrm_result = get_route_distance_duration(
         float(payload.origin_lat),
         float(payload.origin_lng),
         float(payload.destination_lat),
         float(payload.destination_lng),
     )
-    distance_km = round(distance_km, 2)
-    # City avg ~24 km/h → 2.5 min/km
-    duration_min = round(distance_km * 2.5, 2)
+    if osrm_result:
+        distance_km, duration_min = osrm_result
+    else:
+        distance_km = haversine_km(
+            float(payload.origin_lat),
+            float(payload.origin_lng),
+            float(payload.destination_lat),
+            float(payload.destination_lng),
+        )
+        distance_km = round(distance_km, 2)
+        duration_min = round(distance_km * 2.5, 2)  # City avg ~24 km/h
+
     estimated_price = calculate_price(distance_km, duration_min)
     eta_minutes = int(duration_min) + 2  # buffer for pickup
     return estimated_price, distance_km, duration_min, eta_minutes
@@ -178,10 +190,12 @@ def cancel_trip_by_passenger(
     old_status = trip.status
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
 
-    # Passenger cancel after accept → cancellation fee
+    # Passenger cancel after accept → cancellation fee (simulated, variable by distance via pricing)
     fee = 0.0
     if old_status in (TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing):
-        fee = getattr(settings, "CANCELLATION_FEE_EUR", 2.0)
+        pct = getattr(settings, "CANCELLATION_FEE_PERCENT", 0.20)
+        min_fee = getattr(settings, "CANCELLATION_FEE_MIN", 1.50)
+        fee = max(min_fee, round(float(trip.estimated_price) * pct, 2))
 
     trip.cancellation_reason = (reason or "").strip() or None
     trip.cancellation_fee = fee if fee > 0 else None

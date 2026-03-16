@@ -5,7 +5,8 @@ from app.auth.security import decode_access_token
 from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.db.session import SessionLocal
-from app.models.enums import UserStatus
+from app.models.enums import Role, UserStatus
+from app.realtime.driver_offers_hub import driver_offers_hub
 from app.realtime.hub import hub
 
 
@@ -59,5 +60,46 @@ async def trip_status_ws(websocket: WebSocket, trip_id: str) -> None:
         pass
     finally:
         await hub.unsubscribe(trip_id, websocket)
+        await websocket.close()
+
+
+async def _authorize_driver(websocket: WebSocket) -> str | None:
+    """Validate driver token, return driver_id or None."""
+    token = _extract_token(websocket)
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+    except Exception:
+        return None
+    user_id = payload.get("sub")
+    if not user_id:
+        return None
+    with SessionLocal() as db:
+        user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if not user or user.status != UserStatus.active:
+            return None
+        if user.role != Role.driver:
+            return None
+    return user_id
+
+
+@router.websocket("/ws/driver/offers")
+async def driver_offers_ws(websocket: WebSocket) -> None:
+    """Driver subscribes to receive new_trip_offer events in real time."""
+    await websocket.accept()
+    driver_id = await _authorize_driver(websocket)
+    if not driver_id:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    await driver_offers_hub.subscribe(driver_id, websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except Exception:
+        pass
+    finally:
+        await driver_offers_hub.unsubscribe(driver_id, websocket)
         await websocket.close()
 

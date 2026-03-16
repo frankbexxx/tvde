@@ -54,8 +54,14 @@ class Settings(BaseSettings):
     PRICE_PER_KM: float = 0.60
     PRICE_PER_MIN: float = 0.15
 
-    # Cancellation: fee when passenger cancels after driver accepted; driver penalty is tracked in driver.cancellation_count
-    CANCELLATION_FEE_EUR: float = 2.00
+    # OSRM for real road distance/duration. When set, used instead of Haversine.
+    # Example: https://router.project-osrm.org
+    OSRM_BASE_URL: str | None = None
+
+    # Cancellation: fee when passenger cancels after driver accepted (simulated, variable by distance).
+    # Formula: max(CANCELLATION_FEE_MIN, estimated_price * CANCELLATION_FEE_PERCENT)
+    CANCELLATION_FEE_PERCENT: float = 0.20  # 20% of estimated trip price
+    CANCELLATION_FEE_MIN: float = 1.50
 
 
 settings = Settings()

@@ -76,6 +76,22 @@ def create_offers_for_trip(
             },
         )
 
+    # Publish new_trip_offer to driver WebSocket subscribers (after flush for offer.id)
+    db.flush()
+    from app.realtime.driver_offers_hub import driver_offers_hub
+    for offer in offers:
+        driver_offers_hub.publish_new_offer(
+            driver_id=str(offer.driver_id),
+            offer_id=str(offer.id),
+            trip_id=str(trip.id),
+            origin_lat=float(trip.origin_lat),
+            origin_lng=float(trip.origin_lng),
+            destination_lat=float(trip.destination_lat),
+            destination_lng=float(trip.destination_lng),
+            estimated_price=float(trip.estimated_price),
+            expires_at=expires_at,
+        )
+
     return offers
 
 
@@ -155,8 +171,22 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 expires_at=expires_at,
             )
             db.add(offer)
-            new_offers.append(offer)
+            new_offers.append((offer, trip))
             logger.info("redispatch_expired_trips: new offer trip_id=%s driver_id=%s", trip.id, driver.user_id)
     if new_offers:
+        db.flush()
+        from app.realtime.driver_offers_hub import driver_offers_hub
+        for offer, t in new_offers:
+            driver_offers_hub.publish_new_offer(
+                driver_id=str(offer.driver_id),
+                offer_id=str(offer.id),
+                trip_id=str(t.id),
+                origin_lat=float(t.origin_lat),
+                origin_lng=float(t.origin_lng),
+                destination_lat=float(t.destination_lat),
+                destination_lng=float(t.destination_lng),
+                estimated_price=float(t.estimated_price),
+                expires_at=expires_at,
+            )
         db.commit()
-    return new_offers
+    return [o for o, _ in new_offers]
