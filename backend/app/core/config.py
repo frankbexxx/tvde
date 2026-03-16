@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # Geographic radius (km) for driver–trip matching. Drivers see trips within this distance;
     # passengers are matched to drivers within this radius. Covers e.g. Lisbon metro (Oeiras, etc.).
-    GEO_RADIUS_KM: float = 25.0
+    GEO_RADIUS_KM: float = 50.0
 
     # Multi-offer dispatch: number of drivers to send offers to.
     OFFER_TOP_N: int = 5
