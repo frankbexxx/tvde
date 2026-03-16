@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import DateTime, Enum, Index, String, func
+from sqlalchemy import DateTime, Enum, Index, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -45,6 +45,11 @@ class User(Base):
         String(32),
         nullable=True,
         comment="BETA: passenger or driver — role requested at signup.",
+    )
+    avg_rating_as_passenger: Mapped[Optional[float]] = mapped_column(
+        Numeric(3, 2),
+        nullable=True,
+        comment="Average rating from drivers (1-5).",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -20,6 +20,7 @@ def _ensure_schema_columns() -> None:
                 "ALTER TABLE trips ADD COLUMN IF NOT EXISTS driver_rating INTEGER",
                 "ALTER TABLE trips ADD COLUMN IF NOT EXISTS passenger_rating INTEGER",
                 "ALTER TABLE drivers ADD COLUMN IF NOT EXISTS avg_rating NUMERIC(3,2)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS avg_rating_as_passenger NUMERIC(3,2)",
             ]:
                 conn.execute(text(stmt))
             conn.commit()

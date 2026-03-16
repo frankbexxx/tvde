@@ -56,6 +56,7 @@ def _dev_add_columns_if_missing() -> None:
                 "ALTER TABLE trips ADD COLUMN IF NOT EXISTS driver_rating INTEGER",
                 "ALTER TABLE trips ADD COLUMN IF NOT EXISTS passenger_rating INTEGER",
                 "ALTER TABLE drivers ADD COLUMN IF NOT EXISTS avg_rating NUMERIC(3,2)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS avg_rating_as_passenger NUMERIC(3,2)",
                 "ALTER TABLE payments ADD COLUMN IF NOT EXISTS driver_payout NUMERIC(10,2)",
                 "ALTER TABLE drivers ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true NOT NULL",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS requested_role VARCHAR(32)",

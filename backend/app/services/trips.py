@@ -437,7 +437,25 @@ def rate_trip_as_driver(
             detail="rating_must_be_1_to_5",
         )
     trip.passenger_rating = rating
+    passenger_id = trip.passenger_id
     db.commit()
+
+    # Update passenger avg_rating_as_passenger
+    if passenger_id:
+        from app.db.models.user import User
+        avg_row = db.execute(
+            select(func.avg(Trip.passenger_rating).label("avg"))
+            .where(Trip.passenger_id == passenger_id)
+            .where(Trip.passenger_rating.isnot(None))
+        ).one_or_none()
+        if avg_row and avg_row.avg is not None:
+            user = db.execute(
+                select(User).where(User.id == passenger_id)
+            ).scalar_one_or_none()
+            if user:
+                user.avg_rating_as_passenger = round(float(avg_row.avg), 2)
+        db.commit()
+
     db.refresh(trip)
     return trip
 

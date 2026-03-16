@@ -71,6 +71,9 @@ A cada execução, o endpoint `/cron/jobs` executa:
    - Ofertas expiradas (> 15 s) passam a `expired`
    - Trips em `requested` com todas as ofertas expiradas recebem novas ofertas para outros motoristas
 
+3. **Cleanup**
+   - Apaga `audit_events` mais antigos que `AUDIT_EVENTS_RETENTION_DAYS` (default 90)
+
 ---
 
 ## 5. Frequência recomendada

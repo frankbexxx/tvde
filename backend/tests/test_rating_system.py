@@ -98,3 +98,19 @@ def test_rating_average_updated(db: Session) -> None:
     driver = db.execute(select(Driver).where(Driver.user_id == uuid.UUID(driver_id))).scalar_one_or_none()
     assert driver is not None
     assert driver.avg_rating == 5.0
+
+
+def test_passenger_avg_rating_updated(db: Session) -> None:
+    """C001: Passenger avg_rating_as_passenger updated when driver rates."""
+    passenger_id, driver_id, trip_id = _create_passenger_driver_and_completed_trip(db)
+
+    rate_trip_as_driver(
+        db=db,
+        driver_id=driver_id,
+        trip_id=trip_id,
+        rating=4,
+    )
+
+    user = db.execute(select(User).where(User.id == uuid.UUID(passenger_id))).scalar_one_or_none()
+    assert user is not None
+    assert user.avg_rating_as_passenger == 4.0

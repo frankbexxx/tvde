@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     # Secret for cron-job.org (no JWT). GET /cron/jobs?secret=<CRON_SECRET>
     CRON_SECRET: str | None = None
 
+    # Cleanup: delete audit_events older than N days
+    AUDIT_EVENTS_RETENTION_DAYS: int = 90
+
     # Pricing engine: price = BASE_FARE + (distance_km × PRICE_PER_KM) + (duration_min × PRICE_PER_MIN)
     BASE_FARE: float = 1.50
     PRICE_PER_KM: float = 0.60
