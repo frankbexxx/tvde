@@ -45,6 +45,16 @@ def create_offers_for_trip(
         ).all()
     )
 
+    logger.info(
+        "create_offers_for_trip: drivers with location",
+        extra={
+            "trip_id": str(trip.id),
+            "drivers_with_loc_count": len(drivers_with_loc),
+            "radius_km": radius_km,
+            "top_n": top_n,
+        },
+    )
+
     candidates: list[tuple[Driver, float]] = []
     for driver, loc in drivers_with_loc:
         dist_km = haversine_km(
@@ -56,6 +66,17 @@ def create_offers_for_trip(
 
     candidates.sort(key=lambda x: x[1])
     selected = candidates[:top_n]
+
+    if not selected:
+        logger.warning(
+            "create_offers_for_trip: no offers created (no drivers in radius or no drivers with location)",
+            extra={
+                "trip_id": str(trip.id),
+                "drivers_with_loc": len(drivers_with_loc),
+                "candidates_in_radius": len(candidates),
+                "origin": f"{origin_lat},{origin_lng}",
+            },
+        )
 
     offers: list[TripOffer] = []
     for driver, dist_km in selected:

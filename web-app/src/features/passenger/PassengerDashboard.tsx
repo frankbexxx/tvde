@@ -54,7 +54,7 @@ export function PassengerDashboard() {
   )
 
   const isOnline = useOnlineStatus()
-  const { data: activeTrip } = usePolling<TripDetailResponse | null>(
+  const { data: activeTrip, isLoading: activeTripLoading } = usePolling<TripDetailResponse | null>(
     () =>
       activeTripId && token
         ? getTripDetail(activeTripId, token).catch(() => null)
@@ -63,6 +63,15 @@ export function PassengerDashboard() {
     !!activeTripId && !!token,
     3000
   )
+
+  // Clear stale activeTripId when trip returns 404 (cancelled/deleted) — avoids "A verificar..." loop
+  useEffect(() => {
+    if (!activeTripId) return
+    if (activeTripLoading) return
+    if (activeTrip !== null) return
+    setPassengerActiveTripId(null)
+    setStatus('Pronto')
+  }, [activeTripId, activeTrip, activeTripLoading, setPassengerActiveTripId, setStatus])
 
   const handleRequestTrip = async () => {
     if (!token) return

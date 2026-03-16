@@ -11,6 +11,8 @@ import {
   startTrip,
   completeTrip,
   cancelTripByDriver,
+  setDriverOnline,
+  setDriverOffline,
 } from '../../api/trips'
 import type { TripAvailableItem, TripHistoryItem } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
@@ -102,6 +104,16 @@ export function DriverDashboard() {
   useEffect(() => {
     setStoredOffline(offline)
   }, [offline])
+
+  // Sync backend status when token becomes available (ensures backend is_available matches frontend)
+  useEffect(() => {
+    if (!token) return
+    if (offline) {
+      void setDriverOffline(token).catch(() => {})
+    } else {
+      void setDriverOnline(token).catch(() => {})
+    }
+  }, [token, offline])
 
   useEffect(() => {
     if (toast) {

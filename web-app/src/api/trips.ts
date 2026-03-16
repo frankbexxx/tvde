@@ -116,6 +116,20 @@ export async function getTripDetail(tripId: string, token: string): Promise<Trip
 
 // --- Driver ---
 
+export async function setDriverOnline(token: string): Promise<void> {
+  await apiFetch<void>('/driver/status/online', {
+    method: 'POST',
+    token,
+  })
+}
+
+export async function setDriverOffline(token: string): Promise<void> {
+  await apiFetch<void>('/driver/status/offline', {
+    method: 'POST',
+    token,
+  })
+}
+
 export async function getAvailableTrips(token: string): Promise<TripAvailableItem[]> {
   return apiFetch<TripAvailableItem[]>('/driver/trips/available', { token })
 }
