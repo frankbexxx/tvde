@@ -217,7 +217,7 @@ export function PassengerDashboard() {
         <p className="text-slate-600 mt-1">Pedir e acompanhar viagens</p>
       </header>
 
-      <DevTools lastCreatedTripId={activeTripId} onAssigned={refetchHistory} />
+      <DevTools lastCreatedTripId={activeTripId} onAssigned={refetchHistory} mode="passenger" />
 
       <div className="space-y-6 mt-6 transition-opacity duration-150">
         <StatusHeader label={statusConfig.label} variant={statusConfig.variant} />

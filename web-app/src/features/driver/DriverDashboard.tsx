@@ -181,7 +181,7 @@ export function DriverDashboard() {
         <p className="text-slate-600 mt-1">Aceitar e completar viagens</p>
       </header>
 
-      <DevTools lastCreatedTripId={null} onAssigned={refetchAvailable} />
+      <DevTools lastCreatedTripId={null} onAssigned={refetchAvailable} mode="driver" />
 
       <div className="space-y-6 transition-opacity duration-150">
         <Toggle

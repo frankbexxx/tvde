@@ -10,16 +10,37 @@ function errMsg(err: unknown): string {
   return e?.detail ?? e?.message ?? String(err ?? 'Erro')
 }
 
+/** Diagnostic response types */
+interface TripMatchingDiagnostic {
+  trip_id?: string
+  root_cause?: string
+  step_1_drivers_with_location?: { count: number }
+  step_2_drivers_in_radius?: { count: number }
+  step_3_offers?: { count: number }
+  error?: string
+}
+
+interface DriverEligibilityDiagnostic {
+  driver_id?: string
+  root_cause?: string
+  has_location?: boolean
+  is_available?: boolean
+  pending_offers_count?: number
+  error?: string
+}
+
 /**
- * Dev tools: assign trip, seed, auto-trip, run timeouts.
+ * Dev tools: assign trip, seed, auto-trip, run timeouts, diagnostics.
  * Collapsible - minimal footprint for non-technical users.
  */
 export function DevTools({
   lastCreatedTripId,
   onAssigned,
+  mode = 'passenger',
 }: {
   lastCreatedTripId: string | null
   onAssigned?: () => void
+  mode?: 'passenger' | 'driver'
 }) {
   const { tokens } = useAuth()
   const { addLog, setStatus } = useActivityLog()
@@ -115,6 +136,57 @@ export function DevTools({
     }
   }
 
+  const handleTripDiagnostic = async () => {
+    if (!lastCreatedTripId) return
+    setStatus('A diagnosticar viagem...')
+    addLog('Clique: Diagnóstico viagem', 'action')
+    try {
+      const d = await apiFetch<TripMatchingDiagnostic>(`/debug/trip-matching/${lastCreatedTripId}`)
+      if (d.error) {
+        addLog(`Diagnóstico: ${d.error}`, 'error')
+      } else {
+        const rc = d.root_cause ?? '?'
+        addLog(`Diagnóstico: ${rc}`, rc.startsWith('OK') ? 'success' : 'error')
+        addLog(
+          `  → drivers com localização: ${d.step_1_drivers_with_location?.count ?? 0}, ` +
+            `no raio: ${d.step_2_drivers_in_radius?.count ?? 0}, ` +
+            `ofertas: ${d.step_3_offers?.count ?? 0}`,
+          'info'
+        )
+        console.log('Diagnóstico viagem:', d)
+      }
+      setStatus('Pronto')
+    } catch (err) {
+      addLog(`Erro Diagnóstico: ${errMsg(err)}`, 'error')
+      setStatus('Erro')
+    }
+  }
+
+  const handleDriverDiagnostic = async () => {
+    setStatus('A diagnosticar motorista...')
+    addLog('Clique: Diagnóstico motorista', 'action')
+    try {
+      const d = await apiFetch<DriverEligibilityDiagnostic>('/debug/driver-eligibility')
+      if (d.error) {
+        addLog(`Diagnóstico: ${d.error}`, 'error')
+      } else {
+        const rc = d.root_cause ?? '?'
+        addLog(`Diagnóstico: ${rc}`, rc.startsWith('OK') ? 'success' : 'error')
+        addLog(
+          `  → localização: ${d.has_location ? 'sim' : 'não'}, ` +
+            `disponível: ${d.is_available ? 'sim' : 'não'}, ` +
+            `ofertas pendentes: ${d.pending_offers_count ?? 0}`,
+          'info'
+        )
+        console.log('Diagnóstico motorista:', d)
+      }
+      setStatus('Pronto')
+    } catch (err) {
+      addLog(`Erro Diagnóstico: ${errMsg(err)}`, 'error')
+      setStatus('Erro')
+    }
+  }
+
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
       <button
@@ -167,6 +239,24 @@ export function DevTools({
               className="px-3 py-1.5 text-sm bg-emerald-200 rounded-lg hover:bg-emerald-300"
             >
               Assign
+            </button>
+          )}
+          {mode === 'passenger' && lastCreatedTripId && (
+            <button
+              onClick={handleTripDiagnostic}
+              className="px-3 py-1.5 text-sm bg-violet-200 rounded-lg hover:bg-violet-300"
+              title="Diagnosticar por que o motorista não vê a viagem"
+            >
+              Diagnóstico viagem
+            </button>
+          )}
+          {mode === 'driver' && (
+            <button
+              onClick={handleDriverDiagnostic}
+              className="px-3 py-1.5 text-sm bg-violet-200 rounded-lg hover:bg-violet-300"
+              title="Diagnosticar por que não aparecem viagens"
+            >
+              Diagnóstico motorista
             </button>
           )}
         </div>
