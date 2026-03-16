@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     # Offer timeout (seconds) before offer expires. Driver has this long to accept.
     OFFER_TIMEOUT_SECONDS: int = 15
 
+    # Secret for cron-job.org (no JWT). GET /cron/jobs?secret=<CRON_SECRET>
+    CRON_SECRET: str | None = None
+
 
 settings = Settings()
 
