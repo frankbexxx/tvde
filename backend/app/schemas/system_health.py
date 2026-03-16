@@ -28,6 +28,13 @@ class RunTimeoutsResponse(BaseModel):
     ongoing_to_failed: int = 0
 
 
+class RunOfferExpiryResponse(BaseModel):
+    """Result of offer expiry and redispatch."""
+
+    expired_count: int = 0
+    redispatch_offers_created: int = 0
+
+
 class AdminMetricsResponse(BaseModel):
     """Basic operational metrics for admin dashboard."""
 

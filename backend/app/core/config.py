@@ -43,8 +43,8 @@ class Settings(BaseSettings):
 
     # Multi-offer dispatch: number of drivers to send offers to.
     OFFER_TOP_N: int = 5
-    # Offer timeout (minutes) before offer expires.
-    OFFER_TIMEOUT_MINUTES: int = 2
+    # Offer timeout (seconds) before offer expires. Driver has this long to accept.
+    OFFER_TIMEOUT_SECONDS: int = 15
 
 
 settings = Settings()

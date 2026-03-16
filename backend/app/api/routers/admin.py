@@ -20,6 +20,7 @@ from app.schemas.driver import DriverStatusResponse
 from app.schemas.system_health import (
     AdminMetricsResponse,
     RecoverDriverResponse,
+    RunOfferExpiryResponse,
     RunTimeoutsResponse,
     SystemHealthResponse,
 )
@@ -27,6 +28,7 @@ from app.api.serializers import trip_to_detail, trip_to_status_response
 from app.schemas.trip import TripActiveItem, TripDetailResponse, TripStatusResponse
 from app.services.admin_metrics import get_admin_metrics
 from app.services.system_health import get_system_health
+from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
 from app.services.trip_timeouts import run_trip_timeouts
 from app.services.trips import assign_trip, cancel_trip_by_admin, get_trip_by_id
 
@@ -464,6 +466,17 @@ async def run_timeouts_admin(
     """Run trip timeout rules (assigned→requested, accepted→cancelled, ongoing→failed)."""
     counts = run_trip_timeouts(db)
     return RunTimeoutsResponse(**counts)
+
+
+@router.post("/run-offer-expiry", response_model=RunOfferExpiryResponse)
+async def run_offer_expiry_admin(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> RunOfferExpiryResponse:
+    """Expire stale offers and redispatch trips with all offers expired."""
+    expired = expire_stale_offers(db)
+    new_offers = redispatch_expired_trips(db)
+    return RunOfferExpiryResponse(expired_count=expired, redispatch_offers_created=len(new_offers))
 
 
 @router.get("/export-logs", response_model=None)
