@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -8,6 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.enums import TripStatus
+
+if TYPE_CHECKING:
+    from app.db.models.trip_offer import TripOffer
 
 
 class Trip(Base):
@@ -111,6 +114,9 @@ class Trip(Base):
     payment: Mapped[Optional["Payment"]] = relationship(
         back_populates="trip",
         uselist=False,
+    )
+    offers: Mapped[List["TripOffer"]] = relationship(
+        back_populates="trip",
     )
 
 

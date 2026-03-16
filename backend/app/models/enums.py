@@ -36,3 +36,10 @@ class PaymentStatus(str, Enum):
     succeeded = "succeeded"
     failed = "failed"
 
+
+class OfferStatus(str, Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+    expired = "expired"
+

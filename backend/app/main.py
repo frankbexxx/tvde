@@ -16,6 +16,7 @@ from app.api.routers import (
     auth,
     debug_routes,
     dev_tools,
+    driver_offers,
     driver_status,
     driver_trips,
     drivers,
@@ -138,6 +139,7 @@ app.include_router(dev_tools.router)
 app.include_router(auth.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
+app.include_router(driver_offers.router)
 app.include_router(driver_status.router)
 app.include_router(drivers.router)
 app.include_router(matching.router)

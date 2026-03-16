@@ -104,21 +104,24 @@ def upsert_driver_location(
 
     log_event("driver_location_update", driver_id=driver_id, lat=lat, lng=lng)
 
-    # Simple auto-dispatch for BETA/dev:
-    # If there are requested trips and the driver is available, move the
-    # oldest requested trip into the "assigned" pool so that it appears in
-    # /driver/trips/available.
+    # Fallback auto-dispatch for BETA/dev: when multi-offer created 0 offers
+    # (no drivers had locations). Assign oldest requested trip to pool.
+    from app.db.models.trip_offer import TripOffer
     beta_mode = getattr(settings, "BETA_MODE", False)
     if beta_mode and getattr(driver, "is_available", True):
-        trip = (
-            db.execute(
-                select(Trip)
-                .where(Trip.status == TripStatus.requested)
-                .order_by(Trip.created_at.asc())
-            )
-            .scalars()
-            .first()
+        # Only assign trips that have no offers (multi-offer missed them)
+        ids_with_offers = {
+            row[0] for row in
+            db.execute(select(TripOffer.trip_id).distinct()).all()
+        }
+        q = (
+            select(Trip)
+            .where(Trip.status == TripStatus.requested)
+            .order_by(Trip.created_at.asc())
         )
+        if ids_with_offers:
+            q = q.where(Trip.id.notin_(ids_with_offers))
+        trip = db.execute(q).scalars().first()
         if trip is not None:
             previous_status = trip.status
             validate_trip_transition(previous_status, TripStatus.assigned, trip_id=str(trip.id))

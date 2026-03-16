@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Numeric, Text, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -8,6 +8,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.models.enums import DriverStatus
+
+if TYPE_CHECKING:
+    from app.db.models.trip_offer import TripOffer
 
 
 class Driver(Base):
@@ -57,6 +60,9 @@ class Driver(Base):
 
     user: Mapped["User"] = relationship(back_populates="driver_profile")
     trips: Mapped[List["Trip"]] = relationship(back_populates="driver")
+    offers: Mapped[List["TripOffer"]] = relationship(
+        back_populates="driver",
+    )
 
 
 Index("ix_drivers_status", Driver.status)

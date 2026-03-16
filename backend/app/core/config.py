@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     # passengers are matched to drivers within this radius. Covers e.g. Lisbon metro (Oeiras, etc.).
     GEO_RADIUS_KM: float = 25.0
 
+    # Multi-offer dispatch: number of drivers to send offers to.
+    OFFER_TOP_N: int = 5
+    # Offer timeout (minutes) before offer expires.
+    OFFER_TIMEOUT_MINUTES: int = 2
+
 
 settings = Settings()
 

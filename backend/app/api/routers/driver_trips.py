@@ -2,11 +2,13 @@ import time
 from typing import List
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_db, require_role
 from app.db.models.trip import Trip
+from app.db.models.trip_offer import TripOffer
+from app.models.enums import OfferStatus
 from app.models.enums import Role
 from app.schemas.trip import (
     TripAvailableItem,
@@ -22,6 +24,7 @@ from app.api.serializers import (
 )
 from app.services.interaction_logging import log_interaction
 from app.services.trips import (
+    accept_offer as accept_offer_service,
     accept_trip as accept_trip_service,
     cancel_trip_by_driver,
     complete_trip as complete_trip_service,
@@ -51,7 +54,7 @@ async def list_available_trips(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> List[TripAvailableItem]:
-    trips = list_available_trips_service(
+    items = list_available_trips_service(
         db=db,
         driver_id=user.user_id,
     )
@@ -63,8 +66,9 @@ async def list_available_trips(
             destination_lat=float(trip.destination_lat),
             destination_lng=float(trip.destination_lng),
             estimated_price=float(trip.estimated_price),
+            offer_id=str(offer.id) if offer else None,
         )
-        for trip in trips
+        for trip, offer in items
     ]
 
 
@@ -92,11 +96,29 @@ async def accept_trip(
     tid = trip_id.strip()
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
     t0 = time.perf_counter()
-    trip, client_secret = accept_trip_service(
-        db=db,
-        driver_id=user.user_id,
-        trip_id=tid,
-    )
+    # If driver has pending offer for this trip, use accept_offer (multi-offer flow)
+    offer = db.execute(
+        select(TripOffer)
+        .where(
+            and_(
+                TripOffer.trip_id == tid,
+                TripOffer.driver_id == user.user_id,
+                TripOffer.status == OfferStatus.pending,
+            )
+        )
+    ).scalar_one_or_none()
+    if offer:
+        trip, client_secret = accept_offer_service(
+            db=db,
+            driver_id=user.user_id,
+            offer_id=str(offer.id),
+        )
+    else:
+        trip, client_secret = accept_trip_service(
+            db=db,
+            driver_id=user.user_id,
+            trip_id=tid,
+        )
     latency_ms = int((time.perf_counter() - t0) * 1000)
     payment = trip.payment
     log_interaction(

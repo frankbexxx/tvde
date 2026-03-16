@@ -52,6 +52,19 @@ class TripAvailableItem(BaseModel):
     destination_lat: float
     destination_lng: float
     estimated_price: float
+    offer_id: Optional[str] = None  # When from multi-offer dispatch
+
+
+class TripOfferItem(BaseModel):
+    """Offer sent to driver for a requested trip."""
+    offer_id: str
+    trip_id: str
+    origin_lat: float
+    origin_lng: float
+    destination_lat: float
+    destination_lng: float
+    estimated_price: float
+    expires_at: str
 
 
 class TripActiveItem(BaseModel):

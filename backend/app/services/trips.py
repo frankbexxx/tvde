@@ -12,14 +12,16 @@ import stripe
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
+from app.db.models.trip_offer import TripOffer
 from app.events.dispatcher import emit
-from app.models.enums import DriverStatus, PaymentStatus, TripStatus
+from app.models.enums import DriverStatus, OfferStatus, PaymentStatus, TripStatus
 from app.schemas.realtime import TripStatusChangedEvent
 from app.schemas.trip import TripCreateRequest
 from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import calculate_price
 from app.utils.geo import haversine_km
+from app.services.offer_dispatch import create_offers_for_trip
 from app.utils.logging import log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.stripe_service import (
@@ -115,40 +117,16 @@ def create_trip(
     db.add(trip)
     db.flush()
 
-    # Auto-dispatch: if driver available, assign trip to pool
-    available_driver = db.execute(
-        select(Driver)
-        .where(Driver.status == DriverStatus.approved)
-        .where(Driver.is_available == True)
-    ).scalars().first()
-    if available_driver is not None:
-        previous_status = trip.status
-        validate_trip_transition(previous_status, TripStatus.assigned, trip_id=str(trip.id))
-        trip.status = TripStatus.assigned
-        log_event(
-            "trip_auto_dispatched",
-            trip_id=trip.id,
-            driver_id=available_driver.user_id,
-        )
-        logger.info(
-            "create_trip: auto-assigning trip to pool",
-            extra={
-                "trip_id": str(trip.id),
-                "passenger_id": str(passenger_id),
-                "previous_status": previous_status.value,
-                "new_status": trip.status.value,
-                "auto_assign_driver_id": str(available_driver.user_id),
-            },
-        )
-    else:
-        logger.info(
-            "create_trip: no available driver at request time",
-            extra={
-                "trip_id": str(trip.id),
-                "passenger_id": str(passenger_id),
-                "status": trip.status.value,
-            },
-        )
+    # Multi-offer dispatch: create offers for top N drivers within radius
+    offers = create_offers_for_trip(db=db, trip=trip)
+    logger.info(
+        "create_trip: offers created",
+        extra={
+            "trip_id": str(trip.id),
+            "passenger_id": str(passenger_id),
+            "offer_count": len(offers),
+        },
+    )
 
     db.commit()
     db.refresh(trip)
@@ -480,6 +458,157 @@ def accept_trip(
     return trip, client_secret
 
 
+def accept_offer(
+    *,
+    db: Session,
+    driver_id: str,
+    offer_id: str,
+) -> tuple[Trip, str | None]:
+    """Accept an offer. First accept wins; others get 409 offer_already_taken."""
+    offer = db.execute(
+        select(TripOffer).where(TripOffer.id == offer_id).with_for_update()
+    ).scalar_one_or_none()
+    if not offer:
+        _raise_not_found()
+    if str(offer.driver_id) != str(driver_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+    if offer.status != OfferStatus.pending:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="offer_already_taken",
+        )
+
+    trip = db.execute(
+        select(Trip).where(Trip.id == offer.trip_id).with_for_update()
+    ).scalar_one_or_none()
+    if not trip:
+        _raise_not_found()
+    if trip.status != TripStatus.requested:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="offer_already_taken",
+        )
+    if trip.driver_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="offer_already_taken",
+        )
+
+    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    if not driver:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+    if not getattr(driver, "is_available", True):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Driver is not available to accept new trips.",
+        )
+
+    # Expire other offers for this trip
+    for o in db.execute(
+        select(TripOffer).where(TripOffer.trip_id == trip.id, TripOffer.id != offer.id)
+    ).scalars().all():
+        o.status = OfferStatus.expired
+    offer.status = OfferStatus.accepted
+
+    # Same payment + trip update logic as accept_trip
+    amount_cents = 50
+    total_amount = _money(Decimal("0.50"))
+    commission_rate = _to_decimal(driver.commission_percent) / Decimal("100")
+    commission_amount = _money(total_amount * commission_rate)
+    driver_amount = _money(total_amount - commission_amount)
+
+    stripe_pi_id: str
+    if getattr(settings, "STRIPE_MOCK", False):
+        import uuid
+        stripe_pi_id = f"pi_mock_{uuid.uuid4().hex[:24]}"
+    else:
+        try:
+            intent = create_authorization_payment_intent(
+                amount_cents=amount_cents,
+                currency="EUR",
+                metadata={"trip_id": str(trip.id)},
+            )
+            stripe_pi_id = intent.id
+        except stripe.error.StripeError as e:
+            logger.error(f"accept_offer: Stripe failed trip_id={trip.id}, error={e}")
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="Payment authorization failed.",
+            ) from e
+
+    payment = Payment(
+        trip_id=trip.id,
+        total_amount=float(total_amount),
+        commission_amount=float(commission_amount),
+        driver_amount=float(driver_amount),
+        currency="EUR",
+        status=PaymentStatus.processing,
+        stripe_payment_intent_id=stripe_pi_id,
+        authorization_expires_at=None,
+    )
+    db.add(payment)
+
+    trip.driver_id = driver_id
+    trip.status = TripStatus.accepted
+    driver.is_available = False
+
+    db.commit()
+    db.refresh(trip)
+
+    log_event("trip_accepted", trip_id=trip.id, driver_id=driver_id)
+    emit(
+        TripStatusChangedEvent(
+            trip_id=str(trip.id),
+            status=trip.status,
+            timestamp=datetime.now(timezone.utc),
+        )
+    )
+    return trip, None
+
+
+def reject_offer(
+    *,
+    db: Session,
+    driver_id: str,
+    offer_id: str,
+) -> TripOffer:
+    """Reject an offer."""
+    offer = db.execute(
+        select(TripOffer).where(TripOffer.id == offer_id)
+    ).scalar_one_or_none()
+    if not offer:
+        _raise_not_found()
+    if str(offer.driver_id) != str(driver_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+    if offer.status != OfferStatus.pending:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="offer_already_taken",
+        )
+    offer.status = OfferStatus.rejected
+    db.commit()
+    db.refresh(offer)
+    return offer
+
+
+def list_offers_for_driver(
+    *,
+    db: Session,
+    driver_id: str,
+) -> list[tuple[TripOffer, Trip]]:
+    """List pending offers for a driver (not expired)."""
+    now = datetime.now(timezone.utc)
+    rows = db.execute(
+        select(TripOffer, Trip)
+        .join(Trip, TripOffer.trip_id == Trip.id)
+        .where(TripOffer.driver_id == driver_id)
+        .where(TripOffer.status == OfferStatus.pending)
+        .where(TripOffer.expires_at > now)
+        .where(Trip.status == TripStatus.requested)
+    ).all()
+    return list(rows)
+
+
 def assign_trip(
     *,
     db: Session,
@@ -520,7 +649,11 @@ def list_available_trips(
     *,
     db: Session,
     driver_id: str,
-) -> list[Trip]:
+) -> list[tuple[Trip, TripOffer | None]]:
+    """
+    Return trips available for driver: from pending offers (multi-offer) and legacy assigned pool.
+    Returns (trip, offer) - offer is None for legacy assigned trips.
+    """
     driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
     if not driver or driver.status != DriverStatus.approved:
         raise HTTPException(
@@ -538,54 +671,45 @@ def list_available_trips(
         )
         return []
 
-    trips = list(
+    result: list[tuple[Trip, TripOffer | None]] = []
+
+    # Multi-offer: pending offers for this driver
+    for offer, trip in list_offers_for_driver(db=db, driver_id=driver_id):
+        result.append((trip, offer))
+
+    # Legacy: assigned trips (from admin assign or driver_location auto-dispatch)
+    assigned_trips = list(
         db.execute(
             select(Trip).where(Trip.status == TripStatus.assigned)
         ).scalars()
     )
-
     driver_loc = db.execute(
         select(DriverLocation).where(DriverLocation.driver_id == driver_id)
     ).scalar_one_or_none()
-
     if driver_loc is not None:
         candidates: list[tuple[Trip, float]] = []
-        for trip in trips:
+        for trip in assigned_trips:
             dist_km = haversine_km(
-                float(driver_loc.lat),
-                float(driver_loc.lng),
-                float(trip.origin_lat),
-                float(trip.origin_lng),
+                float(driver_loc.lat), float(driver_loc.lng),
+                float(trip.origin_lat), float(trip.origin_lng),
             )
             if dist_km <= settings.GEO_RADIUS_KM:
                 candidates.append((trip, dist_km))
         candidates.sort(key=lambda x: x[1])
-        trips = [t for t, _ in candidates]
-        for trip, dist_km in candidates:
-            logger.debug(
-                "list_available_trips: driver sees trip",
-                extra={
-                    "driver_id": str(driver_id),
-                    "trip_id": str(trip.id),
-                    "distance_km": round(dist_km, 2),
-                },
-            )
+        for trip, _ in candidates:
+            result.append((trip, None))
     else:
-        logger.info(
-            "list_available_trips: no driver location, fallback to all trips",
-            extra={"driver_id": str(driver_id)},
-        )
+        for trip in assigned_trips:
+            result.append((trip, None))
 
     logger.info(
-        "list_available_trips: fetched trips for driver",
+        "list_available_trips: fetched for driver",
         extra={
             "driver_id": str(driver_id),
-            "driver_status": driver.status.value,
-            "is_available": getattr(driver, "is_available", None),
-            "trip_count": len(trips),
+            "trip_count": len(result),
         },
     )
-    return trips
+    return result
 
 
 def mark_trip_arriving(
