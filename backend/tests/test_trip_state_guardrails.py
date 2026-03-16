@@ -120,3 +120,4 @@ def test_valid_flow_still_works() -> None:
     validate_trip_transition(TripStatus.accepted, TripStatus.arriving)
     validate_trip_transition(TripStatus.arriving, TripStatus.ongoing)
     validate_trip_transition(TripStatus.ongoing, TripStatus.completed)
+    validate_trip_transition(TripStatus.ongoing, TripStatus.failed)  # timeout rule

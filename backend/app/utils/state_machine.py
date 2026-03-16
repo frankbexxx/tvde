@@ -13,7 +13,7 @@ ALLOWED_TRANSITIONS: dict[TripStatus, list[TripStatus]] = {
     TripStatus.assigned: [TripStatus.accepted, TripStatus.cancelled],
     TripStatus.accepted: [TripStatus.arriving, TripStatus.cancelled],
     TripStatus.arriving: [TripStatus.ongoing, TripStatus.cancelled],
-    TripStatus.ongoing: [TripStatus.completed, TripStatus.cancelled],
+    TripStatus.ongoing: [TripStatus.completed, TripStatus.cancelled, TripStatus.failed],
 }
 
 

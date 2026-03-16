@@ -61,6 +61,21 @@ def _get_trip_for_driver(
     return trip
 
 
+def _get_trip_for_driver_locked(
+    *,
+    db: Session,
+    driver_id: str,
+    trip_id: str,
+) -> Trip:
+    """Same as _get_trip_for_driver but locks row (FOR UPDATE) to prevent race conditions."""
+    trip = db.execute(
+        select(Trip).where(Trip.id == trip_id).with_for_update()
+    ).scalar_one_or_none()
+    if not trip or str(trip.driver_id) != str(driver_id):
+        _raise_not_found()
+    return trip
+
+
 def _raise_invalid_state() -> None:
     raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
@@ -155,9 +170,10 @@ def cancel_trip_by_passenger(
     trip_id: str,
 ) -> Trip:
     trip = db.execute(
-        select(Trip).where(Trip.id == trip_id, Trip.passenger_id == passenger_id).options(
-            joinedload(Trip.payment)
-        )
+        select(Trip)
+        .where(Trip.id == trip_id, Trip.passenger_id == passenger_id)
+        .options(joinedload(Trip.payment))
+        .with_for_update()
     ).scalar_one_or_none()
     if not trip:
         _raise_not_found()
@@ -216,7 +232,10 @@ def cancel_trip_by_driver(
     trip_id: str,
 ) -> Trip:
     trip = db.execute(
-        select(Trip).where(Trip.id == trip_id).options(joinedload(Trip.payment))
+        select(Trip)
+        .where(Trip.id == trip_id)
+        .options(joinedload(Trip.payment))
+        .with_for_update()
     ).scalar_one_or_none()
     if not trip or str(trip.driver_id) != str(driver_id):
         _raise_not_found()
@@ -647,9 +666,9 @@ def complete_trip(
     - trip.status must be ongoing
     - payment.status must be processing
     - payment.stripe_payment_intent_id must exist
-    - Prevents double capture via status check
+    - Prevents double capture via row lock (FOR UPDATE) and status check
     """
-    trip = _get_trip_for_driver(db=db, driver_id=driver_id, trip_id=trip_id)
+    trip = _get_trip_for_driver_locked(db=db, driver_id=driver_id, trip_id=trip_id)
     
     # Validate trip state.
     validate_trip_transition(trip.status, TripStatus.completed, trip_id=str(trip.id))
