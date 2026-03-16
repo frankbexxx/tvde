@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     # returns payment_intent_client_secret for frontend confirmation. Default False.
     ENABLE_CONFIRM_ON_ACCEPT: bool = False
 
+    # Geographic radius (km) for driver–trip matching. Drivers see trips within this distance;
+    # passengers are matched to drivers within this radius. Covers e.g. Lisbon metro (Oeiras, etc.).
+    GEO_RADIUS_KM: float = 25.0
+
 
 settings = Settings()
 

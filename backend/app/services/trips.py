@@ -516,9 +516,6 @@ def assign_trip(
     return trip
 
 
-GEO_RADIUS_KM = 5.0
-
-
 def list_available_trips(
     *,
     db: Session,
@@ -560,7 +557,7 @@ def list_available_trips(
                 float(trip.origin_lat),
                 float(trip.origin_lng),
             )
-            if dist_km <= GEO_RADIUS_KM:
+            if dist_km <= settings.GEO_RADIUS_KM:
                 candidates.append((trip, dist_km))
         candidates.sort(key=lambda x: x[1])
         trips = [t for t, _ in candidates]

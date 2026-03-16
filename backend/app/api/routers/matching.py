@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_db, require_role
+from app.core.config import settings
 from app.models.enums import Role
 from app.services.matching import find_nearest_driver
 
@@ -38,6 +39,7 @@ async def find_driver(
         db=db,
         lat=payload.lat,
         lng=payload.lng,
+        radius_km=settings.GEO_RADIUS_KM,
     )
     if not result:
         raise HTTPException(

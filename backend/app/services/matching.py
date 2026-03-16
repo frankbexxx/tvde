@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.models.driver import DriverLocation
 
 
@@ -34,7 +35,7 @@ def find_nearest_driver(
     db: Session,
     lat: float,
     lng: float,
-    radius_km: float = 5.0,
+    radius_km: float | None = None,
 ) -> Optional[Dict[str, Any]]:
     """
     MVP geographic matching:
@@ -43,6 +44,7 @@ def find_nearest_driver(
     - Filters by radius_km
     - Returns closest driver or None
     """
+    r = radius_km if radius_km is not None else settings.GEO_RADIUS_KM
     locations = list(db.execute(select(DriverLocation)).scalars())
     if not locations:
         return None
@@ -52,7 +54,7 @@ def find_nearest_driver(
 
     for loc in locations:
         d = _haversine_km(float(loc.lat), float(loc.lng), lat, lng)
-        if d <= radius_km and (best_dist is None or d < best_dist):
+        if d <= r and (best_dist is None or d < best_dist):
             best_dist = d
             best_loc = loc
 
