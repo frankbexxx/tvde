@@ -85,3 +85,12 @@ A cada execução, o endpoint `/cron/jobs` executa:
 - **Nunca** partilhes o `CRON_SECRET` publicamente.
 - Usa um valor longo e aleatório (ex: 32+ caracteres).
 - O endpoint só responde `ok` se o `secret` coincidir com `CRON_SECRET`.
+
+---
+
+## 7. Render Free Tier — spin-down
+
+Se usares o plano gratuito do Render, a instância **desliga após inatividade**. O primeiro pedido após o spin-down pode demorar **~50 segundos** até o serviço voltar.
+
+- O cron-job.org continua a chamar a cada minuto; quando a instância acordar, os jobs correm normalmente.
+- Para evitar atrasos, considera um plano pago ou um serviço de "keep-alive" (ex: UptimeRobot a pingar `/health` a cada 5 min).

@@ -5,7 +5,7 @@ import random
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 import stripe
 
@@ -92,9 +92,23 @@ def _raise_not_found() -> None:
     )
 
 
-def _estimate_trip(_: TripCreateRequest) -> tuple[float, int]:
-    # Placeholder until distance/ETA calculation. Amount set at complete.
-    return 0.0, 0
+def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int]:
+    """
+    Estimate distance (Haversine), duration (2.5 min/km city avg), price, ETA.
+    Returns (estimated_price, distance_km, duration_min, eta_minutes).
+    """
+    distance_km = haversine_km(
+        float(payload.origin_lat),
+        float(payload.origin_lng),
+        float(payload.destination_lat),
+        float(payload.destination_lng),
+    )
+    distance_km = round(distance_km, 2)
+    # City avg ~24 km/h → 2.5 min/km
+    duration_min = round(distance_km * 2.5, 2)
+    estimated_price = calculate_price(distance_km, duration_min)
+    eta_minutes = int(duration_min) + 2  # buffer for pickup
+    return estimated_price, distance_km, duration_min, eta_minutes
 
 
 def create_trip(
@@ -103,7 +117,7 @@ def create_trip(
     passenger_id: str,
     payload: TripCreateRequest,
 ) -> tuple[Trip, int]:
-    estimated_price, eta = _estimate_trip(payload)
+    estimated_price, distance_km, duration_min, eta = _estimate_trip(payload)
     trip = Trip(
         passenger_id=passenger_id,
         status=TripStatus.requested,
@@ -112,6 +126,8 @@ def create_trip(
         destination_lat=payload.destination_lat,
         destination_lng=payload.destination_lng,
         estimated_price=estimated_price,
+        distance_km=distance_km,
+        duration_min=duration_min,
         final_price=None,
     )
     db.add(trip)
@@ -146,12 +162,13 @@ def cancel_trip_by_passenger(
     db: Session,
     passenger_id: str,
     trip_id: str,
+    reason: str | None = None,
 ) -> Trip:
     trip = db.execute(
         select(Trip)
         .where(Trip.id == trip_id, Trip.passenger_id == passenger_id)
         .options(joinedload(Trip.payment))
-        .with_for_update()
+        .with_for_update(of=Trip)
     ).scalar_one_or_none()
     if not trip:
         _raise_not_found()
@@ -160,6 +177,15 @@ def cancel_trip_by_passenger(
 
     old_status = trip.status
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
+
+    # Passenger cancel after accept → cancellation fee
+    fee = 0.0
+    if old_status in (TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing):
+        fee = getattr(settings, "CANCELLATION_FEE_EUR", 2.0)
+
+    trip.cancellation_reason = (reason or "").strip() or None
+    trip.cancellation_fee = fee if fee > 0 else None
+    trip.cancelled_by = "passenger"
 
     # Cancel PaymentIntent if trip has payment (accepted/arriving/ongoing)
     payment = trip.payment
@@ -208,12 +234,13 @@ def cancel_trip_by_driver(
     db: Session,
     driver_id: str,
     trip_id: str,
+    reason: str | None = None,
 ) -> Trip:
     trip = db.execute(
         select(Trip)
         .where(Trip.id == trip_id)
         .options(joinedload(Trip.payment))
-        .with_for_update()
+        .with_for_update(of=Trip)
     ).scalar_one_or_none()
     if not trip or str(trip.driver_id) != str(driver_id):
         _raise_not_found()
@@ -222,6 +249,14 @@ def cancel_trip_by_driver(
 
     old_status = trip.status
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
+
+    trip.cancellation_reason = (reason or "").strip() or None
+    trip.cancelled_by = "driver"
+
+    # Driver penalty: increment cancellation_count
+    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    if driver:
+        driver.cancellation_count = (driver.cancellation_count or 0) + 1
 
     payment = trip.payment
     pi_id = (payment.stripe_payment_intent_id or "") if payment else ""
@@ -294,6 +329,7 @@ def cancel_trip_by_admin(
             logger.warning(f"cancel_trip_by_admin: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
+    trip.cancelled_by = "admin"
     _set_driver_available(db, trip.driver_id)
     db.commit()
     db.refresh(trip)
@@ -310,6 +346,85 @@ def cancel_trip_by_admin(
             timestamp=datetime.now(timezone.utc),
         )
     )
+    return trip
+
+
+def rate_trip_as_passenger(
+    *,
+    db: Session,
+    passenger_id: str,
+    trip_id: str,
+    rating: int,
+) -> Trip:
+    """Passenger rates driver (1-5). Trip must be completed."""
+    trip = db.execute(
+        select(Trip)
+        .where(Trip.id == trip_id, Trip.passenger_id == passenger_id)
+        .with_for_update(of=Trip)
+    ).scalar_one_or_none()
+    if not trip:
+        _raise_not_found()
+    if trip.status != TripStatus.completed:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="trip_not_completed",
+        )
+    if not (1 <= rating <= 5):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="rating_must_be_1_to_5",
+        )
+    trip.driver_rating = rating
+    driver_id = trip.driver_id
+    db.commit()
+
+    # Update driver avg_rating
+    if driver_id:
+        avg_row = db.execute(
+            select(func.avg(Trip.driver_rating).label("avg"))
+            .where(Trip.driver_id == driver_id)
+            .where(Trip.driver_rating.isnot(None))
+        ).one_or_none()
+        if avg_row and avg_row.avg is not None:
+            driver = db.execute(
+                select(Driver).where(Driver.user_id == driver_id)
+            ).scalar_one_or_none()
+            if driver:
+                driver.avg_rating = round(float(avg_row.avg), 2)
+        db.commit()
+
+    db.refresh(trip)
+    return trip
+
+
+def rate_trip_as_driver(
+    *,
+    db: Session,
+    driver_id: str,
+    trip_id: str,
+    rating: int,
+) -> Trip:
+    """Driver rates passenger (1-5). Trip must be completed."""
+    trip = db.execute(
+        select(Trip)
+        .where(Trip.id == trip_id)
+        .with_for_update(of=Trip)
+    ).scalar_one_or_none()
+    if not trip or str(trip.driver_id) != str(driver_id):
+        _raise_not_found()
+    if trip.status != TripStatus.completed:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="trip_not_completed",
+        )
+    if not (1 <= rating <= 5):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="rating_must_be_1_to_5",
+        )
+    trip.passenger_rating = rating
+    db.commit()
+    db.refresh(trip)
     return trip
 
 

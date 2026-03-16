@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Numeric, Text, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Integer, Numeric, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -43,6 +43,18 @@ class Driver(Base):
         default=True,
         server_default="true",
         comment="True when driver can accept new trips.",
+    )
+    cancellation_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        nullable=False,
+        server_default="0",
+        comment="Number of trips cancelled by this driver (penalty tracking).",
+    )
+    avg_rating: Mapped[Optional[float]] = mapped_column(
+        Numeric(3, 2),
+        nullable=True,
+        comment="Average rating from passengers (1-5).",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

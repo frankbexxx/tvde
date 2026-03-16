@@ -104,6 +104,22 @@ def upsert_driver_location(
 
     log_event("driver_location_update", driver_id=driver_id, lat=lat, lng=lng)
 
+    # Broadcast to trip subscribers when driver has an active trip
+    active_trip = db.execute(
+        select(Trip)
+        .where(Trip.driver_id == driver_id)
+        .where(Trip.status.in_([TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]))
+        .limit(1)
+    ).scalar_one_or_none()
+    if active_trip:
+        from app.realtime.hub import hub
+        hub.publish_driver_location(
+            trip_id=str(active_trip.id),
+            lat=lat,
+            lng=lng,
+            timestamp=ts,
+        )
+
     # Fallback auto-dispatch for BETA/dev: when multi-offer created 0 offers
     # (no drivers had locations). Assign oldest requested trip to pool.
     from app.db.models.trip_offer import TripOffer

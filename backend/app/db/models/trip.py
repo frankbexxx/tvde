@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -101,6 +101,31 @@ class Trip(Base):
         server_default=func.now(),
         onupdate=func.now(),
         comment="Updated on state transitions or price updates.",
+    )
+    cancellation_reason: Mapped[Optional[str]] = mapped_column(
+        String(280),
+        nullable=True,
+        comment="Reason for cancellation, when cancelled.",
+    )
+    cancellation_fee: Mapped[Optional[float]] = mapped_column(
+        Numeric(10, 2),
+        nullable=True,
+        comment="Fee charged when passenger cancels after driver accepted.",
+    )
+    cancelled_by: Mapped[Optional[str]] = mapped_column(
+        String(16),
+        nullable=True,
+        comment="Who cancelled: passenger, driver, admin.",
+    )
+    driver_rating: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+        comment="Passenger's rating of driver (1-5), set after completion.",
+    )
+    passenger_rating: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+        comment="Driver's rating of passenger (1-5), set after completion.",
     )
 
     passenger: Mapped["User"] = relationship(

@@ -29,6 +29,10 @@ class TripCancelRequest(BaseModel):
     reason: Optional[str] = Field(None, max_length=280)
 
 
+class TripRateRequest(BaseModel):
+    rating: int = Field(..., ge=1, le=5, description="Rating 1-5")
+
+
 class TripStatusResponse(BaseModel):
     trip_id: str
     status: TripStatus

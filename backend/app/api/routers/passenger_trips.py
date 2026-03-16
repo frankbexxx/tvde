@@ -16,9 +16,10 @@ from app.schemas.trip import (
     TripCreateResponse,
     TripDetailResponse,
     TripHistoryItem,
+    TripRateRequest,
     TripStatusResponse,
 )
-from app.api.serializers import trip_to_detail, trip_to_history_item
+from app.api.serializers import trip_to_detail, trip_to_history_item, trip_to_status_response
 from app.services.driver_location import get_driver_location_for_trip
 from app.services.interaction_logging import log_interaction
 from app.services.trips import (
@@ -26,6 +27,7 @@ from app.services.trips import (
     create_trip as create_trip_service,
     get_trip_for_passenger,
     list_completed_trips_for_passenger,
+    rate_trip_as_passenger,
 )
 
 
@@ -120,6 +122,23 @@ async def create_trip(
     )
 
 
+@router.post("/{trip_id}/rate", response_model=TripStatusResponse)
+async def rate_trip(
+    trip_id: str,
+    payload: TripRateRequest,
+    user: UserContext = Depends(require_role(Role.passenger)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    """Passenger rates driver after trip completion."""
+    trip = rate_trip_as_passenger(
+        db=db,
+        passenger_id=user.user_id,
+        trip_id=trip_id.strip(),
+        rating=payload.rating,
+    )
+    return trip_to_status_response(trip, include_stripe_pi=False)
+
+
 @router.post("/{trip_id}/cancel", response_model=TripStatusResponse)
 async def cancel_trip(
     trip_id: str,
@@ -127,7 +146,6 @@ async def cancel_trip(
     user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
-    _ = payload
     tid = trip_id.strip()
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
     t0 = time.perf_counter()
@@ -135,6 +153,7 @@ async def cancel_trip(
         db=db,
         passenger_id=user.user_id,
         trip_id=tid,
+        reason=payload.reason,
     )
     latency_ms = int((time.perf_counter() - t0) * 1000)
     payment = trip.payment

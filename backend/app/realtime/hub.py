@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Dict, Set
+from datetime import datetime
+from typing import Any, Dict, Set
 
 from fastapi import WebSocket
 
@@ -31,26 +32,53 @@ class RealtimeHub:
             loop = asyncio.get_running_loop()
         except RuntimeError:
             return
+        loop.create_task(self._broadcast_status(event))
 
-        loop.create_task(self._broadcast(event))
+    def publish_driver_location(
+        self,
+        trip_id: str,
+        lat: float,
+        lng: float,
+        timestamp: datetime,
+    ) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        loop.create_task(
+            self._broadcast_json(
+                trip_id,
+                {
+                    "event": "driver.location",
+                    "trip_id": trip_id,
+                    "lat": lat,
+                    "lng": lng,
+                    "timestamp": timestamp.isoformat(),
+                },
+            )
+        )
 
-    async def _broadcast(self, event: TripStatusChangedEvent) -> None:
+    async def _broadcast_status(self, event: TripStatusChangedEvent) -> None:
+        payload: dict[str, Any] = {
+            "event": "trip.status_changed",
+            "trip_id": event.trip_id,
+            "status": event.status,
+            "timestamp": event.timestamp.isoformat(),
+        }
+        await self._broadcast_json(event.trip_id, payload)
+
+    async def _broadcast_json(self, trip_id: str, payload: dict[str, Any]) -> None:
         async with self._lock:
-            sockets = list(self._subscriptions.get(event.trip_id, set()))
+            sockets = list(self._subscriptions.get(trip_id, set()))
 
         if not sockets:
             return
 
-        payload = {
-            "trip_id": event.trip_id,
-            "status": event.status,
-            "timestamp": event.timestamp,
-        }
         for websocket in sockets:
             try:
                 await websocket.send_json(payload)
             except Exception:
-                await self.unsubscribe(event.trip_id, websocket)
+                await self.unsubscribe(trip_id, websocket)
 
 
 hub = RealtimeHub()

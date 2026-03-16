@@ -49,6 +49,14 @@ class Settings(BaseSettings):
     # Secret for cron-job.org (no JWT). GET /cron/jobs?secret=<CRON_SECRET>
     CRON_SECRET: str | None = None
 
+    # Pricing engine: price = BASE_FARE + (distance_km × PRICE_PER_KM) + (duration_min × PRICE_PER_MIN)
+    BASE_FARE: float = 1.50
+    PRICE_PER_KM: float = 0.60
+    PRICE_PER_MIN: float = 0.15
+
+    # Cancellation: fee when passenger cancels after driver accepted; driver penalty is tracked in driver.cancellation_count
+    CANCELLATION_FEE_EUR: float = 2.00
+
 
 settings = Settings()
 
