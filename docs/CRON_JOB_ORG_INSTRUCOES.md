@@ -49,6 +49,9 @@ https://api-tua-app.onrender.com/cron/jobs?secret=abc123xyz789
   "offers": {
     "expired_count": 0,
     "redispatch_created": 0
+  },
+  "cleanup": {
+    "audit_events_deleted": 0
   }
 }
 ```

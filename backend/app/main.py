@@ -41,9 +41,7 @@ from app.db.session import engine
 
 
 def _dev_add_columns_if_missing() -> None:
-    """Add new columns in dev or BETA without migrations. Idempotent (PG 9.6+)."""
-    if settings.ENV != "dev" and not getattr(settings, "BETA_MODE", False):
-        return
+    """Add new columns without migrations. Idempotent (PG 9.6+). Runs on startup."""
     try:
         with engine.connect() as conn:
             for stmt in [
