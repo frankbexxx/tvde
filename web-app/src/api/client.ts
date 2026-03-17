@@ -38,7 +38,7 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string | null; timeoutMs?: number } = {}
 ): Promise<T> {
-  const token = options.token ?? tokenGetter?.() ?? null
+  const token = options.token ?? tokenGetter?.() ?? localStorage.getItem('token')
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),

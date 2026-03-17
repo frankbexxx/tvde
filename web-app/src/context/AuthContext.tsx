@@ -113,13 +113,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('A entrar...')
       try {
         const res = await loginApi(phone, password, requestedRole)
-        setBetaToken(res.access_token)
+        const token = res.access_token
+        console.log('LOGIN TOKEN:', token)
+        localStorage.setItem('token', token)
+        setBetaToken(token)
         setBetaRole(res.role as Role)
         setBetaUserId(res.user_id)
         setTokens({
-          passenger: res.access_token,
-          driver: res.access_token,
-          admin: res.access_token,
+          passenger: token,
+          driver: token,
+          admin: token,
         })
         setStatus('Pronto')
         addLog('Sessão iniciada', 'success')
@@ -135,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    localStorage.removeItem('token')
     setTokens(null)
     setBetaToken(null)
     setBetaRole('passenger')
