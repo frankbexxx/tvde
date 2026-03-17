@@ -9,10 +9,12 @@ from app.core.config import settings
 
 def calculate_price(distance_km: float, duration_min: float) -> float:
     """Calculate total trip price from distance and duration."""
+    d = float(distance_km)
+    t = float(duration_min)
     total = (
-        settings.BASE_FARE
-        + (settings.PRICE_PER_KM * distance_km)
-        + (settings.PRICE_PER_MIN * duration_min)
+        float(settings.BASE_FARE)
+        + (float(settings.PRICE_PER_KM) * d)
+        + (float(settings.PRICE_PER_MIN) * t)
     )
     return round(total, 2)
 
