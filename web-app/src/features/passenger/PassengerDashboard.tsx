@@ -10,7 +10,6 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
-import { TripCard } from '../../components/cards/TripCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
@@ -148,6 +147,13 @@ export function PassengerDashboard() {
   const isActiveStatus = (s: string) =>
     ['requested', 'assigned', 'accepted', 'arriving', 'ongoing'].includes(s)
 
+  // B002: UX state with 500ms delay to avoid flicker (must be declared before useEffects that use it)
+  const uxState = usePassengerUxState(
+    activeTrip,
+    !!driverLocation,
+    tripCompletedFromLocation
+  )
+
   useEffect(() => {
     if (uxState) {
       setStatus(UX_STATE_LABELS[uxState] ?? uxState)
@@ -165,13 +171,6 @@ export function PassengerDashboard() {
       setPassengerActiveTripId(null)
     }
   }, [activeTrip?.status, addLog, setPassengerActiveTripId])
-
-  // B002: UX state with 500ms delay to avoid flicker
-  const uxState = usePassengerUxState(
-    activeTrip,
-    !!driverLocation,
-    tripCompletedFromLocation
-  )
 
   const statusConfig = uxState
     ? { label: UX_STATE_LABELS[uxState] ?? uxState, variant: UX_STATE_VARIANTS[uxState] ?? 'idle' }
