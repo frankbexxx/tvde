@@ -61,7 +61,7 @@ export function DriverDashboard() {
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
-  const driverLocation = useGeolocation()
+  const { position: driverLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
   const [offline, setOffline] = useState(getStoredOffline)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -182,6 +182,13 @@ export function DriverDashboard() {
       </header>
 
       <DevTools lastCreatedTripId={null} onAssigned={refetchAvailable} mode="driver" />
+
+      {geolocationUsedFallback && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+          A usar Lisboa (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
+          <strong>Demo Lisboa</strong> em ▶ Dev.
+        </div>
+      )}
 
       <div className="space-y-6 transition-opacity duration-150">
         <Toggle

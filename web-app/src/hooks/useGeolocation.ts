@@ -13,6 +13,7 @@ export const LISBON_FALLBACK = {
 } as const
 
 const DEMO_LOCATION_KEY = 'tvde_demo_location'
+const GEOLOCATION_FAILED_KEY = 'tvde_geolocation_failed'
 
 /** Check if demo location mode is active (no geolocation, use Lisbon). */
 export function isDemoLocationEnabled(): boolean {
@@ -31,8 +32,10 @@ export function setDemoLocationEnabled(enabled: boolean): void {
   try {
     if (enabled) {
       localStorage.setItem(DEMO_LOCATION_KEY, '1')
+      sessionStorage.removeItem(GEOLOCATION_FAILED_KEY)
     } else {
       localStorage.removeItem(DEMO_LOCATION_KEY)
+      sessionStorage.removeItem(GEOLOCATION_FAILED_KEY)
     }
   } catch {
     /* ignore */
@@ -62,20 +65,27 @@ function distanceMeters(a: { lat: number; lng: number }, b: { lat: number; lng: 
   return R * c
 }
 
+export type GeolocationResult = {
+  position: LatLng
+  /** True when using Lisbon due to error/fallback (not demo mode). */
+  usedFallback: boolean
+}
+
 /**
  * Watches the user's geolocation using the browser Geolocation API.
- * - Returns { lat, lng } (or null while unavailable)
+ * - Returns { position, usedFallback }
+ * - After first failure, uses Lisbon without prompting again (sessionStorage).
  * - Uses high accuracy when possible
- * - Handles permission errors gracefully (logs to console)
  * - Ignores tiny movements (< ~5m) to reduce React re-renders and jitter.
  */
-export function useGeolocation(): LatLng {
+export function useGeolocation(): GeolocationResult {
   const [position, setPosition] = useState<LatLng>(() => {
     if (isDemoLocationEnabled()) {
       return { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
     }
     return null
   })
+  const [usedFallback, setUsedFallback] = useState(false)
   const lastPositionRef = useRef<LatLng>(position)
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -84,12 +94,38 @@ export function useGeolocation(): LatLng {
       const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
       lastPositionRef.current = fallback
       setPosition(fallback)
+      setUsedFallback(false)
       return
+    }
+
+    // After a previous geolocation failure in this session, skip asking again (avoids repeated prompts on refresh).
+    try {
+      if (sessionStorage.getItem(GEOLOCATION_FAILED_KEY) === '1') {
+        const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+        lastPositionRef.current = fallback
+        setPosition(fallback)
+        setUsedFallback(true)
+        return
+      }
+    } catch {
+      /* ignore */
     }
 
     if (!('geolocation' in navigator)) {
       console.warn('Geolocation is not available in this browser.')
       return
+    }
+
+    const useFallback = () => {
+      try {
+        sessionStorage.setItem(GEOLOCATION_FAILED_KEY, '1')
+      } catch {
+        /* ignore */
+      }
+      const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+      lastPositionRef.current = fallback
+      setPosition(fallback)
+      setUsedFallback(true)
     }
 
     const onSuccess = (pos: GeolocationPosition) => {
@@ -116,23 +152,21 @@ export function useGeolocation(): LatLng {
 
     const onError = (err: GeolocationPositionError) => {
       console.warn('Geolocation error:', err.code, err.message)
-      // Keep last known position if any; do not throw.
+      useFallback()
     }
 
-    // If we don't get any position within 5s, fall back to Lisbon center.
+    // If we don't get any position within 3s, fall back to Lisbon center.
     fallbackTimeoutRef.current = setTimeout(() => {
       if (!lastPositionRef.current) {
         console.warn('Geolocation fallback: using Lisbon center coordinates')
-        const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
-        lastPositionRef.current = fallback
-        setPosition(fallback)
+        useFallback()
       }
-    }, 5000)
+    }, 3000)
 
     const watchId = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
       maximumAge: 0,
-      timeout: 10000,
+      timeout: 8000,
     })
 
     return () => {
@@ -144,7 +178,7 @@ export function useGeolocation(): LatLng {
     }
   }, [])
 
-  return position
+  return { position, usedFallback }
 }
 
 

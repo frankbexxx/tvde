@@ -43,7 +43,7 @@ export function PassengerDashboard() {
   const activeTripId = passengerActiveTripId
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
-  const passengerLocation = useGeolocation()
+  const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   const { data: history, refetch: refetchHistory } = usePolling(
@@ -218,6 +218,13 @@ export function PassengerDashboard() {
       </header>
 
       <DevTools lastCreatedTripId={activeTripId} onAssigned={refetchHistory} mode="passenger" />
+
+      {geolocationUsedFallback && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+          A usar Lisboa (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
+          <strong>Demo Lisboa</strong> em ▶ Dev.
+        </div>
+      )}
 
       <div className="space-y-6 mt-6 transition-opacity duration-150">
         <StatusHeader label={statusConfig.label} variant={statusConfig.variant} />
