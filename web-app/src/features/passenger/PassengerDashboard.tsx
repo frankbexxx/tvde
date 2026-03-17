@@ -172,6 +172,7 @@ export function PassengerDashboard() {
         : handleRequestTrip
 
   // Poll driver location for the active trip so passenger can see live movement.
+  // B001: 404/409 are valid states — no error logs, stop polling on trip_completed.
   useEffect(() => {
     if (!activeTripId) {
       setDriverLocation(null)
@@ -181,20 +182,28 @@ export function PassengerDashboard() {
     let cancelled = false
     const interval = setInterval(() => {
       if (cancelled) return
-      void getDriverLocation(activeTripId)
-        .then((loc) => {
-          setDriverLocation({ lat: loc.lat, lng: loc.lng })
-        })
-        .catch((err) => {
-          console.warn('Failed to fetch driver location', err)
-        })
+      void getDriverLocation(activeTripId).then((result) => {
+        if (cancelled) return
+        if (result.ok) {
+          setDriverLocation({ lat: result.lat, lng: result.lng })
+        } else if (result.reason === 'driver_not_assigned') {
+          setDriverLocation(null)
+        } else if (result.reason === 'trip_completed') {
+          setPassengerActiveTripId(null)
+          setDriverLocation(null)
+        }
+      }).catch((err) => {
+        if (cancelled) return
+        // Only real errors (5xx, network) reach here
+        console.warn('getDriverLocation error', err)
+      })
     }, 2000)
 
     return () => {
       cancelled = true
       clearInterval(interval)
     }
-  }, [activeTripId])
+  }, [activeTripId, setPassengerActiveTripId])
 
   return (
     <ScreenContainer
