@@ -16,6 +16,8 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
 import { MapView } from '../../maps/MapView'
 import { getDriverLocation } from '../../services/trackingService'
+import { usePassengerUxState } from './usePassengerUxState'
+import { PassengerStatusCard } from './PassengerStatusCard'
 
 /** Câmara Municipal de Oeiras, Largo Marquês de Pombal */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
@@ -38,6 +40,23 @@ const STATUS_CONFIG: Record<
   failed: { label: 'Falhou', variant: 'error' },
 }
 
+/** B002: UX state labels — 500ms delay applied in usePassengerUxState */
+const UX_STATE_LABELS: Record<string, string> = {
+  SEARCHING_DRIVER: 'À procura de motorista...',
+  DRIVER_ASSIGNED: 'Motorista a caminho',
+  DRIVER_ARRIVING: 'Motorista chegou',
+  TRIP_ONGOING: 'Em viagem',
+  TRIP_COMPLETED: 'Viagem concluída',
+}
+
+const UX_STATE_VARIANTS: Record<string, import('../../components/layout/StatusHeader').StatusVariant> = {
+  SEARCHING_DRIVER: 'requested',
+  DRIVER_ASSIGNED: 'accepted',
+  DRIVER_ARRIVING: 'arriving',
+  TRIP_ONGOING: 'ongoing',
+  TRIP_COMPLETED: 'completed',
+}
+
 export function PassengerDashboard() {
   const { token } = useAuth()
   const { addLog, setStatus } = useActivityLog()
@@ -47,6 +66,7 @@ export function PassengerDashboard() {
   const [creating, setCreating] = useState(false)
   const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
 
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getTripHistory(token!),
@@ -129,22 +149,32 @@ export function PassengerDashboard() {
     ['requested', 'assigned', 'accepted', 'arriving', 'ongoing'].includes(s)
 
   useEffect(() => {
-    if (activeTrip?.status) {
-      setStatus(STATUS_CONFIG[activeTrip.status]?.label ?? activeTrip.status)
+    if (uxState) {
+      setStatus(UX_STATE_LABELS[uxState] ?? uxState)
     } else if (!activeTripId) {
       setStatus('Pronto')
     }
-  }, [activeTrip?.status, activeTripId, setStatus])
+  }, [uxState, activeTripId, setStatus])
 
   useEffect(() => {
-    if (activeTrip?.status === 'completed' || activeTrip?.status === 'cancelled') {
-      addLog(`Viagem ${activeTrip.status}`, 'success')
+    if (activeTrip?.status === 'completed') {
+      addLog('Viagem completed', 'success')
+      setTripCompletedFromLocation(true)
+    } else if (activeTrip?.status === 'cancelled') {
+      addLog('Viagem cancelada', 'success')
       setPassengerActiveTripId(null)
     }
-  }, [activeTrip?.status, addLog])
+  }, [activeTrip?.status, addLog, setPassengerActiveTripId])
 
-  const statusConfig = activeTrip?.status
-    ? STATUS_CONFIG[activeTrip.status] ?? { label: activeTrip.status, variant: 'idle' as const }
+  // B002: UX state with 500ms delay to avoid flicker
+  const uxState = usePassengerUxState(
+    activeTrip,
+    !!driverLocation,
+    tripCompletedFromLocation
+  )
+
+  const statusConfig = uxState
+    ? { label: UX_STATE_LABELS[uxState] ?? uxState, variant: UX_STATE_VARIANTS[uxState] ?? 'idle' }
     : activeTripId && !isOnline
       ? { label: 'Sem conectividade', variant: 'idle' as const }
       : activeTripId
@@ -171,10 +201,20 @@ export function PassengerDashboard() {
         ? handleCancel
         : handleRequestTrip
 
-  // Poll driver location for the active trip so passenger can see live movement.
-  // B001: 404/409 are valid states — no error logs, stop polling on trip_completed.
+  // When trip completed (from driver-location 409 or trip poll): show TRIP_COMPLETED, then clear after 2s.
   useEffect(() => {
-    if (!activeTripId) {
+    if (!tripCompletedFromLocation) return
+    const t = setTimeout(() => {
+      setPassengerActiveTripId(null)
+      setTripCompletedFromLocation(false)
+    }, 2000)
+    return () => clearTimeout(t)
+  }, [tripCompletedFromLocation, setPassengerActiveTripId])
+
+  // Poll driver location for the active trip so passenger can see live movement.
+  // B001/B002: 404/409 valid states. On trip_completed: stop polling, set flag (effect above clears after 2s).
+  useEffect(() => {
+    if (!activeTripId || tripCompletedFromLocation) {
       setDriverLocation(null)
       return
     }
@@ -189,12 +229,11 @@ export function PassengerDashboard() {
         } else if (result.reason === 'driver_not_assigned') {
           setDriverLocation(null)
         } else if (result.reason === 'trip_completed') {
-          setPassengerActiveTripId(null)
+          setTripCompletedFromLocation(true)
           setDriverLocation(null)
         }
       }).catch((err) => {
         if (cancelled) return
-        // Only real errors (5xx, network) reach here
         console.warn('getDriverLocation error', err)
       })
     }, 2000)
@@ -203,7 +242,7 @@ export function PassengerDashboard() {
       cancelled = true
       clearInterval(interval)
     }
-  }, [activeTripId, setPassengerActiveTripId])
+  }, [activeTripId, tripCompletedFromLocation, setPassengerActiveTripId])
 
   return (
     <ScreenContainer
@@ -284,45 +323,16 @@ export function PassengerDashboard() {
           </div>
         )}
 
-        {activeTrip && isActiveStatus(activeTrip.status) && (
-          <div className="space-y-4">
-            {activeTrip.status === 'requested' && (
-              <div className="flex flex-col items-center justify-center py-6 space-y-3">
-                <Spinner size="lg" />
-                <p className="text-slate-500 text-base">
-                  Estamos a encontrar o motorista mais próximo.
-                </p>
-              </div>
-            )}
-            {(activeTrip.status === 'assigned' ||
-              activeTrip.status === 'accepted' ||
-              activeTrip.status === 'arriving' ||
-              activeTrip.status === 'ongoing') && (
-              <TripCard
-                pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-                destination={formatDestination(
-                  activeTrip.destination_lat,
-                  activeTrip.destination_lng
-                )}
-                price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-                estimateFallback={ESTIMATE_MOCK}
-                driverName="O seu motorista está a caminho"
-              />
-            )}
-          </div>
-        )}
-
-        {activeTrip?.status === 'completed' && (
-          <div className="space-y-4">
-            <TripCard
-              pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-              destination={formatDestination(
-                activeTrip.destination_lat,
-                activeTrip.destination_lng
-              )}
-              price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-            />
-          </div>
+        {/* B002: PassengerStatusCard — UX state layer with 500ms delay, no empty screens */}
+        {activeTripId && (
+          uxState && activeTrip ? (
+            <PassengerStatusCard uxState={uxState} activeTrip={activeTrip} />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-slate-200 bg-slate-50/50">
+              <Spinner size="lg" />
+              <p className="text-slate-600 text-base">A verificar...</p>
+            </div>
+          )
         )}
 
         {history && history.length > 0 && (
