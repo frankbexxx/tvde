@@ -89,6 +89,7 @@ def upsert_driver_location(
         .where(DriverLocation.driver_id == driver_id)
         .limit(1)
     ).scalar_one_or_none()
+    is_first_send = loc is None
     if loc is None:
         loc = DriverLocation(
             driver_id=driver_id,
@@ -103,6 +104,8 @@ def upsert_driver_location(
         loc.timestamp = ts
 
     log_event("driver_location_update", driver_id=driver_id, lat=lat, lng=lng)
+    if is_first_send:
+        log_event("driver_location_first_send", driver_id=driver_id, lat=lat, lng=lng)
 
     # Broadcast to trip subscribers when driver has an active trip
     active_trip = db.execute(

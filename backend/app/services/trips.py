@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import random
+import time
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, timezone
 from fastapi import HTTPException, status
@@ -145,8 +146,38 @@ def create_trip(
     db.add(trip)
     db.flush()
 
-    # Multi-offer dispatch: create offers for top N drivers within radius
+    # Multi-offer dispatch: create offers for top N drivers within radius.
+    # A006: if 0 offers, retry up to 3 times with 2s wait (driver may send location in parallel).
     offers = create_offers_for_trip(db=db, trip=trip)
+    max_retries = 3
+    retry_wait_sec = 2
+    attempt = 1
+    while len(offers) == 0 and attempt <= max_retries:
+        log_event(
+            "dispatch_retry_attempt",
+            trip_id=str(trip.id),
+            attempt=attempt,
+            max_retries=max_retries,
+        )
+        time.sleep(retry_wait_sec)
+        db.expire_all()  # Force fresh read from DB (driver may have sent location)
+        offers = create_offers_for_trip(db=db, trip=trip)
+        if offers:
+            log_event(
+                "dispatch_retry_success",
+                trip_id=str(trip.id),
+                attempt=attempt,
+                offer_count=len(offers),
+            )
+            break
+        attempt += 1
+    if len(offers) == 0 and attempt > 1:
+        log_event(
+            "dispatch_retry_failed",
+            trip_id=str(trip.id),
+            attempts=attempt - 1,
+        )
+
     logger.info(
         "create_trip: offers created",
         extra={

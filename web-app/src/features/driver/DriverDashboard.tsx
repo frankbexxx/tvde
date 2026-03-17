@@ -82,16 +82,21 @@ export function DriverDashboard() {
     10000
   )
 
-  // Periodically send driver location to backend when online and location is available.
+  // Send driver location immediately when available, then every 3s (A006 geo stability).
   useEffect(() => {
     if (offline || !driverLocation) return
 
     let cancelled = false
+
+    // Immediate first send — no driver should be online without at least one location in DB.
+    void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
+      if (!cancelled) console.warn('Failed to send driver location (first)', err)
+    })
+
     const interval = setInterval(() => {
       if (cancelled || !driverLocation) return
       void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
-        // Swallow errors here; ActivityPanel will still log other issues.
-        console.warn('Failed to send driver location', err)
+        if (!cancelled) console.warn('Failed to send driver location', err)
       })
     }, 3000)
 
