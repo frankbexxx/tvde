@@ -32,8 +32,9 @@ const LISBON_CENTER: LatLng = { lat: 38.7223, lng: -9.1393 }
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 const DEFAULT_MAP_STYLE = 'https://demotiles.maplibre.org/style.json'
+// basic-v2 has fewer sprites than streets-v2, avoids "image could not be loaded" errors
 const MAPTILER_STYLE = MAPTILER_KEY
-  ? `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_KEY}`
+  ? `https://api.maptiler.com/maps/basic-v2/style.json?key=${MAPTILER_KEY}`
   : DEFAULT_MAP_STYLE
 
 export function MapView({ passengerLocation, driverLocation, route, className, overlay }: MapViewProps) {

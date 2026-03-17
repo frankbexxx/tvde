@@ -4,6 +4,10 @@ import { useActivityLog } from '../../context/ActivityLogContext'
 import { assignTripAdmin, runTimeoutsAdmin } from '../../api/trips'
 import { apiFetch, API_BASE } from '../../api/client'
 import { getExportFilename, getDeviceId, getCurrentRun, resetRun } from '../../utils/exportLogs'
+import {
+  isDemoLocationEnabled,
+  setDemoLocationEnabled,
+} from '../../hooks/useGeolocation'
 
 function errMsg(err: unknown): string {
   const e = err as { detail?: string; message?: string }
@@ -123,6 +127,16 @@ export function DevTools({
     setStatus('Pronto')
   }
 
+  const handleToggleDemoLocation = () => {
+    const next = !isDemoLocationEnabled()
+    setDemoLocationEnabled(next)
+    addLog(
+      next ? 'Localização demo ativada (Lisboa, sem permissão)' : 'Localização demo desativada',
+      'info'
+    )
+    window.location.reload()
+  }
+
   const handleSeed = async () => {
     setStatus('A executar seed...')
     addLog('Clique: Seed', 'action')
@@ -198,6 +212,17 @@ export function DevTools({
       </button>
       {open && (
         <div className="px-3 pb-3 flex flex-wrap gap-2">
+          <button
+            onClick={handleToggleDemoLocation}
+            className={`px-3 py-1.5 text-sm rounded-lg ${
+              isDemoLocationEnabled()
+                ? 'bg-emerald-300 text-emerald-900'
+                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+            }`}
+            title="Usar Lisboa sem pedir permissão de localização (útil no PC)"
+          >
+            {isDemoLocationEnabled() ? '✓ Demo Lisboa' : 'Demo Lisboa'}
+          </button>
           <button
             onClick={handleSeed}
             className="px-3 py-1.5 text-sm bg-amber-200 rounded-lg hover:bg-amber-300"

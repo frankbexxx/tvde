@@ -7,10 +7,37 @@ type LatLng = {
 
 const METERS_THRESHOLD = 5
 
-const LISBON_FALLBACK = {
+export const LISBON_FALLBACK = {
   lat: 38.7223,
   lng: -9.1393,
 } as const
+
+const DEMO_LOCATION_KEY = 'tvde_demo_location'
+
+/** Check if demo location mode is active (no geolocation, use Lisbon). */
+export function isDemoLocationEnabled(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    if (localStorage.getItem(DEMO_LOCATION_KEY) === '1') return true
+    const params = new URLSearchParams(window.location.search)
+    return params.get('demo') === '1' || params.get('demo') === 'true'
+  } catch {
+    return false
+  }
+}
+
+/** Enable demo location (Lisbon, no permission prompt). Persists until disabled. */
+export function setDemoLocationEnabled(enabled: boolean): void {
+  try {
+    if (enabled) {
+      localStorage.setItem(DEMO_LOCATION_KEY, '1')
+    } else {
+      localStorage.removeItem(DEMO_LOCATION_KEY)
+    }
+  } catch {
+    /* ignore */
+  }
+}
 
 function toRadians(deg: number) {
   return (deg * Math.PI) / 180
@@ -43,11 +70,23 @@ function distanceMeters(a: { lat: number; lng: number }, b: { lat: number; lng: 
  * - Ignores tiny movements (< ~5m) to reduce React re-renders and jitter.
  */
 export function useGeolocation(): LatLng {
-  const [position, setPosition] = useState<LatLng>(null)
-  const lastPositionRef = useRef<LatLng>(null)
+  const [position, setPosition] = useState<LatLng>(() => {
+    if (isDemoLocationEnabled()) {
+      return { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+    }
+    return null
+  })
+  const lastPositionRef = useRef<LatLng>(position)
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    if (isDemoLocationEnabled()) {
+      const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+      lastPositionRef.current = fallback
+      setPosition(fallback)
+      return
+    }
+
     if (!('geolocation' in navigator)) {
       console.warn('Geolocation is not available in this browser.')
       return
