@@ -83,8 +83,9 @@ export function DriverDashboard() {
   )
 
   // Send driver location immediately when available, then every 3s (A006 geo stability).
+  // Only send when we have a token — prevents 401 "Not authenticated" on cold load.
   useEffect(() => {
-    if (offline || !driverLocation) return
+    if (offline || !driverLocation || !token) return
 
     let cancelled = false
 
@@ -94,7 +95,7 @@ export function DriverDashboard() {
     })
 
     const interval = setInterval(() => {
-      if (cancelled || !driverLocation) return
+      if (cancelled || !driverLocation || !token) return
       void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
         if (!cancelled) console.warn('Failed to send driver location', err)
       })
@@ -104,7 +105,7 @@ export function DriverDashboard() {
       cancelled = true
       clearInterval(interval)
     }
-  }, [offline, driverLocation])
+  }, [offline, driverLocation, token])
 
   useEffect(() => {
     setStoredOffline(offline)
