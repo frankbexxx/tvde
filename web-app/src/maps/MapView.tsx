@@ -28,7 +28,8 @@ export interface MapViewProps {
   overlay?: ReactNode
 }
 
-const LISBON_CENTER: LatLng = { lat: 38.7223, lng: -9.1393 }
+/** Câmara Municipal de Oeiras — centro inicial do mapa */
+const OEIRAS_CENTER: LatLng = { lat: 38.6973, lng: -9.30836 }
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 const DEFAULT_MAP_STYLE = 'https://demotiles.maplibre.org/style.json'
@@ -45,8 +46,8 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
 
   const initialViewState = useMemo(
     () => ({
-      latitude: LISBON_CENTER.lat,
-      longitude: LISBON_CENTER.lng,
+      latitude: OEIRAS_CENTER.lat,
+      longitude: OEIRAS_CENTER.lng,
       zoom: 13,
     }),
     []

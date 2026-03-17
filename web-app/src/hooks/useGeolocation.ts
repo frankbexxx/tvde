@@ -7,9 +7,10 @@ type LatLng = {
 
 const METERS_THRESHOLD = 5
 
-export const LISBON_FALLBACK = {
-  lat: 38.7223,
-  lng: -9.1393,
+/** Câmara Municipal de Oeiras, Largo Marquês de Pombal */
+export const OEIRAS_FALLBACK = {
+  lat: 38.6973,
+  lng: -9.30836,
 } as const
 
 const DEMO_LOCATION_KEY = 'tvde_demo_location'
@@ -81,7 +82,7 @@ export type GeolocationResult = {
 export function useGeolocation(): GeolocationResult {
   const [position, setPosition] = useState<LatLng>(() => {
     if (isDemoLocationEnabled()) {
-      return { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+      return { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
     }
     return null
   })
@@ -91,7 +92,7 @@ export function useGeolocation(): GeolocationResult {
 
   useEffect(() => {
     if (isDemoLocationEnabled()) {
-      const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+      const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
       lastPositionRef.current = fallback
       setPosition(fallback)
       setUsedFallback(false)
@@ -101,7 +102,7 @@ export function useGeolocation(): GeolocationResult {
     // After a previous geolocation failure in this session, skip asking again (avoids repeated prompts on refresh).
     try {
       if (sessionStorage.getItem(GEOLOCATION_FAILED_KEY) === '1') {
-        const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+        const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
         lastPositionRef.current = fallback
         setPosition(fallback)
         setUsedFallback(true)
@@ -122,7 +123,7 @@ export function useGeolocation(): GeolocationResult {
       } catch {
         /* ignore */
       }
-      const fallback = { lat: LISBON_FALLBACK.lat, lng: LISBON_FALLBACK.lng }
+      const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
       lastPositionRef.current = fallback
       setPosition(fallback)
       setUsedFallback(true)
@@ -158,7 +159,7 @@ export function useGeolocation(): GeolocationResult {
     // If we don't get any position within 3s, fall back to Lisbon center.
     fallbackTimeoutRef.current = setTimeout(() => {
       if (!lastPositionRef.current) {
-        console.warn('Geolocation fallback: using Lisbon center coordinates')
+        console.warn('Geolocation fallback: using Oeiras (Câmara Municipal) coordinates')
         useFallback()
       }
     }, 3000)

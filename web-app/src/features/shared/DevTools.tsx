@@ -131,7 +131,7 @@ export function DevTools({
     const next = !isDemoLocationEnabled()
     setDemoLocationEnabled(next)
     addLog(
-      next ? 'Localização demo ativada (Lisboa, sem permissão)' : 'Localização demo desativada',
+      next ? 'Localização demo ativada (Oeiras, sem permissão)' : 'Localização demo desativada',
       'info'
     )
     window.location.reload()
@@ -219,9 +219,9 @@ export function DevTools({
                 ? 'bg-emerald-300 text-emerald-900'
                 : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
             }`}
-            title="Usar Lisboa sem pedir permissão de localização (útil no PC)"
+            title="Usar Oeiras (Câmara Municipal) sem pedir permissão de localização (útil no PC)"
           >
-            {isDemoLocationEnabled() ? '✓ Demo Lisboa' : 'Demo Lisboa'}
+            {isDemoLocationEnabled() ? '✓ Demo Oeiras' : 'Demo Oeiras'}
           </button>
           <button
             onClick={handleSeed}

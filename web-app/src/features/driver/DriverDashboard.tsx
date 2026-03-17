@@ -185,8 +185,8 @@ export function DriverDashboard() {
 
       {geolocationUsedFallback && (
         <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-          A usar Lisboa (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
-          <strong>Demo Lisboa</strong> em ▶ Dev.
+          A usar Oeiras (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
+          <strong>Demo Oeiras</strong> em ▶ Dev.
         </div>
       )}
 

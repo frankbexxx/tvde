@@ -17,8 +17,10 @@ import { DevTools } from '../shared/DevTools'
 import { MapView } from '../../maps/MapView'
 import { getDriverLocation } from '../../services/trackingService'
 
-const DEMO_ORIGIN = { lat: 38.7223, lng: -9.1393 }
-const DEMO_DEST = { lat: 38.7369, lng: -9.1386 }
+/** Câmara Municipal de Oeiras, Largo Marquês de Pombal */
+const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
+/** Lisboa centro (destino típico de Oeiras) */
+const DEMO_DEST = { lat: 38.7223, lng: -9.1393 }
 
 const ESTIMATE_MOCK = '4–6'
 
@@ -221,8 +223,8 @@ export function PassengerDashboard() {
 
       {geolocationUsedFallback && (
         <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-          A usar Lisboa (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
-          <strong>Demo Lisboa</strong> em ▶ Dev.
+          A usar Oeiras (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
+          <strong>Demo Oeiras</strong> em ▶ Dev.
         </div>
       )}
 
