@@ -17,6 +17,8 @@ Lista exaustiva do que foi implementado (com snippets) e como testar — **todas
 | C001 | Rating System |
 | D001 | Background Workers (Cron) |
 
+**Secções adicionais:** Diagnóstico passageiro–motorista | Localização demo (Oeiras) | Ferramentas admin na web-app
+
 ---
 
 ## 1. A001 — Driver Availability
@@ -352,10 +354,10 @@ def publish_new_offer(self, driver_id, offer_id, trip_id, origin_lat, origin_lng
   "event": "new_trip_offer",
   "offer_id": "uuid",
   "trip_id": "uuid",
-  "origin_lat": 38.7,
-  "origin_lng": -9.1,
-  "destination_lat": 38.8,
-  "destination_lng": -9.2,
+  "origin_lat": 38.6973,
+  "origin_lng": -9.30836,
+  "destination_lat": 38.7223,
+  "destination_lng": -9.1393,
   "estimated_price": 12.50,
   "expires_at": "2025-02-22T12:00:15Z"
 }
@@ -571,9 +573,9 @@ Authorization: Bearer <driver_token>
 ### 2. A002 — Multi-Offer
 
 ```bash
-# Passageiro cria trip
+# Passageiro cria trip (exemplo: Oeiras → Lisboa)
 POST /trips
-{"origin_lat": 38.7, "origin_lng": -9.1, "destination_lat": 38.8, "destination_lng": -9.2}
+{"origin_lat": 38.6973, "origin_lng": -9.30836, "destination_lat": 38.7223, "destination_lng": -9.1393}
 
 # Motorista lista ofertas
 GET /driver/trips
@@ -694,13 +696,73 @@ Quando o passageiro pede viagem e o motorista não vê ofertas, usa os endpoints
 
 ---
 
+## Localização demo e geolocalização
+
+### Coordenadas demo (Oeiras)
+
+- **Origem:** Câmara Municipal de Oeiras, Largo Marquês de Pombal — `38.6973, -9.30836`
+- **Destino demo:** Lisboa centro — `38.7223, -9.1393`
+- **Mapa inicial:** Centro em Oeiras
+
+### Modo Demo Oeiras (sem pedir permissão)
+
+Para testar no PC sem pedir permissão de localização em cada refresh:
+
+1. **DevTools:** Expandir ▶ Dev → clicar **Demo Oeiras** → a app recarrega e usa Oeiras sem geolocalização.
+2. **URL:** Aceder a `/passenger?demo=1` ou `/driver?demo=1` para usar Oeiras numa sessão.
+3. **Persistência:** O botão Demo Oeiras grava em `localStorage` — fica ativo até desativar.
+
+### Fallback automático (após erro)
+
+- Se a geolocalização falhar (timeout, permissão negada), a app usa Oeiras e grava em `sessionStorage`.
+- Nos refreshes seguintes da mesma sessão, **não volta a pedir permissão** — usa Oeiras diretamente.
+- Banner: "A usar Oeiras (localização indisponível). Para não pedir permissão no próximo carregamento, ativa **Demo Oeiras** em ▶ Dev."
+
+### MapTiler
+
+- Estilo: `basic-v2` (menos sprites, evita erros de imagem no mapa).
+- `VITE_MAPTILER_KEY` no Render (tvde-app) para tiles.
+
+---
+
+## Ferramentas admin na web-app
+
+Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger).
+
+### Tabs no AdminDashboard
+
+| Tab | Conteúdo |
+|-----|----------|
+| Pendentes | Aprovar utilizadores (BETA) |
+| Utilizadores | Lista, promover/rebaixar motorista, editar, eliminar |
+| Viagens | Lista de viagens ativas; Atribuir, Cancelar, Debug |
+| Métricas | active_trips, drivers_available/busy, trips_requested, etc. |
+| Operações | Executar timeouts, Expirar ofertas + redispatch, Exportar logs CSV, Recuperar motorista |
+| Saúde | Status do sistema, warnings, anomalias (viagens accepted/ongoing há muito, etc.) |
+
+### Endpoints usados
+
+- `GET /admin/trips/active` — viagens em requested, assigned, accepted, arriving, ongoing
+- `GET /admin/trips/{trip_id}` — detalhe da viagem
+- `GET /admin/trip-debug/{trip_id}` — debug completo (payment, driver, logs)
+- `POST /admin/trips/{trip_id}/assign` — atribuir viagem
+- `POST /admin/cancel-trip/{trip_id}` — cancelar viagem
+- `GET /admin/metrics` — métricas operacionais
+- `GET /admin/system-health` — saúde do sistema
+- `POST /admin/run-timeouts` — executar timeouts
+- `POST /admin/run-offer-expiry` — expirar ofertas e redispatch
+- `POST /admin/recover-driver/{driver_id}` — forçar is_available=true
+- `GET /admin/export-logs?format=csv` — exportar logs
+
+---
+
 ## Variáveis de ambiente relevantes
 
 | Variável | Descrição |
 |----------|-----------|
 | `CRON_SECRET` | Secret para `/cron/jobs` |
 | `AUDIT_EVENTS_RETENTION_DAYS` | Dias de retenção (default 90) |
-| `GEO_RADIUS_KM` | Raio de matching (default 25) |
+| `GEO_RADIUS_KM` | Raio de matching (default 50) |
 | `OFFER_TOP_N` | Número de ofertas por trip (default 5) |
 | `OFFER_TIMEOUT_SECONDS` | Timeout da oferta (default 15) |
 | `BASE_FARE` | Tarifa base (default 1.50) |
@@ -709,3 +771,12 @@ Quando o passageiro pede viagem e o motorista não vê ofertas, usa os endpoints
 | `OSRM_BASE_URL` | URL OSRM (opcional) |
 | `CANCELLATION_FEE_PERCENT` | % do preço estimado (default 0.20) |
 | `CANCELLATION_FEE_MIN` | Mínimo em € (default 1.50) |
+| `BETA_MODE` | Modo BETA (login por telefone, rate limit) |
+| `ENABLE_DEV_TOOLS` | Seed, tokens, debug em produção |
+
+### Frontend (Render tvde-app)
+
+| Variável | Descrição |
+|----------|-----------|
+| `VITE_API_URL` | URL do backend (ex: `https://tvde-api-xxx.onrender.com`) |
+| `VITE_MAPTILER_KEY` | Chave MapTiler para tiles do mapa |
