@@ -40,6 +40,7 @@ const MAPTILER_STYLE = MAPTILER_KEY
 
 export function MapView({ passengerLocation, driverLocation, route, className, overlay }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
+  const prevDriverRef = useRef<LatLng | null>(null)
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
@@ -101,6 +102,21 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
     })
     setHasInitialFit(true)
   }, [passengerLocation, hasInitialFit])
+
+  // When driver appears (ASSIGNED state), smooth pan to driver
+  useEffect(() => {
+    if (!driverLocation) return
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    if (prevDriverRef.current?.lat === driverLocation.lat && prevDriverRef.current?.lng === driverLocation.lng) return
+    prevDriverRef.current = driverLocation
+
+    map.easeTo({
+      center: [driverLocation.lng, driverLocation.lat],
+      duration: 700,
+      zoom: 15,
+    })
+  }, [driverLocation])
 
   return (
     <div className={`relative w-full rounded-2xl overflow-hidden shadow-card bg-card ${className ?? ''}`}>

@@ -12,7 +12,7 @@ export type PassengerUxState =
   | 'TRIP_ONGOING'
   | 'TRIP_COMPLETED'
 
-const UX_STATE_DELAY_MS = 500
+const UX_STATE_DELAY_MS = 400
 
 function deriveRawUxState(
   activeTrip: TripDetailResponse | null | undefined,

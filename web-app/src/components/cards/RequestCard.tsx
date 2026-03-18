@@ -41,7 +41,7 @@ export function RequestCard({
           {loading ? (
             <span className="inline-flex items-center gap-2">
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              ...
+              A processar...
             </span>
           ) : (
             'ACEITAR'

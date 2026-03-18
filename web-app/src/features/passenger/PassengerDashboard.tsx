@@ -17,6 +17,7 @@ import { MapView } from '../../maps/MapView'
 import { getDriverLocation } from '../../services/trackingService'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
+import { toast } from 'sonner'
 
 /** Câmara Municipal de Oeiras, Largo Marquês de Pombal */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
@@ -100,6 +101,7 @@ export function PassengerDashboard() {
     setCreating(true)
     setStatus('A pedir viagem...')
     addLog('Clique: Pedir viagem', 'action')
+    // Optimistic: show SEARCHING immediately (handled by creating + optimisticTrip below)
     try {
       const res = await createTrip(
         {
@@ -165,6 +167,7 @@ export function PassengerDashboard() {
   useEffect(() => {
     if (activeTrip?.status === 'completed') {
       addLog('Viagem concluída', 'success')
+      toast.success('Viagem concluída')
       setTripCompletedFromLocation(true)
     } else if (activeTrip?.status === 'cancelled') {
       addLog('Viagem cancelada', 'success')
@@ -172,13 +175,15 @@ export function PassengerDashboard() {
     }
   }, [activeTrip?.status, addLog, setPassengerActiveTripId])
 
-  const statusConfig = uxState
-    ? { label: UX_STATE_LABELS[uxState] ?? uxState, variant: UX_STATE_VARIANTS[uxState] ?? 'idle' }
-    : activeTripId && !isOnline
-      ? { label: 'Sem conectividade', variant: 'idle' as const }
-      : activeTripId
-        ? { label: 'A verificar...', variant: 'idle' as const }
-        : { label: 'Sem viagem ativa', variant: 'idle' as const }
+  const statusConfig = creating && !activeTripId
+    ? { label: 'À procura de motorista...', variant: 'requested' as const }
+    : uxState
+      ? { label: UX_STATE_LABELS[uxState] ?? uxState, variant: UX_STATE_VARIANTS[uxState] ?? 'idle' }
+      : activeTripId && !isOnline
+        ? { label: 'Sem conectividade', variant: 'idle' as const }
+        : activeTripId
+          ? { label: 'A verificar...', variant: 'idle' as const }
+          : { label: 'Sem viagem ativa', variant: 'idle' as const }
 
   const showPrimaryButton =
     !activeTripId ||
@@ -322,14 +327,32 @@ export function PassengerDashboard() {
           </div>
         )}
 
-        {/* B002: PassengerStatusCard — UX state layer with 500ms delay, no empty screens */}
-        {activeTripId && (
-          uxState && activeTrip ? (
-            <PassengerStatusCard uxState={uxState} activeTrip={activeTrip} />
+        {/* B002: PassengerStatusCard — UX state layer, optimistic SEARCHING when creating */}
+        {(activeTripId || creating) && (
+          (uxState && activeTrip) || (creating && !activeTripId) ? (
+            <PassengerStatusCard
+              uxState={creating && !activeTripId ? 'SEARCHING_DRIVER' : uxState!}
+              activeTrip={
+                creating && !activeTripId
+                  ? {
+                      trip_id: 'optimistic',
+                      status: 'requested',
+                      passenger_id: '',
+                      origin_lat: DEMO_ORIGIN.lat,
+                      origin_lng: DEMO_ORIGIN.lng,
+                      destination_lat: DEMO_DEST.lat,
+                      destination_lng: DEMO_DEST.lng,
+                      estimated_price: 0,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    }
+                  : activeTrip!
+              }
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted">
+            <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted transition-opacity duration-300">
               <Spinner size="lg" />
-              <p className="text-muted-foreground text-base">A verificar...</p>
+              <p className="text-muted-foreground text-base">A verificar disponibilidade...</p>
             </div>
           )
         )}

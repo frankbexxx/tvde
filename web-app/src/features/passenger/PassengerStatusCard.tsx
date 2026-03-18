@@ -2,6 +2,7 @@
  * B002: Central visual component for passenger UX state.
  * Shows semantic content per state — no empty screens, no error flicker.
  */
+import { useEffect, useState } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
@@ -10,21 +11,42 @@ import type { TripDetailResponse } from '../../api/trips'
 
 const ESTIMATE_FALLBACK = '4–6'
 
+const SEARCHING_MESSAGES = [
+  'A procurar motoristas próximos...',
+  'A verificar disponibilidade...',
+  'A contactar motoristas...',
+]
+const SEARCHING_ROTATE_MS = 2500
+
 interface PassengerStatusCardProps {
   uxState: PassengerUxState | null
   activeTrip: TripDetailResponse | null | undefined
 }
 
 export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCardProps) {
+  const [searchingMsgIndex, setSearchingMsgIndex] = useState(0)
+
+  useEffect(() => {
+    if (uxState !== 'SEARCHING_DRIVER') return
+    const t = setInterval(
+      () => setSearchingMsgIndex((i) => (i + 1) % SEARCHING_MESSAGES.length),
+      SEARCHING_ROTATE_MS
+    )
+    return () => clearInterval(t)
+  }, [uxState])
+
   if (!uxState || !activeTrip) return null
 
   switch (uxState) {
     case 'SEARCHING_DRIVER':
       return (
-        <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-200 ease-out">
+        <div
+          key="SEARCHING_DRIVER"
+          className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-200 ease-out animate-in fade-in duration-300"
+        >
           <Spinner size="lg" />
           <p className="text-foreground text-base font-medium animate-pulse">
-            À procura de motorista...
+            {SEARCHING_MESSAGES[searchingMsgIndex]}
           </p>
           <p className="text-muted-foreground text-sm">
             Estamos a encontrar o motorista mais próximo.
@@ -34,7 +56,10 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'DRIVER_ASSIGNED':
       return (
-        <div className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-200 ease-out">
+        <div
+          key="DRIVER_ASSIGNED"
+          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+        >
           <p className="text-success font-medium">Motorista a caminho</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
@@ -48,7 +73,10 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'DRIVER_ARRIVING':
       return (
-        <div className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-200 ease-out">
+        <div
+          key="DRIVER_ARRIVING"
+          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+        >
           <p className="text-success font-medium">Motorista chegou</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
@@ -62,7 +90,10 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'TRIP_ONGOING':
       return (
-        <div className="space-y-4 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-4 transition-all duration-200 ease-out">
+        <div
+          key="TRIP_ONGOING"
+          className="space-y-4 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+        >
           <p className="text-primary font-medium">Em viagem</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
@@ -75,7 +106,10 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'TRIP_COMPLETED':
       return (
-        <div className="space-y-4 rounded-2xl border border-border bg-muted px-4 py-4 transition-all duration-200 ease-out">
+        <div
+          key="TRIP_COMPLETED"
+          className="space-y-4 rounded-2xl border border-border bg-muted px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+        >
           <p className="text-muted-foreground font-medium">Viagem concluída</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}

@@ -27,6 +27,7 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
 import { MapView } from '../../maps/MapView'
 import { sendDriverLocation } from '../../services/locationService'
+import { toast as sonnerToast } from 'sonner'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -143,6 +144,7 @@ export function DriverDashboard() {
       setDriverActiveTripId(tripId)
       setStatus(STATUS_CONFIG[res.status]?.label ?? res.status)
       addLog(`${actionName} concluído (${res.status})`, 'success')
+      if (actionName === 'ACEITAR') sonnerToast.success('Viagem aceite')
       onSuccess?.()
       refetchHistory()
       refetchAvailable()
@@ -267,6 +269,7 @@ export function DriverDashboard() {
             ) : (
               <div className="py-8 text-center text-muted-foreground">
                 <p className="text-base">Nenhuma viagem disponível.</p>
+                <p className="text-sm mt-1">Ative para receber novas viagens.</p>
               </div>
             )}
           </>
@@ -389,6 +392,7 @@ function ActiveTripActions({
       const res = await action()
       setStatus(STATUS_CONFIG[res.status]?.label ?? res.status)
       addLog(`${actionName} concluído (${res.status})`, 'success')
+      if (res.status === 'completed') sonnerToast.success('Viagem concluída')
       if (res.status === 'completed' || res.status === 'cancelled') onComplete()
     } catch (err: unknown) {
       const msg = (err as { detail?: string })?.detail ?? 'Erro'
