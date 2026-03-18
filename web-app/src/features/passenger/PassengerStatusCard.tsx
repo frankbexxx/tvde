@@ -23,7 +23,7 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
       return (
         <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-200 ease-out">
           <Spinner size="lg" />
-          <p className="text-foreground text-base font-medium">
+          <p className="text-foreground text-base font-medium animate-pulse">
             À procura de motorista...
           </p>
           <p className="text-muted-foreground text-sm">
