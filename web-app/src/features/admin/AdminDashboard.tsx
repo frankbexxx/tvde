@@ -376,8 +376,8 @@ export function AdminDashboard() {
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
-              tab === id ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'
+            className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              tab === id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
           >
             {label}
@@ -391,7 +391,7 @@ export function AdminDashboard() {
 
       {tab === 'pending' && (
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Pending Users</h2>
+          <h2 className="text-lg font-bold text-slate-900 mb-4">Utilizadores pendentes</h2>
           {pending.length === 0 ? (
             <p className="text-slate-500">Nenhum utilizador pendente.</p>
           ) : (
@@ -731,7 +731,7 @@ export function AdminDashboard() {
                         <button
                           type="button"
                           onClick={handleSaveEdit}
-                          className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg"
+                          className="px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-lg hover:opacity-90"
                         >
                           Guardar
                         </button>

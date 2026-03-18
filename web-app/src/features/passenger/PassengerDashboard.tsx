@@ -164,7 +164,7 @@ export function PassengerDashboard() {
 
   useEffect(() => {
     if (activeTrip?.status === 'completed') {
-      addLog('Viagem completed', 'success')
+      addLog('Viagem concluída', 'success')
       setTripCompletedFromLocation(true)
     } else if (activeTrip?.status === 'cancelled') {
       addLog('Viagem cancelada', 'success')
