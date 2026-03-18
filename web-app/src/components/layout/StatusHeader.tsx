@@ -14,14 +14,14 @@ export type StatusVariant =
   | 'error'
 
 const VARIANT_STYLES: Record<StatusVariant, string> = {
-  requested: 'bg-amber-50 text-amber-900 border-amber-200',
-  assigned: 'bg-blue-50 text-blue-900 border-blue-200',
-  accepted: 'bg-emerald-50 text-emerald-900 border-emerald-200',
-  arriving: 'bg-emerald-50 text-emerald-900 border-emerald-200',
-  ongoing: 'bg-violet-50 text-violet-900 border-violet-200',
-  completed: 'bg-slate-100 text-slate-800 border-slate-300',
-  idle: 'bg-slate-50 text-slate-600 border-slate-200',
-  error: 'bg-red-50 text-red-900 border-red-200',
+  requested: 'bg-accent text-accent-foreground border-border',
+  assigned: 'bg-primary text-primary-foreground border-border',
+  accepted: 'bg-primary text-primary-foreground border-border',
+  arriving: 'bg-primary text-primary-foreground border-border',
+  ongoing: 'bg-secondary text-secondary-foreground border-border',
+  completed: 'bg-muted text-muted-foreground border-border',
+  idle: 'bg-muted text-muted-foreground border-border',
+  error: 'bg-destructive text-destructive-foreground border-border',
 }
 
 interface StatusHeaderProps {

@@ -21,10 +21,14 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
   switch (uxState) {
     case 'SEARCHING_DRIVER':
       return (
-        <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-amber-200 bg-amber-50/50 transition-opacity duration-300">
+        <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted transition-opacity duration-300">
           <Spinner size="lg" />
-          <p className="text-amber-900 text-base font-medium">À procura de motorista...</p>
-          <p className="text-amber-700 text-sm">Estamos a encontrar o motorista mais próximo.</p>
+          <p className="text-foreground text-base font-medium">
+            À procura de motorista...
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Estamos a encontrar o motorista mais próximo.
+          </p>
         </div>
       )
 
