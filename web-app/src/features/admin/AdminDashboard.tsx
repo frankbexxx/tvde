@@ -390,8 +390,8 @@ export function AdminDashboard() {
       )}
 
       {tab === 'pending' && (
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-4">Utilizadores pendentes</h2>
+        <section className="space-y-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Utilizadores pendentes</h2>
           {pending.length === 0 ? (
             <p className="text-muted-foreground">Nenhum utilizador pendente.</p>
           ) : (
@@ -420,8 +420,8 @@ export function AdminDashboard() {
       )}
 
       {tab === 'trips' && (
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-4">Viagens ativas</h2>
+        <section className="space-y-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Viagens ativas</h2>
           <button
             type="button"
             onClick={() => fetchActiveTrips()}
@@ -436,7 +436,7 @@ export function AdminDashboard() {
               {activeTrips.map((t) => (
                 <li
                   key={t.trip_id}
-                  className="bg-muted rounded-lg px-4 py-3"
+                  className="bg-muted rounded-lg px-4 py-3 shadow-card hover:bg-muted/90 transition-colors"
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div>
@@ -500,7 +500,7 @@ export function AdminDashboard() {
                         </button>
                       </div>
                       {tripDebug && tripDebugId === t.trip_id && (
-                        <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
+                        <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
                           {JSON.stringify(tripDebug, null, 2)}
                         </pre>
                       )}
@@ -514,8 +514,8 @@ export function AdminDashboard() {
       )}
 
       {tab === 'metrics' && (
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-4">Métricas</h2>
+        <section className="space-y-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Métricas</h2>
           <button
             type="button"
             onClick={() => fetchMetrics()}
@@ -525,27 +525,27 @@ export function AdminDashboard() {
           </button>
           {metrics ? (
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="bg-muted rounded-lg px-3 py-2">
+              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
                 <p className="text-muted-foreground">Viagens ativas</p>
                 <p className="font-bold text-foreground">{metrics.active_trips}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2">
+              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
                 <p className="text-muted-foreground">Motoristas disponíveis</p>
                 <p className="font-bold text-foreground">{metrics.drivers_available}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2">
+              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
                 <p className="text-muted-foreground">Motoristas ocupados</p>
                 <p className="font-bold text-foreground">{metrics.drivers_busy}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2">
+              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
                 <p className="text-muted-foreground">À espera de motorista</p>
                 <p className="font-bold text-foreground">{metrics.trips_requested}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2">
+              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
                 <p className="text-muted-foreground">Em viagem</p>
                 <p className="font-bold text-foreground">{metrics.trips_ongoing}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2">
+              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
                 <p className="text-muted-foreground">Concluídas hoje</p>
                 <p className="font-bold text-foreground">{metrics.trips_completed_today}</p>
               </div>
@@ -564,8 +564,8 @@ export function AdminDashboard() {
       )}
 
       {tab === 'ops' && (
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-4">Operações</h2>
+        <section className="space-y-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Operações</h2>
           <div className="space-y-3">
             <button
               type="button"
@@ -619,8 +619,8 @@ export function AdminDashboard() {
       )}
 
       {tab === 'health' && (
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-4">Saúde do sistema</h2>
+        <section className="space-y-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Saúde do sistema</h2>
           <button
             type="button"
             onClick={() => fetchHealth()}
@@ -649,7 +649,7 @@ export function AdminDashboard() {
                   <p className="text-sm font-medium text-foreground">
                     Viagens accepted há muito ({health.trips_accepted_too_long.length})
                   </p>
-                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.trips_accepted_too_long, null, 2)}
                   </pre>
                 </div>
@@ -659,7 +659,7 @@ export function AdminDashboard() {
                   <p className="text-sm font-medium text-foreground">
                     Viagens ongoing há muito ({health.trips_ongoing_too_long.length})
                   </p>
-                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.trips_ongoing_too_long, null, 2)}
                   </pre>
                 </div>
@@ -669,7 +669,7 @@ export function AdminDashboard() {
                   <p className="text-sm font-medium text-foreground">
                     Motoristas offline há muito ({health.drivers_unavailable_too_long.length})
                   </p>
-                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.drivers_unavailable_too_long, null, 2)}
                   </pre>
                 </div>
@@ -679,7 +679,7 @@ export function AdminDashboard() {
                   <p className="text-sm font-medium text-foreground">
                     Pagamentos bloqueados ({health.stuck_payments.length})
                   </p>
-                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.stuck_payments, null, 2)}
                   </pre>
                 </div>
@@ -700,8 +700,8 @@ export function AdminDashboard() {
       )}
 
       {tab === 'users' && (
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-4">Gestão de Utilizadores</h2>
+        <section className="space-y-6">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Gestão de Utilizadores</h2>
           {users.length === 0 ? (
             <p className="text-muted-foreground">Nenhum utilizador.</p>
           ) : (
@@ -709,7 +709,7 @@ export function AdminDashboard() {
               {users.map((u) => (
                 <li
                   key={u.id}
-                  className="bg-muted rounded-lg px-4 py-3"
+                  className="bg-muted rounded-lg px-4 py-3 shadow-card hover:bg-muted/90 transition-colors"
                 >
                   {editingId === u.id ? (
                     <div className="space-y-2">

@@ -338,7 +338,7 @@ function ActiveTripSummary({
   const config = STATUS_CONFIG[status] ?? { label: status, variant: 'idle' as const }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-muted transition-all duration-200 ease-out">
       <StatusHeader label={config.label} variant={config.variant} />
       {trip && (
         <TripCard

@@ -36,7 +36,7 @@ export function RequestCard({
           type="button"
           onClick={onAccept}
           disabled={loading}
-          className="min-h-[52px] px-6 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-lg shadow-floating hover:from-primary/95 hover:to-accent/95 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
+          className="min-h-[52px] px-6 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-lg shadow-floating hover:from-primary/95 hover:to-accent/95 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:opacity-50 disabled:hover:scale-100"
         >
           {loading ? (
             <span className="inline-flex items-center gap-2">

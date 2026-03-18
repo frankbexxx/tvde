@@ -20,7 +20,7 @@ export function PrimaryActionButton({
   variant = 'primary',
 }: PrimaryActionButtonProps) {
   const base =
-    'w-full min-h-[52px] rounded-full font-bold text-lg shadow-floating hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100'
+    'w-full min-h-[52px] rounded-full font-bold text-lg shadow-floating hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100'
   const styles =
     variant === 'danger'
       ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
