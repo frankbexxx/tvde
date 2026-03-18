@@ -34,8 +34,8 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'DRIVER_ASSIGNED':
       return (
-        <div className="space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-4 transition-opacity duration-300">
-          <p className="text-emerald-900 font-medium">Motorista a caminho</p>
+        <div className="space-y-4 rounded-2xl border border-success/30 bg-success/10 px-4 py-4 transition-opacity duration-300">
+          <p className="text-success font-medium">Motorista a caminho</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
@@ -48,8 +48,8 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'DRIVER_ARRIVING':
       return (
-        <div className="space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 px-4 py-4 transition-opacity duration-300">
-          <p className="text-emerald-900 font-medium">Motorista chegou</p>
+        <div className="space-y-4 rounded-2xl border border-success/30 bg-success/10 px-4 py-4 transition-opacity duration-300">
+          <p className="text-success font-medium">Motorista chegou</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
@@ -62,8 +62,8 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'TRIP_ONGOING':
       return (
-        <div className="space-y-4 rounded-2xl border border-violet-200 bg-violet-50/50 px-4 py-4 transition-opacity duration-300">
-          <p className="text-violet-900 font-medium">Em viagem</p>
+        <div className="space-y-4 rounded-2xl border border-secondary/30 bg-secondary/10 px-4 py-4 transition-opacity duration-300">
+          <p className="text-secondary font-medium">Em viagem</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
@@ -75,8 +75,8 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
 
     case 'TRIP_COMPLETED':
       return (
-        <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition-opacity duration-300">
-          <p className="text-slate-800 font-medium">Viagem concluída</p>
+        <div className="space-y-4 rounded-2xl border border-border bg-muted px-4 py-4 transition-opacity duration-300">
+          <p className="text-muted-foreground font-medium">Viagem concluída</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}

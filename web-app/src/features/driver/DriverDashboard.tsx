@@ -183,14 +183,14 @@ export function DriverDashboard() {
       }
     >
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Motorista</h1>
-        <p className="text-slate-600 mt-1">Aceitar e completar viagens</p>
+        <h1 className="text-2xl font-bold text-foreground">Motorista</h1>
+        <p className="text-muted-foreground mt-1">Aceitar e completar viagens</p>
       </header>
 
       <DevTools lastCreatedTripId={null} onAssigned={refetchAvailable} mode="driver" />
 
       {geolocationUsedFallback && (
-        <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+        <div className="rounded-lg bg-warning/20 border border-warning/50 px-3 py-2 text-sm text-warning">
           A usar Oeiras (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
           <strong>Demo Oeiras</strong> em ▶ Dev.
         </div>
@@ -210,13 +210,13 @@ export function DriverDashboard() {
         />
 
         {toast && (
-          <div className="rounded-xl bg-amber-100 border border-amber-300 px-4 py-3 text-amber-900 text-base animate-toast-enter">
+          <div className="rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 text-warning text-base animate-toast-enter">
             {toast}
           </div>
         )}
 
         {error && (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-800 text-base">
+          <div className="rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-destructive text-base">
             {error}
           </div>
         )}
@@ -229,8 +229,8 @@ export function DriverDashboard() {
 
         {offline && (
           <div className="py-12 text-center">
-            <p className="text-slate-600 text-lg">Está offline.</p>
-            <p className="text-slate-500 mt-2">Ative para receber viagens.</p>
+            <p className="text-muted-foreground text-lg">Está offline.</p>
+            <p className="text-muted-foreground mt-2">Ative para receber viagens.</p>
           </div>
         )}
 
@@ -265,7 +265,7 @@ export function DriverDashboard() {
                 ))}
               </ul>
             ) : (
-              <div className="py-8 text-center text-slate-500">
+              <div className="py-8 text-center text-muted-foreground">
                 <p className="text-base">Nenhuma viagem disponível.</p>
               </div>
             )}
@@ -286,19 +286,19 @@ export function DriverDashboard() {
         )}
 
         {history && history.length > 0 && (
-          <section className="pt-6 mt-6 border-t border-slate-200">
-            <h2 className="text-base font-medium text-slate-500 mb-3">Histórico</h2>
+          <section className="pt-6 mt-6 border-t border-border">
+            <h2 className="text-base font-medium text-muted-foreground mb-3">Histórico</h2>
             <ul className="space-y-2">
               {history.slice(0, 5).map((t: TripHistoryItem) => (
                 <li
                   key={t.trip_id}
-                  className="flex justify-between items-center py-2 border-b border-slate-100 last:border-0 transition-opacity duration-150"
+                  className="flex justify-between items-center py-2 border-b border-border last:border-0 transition-opacity duration-150"
                 >
-                  <span className="text-base text-slate-500">
+                  <span className="text-base text-muted-foreground">
                     {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
                     {formatDestination(t.destination_lat, t.destination_lng)}
                   </span>
-                  <span className="font-medium text-slate-600">
+                  <span className="font-medium text-muted-foreground">
                     {t.final_price != null ? `${t.final_price} €` : '—'}
                   </span>
                 </li>
@@ -429,7 +429,7 @@ function ActiveTripActions({
           type="button"
           onClick={() => run(() => cancelTripByDriver(tripId, token), 'Cancelar viagem')}
           disabled={loading}
-          className="w-full text-slate-600 text-base py-3 hover:text-red-600"
+          className="w-full text-muted-foreground text-base py-3 hover:text-destructive"
         >
           Cancelar viagem
         </button>

@@ -363,7 +363,7 @@ export function AdminDashboard() {
   if (loading && users.length === 0) {
     return (
       <div className="p-4">
-        <p className="text-slate-500">A carregar...</p>
+        <p className="text-muted-foreground">A carregar...</p>
       </div>
     )
   }
@@ -386,29 +386,29 @@ export function AdminDashboard() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-4">{error}</p>
+        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-4">{error}</p>
       )}
 
       {tab === 'pending' && (
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Utilizadores pendentes</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Utilizadores pendentes</h2>
           {pending.length === 0 ? (
-            <p className="text-slate-500">Nenhum utilizador pendente.</p>
+            <p className="text-muted-foreground">Nenhum utilizador pendente.</p>
           ) : (
             <ul className="space-y-3">
               {pending.map((u) => (
                 <li
                   key={u.phone}
-                  className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-3"
+                  className="flex items-center justify-between bg-muted rounded-lg px-4 py-3"
                 >
                   <div>
-                    <p className="font-medium text-slate-900">{u.phone}</p>
-                    <p className="text-sm text-slate-500">{u.requested_role}</p>
+                    <p className="font-medium text-foreground">{u.phone}</p>
+                    <p className="text-sm text-muted-foreground">{u.requested_role}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleApprove(u.phone)}
-                    className="px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700"
+                    className="px-3 py-1.5 bg-success text-success-foreground text-sm font-medium rounded-lg hover:opacity-90"
                   >
                     Aprovar
                   </button>
@@ -421,34 +421,34 @@ export function AdminDashboard() {
 
       {tab === 'trips' && (
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Viagens ativas</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Viagens ativas</h2>
           <button
             type="button"
             onClick={() => fetchActiveTrips()}
-            className="mb-3 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-lg"
+            className="mb-3 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
           >
             Atualizar
           </button>
           {activeTrips.length === 0 ? (
-            <p className="text-slate-500">Nenhuma viagem ativa.</p>
+            <p className="text-muted-foreground">Nenhuma viagem ativa.</p>
           ) : (
             <ul className="space-y-3">
               {activeTrips.map((t) => (
                 <li
                   key={t.trip_id}
-                  className="bg-slate-50 rounded-lg px-4 py-3"
+                  className="bg-muted rounded-lg px-4 py-3"
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div>
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-foreground">
                         {t.trip_id.slice(0, 8)}… · {t.status}
                       </p>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-muted-foreground">
                         {t.origin_lat.toFixed(4)}, {t.origin_lng.toFixed(4)} →{' '}
                         {t.destination_lat.toFixed(4)}, {t.destination_lng.toFixed(4)}
                       </p>
                       {t.driver_id && (
-                        <p className="text-xs text-slate-500">Driver: {t.driver_id.slice(0, 8)}…</p>
+                        <p className="text-xs text-muted-foreground">Driver: {t.driver_id.slice(0, 8)}…</p>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -457,7 +457,7 @@ export function AdminDashboard() {
                         onClick={() =>
                           setSelectedTripId(selectedTripId === t.trip_id ? null : t.trip_id)
                         }
-                        className="px-2 py-1 bg-sky-600 text-white text-xs rounded"
+                        className="px-2 py-1 bg-info text-info-foreground text-xs rounded"
                       >
                         {selectedTripId === t.trip_id ? 'Fechar' : 'Detalhe'}
                       </button>
@@ -466,7 +466,7 @@ export function AdminDashboard() {
                           type="button"
                           onClick={() => handleAssignTrip(t.trip_id)}
                           disabled={tripActionLoading === t.trip_id}
-                          className="px-2 py-1 bg-emerald-600 text-white text-xs rounded disabled:opacity-50"
+                          className="px-2 py-1 bg-success text-success-foreground text-xs rounded disabled:opacity-50"
                         >
                           Atribuir
                         </button>
@@ -476,7 +476,7 @@ export function AdminDashboard() {
                           type="button"
                           onClick={() => handleCancelTrip(t.trip_id)}
                           disabled={tripActionLoading === t.trip_id}
-                          className="px-2 py-1 bg-red-600 text-white text-xs rounded disabled:opacity-50"
+                          className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded disabled:opacity-50"
                         >
                           Cancelar
                         </button>
@@ -484,9 +484,9 @@ export function AdminDashboard() {
                     </div>
                   </div>
                   {selectedTripId === t.trip_id && (
-                    <div className="mt-3 pt-3 border-t border-slate-200 space-y-2">
+                    <div className="mt-3 pt-3 border-t border-border space-y-2">
                       {tripDetail && (
-                        <p className="text-xs text-slate-600">
+                        <p className="text-xs text-muted-foreground">
                           Preço: {tripDetail.estimated_price} € · Status: {tripDetail.status}
                         </p>
                       )}
@@ -494,13 +494,13 @@ export function AdminDashboard() {
                         <button
                           type="button"
                           onClick={() => fetchTripDebug(t.trip_id)}
-                          className="px-2 py-1 bg-amber-600 text-white text-xs rounded"
+                          className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded"
                         >
                           Debug
                         </button>
                       </div>
                       {tripDebug && tripDebugId === t.trip_id && (
-                        <pre className="text-xs bg-slate-100 p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
+                        <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
                           {JSON.stringify(tripDebug, null, 2)}
                         </pre>
                       )}
@@ -515,63 +515,63 @@ export function AdminDashboard() {
 
       {tab === 'metrics' && (
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Métricas</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Métricas</h2>
           <button
             type="button"
             onClick={() => fetchMetrics()}
-            className="mb-3 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-lg"
+            className="mb-3 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
           >
             Atualizar
           </button>
           {metrics ? (
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="bg-slate-50 rounded-lg px-3 py-2">
-                <p className="text-slate-500">Viagens ativas</p>
-                <p className="font-bold text-slate-900">{metrics.active_trips}</p>
+              <div className="bg-muted rounded-lg px-3 py-2">
+                <p className="text-muted-foreground">Viagens ativas</p>
+                <p className="font-bold text-foreground">{metrics.active_trips}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg px-3 py-2">
-                <p className="text-slate-500">Motoristas disponíveis</p>
-                <p className="font-bold text-slate-900">{metrics.drivers_available}</p>
+              <div className="bg-muted rounded-lg px-3 py-2">
+                <p className="text-muted-foreground">Motoristas disponíveis</p>
+                <p className="font-bold text-foreground">{metrics.drivers_available}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg px-3 py-2">
-                <p className="text-slate-500">Motoristas ocupados</p>
-                <p className="font-bold text-slate-900">{metrics.drivers_busy}</p>
+              <div className="bg-muted rounded-lg px-3 py-2">
+                <p className="text-muted-foreground">Motoristas ocupados</p>
+                <p className="font-bold text-foreground">{metrics.drivers_busy}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg px-3 py-2">
-                <p className="text-slate-500">À espera de motorista</p>
-                <p className="font-bold text-slate-900">{metrics.trips_requested}</p>
+              <div className="bg-muted rounded-lg px-3 py-2">
+                <p className="text-muted-foreground">À espera de motorista</p>
+                <p className="font-bold text-foreground">{metrics.trips_requested}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg px-3 py-2">
-                <p className="text-slate-500">Em viagem</p>
-                <p className="font-bold text-slate-900">{metrics.trips_ongoing}</p>
+              <div className="bg-muted rounded-lg px-3 py-2">
+                <p className="text-muted-foreground">Em viagem</p>
+                <p className="font-bold text-foreground">{metrics.trips_ongoing}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg px-3 py-2">
-                <p className="text-slate-500">Concluídas hoje</p>
-                <p className="font-bold text-slate-900">{metrics.trips_completed_today}</p>
+              <div className="bg-muted rounded-lg px-3 py-2">
+                <p className="text-muted-foreground">Concluídas hoje</p>
+                <p className="font-bold text-foreground">{metrics.trips_completed_today}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg px-3 py-2 col-span-2">
-                <p className="text-slate-500">Total criadas / aceites / concluídas</p>
-                <p className="font-bold text-slate-900">
+              <div className="bg-muted rounded-lg px-3 py-2 col-span-2">
+                <p className="text-muted-foreground">Total criadas / aceites / concluídas</p>
+                <p className="font-bold text-foreground">
                   {metrics.trips_created_total} / {metrics.trips_accepted_total} /{' '}
                   {metrics.trips_completed_total}
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-slate-500">Carregar métricas...</p>
+            <p className="text-muted-foreground">Carregar métricas...</p>
           )}
         </section>
       )}
 
       {tab === 'ops' && (
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Operações</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Operações</h2>
           <div className="space-y-3">
             <button
               type="button"
               onClick={handleRunTimeouts}
               disabled={!!opsLoading}
-              className="w-full px-4 py-3 bg-amber-200 text-amber-900 rounded-lg font-medium disabled:opacity-50"
+              className="w-full px-4 py-3 bg-warning/20 text-warning rounded-lg font-medium disabled:opacity-50"
             >
               {opsLoading === 'timeouts' ? 'A executar...' : 'Executar timeouts'}
             </button>
@@ -579,7 +579,7 @@ export function AdminDashboard() {
               type="button"
               onClick={handleRunOfferExpiry}
               disabled={!!opsLoading}
-              className="w-full px-4 py-3 bg-orange-200 text-orange-900 rounded-lg font-medium disabled:opacity-50"
+              className="w-full px-4 py-3 bg-warning/20 text-warning rounded-lg font-medium disabled:opacity-50"
             >
               {opsLoading === 'offer-expiry' ? 'A executar...' : 'Expirar ofertas e redispatch'}
             </button>
@@ -587,13 +587,13 @@ export function AdminDashboard() {
               type="button"
               onClick={handleExportLogs}
               disabled={!!opsLoading}
-              className="w-full px-4 py-3 bg-sky-200 text-sky-900 rounded-lg font-medium disabled:opacity-50"
+              className="w-full px-4 py-3 bg-info/20 text-info rounded-lg font-medium disabled:opacity-50"
             >
               {opsLoading === 'export' ? 'A exportar...' : 'Exportar logs CSV'}
             </button>
-            <div className="pt-4 border-t border-slate-200">
-              <p className="text-sm font-medium text-slate-700 mb-2">Recuperar motorista</p>
-              <p className="text-xs text-slate-500 mb-2">
+            <div className="pt-4 border-t border-border">
+              <p className="text-sm font-medium text-foreground mb-2">Recuperar motorista</p>
+              <p className="text-xs text-muted-foreground mb-2">
                 Força is_available=true para motorista bloqueado (sem viagem ativa)
               </p>
               <div className="flex gap-2">
@@ -608,7 +608,7 @@ export function AdminDashboard() {
                   type="button"
                   onClick={handleRecoverDriver}
                   disabled={!!opsLoading || !recoverDriverId.trim()}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50"
+                  className="px-4 py-2 bg-success text-success-foreground rounded-lg text-sm disabled:opacity-50"
                 >
                   Recuperar
                 </button>
@@ -620,11 +620,11 @@ export function AdminDashboard() {
 
       {tab === 'health' && (
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Saúde do sistema</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Saúde do sistema</h2>
           <button
             type="button"
             onClick={() => fetchHealth()}
-            className="mb-3 px-3 py-1.5 bg-slate-200 text-slate-700 text-sm rounded-lg"
+            className="mb-3 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
           >
             Atualizar
           </button>
@@ -632,13 +632,13 @@ export function AdminDashboard() {
             <div className="space-y-3">
               <p
                 className={`font-medium ${
-                  health.status === 'ok' ? 'text-emerald-700' : 'text-amber-700'
+                  health.status === 'ok' ? 'text-success' : 'text-warning'
                 }`}
               >
                 Status: {health.status}
               </p>
               {health.warnings.length > 0 && (
-                <ul className="text-sm text-amber-700 space-y-1">
+                <ul className="text-sm text-warning space-y-1">
                   {health.warnings.map((w, i) => (
                     <li key={i}>{w}</li>
                   ))}
@@ -646,40 +646,40 @@ export function AdminDashboard() {
               )}
               {health.trips_accepted_too_long.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700">
+                  <p className="text-sm font-medium text-foreground">
                     Viagens accepted há muito ({health.trips_accepted_too_long.length})
                   </p>
-                  <pre className="text-xs bg-slate-100 p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.trips_accepted_too_long, null, 2)}
                   </pre>
                 </div>
               )}
               {health.trips_ongoing_too_long.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700">
+                  <p className="text-sm font-medium text-foreground">
                     Viagens ongoing há muito ({health.trips_ongoing_too_long.length})
                   </p>
-                  <pre className="text-xs bg-slate-100 p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.trips_ongoing_too_long, null, 2)}
                   </pre>
                 </div>
               )}
               {health.drivers_unavailable_too_long.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700">
+                  <p className="text-sm font-medium text-foreground">
                     Motoristas offline há muito ({health.drivers_unavailable_too_long.length})
                   </p>
-                  <pre className="text-xs bg-slate-100 p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.drivers_unavailable_too_long, null, 2)}
                   </pre>
                 </div>
               )}
               {health.stuck_payments.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-slate-700">
+                  <p className="text-sm font-medium text-foreground">
                     Pagamentos bloqueados ({health.stuck_payments.length})
                   </p>
-                  <pre className="text-xs bg-slate-100 p-2 rounded overflow-x-auto">
+                  <pre className="text-xs text-foreground bg-muted p-2 rounded overflow-x-auto">
                     {JSON.stringify(health.stuck_payments, null, 2)}
                   </pre>
                 </div>
@@ -690,26 +690,26 @@ export function AdminDashboard() {
                 health.trips_ongoing_too_long.length === 0 &&
                 health.drivers_unavailable_too_long.length === 0 &&
                 health.stuck_payments.length === 0 && (
-                  <p className="text-slate-500">Tudo OK.</p>
+                  <p className="text-muted-foreground">Tudo OK.</p>
                 )}
             </div>
           ) : (
-            <p className="text-slate-500">Carregar saúde...</p>
+            <p className="text-muted-foreground">Carregar saúde...</p>
           )}
         </section>
       )}
 
       {tab === 'users' && (
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Gestão de Utilizadores</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">Gestão de Utilizadores</h2>
           {users.length === 0 ? (
-            <p className="text-slate-500">Nenhum utilizador.</p>
+            <p className="text-muted-foreground">Nenhum utilizador.</p>
           ) : (
             <ul className="space-y-3">
               {users.map((u) => (
                 <li
                   key={u.id}
-                  className="bg-slate-50 rounded-lg px-4 py-3"
+                  className="bg-muted rounded-lg px-4 py-3"
                 >
                   {editingId === u.id ? (
                     <div className="space-y-2">
@@ -738,7 +738,7 @@ export function AdminDashboard() {
                         <button
                           type="button"
                           onClick={cancelEdit}
-                          className="px-3 py-1.5 bg-slate-300 text-slate-700 text-sm rounded-lg"
+                          className="px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
                         >
                           Cancelar
                         </button>
@@ -748,15 +748,15 @@ export function AdminDashboard() {
                     <>
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <p className="font-medium text-slate-900">
+                          <p className="font-medium text-foreground">
                             {u.name || u.phone}
                             {u.name && u.name !== u.phone && (
-                              <span className="text-slate-500 text-sm ml-1">({u.phone})</span>
+                              <span className="text-muted-foreground text-sm ml-1">({u.phone})</span>
                             )}
-                            {!u.name && <span className="text-slate-500 text-sm ml-1">—</span>}
+                            {!u.name && <span className="text-muted-foreground text-sm ml-1">—</span>}
                           </p>
-                          <p className="text-sm text-slate-600">{u.phone}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-sm text-muted-foreground">{u.phone}</p>
+                          <p className="text-xs text-muted-foreground">
                             {u.role} · {u.status}
                             {u.has_driver_profile && ' · motorista'}
                           </p>
@@ -766,7 +766,7 @@ export function AdminDashboard() {
                             <button
                               type="button"
                               onClick={() => handlePromote(u.id)}
-                              className="px-2 py-1 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700"
+                              className="px-2 py-1 bg-success text-success-foreground text-xs rounded hover:opacity-90"
                             >
                               Motorista
                             </button>
@@ -775,7 +775,7 @@ export function AdminDashboard() {
                             <button
                               type="button"
                               onClick={() => handleDemote(u.id)}
-                              className="px-2 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700"
+                              className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded hover:opacity-90"
                             >
                               Passageiro
                             </button>
@@ -785,7 +785,7 @@ export function AdminDashboard() {
                               <button
                                 type="button"
                                 onClick={() => startEdit(u)}
-                                className="px-2 py-1 bg-sky-600 text-white text-xs rounded hover:bg-sky-700"
+                                className="px-2 py-1 bg-info text-info-foreground text-xs rounded hover:opacity-90"
                               >
                                 Editar
                               </button>
@@ -794,14 +794,14 @@ export function AdminDashboard() {
                                   <button
                                     type="button"
                                     onClick={() => handleDelete(u.id)}
-                                    className="px-2 py-1 bg-red-600 text-white text-xs rounded"
+                                    className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded"
                                   >
                                     Confirmar
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setDeleteConfirmId(null)}
-                                    className="px-2 py-1 bg-slate-400 text-white text-xs rounded"
+                                    className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"
                                   >
                                     Cancelar
                                   </button>
@@ -810,7 +810,7 @@ export function AdminDashboard() {
                                 <button
                                   type="button"
                                   onClick={() => setDeleteConfirmId(u.id)}
-                                  className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                                  className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded hover:opacity-90"
                                 >
                                   Eliminar
                                 </button>

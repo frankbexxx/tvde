@@ -49,6 +49,22 @@ export default {
           DEFAULT: "hsl(var(--color-card))",
           foreground: "hsl(var(--color-card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--color-success))",
+          foreground: "hsl(var(--color-success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--color-warning))",
+          foreground: "hsl(var(--color-warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--color-info))",
+          foreground: "hsl(var(--color-info-foreground))",
+        },
+        surface: {
+          raised: "hsl(var(--color-surface-raised))",
+          overlay: "hsl(var(--color-surface-overlay))",
+        },
       },
     },
   },

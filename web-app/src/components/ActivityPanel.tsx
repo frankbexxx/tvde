@@ -5,7 +5,7 @@ import type { LogEntry, LogType } from '../context/ActivityLogContext'
 const LOG_COLORS: Record<LogType, string> = {
   info: 'text-muted-foreground',
   success: 'text-green-600',
-  error: 'text-red-600',
+  error: 'text-destructive',
   action: 'text-primary font-medium',
 }
 
@@ -61,7 +61,7 @@ export function ActivityPanel() {
           <div className="text-xs font-medium text-muted-foreground capitalize">{role}</div>
         </div>
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-success/80 animate-pulse" />
           Ao vivo
         </div>
       </div>

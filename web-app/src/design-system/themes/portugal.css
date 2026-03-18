@@ -23,6 +23,16 @@
 
   --color-muted: 45 30% 94%;
   --color-muted-foreground: 222 25% 45%;
+
+  --color-success: 145 50% 38%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning: 45 90% 55%;
+  --color-warning-foreground: 0 0% 12%;
+  --color-info: 222 50% 45%;
+  --color-info-foreground: 0 0% 100%;
+  --color-surface-raised: 0 0% 97%;
+  --color-surface-overlay: 222 40% 5%;
+
   --color-border: 45 20% 88%;
   --color-input: 45 20% 88%;
   --color-ring: 120 45% 38%;

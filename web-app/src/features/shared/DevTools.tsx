@@ -202,11 +202,11 @@ export function DevTools({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+    <div className="rounded-lg border border-border bg-muted overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full px-3 py-2 text-left text-sm text-slate-500 hover:text-slate-700"
+        className="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:text-foreground"
       >
         {open ? '▼ Dev' : '▶ Dev'}
       </button>
@@ -216,8 +216,8 @@ export function DevTools({
             onClick={handleToggleDemoLocation}
             className={`px-3 py-1.5 text-sm rounded-lg ${
               isDemoLocationEnabled()
-                ? 'bg-emerald-300 text-emerald-900'
-                : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                ? 'bg-success/30 text-success'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
             }`}
             title="Usar Oeiras (Câmara Municipal) sem pedir permissão de localização (útil no PC)"
           >
@@ -225,7 +225,7 @@ export function DevTools({
           </button>
           <button
             onClick={handleSeed}
-            className="px-3 py-1.5 text-sm bg-amber-200 rounded-lg hover:bg-amber-300"
+            className="px-3 py-1.5 text-sm bg-warning/20 text-warning rounded-lg hover:bg-warning/30"
           >
             Seed
           </button>
@@ -233,25 +233,25 @@ export function DevTools({
             <>
               <button
                 onClick={handleAutoTrip}
-                className="px-3 py-1.5 text-sm bg-amber-200 rounded-lg hover:bg-amber-300"
+                className="px-3 py-1.5 text-sm bg-warning/20 text-warning rounded-lg hover:bg-warning/30"
               >
                 Auto-trip
               </button>
               <button
                 onClick={handleRunTimeouts}
-                className="px-3 py-1.5 text-sm bg-orange-200 rounded-lg hover:bg-orange-300"
+                className="px-3 py-1.5 text-sm bg-warning/20 text-warning rounded-lg hover:bg-warning/30"
               >
                 Timeouts
               </button>
               <button
                 onClick={handleExportLogs}
-                className="px-3 py-1.5 text-sm bg-sky-200 rounded-lg hover:bg-sky-300"
+                className="px-3 py-1.5 text-sm bg-info/20 text-info rounded-lg hover:bg-info/30"
               >
                 Export logs
               </button>
               <button
                 onClick={handleResetRun}
-                className="px-3 py-1.5 text-sm bg-slate-200 rounded-lg hover:bg-slate-300"
+                className="px-3 py-1.5 text-sm bg-muted text-muted-foreground rounded-lg hover:bg-muted/80"
                 title={`Device ${getDeviceId()}, run ${getCurrentRun()}`}
               >
                 Reset run
@@ -261,7 +261,7 @@ export function DevTools({
           {tokens && lastCreatedTripId && (
             <button
               onClick={handleAssign}
-              className="px-3 py-1.5 text-sm bg-emerald-200 rounded-lg hover:bg-emerald-300"
+              className="px-3 py-1.5 text-sm bg-success/20 text-success rounded-lg hover:bg-success/30"
             >
               Assign
             </button>
@@ -269,7 +269,7 @@ export function DevTools({
           {mode === 'passenger' && lastCreatedTripId && (
             <button
               onClick={handleTripDiagnostic}
-              className="px-3 py-1.5 text-sm bg-violet-200 rounded-lg hover:bg-violet-300"
+              className="px-3 py-1.5 text-sm bg-secondary/20 text-secondary rounded-lg hover:bg-secondary/30"
               title="Diagnosticar por que o motorista não vê a viagem"
             >
               Diagnóstico viagem
@@ -278,7 +278,7 @@ export function DevTools({
           {mode === 'driver' && (
             <button
               onClick={handleDriverDiagnostic}
-              className="px-3 py-1.5 text-sm bg-violet-200 rounded-lg hover:bg-violet-300"
+              className="px-3 py-1.5 text-sm bg-secondary/20 text-secondary rounded-lg hover:bg-secondary/30"
               title="Diagnosticar por que não aparecem viagens"
             >
               Diagnóstico motorista
