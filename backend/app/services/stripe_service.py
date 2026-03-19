@@ -33,10 +33,9 @@ def confirm_payment_intent(
     payment_method: str | None = None,
 ) -> stripe.PaymentIntent:
     """Confirm PaymentIntent. In dev, pass payment_method for backend-only flow."""
-    kwargs = {}
     if payment_method:
-        kwargs["payment_method"] = payment_method
-    return stripe.PaymentIntent.confirm(payment_intent_id, **kwargs)
+        return stripe.PaymentIntent.confirm(payment_intent_id, payment_method=payment_method)
+    return stripe.PaymentIntent.confirm(payment_intent_id)
 
 
 def update_payment_intent_amount(

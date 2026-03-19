@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -22,7 +22,7 @@ def run_cleanup(db: Session) -> dict[str, int]:
     cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
 
     result = db.execute(delete(AuditEvent).where(AuditEvent.occurred_at < cutoff))
-    deleted = result.rowcount or 0
+    deleted = (result.rowcount if hasattr(result, "rowcount") else 0) or 0
     if deleted > 0:
         db.commit()
         logger.info("cleanup: deleted %d audit_events older than %s days", deleted, retention_days)
