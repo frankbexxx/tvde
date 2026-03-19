@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Resolve .env relative to backend/ (not cwd) so it works regardless of where uvicorn is started
 _BASE_DIR = Path(__file__).resolve().parents[2]  # app/core/config.py -> backend/
@@ -9,7 +8,7 @@ _ENV_FILE = _BASE_DIR / ".env"
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=str(_ENV_FILE), extra="ignore")
+    model_config = SettingsConfigDict(env_file=str(_ENV_FILE), extra="ignore")
 
     DATABASE_URL: str
 
@@ -69,5 +68,5 @@ class Settings(BaseSettings):
     CANCELLATION_FEE_MIN: float = 1.50
 
 
-settings = Settings()
+settings = Settings()  # type: ignore[call-arg]
 
