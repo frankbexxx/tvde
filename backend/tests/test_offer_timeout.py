@@ -2,7 +2,6 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 

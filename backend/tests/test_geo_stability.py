@@ -11,12 +11,11 @@ from sqlalchemy.orm import Session
 from app.api.deps import UserContext, get_current_user, get_db
 from app.db.base import Base
 from app.db.models.driver import Driver, DriverLocation
-from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
-from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
+from app.models.enums import DriverStatus, Role, UserStatus
 from app.services.driver_location import upsert_driver_location
 
 Base.metadata.create_all(bind=engine)

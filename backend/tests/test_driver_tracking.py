@@ -122,7 +122,7 @@ def test_get_driver_location_as_passenger() -> None:
 def test_get_driver_location_as_assigned_driver() -> None:
   db = _make_db()
   passenger_id, trip_id = _create_passenger_and_trip(db)
-  _ = _assign_driver_and_location(db, trip_id)
+  driver_id = _assign_driver_and_location(db, trip_id)
 
   user_ctx = UserContext(user_id=driver_id, role=Role.driver)
   _override_dependencies(db, user_ctx)

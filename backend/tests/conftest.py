@@ -1,4 +1,9 @@
 """Pytest fixtures for admin operational tests."""
+import os
+
+# A012: Quiet operational logs during pytest; must run before `from app.main import app`.
+os.environ["ENV"] = "test"
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text

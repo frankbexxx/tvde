@@ -10,7 +10,6 @@ from app.services.cleanup import run_cleanup
 
 def test_cleanup_deletes_old_audit_events(db) -> None:
     """Cleanup deletes audit_events older than retention."""
-    from app.core.config import settings
 
     old_date = datetime.now(timezone.utc) - timedelta(days=100)
     evt = AuditEvent(

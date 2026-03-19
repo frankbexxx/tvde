@@ -216,7 +216,7 @@ export function PassengerDashboard() {
   }, [tripCompletedFromLocation, setPassengerActiveTripId])
 
   // Poll driver location for the active trip so passenger can see live movement.
-  // B001/B002: 404/409 valid states. On trip_completed: stop polling, set flag (effect above clears after 2s).
+  // A013: 404 / 409 não terminais = fluxo normal (sem setError). 409 terminal → trip_completed + clear.
   useEffect(() => {
     if (!activeTripId || tripCompletedFromLocation) {
       setDriverLocation(null)
@@ -230,15 +230,23 @@ export function PassengerDashboard() {
         if (cancelled) return
         if (result.ok) {
           setDriverLocation({ lat: result.lat, lng: result.lng })
-        } else if (result.reason === 'driver_not_assigned') {
-          setDriverLocation(null)
         } else if (result.reason === 'trip_completed') {
           setTripCompletedFromLocation(true)
+          setDriverLocation(null)
+        } else if (result.reason === 'driver_not_assigned' || result.reason === 'location_unavailable') {
+          // A013: sem erro de UI — pin só quando há coords; estados “à espera” / “localização neste estado não disponível”
           setDriverLocation(null)
         }
       }).catch((err) => {
         if (cancelled) return
-        console.warn('getDriverLocation error', err)
+        const st = (err as { status?: number })?.status
+        if (st != null && st >= 500) {
+          console.warn('getDriverLocation falha de servidor', err)
+        } else if (st === 0) {
+          console.warn('getDriverLocation rede / timeout', err)
+        } else {
+          console.warn('getDriverLocation', err)
+        }
       })
     }, 2000)
 

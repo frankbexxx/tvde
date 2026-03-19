@@ -12,7 +12,9 @@ from app.db.session import SessionLocal
 from app.models.enums import Role, UserStatus
 
 
-bearer_scheme = HTTPBearer(scheme_name="BearerAuth")
+# auto_error=False: missing Bearer would otherwise yield 403 (Starlette HTTPBearer default).
+# get_current_user raises 401 for missing/invalid credentials (A012).
+bearer_scheme = HTTPBearer(scheme_name="BearerAuth", auto_error=False)
 bearer_scheme_optional = HTTPBearer(scheme_name="BearerAuth", auto_error=False)
 
 
@@ -30,9 +32,14 @@ def get_db() -> Generator[Session, None, None]:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> UserContext:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="not_authenticated",
+        )
     token = credentials.credentials
     try:
         payload = decode_access_token(token)
@@ -64,7 +71,25 @@ async def get_current_user(
     return UserContext(user_id=str(user.id), role=user.role)
 
 
+async def get_current_admin(user: UserContext = Depends(get_current_user)) -> UserContext:
+    """Admin only: authentication is handled by get_current_user; this step is role-only → 403."""
+    if user.role != Role.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="forbidden",
+        )
+    return user
+
+
 def require_role(*roles: Role):
+    """Admin-only routes use get_current_admin (auth → get_current_user, then role → 403)."""
+    if frozenset(roles) == frozenset({Role.admin}):
+
+        async def _admin_only(admin: UserContext = Depends(get_current_admin)) -> UserContext:
+            return admin
+
+        return _admin_only
+
     async def _require(user: UserContext = Depends(get_current_user)) -> UserContext:
         if user.role not in roles:
             raise HTTPException(

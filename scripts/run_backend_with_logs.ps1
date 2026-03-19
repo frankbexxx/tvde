@@ -1,25 +1,19 @@
-# A008: Arranca backend com logs visíveis no terminal
-# 1 comando -> backend + logs visíveis
-# Executar a partir da raiz do projeto: .\scripts\run_backend_with_logs.ps1
-
-$ErrorActionPreference = "Stop"
-$backendDir = Join-Path $PSScriptRoot ".." "backend"
-
-if (-not (Test-Path $backendDir)) {
-    Write-Host "ERRO: pasta backend nao encontrada em $backendDir" -ForegroundColor Red
-    exit 1
-}
-
-$venvPython = Join-Path $backendDir "venv" "Scripts" "python.exe"
-$venvActivate = Join-Path $backendDir "venv" "Scripts" "Activate.ps1"
-
-if (Test-Path $venvActivate) {
-    Write-Host "A ativar venv..." -ForegroundColor Cyan
-    & $venvActivate
-}
-
+# Ir para a pasta backend (relativa ao script)
+$backendDir = Join-Path $PSScriptRoot "..\backend"
 Set-Location $backendDir
 
-# Garantir que logs sao visiveis (uvicorn mostra stdout por defeito)
-Write-Host "A arrancar uvicorn (logs no terminal)..." -ForegroundColor Green
-python -m uvicorn app.main:app --reload --port 8000
+Write-Host ""
+Write-Host "=== TEST MODE READY ===" -ForegroundColor Green
+Write-Host "1. Criar trip (frontend)"
+Write-Host "2. Aceitar como driver"
+Write-Host "3. Seguir logs no terminal"
+Write-Host "4. No final ver SUMMARY"
+Write-Host ""
+
+# Ativar venv (se existir)
+if (Test-Path ".\venv\Scripts\Activate.ps1") {
+    . .\venv\Scripts\Activate.ps1
+}
+
+# Arrancar backend
+uvicorn app.main:app --reload

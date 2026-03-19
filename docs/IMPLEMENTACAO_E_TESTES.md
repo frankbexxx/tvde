@@ -62,7 +62,7 @@ drivers_with_loc = list(
         select(Driver, DriverLocation)
         .join(DriverLocation, ...)
         .where(Driver.status == DriverStatus.approved)
-        .where(Driver.is_available == True)  # ← A001
+        .where(Driver.is_available)  # ← A001
     ).all()
 )
 ```

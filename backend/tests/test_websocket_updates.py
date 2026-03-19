@@ -3,7 +3,6 @@
 import asyncio
 from datetime import datetime, timezone
 
-import pytest
 
 from app.models.enums import TripStatus
 from app.realtime.driver_offers_hub import driver_offers_hub

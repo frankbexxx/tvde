@@ -26,6 +26,36 @@ _buffer_lock = Lock()
 # ~50m = 0.05km threshold for "significant" location change
 LOCATION_CHANGE_THRESHOLD_KM = 0.05
 
+# A012: In ENV=test, skip console lines for these events (pytest readability).
+_TEST_QUIET_EVENTS = frozenset({
+    "offers_sent",
+    "dispatch_retry_attempt",
+    "dispatch_retry_success",
+    "dispatch_retry_failed",
+    "NO_READY_DRIVERS_AT_DISPATCH",
+})
+
+
+def _suppress_console_in_test(event_name: str) -> bool:
+    try:
+        from app.core.config import settings
+        if getattr(settings, "ENV", "") != "test":
+            return False
+    except Exception:
+        return False
+    return event_name in _TEST_QUIET_EVENTS
+
+
+def _log_state_arrow() -> str:
+    """Unicode arrow breaks Windows cp1252 during pytest -s; ASCII in test only (A012)."""
+    try:
+        from app.core.config import settings
+        if getattr(settings, "ENV", "") == "test":
+            return "->"
+    except Exception:
+        pass
+    return "→"
+
 
 def _serialize_value(v: object) -> str:
     """Convert value to string for display."""
@@ -71,7 +101,7 @@ def _format_human_readable(event_name: str, **fields) -> str:
         to_val = fields.get("to") or fields.get("to_state")
         from_str = _serialize_value(from_val) if from_val is not None else "?"
         to_str = _serialize_value(to_val) if to_val is not None else "?"
-        parts.append(f"{from_str} → {to_str}")
+        parts.append(f"{from_str} {_log_state_arrow()} {to_str}")
         msg = "state_changed | " + " | ".join(parts)
     else:
         for k, v in fields.items():
@@ -171,11 +201,32 @@ def get_trip_summary(trip_id: str) -> dict:
     return _compute_trip_summary(trip_id)
 
 
+def _trip_banner_title_new() -> str:
+    """ASCII in ENV=test so pytest -s works on Windows (cp1252); emoji kept for dev."""
+    try:
+        from app.core.config import settings
+        if getattr(settings, "ENV", "") == "test":
+            return "NEW TRIP STARTED"
+    except Exception:
+        pass
+    return "🚗 NEW TRIP STARTED"
+
+
+def _trip_banner_title_done() -> str:
+    try:
+        from app.core.config import settings
+        if getattr(settings, "ENV", "") == "test":
+            return "TRIP COMPLETED"
+    except Exception:
+        pass
+    return "✅ TRIP COMPLETED"
+
+
 def _print_trip_header(trip_id: str) -> None:
     """A008: Print NEW TRIP banner."""
     tid = _serialize_value(trip_id)
     print("\n" + "=" * 30)
-    print("🚗 NEW TRIP STARTED")
+    print(_trip_banner_title_new())
     print(f"trip_id={tid}")
     print("=" * 30)
 
@@ -185,7 +236,7 @@ def _print_trip_completed(trip_id: str) -> None:
     tid = _serialize_value(trip_id)
     summary = _compute_trip_summary(tid)
     print("\n" + "=" * 30)
-    print("✅ TRIP COMPLETED")
+    print(_trip_banner_title_done())
     print(f"trip_id={tid}")
     print("=" * 30)
     print("----- TRIP SUMMARY -----")
@@ -203,7 +254,8 @@ def log_event(event_name: str, **fields) -> None:
     now = datetime.now(timezone.utc)
     human_msg = _format_human_readable(event_name, **fields)
     line = f"{_time_prefix()} {human_msg}"
-    logger.info(line)
+    if not _suppress_console_in_test(event_name):
+        logger.info(line)
 
     trip_id = fields.get("trip_id")
     to_val = fields.get("to") or fields.get("to_state")
@@ -225,6 +277,8 @@ def log_debug_event(event_name: str, **fields) -> None:
         if not getattr(settings, "DEBUG_RUNTIME_LOGS", False):
             return
     except Exception:
+        return
+    if _suppress_console_in_test(event_name):
         return
     human_msg = _format_human_readable(event_name, **fields)
     line = f"{_time_prefix()} {human_msg}"

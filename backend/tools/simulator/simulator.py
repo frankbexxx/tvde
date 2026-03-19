@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402  # Imports after setup intentional - config/path resolution
 """
 TVDE Traffic Simulator — concurrent passenger and driver bots.
 

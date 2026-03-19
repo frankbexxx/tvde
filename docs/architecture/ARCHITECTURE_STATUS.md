@@ -82,7 +82,7 @@
     - Se `!is_available` → retorna `[]` e loga `driver not available`.
     - Caso contrário, lê trips com `status=assigned` e loga `trip_count`.
   - `accept_trip`:
-    - Requer `trip.status == assigned`, `trip.driver_id is NULL`, `driver.is_available == True`.
+    - Requer `trip.status == assigned`, `trip.driver_id is NULL`, `Driver.is_available`.
     - Cria `Payment` com Stripe PaymentIntent em modo autorização.
     - Atualiza trip:
       - `trip.driver_id = driver_id`

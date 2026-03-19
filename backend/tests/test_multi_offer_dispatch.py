@@ -10,12 +10,11 @@ from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
 from app.db.base import Base
 from app.db.models.driver import Driver, DriverLocation
-from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
-from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
+from app.models.enums import DriverStatus, OfferStatus, Role, UserStatus
 
 
 Base.metadata.create_all(bind=engine)
@@ -173,7 +172,7 @@ def test_mod_003_rejected_offers_handled() -> None:
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
     db.commit()
-    _ = _create_driver_with_location(db, 38.7, -9.1)
+    driver_id = _create_driver_with_location(db, 38.7, -9.1)
     passenger_id = _create_passenger(db)
     _override_deps(db, UserContext(user_id=passenger_id, role=Role.passenger))
     client = TestClient(app)

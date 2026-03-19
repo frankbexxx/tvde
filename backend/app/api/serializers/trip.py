@@ -1,6 +1,5 @@
 """Shared trip-to-response serializers. Used by passenger, driver, admin routers."""
 
-from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.schemas.trip import TripDetailResponse, TripHistoryItem, TripStatusResponse
 

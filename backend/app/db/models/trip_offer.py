@@ -1,6 +1,7 @@
 """Trip offer: driver receives offer for a requested trip."""
 
 from __future__ import annotations
+# ruff: noqa: F821  # SQLAlchemy forward refs in Mapped["..."] are valid
 
 import uuid
 from datetime import datetime

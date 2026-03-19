@@ -1,6 +1,5 @@
 """A004: Pricing engine tests."""
 
-import pytest
 from app.core.config import settings
 from app.core.pricing import calculate_price
 

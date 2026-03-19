@@ -1,0 +1,111 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
+
+  "files": {
+    "includes": [
+      "**/src/**",
+      "**/api/**",
+      "**/scripts/**",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.json",
+      "**/*.jsonc",
+      "**/*.mjs",
+      "**/*.cjs",
+      "!**/.pytest_cache",
+      "!**/__pycache__",
+      "!**/*.pyc",
+      "!**/*.pyo",
+      "!**/*.pyd",
+      "!**/.coverage",
+      "!**/coverage",
+      "!**/htmlcov",
+      "!**/venv",
+      "!**/.venv",
+      "!**/env",
+      "!**/.env",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.next",
+      "!**/.vite",
+      "!**/out",
+      "!**/.git",
+      "!**/.vscode",
+      "!**/.idea",
+      "!**/*.swp",
+      "!**/*.swo",
+      "!**/*.log",
+      "!**/logs",
+      "!**/tmp",
+      "!**/temp"
+    ]
+  },
+
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+
+  "assist": {
+    "enabled": true,                  
+    "actions": {
+      "source": {
+        "organizeImports": "on"       
+      }
+    }
+  },
+
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+
+      "style": {
+        "useBlockStatements": "warn",
+        "useShorthandAssign": "warn",
+        "useConsistentArrayType": "warn",
+        "useConsistentArrowReturn": "warn",
+        "useShorthandFunctionType": "warn"
+      },
+
+      "suspicious": {
+        "noExplicitAny": "warn",      
+        "noArrayIndexKey": "warn"     
+      },
+
+      "performance": {
+        "noDelete": "warn",
+        "noAccumulatingSpread": "warn"
+      },
+
+      "correctness": {
+        "useExhaustiveDependencies": "warn",   
+        "useHookAtTopLevel": "error",
+        "noUnusedPrivateClassMembers": "warn"
+      },
+
+      "security": {
+        "noDangerouslySetInnerHtml": "warn"
+      },
+
+      "a11y": {
+        "useAltText": "warn",
+        "useAriaPropsForRole": "warn",
+        "useValidAriaProps": "warn"
+      }
+    }
+  },
+
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
+    }
+  }
+}
