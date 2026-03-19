@@ -9,7 +9,6 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db.models.driver import Driver
 from app.db.models.trip import Trip
 from app.events.dispatcher import emit
 from app.models.enums import TripStatus
@@ -69,7 +68,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
     for trip in accepted_stuck:
         driver_id = trip.driver_id
         trip.status = TripStatus.cancelled
-        _set_driver_available(db, driver_id)
+        _set_driver_available(db, str(driver_id) if driver_id else None)
         counts["accepted_to_cancelled"] += 1
         logger.info(
             f"trip_timeouts: accepted→cancelled trip_id={trip.id}, "
@@ -93,7 +92,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
     for trip in ongoing_stuck:
         driver_id = trip.driver_id
         trip.status = TripStatus.failed
-        _set_driver_available(db, driver_id)
+        _set_driver_available(db, str(driver_id) if driver_id else None)
         counts["ongoing_to_failed"] += 1
         logger.info(
             f"trip_timeouts: ongoing→failed trip_id={trip.id}, "

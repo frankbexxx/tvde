@@ -182,7 +182,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
     all_requested = list(
         db.execute(select(Trip).where(Trip.status == TripStatus.requested)).scalars().all()
     )
-    new_offers: List[TripOffer] = []
+    new_offers: list[tuple[TripOffer, Trip]] = []
     for trip in all_requested:
         offers = list(
             db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id)).scalars().all()
@@ -211,7 +211,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         if excluded_ids:
             q = q.where(Driver.user_id.notin_(list(excluded_ids)))
         drivers_with_loc = list(db.execute(q).all())
-        candidates: List[tuple] = []
+        candidates: list[tuple[Driver, float]] = []
         for driver, loc in drivers_with_loc:
             loc_ts = loc.timestamp
             if loc_ts.tzinfo is None:

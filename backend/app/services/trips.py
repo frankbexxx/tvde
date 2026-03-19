@@ -3,7 +3,8 @@ from __future__ import annotations
 import logging
 import random
 import time
-from decimal import Decimal, ROUND_HALF_UP
+import uuid
+from decimal import Decimal
 from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
@@ -246,7 +247,7 @@ def cancel_trip_by_passenger(
             logger.warning(f"cancel_trip_by_passenger: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
-    _set_driver_available(db, trip.driver_id)
+    _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
     log_event(
@@ -316,7 +317,7 @@ def cancel_trip_by_driver(
             logger.warning(f"cancel_trip_by_driver: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
-    _set_driver_available(db, trip.driver_id)
+    _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
     log_event(
@@ -375,7 +376,7 @@ def cancel_trip_by_admin(
 
     trip.status = TripStatus.cancelled
     trip.cancelled_by = "admin"
-    _set_driver_available(db, trip.driver_id)
+    _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
     log_event(
@@ -560,7 +561,6 @@ def accept_trip(
     # STEP 1: Create Stripe PaymentIntent (or mock when STRIPE_MOCK).
     stripe_pi_id: str
     if getattr(settings, "STRIPE_MOCK", False):
-        import uuid
         stripe_pi_id = f"pi_mock_{uuid.uuid4().hex[:24]}"
         logger.info(f"accept_trip: STRIPE_MOCK — fake PI trip_id={trip_id}")
     else:
@@ -606,7 +606,7 @@ def accept_trip(
 
     # STEP 4: Update trip state and driver availability.
     old_status = trip.status
-    trip.driver_id = driver_id
+    trip.driver_id = uuid.UUID(driver_id) if driver_id else None
     trip.status = TripStatus.accepted
     driver.is_available = False
 
@@ -697,7 +697,6 @@ def accept_offer(
 
     stripe_pi_id: str
     if getattr(settings, "STRIPE_MOCK", False):
-        import uuid
         stripe_pi_id = f"pi_mock_{uuid.uuid4().hex[:24]}"
     else:
         try:
@@ -726,7 +725,7 @@ def accept_offer(
     )
     db.add(payment)
 
-    trip.driver_id = driver_id
+    trip.driver_id = uuid.UUID(driver_id) if driver_id else None
     trip.status = TripStatus.accepted
     driver.is_available = False
 
@@ -784,7 +783,7 @@ def list_offers_for_driver(
         .where(TripOffer.expires_at > now)
         .where(Trip.status == TripStatus.requested)
     ).all()
-    return list(rows)
+    return [(r[0], r[1]) for r in rows]
 
 
 def assign_trip(
@@ -1117,7 +1116,7 @@ def complete_trip(
     trip.final_price = final_price
     trip.status = TripStatus.completed
     trip.completed_at = datetime.now(timezone.utc)
-    _set_driver_available(db, trip.driver_id)
+    _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     payment.total_amount = round(final_price, 2)
     payment.commission_amount = float(commission_amount)
     payment.driver_amount = float(driver_payout)
