@@ -127,7 +127,7 @@ DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db
 | Teste | Eventos esperados |
 |-------|-------------------|
 | `test_mod_001_offer_creation` | 1× offers_sent (DEBUG) + trip_created | ordem: trip_created primeiro |
-| `test_mod_002_only_first_accept_wins` | offer_sent, trip_created, trip_accepted, trip_state_change |
+| `test_mod_002_only_first_accept_wins` | offers_sent, trip_created, trip_accepted, trip_state_change |
 | `test_geo_stability_stale_drivers_excluded` | stale_location_filtered |
 | `test_da_001_driver_goes_online` | (nenhum log_event) |
 | `test_valid_flow_still_works` | trip_created, trip_state_change (várias), trip_accepted |
