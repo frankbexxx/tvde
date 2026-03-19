@@ -117,7 +117,7 @@ def test_da_002_driver_goes_offline() -> None:
 def test_da_003_offline_driver_not_eligible_for_dispatch() -> None:
     """TEST-DA-003: offline driver not included in dispatch candidates."""
     db = _make_db()
-    driver_id = _create_driver(db, is_available=False)
+    _ = _create_driver(db, is_available=False)
     passenger_id = _create_passenger(db)
     # Ensure no driver is available (isolation: other tests may have left drivers online)
     for d in db.execute(select(Driver)).scalars().all():

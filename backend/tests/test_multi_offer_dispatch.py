@@ -173,7 +173,7 @@ def test_mod_003_rejected_offers_handled() -> None:
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
     db.commit()
-    driver_id = _create_driver_with_location(db, 38.7, -9.1)
+    _ = _create_driver_with_location(db, 38.7, -9.1)
     passenger_id = _create_passenger(db)
     _override_deps(db, UserContext(user_id=passenger_id, role=Role.passenger))
     client = TestClient(app)
@@ -213,7 +213,7 @@ def test_mod_004_expired_offers() -> None:
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
     db.commit()
-    driver_id = _create_driver_with_location(db, 38.7, -9.1)
+    _ = _create_driver_with_location(db, 38.7, -9.1)
     passenger_id = _create_passenger(db)
     _override_deps(db, UserContext(user_id=passenger_id, role=Role.passenger))
     client = TestClient(app)

@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.db.base import Base
-from app.db.session import engine
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.user import User
 from app.db.session import SessionLocal, engine

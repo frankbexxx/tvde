@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.db.base import Base
-from app.db.session import engine
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.user import User
@@ -103,7 +102,7 @@ def _reset_overrides() -> None:
 def test_get_driver_location_as_passenger() -> None:
   db = _make_db()
   passenger_id, trip_id = _create_passenger_and_trip(db)
-  driver_id = _assign_driver_and_location(db, trip_id)
+  _ = _assign_driver_and_location(db, trip_id)
 
   user_ctx = UserContext(user_id=passenger_id, role=Role.passenger)
   _override_dependencies(db, user_ctx)
@@ -123,7 +122,7 @@ def test_get_driver_location_as_passenger() -> None:
 def test_get_driver_location_as_assigned_driver() -> None:
   db = _make_db()
   passenger_id, trip_id = _create_passenger_and_trip(db)
-  driver_id = _assign_driver_and_location(db, trip_id)
+  _ = _assign_driver_and_location(db, trip_id)
 
   user_ctx = UserContext(user_id=driver_id, role=Role.driver)
   _override_dependencies(db, user_ctx)
@@ -139,7 +138,7 @@ def test_get_driver_location_as_assigned_driver() -> None:
 def test_get_driver_location_forbidden_for_other_passenger() -> None:
   db = _make_db()
   passenger_id, trip_id = _create_passenger_and_trip(db)
-  driver_id = _assign_driver_and_location(db, trip_id)
+  _ = _assign_driver_and_location(db, trip_id)
 
   other_passenger = User(
     role=Role.passenger,

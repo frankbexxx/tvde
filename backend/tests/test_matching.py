@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.db.base import Base
-from app.db.session import engine
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.user import User
 from app.db.session import SessionLocal, engine
@@ -107,7 +106,7 @@ def test_matching_single_driver() -> None:
 def test_matching_multiple_drivers_returns_nearest() -> None:
   db = _make_db()
   _create_driver_with_location(db, 40.0, -8.0)      # near
-  far_id = _create_driver_with_location(db, 41.0, -9.0)  # far
+  _ = _create_driver_with_location(db, 41.0, -9.0)  # far
 
   user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
   _override_dependencies(db, user_ctx)

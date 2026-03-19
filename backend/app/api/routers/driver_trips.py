@@ -34,6 +34,7 @@ from app.services.trips import (
     get_trip_for_driver,
     list_completed_trips_for_driver,
     mark_trip_arriving as mark_trip_arriving_service,
+    rate_trip_as_driver,
     start_trip as start_trip_service,
 )
 

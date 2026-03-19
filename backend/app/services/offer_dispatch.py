@@ -37,7 +37,6 @@ def create_offers_for_trip(
     timeout_sec = getattr(settings, "OFFER_TIMEOUT_SECONDS", 15)
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=timeout_sec)
     now = datetime.now(timezone.utc)
-    max_age = timedelta(seconds=LOCATION_MAX_AGE_SECONDS)
 
     origin_lat = float(trip.origin_lat)
     origin_lng = float(trip.origin_lng)
@@ -47,7 +46,7 @@ def create_offers_for_trip(
             select(Driver, DriverLocation)
             .join(DriverLocation, DriverLocation.driver_id == Driver.user_id)
             .where(Driver.status == DriverStatus.approved)
-            .where(Driver.is_available == True)
+            .where(Driver.is_available)
         ).all()
     )
 
@@ -207,7 +206,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             select(Driver, DriverLocation)
             .join(DriverLocation, DriverLocation.driver_id == Driver.user_id)
             .where(Driver.status == DriverStatus.approved)
-            .where(Driver.is_available == True)
+            .where(Driver.is_available)
         )
         if excluded_ids:
             q = q.where(Driver.user_id.notin_(list(excluded_ids)))

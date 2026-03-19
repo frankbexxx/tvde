@@ -1,5 +1,7 @@
 """Trip offer: driver receives offer for a requested trip."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
 
