@@ -3,10 +3,12 @@ Temporary debug routes for map/driver tracking diagnostics.
 All endpoints return 404 when ENV != "dev" and ENABLE_DEV_TOOLS is false.
 """
 import uuid
+
+from app.utils.logging import get_recent_trip_logs
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -86,7 +88,7 @@ async def debug_trip_matching(
             select(Driver, DriverLocation)
             .join(DriverLocation, DriverLocation.driver_id == Driver.user_id)
             .where(Driver.status == DriverStatus.approved)
-            .where(Driver.is_available == True)
+            .where(Driver.is_available)
         ).all()
     )
 
@@ -147,6 +149,17 @@ async def debug_trip_matching(
         "step_3_offers": {"count": len(step3), "list": step3},
         "root_cause": root_cause,
     }
+
+
+@router.get("/trip/{trip_id}/logs")
+async def debug_trip_logs(trip_id: str) -> dict:
+    """
+    Return recent in-memory log lines for a trip (A007 buffer).
+    Dev only. Max 50 events per trip.
+    """
+    _require_dev_or_beta()
+    logs_list = get_recent_trip_logs(trip_id.strip())
+    return {"trip_id": trip_id, "logs": logs_list, "count": len(logs_list)}
 
 
 @router.get("/driver-eligibility")

@@ -132,12 +132,13 @@ def create_offers_for_trip(
 
     # Publish new_trip_offer to driver WebSocket subscribers (after flush for offer.id)
     db.flush()
-    for offer in offers:
+    for (_, dist_km), offer in zip(selected, offers):
         log_debug_event(
             "offer_sent",
             offer_id=str(offer.id),
             trip_id=str(trip.id),
             driver_id=str(offer.driver_id),
+            distance_km=round(dist_km, 2),
         )
     from app.realtime.driver_offers_hub import driver_offers_hub
     for offer in offers:
@@ -229,7 +230,8 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             if dist_km <= radius_km:
                 candidates.append((driver, dist_km))
         candidates.sort(key=lambda x: x[1])
-        for driver, dist_km in candidates[:top_n]:
+        selected_redispatch = candidates[:top_n]
+        for driver, dist_km in selected_redispatch:
             offer = TripOffer(
                 trip_id=trip.id,
                 driver_id=driver.user_id,
@@ -237,17 +239,18 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 expires_at=expires_at,
             )
             db.add(offer)
-            new_offers.append((offer, trip))
+            new_offers.append((offer, trip, dist_km))
             logger.info("redispatch_expired_trips: new offer trip_id=%s driver_id=%s", trip.id, driver.user_id)
     if new_offers:
         db.flush()
         from app.realtime.driver_offers_hub import driver_offers_hub
-        for offer, t in new_offers:
+        for offer, t, dist_km in new_offers:
             log_debug_event(
                 "offer_sent",
                 offer_id=str(offer.id),
                 trip_id=str(t.id),
                 driver_id=str(offer.driver_id),
+                distance_km=round(dist_km, 2),
             )
             driver_offers_hub.publish_new_offer(
                 driver_id=str(offer.driver_id),
@@ -261,4 +264,4 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 expires_at=expires_at,
             )
         db.commit()
-    return [o for o, _ in new_offers]
+    return [o for o, _, _ in new_offers]

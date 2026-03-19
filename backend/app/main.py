@@ -1,3 +1,4 @@
+# ruff: noqa: E402  # Imports after load_dotenv intentional - env must load before app config
 from contextlib import asynccontextmanager
 from pathlib import Path
 
