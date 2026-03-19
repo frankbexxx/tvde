@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { useLocation } from 'react-router-dom'
-import { setTokenGetter } from '../api/client'
+import { setTokenGetter, type ApiError } from '../api/client'
 import {
   getConfig,
   getDevTokens,
@@ -92,17 +92,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err: unknown) {
       console.error('Failed to load:', err)
+
+      const apiErr = err as Partial<ApiError>
+      const status = typeof apiErr.status === 'number' ? apiErr.status : undefined
+      const rawDetail = apiErr.detail
+      const detailStr =
+        typeof rawDetail === 'string'
+          ? rawDetail
+          : rawDetail && typeof rawDetail === 'object' && 'detail' in rawDetail
+            ? String((rawDetail as { detail?: unknown }).detail ?? '')
+            : ''
+
+      console.log('[Auth/loadTokens] response', { status, detail: detailStr || rawDetail, err })
+
       setTokens(null)
       setBetaMode(false)
-      const detail =
-        err && typeof err === 'object' && 'detail' in err
-          ? String((err as { detail?: string }).detail)
-          : ''
-      const isTimeout = detail.includes('Servidor indisponível') || detail.includes('timeout')
-      const msg = isTimeout ? 'Servidor indisponível. Tenta novamente.' : 'Erro: executar Seed primeiro'
+
+      const isTimeout =
+        status === 0 ||
+        detailStr.includes('Servidor indisponível') ||
+        detailStr.toLowerCase().includes('timeout')
+
+      let msg: string
+      let logLine: string
+
+      if (isTimeout) {
+        msg = 'Servidor indisponível. Tenta novamente.'
+        logLine = 'Timeout ao ligar ao servidor'
+      } else if (status === 401) {
+        msg = 'Não autorizado. Inicia sessão (modo BETA) ou verifica o token.'
+        logLine = '401 ao carregar tokens dev'
+      } else if (status === 404) {
+        msg =
+          'Endpoint /dev/tokens indisponível (servidor não está em dev ou dev tools desativados). Usa login BETA ou ativa ENABLE_DEV_TOOLS.'
+        logLine = '404 — dev endpoints não disponíveis'
+      } else if (status === 500 && detailStr) {
+        msg = detailStr
+        logLine = `Erro servidor: ${detailStr.slice(0, 120)}`
+      } else if (detailStr) {
+        msg = `Erro ao carregar dados: ${detailStr}`
+        logLine = msg
+      } else {
+        msg = 'Erro ao carregar dados. Verifica a API (VITE_API_URL) e a consola.'
+        logLine = 'Falha ao carregar tokens (sem detalhe)'
+      }
+
       setLoadError(msg)
       setStatus(msg)
-      addLog(isTimeout ? 'Timeout ao ligar ao servidor' : 'Falha ao carregar — executar Seed', 'error')
+      addLog(logLine, 'error')
     } finally {
       setIsLoading(false)
     }
