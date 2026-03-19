@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     CANCELLATION_FEE_PERCENT: float = 0.20  # 20% of estimated trip price
     CANCELLATION_FEE_MIN: float = 1.50
 
+    # A007: When True, detailed runtime logs for real-user testing (trip flow, timestamps).
+    DEBUG_RUNTIME_LOGS: bool = False
+
 
 settings = Settings()  # type: ignore[call-arg]
 

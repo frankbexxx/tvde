@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
-from app.utils.logging import log_event
+from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, Role, TripStatus
@@ -115,6 +115,13 @@ def upsert_driver_location(
         .limit(1)
     ).scalar_one_or_none()
     if active_trip:
+        log_debug_event(
+            "driver_location_updated",
+            trip_id=str(active_trip.id),
+            driver_id=driver_id,
+            lat=lat,
+            lng=lng,
+        )
         from app.realtime.hub import hub
         hub.publish_driver_location(
             trip_id=str(active_trip.id),

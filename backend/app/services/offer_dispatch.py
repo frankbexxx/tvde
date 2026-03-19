@@ -15,7 +15,7 @@ from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.models.enums import DriverStatus, OfferStatus, TripStatus
 from app.utils.geo import haversine_km
-from app.utils.logging import log_event
+from app.utils.logging import log_debug_event, log_event
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +132,13 @@ def create_offers_for_trip(
 
     # Publish new_trip_offer to driver WebSocket subscribers (after flush for offer.id)
     db.flush()
+    for offer in offers:
+        log_debug_event(
+            "offer_sent",
+            offer_id=str(offer.id),
+            trip_id=str(trip.id),
+            driver_id=str(offer.driver_id),
+        )
     from app.realtime.driver_offers_hub import driver_offers_hub
     for offer in offers:
         driver_offers_hub.publish_new_offer(
@@ -236,6 +243,12 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         db.flush()
         from app.realtime.driver_offers_hub import driver_offers_hub
         for offer, t in new_offers:
+            log_debug_event(
+                "offer_sent",
+                offer_id=str(offer.id),
+                trip_id=str(t.id),
+                driver_id=str(offer.driver_id),
+            )
             driver_offers_hub.publish_new_offer(
                 driver_id=str(offer.driver_id),
                 offer_id=str(offer.id),

@@ -24,7 +24,7 @@ from app.core.config import settings
 from app.core.pricing import calculate_price
 from app.utils.geo import haversine_km
 from app.services.offer_dispatch import create_offers_for_trip
-from app.utils.logging import log_event
+from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.stripe_service import (
     cancel_payment_intent,
@@ -190,7 +190,7 @@ def create_trip(
 
     db.commit()
     db.refresh(trip)
-    log_event("trip_created", trip_id=trip.id, passenger_id=passenger_id)
+    log_event("trip_created", trip_id=trip.id, passenger_id=passenger_id, created_at=trip.created_at)
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -255,6 +255,7 @@ def cancel_trip_by_passenger(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(
@@ -325,6 +326,7 @@ def cancel_trip_by_driver(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(
@@ -384,6 +386,7 @@ def cancel_trip_by_admin(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(
@@ -620,6 +623,7 @@ def accept_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
 
     # STEP 6: Emit event.
@@ -732,7 +736,16 @@ def accept_offer(
     db.commit()
     db.refresh(trip)
 
+    old_status = TripStatus.requested
     log_event("trip_accepted", trip_id=trip.id, driver_id=driver_id)
+    log_debug_event("offer_accepted", trip_id=trip.id, driver_id=driver_id, offer_id=offer_id)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old_status,
+        to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
+    )
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),
@@ -811,6 +824,7 @@ def assign_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(
@@ -909,6 +923,7 @@ def mark_trip_arriving(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(
@@ -941,6 +956,7 @@ def start_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(
@@ -1129,6 +1145,7 @@ def complete_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(
