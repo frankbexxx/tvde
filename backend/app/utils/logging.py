@@ -47,7 +47,7 @@ def _format_human_readable(event_name: str, **fields) -> str:
         "trip_created": "TRIP",
         "trip_accepted": "TRIP",
         "trip_state_change": "TRIP",
-        "offer_sent": "DISPATCH",
+        "offers_sent": "DISPATCH",
         "offer_accepted": "DRIVER",
         "driver_location_update": "DRIVER",
         "driver_location_first_send": "DRIVER",
@@ -89,6 +89,8 @@ def _append_to_buffer(
     event_name: str,
     line: str,
     to_state: str | None = None,
+    *,
+    buffer_extra: dict | None = None,
 ) -> None:
     """Append event to in-memory buffer (max 50 per trip)."""
     if not trip_id:
@@ -97,6 +99,8 @@ def _append_to_buffer(
     entry: dict = {"ts": now, "event": event_name, "line": line}
     if to_state is not None:
         entry["to_state"] = to_state
+    if buffer_extra:
+        entry.update(buffer_extra)
     with _buffer_lock:
         lst = _recent_trip_logs[trip_id]
         lst.append(entry)
@@ -140,8 +144,8 @@ def _compute_trip_summary(trip_id: str) -> dict:
                 ts_ongoing = ts
             elif to_s == "completed":
                 ts_completed = ts
-        elif ev == "offer_sent":
-            offers_sent += 1
+        elif ev == "offers_sent":
+            offers_sent += int(e.get("offers_count", 0) or 0)
 
     def _sec(a: datetime | None, b: datetime | None) -> int | None:
         if a is None or b is None:
@@ -231,7 +235,12 @@ def log_debug_event(event_name: str, **fields) -> None:
     to_str = _serialize_value(to_val) if to_val else None
     if trip_id is not None:
         trip_id_str = _serialize_value(trip_id)
-        _append_to_buffer(trip_id_str, event_name, line, to_state=to_str)
+        buffer_extra: dict | None = None
+        if event_name == "offers_sent":
+            buffer_extra = {"offers_count": int(fields.get("count") or 0)}
+        _append_to_buffer(
+            trip_id_str, event_name, line, to_state=to_str, buffer_extra=buffer_extra
+        )
 
 
 def should_log_driver_location(

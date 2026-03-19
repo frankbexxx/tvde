@@ -146,6 +146,15 @@ def create_trip(
     )
     db.add(trip)
     db.flush()
+    db.refresh(trip)
+
+    # A011: trip_created before offers (log order for humans)
+    log_event(
+        "trip_created",
+        trip_id=trip.id,
+        passenger_id=passenger_id,
+        created_at=trip.created_at,
+    )
 
     # Multi-offer dispatch: create offers for top N drivers within radius.
     # A006: if 0 offers, retry up to 3 times with 2s wait (driver may send location in parallel).
@@ -190,7 +199,6 @@ def create_trip(
 
     db.commit()
     db.refresh(trip)
-    log_event("trip_created", trip_id=trip.id, passenger_id=passenger_id, created_at=trip.created_at)
     emit(
         TripStatusChangedEvent(
             trip_id=str(trip.id),

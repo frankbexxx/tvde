@@ -121,24 +121,17 @@ def create_offers_for_trip(
         )
         db.add(offer)
         offers.append(offer)
-        logger.info(
-            "create_offers_for_trip: offer created",
-            extra={
-                "trip_id": str(trip.id),
-                "driver_id": str(driver.user_id),
-                "distance_km": round(dist_km, 2),
-            },
-        )
 
     # Publish new_trip_offer to driver WebSocket subscribers (after flush for offer.id)
     db.flush()
-    for (_, dist_km), offer in zip(selected, offers):
+    if offers:
+        dists = [d for _, d in selected[: len(offers)]]
         log_debug_event(
-            "offer_sent",
-            offer_id=str(offer.id),
+            "offers_sent",
             trip_id=str(trip.id),
-            driver_id=str(offer.driver_id),
-            distance_km=round(dist_km, 2),
+            count=len(offers),
+            min_km=round(min(dists), 2),
+            max_km=round(max(dists), 2),
         )
     from app.realtime.driver_offers_hub import driver_offers_hub
     for offer in offers:
@@ -243,15 +236,21 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             logger.info("redispatch_expired_trips: new offer trip_id=%s driver_id=%s", trip.id, driver.user_id)
     if new_offers:
         db.flush()
+        from collections import defaultdict
+
+        by_trip: dict[str, list[float]] = defaultdict(list)
+        for _offer, t, dist_km in new_offers:
+            by_trip[str(t.id)].append(dist_km)
+        for tid, dists in by_trip.items():
+            log_debug_event(
+                "offers_sent",
+                trip_id=tid,
+                count=len(dists),
+                min_km=round(min(dists), 2),
+                max_km=round(max(dists), 2),
+            )
         from app.realtime.driver_offers_hub import driver_offers_hub
         for offer, t, dist_km in new_offers:
-            log_debug_event(
-                "offer_sent",
-                offer_id=str(offer.id),
-                trip_id=str(t.id),
-                driver_id=str(offer.driver_id),
-                distance_km=round(dist_km, 2),
-            )
             driver_offers_hub.publish_new_offer(
                 driver_id=str(offer.driver_id),
                 offer_id=str(offer.id),

@@ -20,7 +20,7 @@ Documento de referência para logs estruturados, testes automatizados e observab
 ### 2.1 Variáveis de ambiente (`.env`)
 
 ```env
-# Ativar logs detalhados (offer_sent, offer_accepted, driver_location_updated)
+# Ativar logs detalhados (offers_sent resumo, offer_accepted, driver_location_updated)
 DEBUG_RUNTIME_LOGS=True
 
 # Pré-requisitos para testes
@@ -59,7 +59,7 @@ DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db
 
 | Evento | Prefixo | Campos | Quando |
 |--------|---------|--------|--------|
-| `offer_sent` | [DISPATCH] | trip_id, offer_id, driver_id, distance_km | Oferta enviada a driver |
+| `offers_sent` | [DISPATCH] | trip_id, count, min_km, max_km | Resumo de ofertas (DEBUG) |
 | `offer_accepted` | [DRIVER] | trip_id, driver_id, offer_id | Driver aceita oferta |
 | `driver_location_updated` | [DRIVER] | trip_id, driver_id, lat, lng | Localização quando driver tem trip ativa |
 
@@ -67,7 +67,7 @@ DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db
 
 ```
 [TRIP] trip_created | trip_id=... | passenger_id=... | created_at=...
-[DISPATCH] offer_sent | trip_id=... | driver_id=... | distance_km=2.1
+[DISPATCH] offers_sent | trip_id=... | count=5 | min_km=0.0 | max_km=5.64
 [DRIVER] offer_accepted | trip_id=... | driver_id=... | offer_id=...
 [TRIP] state_changed | trip_id=... | requested → assigned
 ```
@@ -120,13 +120,13 @@ DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db
 | `test_osrm.py` | 2 | OSRM sem config, com config |
 | `test_pricing_engine.py` | 3 | Base fare, distance, time pricing |
 
-**Total: 47 testes**
+**Total: 49 testes** (incl. 2 admin com estrutura JSON autenticada)
 
 ### 6.2 O que cada teste regista (via logs)
 
 | Teste | Eventos esperados |
 |-------|-------------------|
-| `test_mod_001_offer_creation` | 5× offer_sent (DEBUG), 1× trip_created |
+| `test_mod_001_offer_creation` | 1× offers_sent (DEBUG) + trip_created | ordem: trip_created primeiro |
 | `test_mod_002_only_first_accept_wins` | offer_sent, trip_created, trip_accepted, trip_state_change |
 | `test_geo_stability_stale_drivers_excluded` | stale_location_filtered |
 | `test_da_001_driver_goes_online` | (nenhum log_event) |
@@ -162,7 +162,7 @@ O `-s` desativa a captura de stdout; os logs aparecem no terminal.
 ### 7.4 Resultado esperado
 
 ```
-============================= 47 passed in ~17s ==============================
+============================= 49 passed in ~18s ==============================
 ```
 
 ---
@@ -246,7 +246,7 @@ Ordem esperada com `DEBUG_RUNTIME_LOGS=True`:
 | `app/utils/logging.py` | log_event, log_debug_event, buffer, formatação |
 | `app/core/config.py` | DEBUG_RUNTIME_LOGS |
 | `app/services/trips.py` | trip_created, trip_accepted, trip_state_change |
-| `app/services/offer_dispatch.py` | offer_sent, stale_location_filtered, NO_READY_DRIVERS |
+| `app/services/offer_dispatch.py` | offers_sent, stale_location_filtered, NO_READY_DRIVERS |
 | `app/services/driver_location.py` | driver_location_*, driver_location_updated |
 | `app/api/routers/debug_routes.py` | GET /debug/trip/{id}/logs |
 
