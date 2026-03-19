@@ -45,6 +45,7 @@ def _format_human_readable(event_name: str, **fields) -> str:
         "driver_location_requested": "DRIVER",
         "stale_location_filtered": "DISPATCH",
         "NO_READY_DRIVERS_AT_DISPATCH": "DISPATCH",
+        "dispatch_retry_attempt": "DISPATCH",
         "dispatch_retry_success": "DISPATCH",
         "dispatch_retry_failed": "DISPATCH",
         "trip_auto_dispatched": "DISPATCH",

@@ -47,7 +47,7 @@ DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db
 | `trip_state_change` | [TRIP] | trip_id, from, to | Qualquer transição de estado |
 | `stale_location_filtered` | [DISPATCH] | trip_id, driver_id, age_seconds | Localização ignorada por stale |
 | `NO_READY_DRIVERS_AT_DISPATCH` | [DISPATCH] | trip_id, drivers_with_loc_count, stale_excluded | Sem drivers disponíveis |
-| `dispatch_retry_attempt` | [TVDE] | trip_id, attempt | Retry de dispatch (prefix fallback) |
+| `dispatch_retry_attempt` | [DISPATCH] | trip_id, attempt | Retry de dispatch |
 | `dispatch_retry_success` | [DISPATCH] | trip_id, attempt, offer_count | Retry bem-sucedido |
 | `dispatch_retry_failed` | [DISPATCH] | trip_id, attempts | Retry falhou |
 | `trip_auto_dispatched` | [DISPATCH] | trip_id, driver_id | Auto-dispatch em BETA |
