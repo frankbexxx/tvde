@@ -4,7 +4,7 @@ All endpoints return 404 when ENV != "dev" and ENABLE_DEV_TOOLS is false.
 """
 import uuid
 
-from app.utils.logging import get_recent_trip_logs
+from app.utils.logging import get_recent_trip_logs, get_trip_summary
 from datetime import datetime, timezone
 from typing import Any
 
@@ -160,6 +160,16 @@ async def debug_trip_logs(trip_id: str) -> dict:
     _require_dev_or_beta()
     logs_list = get_recent_trip_logs(trip_id.strip())
     return {"trip_id": trip_id, "logs": logs_list, "count": len(logs_list)}
+
+
+@router.get("/trip/{trip_id}/summary")
+async def debug_trip_summary(trip_id: str) -> dict:
+    """
+    Return trip summary: time_to_assign, time_to_accept, time_to_start, events_count.
+    A008. Dev only.
+    """
+    _require_dev_or_beta()
+    return get_trip_summary(trip_id.strip())
 
 
 @router.get("/driver-eligibility")

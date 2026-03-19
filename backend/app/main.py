@@ -97,6 +97,15 @@ def custom_openapi() -> dict:
 async def lifespan(app: FastAPI):
     # Startup — log config for diagnostics (no secrets)
     _env = getattr(settings, "ENV", "?")
+    _debug_logs = getattr(settings, "DEBUG_RUNTIME_LOGS", False)
+    if _env == "dev" or _debug_logs:
+        print("\n=== TEST MODE READY ===")
+        print("1. Criar trip (frontend)")
+        print("2. Aceitar como driver")
+        print("3. Seguir logs no terminal")
+        print("4. No final ver SUMMARY")
+        print("Opcional: GET /debug/trip/{trip_id}/logs")
+        print("=======================\n")
     _dev = getattr(settings, "ENABLE_DEV_TOOLS", False)
     _beta = getattr(settings, "BETA_MODE", False)
     print(f"[TVDE] config ENV={_env} ENABLE_DEV_TOOLS={_dev} BETA_MODE={_beta}")

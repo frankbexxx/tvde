@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
-from app.utils.logging import log_debug_event, log_event
+from app.utils.logging import log_debug_event, log_event, should_log_driver_location
 from app.utils.state_machine import validate_trip_transition
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, Role, TripStatus
@@ -90,6 +90,8 @@ def upsert_driver_location(
         .limit(1)
     ).scalar_one_or_none()
     is_first_send = loc is None
+    old_lat = float(loc.lat) if loc else None
+    old_lng = float(loc.lng) if loc else None
     if loc is None:
         loc = DriverLocation(
             driver_id=driver_id,
@@ -103,10 +105,6 @@ def upsert_driver_location(
         loc.lng = lng
         loc.timestamp = ts
 
-    log_event("driver_location_update", driver_id=driver_id, lat=lat, lng=lng)
-    if is_first_send:
-        log_event("driver_location_first_send", driver_id=driver_id, lat=lat, lng=lng)
-
     # Broadcast to trip subscribers when driver has an active trip
     active_trip = db.execute(
         select(Trip)
@@ -114,6 +112,21 @@ def upsert_driver_location(
         .where(Trip.status.in_([TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]))
         .limit(1)
     ).scalar_one_or_none()
+    has_active_trip = active_trip is not None
+
+    # A008: Only log when first send, significant change (>50m), or has active trip
+    if should_log_driver_location(
+        is_first_send=is_first_send,
+        has_active_trip=has_active_trip,
+        old_lat=old_lat,
+        old_lng=old_lng,
+        new_lat=lat,
+        new_lng=lng,
+    ):
+        log_event("driver_location_update", driver_id=driver_id, lat=lat, lng=lng)
+        if is_first_send:
+            log_event("driver_location_first_send", driver_id=driver_id, lat=lat, lng=lng)
+
     if active_trip:
         log_debug_event(
             "driver_location_updated",
