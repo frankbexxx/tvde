@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
@@ -50,6 +50,8 @@ export function PassengerDashboard() {
   const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
+  /** A015: pickup escolhido no mapa (sem backend até A018) */
+  const [pickupLocation, setPickupLocation] = useState<{ lat: number; lng: number } | null>(null)
 
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getTripHistory(token!),
@@ -77,6 +79,14 @@ export function PassengerDashboard() {
     setPassengerActiveTripId(null)
     setStatus('Pronto')
   }, [activeTripId, activeTrip, activeTripLoading, setPassengerActiveTripId, setStatus])
+
+  useEffect(() => {
+    if (activeTripId) setPickupLocation(null)
+  }, [activeTripId])
+
+  const handlePickupMapSelect = useCallback((coords: { lat: number; lng: number }) => {
+    setPickupLocation(coords)
+  }, [])
 
   const handleRequestTrip = async () => {
     if (!token) return
@@ -174,6 +184,21 @@ export function PassengerDashboard() {
     if (['cancelled', 'failed', 'completed'].includes(activeTrip.status)) return false
     return ['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status)
   }, [activeTrip, driverLocation, tripCompletedFromLocation])
+
+  /** A015: mapa interativo antes de pedir viagem */
+  const isPickupPlanningMode = !activeTripId && !creating && !tripCompletedFromLocation
+
+  const showMapOnScreen = showPassengerMap || isPickupPlanningMode
+
+  const routeForMap = useMemo(() => {
+    if (showPassengerMap && activeTrip) {
+      return {
+        from: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
+        to: { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng },
+      }
+    }
+    return undefined
+  }, [showPassengerMap, activeTrip])
 
   const mapPlaceholder = useMemo(() => {
     if (tripCompletedFromLocation) return 'Viagem concluída'
@@ -297,10 +322,12 @@ export function PassengerDashboard() {
       <div className="space-y-6 mt-6 transition-opacity duration-300 ease-out">
         <StatusHeader label={banner.label} variant={banner.variant} />
 
-        {/* A014: mapa só com motorista + GPS; requested = placeholder */}
+        {/* A014: em viagem, mapa só com motorista + GPS; A015: em idle, mapa clicável para pickup */}
         <MapView
-          showMap={showPassengerMap}
+          showMap={showMapOnScreen}
           mapPlaceholder={mapPlaceholder}
+          pickupSelection={isPickupPlanningMode ? pickupLocation : null}
+          onPickupSelect={isPickupPlanningMode ? handlePickupMapSelect : undefined}
           passengerLocation={
             passengerLocation ?? (activeTrip
               ? {
@@ -310,24 +337,17 @@ export function PassengerDashboard() {
               : DEMO_ORIGIN)
           }
           driverLocation={driverLocation ?? undefined}
-          route={
-            activeTrip
-              ? {
-                  from: {
-                    lat: activeTrip.origin_lat,
-                    lng: activeTrip.origin_lng,
-                  },
-                  to: {
-                    lat: activeTrip.destination_lat,
-                    lng: activeTrip.destination_lng,
-                  },
-                }
-              : {
-                  from: DEMO_ORIGIN,
-                  to: DEMO_DEST,
-                }
-          }
+          route={routeForMap}
         />
+
+        {isPickupPlanningMode && (
+          <p
+            className="text-center text-sm font-medium text-muted-foreground -mt-2 transition-colors duration-300"
+            aria-live="polite"
+          >
+            {pickupLocation ? 'Origem selecionada' : 'Seleciona ponto de recolha'}
+          </p>
+        )}
 
         {error && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-destructive text-base">

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import Map from 'react-map-gl/maplibre'
-import type { MapRef } from 'react-map-gl/maplibre'
+import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { FeatureCollection, LineString } from 'geojson'
 import { PassengerMarker } from './PassengerMarker'
@@ -30,6 +30,9 @@ export interface MapViewProps {
   showMap?: boolean
   /** Mensagem quando showMap é false */
   mapPlaceholder?: string
+  /** A015: clique no mapa → coords WGS84 (substitui pickup anterior; um marcador) */
+  pickupSelection?: LatLng | null
+  onPickupSelect?: (coords: LatLng) => void
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -50,6 +53,8 @@ export function MapView({
   overlay,
   showMap = true,
   mapPlaceholder = 'Mapa indisponível neste momento.',
+  pickupSelection = null,
+  onPickupSelect,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -135,6 +140,15 @@ export function MapView({
     })
   }, [driverLocation])
 
+  const handleMapClick = useCallback(
+    (e: MapLayerMouseEvent) => {
+      if (!onPickupSelect) return
+      const { lng, lat } = e.lngLat
+      onPickupSelect({ lat, lng })
+    },
+    [onPickupSelect]
+  )
+
   const frameClass = `relative w-full rounded-2xl overflow-hidden shadow-card bg-card transition-opacity duration-500 ease-out motion-reduce:transition-none ${className ?? ''}`
 
   if (!showMap) {
@@ -162,12 +176,21 @@ export function MapView({
           mapLib={maplibregl}
           initialViewState={initialViewState}
           reuseMaps
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100%', height: '100%', cursor: onPickupSelect ? 'crosshair' : undefined }}
           mapStyle={MAPTILER_STYLE}
+          onClick={onPickupSelect ? handleMapClick : undefined}
         >
-          {/* Passenger marker */}
-          {passengerLocation && (
-            <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
+          {/* A015: um marcador de recolha OU marcador de passageiro (nunca ambos no mesmo modo) */}
+          {pickupSelection ? (
+            <PassengerMarker
+              longitude={pickupSelection.lng}
+              latitude={pickupSelection.lat}
+              colorClassName="bg-amber-500 ring-amber-400/60 shadow-lg"
+            />
+          ) : (
+            passengerLocation && (
+              <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
+            )
           )}
 
           {/* Driver marker */}
