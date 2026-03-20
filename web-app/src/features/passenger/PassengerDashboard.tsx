@@ -55,6 +55,8 @@ export function PassengerDashboard() {
   /** A015/A016: planeamento no mapa (sem backend até A018) */
   const [pickupLocation, setPickupLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [dropoffLocation, setDropoffLocation] = useState<{ lat: number; lng: number } | null>(null)
+  /** A017b: planeamento só após o utilizador clicar em "Pedir viagem" */
+  const [isPlanningMode, setIsPlanningMode] = useState(false)
   /** Ref espelha pickup para cliques muito rápidos (1º vs 2º clique antes do re-render) */
   const pickupLocationRef = useRef<{ lat: number; lng: number } | null>(null)
   /** A017: GeoJSON OSRM entre pickup e dropoff (apenas planeamento) */
@@ -98,8 +100,16 @@ export function PassengerDashboard() {
       setPickupLocation(null)
       setDropoffLocation(null)
       pickupLocationRef.current = null
+      setIsPlanningMode(false)
     }
   }, [activeTripId])
+
+  const resetPlanning = useCallback(() => {
+    setPickupLocation(null)
+    setDropoffLocation(null)
+    setIsPlanningMode(false)
+    pickupLocationRef.current = null
+  }, [])
 
   const handlePlanningMapClick = useCallback((coords: { lat: number; lng: number }) => {
     if (!pickupLocationRef.current) {
@@ -207,10 +217,14 @@ export function PassengerDashboard() {
     return ['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status)
   }, [activeTrip, driverLocation, tripCompletedFromLocation])
 
-  /** A015: mapa interativo antes de pedir viagem */
-  const isPickupPlanningMode = !activeTripId && !creating && !tripCompletedFromLocation
+  /**
+   * A017b: prioridade — viagem activa > modo planeamento (input) > idle neutro (mapa sem cliques).
+   * Mapa visível em idle mesmo sem planeamento; interação só com isPlanningMode.
+   */
+  const isTripIdle = !activeTripId && !creating && !tripCompletedFromLocation
+  const isPickupPlanningMode = isTripIdle && isPlanningMode
 
-  const showMapOnScreen = showPassengerMap || isPickupPlanningMode
+  const showMapOnScreen = showPassengerMap || isTripIdle
 
   // A017: OSRM público só com os dois pontos e sem viagem activa
   useEffect(() => {
@@ -273,12 +287,24 @@ export function PassengerDashboard() {
         ? 'Cancelar'
         : null
 
+  const primaryPlanningDisabled =
+    !!primaryLabel &&
+    primaryLabel === 'Pedir viagem' &&
+    !activeTripId &&
+    isPlanningMode &&
+    (!pickupLocation || !dropoffLocation)
+
   const primaryOnClick =
     primaryLabel === 'Pedir nova viagem'
-      ? () => setPassengerActiveTripId(null)
+      ? () => {
+          setPassengerActiveTripId(null)
+          setIsPlanningMode(false)
+        }
       : primaryLabel === 'Cancelar'
         ? handleCancel
-        : handleRequestTrip
+        : primaryLabel === 'Pedir viagem' && !activeTripId && !isPlanningMode
+          ? () => setIsPlanningMode(true)
+          : handleRequestTrip
 
   // When trip completed (from driver-location 409 or trip poll): show TRIP_COMPLETED, then clear after 2s.
   useEffect(() => {
@@ -339,6 +365,7 @@ export function PassengerDashboard() {
             onClick={primaryOnClick}
             disabled={
               creating ||
+              primaryPlanningDisabled ||
               (!!activeTripId && primaryLabel !== 'Cancelar' && primaryLabel !== 'Pedir nova viagem')
             }
             loading={creating}
@@ -387,16 +414,27 @@ export function PassengerDashboard() {
         />
 
         {isPickupPlanningMode && (
-          <p
-            className="text-center text-sm font-medium text-muted-foreground -mt-2 transition-colors duration-300"
-            aria-live="polite"
-          >
-            {!pickupLocation
-              ? 'Seleciona ponto de recolha'
-              : !dropoffLocation
-                ? 'Seleciona destino'
-                : 'Rota definida'}
-          </p>
+          <div className="-mt-2 flex flex-col items-center gap-2">
+            <p
+              className="text-center text-sm font-medium text-muted-foreground transition-colors duration-300"
+              aria-live="polite"
+            >
+              {!pickupLocation
+                ? 'Seleciona ponto de recolha'
+                : !dropoffLocation
+                  ? 'Seleciona destino'
+                  : 'Rota definida'}
+            </p>
+            {pickupLocation && (
+              <button
+                type="button"
+                onClick={resetPlanning}
+                className="rounded-lg border border-border bg-muted/80 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+              >
+                Repor
+              </button>
+            )}
+          </div>
         )}
 
         {error && (
