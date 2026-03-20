@@ -36,6 +36,8 @@ export interface MapViewProps {
   dropoffSelection?: LatLng | null
   /** A016: um clique → pickup se ainda não existe, senão atualiza só dropoff */
   onPlanningMapClick?: (coords: LatLng) => void
+  /** A017: GeoJSON pré-calculado (planeamento); separado da rota de viagem activa */
+  planningRouteGeometry?: FeatureCollection<LineString> | null
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -59,6 +61,7 @@ export function MapView({
   pickupSelection = null,
   dropoffSelection = null,
   onPlanningMapClick,
+  planningRouteGeometry = null,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -213,10 +216,24 @@ export function MapView({
             <DriverMarker longitude={driverLocation.lng} latitude={driverLocation.lat} />
           )}
 
-          {/* OSRM route */}
+          {/* Rota viagem activa (OSRM interno via prop `route`) */}
           {routeGeometry && (
             <RouteLine id="route-source" geometry={routeGeometry} />
           )}
+          {/* A017: pré-visualização pickup→dropoff em planeamento */}
+          {planningRouteGeometry && planningRouteGeometry.features?.length ? (
+            <RouteLine
+              id="planning-route-source"
+              geometry={planningRouteGeometry}
+              layerProps={{
+                paint: {
+                  'line-color': '#8b5cf6',
+                  'line-width': 4,
+                  'line-opacity': 0.8,
+                } as any,
+              }}
+            />
+          ) : null}
         </Map>
       </div>
 

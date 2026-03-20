@@ -13,7 +13,9 @@ import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton
 import { Spinner } from '../../components/ui/Spinner'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { DevTools } from '../shared/DevTools'
+import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
+import { getRouteGeoJSON } from '../../maps/routing'
 import { getDriverLocation } from '../../services/trackingService'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
@@ -55,6 +57,10 @@ export function PassengerDashboard() {
   const [dropoffLocation, setDropoffLocation] = useState<{ lat: number; lng: number } | null>(null)
   /** Ref espelha pickup para cliques muito rápidos (1º vs 2º clique antes do re-render) */
   const pickupLocationRef = useRef<{ lat: number; lng: number } | null>(null)
+  /** A017: GeoJSON OSRM entre pickup e dropoff (apenas planeamento) */
+  const [planningRouteGeoJSON, setPlanningRouteGeoJSON] = useState<FeatureCollection<LineString> | null>(
+    null
+  )
 
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getTripHistory(token!),
@@ -206,6 +212,28 @@ export function PassengerDashboard() {
 
   const showMapOnScreen = showPassengerMap || isPickupPlanningMode
 
+  // A017: OSRM público só com os dois pontos e sem viagem activa
+  useEffect(() => {
+    if (!isPickupPlanningMode || !pickupLocation || !dropoffLocation) {
+      setPlanningRouteGeoJSON(null)
+      return
+    }
+
+    let cancelled = false
+
+    void getRouteGeoJSON(pickupLocation, dropoffLocation)
+      .then((geo) => {
+        if (!cancelled) setPlanningRouteGeoJSON(geo)
+      })
+      .catch(() => {
+        if (!cancelled) setPlanningRouteGeoJSON(null)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isPickupPlanningMode, pickupLocation, dropoffLocation])
+
   const routeForMap = useMemo(() => {
     if (showPassengerMap && activeTrip) {
       return {
@@ -355,6 +383,7 @@ export function PassengerDashboard() {
           }
           driverLocation={driverLocation ?? undefined}
           route={routeForMap}
+          planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
         />
 
         {isPickupPlanningMode && (
