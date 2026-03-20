@@ -26,10 +26,8 @@ import {
 } from './passengerBanner'
 import { toast } from 'sonner'
 
-/** Câmara Municipal de Oeiras, Largo Marquês de Pombal */
+/** Câmara Municipal de Oeiras — centro do mapa / fallback de posição do passageiro */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
-/** Lisboa centro (destino típico de Oeiras) */
-const DEMO_DEST = { lat: 38.7223, lng: -9.1393 }
 
 const ESTIMATE_MOCK = '4–6'
 
@@ -122,6 +120,10 @@ export function PassengerDashboard() {
 
   const handleRequestTrip = async () => {
     if (!token) return
+    if (!pickupLocation || !dropoffLocation) return
+
+    console.log('Creating trip with:', { pickupLocation, dropoffLocation })
+
     setError(null)
     setCreating(true)
     setStatus('A pedir viagem...')
@@ -130,10 +132,10 @@ export function PassengerDashboard() {
     try {
       const res = await createTrip(
         {
-          origin_lat: DEMO_ORIGIN.lat,
-          origin_lng: DEMO_ORIGIN.lng,
-          destination_lat: DEMO_DEST.lat,
-          destination_lng: DEMO_DEST.lng,
+          origin_lat: pickupLocation.lat,
+          origin_lng: pickupLocation.lng,
+          destination_lat: dropoffLocation.lat,
+          destination_lng: dropoffLocation.lng,
         },
         token
       )
