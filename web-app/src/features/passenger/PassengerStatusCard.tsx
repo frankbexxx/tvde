@@ -1,8 +1,6 @@
 /**
- * B002: Central visual component for passenger UX state.
- * Shows semantic content per state — no empty screens, no error flicker.
+ * B002 / A014: Conteúdo visual por estado da viagem — clareza, sem depender só de logs.
  */
-import { useEffect, useState } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
@@ -11,29 +9,30 @@ import type { TripDetailResponse } from '../../api/trips'
 
 const ESTIMATE_FALLBACK = '4–6'
 
-const SEARCHING_MESSAGES = [
-  'A procurar motoristas próximos...',
-  'A verificar disponibilidade...',
-  'A contactar motoristas...',
-]
-const SEARCHING_ROTATE_MS = 2500
-
 interface PassengerStatusCardProps {
   uxState: PassengerUxState | null
   activeTrip: TripDetailResponse | null | undefined
+  /** A014: só no pedido inicial — spinner curto, separado do estado "à procura" */
+  isSubmittingTrip?: boolean
 }
 
-export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCardProps) {
-  const [searchingMsgIndex, setSearchingMsgIndex] = useState(0)
-
-  useEffect(() => {
-    if (uxState !== 'SEARCHING_DRIVER') return
-    const t = setInterval(
-      () => setSearchingMsgIndex((i) => (i + 1) % SEARCHING_MESSAGES.length),
-      SEARCHING_ROTATE_MS
+export function PassengerStatusCard({
+  uxState,
+  activeTrip,
+  isSubmittingTrip = false,
+}: PassengerStatusCardProps) {
+  if (isSubmittingTrip) {
+    return (
+      <div
+        key="SUBMITTING"
+        className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 ease-out animate-in fade-in duration-300"
+      >
+        <Spinner size="lg" />
+        <p className="text-foreground text-base font-semibold">A enviar pedido…</p>
+        <p className="text-muted-foreground text-sm text-center px-4">Aguarda um momento.</p>
+      </div>
     )
-    return () => clearInterval(t)
-  }, [uxState])
+  }
 
   if (!uxState || !activeTrip) return null
 
@@ -42,48 +41,73 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
       return (
         <div
           key="SEARCHING_DRIVER"
-          className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-200 ease-out animate-in fade-in duration-300"
+          className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <Spinner size="lg" />
-          <p className="text-foreground text-base font-medium animate-pulse">
-            {SEARCHING_MESSAGES[searchingMsgIndex]}
-          </p>
-          <p className="text-muted-foreground text-sm">
-            Estamos a encontrar o motorista mais próximo.
+          <p className="text-foreground text-lg font-semibold text-center px-2">À procura de motorista</p>
+          <p className="text-muted-foreground text-sm text-center max-w-sm px-4">
+            Isto pode demorar um pouco — estamos a contactar motoristas na zona.
           </p>
         </div>
       )
 
-    case 'DRIVER_ASSIGNED':
+    case 'DRIVER_ASSIGNED': {
+      const isAssignedOnly = activeTrip.status === 'assigned'
+      if (isAssignedOnly) {
+        return (
+          <div
+            key="DRIVER_ASSIGNED_ASSIGNED"
+            className="space-y-4 rounded-2xl border border-primary/35 bg-primary/10 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
+          >
+            <div>
+              <p className="text-primary font-semibold text-lg">Motorista encontrado</p>
+              <p className="text-muted-foreground text-sm mt-1">
+                A obter localização — o mapa aparece em breve.
+              </p>
+            </div>
+            <TripCard
+              pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
+              destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
+              price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
+              estimateFallback={ESTIMATE_FALLBACK}
+            />
+          </div>
+        )
+      }
       return (
         <div
-          key="DRIVER_ASSIGNED"
-          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+          key="DRIVER_ASSIGNED_ACCEPTED"
+          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <p className="text-success font-medium">Motorista a caminho</p>
+          <p className="text-success font-semibold text-lg">Motorista a caminho</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
             price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
             estimateFallback={ESTIMATE_FALLBACK}
-            driverName="O seu motorista está a caminho"
+            driverName="Motorista TVDE"
+            vehicleLabel="Veículo TVDE"
           />
         </div>
       )
+    }
 
     case 'DRIVER_ARRIVING':
       return (
         <div
           key="DRIVER_ARRIVING"
-          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <p className="text-success font-medium">Motorista chegou</p>
+          <div>
+            <p className="text-success font-semibold text-lg">A chegar</p>
+            <p className="text-muted-foreground text-sm mt-1">O motorista está próximo do ponto de recolha.</p>
+          </div>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
             price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
             estimateFallback={ESTIMATE_FALLBACK}
-            driverName="O seu motorista está à sua espera"
+            driverName="Motorista TVDE"
+            vehicleLabel="Veículo TVDE"
           />
         </div>
       )
@@ -92,14 +116,16 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
       return (
         <div
           key="TRIP_ONGOING"
-          className="space-y-4 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+          className="space-y-4 rounded-2xl border border-secondary/40 bg-secondary/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <p className="text-primary font-medium">Em viagem</p>
+          <p className="text-secondary-foreground font-semibold text-lg">Viagem em curso</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
             price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
             estimateFallback={ESTIMATE_FALLBACK}
+            driverName="Motorista TVDE"
+            vehicleLabel="Veículo TVDE"
           />
         </div>
       )
@@ -108,9 +134,9 @@ export function PassengerStatusCard({ uxState, activeTrip }: PassengerStatusCard
       return (
         <div
           key="TRIP_COMPLETED"
-          className="space-y-4 rounded-2xl border border-border bg-muted px-4 py-4 transition-all duration-200 ease-out animate-in fade-in duration-300"
+          className="space-y-4 rounded-2xl border border-border bg-muted px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <p className="text-muted-foreground font-medium">Viagem concluída</p>
+          <p className="text-muted-foreground font-semibold text-lg">Viagem concluída</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}

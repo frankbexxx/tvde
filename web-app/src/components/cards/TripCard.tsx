@@ -11,8 +11,10 @@ interface TripCardProps {
   price: number
   /** When price is 0, show this instead (e.g. "4–6") */
   estimateFallback?: string
-  /** Optional driver name - not in API, can be "Motorista" */
+  /** Optional driver name — API não expõe ainda; texto amigável */
   driverName?: string
+  /** Linha opcional veículo (ex. classe TVDE) — sem alterar contrato API */
+  vehicleLabel?: string
   children?: React.ReactNode
 }
 
@@ -22,6 +24,7 @@ export function TripCard({
   price,
   estimateFallback,
   driverName,
+  vehicleLabel,
   children,
 }: TripCardProps) {
   const priceDisplay =
@@ -39,7 +42,13 @@ export function TripCard({
         </div>
       )}
       {driverName && (
-        <p className="text-sm text-muted-foreground">{driverName}</p>
+        <div className="space-y-0.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Motorista</p>
+          <p className="text-sm font-medium text-foreground">{driverName}</p>
+          {vehicleLabel && (
+            <p className="text-sm text-muted-foreground">{vehicleLabel}</p>
+          )}
+        </div>
       )}
       <div className="flex items-center justify-between pt-3 border-t border-border">
         <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>

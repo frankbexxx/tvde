@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
@@ -17,6 +17,11 @@ import { MapView } from '../../maps/MapView'
 import { getDriverLocation } from '../../services/trackingService'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
+import {
+  getPassengerBannerState,
+  humanizeCancelError,
+  humanizeCreateTripError,
+} from './passengerBanner'
 import { toast } from 'sonner'
 
 /** Câmara Municipal de Oeiras, Largo Marquês de Pombal */
@@ -26,35 +31,13 @@ const DEMO_DEST = { lat: 38.7223, lng: -9.1393 }
 
 const ESTIMATE_MOCK = '4–6'
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; variant: import('../../components/layout/StatusHeader').StatusVariant }
-> = {
-  requested: { label: 'À procura de motorista', variant: 'requested' },
-  assigned: { label: 'Motorista atribuído', variant: 'assigned' },
-  accepted: { label: 'Motorista a caminho', variant: 'accepted' },
-  arriving: { label: 'Motorista a chegar', variant: 'arriving' },
-  ongoing: { label: 'Em viagem', variant: 'ongoing' },
-  completed: { label: 'Viagem concluída', variant: 'completed' },
-  cancelled: { label: 'Cancelada', variant: 'idle' },
-  failed: { label: 'Falhou', variant: 'error' },
-}
-
-/** B002: UX state labels — 500ms delay applied in usePassengerUxState */
-const UX_STATE_LABELS: Record<string, string> = {
-  SEARCHING_DRIVER: 'À procura de motorista...',
-  DRIVER_ASSIGNED: 'Motorista a caminho',
-  DRIVER_ARRIVING: 'Motorista chegou',
-  TRIP_ONGOING: 'Em viagem',
-  TRIP_COMPLETED: 'Viagem concluída',
-}
-
-const UX_STATE_VARIANTS: Record<string, import('../../components/layout/StatusHeader').StatusVariant> = {
-  SEARCHING_DRIVER: 'requested',
-  DRIVER_ASSIGNED: 'accepted',
-  DRIVER_ARRIVING: 'arriving',
-  TRIP_ONGOING: 'ongoing',
-  TRIP_COMPLETED: 'completed',
+const POST_CREATE_LABEL: Record<string, string> = {
+  requested: 'À procura de motorista',
+  assigned: 'Motorista atribuído',
+  accepted: 'Motorista a caminho',
+  arriving: 'A chegar',
+  ongoing: 'Viagem em curso',
+  completed: 'Viagem concluída',
 }
 
 export function PassengerDashboard() {
@@ -113,14 +96,14 @@ export function PassengerDashboard() {
         token
       )
       setPassengerActiveTripId(res.trip_id)
-      setStatus(STATUS_CONFIG[res.status]?.label ?? res.status)
+      setStatus(POST_CREATE_LABEL[res.status] ?? res.status)
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
       refetchHistory()
     } catch (err: unknown) {
-      const msg = String((err as { detail?: string })?.detail ?? 'Erro ao pedir viagem')
+      const msg = humanizeCreateTripError((err as { detail?: string })?.detail)
       setError(msg)
-      setStatus('Erro ao pedir viagem')
+      setStatus('Não foi possível pedir a viagem')
       addLog(`Erro: ${msg}`, 'error')
     } finally {
       setCreating(false)
@@ -139,9 +122,9 @@ export function PassengerDashboard() {
       addLog('Viagem cancelada', 'success')
       refetchHistory()
     } catch (err: unknown) {
-      const msg = (err as { detail?: string })?.detail ?? 'Erro ao cancelar'
-      setError(String(msg))
-      setStatus('Erro ao cancelar')
+      const msg = humanizeCancelError((err as { detail?: string })?.detail)
+      setError(msg)
+      setStatus('Não foi possível cancelar')
       addLog(`Erro: ${msg}`, 'error')
     }
   }
@@ -156,13 +139,22 @@ export function PassengerDashboard() {
     tripCompletedFromLocation
   )
 
+  const banner = useMemo(
+    () =>
+      getPassengerBannerState({
+        creating,
+        activeTripId,
+        activeTripLoading,
+        activeTrip,
+        uxState,
+        isOnline,
+      }),
+    [creating, activeTripId, activeTripLoading, activeTrip, uxState, isOnline]
+  )
+
   useEffect(() => {
-    if (uxState) {
-      setStatus(UX_STATE_LABELS[uxState] ?? uxState)
-    } else if (!activeTripId) {
-      setStatus('Pronto')
-    }
-  }, [uxState, activeTripId, setStatus])
+    setStatus(banner.label)
+  }, [banner.label, setStatus])
 
   useEffect(() => {
     if (activeTrip?.status === 'completed') {
@@ -175,15 +167,29 @@ export function PassengerDashboard() {
     }
   }, [activeTrip?.status, addLog, setPassengerActiveTripId])
 
-  const statusConfig = creating && !activeTripId
-    ? { label: 'À procura de motorista...', variant: 'requested' as const }
-    : uxState
-      ? { label: UX_STATE_LABELS[uxState] ?? uxState, variant: UX_STATE_VARIANTS[uxState] ?? 'idle' }
-      : activeTripId && !isOnline
-        ? { label: 'Sem conectividade', variant: 'idle' as const }
-        : activeTripId
-          ? { label: 'A verificar...', variant: 'idle' as const }
-          : { label: 'Sem viagem ativa', variant: 'idle' as const }
+  const showPassengerMap = useMemo(() => {
+    if (!activeTrip || tripCompletedFromLocation) return false
+    if (activeTrip.status === 'requested') return false
+    if (!driverLocation) return false
+    if (['cancelled', 'failed', 'completed'].includes(activeTrip.status)) return false
+    return ['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status)
+  }, [activeTrip, driverLocation, tripCompletedFromLocation])
+
+  const mapPlaceholder = useMemo(() => {
+    if (tripCompletedFromLocation) return 'Viagem concluída'
+    if (activeTripId && !activeTrip) return 'A sincronizar viagem…'
+    if (!activeTrip) return 'Mapa indisponível.'
+    if (activeTrip.status === 'requested') return 'À procura de motorista'
+    if (
+      ['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status) &&
+      !driverLocation
+    ) {
+      return 'A aguardar posição do motorista'
+    }
+    return 'Mapa indisponível.'
+  }, [activeTrip, activeTripId, driverLocation, tripCompletedFromLocation])
+
+  const showSubmittingCard = creating && !activeTripId
 
   const showPrimaryButton =
     !activeTripId ||
@@ -288,11 +294,13 @@ export function PassengerDashboard() {
         </div>
       )}
 
-      <div className="space-y-6 mt-6 transition-opacity duration-150">
-        <StatusHeader label={statusConfig.label} variant={statusConfig.variant} />
+      <div className="space-y-6 mt-6 transition-opacity duration-300 ease-out">
+        <StatusHeader label={banner.label} variant={banner.variant} />
 
-        {/* Map section – centered around passenger location when available */}
+        {/* A014: mapa só com motorista + GPS; requested = placeholder */}
         <MapView
+          showMap={showPassengerMap}
+          mapPlaceholder={mapPlaceholder}
           passengerLocation={
             passengerLocation ?? (activeTrip
               ? {
@@ -335,32 +343,19 @@ export function PassengerDashboard() {
           </div>
         )}
 
-        {/* B002: PassengerStatusCard — UX state layer, optimistic SEARCHING when creating */}
+        {/* A014: loading (envio) separado de waiting (à procura) */}
         {(activeTripId || creating) && (
-          (uxState && activeTrip) || (creating && !activeTripId) ? (
-            <PassengerStatusCard
-              uxState={creating && !activeTripId ? 'SEARCHING_DRIVER' : uxState!}
-              activeTrip={
-                creating && !activeTripId
-                  ? {
-                      trip_id: 'optimistic',
-                      status: 'requested',
-                      passenger_id: '',
-                      origin_lat: DEMO_ORIGIN.lat,
-                      origin_lng: DEMO_ORIGIN.lng,
-                      destination_lat: DEMO_DEST.lat,
-                      destination_lng: DEMO_DEST.lng,
-                      estimated_price: 0,
-                      created_at: new Date().toISOString(),
-                      updated_at: new Date().toISOString(),
-                    }
-                  : activeTrip!
-              }
-            />
+          showSubmittingCard ? (
+            <PassengerStatusCard isSubmittingTrip uxState={null} activeTrip={null} />
+          ) : uxState && activeTrip ? (
+            <PassengerStatusCard uxState={uxState} activeTrip={activeTrip} />
           ) : (
-            <div className="flex flex-col items-center justify-center py-6 space-y-3 rounded-2xl border border-border bg-muted transition-opacity duration-300">
+            <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 animate-in fade-in duration-300">
               <Spinner size="lg" />
-              <p className="text-muted-foreground text-base">A verificar disponibilidade...</p>
+              <p className="text-muted-foreground text-base font-medium">A sincronizar viagem…</p>
+              <p className="text-muted-foreground text-sm text-center px-4">
+                A obter o estado mais recente da viagem.
+              </p>
             </div>
           )
         )}

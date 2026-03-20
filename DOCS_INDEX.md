@@ -46,9 +46,12 @@ Referência de todos os ficheiros de documentação do projeto.
 
 | Ficheiro | Propósito |
 |----------|-----------|
+| [docs/README.md](docs/README.md) | Mapa da pasta `docs/` (ativo vs arquivo) |
 | [docs/architecture/TVDE_SYSTEM_BLUEPRINT.md](docs/architecture/TVDE_SYSTEM_BLUEPRINT.md) | Blueprint do sistema — objetivos, camadas, trip lifecycle |
 | [docs/architecture/ARCHITECTURE_STATUS.md](docs/architecture/ARCHITECTURE_STATUS.md) | Estado técnico atual — backend, frontend, pipelines |
-| [docs/prompts/CURSOR_IMPLEMENTATION_PROMPTS.md](docs/prompts/CURSOR_IMPLEMENTATION_PROMPTS.md) | Índice de prompts de implementação (PROMPT_-1, 00, 1–4) |
+| [docs/prompts/A000_SYSTEM_RULES.md](docs/prompts/A000_SYSTEM_RULES.md) | Regras do projeto para agentes / implementação |
+| [docs/prompts/A014_UX_POLISH.md](docs/prompts/A014_UX_POLISH.md) | Polish UX (em curso) |
+| [archive/docs_maint_2026_02_23/](archive/docs_maint_2026_02_23/README.md) | Prompts já implementadas, imagens e notas arquivadas (sem apagar) |
 
 ---
 
@@ -87,11 +90,14 @@ Referência de todos os ficheiros de documentação do projeto.
 | 9 | [TESTE_STRIPE_COMPLETO.md](TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe |
 | 10 | [INTERACTION_LOGGING.md](INTERACTION_LOGGING.md) | Logs e telemetria |
 | 11 | [docs/DEBUG_BETA_RENDER.md](docs/DEBUG_BETA_RENDER.md) | Depuração BETA |
-| 12 | [docs/STACK_TECNOLOGICO.md](docs/STACK_TECNOLOGICO.md) | Stack técnico |
-| 13 | [docs/ESTRUTURA_GUI.md](docs/ESTRUTURA_GUI.md) | Estrutura da GUI |
-| 14 | [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da BD |
-| 15 | [web-app/README.md](web-app/README.md) | Web app |
-| 16 | [scripts/README.md](scripts/README.md) | Scripts do projeto |
+| 12 | [docs/README.md](docs/README.md) | Mapa da documentação ativa em `docs/` |
+| 13 | [docs/STACK_TECNOLOGICO.md](docs/STACK_TECNOLOGICO.md) | Stack técnico |
+| 14 | [docs/ESTRUTURA_GUI.md](docs/ESTRUTURA_GUI.md) | Estrutura da GUI |
+| 15 | [docs/IMPLEMENTACAO_E_TESTES.md](docs/IMPLEMENTACAO_E_TESTES.md) | Implementação e testes |
+| 16 | [docs/LOGS_E_TESTES_SINTESE.md](docs/LOGS_E_TESTES_SINTESE.md) | Logs e testes (síntese) |
+| 17 | [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da BD |
+| 18 | [web-app/README.md](web-app/README.md) | Web app |
+| 19 | [scripts/README.md](scripts/README.md) | Scripts do projeto |
 
 ---
 
@@ -101,5 +107,6 @@ Referência de todos os ficheiros de documentação do projeto.
 |-------------|----------|
 | `archive/docs_nao_essenciais/` | Docs movidos em 2026-03-08 (guias alternativos, relatórios, design system antigo, etc.) — ver README nessa pasta |
 | `archive/docs_2026_03_22/` | Docs movidos em 2026-03-22 (arquitetura duplicada, regressão, visão produto, logs simulator) — ver README nessa pasta |
+| `archive/docs_maint_2026_02_23/` | Manutenção 2026-02: prompts implementadas (A001–A013, B*, …), `docs/vision/`, imagens, análises pontuais — ver README nessa pasta |
 | `archive_support/` | Runbooks e manuais desatualizados |
 | `archive/` (resto) | Screenshots, PDFs, imagens de sessão |

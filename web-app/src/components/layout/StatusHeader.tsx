@@ -32,8 +32,10 @@ interface StatusHeaderProps {
 export function StatusHeader({ label, variant = 'idle' }: StatusHeaderProps) {
   return (
     <div
-      className={`rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 transition-colors duration-300 ${VARIANT_STYLES[variant]}`}
+      key={label}
+      className={`rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 transition-all duration-500 ease-out motion-reduce:transition-none animate-in fade-in duration-500 ${VARIANT_STYLES[variant]}`}
       role="status"
+      aria-live="polite"
     >
       {label}
     </div>

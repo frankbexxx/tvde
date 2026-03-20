@@ -26,6 +26,10 @@ export interface MapViewProps {
   route?: RoutePoints | null
   className?: string
   overlay?: ReactNode
+  /** A014: false = placeholder com mesma altura (ex. requested ou sem GPS do motorista) */
+  showMap?: boolean
+  /** Mensagem quando showMap é false */
+  mapPlaceholder?: string
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -38,7 +42,15 @@ const MAPTILER_STYLE = MAPTILER_KEY
   ? `https://api.maptiler.com/maps/basic-v2/style.json?key=${MAPTILER_KEY}`
   : DEFAULT_MAP_STYLE
 
-export function MapView({ passengerLocation, driverLocation, route, className, overlay }: MapViewProps) {
+export function MapView({
+  passengerLocation,
+  driverLocation,
+  route,
+  className,
+  overlay,
+  showMap = true,
+  mapPlaceholder = 'Mapa indisponível neste momento.',
+}: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
   const [hasInitialFit, setHasInitialFit] = useState(false)
@@ -56,6 +68,11 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
 
   // Fetch OSRM route when endpoints change (debounced by key)
   useEffect(() => {
+    if (!showMap) {
+      setRouteGeometry(null)
+      setLastRouteKey(null)
+      return
+    }
     if (!route) {
       setRouteGeometry(null)
       setLastRouteKey(null)
@@ -87,7 +104,7 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [route?.from.lat, route?.from.lng, route?.to.lat, route?.to.lng])
+  }, [showMap, route?.from.lat, route?.from.lng, route?.to.lat, route?.to.lng])
 
   // On first availability of a passenger location, gently recenter the map
   useEffect(() => {
@@ -118,8 +135,27 @@ export function MapView({ passengerLocation, driverLocation, route, className, o
     })
   }, [driverLocation])
 
+  const frameClass = `relative w-full rounded-2xl overflow-hidden shadow-card bg-card transition-opacity duration-500 ease-out motion-reduce:transition-none ${className ?? ''}`
+
+  if (!showMap) {
+    return (
+      <div className={frameClass}>
+        <div
+          className="h-[45vh] min-h-[220px] max-h-[420px] flex flex-col items-center justify-center gap-3 px-6 bg-muted/60 border border-dashed border-border animate-in fade-in duration-500"
+          role="region"
+          aria-label="Mapa"
+        >
+          <p className="text-center text-base font-medium text-foreground max-w-sm">{mapPlaceholder}</p>
+          <p className="text-center text-sm text-muted-foreground max-w-xs">
+            O mapa aparece quando o motorista tiver posição ativa.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className={`relative w-full rounded-2xl overflow-hidden shadow-card bg-card ${className ?? ''}`}>
+    <div className={`${frameClass} animate-in fade-in duration-500`}>
       <div className="h-[45vh] min-h-[220px] max-h-[420px]">
         <Map
           ref={mapRef}

@@ -16,7 +16,7 @@ const UX_STATE_DELAY_MS = 400
 
 function deriveRawUxState(
   activeTrip: TripDetailResponse | null | undefined,
-  hasDriverLocation: boolean,
+  _hasDriverLocation: boolean,
   tripCompletedFromLocation: boolean
 ): PassengerUxState | null {
   if (tripCompletedFromLocation || activeTrip?.status === 'completed') {
@@ -24,14 +24,15 @@ function deriveRawUxState(
   }
   if (!activeTrip) return null
 
+  // A014: `assigned` = motorista encontrado, mesmo sem GPS ainda (não confundir com SEARCHING).
   switch (activeTrip.status) {
     case 'ongoing':
       return 'TRIP_ONGOING'
     case 'arriving':
       return 'DRIVER_ARRIVING'
-    case 'accepted':
     case 'assigned':
-      return hasDriverLocation ? 'DRIVER_ASSIGNED' : 'SEARCHING_DRIVER'
+    case 'accepted':
+      return 'DRIVER_ASSIGNED'
     case 'requested':
       return 'SEARCHING_DRIVER'
     default:
