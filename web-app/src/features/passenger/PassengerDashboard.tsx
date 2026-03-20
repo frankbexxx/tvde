@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
@@ -50,8 +50,11 @@ export function PassengerDashboard() {
   const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
-  /** A015: pickup escolhido no mapa (sem backend até A018) */
+  /** A015/A016: planeamento no mapa (sem backend até A018) */
   const [pickupLocation, setPickupLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [dropoffLocation, setDropoffLocation] = useState<{ lat: number; lng: number } | null>(null)
+  /** Ref espelha pickup para cliques muito rápidos (1º vs 2º clique antes do re-render) */
+  const pickupLocationRef = useRef<{ lat: number; lng: number } | null>(null)
 
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getTripHistory(token!),
@@ -81,11 +84,24 @@ export function PassengerDashboard() {
   }, [activeTripId, activeTrip, activeTripLoading, setPassengerActiveTripId, setStatus])
 
   useEffect(() => {
-    if (activeTripId) setPickupLocation(null)
+    pickupLocationRef.current = pickupLocation
+  }, [pickupLocation])
+
+  useEffect(() => {
+    if (activeTripId) {
+      setPickupLocation(null)
+      setDropoffLocation(null)
+      pickupLocationRef.current = null
+    }
   }, [activeTripId])
 
-  const handlePickupMapSelect = useCallback((coords: { lat: number; lng: number }) => {
-    setPickupLocation(coords)
+  const handlePlanningMapClick = useCallback((coords: { lat: number; lng: number }) => {
+    if (!pickupLocationRef.current) {
+      pickupLocationRef.current = coords
+      setPickupLocation(coords)
+      return
+    }
+    setDropoffLocation(coords)
   }, [])
 
   const handleRequestTrip = async () => {
@@ -322,12 +338,13 @@ export function PassengerDashboard() {
       <div className="space-y-6 mt-6 transition-opacity duration-300 ease-out">
         <StatusHeader label={banner.label} variant={banner.variant} />
 
-        {/* A014: em viagem, mapa só com motorista + GPS; A015: em idle, mapa clicável para pickup */}
+        {/* A014: em viagem, mapa só com motorista + GPS; A015/A016: planeamento com pickup + dropoff */}
         <MapView
           showMap={showMapOnScreen}
           mapPlaceholder={mapPlaceholder}
           pickupSelection={isPickupPlanningMode ? pickupLocation : null}
-          onPickupSelect={isPickupPlanningMode ? handlePickupMapSelect : undefined}
+          dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
+          onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
           passengerLocation={
             passengerLocation ?? (activeTrip
               ? {
@@ -345,7 +362,11 @@ export function PassengerDashboard() {
             className="text-center text-sm font-medium text-muted-foreground -mt-2 transition-colors duration-300"
             aria-live="polite"
           >
-            {pickupLocation ? 'Origem selecionada' : 'Seleciona ponto de recolha'}
+            {!pickupLocation
+              ? 'Seleciona ponto de recolha'
+              : !dropoffLocation
+                ? 'Seleciona destino'
+                : 'Rota definida'}
           </p>
         )}
 

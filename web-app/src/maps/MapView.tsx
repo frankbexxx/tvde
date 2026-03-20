@@ -30,9 +30,12 @@ export interface MapViewProps {
   showMap?: boolean
   /** Mensagem quando showMap é false */
   mapPlaceholder?: string
-  /** A015: clique no mapa → coords WGS84 (substitui pickup anterior; um marcador) */
+  /** A015/A016: recolha (âmbar) */
   pickupSelection?: LatLng | null
-  onPickupSelect?: (coords: LatLng) => void
+  /** A016: destino (cor distinta) */
+  dropoffSelection?: LatLng | null
+  /** A016: um clique → pickup se ainda não existe, senão atualiza só dropoff */
+  onPlanningMapClick?: (coords: LatLng) => void
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -54,7 +57,8 @@ export function MapView({
   showMap = true,
   mapPlaceholder = 'Mapa indisponível neste momento.',
   pickupSelection = null,
-  onPickupSelect,
+  dropoffSelection = null,
+  onPlanningMapClick,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -142,11 +146,11 @@ export function MapView({
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
-      if (!onPickupSelect) return
+      if (!onPlanningMapClick) return
       const { lng, lat } = e.lngLat
-      onPickupSelect({ lat, lng })
+      onPlanningMapClick({ lat, lng })
     },
-    [onPickupSelect]
+    [onPlanningMapClick]
   )
 
   const frameClass = `relative w-full rounded-2xl overflow-hidden shadow-card bg-card transition-opacity duration-500 ease-out motion-reduce:transition-none ${className ?? ''}`
@@ -176,11 +180,15 @@ export function MapView({
           mapLib={maplibregl}
           initialViewState={initialViewState}
           reuseMaps
-          style={{ width: '100%', height: '100%', cursor: onPickupSelect ? 'crosshair' : undefined }}
+          style={{
+            width: '100%',
+            height: '100%',
+            cursor: onPlanningMapClick ? 'crosshair' : undefined,
+          }}
           mapStyle={MAPTILER_STYLE}
-          onClick={onPickupSelect ? handleMapClick : undefined}
+          onClick={onPlanningMapClick ? handleMapClick : undefined}
         >
-          {/* A015: um marcador de recolha OU marcador de passageiro (nunca ambos no mesmo modo) */}
+          {/* A015/A016: pickup âmbar; passageiro só se ainda sem pickup */}
           {pickupSelection ? (
             <PassengerMarker
               longitude={pickupSelection.lng}
@@ -192,6 +200,13 @@ export function MapView({
               <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
             )
           )}
+          {dropoffSelection ? (
+            <PassengerMarker
+              longitude={dropoffSelection.lng}
+              latitude={dropoffSelection.lat}
+              colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-lg"
+            />
+          ) : null}
 
           {/* Driver marker */}
           {driverLocation && (
