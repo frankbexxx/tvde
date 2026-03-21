@@ -16,7 +16,10 @@ import { DevTools } from '../shared/DevTools'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
 import { getRouteGeoJSON } from '../../maps/routing'
+import { getOsrmRouteMeta } from '../../services/routingService'
+import { reverseGeocode } from '../../services/geocoding'
 import { getDriverLocation } from '../../services/trackingService'
+import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
 import {
@@ -61,6 +64,17 @@ export function PassengerDashboard() {
   const [planningRouteGeoJSON, setPlanningRouteGeoJSON] = useState<FeatureCollection<LineString> | null>(
     null
   )
+  /** A019: moradas e meta de rota para painel de confirmação */
+  const [pickupAddress, setPickupAddress] = useState<string | null>(null)
+  const [dropoffAddress, setDropoffAddress] = useState<string | null>(null)
+  const [pickupAddressLoading, setPickupAddressLoading] = useState(false)
+  const [dropoffAddressLoading, setDropoffAddressLoading] = useState(false)
+  const [confirmRouteMeta, setConfirmRouteMeta] = useState<{
+    durationSec: number
+    distanceM: number
+  } | null>(null)
+  const [confirmRouteMetaLoading, setConfirmRouteMetaLoading] = useState(false)
+  const mapAnchorRef = useRef<HTMLDivElement | null>(null)
 
   const { data: history, refetch: refetchHistory } = usePolling(
     () => getTripHistory(token!),
@@ -94,6 +108,40 @@ export function PassengerDashboard() {
   }, [pickupLocation])
 
   useEffect(() => {
+    if (!pickupLocation) {
+      setPickupAddress(null)
+      return
+    }
+    let cancelled = false
+    setPickupAddressLoading(true)
+    void reverseGeocode(pickupLocation.lng, pickupLocation.lat).then((addr) => {
+      if (!cancelled) setPickupAddress(addr)
+    }).finally(() => {
+      if (!cancelled) setPickupAddressLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [pickupLocation])
+
+  useEffect(() => {
+    if (!dropoffLocation) {
+      setDropoffAddress(null)
+      return
+    }
+    let cancelled = false
+    setDropoffAddressLoading(true)
+    void reverseGeocode(dropoffLocation.lng, dropoffLocation.lat).then((addr) => {
+      if (!cancelled) setDropoffAddress(addr)
+    }).finally(() => {
+      if (!cancelled) setDropoffAddressLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [dropoffLocation])
+
+  useEffect(() => {
     if (activeTripId) {
       setPickupLocation(null)
       setDropoffLocation(null)
@@ -107,8 +155,12 @@ export function PassengerDashboard() {
     setDropoffLocation(null)
     setIsPlanningMode(false)
     pickupLocationRef.current = null
+    setPickupAddress(null)
+    setDropoffAddress(null)
+    setConfirmRouteMeta(null)
   }, [])
 
+  /** A019: com pickup+dropoff, novo clique actualiza só o destino */
   const handlePlanningMapClick = useCallback((coords: { lat: number; lng: number }) => {
     if (!pickupLocationRef.current) {
       pickupLocationRef.current = coords
@@ -173,9 +225,6 @@ export function PassengerDashboard() {
     }
   }
 
-  const isActiveStatus = (s: string) =>
-    ['requested', 'assigned', 'accepted', 'arriving', 'ongoing'].includes(s)
-
   // B002: UX state with 500ms delay to avoid flicker (must be declared before useEffects that use it)
   const uxState = usePassengerUxState(
     activeTrip,
@@ -226,6 +275,46 @@ export function PassengerDashboard() {
   const isTripIdle = !activeTripId && !creating && !tripCompletedFromLocation
   const isPickupPlanningMode = isTripIdle && isPlanningMode
 
+  /** A019: estado UX explícito (Uber-like) */
+  const passengerUiState: PassengerUIState = useMemo(() => {
+    if (tripCompletedFromLocation) return 'idle'
+    if (creating && !activeTripId) return 'searching'
+    if (activeTripId && !activeTrip) return 'searching'
+    if (activeTripId && activeTrip) {
+      if (activeTrip.status === 'requested') return 'searching'
+      if (['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status)) return 'in_trip'
+      return 'idle'
+    }
+    if (!activeTripId && !creating && !tripCompletedFromLocation) {
+      if (!isPlanningMode) return 'idle'
+      if (pickupLocation && dropoffLocation) return 'confirming'
+      return 'planning'
+    }
+    return 'idle'
+  }, [
+    tripCompletedFromLocation,
+    creating,
+    activeTripId,
+    activeTrip,
+    isPlanningMode,
+    pickupLocation,
+    dropoffLocation,
+  ])
+
+  /** Painel inferior: omitir "searching" duplicado quando já há PassengerStatusCard em requested */
+  const showTripPlannerPanel = useMemo(() => {
+    if (tripCompletedFromLocation) return false
+    if (creating && !activeTripId) return true
+    if (activeTripId && !activeTrip) return false
+    if (activeTripId && activeTrip?.status === 'requested') return false
+    if (activeTripId && activeTrip) {
+      if (['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status)) return true
+      return false
+    }
+    if (isTripIdle) return true
+    return false
+  }, [tripCompletedFromLocation, creating, activeTripId, activeTrip, isTripIdle])
+
   const showMapOnScreen = showPassengerMap || isTripIdle
 
   // A017: OSRM público só com os dois pontos e sem viagem activa
@@ -249,6 +338,39 @@ export function PassengerDashboard() {
       cancelled = true
     }
   }, [isPickupPlanningMode, pickupLocation, dropoffLocation])
+
+  /** A019: distância / ETA no ecrã de confirmação */
+  useEffect(() => {
+    const confirming =
+      isPlanningMode &&
+      pickupLocation &&
+      dropoffLocation &&
+      !activeTripId &&
+      !creating &&
+      !tripCompletedFromLocation
+    if (!confirming) {
+      setConfirmRouteMeta(null)
+      setConfirmRouteMetaLoading(false)
+      return
+    }
+    let cancelled = false
+    setConfirmRouteMetaLoading(true)
+    void getOsrmRouteMeta(pickupLocation, dropoffLocation).then((m) => {
+      if (!cancelled) setConfirmRouteMeta(m)
+    }).finally(() => {
+      if (!cancelled) setConfirmRouteMetaLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [
+    isPlanningMode,
+    pickupLocation,
+    dropoffLocation,
+    activeTripId,
+    creating,
+    tripCompletedFromLocation,
+  ])
 
   const routeForMap = useMemo(() => {
     if (showPassengerMap && activeTrip) {
@@ -276,25 +398,19 @@ export function PassengerDashboard() {
 
   const showSubmittingCard = creating && !activeTripId
 
-  const showPrimaryButton =
-    !activeTripId ||
-    isActiveStatus(activeTrip?.status ?? '') ||
-    activeTrip?.status === 'completed'
+  /** A019: botão fixo só para ciclo de viagem activa (Cancelar / Pedir nova viagem) */
+  const showBottomPrimary =
+    !!activeTripId &&
+    (activeTrip?.status === 'completed' ||
+      (!!activeTrip &&
+        ['requested', 'assigned', 'accepted', 'arriving'].includes(activeTrip.status)))
 
-  const primaryLabel = !activeTripId
-    ? 'Pedir viagem'
-    : activeTrip?.status === 'completed'
+  const primaryLabel =
+    activeTrip?.status === 'completed'
       ? 'Pedir nova viagem'
-      : ['requested', 'assigned', 'accepted', 'arriving'].includes(activeTrip?.status ?? '')
+      : activeTrip && ['requested', 'assigned', 'accepted', 'arriving'].includes(activeTrip.status)
         ? 'Cancelar'
         : null
-
-  const primaryPlanningDisabled =
-    !!primaryLabel &&
-    primaryLabel === 'Pedir viagem' &&
-    !activeTripId &&
-    isPlanningMode &&
-    (!pickupLocation || !dropoffLocation)
 
   const primaryOnClick =
     primaryLabel === 'Pedir nova viagem'
@@ -304,9 +420,7 @@ export function PassengerDashboard() {
         }
       : primaryLabel === 'Cancelar'
         ? handleCancel
-        : primaryLabel === 'Pedir viagem' && !activeTripId && !isPlanningMode
-          ? () => setIsPlanningMode(true)
-          : handleRequestTrip
+        : () => {}
 
   // When trip completed (from driver-location 409 or trip poll): show TRIP_COMPLETED, then clear after 2s.
   useEffect(() => {
@@ -362,15 +476,11 @@ export function PassengerDashboard() {
   return (
     <ScreenContainer
       bottomButton={
-        showPrimaryButton && primaryLabel ? (
+        showBottomPrimary && primaryLabel ? (
           <PrimaryActionButton
             onClick={primaryOnClick}
-            disabled={
-              creating ||
-              primaryPlanningDisabled ||
-              (!!activeTripId && primaryLabel !== 'Cancelar' && primaryLabel !== 'Pedir nova viagem')
-            }
-            loading={creating}
+            disabled={!!activeTripId && primaryLabel !== 'Cancelar' && primaryLabel !== 'Pedir nova viagem'}
+            loading={false}
             variant={primaryLabel === 'Cancelar' ? 'danger' : 'primary'}
           >
             {primaryLabel}
@@ -396,47 +506,46 @@ export function PassengerDashboard() {
         <StatusHeader label={banner.label} variant={banner.variant} />
 
         {/* A014: em viagem, mapa só com motorista + GPS; A015/A016: planeamento com pickup + dropoff */}
-        <MapView
-          showMap={showMapOnScreen}
-          mapPlaceholder={mapPlaceholder}
-          pickupSelection={isPickupPlanningMode ? pickupLocation : null}
-          dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
-          onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
-          passengerLocation={
-            passengerLocation ?? (activeTrip
-              ? {
-                  lat: activeTrip.origin_lat,
-                  lng: activeTrip.origin_lng,
-                }
-              : DEMO_ORIGIN)
-          }
-          driverLocation={driverLocation ?? undefined}
-          route={routeForMap}
-          planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
-        />
+        <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
+          <MapView
+            showMap={showMapOnScreen}
+            mapPlaceholder={mapPlaceholder}
+            pickupSelection={isPickupPlanningMode ? pickupLocation : null}
+            dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
+            onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
+            passengerLocation={
+              passengerLocation ?? (activeTrip
+                ? {
+                    lat: activeTrip.origin_lat,
+                    lng: activeTrip.origin_lng,
+                  }
+                : DEMO_ORIGIN)
+            }
+            driverLocation={driverLocation ?? undefined}
+            route={routeForMap}
+            planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
+          />
+        </div>
 
-        {isPickupPlanningMode && (
-          <div className="-mt-2 flex flex-col items-center gap-2">
-            <p
-              className="text-center text-sm font-medium text-muted-foreground transition-colors duration-300"
-              aria-live="polite"
-            >
-              {!pickupLocation
-                ? 'Seleciona ponto de recolha'
-                : !dropoffLocation
-                  ? 'Seleciona destino'
-                  : 'Rota definida'}
-            </p>
-            {pickupLocation && (
-              <button
-                type="button"
-                onClick={resetPlanning}
-                className="rounded-lg border border-border bg-muted/80 px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-              >
-                Repor
-              </button>
-            )}
-          </div>
+        {showTripPlannerPanel && (
+          <TripPlannerPanel
+            uiState={passengerUiState}
+            hasPickup={!!pickupLocation}
+            hasDropoff={!!dropoffLocation}
+            pickupAddress={pickupAddress}
+            dropoffAddress={dropoffAddress}
+            pickupAddressLoading={pickupAddressLoading}
+            dropoffAddressLoading={dropoffAddressLoading}
+            routeMeta={confirmRouteMeta}
+            routeMetaLoading={confirmRouteMetaLoading}
+            activeTrip={activeTrip ?? null}
+            onChooseMap={() => setIsPlanningMode(true)}
+            onSetDestinationHint={() =>
+              mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }
+            onReset={resetPlanning}
+            onConfirmTrip={handleRequestTrip}
+          />
         )}
 
         {error && (
@@ -453,11 +562,9 @@ export function PassengerDashboard() {
           </div>
         )}
 
-        {/* A014: loading (envio) separado de waiting (à procura) */}
-        {(activeTripId || creating) && (
-          showSubmittingCard ? (
-            <PassengerStatusCard isSubmittingTrip uxState={null} activeTrip={null} />
-          ) : uxState && activeTrip ? (
+        {/* A014: estado da viagem; A019: envio inicial usa TripPlannerPanel (searching) */}
+        {(activeTripId || creating) && !showSubmittingCard && (
+          uxState && activeTrip ? (
             <PassengerStatusCard uxState={uxState} activeTrip={activeTrip} />
           ) : (
             <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 animate-in fade-in duration-300">

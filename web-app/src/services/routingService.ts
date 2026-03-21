@@ -71,4 +71,37 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteGeometry 
   }
 }
 
+/** A019: duração e distância para UI de confirmação (mesmo endpoint OSRM, sem geometria pesada). */
+export async function getOsrmRouteMeta(
+  from: LatLng,
+  to: LatLng
+): Promise<{ durationSec: number; distanceM: number } | null> {
+  const baseUrl = 'https://router.project-osrm.org/route/v1/driving'
+  const coords = `${from.lng},${from.lat};${to.lng},${to.lat}`
+  const url = `${baseUrl}/${coords}?overview=false`
+
+  const run = async () => {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      routes?: Array<{ duration?: number; distance?: number }>
+    }
+    const r = data.routes?.[0]
+    if (r == null || typeof r.duration !== 'number' || typeof r.distance !== 'number') {
+      return null
+    }
+    return { durationSec: r.duration, distanceM: r.distance }
+  }
+
+  try {
+    return await run()
+  } catch {
+    try {
+      return await run()
+    } catch {
+      return null
+    }
+  }
+}
+
 
