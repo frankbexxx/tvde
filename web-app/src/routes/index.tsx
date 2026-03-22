@@ -12,13 +12,22 @@ import { Spinner } from '../components/ui/Spinner'
 
 export function AppRoutes() {
   const { pathname } = useLocation()
-  const { isLoading, betaMode, isAuthenticated, isAdmin, logout, loadError, loadTokens } = useAuth()
+  const {
+    isLoading,
+    betaMode,
+    isAuthenticated,
+    isAdmin,
+    logout,
+    loadError,
+    loadTokens,
+    splashPrimary,
+  } = useAuth()
 
   if (isLoading) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-background px-4">
         <Spinner size="lg" />
-        <p className="text-foreground text-base font-medium text-center">A iniciar serviço…</p>
+        <p className="text-foreground text-base font-medium text-center">{splashPrimary}</p>
         <p className="text-muted-foreground/90 text-sm text-center max-w-xs">
           Isto pode demorar alguns segundos na primeira utilização
         </p>

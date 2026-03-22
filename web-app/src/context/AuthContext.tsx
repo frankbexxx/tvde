@@ -14,12 +14,15 @@ import {
   withColdStartRetries,
   type ApiError,
 } from '../api/client'
+import { validateAccessToken } from '../api/session'
 import {
   getConfig,
   getDevTokens,
   login as loginApi,
   type AuthTokens,
 } from '../api/auth'
+import { clearAuthStorage, getStoredAccessToken, setStoredAccessToken } from '../utils/authStorage'
+import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { useActivityLog } from './ActivityLogContext'
 
 export type Role = 'passenger' | 'driver' | 'admin'
@@ -36,6 +39,10 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
   isAdmin: boolean
+  /** A020: true durante boot + verificação de sessão */
+  isLoadingAuth: boolean
+  /** A020: copy do ecrã de arranque (boot vs sessão) */
+  splashPrimary: string
   loadError: string | null
   setRole: (role: Role) => void
   loadTokens: () => Promise<void>
@@ -55,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [betaMode, setBetaMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [splashPrimary, setSplashPrimary] = useState('A iniciar serviço…')
 
   const role = useMemo<Role>(() => {
     if (pathname.startsWith('/admin')) return 'admin'
@@ -81,12 +89,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
     setLoadError(null)
+    setSplashPrimary('A iniciar serviço…')
     setStatus('A iniciar serviço...')
     try {
       const config = await withColdStartRetries((timeoutMs) => getConfig(timeoutMs))
       setBetaMode(config.beta_mode)
       if (config.beta_mode) {
         setTokens(null)
+        setBetaToken(null)
+        setBetaUserId(null)
+        setSplashPrimary('A verificar sessão…')
+        setStatus('A verificar sessão…')
+        const tok = getStoredAccessToken()
+        if (tok) {
+          if (isJwtExpired(tok)) {
+            clearAuthStorage()
+            addLog('Sessão expirada (token)', 'info')
+          } else {
+            const p = parseJwtPayload(tok)
+            if (!p?.sub) {
+              clearAuthStorage()
+            } else {
+              const r = (p.role as Role) ?? 'passenger'
+              setBetaToken(tok)
+              setBetaRole(r)
+              setBetaUserId(p.sub)
+              setTokens({
+                passenger: tok,
+                driver: tok,
+                admin: tok,
+              })
+              const ok = await validateAccessToken(tok)
+              if (!ok) {
+                clearAuthStorage()
+                setBetaToken(null)
+                setBetaUserId(null)
+                setTokens(null)
+                addLog('Sessão inválida no servidor', 'info')
+              } else {
+                addLog('Sessão restaurada', 'success')
+              }
+            }
+          }
+        }
         setStatus('Pronto')
         addLog('Modo BETA ativo', 'info')
       } else {
@@ -112,6 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setTokens(null)
       setBetaMode(false)
+      setBetaToken(null)
+      setBetaUserId(null)
 
       const FINAL_FAIL =
         'Não foi possível ligar ao servidor. Tenta novamente.'
@@ -159,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await loginApi(phone, password, requestedRole)
         const token = res.access_token
         console.log('LOGIN TOKEN:', token)
-        localStorage.setItem('token', token)
+        setStoredAccessToken(token)
         setBetaToken(token)
         setBetaRole(res.role as Role)
         setBetaUserId(res.user_id)
@@ -182,7 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token')
+    clearAuthStorage()
     setTokens(null)
     setBetaToken(null)
     setBetaRole('passenger')
@@ -218,6 +265,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       tokens,
       isAdmin,
+      isLoadingAuth: isLoading,
+      splashPrimary,
       loadError,
       setRole,
       loadTokens,
@@ -233,6 +282,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       tokens,
       isAdmin,
+      splashPrimary,
       loadError,
       setRole,
       loadTokens,

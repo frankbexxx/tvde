@@ -1,7 +1,8 @@
 /**
  * API client with base URL from env, token injection, 401 handling, and timeout.
- * Token stored in memory (AuthContext).
+ * Token: AuthContext + localStorage access_token (A020).
  */
+import { getStoredAccessToken } from '../utils/authStorage'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
 
@@ -44,7 +45,7 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string | null; timeoutMs?: number } = {}
 ): Promise<T> {
-  const token = options.token ?? tokenGetter?.() ?? localStorage.getItem('token')
+  const token = options.token ?? tokenGetter?.() ?? getStoredAccessToken()
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
