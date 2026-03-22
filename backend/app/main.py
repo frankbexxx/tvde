@@ -140,10 +140,14 @@ app.openapi = custom_openapi
 # Request ID for tracing (runs first on request)
 app.add_middleware(RequestIDMiddleware)
 
-# CORS for frontend on different origin (e.g. Render static site)
+# CORS: origens explícitas (credentials + JWT — não usar "*")
+CORS_ORIGINS = [
+    "https://tvde-app-j51f.onrender.com",
+    "http://localhost:5173",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://tvde-app.onrender.com"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
