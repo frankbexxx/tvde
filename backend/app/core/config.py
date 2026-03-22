@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     ENABLE_DEV_TOOLS: bool = False  # When True, /dev/seed and /dev/tokens work in production (for field validation)
     BETA_MODE: bool = False  # When True, rate limit request_trip (5/min per user)
 
+    # CORS: comma-separated browser origins (no "*"). Must include the static site URL when using credentials.
+    # Override on Render if the frontend hostname changes. Default matches production + Vite dev.
+    CORS_ALLOWED_ORIGINS: str = (
+        "https://tvde-app-j51f.onrender.com,http://localhost:5173"
+    )
+
     # BETA mode for 15-20 real users (presential tests)
     ADMIN_PHONE: str | None = None  # e.g. +351924075365 — auto-admin, no approval
     MAX_BETA_USERS: int = 30

@@ -773,10 +773,11 @@ Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger)
 | `CANCELLATION_FEE_MIN` | Mínimo em € (default 1.50) |
 | `BETA_MODE` | Modo BETA (login por telefone, rate limit) |
 | `ENABLE_DEV_TOOLS` | Seed, tokens, debug em produção |
+| `CORS_ALLOWED_ORIGINS` | Origens CORS separadas por vírgula (sem `*`). Default: frontend Render + `http://localhost:5173` |
 
 ### Frontend (Render tvde-app)
 
 | Variável | Descrição |
 |----------|-----------|
-| `VITE_API_URL` | URL do backend (ex: `https://tvde-api-xxx.onrender.com`) |
+| `VITE_API_URL` | URL do backend (produção: `https://tvde-api-fd2z.onrender.com`) |
 | `VITE_MAPTILER_KEY` | Chave MapTiler para tiles do mapa |

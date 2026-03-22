@@ -65,7 +65,7 @@ Exemplo: `interaction_logs_a3f2b1c8_run3_2026-02-22.csv`
 
 ```bash
 curl -H "Authorization: Bearer <admin_token>" \
-  "https://tvde-api.onrender.com/admin/export-logs?format=csv" \
+  "https://tvde-api-fd2z.onrender.com/admin/export-logs?format=csv" \
   -o interaction_logs.csv
 ```
 

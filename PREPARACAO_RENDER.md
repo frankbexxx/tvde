@@ -108,7 +108,7 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 
 | Key | Value |
 |-----|-------|
-| `VITE_API_URL` | `https://tvde-api.onrender.com` (o URL do teu backend) |
+| `VITE_API_URL` | `https://tvde-api-fd2z.onrender.com` (URL real do teu tvde-api no Render) |
 
 5. Clica **Create Static Site**.
 6. Espera o build terminar.
@@ -117,7 +117,7 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
    - **Destination:** `/index.html`
    - **Action:** Rewrite
    (Isto evita 404 ao recarregar em `/passenger` ou `/driver`.)
-8. Copia o **URL** do site (ex: `https://tvde-app.onrender.com`).
+8. Copia o **URL** do site (ex: `https://tvde-app-j51f.onrender.com`).
 
 ---
 
@@ -138,16 +138,19 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 - O PostgreSQL tem limite de dados e conexões.
 - Para validação humana, o adormecimento pode ser aceitável — avisa os testadores que o primeiro carregamento pode demorar.
 
-### URLs
+### URLs (canónicos — produção actual)
 
-- **Frontend:** `https://tvde-app.onrender.com` (ou o nome que escolheste)
-- **Backend:** `https://tvde-api.onrender.com`
-- **Health check:** `https://tvde-api.onrender.com/health`
+| Serviço | URL |
+|---------|-----|
+| **Frontend (static)** | `https://tvde-app-j51f.onrender.com` |
+| **Backend (API)** | `https://tvde-api-fd2z.onrender.com` |
+| **Health** | `https://tvde-api-fd2z.onrender.com/health` |
 
-**URLs em produção (atual):**
+**CORS (backend):** o API só aceita origens listadas em `CORS_ALLOWED_ORIGINS` (vírgulas, sem `*`). O default no código já inclui o frontend acima + `http://localhost:5173`. No Render (**tvde-api**), podes definir explicitamente:
 
-- **Backend:** `https://tvde-api-fd2z.onrender.com`
-- **Health check:** `https://tvde-api-fd2z.onrender.com/health`
+`CORS_ALLOWED_ORIGINS` = `https://tvde-app-j51f.onrender.com,http://localhost:5173`
+
+Isto deve ser consistente com o URL real do browser ao abrir a app (origem = barra de endereços).
 
 ### Stripe
 

@@ -137,17 +137,21 @@ app = FastAPI(title="Ride Sharing API", version="0.1.0", lifespan=lifespan)
 
 app.openapi = custom_openapi
 
+
+def _cors_allowed_origins() -> list[str]:
+    raw = (settings.CORS_ALLOWED_ORIGINS or "").strip()
+    if not raw:
+        return ["https://tvde-app-j51f.onrender.com", "http://localhost:5173"]
+    return [p.strip() for p in raw.split(",") if p.strip()]
+
+
 # Request ID for tracing (runs first on request)
 app.add_middleware(RequestIDMiddleware)
 
-# CORS: origens explícitas (credentials + JWT — não usar "*")
-CORS_ORIGINS = [
-    "https://tvde-app-j51f.onrender.com",
-    "http://localhost:5173",
-]
+# CORS: origens explícitas (credentials + JWT — não usar "*"). Lista em CORS_ALLOWED_ORIGINS (config / Render).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=_cors_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

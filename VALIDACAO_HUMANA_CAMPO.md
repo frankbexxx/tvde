@@ -25,8 +25,8 @@ A app corre em produção no Render. Segue o guia **PREPARACAO_RENDER.md** para:
 5. Executar Seed
 
 Quando terminares, tens:
-- **URL da app:** `https://tvde-app.onrender.com` (ou o teu)
-- **URL do backend:** `https://tvde-api.onrender.com`
+- **URL da app:** `https://tvde-app-j51f.onrender.com`
+- **URL do backend:** `https://tvde-api-fd2z.onrender.com`
 - Tudo acessível por qualquer dispositivo com internet
 
 ---
