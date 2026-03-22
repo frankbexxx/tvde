@@ -52,9 +52,14 @@ export function TripPlannerPanel({
   onReset,
   onConfirmTrip,
 }: TripPlannerPanelProps) {
+  const panelSurface =
+    uiState === 'planning' || uiState === 'confirming'
+      ? 'border-border/90 bg-muted/50 dark:bg-zinc-950/50 shadow-inner'
+      : 'bg-card border-border'
+
   return (
     <section
-      className="rounded-2xl border border-border bg-card shadow-card px-4 py-4 space-y-3"
+      className={`rounded-2xl border shadow-card px-4 py-4 space-y-3 ${panelSurface}`}
       aria-label="Planeamento da viagem"
     >
       {uiState === 'idle' && (
@@ -75,16 +80,16 @@ export function TripPlannerPanel({
 
       {uiState === 'planning' && (
         <>
-          <p className="text-sm font-medium text-muted-foreground">Recolha</p>
-          <p className="text-base text-foreground min-h-[1.5rem]">
+          <p className="text-sm font-semibold text-foreground/90">Recolha</p>
+          <p className="text-base text-foreground min-h-[1.5rem] font-medium">
             {!hasPickup
               ? 'Toca no mapa para escolher recolha'
               : pickupAddressLoading
                 ? 'A obter morada…'
                 : (pickupAddress ?? 'Local selecionado')}
           </p>
-          <p className="text-sm font-medium text-muted-foreground pt-1">Destino</p>
-          <p className="text-base text-foreground min-h-[1.5rem]">
+          <p className="text-sm font-semibold text-foreground/90 pt-1">Destino</p>
+          <p className="text-base text-foreground min-h-[1.5rem] font-medium">
             {!hasDropoff
               ? 'Ainda não definido — toca no mapa'
               : dropoffAddressLoading
@@ -117,15 +122,15 @@ export function TripPlannerPanel({
           <p className="text-base font-semibold text-foreground">Confirma a viagem</p>
           <div className="space-y-2 text-sm">
             <div>
-              <span className="text-muted-foreground">De </span>
-              <span className="text-foreground">{pickupAddress ?? '—'}</span>
+              <span className="text-foreground/75">De </span>
+              <span className="text-foreground font-medium">{pickupAddress ?? '—'}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Para </span>
-              <span className="text-foreground">{dropoffAddress ?? '—'}</span>
+              <span className="text-foreground/75">Para </span>
+              <span className="text-foreground font-medium">{dropoffAddress ?? '—'}</span>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground min-h-[1.25rem]">
+          <div className="flex items-center gap-3 text-sm text-foreground/80 min-h-[1.25rem]">
             {routeMetaLoading ? (
               <span>A calcular percurso…</span>
             ) : routeMeta ? (

@@ -8,7 +8,12 @@ import {
   type ReactNode,
 } from 'react'
 import { useLocation } from 'react-router-dom'
-import { setTokenGetter, type ApiError } from '../api/client'
+import {
+  isTimeoutLikeError,
+  setTokenGetter,
+  withColdStartRetries,
+  type ApiError,
+} from '../api/client'
 import {
   getConfig,
   getDevTokens,
@@ -76,16 +81,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
     setLoadError(null)
-    setStatus('A carregar...')
+    setStatus('A iniciar serviço...')
     try {
-      const config = await getConfig()
+      const config = await withColdStartRetries((timeoutMs) => getConfig(timeoutMs))
       setBetaMode(config.beta_mode)
       if (config.beta_mode) {
         setTokens(null)
         setStatus('Pronto')
         addLog('Modo BETA ativo', 'info')
       } else {
-        const t = await getDevTokens()
+        const t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
         setTokens(t)
         setStatus('Pronto')
         addLog('Tokens carregados', 'success')
@@ -108,18 +113,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTokens(null)
       setBetaMode(false)
 
-      const isTimeout =
-        status === 0 ||
-        detailStr.includes('Servidor indisponível') ||
-        detailStr.toLowerCase().includes('timeout')
+      const FINAL_FAIL =
+        'Não foi possível ligar ao servidor. Tenta novamente.'
+
+      if (isTimeoutLikeError(err)) {
+        setLoadError(FINAL_FAIL)
+        setStatus(FINAL_FAIL)
+        addLog('Falha após retries (timeout/rede)', 'error')
+        return
+      }
 
       let msg: string
       let logLine: string
 
-      if (isTimeout) {
-        msg = 'Servidor indisponível. Tenta novamente.'
-        logLine = 'Timeout ao ligar ao servidor'
-      } else if (status === 401) {
+      if (status === 401) {
         msg = 'Não autorizado. Inicia sessão (modo BETA) ou verifica o token.'
         logLine = '401 ao carregar tokens dev'
       } else if (status === 404) {

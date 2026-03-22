@@ -8,6 +8,7 @@ import { RoleSelector } from '../components/RoleSelector'
 import { ActivityPanel } from '../components/ActivityPanel'
 import { SettingsButton } from '../design-system/components/app/SettingsButton'
 import { useAuth } from '../context/AuthContext'
+import { Spinner } from '../components/ui/Spinner'
 
 export function AppRoutes() {
   const { pathname } = useLocation()
@@ -16,8 +17,11 @@ export function AppRoutes() {
   if (isLoading) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-background px-4">
-        <p className="text-muted-foreground text-base">A carregar...</p>
-        <p className="text-muted-foreground/70 text-sm">Pode demorar na primeira vez</p>
+        <Spinner size="lg" />
+        <p className="text-foreground text-base font-medium text-center">A iniciar serviço…</p>
+        <p className="text-muted-foreground/90 text-sm text-center max-w-xs">
+          Pode demorar na primeira vez
+        </p>
       </div>
     )
   }
@@ -28,7 +32,7 @@ export function AppRoutes() {
         <p className="text-destructive text-base text-center">{loadError}</p>
         <button
           type="button"
-          onClick={() => loadTokens()}
+          onClick={() => void loadTokens()}
           className="rounded-lg bg-primary px-4 py-2 text-primary-foreground font-medium"
         >
           Tentar novamente
