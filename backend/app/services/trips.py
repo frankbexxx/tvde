@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 import time
@@ -125,7 +126,7 @@ def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int
     return estimated_price, distance_km, duration_min, eta_minutes
 
 
-def create_trip(
+async def create_trip(
     *,
     db: Session,
     passenger_id: str,
@@ -169,7 +170,7 @@ def create_trip(
             attempt=attempt,
             max_retries=max_retries,
         )
-        time.sleep(retry_wait_sec)
+        await asyncio.sleep(retry_wait_sec)
         db.expire_all()  # Force fresh read from DB (driver may have sent location)
         offers = create_offers_for_trip(db=db, trip=trip)
         if offers:

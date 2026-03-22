@@ -228,7 +228,7 @@ async def dev_auto_trip(db: Session = Depends(get_db)) -> dict:
         destination_lng=dest_lng,
     )
 
-    trip, _ = create_trip_service(
+    trip, _ = await create_trip_service(
         db=db,
         passenger_id=str(passenger.id),
         payload=payload,

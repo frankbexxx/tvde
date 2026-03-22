@@ -143,7 +143,7 @@ app.add_middleware(RequestIDMiddleware)
 # CORS for frontend on different origin (e.g. Render static site)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://tvde-app.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -153,7 +153,8 @@ app.include_router(health.router)
 app.include_router(cron.router)
 app.include_router(logs.router)
 app.include_router(debug_routes.router)
-app.include_router(dev_tools.router)
+if settings.ENABLE_DEV_TOOLS:
+    app.include_router(dev_tools.router)
 app.include_router(auth.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)

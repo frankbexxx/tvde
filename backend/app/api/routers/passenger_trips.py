@@ -91,7 +91,7 @@ async def create_trip(
     _rate_limit: None = Depends(check_request_trip_rate_limit),
 ) -> TripCreateResponse:
     t0 = time.perf_counter()
-    trip, eta = create_trip_service(
+    trip, eta = await create_trip_service(
         db=db,
         passenger_id=user.user_id,
         payload=payload,

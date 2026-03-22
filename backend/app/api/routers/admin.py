@@ -85,13 +85,15 @@ class AdminUserUpdateRequest(BaseModel):
 
 @router.get("/users", response_model=List[AdminUserItem])
 async def list_users(
+    limit: int = Query(50, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> List[AdminUserItem]:
     """BETA: list all users for admin management."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
-    users = db.execute(select(User).order_by(User.created_at.desc())).scalars().all()
+    users = db.execute(select(User).order_by(User.created_at.desc()).limit(limit).offset(offset)).scalars().all()
     result = []
     for u in users:
         driver = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
@@ -326,6 +328,8 @@ async def reject_driver(
 
 @router.get("/trips/active", response_model=List[TripActiveItem])
 async def list_active_trips(
+    limit: int = Query(50, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> List[TripActiveItem]:
@@ -342,6 +346,8 @@ async def list_active_trips(
             select(Trip)
             .where(Trip.status.in_(active_statuses))
             .order_by(Trip.updated_at.desc())
+            .limit(limit)
+            .offset(offset)
         ).scalars().all()
     )
     return [
