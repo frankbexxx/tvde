@@ -47,10 +47,11 @@ async def _authorize(websocket: WebSocket, trip_id: str) -> bool:
 
 @router.websocket("/ws/trips/{trip_id}")
 async def trip_status_ws(websocket: WebSocket, trip_id: str) -> None:
+    # Mesmo padrão que driver_offers_ws: accept antes de close (Starlette/Cursor-safe)
+    await websocket.accept()
     if not await _authorize(websocket, trip_id):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
-    await websocket.accept()
 
     await hub.subscribe(trip_id, websocket)
     try:
