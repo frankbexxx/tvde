@@ -20,7 +20,7 @@ export function AppRoutes() {
         <Spinner size="lg" />
         <p className="text-foreground text-base font-medium text-center">A iniciar serviço…</p>
         <p className="text-muted-foreground/90 text-sm text-center max-w-xs">
-          Pode demorar na primeira vez
+          Isto pode demorar alguns segundos na primeira utilização
         </p>
       </div>
     )
