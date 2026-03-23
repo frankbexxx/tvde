@@ -45,15 +45,16 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit & { token?: string | null; timeoutMs?: number } = {}
 ): Promise<T> {
-  const token = options.token ?? tokenGetter?.() ?? getStoredAccessToken()
+  const authToken = options.token ?? tokenGetter?.() ?? getStoredAccessToken()
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   }
-  if (token) {
-    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`
+  if (authToken) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${authToken}`
   }
-  const { token: _, timeoutMs = DEFAULT_TIMEOUT_MS, ...init } = options
+  const { token: _omitToken, timeoutMs = DEFAULT_TIMEOUT_MS, ...init } = options
+  void _omitToken
   let res: Response
   try {
     res = await fetchWithTimeout(`${API_BASE}${path}`, { ...init, headers }, timeoutMs)

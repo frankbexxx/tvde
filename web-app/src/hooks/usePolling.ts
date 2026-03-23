@@ -28,6 +28,8 @@ export function usePolling<T>(
     } finally {
       setIsLoading(false)
     }
+    // deps is intentional (callers pass [token] etc.); fn is latest from closure
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
   useEffect(() => {

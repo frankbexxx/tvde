@@ -242,7 +242,7 @@ export function MapView({
                   'line-color': '#8b5cf6',
                   'line-width': 4,
                   'line-opacity': 0.8,
-                } as any,
+                },
               }}
             />
           ) : null}

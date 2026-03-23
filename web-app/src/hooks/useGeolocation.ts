@@ -94,8 +94,10 @@ export function useGeolocation(): GeolocationResult {
     if (isDemoLocationEnabled()) {
       const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
       lastPositionRef.current = fallback
-      setPosition(fallback)
-      setUsedFallback(false)
+      queueMicrotask(() => {
+        setPosition(fallback)
+        setUsedFallback(false)
+      })
       return
     }
 
@@ -104,8 +106,10 @@ export function useGeolocation(): GeolocationResult {
       if (sessionStorage.getItem(GEOLOCATION_FAILED_KEY) === '1') {
         const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
         lastPositionRef.current = fallback
-        setPosition(fallback)
-        setUsedFallback(true)
+        queueMicrotask(() => {
+          setPosition(fallback)
+          setUsedFallback(true)
+        })
         return
       }
     } catch {
@@ -117,7 +121,7 @@ export function useGeolocation(): GeolocationResult {
       return
     }
 
-    const useFallback = () => {
+    const applyFallback = () => {
       try {
         sessionStorage.setItem(GEOLOCATION_FAILED_KEY, '1')
       } catch {
@@ -153,14 +157,14 @@ export function useGeolocation(): GeolocationResult {
 
     const onError = (err: GeolocationPositionError) => {
       console.warn('Geolocation error:', err.code, err.message)
-      useFallback()
+      applyFallback()
     }
 
     // If we don't get any position within 3s, fall back to Lisbon center.
     fallbackTimeoutRef.current = setTimeout(() => {
       if (!lastPositionRef.current) {
         console.warn('Geolocation fallback: using Oeiras (Câmara Municipal) coordinates')
-        useFallback()
+        applyFallback()
       }
     }, 3000)
 

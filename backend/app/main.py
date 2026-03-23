@@ -139,10 +139,13 @@ app.openapi = custom_openapi
 
 
 def _cors_allowed_origins() -> list[str]:
-    raw = (settings.CORS_ALLOWED_ORIGINS or "").strip()
-    if not raw:
+    """Origens a partir de CORS_ALLOWED_ORIGINS (.env / Render). Vírgulas; cada segmento com strip()."""
+    value = settings.CORS_ALLOWED_ORIGINS
+    out = [o.strip() for o in value.split(",") if o.strip()]
+    if not out:
+        # Evita lista vazia se env estiver mal formatada; o default em config.py cobre dev sem .env
         return ["https://tvde-app-j51f.onrender.com", "http://localhost:5173"]
-    return [p.strip() for p in raw.split(",") if p.strip()]
+    return out
 
 
 # Request ID for tracing (runs first on request)
