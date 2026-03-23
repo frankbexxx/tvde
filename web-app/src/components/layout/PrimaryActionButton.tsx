@@ -10,7 +10,7 @@ interface PrimaryActionButtonProps {
 
 /**
  * Fixed-bottom style primary action. Visual focal point.
- * Full width, min 52px height, rounded-2xl, shadow-floating, bold text.
+ * Full width, min 52px height, rounded-full, shadow-floating (CTA), bold text.
  */
 export function PrimaryActionButton({
   children,

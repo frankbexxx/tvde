@@ -398,6 +398,24 @@ export function PassengerDashboard() {
 
   const showSubmittingCard = creating && !activeTripId
 
+  /** A021: um foco por ecrã — header, mapa e painel coordenam peso visual */
+  const a021Layout = useMemo(() => {
+    switch (passengerUiState) {
+      case 'idle':
+        return { statusHeader: 'subdued' as const, map: 'subdued' as const, panel: 'default' as const }
+      case 'planning':
+        return { statusHeader: 'subdued' as const, map: 'emphasized' as const, panel: 'subdued' as const }
+      case 'confirming':
+        return { statusHeader: 'subdued' as const, map: 'subdued' as const, panel: 'default' as const }
+      case 'searching':
+        return { statusHeader: 'default' as const, map: 'subdued' as const, panel: 'subdued' as const }
+      case 'in_trip':
+        return { statusHeader: 'default' as const, map: 'subdued' as const, panel: 'subdued' as const }
+      default:
+        return { statusHeader: 'default' as const, map: 'emphasized' as const, panel: 'default' as const }
+    }
+  }, [passengerUiState])
+
   /** A019: botão fixo só para ciclo de viagem activa (Cancelar / Pedir nova viagem) */
   const showBottomPrimary =
     !!activeTripId &&
@@ -490,7 +508,7 @@ export function PassengerDashboard() {
     >
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Passageiro</h1>
-        <p className="text-muted-foreground mt-1">Pedir e acompanhar viagens</p>
+        <p className="text-foreground/80 mt-1">Pedir e acompanhar viagens</p>
       </header>
 
       <DevTools lastCreatedTripId={activeTripId} onAssigned={refetchHistory} mode="passenger" />
@@ -524,6 +542,7 @@ export function PassengerDashboard() {
             driverLocation={driverLocation ?? undefined}
             route={routeForMap}
             planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
+            mapVisualWeight={a021Layout.map}
           />
         </div>
 
@@ -545,6 +564,7 @@ export function PassengerDashboard() {
             }
             onReset={resetPlanning}
             onConfirmTrip={handleRequestTrip}
+            visualWeight={a021Layout.panel}
           />
         )}
 
@@ -569,8 +589,8 @@ export function PassengerDashboard() {
           ) : (
             <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 animate-in fade-in duration-300">
               <Spinner size="lg" />
-              <p className="text-muted-foreground text-base font-medium">A sincronizar viagem…</p>
-              <p className="text-muted-foreground text-sm text-center px-4">
+              <p className="text-foreground/90 text-base font-medium">A sincronizar viagem…</p>
+              <p className="text-foreground/80 text-sm text-center px-4">
                 A obter o estado mais recente da viagem.
               </p>
             </div>
@@ -586,11 +606,11 @@ export function PassengerDashboard() {
                   key={t.trip_id}
                   className="flex justify-between items-center py-2 border-b border-border last:border-0 transition-opacity duration-150"
                 >
-                  <span className="text-base text-muted-foreground">
+                  <span className="text-base text-foreground/80">
                     {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
                     {formatDestination(t.destination_lat, t.destination_lng)}
                   </span>
-                  <span className="font-medium text-muted-foreground">
+                  <span className="font-medium text-foreground/80">
                     {t.final_price != null ? `${t.final_price} €` : '—'}
                   </span>
                 </li>

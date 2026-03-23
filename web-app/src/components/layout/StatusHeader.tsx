@@ -24,16 +24,29 @@ const VARIANT_STYLES: Record<StatusVariant, string> = {
   error: 'bg-destructive text-destructive-foreground border-border',
 }
 
+export type StatusHeaderVisualWeight = 'default' | 'subdued'
+
 interface StatusHeaderProps {
   label: string
   variant?: StatusVariant
+  /** A021: quando não é o foco do ecrã, reduz peso visual para não competir com painel/mapa */
+  visualWeight?: StatusHeaderVisualWeight
 }
 
-export function StatusHeader({ label, variant = 'idle' }: StatusHeaderProps) {
+export function StatusHeader({
+  label,
+  variant = 'idle',
+  visualWeight = 'default',
+}: StatusHeaderProps) {
+  const isSubdued = visualWeight === 'subdued'
   return (
     <div
       key={label}
-      className={`rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 transition-all duration-500 ease-out motion-reduce:transition-none animate-in fade-in duration-500 ${VARIANT_STYLES[variant]}`}
+      className={`rounded-2xl border text-center transition-all duration-300 ease-out motion-reduce:transition-none animate-in fade-in duration-500 ${VARIANT_STYLES[variant]} ${
+        isSubdued
+          ? 'px-3 py-3 mb-4 text-base font-medium opacity-90 shadow-none border-border/60'
+          : 'px-4 py-4 mb-6 text-xl font-semibold shadow-sm border-border'
+      }`}
       role="status"
       aria-live="polite"
     >

@@ -38,6 +38,8 @@ export interface MapViewProps {
   onPlanningMapClick?: (coords: LatLng) => void
   /** A017: GeoJSON pré-calculado (planeamento); separado da rota de viagem activa */
   planningRouteGeometry?: FeatureCollection<LineString> | null
+  /** A021: mapa como suporte — reduz impacto visual fora do modo planeamento */
+  mapVisualWeight?: 'emphasized' | 'subdued'
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -62,6 +64,7 @@ export function MapView({
   dropoffSelection = null,
   onPlanningMapClick,
   planningRouteGeometry = null,
+  mapVisualWeight = 'emphasized',
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -156,21 +159,30 @@ export function MapView({
     [onPlanningMapClick]
   )
 
-  const frameClass = `relative w-full rounded-2xl overflow-hidden shadow-card bg-card transition-opacity duration-500 ease-out motion-reduce:transition-none ${className ?? ''}`
+  const isSubdued = mapVisualWeight === 'subdued'
+  const frameClass = `relative w-full rounded-2xl overflow-hidden bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${
+    isSubdued ? 'shadow-sm opacity-95' : 'shadow-card'
+  } ${className ?? ''}`
 
   if (!showMap) {
     return (
-      <div className={frameClass}>
+      <div className={`${frameClass} relative`}>
         <div
           className="h-[45vh] min-h-[220px] max-h-[420px] flex flex-col items-center justify-center gap-3 px-6 bg-muted/60 border border-dashed border-border animate-in fade-in duration-500"
           role="region"
           aria-label="Mapa"
         >
           <p className="text-center text-base font-medium text-foreground max-w-sm">{mapPlaceholder}</p>
-          <p className="text-center text-sm text-muted-foreground max-w-xs">
+          <p className="text-center text-sm text-foreground/80 max-w-xs">
             O mapa aparece quando o motorista tiver posição ativa.
           </p>
         </div>
+        {isSubdued && (
+          <div
+            className="pointer-events-none absolute inset-0 rounded-2xl bg-background/25 transition-opacity duration-300"
+            aria-hidden
+          />
+        )}
       </div>
     )
   }
@@ -196,7 +208,7 @@ export function MapView({
             <PassengerMarker
               longitude={pickupSelection.lng}
               latitude={pickupSelection.lat}
-              colorClassName="bg-amber-500 ring-amber-400/60 shadow-lg"
+              colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
             />
           ) : (
             passengerLocation && (
@@ -207,7 +219,7 @@ export function MapView({
             <PassengerMarker
               longitude={dropoffSelection.lng}
               latitude={dropoffSelection.lat}
-              colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-lg"
+              colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
             />
           ) : null}
 
@@ -238,6 +250,12 @@ export function MapView({
       </div>
 
       {overlay && <div className="pointer-events-none absolute inset-0">{overlay}</div>}
+      {isSubdued && (
+        <div
+          className="pointer-events-none absolute inset-0 rounded-2xl bg-background/25 transition-opacity duration-300"
+          aria-hidden
+        />
+      )}
     </div>
   )
 }
