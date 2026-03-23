@@ -6,10 +6,10 @@ web-app/.env
 *.pem
 *.key
 *credentials*
-*secrets*
+# Avoid *secrets* alone: matches DEPLOY_SECRETS.md and breaks Cursor worktree sync.
+*secrets*.json
 unified_payments.csv
 interaction_logs*.csv
-DEPLOY_SECRETS.md
 
 # Logs e exports temporarios
 logs/
