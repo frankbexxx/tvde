@@ -76,19 +76,17 @@ O que **não** está fechado é a **próxima geração**: quando o preço é def
 
 | Item                      | Local                      | Nota                                                                   |
 | ------------------------- | -------------------------- | ---------------------------------------------------------------------- |
-| `create_payment_for_trip` | `app/services/payments.py` | Reservado a fluxos alternativos; não há chamadas.                      |
-| `calculate_driver_payout` | `app/core/pricing.py`      | Comissão real está em `driver.commission_percent` + lógica em `trips`. |
-| `emit_many`               | `app/events/dispatcher.py` | Nunca chamado; só `emit`.                                              |
-| `DomainEvent`             | `app/events/base.py`       | Classe órfã; eventos usam Pydantic (`TripStatusChangedEvent`, etc.).   |
-
-Não são bugs; são **candidatos a remoção ou marcação explícita “FUTURO”** para não confundir quem lê o repo.
+| ~~`create_payment_for_trip`~~ | — | **Removido** (consolidação A022).                                      |
+| `calculate_driver_payout`       | `app/core/pricing.py` | Comissão efectiva em `driver.commission_percent` + `trips`.   |
+| ~~`emit_many`~~                 | — | **Removido**.                                                          |
+| ~~`DomainEvent`~~               | — | **Removido** (`events/base.py` eliminado).                           |
 
 ### Duplicação
 
-| Tema                  | Onde                                                                                | Comentário                                                                                                                      |
-| --------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Haversine             | `app/utils/geo.py` (`haversine_km`) vs `app/services/matching.py` (`_haversine_km`) | Duas implementações da mesma fórmula. **Refactor leve:** `matching` importar `haversine_km` de `geo` e remover `_haversine_km`. |
-| Serialização de trips | `app/api/serializers/trip.py`                                                       | Já **centralizada** — bom padrão; evita divergência entre routers.                                                              |
+| Tema                  | Onde                          | Comentário                                                      |
+| --------------------- | ----------------------------- | --------------------------------------------------------------- |
+| Haversine             | `app/utils/geo.py`            | `matching` importa `haversine_km` — duplicação eliminada (A022). |
+| Serialização de trips | `app/api/serializers/trip.py` | Centralizada entre routers.                                     |
 
 ### Web App
 

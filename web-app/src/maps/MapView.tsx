@@ -38,6 +38,8 @@ export interface MapViewProps {
   onPlanningMapClick?: (coords: LatLng) => void
   /** A017: GeoJSON pré-calculado (planeamento); separado da rota de viagem activa */
   planningRouteGeometry?: FeatureCollection<LineString> | null
+  /** A021: planning = herói; support = mapa secundário (overlay leve) */
+  visualRole?: 'planning' | 'support' | 'neutral'
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -62,6 +64,7 @@ export function MapView({
   dropoffSelection = null,
   onPlanningMapClick,
   planningRouteGeometry = null,
+  visualRole = 'neutral',
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -175,9 +178,17 @@ export function MapView({
     )
   }
 
+  const supportOverlay =
+    visualRole === 'support' ? (
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] rounded-2xl bg-background/20 dark:bg-black/25 transition-opacity duration-500 ease-out"
+        aria-hidden
+      />
+    ) : null
+
   return (
-    <div className={`${frameClass} animate-in fade-in duration-500`}>
-      <div className="h-[45vh] min-h-[220px] max-h-[420px]">
+    <div className={`${frameClass} animate-in fade-in duration-500 relative`}>
+      <div className="relative h-[45vh] min-h-[220px] max-h-[420px]">
         <Map
           ref={mapRef}
           mapLib={maplibregl}
@@ -235,9 +246,10 @@ export function MapView({
             />
           ) : null}
         </Map>
+        {supportOverlay}
       </div>
 
-      {overlay && <div className="pointer-events-none absolute inset-0">{overlay}</div>}
+      {overlay && <div className="pointer-events-none absolute inset-0 z-[2]">{overlay}</div>}
     </div>
   )
 }

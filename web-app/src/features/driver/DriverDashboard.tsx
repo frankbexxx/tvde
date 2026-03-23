@@ -186,7 +186,10 @@ export function DriverDashboard() {
     >
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Motorista</h1>
-        <p className="text-muted-foreground mt-1">Aceitar e completar viagens</p>
+        <p className="text-foreground/80 mt-1 text-base">
+          O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong>{' '}
+          no fim.
+        </p>
       </header>
 
       <DevTools lastCreatedTripId={null} onAssigned={refetchAvailable} mode="driver" />
@@ -226,13 +229,16 @@ export function DriverDashboard() {
         {!offline && (
           <MapView
             driverLocation={driverLocation ?? undefined}
+            visualRole={
+              activeTripId || (available && available.length > 0) ? 'support' : 'neutral'
+            }
           />
         )}
 
         {offline && (
           <div className="py-12 text-center">
-            <p className="text-muted-foreground text-lg">Está offline.</p>
-            <p className="text-muted-foreground mt-2">Ative para receber viagens.</p>
+            <p className="text-foreground/85 text-lg">Está offline.</p>
+            <p className="text-foreground/75 mt-2">Ative para receber viagens.</p>
           </div>
         )}
 
@@ -245,6 +251,7 @@ export function DriverDashboard() {
                   : 'À espera de viagens'
               }
               variant="idle"
+              emphasis={available && available.length > 0 ? 'subdued' : 'primary'}
             />
             {available && available.length > 0 ? (
               <ul className="space-y-4">
@@ -267,7 +274,7 @@ export function DriverDashboard() {
                 ))}
               </ul>
             ) : (
-              <div className="py-8 text-center text-muted-foreground">
+              <div className="py-8 text-center text-foreground/80">
                 <p className="text-base">Nenhuma viagem disponível.</p>
                 <p className="text-sm mt-1">Ative para receber novas viagens.</p>
               </div>
@@ -290,18 +297,18 @@ export function DriverDashboard() {
 
         {history && history.length > 0 && (
           <section className="pt-6 mt-6 border-t border-border">
-            <h2 className="text-base font-medium text-muted-foreground mb-3">Histórico</h2>
+            <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
             <ul className="space-y-2">
               {history.slice(0, 5).map((t: TripHistoryItem) => (
                 <li
                   key={t.trip_id}
                   className="flex justify-between items-center py-2 border-b border-border last:border-0 transition-opacity duration-150"
                 >
-                  <span className="text-base text-muted-foreground">
+                  <span className="text-base text-foreground/85">
                     {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
                     {formatDestination(t.destination_lat, t.destination_lng)}
                   </span>
-                  <span className="font-medium text-muted-foreground">
+                  <span className="font-medium text-foreground">
                     {t.final_price != null ? `${t.final_price} €` : '—'}
                   </span>
                 </li>
@@ -341,14 +348,19 @@ function ActiveTripSummary({
   const config = STATUS_CONFIG[status] ?? { label: status, variant: 'idle' as const }
 
   return (
-    <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-muted transition-all duration-200 ease-out">
-      <StatusHeader label={config.label} variant={config.variant} />
+    <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out">
+      <StatusHeader label={config.label} variant={config.variant} emphasis="primary" />
       {trip && (
         <TripCard
           pickup={formatPickup(trip.origin_lat, trip.origin_lng)}
           destination={formatDestination(trip.destination_lat, trip.destination_lng)}
           price={trip.final_price ?? trip.estimated_price ?? 0}
           estimateFallback="4–6"
+          priceCaption={
+            trip.status === 'completed' && trip.final_price != null
+              ? 'Preço final'
+              : 'Estimativa (indicativa)'
+          }
         />
       )}
     </div>

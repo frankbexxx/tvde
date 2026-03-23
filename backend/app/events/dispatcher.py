@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Iterable, Protocol
+from typing import Protocol
 
 from app.db.models.audit_event import AuditEvent
 from app.db.session import SessionLocal
@@ -64,9 +64,4 @@ def emit(event: EventProtocol) -> None:
     except Exception:
         logger.exception("Failed to publish realtime event")
         return
-
-
-def emit_many(events: Iterable[EventProtocol]) -> None:
-    for event in events:
-        emit(event)
 
