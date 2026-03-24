@@ -60,7 +60,7 @@ Com PostgreSQL a correr e `DATABASE_URL` válido:
 ```bash
 cd backend
 .\venv\Scripts\activate
-pytest tests/test_a022_hardening.py -q
+pytest tests/test_consolidacao_tvde.py -q
 ```
 
 Sem PostgreSQL, estes testes fazem **skip** explícito.

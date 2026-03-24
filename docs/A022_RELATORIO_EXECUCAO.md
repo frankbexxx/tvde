@@ -31,11 +31,11 @@
 
 ### 3. Testes
 
-- **Ficheiro:** `backend/tests/test_a022_hardening.py`
-  - Webhook: mock a `stripe.Webhook.construct_event` + `payment_intent.succeeded`.
-  - Métricas ausentes: `complete_trip` → 422.
-  - Fluxo `ongoing` → `completed` com `STRIPE_MOCK` e `pi_mock_*`.
-- **Fixture** `_require_postgres`: se não houver PostgreSQL, os testes **saltam** com mensagem clara (evita falhas falsas em ambientes sem Docker).
+- **Ficheiro:** `backend/tests/test_consolidacao_tvde.py` (suíte única de consolidação; ver `docs/TESTES_CONSOLIDACAO_TVDE.md`).
+  - Fluxo HTTP viagem até `completed`; cancelamento; métricas ausentes → 422.
+  - Webhooks: sucesso, falha, idempotência (mock a `stripe.Webhook.construct_event` no router).
+  - `STRIPE_MOCK` nos fluxos de viagem (sem Stripe real).
+- **Fixture** `_require_postgres`: se não houver PostgreSQL, o módulo **salta** com mensagem clara.
 
 ### 4. Operação
 
@@ -57,7 +57,7 @@
 
 ## Verificação
 
-- `pytest tests/test_a022_hardening.py`: neste ambiente, **skipped** (PostgreSQL indisponível). Com BD ativa, devem correr os três testes.
+- `pytest tests/test_consolidacao_tvde.py`: sem PostgreSQL, **skipped**. Com BD ativa, devem correr os sete testes.
 - `ruff` nos ficheiros alterados (recomendado antes do merge).
 
 ---
