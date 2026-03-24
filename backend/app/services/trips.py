@@ -1078,7 +1078,7 @@ def complete_trip(
             },
         )
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="trip_metrics_required_before_completion",
         )
 
