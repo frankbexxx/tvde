@@ -198,8 +198,12 @@ def test_complete_trip_requires_metrics(client: TestClient) -> None:
 
 
 def _insert_payment_for_webhook(
-    db: Session, pi_id: str, status: PaymentStatus = PaymentStatus.processing
+    db: Session,
+    pi_id: str | None = None,
+    status: PaymentStatus = PaymentStatus.processing,
 ) -> Payment:
+    """pi_id único por defeito — evita colisões com corridas anteriores na mesma BD."""
+    resolved_pi = pi_id or f"pi_test_{uuid.uuid4().hex}"
     passenger = User(
         role=Role.passenger,
         name=f"P {uuid.uuid4().hex[:8]}",
@@ -228,7 +232,7 @@ def _insert_payment_for_webhook(
         driver_amount=8.5,
         currency="EUR",
         status=status,
-        stripe_payment_intent_id=pi_id,
+        stripe_payment_intent_id=resolved_pi,
     )
     db.add(pay)
     db.commit()
@@ -240,7 +244,7 @@ def _insert_payment_for_webhook(
 def test_webhook_payment_succeeded(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     db = SessionLocal()
     try:
-        pay = _insert_payment_for_webhook(db, "pi_wh_succ_01")
+        pay = _insert_payment_for_webhook(db)
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
         event = {
             "type": "payment_intent.succeeded",
@@ -266,7 +270,7 @@ def test_webhook_payment_succeeded(client: TestClient, monkeypatch: pytest.Monke
 def test_webhook_payment_failed(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     db = SessionLocal()
     try:
-        pay = _insert_payment_for_webhook(db, "pi_wh_fail_01")
+        pay = _insert_payment_for_webhook(db)
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
         event = {
             "type": "payment_intent.payment_failed",
@@ -292,7 +296,7 @@ def test_webhook_payment_failed(client: TestClient, monkeypatch: pytest.MonkeyPa
 def test_webhook_idempotency(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     db = SessionLocal()
     try:
-        pay = _insert_payment_for_webhook(db, "pi_wh_idem_01")
+        pay = _insert_payment_for_webhook(db)
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
         event = {
             "type": "payment_intent.succeeded",

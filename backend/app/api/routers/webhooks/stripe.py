@@ -73,8 +73,13 @@ async def stripe_webhook(
         )
         return {"status": "ok"}
 
+    # One PI should map to one row; duplicates (tests / bad data) must not 500 the webhook.
+    pi_key = str(payment_intent_id)
     payment = db.execute(
-        select(Payment).where(Payment.stripe_payment_intent_id == payment_intent_id)
+        select(Payment)
+        .where(Payment.stripe_payment_intent_id == pi_key)
+        .order_by(Payment.id.desc())
+        .limit(1)
     ).scalar_one_or_none()
 
     if not payment:
