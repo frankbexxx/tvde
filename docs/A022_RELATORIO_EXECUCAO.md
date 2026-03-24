@@ -64,7 +64,5 @@
 
 ## Git
 
-- Commit e push realizados na sequência desta sessão (mensagem sugerida abaixo).
-
-**Mensagem de commit sugerida:**  
-`feat(A022): prompt unificado, hardening pricing/logs, tests, operation checklist`
+- **Commit:** `b39a1f0` — `feat(A022): prompt unificado, hardening pricing/logs, webhook tests, operation checklist`
+- **Push:** `main` → `origin/main`
