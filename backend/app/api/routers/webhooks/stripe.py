@@ -11,6 +11,7 @@ from app.api.deps import get_db
 from app.core.config import settings
 from app.db.models.payment import Payment
 from app.models.enums import PaymentStatus
+from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,12 @@ async def stripe_webhook(
         if payment.status != PaymentStatus.succeeded:
             payment.status = PaymentStatus.succeeded
             db.commit()
+            log_event(
+                "stripe_webhook_payment_succeeded",
+                trip_id=str(payment.trip_id),
+                payment_id=str(payment.id),
+                payment_intent_id=str(payment_intent_id),
+            )
             logger.info(
                 f"webhook: Payment marked as succeeded event_type={event_type}, "
                 f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
@@ -107,6 +114,13 @@ async def stripe_webhook(
         if payment.status != PaymentStatus.failed:
             payment.status = PaymentStatus.failed
             db.commit()
+            log_event(
+                "stripe_webhook_payment_failed",
+                trip_id=str(payment.trip_id),
+                payment_id=str(payment.id),
+                payment_intent_id=str(payment_intent_id),
+                event_type=event_type,
+            )
             logger.info(
                 f"webhook: Payment marked as failed event_type={event_type}, "
                 f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
