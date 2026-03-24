@@ -15,5 +15,11 @@ def create_access_token(*, subject: str, role: str) -> Dict[str, Any]:
 
 
 def decode_access_token(token: str) -> Dict[str, Any]:
-    return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+    """Valida assinatura, exp (obrigatório) e sub (obrigatório)."""
+    return jwt.decode(
+        token,
+        settings.JWT_SECRET_KEY,
+        algorithms=[settings.JWT_ALGORITHM],
+        options={"require": ["exp", "sub"]},
+    )
 

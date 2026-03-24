@@ -1,6 +1,8 @@
 from fastapi import APIRouter, WebSocket, status
 from sqlalchemy import select
 
+from jwt.exceptions import InvalidTokenError
+
 from app.auth.security import decode_access_token
 from app.db.models.user import User
 from app.db.session import SessionLocal
@@ -24,7 +26,7 @@ async def _authorize_admin(websocket: WebSocket) -> bool:
         return False
     try:
         payload = decode_access_token(token)
-    except Exception:
+    except InvalidTokenError:
         return False
 
     user_id = payload.get("sub")

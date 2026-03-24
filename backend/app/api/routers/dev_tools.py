@@ -1,6 +1,6 @@
 """
-Dev-only router for Web Test Console.
-All endpoints return 404 when ENV != "dev".
+Dev-only router (/dev/*). Montado só fora de produção (ENVIRONMENT/ENV ≠ prod)
+e com ENV=dev ou ENABLE_DEV_TOOLS (ver Settings.dev_tools_router_enabled).
 """
 import random
 
@@ -28,7 +28,8 @@ from app.services.trips import (
 
 
 def _require_dev() -> None:
-    if settings.ENV != "dev" and not settings.ENABLE_DEV_TOOLS:
+    # Router só montado fora de prod (main); reforço se ENV/staging correr código antigo.
+    if settings.is_production_environment():
         raise HTTPException(status_code=404)
 
 
