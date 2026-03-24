@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Dumps, saídas de teste, notas locais (alinhado com .gitignore na raiz)
+*.sql
+*_pytest_out.txt
+worktree.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
