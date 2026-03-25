@@ -328,12 +328,6 @@ export function PassengerDashboard() {
 
   const showMapOnScreen = showPassengerMap || isTripIdle
 
-  const mapVisualRole = useMemo(() => {
-    if (isPickupPlanningMode && passengerUiState === 'planning') return 'planning' as const
-    if (showMapOnScreen) return 'support' as const
-    return 'neutral' as const
-  }, [isPickupPlanningMode, passengerUiState, showMapOnScreen])
-
   // A017: OSRM público só com os dois pontos e sem viagem activa
   useEffect(() => {
     if (!isPickupPlanningMode || !pickupLocation || !dropoffLocation) {
@@ -414,6 +408,24 @@ export function PassengerDashboard() {
   }, [activeTrip, activeTripId, driverLocation, tripCompletedFromLocation])
 
   const showSubmittingCard = creating && !activeTripId
+
+  /** A021: um foco por ecrã — header, mapa e painel coordenam peso visual */
+  const a021Layout = useMemo(() => {
+    switch (passengerUiState) {
+      case 'idle':
+        return { statusHeader: 'subdued' as const, map: 'subdued' as const, panel: 'default' as const }
+      case 'planning':
+        return { statusHeader: 'subdued' as const, map: 'emphasized' as const, panel: 'subdued' as const }
+      case 'confirming':
+        return { statusHeader: 'subdued' as const, map: 'subdued' as const, panel: 'default' as const }
+      case 'searching':
+        return { statusHeader: 'default' as const, map: 'subdued' as const, panel: 'subdued' as const }
+      case 'in_trip':
+        return { statusHeader: 'default' as const, map: 'subdued' as const, panel: 'subdued' as const }
+      default:
+        return { statusHeader: 'default' as const, map: 'emphasized' as const, panel: 'default' as const }
+    }
+  }, [passengerUiState])
 
   /** A019: botão fixo só para ciclo de viagem activa (Cancelar / Pedir nova viagem) */
   const showBottomPrimary =
@@ -547,7 +559,7 @@ export function PassengerDashboard() {
             driverLocation={driverLocation ?? undefined}
             route={routeForMap}
             planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
-            visualRole={mapVisualRole}
+            mapVisualWeight={a021Layout.map}
           />
         </div>
 
@@ -570,6 +582,7 @@ export function PassengerDashboard() {
             }
             onReset={resetPlanning}
             onConfirmTrip={handleRequestTrip}
+            visualWeight={a021Layout.panel}
           />
         )}
 

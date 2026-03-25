@@ -3,6 +3,8 @@ import type { TripDetailResponse } from '../../api/trips'
 
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
 
+export type TripPlannerVisualWeight = 'default' | 'subdued'
+
 function formatEta(durationSec: number): string {
   const m = Math.max(1, Math.round(durationSec / 60))
   return m === 1 ? '~1 min' : `~${m} min`
@@ -34,11 +36,13 @@ export interface TripPlannerPanelProps {
   onSetDestinationHint: () => void
   onReset: () => void
   onConfirmTrip: () => void
+  /** A021: quando o foco está no header/mapa, o painel baixa contraste */
+  visualWeight?: TripPlannerVisualWeight
 }
 
 /**
  * A019: painel inferior com copy e acções por estado UX (Uber-like).
- * A021: contraste sem text-muted em bg fraco; densidade reduzida.
+ * A021: hierarquia visual, contraste sem text-muted fraco em bg-muted; densidade reduzida.
  */
 export function TripPlannerPanel({
   uiState,
@@ -56,12 +60,19 @@ export function TripPlannerPanel({
   onSetDestinationHint,
   onReset,
   onConfirmTrip,
+  visualWeight = 'default',
 }: TripPlannerPanelProps) {
-  const isSubdued = emphasis === 'subdued'
-  const panelSurface =
-    uiState === 'planning' || uiState === 'confirming'
-      ? 'border-border bg-card'
-      : 'bg-card border-border'
+  const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
+
+  const panelSurface = (() => {
+    if (isSubdued) {
+      return 'border-border/70 bg-card/95 shadow-sm opacity-90'
+    }
+    if (uiState === 'planning' || uiState === 'confirming') {
+      return 'border-border bg-card shadow-inner'
+    }
+    return 'bg-card border-border shadow-card'
+  })()
 
   const emphasisWrap = isSubdued
     ? 'opacity-80 transition-opacity duration-500 ease-out'
@@ -82,7 +93,7 @@ export function TripPlannerPanel({
 
   return (
     <section
-      className={`rounded-2xl border shadow-card px-4 py-4 space-y-3 ${panelSurface} ${emphasisWrap}`}
+      className={`rounded-2xl border px-4 py-4 space-y-3 transition-all duration-300 ease-out ${panelSurface} ${emphasisWrap}`}
       aria-label="Planeamento da viagem"
     >
       {uiState === 'idle' && (
@@ -94,7 +105,7 @@ export function TripPlannerPanel({
           <button
             type="button"
             onClick={onChooseMap}
-            className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity"
+            className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity"
           >
             Escolher no mapa
           </button>
@@ -114,7 +125,7 @@ export function TripPlannerPanel({
               <button
                 type="button"
                 onClick={onSetDestinationHint}
-                className="w-full rounded-xl border border-border bg-muted/50 py-3 text-base font-medium text-foreground hover:bg-muted transition-colors"
+                className="w-full rounded-2xl border border-border bg-muted/50 py-3 text-base font-medium text-foreground hover:bg-muted transition-colors"
               >
                 Centrar mapa no destino
               </button>
@@ -122,7 +133,7 @@ export function TripPlannerPanel({
             <button
               type="button"
               onClick={onReset}
-              className="w-full rounded-xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
             >
               Repor
             </button>
@@ -145,7 +156,7 @@ export function TripPlannerPanel({
               <>
                 <span className="font-medium">{formatDistance(routeMeta.distanceM)}</span>
                 <span className="text-foreground/50">·</span>
-                <span>{formatEta(routeMeta.durationSec)}</span>
+                <span className="font-medium">{formatEta(routeMeta.durationSec)}</span>
               </>
             ) : (
               <span>Percurso estimado indisponível</span>
@@ -155,14 +166,14 @@ export function TripPlannerPanel({
             <button
               type="button"
               onClick={onConfirmTrip}
-              className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity"
+              className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity"
             >
               Confirmar viagem
             </button>
             <button
               type="button"
               onClick={onReset}
-              className="w-full rounded-xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
             >
               Repor
             </button>
@@ -183,10 +194,10 @@ export function TripPlannerPanel({
       {uiState === 'in_trip' && activeTrip && (
         <div className="space-y-1">
           <p className="text-base font-semibold text-foreground">Viagem em curso</p>
-          <p className="text-sm text-foreground/80">
-            Estado: <span className="text-foreground font-medium">{activeTrip.status}</span>
+          <p className="text-sm text-foreground/85">
+            Estado: <span className="text-foreground font-semibold">{activeTrip.status}</span>
           </p>
-          <p className="text-xs text-foreground/70 pt-1">Vê o mapa e o estado no topo.</p>
+          <p className="text-sm text-foreground/80 pt-0.5">Acompanha o mapa e o estado acima.</p>
         </div>
       )}
     </section>

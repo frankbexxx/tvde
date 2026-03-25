@@ -50,8 +50,8 @@ export function usePassengerUxState(
 
   useEffect(() => {
     if (rawState === null) {
-      setDisplayedState(null)
-      return
+      const clear = setTimeout(() => setDisplayedState(null), 0)
+      return () => clearTimeout(clear)
     }
     const t = setTimeout(() => setDisplayedState(rawState), UX_STATE_DELAY_MS)
     return () => clearTimeout(t)

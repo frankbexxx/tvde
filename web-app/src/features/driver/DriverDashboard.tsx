@@ -229,8 +229,8 @@ export function DriverDashboard() {
         {!offline && (
           <MapView
             driverLocation={driverLocation ?? undefined}
-            visualRole={
-              activeTripId || (available && available.length > 0) ? 'support' : 'neutral'
+            mapVisualWeight={
+              activeTripId || (available && available.length > 0) ? 'subdued' : 'emphasized'
             }
           />
         )}

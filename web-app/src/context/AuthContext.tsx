@@ -202,29 +202,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (phone: string, password: string, requestedRole?: string) => {
       setStatus('A entrar...')
-      try {
-        const res = await loginApi(phone, password, requestedRole)
-        const token = res.access_token
-        console.log('LOGIN TOKEN:', token)
-        setStoredAccessToken(token)
-        setBetaToken(token)
-        setBetaRole(res.role as Role)
-        setBetaUserId(res.user_id)
-        setTokens({
-          passenger: token,
-          driver: token,
-          admin: token,
-        })
-        setStatus('Pronto')
-        addLog('Sessão iniciada', 'success')
-      } catch (err) {
-        throw err
-      }
+      const res = await loginApi(phone, password, requestedRole)
+      const token = res.access_token
+      console.log('LOGIN TOKEN:', token)
+      setStoredAccessToken(token)
+      setBetaToken(token)
+      setBetaRole(res.role as Role)
+      setBetaUserId(res.user_id)
+      setTokens({
+        passenger: token,
+        driver: token,
+        admin: token,
+      })
+      setStatus('Pronto')
+      addLog('Sessão iniciada', 'success')
     },
     [addLog, setStatus]
   )
 
-  const setRole = useCallback((_r: Role) => {
+  const setRole = useCallback((_role: Role) => {
+    void _role
     /* Role is derived from URL pathname */
   }, [])
 
