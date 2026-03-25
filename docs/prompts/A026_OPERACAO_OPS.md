@@ -102,6 +102,8 @@ O modelo usa `TripStatus`: `requested`, `assigned`, `accepted`, `arriving`, `ong
 
 Ver `OPERATION_CHECKLIST.md` na raiz do repo — secção **A026 — Operação**.
 
+Testes (automáticos + manuais): `docs/TESTES_A026_OPERACAO.md`.
+
 ---
 
 # 6. TESTE MANUAL (OPERADOR)

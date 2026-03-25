@@ -88,7 +88,8 @@ Em produção/staging: correr o SQL na BD correta após validar que não há dup
 
 ## 7. A026 — Operação (cron + runtime real)
 
-Especificação completa: `docs/prompts/A026_OPERACAO_OPS.md`.
+Especificação completa: `docs/prompts/A026_OPERACAO_OPS.md`.  
+Testes: `docs/TESTES_A026_OPERACAO.md`.
 
 ### CRON
 
