@@ -16,6 +16,11 @@ class Payment(Base):
     __tablename__ = "payments"
     __table_args__ = (
         UniqueConstraint("trip_id", name="uq_payments_trip_id"),
+        # A025: um PaymentIntent Stripe → no máximo um pagamento (NULL repetido permitido em PG).
+        UniqueConstraint(
+            "stripe_payment_intent_id",
+            name="unique_stripe_payment_intent_id",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

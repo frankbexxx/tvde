@@ -60,13 +60,21 @@ Com PostgreSQL a correr e `DATABASE_URL` válido:
 ```bash
 cd backend
 .\venv\Scripts\activate
-pytest tests/test_consolidacao_tvde.py -q
+pytest tests/test_consolidacao_tvde.py tests/test_a025_db_constraints.py -q
 ```
 
 Sem PostgreSQL, estes testes fazem **skip** explícito.
 
 ---
 
-## 6. Pricing no `complete_trip`
+## 6. Migração A025 — `payments.stripe_payment_intent_id` UNIQUE
+
+Antes de aplicar: **backup** (`pg_dump`). Script em `backend/sql/a025_payments_stripe_pi_unique.sql` (detetar duplicados, limpar, `ALTER TABLE` + índice em `status`).
+
+Em produção/staging: correr o SQL na BD correta após validar que não há duplicados (ou após limpeza). Novas instalações com `metadata.create_all` herdam o `UniqueConstraint` do modelo.
+
+---
+
+## 7. Pricing no `complete_trip`
 
 Se aparecer resposta **422** com `trip_metrics_required_before_completion`, a viagem não tem `distance_km` / `duration_min` na BD — corrigir dados ou fluxo que cria a viagem (o fluxo normal de `create_trip` preenche métricas).

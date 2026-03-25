@@ -45,6 +45,8 @@ temp/
 
 # Dumps (BD / exports locais)
 *.sql
+# Migrações SQL versionadas em backend/sql/
+!backend/sql/*.sql
 
 # Saídas de teste
 *_pytest_out.txt
