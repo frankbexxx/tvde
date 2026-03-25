@@ -13,7 +13,9 @@ from app.db.base import Base
 from app.models.enums import DriverStatus
 
 if TYPE_CHECKING:
+    from app.db.models.trip import Trip
     from app.db.models.trip_offer import TripOffer
+    from app.db.models.user import User
 
 
 class Driver(Base):

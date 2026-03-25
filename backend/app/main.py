@@ -1,4 +1,5 @@
 # ruff: noqa: E402  # Imports after load_dotenv intentional - env must load before app config
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -40,6 +41,8 @@ from sqlalchemy.exc import ProgrammingError
 from app.db.base import Base
 from app.db.session import engine
 
+logger = logging.getLogger(__name__)
+
 
 def _dev_add_columns_if_missing() -> None:
     """Add new columns without migrations. Idempotent (PG 9.6+). Runs on startup."""
@@ -68,8 +71,10 @@ def _dev_add_columns_if_missing() -> None:
                 isolation_level="AUTOCOMMIT"
             ) as conn:
                 conn.execute(text("ALTER TYPE user_status_enum ADD VALUE 'pending'"))
-        except Exception:
-            pass  # Fails if value already exists
+        except ProgrammingError:
+            logger.debug(
+                "user_status_enum 'pending' skip (already exists or unsupported)",
+            )
     except Exception as e:
         print(f"[WARN] Schema update (add columns): {e}")
 
