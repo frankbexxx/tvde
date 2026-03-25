@@ -25,5 +25,3 @@ Ver **[DOCS_INDEX.md](DOCS_INDEX.md)** para índice completo.
 | `PREPARACAO_RENDER.md` | Deploy no Render |
 | `VALIDACAO_HUMANA_CAMPO.md` | Teste humano em campo |
 | `PROXIMA_SESSAO.md` | Handoff e contexto do projeto |
-
-# test
