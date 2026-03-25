@@ -9,6 +9,7 @@ on:
 
 jobs:
   test:
+    name: backend-ci
     runs-on: ubuntu-latest
 
     services:
