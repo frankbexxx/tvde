@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
+
+if TYPE_CHECKING:
+    from app.db.models.driver import Driver
+    from app.db.models.trip import Trip
 
 from sqlalchemy import DateTime, Enum, Index, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID

@@ -251,7 +251,6 @@ def _print_trip_completed(trip_id: str) -> None:
 
 def log_event(event_name: str, **fields) -> None:
     """Log a structured event. Timeline format, trip headers, buffer."""
-    now = datetime.now(timezone.utc)
     human_msg = _format_human_readable(event_name, **fields)
     line = f"{_time_prefix()} {human_msg}"
     if not _suppress_console_in_test(event_name):

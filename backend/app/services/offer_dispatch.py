@@ -183,7 +183,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
     all_requested = list(
         db.execute(select(Trip).where(Trip.status == TripStatus.requested)).scalars().all()
     )
-    new_offers: list[tuple[TripOffer, Trip]] = []
+    new_offers: list[tuple[TripOffer, Trip, float]] = []
     for trip in all_requested:
         offers = list(
             db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id)).scalars().all()
