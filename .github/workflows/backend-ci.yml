@@ -1,5 +1,5 @@
 # A032 — CI: testes automáticos com PostgreSQL (push main + PRs)
-name: Backend CI
+name: backend-ci
 
 on:
   push:
