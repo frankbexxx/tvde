@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.config import settings
 from app.services.cleanup import run_cleanup
+from app.utils.logging import log_event
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
 from app.services.trip_timeouts import run_trip_timeouts
 
@@ -43,6 +44,16 @@ async def run_scheduled_jobs(
     expired = expire_stale_offers(db)
     new_offers = redispatch_expired_trips(db)
     cleanup = run_cleanup(db)
+
+    log_event(
+        "cron_jobs_run",
+        assigned_to_requested=timeouts.get("assigned_to_requested", 0),
+        accepted_to_cancelled=timeouts.get("accepted_to_cancelled", 0),
+        ongoing_to_failed=timeouts.get("ongoing_to_failed", 0),
+        offers_expired=expired,
+        redispatch_offers_created=len(new_offers),
+        audit_events_deleted=cleanup.get("audit_events_deleted", 0),
+    )
 
     return {
         "status": "ok",

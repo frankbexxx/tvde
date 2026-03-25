@@ -1,6 +1,6 @@
 # Operação — TVDE (checklist)
 
-Documento operacional mínimo. Complementa `GUIA_TESTES.md` e `docs/prompts/A022_CONSOLIDACAO_HARDENING.md`.
+Documento operacional mínimo. Complementa `GUIA_TESTES.md`, `docs/prompts/A022_CONSOLIDACAO_HARDENING.md` e **`docs/prompts/A026_OPERACAO_OPS.md`** (A026).
 
 ---
 
@@ -60,7 +60,7 @@ Com PostgreSQL a correr e `DATABASE_URL` válido:
 ```bash
 cd backend
 .\venv\Scripts\activate
-pytest tests/test_consolidacao_tvde.py tests/test_a025_db_constraints.py -q
+pytest tests/test_consolidacao_tvde.py tests/test_a025_db_constraints.py tests/test_a026_cron_ops.py -q
 ```
 
 Sem PostgreSQL, estes testes fazem **skip** explícito.
@@ -86,6 +86,35 @@ Em produção/staging: correr o SQL na BD correta após validar que não há dup
 
 ---
 
-## 7. Pricing no `complete_trip`
+## 7. A026 — Operação (cron + runtime real)
+
+Especificação completa: `docs/prompts/A026_OPERACAO_OPS.md`.
+
+### CRON
+
+- **Endpoint:** `GET /cron/jobs?secret=<CRON_SECRET>`
+- **Frequência:** **30 s** (ideal) ou **60 s** (aceitável) via agendador externo (ex. cron-job.org).
+- **Regra:** em produção o cron **não** pode depender só de chamadas manuais.
+- **Logs:** após cada execução com sucesso aparecem eventos `cron_jobs_run`, e quando aplicável `trip_timeouts_applied`, `cron_cleanup_audit_events`.
+
+### Verificação diária
+
+- `GET /admin/system-health` (JWT admin).
+- Em condições normais: **`stuck_payments`** deve estar **vazio** (lista vazia).
+- Rever também `trips_accepted_too_long`, `trips_ongoing_too_long`, `inconsistent_financial_state` se existirem entradas.
+
+### Alertas (operador)
+
+- Pagamento em `processing` **> ~10 min** → aparece em `stuck_payments` (investigar Stripe / webhook).
+- Viagens que **não evoluem** dentro dos limiares de `trip_timeouts` + listas do system-health.
+
+### Teste manual (resumo)
+
+1. Trip em `assigned` sem aceitar → após **> 2 min** e com cron a correr → deve passar a `requested` (timeout).
+2. Pagamento preso em processing → confirmar entrada em `stuck_payments` até resolução.
+
+---
+
+## 8. Pricing no `complete_trip`
 
 Se aparecer resposta **422** com `trip_metrics_required_before_completion`, a viagem não tem `distance_km` / `duration_min` na BD — corrigir dados ou fluxo que cria a viagem (o fluxo normal de `create_trip` preenche métricas).
