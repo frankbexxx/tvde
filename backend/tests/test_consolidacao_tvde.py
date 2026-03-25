@@ -299,6 +299,7 @@ def test_webhook_idempotency(client: TestClient, monkeypatch: pytest.MonkeyPatch
         pay = _insert_payment_for_webhook(db)
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
         event = {
+            "id": "evt_test_idempotency_dup",
             "type": "payment_intent.succeeded",
             "data": {"object": {"id": pay.stripe_payment_intent_id, "object": "payment_intent"}},
         }
@@ -328,6 +329,38 @@ def test_complete_trip_with_mock_payment(client: TestClient) -> None:
         assert t.distance_km is not None and t.duration_min is not None
         _http_accept_arriving_start_complete(client, db, driver_id, tid)
         assert _get_trip_status_db(db, tid) == "completed"
+    finally:
+        app.dependency_overrides.clear()
+        db.close()
+
+
+# --- A024 — idempotência complete + alinhamento trip/payment ---
+def test_complete_trip_idempotent_second_post(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        passenger_id = _create_passenger(db)
+        driver_id = _create_driver_with_location(db, 38.7, -9.1)
+        trip_id = _http_create_trip(client, db, passenger_id)
+        _override_user_and_db(db, UserContext(user_id=driver_id, role=Role.driver))
+        assert client.post(f"/driver/trips/{trip_id}/accept").status_code == 200
+        assert client.post(f"/driver/trips/{trip_id}/arriving").status_code == 200
+        assert client.post(f"/driver/trips/{trip_id}/start").status_code == 200
+        r1 = client.post(
+            f"/driver/trips/{trip_id}/complete",
+            json={"final_price": 0.0},
+        )
+        assert r1.status_code == 200, r1.text
+        assert r1.json()["status"] == "completed"
+        r2 = client.post(
+            f"/driver/trips/{trip_id}/complete",
+            json={"final_price": 0.0},
+        )
+        assert r2.status_code == 200, r2.text
+        assert r2.json()["status"] == "completed"
+        trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one()
+        pay = db.execute(select(Payment).where(Payment.trip_id == trip.id)).scalar_one()
+        assert trip.final_price is not None
+        assert round(float(trip.final_price), 2) == round(float(pay.total_amount), 2)
     finally:
         app.dependency_overrides.clear()
         db.close()
