@@ -30,6 +30,8 @@ from app.schemas.auth import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 BETA_PHONE_REGEX = re.compile(r"^\+351\d{9}$")
+# OAuth 2.0 token type (RFC 6749); not a credential.
+OAUTH_ACCESS_TOKEN_TYPE = "bearer"  # nosec B105
 
 
 def _normalize_phone(phone: str) -> str:
@@ -152,7 +154,7 @@ async def verify_otp(
 
     return TokenResponse(
         access_token=token_data["token"],
-        token_type="bearer",
+        token_type=OAUTH_ACCESS_TOKEN_TYPE,
         user_id=str(user.id),
         role=user.role,
         expires_at=token_data["expires_at"],
@@ -227,7 +229,7 @@ async def login(
 
     return TokenResponse(
         access_token=token_data["token"],
-        token_type="bearer",
+        token_type=OAUTH_ACCESS_TOKEN_TYPE,
         user_id=str(user.id),
         role=user.role,
         expires_at=token_data["expires_at"],

@@ -1,0 +1,5 @@
+# Run from backend/: bandit -r app -c bandit.yaml
+exclude_dirs:
+  - venv
+  - tests
+  - tools

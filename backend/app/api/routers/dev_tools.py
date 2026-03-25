@@ -42,8 +42,9 @@ LISBON_LNG_MIN, LISBON_LNG_MAX = -9.20, -9.10
 
 
 def _random_lisbon_coords() -> tuple[float, float]:
-    lat = random.uniform(LISBON_LAT_MIN, LISBON_LAT_MAX)
-    lng = random.uniform(LISBON_LNG_MIN, LISBON_LNG_MAX)
+    # Dev-only mock coordinates, not cryptographic use (bandit B311).
+    lat = random.uniform(LISBON_LAT_MIN, LISBON_LAT_MAX)  # nosec B311
+    lng = random.uniform(LISBON_LNG_MIN, LISBON_LNG_MAX)  # nosec B311
     return round(lat, 6), round(lng, 6)
 
 

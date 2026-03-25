@@ -50,10 +50,10 @@ def _log_state_arrow() -> str:
     """Unicode arrow breaks Windows cp1252 during pytest -s; ASCII in test only (A012)."""
     try:
         from app.core.config import settings
-        if getattr(settings, "ENV", "") == "test":
-            return "->"
     except Exception:
-        pass
+        return "→"
+    if getattr(settings, "ENV", "") == "test":
+        return "->"
     return "→"
 
 
@@ -205,20 +205,20 @@ def _trip_banner_title_new() -> str:
     """ASCII in ENV=test so pytest -s works on Windows (cp1252); emoji kept for dev."""
     try:
         from app.core.config import settings
-        if getattr(settings, "ENV", "") == "test":
-            return "NEW TRIP STARTED"
     except Exception:
-        pass
+        return "🚗 NEW TRIP STARTED"
+    if getattr(settings, "ENV", "") == "test":
+        return "NEW TRIP STARTED"
     return "🚗 NEW TRIP STARTED"
 
 
 def _trip_banner_title_done() -> str:
     try:
         from app.core.config import settings
-        if getattr(settings, "ENV", "") == "test":
-            return "TRIP COMPLETED"
     except Exception:
-        pass
+        return "✅ TRIP COMPLETED"
+    if getattr(settings, "ENV", "") == "test":
+        return "TRIP COMPLETED"
     return "✅ TRIP COMPLETED"
 
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, status
 from sqlalchemy import select
+from starlette.websockets import WebSocketDisconnect
 
 from jwt.exceptions import InvalidTokenError
 
@@ -51,7 +52,7 @@ async def admin_trips_ws(websocket: WebSocket) -> None:
     try:
         while True:
             await websocket.receive_text()
-    except Exception:
+    except WebSocketDisconnect:
         pass
     finally:
         await admin_hub.unsubscribe(websocket)
