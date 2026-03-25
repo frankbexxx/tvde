@@ -70,7 +70,8 @@ def _create_user_trip_payment(
     return u, trip, pay
 
 
-def test_unique_stripe_payment_intent_rejects_duplicate() -> None:
+def test_webhook_duplicate_pi_db_constraint() -> None:
+    """Mesmo PI em dois pagamentos → IntegrityError (protege se app/webhook tentar duplicar)."""
     db = SessionLocal()
     pi = f"pi_a025_dup_{uuid.uuid4().hex[:16]}"
     try:
@@ -114,7 +115,7 @@ def test_unique_stripe_payment_intent_rejects_duplicate() -> None:
         db.close()
 
 
-def test_multiple_null_stripe_pi_allowed() -> None:
+def test_multiple_null_payment_intents_allowed() -> None:
     """PostgreSQL: vários pagamentos com stripe_payment_intent_id NULL são válidos."""
     db = SessionLocal()
     try:

@@ -73,6 +73,17 @@ Antes de aplicar: **backup** (`pg_dump`). Script em `backend/sql/a025_payments_s
 
 Em produção/staging: correr o SQL na BD correta após validar que não há duplicados (ou após limpeza). Novas instalações com `metadata.create_all` herdam o `UniqueConstraint` do modelo.
 
+### Validação manual (só operador)
+
+1. **Contagem de linhas** — antes do `DELETE` de duplicados e depois (não automatizado no repo):
+   - `SELECT COUNT(*) FROM payments;`
+   - Esperado: após limpeza, `COUNT` desce apenas pelo número de linhas duplicadas removidas (ex.: 36), não por apagar viagens inteiras.
+2. **Duplicados zero** — antes do `ALTER TABLE`:
+   - `SELECT stripe_payment_intent_id, COUNT(*) FROM payments WHERE stripe_payment_intent_id IS NOT NULL GROUP BY 1 HAVING COUNT(*) > 1;`
+   - Deve devolver 0 linhas.
+3. **Testes automáticos** (com Postgres + migração aplicada):
+   - `pytest tests/test_consolidacao_tvde.py tests/test_a025_db_constraints.py tests/test_a023_security.py -q`
+
 ---
 
 ## 7. Pricing no `complete_trip`

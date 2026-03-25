@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select, text, update
+from sqlalchemy import func, select, text, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
@@ -315,6 +315,51 @@ def test_webhook_idempotency(client: TestClient, monkeypatch: pytest.MonkeyPatch
         db.close()
 
 
+def test_webhook_twice_same_pi_keeps_single_payment_row(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A025: webhook idempotente + UNIQUE(stripe_payment_intent_id) — uma linha por PI."""
+    db = SessionLocal()
+    try:
+        pay = _insert_payment_for_webhook(db)
+        pi = pay.stripe_payment_intent_id
+        assert pi
+        monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        event = {
+            "id": "evt_a025_dup_delivery",
+            "type": "payment_intent.succeeded",
+            "data": {"object": {"id": pi, "object": "payment_intent"}},
+        }
+        with patch(
+            "app.api.routers.webhooks.stripe.stripe.Webhook.construct_event",
+            return_value=event,
+        ):
+            assert (
+                client.post(
+                    "/webhooks/stripe",
+                    content=b"{}",
+                    headers={"stripe-signature": "v1=a"},
+                ).status_code
+                == 200
+            )
+            assert (
+                client.post(
+                    "/webhooks/stripe",
+                    content=b"{}",
+                    headers={"stripe-signature": "v1=b"},
+                ).status_code
+                == 200
+            )
+        rows = db.execute(
+            select(func.count()).select_from(Payment).where(Payment.stripe_payment_intent_id == pi)
+        ).scalar()
+        assert rows == 1
+        db.refresh(pay)
+        assert pay.status == PaymentStatus.succeeded
+    finally:
+        db.close()
+
+
 # --- 6. Fluxo completo com STRIPE_MOCK — doc §6 (HTTP E2E) ---
 def test_complete_trip_with_mock_payment(client: TestClient) -> None:
     assert settings.STRIPE_MOCK is True  # fixture autouse
@@ -329,6 +374,26 @@ def test_complete_trip_with_mock_payment(client: TestClient) -> None:
         assert t.distance_km is not None and t.duration_min is not None
         _http_accept_arriving_start_complete(client, db, driver_id, tid)
         assert _get_trip_status_db(db, tid) == "completed"
+    finally:
+        app.dependency_overrides.clear()
+        db.close()
+
+
+def test_complete_trip_full_flow_with_unique_pi_constraint(client: TestClient) -> None:
+    """A025: fluxo HTTP accept→complete com STRIPE_MOCK; PI único na BD; não rebenta com UNIQUE."""
+    db = SessionLocal()
+    try:
+        passenger_id = _create_passenger(db)
+        driver_id = _create_driver_with_location(db, 38.7, -9.1)
+        trip_id = _http_create_trip(client, db, passenger_id)
+        _http_accept_arriving_start_complete(client, db, driver_id, trip_id)
+        trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one()
+        pay = db.execute(select(Payment).where(Payment.trip_id == trip.id)).scalar_one()
+        assert trip.status == TripStatus.completed
+        assert pay.stripe_payment_intent_id
+        assert str(pay.stripe_payment_intent_id).startswith("pi_")
+        assert trip.final_price is not None
+        assert round(float(trip.final_price), 2) == round(float(pay.total_amount), 2)
     finally:
         app.dependency_overrides.clear()
         db.close()
