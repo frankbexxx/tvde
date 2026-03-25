@@ -25,11 +25,11 @@ export function PassengerStatusCard({
     return (
       <div
         key="SUBMITTING"
-        className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 ease-out animate-in fade-in duration-300"
+        className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 ease-out animate-in fade-in duration-300"
       >
         <Spinner size="lg" />
         <p className="text-foreground text-base font-semibold">A enviar pedido…</p>
-        <p className="text-muted-foreground text-sm text-center px-4">Aguarda um momento.</p>
+        <p className="text-foreground/80 text-sm text-center px-4">Aguarda um momento.</p>
       </div>
     )
   }
@@ -41,10 +41,10 @@ export function PassengerStatusCard({
       return (
         <div
           key="SEARCHING_DRIVER"
-          className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 ease-out animate-in fade-in duration-300"
+          className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
           <p className="text-foreground text-lg font-semibold text-center px-2">À procura de motorista</p>
-          <p className="text-muted-foreground text-sm text-center max-w-sm px-4">
+          <p className="text-foreground/80 text-sm text-center max-w-sm px-4">
             Isto pode demorar um pouco — estamos a contactar motoristas na zona.
           </p>
         </div>
@@ -60,7 +60,7 @@ export function PassengerStatusCard({
           >
             <div>
               <p className="text-primary font-semibold text-lg">Motorista encontrado</p>
-              <p className="text-muted-foreground text-sm mt-1">
+              <p className="text-foreground/80 text-sm mt-1">
                 A obter localização — o mapa aparece em breve.
               </p>
             </div>
@@ -69,6 +69,7 @@ export function PassengerStatusCard({
               destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
               price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
               estimateFallback={ESTIMATE_FALLBACK}
+              priceCaption="Estimativa (indicativa)"
             />
           </div>
         )
@@ -84,6 +85,7 @@ export function PassengerStatusCard({
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
             price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
             estimateFallback={ESTIMATE_FALLBACK}
+            priceCaption="Estimativa (indicativa)"
             driverName="Motorista TVDE"
             vehicleLabel="Veículo TVDE"
           />
@@ -99,13 +101,14 @@ export function PassengerStatusCard({
         >
           <div>
             <p className="text-success font-semibold text-lg">A chegar</p>
-            <p className="text-muted-foreground text-sm mt-1">O motorista está próximo do ponto de recolha.</p>
+            <p className="text-foreground/80 text-sm mt-1">O motorista está próximo do ponto de recolha.</p>
           </div>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
             price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
             estimateFallback={ESTIMATE_FALLBACK}
+            priceCaption="Estimativa (indicativa)"
             driverName="Motorista TVDE"
             vehicleLabel="Veículo TVDE"
           />
@@ -124,6 +127,7 @@ export function PassengerStatusCard({
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
             price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
             estimateFallback={ESTIMATE_FALLBACK}
+            priceCaption="Estimativa (indicativa)"
             driverName="Motorista TVDE"
             vehicleLabel="Veículo TVDE"
           />
@@ -134,13 +138,14 @@ export function PassengerStatusCard({
       return (
         <div
           key="TRIP_COMPLETED"
-          className="space-y-4 rounded-2xl border border-border bg-muted px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
+          className="space-y-4 rounded-2xl border border-border bg-card px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <p className="text-muted-foreground font-semibold text-lg">Viagem concluída</p>
+          <p className="text-foreground/85 font-semibold text-lg">Viagem concluída</p>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
             price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
+            priceCaption="Preço final"
           />
         </div>
       )

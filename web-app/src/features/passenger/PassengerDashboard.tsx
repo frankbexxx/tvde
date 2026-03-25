@@ -276,6 +276,7 @@ export function PassengerDashboard() {
   const isPickupPlanningMode = isTripIdle && isPlanningMode
 
   /** A019: estado UX explícito (Uber-like) */
+  /** A021: um foco por estado — header vs painel vs mapa */
   const passengerUiState: PassengerUIState = useMemo(() => {
     if (tripCompletedFromLocation) return 'idle'
     if (creating && !activeTripId) return 'searching'
@@ -300,6 +301,16 @@ export function PassengerDashboard() {
     pickupLocation,
     dropoffLocation,
   ])
+
+  const statusHeaderEmphasis = useMemo(() => {
+    if (passengerUiState === 'searching' || passengerUiState === 'in_trip') return 'primary' as const
+    return 'subdued' as const
+  }, [passengerUiState])
+
+  const plannerEmphasis = useMemo(() => {
+    if (passengerUiState === 'idle' || passengerUiState === 'confirming') return 'primary' as const
+    return 'subdued' as const
+  }, [passengerUiState])
 
   /** Painel inferior: omitir "searching" duplicado quando já há PassengerStatusCard em requested */
   const showTripPlannerPanel = useMemo(() => {
@@ -508,7 +519,9 @@ export function PassengerDashboard() {
     >
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Passageiro</h1>
-        <p className="text-foreground/80 mt-1">Pedir e acompanhar viagens</p>
+        <p className="text-foreground/80 mt-1 text-base">
+          Vês uma <strong>estimativa</strong> ao pedir; o <strong>preço final</strong> aparece no fim da viagem.
+        </p>
       </header>
 
       <DevTools lastCreatedTripId={activeTripId} onAssigned={refetchHistory} mode="passenger" />
@@ -521,7 +534,11 @@ export function PassengerDashboard() {
       )}
 
       <div className="space-y-6 mt-6 transition-opacity duration-300 ease-out">
-        <StatusHeader label={banner.label} variant={banner.variant} />
+        <StatusHeader
+          label={banner.label}
+          variant={banner.variant}
+          emphasis={statusHeaderEmphasis}
+        />
 
         {/* A014: em viagem, mapa só com motorista + GPS; A015/A016: planeamento com pickup + dropoff */}
         <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
@@ -549,6 +566,7 @@ export function PassengerDashboard() {
         {showTripPlannerPanel && (
           <TripPlannerPanel
             uiState={passengerUiState}
+            emphasis={plannerEmphasis}
             hasPickup={!!pickupLocation}
             hasDropoff={!!dropoffLocation}
             pickupAddress={pickupAddress}
@@ -575,9 +593,14 @@ export function PassengerDashboard() {
         )}
 
         {!activeTripId && (
-          <div className="space-y-4">
-            <p className="text-base text-foreground">
-              Estimativa: <strong>{ESTIMATE_MOCK} €</strong>
+          <div className="rounded-2xl border border-border bg-card px-4 py-3 space-y-1">
+            <p className="text-sm font-medium text-foreground">Estimativa indicativa</p>
+            <p className="text-lg font-semibold text-foreground">
+              {ESTIMATE_MOCK} € <span className="text-sm font-normal text-foreground/75">(intervalo típico)</span>
+            </p>
+            <p className="text-sm text-foreground/80 leading-snug">
+              Não é o preço final. O valor cobrado no fim depende da distância real (ver{' '}
+              <span className="font-medium">preço final</span> após concluir).
             </p>
           </div>
         )}
@@ -587,9 +610,9 @@ export function PassengerDashboard() {
           uxState && activeTrip ? (
             <PassengerStatusCard uxState={uxState} activeTrip={activeTrip} />
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-muted transition-all duration-500 animate-in fade-in duration-300">
+            <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 animate-in fade-in duration-300">
               <Spinner size="lg" />
-              <p className="text-foreground/90 text-base font-medium">A sincronizar viagem…</p>
+              <p className="text-foreground text-base font-medium">A sincronizar viagem…</p>
               <p className="text-foreground/80 text-sm text-center px-4">
                 A obter o estado mais recente da viagem.
               </p>
@@ -599,18 +622,18 @@ export function PassengerDashboard() {
 
         {history && history.length > 0 && (
           <section className="pt-6 mt-6 border-t border-border">
-            <h2 className="text-base font-medium text-muted-foreground mb-3">Histórico</h2>
+            <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
             <ul className="space-y-2">
               {history.slice(0, 5).map((t: TripHistoryItem) => (
                 <li
                   key={t.trip_id}
                   className="flex justify-between items-center py-2 border-b border-border last:border-0 transition-opacity duration-150"
                 >
-                  <span className="text-base text-foreground/80">
+                  <span className="text-base text-foreground/85">
                     {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
                     {formatDestination(t.destination_lat, t.destination_lng)}
                   </span>
-                  <span className="font-medium text-foreground/80">
+                  <span className="font-medium text-foreground">
                     {t.final_price != null ? `${t.final_price} €` : '—'}
                   </span>
                 </li>

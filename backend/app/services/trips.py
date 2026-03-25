@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import random
-import time
 import uuid
 from decimal import Decimal
 from datetime import datetime, timezone
@@ -259,11 +257,14 @@ def cancel_trip_by_passenger(
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
+    _pc = trip.payment
     log_event(
         "trip_state_change",
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        payment_id=str(_pc.id) if _pc else None,
+        payment_intent_id=(_pc.stripe_payment_intent_id or "") if _pc else "",
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
@@ -330,11 +331,14 @@ def cancel_trip_by_driver(
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
+    _pc_d = trip.payment
     log_event(
         "trip_state_change",
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        payment_id=str(_pc_d.id) if _pc_d else None,
+        payment_intent_id=(_pc_d.stripe_payment_intent_id or "") if _pc_d else "",
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
@@ -390,11 +394,14 @@ def cancel_trip_by_admin(
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
+    _pc_a = trip.payment
     log_event(
         "trip_state_change",
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        payment_id=str(_pc_a.id) if _pc_a else None,
+        payment_intent_id=(_pc_a.stripe_payment_intent_id or "") if _pc_a else "",
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
@@ -625,13 +632,22 @@ def accept_trip(
     # STEP 5: Single atomic commit.
     db.commit()
     db.refresh(trip)
+    db.refresh(payment)
 
-    log_event("trip_accepted", trip_id=trip.id, driver_id=driver_id)
+    log_event(
+        "trip_accepted",
+        trip_id=trip.id,
+        driver_id=driver_id,
+        payment_id=str(payment.id),
+        payment_intent_id=stripe_pi_id,
+    )
     log_event(
         "trip_state_change",
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        payment_id=str(payment.id),
+        payment_intent_id=stripe_pi_id,
         **{"from": old_status.value, "to": trip.status.value},
     )
 
@@ -744,15 +760,24 @@ def accept_offer(
 
     db.commit()
     db.refresh(trip)
+    db.refresh(payment)
 
     old_status = TripStatus.requested
-    log_event("trip_accepted", trip_id=trip.id, driver_id=driver_id)
+    log_event(
+        "trip_accepted",
+        trip_id=trip.id,
+        driver_id=driver_id,
+        payment_id=str(payment.id),
+        payment_intent_id=stripe_pi_id,
+    )
     log_debug_event("offer_accepted", trip_id=trip.id, driver_id=driver_id, offer_id=offer_id)
     log_event(
         "trip_state_change",
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        payment_id=str(payment.id),
+        payment_intent_id=stripe_pi_id,
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
@@ -977,6 +1002,34 @@ def start_trip(
     return trip
 
 
+def _trip_payment_total_mismatch_log(
+    trip: Trip, payment: Payment, *, context: str
+) -> None:
+    """A024: regista divergência entre Trip.final_price e Payment.total_amount."""
+    if trip.final_price is None:
+        return
+    tf = round(float(trip.final_price), 2)
+    ta = round(float(payment.total_amount), 2)
+    if tf != ta:
+        log_event(
+            "trip_payment_total_mismatch",
+            trip_id=str(trip.id),
+            payment_id=str(payment.id),
+            context=context,
+            trip_final_price=tf,
+            payment_total_amount=ta,
+        )
+        logger.warning(
+            "complete_trip: price mismatch trip_id=%s payment_id=%s context=%s "
+            "trip.final_price=%s payment.total_amount=%s",
+            trip.id,
+            payment.id,
+            context,
+            tf,
+            ta,
+        )
+
+
 def complete_trip(
     *,
     db: Session,
@@ -992,14 +1045,37 @@ def complete_trip(
     - Prevents double capture via row lock (FOR UPDATE) and status check
     """
     trip = _get_trip_for_driver_locked(db=db, driver_id=driver_id, trip_id=trip_id)
-    
-    # Validate trip state.
-    validate_trip_transition(trip.status, TripStatus.completed, trip_id=str(trip.id))
 
-    # Payment must exist (created in accept_trip).
     payment = db.execute(
         select(Payment).where(Payment.trip_id == trip.id)
     ).scalar_one_or_none()
+
+    # A024: retry seguro — mesma viagem já completed → devolver estado sem 409.
+    if trip.status == TripStatus.completed:
+        if not payment:
+            logger.error(
+                "complete_trip_idempotent: completed trip without payment trip_id=%s",
+                trip_id,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Payment not found for completed trip.",
+            )
+        _trip_payment_total_mismatch_log(
+            trip, payment, context="complete_trip_idempotent_retry"
+        )
+        log_event(
+            "complete_trip_idempotent_retry",
+            trip_id=str(trip.id),
+            payment_id=str(payment.id),
+            payment_status=payment.status.value,
+        )
+        return trip
+
+    # Validate trip state (ongoing → completed).
+    validate_trip_transition(trip.status, TripStatus.completed, trip_id=str(trip.id))
+
+    # Payment must exist (created in accept_trip).
     if not payment:
         logger.error(
             f"complete_trip: Payment not found trip_id={trip_id}, driver_id={driver_id}"
@@ -1040,22 +1116,36 @@ def complete_trip(
             detail="Driver not found for trip.",
         )
 
-    # --- Distance / duration (mock if None) ---
+    # --- Distance / duration required (A022: no synthetic fallback) ---
     distance_km = trip.distance_km
     duration_min = trip.duration_min
     if distance_km is None or duration_min is None:
-        distance_km = round(random.uniform(2.0, 5.0), 2)
-        duration_min = round(random.uniform(5.0, 15.0), 2)
-        trip.distance_km = distance_km
-        trip.duration_min = duration_min
+        logger.error(
+            "complete_trip: missing trip metrics",
+            extra={
+                "trip_id": trip_id,
+                "distance_km": distance_km,
+                "duration_min": duration_min,
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="trip_metrics_required_before_completion",
+        )
 
     # --- Final price from pricing engine ---
-    final_price = calculate_price(distance_km, duration_min)
+    final_price = calculate_price(float(distance_km), float(duration_min))
     # Commission from driver (single source of truth; consistent with accept_trip).
     commission_rate = _to_decimal(driver.commission_percent) / Decimal("100")
     commission_amount = _money(Decimal(str(final_price)) * commission_rate)
     driver_payout = _money(Decimal(str(final_price)) - commission_amount)
 
+    log_event(
+        "payment_capture_started",
+        trip_id=str(trip.id),
+        payment_id=str(payment.id),
+        payment_intent_id=payment.stripe_payment_intent_id or "",
+    )
     # --- Stripe: update, confirm, capture. Skip when STRIPE_MOCK (simulator/testing). ---
     stripe_mock = (
         getattr(settings, "STRIPE_MOCK", False)
@@ -1063,6 +1153,13 @@ def complete_trip(
     )
     if stripe_mock:
         logger.info(f"complete_trip: STRIPE_MOCK — skipping Stripe API trip_id={trip_id}")
+        log_event(
+            "payment_capture_success",
+            trip_id=str(trip.id),
+            payment_id=str(payment.id),
+            payment_intent_id=payment.stripe_payment_intent_id or "",
+            stripe_mock=True,
+        )
     else:
         intent = retrieve_payment_intent(payment.stripe_payment_intent_id)
         pi_status = intent.status if hasattr(intent, "status") else intent.get("status")
@@ -1125,6 +1222,13 @@ def complete_trip(
                 f"complete_trip: PaymentIntent captured trip_id={trip_id}, "
                 f"payment_intent_id={payment.stripe_payment_intent_id}"
             )
+            log_event(
+                "payment_capture_success",
+                trip_id=str(trip.id),
+                payment_id=str(payment.id),
+                payment_intent_id=payment.stripe_payment_intent_id or "",
+                stripe_mock=False,
+            )
         except stripe.error.StripeError as e:
             logger.error(
                 f"complete_trip: Stripe capture failed trip_id={trip_id}, "
@@ -1137,16 +1241,24 @@ def complete_trip(
             ) from e
 
     # --- Only after capture succeeds (or STRIPE_MOCK): update DB and commit ---
+    amount_store = round(float(final_price), 2)
     old_status = trip.status
-    trip.final_price = final_price
+    trip.final_price = amount_store
     trip.status = TripStatus.completed
     trip.completed_at = datetime.now(timezone.utc)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
-    payment.total_amount = round(final_price, 2)
+    payment.total_amount = amount_store
     payment.commission_amount = float(commission_amount)
     payment.driver_amount = float(driver_payout)
     payment.driver_payout = float(driver_payout)
+    _trip_payment_total_mismatch_log(trip, payment, context="post_assign_before_commit")
     # payment.status stays processing until webhook confirms succeeded.
+    log_event(
+        "trip_completion_commit",
+        trip_id=str(trip.id),
+        payment_id=str(payment.id),
+        payment_intent_id=payment.stripe_payment_intent_id or "",
+    )
     db.commit()
     db.refresh(trip)
     log_event(
@@ -1154,6 +1266,8 @@ def complete_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        payment_id=str(payment.id),
+        payment_intent_id=payment.stripe_payment_intent_id or "",
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(

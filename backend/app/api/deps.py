@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from jwt.exceptions import InvalidTokenError
+
 from app.auth.security import decode_access_token
 from app.db.models.user import User
 from app.db.session import SessionLocal
@@ -43,7 +45,7 @@ async def get_current_user(
     token = credentials.credentials
     try:
         payload = decode_access_token(token)
-    except Exception as exc:
+    except InvalidTokenError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_token",
@@ -117,6 +119,6 @@ async def get_optional_user(
         if not user or user.status != UserStatus.active:
             return None
         return UserContext(user_id=str(user.id), role=user.role)
-    except Exception:
+    except InvalidTokenError:
         return None
 

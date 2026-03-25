@@ -25,13 +25,16 @@ export function RequestCard({
       : `${estimateFallback} €`
 
   return (
-    <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm p-4 space-y-2 shadow-card hover:shadow-floating transition-all duration-200">
+    <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm p-4 space-y-2 shadow-card transition-all duration-200">
       <div className="space-y-0.5">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Recolha</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
         <p className="text-lg font-semibold text-foreground">{pickup}</p>
       </div>
       <div className="flex items-center justify-between gap-4 pt-2">
-        <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
+        <div>
+          <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
+          <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
+        </div>
         <button
           type="button"
           onClick={onAccept}

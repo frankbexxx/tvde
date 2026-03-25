@@ -202,16 +202,16 @@ export function DevTools({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-muted overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-card">
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:text-foreground"
+        className="w-full px-4 py-3 text-left text-sm font-medium text-foreground/85 hover:text-foreground transition-colors"
       >
         {open ? '▼ Dev' : '▶ Dev'}
       </button>
       {open && (
-        <div className="px-3 pb-3 flex flex-wrap gap-2">
+        <div className="px-4 pb-4 flex flex-wrap gap-2 border-t border-border pt-3">
           <button
             onClick={handleToggleDemoLocation}
             className={`px-3 py-1.5 text-sm rounded-lg ${

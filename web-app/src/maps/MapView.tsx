@@ -38,7 +38,7 @@ export interface MapViewProps {
   onPlanningMapClick?: (coords: LatLng) => void
   /** A017: GeoJSON pré-calculado (planeamento); separado da rota de viagem activa */
   planningRouteGeometry?: FeatureCollection<LineString> | null
-  /** A021: mapa como suporte — reduz impacto visual fora do modo planeamento */
+  /** A021: planeamento = mapa em destaque; subdued = suporte (overlay leve) */
   mapVisualWeight?: 'emphasized' | 'subdued'
 }
 
@@ -187,9 +187,16 @@ export function MapView({
     )
   }
 
+  const supportOverlay = isSubdued ? (
+    <div
+      className="pointer-events-none absolute inset-0 z-[1] rounded-2xl bg-background/20 dark:bg-black/25 transition-opacity duration-500 ease-out"
+      aria-hidden
+    />
+  ) : null
+
   return (
-    <div className={`${frameClass} animate-in fade-in duration-500`}>
-      <div className="h-[45vh] min-h-[220px] max-h-[420px]">
+    <div className={`${frameClass} animate-in fade-in duration-500 relative`}>
+      <div className="relative h-[45vh] min-h-[220px] max-h-[420px]">
         <Map
           ref={mapRef}
           mapLib={maplibregl}
@@ -247,15 +254,10 @@ export function MapView({
             />
           ) : null}
         </Map>
+        {supportOverlay}
       </div>
 
-      {overlay && <div className="pointer-events-none absolute inset-0">{overlay}</div>}
-      {isSubdued && (
-        <div
-          className="pointer-events-none absolute inset-0 rounded-2xl bg-background/25 transition-opacity duration-300"
-          aria-hidden
-        />
-      )}
+      {overlay && <div className="pointer-events-none absolute inset-0 z-[2]">{overlay}</div>}
     </div>
   )
 }

@@ -1,5 +1,8 @@
 from fastapi import APIRouter, WebSocket, status
 from sqlalchemy import select
+from starlette.websockets import WebSocketDisconnect
+
+from jwt.exceptions import InvalidTokenError
 
 from app.auth.security import decode_access_token
 from app.db.models.user import User
@@ -24,7 +27,7 @@ async def _authorize_admin(websocket: WebSocket) -> bool:
         return False
     try:
         payload = decode_access_token(token)
-    except Exception:
+    except InvalidTokenError:
         return False
 
     user_id = payload.get("sub")
@@ -49,7 +52,7 @@ async def admin_trips_ws(websocket: WebSocket) -> None:
     try:
         while True:
             await websocket.receive_text()
-    except Exception:
+    except WebSocketDisconnect:
         pass
     finally:
         await admin_hub.unsubscribe(websocket)

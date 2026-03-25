@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, status
 from sqlalchemy import select
+from starlette.websockets import WebSocketDisconnect
 
 from app.auth.security import decode_access_token
 from app.db.models.trip import Trip
@@ -57,7 +58,7 @@ async def trip_status_ws(websocket: WebSocket, trip_id: str) -> None:
     try:
         while True:
             await websocket.receive_text()
-    except Exception:
+    except WebSocketDisconnect:
         pass
     finally:
         await hub.unsubscribe(trip_id, websocket)
@@ -98,7 +99,7 @@ async def driver_offers_ws(websocket: WebSocket) -> None:
     try:
         while True:
             await websocket.receive_text()
-    except Exception:
+    except WebSocketDisconnect:
         pass
     finally:
         await driver_offers_hub.unsubscribe(driver_id, websocket)

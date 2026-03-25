@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,11 +12,19 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from app.models.enums import PaymentStatus
 
+if TYPE_CHECKING:
+    from app.db.models.trip import Trip
+
 
 class Payment(Base):
     __tablename__ = "payments"
     __table_args__ = (
         UniqueConstraint("trip_id", name="uq_payments_trip_id"),
+        # A025: um PaymentIntent Stripe → no máximo um pagamento (NULL repetido permitido em PG).
+        UniqueConstraint(
+            "stripe_payment_intent_id",
+            name="unique_stripe_payment_intent_id",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

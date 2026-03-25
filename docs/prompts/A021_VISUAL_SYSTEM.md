@@ -1,5 +1,21 @@
 # A021 — VISUAL SYSTEM (REFINAMENTO UX)
 
+## ✅ DECISÕES FECHADAS (alinhamento A021→A022)
+
+Execução consolidada com as seguintes regras **já aplicadas** no repositório:
+
+| Tema | Decisão |
+|------|---------|
+| **Pricing** | Modelo **C (híbrido)** — ver `docs/PRICING_DECISION.md` |
+| **Dead code** | Removidos `create_payment_for_trip`, `DomainEvent`, `emit_many` |
+| **Geo** | Haversine único em `app/utils/geo.py` (matching importa de lá) |
+| **Âmbito visual** | `web-app`: passageiro, motorista, admin, DevTools |
+| **Features** | Congeladas: só UX, fixes e limpeza leve |
+
+**Ordem de trabalho:** (1) aplicar este documento no UI → (2) documentar pricing → (3) limpeza técnica mínima → (4) retomar evolução (A022+).
+
+---
+
 ## 🎯 OBJETIVO
 
 Transformar o sistema visual atual (funcional) num sistema consistente, previsível e com hierarquia clara.

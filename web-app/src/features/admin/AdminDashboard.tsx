@@ -363,7 +363,7 @@ export function AdminDashboard() {
   if (loading && users.length === 0) {
     return (
       <div className="p-4">
-        <p className="text-muted-foreground">A carregar...</p>
+        <p className="text-foreground/80">A carregar...</p>
       </div>
     )
   }
@@ -376,8 +376,10 @@ export function AdminDashboard() {
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
-              tab === id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+              tab === id
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
             }`}
           >
             {label}
@@ -399,11 +401,11 @@ export function AdminDashboard() {
               {pending.map((u) => (
                 <li
                   key={u.phone}
-                  className="flex items-center justify-between bg-muted rounded-lg px-4 py-3"
+                  className="flex items-center justify-between bg-card border border-border rounded-2xl px-4 py-3 shadow-card"
                 >
                   <div>
                     <p className="font-medium text-foreground">{u.phone}</p>
-                    <p className="text-sm text-muted-foreground">{u.requested_role}</p>
+                    <p className="text-sm text-foreground/75">{u.requested_role}</p>
                   </div>
                   <button
                     type="button"
@@ -425,30 +427,30 @@ export function AdminDashboard() {
           <button
             type="button"
             onClick={() => fetchActiveTrips()}
-            className="mb-3 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
+            className="mb-3 px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
           >
             Atualizar
           </button>
           {activeTrips.length === 0 ? (
-            <p className="text-muted-foreground">Nenhuma viagem ativa.</p>
+            <p className="text-foreground/75">Nenhuma viagem ativa.</p>
           ) : (
             <ul className="space-y-3">
               {activeTrips.map((t) => (
                 <li
                   key={t.trip_id}
-                  className="bg-muted rounded-lg px-4 py-3 shadow-card hover:bg-muted/90 transition-colors"
+                  className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div>
                       <p className="font-medium text-foreground">
                         {t.trip_id.slice(0, 8)}… · {t.status}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-foreground/75">
                         {t.origin_lat.toFixed(4)}, {t.origin_lng.toFixed(4)} →{' '}
                         {t.destination_lat.toFixed(4)}, {t.destination_lng.toFixed(4)}
                       </p>
                       {t.driver_id && (
-                        <p className="text-xs text-muted-foreground">Driver: {t.driver_id.slice(0, 8)}…</p>
+                        <p className="text-xs text-foreground/70">Driver: {t.driver_id.slice(0, 8)}…</p>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-1">
@@ -486,8 +488,8 @@ export function AdminDashboard() {
                   {selectedTripId === t.trip_id && (
                     <div className="mt-3 pt-3 border-t border-border space-y-2">
                       {tripDetail && (
-                        <p className="text-xs text-muted-foreground">
-                          Preço: {tripDetail.estimated_price} € · Status: {tripDetail.status}
+                        <p className="text-xs text-foreground/75">
+                          Estimativa: {tripDetail.estimated_price} € · Status: {tripDetail.status}
                         </p>
                       )}
                       <div className="flex gap-2">
@@ -519,38 +521,38 @@ export function AdminDashboard() {
           <button
             type="button"
             onClick={() => fetchMetrics()}
-            className="mb-3 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
+            className="mb-3 px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
           >
             Atualizar
           </button>
           {metrics ? (
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
-                <p className="text-muted-foreground">Viagens ativas</p>
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
+                <p className="text-foreground/70">Viagens ativas</p>
                 <p className="font-bold text-foreground">{metrics.active_trips}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
-                <p className="text-muted-foreground">Motoristas disponíveis</p>
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
+                <p className="text-foreground/70">Motoristas disponíveis</p>
                 <p className="font-bold text-foreground">{metrics.drivers_available}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
-                <p className="text-muted-foreground">Motoristas ocupados</p>
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
+                <p className="text-foreground/70">Motoristas ocupados</p>
                 <p className="font-bold text-foreground">{metrics.drivers_busy}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
-                <p className="text-muted-foreground">À espera de motorista</p>
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
+                <p className="text-foreground/70">À espera de motorista</p>
                 <p className="font-bold text-foreground">{metrics.trips_requested}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
-                <p className="text-muted-foreground">Em viagem</p>
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
+                <p className="text-foreground/70">Em viagem</p>
                 <p className="font-bold text-foreground">{metrics.trips_ongoing}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2 shadow-card">
-                <p className="text-muted-foreground">Concluídas hoje</p>
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
+                <p className="text-foreground/70">Concluídas hoje</p>
                 <p className="font-bold text-foreground">{metrics.trips_completed_today}</p>
               </div>
-              <div className="bg-muted rounded-lg px-3 py-2 col-span-2">
-                <p className="text-muted-foreground">Total criadas / aceites / concluídas</p>
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 col-span-2 shadow-card">
+                <p className="text-foreground/70">Total criadas / aceites / concluídas</p>
                 <p className="font-bold text-foreground">
                   {metrics.trips_created_total} / {metrics.trips_accepted_total} /{' '}
                   {metrics.trips_completed_total}
@@ -558,7 +560,7 @@ export function AdminDashboard() {
               </div>
             </div>
           ) : (
-            <p className="text-muted-foreground">Carregar métricas...</p>
+            <p className="text-foreground/75">Carregar métricas...</p>
           )}
         </section>
       )}
@@ -621,13 +623,13 @@ export function AdminDashboard() {
       {tab === 'health' && (
         <section className="space-y-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Saúde do sistema</h2>
-          <button
-            type="button"
-            onClick={() => fetchHealth()}
-            className="mb-3 px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
-          >
-            Atualizar
-          </button>
+            <button
+              type="button"
+              onClick={() => fetchHealth()}
+              className="mb-3 px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
+            >
+              Atualizar
+            </button>
           {health ? (
             <div className="space-y-3">
               <p
@@ -690,11 +692,11 @@ export function AdminDashboard() {
                 health.trips_ongoing_too_long.length === 0 &&
                 health.drivers_unavailable_too_long.length === 0 &&
                 health.stuck_payments.length === 0 && (
-                  <p className="text-muted-foreground">Tudo OK.</p>
+                  <p className="text-foreground/75">Tudo OK.</p>
                 )}
             </div>
           ) : (
-            <p className="text-muted-foreground">Carregar saúde...</p>
+            <p className="text-foreground/75">Carregar saúde...</p>
           )}
         </section>
       )}
@@ -709,7 +711,7 @@ export function AdminDashboard() {
               {users.map((u) => (
                 <li
                   key={u.id}
-                  className="bg-muted rounded-lg px-4 py-3 shadow-card hover:bg-muted/90 transition-colors"
+                  className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
                 >
                   {editingId === u.id ? (
                     <div className="space-y-2">

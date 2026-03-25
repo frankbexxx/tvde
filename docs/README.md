@@ -17,3 +17,8 @@ Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura 
 **Prompts e análises antigas:** `archive/docs_maint_2026_02_23/` (ver README lá dentro).
 
 Índice global do repo: [DOCS_INDEX.md](../DOCS_INDEX.md).
+
+---
+
+---
+Teste commit/push (linha neutra).

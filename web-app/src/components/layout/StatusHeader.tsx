@@ -19,34 +19,33 @@ const VARIANT_STYLES: Record<StatusVariant, string> = {
   accepted: 'bg-primary text-primary-foreground border-border',
   arriving: 'bg-primary text-primary-foreground border-border',
   ongoing: 'bg-secondary text-secondary-foreground border-border',
-  completed: 'bg-muted text-muted-foreground border-border',
-  idle: 'bg-muted text-muted-foreground border-border',
+  completed: 'bg-muted text-foreground/90 border-border',
+  idle: 'bg-muted text-foreground/85 border-border',
   error: 'bg-destructive text-destructive-foreground border-border',
 }
 
-export type StatusHeaderVisualWeight = 'default' | 'subdued'
+/** A021: um único foco por estado — subdued quando outro bloco (painel/mapa) é o herói */
+export type StatusHeaderEmphasis = 'primary' | 'subdued'
 
 interface StatusHeaderProps {
   label: string
   variant?: StatusVariant
-  /** A021: quando não é o foco do ecrã, reduz peso visual para não competir com painel/mapa */
-  visualWeight?: StatusHeaderVisualWeight
+  emphasis?: StatusHeaderEmphasis
 }
 
 export function StatusHeader({
   label,
   variant = 'idle',
-  visualWeight = 'default',
+  emphasis = 'primary',
 }: StatusHeaderProps) {
-  const isSubdued = visualWeight === 'subdued'
+  const isSubdued = emphasis === 'subdued'
+  const surface = isSubdued
+    ? 'rounded-2xl border border-border bg-card px-4 py-3 text-center text-base font-medium text-foreground/90 mb-4 shadow-none opacity-90'
+    : `rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 shadow-sm ${VARIANT_STYLES[variant]}`
   return (
     <div
       key={label}
-      className={`rounded-2xl border text-center transition-all duration-300 ease-out motion-reduce:transition-none animate-in fade-in duration-500 ${VARIANT_STYLES[variant]} ${
-        isSubdued
-          ? 'px-3 py-3 mb-4 text-base font-medium opacity-90 shadow-none border-border/60'
-          : 'px-4 py-4 mb-6 text-xl font-semibold shadow-sm border-border'
-      }`}
+      className={`${surface} transition-all duration-500 ease-out motion-reduce:transition-none animate-in fade-in duration-500`}
       role="status"
       aria-live="polite"
     >

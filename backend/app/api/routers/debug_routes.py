@@ -1,6 +1,6 @@
 """
 Temporary debug routes for map/driver tracking diagnostics.
-All endpoints return 404 when ENV != "dev" and ENABLE_DEV_TOOLS is false.
+A023: em produção só com BETA_MODE; endpoints sensíveis exigem ENV=dev ou ENABLE_DEV_TOOLS.
 """
 import uuid
 
@@ -22,14 +22,24 @@ from app.utils.geo import haversine_km
 
 
 def _require_dev() -> None:
-    if settings.ENV != "dev" and not getattr(settings, "ENABLE_DEV_TOOLS", False):
+    if settings.is_production_environment():
+        raise HTTPException(status_code=404)
+    env_l = settings.ENV.strip().lower()
+    if env_l not in ("dev", "development") and not getattr(
+        settings, "ENABLE_DEV_TOOLS", False
+    ):
         raise HTTPException(status_code=404)
 
 
 def _require_dev_or_beta() -> None:
-    """Allow debug endpoints when ENABLE_DEV_TOOLS or BETA_MODE."""
+    """Produção: só com BETA_MODE; caso contrário exige dev ou ENABLE_DEV_TOOLS."""
+    if settings.is_production_environment() and not getattr(
+        settings, "BETA_MODE", False
+    ):
+        raise HTTPException(status_code=404, detail="debug_not_available")
+    env_l = settings.ENV.strip().lower()
     if not (
-        settings.ENV == "dev"
+        env_l in ("dev", "development")
         or getattr(settings, "ENABLE_DEV_TOOLS", False)
         or getattr(settings, "BETA_MODE", False)
     ):

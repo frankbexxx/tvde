@@ -66,7 +66,7 @@ def _create_trip_in_accepted_state(db: Session) -> tuple[str, str]:
         driver_amount=8.5,
         currency="EUR",
         status=PaymentStatus.processing,
-        stripe_payment_intent_id="pi_test_123",
+        stripe_payment_intent_id=f"pi_test_guard_{uuid.uuid4().hex[:20]}",
     )
     db.add(payment)
     db.commit()

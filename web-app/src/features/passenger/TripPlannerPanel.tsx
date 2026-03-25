@@ -17,8 +17,12 @@ function formatDistance(distanceM: number): string {
   return `${Math.round(distanceM)} m`
 }
 
+/** A021: painel secundário quando StatusHeader ou mapa têm foco */
+export type PanelEmphasis = 'primary' | 'subdued'
+
 export interface TripPlannerPanelProps {
   uiState: PassengerUIState
+  emphasis?: PanelEmphasis
   hasPickup: boolean
   hasDropoff: boolean
   pickupAddress: string | null
@@ -38,10 +42,11 @@ export interface TripPlannerPanelProps {
 
 /**
  * A019: painel inferior com copy e acções por estado UX (Uber-like).
- * A021: hierarquia visual, contraste e densidade.
+ * A021: hierarquia visual, contraste sem text-muted fraco em bg-muted; densidade reduzida.
  */
 export function TripPlannerPanel({
   uiState,
+  emphasis = 'primary',
   hasPickup,
   hasDropoff,
   pickupAddress,
@@ -57,7 +62,7 @@ export function TripPlannerPanel({
   onConfirmTrip,
   visualWeight = 'default',
 }: TripPlannerPanelProps) {
-  const isSubdued = visualWeight === 'subdued'
+  const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
 
   const panelSurface = (() => {
     if (isSubdued) {
@@ -69,9 +74,26 @@ export function TripPlannerPanel({
     return 'bg-card border-border shadow-card'
   })()
 
+  const emphasisWrap = isSubdued
+    ? 'opacity-80 transition-opacity duration-500 ease-out'
+    : 'transition-opacity duration-500 ease-out'
+
+  const pickupLine =
+    !hasPickup
+      ? 'Toca no mapa — recolha'
+      : pickupAddressLoading
+        ? 'A obter morada…'
+        : (pickupAddress ?? 'Local selecionado')
+  const dropLine =
+    !hasDropoff
+      ? 'Toca no mapa — destino'
+      : dropoffAddressLoading
+        ? 'A obter morada…'
+        : (dropoffAddress ?? 'Local selecionado')
+
   return (
     <section
-      className={`rounded-2xl border px-4 py-4 space-y-3 transition-all duration-300 ease-out ${panelSurface}`}
+      className={`rounded-2xl border px-4 py-4 space-y-3 transition-all duration-300 ease-out ${panelSurface} ${emphasisWrap}`}
       aria-label="Planeamento da viagem"
     >
       {uiState === 'idle' && (
@@ -92,50 +114,26 @@ export function TripPlannerPanel({
 
       {uiState === 'planning' && (
         <>
-          <p className="text-sm font-semibold text-foreground/90">No mapa</p>
-          <div className="min-h-[2.75rem] flex items-center">
-            <p className="text-base font-medium text-foreground leading-snug">
-              {!hasPickup && 'Toca no mapa para escolher o ponto de recolha.'}
-              {hasPickup && !hasDropoff && (
-                <>
-                  {pickupAddressLoading ? (
-                    <span className="text-foreground/80">A obter morada…</span>
-                  ) : (
-                    <span>{pickupAddress ?? 'Recolha'}</span>
-                  )}
-                  <span className="text-foreground/70 mx-1.5">→</span>
-                  <span className="text-foreground/80">toca no mapa para o destino</span>
-                </>
-              )}
-              {hasPickup && hasDropoff && (
-                <>
-                  {pickupAddressLoading || dropoffAddressLoading ? (
-                    <span className="text-foreground/80">A obter moradas…</span>
-                  ) : (
-                    <span>
-                      {pickupAddress ?? '—'}
-                      <span className="text-foreground/65 mx-1.5">→</span>
-                      {dropoffAddress ?? '—'}
-                    </span>
-                  )}
-                </>
-              )}
-            </p>
-          </div>
+          <p className="text-base font-semibold text-foreground">Percurso</p>
+          <p className="text-base font-medium text-foreground leading-snug">
+            <span className="text-foreground/75">{pickupLine}</span>
+            <span className="mx-1.5 text-foreground/50">→</span>
+            <span className="text-foreground">{dropLine}</span>
+          </p>
           <div className="flex flex-col gap-2 pt-1">
             {!hasDropoff && (
               <button
                 type="button"
                 onClick={onSetDestinationHint}
-                className="w-full rounded-2xl border border-border bg-muted/40 py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
+                className="w-full rounded-2xl border border-border bg-muted/50 py-3 text-base font-medium text-foreground hover:bg-muted transition-colors"
               >
-                Definir destino
+                Centrar mapa no destino
               </button>
             )}
             <button
               type="button"
               onClick={onReset}
-              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/50 transition-colors"
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
             >
               Repor
             </button>
@@ -147,10 +145,9 @@ export function TripPlannerPanel({
         <>
           <p className="text-base font-semibold text-foreground">Confirma a viagem</p>
           <p className="text-base font-medium text-foreground leading-snug">
-            <span className="text-foreground/80 font-normal">Itinerário: </span>
-            {pickupAddress ?? '—'}
-            <span className="text-foreground/65 mx-1">→</span>
-            {dropoffAddress ?? '—'}
+            <span className="text-foreground/80">{pickupAddress ?? '—'}</span>
+            <span className="mx-1.5 text-foreground/45">→</span>
+            <span className="text-foreground">{dropoffAddress ?? '—'}</span>
           </p>
           <div className="flex items-center gap-3 text-sm text-foreground/80 min-h-[1.25rem]">
             {routeMetaLoading ? (
@@ -176,7 +173,7 @@ export function TripPlannerPanel({
             <button
               type="button"
               onClick={onReset}
-              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/50 transition-colors"
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
             >
               Repor
             </button>
@@ -188,7 +185,7 @@ export function TripPlannerPanel({
         <div className="flex flex-col items-center gap-3 py-2">
           <Spinner size="lg" />
           <p className="text-base font-semibold text-foreground text-center">À procura de motorista…</p>
-          <p className="text-sm text-foreground/80 text-center">
+          <p className="text-sm text-foreground/75 text-center">
             {activeTrip ? `Pedido ${activeTrip.trip_id.slice(0, 8)}…` : 'A enviar o teu pedido…'}
           </p>
         </div>

@@ -14,6 +14,7 @@ from app.events.dispatcher import emit
 from app.models.enums import TripStatus
 from app.schemas.realtime import TripStatusChangedEvent
 from app.services.trips import _set_driver_available
+from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -108,5 +109,11 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
 
     if any(c > 0 for c in counts.values()):
         db.commit()
+        log_event(
+            "trip_timeouts_applied",
+            assigned_to_requested=counts["assigned_to_requested"],
+            accepted_to_cancelled=counts["accepted_to_cancelled"],
+            ongoing_to_failed=counts["ongoing_to_failed"],
+        )
 
     return counts

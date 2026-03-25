@@ -43,6 +43,20 @@ logs/
 tmp/
 temp/
 
+# Dumps (BD / exports locais)
+*.sql
+# Migrações SQL versionadas em backend/sql/
+!backend/sql/*.sql
+
+# Saídas de teste
+*_pytest_out.txt
+
+# Relatórios de auditoria locais
+backend/audit/
+
+# Notas / estado local
+worktree.txt
+
 # Archive (imagens e assets de sessão — opcional manter local)
 archive/cursor_images/
 

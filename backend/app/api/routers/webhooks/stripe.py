@@ -3,6 +3,7 @@
 import logging
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 import stripe
@@ -11,6 +12,7 @@ from app.api.deps import get_db
 from app.core.config import settings
 from app.db.models.payment import Payment
 from app.models.enums import PaymentStatus
+from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,7 @@ async def stripe_webhook(
     if not settings.STRIPE_WEBHOOK_SECRET:
         logger.error("STRIPE_WEBHOOK_SECRET not configured")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Webhook secret not configured.",
         )
 
@@ -72,51 +74,109 @@ async def stripe_webhook(
         )
         return {"status": "ok"}
 
-    payment = db.execute(
-        select(Payment).where(Payment.stripe_payment_intent_id == payment_intent_id)
-    ).scalar_one_or_none()
+    stripe_event_id = event.get("id")
 
-    if not payment:
-        logger.warning(
-            f"webhook: Payment not found event_type={event_type}, "
-            f"payment_intent_id={payment_intent_id}"
+    try:
+        # One PI should map to one row; duplicates (tests / bad data) must not 500.
+        pi_key = str(payment_intent_id)
+        payment = db.execute(
+            select(Payment)
+            .where(Payment.stripe_payment_intent_id == pi_key)
+            .order_by(Payment.id.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+
+        if not payment:
+            logger.warning(
+                f"webhook: Payment not found event_type={event_type}, "
+                f"payment_intent_id={payment_intent_id}"
+            )
+            return {"status": "ok"}
+
+        # Manual capture: only payment_intent.succeeded fires after capture.
+        if event_type == "payment_intent.succeeded":
+            if payment.status != PaymentStatus.succeeded:
+                payment.status = PaymentStatus.succeeded
+                db.commit()
+                log_event(
+                    "stripe_webhook_payment_succeeded",
+                    trip_id=str(payment.trip_id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=str(payment_intent_id),
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                )
+                logger.info(
+                    f"webhook: Payment marked as succeeded event_type={event_type}, "
+                    f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
+                    f"payment_status_final=succeeded"
+                )
+            else:
+                log_event(
+                    "stripe_webhook_duplicate_event",
+                    trip_id=str(payment.trip_id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=str(payment_intent_id),
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                    event_type=event_type,
+                    note="already_succeeded",
+                )
+                logger.info(
+                    f"webhook: Payment already succeeded (idempotent) event_type={event_type}, "
+                    f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
+                    f"stripe_event_id={stripe_event_id}"
+                )
+
+        elif event_type in ("payment_intent.payment_failed", "charge.payment_failed"):
+            if payment.status != PaymentStatus.failed:
+                payment.status = PaymentStatus.failed
+                db.commit()
+                log_event(
+                    "stripe_webhook_payment_failed",
+                    trip_id=str(payment.trip_id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=str(payment_intent_id),
+                    event_type=event_type,
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                )
+                logger.info(
+                    f"webhook: Payment marked as failed event_type={event_type}, "
+                    f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
+                    f"payment_status_final=failed"
+                )
+            else:
+                log_event(
+                    "stripe_webhook_duplicate_event",
+                    trip_id=str(payment.trip_id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=str(payment_intent_id),
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                    event_type=event_type,
+                    note="already_failed",
+                )
+                logger.info(
+                    f"webhook: Payment already failed (idempotent) event_type={event_type}, "
+                    f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
+                    f"stripe_event_id={stripe_event_id}"
+                )
+
+    except SQLAlchemyError:
+        logger.exception(
+            "webhook: DB error (ack 200 to avoid poison retries) event_type=%s "
+            "payment_intent_id=%s stripe_event_id=%s",
+            event_type,
+            payment_intent_id,
+            stripe_event_id,
         )
-        # Always return 200 for valid webhook events, even if payment not found.
-        return {"status": "ok"}
-
-    # Manual capture: only payment_intent.succeeded fires after capture.
-    # charge.succeeded fires at authorization (confirm) time — ignore for status.
-    if event_type == "payment_intent.succeeded":
-        # Idempotent: only update if not already succeeded.
-        if payment.status != PaymentStatus.succeeded:
-            payment.status = PaymentStatus.succeeded
-            db.commit()
-            logger.info(
-                f"webhook: Payment marked as succeeded event_type={event_type}, "
-                f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
-                f"payment_status_final=succeeded"
-            )
-        else:
-            logger.info(
-                f"webhook: Payment already succeeded (idempotent) event_type={event_type}, "
-                f"payment_intent_id={payment_intent_id}, payment_id={payment.id}"
-            )
-
-    elif event_type in ("payment_intent.payment_failed", "charge.payment_failed"):
-        # Idempotent: only update if not already failed.
-        if payment.status != PaymentStatus.failed:
-            payment.status = PaymentStatus.failed
-            db.commit()
-            logger.info(
-                f"webhook: Payment marked as failed event_type={event_type}, "
-                f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
-                f"payment_status_final=failed"
-            )
-        else:
-            logger.info(
-                f"webhook: Payment already failed (idempotent) event_type={event_type}, "
-                f"payment_intent_id={payment_intent_id}, payment_id={payment.id}"
-            )
+        log_event(
+            "stripe_webhook_db_error_ack",
+            event_type=event_type,
+            payment_intent_id=str(payment_intent_id),
+            stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+        )
+        try:
+            db.rollback()
+        except Exception:
+            logger.exception("webhook: rollback after DB error failed")
 
     return {"status": "ok"}
 

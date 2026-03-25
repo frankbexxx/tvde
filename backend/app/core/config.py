@@ -24,11 +24,14 @@ class Settings(BaseSettings):
     STRIPE_MOCK: bool = False  # When True, skip Stripe API calls (simulator/testing only)
 
     ENV: str = "dev"
-    ENABLE_DEV_TOOLS: bool = False  # When True, /dev/seed and /dev/tokens work in production (for field validation)
+    # A023: optional override for security policy (CORS, dev routers). Values: dev | prod | production
+    ENVIRONMENT: str | None = None
+    # A023: em produção deve ser False. Em dev local, True acelera seed/tokens mesmo com ENV≠dev.
+    ENABLE_DEV_TOOLS: bool = False
     BETA_MODE: bool = False  # When True, rate limit request_trip (5/min per user)
 
-    # CORS: comma-separated browser origins (no "*"). Must include the static site URL when using credentials.
-    # Override on Render if the frontend hostname changes. Default matches production + Vite dev.
+    # CORS: comma-separated origins (no "*"). Em produção (ENVIRONMENT/ENV=prod) é obrigatório ter pelo menos uma.
+    # Em dev, o middleware pode usar "*" sem credentials (ver main.py).
     CORS_ALLOWED_ORIGINS: str = (
         "https://tvde-app-j51f.onrender.com,http://localhost:5173"
     )
@@ -75,6 +78,31 @@ class Settings(BaseSettings):
 
     # A007: When True, detailed runtime logs for real-user testing (trip flow, timestamps).
     DEBUG_RUNTIME_LOGS: bool = False
+
+    def _raw_environment_label(self) -> str:
+        if self.ENVIRONMENT is not None and str(self.ENVIRONMENT).strip():
+            return str(self.ENVIRONMENT).strip().lower()
+        return self.ENV.strip().lower()
+
+    def is_production_environment(self) -> bool:
+        """A023: prod se ENVIRONMENT ou ENV for prod/production."""
+        return self._raw_environment_label() in ("prod", "production")
+
+    def is_development_environment(self) -> bool:
+        return not self.is_production_environment()
+
+    def dev_tools_router_enabled(self) -> bool:
+        """Montar /dev/* só fora de produção; localmente ENV=dev ou ENABLE_DEV_TOOLS."""
+        if self.is_production_environment():
+            return False
+        env_l = self.ENV.strip().lower()
+        return self.ENABLE_DEV_TOOLS or env_l in ("dev", "development")
+
+    def debug_router_enabled(self) -> bool:
+        """Montar /debug/* em dev/staging ou em beta controlado."""
+        if self.is_production_environment():
+            return bool(self.BETA_MODE)
+        return True
 
 
 settings = Settings()  # type: ignore[call-arg]

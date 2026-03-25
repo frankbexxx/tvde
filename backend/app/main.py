@@ -1,4 +1,5 @@
 # ruff: noqa: E402  # Imports after load_dotenv intentional - env must load before app config
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -40,6 +41,8 @@ from sqlalchemy.exc import ProgrammingError
 from app.db.base import Base
 from app.db.session import engine
 
+logger = logging.getLogger(__name__)
+
 
 def _dev_add_columns_if_missing() -> None:
     """Add new columns without migrations. Idempotent (PG 9.6+). Runs on startup."""
@@ -68,8 +71,10 @@ def _dev_add_columns_if_missing() -> None:
                 isolation_level="AUTOCOMMIT"
             ) as conn:
                 conn.execute(text("ALTER TYPE user_status_enum ADD VALUE 'pending'"))
-        except Exception:
-            pass  # Fails if value already exists
+        except ProgrammingError:
+            logger.debug(
+                "user_status_enum 'pending' skip (already exists or unsupported)",
+            )
     except Exception as e:
         print(f"[WARN] Schema update (add columns): {e}")
 
@@ -96,9 +101,8 @@ def custom_openapi() -> dict:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup — log config for diagnostics (no secrets)
-    _env = getattr(settings, "ENV", "?")
     _debug_logs = getattr(settings, "DEBUG_RUNTIME_LOGS", False)
-    if _env == "dev" or _debug_logs:
+    if settings.is_development_environment() or _debug_logs:
         print("\n=== TEST MODE READY ===")
         print("1. Criar trip (frontend)")
         print("2. Aceitar como driver")
@@ -106,9 +110,12 @@ async def lifespan(app: FastAPI):
         print("4. No final ver SUMMARY")
         print("Opcional: GET /debug/trip/{trip_id}/logs")
         print("=======================\n")
-    _dev = getattr(settings, "ENABLE_DEV_TOOLS", False)
+    _dev = settings.dev_tools_router_enabled()
     _beta = getattr(settings, "BETA_MODE", False)
-    print(f"[TVDE] config ENV={_env} ENABLE_DEV_TOOLS={_dev} BETA_MODE={_beta}")
+    print(
+        f"[TVDE] config ENV={settings.ENV} ENVIRONMENT={settings.ENVIRONMENT!r} "
+        f"prod={settings.is_production_environment()} dev_tools_mounted={_dev} BETA_MODE={_beta}"
+    )
     try:
         Base.metadata.create_all(bind=engine)
     except ProgrammingError as e:
@@ -117,10 +124,11 @@ async def lifespan(app: FastAPI):
         print("[WARN] Schema: some objects already exist (ok)")
     _dev_add_columns_if_missing()
 
-    if settings.ENV != "dev":
+    _env_low = settings.ENV.strip().lower()
+    if _env_low not in ("dev", "development"):
         if not settings.STRIPE_WEBHOOK_SECRET:
             raise RuntimeError(
-                "STRIPE_WEBHOOK_SECRET is required in non-dev environments. "
+                "STRIPE_WEBHOOK_SECRET is required when ENV is not dev. "
                 "Set it in .env or environment variables."
             )
     elif not settings.STRIPE_WEBHOOK_SECRET:
@@ -138,24 +146,34 @@ app = FastAPI(title="Ride Sharing API", version="0.1.0", lifespan=lifespan)
 app.openapi = custom_openapi
 
 
-def _cors_allowed_origins() -> list[str]:
-    """Origens a partir de CORS_ALLOWED_ORIGINS (.env / Render). Vírgulas; cada segmento com strip()."""
+def _cors_allowed_origins_list() -> list[str]:
+    """Origens a partir de CORS_ALLOWED_ORIGINS. Vírgulas; strip em cada segmento."""
     value = settings.CORS_ALLOWED_ORIGINS
-    out = [o.strip() for o in value.split(",") if o.strip()]
-    if not out:
-        # Evita lista vazia se env estiver mal formatada; o default em config.py cobre dev sem .env
-        return ["https://tvde-app-j51f.onrender.com", "http://localhost:5173"]
-    return out
+    return [o.strip() for o in value.split(",") if o.strip()]
 
+
+def _cors_middleware_params() -> dict:
+    """A023: dev → * sem credentials (Bearer em header). Produção → lista explícita + credentials."""
+    if settings.is_development_environment():
+        return {"allow_origins": ["*"], "allow_credentials": False}
+    origins = _cors_allowed_origins_list()
+    if not origins:
+        raise RuntimeError(
+            "CORS_ALLOWED_ORIGINS must list at least one origin in production "
+            "(comma-separated; no *)."
+        )
+    return {"allow_origins": origins, "allow_credentials": True}
+
+
+_cors = _cors_middleware_params()
 
 # Request ID for tracing (runs first on request)
 app.add_middleware(RequestIDMiddleware)
 
-# CORS: origens explícitas (credentials + JWT — não usar "*"). Lista em CORS_ALLOWED_ORIGINS (config / Render).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_allowed_origins(),
-    allow_credentials=True,
+    allow_origins=_cors["allow_origins"],
+    allow_credentials=_cors["allow_credentials"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -163,8 +181,9 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(cron.router)
 app.include_router(logs.router)
-app.include_router(debug_routes.router)
-if settings.ENABLE_DEV_TOOLS:
+if settings.debug_router_enabled():
+    app.include_router(debug_routes.router)
+if settings.dev_tools_router_enabled():
     app.include_router(dev_tools.router)
 app.include_router(auth.router)
 app.include_router(passenger_trips.router)

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.audit_event import AuditEvent
+from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -26,4 +27,9 @@ def run_cleanup(db: Session) -> dict[str, int]:
     if deleted > 0:
         db.commit()
         logger.info("cleanup: deleted %d audit_events older than %s days", deleted, retention_days)
+        log_event(
+            "cron_cleanup_audit_events",
+            deleted_count=deleted,
+            retention_days=retention_days,
+        )
     return {"audit_events_deleted": deleted}

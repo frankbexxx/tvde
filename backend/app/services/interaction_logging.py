@@ -41,5 +41,5 @@ def log_interaction(
         logger.warning("InteractionLog failed (non-blocking): %s", e)
         try:
             db.rollback()
-        except Exception:
-            pass
+        except Exception as rb_err:
+            logger.debug("InteractionLog rollback failed: %s", rb_err)
