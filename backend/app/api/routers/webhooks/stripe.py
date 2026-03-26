@@ -77,7 +77,11 @@ async def stripe_webhook(
         )
         return {"status": "ok"}
 
-    stripe_event_id = event.get("id")
+    # Event is also a StripeObject — use [] not .get()
+    try:
+        stripe_event_id = event["id"]
+    except KeyError:
+        stripe_event_id = None
 
     try:
         # One PI should map to one row; duplicates (tests / bad data) must not 500.
