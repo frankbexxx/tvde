@@ -13,12 +13,8 @@ Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura 
 | `STACK_TECNOLOGICO.md` | Stack e convenções |
 | `CRON_JOB_ORG_INSTRUCOES.md` | Cron externo |
 | `DEBUG_BETA_RENDER.md` | Depuração BETA no Render |
+| `visao_cursor.md` | Visão geral, ideias e checklist de comercialização (handoff Cursor) |
 
-**Prompts e análises antigas:** `archive/docs_maint_2026_02_23/` (ver README lá dentro).
+**Prompts e análises antigas:** `archive/docs_maint_2026_02_23/` (ver README lá dentro). **Snapshots de worktree / A021 / UI:** `archive/docs_2026_03_26/`.
 
 Índice global do repo: [DOCS_INDEX.md](../DOCS_INDEX.md).
-
----
-
----
-Teste commit/push (linha neutra).

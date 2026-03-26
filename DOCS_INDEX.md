@@ -12,6 +12,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | [PROJECT.md](PROJECT.md) | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento |
 | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](docs/architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico — fases de estabilização, simulação, geo matching, etc. |
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff entre sessões — estado atual, próximas ações |
+| [docs/visao_cursor.md](docs/visao_cursor.md) | Visão geral do projeto (perspectiva Cursor), ideias e checklist de comercialização |
 
 ---
 
@@ -98,6 +99,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | 17 | [backend/DATABASE_SCHEMA_RAW.md](backend/DATABASE_SCHEMA_RAW.md) | Schema da BD |
 | 18 | [web-app/README.md](web-app/README.md) | Web app |
 | 19 | [scripts/README.md](scripts/README.md) | Scripts do projeto |
+| 20 | [docs/visao_cursor.md](docs/visao_cursor.md) | Visão Cursor + checklist comercialização |
 
 ---
 
@@ -107,6 +109,7 @@ Referência de todos os ficheiros de documentação do projeto.
 |-------------|----------|
 | `archive/docs_nao_essenciais/` | Docs movidos em 2026-03-08 (guias alternativos, relatórios, design system antigo, etc.) — ver README nessa pasta |
 | `archive/docs_2026_03_22/` | Docs movidos em 2026-03-22 (arquitetura duplicada, regressão, visão produto, logs simulator) — ver README nessa pasta |
+| `archive/docs_2026_03_26/` | Worktree, relatórios A021/lint, auditorias visuais snapshot — ver README nessa pasta |
 | `archive/docs_maint_2026_02_23/` | Manutenção 2026-02: prompts implementadas (A001–A013, B*, …), `docs/vision/`, imagens, análises pontuais — ver README nessa pasta |
 | `archive_support/` | Runbooks e manuais desatualizados |
 | `archive/` (resto) | Screenshots, PDFs, imagens de sessão |
