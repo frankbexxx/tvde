@@ -6,7 +6,7 @@ Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura 
 |------------------|-----|
 | `architecture/` | Blueprint, estado técnico, convenções, roadmap de engenharia |
 | `testing/` | Protocolos e livros de teste (passageiro, motorista, simulador, sistema completo) |
-| `prompts/` | Só o que está **em curso** ou **regras fixas**: `A000_SYSTEM_RULES.md`, `A014_UX_POLISH.md`, … |
+| `prompts/` | Regras fixas, UX em curso, playbooks operacionais: `A000`, `A014`, `A033_B_VALIDATION_HARDENING_PLAYBOOK.md`, … |
 | `IMPLEMENTACAO_E_TESTES.md` | Ligação entre código, testes e deploy |
 | `ESTRUTURA_GUI.md` | Mapa da GUI |
 | `LOGS_E_TESTES_SINTESE.md` | Logs operacionais e pytest |
