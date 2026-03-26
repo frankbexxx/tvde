@@ -20,8 +20,8 @@ class EventProtocol(Protocol):
 
 
 def _event_to_audit_payload(event: EventProtocol) -> dict:
-    # Ensure JSON-serializable payload for JSONB.
-    return event.model_dump()
+    # JSONB column: datetimes and enums must be serialized (not raw datetime objects).
+    return event.model_dump(mode="json")
 
 
 def _event_occurred_at(event: EventProtocol) -> datetime:
