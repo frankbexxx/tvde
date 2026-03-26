@@ -19,6 +19,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
 
+def _payment_intent_from_charge_field(raw: object) -> str | None:
+    """Resolve pi_ id from Charge.payment_intent (str, expanded dict, or StripeObject)."""
+    if raw is None:
+        return None
+    if isinstance(raw, str):
+        return raw if raw.startswith("pi_") else None
+    if isinstance(raw, dict):
+        rid = raw.get("id")
+        return str(rid) if rid and str(rid).startswith("pi_") else None
+    if hasattr(raw, "to_dict"):
+        d = raw.to_dict()
+        rid = d.get("id") if isinstance(d, dict) else None
+        return str(rid) if rid and str(rid).startswith("pi_") else None
+    s = str(raw)
+    return s if s.startswith("pi_") else None
+
+
 @router.post("/stripe")
 async def stripe_webhook(
     request: Request,
@@ -56,18 +73,20 @@ async def stripe_webhook(
             detail="Invalid signature",
         ) from e
 
+    # construct_event returns nested StripeObjects — no .get(); normalize once (tests use plain dict).
+    if hasattr(event, "to_dict"):
+        event = event.to_dict()
+
     # Handle payment events (idempotent).
     event_type = event["type"]
     obj = event["data"]["object"]
-    # construct_event returns StripeObject, not dict — .get() raises AttributeError.
     if hasattr(obj, "to_dict"):
         obj = obj.to_dict()
+
     # payment_intent.* events: object is PaymentIntent, id is pi_xxx
     # charge.* events: object is Charge, id is ch_xxx; use charge.payment_intent for lookup
     if obj.get("object") == "charge":
-        payment_intent_id = obj.get("payment_intent")
-        if isinstance(payment_intent_id, dict):
-            payment_intent_id = payment_intent_id.get("id")
+        payment_intent_id = _payment_intent_from_charge_field(obj.get("payment_intent"))
     else:
         payment_intent_id = obj.get("id")
 
@@ -77,11 +96,7 @@ async def stripe_webhook(
         )
         return {"status": "ok"}
 
-    # Event is also a StripeObject — use [] not .get()
-    try:
-        stripe_event_id = event["id"]
-    except KeyError:
-        stripe_event_id = None
+    stripe_event_id = event.get("id")
 
     try:
         # One PI should map to one row; duplicates (tests / bad data) must not 500.
