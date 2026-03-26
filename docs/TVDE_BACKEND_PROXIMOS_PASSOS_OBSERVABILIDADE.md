@@ -33,7 +33,7 @@ Grande parte do que pediste **já está implementada** em `app/services/system_h
 **Próximo passo lógico (código / ops), não reinventar queries:**
 
 1. **Threshold pós-`completed`:** hoje “stuck processing” é global (10 min). Opcional: para viagens já `TripStatus.completed`, usar janela mais curta (ex. 2–5 min) _só_ nesse subconjunto — exige extensão em `get_system_health` ou segundo contador.
-2. **Alerta ativo (implementado):** `GET /cron/jobs` chama `run_system_health_check(db)` (`app/cron/system_health_check.py`) após os outros jobs. Se `status != "ok"`, emite **`system_health_degraded`** e, se houver `stuck_payments`, **`payment_stuck_processing_detected`**. A resposta JSON inclui `system_health` com contadores e `warnings`. Agendar o mesmo endpoint (ex. cron-job.org / Render cron) na frequência desejada — não há scheduler in-process.
+2. **Alerta ativo (implementado):** `GET /cron/jobs` chama `run_system_health_check(db)` (`app/cron/system_health_check.py`) após os outros jobs. **`system_health_degraded`** e **`payment_stuck_processing_detected`** só na **transição** para estado degradado (evita spam enquanto o cron continua a correr com o mesmo problema). O segundo evento inclui `sample_payment_ids` (até 3 ids). A resposta JSON de `/cron/jobs` expõe `system_health` com **apenas contagens e `warnings`** — nunca listas completas de entidades. Agendar o endpoint (ex. cron-job.org / Render cron) na frequência desejada — não há scheduler in-process.
 3. **Painel admin** (`AdminDashboard` já consome `/admin/system-health`): garantir que a equipa olha para **`inconsistent_financial_state`** e **`stuck_payments`** em produção.
 
 ---
