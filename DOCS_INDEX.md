@@ -23,6 +23,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md) | Deploy no Render — PostgreSQL, backend, Stripe webhook, frontend |
 | [VALIDACAO_HUMANA_CAMPO.md](VALIDACAO_HUMANA_CAMPO.md) | Teste humano em campo — preparação, cenários, observação |
 | [docs/DEBUG_BETA_RENDER.md](docs/DEBUG_BETA_RENDER.md) | Depuração modo BETA no Render |
+| [docs/TODO_CODIGO_TVDE.md](docs/TODO_CODIGO_TVDE.md) | TODO código top-down — validação PROD, staging, backups, migrações, hardening |
 
 ---
 
@@ -100,6 +101,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | 18 | [web-app/README.md](web-app/README.md) | Web app |
 | 19 | [scripts/README.md](scripts/README.md) | Scripts do projeto |
 | 20 | [docs/visao_cursor.md](docs/visao_cursor.md) | Visão Cursor + checklist comercialização |
+| 21 | [docs/TODO_CODIGO_TVDE.md](docs/TODO_CODIGO_TVDE.md) | TODO código pré-produção (árvore ajustada) |
 
 ---
 
