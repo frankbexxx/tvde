@@ -41,6 +41,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | Ficheiro | Propósito |
 |----------|-----------|
 | [INTERACTION_LOGGING.md](INTERACTION_LOGGING.md) | Telemetria comportamental — export de logs (request_trip, accept, complete, etc.) |
+| [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade, reconciliação via cron, roadmap escala |
 
 ---
 
@@ -104,6 +105,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | 20 | [docs/visao_cursor.md](docs/visao_cursor.md) | Visão Cursor + checklist comercialização |
 | 21 | [docs/TODO_CODIGO_TVDE.md](docs/TODO_CODIGO_TVDE.md) | TODO código pré-produção (árvore ajustada) |
 | 22 | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD (A033-B) |
+| 23 | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade e reconciliação |
 
 ---
 
