@@ -27,7 +27,9 @@ async def run_scheduled_jobs(
     1. Trip timeouts (assigned→requested, accepted→cancelled, ongoing→failed)
     2. Offer expiry + redispatch (expire stale offers, create new for trips with all expired)
     3. Cleanup (audit_events retention)
-    4. System health snapshot (read-only; log_event if degraded)
+    4. System health snapshot (read-only; log_event on transition into degraded only)
+
+    Response: `system_health` contains counts and `warnings` only — never full diagnostic lists.
 
     Requires: ?secret=<CRON_SECRET>
     """
