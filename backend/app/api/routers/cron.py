@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.config import settings
+from app.cron.system_health_check import run_system_health_check
 from app.services.cleanup import run_cleanup
 from app.utils.logging import log_event
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
@@ -25,6 +26,8 @@ async def run_scheduled_jobs(
     Jobs executed:
     1. Trip timeouts (assigned→requested, accepted→cancelled, ongoing→failed)
     2. Offer expiry + redispatch (expire stale offers, create new for trips with all expired)
+    3. Cleanup (audit_events retention)
+    4. System health snapshot (read-only; log_event if degraded)
 
     Requires: ?secret=<CRON_SECRET>
     """
@@ -44,6 +47,7 @@ async def run_scheduled_jobs(
     expired = expire_stale_offers(db)
     new_offers = redispatch_expired_trips(db)
     cleanup = run_cleanup(db)
+    system_health = run_system_health_check(db)
 
     log_event(
         "cron_jobs_run",
@@ -53,6 +57,7 @@ async def run_scheduled_jobs(
         offers_expired=expired,
         redispatch_offers_created=len(new_offers),
         audit_events_deleted=cleanup.get("audit_events_deleted", 0),
+        system_health_status=system_health.get("status", ""),
     )
 
     return {
@@ -67,4 +72,15 @@ async def run_scheduled_jobs(
             "redispatch_created": len(new_offers),
         },
         "cleanup": cleanup,
+        "system_health": {
+            "status": system_health.get("status"),
+            "stuck_payments": len(system_health.get("stuck_payments") or []),
+            "inconsistent_financial_state": len(
+                system_health.get("inconsistent_financial_state") or []
+            ),
+            "missing_payment_records": len(
+                system_health.get("missing_payment_records") or []
+            ),
+            "warnings": system_health.get("warnings") or [],
+        },
     }

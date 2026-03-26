@@ -55,3 +55,7 @@ def test_cron_jobs_ok_and_double_call_idempotent(
         assert "timeouts" in body
         assert "offers" in body
         assert "cleanup" in body
+        sh = body["system_health"]
+        assert sh["status"] in ("ok", "degraded")
+        assert "stuck_payments" in sh
+        assert "warnings" in sh
