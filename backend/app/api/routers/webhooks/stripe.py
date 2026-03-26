@@ -59,6 +59,9 @@ async def stripe_webhook(
     # Handle payment events (idempotent).
     event_type = event["type"]
     obj = event["data"]["object"]
+    # construct_event returns StripeObject, not dict — .get() raises AttributeError.
+    if hasattr(obj, "to_dict"):
+        obj = obj.to_dict()
     # payment_intent.* events: object is PaymentIntent, id is pi_xxx
     # charge.* events: object is Charge, id is ch_xxx; use charge.payment_intent for lookup
     if obj.get("object") == "charge":
