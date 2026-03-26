@@ -23,6 +23,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md) | Deploy no Render — PostgreSQL, backend, Stripe webhook, frontend |
 | [VALIDACAO_HUMANA_CAMPO.md](VALIDACAO_HUMANA_CAMPO.md) | Teste humano em campo — preparação, cenários, observação |
 | [docs/DEBUG_BETA_RENDER.md](docs/DEBUG_BETA_RENDER.md) | Depuração modo BETA no Render |
+| [docs/TODO_CODIGO_TVDE.md](docs/TODO_CODIGO_TVDE.md) | TODO código top-down — validação PROD, staging, backups, migrações, hardening |
 
 ---
 
@@ -52,6 +53,7 @@ Referência de todos os ficheiros de documentação do projeto.
 | [docs/architecture/ARCHITECTURE_STATUS.md](docs/architecture/ARCHITECTURE_STATUS.md) | Estado técnico atual — backend, frontend, pipelines |
 | [docs/prompts/A000_SYSTEM_RULES.md](docs/prompts/A000_SYSTEM_RULES.md) | Regras do projeto para agentes / implementação |
 | [docs/prompts/A014_UX_POLISH.md](docs/prompts/A014_UX_POLISH.md) | Polish UX (em curso) |
+| [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | A033-B — validação produção (env, webhook, cron, e2e, migrações, backup) |
 | [archive/docs_maint_2026_02_23/](archive/docs_maint_2026_02_23/README.md) | Prompts já implementadas, imagens e notas arquivadas (sem apagar) |
 
 ---
@@ -100,6 +102,8 @@ Referência de todos os ficheiros de documentação do projeto.
 | 18 | [web-app/README.md](web-app/README.md) | Web app |
 | 19 | [scripts/README.md](scripts/README.md) | Scripts do projeto |
 | 20 | [docs/visao_cursor.md](docs/visao_cursor.md) | Visão Cursor + checklist comercialização |
+| 21 | [docs/TODO_CODIGO_TVDE.md](docs/TODO_CODIGO_TVDE.md) | TODO código pré-produção (árvore ajustada) |
+| 22 | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD (A033-B) |
 
 ---
 
