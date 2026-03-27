@@ -59,6 +59,9 @@ backend/audit/
 # Notas / estado local
 worktree.txt
 
+# Rascunhos locais (md, screenshots) — ver docs/README quando o PR de limpeza mergear
+docs/_local/
+
 # Archive (imagens e assets de sessão — opcional manter local)
 archive/cursor_images/
 
