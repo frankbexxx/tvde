@@ -12,6 +12,9 @@ PyJWT
 
 stripe>=8.0.0
 
+# CVE-2026-25645 (pip-audit)
+requests>=2.33.0
+
 # Pygments (transitive, ex. pytest): CVE-2026-4539 — quando existir 2.19.3+ no PyPI,
 # adicionar pin explícito pygments>=2.19.3 e voltar a correr pip-audit.
 

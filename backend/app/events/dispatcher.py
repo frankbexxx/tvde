@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Protocol
-
 from app.db.models.audit_event import AuditEvent
 from app.db.session import SessionLocal
 from app.realtime.admin_hub import admin_hub
@@ -13,31 +11,25 @@ from app.schemas.realtime import TripStatusChangedEvent
 logger = logging.getLogger(__name__)
 
 
-class EventProtocol(Protocol):
-    event: str
-
-    def model_dump(self) -> dict: ...
-
-
-def _event_to_audit_payload(event: EventProtocol) -> dict:
+def _event_to_audit_payload(event: TripStatusChangedEvent) -> dict:
     # JSONB column: datetimes and enums must be serialized (not raw datetime objects).
     return event.model_dump(mode="json")
 
 
-def _event_occurred_at(event: EventProtocol) -> datetime:
+def _event_occurred_at(event: TripStatusChangedEvent) -> datetime:
     timestamp = getattr(event, "timestamp", None)
     if isinstance(timestamp, datetime):
         return timestamp
     return datetime.now(timezone.utc)
 
 
-def _event_entity(event: EventProtocol) -> tuple[str, str]:
+def _event_entity(event: TripStatusChangedEvent) -> tuple[str, str]:
     if isinstance(event, TripStatusChangedEvent):
         return "trip", event.trip_id
     return "unknown", "unknown"
 
 
-def emit(event: EventProtocol) -> None:
+def emit(event: TripStatusChangedEvent) -> None:
     try:
         entity_type, entity_id = _event_entity(event)
         payload = _event_to_audit_payload(event)
@@ -64,4 +56,3 @@ def emit(event: EventProtocol) -> None:
     except Exception:
         logger.exception("Failed to publish realtime event")
         return
-
