@@ -1,6 +1,5 @@
 from fastapi import APIRouter, WebSocket, status
 from sqlalchemy import select
-from starlette.websockets import WebSocketDisconnect
 
 from jwt.exceptions import InvalidTokenError
 
@@ -9,6 +8,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.models.enums import Role, UserStatus
 from app.realtime.admin_hub import admin_hub
+from app.utils.ws_idle_receive import receive_until_disconnect
 
 
 router = APIRouter(tags=["ws-admin"])
@@ -50,10 +50,7 @@ async def admin_trips_ws(websocket: WebSocket) -> None:
 
     await admin_hub.subscribe(websocket)
     try:
-        while True:
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        pass
+        await receive_until_disconnect(websocket)
     finally:
         await admin_hub.unsubscribe(websocket)
         await websocket.close()
