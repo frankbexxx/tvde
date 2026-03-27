@@ -1,6 +1,6 @@
 # TODO código — TVDE (versão final ajustada)
 
-Checklist **top-down** para fecho técnico até operação com confiança. Complementa `docs/ROADMAP_TVDE_ATE_PRODUCAO.md` e `OPERATION_CHECKLIST.md`.
+Checklist **top-down** para fecho técnico até operação com confiança. Complementa o anexo A023–A035 em `docs/architecture/TVDE_ENGINEERING_ROADMAP.md` e a **Secção F** de `PROXIMA_SESSAO.md` (ex-`OPERATION_CHECKLIST.md`).
 
 ---
 
@@ -186,23 +186,23 @@ CLEANUP
 
 ## Ordem final (ajustada)
 
-1. PROD_VALIDATION  
-2. STAGING  
-3. BACKUPS (mínimo antes de tráfego real)  
-4. MIGRATIONS  
-5. HARDENING (validação final)  
-6. OBSERVABILITY  
-7. TESTS (focados)  
-8. DEPENDENCIES  
-9. INTEGRATIONS  
-10. CLEANUP  
+1. PROD_VALIDATION
+2. STAGING
+3. BACKUPS (mínimo antes de tráfego real)
+4. MIGRATIONS
+5. HARDENING (validação final)
+6. OBSERVABILITY
+7. TESTS (focados)
+8. DEPENDENCIES
+9. INTEGRATIONS
+10. CLEANUP
 
 ---
 
 ## Diferença crítica (antes vs agora)
 
-| Antes | Agora |
-|-------|--------|
+| Antes              | Agora                                 |
+| ------------------ | ------------------------------------- |
 | Implementar coisas | Provar que funcionam em ambiente real |
 
 ---
@@ -211,9 +211,9 @@ CLEANUP
 
 **Nada entra em PROD** sem passar **pelo menos uma vez** por **STAGING** com:
 
-- webhook  
-- cron  
-- e2e  
+- webhook
+- cron
+- e2e
 
 ---
 
@@ -223,4 +223,4 @@ O núcleo de código do projeto está em grande parte **feito**; o trabalho que 
 
 ---
 
-**Ver também:** [visao_cursor.md](visao_cursor.md) (comercialização e checklist alargado), [ROADMAP_TVDE_ATE_PRODUCAO.md](ROADMAP_TVDE_ATE_PRODUCAO.md).
+**Ver também:** [visao_cursor.md](visao_cursor.md) (comercialização e checklist alargado), [architecture/TVDE_ENGINEERING_ROADMAP.md](architecture/TVDE_ENGINEERING_ROADMAP.md) (anexo pré-produção A023–A035).

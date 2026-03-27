@@ -1,21 +1,22 @@
-# Implementação e Guia de Testes
+# Implementação, testes e logs
 
-Lista exaustiva do que foi implementado (com snippets) e como testar — **todas as prompts do A000_SYSTEM_RULES.md**.
+Lista do que foi implementado (com snippets), como testar — **prompts A000** — e **referência de logs** (buffer, eventos, pytest detalhado).  
+_A Parte II integrou o antigo `LOGS_E_TESTES_SINTESE.md`._
 
 ---
 
 ## Índice (A000 — prompts concluídas)
 
-| Prompt | Descrição |
-|--------|-----------|
-| A001 | Driver Availability (online/offline) |
-| A002 | Multi-Offer Dispatch |
-| A003 | Rejection Timeout (offer expiry + redispatch) |
-| A004 | Pricing Engine |
-| A005 | Cancellation Rules |
-| B001 | WebSocket Infra |
-| C001 | Rating System |
-| D001 | Background Workers (Cron) |
+| Prompt | Descrição                                     |
+| ------ | --------------------------------------------- |
+| A001   | Driver Availability (online/offline)          |
+| A002   | Multi-Offer Dispatch                          |
+| A003   | Rejection Timeout (offer expiry + redispatch) |
+| A004   | Pricing Engine                                |
+| A005   | Cancellation Rules                            |
+| B001   | WebSocket Infra                               |
+| C001   | Rating System                                 |
+| D001   | Background Workers (Cron)                     |
 
 **Secções adicionais:** Diagnóstico passageiro–motorista | Localização demo (Oeiras) | Ferramentas admin na web-app
 
@@ -358,7 +359,7 @@ def publish_new_offer(self, driver_id, offer_id, trip_id, origin_lat, origin_lng
   "origin_lng": -9.30836,
   "destination_lat": 38.7223,
   "destination_lng": -9.1393,
-  "estimated_price": 12.50,
+  "estimated_price": 12.5,
   "expires_at": "2025-02-22T12:00:15Z"
 }
 ```
@@ -542,17 +543,17 @@ cd backend
 pytest -v --ignore=tests/test_admin_operational.py
 ```
 
-| Módulo | Prompt | O que cobre |
-|--------|--------|-------------|
-| `test_driver_availability.py` | A001 | go_online, go_offline, offline driver não recebe dispatch |
-| `test_multi_offer_dispatch.py` | A002 | 5 ofertas criadas, first accept wins, reject, expired |
-| `test_offer_timeout.py` | A003 | Offer expiry, redispatch quando todas expiradas |
-| `test_pricing_engine.py` | A004 | BASE_FARE, PRICE_PER_KM, PRICE_PER_MIN |
-| `test_osrm.py` | A004 | OSRM retorna None sem config; distância/duração com config |
-| `test_cancellation_rules.py` | A005 | Cancel sem fee, cancel com fee, driver penalty |
-| `test_websocket_updates.py` | B001 | trip_status, driver_location, new_trip_offer |
-| `test_rating_system.py` | C001 | Rating passageiro→motorista, motorista→passageiro, avg_rating, avg_rating_as_passenger |
-| `test_cleanup.py` | D001 | Cleanup apaga audit_events antigos |
+| Módulo                         | Prompt | O que cobre                                                                            |
+| ------------------------------ | ------ | -------------------------------------------------------------------------------------- |
+| `test_driver_availability.py`  | A001   | go_online, go_offline, offline driver não recebe dispatch                              |
+| `test_multi_offer_dispatch.py` | A002   | 5 ofertas criadas, first accept wins, reject, expired                                  |
+| `test_offer_timeout.py`        | A003   | Offer expiry, redispatch quando todas expiradas                                        |
+| `test_pricing_engine.py`       | A004   | BASE_FARE, PRICE_PER_KM, PRICE_PER_MIN                                                 |
+| `test_osrm.py`                 | A004   | OSRM retorna None sem config; distância/duração com config                             |
+| `test_cancellation_rules.py`   | A005   | Cancel sem fee, cancel com fee, driver penalty                                         |
+| `test_websocket_updates.py`    | B001   | trip_status, driver_location, new_trip_offer                                           |
+| `test_rating_system.py`        | C001   | Rating passageiro→motorista, motorista→passageiro, avg_rating, avg_rating_as_passenger |
+| `test_cleanup.py`              | D001   | Cleanup apaga audit_events antigos                                                     |
 
 ---
 
@@ -657,10 +658,10 @@ Quando o passageiro pede viagem e o motorista não vê ofertas, usa os endpoints
 
 ### Endpoints (BETA_MODE ou ENABLE_DEV_TOOLS)
 
-| Endpoint | Token | Descrição |
-|----------|-------|-----------|
+| Endpoint                             | Token                       | Descrição                                                      |
+| ------------------------------------ | --------------------------- | -------------------------------------------------------------- |
 | `GET /debug/trip-matching/{trip_id}` | Passageiro (dono da viagem) | Diagnóstico: drivers com localização, no raio, ofertas criadas |
-| `GET /debug/driver-eligibility` | Motorista | Diagnóstico: localização, is_available, ofertas pendentes |
+| `GET /debug/driver-eligibility`      | Motorista                   | Diagnóstico: localização, is_available, ofertas pendentes      |
 
 ### Botões no DevTools (▶ Dev)
 
@@ -669,23 +670,23 @@ Quando o passageiro pede viagem e o motorista não vê ofertas, usa os endpoints
 
 ### Possíveis root_cause (trip-matching)
 
-| root_cause | Significado |
-|------------|-------------|
+| root_cause                                                   | Significado                                   |
+| ------------------------------------------------------------ | --------------------------------------------- |
 | `ZERO_OFFERS: 0 drivers with location and is_available=true` | Nenhum motorista com localização e disponível |
-| `ZERO_OFFERS: N drivers with location but 0 within Xkm` | Motoristas existem mas fora do raio |
-| `ZERO_OFFERS: drivers in radius but no offers in DB` | Bug ou ofertas expiraram antes de criar |
-| `ZERO_OFFERS: N offers exist but all expired or taken` | Ofertas criadas mas já expiraram |
-| `OK: N pending offers` | Ofertas pendentes — motorista deveria ver |
+| `ZERO_OFFERS: N drivers with location but 0 within Xkm`      | Motoristas existem mas fora do raio           |
+| `ZERO_OFFERS: drivers in radius but no offers in DB`         | Bug ou ofertas expiraram antes de criar       |
+| `ZERO_OFFERS: N offers exist but all expired or taken`       | Ofertas criadas mas já expiraram              |
+| `OK: N pending offers`                                       | Ofertas pendentes — motorista deveria ver     |
 
 ### Possíveis root_cause (driver-eligibility)
 
-| root_cause | Significado |
-|------------|-------------|
-| `NO_LOCATION: driver has no DriverLocation row` | Motorista nunca enviou `POST /drivers/location` |
-| `OFFLINE: is_available=false` | Motorista está Offline (toggle "Disponível") |
-| `NOT_APPROVED: driver status=X` | Motorista não aprovado |
-| `NO_OFFERS: 0 pending offers` | create_offers_for_trip não incluiu este motorista |
-| `OK: N pending offers` | Motorista tem ofertas — deveria ver na lista |
+| root_cause                                      | Significado                                       |
+| ----------------------------------------------- | ------------------------------------------------- |
+| `NO_LOCATION: driver has no DriverLocation row` | Motorista nunca enviou `POST /drivers/location`   |
+| `OFFLINE: is_available=false`                   | Motorista está Offline (toggle "Disponível")      |
+| `NOT_APPROVED: driver status=X`                 | Motorista não aprovado                            |
+| `NO_OFFERS: 0 pending offers`                   | create_offers_for_trip não incluiu este motorista |
+| `OK: N pending offers`                          | Motorista tem ofertas — deveria ver na lista      |
 
 ### Pré-condições para teste válido
 
@@ -731,14 +732,14 @@ Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger)
 
 ### Tabs no AdminDashboard
 
-| Tab | Conteúdo |
-|-----|----------|
-| Pendentes | Aprovar utilizadores (BETA) |
-| Utilizadores | Lista, promover/rebaixar motorista, editar, eliminar |
-| Viagens | Lista de viagens ativas; Atribuir, Cancelar, Debug |
-| Métricas | active_trips, drivers_available/busy, trips_requested, etc. |
-| Operações | Executar timeouts, Expirar ofertas + redispatch, Exportar logs CSV, Recuperar motorista |
-| Saúde | Status do sistema, warnings, anomalias (viagens accepted/ongoing há muito, etc.) |
+| Tab          | Conteúdo                                                                                |
+| ------------ | --------------------------------------------------------------------------------------- |
+| Pendentes    | Aprovar utilizadores (BETA)                                                             |
+| Utilizadores | Lista, promover/rebaixar motorista, editar, eliminar                                    |
+| Viagens      | Lista de viagens ativas; Atribuir, Cancelar, Debug                                      |
+| Métricas     | active_trips, drivers_available/busy, trips_requested, etc.                             |
+| Operações    | Executar timeouts, Expirar ofertas + redispatch, Exportar logs CSV, Recuperar motorista |
+| Saúde        | Status do sistema, warnings, anomalias (viagens accepted/ongoing há muito, etc.)        |
 
 ### Endpoints usados
 
@@ -758,26 +759,169 @@ Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger)
 
 ## Variáveis de ambiente relevantes
 
-| Variável | Descrição |
-|----------|-----------|
-| `CRON_SECRET` | Secret para `/cron/jobs` |
-| `AUDIT_EVENTS_RETENTION_DAYS` | Dias de retenção (default 90) |
-| `GEO_RADIUS_KM` | Raio de matching (default 50) |
-| `OFFER_TOP_N` | Número de ofertas por trip (default 5) |
-| `OFFER_TIMEOUT_SECONDS` | Timeout da oferta (default 15) |
-| `BASE_FARE` | Tarifa base (default 1.50) |
-| `PRICE_PER_KM` | Preço por km (default 0.60) |
-| `PRICE_PER_MIN` | Preço por minuto (default 0.15) |
-| `OSRM_BASE_URL` | URL OSRM (opcional) |
-| `CANCELLATION_FEE_PERCENT` | % do preço estimado (default 0.20) |
-| `CANCELLATION_FEE_MIN` | Mínimo em € (default 1.50) |
-| `BETA_MODE` | Modo BETA (login por telefone, rate limit) |
-| `ENABLE_DEV_TOOLS` | Seed, tokens, debug em produção |
-| `CORS_ALLOWED_ORIGINS` | Origens CORS separadas por vírgula (sem `*`). Default: frontend Render + `http://localhost:5173` |
+| Variável                      | Descrição                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| `CRON_SECRET`                 | Secret para `/cron/jobs`                                                                         |
+| `AUDIT_EVENTS_RETENTION_DAYS` | Dias de retenção (default 90)                                                                    |
+| `GEO_RADIUS_KM`               | Raio de matching (default 50)                                                                    |
+| `OFFER_TOP_N`                 | Número de ofertas por trip (default 5)                                                           |
+| `OFFER_TIMEOUT_SECONDS`       | Timeout da oferta (default 15)                                                                   |
+| `BASE_FARE`                   | Tarifa base (default 1.50)                                                                       |
+| `PRICE_PER_KM`                | Preço por km (default 0.60)                                                                      |
+| `PRICE_PER_MIN`               | Preço por minuto (default 0.15)                                                                  |
+| `OSRM_BASE_URL`               | URL OSRM (opcional)                                                                              |
+| `CANCELLATION_FEE_PERCENT`    | % do preço estimado (default 0.20)                                                               |
+| `CANCELLATION_FEE_MIN`        | Mínimo em € (default 1.50)                                                                       |
+| `BETA_MODE`                   | Modo BETA (login por telefone, rate limit)                                                       |
+| `ENABLE_DEV_TOOLS`            | Seed, tokens, debug em produção                                                                  |
+| `CORS_ALLOWED_ORIGINS`        | Origens CORS separadas por vírgula (sem `*`). Default: frontend Render + `http://localhost:5173` |
 
 ### Frontend (Render tvde-app)
 
-| Variável | Descrição |
-|----------|-----------|
-| `VITE_API_URL` | URL do backend (produção: `https://tvde-api-fd2z.onrender.com`) |
-| `VITE_MAPTILER_KEY` | Chave MapTiler para tiles do mapa |
+| Variável            | Descrição                                                       |
+| ------------------- | --------------------------------------------------------------- |
+| `VITE_API_URL`      | URL do backend (produção: `https://tvde-api-fd2z.onrender.com`) |
+| `VITE_MAPTILER_KEY` | Chave MapTiler para tiles do mapa                               |
+
+---
+
+# Parte II — Logs estruturados, buffer e síntese pytest
+
+_Conteúdo fundido a partir de `LOGS_E_TESTES_SINTESE.md`. Para contagens e tabelas de eventos, preferir esta parte; a secção «Testes automatizados» acima resume o mesmo âmbito por prompt A000._
+
+## II.1 Visão geral (logging)
+
+| Componente            | O que faz                                   | Onde                              |
+| --------------------- | ------------------------------------------- | --------------------------------- |
+| **log_event**         | Regista evento sempre (formato legível)     | `app/utils/logging.py`            |
+| **log_debug_event**   | Regista só quando `DEBUG_RUNTIME_LOGS=True` | `app/utils/logging.py`            |
+| **Buffer em memória** | Últimos 50 eventos por `trip_id`            | `app/utils/logging.py`            |
+| **Endpoint debug**    | `GET /debug/trip/{trip_id}/logs`            | `app/api/routers/debug_routes.py` |
+
+## II.2 Configuração (`.env`)
+
+```env
+# Ativar logs detalhados (offers_sent resumo, offer_accepted, driver_location_updated)
+DEBUG_RUNTIME_LOGS=True
+
+# Pré-requisitos para testes
+DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db
+# + JWT_SECRET_KEY, OTP_SECRET, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+```
+
+**Pré-requisitos para testes:** PostgreSQL a correr (`.\scripts\1_start_db.ps1` ou `docker start ride_postgres`), `backend/.env` completo, venv activo.
+
+## II.3 Eventos registados
+
+### Sempre (`log_event`)
+
+| Evento                         | Prefixo    | Campos                                          | Quando                     |
+| ------------------------------ | ---------- | ----------------------------------------------- | -------------------------- |
+| `trip_created`                 | [TRIP]     | trip_id, passenger_id, created_at               | Após criar trip            |
+| `trip_accepted`                | [TRIP]     | trip_id, driver_id                              | Driver aceita              |
+| `trip_state_change`            | [TRIP]     | trip_id, from, to                               | Transição de estado        |
+| `stale_location_filtered`      | [DISPATCH] | trip_id, driver_id, age_seconds                 | Localização stale ignorada |
+| `NO_READY_DRIVERS_AT_DISPATCH` | [DISPATCH] | trip_id, drivers_with_loc_count, stale_excluded | Sem drivers                |
+| `dispatch_retry_attempt`       | [DISPATCH] | trip_id, attempt                                | Retry dispatch             |
+| `dispatch_retry_success`       | [DISPATCH] | trip_id, attempt, offer_count                   | Retry OK                   |
+| `dispatch_retry_failed`        | [DISPATCH] | trip_id, attempts                               | Retry falhou               |
+| `trip_auto_dispatched`         | [DISPATCH] | trip_id, driver_id                              | Auto-dispatch BETA         |
+| `driver_location_update`       | [DRIVER]   | driver_id, lat, lng                             | Localização                |
+| `driver_location_first_send`   | [DRIVER]   | driver_id, lat, lng                             | Primeira localização       |
+| `driver_location_requested`    | [DRIVER]   | trip_id, user_id                                | Pedido de localização      |
+
+### Só com `DEBUG_RUNTIME_LOGS=True` (`log_debug_event`)
+
+| Evento                    | Prefixo    | Campos                         | Quando                     |
+| ------------------------- | ---------- | ------------------------------ | -------------------------- |
+| `offers_sent`             | [DISPATCH] | trip_id, count, min_km, max_km | Resumo ofertas             |
+| `offer_accepted`          | [DRIVER]   | trip_id, driver_id, offer_id   | Aceita oferta              |
+| `driver_location_updated` | [DRIVER]   | trip_id, driver_id, lat, lng   | Localização com trip ativa |
+
+### Formato no console
+
+```
+[TRIP] trip_created | trip_id=... | passenger_id=... | created_at=...
+[DISPATCH] offers_sent | trip_id=... | count=5 | min_km=0.0 | max_km=5.64
+```
+
+## II.4 Duplicações e redundâncias (esperadas)
+
+| Situação                                              | Nota                                        |
+| ----------------------------------------------------- | ------------------------------------------- |
+| `trip_accepted` + `trip_state_change`                 | Mantido: um semântico, outro transição      |
+| `offer_accepted` vs `trip_accepted`                   | `offer_accepted` é debug-only               |
+| `driver_location_update` vs `driver_location_updated` | Complementares (uma com trip_id contextual) |
+
+## II.5 Gaps conhecidos
+
+| Gap                                | Sugestão                                                      |
+| ---------------------------------- | ------------------------------------------------------------- |
+| Logs sem trip_id em alguns eventos | Adicionar trip_id quando driver tem trip ativa                |
+| Tempos até assignment/aceite       | Derivar de timestamps em `trip_created` / `trip_state_change` |
+| Rating                             | Evento dedicado baixa prioridade                              |
+
+## II.6 Testes automatizados — detalhe por ficheiro
+
+| Ficheiro                        | Testes (aprox.) | O que testa                   |
+| ------------------------------- | --------------- | ----------------------------- |
+| `test_admin_operational.py`     | 5               | 401 sem auth admin            |
+| `test_driver_availability.py`   | 3               | Online/offline, dispatch      |
+| `test_driver_location.py`       | 4               | POST localização              |
+| `test_driver_tracking.py`       | 4               | GET localização trip          |
+| `test_geo_stability.py`         | 4               | Stale, first send             |
+| `test_matching.py`              | 3               | Matching                      |
+| `test_multi_offer_dispatch.py`  | 4               | Ofertas, first accept, reject |
+| `test_offer_timeout.py`         | 2               | Expiração, redispatch         |
+| `test_cancellation_rules.py`    | 3               | Cancel, fee                   |
+| `test_rating_system.py`         | 4               | Ratings e médias              |
+| `test_trip_state_guardrails.py` | 2               | Guardrails estado             |
+| `test_websocket_updates.py`     | 3               | WS                            |
+| `test_cleanup.py`               | 1               | Audit cleanup                 |
+| `test_osrm.py`                  | 2               | OSRM                          |
+| `test_pricing_engine.py`        | 3               | Pricing                       |
+
+Correr tudo: `cd backend; pytest tests/ -v` — com `-s` vê-se stdout dos logs.
+
+## II.7 Como ver logs
+
+- **Backend:** terminal do `uvicorn`
+- **Testes:** `pytest tests/ -v -s`
+- **API:** `GET /debug/trip/{trip_id}/logs` (dev / `ENABLE_DEV_TOOLS` / `BETA_MODE`)
+- **Filtro:** `pytest tests/ -v -s 2>&1 | Select-String "trip_id=..."`
+
+## II.8 Buffer em memória
+
+| Propriedade     | Valor        |
+| --------------- | ------------ |
+| Máximo por trip | 50 eventos   |
+| Persistência    | Volátil      |
+| Thread-safe     | Sim (`Lock`) |
+
+## II.9 Endpoints de debug (resumo)
+
+| Endpoint                             | Uso                   |
+| ------------------------------------ | --------------------- |
+| `GET /debug/trip/{trip_id}/logs`     | Logs recentes da trip |
+| `GET /debug/driver-locations`        | Localizações (dev)    |
+| `GET /debug/trip-matching/{trip_id}` | Diagnóstico matching  |
+| `GET /debug/driver-eligibility`      | Diagnóstico motorista |
+
+## II.10 Ficheiros relevantes
+
+| Ficheiro                          | Função               |
+| --------------------------------- | -------------------- |
+| `app/utils/logging.py`            | log_event, buffer    |
+| `app/core/config.py`              | `DEBUG_RUNTIME_LOGS` |
+| `app/services/trips.py`           | eventos trip         |
+| `app/services/offer_dispatch.py`  | dispatch             |
+| `app/services/driver_location.py` | localização          |
+| `app/api/routers/debug_routes.py` | endpoints debug      |
+
+## II.11 Melhorias possíveis
+
+1. Cálculo automático de tempos por trip a partir dos logs
+2. Evento `trip_cancelled` dedicado
+3. `trip_rated`
+4. Export ficheiro opcional
+5. Nível DEBUG mais fino
