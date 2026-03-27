@@ -9,6 +9,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 ## ROADMAP — Fase Atual (MVP Público Web)
 
 ### Estado Atual (concluído)
+
 - Backend funcional
 - Stripe authorization + capture funcional
 - Webhook como fonte de verdade
@@ -21,30 +22,31 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ### Fase 1 — Modelo Financeiro Real (Base Económica) — **Concluída**
 
-| Item | Estado |
-|------|--------|
-| Pricing Engine | ✅ `app/core/pricing.py` |
-| Integração no complete_trip | ✅ Recalcula `final_price`, update amount, capture |
-| Campos distance_km, duration_min | ✅ Mock se null |
-| driver_payout no Payment | ✅ Armazenado |
-| Stripe Connect | ❌ Não integrado (conforme plano) |
+| Item                             | Estado                                             |
+| -------------------------------- | -------------------------------------------------- |
+| Pricing Engine                   | ✅ `app/core/pricing.py`                           |
+| Integração no complete_trip      | ✅ Recalcula `final_price`, update amount, capture |
+| Campos distance_km, duration_min | ✅ Mock se null                                    |
+| driver_payout no Payment         | ✅ Armazenado                                      |
+| Stripe Connect                   | ❌ Não integrado (conforme plano)                  |
 
 ---
 
 ### Fase 2 — Web App Responsiva (MVP Validável) — **Concluída**
 
-| Item | Estado |
-|------|--------|
-| Novo projeto web-app | ✅ React + Vite + TypeScript |
-| Passenger Dashboard | ✅ Pedir viagem, estado, preço, histórico |
-| Driver Dashboard | ✅ Lista assigned, Accept/Arriving/Start/Complete |
-| Polling 5s | ✅ |
-| Painel de atividade (log + estado) | ✅ Implementado |
-| Guia de testes | ✅ GUIA_TESTES.md |
+| Item                               | Estado                                            |
+| ---------------------------------- | ------------------------------------------------- |
+| Novo projeto web-app               | ✅ React + Vite + TypeScript                      |
+| Passenger Dashboard                | ✅ Pedir viagem, estado, preço, histórico         |
+| Driver Dashboard                   | ✅ Lista assigned, Accept/Arriving/Start/Complete |
+| Polling 5s                         | ✅                                                |
+| Painel de atividade (log + estado) | ✅ Implementado                                   |
+| Guia de testes                     | ✅ GUIA_TESTES.md                                 |
 
 ---
 
 ### Princípios Arquiteturais (ROADMAP)
+
 - Stripe é a fonte financeira externa
 - Webhook é a fonte de verdade interna
 - `Payment.status` só muda via webhook
@@ -52,6 +54,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - `update_payment_intent_amount` só pode ocorrer antes de capture
 
 ### Restrições Técnicas (ROADMAP)
+
 - Não quebrar state machine existente
 - Não alterar fluxo de authorization no `accept_trip`
 - Não alterar webhook handler
@@ -60,6 +63,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 ---
 
 ### Pendente no ROADMAP (não implementado)
+
 - **Confirmação no Accept** — `ENABLE_CONFIRM_ON_ACCEPT` existe mas não ativado
 - **Stripe Connect** — split automático para motoristas
 - **Migrations** — Alembic para evolução de schema
@@ -73,6 +77,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 ## O que existe
 
 ### Backend
+
 - FastAPI, SQLAlchemy 2, PostgreSQL, Stripe (manual capture)
 - Modelos: User, Driver, Trip, Payment, AuditEvent, OtpCode
 - Driver: `is_available` (nova coluna)
@@ -81,6 +86,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - **POST /admin/run-timeouts** — execução manual de timeouts
 
 ### Web App
+
 - React + Vite + TypeScript, Tailwind
 - Passenger: pedir viagem, viagem ativa, histórico, cancelar (até entrar na viatura); "Sem conectividade" / "A verificar..." quando offline ou falha temporária
 - Driver: lista available, Accept, Arriving, Start, Complete, Cancel, histórico; volta à lista quando passageiro cancela
@@ -89,6 +95,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - Role derivado do URL (`/driver` → motorista, `/passenger` → passageiro)
 
 ### Fluxo Operacional (implementado)
+
 - Auto-dispatch: trip criada com driver disponível → `assigned`
 - Timeouts: assigned 2min→requested, accepted 10min→cancelled, ongoing 6h→failed
 - Driver `is_available`: false ao aceitar, true ao completar/cancelar
@@ -100,6 +107,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 ## Estado atual de testes
 
 **Testes concluídos com sucesso:**
+
 - Fluxo completo: Pedir viagem → Assign (ou auto-dispatch) → Accept → Arriving → Start → Complete
 - Auto-trip, Run timeouts, Seed
 - Vista Passageiro e Motorista funcionais
@@ -115,7 +123,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 3. **Auto-trip** — Requer driver disponível. Se falhar com "Driver is not available", executar Seed primeiro.
 4. **Stripe webhook** — Obrigatório para `payment.status` passar a `succeeded`. Sem `stripe listen`, o complete funciona mas o payment fica em `processing`.
 5. **Invariantes** — Não alterar accept_trip, complete_trip, stripe_service, webhook, model financeiro.
-6. **Run timeouts** — Execução manual: POST /admin/run-timeouts. Não há cron job; em produção seria necessário agendar.
+6. **Cron e timeouts** — Em produção: agendar `GET /cron/jobs?secret=<CRON_SECRET>` (30–60 s). Manualmente: `POST /admin/run-timeouts` e `POST /admin/run-offer-expiry`. Detalhe completo na **Secção F** (checklist operacional fundido).
 
 ---
 
@@ -136,19 +144,23 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 ## Recomendação
 
 **Prioridade 1 — Concluída**
+
 - Validação em campo: 4 dispositivos, rede móvel, fluxo completo — 100% positivo
 
 **Prioridade 2 — Melhorias incrementais (se necessário)**
+
 1. Ajustes de UI/UX na Web App
-2. Cron job ou scheduler para execução periódica de `run-timeouts` (se aplicável)
+2. Confirmar agendador externo (ex. cron-job.org) a bater em `GET /cron/jobs` com `CRON_SECRET` — ver Secção F
 3. Revisão do GUIA_TESTES.md com feedback do utilizador
 
 **Prioridade 3 — Decisão pendente**
+
 - **Quando o preço passa a ser definitivo?** (modo atual: no complete; modo futuro: antes de confirm)
 - Definir antes de qualquer implementação de confirmação no accept
 - Ver `STRIPE_CONFIRMACAO_FUTURA.md` — estratégias A, B, C
 
 **Não fazer ainda**
+
 - Não ativar `ENABLE_CONFIRM_ON_ACCEPT` até definir filosofia de pricing
 - Não introduzir Stripe Connect
 - Não alterar state machine, webhook ou fluxo financeiro
@@ -159,7 +171,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 1. **Migrations** — O projeto usa `create_all` + `_dev_add_columns_if_missing()`. Para produção, Alembic (ou equivalente) será necessário. A adição de novas colunas pode exigir scripts de migração.
 
-2. **Testes automatizados** — Não existem testes unitários ou de integração. O fluxo é validado manualmente. Para evolução segura, pytest (backend) e Vitest/React Testing Library (frontend) seriam úteis.
+2. **Testes automatizados** — O backend tem suite **pytest** (PostgreSQL recomendado). Ver `docs/IMPLEMENTACAO_E_TESTES.md`. Frontend: Vitest/React Testing Library ainda como evolução opcional.
 
 3. **Distância / duração reais** — O pricing usa valores mock (2–5 km, 5–15 min). Integração com API de rotas (Google Maps, OSRM) seria o próximo passo para preços realistas.
 
@@ -201,14 +213,224 @@ Ver **GUIA_TESTES.md** para instruções completas e sequenciais.
 
 # Ficheiros Chave
 
-| Ficheiro | Responsabilidade |
-|----------|------------------|
-| `app/services/trips.py` | Lógica trip; accept, complete, assign_trip (idempotente) |
-| `app/services/trip_timeouts.py` | run_trip_timeouts() |
-| `app/services/stripe_service.py` | Wrappers Stripe |
-| `app/api/routers/webhooks/stripe.py` | Webhook |
-| `app/db/models/driver.py` | is_available |
-| `web-app/src/context/AuthContext.tsx` | Token em memory; role derivado do pathname |
-| `web-app/src/context/ActivityLogContext.tsx` | Log e estado |
-| `web-app/src/components/ActivityPanel.tsx` | Painel direito |
-| `GUIA_TESTES.md` | Guia passo a passo para testes |
+| Ficheiro                                     | Responsabilidade                                         |
+| -------------------------------------------- | -------------------------------------------------------- |
+| `app/services/trips.py`                      | Lógica trip; accept, complete, assign_trip (idempotente) |
+| `app/services/trip_timeouts.py`              | run_trip_timeouts()                                      |
+| `app/services/stripe_service.py`             | Wrappers Stripe                                          |
+| `app/api/routers/webhooks/stripe.py`         | Webhook                                                  |
+| `app/db/models/driver.py`                    | is_available                                             |
+| `web-app/src/context/AuthContext.tsx`        | Token em memory; role derivado do pathname               |
+| `web-app/src/context/ActivityLogContext.tsx` | Log e estado                                             |
+| `web-app/src/components/ActivityPanel.tsx`   | Painel direito                                           |
+| `GUIA_TESTES.md`                             | Guia passo a passo para testes                           |
+
+---
+
+# Secção F — Operação (checklist consolidado)
+
+_Conteúdo fundido a partir de `OPERATION_CHECKLIST.md` na raiz; esse ficheiro passou a apontar para aqui._
+
+## F.1 Jobs agendados (timeouts + ofertas + cleanup)
+
+### Opção recomendada — um único endpoint
+
+- **Método / URL:** `GET /cron/jobs?secret=<CRON_SECRET>`
+- **Auth:** query `secret` deve coincidir com variável de ambiente `CRON_SECRET` (configurar em produção).
+- **Efeito:** executa `run_trip_timeouts`, expiração de ofertas + redispatch, e `run_cleanup`.
+- **Frequência sugerida:** cada **30–60 s** (ajustar à carga; 60 s é aceitável na maioria dos MVPs).
+
+Se `CRON_SECRET` não estiver definido, o endpoint responde **503** — configurar antes de confiar no agendador.
+
+### Opção alternativa — JWT admin
+
+- `POST /admin/run-timeouts`
+- `POST /admin/run-offer-expiry`
+
+Ambos requerem token de **admin**.
+
+## F.2 Verificações diárias (ou após deploy)
+
+1. **`GET /admin/system-health`** (admin JWT) — rever `stuck_payments`, avisos e listas anómalas.
+2. **Regra:** se `stuck_payments.length > 0` → investigar **já** (Stripe Dashboard, logs com `payment_intent_id`, webhook).
+
+## F.3 Stripe webhook
+
+- URL pública apontando para `POST /webhooks/stripe`.
+- `STRIPE_WEBHOOK_SECRET` igual ao secret do endpoint no Stripe.
+- Eventos mínimos: `payment_intent.succeeded`, `payment_intent.payment_failed`.
+
+O handler devolve **200** mesmo quando o PaymentIntent não existe na BD (comportamento esperado para a Stripe) — usar logs e `system-health` para detetar anomalias.
+
+## F.4 Logs correlacionados (A022)
+
+Procurar por eventos (buffer / consola):
+
+- `payment_capture_started`, `payment_capture_success`, `trip_completion_commit`
+- `stripe_webhook_payment_succeeded`, `stripe_webhook_payment_failed`
+- `trip_accepted` (inclui `payment_id`, `payment_intent_id`)
+- `trip_state_change` em cancelamentos e conclusão (inclui `payment_id` quando existe)
+
+## F.5 Testes automatizados (backend)
+
+Com PostgreSQL a correr e `DATABASE_URL` válido:
+
+```bash
+cd backend
+.\venv\Scripts\activate
+pytest tests/test_consolidacao_tvde.py tests/test_a025_db_constraints.py tests/test_a026_cron_ops.py -q
+```
+
+Sem PostgreSQL, estes testes fazem **skip** explícito.
+
+## F.6 Migração A025 — `payments.stripe_payment_intent_id` UNIQUE
+
+Antes de aplicar: **backup** (`pg_dump`). Script em `backend/sql/a025_payments_stripe_pi_unique.sql` (detetar duplicados, limpar, `ALTER TABLE` + índice em `status`).
+
+Em produção/staging: correr o SQL na BD correta após validar que não há duplicados (ou após limpeza). Novas instalações com `metadata.create_all` herdam o `UniqueConstraint` do modelo.
+
+### Validação manual (só operador)
+
+1. **Contagem de linhas** — antes do `DELETE` de duplicados e depois (não automatizado no repo):
+   - `SELECT COUNT(*) FROM payments;`
+2. **Duplicados zero** — antes do `ALTER TABLE`:
+   - `SELECT stripe_payment_intent_id, COUNT(*) FROM payments WHERE stripe_payment_intent_id IS NOT NULL GROUP BY 1 HAVING COUNT(*) > 1;`
+   - Deve devolver 0 linhas.
+3. **Testes automáticos** (com Postgres + migração aplicada):
+   - `pytest tests/test_consolidacao_tvde.py tests/test_a025_db_constraints.py tests/test_a023_security.py -q`
+
+## F.7 A026 — Operação (cron + runtime real)
+
+Especificação completa: `docs/prompts/A026_OPERACAO_OPS.md`.  
+Testes: `docs/TESTES_A026_OPERACAO.md`.
+
+### CRON
+
+- **Endpoint:** `GET /cron/jobs?secret=<CRON_SECRET>`
+- **Frequência:** **30 s** (ideal) ou **60 s** (aceitável) via agendador externo (ex. cron-job.org).
+- **Regra:** em produção o cron **não** pode depender só de chamadas manuais.
+- **Logs:** após cada execução com sucesso aparecem eventos `cron_jobs_run`, e quando aplicável `trip_timeouts_applied`, `cron_cleanup_audit_events`.
+
+### Verificação diária
+
+- `GET /admin/system-health` (JWT admin).
+- Em condições normais: **`stuck_payments`** deve estar **vazio** (lista vazia).
+- Rever também `trips_accepted_too_long`, `trips_ongoing_too_long`, `inconsistent_financial_state` se existirem entradas.
+
+### Alertas (operador)
+
+- Pagamento em `processing` **> ~10 min** → aparece em `stuck_payments` (investigar Stripe / webhook).
+- Viagens que **não evoluem** dentro dos limiares de `trip_timeouts` + listas do system-health.
+
+### Teste manual (resumo)
+
+1. Trip em `assigned` sem aceitar → após **> 2 min** e com cron a correr → deve passar a `requested` (timeout).
+2. Pagamento preso em processing → confirmar entrada em `stuck_payments` até resolução.
+
+## F.8 Pricing no `complete_trip`
+
+Se aparecer resposta **422** com `trip_metrics_required_before_completion`, a viagem não tem `distance_km` / `duration_min` na BD — corrigir dados ou fluxo que cria a viagem (o fluxo normal de `create_trip` preenche métricas).
+
+---
+
+# Secção G — Relatório projeto / roadmap (março 2026)
+
+_Conteúdo fundido a partir de `RELATORIO_PROJETO_ROADMAP.md`; esse ficheiro na raiz passou a apontar para aqui._
+
+Documento descritivo (nem genérico nem exaustivo). Estado verificado no código em **março de 2026** (incl. correções Stripe webhook, audit JSONB e job de saúde no cron).
+
+## G.1 O que o projeto é hoje
+
+Plataforma **TVDE / ride-sharing** (tipo Uber/Bolt): passageiro pede viagem, motorista aceita e conclui, pagamento com **Stripe manual capture**. A **viagem** passa a `completed` no `complete_trip` após capture na API; o **pagamento** (`payments.status`: `processing` → `succeeded` / `failed`) é confirmado pelo **webhook Stripe** — separação explícita: trip = operacional, payment = financeiro, webhook = SoT só para pagamentos. Há **Web App** (React, Vite, TypeScript) para validação humana, com painel de log/estado, e **backend FastAPI** com regras operacionais (disponibilidade do motorista, timeouts, ofertas, matching) que já ultrapassam o MVP “só state machine + Stripe” descrito no roadmap original.
+
+Validação em campo (4 telemóveis, rede móvel) e testes Render estão registados como concluídos neste handoff.
+
+## G.2 Alinhamento com o roadmap
+
+### Fase 1 — Modelo financeiro real
+
+**No roadmap:** pricing engine, integração no `complete_trip`, `distance_km` / `duration_min`, `driver_payout`, sem Connect.
+
+**Na prática:** Implementado. O `complete_trip` recalcula preço, atualiza amount no PaymentIntent quando aplicável, confirma e captura; comissão vem de `driver.commission_percent`. OSRM opcional, haversine para estimativas.
+
+**Conclusão:** Fase 1 **cumprida** no espírito do roadmap; falta refinamento (rotas reais estáveis, mais testes), não o esqueleto.
+
+### Fase 2 — Web App MVP validável
+
+**Na prática:** Existe `web-app/` com fluxos principais, DevTools, UX extra. O `web-test-console` foi substituído.
+
+**Conclusão:** Fase 2 **cumprida** e **excedida** em alguns aspetos.
+
+### Fora do roadmap original (mas presentes)
+
+Timeouts de trip, `is_available`, race em `accept_trip`, dispatch/ofertas, cron/admin, métricas admin, localização, ratings, cancelamentos, etc. — **crescimento orgânico** do MVP.
+
+### Observabilidade e consistência (em evolução)
+
+- **`GET /admin/system-health`**, **`GET /cron/jobs`** com health check, webhook Stripe normalizado, audit JSONB com `model_dump(mode="json")`.
+- Documentação: `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`; tabela API vs web-app quando existir no repo.
+
+### Ainda não no roadmap “feito”
+
+- **Confirmação no accept** (`ENABLE_CONFIRM_ON_ACCEPT`): não ativar sem decisão de pricing (`archive/docs_nao_essenciais/STRIPE_CONFIRMACAO_FUTURA.md`).
+- **Stripe Connect**, **Alembic**, **push**, **OTP/SMS produção** — futuros.
+
+### Git / PRs (higiene)
+
+- Preferir **PRs separados** por tema (Stripe vs cron vs observabilidade) ou descrição explícita no PR para revert claro.
+
+## G.3 Conclusão (estado do trabalho)
+
+O núcleo (**financeiro + UI validável**) está **fechado** em “funciona de ponta a ponta e foi testado em condições reais”. O que **não** está fechado é a **próxima geração**: preço definitivo, SCA no accept, Connect, endurecimento de produção. Escala: idempotência por `stripe_event_id`, ledger, filas — ver `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`.
+
+## G.4 Expectativas realistas
+
+| Expectativa                       | Realidade                                                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| “MVP demonstrável”                | Atendida.                                                                                             |
+| “Produção sem dívida”             | Parcial: Alembic formal, suite a crescer; cron + admin; reconciliação read-only.                      |
+| “Mesmo roadmap antigo sem deriva” | O código já inclui features além do ROADMAP arquivado — verdade operacional no código + este handoff. |
+
+## G.5 Caminhos possíveis (ordem sugerida)
+
+1. Decisão produto/financeiro — quando o preço é definitivo.
+2. Endurecimento — pytest nos serviços críticos; Alembic quando schema estabilizar.
+3. Operação — scheduler fiável para `GET /cron/jobs`; painel Saúde.
+4. Escala — SSE/WebSocket vs polling quando justificado.
+5. Monetização motorista — Stripe Connect após modelo congelado.
+
+## G.6 Verificação de código — dead code e duplicação
+
+### Dead code (exemplos já tratados)
+
+| Item                                | Nota                                               |
+| ----------------------------------- | -------------------------------------------------- |
+| ~~`create_payment_for_trip`~~       | Removido (A022).                                   |
+| `calculate_driver_payout`           | Comissão em `driver.commission_percent` + `trips`. |
+| ~~`emit_many`~~ / ~~`DomainEvent`~~ | Removidos na consolidação de eventos.              |
+
+### Duplicação
+
+| Tema                  | Onde                          | Comentário                         |
+| --------------------- | ----------------------------- | ---------------------------------- |
+| Haversine             | `app/utils/geo.py`            | `matching` importa `haversine_km`. |
+| Serialização de trips | `app/api/serializers/trip.py` | Centralizada entre routers.        |
+
+### Web App
+
+- `usePolling` com `deps` explícitos; risco residual: ficheiros legacy após refactors.
+
+## G.7 Onde está cada coisa
+
+| Necessidade                    | Onde ir                                                    |
+| ------------------------------ | ---------------------------------------------------------- |
+| Continuar amanhã               | Este ficheiro (`PROXIMA_SESSAO.md`)                        |
+| Roadmap engenharia + A023–A035 | `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`            |
+| Roadmap histórico              | `archive/docs_2026_03_22/ROADMAP.md`                       |
+| Confirmação Stripe futura      | `archive/docs_nao_essenciais/STRIPE_CONFIRMACAO_FUTURA.md` |
+| Testes manuais                 | `GUIA_TESTES.md`                                           |
+| Observabilidade backend        | `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`     |
+| Índice de docs                 | `DOCS_INDEX.md`                                            |
+| Implementação + logs + pytest  | `docs/IMPLEMENTACAO_E_TESTES.md`                           |
+
+_Relatório fundido para apoio à decisão; não substitui o código._

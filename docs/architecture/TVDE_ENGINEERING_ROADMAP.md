@@ -109,3 +109,57 @@ Não prioritário para MVP.
 4 — Dispatch improvements  
 5 — Observability  
 6 — Tracking improvements
+
+---
+
+# Anexo — Pré-produção (blocos A023–A035)
+
+_Consolidado a partir de `docs/ROADMAP_TVDE_ATE_PRODUCAO.md` (ficheiro redirecionado). Fases numeradas abaixo são trabalho tático até “pronto para produção”; não substituem as fases 1–6 acima (visão de engenharia)._
+
+## Estado de referência (quando o anexo foi fundido)
+
+- Sistema funcional; hardening base; testes e Docker estáveis.
+- Fase mental: **consolidação → pré-produção**.
+
+## Bloco 1 — Integridade (crítico)
+
+| ID                          | Tema                                                                          |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| A023_SECURITY_BASE_SEC      | JWT hardening, CORS restrito, dev endpoints desligados em produção            |
+| A024_STRIPE_EDGE_CASES_EXEC | `requires_capture`, alinhar Trip.final_price vs Payment.amount, idempotência  |
+| A025_DB_CONSTRAINTS_DATA    | `stripe_payment_intent_id` único (nullable-safe), índices, limpeza duplicados |
+
+## Bloco 2 — Operação
+
+| ID                    | Tema                                          |
+| --------------------- | --------------------------------------------- |
+| A026_CRON_JOBS_OPS    | Timeouts, cleanup, frequência 30–60 s         |
+| A027_ENVIRONMENTS_OPS | dev / staging / prod; `STRIPE_MOCK` só em dev |
+| A028_BACKUPS_OPS      | Script backup, antes de deploy, regular       |
+
+## Bloco 3 — Observabilidade
+
+| ID                       | Tema                                         |
+| ------------------------ | -------------------------------------------- |
+| A029_LOG_CORRELATION_OBS | `trip_id`, `payment_intent_id`, `request_id` |
+| A030_SYSTEM_HEALTH_OBS   | stuck payments, métricas básicas             |
+
+## Bloco 4 — Testes
+
+| ID                       | Tema                                                               |
+| ------------------------ | ------------------------------------------------------------------ |
+| A031_TEST_EXPANSION_TEST | Poucos testes; só flows com risco financeiro                       |
+| A032_CI_PIPELINE_TEST    | PostgreSQL em CI, sem skips críticos, merge bloqueado em regressão |
+
+## Bloco 5 — Preparação produção
+
+| ID                          | Tema                                          |
+| --------------------------- | --------------------------------------------- |
+| A033_DEPLOYMENT_READY_OPS   | Env, secrets, Stripe                          |
+| A034_SECURITY_AUDIT_AUDIT   | Endpoints, permissões, auth                   |
+| A035_FINAL_VALIDATION_AUDIT | Simulação completa trip + pagamento test mode |
+
+## Notas
+
+- Não adicionar features grandes antes do fecho A035; não refatorar arquitetura “por gosto”.
+- **Definição de pronto:** pagamentos fiáveis, sistema previsível, erros visíveis, operação clara.
