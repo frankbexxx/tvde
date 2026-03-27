@@ -112,7 +112,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - Auto-trip, Run timeouts, Seed
 - Vista Passageiro e Motorista funcionais
 - **Validação em campo (28/02/2026):** 4 telemóveis, rede móvel (dados móveis, sem Wi‑Fi), 1 motorista + 3 passageiros — 100% positivo
-- **Testes Render (04/03/2026):** Testes 1–6 concluídos — cold start, dormancy, multi-dispositivo, regressão (cancelar), fricção de rede, Stripe webhook. Ver [TESTES_RENDER_TIMING.md](TESTES_RENDER_TIMING.md)
+- **Testes Render (04/03/2026):** Testes 1–6 concluídos — cold start, dormancy, multi-dispositivo, regressão (cancelar), fricção de rede, Stripe webhook. Notas em `archive/docs_nao_essenciais/TESTES_RENDER_TIMING.md` no snapshot — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)
 
 ---
 
@@ -135,7 +135,7 @@ O sistema está num **MVP validável** — fluxo técnico e operacional completo
 - **Operacional:** Disponibilidade, timeouts, dispatch, proteção contra race
 - **UX:** Web app com log e estado em tempo real, guia de testes para não-técnicos
 
-A **validação em contexto real** foi concluída com sucesso (4 dispositivos, rede móvel). Próximo passo natural: **decisão sobre confirmação** — quando o preço passa a ser definitivo (ver STRIPE_CONFIRMACAO_FUTURA.md). A introdução de Stripe Connect ou confirmação no accept deve ser feita depois dessa decisão.
+A **validação em contexto real** foi concluída com sucesso (4 dispositivos, rede móvel). Próximo passo natural: **decisão sobre confirmação** — quando o preço passa a ser definitivo (ver `STRIPE_CONFIRMACAO_FUTURA.md` no snapshot — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)). A introdução de Stripe Connect ou confirmação no accept deve ser feita depois dessa decisão.
 
 ---
 
@@ -157,7 +157,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 - **Quando o preço passa a ser definitivo?** (modo atual: no complete; modo futuro: antes de confirm)
 - Definir antes de qualquer implementação de confirmação no accept
-- Ver `STRIPE_CONFIRMACAO_FUTURA.md` — estratégias A, B, C
+- Ver `STRIPE_CONFIRMACAO_FUTURA.md` no snapshot — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md) — estratégias A, B, C
 
 **Não fazer ainda**
 
@@ -302,7 +302,7 @@ Em produção/staging: correr o SQL na BD correta após validar que não há dup
 ## F.7 A026 — Operação (cron + runtime real)
 
 Especificação completa: `docs/prompts/A026_OPERACAO_OPS.md`.  
-Testes: `docs/TESTES_A026_OPERACAO.md`.
+Relatório de testes A026: arquivado fora do Git — ver [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md).
 
 ### CRON
 
@@ -372,7 +372,7 @@ Timeouts de trip, `is_available`, race em `accept_trip`, dispatch/ofertas, cron/
 
 ### Ainda não no roadmap “feito”
 
-- **Confirmação no accept** (`ENABLE_CONFIRM_ON_ACCEPT`): não ativar sem decisão de pricing (`archive/docs_nao_essenciais/STRIPE_CONFIRMACAO_FUTURA.md`).
+- **Confirmação no accept** (`ENABLE_CONFIRM_ON_ACCEPT`): não ativar sem decisão de pricing (doc `STRIPE_CONFIRMACAO_FUTURA.md` no snapshot — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)).
 - **Stripe Connect**, **Alembic**, **push**, **OTP/SMS produção** — futuros.
 
 ### Git / PRs (higiene)
@@ -426,8 +426,7 @@ O núcleo (**financeiro + UI validável**) está **fechado** em “funciona de p
 | ------------------------------ | ---------------------------------------------------------- |
 | Continuar amanhã               | Este ficheiro (`PROXIMA_SESSAO.md`)                        |
 | Roadmap engenharia + A023–A035 | `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`            |
-| Roadmap histórico              | `archive/docs_2026_03_22/ROADMAP.md`                       |
-| Confirmação Stripe futura      | `archive/docs_nao_essenciais/STRIPE_CONFIRMACAO_FUTURA.md` |
+| Roadmap histórico / Stripe futuro | Snapshot local — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md) (`archive/docs_2026_03_22/ROADMAP.md`, `STRIPE_CONFIRMACAO_FUTURA.md`) |
 | Testes manuais                 | `GUIA_TESTES.md`                                           |
 | Observabilidade backend        | `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`     |
 | Índice de docs                 | `DOCS_INDEX.md`                                            |

@@ -17,7 +17,7 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 
 ## Documentação
 
-1. **[DOCS_INDEX.md](DOCS_INDEX.md)** — mapa de tudo o que está no repo (inclui secção *Documentos arquivados* para histórico em `archive/`).
+1. **[DOCS_INDEX.md](DOCS_INDEX.md)** — mapa da documentação no repo. Histórico antigo retirado do Git: **[docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)**.
 2. **[PROJECT.md](PROJECT.md)** — produto, modelo de dados, fluxo viagem/pagamento.
 3. **[docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)** — Git/GitHub para este repo (branches, PR, `main`; push directo a `main` está bloqueado).
 4. **[PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)** — handoff entre sessões; operações do dia a dia na **Secção F**; relatório de alinhamento na **Secção G**.

@@ -43,4 +43,4 @@
 ## Referências
 
 - Plano de execução: `docs/prompts/A021_VISUAL_SYSTEM.md` (visual) e instruções A021→A022 fechadas na sessão de consolidação.
-- Histórico Stripe / confirmação futura (arquivo): `archive/docs_nao_essenciais/STRIPE_CONFIRMACAO_FUTURA.md`
+- Histórico Stripe / confirmação futura: no snapshot local (ver [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md)), ficheiro `archive/docs_nao_essenciais/STRIPE_CONFIRMACAO_FUTURA.md`

@@ -1,5 +1,5 @@
 """
-Testes de consolidação TVDE — alinhados com docs/TESTES_CONSOLIDACAO_TVDE.md
+Testes de consolidação TVDE — documentação de sessão correlata arquivada (ver docs/HISTORICO_FORA_DO_GIT.md).
 
 - Fluxo HTTP real (TestClient) onde faz sentido
 - STRIPE_MOCK=True (sem Stripe real)

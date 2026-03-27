@@ -18,6 +18,6 @@ Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura 
 | `visao_cursor.md`            | Visão geral, ideias e checklist de comercialização (handoff Cursor)                                             |
 | `TODO_CODIGO_TVDE.md`        | Árvore TODO código — PROD validation, staging, backups, migrações                                               |
 
-**Prompts e análises antigas:** `archive/docs_maint_2026_02_23/` (ver README lá dentro). **Snapshots de worktree / A021 / UI:** `archive/docs_2026_03_26/`.
+**Histórico antigo (prompts implementados, snapshots, PDFs):** já não está no clone — ver [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md).
 
 Índice global do repo: [DOCS_INDEX.md](../DOCS_INDEX.md).
