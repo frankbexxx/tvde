@@ -4,11 +4,17 @@ Referência de todos os ficheiros de documentação do projeto.
 
 ---
 
-## Inventário e limpeza (em curso)
+## Espinha dorsal (canónico)
+
+Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub manual** → **PROXIMA_SESSAO** → este índice para o resto. Implementação técnica e testes: **docs/IMPLEMENTACAO_E_TESTES.md**. Histórico e material antigo continua em **`archive/`** (ver secção *Documentos arquivados* no fim deste ficheiro).
+
+---
+
+## Inventário e próximo arquivo
 
 | Ficheiro                                                                                 | Propósito                                                                                                                                     |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](docs/DOCUMENTATION_INVENTORY_2026-03-27.md) | O que o Git rastreia (`.md` + imagens): **manter / fundir / arquivar** — base para a espinha dorsal e para arquivo em `C:\dev\_archives\APP\` |
+| [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](docs/DOCUMENTATION_INVENTORY_2026-03-27.md) | O que o Git rastreia (`.md` + imagens): **manter / fundir / arquivar** — fusões principais feitas; próximo passo opcional: cópia para `C:\dev\_archives\APP\` + `git rm` do que sair do repo |
 
 ---
 
