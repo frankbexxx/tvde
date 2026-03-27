@@ -2,6 +2,8 @@
 
 Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura **corrente**.
 
+**`_local/`** — ficheiros pessoais de rascunho (`.md`, imagens de sessão): pasta **`docs/_local/`**, ignorada pelo Git.
+
 | Pasta / ficheiro             | Uso                                                                                                             |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `architecture/`              | Blueprint, estado técnico, convenções, roadmap de engenharia                                                    |
