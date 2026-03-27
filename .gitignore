@@ -50,6 +50,8 @@ temp/
 
 # Saídas de teste
 *_pytest_out.txt
+.coverage
+htmlcov/
 
 # Relatórios de auditoria locais
 backend/audit/

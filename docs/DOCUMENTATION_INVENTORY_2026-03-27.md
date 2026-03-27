@@ -10,15 +10,14 @@ Método: `git ls-files` filtrado por `*.md` e extensões de imagem. Estado do wo
 
 | Tipo                         | Quantidade (tracked) | Nota                                                            |
 | ---------------------------- | -------------------- | --------------------------------------------------------------- |
-| Ficheiros `.md`              | **~175**             | inclui tudo em `archive/`                                       |
-| `.md` **fora** de `archive/` | **~58**              | candidatos a “espinha dorsal” + `docs/` ativos                  |
-| Imagens (png/svg) tracked    | **17**               | quase tudo sob `archive/`; **2** em `web-app/` (assets normais) |
+| Ficheiros `.md` (antes da remoção de `archive/`) | **~175** | após `git rm` de `archive/`, contagem no clone desce (~60 `.md` tracked) |
+| Imagens tracked (antes)                         | **17**   | a maioria saiu com `archive/`; no repo ficam sobretudo assets `web-app/`   |
 
 ---
 
-## Aviso: índice vs ficheiro por commitar
+## Aviso
 
-`DOCS_INDEX.md` aponta para `docs/GITHUB_MANUAL_TVDE.md`, mas esse ficheiro está **por adicionar ao Git** (`git add`). **Decisão pendente:** fazer `git add docs/GITHUB_MANUAL_TVDE.md` **ou** remover a entrada do índice até estar committed.
+`docs/GITHUB_MANUAL_TVDE.md` está **no repositório** (commit posterior ao inventário inicial).
 
 ---
 
@@ -37,7 +36,7 @@ Método: `git ls-files` filtrado por `*.md` e extensões de imagem. Estado do wo
 | `INTERACTION_LOGGING.md`       | Telemetria / export de logs | **Manter**                                                                                                         |
 | `OPERATION_CHECKLIST.md`       | Checklist operação          | **Feito:** fundido em `PROXIMA_SESSAO.md` Secção F; raiz = stub com link                                           |
 | `RELATORIO_PROJETO_ROADMAP.md` | Roadmap / relatório         | **Feito:** fundido em `PROXIMA_SESSAO.md` Secção G + anexo A023–A035 em `TVDE_ENGINEERING_ROADMAP.md`; raiz = stub |
-| `AUDIT_RELATORIO_COMPLETO.md`  | Relatório de auditoria      | **Arquivar** fora do Git após confirmar que não há decisões únicas só aqui; manter sumário no índice se necessário |
+| `AUDIT_RELATORIO_COMPLETO.md`  | Relatório de auditoria      | **Feito:** removido do Git; cópia no snapshot — [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md)              |
 
 ---
 
@@ -64,14 +63,14 @@ Método: `git ls-files` filtrado por `*.md` e extensões de imagem. Estado do wo
 | `docs/IMPLEMENTACAO_E_TESTES.md`, `docs/LOGS_E_TESTES_SINTESE.md`                                     | **Feito:** Parte II em `IMPLEMENTACAO_E_TESTES.md`; `LOGS_*` = stub                                                                        |
 | `docs/PRICING_DECISION.md`                                                                            | **Manter** se decisão ainda vigente                                                                                                        |
 | `docs/ROADMAP_TVDE_ATE_PRODUCAO.md`                                                                   | **Feito:** anexo em `TVDE_ENGINEERING_ROADMAP.md`; ficheiro = stub                                                                         |
-| `docs/TESTES_A026_OPERACAO.md`, `docs/TESTES_CONSOLIDACAO_TVDE.md`, `docs/A022_RELATORIO_EXECUCAO.md` | **Arquivar** fora do Git (relatórios de sessão); deixar **uma linha** no `DOCS_INDEX` “histórico em arquivo local” se precisares de trilho |
+| `docs/TESTES_A026_OPERACAO.md`, `docs/TESTES_CONSOLIDACAO_TVDE.md`, `docs/A022_RELATORIO_EXECUCAO.md` | **Feito:** removidos do Git; cópia no snapshot — [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md)                                |
 
 ### 2.3 `docs/prompts/` (agentes / implementação)
 
 | Ficheiro                                                          | Recomendação                                                                                                                                |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `A000_SYSTEM_RULES.md`, `A033_B_VALIDATION_HARDENING_PLAYBOOK.md` | **Manter** — referência viva                                                                                                                |
-| `A014`, `A019_*`, `A020_*`, `A021`, `A022`, `A026_*`, `A032`      | **Manter** enquanto forem usados em Cursor; **arquivar** prompts “fechados” numa só pasta em `archive/` ou fora do Git quando a fase acabar |
+| `A014`, `A019_*`, `A020_*`, `A021`, `A022`, `A026_*`, `A032`      | **Manter** enquanto forem usados em Cursor; prompts antigos já arquivados no snapshot local (ex-`archive/docs_maint_*`)              |
 | Nomes com encoding estranho (`A019_QA_ EXECU…`, `A020_SESSION…`)  | **Renomear** (sem mudar conteúdo) num PR pequeno — melhora links e grep                                                                     |
 
 ### 2.4 `docs/testing/` (test book numerado)
@@ -82,24 +81,18 @@ Método: `git ls-files` filtrado por `*.md` e extensões de imagem. Estado do wo
 
 ---
 
-## 3. `archive/` (já marcado como arquivo **dentro** do Git)
+## 3. `archive/` e `archive_support/` — **removidos do Git (2026-03-27)**
 
-Pastas: `archive/docs_2026_03_22/`, `archive/docs_2026_03_26/`, `archive/docs_maint_2026_02_23/`, `archive/docs_nao_essenciais/`, `archive_support/`, etc.
-
-| Recomendação estratégica                                                                                                                                                                                                                               |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Fase posterior:** cópia completa para `C:\dev\_archives\APP\git-archive-snapshot-AAAA-MM-DD\` e **`git rm -r` do `archive/`** no repo — reduz ruído e tamanho do clone. Só depois de confirmares que não precisas disto em CI nem em links partidos. |
-| Até lá: tratar como **read-only**; não reescrever em massa.                                                                                                                                                                                            |
+Cópia em `C:\dev\_archives\APP\repo-removed-from-git-2026-03-27\`. Detalhe: [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md). Histórico em commits anteriores: `git show <commit>:archive/...`.
 
 ---
 
-## 4. Imagens tracked
+## 4. Imagens
 
-| Localização                                               | Recomendação                                                                             |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `web-app/public/vite.svg`, `web-app/src/assets/react.svg` | **Manter** — assets do build                                                             |
-| Tudo sob `archive/**` (\*.png)                            | **Sair com o `archive/`** na fase de remoção, **ou** arquivar em disco antes do `git rm` |
-| `archive_support/ChatGPT Image …png`                      | Candidato forte a **arquivar fora do Git** / remover do tracking                         |
+| Localização                                               | Estado                                                                      |
+| --------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `web-app/public/vite.svg`, `web-app/src/assets/react.svg` | **No repo** — assets do build                                               |
+| Imagens que estavam em `archive/` e `archive_support/`    | **Fora do Git** — no snapshot local em `C:\dev\_archives\APP\repo-removed-from-git-2026-03-27\` |
 
 ---
 
@@ -118,7 +111,7 @@ Pastas: `archive/docs_2026_03_22/`, `archive/docs_2026_03_26/`, `archive/docs_ma
 1. **Rever este inventário** — marca à mão ✓ onde discordares das recomendações.
 2. **Espinha dorsal:** actualizar `README.md` + `DOCS_INDEX.md` (secções _Canónico_ / _Legado / arquivo_ / _Ação pendente: commit GITHUB_MANUAL_).
 3. **Fundir** pares acordados (roadmaps, relatórios redundantes) em PRs pequenos.
-4. **Arquivo físico + `git rm`:** só depois de cópia para `C:\dev\_archives\APP\…` e backup verificado.
+4. **Arquivo físico + `git rm`:** **feito** para `archive/`, `archive_support/` e relatórios pontuais listados em [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md).
 
 ---
 
