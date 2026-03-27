@@ -17,11 +17,16 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 
 ## Documentação
 
-Ver **[DOCS_INDEX.md](DOCS_INDEX.md)** para índice completo.
+1. **[DOCS_INDEX.md](DOCS_INDEX.md)** — mapa de tudo o que está no repo (inclui secção *Documentos arquivados* para histórico em `archive/`).
+2. **[PROJECT.md](PROJECT.md)** — produto, modelo de dados, fluxo viagem/pagamento.
+3. **[docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)** — Git/GitHub para este repo (branches, PR, `main`; push directo a `main` está bloqueado).
+4. **[PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)** — handoff entre sessões; operações do dia a dia na **Secção F**; relatório de alinhamento na **Secção G**.
+5. **[docs/IMPLEMENTACAO_E_TESTES.md](docs/IMPLEMENTACAO_E_TESTES.md)** — o que foi implementado (A000…), como testar, e **Parte II** (logs / pytest).
+
+Guias operacionais rápidos:
 
 | Ficheiro | Descrição |
 |----------|-----------|
 | `GUIA_TESTES.md` | Manual de testes passo a passo |
 | `PREPARACAO_RENDER.md` | Deploy no Render |
 | `VALIDACAO_HUMANA_CAMPO.md` | Teste humano em campo |
-| `PROXIMA_SESSAO.md` | Handoff e contexto do projeto |
