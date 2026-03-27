@@ -131,7 +131,7 @@ Não exigir E2E browser neste incremento.
 2. Implementar alterações pontuais.  
 3. Correr `pytest` no backend.  
 4. Commit com mensagem clara (ex.: `feat(A022): hardening pricing logs tests operation checklist`).  
-5. Registar o que foi feito em `docs/A022_RELATORIO_EXECUCAO.md` (ou actualizar na mesma sessão).
+5. Registar o que foi feito num relatório de sessão (o antigo `docs/A022_RELATORIO_EXECUCAO.md` foi arquivado fora do Git — ver [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)).
 
 ---
 

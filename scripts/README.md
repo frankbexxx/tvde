@@ -8,7 +8,7 @@ Scripts PowerShell e Python para automatizar o protocolo de teste. Executar a pa
 |--------|-----------|
 | `start_test_env.ps1` | Arranque completo: BD + backend + frontend. Verifica endpoints. Ver docs/testing/TEST_ENVIRONMENT_SETUP.md |
 | `start_test_env.sh` | Igual (Linux/macOS) |
-| `archive_temp.ps1` | Arquivar unified_payments.csv, logs/ para archive/ e limpar tmp/, temp/. Executar periodicamente. |
+| `archive_temp.ps1` | Arquivar exports para pasta `archive/` local (a pasta **não** está no Git desde 2026-03; podes criá-la à mão ou usar `C:\dev\_archives\APP\`). |
 | `run_tests.ps1` | Executa pytest (backend) + test_simulator_trip (quando backend está up). Sem intervenção manual. |
 | `test_simulator_trip.py` | Teste de integração: seed → driver → criar viagem → verificar completed. |
 | `driver_simulator.py` | Simula N motoristas (location, accept, lifecycle). Requer backend com ENABLE_DEV_TOOLS. |

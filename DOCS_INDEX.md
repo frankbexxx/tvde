@@ -6,7 +6,7 @@ Referência de todos os ficheiros de documentação do projeto.
 
 ## Espinha dorsal (canónico)
 
-Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub manual** → **PROXIMA_SESSAO** → este índice para o resto. Implementação técnica e testes: **docs/IMPLEMENTACAO_E_TESTES.md**. Histórico e material antigo continua em **`archive/`** (ver secção *Documentos arquivados* no fim deste ficheiro).
+Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub manual** → **PROXIMA_SESSAO** → este índice para o resto. Implementação técnica e testes: **docs/IMPLEMENTACAO_E_TESTES.md**. Documentação histórica que **já não está no clone**: **[docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)**.
 
 ---
 
@@ -77,7 +77,6 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | [docs/prompts/A000_SYSTEM_RULES.md](docs/prompts/A000_SYSTEM_RULES.md)                                       | Regras do projeto para agentes / implementação                           |
 | [docs/prompts/A014_UX_POLISH.md](docs/prompts/A014_UX_POLISH.md)                                             | Polish UX (em curso)                                                     |
 | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | A033-B — validação produção (env, webhook, cron, e2e, migrações, backup) |
-| [archive/docs_maint_2026_02_23/](archive/docs_maint_2026_02_23/README.md)                                    | Prompts já implementadas, imagens e notas arquivadas (sem apagar)        |
 
 ---
 
@@ -131,16 +130,12 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 23  | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade e reconciliação                     |
 | 24  | [docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)                                                     | Git + GitHub — fluxo TVDE (antes / durante / depois)         |
 | 25  | [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](docs/DOCUMENTATION_INVENTORY_2026-03-27.md)                     | Inventário docs/media tracked — plano manter/fundir/arquivar |
+| 26  | [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                   |
 
 ---
 
-## Documentos arquivados
+## Documentos arquivados (fora do Git)
 
-| Localização                      | Conteúdo                                                                                                                           |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `archive/docs_nao_essenciais/`   | Docs movidos em 2026-03-08 (guias alternativos, relatórios, design system antigo, etc.) — ver README nessa pasta                   |
-| `archive/docs_2026_03_22/`       | Docs movidos em 2026-03-22 (arquitetura duplicada, regressão, visão produto, logs simulator) — ver README nessa pasta              |
-| `archive/docs_2026_03_26/`       | Worktree, relatórios A021/lint, auditorias visuais snapshot — ver README nessa pasta                                               |
-| `archive/docs_maint_2026_02_23/` | Manutenção 2026-02: prompts implementadas (A001–A013, B\*, …), `docs/vision/`, imagens, análises pontuais — ver README nessa pasta |
-| `archive_support/`               | Runbooks e manuais desatualizados                                                                                                  |
-| `archive/` (resto)               | Screenshots, PDFs, imagens de sessão                                                                                               |
+A pasta `archive/` e `archive_support/` **deixaram de fazer parte do repositório** (clone mais leve). Cópia de segurança e lista de ficheiros: **[docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)**.
+
+Histórico ainda acessível com `git show <commit>:archive/...` para commits **anteriores** à remoção.
