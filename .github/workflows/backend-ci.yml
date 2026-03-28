@@ -42,6 +42,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Apply Alembic migrations
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          JWT_SECRET_KEY: ci-jwt-secret-key-at-least-32-characters-long
+          OTP_SECRET: ci-otp-secret-key-at-least-32-characters-long
+          STRIPE_SECRET_KEY: sk_test_ci_placeholder_not_used
+          STRIPE_MOCK: "true"
+          ENV: dev
+        run: alembic upgrade head
+
       - name: Run pytest
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db

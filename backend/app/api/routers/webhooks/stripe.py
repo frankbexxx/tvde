@@ -3,6 +3,7 @@
 import logging
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -11,6 +12,7 @@ import stripe
 from app.api.deps import get_db
 from app.core.config import settings
 from app.db.models.payment import Payment
+from app.db.models.stripe_webhook_event import StripeWebhookEvent
 from app.models.enums import PaymentStatus
 from app.utils.logging import log_event
 
@@ -115,6 +117,22 @@ async def stripe_webhook(
             )
             return {"status": "ok"}
 
+        if stripe_event_id:
+            ins = (
+                insert(StripeWebhookEvent)
+                .values(stripe_event_id=str(stripe_event_id))
+                .on_conflict_do_nothing()
+            )
+            ins_result = db.execute(ins)
+            if ins_result.rowcount == 0:
+                logger.info(
+                    "webhook: duplicate Stripe delivery (evt idempotent) "
+                    "stripe_event_id=%s event_type=%s",
+                    stripe_event_id,
+                    event_type,
+                )
+                return {"status": "ok"}
+
         # Manual capture: only payment_intent.succeeded fires after capture.
         if event_type == "payment_intent.succeeded":
             if payment.status != PaymentStatus.succeeded:
@@ -201,4 +219,3 @@ async def stripe_webhook(
             logger.exception("webhook: rollback after DB error failed")
 
     return {"status": "ok"}
-

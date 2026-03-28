@@ -1,4 +1,5 @@
 """Tests for multi-offer dispatch (A002)."""
+
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -8,23 +9,21 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
-from app.db.base import Base
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, OfferStatus, Role, UserStatus
-
-
-Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
     return SessionLocal()
 
 
-def _create_driver_with_location(db: Session, lat: float, lng: float, is_available: bool = True) -> str:
+def _create_driver_with_location(
+    db: Session, lat: float, lng: float, is_available: bool = True
+) -> str:
     user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
@@ -108,9 +107,11 @@ def test_mod_001_offer_creation() -> None:
     assert body["status"] == "requested"
     trip_id = body["trip_id"]
 
-    offers = db.execute(
-        select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id))
-    ).scalars().all()
+    offers = (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id)))
+        .scalars()
+        .all()
+    )
     top_n = getattr(settings, "OFFER_TOP_N", 5)
     assert len(offers) == top_n
 
@@ -143,9 +144,11 @@ def test_mod_002_only_first_accept_wins() -> None:
     assert r.status_code == 200
     trip_id = r.json()["trip_id"]
 
-    offers = list(db.execute(
-        select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id))
-    ).scalars().all())
+    offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id)))
+        .scalars()
+        .all()
+    )
     assert len(offers) >= 2
     offer_for_d1 = next((o for o in offers if str(o.driver_id) == str(d1)), None)
     offer_for_d2 = next((o for o in offers if str(o.driver_id) == str(d2)), None)
@@ -189,9 +192,11 @@ def test_mod_003_rejected_offers_handled() -> None:
     assert r.status_code == 200
     trip_id = r.json()["trip_id"]
 
-    offers = list(db.execute(
-        select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id))
-    ).scalars().all())
+    offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id)))
+        .scalars()
+        .all()
+    )
     assert len(offers) >= 1
     offer_id = str(offers[0].id)
 
@@ -229,9 +234,11 @@ def test_mod_004_expired_offers() -> None:
     assert r.status_code == 200
     trip_id = r.json()["trip_id"]
 
-    offers = list(db.execute(
-        select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id))
-    ).scalars().all())
+    offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id)))
+        .scalars()
+        .all()
+    )
     assert len(offers) >= 1
     offer = offers[0]
 
@@ -242,12 +249,16 @@ def test_mod_004_expired_offers() -> None:
 
     # Verify expired offers are excluded from pending list
     now = datetime.now(timezone.utc)
-    offers_pending = list(db.execute(
-        select(TripOffer)
-        .where(TripOffer.trip_id == uuid.UUID(trip_id))
-        .where(TripOffer.status == OfferStatus.pending)
-        .where(TripOffer.expires_at > now)
-    ).scalars().all())
+    offers_pending = list(
+        db.execute(
+            select(TripOffer)
+            .where(TripOffer.trip_id == uuid.UUID(trip_id))
+            .where(TripOffer.status == OfferStatus.pending)
+            .where(TripOffer.expires_at > now)
+        )
+        .scalars()
+        .all()
+    )
     assert len(offers_pending) == 0, "Expired offer should not appear in pending list"
 
     _reset_overrides()

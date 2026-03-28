@@ -1,4 +1,5 @@
 """Tests for offer timeout (A003)."""
+
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -6,18 +7,18 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
-from app.db.base import Base
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
-from app.services.offer_dispatch import create_offers_for_trip, expire_stale_offers, redispatch_expired_trips
-
-
-Base.metadata.create_all(bind=engine)
+from app.services.offer_dispatch import (
+    create_offers_for_trip,
+    expire_stale_offers,
+    redispatch_expired_trips,
+)
 
 
 def _make_db() -> Session:
@@ -33,10 +34,14 @@ def _create_driver_with_location(db: Session, lat: float, lng: float) -> str:
     )
     db.add(user)
     db.flush()
-    driver = Driver(user_id=user.id, status=DriverStatus.approved, commission_percent=15.0)
+    driver = Driver(
+        user_id=user.id, status=DriverStatus.approved, commission_percent=15.0
+    )
     db.add(driver)
     db.flush()
-    loc = DriverLocation(driver_id=user.id, lat=lat, lng=lng, timestamp=datetime.now(timezone.utc))
+    loc = DriverLocation(
+        driver_id=user.id, lat=lat, lng=lng, timestamp=datetime.now(timezone.utc)
+    )
     db.add(loc)
     db.commit()
     return str(user.id)
@@ -96,7 +101,11 @@ def test_ot_001_offer_expires_after_timeout() -> None:
     create_offers_for_trip(db=db, trip=trip)
     db.commit()
 
-    offers = list(db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id)).scalars().all())
+    offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+        .scalars()
+        .all()
+    )
     assert len(offers) >= 1
     offer = offers[0]
     assert offer.status == OfferStatus.pending
@@ -129,7 +138,11 @@ def test_ot_002_redispatch_triggered() -> None:
     create_offers_for_trip(db=db, trip=trip)
     db.commit()
 
-    offers = list(db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id)).scalars().all())
+    offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+        .scalars()
+        .all()
+    )
     assert len(offers) >= 1
     for o in offers:
         o.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
@@ -140,8 +153,14 @@ def test_ot_002_redispatch_triggered() -> None:
     assert len(new_offers) >= 1
 
     db.expire_all()  # Clear session cache to see committed data
-    all_offers = list(db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id)).scalars().all())
+    all_offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+        .scalars()
+        .all()
+    )
     pending = [o for o in all_offers if o.status == OfferStatus.pending]
-    assert len(pending) >= 1, f"Expected pending offers, got statuses: {[o.status for o in all_offers]}"
+    assert (
+        len(pending) >= 1
+    ), f"Expected pending offers, got statuses: {[o.status for o in all_offers]}"
 
     db.close()

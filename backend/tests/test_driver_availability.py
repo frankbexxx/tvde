@@ -1,4 +1,5 @@
 """Tests for driver availability (A001)."""
+
 import uuid
 
 from fastapi.testclient import TestClient
@@ -6,16 +7,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
-from app.db.base import Base
 from app.db.models.driver import Driver
 from app.db.models.trip import Trip
 from app.db.models.user import User
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
-
-
-Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
@@ -87,7 +84,9 @@ def test_da_001_driver_goes_online() -> None:
     assert r.status_code == 200
     assert r.json()["is_available"] is True
 
-    driver = db.execute(select(Driver).where(Driver.user_id == uuid.UUID(driver_id))).scalar_one()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(driver_id))
+    ).scalar_one()
     assert driver.is_available is True
 
     _reset_overrides()
@@ -107,7 +106,9 @@ def test_da_002_driver_goes_offline() -> None:
     assert r.status_code == 200
     assert r.json()["is_available"] is False
 
-    driver = db.execute(select(Driver).where(Driver.user_id == uuid.UUID(driver_id))).scalar_one()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(driver_id))
+    ).scalar_one()
     assert driver.is_available is False
 
     _reset_overrides()
