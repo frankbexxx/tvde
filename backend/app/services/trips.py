@@ -247,7 +247,12 @@ def cancel_trip_by_passenger(
         try:
             intent = retrieve_payment_intent(pi_id)
             pi_status = getattr(intent, "status", None) or intent.get("status", "")
-            if pi_status in ("requires_payment_method", "requires_confirmation", "requires_action", "requires_capture"):
+            if pi_status in (
+                "requires_payment_method",
+                "requires_confirmation",
+                "requires_action",
+                "requires_capture",
+            ):
                 cancel_payment_intent(pi_id)
                 logger.info(f"cancel_trip_by_passenger: cancelled PI {pi_id}")
         except Exception as e:
@@ -281,7 +286,9 @@ def _set_driver_available(db: Session, driver_id: str | None) -> None:
     """Set driver is_available=True when trip ends."""
     if not driver_id:
         return
-    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_id)
+    ).scalar_one_or_none()
     if driver and hasattr(driver, "is_available"):
         driver.is_available = True
 
@@ -311,7 +318,9 @@ def cancel_trip_by_driver(
     trip.cancelled_by = "driver"
 
     # Driver penalty: increment cancellation_count
-    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_id)
+    ).scalar_one_or_none()
     if driver:
         driver.cancellation_count = (driver.cancellation_count or 0) + 1
 
@@ -321,7 +330,12 @@ def cancel_trip_by_driver(
         try:
             intent = retrieve_payment_intent(pi_id)
             pi_status = getattr(intent, "status", None) or intent.get("status", "")
-            if pi_status in ("requires_payment_method", "requires_confirmation", "requires_action", "requires_capture"):
+            if pi_status in (
+                "requires_payment_method",
+                "requires_confirmation",
+                "requires_action",
+                "requires_capture",
+            ):
                 cancel_payment_intent(pi_id)
                 logger.info(f"cancel_trip_by_driver: cancelled PI {pi_id}")
         except Exception as e:
@@ -383,9 +397,15 @@ def cancel_trip_by_admin(
         try:
             intent = retrieve_payment_intent(payment.stripe_payment_intent_id)
             pi_status = getattr(intent, "status", None) or intent.get("status", "")
-            if pi_status in ("requires_payment_method", "requires_confirmation", "requires_action"):
+            if pi_status in (
+                "requires_payment_method",
+                "requires_confirmation",
+                "requires_action",
+            ):
                 cancel_payment_intent(payment.stripe_payment_intent_id)
-                logger.info(f"cancel_trip_by_admin: cancelled PI {payment.stripe_payment_intent_id}")
+                logger.info(
+                    f"cancel_trip_by_admin: cancelled PI {payment.stripe_payment_intent_id}"
+                )
         except Exception as e:
             logger.warning(f"cancel_trip_by_admin: could not cancel PI: {e}")
 
@@ -471,9 +491,7 @@ def rate_trip_as_driver(
 ) -> Trip:
     """Driver rates passenger (1-5). Trip must be completed."""
     trip = db.execute(
-        select(Trip)
-        .where(Trip.id == trip_id)
-        .with_for_update(of=Trip)
+        select(Trip).where(Trip.id == trip_id).with_for_update(of=Trip)
     ).scalar_one_or_none()
     if not trip or str(trip.driver_id) != str(driver_id):
         _raise_not_found()
@@ -494,6 +512,7 @@ def rate_trip_as_driver(
     # Update passenger avg_rating_as_passenger
     if passenger_id:
         from app.db.models.user import User
+
         avg_row = db.execute(
             select(func.avg(Trip.passenger_rating).label("avg"))
             .where(Trip.passenger_id == passenger_id)
@@ -518,7 +537,7 @@ def accept_trip(
     trip_id: str,
 ) -> tuple[Trip, str | None]:
     """Accept trip with atomic payment authorization.
-    
+
     Order of operations (atomic):
     1. Lock trip row (FOR UPDATE) to prevent race condition
     2. Validate trip state == assigned
@@ -529,7 +548,7 @@ def accept_trip(
     7. Update trip state to accepted, driver is_available=False
     8. Single commit
     9. Emit event
-    
+
     If Stripe fails at step 5, nothing is changed (trip remains assigned).
     """
     trip = db.execute(
@@ -557,7 +576,9 @@ def accept_trip(
             detail="Payment already exists for this trip.",
         )
 
-    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_id)
+    ).scalar_one_or_none()
     if not driver:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -588,6 +609,7 @@ def accept_trip(
                 amount_cents=amount_cents,
                 currency="EUR",
                 metadata={"trip_id": str(trip.id)},
+                idempotency_key=f"tvde-pi-auth-{trip.id}",
             )
             stripe_pi_id = intent.id
             logger.info(
@@ -701,7 +723,9 @@ def accept_offer(
             detail="offer_already_taken",
         )
 
-    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_id)
+    ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
     if not getattr(driver, "is_available", True):
@@ -711,9 +735,15 @@ def accept_offer(
         )
 
     # Expire other offers for this trip
-    for o in db.execute(
-        select(TripOffer).where(TripOffer.trip_id == trip.id, TripOffer.id != offer.id)
-    ).scalars().all():
+    for o in (
+        db.execute(
+            select(TripOffer).where(
+                TripOffer.trip_id == trip.id, TripOffer.id != offer.id
+            )
+        )
+        .scalars()
+        .all()
+    ):
         o.status = OfferStatus.expired
     offer.status = OfferStatus.accepted
 
@@ -733,6 +763,7 @@ def accept_offer(
                 amount_cents=amount_cents,
                 currency="EUR",
                 metadata={"trip_id": str(trip.id)},
+                idempotency_key=f"tvde-pi-auth-{trip.id}",
             )
             stripe_pi_id = intent.id
         except stripe.error.StripeError as e:
@@ -770,7 +801,9 @@ def accept_offer(
         payment_id=str(payment.id),
         payment_intent_id=stripe_pi_id,
     )
-    log_debug_event("offer_accepted", trip_id=trip.id, driver_id=driver_id, offer_id=offer_id)
+    log_debug_event(
+        "offer_accepted", trip_id=trip.id, driver_id=driver_id, offer_id=offer_id
+    )
     log_event(
         "trip_state_change",
         trip_id=trip.id,
@@ -879,7 +912,9 @@ def list_available_trips(
     Return trips available for driver: from pending offers (multi-offer) and legacy assigned pool.
     Returns (trip, offer) - offer is None for legacy assigned trips.
     """
-    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_id)
+    ).scalar_one_or_none()
     if not driver or driver.status != DriverStatus.approved:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -904,9 +939,7 @@ def list_available_trips(
 
     # Legacy: assigned trips (from admin assign or driver_location auto-dispatch)
     assigned_trips = list(
-        db.execute(
-            select(Trip).where(Trip.status == TripStatus.assigned)
-        ).scalars()
+        db.execute(select(Trip).where(Trip.status == TripStatus.assigned)).scalars()
     )
     driver_loc = db.execute(
         select(DriverLocation).where(DriverLocation.driver_id == driver_id)
@@ -915,8 +948,10 @@ def list_available_trips(
         candidates: list[tuple[Trip, float]] = []
         for trip in assigned_trips:
             dist_km = haversine_km(
-                float(driver_loc.lat), float(driver_loc.lng),
-                float(trip.origin_lat), float(trip.origin_lng),
+                float(driver_loc.lat),
+                float(driver_loc.lng),
+                float(trip.origin_lat),
+                float(trip.origin_lng),
             )
             if dist_km <= settings.GEO_RADIUS_KM:
                 candidates.append((trip, dist_km))
@@ -1037,7 +1072,7 @@ def complete_trip(
     trip_id: str,
 ) -> Trip:
     """Complete trip and capture payment authorization.
-    
+
     Rules:
     - trip.status must be ongoing
     - payment.status must be processing
@@ -1147,12 +1182,13 @@ def complete_trip(
         payment_intent_id=payment.stripe_payment_intent_id or "",
     )
     # --- Stripe: update, confirm, capture. Skip when STRIPE_MOCK (simulator/testing). ---
-    stripe_mock = (
-        getattr(settings, "STRIPE_MOCK", False)
-        or (payment.stripe_payment_intent_id or "").startswith("pi_mock_")
-    )
+    stripe_mock = getattr(settings, "STRIPE_MOCK", False) or (
+        payment.stripe_payment_intent_id or ""
+    ).startswith("pi_mock_")
     if stripe_mock:
-        logger.info(f"complete_trip: STRIPE_MOCK — skipping Stripe API trip_id={trip_id}")
+        logger.info(
+            f"complete_trip: STRIPE_MOCK — skipping Stripe API trip_id={trip_id}"
+        )
         log_event(
             "payment_capture_success",
             trip_id=str(trip.id),
@@ -1170,6 +1206,7 @@ def complete_trip(
                 update_payment_intent_amount(
                     payment.stripe_payment_intent_id,
                     amount_cents=amount_cents,
+                    idempotency_key=f"tvde-pi-amt-{payment.stripe_payment_intent_id}",
                 )
                 logger.info(
                     f"complete_trip: PaymentIntent amount updated trip_id={trip_id}, "
@@ -1190,9 +1227,13 @@ def complete_trip(
                     confirm_payment_intent(
                         payment.stripe_payment_intent_id,
                         payment_method="pm_card_visa",
+                        idempotency_key=f"tvde-pi-confirm-{payment.stripe_payment_intent_id}",
                     )
                 else:
-                    confirm_payment_intent(payment.stripe_payment_intent_id)
+                    confirm_payment_intent(
+                        payment.stripe_payment_intent_id,
+                        idempotency_key=f"tvde-pi-confirm-{payment.stripe_payment_intent_id}",
+                    )
                 logger.info(
                     f"complete_trip: PaymentIntent confirmed trip_id={trip_id}, "
                     f"payment_intent_id={payment.stripe_payment_intent_id}"
@@ -1207,7 +1248,9 @@ def complete_trip(
                     detail="Payment confirmation failed.",
                 ) from e
         else:
-            amount_cents = intent.amount if hasattr(intent, "amount") else intent.get("amount", 0)
+            amount_cents = (
+                intent.amount if hasattr(intent, "amount") else intent.get("amount", 0)
+            )
             final_price = round(amount_cents / 100.0, 2)
             commission_amount = _money(Decimal(str(final_price)) * commission_rate)
             driver_payout = _money(Decimal(str(final_price)) - commission_amount)
@@ -1217,7 +1260,10 @@ def complete_trip(
             )
 
         try:
-            capture_payment_intent(payment.stripe_payment_intent_id)
+            capture_payment_intent(
+                payment.stripe_payment_intent_id,
+                idempotency_key=f"tvde-pi-cap-{payment.stripe_payment_intent_id}",
+            )
             logger.info(
                 f"complete_trip: PaymentIntent captured trip_id={trip_id}, "
                 f"payment_intent_id={payment.stripe_payment_intent_id}"
@@ -1289,13 +1335,18 @@ def list_completed_trips_for_passenger(
     passenger_id: str,
 ) -> list[Trip]:
     """Completed trips for passenger history. Read-only."""
-    trips = db.execute(
-        select(Trip)
-        .options(joinedload(Trip.payment))
-        .where(Trip.passenger_id == passenger_id)
-        .where(Trip.status == TripStatus.completed)
-        .order_by(Trip.completed_at.desc().nullslast())
-    ).unique().scalars().all()
+    trips = (
+        db.execute(
+            select(Trip)
+            .options(joinedload(Trip.payment))
+            .where(Trip.passenger_id == passenger_id)
+            .where(Trip.status == TripStatus.completed)
+            .order_by(Trip.completed_at.desc().nullslast())
+        )
+        .unique()
+        .scalars()
+        .all()
+    )
     return list(trips)
 
 
@@ -1305,13 +1356,18 @@ def list_completed_trips_for_driver(
     driver_id: str,
 ) -> list[Trip]:
     """Completed trips for driver history. Read-only."""
-    trips = db.execute(
-        select(Trip)
-        .options(joinedload(Trip.payment))
-        .where(Trip.driver_id == driver_id)
-        .where(Trip.status == TripStatus.completed)
-        .order_by(Trip.completed_at.desc().nullslast())
-    ).unique().scalars().all()
+    trips = (
+        db.execute(
+            select(Trip)
+            .options(joinedload(Trip.payment))
+            .where(Trip.driver_id == driver_id)
+            .where(Trip.status == TripStatus.completed)
+            .order_by(Trip.completed_at.desc().nullslast())
+        )
+        .unique()
+        .scalars()
+        .all()
+    )
     return list(trips)
 
 
@@ -1322,11 +1378,13 @@ def get_trip_for_passenger(
     trip_id: str,
 ) -> Trip:
     """Get trip for passenger (must own). Read-only."""
-    trip = db.execute(
-        select(Trip)
-        .options(joinedload(Trip.payment))
-        .where(Trip.id == trip_id)
-    ).unique().scalar_one_or_none()
+    trip = (
+        db.execute(
+            select(Trip).options(joinedload(Trip.payment)).where(Trip.id == trip_id)
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
     if not trip or str(trip.passenger_id) != str(passenger_id):
         _raise_not_found()
     return trip
@@ -1339,11 +1397,13 @@ def get_trip_for_driver(
     trip_id: str,
 ) -> Trip:
     """Get trip for driver (must be assigned). Read-only."""
-    trip = db.execute(
-        select(Trip)
-        .options(joinedload(Trip.payment))
-        .where(Trip.id == trip_id)
-    ).unique().scalar_one_or_none()
+    trip = (
+        db.execute(
+            select(Trip).options(joinedload(Trip.payment)).where(Trip.id == trip_id)
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
     if not trip or str(trip.driver_id) != str(driver_id):
         _raise_not_found()
     return trip
@@ -1355,12 +1415,13 @@ def get_trip_by_id(
     trip_id: str,
 ) -> Trip:
     """Get trip by id (admin). Read-only."""
-    trip = db.execute(
-        select(Trip)
-        .options(joinedload(Trip.payment))
-        .where(Trip.id == trip_id)
-    ).unique().scalar_one_or_none()
+    trip = (
+        db.execute(
+            select(Trip).options(joinedload(Trip.payment)).where(Trip.id == trip_id)
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
     if not trip:
         _raise_not_found()
     return trip
-

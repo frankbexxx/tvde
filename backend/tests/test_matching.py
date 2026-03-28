@@ -5,16 +5,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
-from app.db.base import Base
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.user import User
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
-
-
-# Ensure tables exist (including driver_locations) for tests.
-Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
@@ -70,53 +65,52 @@ def _reset_overrides() -> None:
 
 
 def test_matching_no_drivers() -> None:
-  db = _make_db()
-  # Ensure table is empty for this test
-  db.query(DriverLocation).delete()
-  db.commit()
+    db = _make_db()
+    # Ensure table is empty for this test
+    db.query(DriverLocation).delete()
+    db.commit()
 
-  # passenger context
-  user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
-  _override_dependencies(db, user_ctx)
-  client = TestClient(app)
+    # passenger context
+    user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
 
-  r = client.post("/matching/find-driver", json={"lat": 40.0, "lng": -8.0})
-  assert r.status_code == 404
+    r = client.post("/matching/find-driver", json={"lat": 40.0, "lng": -8.0})
+    assert r.status_code == 404
 
-  _reset_overrides()
-  db.close()
+    _reset_overrides()
+    db.close()
 
 
 def test_matching_single_driver() -> None:
-  db = _make_db()
-  _create_driver_with_location(db, 40.0, -8.0)
-  user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
-  _override_dependencies(db, user_ctx)
-  client = TestClient(app)
+    db = _make_db()
+    _create_driver_with_location(db, 40.0, -8.0)
+    user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
 
-  r = client.post("/matching/find-driver", json={"lat": 40.0, "lng": -8.0})
-  assert r.status_code == 200
-  body = r.json()
-  assert body["distance_km"] <= 0.1
+    r = client.post("/matching/find-driver", json={"lat": 40.0, "lng": -8.0})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["distance_km"] <= 0.1
 
-  _reset_overrides()
-  db.close()
+    _reset_overrides()
+    db.close()
 
 
 def test_matching_multiple_drivers_returns_nearest() -> None:
-  db = _make_db()
-  _create_driver_with_location(db, 40.0, -8.0)      # near
-  _ = _create_driver_with_location(db, 41.0, -9.0)  # far
+    db = _make_db()
+    _create_driver_with_location(db, 40.0, -8.0)  # near
+    _ = _create_driver_with_location(db, 41.0, -9.0)  # far
 
-  user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
-  _override_dependencies(db, user_ctx)
-  client = TestClient(app)
+    user_ctx = UserContext(user_id=str(uuid.uuid4()), role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
 
-  r = client.post("/matching/find-driver", json={"lat": 40.0, "lng": -8.0})
-  assert r.status_code == 200
-  body = r.json()
-  assert body["distance_km"] < 5.0
+    r = client.post("/matching/find-driver", json={"lat": 40.0, "lng": -8.0})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["distance_km"] < 5.0
 
-  _reset_overrides()
-  db.close()
-
+    _reset_overrides()
+    db.close()

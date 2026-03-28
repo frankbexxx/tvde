@@ -34,49 +34,9 @@ from app.middleware import RequestIDMiddleware
 
 import app.db.models  # noqa: F401
 from app.core.config import settings
-from sqlalchemy import text
-
-from sqlalchemy.exc import ProgrammingError
-
-from app.db.base import Base
-from app.db.session import engine
+from app.db.migrations_runner import upgrade_to_head
 
 logger = logging.getLogger(__name__)
-
-
-def _dev_add_columns_if_missing() -> None:
-    """Add new columns without migrations. Idempotent (PG 9.6+). Runs on startup."""
-    try:
-        with engine.connect() as conn:
-            for stmt in [
-                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS distance_km NUMERIC(8,2)",
-                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS duration_min NUMERIC(8,2)",
-                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS cancellation_reason VARCHAR(280)",
-                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS cancellation_fee NUMERIC(10,2)",
-                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS cancelled_by VARCHAR(16)",
-                "ALTER TABLE drivers ADD COLUMN IF NOT EXISTS cancellation_count INTEGER DEFAULT 0 NOT NULL",
-                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS driver_rating INTEGER",
-                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS passenger_rating INTEGER",
-                "ALTER TABLE drivers ADD COLUMN IF NOT EXISTS avg_rating NUMERIC(3,2)",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS avg_rating_as_passenger NUMERIC(3,2)",
-                "ALTER TABLE payments ADD COLUMN IF NOT EXISTS driver_payout NUMERIC(10,2)",
-                "ALTER TABLE drivers ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT true NOT NULL",
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS requested_role VARCHAR(32)",
-            ]:
-                conn.execute(text(stmt))
-            conn.commit()
-        # ALTER TYPE ADD VALUE cannot run inside transaction on PG < 12
-        try:
-            with engine.connect().execution_options(
-                isolation_level="AUTOCOMMIT"
-            ) as conn:
-                conn.execute(text("ALTER TYPE user_status_enum ADD VALUE 'pending'"))
-        except ProgrammingError:
-            logger.debug(
-                "user_status_enum 'pending' skip (already exists or unsupported)",
-            )
-    except Exception as e:
-        print(f"[WARN] Schema update (add columns): {e}")
 
 
 def custom_openapi() -> dict:
@@ -87,9 +47,7 @@ def custom_openapi() -> dict:
         version=app.version,
         routes=app.routes,
     )
-    security_schemes = (
-        openapi_schema.get("components", {}).get("securitySchemes", {})
-    )
+    security_schemes = openapi_schema.get("components", {}).get("securitySchemes", {})
     bearer_scheme = security_schemes.get("BearerAuth")
     if bearer_scheme and bearer_scheme.get("type") == "http":
         bearer_scheme["bearerFormat"] = "JWT"
@@ -117,12 +75,13 @@ async def lifespan(app: FastAPI):
         f"prod={settings.is_production_environment()} dev_tools_mounted={_dev} BETA_MODE={_beta}"
     )
     try:
-        Base.metadata.create_all(bind=engine)
-    except ProgrammingError as e:
-        if "already exists" not in str(e):
-            raise
-        print("[WARN] Schema: some objects already exist (ok)")
-    _dev_add_columns_if_missing()
+        upgrade_to_head()
+    except Exception as e:
+        logger.exception("Alembic upgrade failed on startup")
+        raise RuntimeError(
+            "Database migration failed. Ensure DATABASE_URL is correct and run "
+            "'alembic upgrade head' from the backend directory."
+        ) from e
 
     _env_low = settings.ENV.strip().lower()
     if _env_low not in ("dev", "development"):
@@ -196,4 +155,3 @@ app.include_router(admin.router)
 app.include_router(ws.router)
 app.include_router(admin_ws.router)
 app.include_router(stripe_webhook.router)
-

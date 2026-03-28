@@ -34,7 +34,13 @@ def _fix_database_url(url: str) -> str:
 
 
 _db_url = _fix_database_url(settings.DATABASE_URL)
+
+
+def get_database_url() -> str:
+    """URL usada por SQLAlchemy e Alembic (password com @ já escapado)."""
+    return _db_url
+
+
 engine = create_engine(_db_url, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-

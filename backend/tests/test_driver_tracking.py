@@ -5,17 +5,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
-from app.db.base import Base
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.user import User
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
-
-
-# Ensure tables exist (including driver_locations) for tests.
-Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
@@ -100,77 +95,76 @@ def _reset_overrides() -> None:
 
 
 def test_get_driver_location_as_passenger() -> None:
-  db = _make_db()
-  passenger_id, trip_id = _create_passenger_and_trip(db)
-  _ = _assign_driver_and_location(db, trip_id)
+    db = _make_db()
+    passenger_id, trip_id = _create_passenger_and_trip(db)
+    _ = _assign_driver_and_location(db, trip_id)
 
-  user_ctx = UserContext(user_id=passenger_id, role=Role.passenger)
-  _override_dependencies(db, user_ctx)
-  client = TestClient(app)
+    user_ctx = UserContext(user_id=passenger_id, role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
 
-  r = client.get(f"/trips/{trip_id}/driver-location")
-  assert r.status_code == 200
-  body = r.json()
-  assert body["lat"] == 40.0
-  assert body["lng"] == -8.0
-  assert isinstance(body["timestamp"], int)
+    r = client.get(f"/trips/{trip_id}/driver-location")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["lat"] == 40.0
+    assert body["lng"] == -8.0
+    assert isinstance(body["timestamp"], int)
 
-  _reset_overrides()
-  db.close()
+    _reset_overrides()
+    db.close()
 
 
 def test_get_driver_location_as_assigned_driver() -> None:
-  db = _make_db()
-  passenger_id, trip_id = _create_passenger_and_trip(db)
-  driver_id = _assign_driver_and_location(db, trip_id)
+    db = _make_db()
+    passenger_id, trip_id = _create_passenger_and_trip(db)
+    driver_id = _assign_driver_and_location(db, trip_id)
 
-  user_ctx = UserContext(user_id=driver_id, role=Role.driver)
-  _override_dependencies(db, user_ctx)
-  client = TestClient(app)
+    user_ctx = UserContext(user_id=driver_id, role=Role.driver)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
 
-  r = client.get(f"/trips/{trip_id}/driver-location")
-  assert r.status_code == 200
+    r = client.get(f"/trips/{trip_id}/driver-location")
+    assert r.status_code == 200
 
-  _reset_overrides()
-  db.close()
+    _reset_overrides()
+    db.close()
 
 
 def test_get_driver_location_forbidden_for_other_passenger() -> None:
-  db = _make_db()
-  passenger_id, trip_id = _create_passenger_and_trip(db)
-  _ = _assign_driver_and_location(db, trip_id)
+    db = _make_db()
+    passenger_id, trip_id = _create_passenger_and_trip(db)
+    _ = _assign_driver_and_location(db, trip_id)
 
-  other_passenger = User(
-    role=Role.passenger,
-    name=f"Passenger Other {uuid.uuid4()}",
-    phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
-    status=UserStatus.active,
-  )
-  db.add(other_passenger)
-  db.commit()
+    other_passenger = User(
+        role=Role.passenger,
+        name=f"Passenger Other {uuid.uuid4()}",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+    )
+    db.add(other_passenger)
+    db.commit()
 
-  user_ctx = UserContext(user_id=str(other_passenger.id), role=Role.passenger)
-  _override_dependencies(db, user_ctx)
-  client = TestClient(app)
+    user_ctx = UserContext(user_id=str(other_passenger.id), role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
 
-  r = client.get(f"/trips/{trip_id}/driver-location")
-  assert r.status_code == 403
+    r = client.get(f"/trips/{trip_id}/driver-location")
+    assert r.status_code == 403
 
-  _reset_overrides()
-  db.close()
+    _reset_overrides()
+    db.close()
 
 
 def test_get_driver_location_invalid_trip_id() -> None:
-  db = _make_db()
-  passenger_id, trip_id = _create_passenger_and_trip(db)
+    db = _make_db()
+    passenger_id, trip_id = _create_passenger_and_trip(db)
 
-  user_ctx = UserContext(user_id=passenger_id, role=Role.passenger)
-  _override_dependencies(db, user_ctx)
-  client = TestClient(app)
+    user_ctx = UserContext(user_id=passenger_id, role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
 
-  r = client.get("/trips/00000000-0000-0000-0000-000000000000/driver-location")
-  assert r.status_code == 404
+    r = client.get("/trips/00000000-0000-0000-0000-000000000000/driver-location")
+    assert r.status_code == 404
 
-  _reset_overrides()
-  db.close()
-
+    _reset_overrides()
+    db.close()

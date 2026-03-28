@@ -1,4 +1,5 @@
 """Tests for A006 geo stability layer: immediate send, staleness, dispatch retry."""
+
 import threading
 import time
 import uuid
@@ -9,23 +10,22 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
-from app.db.base import Base
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
-from app.db.session import SessionLocal, engine
+from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.services.driver_location import upsert_driver_location
-
-Base.metadata.create_all(bind=engine)
 
 
 def _make_db() -> Session:
     return SessionLocal()
 
 
-def _create_driver(db: Session, lat: float = 38.7, lng: float = -9.1, is_available: bool = True) -> str:
+def _create_driver(
+    db: Session, lat: float = 38.7, lng: float = -9.1, is_available: bool = True
+) -> str:
     user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
@@ -135,9 +135,11 @@ def test_geo_stability_stale_drivers_excluded() -> None:
     body = r.json()
     trip_id = body["trip_id"]
 
-    offers = db.execute(
-        select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id))
-    ).scalars().all()
+    offers = (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id)))
+        .scalars()
+        .all()
+    )
     # Stale driver should be excluded -> 0 offers
     assert len(offers) == 0
 
@@ -179,9 +181,11 @@ def test_geo_stability_dispatch_succeeds_with_fresh_location() -> None:
     body = r.json()
     trip_id = body["trip_id"]
 
-    offers = list(db.execute(
-        select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id))
-    ).scalars().all())
+    offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id)))
+        .scalars()
+        .all()
+    )
     assert len(offers) >= 1
 
     _reset_overrides()
@@ -235,11 +239,15 @@ def test_geo_stability_dispatch_retry_after_driver_sends_location() -> None:
     body = r.json()
     trip_id = body["trip_id"]
 
-    offers = list(db.execute(
-        select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id))
-    ).scalars().all())
+    offers = list(
+        db.execute(select(TripOffer).where(TripOffer.trip_id == uuid.UUID(trip_id)))
+        .scalars()
+        .all()
+    )
     # Retry should have picked up the driver's location
-    assert len(offers) >= 1, "Dispatch retry should create offers when driver sends location during wait"
+    assert (
+        len(offers) >= 1
+    ), "Dispatch retry should create offers when driver sends location during wait"
 
     _reset_overrides()
     db.close()
