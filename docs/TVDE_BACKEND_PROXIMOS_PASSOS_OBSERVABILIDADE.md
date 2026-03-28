@@ -63,7 +63,7 @@ Opcional futuro: tabela dedicada (ex. **`stripe_webhook_events`** ou **`processe
 ## 4. Alertas simples (sem infra pesada)
 
 - **`logger.warning`** / **`log_event`** quando `get_system_health` devolver listas não vazias ou `status == "degraded"`.
-- Casos já cobertos pela lógica atual: ver secção 1; acrescentar “orphan payment” só se existir `Payment` sem `Trip` válido — hoje **orphan_payments** no schema está **deprecated** e vazio; inconsistências úteis passam por **`missing_payment_records`** e **`inconsistent_financial_state`**.
+- Casos já cobertos pela lógica atual: ver seção 1; acrescentar “orphan payment” só se existir `Payment` sem `Trip` válido — hoje **orphan_payments** no schema está **deprecated** e vazio; inconsistências úteis passam por **`missing_payment_records`** e **`inconsistent_financial_state`**.
 
 ---
 

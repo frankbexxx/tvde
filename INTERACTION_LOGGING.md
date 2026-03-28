@@ -27,7 +27,7 @@ Sistema mínimo de observação: quem clicou, o que aconteceu, quanto tempo, est
 | dormancy_enter | Tab/ecrã ficou oculto (visibility hidden)      |
 | dormancy_exit  | Tab/ecrã voltou visível (acordou)              |
 
-**Nota:** Ao acordar (`dormancy_exit`), o estado é actualizado automaticamente (refetch imediato dos dados em polling).
+**Nota:** Ao acordar (`dormancy_exit`), o estado é atualizado automaticamente (refetch imediato dos dados em polling).
 
 ---
 

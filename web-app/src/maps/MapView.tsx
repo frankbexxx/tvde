@@ -36,7 +36,7 @@ export interface MapViewProps {
   dropoffSelection?: LatLng | null
   /** A016: um clique → pickup se ainda não existe, senão atualiza só dropoff */
   onPlanningMapClick?: (coords: LatLng) => void
-  /** A017: GeoJSON pré-calculado (planeamento); separado da rota de viagem activa */
+  /** A017: GeoJSON pré-calculado (planeamento); separado da rota de viagem ativa */
   planningRouteGeometry?: FeatureCollection<LineString> | null
   /** A021: planeamento = mapa em destaque; subdued = suporte (overlay leve) */
   mapVisualWeight?: 'emphasized' | 'subdued'
@@ -235,7 +235,7 @@ export function MapView({
             <DriverMarker longitude={driverLocation.lng} latitude={driverLocation.lat} />
           )}
 
-          {/* Rota viagem activa (OSRM interno via prop `route`) */}
+          {/* Rota viagem ativa (OSRM interno via prop `route`) */}
           {routeGeometry && (
             <RouteLine id="route-source" geometry={routeGeometry} />
           )}

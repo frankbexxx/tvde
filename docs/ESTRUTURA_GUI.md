@@ -103,7 +103,7 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 - **Mobile:** largura total, borda superior, `min-h-[200px]`
 - **Desktop:** `w-80` (320px), borda esquerda, altura `calc(100vh-4rem)`
 
-**Secções:**
+**Seções:**
 1. **Vista + Live** — role, indicador "Ao vivo" (verde)
 2. **Estado** — status atual (amber-50)
 3. **Registo** — logs com CopyLogButton, Limpar

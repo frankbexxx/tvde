@@ -3,8 +3,11 @@ import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
 import { createTrip, getTripHistory, getTripDetail, cancelTrip } from '../../api/trips'
+import { isTimeoutLikeError } from '../../api/client'
 import type { TripDetailResponse, TripHistoryItem } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
+import { usePollStallHint } from '../../hooks/usePollStallHint'
+import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
@@ -34,13 +37,10 @@ const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
 
 const ESTIMATE_MOCK = '4–6'
 
-const POST_CREATE_LABEL: Record<string, string> = {
-  requested: 'À procura de motorista',
-  assigned: 'Motorista atribuído',
-  accepted: 'Motorista a caminho',
-  arriving: 'A chegar',
-  ongoing: 'Viagem em curso',
-  completed: 'Viagem concluída',
+/** Resultado do poll do detalhe — `notFound` só após 404 explícito (não confundir com erro de rede). */
+type PassengerTripPollResult = {
+  trip: TripDetailResponse | null
+  notFound: boolean
 }
 
 export function PassengerDashboard() {
@@ -50,6 +50,8 @@ export function PassengerDashboard() {
   const activeTripId = passengerActiveTripId
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [createTakingLong, setCreateTakingLong] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
@@ -76,7 +78,7 @@ export function PassengerDashboard() {
   const [confirmRouteMetaLoading, setConfirmRouteMetaLoading] = useState(false)
   const mapAnchorRef = useRef<HTMLDivElement | null>(null)
 
-  const { data: history, refetch: refetchHistory } = usePolling(
+  const { data: history, refetch: refetchHistory, pollFault: historyPollFault } = usePolling(
     () => getTripHistory(token!),
     [token],
     !!token,
@@ -84,24 +86,68 @@ export function PassengerDashboard() {
   )
 
   const isOnline = useOnlineStatus()
-  const { data: activeTrip, isLoading: activeTripLoading } = usePolling<TripDetailResponse | null>(
-    () =>
-      activeTripId && token
-        ? getTripDetail(activeTripId, token).catch(() => null)
-        : Promise.resolve(null),
-    [activeTripId, token],
+  const fetchPassengerActiveTrip = useCallback((): Promise<PassengerTripPollResult> => {
+    if (!activeTripId || !token) {
+      return Promise.resolve({ trip: null, notFound: false })
+    }
+    return getTripDetail(activeTripId, token)
+      .then((trip) => ({ trip, notFound: false }))
+      .catch((e: unknown) => {
+        const st = (e as { status?: number })?.status
+        if (st === 404) return { trip: null, notFound: true }
+        throw e
+      })
+  }, [activeTripId, token])
+
+  const {
+    data: activeTripPoll,
+    isLoading: activeTripLoading,
+    isRefreshing: activeTripRefreshing,
+    lastSuccessAt: activeTripLastSuccessAt,
+    pollFault: activeTripPollFault,
+  } = usePolling<PassengerTripPollResult>(
+    fetchPassengerActiveTrip,
+    [fetchPassengerActiveTrip],
     !!activeTripId && !!token,
     3000
   )
 
-  // Clear stale activeTripId when trip returns 404 (cancelled/deleted) — avoids "A verificar..." loop
+  const activeTrip = activeTripPoll?.trip ?? null
+  const activeTripNotFound = activeTripPoll?.notFound ?? false
+
+  const tripPollStalled = usePollStallHint(
+    activeTripLastSuccessAt,
+    activeTripRefreshing,
+    Boolean(activeTripId && activeTrip)
+  )
+
+  const tripPollFootnote = activeTripId
+    ? activeTripPollFault
+      ? 'Não foi possível atualizar agora. Verifica a ligação — voltamos a tentar de seguida.'
+      : activeTripRefreshing
+        ? 'A atualizar estado…'
+        : tripPollStalled
+          ? 'Sem novidades há instantes — a última informação mantém-se válida.'
+          : null
+    : null
+
+  useEffect(() => {
+    if (!creating) {
+      setCreateTakingLong(false)
+      return
+    }
+    const id = window.setTimeout(() => setCreateTakingLong(true), 12_000)
+    return () => window.clearTimeout(id)
+  }, [creating])
+
+  // Só limpar id quando o servidor confirma 404 — evita apagar viagem por erro transitório / 1.º poll falhado
   useEffect(() => {
     if (!activeTripId) return
     if (activeTripLoading) return
-    if (activeTrip !== null) return
+    if (!activeTripNotFound) return
     setPassengerActiveTripId(null)
     setStatus('Pronto')
-  }, [activeTripId, activeTrip, activeTripLoading, setPassengerActiveTripId, setStatus])
+  }, [activeTripId, activeTripLoading, activeTripNotFound, setPassengerActiveTripId, setStatus])
 
   useEffect(() => {
     pickupLocationRef.current = pickupLocation
@@ -160,7 +206,7 @@ export function PassengerDashboard() {
     setConfirmRouteMeta(null)
   }, [])
 
-  /** A019: com pickup+dropoff, novo clique actualiza só o destino */
+  /** A019: com pickup+dropoff, novo clique atualiza só o destino */
   const handlePlanningMapClick = useCallback((coords: { lat: number; lng: number }) => {
     if (!pickupLocationRef.current) {
       pickupLocationRef.current = coords
@@ -173,6 +219,7 @@ export function PassengerDashboard() {
   const handleRequestTrip = async () => {
     if (!token) return
     if (!pickupLocation || !dropoffLocation) return
+    if (creating) return
 
     console.log('Creating trip with:', { pickupLocation, dropoffLocation })
 
@@ -192,12 +239,14 @@ export function PassengerDashboard() {
         token
       )
       setPassengerActiveTripId(res.trip_id)
-      setStatus(POST_CREATE_LABEL[res.status] ?? res.status)
+      setStatus(passengerTripStatusLabel(res.status))
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
       refetchHistory()
     } catch (err: unknown) {
-      const msg = humanizeCreateTripError((err as { detail?: string })?.detail)
+      const msg = isTimeoutLikeError(err)
+        ? 'Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta de novo.'
+        : humanizeCreateTripError((err as { detail?: string })?.detail)
       setError(msg)
       setStatus('Não foi possível pedir a viagem')
       addLog(`Erro: ${msg}`, 'error')
@@ -207,8 +256,9 @@ export function PassengerDashboard() {
   }
 
   const handleCancel = async () => {
-    if (!activeTripId || !token) return
+    if (!activeTripId || !token || cancelling) return
     setError(null)
+    setCancelling(true)
     setStatus('A cancelar...')
     addLog('Clique: Cancelar viagem', 'action')
     try {
@@ -218,10 +268,14 @@ export function PassengerDashboard() {
       addLog('Viagem cancelada', 'success')
       refetchHistory()
     } catch (err: unknown) {
-      const msg = humanizeCancelError((err as { detail?: string })?.detail)
+      const msg = isTimeoutLikeError(err)
+        ? 'Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta cancelar de novo.'
+        : humanizeCancelError((err as { detail?: string })?.detail)
       setError(msg)
       setStatus('Não foi possível cancelar')
       addLog(`Erro: ${msg}`, 'error')
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -269,7 +323,7 @@ export function PassengerDashboard() {
   }, [activeTrip, driverLocation, tripCompletedFromLocation])
 
   /**
-   * A017b: prioridade — viagem activa > modo planeamento (input) > idle neutro (mapa sem cliques).
+   * A017b: prioridade — viagem ativa > modo planeamento (input) > idle neutro (mapa sem cliques).
    * Mapa visível em idle mesmo sem planeamento; interação só com isPlanningMode.
    */
   const isTripIdle = !activeTripId && !creating && !tripCompletedFromLocation
@@ -427,7 +481,7 @@ export function PassengerDashboard() {
     }
   }, [passengerUiState])
 
-  /** A019: botão fixo só para ciclo de viagem activa (Cancelar / Pedir nova viagem) */
+  /** A019: botão fixo só para ciclo de viagem ativa (Cancelar / Pedir nova viagem) */
   const showBottomPrimary =
     !!activeTripId &&
     (activeTrip?.status === 'completed' ||
@@ -508,8 +562,8 @@ export function PassengerDashboard() {
         showBottomPrimary && primaryLabel ? (
           <PrimaryActionButton
             onClick={primaryOnClick}
-            disabled={!!activeTripId && primaryLabel !== 'Cancelar' && primaryLabel !== 'Pedir nova viagem'}
-            loading={false}
+            disabled={false}
+            loading={primaryLabel === 'Cancelar' && cancelling}
             variant={primaryLabel === 'Cancelar' ? 'danger' : 'primary'}
           >
             {primaryLabel}
@@ -536,9 +590,18 @@ export function PassengerDashboard() {
       <div className="space-y-6 mt-6 transition-opacity duration-300 ease-out">
         <StatusHeader
           label={banner.label}
+          subLabel={banner.subLabel}
           variant={banner.variant}
           emphasis={statusHeaderEmphasis}
         />
+        {tripPollFootnote ? (
+          <p
+            className="text-center text-xs text-foreground/55 -mt-3 mb-5 min-h-[1.25rem]"
+            aria-live="polite"
+          >
+            {tripPollFootnote}
+          </p>
+        ) : null}
 
         {/* A014: em viagem, mapa só com motorista + GPS; A015/A016: planeamento com pickup + dropoff */}
         <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
@@ -576,12 +639,19 @@ export function PassengerDashboard() {
             routeMeta={confirmRouteMeta}
             routeMetaLoading={confirmRouteMetaLoading}
             activeTrip={activeTrip ?? null}
+            tripPollHint={tripPollFootnote}
+            slowRequestHint={
+              creating && createTakingLong
+                ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
+                : null
+            }
             onChooseMap={() => setIsPlanningMode(true)}
             onSetDestinationHint={() =>
               mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
             }
             onReset={resetPlanning}
             onConfirmTrip={handleRequestTrip}
+            confirmTripPending={creating}
             visualWeight={a021Layout.panel}
           />
         )}
@@ -618,6 +688,12 @@ export function PassengerDashboard() {
               </p>
             </div>
           )
+        )}
+
+        {historyPollFault && (
+          <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+            Não foi possível atualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
+          </div>
         )}
 
         {history && history.length > 0 && (

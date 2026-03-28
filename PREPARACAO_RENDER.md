@@ -112,7 +112,7 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 
 5. Clica **Create Static Site**.
 6. Espera o build terminar.
-7. **Redirects/Rewrites** (obrigatório para SPA): No serviço **tvde-app** → **Settings** → secção **Redirects/Rewrites** → **Add Rule**:
+7. **Redirects/Rewrites** (obrigatório para SPA): No serviço **tvde-app** → **Settings** → seção **Redirects/Rewrites** → **Add Rule**:
    - **Source:** `/*`
    - **Destination:** `/index.html`
    - **Action:** Rewrite
@@ -138,7 +138,7 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 - O PostgreSQL tem limite de dados e conexões.
 - Para validação humana, o adormecimento pode ser aceitável — avisa os testadores que o primeiro carregamento pode demorar.
 
-### URLs (canónicos — produção actual)
+### URLs (canónicos — produção atual)
 
 | Serviço | URL |
 |---------|-----|

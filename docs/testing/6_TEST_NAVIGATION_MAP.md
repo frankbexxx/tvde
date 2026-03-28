@@ -12,7 +12,7 @@ Este documento descreve **onde o testador deve ir na interface**.
 | **Pedir viagem** | Botão "Pedir viagem" no dashboard | Cria nova viagem |
 | **Estado da viagem** | Header e mapa após pedir viagem | Mostra requested, assigned, accepted, arriving, ongoing, completed |
 | **Cancelar viagem** | Botão "Cancelar" quando viagem ativa | Cancela viagem em curso |
-| **Histórico** | Secção "Histórico" ou painel lateral | Lista viagens concluídas |
+| **Histórico** | Seção "Histórico" ou painel lateral | Lista viagens concluídas |
 | **Mudar para Motorista** | Link "Motorista" no header | Troca para vista motorista |
 | **Log** | Link "Log" no header | Painel de eventos da sessão |
 
@@ -28,7 +28,7 @@ Este documento descreve **onde o testador deve ir na interface**.
 | **Marcar a chegar** | Botão "Cheguei" | Transição para arriving |
 | **Iniciar viagem** | Botão "Iniciar viagem" | Transição para ongoing |
 | **Concluir viagem** | Botão "Concluir viagem" | Transição para completed |
-| **Histórico** | Secção histórico | Lista viagens concluídas |
+| **Histórico** | Seção histórico | Lista viagens concluídas |
 | **Mudar para Passageiro** | Link "Passageiro" no header | Troca para vista passageiro |
 
 ---
@@ -38,7 +38,7 @@ Este documento descreve **onde o testador deve ir na interface**.
 | Destino | Como chegar | Descrição |
 |---------|-------------|-----------|
 | **Utilizadores** | Rota `/admin` | Gestão de utilizadores |
-| **Aprovação de motoristas** | Secção apropriada | Aprovar/rejeitar motoristas |
+| **Aprovação de motoristas** | Seção apropriada | Aprovar/rejeitar motoristas |
 | **Métricas** | Endpoint `/admin/metrics` | Contagens operacionais |
 
 ---

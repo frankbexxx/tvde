@@ -168,7 +168,7 @@ http://localhost:5173/passenger
 
 **Resultado esperado**
 
-A secção "Histórico" ou painel com viagens passadas está visível.
+A seção "Histórico" ou painel com viagens passadas está visível.
 
 ---
 
