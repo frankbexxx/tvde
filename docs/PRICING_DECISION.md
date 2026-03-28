@@ -28,7 +28,7 @@
 
 ## Impacto no backend
 
-- Manter a lógica actual: `complete_trip` recalcula preço, ajusta o PaymentIntent se necessário **antes** da captura, webhook continua como fonte de verdade para `payment.status`.
+- Manter a lógica atual: `complete_trip` recalcula preço, ajusta o PaymentIntent se necessário **antes** da captura, webhook continua como fonte de verdade para `payment.status`.
 - **`ENABLE_CONFIRM_ON_ACCEPT`** permanece desligado** — confirmação extra no aceitar não faz parte deste modelo híbrido nesta fase.
 - Nenhuma alteração obrigatória de endpoints ou estados de trip para esta decisão (só alinhamento de messaging no cliente).
 

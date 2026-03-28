@@ -127,7 +127,7 @@ Outra pessoa mergeou PRs; o teu `main` local está velho **e** queres atualizar 
 ### Depois do merge
 
 1. No GitHub, no PR mergeado, usa **Delete branch** na branch do PR (limpa o remoto).
-2. No teu PC (ver secção seguinte).
+2. No teu PC (ver seção seguinte).
 
 ---
 

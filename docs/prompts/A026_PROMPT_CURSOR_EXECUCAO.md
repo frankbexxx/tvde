@@ -50,7 +50,7 @@ Implementar A026 — OPERAÇÃO REAL (mínimo de código, alinhado ao existente)
 
 ### 5. Atualizar `OPERATION_CHECKLIST.md`
 
-- secção A026: cron, frequência, verificações diárias, alertas
+- seção A026: cron, frequência, verificações diárias, alertas
 
 ### 6. Testes automáticos (se possível)
 

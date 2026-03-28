@@ -80,7 +80,7 @@ Legenda: **Temos** = existe de forma utilizável ou documentada no repo / opera�
 | Ciclo viagem (pedir → atribuir → aceitar → executar → concluir/cancelar) | **Temos**                                                           |
 | Pagamento com Stripe (autorização/captura alinhada ao modelo)            | **Temos** / **Parcial** (sempre validar edge cases em staging)      |
 | Web passageiro + motorista + admin                                       | **Temos**                                                           |
-| Apps iOS/Android nativos (React Native)                                  | **Falta** (planeado em `PROJECT.md`, não é o núcleo actual do repo) |
+| Apps iOS/Android nativos (React Native)                                  | **Falta** (planeado em `PROJECT.md`, não é o núcleo atual do repo) |
 | Push notifications                                                       | **Falta** (relevante para motorista em produção)                    |
 | Suporte in-app / tickets                                                 | **Falta**                                                           |
 | FAQ / Centro de ajuda para utilizadores                                  | **Falta**                                                           |

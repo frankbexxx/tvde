@@ -10,27 +10,27 @@
 
 Passar de «funciona» a «previsível em produção» **sem**:
 
-- novas features de produto  
-- refactors grandes  
-- mudanças de arquitetura  
-- novas dependências (PyPI)  
+- novas features de produto
+- refactors grandes
+- mudanças de arquitetura
+- novas dependências (PyPI)
 
 ---
 
 ## Princípios
 
-- Bloquear estados e dados inválidos cedo (`HTTPException`, não `Exception` genérica).  
-- Tornar falhas **visíveis** (logs correlacionáveis, não silêncio).  
-- Reduzir dependência de memória humana (checklist operacional versionado).  
+- Bloquear estados e dados inválidos cedo (`HTTPException`, não `Exception` genérica).
+- Tornar falhas **visíveis** (logs correlacionáveis, não silêncio).
+- Reduzir dependência de memória humana (checklist operacional versionado).
 - Respeitar invariantes existentes: webhook continua fonte de verdade para `payment.status`; `complete_trip` não marca `succeeded` manualmente.
 
 ---
 
 ## Escopo (4 eixos)
 
-1. **Pricing** — integridade (`distance_km` / `duration_min` obrigatórios no `complete_trip`).  
-2. **Payments** — rastreabilidade (`log_event`) + confirmação operacional do webhook (manual/staging).  
-3. **Operação** — cron / admin documentados (`OPERATION_CHECKLIST.md`).  
+1. **Pricing** — integridade (`distance_km` / `duration_min` obrigatórios no `complete_trip`).
+2. **Payments** — rastreabilidade (`log_event`) + confirmação operacional do webhook (manual/staging).
+3. **Operação** — cron / admin documentados (`OPERATION_CHECKLIST.md`).
 4. **Testes** — mínimo crítico: webhook simulado + fluxo `ongoing` → `completed` com `STRIPE_MOCK`.
 
 ---
@@ -39,7 +39,7 @@ Passar de «funciona» a «previsível em produção» **sem**:
 
 **Problema:** `random.uniform` quando métricas são `None` gera preço final artificial.
 
-**Acção:** Se `trip.distance_km` ou `trip.duration_min` for `None`, responder **`422`** com `detail="trip_metrics_required_before_completion"` (contrato estável para clientes).
+**Ação:** Se `trip.distance_km` ou `trip.duration_min` for `None`, responder **`422`** com `detail="trip_metrics_required_before_completion"` (contrato estável para clientes).
 
 **Nota:** `create_trip` preenche métricas via `_estimate_trip` (OSRM ou haversine); viagens criadas pelo fluxo normal estão cobertas. Dados legacy ou BD manual sem métricas **falham de forma explícita**.
 
@@ -57,9 +57,9 @@ Usar **`GET /admin/system-health`** (JWT admin). Campo `stuck_payments`.
 
 Em `complete_trip`, após preço final calculado e antes/depois da captura:
 
-- `payment_capture_started` — `trip_id`, `payment_id`, `payment_intent_id`  
-- `payment_capture_success` — mesmos identificadores (+ `stripe_mock` quando aplicável)  
-- `trip_completion_commit` — imediatamente antes de `db.commit()` da conclusão  
+- `payment_capture_started` — `trip_id`, `payment_id`, `payment_intent_id`
+- `payment_capture_success` — mesmos identificadores (+ `stripe_mock` quando aplicável)
+- `trip_completion_commit` — imediatamente antes de `db.commit()` da conclusão
 
 Não remover `log_event` / `logger` existentes.
 
@@ -67,19 +67,19 @@ Não remover `log_event` / `logger` existentes.
 
 Confirmar no ambiente: URL pública, `STRIPE_WEBHOOK_SECRET`, eventos `payment_intent.succeeded` e `payment_intent.payment_failed`.
 
-Resposta **200** mesmo quando o PI não existe na BD é **correcto para a Stripe** → exige monitorização interna.
+Resposta **200** mesmo quando o PI não existe na BD é **correto para a Stripe** → exige monitorização interna.
 
 ---
 
-## 3. Correlacção em mais pontos
+## 3. Correlação em mais pontos
 
 Garantir `trip_id` + `payment_id` (e `payment_intent_id` quando existir) em:
 
-- `accept_trip` / `accept_offer` (`trip_accepted`)  
-- `stripe` webhook (eventos que alteram `Payment`)  
-- cancelamentos: reforçar `trip_state_change` com `payment_id` quando houver `trip.payment`  
+- `accept_trip` / `accept_offer` (`trip_accepted`)
+- `stripe` webhook (eventos que alteram `Payment`)
+- cancelamentos: reforçar `trip_state_change` com `payment_id` quando houver `trip.payment`
 
-*(O `request_id` já pode existir via middleware; não obrigatório neste incremento.)*
+_(O `request_id` já pode existir via middleware; não obrigatório neste incremento.)_
 
 ---
 
@@ -97,10 +97,10 @@ Documentação canónica: **`OPERATION_CHECKLIST.md`** na raiz do repositório.
 
 ## 5. Testes mínimos
 
-| Teste | Objectivo |
-|-------|-----------|
-| `test_stripe_webhook_marks_payment_succeeded` | Simular `payment_intent.succeeded` sem API Stripe real (`unittest.mock` em `construct_event`). |
-| `test_complete_trip_ongoing_to_completed_with_stripe_mock` | Serviço `complete_trip` com `STRIPE_MOCK`, métricas preenchidas, PI `pi_mock_*`. |
+| Teste                                                      | Objetivo                                                                                       |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `test_stripe_webhook_marks_payment_succeeded`              | Simular `payment_intent.succeeded` sem API Stripe real (`unittest.mock` em `construct_event`). |
+| `test_complete_trip_ongoing_to_completed_with_stripe_mock` | Serviço `complete_trip` com `STRIPE_MOCK`, métricas preenchidas, PI `pi_mock_*`.               |
 
 Não exigir E2E browser neste incremento.
 
@@ -108,40 +108,40 @@ Não exigir E2E browser neste incremento.
 
 ## 6. Proibido (A022)
 
-- Filas/workers novos  
-- Alterar schema por migrations novas neste passo  
-- Refatorar serviços inteiros «de passagem»  
-- Otimizações prematuras  
+- Filas/workers novos
+- Alterar schema por migrations novas neste passo
+- Refatorar serviços inteiros «de passagem»
+- Otimizações prematuras
 
 ---
 
 ## 7. Definição de sucesso
 
-- Nenhum fallback aleatório de métricas no `complete_trip`.  
-- Webhook continua a actualizar `payment.status` (teste verde).  
-- Logs permitem seguir `trip_id` / `payment_id` no aceite, complete e webhook.  
-- `OPERATION_CHECKLIST.md` descreve cron/admin e verificação de saúde.  
-- `pytest` nos novos testes + regressões conhecidas verdes.  
+- Nenhum fallback aleatório de métricas no `complete_trip`.
+- Webhook continua a atualizar `payment.status` (teste verde).
+- Logs permitem seguir `trip_id` / `payment_id` no aceite, complete e webhook.
+- `OPERATION_CHECKLIST.md` descreve cron/admin e verificação de saúde.
+- `pytest` nos novos testes + regressões conhecidas verdes.
 
 ---
 
 ## 8. Execução no Cursor
 
-1. Ler este ficheiro e o código referenciado.  
-2. Implementar alterações pontuais.  
-3. Correr `pytest` no backend.  
-4. Commit com mensagem clara (ex.: `feat(A022): hardening pricing logs tests operation checklist`).  
+1. Ler este ficheiro e o código referenciado.
+2. Implementar alterações pontuais.
+3. Correr `pytest` no backend.
+4. Commit com mensagem clara (ex.: `feat(A022): hardening pricing logs tests operation checklist`).
 5. Registar o que foi feito num relatório de sessão (o antigo `docs/A022_RELATORIO_EXECUCAO.md` foi arquivado fora do Git — ver [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)).
 
 ---
 
 ## Referências no repo
 
-- `docs/PRICING_DECISION.md`  
-- `docs/DIAGNOSTICO_SISTEMA_TVDE.md`  
-- `GUIA_TESTES.md`  
-- `PROXIMA_SESSAO.md`  
+- `docs/PRICING_DECISION.md`
+- `docs/DIAGNOSTICO_SISTEMA_TVDE.md`
+- `GUIA_TESTES.md`
+- `PROXIMA_SESSAO.md`
 
 ---
 
-*Fim do prompt A022.*
+_Fim do prompt A022._

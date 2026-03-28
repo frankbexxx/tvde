@@ -26,7 +26,7 @@ Método: `git ls-files` filtrado por `*.md` e extensões de imagem. Estado do wo
 | Ficheiro                       | Função resumida             | Recomendação inicial                                                                                               |
 | ------------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `README.md`                    | Entrada do projeto          | **Manter** — âncora                                                                                                |
-| `DOCS_INDEX.md`                | Mapa da documentação        | **Manter** — âncora (actualizar na fase “espinha”)                                                                 |
+| `DOCS_INDEX.md`                | Mapa da documentação        | **Manter** — âncora (atualizar na fase “espinha”)                                                                 |
 | `PROJECT.md`                   | Produto, modelo, fluxos     | **Manter**                                                                                                         |
 | `PROXIMA_SESSAO.md`            | Handoff entre sessões       | **Manter** (ou fundir num único “estado” se quiseres menos ficheiros)                                              |
 | `GUIA_TESTES.md`               | Testes manuais              | **Manter** — canónico operacional                                                                                  |
@@ -34,8 +34,8 @@ Método: `git ls-files` filtrado por `*.md` e extensões de imagem. Estado do wo
 | `TESTE_STRIPE_COMPLETO.md`     | Stripe E2E                  | **Manter**                                                                                                         |
 | `VALIDACAO_HUMANA_CAMPO.md`    | Testes em campo             | **Manter**                                                                                                         |
 | `INTERACTION_LOGGING.md`       | Telemetria / export de logs | **Manter**                                                                                                         |
-| `OPERATION_CHECKLIST.md`       | Checklist operação          | **Feito:** fundido em `PROXIMA_SESSAO.md` Secção F; raiz = stub com link                                           |
-| `RELATORIO_PROJETO_ROADMAP.md` | Roadmap / relatório         | **Feito:** fundido em `PROXIMA_SESSAO.md` Secção G + anexo A023–A035 em `TVDE_ENGINEERING_ROADMAP.md`; raiz = stub |
+| `OPERATION_CHECKLIST.md`       | Checklist operação          | **Feito:** fundido em `PROXIMA_SESSAO.md` Seção F; raiz = stub com link                                           |
+| `RELATORIO_PROJETO_ROADMAP.md` | Roadmap / relatório         | **Feito:** fundido em `PROXIMA_SESSAO.md` Seção G + anexo A023–A035 em `TVDE_ENGINEERING_ROADMAP.md`; raiz = stub |
 | `AUDIT_RELATORIO_COMPLETO.md`  | Relatório de auditoria      | **Feito:** removido do Git; cópia no snapshot — [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md)              |
 
 ---
@@ -109,7 +109,7 @@ Cópia em `C:\dev\_archives\APP\repo-removed-from-git-2026-03-27\`. Detalhe: [HI
 ## 6. Próximos passos (ordem acordada)
 
 1. **Rever este inventário** — marca à mão ✓ onde discordares das recomendações.
-2. **Espinha dorsal:** actualizar `README.md` + `DOCS_INDEX.md` (secções _Canónico_ / _Legado / arquivo_ / _Ação pendente: commit GITHUB_MANUAL_).
+2. **Espinha dorsal:** atualizar `README.md` + `DOCS_INDEX.md` (seções _Canónico_ / _Legado / arquivo_ / _Ação pendente: commit GITHUB_MANUAL_).
 3. **Fundir** pares acordados (roadmaps, relatórios redundantes) em PRs pequenos.
 4. **Arquivo físico + `git rm`:** **feito** para `archive/`, `archive_support/` e relatórios pontuais listados em [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md).
 

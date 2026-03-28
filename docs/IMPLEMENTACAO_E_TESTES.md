@@ -18,7 +18,7 @@ _A Parte II integrou o antigo `LOGS_E_TESTES_SINTESE.md`._
 | C001   | Rating System                                 |
 | D001   | Background Workers (Cron)                     |
 
-**Secções adicionais:** Diagnóstico passageiro–motorista | Localização demo (Oeiras) | Ferramentas admin na web-app
+**Seções adicionais:** Diagnóstico passageiro–motorista | Localização demo (Oeiras) | Ferramentas admin na web-app
 
 ---
 
@@ -787,7 +787,7 @@ Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger)
 
 # Parte II — Logs estruturados, buffer e síntese pytest
 
-_Conteúdo fundido a partir de `LOGS_E_TESTES_SINTESE.md`. Para contagens e tabelas de eventos, preferir esta parte; a secção «Testes automatizados» acima resume o mesmo âmbito por prompt A000._
+_Conteúdo fundido a partir de `LOGS_E_TESTES_SINTESE.md`. Para contagens e tabelas de eventos, preferir esta parte; a seção «Testes automatizados» acima resume o mesmo âmbito por prompt A000._
 
 ## II.1 Visão geral (logging)
 

@@ -12,21 +12,21 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Inventário e próximo arquivo
 
-| Ficheiro                                                                                 | Propósito                                                                                                                                     |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ficheiro                                                                                 | Propósito                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](docs/DOCUMENTATION_INVENTORY_2026-03-27.md) | O que o Git rastreia (`.md` + imagens): **manter / fundir / arquivar** — fusões principais feitas; próximo passo opcional: cópia para `C:\dev\_archives\APP\` + `git rm` do que sair do repo |
 
 ---
 
 ## Documentos principais
 
-| Ficheiro                                                                                       | Propósito                                                                                            |
-| ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [README.md](README.md)                                                                         | Entrada do projeto — estrutura, início rápido                                                        |
-| [PROJECT.md](PROJECT.md)                                                                       | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento                                     |
-| [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](docs/architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (fases 1–6) + **anexo pré-produção A023–A035** (ex-`ROADMAP_TVDE_ATE_PRODUCAO`)      |
-| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                         | Handoff — estado, roadmap resumido; **Sec. F** operação (ex-checklist); **Sec. G** relatório projeto |
-| [docs/visao_cursor.md](docs/visao_cursor.md)                                                   | Visão geral do projeto (perspectiva Cursor), ideias e checklist de comercialização                   |
+| Ficheiro                                                                                       | Propósito                                                                                                                                                             |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [README.md](README.md)                                                                         | Entrada do projeto — estrutura, início rápido                                                                                                                         |
+| [PROJECT.md](PROJECT.md)                                                                       | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento                                                                                                      |
+| [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](docs/architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (fases 1–6) + **anexo A023–A035** com colunas Estado/Evidência + **checklist entrega app**; **estado atual 2026-03-28** (Alembic, CI, gaps A028/A034) |
+| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                         | Handoff — estado, roadmap resumido; **Seção F** operação (ex-checklist); **Seção G** relatório projeto                                                                |
+| [docs/visao_cursor.md](docs/visao_cursor.md)                                                   | Visão geral do projeto (perspectiva Cursor), ideias e checklist de comercialização                                                                                    |
 
 ---
 
@@ -69,14 +69,15 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Arquitetura e prompts
 
-| Ficheiro                                                                                                     | Propósito                                                                |
-| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| [docs/README.md](docs/README.md)                                                                             | Mapa da pasta `docs/` (ativo vs arquivo)                                 |
-| [docs/architecture/TVDE_SYSTEM_BLUEPRINT.md](docs/architecture/TVDE_SYSTEM_BLUEPRINT.md)                     | Blueprint do sistema — objetivos, camadas, trip lifecycle                |
-| [docs/architecture/ARCHITECTURE_STATUS.md](docs/architecture/ARCHITECTURE_STATUS.md)                         | Estado técnico atual — backend, frontend, pipelines                      |
-| [docs/prompts/A000_SYSTEM_RULES.md](docs/prompts/A000_SYSTEM_RULES.md)                                       | Regras do projeto para agentes / implementação                           |
-| [docs/prompts/A014_UX_POLISH.md](docs/prompts/A014_UX_POLISH.md)                                             | Polish UX (em curso)                                                     |
-| [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | A033-B — validação produção (env, webhook, cron, e2e, migrações, backup) |
+| Ficheiro                                                                                                     | Propósito                                                                                              |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| [docs/README.md](docs/README.md)                                                                             | Mapa da pasta `docs/` (ativo vs arquivo)                                                               |
+| [docs/architecture/TVDE_SYSTEM_BLUEPRINT.md](docs/architecture/TVDE_SYSTEM_BLUEPRINT.md)                     | Blueprint do sistema — objetivos, camadas, trip lifecycle                                              |
+| [docs/architecture/ARCHITECTURE_STATUS.md](docs/architecture/ARCHITECTURE_STATUS.md)                         | Estado técnico atual — backend, frontend, pipelines                                                    |
+| [docs/prompts/A000_SYSTEM_RULES.md](docs/prompts/A000_SYSTEM_RULES.md)                                       | Regras do projeto para agentes / implementação                                                         |
+| [docs/prompts/A014_UX_POLISH.md](docs/prompts/A014_UX_POLISH.md)                                             | Polish UX (em curso)                                                                                   |
+| [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | A033-B — validação produção (env, webhook, cron, e2e, migrações, backup)                               |
+| [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | **UX web-app (3–5 dias):** princípios, mini-roadmap, formato de prompts, **Prompt 1** estados visíveis |
 
 ---
 
@@ -107,7 +108,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | --- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
 | 1   | [README.md](README.md)                                                                                       | Entrada do projeto                                           |
 | 2   | [PROJECT.md](PROJECT.md)                                                                                     | Visão geral, stack, modelo                                   |
-| 3   | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](docs/architecture/TVDE_ENGINEERING_ROADMAP.md)               | Roadmap técnico                                              |
+| 3   | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](docs/architecture/TVDE_ENGINEERING_ROADMAP.md)               | Roadmap técnico + entrega app (atualizado 2026-03-28)        |
 | 4   | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                                       | Handoff e contexto                                           |
 | 5   | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                               | Este índice                                                  |
 | 6   | [PREPARACAO_RENDER.md](PREPARACAO_RENDER.md)                                                                 | Deploy no Render                                             |
@@ -131,6 +132,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 24  | [docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)                                                     | Git + GitHub — fluxo TVDE (antes / durante / depois)         |
 | 25  | [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](docs/DOCUMENTATION_INVENTORY_2026-03-27.md)                     | Inventário docs/media tracked — plano manter/fundir/arquivar |
 | 26  | [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                   |
+| 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis) |
 
 ---
 

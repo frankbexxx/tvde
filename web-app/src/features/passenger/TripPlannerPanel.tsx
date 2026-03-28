@@ -1,5 +1,6 @@
 import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
+import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
 
@@ -32,6 +33,12 @@ export interface TripPlannerPanelProps {
   routeMeta: { durationSec: number; distanceM: number } | null
   routeMetaLoading: boolean
   activeTrip: TripDetailResponse | null
+  /** Texto curto sob o estado (polling / última info válida). */
+  tripPollHint?: string | null
+  /** Pedido de viagem demorado (ação do utilizador). */
+  slowRequestHint?: string | null
+  /** Bloqueia confirmar / repor durante o POST do pedido. */
+  confirmTripPending?: boolean
   onChooseMap: () => void
   onSetDestinationHint: () => void
   onReset: () => void
@@ -41,7 +48,7 @@ export interface TripPlannerPanelProps {
 }
 
 /**
- * A019: painel inferior com copy e acções por estado UX (Uber-like).
+ * A019: painel inferior com copy e ações por estado UX (Uber-like).
  * A021: hierarquia visual, contraste sem text-muted fraco em bg-muted; densidade reduzida.
  */
 export function TripPlannerPanel({
@@ -56,6 +63,9 @@ export function TripPlannerPanel({
   routeMeta,
   routeMetaLoading,
   activeTrip,
+  tripPollHint = null,
+  slowRequestHint = null,
+  confirmTripPending = false,
   onChooseMap,
   onSetDestinationHint,
   onReset,
@@ -77,6 +87,9 @@ export function TripPlannerPanel({
   const emphasisWrap = isSubdued
     ? 'opacity-80 transition-opacity duration-500 ease-out'
     : 'transition-opacity duration-500 ease-out'
+
+  const inTripPaymentLine =
+    uiState === 'in_trip' && activeTrip ? paymentStatusLabel(activeTrip.payment_status) : null
 
   const pickupLine =
     !hasPickup
@@ -166,14 +179,26 @@ export function TripPlannerPanel({
             <button
               type="button"
               onClick={onConfirmTrip}
-              className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity"
+              disabled={confirmTripPending || routeMetaLoading}
+              className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity duration-200 disabled:opacity-50 disabled:pointer-events-none"
             >
-              Confirmar viagem
+              {confirmTripPending ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <span
+                    className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
+                    aria-hidden
+                  />
+                  A confirmar…
+                </span>
+              ) : (
+                'Confirmar viagem'
+              )}
             </button>
             <button
               type="button"
               onClick={onReset}
-              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
+              disabled={confirmTripPending}
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
             >
               Repor
             </button>
@@ -188,6 +213,11 @@ export function TripPlannerPanel({
           <p className="text-sm text-foreground/75 text-center">
             {activeTrip ? `Pedido ${activeTrip.trip_id.slice(0, 8)}…` : 'A enviar o teu pedido…'}
           </p>
+          {slowRequestHint ? (
+            <p className="text-xs text-foreground/70 text-center px-2" aria-live="polite">
+              {slowRequestHint}
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -195,8 +225,19 @@ export function TripPlannerPanel({
         <div className="space-y-1">
           <p className="text-base font-semibold text-foreground">Viagem em curso</p>
           <p className="text-sm text-foreground/85">
-            Estado: <span className="text-foreground font-semibold">{activeTrip.status}</span>
+            Estado:{' '}
+            <span className="text-foreground font-semibold">
+              {passengerTripStatusLabel(activeTrip.status)}
+            </span>
           </p>
+          {inTripPaymentLine ? (
+            <p className="text-sm text-foreground/80">Pagamento: {inTripPaymentLine}</p>
+          ) : null}
+          {tripPollHint ? (
+            <p className="text-xs text-foreground/60 pt-0.5" aria-live="polite">
+              {tripPollHint}
+            </p>
+          ) : null}
           <p className="text-sm text-foreground/80 pt-0.5">Acompanha o mapa e o estado acima.</p>
         </div>
       )}

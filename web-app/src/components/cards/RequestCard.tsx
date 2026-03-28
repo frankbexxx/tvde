@@ -8,6 +8,8 @@ interface RequestCardProps {
   estimatedPrice: number
   /** When estimatedPrice is 0, show this instead (e.g. "4–6") */
   estimateFallback?: string
+  /** Linha curta acima da recolha (ex.: nova viagem na lista). */
+  contextHint?: string
   onAccept: () => void
   loading?: boolean
 }
@@ -16,6 +18,7 @@ export function RequestCard({
   pickup,
   estimatedPrice,
   estimateFallback = '4–6',
+  contextHint,
   onAccept,
   loading,
 }: RequestCardProps) {
@@ -26,6 +29,9 @@ export function RequestCard({
 
   return (
     <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm p-4 space-y-2 shadow-card transition-all duration-200">
+      {contextHint ? (
+        <p className="text-xs font-semibold text-primary">{contextHint}</p>
+      ) : null}
       <div className="space-y-0.5">
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
         <p className="text-lg font-semibold text-foreground">{pickup}</p>

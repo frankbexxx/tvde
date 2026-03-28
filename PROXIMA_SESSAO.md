@@ -4,7 +4,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
-# Secção A — Resumo do ROADMAP Completo
+# Seção A — Resumo do ROADMAP Completo
 
 ## ROADMAP — Fase Atual (MVP Público Web)
 
@@ -17,6 +17,8 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - Tokens dev ativos
 - State machine estável
 - **Etapa Operacional** implementada (disponibilidade, timeouts, dispatch, race condition)
+- **Alembic** em produção: baseline `80f5b3e9fd12`, head `c4a8e1b2d0f3` (`stripe_webhook_events`); arranque API corre `upgrade head`; CI aplica migrações antes de `pytest`
+- **Webhook Stripe**: idempotência por `evt_` (tabela `stripe_webhook_events`) + chaves de idempotência nas chamadas à API Stripe (create/confirm/capture/update amount)
 
 ---
 
@@ -57,29 +59,32 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 - Não quebrar state machine existente
 - Não alterar fluxo de authorization no `accept_trip`
-- Não alterar webhook handler
+- Webhook: **SoT** de `Payment.status` inalterável na regra de negócio; reentregas Stripe tratadas com dedup por `stripe_event_id` (sem mudar quem define o estado final)
 - Manter idempotência e atomicidade
 
 ---
 
-### Pendente no ROADMAP (não implementado)
+### Pendente no ROADMAP (não implementado ou parcial)
 
 - **Confirmação no Accept** — `ENABLE_CONFIRM_ON_ACCEPT` existe mas não ativado
 - **Stripe Connect** — split automático para motoristas
-- **Migrations** — Alembic para evolução de schema
-- **API de rotas** — distância/duração reais (Google Maps, OSRM, etc.)
+- **API de rotas** — distância/duração reais estáveis além de OSRM opcional + haversine
 - **Notificações push** — para motoristas e passageiros
+- **Backups PG formais** — A028 (ver checklist em `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`)
+- **Auditoria de segurança documentada** — A034
+
+~~**Migrations (Alembic)**~~ — **Feito** (ver roadmap de engenharia; evolução de schema só via revisões Alembic).
 
 ---
 
-# Secção B — Resumo do que Existe, Estado de Testes e Cuidados
+# Seção B — Resumo do que Existe, Estado de Testes e Cuidados
 
 ## O que existe
 
 ### Backend
 
 - FastAPI, SQLAlchemy 2, PostgreSQL, Stripe (manual capture)
-- Modelos: User, Driver, Trip, Payment, AuditEvent, OtpCode
+- Modelos: User, Driver, Trip, TripOffer, Payment, `StripeWebhookEvent`, AuditEvent, OtpCode, InteractionLog
 - Driver: `is_available` (nova coluna)
 - Serviços: trips, stripe_service, trip_timeouts, system_health, payments
 - Endpoints: passenger, driver, admin, dev_tools, webhooks
@@ -123,11 +128,11 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 3. **Auto-trip** — Requer driver disponível. Se falhar com "Driver is not available", executar Seed primeiro.
 4. **Stripe webhook** — Obrigatório para `payment.status` passar a `succeeded`. Sem `stripe listen`, o complete funciona mas o payment fica em `processing`.
 5. **Invariantes** — Não alterar accept_trip, complete_trip, stripe_service, webhook, model financeiro.
-6. **Cron e timeouts** — Em produção: agendar `GET /cron/jobs?secret=<CRON_SECRET>` (30–60 s). Manualmente: `POST /admin/run-timeouts` e `POST /admin/run-offer-expiry`. Detalhe completo na **Secção F** (checklist operacional fundido).
+6. **Cron e timeouts** — Em produção: agendar `GET /cron/jobs?secret=<CRON_SECRET>` (30–60 s). Manualmente: `POST /admin/run-timeouts` e `POST /admin/run-offer-expiry`. Detalhe completo na **Seção F** (checklist operacional fundido).
 
 ---
 
-# Secção C — Visão
+# Seção C — Visão
 
 O sistema está num **MVP validável** — fluxo técnico e operacional completos, com testes manuais a passar. A base está sólida:
 
@@ -139,7 +144,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ---
 
-# Secção D — O que Deve Ser a Próxima Sessão
+# Seção D — O que Deve Ser a Próxima Sessão
 
 ## Recomendação
 
@@ -150,7 +155,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 **Prioridade 2 — Melhorias incrementais (se necessário)**
 
 1. Ajustes de UI/UX na Web App
-2. Confirmar agendador externo (ex. cron-job.org) a bater em `GET /cron/jobs` com `CRON_SECRET` — ver Secção F
+2. Confirmar agendador externo (ex. cron-job.org) a bater em `GET /cron/jobs` com `CRON_SECRET` — ver Seção F
 3. Revisão do GUIA_TESTES.md com feedback do utilizador
 
 **Prioridade 3 — Decisão pendente**
@@ -167,7 +172,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ---
 
-# Secção E — Assuntos Pertinentes Não Focados Anteriormente
+# Seção E — Assuntos Pertinentes Não Focados Anteriormente
 
 1. **Migrations** — O projeto usa `create_all` + `_dev_add_columns_if_missing()`. Para produção, Alembic (ou equivalente) será necessário. A adição de novas colunas pode exigir scripts de migração.
 
@@ -227,7 +232,7 @@ Ver **GUIA_TESTES.md** para instruções completas e sequenciais.
 
 ---
 
-# Secção F — Operação (checklist consolidado)
+# Seção F — Operação (checklist consolidado)
 
 _Conteúdo fundido a partir de `OPERATION_CHECKLIST.md` na raiz; esse ficheiro passou a apontar para aqui._
 
@@ -333,11 +338,11 @@ Se aparecer resposta **422** com `trip_metrics_required_before_completion`, a vi
 
 ---
 
-# Secção G — Relatório projeto / roadmap (março 2026)
+# Seção G — Relatório projeto / roadmap (março 2026)
 
 _Conteúdo fundido a partir de `RELATORIO_PROJETO_ROADMAP.md`; esse ficheiro na raiz passou a apontar para aqui._
 
-Documento descritivo (nem genérico nem exaustivo). Estado verificado no código em **março de 2026** (incl. correções Stripe webhook, audit JSONB e job de saúde no cron).
+Documento descritivo (nem genérico nem exaustivo). Estado verificado no código em **março de 2026** (incl. Alembic, dedup de webhook por `evt_`, CI com Postgres + migrações, audit JSONB e job de saúde no cron).
 
 ## G.1 O que o projeto é hoje
 
@@ -373,7 +378,8 @@ Timeouts de trip, `is_available`, race em `accept_trip`, dispatch/ofertas, cron/
 ### Ainda não no roadmap “feito”
 
 - **Confirmação no accept** (`ENABLE_CONFIRM_ON_ACCEPT`): não ativar sem decisão de pricing (doc `STRIPE_CONFIRMACAO_FUTURA.md` no snapshot — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)).
-- **Stripe Connect**, **Alembic**, **push**, **OTP/SMS produção** — futuros.
+- **Stripe Connect**, **push**, **OTP/SMS produção** — futuros.
+- **Alembic + tabela `stripe_webhook_events` + idempotência API Stripe** — **feitos**; pormenores e checklist de entrega: **`docs/architecture/TVDE_ENGINEERING_ROADMAP.md`** (atualização 2026-03-28).
 
 ### Git / PRs (higiene)
 
@@ -381,20 +387,20 @@ Timeouts de trip, `is_available`, race em `accept_trip`, dispatch/ofertas, cron/
 
 ## G.3 Conclusão (estado do trabalho)
 
-O núcleo (**financeiro + UI validável**) está **fechado** em “funciona de ponta a ponta e foi testado em condições reais”. O que **não** está fechado é a **próxima geração**: preço definitivo, SCA no accept, Connect, endurecimento de produção. Escala: idempotência por `stripe_event_id`, ledger, filas — ver `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`.
+O núcleo (**financeiro + UI validável**) está **fechado** em “funciona de ponta a ponta e foi testado em condições reais”. O que **não** está fechado é a **próxima geração**: preço definitivo, SCA no accept, Connect, endurecimento de produção (backups formais, auditoria A034). **Idempotência por `stripe_event_id`** no webhook está implementada (`stripe_webhook_events`). Escala futura: ledger, filas — ver `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`.
 
 ## G.4 Expectativas realistas
 
-| Expectativa                       | Realidade                                                                                             |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| “MVP demonstrável”                | Atendida.                                                                                             |
-| “Produção sem dívida”             | Parcial: Alembic formal, suite a crescer; cron + admin; reconciliação read-only.                      |
-| “Mesmo roadmap antigo sem deriva” | O código já inclui features além do ROADMAP arquivado — verdade operacional no código + este handoff. |
+| Expectativa                       | Realidade                                                                                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| “MVP demonstrável”                | Atendida.                                                                                                                                         |
+| “Produção sem dívida”             | Parcial: Alembic **fechado**; **Falta** backups formais (A028), auditoria A034, suite de testes a crescer; cron + admin; reconciliação read-only. |
+| “Mesmo roadmap antigo sem deriva” | O código já inclui features além do ROADMAP arquivado — verdade operacional no código + este handoff.                                             |
 
 ## G.5 Caminhos possíveis (ordem sugerida)
 
 1. Decisão produto/financeiro — quando o preço é definitivo.
-2. Endurecimento — pytest nos serviços críticos; Alembic quando schema estabilizar.
+2. Endurecimento — pytest nos serviços críticos; **backups PG** (A028); **revisão A034**; checklist **Entrega da app** no `TVDE_ENGINEERING_ROADMAP.md`.
 3. Operação — scheduler fiável para `GET /cron/jobs`; painel Saúde.
 4. Escala — SSE/WebSocket vs polling quando justificado.
 5. Monetização motorista — Stripe Connect após modelo congelado.
@@ -422,14 +428,15 @@ O núcleo (**financeiro + UI validável**) está **fechado** em “funciona de p
 
 ## G.7 Onde está cada coisa
 
-| Necessidade                    | Onde ir                                                    |
-| ------------------------------ | ---------------------------------------------------------- |
-| Continuar amanhã               | Este ficheiro (`PROXIMA_SESSAO.md`)                        |
-| Roadmap engenharia + A023–A035 | `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`            |
-| Roadmap histórico / Stripe futuro | Snapshot local — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md) (`archive/docs_2026_03_22/ROADMAP.md`, `STRIPE_CONFIRMACAO_FUTURA.md`) |
-| Testes manuais                 | `GUIA_TESTES.md`                                           |
-| Observabilidade backend        | `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`     |
-| Índice de docs                 | `DOCS_INDEX.md`                                            |
-| Implementação + logs + pytest  | `docs/IMPLEMENTACAO_E_TESTES.md`                           |
+| Necessidade                         | Onde ir                                                                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Continuar amanhã                    | Este ficheiro (`PROXIMA_SESSAO.md`)                                                                                                                    |
+| Roadmap engenharia + A023–A035      | `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`                                                                                                        |
+| UX web-app (mini roadmap + prompts) | `docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md`                                                                                                            |
+| Roadmap histórico / Stripe futuro   | Snapshot local — [docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md) (`archive/docs_2026_03_22/ROADMAP.md`, `STRIPE_CONFIRMACAO_FUTURA.md`) |
+| Testes manuais                      | `GUIA_TESTES.md`                                                                                                                                       |
+| Observabilidade backend             | `docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`                                                                                                 |
+| Índice de docs                      | `DOCS_INDEX.md`                                                                                                                                        |
+| Implementação + logs + pytest       | `docs/IMPLEMENTACAO_E_TESTES.md`                                                                                                                       |
 
 _Relatório fundido para apoio à decisão; não substitui o código._

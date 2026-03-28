@@ -94,7 +94,7 @@ http://localhost:5173/driver
 
 **Resultado esperado**
 
-A secção de viagens disponíveis está visível.
+A seção de viagens disponíveis está visível.
 
 ---
 
@@ -178,7 +178,7 @@ http://localhost:5173/driver
 
 **Resultado esperado**
 
-A secção "Histórico" está visível.
+A seção "Histórico" está visível.
 
 ---
 

@@ -440,7 +440,7 @@ Para testar o fluxo completo, precisa de dois "dispositivos" ou duas abas: uma c
 ### 15.3 Aceitar a viagem (Motorista)
 
 1. Clique no botão **"ACEITAR"** numa das viagens.
-2. **Resultado esperado:** O botão fica em loading. Após 1–2 segundos, a viagem desaparece da lista e aparece a secção "Viagem ativa" com o estado "A caminho do passageiro".
+2. **Resultado esperado:** O botão fica em loading. Após 1–2 segundos, a viagem desaparece da lista e aparece a seção "Viagem ativa" com o estado "A caminho do passageiro".
 3. O botão fixo no fundo passa a ser **"Cheguei"**.
 
 ### 15.4 Simular chegada (Motorista)
@@ -472,7 +472,7 @@ Para testar o fluxo completo, precisa de dois "dispositivos" ou duas abas: uma c
 ### 16.1 Verificar após viagem concluída
 
 1. Na vista Passageiro, vá até ao final da página.
-2. Deve ver a secção **"Histórico"** (título cinzento, mais discreto).
+2. Deve ver a seção **"Histórico"** (título cinzento, mais discreto).
 3. Cada linha mostra: origem → destino e o preço.
 
 ### 16.2 Verificar conteúdo
@@ -550,7 +550,7 @@ Para testar o fluxo completo, precisa de dois "dispositivos" ou duas abas: uma c
 ### 19.3 Clicar em ACEITAR
 
 1. Clique no botão **"ACEITAR"**.
-2. **Resultado esperado:** O botão fica em loading (spinner). Após 1–2 segundos, a viagem desaparece da lista e aparece a secção "Viagem ativa" com o card da viagem e o estado "A caminho do passageiro".
+2. **Resultado esperado:** O botão fica em loading (spinner). Após 1–2 segundos, a viagem desaparece da lista e aparece a seção "Viagem ativa" com o card da viagem e o estado "A caminho do passageiro".
 3. O botão fixo no fundo passa a ser **"Cheguei"**.
 
 ---
@@ -596,7 +596,7 @@ Este teste verifica o que acontece quando dois motoristas tentam aceitar a mesma
 ### 22.1 Verificar após viagem concluída
 
 1. Na vista Motorista, vá até ao final da página.
-2. Deve ver a secção **"Histórico"** (título cinzento).
+2. Deve ver a seção **"Histórico"** (título cinzento).
 3. Cada linha mostra: origem → destino e o preço.
 
 ---

@@ -4,6 +4,7 @@
 import { Spinner } from '../../components/ui/Spinner'
 import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
+import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
 
@@ -100,7 +101,7 @@ export function PassengerStatusCard({
           className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
           <div>
-            <p className="text-success font-semibold text-lg">A chegar</p>
+            <p className="text-success font-semibold text-lg">{passengerTripStatusLabel('arriving')}</p>
             <p className="text-foreground/80 text-sm mt-1">O motorista está próximo do ponto de recolha.</p>
           </div>
           <TripCard
@@ -115,13 +116,23 @@ export function PassengerStatusCard({
         </div>
       )
 
-    case 'TRIP_ONGOING':
+    case 'TRIP_ONGOING': {
+      const ps = activeTrip.payment_status
+      const payOngoing =
+        ps === 'pending' || ps === 'processing' || ps === 'failed'
+          ? paymentStatusLabel(ps)
+          : null
       return (
         <div
           key="TRIP_ONGOING"
           className="space-y-4 rounded-2xl border border-secondary/40 bg-secondary/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <p className="text-secondary-foreground font-semibold text-lg">Viagem em curso</p>
+          <div>
+            <p className="text-secondary-foreground font-semibold text-lg">Viagem em curso</p>
+            {payOngoing ? (
+              <p className="text-sm text-foreground/75 mt-1">{payOngoing}</p>
+            ) : null}
+          </div>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
@@ -133,14 +144,21 @@ export function PassengerStatusCard({
           />
         </div>
       )
+    }
 
-    case 'TRIP_COMPLETED':
+    case 'TRIP_COMPLETED': {
+      const payDone = paymentStatusLabel(activeTrip.payment_status)
       return (
         <div
           key="TRIP_COMPLETED"
           className="space-y-4 rounded-2xl border border-border bg-card px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
-          <p className="text-foreground/85 font-semibold text-lg">Viagem concluída</p>
+          <div>
+            <p className="text-foreground/85 font-semibold text-lg">Viagem concluída</p>
+            {payDone ? (
+              <p className="text-sm text-foreground/80 mt-1">{payDone}</p>
+            ) : null}
+          </div>
           <TripCard
             pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
             destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
@@ -149,6 +167,7 @@ export function PassengerStatusCard({
           />
         </div>
       )
+    }
 
     default:
       return null

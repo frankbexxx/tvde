@@ -29,12 +29,15 @@ export type StatusHeaderEmphasis = 'primary' | 'subdued'
 
 interface StatusHeaderProps {
   label: string
+  /** Linha secundária (ex.: próximos passos após erro de pagamento). */
+  subLabel?: string
   variant?: StatusVariant
   emphasis?: StatusHeaderEmphasis
 }
 
 export function StatusHeader({
   label,
+  subLabel,
   variant = 'idle',
   emphasis = 'primary',
 }: StatusHeaderProps) {
@@ -45,11 +48,14 @@ export function StatusHeader({
   return (
     <div
       key={label}
-      className={`${surface} transition-all duration-500 ease-out motion-reduce:transition-none animate-in fade-in duration-500`}
+      className={`${surface} transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none animate-in fade-in duration-300`}
       role="status"
       aria-live="polite"
     >
-      {label}
+      <span className="block">{label}</span>
+      {subLabel ? (
+        <p className="mt-2 text-sm font-normal leading-snug opacity-90 max-w-md mx-auto">{subLabel}</p>
+      ) : null}
     </div>
   )
 }

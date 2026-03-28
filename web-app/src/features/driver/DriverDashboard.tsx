@@ -15,7 +15,15 @@ import {
   setDriverOffline,
 } from '../../api/trips'
 import type { TripAvailableItem, TripHistoryItem } from '../../api/trips'
+import { isTimeoutLikeError } from '../../api/client'
 import { usePolling } from '../../hooks/usePolling'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { usePollStallHint } from '../../hooks/usePollStallHint'
+import {
+  DRIVER_NEW_TRIP_LIST_HINT,
+  driverActiveTripUi,
+  paymentStatusLabel,
+} from '../../constants/tripStatusLabels'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
@@ -47,16 +55,6 @@ function setStoredOffline(offline: boolean) {
   }
 }
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; variant: import('../../components/layout/StatusHeader').StatusVariant }
-> = {
-  accepted: { label: 'A caminho do passageiro', variant: 'accepted' },
-  arriving: { label: 'A chegar', variant: 'arriving' },
-  ongoing: { label: 'Em viagem', variant: 'ongoing' },
-  completed: { label: 'Viagem concluída', variant: 'completed' },
-}
-
 export function DriverDashboard() {
   const { token } = useAuth()
   const { addLog, setStatus } = useActivityLog()
@@ -67,21 +65,32 @@ export function DriverDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [actionTakingLong, setActionTakingLong] = useState(false)
+  const isOnline = useOnlineStatus()
 
   const pollEnabled = !!token && !offline
 
-  const { data: available, refetch: refetchAvailable } = usePolling(
+  const { data: available, refetch: refetchAvailable, pollFault: availablePollFault } = usePolling(
     () => getAvailableTrips(token!),
     [token],
     pollEnabled,
     3000
   )
-  const { data: history, refetch: refetchHistory } = usePolling(
+  const { data: history, refetch: refetchHistory, pollFault: historyPollFault } = usePolling(
     () => getDriverTripHistory(token!),
     [token],
     !!token,
     10000
   )
+
+  useEffect(() => {
+    if (!actionLoading) {
+      setActionTakingLong(false)
+      return
+    }
+    const id = window.setTimeout(() => setActionTakingLong(true), 12_000)
+    return () => window.clearTimeout(id)
+  }, [actionLoading])
 
   // Send driver location immediately when available, then every 3s (A006 geo stability).
   // Only send when we have a token — prevents 401 "Not authenticated" on cold load.
@@ -135,6 +144,7 @@ export function DriverDashboard() {
     actionName: string,
     onSuccess?: () => void
   ) => {
+    if (actionLoading != null) return
     setError(null)
     setActionLoading(tripId)
     setStatus(`A executar: ${actionName}...`)
@@ -142,7 +152,7 @@ export function DriverDashboard() {
     try {
       const res = await action()
       setDriverActiveTripId(tripId)
-      setStatus(STATUS_CONFIG[res.status]?.label ?? res.status)
+      setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (actionName === 'ACEITAR') sonnerToast.success('Viagem aceite')
       onSuccess?.()
@@ -155,9 +165,12 @@ export function DriverDashboard() {
         addLog('409: Viagem já aceite por outro motorista', 'error')
         refetchAvailable()
       } else {
-        setError(e?.detail ?? 'Erro')
+        const msg = isTimeoutLikeError(err) || e?.status === 0
+          ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
+          : String(e?.detail ?? 'Erro')
+        setError(msg)
         setStatus('Erro')
-        addLog(`Erro ${actionName}: ${e?.detail ?? 'Erro'}`, 'error')
+        addLog(`Erro ${actionName}: ${msg}`, 'error')
       }
     } finally {
       setActionLoading(null)
@@ -201,6 +214,22 @@ export function DriverDashboard() {
         </div>
       )}
 
+      {!isOnline && (
+        <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+          <p className="font-medium text-foreground">Sem ligação à internet</p>
+          <p className="text-foreground/80 mt-1">
+            Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se precisares.
+          </p>
+        </div>
+      )}
+
+      {pollEnabled && availablePollFault && (
+        <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+          Não foi possível atualizar a lista de viagens. A última informação mantém-se; voltamos a tentar
+          automaticamente — verifica a ligação se persistir.
+        </div>
+      )}
+
       <div className="space-y-6 transition-opacity duration-150">
         <Toggle
           label="Estado"
@@ -226,6 +255,12 @@ export function DriverDashboard() {
           </div>
         )}
 
+        {actionLoading && actionTakingLong && (
+          <p className="text-center text-sm text-foreground/70" aria-live="polite">
+            Ainda a processar… Se demorar muito, verifica a ligação.
+          </p>
+        )}
+
         {!offline && (
           <MapView
             driverLocation={driverLocation ?? undefined}
@@ -237,8 +272,8 @@ export function DriverDashboard() {
 
         {offline && (
           <div className="py-12 text-center">
-            <p className="text-foreground/85 text-lg">Está offline.</p>
-            <p className="text-foreground/75 mt-2">Ative para receber viagens.</p>
+            <p className="text-foreground/85 text-lg">Estás offline.</p>
+            <p className="text-foreground/75 mt-2">Ativa a disponibilidade para receber viagens.</p>
           </div>
         )}
 
@@ -258,6 +293,7 @@ export function DriverDashboard() {
                 {available.map((t: TripAvailableItem) => (
                   <li key={t.trip_id}>
                     <RequestCard
+                      contextHint={DRIVER_NEW_TRIP_LIST_HINT}
                       pickup={formatPickup(t.origin_lat, t.origin_lng)}
                       estimatedPrice={t.estimated_price}
                       onAccept={() =>
@@ -276,7 +312,7 @@ export function DriverDashboard() {
             ) : (
               <div className="py-8 text-center text-foreground/80">
                 <p className="text-base">Nenhuma viagem disponível.</p>
-                <p className="text-sm mt-1">Ative para receber novas viagens.</p>
+                <p className="text-sm mt-1">Ativa a disponibilidade para veres novas viagens.</p>
               </div>
             )}
           </>
@@ -293,6 +329,12 @@ export function DriverDashboard() {
               refetchHistory()
             }}
           />
+        )}
+
+        {historyPollFault && (
+          <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+            Não foi possível atualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
+          </div>
         )}
 
         {history && history.length > 0 && (
@@ -331,7 +373,12 @@ function ActiveTripSummary({
   onTripCancelled: () => void
 }) {
   const fetchTrip = useCallback(() => getDriverTripDetail(tripId, token), [tripId, token])
-  const { data: trip } = usePolling(
+  const {
+    data: trip,
+    isRefreshing: tripRefreshing,
+    lastSuccessAt: tripLastSuccessAt,
+    pollFault: tripPollFault,
+  } = usePolling(
     fetchTrip,
     [tripId, token],
     !!tripId && !!token,
@@ -339,17 +386,47 @@ function ActiveTripSummary({
   )
   const status = trip?.status ?? 'accepted'
 
+  const tripPollStalled = usePollStallHint(
+    tripLastSuccessAt,
+    tripRefreshing,
+    Boolean(tripId && token && trip)
+  )
+  const tripPollFootnote = tripPollFault
+    ? 'Não foi possível atualizar agora. Verifica a ligação — voltamos a tentar de seguida.'
+    : trip
+      ? tripRefreshing
+        ? 'A atualizar estado…'
+        : tripPollStalled
+          ? 'Sem novidades há instantes — a última informação mantém-se válida.'
+          : null
+      : null
+
   useEffect(() => {
     if (trip?.status === 'cancelled') {
       onTripCancelled()
     }
   }, [trip?.status, onTripCancelled])
 
-  const config = STATUS_CONFIG[status] ?? { label: status, variant: 'idle' as const }
+  const config = driverActiveTripUi(status)
 
   return (
     <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out">
       <StatusHeader label={config.label} variant={config.variant} emphasis="primary" />
+      {tripPollFootnote ? (
+        <p className="text-center text-xs text-foreground/55 -mt-3 mb-1 min-h-[1.25rem]" aria-live="polite">
+          {tripPollFootnote}
+        </p>
+      ) : null}
+      {trip?.payment_status === 'failed' ? (
+        <p className="text-sm text-destructive text-center px-2">
+          Pagamento do passageiro recusado. Segue as instruções da plataforma ou do suporte.
+        </p>
+      ) : null}
+      {trip?.status === 'completed' && trip.payment_status && trip.payment_status !== 'failed' ? (
+        <p className="text-sm text-foreground/80 text-center px-2">
+          Pagamento do passageiro: {paymentStatusLabel(trip.payment_status)}
+        </p>
+      ) : null}
       {trip && (
         <TripCard
           pickup={formatPickup(trip.origin_lat, trip.origin_lng)}
@@ -391,24 +468,38 @@ function ActiveTripActions({
   )
   const status = trip?.status ?? 'accepted'
   const [loading, setLoading] = useState(false)
+  const [loadingLong, setLoadingLong] = useState(false)
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadingLong(false)
+      return
+    }
+    const id = window.setTimeout(() => setLoadingLong(true), 12_000)
+    return () => window.clearTimeout(id)
+  }, [loading])
 
   const run = async (
     action: () => Promise<{ status: string }>,
     actionName: string
   ) => {
+    if (loading) return
     setLoading(true)
     onError('')
     setStatus(`A executar: ${actionName}...`)
     addLog(`Clique: ${actionName}`, 'action')
     try {
       const res = await action()
-      setStatus(STATUS_CONFIG[res.status]?.label ?? res.status)
+      setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (res.status === 'completed') sonnerToast.success('Viagem concluída')
       if (res.status === 'completed' || res.status === 'cancelled') onComplete()
     } catch (err: unknown) {
-      const msg = (err as { detail?: string })?.detail ?? 'Erro'
-      onError(String(msg))
+      const e = err as { status?: number; detail?: string }
+      const msg = isTimeoutLikeError(err) || e?.status === 0
+        ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
+        : String(e?.detail ?? 'Erro')
+      onError(msg)
       setStatus('Erro')
       addLog(`Erro ${actionName}: ${msg}`, 'error')
     } finally {
@@ -433,6 +524,11 @@ function ActiveTripActions({
 
   return (
     <div className="space-y-2">
+      {loadingLong ? (
+        <p className="text-center text-sm text-foreground/70 px-1" aria-live="polite">
+          Ainda a processar… Se demorar muito, verifica a ligação.
+        </p>
+      ) : null}
       <PrimaryActionButton
         onClick={() => run(buttonConfig.action, buttonConfig.label)}
         disabled={loading}

@@ -3,6 +3,7 @@
  */
 import type { StatusVariant } from '../../components/layout/StatusHeader'
 import type { TripDetailResponse } from '../../api/trips'
+import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
 
 export function getPassengerBannerState(params: {
@@ -12,7 +13,7 @@ export function getPassengerBannerState(params: {
   activeTrip: TripDetailResponse | null | undefined
   uxState: PassengerUxState | null
   isOnline: boolean
-}): { label: string; variant: StatusVariant } {
+}): { label: string; variant: StatusVariant; subLabel?: string } {
   const { creating, activeTripId, activeTripLoading, activeTrip, uxState, isOnline } = params
 
   if (creating && !activeTripId) {
@@ -22,7 +23,24 @@ export function getPassengerBannerState(params: {
     return { label: 'Pronto', variant: 'idle' }
   }
   if (activeTripId && !isOnline) {
-    return { label: 'Sem ligação — verifica a rede', variant: 'idle' }
+    return {
+      label: 'Sem ligação — verifica a rede',
+      variant: 'idle',
+      subLabel: 'Quando voltares a ficar online, a app volta a atualizar sozinha. Podes tentar recarregar a página.',
+    }
+  }
+  if (activeTrip?.payment_status === 'failed') {
+    return {
+      label: 'Pagamento recusado',
+      variant: 'error',
+      subLabel: 'Tenta pedir de novo ou contacta o suporte se o problema continuar.',
+    }
+  }
+  if (activeTrip?.status === 'cancelled') {
+    return { label: passengerTripStatusLabel('cancelled'), variant: 'idle' }
+  }
+  if (activeTrip?.status === 'failed') {
+    return { label: passengerTripStatusLabel('failed'), variant: 'error' }
   }
   if (activeTripLoading && !activeTrip) {
     return { label: 'A sincronizar viagem…', variant: 'idle' }
@@ -40,11 +58,28 @@ export function getPassengerBannerState(params: {
       }
       return { label: 'Motorista a caminho', variant: 'accepted' }
     case 'DRIVER_ARRIVING':
-      return { label: 'A chegar', variant: 'arriving' }
+      return { label: passengerTripStatusLabel('arriving'), variant: 'arriving' }
     case 'TRIP_ONGOING':
       return { label: 'Viagem em curso', variant: 'ongoing' }
-    case 'TRIP_COMPLETED':
+    case 'TRIP_COMPLETED': {
+      const ps = activeTrip?.payment_status
+      if (ps === 'succeeded') {
+        return {
+          label: 'Viagem concluída',
+          variant: 'completed',
+          subLabel: 'Pagamento confirmado.',
+        }
+      }
+      if (ps === 'processing' || ps === 'pending') {
+        return {
+          label: 'Viagem concluída',
+          variant: 'completed',
+          subLabel:
+            'O pagamento pode demorar alguns segundos a aparecer como concluído — mantém esta página aberta.',
+        }
+      }
       return { label: 'Viagem concluída', variant: 'completed' }
+    }
     default:
       return { label: 'A sincronizar viagem…', variant: 'idle' }
   }
