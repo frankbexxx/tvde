@@ -515,8 +515,14 @@ export function PassengerDashboard() {
     return () => clearTimeout(t)
   }, [tripCompletedFromLocation, setPassengerActiveTripId])
 
-  // Poll driver location for the active trip so passenger can see live movement.
-  // A013: 404 / 409 não terminais = fluxo normal (sem setError). 409 terminal → trip_completed + clear.
+  // Poll da posição do motorista: intervalo curto com viagem atribuída/em curso; mais lento em `requested` (menos 404 na rede).
+  const driverLocPollMs = useMemo(() => {
+    const s = activeTrip?.status
+    if (s && ['assigned', 'accepted', 'arriving', 'ongoing'].includes(s)) return 1500
+    if (s === 'requested') return 5000
+    return 3000
+  }, [activeTrip?.status])
+
   useEffect(() => {
     if (!activeTripId || tripCompletedFromLocation) {
       setDriverLocation(null)
@@ -524,7 +530,8 @@ export function PassengerDashboard() {
     }
 
     let cancelled = false
-    const interval = setInterval(() => {
+
+    const pollOnce = () => {
       if (cancelled) return
       void getDriverLocation(activeTripId).then((result) => {
         if (cancelled) return
@@ -534,7 +541,6 @@ export function PassengerDashboard() {
           setTripCompletedFromLocation(true)
           setDriverLocation(null)
         } else if (result.reason === 'driver_not_assigned' || result.reason === 'location_unavailable') {
-          // A013: sem erro de UI — pin só quando há coords; estados “à espera” / “localização neste estado não disponível”
           setDriverLocation(null)
         }
       }).catch((err) => {
@@ -548,13 +554,16 @@ export function PassengerDashboard() {
           console.warn('getDriverLocation', err)
         }
       })
-    }, 2000)
+    }
+
+    pollOnce()
+    const interval = setInterval(pollOnce, driverLocPollMs)
 
     return () => {
       cancelled = true
       clearInterval(interval)
     }
-  }, [activeTripId, tripCompletedFromLocation, setPassengerActiveTripId])
+  }, [activeTripId, tripCompletedFromLocation, driverLocPollMs, setPassengerActiveTripId])
 
   return (
     <ScreenContainer

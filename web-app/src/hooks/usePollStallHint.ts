@@ -13,8 +13,15 @@ export function usePollStallHint(
   const [stalled, setStalled] = useState(false)
 
   useEffect(() => {
+    if (enabled && lastSuccessAt != null) {
+      return
+    }
+    const id = requestAnimationFrame(() => setStalled(false))
+    return () => cancelAnimationFrame(id)
+  }, [enabled, lastSuccessAt])
+
+  useEffect(() => {
     if (!enabled || lastSuccessAt == null) {
-      setStalled(false)
       return
     }
 
@@ -26,9 +33,12 @@ export function usePollStallHint(
       setStalled(Date.now() - lastSuccessAt > stallMs)
     }
 
-    tick()
-    const id = window.setInterval(tick, 2000)
-    return () => window.clearInterval(id)
+    const raf = requestAnimationFrame(() => tick())
+    const interval = window.setInterval(tick, 2000)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.clearInterval(interval)
+    }
   }, [enabled, lastSuccessAt, isRefreshing, stallMs])
 
   return stalled

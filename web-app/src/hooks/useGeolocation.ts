@@ -5,7 +5,8 @@ type LatLng = {
   lng: number
 } | null
 
-const METERS_THRESHOLD = 5
+/** Movimento mínimo para atualizar estado — mais baixo = rasto mais “vivo” em deslocação real. */
+const METERS_THRESHOLD = 4
 
 /** Câmara Municipal de Oeiras, Largo Marquês de Pombal */
 export const OEIRAS_FALLBACK = {
