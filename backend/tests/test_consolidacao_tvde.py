@@ -298,8 +298,10 @@ def test_webhook_idempotency(client: TestClient, monkeypatch: pytest.MonkeyPatch
     try:
         pay = _insert_payment_for_webhook(db)
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        # ID estável entre os dois POSTs, único por corrida (evita colisão com BD persistente).
+        evt_id = f"evt_test_idempotency_dup_{uuid.uuid4().hex}"
         event = {
-            "id": "evt_test_idempotency_dup",
+            "id": evt_id,
             "type": "payment_intent.succeeded",
             "data": {"object": {"id": pay.stripe_payment_intent_id, "object": "payment_intent"}},
         }
@@ -325,8 +327,9 @@ def test_webhook_twice_same_pi_keeps_single_payment_row(
         pi = pay.stripe_payment_intent_id
         assert pi
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        evt_id = f"evt_a025_dup_delivery_{uuid.uuid4().hex}"
         event = {
-            "id": "evt_a025_dup_delivery",
+            "id": evt_id,
             "type": "payment_intent.succeeded",
             "data": {"object": {"id": pi, "object": "payment_intent"}},
         }
