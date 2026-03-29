@@ -92,14 +92,14 @@ export function DriverDashboard() {
     return () => window.clearTimeout(id)
   }, [actionLoading])
 
-  // Send driver location immediately when available, then every 3s (A006 geo stability).
-  // Only send when we have a token — prevents 401 "Not authenticated" on cold load.
+  // Envio imediato + intervalo: mais frequente com viagem ativa (teste campo / rasto ao vivo).
+  const locationSendMs = activeTripId ? 1500 : 3000
+
   useEffect(() => {
     if (offline || !driverLocation || !token) return
 
     let cancelled = false
 
-    // Immediate first send — no driver should be online without at least one location in DB.
     void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
       if (!cancelled) console.warn('Failed to send driver location (first)', err)
     })
@@ -109,13 +109,13 @@ export function DriverDashboard() {
       void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
         if (!cancelled) console.warn('Failed to send driver location', err)
       })
-    }, 3000)
+    }, locationSendMs)
 
     return () => {
       cancelled = true
       clearInterval(interval)
     }
-  }, [offline, driverLocation, token])
+  }, [offline, driverLocation, token, locationSendMs])
 
   useEffect(() => {
     setStoredOffline(offline)
