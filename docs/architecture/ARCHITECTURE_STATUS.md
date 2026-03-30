@@ -232,4 +232,3 @@ No **DriverDashboard**:
 - **Mapas**
   - Estilo base: MapTiler Streets‑v2 via `VITE_MAPTILER_KEY`.
   - Linha de rota OSRM e markers funcionam bem sobre este estilo.
-
