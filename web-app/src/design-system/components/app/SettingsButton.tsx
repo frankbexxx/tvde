@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useLocation } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -28,8 +28,8 @@ export function SettingsButton() {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<ConfigView>("main")
   const isMobile = useMediaQuery("(max-width: 639px)")
-  const { betaMode, logout } = useAuth()
-  const { pathname } = useLocation()
+  const { betaMode, logout, appRouteRole, setAppRouteRole, isAdmin } = useAuth()
+  const navigate = useNavigate()
   const { passengerActiveTripId } = useActiveTrip()
 
   const handleOpenChange = (next: boolean) => {
@@ -37,8 +37,8 @@ export function SettingsButton() {
     if (!next) setView("main")
   }
 
-  const devToolsMode = pathname.includes("/driver") ? "driver" : "passenger"
-  const devToolsTripId = pathname.includes("/passenger") ? passengerActiveTripId : null
+  const devToolsMode = appRouteRole === "driver" ? "driver" : "passenger"
+  const devToolsTripId = appRouteRole === "passenger" ? passengerActiveTripId : null
 
   const mainBody = (
     <div className="mt-4 flex flex-col gap-4">
@@ -46,6 +46,42 @@ export function SettingsButton() {
         <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Aspeto</p>
         <ThemeSelector />
       </div>
+      <div>
+        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Modo da app</p>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant={appRouteRole === "passenger" ? "default" : "outline"}
+            className="flex-1 font-medium"
+            onClick={() => {
+              setAppRouteRole("passenger")
+              navigate("/passenger", { replace: true })
+              setOpen(false)
+            }}
+          >
+            Passageiro
+          </Button>
+          <Button
+            type="button"
+            variant={appRouteRole === "driver" ? "default" : "outline"}
+            className="flex-1 font-medium"
+            onClick={() => {
+              setAppRouteRole("driver")
+              navigate("/driver", { replace: true })
+              setOpen(false)
+            }}
+          >
+            Motorista
+          </Button>
+        </div>
+      </div>
+      {isAdmin ? (
+        <Button type="button" variant="outline" className="w-full font-medium" asChild>
+          <Link to="/admin" onClick={() => setOpen(false)}>
+            Painel admin
+          </Link>
+        </Button>
+      ) : null}
       <Button
         type="button"
         variant="outline"

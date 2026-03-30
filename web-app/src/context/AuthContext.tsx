@@ -20,8 +20,15 @@ import {
   getDevTokens,
   login as loginApi,
   type AuthTokens,
+  type TokenResponse,
 } from '../api/auth'
-import { clearAuthStorage, getStoredAccessToken, setStoredAccessToken } from '../utils/authStorage'
+import {
+  clearAuthStorage,
+  getStoredAccessToken,
+  getStoredAppRouteRole,
+  setStoredAccessToken,
+  setStoredAppRouteRole,
+} from '../utils/authStorage'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { useActivityLog } from './ActivityLogContext'
 
@@ -36,17 +43,22 @@ interface AuthState {
   isAuthenticated: boolean
 }
 
+export type AppRouteRole = 'passenger' | 'driver'
+
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
   isAdmin: boolean
+  /** Papel da shell passageiro/motorista (persistido; não usar URL). */
+  appRouteRole: AppRouteRole
   /** A020: true durante boot + verificação de sessão */
   isLoadingAuth: boolean
   /** A020: copy do ecrã de arranque (boot vs sessão) */
   splashPrimary: string
   loadError: string | null
   setRole: (role: Role) => void
+  setAppRouteRole: (role: AppRouteRole) => void
   loadTokens: () => Promise<void>
-  login: (phone: string, password: string, requestedRole?: string) => Promise<void>
+  login: (phone: string, password: string, requestedRole?: string) => Promise<TokenResponse>
   logout: () => void
 }
 
@@ -63,18 +75,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [splashPrimary, setSplashPrimary] = useState('A iniciar serviço…')
+  const [appRouteRole, setAppRouteRoleState] = useState<AppRouteRole>(() => getStoredAppRouteRole())
 
-  const role = useMemo<Role>(() => {
+  const syncAppRouteRole = useCallback((r: AppRouteRole) => {
+    setStoredAppRouteRole(r)
+    setAppRouteRoleState(r)
+  }, [])
+
+  /** Qual token usar: admin só em /admin; caso contrário passageiro vs motorista pela sessão. */
+  const tokenPickRole = useMemo<'passenger' | 'driver' | 'admin'>(() => {
     if (pathname.startsWith('/admin')) return 'admin'
-    if (pathname.startsWith('/driver')) return 'driver'
-    return 'passenger'
-  }, [pathname])
+    return appRouteRole === 'driver' ? 'driver' : 'passenger'
+  }, [pathname, appRouteRole])
 
-  const effectiveRole = betaMode && betaToken ? betaRole : role
+  const uiRole = useMemo<Role>(() => {
+    if (pathname.startsWith('/admin')) return 'admin'
+    return appRouteRole === 'driver' ? 'driver' : 'passenger'
+  }, [pathname, appRouteRole])
+
   const token = useMemo(() => {
     if (betaMode && betaToken) return betaToken
     if (!tokens) return null
-    switch (role) {
+    switch (tokenPickRole) {
       case 'passenger':
         return tokens.passenger
       case 'driver':
@@ -84,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       default:
         return tokens.passenger
     }
-  }, [betaMode, betaToken, tokens, role])
+  }, [betaMode, betaToken, tokens, tokenPickRole])
 
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
@@ -104,16 +126,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (tok) {
           if (isJwtExpired(tok)) {
             clearAuthStorage()
+            setAppRouteRoleState('passenger')
             addLog('Sessão expirada (token)', 'info')
           } else {
             const p = parseJwtPayload(tok)
             if (!p?.sub) {
               clearAuthStorage()
+              setAppRouteRoleState('passenger')
             } else {
               const r = (p.role as Role) ?? 'passenger'
               setBetaToken(tok)
               setBetaRole(r)
               setBetaUserId(p.sub)
+              syncAppRouteRole(r === 'driver' ? 'driver' : 'passenger')
               setTokens({
                 passenger: tok,
                 driver: tok,
@@ -125,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setBetaToken(null)
                 setBetaUserId(null)
                 setTokens(null)
+                setAppRouteRoleState('passenger')
                 addLog('Sessão inválida no servidor', 'info')
               } else {
                 addLog('Sessão restaurada', 'success')
@@ -137,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         const t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
         setTokens(t)
+        setAppRouteRoleState(getStoredAppRouteRole())
         setStatus('Pronto')
         addLog('Tokens carregados', 'success')
       }
@@ -197,7 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [addLog, setStatus])
+  }, [addLog, setStatus, syncAppRouteRole])
 
   const login = useCallback(
     async (phone: string, password: string, requestedRole?: string) => {
@@ -207,8 +234,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('LOGIN TOKEN:', token)
       setStoredAccessToken(token)
       setBetaToken(token)
-      setBetaRole(res.role as Role)
+      const serverRole = res.role as Role
+      setBetaRole(serverRole)
       setBetaUserId(res.user_id)
+      syncAppRouteRole(serverRole === 'driver' ? 'driver' : 'passenger')
       setTokens({
         passenger: token,
         driver: token,
@@ -216,14 +245,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       setStatus('Pronto')
       addLog('Sessão iniciada', 'success')
+      return res
     },
-    [addLog, setStatus]
+    [addLog, setStatus, syncAppRouteRole]
   )
 
-  const setRole = useCallback((_role: Role) => {
-    void _role
-    /* Role is derived from URL pathname */
-  }, [])
+  const setRole = useCallback(
+    (r: Role) => {
+      if (r === 'passenger' || r === 'driver') syncAppRouteRole(r)
+    },
+    [syncAppRouteRole]
+  )
+
+  const setAppRouteRole = syncAppRouteRole
 
   const logout = useCallback(() => {
     clearAuthStorage()
@@ -231,6 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setBetaToken(null)
     setBetaRole('passenger')
     setBetaUserId(null)
+    setAppRouteRoleState('passenger')
   }, [])
 
   useEffect(() => {
@@ -255,33 +290,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = useMemo(
     () => ({
       token,
-      role: effectiveRole,
+      role: uiRole,
       userId: betaMode ? betaUserId : null,
       isLoading,
       betaMode,
       isAuthenticated,
       tokens,
       isAdmin,
+      appRouteRole,
       isLoadingAuth: isLoading,
       splashPrimary,
       loadError,
       setRole,
+      setAppRouteRole,
       loadTokens,
       login,
       logout,
     }),
     [
       token,
-      effectiveRole,
+      uiRole,
       betaUserId,
       isLoading,
       betaMode,
       isAuthenticated,
       tokens,
       isAdmin,
+      appRouteRole,
       splashPrimary,
       loadError,
       setRole,
+      setAppRouteRole,
       loadTokens,
       login,
       logout,

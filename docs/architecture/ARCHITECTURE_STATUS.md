@@ -123,7 +123,8 @@
   - `/config` diz se `beta_mode` está ativo.
   - `AuthContext` em BETA:
     - Usa um único access token por login (phone + OTP / password).
-    - Role efetiva deriva do path (`/passenger`, `/driver`, `/admin`).
+    - **Papel da shell (passageiro vs motorista):** `appRouteRole` persistido (`localStorage`), definido no login e ajustável em Configuração; rotas `/passenger` e `/driver` têm *guards* que impedem cruzamento (motorista não abre UI de passageiro e vice‑versa).
+    - **Admin:** em `/admin`, o token/UI de admin continua a seguir a rota (`pathname`); `role` na UI reflecte admin nessa rota.
 
 ---
 

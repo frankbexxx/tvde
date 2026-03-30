@@ -35,7 +35,7 @@ main.tsx
 
 **Contextos:**
 - `ActivityLogContext` — logs de eventos, status
-- `AuthContext` — token, role, betaMode, login/logout
+- `AuthContext` — token, `role` (UI: passageiro/motorista/admin conforme rota e sessão), `appRouteRole` (passageiro vs motorista persistido), `betaMode`, login/logout
 - `ActiveTripContext` — passengerActiveTripId, driverActiveTripId
 
 ---
@@ -75,7 +75,7 @@ sticky top-0 z-10 bg-background border-b border-border shrink-0
 
 **Conteúdo (flex justify-between):**
 - `h1` "TVDE" (text-lg font-bold)
-- Grupo: `Link "Log"` | `button "Sair"` (se betaMode) | `SettingsButton` | `RoleSelector`
+- `SettingsButton` (ícone engrenagem): tema, modo da app, registo de atividade, sair (BETA), DevTools (DEV)
 
 ### 4.3 Área principal
 
@@ -125,15 +125,14 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 
 ---
 
-## 6. RoleSelector
+## 6. Papel da app (passageiro / motorista)
 
-**Layout:** `nav flex gap-1`
+O modo **passageiro** vs **motorista** da shell **não** é escolhido pela URL sozinha: fica em **`appRouteRole`** no `AuthContext`, persistido em `localStorage` (`tvde_app_route_role` — ver `src/utils/authStorage.ts`).
 
-**Links:**
-- Passageiro | Motorista | Admin (se isAdmin)
-- Cada link: `min-h-[36px] px-4 rounded-xl text-sm font-medium`
-- Ativo: `bg-primary text-primary-foreground`
-- Inativo: `bg-muted text-muted-foreground hover:bg-accent`
+- **Login (BETA):** o utilizador escolhe Passageiro ou Motorista no ecrã de login; após sucesso, a API devolve `role` e a app navega para `/passenger`, `/driver` ou `/admin` (admin).
+- **Configuração:** secção **Modo da app** em `SettingsButton` permite mudar o papel (com navegação para a rota correcta).
+- **Sem header:** não existe selector Passageiro/Motorista na barra superior (evita dois “papéis” visíveis ao mesmo tempo).
+- **Admin:** atalho **Painel admin** nas definições quando `isAdmin`; em `/admin` o token/UI de admin usa a rota, não o selector removido.
 
 ---
 
@@ -146,15 +145,17 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 
 **Trigger:** `Button variant="ghost" size="icon"` (ícone engrenagem)
 
-**Mobile (Dialog):**
-- `DialogContent max-w-[280px] rounded-2xl`
-- `DialogHeader` + `DialogTitle` "Tema"
-- `ThemeSelector`
+**Corpo principal (vista "Configuração"):**
+- **Aspeto** — `ThemeSelector`
+- **Modo da app** — dois botões (Passageiro / Motorista): `setAppRouteRole` + `navigate` para `/passenger` ou `/driver`
+- Se `isAdmin`: link **Painel admin** → `/admin`
+- **Registo de atividade** — muda para vista com `ActivityPanel` embedded
+- Se `betaMode`: **Sair** (`logout`)
+- Se `import.meta.env.DEV`: **Desenvolvimento** — `DevTools` (modo alinhado com `appRouteRole`)
 
-**Desktop (Sheet):**
-- `SheetContent side="bottom" className="rounded-t-2xl min-h-[180px] max-h-[80dvh] overflow-y-auto safe-area-pb"`
-- `SheetHeader` + `SheetTitle` "Tema"
-- `ThemeSelector`
+**Mobile (Dialog):** `DialogContent` com largura/altura limitadas; título "Configuração" ou "Registo de atividade".
+
+**Desktop (Sheet):** `SheetContent side="bottom"`, cantos superiores arredondados, `safe-area-pb` quando aplicável.
 
 **ThemeSelector:**
 - `grid grid-cols-2 gap-2 w-full max-w-[240px]`
@@ -377,7 +378,8 @@ Usado em: bottom button fixo, Sheet definições.
 | DriverDashboard | `src/features/driver/DriverDashboard.tsx` |
 | AdminDashboard | `src/features/admin/AdminDashboard.tsx` |
 | ActivityPanel | `src/components/ActivityPanel.tsx` |
-| RoleSelector | `src/components/RoleSelector.tsx` |
+| Auth storage (papel UI) | `src/utils/authStorage.ts` |
+| AuthContext | `src/context/AuthContext.tsx` |
 | SettingsButton | `src/design-system/components/app/SettingsButton.tsx` |
 | ThemeSelector | `src/design-system/components/app/ThemeSelector.tsx` |
 | ScreenContainer | `src/components/layout/ScreenContainer.tsx` |

@@ -1,13 +1,35 @@
+import type { ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { PassengerDashboard } from '../features/passenger/PassengerDashboard'
 import { DriverDashboard } from '../features/driver/DriverDashboard'
 import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
-import { RoleSelector } from '../components/RoleSelector'
 import { SettingsButton } from '../design-system/components/app/SettingsButton'
 import { useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/ui/Spinner'
+
+function RootRedirect() {
+  const { appRouteRole } = useAuth()
+  return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
+}
+
+function PassengerOnly({ children }: { children: ReactNode }) {
+  const { appRouteRole } = useAuth()
+  if (appRouteRole === 'driver') return <Navigate to="/driver" replace />
+  return <>{children}</>
+}
+
+function DriverOnly({ children }: { children: ReactNode }) {
+  const { appRouteRole } = useAuth()
+  if (appRouteRole === 'passenger') return <Navigate to="/passenger" replace />
+  return <>{children}</>
+}
+
+function AdminDeniedRedirect() {
+  const { appRouteRole } = useAuth()
+  return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
+}
 
 export function AppRoutes() {
   const { pathname } = useLocation()
@@ -58,25 +80,36 @@ export function AppRoutes() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0">
         <div className="flex justify-between items-center px-4 py-3 gap-2">
           <h1 className="text-lg font-bold text-foreground">TVDE</h1>
-          <div className="flex items-center gap-2">
-            <SettingsButton />
-            <RoleSelector />
-          </div>
+          <SettingsButton />
         </div>
       </header>
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
         <main className="flex-1 overflow-y-auto min-h-0 min-w-0">
           <Routes>
-            <Route path="/" element={<Navigate to="/passenger" replace />} />
-            <Route path="/passenger" element={<PassengerDashboard />} />
-            <Route path="/driver" element={<DriverDashboard />} />
+            <Route path="/" element={<RootRedirect />} />
+            <Route
+              path="/passenger"
+              element={
+                <PassengerOnly>
+                  <PassengerDashboard />
+                </PassengerOnly>
+              }
+            />
+            <Route
+              path="/driver"
+              element={
+                <DriverOnly>
+                  <DriverDashboard />
+                </DriverOnly>
+              }
+            />
             <Route
               path="/admin"
               element={
                 isAdmin ? (
                   <AdminDashboard />
                 ) : (
-                  <Navigate to="/passenger" replace />
+                  <AdminDeniedRedirect />
                 )
               }
             />
