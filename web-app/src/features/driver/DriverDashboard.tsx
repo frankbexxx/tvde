@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
+import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
 import {
   getAvailableTrips,
   getDriverTripHistory,
@@ -81,6 +82,16 @@ export function DriverDashboard() {
     !!token,
     10000
   )
+
+  const { setDriverOnAssigned } = useDevToolsCallbacks()
+  useEffect(() => {
+    const fn = () => {
+      refetchHistory()
+      refetchAvailable()
+    }
+    setDriverOnAssigned(fn)
+    return () => setDriverOnAssigned(undefined)
+  }, [setDriverOnAssigned, refetchHistory, refetchAvailable])
 
   useEffect(() => {
     if (!actionLoading) {

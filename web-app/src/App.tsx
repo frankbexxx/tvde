@@ -2,6 +2,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { ActivityLogProvider } from './context/ActivityLogContext'
 import { AuthProvider } from './context/AuthContext'
 import { ActiveTripProvider } from './context/ActiveTripContext'
+import { DevToolsCallbackProvider } from './context/DevToolsCallbackContext'
 import { AppLifecycleLogger } from './components/AppLifecycleLogger'
 import { Toaster } from './components/ui/sonner'
 import { AppRoutes } from './routes'
@@ -13,9 +14,11 @@ function App() {
       <ActivityLogProvider>
         <AuthProvider>
           <AppLifecycleLogger />
-          <ActiveTripProvider>
-            <AppRoutes />
-          </ActiveTripProvider>
+          <DevToolsCallbackProvider>
+            <ActiveTripProvider>
+              <AppRoutes />
+            </ActiveTripProvider>
+          </DevToolsCallbackProvider>
         </AuthProvider>
       </ActivityLogProvider>
       <Toaster />
