@@ -22,3 +22,6 @@ requests>=2.33.0
 # Testing
 pytest
 httpx
+
+# Lint (local + npm run lint em backend/)
+ruff>=0.9.0

@@ -565,6 +565,13 @@ export function PassengerDashboard() {
     }
   }, [activeTripId, tripCompletedFromLocation, driverLocPollMs, setPassengerActiveTripId])
 
+  /** Bloco único: título, regra de preço, mapa, estado compacto, acções (sem cartões empilhados). */
+  const unifiedPassengerPlanning =
+    isTripIdle &&
+    (passengerUiState === 'idle' ||
+      passengerUiState === 'planning' ||
+      passengerUiState === 'confirming')
+
   return (
     <ScreenContainer
       bottomButton={
@@ -580,13 +587,6 @@ export function PassengerDashboard() {
         ) : undefined
       }
     >
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Passageiro</h1>
-        <p className="text-foreground/80 mt-1 text-base">
-          Vês uma <strong>estimativa</strong> ao pedir; o <strong>preço final</strong> aparece no fim da viagem.
-        </p>
-      </header>
-
       <DevTools lastCreatedTripId={activeTripId} onAssigned={refetchHistory} mode="passenger" />
 
       {geolocationUsedFallback && (
@@ -597,90 +597,159 @@ export function PassengerDashboard() {
       )}
 
       <div className="space-y-6 mt-6 transition-opacity duration-300 ease-out">
-        <StatusHeader
-          label={banner.label}
-          subLabel={banner.subLabel}
-          variant={banner.variant}
-          emphasis={statusHeaderEmphasis}
-        />
-        {tripPollFootnote ? (
-          <p
-            className="text-center text-xs text-foreground/55 -mt-3 mb-5 min-h-[1.25rem]"
-            aria-live="polite"
+        {unifiedPassengerPlanning ? (
+          <section
+            className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"
+            aria-label="Pedir viagem"
           >
-            {tripPollFootnote}
-          </p>
-        ) : null}
+            <div className="px-4 pt-4 pb-3 space-y-3">
+              {passengerUiState === 'confirming' ? (
+                <h2 className="text-xl font-bold text-foreground tracking-tight">Confirma a viagem</h2>
+              ) : (
+                <h2 className="text-xl font-bold text-foreground tracking-tight">Para onde vais?</h2>
+              )}
+              <p className="text-sm text-foreground/80 leading-snug">
+                {passengerUiState === 'planning'
+                  ? 'Indica recolha e destino no mapa.'
+                  : 'Estimativa ao pedir; o preço final aparece no fim da viagem.'}
+              </p>
+              <StatusHeader
+                label={banner.label}
+                subLabel={banner.subLabel}
+                variant={banner.variant}
+                emphasis="subdued"
+                compact
+              />
+            </div>
 
-        {/* A014: em viagem, mapa só com motorista + GPS; A015/A016: planeamento com pickup + dropoff */}
-        <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
-          <MapView
-            showMap={showMapOnScreen}
-            mapPlaceholder={mapPlaceholder}
-            pickupSelection={isPickupPlanningMode ? pickupLocation : null}
-            dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
-            onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
-            passengerLocation={
-              passengerLocation ?? (activeTrip
-                ? {
-                    lat: activeTrip.origin_lat,
-                    lng: activeTrip.origin_lng,
-                  }
-                : DEMO_ORIGIN)
-            }
-            driverLocation={driverLocation ?? undefined}
-            route={routeForMap}
-            planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
-            mapVisualWeight={a021Layout.map}
-          />
-        </div>
+            <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4 border-t border-border">
+              <MapView
+                className="rounded-none shadow-none"
+                showMap={showMapOnScreen}
+                mapPlaceholder={mapPlaceholder}
+                pickupSelection={isPickupPlanningMode ? pickupLocation : null}
+                dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
+                onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
+                passengerLocation={
+                  passengerLocation ?? (activeTrip
+                    ? {
+                        lat: activeTrip.origin_lat,
+                        lng: activeTrip.origin_lng,
+                      }
+                    : DEMO_ORIGIN)
+                }
+                driverLocation={driverLocation ?? undefined}
+                route={routeForMap}
+                planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
+                mapVisualWeight={a021Layout.map}
+              />
+            </div>
 
-        {showTripPlannerPanel && (
-          <TripPlannerPanel
-            uiState={passengerUiState}
-            emphasis={plannerEmphasis}
-            hasPickup={!!pickupLocation}
-            hasDropoff={!!dropoffLocation}
-            pickupAddress={pickupAddress}
-            dropoffAddress={dropoffAddress}
-            pickupAddressLoading={pickupAddressLoading}
-            dropoffAddressLoading={dropoffAddressLoading}
-            routeMeta={confirmRouteMeta}
-            routeMetaLoading={confirmRouteMetaLoading}
-            activeTrip={activeTrip ?? null}
-            tripPollHint={tripPollFootnote}
-            slowRequestHint={
-              creating && createTakingLong
-                ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
-                : null
-            }
-            onChooseMap={() => setIsPlanningMode(true)}
-            onSetDestinationHint={() =>
-              mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            }
-            onReset={resetPlanning}
-            onConfirmTrip={handleRequestTrip}
-            confirmTripPending={creating}
-            visualWeight={a021Layout.panel}
-          />
+            <div className="px-4 py-4 border-t border-border bg-card/40">
+              <TripPlannerPanel
+                embedded
+                uiState={passengerUiState}
+                emphasis={plannerEmphasis}
+                hasPickup={!!pickupLocation}
+                hasDropoff={!!dropoffLocation}
+                pickupAddress={pickupAddress}
+                dropoffAddress={dropoffAddress}
+                pickupAddressLoading={pickupAddressLoading}
+                dropoffAddressLoading={dropoffAddressLoading}
+                routeMeta={confirmRouteMeta}
+                routeMetaLoading={confirmRouteMetaLoading}
+                activeTrip={activeTrip ?? null}
+                tripPollHint={tripPollFootnote}
+                slowRequestHint={
+                  creating && createTakingLong
+                    ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
+                    : null
+                }
+                onChooseMap={() => setIsPlanningMode(true)}
+                onSetDestinationHint={() =>
+                  mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+                onReset={resetPlanning}
+                onConfirmTrip={handleRequestTrip}
+                confirmTripPending={creating}
+                visualWeight={a021Layout.panel}
+              />
+            </div>
+          </section>
+        ) : (
+          <>
+            <StatusHeader
+              label={banner.label}
+              subLabel={banner.subLabel}
+              variant={banner.variant}
+              emphasis={statusHeaderEmphasis}
+            />
+            {tripPollFootnote ? (
+              <p
+                className="text-center text-xs text-foreground/55 -mt-3 mb-5 min-h-[1.25rem]"
+                aria-live="polite"
+              >
+                {tripPollFootnote}
+              </p>
+            ) : null}
+
+            <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
+              <MapView
+                showMap={showMapOnScreen}
+                mapPlaceholder={mapPlaceholder}
+                pickupSelection={isPickupPlanningMode ? pickupLocation : null}
+                dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
+                onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
+                passengerLocation={
+                  passengerLocation ?? (activeTrip
+                    ? {
+                        lat: activeTrip.origin_lat,
+                        lng: activeTrip.origin_lng,
+                      }
+                    : DEMO_ORIGIN)
+                }
+                driverLocation={driverLocation ?? undefined}
+                route={routeForMap}
+                planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
+                mapVisualWeight={a021Layout.map}
+              />
+            </div>
+
+            {showTripPlannerPanel && (
+              <TripPlannerPanel
+                uiState={passengerUiState}
+                emphasis={plannerEmphasis}
+                hasPickup={!!pickupLocation}
+                hasDropoff={!!dropoffLocation}
+                pickupAddress={pickupAddress}
+                dropoffAddress={dropoffAddress}
+                pickupAddressLoading={pickupAddressLoading}
+                dropoffAddressLoading={dropoffAddressLoading}
+                routeMeta={confirmRouteMeta}
+                routeMetaLoading={confirmRouteMetaLoading}
+                activeTrip={activeTrip ?? null}
+                tripPollHint={tripPollFootnote}
+                slowRequestHint={
+                  creating && createTakingLong
+                    ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
+                    : null
+                }
+                onChooseMap={() => setIsPlanningMode(true)}
+                onSetDestinationHint={() =>
+                  mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+                onReset={resetPlanning}
+                onConfirmTrip={handleRequestTrip}
+                confirmTripPending={creating}
+                visualWeight={a021Layout.panel}
+              />
+            )}
+          </>
         )}
 
         {error && (
           <div className="rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-destructive text-base">
             {error}
-          </div>
-        )}
-
-        {!activeTripId && (
-          <div className="rounded-2xl border border-border bg-card px-4 py-3 space-y-1">
-            <p className="text-sm font-medium text-foreground">Estimativa indicativa</p>
-            <p className="text-lg font-semibold text-foreground">
-              {ESTIMATE_MOCK} € <span className="text-sm font-normal text-foreground/75">(intervalo típico)</span>
-            </p>
-            <p className="text-sm text-foreground/80 leading-snug">
-              Não é o preço final. O valor cobrado no fim depende da distância real (ver{' '}
-              <span className="font-medium">preço final</span> após concluir).
-            </p>
           </div>
         )}
 
