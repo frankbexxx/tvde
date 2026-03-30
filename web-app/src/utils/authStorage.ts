@@ -1,5 +1,8 @@
 /** Chaves alinhadas com A020 (sem cookies). */
 
+/** Papel da app (UI): passageiro ou motorista — definido no login, não pela URL. */
+export const LS_APP_ROUTE_ROLE = 'tvde_app_route_role'
+
 export const LS_ACCESS_TOKEN = 'access_token'
 export const LS_REFRESH_TOKEN = 'refresh_token'
 /** Legado — migrar para access_token */
@@ -22,8 +25,18 @@ export function setStoredAccessToken(token: string): void {
   localStorage.removeItem(LS_TOKEN_LEGACY)
 }
 
+export function getStoredAppRouteRole(): 'passenger' | 'driver' {
+  const r = localStorage.getItem(LS_APP_ROUTE_ROLE)
+  return r === 'driver' ? 'driver' : 'passenger'
+}
+
+export function setStoredAppRouteRole(role: 'passenger' | 'driver'): void {
+  localStorage.setItem(LS_APP_ROUTE_ROLE, role)
+}
+
 export function clearAuthStorage(): void {
   localStorage.removeItem(LS_ACCESS_TOKEN)
   localStorage.removeItem(LS_REFRESH_TOKEN)
   localStorage.removeItem(LS_TOKEN_LEGACY)
+  localStorage.removeItem(LS_APP_ROUTE_ROLE)
 }

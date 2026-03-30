@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import type { Role } from '../../context/AuthContext'
 
 interface LoginScreenProps {
   requestedRole: 'passenger' | 'driver'
@@ -8,6 +9,7 @@ interface LoginScreenProps {
 
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const { login } = useAuth()
+  const navigate = useNavigate()
   const [phone, setPhone] = useState(() => {
     const last = localStorage.getItem('tvde_last_phone')
     return last || '+351'
@@ -21,8 +23,12 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     setError(null)
     setLoading(true)
     try {
-      await login(phone.trim(), password, requestedRole)
+      const res = await login(phone.trim(), password, requestedRole)
       localStorage.setItem('tvde_last_phone', phone.trim())
+      const r = res.role as Role
+      if (r === 'admin') navigate('/admin', { replace: true })
+      else if (r === 'driver') navigate('/driver', { replace: true })
+      else navigate('/passenger', { replace: true })
     } catch (err: unknown) {
       const e = err as { detail?: string }
       const msg =

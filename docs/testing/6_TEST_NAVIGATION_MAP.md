@@ -13,8 +13,8 @@ Este documento descreve **onde o testador deve ir na interface**.
 | **Estado da viagem** | Header e mapa após pedir viagem | Mostra requested, assigned, accepted, arriving, ongoing, completed |
 | **Cancelar viagem** | Botão "Cancelar" quando viagem ativa | Cancela viagem em curso |
 | **Histórico** | Seção "Histórico" ou painel lateral | Lista viagens concluídas |
-| **Mudar para Motorista** | Link "Motorista" no header | Troca para vista motorista |
-| **Log** | Link "Log" no header | Painel de eventos da sessão |
+| **Mudar para Motorista** | Configuração (ícone engrenagem) → secção **Modo da app** → Motorista | Troca papel e navega para `/driver` |
+| **Registo de atividade** | Configuração → **Registo de atividade** | Painel de eventos da sessão (embebido) |
 
 ---
 
@@ -29,7 +29,7 @@ Este documento descreve **onde o testador deve ir na interface**.
 | **Iniciar viagem** | Botão "Iniciar viagem" | Transição para ongoing |
 | **Concluir viagem** | Botão "Concluir viagem" | Transição para completed |
 | **Histórico** | Seção histórico | Lista viagens concluídas |
-| **Mudar para Passageiro** | Link "Passageiro" no header | Troca para vista passageiro |
+| **Mudar para Passageiro** | Configuração → **Modo da app** → Passageiro | Troca papel e navega para `/passenger` |
 
 ---
 
