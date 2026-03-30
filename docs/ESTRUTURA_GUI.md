@@ -6,12 +6,13 @@ Documento detalhado da estrutura da interface para **Web** e **Android** (PWA). 
 
 ## 1. Visão geral
 
-| Plataforma | Tecnologia | Comportamento |
-|------------|------------|---------------|
-| **Web** | React + Vite + Tailwind | SPA em `https://tvde-app-xxx.onrender.com` |
-| **Android** | PWA (mesma web app) | Chrome/WebView; viewport dinâmico |
+| Plataforma  | Tecnologia              | Comportamento                              |
+| ----------- | ----------------------- | ------------------------------------------ |
+| **Web**     | React + Vite + Tailwind | SPA em `https://tvde-app-xxx.onrender.com` |
+| **Android** | PWA (mesma web app)     | Chrome/WebView; viewport dinâmico          |
 
 **Breakpoints Tailwind:**
+
 - `sm`: 640px
 - `md`: 768px
 - `lg`: 1024px
@@ -34,6 +35,7 @@ main.tsx
 ```
 
 **Contextos:**
+
 - `ActivityLogContext` — logs de eventos, status
 - `AuthContext` — token, `role` (UI: passageiro/motorista/admin conforme rota e sessão), `appRouteRole` (passageiro vs motorista persistido), `betaMode`, login/logout
 - `ActiveTripContext` — passengerActiveTripId, driverActiveTripId
@@ -42,17 +44,18 @@ main.tsx
 
 ## 3. Fluxo de rotas e decisões
 
-| Condição | Renderiza |
-|----------|-----------|
-| `isLoading` | `"A carregar..."` (centrado, min-h-screen) |
-| `betaMode && !isAuthenticated` | `LoginScreen` |
-| Autenticado | Layout principal com header + main + ActivityPanel |
+| Condição                       | Renderiza                                          |
+| ------------------------------ | -------------------------------------------------- |
+| `isLoading`                    | `"A carregar..."` (centrado, min-h-screen)         |
+| `betaMode && !isAuthenticated` | `LoginScreen`                                      |
+| Autenticado                    | Layout principal com header + main + ActivityPanel |
 
-**Rotas:**
-- `/` → redirect `/passenger`
-- `/passenger` → `PassengerDashboard`
-- `/driver` → `DriverDashboard`
-- `/admin` → `AdminDashboard` (se `isAdmin`) ou redirect `/passenger`
+**Rotas** (guards em `src/routes/index.tsx`: `RootRedirect`, `PassengerOnly`, `DriverOnly`, `AdminDeniedRedirect`):
+
+- `/` → `RootRedirect` para `/passenger` ou `/driver` conforme `appRouteRole`
+- `/passenger` → `PassengerOnly` → `PassengerDashboard`; se papel na sessão for motorista, redirect para `/driver`
+- `/driver` → `DriverOnly` → `DriverDashboard`; se papel for passageiro, redirect para `/passenger`
+- `/admin` → `AdminDashboard` se `isAdmin`; caso contrário `AdminDeniedRedirect` para o home do papel (`/passenger` ou `/driver`)
 
 ---
 
@@ -74,6 +77,7 @@ sticky top-0 z-10 bg-background border-b border-border shrink-0
 ```
 
 **Conteúdo (flex justify-between):**
+
 - `h1` "TVDE" (text-lg font-bold)
 - `SettingsButton` (ícone engrenagem): tema, modo da app, registo de atividade, sair (BETA), DevTools (DEV)
 
@@ -104,6 +108,7 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 - **Desktop:** `w-80` (320px), borda esquerda, altura `calc(100vh-4rem)`
 
 **Seções:**
+
 1. **Vista + Live** — role, indicador "Ao vivo" (verde)
 2. **Estado** — status atual (amber-50)
 3. **Registo** — logs com CopyLogButton, Limpar
@@ -117,6 +122,7 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 **Card:** `max-w-sm bg-card rounded-2xl shadow-card p-6`
 
 **Elementos:**
+
 - `h1` "TVDE BETA"
 - Links: Passageiro | Motorista (flex-1, py-2, rounded-xl)
 - `p` "Entra com o teu telemóvel (+351...)"
@@ -127,12 +133,16 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 
 ## 6. Papel da app (passageiro / motorista)
 
-O modo **passageiro** vs **motorista** da shell **não** é escolhido pela URL sozinha: fica em **`appRouteRole`** no `AuthContext`, persistido em `localStorage` (`tvde_app_route_role` — ver `src/utils/authStorage.ts`).
+### Modelo de papel (actual)
 
-- **Login (BETA):** o utilizador escolhe Passageiro ou Motorista no ecrã de login; após sucesso, a API devolve `role` e a app navega para `/passenger`, `/driver` ou `/admin` (admin).
-- **Configuração:** secção **Modo da app** em `SettingsButton` permite mudar o papel (com navegação para a rota correcta).
-- **Sem header:** não existe selector Passageiro/Motorista na barra superior (evita dois “papéis” visíveis ao mesmo tempo).
-- **Admin:** atalho **Painel admin** nas definições quando `isAdmin`; em `/admin` o token/UI de admin usa a rota, não o selector removido.
+| Aspeto | Comportamento |
+|--------|----------------|
+| **Definição** | No login (BETA), o utilizador escolhe Passageiro ou Motorista; a API devolve `role` e a app sincroniza `appRouteRole` e navega. |
+| **Persistência** | `AuthContext.appRouteRole` + `localStorage` (`tvde_app_route_role`, ver `authStorage.ts`). |
+| **Regras de rota** | `passenger` → UI `/passenger`; `driver` → `/driver`; `admin` → `/admin` (com `isAdmin`). |
+| **Navegação** | `/` redirecciona pelo papel; acesso cruzado passageiro/motorista bloqueado pelos guards. |
+| **Mudança manual** | Só em **Configuração** → Modo da app (não há selector no header). |
+| **Admin** | Atalho **Painel admin** nas definições se `isAdmin`; em `/admin` a UI/token de admin segue a rota (`AuthContext`). |
 
 ---
 
@@ -146,6 +156,7 @@ O modo **passageiro** vs **motorista** da shell **não** é escolhido pela URL s
 **Trigger:** `Button variant="ghost" size="icon"` (ícone engrenagem)
 
 **Corpo principal (vista "Configuração"):**
+
 - **Aspeto** — `ThemeSelector`
 - **Modo da app** — dois botões (Passageiro / Motorista): `setAppRouteRole` + `navigate` para `/passenger` ou `/driver`
 - Se `isAdmin`: link **Painel admin** → `/admin`
@@ -158,6 +169,7 @@ O modo **passageiro** vs **motorista** da shell **não** é escolhido pela URL s
 **Desktop (Sheet):** `SheetContent side="bottom"`, cantos superiores arredondados, `safe-area-pb` quando aplicável.
 
 **ThemeSelector:**
+
 - `grid grid-cols-2 gap-2 w-full max-w-[240px]`
 - Botões: Portugal | Portugal Dark | Minimal | Neon
 
@@ -170,6 +182,7 @@ O modo **passageiro** vs **motorista** da shell **não** é escolhido pela URL s
 **Uso:** PassengerDashboard, DriverDashboard
 
 **Layout:**
+
 - `min-h-screen flex flex-col max-w-md mx-auto w-full bg-background`
 - Área scroll: `flex-1 flex flex-col px-5 py-6 overflow-y-auto` + `pb-24` se bottomButton
 - Bottom button: `fixed bottom-0 left-0 right-0 z-20 bg-background border-t border-border shadow-card`
@@ -197,24 +210,24 @@ ScreenContainer(bottomButton)
 
 ### 9.2 Botão principal (bottom)
 
-| Estado | Label | Variant |
-|--------|-------|---------|
-| Sem viagem | Pedir viagem | primary |
-| requested/assigned/accepted/arriving | Cancelar | danger |
-| completed | Pedir nova viagem | primary |
+| Estado                               | Label             | Variant |
+| ------------------------------------ | ----------------- | ------- |
+| Sem viagem                           | Pedir viagem      | primary |
+| requested/assigned/accepted/arriving | Cancelar          | danger  |
+| completed                            | Pedir nova viagem | primary |
 
 ### 9.3 StatusHeader (variantes)
 
-| Status | Label | Variant |
-|--------|-------|---------|
+| Status    | Label                  | Variant   |
+| --------- | ---------------------- | --------- |
 | requested | À procura de motorista | requested |
-| assigned | Motorista atribuído | assigned |
-| accepted | Motorista a caminho | accepted |
-| arriving | Motorista a chegar | arriving |
-| ongoing | Em viagem | ongoing |
-| completed | Viagem concluída | completed |
-| cancelled | Cancelada | idle |
-| failed | Falhou | error |
+| assigned  | Motorista atribuído    | assigned  |
+| accepted  | Motorista a caminho    | accepted  |
+| arriving  | Motorista a chegar     | arriving  |
+| ongoing   | Em viagem              | ongoing   |
+| completed | Viagem concluída       | completed |
+| cancelled | Cancelada              | idle      |
+| failed    | Falhou                 | error     |
 
 ---
 
@@ -252,11 +265,11 @@ ScreenContainer(bottomButton)
 
 ### 10.4 ActiveTripActions (bottom)
 
-| Status | Botão principal | Cancelar |
-|--------|-----------------|----------|
-| accepted | Cheguei | Sim |
-| arriving | Iniciar viagem | Sim |
-| ongoing | Concluir viagem | Não |
+| Status   | Botão principal | Cancelar |
+| -------- | --------------- | -------- |
+| accepted | Cheguei         | Sim      |
+| arriving | Iniciar viagem  | Sim      |
+| ongoing  | Concluir viagem | Não      |
 
 ---
 
@@ -326,28 +339,30 @@ ScreenContainer(bottomButton)
 
 ### 14.1 Tokens (tokens.css)
 
-| Token | Valor |
-|-------|-------|
-| --radius-base | 1rem |
-| --radius-large | 1.5rem |
-| --shadow-card | 0 8px 20px rgba(0,0,0,0.06) |
-| --shadow-floating | 0 20px 40px rgba(0,0,0,0.12) |
-| --transition-fast | 120ms ease |
-| --transition-normal | 200ms ease |
+| Token               | Valor                        |
+| ------------------- | ---------------------------- |
+| --radius-base       | 1rem                         |
+| --radius-large      | 1.5rem                       |
+| --shadow-card       | 0 8px 20px rgba(0,0,0,0.06)  |
+| --shadow-floating   | 0 20px 40px rgba(0,0,0,0.12) |
+| --transition-fast   | 120ms ease                   |
+| --transition-normal | 200ms ease                   |
 
 ### 14.2 Temas (data-theme)
 
-| Tema | Estilo |
-|------|--------|
-| portugal | Verde, amarelo, vermelho (bandeira); fundo claro |
-| portugal-dark | Verde/amarelo em fundo escuro |
-| minimal | Neutros (220°), fundo branco |
-| neon | Roxo/ciano em fundo escuro |
+| Tema          | Estilo                                           |
+| ------------- | ------------------------------------------------ |
+| portugal      | Verde, amarelo, vermelho (bandeira); fundo claro |
+| portugal-dark | Verde/amarelo em fundo escuro                    |
+| minimal       | Neutros (220°), fundo branco                     |
+| neon          | Roxo/ciano em fundo escuro                       |
 
 ### 14.3 Safe area
 
 ```css
-.safe-area-pb { padding-bottom: env(safe-area-inset-bottom, 0); }
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
 ```
 
 Usado em: bottom button fixo, Sheet definições.
@@ -356,40 +371,40 @@ Usado em: bottom button fixo, Sheet definições.
 
 ## 15. Responsividade — resumo
 
-| Elemento | Mobile | Desktop (md+) |
-|----------|--------|---------------|
-| Container principal | max-w-md, col | max-w-5xl, row |
-| Main + ActivityPanel | col (panel abaixo) | row (panel direita) |
-| ActivityPanel | w-full, border-t, min-h-200 | w-80, border-l, h-[calc(100vh-4rem)] |
-| Settings | Dialog centrado | Sheet bottom |
-| ThemeSelector | max-w-[240px] | — |
-| ScreenContainer | max-w-md | — |
+| Elemento             | Mobile                      | Desktop (md+)                        |
+| -------------------- | --------------------------- | ------------------------------------ |
+| Container principal  | max-w-md, col               | max-w-5xl, row                       |
+| Main + ActivityPanel | col (panel abaixo)          | row (panel direita)                  |
+| ActivityPanel        | w-full, border-t, min-h-200 | w-80, border-l, h-[calc(100vh-4rem)] |
+| Settings             | Dialog centrado             | Sheet bottom                         |
+| ThemeSelector        | max-w-[240px]               | —                                    |
+| ScreenContainer      | max-w-md                    | —                                    |
 
 ---
 
 ## 16. Ficheiros de referência
 
-| Componente | Ficheiro |
-|------------|----------|
-| App | `src/App.tsx` |
-| Rotas | `src/routes/index.tsx` |
-| LoginScreen | `src/features/auth/LoginScreen.tsx` |
-| PassengerDashboard | `src/features/passenger/PassengerDashboard.tsx` |
-| DriverDashboard | `src/features/driver/DriverDashboard.tsx` |
-| AdminDashboard | `src/features/admin/AdminDashboard.tsx` |
-| ActivityPanel | `src/components/ActivityPanel.tsx` |
-| Auth storage (papel UI) | `src/utils/authStorage.ts` |
-| AuthContext | `src/context/AuthContext.tsx` |
-| SettingsButton | `src/design-system/components/app/SettingsButton.tsx` |
-| ThemeSelector | `src/design-system/components/app/ThemeSelector.tsx` |
-| ScreenContainer | `src/components/layout/ScreenContainer.tsx` |
-| PrimaryActionButton | `src/components/layout/PrimaryActionButton.tsx` |
-| StatusHeader | `src/components/layout/StatusHeader.tsx` |
-| TripCard | `src/components/cards/TripCard.tsx` |
-| RequestCard | `src/components/cards/RequestCard.tsx` |
-| Toggle | `src/components/ui/Toggle.tsx` |
-| Spinner | `src/components/ui/Spinner.tsx` |
-| DevTools | `src/features/shared/DevTools.tsx` |
+| Componente              | Ficheiro                                              |
+| ----------------------- | ----------------------------------------------------- |
+| App                     | `src/App.tsx`                                         |
+| Rotas                   | `src/routes/index.tsx`                                |
+| LoginScreen             | `src/features/auth/LoginScreen.tsx`                   |
+| PassengerDashboard      | `src/features/passenger/PassengerDashboard.tsx`       |
+| DriverDashboard         | `src/features/driver/DriverDashboard.tsx`             |
+| AdminDashboard          | `src/features/admin/AdminDashboard.tsx`               |
+| ActivityPanel           | `src/components/ActivityPanel.tsx`                    |
+| Auth storage (papel UI) | `src/utils/authStorage.ts`                            |
+| AuthContext             | `src/context/AuthContext.tsx`                         |
+| SettingsButton          | `src/design-system/components/app/SettingsButton.tsx` |
+| ThemeSelector           | `src/design-system/components/app/ThemeSelector.tsx`  |
+| ScreenContainer         | `src/components/layout/ScreenContainer.tsx`           |
+| PrimaryActionButton     | `src/components/layout/PrimaryActionButton.tsx`       |
+| StatusHeader            | `src/components/layout/StatusHeader.tsx`              |
+| TripCard                | `src/components/cards/TripCard.tsx`                   |
+| RequestCard             | `src/components/cards/RequestCard.tsx`                |
+| Toggle                  | `src/components/ui/Toggle.tsx`                        |
+| Spinner                 | `src/components/ui/Spinner.tsx`                       |
+| DevTools                | `src/features/shared/DevTools.tsx`                    |
 
 ---
 
@@ -402,5 +417,4 @@ Usado em: bottom button fixo, Sheet definições.
 
 ---
 
-*Documento gerado a partir da análise do código em `web-app/src/`.*
-
+_Documento gerado a partir da análise do código em `web-app/src/`._
