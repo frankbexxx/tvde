@@ -45,6 +45,8 @@ export interface TripPlannerPanelProps {
   onConfirmTrip: () => void
   /** A021: quando o foco está no header/mapa, o painel baixa contraste */
   visualWeight?: TripPlannerVisualWeight
+  /** Sem cartão próprio — títulos/copy no bloco pai (fluxo unificado passageiro). */
+  embedded?: boolean
 }
 
 /**
@@ -71,22 +73,26 @@ export function TripPlannerPanel({
   onReset,
   onConfirmTrip,
   visualWeight = 'default',
+  embedded = false,
 }: TripPlannerPanelProps) {
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
 
-  const panelSurface = (() => {
-    if (isSubdued) {
-      return 'border-border/70 bg-card/95 shadow-sm opacity-90'
-    }
-    if (uiState === 'planning' || uiState === 'confirming') {
-      return 'border-border bg-card shadow-inner'
-    }
-    return 'bg-card border-border shadow-card'
-  })()
+  const panelSurface = embedded
+    ? 'border-0 bg-transparent shadow-none opacity-100'
+    : (() => {
+        if (isSubdued) {
+          return 'border-border/70 bg-card/95 shadow-sm opacity-90'
+        }
+        if (uiState === 'planning' || uiState === 'confirming') {
+          return 'border-border bg-card shadow-inner'
+        }
+        return 'bg-card border-border shadow-card'
+      })()
 
-  const emphasisWrap = isSubdued
-    ? 'opacity-80 transition-opacity duration-500 ease-out'
-    : 'transition-opacity duration-500 ease-out'
+  const emphasisWrap =
+    embedded ? '' : isSubdued
+      ? 'opacity-80 transition-opacity duration-500 ease-out'
+      : 'transition-opacity duration-500 ease-out'
 
   const inTripPaymentLine =
     uiState === 'in_trip' && activeTrip ? paymentStatusLabel(activeTrip.payment_status) : null
@@ -104,17 +110,18 @@ export function TripPlannerPanel({
         ? 'A obter morada…'
         : (dropoffAddress ?? 'Local selecionado')
 
-  return (
-    <section
-      className={`rounded-2xl border px-4 py-4 space-y-3 transition-all duration-300 ease-out ${panelSurface} ${emphasisWrap}`}
-      aria-label="Planeamento da viagem"
-    >
+  const inner = (
+    <>
       {uiState === 'idle' && (
         <>
-          <p className="text-lg font-semibold text-foreground">Para onde vais?</p>
-          <p className="text-sm text-foreground/80">
-            Escolhe recolha e destino no mapa quando estiveres pronto.
-          </p>
+          {!embedded && (
+            <>
+              <p className="text-lg font-semibold text-foreground">Para onde vais?</p>
+              <p className="text-sm text-foreground/80">
+                Escolhe recolha e destino no mapa quando estiveres pronto.
+              </p>
+            </>
+          )}
           <button
             type="button"
             onClick={onChooseMap}
@@ -127,7 +134,7 @@ export function TripPlannerPanel({
 
       {uiState === 'planning' && (
         <>
-          <p className="text-base font-semibold text-foreground">Percurso</p>
+          {!embedded && <p className="text-base font-semibold text-foreground">Percurso</p>}
           <p className="text-base font-medium text-foreground leading-snug">
             <span className="text-foreground/75">{pickupLine}</span>
             <span className="mx-1.5 text-foreground/50">→</span>
@@ -156,7 +163,7 @@ export function TripPlannerPanel({
 
       {uiState === 'confirming' && (
         <>
-          <p className="text-base font-semibold text-foreground">Confirma a viagem</p>
+          {!embedded && <p className="text-base font-semibold text-foreground">Confirma a viagem</p>}
           <p className="text-base font-medium text-foreground leading-snug">
             <span className="text-foreground/80">{pickupAddress ?? '—'}</span>
             <span className="mx-1.5 text-foreground/45">→</span>
@@ -223,7 +230,6 @@ export function TripPlannerPanel({
 
       {uiState === 'in_trip' && activeTrip && (
         <div className="space-y-1">
-          <p className="text-base font-semibold text-foreground">Viagem em curso</p>
           <p className="text-sm text-foreground/85">
             Estado:{' '}
             <span className="text-foreground font-semibold">
@@ -241,6 +247,23 @@ export function TripPlannerPanel({
           <p className="text-sm text-foreground/80 pt-0.5">Acompanha o mapa e o estado acima.</p>
         </div>
       )}
+    </>
+  )
+
+  if (embedded) {
+    return (
+      <div className={`space-y-3 ${emphasisWrap}`} aria-label="Planeamento da viagem">
+        {inner}
+      </div>
+    )
+  }
+
+  return (
+    <section
+      className={`rounded-2xl border px-4 py-4 space-y-3 transition-all duration-300 ease-out ${panelSurface} ${emphasisWrap}`}
+      aria-label="Planeamento da viagem"
+    >
+      {inner}
     </section>
   )
 }

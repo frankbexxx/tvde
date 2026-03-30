@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "lint": "python -m ruff check app tests alembic",
+    "lint:fix": "python -m ruff check --fix app tests alembic",
+    "build": "python -m compileall -q app alembic"
+  },
   "devDependencies": {
     "@biomejs/biome": "2.4.8"
   }
