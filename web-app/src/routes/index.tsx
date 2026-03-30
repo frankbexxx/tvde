@@ -5,7 +5,6 @@ import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { RoleSelector } from '../components/RoleSelector'
-import { ActivityPanel } from '../components/ActivityPanel'
 import { SettingsButton } from '../design-system/components/app/SettingsButton'
 import { useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/ui/Spinner'
@@ -17,7 +16,6 @@ export function AppRoutes() {
     betaMode,
     isAuthenticated,
     isAdmin,
-    logout,
     loadError,
     loadTokens,
     splashPrimary,
@@ -61,21 +59,6 @@ export function AppRoutes() {
         <div className="flex justify-between items-center px-4 py-3 gap-2">
           <h1 className="text-lg font-bold text-foreground">TVDE</h1>
           <div className="flex items-center gap-2">
-            <a
-              href="#activity-log-panel"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Log
-            </a>
-            {betaMode && (
-              <button
-                type="button"
-                onClick={logout}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Sair
-              </button>
-            )}
             <SettingsButton />
             <RoleSelector />
           </div>
@@ -100,7 +83,6 @@ export function AppRoutes() {
             <Route path="/debug/map" element={<DebugMapPage />} />
           </Routes>
         </main>
-        <ActivityPanel />
       </div>
     </div>
   )

@@ -32,7 +32,6 @@ import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
-import { DevTools } from '../shared/DevTools'
 import { MapView } from '../../maps/MapView'
 import { sendDriverLocation } from '../../services/locationService'
 import { toast as sonnerToast } from 'sonner'
@@ -205,12 +204,16 @@ export function DriverDashboard() {
         </p>
       </header>
 
-      <DevTools lastCreatedTripId={null} onAssigned={refetchAvailable} mode="driver" />
-
       {geolocationUsedFallback && (
         <div className="rounded-lg bg-warning/20 border border-warning/50 px-3 py-2 text-sm text-warning">
-          A usar Oeiras (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
-          <strong>Demo Oeiras</strong> em ▶ Dev.
+          A usar Oeiras (localização indisponível).
+          {import.meta.env.DEV ? (
+            <>
+              {' '}
+              Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
+              <strong>Configuração</strong> (ícone de engrenagem).
+            </>
+          ) : null}
         </div>
       )}
 
