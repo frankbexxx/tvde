@@ -15,7 +15,6 @@ import { StatusHeader } from '../../components/layout/StatusHeader'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { Spinner } from '../../components/ui/Spinner'
 import { formatPickup, formatDestination } from '../../utils/format'
-import { DevTools } from '../shared/DevTools'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
 import { getRouteGeoJSON } from '../../maps/routing'
@@ -587,12 +586,16 @@ export function PassengerDashboard() {
         ) : undefined
       }
     >
-      <DevTools lastCreatedTripId={activeTripId} onAssigned={refetchHistory} mode="passenger" />
-
       {geolocationUsedFallback && (
         <div className="rounded-lg bg-warning/20 border border-warning/50 px-3 py-2 text-sm text-warning">
-          A usar Oeiras (localização indisponível). Para não pedir permissão no próximo carregamento, ativa{' '}
-          <strong>Demo Oeiras</strong> em ▶ Dev.
+          A usar Oeiras (localização indisponível).
+          {import.meta.env.DEV ? (
+            <>
+              {' '}
+              Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
+              <strong>Configuração</strong> (ícone de engrenagem).
+            </>
+          ) : null}
         </div>
       )}
 

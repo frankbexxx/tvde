@@ -45,14 +45,20 @@ function CopyLogButton({ logs }: { logs: LogEntry[] }) {
   )
 }
 
-export function ActivityPanel() {
+export function ActivityPanel({ embedded = false }: { embedded?: boolean }) {
   const { logs, status, clearLogs } = useActivityLog()
   const { role } = useAuth()
 
+  const rootClass = embedded
+    ? 'w-full max-h-[min(60vh,28rem)] flex flex-col min-h-0 rounded-xl border border-border bg-card/95 overflow-hidden'
+    : 'w-full md:w-80 shrink-0 bg-card/90 backdrop-blur-sm border-t md:border-t-0 md:border-l border-border/40 flex flex-col min-h-[200px] md:min-h-0 md:h-[calc(100dvh-4rem)]'
+
   return (
     <aside
-      id="activity-log-panel"
-      className="w-full md:w-80 shrink-0 bg-card/90 backdrop-blur-sm border-t md:border-t-0 md:border-l border-border/40 flex flex-col min-h-[200px] md:min-h-0 md:h-[calc(100dvh-4rem)]"
+      {...(!embedded ? { id: 'activity-log-panel' as const } : {})}
+      className={rootClass}
+      role="region"
+      aria-label="Registo de atividade"
     >
       {/* Vista + Live */}
       <div className="p-2.5 bg-muted/20 border-b border-border/40 flex justify-between items-center">

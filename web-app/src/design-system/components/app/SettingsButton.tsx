@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useLocation } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -16,16 +17,87 @@ import {
 } from "@/components/ui/sheet"
 import { ThemeSelector } from "./ThemeSelector"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
+import { useAuth } from "@/context/AuthContext"
+import { useActiveTrip } from "@/context/ActiveTripContext"
+import { ActivityPanel } from "@/components/ActivityPanel"
+import { DevTools } from "@/features/shared/DevTools"
+
+type ConfigView = "main" | "logs"
 
 export function SettingsButton() {
   const [open, setOpen] = useState(false)
+  const [view, setView] = useState<ConfigView>("main")
   const isMobile = useMediaQuery("(max-width: 639px)")
+  const { betaMode, logout } = useAuth()
+  const { pathname } = useLocation()
+  const { passengerActiveTripId } = useActiveTrip()
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next)
+    if (!next) setView("main")
+  }
+
+  const devToolsMode = pathname.includes("/driver") ? "driver" : "passenger"
+  const devToolsTripId = pathname.includes("/passenger") ? passengerActiveTripId : null
+
+  const mainBody = (
+    <div className="mt-4 flex flex-col gap-4">
+      <div>
+        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Aspeto</p>
+        <ThemeSelector />
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full justify-center font-medium"
+        onClick={() => setView("logs")}
+      >
+        Registo de atividade
+      </Button>
+      {betaMode ? (
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full text-muted-foreground hover:text-foreground text-sm"
+          onClick={() => {
+            logout()
+            setOpen(false)
+          }}
+        >
+          Sair
+        </Button>
+      ) : null}
+      {import.meta.env.DEV ? (
+        <div className="pt-2 border-t border-border/60">
+          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
+            Desenvolvimento
+          </p>
+          <DevTools lastCreatedTripId={devToolsTripId} mode={devToolsMode} />
+        </div>
+      ) : null}
+    </div>
+  )
+
+  const logsBody = (
+    <div className="mt-2 flex flex-col gap-3 min-h-0 flex-1">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="self-start -ml-2 text-muted-foreground"
+        onClick={() => setView("main")}
+      >
+        ← Voltar
+      </Button>
+      <ActivityPanel embedded />
+    </div>
+  )
 
   const trigger = (
     <Button
       variant="ghost"
       size="icon"
-      aria-label="Definições"
+      aria-label="Configuração"
       className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
     >
       <SettingsIcon />
@@ -34,33 +106,39 @@ export function SettingsButton() {
 
   if (isMobile) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
-        <DialogContent className="max-w-[280px] rounded-2xl">
+        <DialogContent
+          className={
+            view === "logs"
+              ? "max-w-[min(100vw-1.5rem,400px)] max-h-[85dvh] flex flex-col"
+              : "max-w-[min(100vw-1.5rem,380px)] max-h-[85dvh] overflow-y-auto"
+          }
+        >
           <DialogHeader>
-            <DialogTitle>Tema</DialogTitle>
+            <DialogTitle>{view === "main" ? "Configuração" : "Registo de atividade"}</DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
-            <ThemeSelector />
-          </div>
+          {view === "main" ? mainBody : logsBody}
         </DialogContent>
       </Dialog>
     )
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl min-h-[180px] max-h-[80dvh] overflow-y-auto safe-area-pb"
+        className={
+          view === "logs"
+            ? "rounded-t-2xl min-h-[240px] max-h-[85dvh] overflow-hidden flex flex-col safe-area-pb"
+            : "rounded-t-2xl min-h-[200px] max-h-[85dvh] overflow-y-auto safe-area-pb"
+        }
       >
         <SheetHeader>
-          <SheetTitle>Tema</SheetTitle>
+          <SheetTitle>{view === "main" ? "Configuração" : "Registo de atividade"}</SheetTitle>
         </SheetHeader>
-        <div className="mt-4">
-          <ThemeSelector />
-        </div>
+        {view === "main" ? mainBody : logsBody}
       </SheetContent>
     </Sheet>
   )
