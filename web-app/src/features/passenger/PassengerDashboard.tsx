@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
+import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
 import { createTrip, getTripHistory, getTripDetail, cancelTrip } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import type { TripDetailResponse, TripHistoryItem } from '../../api/trips'
@@ -83,6 +84,12 @@ export function PassengerDashboard() {
     !!token,
     10000
   )
+
+  const { setPassengerOnAssigned } = useDevToolsCallbacks()
+  useEffect(() => {
+    setPassengerOnAssigned(refetchHistory)
+    return () => setPassengerOnAssigned(undefined)
+  }, [setPassengerOnAssigned, refetchHistory])
 
   const isOnline = useOnlineStatus()
   const fetchPassengerActiveTrip = useCallback((): Promise<PassengerTripPollResult> => {

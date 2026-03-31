@@ -19,6 +19,7 @@ import { ThemeSelector } from "./ThemeSelector"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useAuth } from "@/context/AuthContext"
 import { useActiveTrip } from "@/context/ActiveTripContext"
+import { useDevToolsCallbacks } from "@/context/DevToolsCallbackContext"
 import { ActivityPanel } from "@/components/ActivityPanel"
 import { DevTools } from "@/features/shared/DevTools"
 
@@ -31,6 +32,7 @@ export function SettingsButton() {
   const { betaMode, logout, appRouteRole, setAppRouteRole, isAdmin } = useAuth()
   const navigate = useNavigate()
   const { passengerActiveTripId } = useActiveTrip()
+  const { notifyAfterDevMutation } = useDevToolsCallbacks()
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
@@ -108,7 +110,11 @@ export function SettingsButton() {
           <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
             Desenvolvimento
           </p>
-          <DevTools lastCreatedTripId={devToolsTripId} mode={devToolsMode} />
+          <DevTools
+            lastCreatedTripId={devToolsTripId}
+            mode={devToolsMode}
+            onAssigned={() => notifyAfterDevMutation(devToolsMode)}
+          />
         </div>
       ) : null}
     </div>
