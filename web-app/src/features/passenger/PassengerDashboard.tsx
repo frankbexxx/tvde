@@ -612,24 +612,29 @@ export function PassengerDashboard() {
             className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"
             aria-label="Pedir viagem"
           >
-            <div className="px-4 pt-4 pb-3 space-y-3">
+            <div className="px-4 pt-4 pb-3 space-y-2">
               {passengerUiState === 'confirming' ? (
-                <h2 className="text-xl font-bold text-foreground tracking-tight">Confirma a viagem</h2>
+                <>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Confirma a viagem</h2>
+                  <p className="text-sm text-foreground/80 leading-snug">
+                    Estimativa ao pedir; o preço final aparece no fim da viagem.
+                  </p>
+                </>
               ) : (
-                <h2 className="text-xl font-bold text-foreground tracking-tight">Para onde vais?</h2>
+                <>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Para onde vais?</h2>
+                  <p className="text-sm text-foreground/80 leading-snug">
+                    {passengerUiState === 'planning'
+                      ? 'Indica recolha e destino no mapa.'
+                      : 'Escolhe recolha e destino para pedir uma viagem'}
+                  </p>
+                  {passengerUiState === 'idle' ? (
+                    <p className="text-xs text-muted-foreground leading-snug">
+                      Começa por indicar o destino
+                    </p>
+                  ) : null}
+                </>
               )}
-              <p className="text-sm text-foreground/80 leading-snug">
-                {passengerUiState === 'planning'
-                  ? 'Indica recolha e destino no mapa.'
-                  : 'Estimativa ao pedir; o preço final aparece no fim da viagem.'}
-              </p>
-              <StatusHeader
-                label={banner.label}
-                subLabel={banner.subLabel}
-                variant={banner.variant}
-                emphasis="subdued"
-                compact
-              />
             </div>
 
             <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4 border-t border-border">

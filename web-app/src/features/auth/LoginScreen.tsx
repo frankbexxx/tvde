@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import type { Role } from '../../context/AuthContext'
+import { LS_LAST_PHONE } from '../../utils/authStorage'
 
 interface LoginScreenProps {
   requestedRole: 'passenger' | 'driver'
@@ -11,7 +12,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [phone, setPhone] = useState(() => {
-    const last = localStorage.getItem('tvde_last_phone')
+    const last = localStorage.getItem(LS_LAST_PHONE)
     return last || '+351'
   })
   const [password, setPassword] = useState('123456')
@@ -24,7 +25,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     setLoading(true)
     try {
       const res = await login(phone.trim(), password, requestedRole)
-      localStorage.setItem('tvde_last_phone', phone.trim())
+      localStorage.setItem(LS_LAST_PHONE, phone.trim())
       const r = res.role as Role
       if (r === 'admin') navigate('/admin', { replace: true })
       else if (requestedRole === 'driver') navigate('/driver', { replace: true })
