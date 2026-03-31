@@ -118,16 +118,17 @@ export function TripPlannerPanel({
             <>
               <p className="text-lg font-semibold text-foreground">Para onde vais?</p>
               <p className="text-sm text-foreground/80">
-                Escolhe recolha e destino no mapa quando estiveres pronto.
+                Escolhe recolha e destino para pedir uma viagem
               </p>
+              <p className="text-xs text-muted-foreground">Começa por indicar o destino</p>
             </>
           )}
           <button
             type="button"
             onClick={onChooseMap}
-            className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity"
+            className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity"
           >
-            Escolher no mapa
+            Pedir viagem
           </button>
         </>
       )}

@@ -6,6 +6,7 @@ import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { SettingsButton } from '../design-system/components/app/SettingsButton'
+import { ProfileButton } from '../design-system/components/app/ProfileButton'
 import { useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/ui/Spinner'
 
@@ -80,7 +81,10 @@ export function AppRoutes() {
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0">
         <div className="flex justify-between items-center px-4 py-3 gap-2">
           <h1 className="text-lg font-bold text-foreground">TVDE</h1>
-          <SettingsButton />
+          <div className="flex items-center gap-1 shrink-0">
+            <ProfileButton />
+            <SettingsButton />
+          </div>
         </div>
       </header>
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">

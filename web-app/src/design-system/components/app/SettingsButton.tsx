@@ -29,7 +29,7 @@ export function SettingsButton() {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<ConfigView>("main")
   const isMobile = useMediaQuery("(max-width: 639px)")
-  const { betaMode, logout, appRouteRole, setAppRouteRole, isAdmin } = useAuth()
+  const { appRouteRole, setAppRouteRole, isAdmin } = useAuth()
   const navigate = useNavigate()
   const { passengerActiveTripId } = useActiveTrip()
   const { notifyAfterDevMutation } = useDevToolsCallbacks()
@@ -92,19 +92,6 @@ export function SettingsButton() {
       >
         Registo de atividade
       </Button>
-      {betaMode ? (
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full text-muted-foreground hover:text-foreground text-sm"
-          onClick={() => {
-            logout()
-            setOpen(false)
-          }}
-        >
-          Sair
-        </Button>
-      ) : null}
       {import.meta.env.DEV ? (
         <div className="pt-2 border-t border-border/60">
           <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">

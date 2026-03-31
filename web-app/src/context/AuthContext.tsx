@@ -27,6 +27,7 @@ import {
   getRawStoredAppRouteRole,
   getStoredAccessToken,
   getStoredAppRouteRole,
+  getStoredLastPhone,
   setStoredAccessToken,
   setStoredAppRouteRole,
 } from '../utils/authStorage'
@@ -61,6 +62,8 @@ interface AuthContextValue extends AuthState {
   loadTokens: () => Promise<void>
   login: (phone: string, password: string, requestedRole?: string) => Promise<TokenResponse>
   logout: () => void
+  /** Telemóvel da sessão BETA (ou último gravado); sem API extra. */
+  sessionPhone: string | null
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -77,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [splashPrimary, setSplashPrimary] = useState('A iniciar serviço…')
   const [appRouteRole, setAppRouteRoleState] = useState<AppRouteRole>(() => getStoredAppRouteRole())
+  const [sessionPhone, setSessionPhone] = useState<string | null>(() => getStoredLastPhone())
 
   const syncAppRouteRole = useCallback((r: AppRouteRole) => {
     setStoredAppRouteRole(r)
@@ -128,12 +132,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isJwtExpired(tok)) {
             clearAuthStorage()
             setAppRouteRoleState('passenger')
+            setSessionPhone(null)
             addLog('Sessão expirada (token)', 'info')
           } else {
             const p = parseJwtPayload(tok)
             if (!p?.sub) {
               clearAuthStorage()
               setAppRouteRoleState('passenger')
+              setSessionPhone(null)
             } else {
               const r = (p.role as Role) ?? 'passenger'
               setBetaToken(tok)
@@ -157,8 +163,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setBetaUserId(null)
                 setTokens(null)
                 setAppRouteRoleState('passenger')
+                setSessionPhone(null)
                 addLog('Sessão inválida no servidor', 'info')
               } else {
+                setSessionPhone(getStoredLastPhone())
                 addLog('Sessão restaurada', 'success')
               }
             }
@@ -170,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
         setTokens(t)
         setAppRouteRoleState(getStoredAppRouteRole())
+        setSessionPhone(getStoredLastPhone())
         setStatus('Pronto')
         addLog('Tokens carregados', 'success')
       }
@@ -192,6 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBetaMode(false)
       setBetaToken(null)
       setBetaUserId(null)
+      setSessionPhone(null)
 
       const FINAL_FAIL =
         'Não foi possível ligar ao servidor. Tenta novamente.'
@@ -256,6 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         admin: token,
       })
       setStatus('Pronto')
+      setSessionPhone(phone.trim())
       addLog('Sessão iniciada', 'success')
       return res
     },
@@ -278,6 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setBetaRole('passenger')
     setBetaUserId(null)
     setAppRouteRoleState('passenger')
+    setSessionPhone(null)
   }, [])
 
   useEffect(() => {
@@ -318,6 +330,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loadTokens,
       login,
       logout,
+      sessionPhone,
     }),
     [
       token,
@@ -336,6 +349,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loadTokens,
       login,
       logout,
+      sessionPhone,
     ]
   )
 
