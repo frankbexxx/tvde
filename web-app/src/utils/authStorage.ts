@@ -25,9 +25,14 @@ export function setStoredAccessToken(token: string): void {
   localStorage.removeItem(LS_TOKEN_LEGACY)
 }
 
-export function getStoredAppRouteRole(): 'passenger' | 'driver' {
+/** Valor em `localStorage` sem fallback (null = nunca gravado). */
+export function getRawStoredAppRouteRole(): 'passenger' | 'driver' | null {
   const r = localStorage.getItem(LS_APP_ROUTE_ROLE)
-  return r === 'driver' ? 'driver' : 'passenger'
+  return r === 'driver' ? 'driver' : r === 'passenger' ? 'passenger' : null
+}
+
+export function getStoredAppRouteRole(): 'passenger' | 'driver' {
+  return getRawStoredAppRouteRole() ?? 'passenger'
 }
 
 export function setStoredAppRouteRole(role: 'passenger' | 'driver'): void {

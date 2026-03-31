@@ -27,7 +27,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       localStorage.setItem('tvde_last_phone', phone.trim())
       const r = res.role as Role
       if (r === 'admin') navigate('/admin', { replace: true })
-      else if (r === 'driver') navigate('/driver', { replace: true })
+      else if (requestedRole === 'driver') navigate('/driver', { replace: true })
       else navigate('/passenger', { replace: true })
     } catch (err: unknown) {
       const e = err as { detail?: string }

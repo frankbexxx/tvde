@@ -24,6 +24,7 @@ import {
 } from '../api/auth'
 import {
   clearAuthStorage,
+  getRawStoredAppRouteRole,
   getStoredAccessToken,
   getStoredAppRouteRole,
   setStoredAccessToken,
@@ -138,7 +139,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setBetaToken(tok)
               setBetaRole(r)
               setBetaUserId(p.sub)
-              syncAppRouteRole(r === 'driver' ? 'driver' : 'passenger')
+              {
+                const savedShell = getRawStoredAppRouteRole()
+                const fromJwt: AppRouteRole = r === 'driver' ? 'driver' : 'passenger'
+                const shell: AppRouteRole = savedShell ?? fromJwt
+                syncAppRouteRole(shell)
+              }
               setTokens({
                 passenger: tok,
                 driver: tok,
@@ -237,7 +243,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const serverRole = res.role as Role
       setBetaRole(serverRole)
       setBetaUserId(res.user_id)
-      syncAppRouteRole(serverRole === 'driver' ? 'driver' : 'passenger')
+      {
+        let shell: AppRouteRole
+        if (requestedRole === 'driver') shell = 'driver'
+        else if (requestedRole === 'passenger') shell = 'passenger'
+        else shell = serverRole === 'driver' ? 'driver' : 'passenger'
+        syncAppRouteRole(shell)
+      }
       setTokens({
         passenger: token,
         driver: token,
