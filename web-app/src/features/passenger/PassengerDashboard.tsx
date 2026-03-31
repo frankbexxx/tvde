@@ -20,7 +20,12 @@ import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
 import { getRouteGeoJSON } from '../../maps/routing'
 import { getOsrmRouteMeta } from '../../services/routingService'
-import { reverseGeocode } from '../../services/geocoding'
+import {
+  forwardGeocodeSearch,
+  reverseGeocode,
+  type GeocodeSuggestion,
+} from '../../services/geocoding'
+import { DestinationSearchField } from './DestinationSearchField'
 import { getDriverLocation } from '../../services/trackingService'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
 import { usePassengerUxState } from './usePassengerUxState'
@@ -36,6 +41,8 @@ import { toast } from 'sonner'
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
 
 const ESTIMATE_MOCK = '4–6'
+
+const HAS_MAPTILER_KEY = Boolean(import.meta.env.VITE_MAPTILER_KEY)
 
 /** Resultado do poll do detalhe — `notFound` só após 404 explícito (não confundir com erro de rede). */
 type PassengerTripPollResult = {
@@ -77,8 +84,12 @@ export function PassengerDashboard() {
   } | null>(null)
   const [confirmRouteMetaLoading, setConfirmRouteMetaLoading] = useState(false)
   const mapAnchorRef = useRef<HTMLDivElement | null>(null)
+  const [destinationQuery, setDestinationQuery] = useState('')
+  const [geoSuggestions, setGeoSuggestions] = useState<GeocodeSuggestion[]>([])
+  const [geoLoading, setGeoLoading] = useState(false)
+  const [mapRecenterKey, setMapRecenterKey] = useState(0)
 
-  const { data: history, refetch: refetchHistory, pollFault: historyPollFault } = usePolling(
+  const { data: history, refetch: refetchHistory, pollFault: historyPollFault, isLoading: historyLoading } = usePolling(
     () => getTripHistory(token!),
     [token],
     !!token,
@@ -177,6 +188,28 @@ export function PassengerDashboard() {
   }, [pickupLocation])
 
   useEffect(() => {
+    const q = destinationQuery.trim()
+    if (q.length < 2 || !HAS_MAPTILER_KEY) {
+      setGeoSuggestions([])
+      setGeoLoading(false)
+      return
+    }
+    let cancelled = false
+    const t = window.setTimeout(() => {
+      setGeoLoading(true)
+      void forwardGeocodeSearch(q, 5).then((rows) => {
+        if (!cancelled) setGeoSuggestions(rows)
+      }).finally(() => {
+        if (!cancelled) setGeoLoading(false)
+      })
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [destinationQuery])
+
+  useEffect(() => {
     if (!dropoffLocation) {
       setDropoffAddress(null)
       return
@@ -210,6 +243,17 @@ export function PassengerDashboard() {
     setPickupAddress(null)
     setDropoffAddress(null)
     setConfirmRouteMeta(null)
+    setDestinationQuery('')
+    setGeoSuggestions([])
+  }, [])
+
+  const handleDestinationPick = useCallback((s: GeocodeSuggestion) => {
+    setDropoffLocation({ lat: s.lat, lng: s.lng })
+    setDestinationQuery(s.primary)
+    setGeoSuggestions([])
+    setIsPlanningMode(true)
+    setMapRecenterKey((k) => k + 1)
+    toast.success('Destino selecionado')
   }, [])
 
   /** A019: com pickup+dropoff, novo clique atualiza só o destino */
@@ -248,6 +292,7 @@ export function PassengerDashboard() {
       setStatus(passengerTripStatusLabel(res.status))
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
+      toast.success('Pedido enviado — a sincronizar…')
       refetchHistory()
     } catch (err: unknown) {
       const msg = isTimeoutLikeError(err)
@@ -272,6 +317,7 @@ export function PassengerDashboard() {
       setPassengerActiveTripId(null)
       setStatus('Pronto')
       addLog('Viagem cancelada', 'success')
+      toast.success('Viagem cancelada')
       refetchHistory()
     } catch (err: unknown) {
       const msg = isTimeoutLikeError(err)
@@ -584,7 +630,7 @@ export function PassengerDashboard() {
         showBottomPrimary && primaryLabel ? (
           <PrimaryActionButton
             onClick={primaryOnClick}
-            disabled={false}
+            disabled={primaryLabel === 'Cancelar' ? cancelling : false}
             loading={primaryLabel === 'Cancelar' && cancelling}
             variant={primaryLabel === 'Cancelar' ? 'danger' : 'primary'}
           >
@@ -612,6 +658,20 @@ export function PassengerDashboard() {
             className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"
             aria-label="Pedir viagem"
           >
+            {passengerUiState !== 'confirming' ? (
+              <div className="px-4 pt-4 pb-1 space-y-2">
+                <DestinationSearchField
+                  query={destinationQuery}
+                  onQueryChange={setDestinationQuery}
+                  suggestions={geoSuggestions}
+                  loading={geoLoading}
+                  onSelect={handleDestinationPick}
+                  disabled={creating}
+                  geocodingUnavailable={!HAS_MAPTILER_KEY}
+                  onDismissSuggestions={() => setGeoSuggestions([])}
+                />
+              </div>
+            ) : null}
             <div className="px-4 pt-4 pb-3 space-y-2">
               {passengerUiState === 'confirming' ? (
                 <>
@@ -657,6 +717,8 @@ export function PassengerDashboard() {
                 route={routeForMap}
                 planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
                 mapVisualWeight={a021Layout.map}
+                planningRecenter={dropoffLocation}
+                planningRecenterKey={mapRecenterKey}
               />
             </div>
 
@@ -727,6 +789,8 @@ export function PassengerDashboard() {
                 route={routeForMap}
                 planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
                 mapVisualWeight={a021Layout.map}
+                planningRecenter={dropoffLocation}
+                planningRecenterKey={mapRecenterKey}
               />
             </div>
 
@@ -789,8 +853,8 @@ export function PassengerDashboard() {
           </div>
         )}
 
-        {history && history.length > 0 && (
-          <section className="pt-6 mt-6 border-t border-border">
+        {!!token && !historyLoading && history && history.length > 0 ? (
+          <section className="pt-8 mt-8 border-t border-border">
             <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
             <ul className="space-y-2">
               {history.slice(0, 5).map((t: TripHistoryItem) => (
@@ -809,7 +873,15 @@ export function PassengerDashboard() {
               ))}
             </ul>
           </section>
-        )}
+        ) : null}
+        {!!token && !historyLoading && history !== null && history.length === 0 ? (
+          <section className="pt-8 mt-8 border-t border-border">
+            <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed rounded-xl border border-dashed border-border/80 bg-muted/30 px-4 py-6 text-center">
+              Ainda não tens viagens concluídas nesta conta.
+            </p>
+          </section>
+        ) : null}
       </div>
     </ScreenContainer>
   )
