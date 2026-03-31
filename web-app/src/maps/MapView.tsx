@@ -40,6 +40,10 @@ export interface MapViewProps {
   planningRouteGeometry?: FeatureCollection<LineString> | null
   /** A021: planeamento = mapa em destaque; subdued = suporte (overlay leve) */
   mapVisualWeight?: 'emphasized' | 'subdued'
+  /** Recentrar suavemente (ex.: destino escolhido na pesquisa por texto). */
+  planningRecenter?: LatLng | null
+  /** Incrementar para repetir animação para o mesmo ponto. */
+  planningRecenterKey?: number
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -65,6 +69,8 @@ export function MapView({
   onPlanningMapClick,
   planningRouteGeometry = null,
   mapVisualWeight = 'emphasized',
+  planningRecenter = null,
+  planningRecenterKey = 0,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -149,6 +155,17 @@ export function MapView({
       zoom: 15,
     })
   }, [driverLocation])
+
+  useEffect(() => {
+    if (!planningRecenter || !planningRecenterKey) return
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    map.easeTo({
+      center: [planningRecenter.lng, planningRecenter.lat],
+      duration: 650,
+      zoom: Math.max(map.getZoom(), 13),
+    })
+  }, [planningRecenter, planningRecenterKey])
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {

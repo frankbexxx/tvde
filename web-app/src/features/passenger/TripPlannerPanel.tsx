@@ -105,7 +105,7 @@ export function TripPlannerPanel({
         : (pickupAddress ?? 'Local selecionado')
   const dropLine =
     !hasDropoff
-      ? 'Toca no mapa — destino'
+      ? 'Indica o destino (pesquisa em cima ou mapa)'
       : dropoffAddressLoading
         ? 'A obter morada…'
         : (dropoffAddress ?? 'Local selecionado')
@@ -123,10 +123,16 @@ export function TripPlannerPanel({
               <p className="text-xs text-muted-foreground">Começa por indicar o destino</p>
             </>
           )}
+          {embedded ? (
+            <p className="text-sm text-muted-foreground text-center leading-snug px-0.5">
+              Indica um destino para começar — pesquisa em cima ou abre o mapa com o botão.
+            </p>
+          ) : null}
           <button
             type="button"
             onClick={onChooseMap}
-            className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity"
+            disabled={confirmTripPending}
+            className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
           >
             Pedir viagem
           </button>
@@ -154,7 +160,8 @@ export function TripPlannerPanel({
             <button
               type="button"
               onClick={onReset}
-              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors"
+              disabled={confirmTripPending}
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
             >
               Repor
             </button>
