@@ -35,6 +35,8 @@ export interface TripPlannerPanelProps {
   activeTrip: TripDetailResponse | null
   /** Texto curto sob o estado (polling / última info válida). */
   tripPollHint?: string | null
+  /** Distância aproximada ao motorista (accepted | arriving | ongoing). */
+  driverTrackingHint?: string | null
   /** Pedido de viagem demorado (ação do utilizador). */
   slowRequestHint?: string | null
   /** Bloqueia confirmar / repor durante o POST do pedido. */
@@ -66,6 +68,7 @@ export function TripPlannerPanel({
   routeMetaLoading,
   activeTrip,
   tripPollHint = null,
+  driverTrackingHint = null,
   slowRequestHint = null,
   confirmTripPending = false,
   onChooseMap,
@@ -246,6 +249,11 @@ export function TripPlannerPanel({
           </p>
           {inTripPaymentLine ? (
             <p className="text-sm text-foreground/80">Pagamento: {inTripPaymentLine}</p>
+          ) : null}
+          {driverTrackingHint ? (
+            <p className="text-sm text-foreground font-medium pt-0.5" aria-live="polite">
+              {driverTrackingHint}
+            </p>
           ) : null}
           {tripPollHint ? (
             <p className="text-xs text-foreground/60 pt-0.5" aria-live="polite">

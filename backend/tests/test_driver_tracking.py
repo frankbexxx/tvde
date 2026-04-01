@@ -168,3 +168,41 @@ def test_get_driver_location_invalid_trip_id() -> None:
 
     _reset_overrides()
     db.close()
+
+
+def test_get_trip_detail_includes_driver_location_when_accepted() -> None:
+    db = _make_db()
+    passenger_id, trip_id = _create_passenger_and_trip(db)
+    _ = _assign_driver_and_location(db, trip_id)
+
+    user_ctx = UserContext(user_id=passenger_id, role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
+
+    r = client.get(f"/trips/{trip_id}")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["driver_location"] is not None
+    assert body["driver_location"]["lat"] == 40.0
+    assert body["driver_location"]["lng"] == -8.0
+    assert isinstance(body["driver_location"]["timestamp"], int)
+
+    _reset_overrides()
+    db.close()
+
+
+def test_get_trip_detail_driver_location_null_when_requested() -> None:
+    db = _make_db()
+    passenger_id, trip_id = _create_passenger_and_trip(db)
+
+    user_ctx = UserContext(user_id=passenger_id, role=Role.passenger)
+    _override_dependencies(db, user_ctx)
+    client = TestClient(app)
+
+    r = client.get(f"/trips/{trip_id}")
+    assert r.status_code == 200
+    body = r.json()
+    assert body.get("driver_location") is None
+
+    _reset_overrides()
+    db.close()

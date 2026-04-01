@@ -31,7 +31,7 @@ import {
   type GeocodeSuggestion,
 } from '../../services/geocoding'
 import { DestinationSearchField } from './DestinationSearchField'
-import { getDriverLocation } from '../../services/trackingService'
+import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../../hooks/usePassengerDriverLocation'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
@@ -41,7 +41,8 @@ import {
   humanizeCreateTripError,
 } from './passengerBanner'
 import { toast } from 'sonner'
-import { log as devLog, warn as logWarn } from '../../utils/logger'
+import { log as devLog } from '../../utils/logger'
+import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 
 /** Câmara Municipal de Oeiras — centro do mapa / fallback de posição do passageiro */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
@@ -66,7 +67,6 @@ export function PassengerDashboard() {
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
-  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
   /** A015/A016: planeamento no mapa (sem backend até A018) */
   const [pickupLocation, setPickupLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -146,6 +146,18 @@ export function PassengerDashboard() {
     () => mergePassengerPolledWithPending(activeTripPolled, passengerPendingTripDetail, activeTripId),
     [activeTripPolled, passengerPendingTripDetail, activeTripId]
   )
+
+  const onTripCompletedFromLocation = useCallback(() => {
+    setTripCompletedFromLocation(true)
+  }, [])
+
+  const { driverLocation } = usePassengerDriverLocation({
+    activeTripId,
+    activeTrip,
+    tripCompletedFromLocation,
+    pollIntervalMs: 4000,
+    onTripCompletedFromLocation,
+  })
 
   useEffect(() => {
     if (!passengerPendingTripDetail || !activeTripId || passengerPendingTripDetail.trip_id !== activeTripId) {
@@ -362,6 +374,13 @@ export function PassengerDashboard() {
     }
   }
 
+  const driverTrackingHint = useMemo(() => {
+    if (!passengerLocation || !driverLocation || !activeTrip) return null
+    if (!isPassengerDriverTrackingStatus(activeTrip.status)) return null
+    const km = haversineKm(passengerLocation, driverLocation)
+    return `Motorista ${formatApproxDistanceKm(km)} de ti (estimativa).`
+  }, [passengerLocation, driverLocation, activeTrip])
+
   // B002: UX state with 500ms delay to avoid flicker (must be declared before useEffects that use it)
   const uxState = usePassengerUxState(
     activeTrip,
@@ -402,7 +421,7 @@ export function PassengerDashboard() {
     if (activeTrip.status === 'requested') return false
     if (!driverLocation) return false
     if (['cancelled', 'failed', 'completed'].includes(activeTrip.status)) return false
-    return ['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status)
+    return isPassengerDriverTrackingStatus(activeTrip.status)
   }, [activeTrip, driverLocation, tripCompletedFromLocation])
 
   /**
@@ -535,10 +554,10 @@ export function PassengerDashboard() {
     if (activeTripId && !activeTrip) return 'A sincronizar viagem…'
     if (!activeTrip) return 'Mapa indisponível.'
     if (activeTrip.status === 'requested') return 'À procura de motorista'
-    if (
-      ['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status) &&
-      !driverLocation
-    ) {
+    if (activeTrip.status === 'assigned') {
+      return 'Motorista atribuído — o mapa mostra o rasto quando a viagem for aceite'
+    }
+    if (isPassengerDriverTrackingStatus(activeTrip.status) && !driverLocation) {
       return 'A aguardar posição do motorista'
     }
     return 'Mapa indisponível.'
@@ -597,56 +616,6 @@ export function PassengerDashboard() {
     }, 2000)
     return () => clearTimeout(t)
   }, [tripCompletedFromLocation, setPassengerActiveTripId])
-
-  // Poll da posição do motorista: intervalo curto com viagem atribuída/em curso; mais lento em `requested` (menos 404 na rede).
-  const driverLocPollMs = useMemo(() => {
-    const s = activeTrip?.status
-    if (s && ['assigned', 'accepted', 'arriving', 'ongoing'].includes(s)) return 1500
-    if (s === 'requested') return 5000
-    return 3000
-  }, [activeTrip?.status])
-
-  useEffect(() => {
-    if (!activeTripId || tripCompletedFromLocation) {
-      setDriverLocation(null)
-      return
-    }
-
-    let cancelled = false
-
-    const pollOnce = () => {
-      if (cancelled) return
-      void getDriverLocation(activeTripId).then((result) => {
-        if (cancelled) return
-        if (result.ok) {
-          setDriverLocation({ lat: result.lat, lng: result.lng })
-        } else if (result.reason === 'trip_completed') {
-          setTripCompletedFromLocation(true)
-          setDriverLocation(null)
-        } else if (result.reason === 'driver_not_assigned' || result.reason === 'location_unavailable') {
-          setDriverLocation(null)
-        }
-      }).catch((err) => {
-        if (cancelled) return
-        const st = (err as { status?: number })?.status
-        if (st != null && st >= 500) {
-          logWarn('getDriverLocation falha de servidor', err)
-        } else if (st === 0) {
-          logWarn('getDriverLocation rede / timeout', err)
-        } else {
-          logWarn('getDriverLocation', err)
-        }
-      })
-    }
-
-    pollOnce()
-    const interval = setInterval(pollOnce, driverLocPollMs)
-
-    return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
-  }, [activeTripId, tripCompletedFromLocation, driverLocPollMs, setPassengerActiveTripId])
 
   /** Bloco único: título, regra de preço, mapa, estado compacto, acções (sem cartões empilhados). */
   const unifiedPassengerPlanning =
@@ -768,6 +737,7 @@ export function PassengerDashboard() {
                 routeMetaLoading={confirmRouteMetaLoading}
                 activeTrip={activeTrip ?? null}
                 tripPollHint={tripPollFootnote}
+                driverTrackingHint={driverTrackingHint}
                 slowRequestHint={
                   creating && createTakingLong
                     ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
@@ -839,6 +809,7 @@ export function PassengerDashboard() {
                 routeMetaLoading={confirmRouteMetaLoading}
                 activeTrip={activeTrip ?? null}
                 tripPollHint={tripPollFootnote}
+                driverTrackingHint={driverTrackingHint}
                 slowRequestHint={
                   creating && createTakingLong
                     ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'

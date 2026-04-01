@@ -64,6 +64,13 @@ export interface TripHistoryItem {
   driver_payout?: number
 }
 
+/** Snapshot from GET /trips/:id (accepted | arriving | ongoing) or GET …/driver-location. */
+export interface DriverLocationSnapshot {
+  lat: number
+  lng: number
+  timestamp: number
+}
+
 export interface TripDetailResponse {
   trip_id: string
   status: TripStatus
@@ -84,6 +91,7 @@ export interface TripDetailResponse {
   payment_status?: PaymentStatus
   commission_amount?: number
   driver_payout?: number
+  driver_location?: DriverLocationSnapshot | null
 }
 
 // --- Passenger ---

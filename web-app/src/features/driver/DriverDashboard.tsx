@@ -26,6 +26,7 @@ import {
 } from '../../constants/tripStatus'
 import { paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { useGeolocation } from '../../hooks/useGeolocation'
+import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { Spinner } from '../../components/ui/Spinner'
@@ -35,9 +36,7 @@ import { TripCard } from '../../components/cards/TripCard'
 import { ActiveTripActions } from './ActiveTripActions'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { MapView } from '../../maps/MapView'
-import { sendDriverLocation } from '../../services/locationService'
 import { toast as sonnerToast } from 'sonner'
-import { warn as logWarn } from '../../utils/logger'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -111,30 +110,12 @@ export function DriverDashboard() {
     return () => window.clearTimeout(id)
   }, [actionLoading])
 
-  // Envio imediato + intervalo: mais frequente com viagem ativa (teste campo / rasto ao vivo).
-  const locationSendMs = activeTripId ? 1500 : 3000
-
-  useEffect(() => {
-    if (offline || !driverLocation || !token) return
-
-    let cancelled = false
-
-    void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
-      if (!cancelled) logWarn('Failed to send driver location (first)', err)
-    })
-
-    const interval = setInterval(() => {
-      if (cancelled || !driverLocation || !token) return
-      void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
-        if (!cancelled) logWarn('Failed to send driver location', err)
-      })
-    }, locationSendMs)
-
-    return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
-  }, [offline, driverLocation, token, locationSendMs])
+  useDriverLocationReporter({
+    enabled: !offline && !!token && !!driverLocation,
+    lat: driverLocation?.lat,
+    lng: driverLocation?.lng,
+    hasActiveTrip: !!activeTripId,
+  })
 
   useEffect(() => {
     setStoredOffline(offline)

@@ -13,6 +13,7 @@ from app.utils.logging import log_debug_event, log_event, should_log_driver_loca
 from app.utils.state_machine import validate_trip_transition
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, Role, TripStatus
+from app.schemas.driver import DriverLocationResponse
 
 
 logger = logging.getLogger(__name__)
@@ -190,6 +191,34 @@ def upsert_driver_location(
             )
 
     db.commit()
+
+
+def driver_location_embed_for_trip_detail(
+    db: Session,
+    trip: Trip,
+) -> DriverLocationResponse | None:
+    """Última posição para anexar ao GET /trips/{{id}}; None se o estado não expõe rasto."""
+    if not trip.driver_id:
+        return None
+    if trip.status not in {
+        TripStatus.accepted,
+        TripStatus.arriving,
+        TripStatus.ongoing,
+    }:
+        return None
+    loc = db.execute(
+        select(DriverLocation).where(DriverLocation.driver_id == trip.driver_id)
+    ).scalar_one_or_none()
+    if not loc:
+        return None
+    ts = loc.timestamp
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    return DriverLocationResponse(
+        lat=float(loc.lat),
+        lng=float(loc.lng),
+        timestamp=int(ts.timestamp() * 1000),
+    )
 
 
 def get_driver_location_for_trip(
