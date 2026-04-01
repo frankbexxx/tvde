@@ -5,6 +5,9 @@
  */
 interface RequestCardProps {
   pickup: string
+  destination?: string
+  /** Estado legível (ex.: pedido na fila). */
+  statusLabel?: string
   estimatedPrice: number
   /** When estimatedPrice is 0, show this instead (e.g. "4–6") */
   estimateFallback?: string
@@ -16,6 +19,8 @@ interface RequestCardProps {
 
 export function RequestCard({
   pickup,
+  destination,
+  statusLabel,
   estimatedPrice,
   estimateFallback = '4–6',
   contextHint,
@@ -32,10 +37,21 @@ export function RequestCard({
       {contextHint ? (
         <p className="text-xs font-semibold text-primary">{contextHint}</p>
       ) : null}
+      {statusLabel ? (
+        <p className="text-xs font-medium text-foreground/70">
+          Estado: <span className="text-foreground">{statusLabel}</span>
+        </p>
+      ) : null}
       <div className="space-y-0.5">
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
         <p className="text-lg font-semibold text-foreground">{pickup}</p>
       </div>
+      {destination ? (
+        <div className="space-y-0.5 pt-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Destino</p>
+          <p className="text-base font-semibold text-foreground/95">{destination}</p>
+        </div>
+      ) : null}
       <div className="flex items-center justify-between gap-4 pt-2">
         <div>
           <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>

@@ -21,6 +21,7 @@ import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
+  DRIVER_AVAILABLE_TRIP_STATUS_LABEL,
   DRIVER_NEW_TRIP_LIST_HINT,
   driverActiveTripUi,
   paymentStatusLabel,
@@ -29,6 +30,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
+import { Spinner } from '../../components/ui/Spinner'
 import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
@@ -70,11 +72,16 @@ export function DriverDashboard() {
 
   const pollEnabled = !!token && !offline
 
-  const { data: available, refetch: refetchAvailable, pollFault: availablePollFault } = usePolling(
+  const {
+    data: available,
+    refetch: refetchAvailable,
+    pollFault: availablePollFault,
+    isLoading: availableLoading,
+  } = usePolling(
     () => getAvailableTrips(token!),
     [token],
     pollEnabled,
-    3000
+    4000
   )
   const { data: history, refetch: refetchHistory, pollFault: historyPollFault } = usePolling(
     () => getDriverTripHistory(token!),
@@ -302,13 +309,20 @@ export function DriverDashboard() {
               variant="idle"
               emphasis={available && available.length > 0 ? 'subdued' : 'primary'}
             />
-            {available && available.length > 0 ? (
+            {pollEnabled && availableLoading && available == null ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-12 text-foreground/80">
+                <Spinner size="md" />
+                <p className="text-sm">A carregar viagens…</p>
+              </div>
+            ) : available && available.length > 0 ? (
               <ul className="space-y-4">
                 {available.map((t: TripAvailableItem) => (
                   <li key={t.trip_id}>
                     <RequestCard
                       contextHint={DRIVER_NEW_TRIP_LIST_HINT}
                       pickup={formatPickup(t.origin_lat, t.origin_lng)}
+                      destination={formatDestination(t.destination_lat, t.destination_lng)}
+                      statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
                       estimatedPrice={t.estimated_price}
                       onAccept={() =>
                         runAction(
@@ -325,8 +339,8 @@ export function DriverDashboard() {
               </ul>
             ) : (
               <div className="py-8 text-center text-foreground/80">
-                <p className="text-base">Nenhuma viagem disponível.</p>
-                <p className="text-sm mt-1">Ativa a disponibilidade para veres novas viagens.</p>
+                <p className="text-base">Sem viagens disponíveis.</p>
+                <p className="text-sm mt-1">Fica disponível para receberes novos pedidos.</p>
               </div>
             )}
           </>
@@ -506,6 +520,7 @@ function ActiveTripActions({
       const res = await action()
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
+      if (res.status === 'ongoing') sonnerToast.success('Viagem iniciada')
       if (res.status === 'completed') sonnerToast.success('Viagem concluída')
       if (res.status === 'completed' || res.status === 'cancelled') onComplete()
     } catch (err: unknown) {
@@ -523,18 +538,26 @@ function ActiveTripActions({
 
   if (status === 'completed' || status === 'cancelled') return null
 
+  const beginTripFromAccepted = async () => {
+    await markArriving(tripId, token)
+    return startTrip(tripId, token)
+  }
+
   const buttonConfig =
-    status === 'accepted'
-      ? { label: 'Cheguei', action: () => markArriving(tripId, token) }
-      : status === 'arriving'
-        ? { label: 'Iniciar viagem', action: () => startTrip(tripId, token) }
-        : status === 'ongoing'
-          ? { label: 'Concluir viagem', action: () => completeTrip(tripId, token) }
-          : null
+    status === 'assigned'
+      ? { label: 'Aceitar', action: () => acceptTrip(tripId, token) }
+      : status === 'accepted'
+        ? { label: 'Iniciar viagem', action: beginTripFromAccepted }
+        : status === 'arriving'
+          ? { label: 'Iniciar viagem', action: () => startTrip(tripId, token) }
+          : status === 'ongoing'
+            ? { label: 'Terminar viagem', action: () => completeTrip(tripId, token) }
+            : null
 
   if (!buttonConfig) return null
 
-  const showCancel = status === 'accepted' || status === 'arriving'
+  const showCancel =
+    status === 'assigned' || status === 'accepted' || status === 'arriving'
 
   return (
     <div className="space-y-2">

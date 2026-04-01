@@ -46,6 +46,7 @@ export interface TripAvailableItem {
   destination_lat: number
   destination_lng: number
   estimated_price: number
+  offer_id?: string | null
 }
 
 export interface TripHistoryItem {

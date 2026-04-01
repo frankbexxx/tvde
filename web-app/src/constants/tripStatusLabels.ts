@@ -22,11 +22,15 @@ export const DRIVER_ACTIVE_TRIP_UI: Record<
   string,
   { label: string; variant: StatusVariant }
 > = {
-  accepted: { label: 'A dirigir-se ao passageiro', variant: 'accepted' },
-  arriving: { label: 'Chegou ao local', variant: 'arriving' },
+  assigned: { label: 'Viagem atribuída — confirma para avançar', variant: 'assigned' },
+  accepted: { label: 'A caminho do passageiro', variant: 'accepted' },
+  arriving: { label: 'No local de recolha', variant: 'arriving' },
   ongoing: { label: 'Em viagem', variant: 'ongoing' },
   completed: { label: 'Viagem concluída', variant: 'completed' },
 }
+
+/** Pedidos na lista «disponíveis» — a API não envia `status` por item; é o estado implícito da fila. */
+export const DRIVER_AVAILABLE_TRIP_STATUS_LABEL = 'Pedido disponível'
 
 export function driverActiveTripUi(status: string): { label: string; variant: StatusVariant } {
   return DRIVER_ACTIVE_TRIP_UI[status] ?? { label: status, variant: 'idle' }
