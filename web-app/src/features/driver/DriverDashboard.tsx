@@ -26,6 +26,7 @@ import {
   DRIVER_AVAILABLE_TRIP_STATUS_LABEL,
   DRIVER_NEW_TRIP_LIST_HINT,
   driverActiveTripUi,
+  driverTripBadgeShort,
 } from '../../constants/tripStatus'
 import { paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { useGeolocation } from '../../hooks/useGeolocation'
@@ -460,6 +461,15 @@ function ActiveTripSummary({
 
   const config = driverActiveTripUi(displayStatus)
 
+  if (!trip && tripId && token) {
+    return (
+      <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card">
+        <StatusHeader label="A carregar viagem…" variant="idle" emphasis="primary" />
+        <p className="text-center text-sm text-foreground/70">A obter detalhes atualizados.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out">
       <StatusHeader label={config.label} variant={config.variant} emphasis="primary" />
@@ -596,7 +606,13 @@ function ActiveTripActions({
             ? { label: 'Terminar viagem', action: () => completeTrip(tripId, token) }
             : null
 
-  if (!buttonConfig) return null
+  if (!buttonConfig) {
+    return (
+      <div className="rounded-xl border border-border/80 bg-muted/30 px-4 py-3 text-center text-sm text-foreground/75">
+        A sincronizar estado da viagem… Se persistir, recarrega a página.
+      </div>
+    )
+  }
 
   const showCancel =
     displayStatus === 'assigned' ||
