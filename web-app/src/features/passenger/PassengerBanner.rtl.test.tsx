@@ -40,21 +40,22 @@ function renderBanner(uxState: PassengerUxState, activeTrip: TripDetailResponse)
 describe('Passenger banner messaging (RTL)', () => {
   it('motorista atribuído (estado API assigned)', () => {
     renderBanner('DRIVER_ASSIGNED', minimalTrip('assigned'))
-    expect(screen.getByRole('status')).toHaveTextContent('Motorista atribuído')
+    expect(screen.getByRole('status', { name: /motorista atribuído/i })).toBeInTheDocument()
   })
 
   it('motorista a caminho (estado API accepted)', () => {
     renderBanner('DRIVER_ASSIGNED', minimalTrip('accepted'))
-    expect(screen.getByRole('status')).toHaveTextContent('Motorista a caminho')
+    expect(screen.getByRole('status', { name: /motorista a caminho/i })).toBeInTheDocument()
   })
 
   it('arriving: cópia de estado da viagem', () => {
     renderBanner('DRIVER_ARRIVING', minimalTrip('arriving'))
-    expect(screen.getByRole('status')).toHaveTextContent(passengerTripStatusLabel('arriving'))
+    const headline = passengerTripStatusLabel('arriving')
+    expect(screen.getByRole('status', { name: new RegExp(headline, 'i') })).toBeInTheDocument()
   })
 
   it('ongoing: viagem em curso', () => {
     renderBanner('TRIP_ONGOING', minimalTrip('ongoing'))
-    expect(screen.getByRole('status')).toHaveTextContent('Viagem em curso')
+    expect(screen.getByRole('status', { name: /viagem em curso/i })).toBeInTheDocument()
   })
 })
