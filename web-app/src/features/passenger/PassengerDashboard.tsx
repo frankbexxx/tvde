@@ -8,7 +8,12 @@ import { isTimeoutLikeError } from '../../api/client'
 import type { TripDetailResponse, TripHistoryItem } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
-import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
+import {
+  mergePassengerPolledWithPending,
+  tripDetailFromCreateResponse,
+  tripStateRank,
+  passengerTripStatusLabel,
+} from '../../constants/tripStatus'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
@@ -36,6 +41,7 @@ import {
   humanizeCreateTripError,
 } from './passengerBanner'
 import { toast } from 'sonner'
+import { log as devLog, warn as logWarn } from '../../utils/logger'
 
 /** Câmara Municipal de Oeiras — centro do mapa / fallback de posição do passageiro */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
@@ -88,6 +94,10 @@ export function PassengerDashboard() {
   const [geoSuggestions, setGeoSuggestions] = useState<GeocodeSuggestion[]>([])
   const [geoLoading, setGeoLoading] = useState(false)
   const [mapRecenterKey, setMapRecenterKey] = useState(0)
+  /** P3: snapshot do POST /trips até o primeiro GET alinhar. */
+  const [passengerPendingTripDetail, setPassengerPendingTripDetail] = useState<TripDetailResponse | null>(
+    null
+  )
 
   const { data: history, refetch: refetchHistory, pollFault: historyPollFault, isLoading: historyLoading } = usePolling(
     () => getTripHistory(token!),
@@ -129,8 +139,27 @@ export function PassengerDashboard() {
     3000
   )
 
-  const activeTrip = activeTripPoll?.trip ?? null
+  const activeTripPolled = activeTripPoll?.trip ?? null
   const activeTripNotFound = activeTripPoll?.notFound ?? false
+
+  const activeTrip = useMemo(
+    () => mergePassengerPolledWithPending(activeTripPolled, passengerPendingTripDetail, activeTripId),
+    [activeTripPolled, passengerPendingTripDetail, activeTripId]
+  )
+
+  useEffect(() => {
+    if (!passengerPendingTripDetail || !activeTripId || passengerPendingTripDetail.trip_id !== activeTripId) {
+      return
+    }
+    if (!activeTripPolled) return
+    if (tripStateRank(activeTripPolled.status) >= tripStateRank(passengerPendingTripDetail.status)) {
+      setPassengerPendingTripDetail(null)
+    }
+  }, [passengerPendingTripDetail, activeTripId, activeTripPolled])
+
+  useEffect(() => {
+    if (!activeTripId) setPassengerPendingTripDetail(null)
+  }, [activeTripId])
 
   const tripPollStalled = usePollStallHint(
     activeTripLastSuccessAt,
@@ -271,9 +300,7 @@ export function PassengerDashboard() {
     if (!pickupLocation || !dropoffLocation) return
     if (creating) return
 
-    if (import.meta.env.DEV) {
-      console.debug('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation })
-    }
+    devLog('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation })
 
     setError(null)
     setCreating(true)
@@ -290,6 +317,7 @@ export function PassengerDashboard() {
         },
         token
       )
+      setPassengerPendingTripDetail(tripDetailFromCreateResponse(res, pickupLocation, dropoffLocation))
       setPassengerActiveTripId(res.trip_id)
       setStatus(passengerTripStatusLabel(res.status))
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
@@ -316,6 +344,7 @@ export function PassengerDashboard() {
     addLog('Clique: Cancelar viagem', 'action')
     try {
       await cancelTrip(activeTripId, token)
+      setPassengerPendingTripDetail(null)
       setPassengerActiveTripId(null)
       setStatus('Pronto')
       addLog('Viagem cancelada', 'success')
@@ -601,11 +630,11 @@ export function PassengerDashboard() {
         if (cancelled) return
         const st = (err as { status?: number })?.status
         if (st != null && st >= 500) {
-          console.warn('getDriverLocation falha de servidor', err)
+          logWarn('getDriverLocation falha de servidor', err)
         } else if (st === 0) {
-          console.warn('getDriverLocation rede / timeout', err)
+          logWarn('getDriverLocation rede / timeout', err)
         } else {
-          console.warn('getDriverLocation', err)
+          logWarn('getDriverLocation', err)
         }
       })
     }

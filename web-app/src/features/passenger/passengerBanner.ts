@@ -49,18 +49,40 @@ export function getPassengerBannerState(params: {
     return { label: 'A sincronizar viagem…', variant: 'idle' }
   }
 
+  const statusLine = (s: string) => `Estado: ${passengerTripStatusLabel(s)}`
+
   switch (uxState) {
     case 'SEARCHING_DRIVER':
-      return { label: 'À procura de motorista', variant: 'requested' }
+      return {
+        label: 'À procura de motorista',
+        variant: 'requested',
+        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+      }
     case 'DRIVER_ASSIGNED':
       if (activeTrip?.status === 'assigned') {
-        return { label: 'Motorista atribuído', variant: 'assigned' }
+        return {
+          label: 'Motorista atribuído',
+          variant: 'assigned',
+          subLabel: statusLine(activeTrip.status),
+        }
       }
-      return { label: 'Motorista a caminho', variant: 'accepted' }
+      return {
+        label: 'Motorista a caminho',
+        variant: 'accepted',
+        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+      }
     case 'DRIVER_ARRIVING':
-      return { label: passengerTripStatusLabel('arriving'), variant: 'arriving' }
+      return {
+        label: passengerTripStatusLabel('arriving'),
+        variant: 'arriving',
+        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+      }
     case 'TRIP_ONGOING':
-      return { label: 'Viagem em curso', variant: 'ongoing' }
+      return {
+        label: 'Viagem em curso',
+        variant: 'ongoing',
+        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+      }
     case 'TRIP_COMPLETED': {
       const ps = activeTrip?.payment_status
       if (ps === 'succeeded') {

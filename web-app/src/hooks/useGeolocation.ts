@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { warn as logWarn } from '../utils/logger'
 
 type LatLng = {
   lat: number
@@ -118,7 +119,7 @@ export function useGeolocation(): GeolocationResult {
     }
 
     if (!('geolocation' in navigator)) {
-      console.warn('Geolocation is not available in this browser.')
+      logWarn('Geolocation is not available in this browser.')
       return
     }
 
@@ -157,14 +158,14 @@ export function useGeolocation(): GeolocationResult {
     }
 
     const onError = (err: GeolocationPositionError) => {
-      console.warn('Geolocation error:', err.code, err.message)
+      logWarn('Geolocation error:', err.code, err.message)
       applyFallback()
     }
 
     // If we don't get any position within 3s, fall back to Lisbon center.
     fallbackTimeoutRef.current = setTimeout(() => {
       if (!lastPositionRef.current) {
-        console.warn('Geolocation fallback: using Oeiras (Câmara Municipal) coordinates')
+        logWarn('Geolocation fallback: using Oeiras (Câmara Municipal) coordinates')
         applyFallback()
       }
     }, 3000)

@@ -21,11 +21,14 @@ import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
+  mergeDriverPolledWithOverride,
+  tripStateRank,
   DRIVER_AVAILABLE_TRIP_STATUS_LABEL,
   DRIVER_NEW_TRIP_LIST_HINT,
   driverActiveTripUi,
-  paymentStatusLabel,
-} from '../../constants/tripStatusLabels'
+  driverTripBadgeShort,
+} from '../../constants/tripStatus'
+import { paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
@@ -38,6 +41,7 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { MapView } from '../../maps/MapView'
 import { sendDriverLocation } from '../../services/locationService'
 import { toast as sonnerToast } from 'sonner'
+import { warn as logWarn } from '../../utils/logger'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -68,6 +72,8 @@ export function DriverDashboard() {
   const [toast, setToast] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [actionTakingLong, setActionTakingLong] = useState(false)
+  /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
+  const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
   const isOnline = useOnlineStatus()
 
   const pollEnabled = !!token && !offline
@@ -118,13 +124,13 @@ export function DriverDashboard() {
     let cancelled = false
 
     void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
-      if (!cancelled) console.warn('Failed to send driver location (first)', err)
+      if (!cancelled) logWarn('Failed to send driver location (first)', err)
     })
 
     const interval = setInterval(() => {
       if (cancelled || !driverLocation || !token) return
       void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
-        if (!cancelled) console.warn('Failed to send driver location', err)
+        if (!cancelled) logWarn('Failed to send driver location', err)
       })
     }, locationSendMs)
 
@@ -169,6 +175,7 @@ export function DriverDashboard() {
     try {
       const res = await action()
       setDriverActiveTripId(tripId)
+      setDriverStatusOverride(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (actionName === 'ACEITAR') sonnerToast.success('Viagem aceite')
@@ -203,7 +210,11 @@ export function DriverDashboard() {
             token={token!}
             addLog={addLog}
             setStatus={setStatus}
+            statusOverride={driverStatusOverride}
+            onClearStatusOverride={() => setDriverStatusOverride(null)}
+            onTripActionSuccess={(s) => setDriverStatusOverride(s)}
             onComplete={() => {
+              setDriverStatusOverride(null)
               setDriverActiveTripId(null)
               setStatus('Pronto')
               refetchHistory()
@@ -350,7 +361,10 @@ export function DriverDashboard() {
           <ActiveTripSummary
             tripId={activeTripId}
             token={token!}
+            statusOverride={driverStatusOverride}
+            onClearStatusOverride={() => setDriverStatusOverride(null)}
             onTripCancelled={() => {
+              setDriverStatusOverride(null)
               setDriverActiveTripId(null)
               setStatus('Pronto')
               refetchAvailable()
@@ -394,10 +408,14 @@ export function DriverDashboard() {
 function ActiveTripSummary({
   tripId,
   token,
+  statusOverride,
+  onClearStatusOverride,
   onTripCancelled,
 }: {
   tripId: string
   token: string
+  statusOverride: string | null
+  onClearStatusOverride: () => void
   onTripCancelled: () => void
 }) {
   const fetchTrip = useCallback(() => getDriverTripDetail(tripId, token), [tripId, token])
@@ -412,7 +430,14 @@ function ActiveTripSummary({
     !!tripId && !!token,
     2000
   )
-  const status = trip?.status ?? 'accepted'
+  const displayStatus = mergeDriverPolledWithOverride(trip?.status, statusOverride, 'accepted')
+
+  useEffect(() => {
+    if (!statusOverride || !trip?.status) return
+    if (tripStateRank(trip.status) >= tripStateRank(statusOverride)) {
+      onClearStatusOverride()
+    }
+  }, [trip?.status, statusOverride, onClearStatusOverride])
 
   const tripPollStalled = usePollStallHint(
     tripLastSuccessAt,
@@ -435,11 +460,25 @@ function ActiveTripSummary({
     }
   }, [trip?.status, onTripCancelled])
 
-  const config = driverActiveTripUi(status)
+  const config = driverActiveTripUi(displayStatus)
+
+  if (!trip && tripId && token) {
+    return (
+      <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card">
+        <StatusHeader label="A carregar viagem…" variant="idle" emphasis="primary" />
+        <p className="text-center text-sm text-foreground/70">A obter detalhes atualizados.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out">
       <StatusHeader label={config.label} variant={config.variant} emphasis="primary" />
+      <p className="text-center -mt-2 mb-1">
+        <span className="inline-block rounded-full bg-primary/15 text-primary text-xs font-semibold px-3 py-1">
+          {driverTripBadgeShort(displayStatus)}
+        </span>
+      </p>
       {tripPollFootnote ? (
         <p className="text-center text-xs text-foreground/55 -mt-3 mb-1 min-h-[1.25rem]" aria-live="polite">
           {tripPollFootnote}
@@ -450,7 +489,7 @@ function ActiveTripSummary({
           Pagamento do passageiro recusado. Segue as instruções da plataforma ou do suporte.
         </p>
       ) : null}
-      {trip?.status === 'completed' && trip.payment_status && trip.payment_status !== 'failed' ? (
+      {displayStatus === 'completed' && trip?.payment_status && trip.payment_status !== 'failed' ? (
         <p className="text-sm text-foreground/80 text-center px-2">
           Pagamento do passageiro: {paymentStatusLabel(trip.payment_status)}
         </p>
@@ -462,7 +501,7 @@ function ActiveTripSummary({
           price={trip.final_price ?? trip.estimated_price ?? 0}
           estimateFallback="4–6"
           priceCaption={
-            trip.status === 'completed' && trip.final_price != null
+            displayStatus === 'completed' && trip.final_price != null
               ? 'Preço final'
               : 'Estimativa (indicativa)'
           }
@@ -477,6 +516,9 @@ function ActiveTripActions({
   token,
   addLog,
   setStatus,
+  statusOverride,
+  onClearStatusOverride,
+  onTripActionSuccess,
   onComplete,
   onError,
 }: {
@@ -484,6 +526,9 @@ function ActiveTripActions({
   token: string
   addLog: (msg: string, type?: 'info' | 'success' | 'error' | 'action') => void
   setStatus: (msg: string) => void
+  statusOverride: string | null
+  onClearStatusOverride: () => void
+  onTripActionSuccess: (status: string) => void
   onComplete: () => void
   onError: (s: string) => void
 }) {
@@ -494,7 +539,19 @@ function ActiveTripActions({
     !!tripId && !!token,
     2000
   )
-  const status = trip?.status ?? 'accepted'
+  /**
+   * P3: override acelera UI após ações; se o poll trouxer estado terminal ou mais avançado,
+   * prevalece o servidor (ex.: passageiro cancelou — não mostrar "Terminar" por override stale).
+   */
+  const displayStatus = mergeDriverPolledWithOverride(trip?.status, statusOverride, 'accepted')
+
+  useEffect(() => {
+    if (!statusOverride || !trip?.status) return
+    if (tripStateRank(trip.status) >= tripStateRank(statusOverride)) {
+      onClearStatusOverride()
+    }
+  }, [trip?.status, statusOverride, onClearStatusOverride])
+
   const [loading, setLoading] = useState(false)
   const [loadingLong, setLoadingLong] = useState(false)
 
@@ -518,6 +575,7 @@ function ActiveTripActions({
     addLog(`Clique: ${actionName}`, 'action')
     try {
       const res = await action()
+      onTripActionSuccess(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (res.status === 'ongoing') sonnerToast.success('Viagem iniciada')
@@ -536,7 +594,7 @@ function ActiveTripActions({
     }
   }
 
-  if (status === 'completed' || status === 'cancelled') return null
+  if (displayStatus === 'completed' || displayStatus === 'cancelled') return null
 
   const beginTripFromAccepted = async () => {
     await markArriving(tripId, token)
@@ -544,20 +602,28 @@ function ActiveTripActions({
   }
 
   const buttonConfig =
-    status === 'assigned'
+    displayStatus === 'assigned'
       ? { label: 'Aceitar', action: () => acceptTrip(tripId, token) }
-      : status === 'accepted'
+      : displayStatus === 'accepted'
         ? { label: 'Iniciar viagem', action: beginTripFromAccepted }
-        : status === 'arriving'
+        : displayStatus === 'arriving'
           ? { label: 'Iniciar viagem', action: () => startTrip(tripId, token) }
-          : status === 'ongoing'
+          : displayStatus === 'ongoing'
             ? { label: 'Terminar viagem', action: () => completeTrip(tripId, token) }
             : null
 
-  if (!buttonConfig) return null
+  if (!buttonConfig) {
+    return (
+      <div className="rounded-xl border border-border/80 bg-muted/30 px-4 py-3 text-center text-sm text-foreground/75">
+        A sincronizar estado da viagem… Se persistir, recarrega a página.
+      </div>
+    )
+  }
 
   const showCancel =
-    status === 'assigned' || status === 'accepted' || status === 'arriving'
+    displayStatus === 'assigned' ||
+    displayStatus === 'accepted' ||
+    displayStatus === 'arriving'
 
   return (
     <div className="space-y-2">

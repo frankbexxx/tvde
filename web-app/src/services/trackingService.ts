@@ -1,4 +1,5 @@
 import { apiFetch } from '../api/client'
+import { warn as logWarn } from '../utils/logger'
 
 export interface DriverLocationResponse {
   lat: number
@@ -76,9 +77,9 @@ export async function getDriverLocation(tripId: string): Promise<DriverLocationR
 
     // Erro real: 5xx, falha de rede, timeout
     if (status != null && status >= 500) {
-      console.warn('[getDriverLocation] server error', status, toDetailString(detail))
+      logWarn('[getDriverLocation] server error', status, toDetailString(detail))
     } else if (status === 0) {
-      console.warn('[getDriverLocation] network or timeout', toDetailString(detail))
+      logWarn('[getDriverLocation] network or timeout', toDetailString(detail))
     }
     throw err
   }

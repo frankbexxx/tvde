@@ -1,4 +1,5 @@
 import type { LineString } from 'geojson'
+import { warn as logWarn } from '../utils/logger'
 
 export interface LatLng {
   lat: number
@@ -28,7 +29,7 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteGeometry 
   const fetchRoute = async () => {
     const res = await fetch(url)
     if (!res.ok) {
-      console.warn('OSRM route request failed', res.status, res.statusText)
+      logWarn('OSRM route request failed', res.status, res.statusText)
       return null
     }
 
@@ -61,11 +62,11 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteGeometry 
   try {
     return await fetchRoute()
   } catch (err) {
-    console.warn('OSRM route request failed, retrying once...', err)
+    logWarn('OSRM route request failed, retrying once...', err)
     try {
       return await fetchRoute()
     } catch (err2) {
-      console.warn('OSRM route retry failed, giving up.', err2)
+      logWarn('OSRM route retry failed, giving up.', err2)
       return null
     }
   }

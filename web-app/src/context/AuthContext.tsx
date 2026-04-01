@@ -14,6 +14,7 @@ import {
   withColdStartRetries,
   type ApiError,
 } from '../api/client'
+import { warn as logWarn } from '../utils/logger'
 import { validateAccessToken } from '../api/session'
 import {
   getConfig,
@@ -197,9 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ? String((rawDetail as { detail?: unknown }).detail ?? '')
             : ''
 
-      if (import.meta.env.DEV) {
-        console.warn('[Auth/loadTokens]', { status, detail: detailStr || rawDetail })
-      }
+      logWarn('[Auth/loadTokens]', { status, detail: detailStr || rawDetail })
 
       setTokens(null)
       setBetaMode(false)
