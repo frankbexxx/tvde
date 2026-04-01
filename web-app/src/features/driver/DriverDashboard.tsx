@@ -8,13 +8,16 @@ import {
   getDriverTripHistory,
   getDriverTripDetail,
   acceptTrip,
-  markArriving,
-  startTrip,
-  completeTrip,
-  cancelTripByDriver,
   setDriverOnline,
   setDriverOffline,
 } from '../../api/trips'
+import {
+  driverPerformAccept,
+  driverPerformCancel,
+  driverPerformComplete,
+  driverPerformStartFromAccepted,
+  driverPerformStartFromArriving,
+} from './driverTripActions'
 import type { TripAvailableItem, TripHistoryItem } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { usePolling } from '../../hooks/usePolling'
@@ -596,20 +599,15 @@ function ActiveTripActions({
 
   if (displayStatus === 'completed' || displayStatus === 'cancelled') return null
 
-  const beginTripFromAccepted = async () => {
-    await markArriving(tripId, token)
-    return startTrip(tripId, token)
-  }
-
   const buttonConfig =
     displayStatus === 'assigned'
-      ? { label: 'Aceitar', action: () => acceptTrip(tripId, token) }
+      ? { label: 'Aceitar', action: () => driverPerformAccept(tripId, token) }
       : displayStatus === 'accepted'
-        ? { label: 'Iniciar viagem', action: beginTripFromAccepted }
+        ? { label: 'Iniciar viagem', action: () => driverPerformStartFromAccepted(tripId, token) }
         : displayStatus === 'arriving'
-          ? { label: 'Iniciar viagem', action: () => startTrip(tripId, token) }
+          ? { label: 'Iniciar viagem', action: () => driverPerformStartFromArriving(tripId, token) }
           : displayStatus === 'ongoing'
-            ? { label: 'Terminar viagem', action: () => completeTrip(tripId, token) }
+            ? { label: 'Terminar viagem', action: () => driverPerformComplete(tripId, token) }
             : null
 
   if (!buttonConfig) {
@@ -642,7 +640,7 @@ function ActiveTripActions({
       {showCancel && (
         <button
           type="button"
-          onClick={() => run(() => cancelTripByDriver(tripId, token), 'Cancelar viagem')}
+          onClick={() => run(() => driverPerformCancel(tripId, token), 'Cancelar viagem')}
           disabled={loading}
           className="w-full text-muted-foreground text-base py-3 hover:text-destructive"
         >
