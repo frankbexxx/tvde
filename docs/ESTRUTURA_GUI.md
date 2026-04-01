@@ -59,6 +59,21 @@ main.tsx
 - `/driver` → `DriverOnly` → `DriverDashboard`; se papel for passageiro, redirect para `/passenger`
 - `/admin` → `AdminDashboard` se `isAdmin`; caso contrário `AdminDeniedRedirect` para o home do papel (`/passenger` ou `/driver`)
 
+### 3.1 Estados da viagem (API ↔ UI)
+
+| Estado API (`TripStatus`) | Passageiro (resumo) | Motorista (lista / viagem ativa) |
+| ------------------------- | ------------------- | --------------------------------- |
+| `requested` | À procura de motorista | Pedido na lista (`GET /driver/trips/available`) |
+| `assigned` | Motorista atribuído | Aceitar (se aplicável) |
+| `accepted` | Motorista a caminho | Iniciar viagem (encadeia `arriving` + `start` na API) |
+| `arriving` | Quase a chegar | Iniciar viagem |
+| `ongoing` | Em viagem | Terminar viagem |
+| `completed` / `cancelled` / `failed` | Ecrã final / limpeza | Ações ocultas; cancelamento do passageiro limpa viagem ativa no motorista |
+
+**Constantes:** `web-app/src/constants/tripStatus.ts` — ranks, `mergeDriverPolledWithOverride`, `mergePassengerPolledWithPending`, labels. **Pagamento:** `tripStatusLabels.ts` (`paymentStatusLabel`).
+
+**Sincronização:** após criar viagem (passageiro) ou aceitar/ações (motorista), a UI aplica estado optimista até o polling alinhar com o servidor.
+
 ---
 
 ## 4. Layout principal (AppRoutes)
@@ -248,13 +263,14 @@ ScreenContainer(bottomButton)
 ScreenContainer(bottomButton)
   ├── header (h1 "Motorista", p descrição)
   ├── Toggle (Estado Disponível/Offline)
-  ├── [toast 409] div bg-amber-100 animate-toast-enter
-  ├── [erro] div bg-red-50
-  ├── [offline] "Está offline..."
-  ├── [!offline && !activeTripId] StatusHeader + RequestCards ou "Nenhuma viagem"
-  ├── [activeTripId] ActiveTripSummary (StatusHeader + TripCard)
+  ├── [toast 409] div warning
+  ├── [erro] div destructive
+  ├── [offline] mensagem offline
+  ├── MapView (quando online)
+  ├── [!offline && !activeTripId] StatusHeader + lista RequestCard (recolha, destino, estado) ou empty / spinner 1.º load
+  ├── [activeTripId] ActiveTripSummary (StatusHeader, badge curto, TripCard)
   ├── Histórico (lista 5 últimas)
-  └── bottomButton: ActiveTripActions (Cheguei | Iniciar | Concluir | Cancelar)
+  └── bottomButton: ActiveTripActions (Aceitar | Iniciar | Terminar | Cancelar)
 ```
 
 ### 10.2 Toggle
@@ -266,18 +282,24 @@ ScreenContainer(bottomButton)
 
 ### 10.3 RequestCard (por viagem disponível)
 
-- `rounded-xl border-2 border-slate-200 bg-white p-4 space-y-4 shadow-sm`
-- Recolha (pickup)
-- Preço: `text-2xl font-bold text-emerald-700`
-- Botão ACEITAR: `min-h-[48px] px-6 rounded-xl bg-emerald-600`
+- Cartão com recolha, destino, estado legível (“Pedido disponível”), estimativa €
+- Botão ACEITAR
 
 ### 10.4 ActiveTripActions (bottom)
 
-| Status   | Botão principal | Cancelar |
-| -------- | --------------- | -------- |
-| accepted | Cheguei         | Sim      |
-| arriving | Iniciar viagem  | Sim      |
-| ongoing  | Concluir viagem | Não      |
+| Status    | Botão principal   | Cancelar |
+| --------- | ----------------- | -------- |
+| assigned  | Aceitar           | Sim      |
+| accepted  | Iniciar viagem    | Sim      |
+| arriving  | Iniciar viagem    | Sim      |
+| ongoing   | Terminar viagem   | Não      |
+
+Se o estado ainda não mapeia (sincronização), mostra mensagem “A sincronizar estado da viagem…”.
+
+### 10.5 Badges e logging
+
+- **Badge** sob o `StatusHeader` da viagem ativa: texto curto (ex.: A caminho, Em curso) via `driverTripBadgeShort` em `tripStatus.ts`.
+- **Logger:** `web-app/src/utils/logger.ts` — `log` / `warn` só em DEV; `error` sempre (ex.: falhas de poll).
 
 ---
 
@@ -418,6 +440,9 @@ Usado em: bottom button fixo, Sheet definições.
 | Toggle                  | `src/components/ui/Toggle.tsx`                        |
 | Spinner                 | `src/components/ui/Spinner.tsx`                       |
 | DevTools                | `src/features/shared/DevTools.tsx`                    |
+| Estados viagem (constantes) | `web-app/src/constants/tripStatus.ts`             |
+| Labels pagamento        | `web-app/src/constants/tripStatusLabels.ts`           |
+| Logger (DEV / prod)     | `web-app/src/utils/logger.ts`                         |
 
 ---
 
