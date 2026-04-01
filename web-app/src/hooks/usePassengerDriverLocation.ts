@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { TripDetailResponse } from '../api/trips'
 import { getDriverLocation } from '../services/trackingService'
 import { warn as logWarn } from '../utils/logger'
@@ -12,8 +12,11 @@ export function isPassengerDriverTrackingStatus(s: string | undefined): s is Pas
   return s != null && (PASSENGER_DRIVER_TRACKING_STATUSES as readonly string[]).includes(s)
 }
 
+type PolledPoint = { tripId: string; lat: number; lng: number }
+
 /**
  * Posição do motorista: mistura `driver_location` do GET /trips/:id com poll em /driver-location.
+ * Estado do poll só é atualizado em callbacks assíncronos (compatível com react-hooks/set-state-in-effect).
  */
 export function usePassengerDriverLocation(options: {
   activeTripId: string | null
@@ -24,32 +27,32 @@ export function usePassengerDriverLocation(options: {
 }): { driverLocation: { lat: number; lng: number } | null } {
   const { activeTripId, activeTrip, tripCompletedFromLocation, pollIntervalMs, onTripCompletedFromLocation } =
     options
-  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null)
 
-  useEffect(() => {
-    if (!activeTrip || !isPassengerDriverTrackingStatus(activeTrip.status)) {
-      return
-    }
+  const embeddedDriverLocation = useMemo((): { lat: number; lng: number } | null => {
+    if (!activeTrip || !activeTripId || tripCompletedFromLocation) return null
+    if (!isPassengerDriverTrackingStatus(activeTrip.status)) return null
     const emb = activeTrip.driver_location
-    if (emb) {
-      setDriverLocation({ lat: emb.lat, lng: emb.lng })
+    if (!emb) return null
+    return { lat: emb.lat, lng: emb.lng }
+  }, [activeTrip, activeTripId, tripCompletedFromLocation])
+
+  const [polled, setPolled] = useState<PolledPoint | null>(null)
+
+  const driverLocation = useMemo(() => {
+    if (!activeTripId || tripCompletedFromLocation) return null
+    if (!isPassengerDriverTrackingStatus(activeTrip?.status)) return null
+    if (polled?.tripId === activeTripId) {
+      return { lat: polled.lat, lng: polled.lng }
     }
-  }, [
-    activeTrip?.trip_id,
-    activeTrip?.status,
-    activeTrip?.driver_location?.lat,
-    activeTrip?.driver_location?.lng,
-    activeTrip?.driver_location?.timestamp,
-  ])
+    return embeddedDriverLocation
+  }, [activeTripId, tripCompletedFromLocation, polled, embeddedDriverLocation, activeTrip])
 
   useEffect(() => {
     if (!activeTripId || tripCompletedFromLocation) {
-      setDriverLocation(null)
       return
     }
     const st = activeTrip?.status
     if (!isPassengerDriverTrackingStatus(st)) {
-      setDriverLocation(null)
       return
     }
 
@@ -61,12 +64,11 @@ export function usePassengerDriverLocation(options: {
         .then((result) => {
           if (cancelled) return
           if (result.ok) {
-            setDriverLocation({ lat: result.lat, lng: result.lng })
+            setPolled({ tripId: activeTripId, lat: result.lat, lng: result.lng })
           } else if (result.reason === 'trip_completed') {
             onTripCompletedFromLocation?.()
-            setDriverLocation(null)
+            setPolled(null)
           }
-          // 404 / location_unavailable: manter última posição (embed ou tick anterior)
         })
         .catch((err) => {
           if (cancelled) return
