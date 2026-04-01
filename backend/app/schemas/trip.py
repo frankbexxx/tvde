@@ -4,6 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from app.models.enums import PaymentStatus, TripStatus
+from app.schemas.driver import DriverLocationResponse
 
 
 class TripCreateRequest(BaseModel):
@@ -123,4 +124,8 @@ class TripDetailResponse(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    driver_location: Optional[DriverLocationResponse] = Field(
+        default=None,
+        description="Última posição do motorista quando a viagem permite rasto (accepted/arriving/ongoing).",
+    )
 

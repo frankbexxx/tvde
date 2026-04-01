@@ -1,6 +1,7 @@
 """Shared trip-to-response serializers. Used by passenger, driver, admin routers."""
 
 from app.db.models.trip import Trip
+from app.schemas.driver import DriverLocationResponse
 from app.schemas.trip import TripDetailResponse, TripHistoryItem, TripStatusResponse
 
 
@@ -23,7 +24,11 @@ def trip_to_history_item(trip: Trip, include_stripe_pi: bool = False) -> TripHis
     )
 
 
-def trip_to_detail(trip: Trip, include_stripe_pi: bool = False) -> TripDetailResponse:
+def trip_to_detail(
+    trip: Trip,
+    include_stripe_pi: bool = False,
+    driver_location: DriverLocationResponse | None = None,
+) -> TripDetailResponse:
     payment = trip.payment
     return TripDetailResponse(
         trip_id=str(trip.id),
@@ -46,6 +51,7 @@ def trip_to_detail(trip: Trip, include_stripe_pi: bool = False) -> TripDetailRes
         commission_amount=float(payment.commission_amount) if payment else None,
         driver_payout=float(payment.driver_payout) if payment and payment.driver_payout else None,
         stripe_payment_intent_id=payment.stripe_payment_intent_id if payment and include_stripe_pi else None,
+        driver_location=driver_location,
     )
 
 

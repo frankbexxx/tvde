@@ -20,7 +20,10 @@ from app.schemas.trip import (
     TripStatusResponse,
 )
 from app.api.serializers import trip_to_detail, trip_to_history_item, trip_to_status_response
-from app.services.driver_location import get_driver_location_for_trip
+from app.services.driver_location import (
+    driver_location_embed_for_trip_detail,
+    get_driver_location_for_trip,
+)
 from app.services.interaction_logging import log_interaction
 from app.services.trips import (
     cancel_trip_by_passenger,
@@ -56,7 +59,8 @@ async def get_trip_detail(
         passenger_id=user.user_id,
         trip_id=trip_id.strip(),
     )
-    return trip_to_detail(trip, include_stripe_pi=False)
+    emb = driver_location_embed_for_trip_detail(db, trip)
+    return trip_to_detail(trip, include_stripe_pi=False, driver_location=emb)
 
 
 @router.get("/{trip_id}/driver-location", response_model=DriverLocationResponse)
