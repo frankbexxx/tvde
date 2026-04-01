@@ -183,7 +183,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         addLog('Tokens carregados', 'success')
       }
     } catch (err: unknown) {
-      console.error('Failed to load:', err)
+      if (import.meta.env.DEV) {
+        console.error('Failed to load:', err)
+      }
 
       const apiErr = err as Partial<ApiError>
       const status = typeof apiErr.status === 'number' ? apiErr.status : undefined
@@ -195,7 +197,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ? String((rawDetail as { detail?: unknown }).detail ?? '')
             : ''
 
-      console.log('[Auth/loadTokens] response', { status, detail: detailStr || rawDetail, err })
+      if (import.meta.env.DEV) {
+        console.warn('[Auth/loadTokens]', { status, detail: detailStr || rawDetail })
+      }
 
       setTokens(null)
       setBetaMode(false)
@@ -247,7 +251,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('A entrar...')
       const res = await loginApi(phone, password, requestedRole)
       const token = res.access_token
-      console.log('LOGIN TOKEN:', token)
       setStoredAccessToken(token)
       setBetaToken(token)
       const serverRole = res.role as Role

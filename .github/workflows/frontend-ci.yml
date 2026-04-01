@@ -1,0 +1,42 @@
+# CI: web-app — lint, testes unitários (Vitest) e build de produção
+name: frontend-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web-app/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'web-app/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  web-app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Vitest
+        run: npm run test
+
+      - name: Production build
+        run: npm run build

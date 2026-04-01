@@ -30,14 +30,16 @@ main.tsx
               └── ActivityLogProvider
                     └── AuthProvider
                           ├── AppLifecycleLogger
-                          └── ActiveTripProvider
-                                └── AppRoutes
+                          └── DevToolsCallbackProvider
+                                └── ActiveTripProvider
+                                      └── AppRoutes
 ```
 
 **Contextos:**
 
 - `ActivityLogContext` — logs de eventos, status
-- `AuthContext` — token, `role` (UI: passageiro/motorista/admin conforme rota e sessão), `appRouteRole` (passageiro vs motorista persistido), `betaMode`, login/logout
+- `AuthContext` — token, `role` (UI: passageiro/motorista/admin conforme rota e sessão), `appRouteRole` (passageiro vs motorista persistido), `sessionPhone` (telemóvel mostrado em Conta), `betaMode`, login/logout
+- `DevToolsCallbackProvider` — callbacks para refetch dos dashboards quando `DevTools` (só DEV) altera estado no servidor
 - `ActiveTripContext` — passengerActiveTripId, driverActiveTripId
 
 ---
@@ -79,7 +81,9 @@ sticky top-0 z-10 bg-background border-b border-border shrink-0
 **Conteúdo (flex justify-between):**
 
 - `h1` "TVDE" (text-lg font-bold)
-- `SettingsButton` (ícone engrenagem): tema, modo da app, registo de atividade, sair (BETA), DevTools (DEV)
+- Grupo à direita (`flex`, ícones): `ProfileButton` (Conta) · `SettingsButton` (Configuração)
+  - **Conta:** telemóvel, papel, **Sair** (só em `betaMode`)
+  - **Configuração:** tema, modo da app (Passageiro/Motorista), registo de atividade embutido, atalho Painel admin se `isAdmin`, **DevTools** só se `import.meta.env.DEV`
 
 ### 4.3 Área principal
 
@@ -161,8 +165,14 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 - **Modo da app** — dois botões (Passageiro / Motorista): `setAppRouteRole` + `navigate` para `/passenger` ou `/driver`
 - Se `isAdmin`: link **Painel admin** → `/admin`
 - **Registo de atividade** — muda para vista com `ActivityPanel` embedded
-- Se `betaMode`: **Sair** (`logout`)
 - Se `import.meta.env.DEV`: **Desenvolvimento** — `DevTools` (modo alinhado com `appRouteRole`)
+
+O **logout (Sair)** em BETA não está nas definições: ver **`ProfileButton`** (painel **Conta**).
+
+### 7.1 ProfileButton (Conta)
+
+- **Trigger:** `Button` ghost, ícone de utilizador, `aria-label="Conta"` — ao lado da engrenagem no header.
+- **Painel** (Dialog em mobile, Sheet em desktop): título **Conta**; telemóvel (`sessionPhone`); papel (Passageiro / Motorista / Administrador); se `betaMode`, botão **Sair** (`logout`, variante destrutiva).
 
 **Mobile (Dialog):** `DialogContent` com largura/altura limitadas; título "Configuração" ou "Registo de atividade".
 
@@ -196,9 +206,8 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 
 ```
 ScreenContainer(bottomButton)
-  ├── header (h1 "Passageiro", p descrição)
-  ├── DevTools
-  ├── StatusHeader
+  ├── [fluxo unificado] cartão: pesquisa destino (texto/MapTiler), mapa, painel embedded
+  ├── StatusHeader (estados fora do cartão unificado)
   ├── [erro] div bg-red-50
   ├── [sem viagem] Estimativa 4–6 €
   ├── [requested] Spinner + "Estamos a encontrar..."
@@ -238,7 +247,6 @@ ScreenContainer(bottomButton)
 ```
 ScreenContainer(bottomButton)
   ├── header (h1 "Motorista", p descrição)
-  ├── DevTools
   ├── Toggle (Estado Disponível/Offline)
   ├── [toast 409] div bg-amber-100 animate-toast-enter
   ├── [erro] div bg-red-50
@@ -329,6 +337,7 @@ ScreenContainer(bottomButton)
 
 ## 13. DevTools
 
+- Apenas em **`import.meta.env.DEV`**, embutido em **`SettingsButton`** (secção Desenvolvimento), não no corpo do dashboard.
 - Collapsible: `▶ Dev` / `▼ Dev`
 - Botões: Seed, Auto-trip, Timeouts, Export logs, Reset run, Assign (se lastCreatedTripId)
 - `rounded-lg border border-slate-200 bg-slate-50 overflow-hidden`
@@ -376,7 +385,8 @@ Usado em: bottom button fixo, Sheet definições.
 | Container principal  | max-w-md, col               | max-w-5xl, row                       |
 | Main + ActivityPanel | col (panel abaixo)          | row (panel direita)                  |
 | ActivityPanel        | w-full, border-t, min-h-200 | w-80, border-l, h-[calc(100vh-4rem)] |
-| Settings             | Dialog centrado             | Sheet bottom                         |
+| Conta (perfil)       | Dialog centrado             | Sheet bottom                         |
+| Configuração         | Dialog centrado             | Sheet bottom                         |
 | ThemeSelector        | max-w-[240px]               | —                                    |
 | ScreenContainer      | max-w-md                    | —                                    |
 
@@ -395,8 +405,11 @@ Usado em: bottom button fixo, Sheet definições.
 | ActivityPanel           | `src/components/ActivityPanel.tsx`                    |
 | Auth storage (papel UI) | `src/utils/authStorage.ts`                            |
 | AuthContext             | `src/context/AuthContext.tsx`                         |
+| ProfileButton (Conta)   | `src/design-system/components/app/ProfileButton.tsx`   |
 | SettingsButton          | `src/design-system/components/app/SettingsButton.tsx` |
 | ThemeSelector           | `src/design-system/components/app/ThemeSelector.tsx`  |
+| DevToolsCallbackContext | `src/context/DevToolsCallbackContext.tsx`             |
+| Pesquisa destino        | `src/features/passenger/DestinationSearchField.tsx`   |
 | ScreenContainer         | `src/components/layout/ScreenContainer.tsx`           |
 | PrimaryActionButton     | `src/components/layout/PrimaryActionButton.tsx`       |
 | StatusHeader            | `src/components/layout/StatusHeader.tsx`              |
