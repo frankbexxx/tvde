@@ -52,6 +52,7 @@ export function StatusHeader({
         key={label}
         className={`inline-flex max-w-full flex-col items-start gap-1 rounded-xl border px-3 py-2 text-left text-sm font-medium shadow-none ${pill} transition-opacity duration-200 motion-reduce:transition-none`}
         role="status"
+        aria-label={label}
         aria-live="polite"
       >
         <span>{label}</span>
@@ -69,6 +70,7 @@ export function StatusHeader({
       key={label}
       className={`${surface} transition-[opacity,transform,box-shadow] duration-200 ease-out motion-reduce:transition-none animate-in fade-in duration-300`}
       role="status"
+      aria-label={label}
       aria-live="polite"
     >
       <span className="block">{label}</span>
