@@ -5,7 +5,7 @@ import { useActiveTrip } from '../../context/ActiveTripContext'
 import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
 import { createTrip, getTripHistory, getTripDetail, cancelTrip } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
-import type { TripDetailResponse, TripHistoryItem } from '../../api/trips'
+import type { TripCreateResponse, TripDetailResponse, TripHistoryItem } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
 import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
@@ -43,6 +43,58 @@ const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
 const ESTIMATE_MOCK = '4–6'
 
 const HAS_MAPTILER_KEY = Boolean(import.meta.env.VITE_MAPTILER_KEY)
+
+/** P3: alinhado com driver até P4 (`tripStatus.ts`). */
+const PASSENGER_STATE_RANK: Record<string, number> = {
+  requested: 0,
+  assigned: 1,
+  accepted: 2,
+  arriving: 3,
+  ongoing: 4,
+  completed: 10,
+  cancelled: 10,
+  failed: 10,
+}
+
+function passengerStateRank(s: string): number {
+  return PASSENGER_STATE_RANK[s] ?? -1
+}
+
+function mergePassengerPolledWithPending(
+  polled: TripDetailResponse | null,
+  pending: TripDetailResponse | null,
+  tripId: string | null
+): TripDetailResponse | null {
+  if (!tripId) return polled
+  if (!pending || pending.trip_id !== tripId) return polled
+  if (!polled) return pending
+  const pr = passengerStateRank(polled.status)
+  const pe = passengerStateRank(pending.status)
+  if (pr >= pe) return polled
+  return { ...polled, status: pending.status }
+}
+
+function tripDetailFromCreateResponse(
+  res: TripCreateResponse,
+  pickup: { lat: number; lng: number },
+  dropoff: { lat: number; lng: number }
+): TripDetailResponse {
+  const now = new Date().toISOString()
+  return {
+    trip_id: res.trip_id,
+    status: res.status,
+    passenger_id: '',
+    origin_lat: pickup.lat,
+    origin_lng: pickup.lng,
+    destination_lat: dropoff.lat,
+    destination_lng: dropoff.lng,
+    estimated_price: res.estimated_price,
+    final_price: res.final_price,
+    created_at: now,
+    updated_at: now,
+    payment_status: res.payment_status,
+  }
+}
 
 /** Resultado do poll do detalhe — `notFound` só após 404 explícito (não confundir com erro de rede). */
 type PassengerTripPollResult = {
@@ -88,6 +140,10 @@ export function PassengerDashboard() {
   const [geoSuggestions, setGeoSuggestions] = useState<GeocodeSuggestion[]>([])
   const [geoLoading, setGeoLoading] = useState(false)
   const [mapRecenterKey, setMapRecenterKey] = useState(0)
+  /** P3: snapshot do POST /trips até o primeiro GET alinhar. */
+  const [passengerPendingTripDetail, setPassengerPendingTripDetail] = useState<TripDetailResponse | null>(
+    null
+  )
 
   const { data: history, refetch: refetchHistory, pollFault: historyPollFault, isLoading: historyLoading } = usePolling(
     () => getTripHistory(token!),
@@ -129,8 +185,27 @@ export function PassengerDashboard() {
     3000
   )
 
-  const activeTrip = activeTripPoll?.trip ?? null
+  const activeTripPolled = activeTripPoll?.trip ?? null
   const activeTripNotFound = activeTripPoll?.notFound ?? false
+
+  const activeTrip = useMemo(
+    () => mergePassengerPolledWithPending(activeTripPolled, passengerPendingTripDetail, activeTripId),
+    [activeTripPolled, passengerPendingTripDetail, activeTripId]
+  )
+
+  useEffect(() => {
+    if (!passengerPendingTripDetail || !activeTripId || passengerPendingTripDetail.trip_id !== activeTripId) {
+      return
+    }
+    if (!activeTripPolled) return
+    if (passengerStateRank(activeTripPolled.status) >= passengerStateRank(passengerPendingTripDetail.status)) {
+      setPassengerPendingTripDetail(null)
+    }
+  }, [passengerPendingTripDetail, activeTripId, activeTripPolled])
+
+  useEffect(() => {
+    if (!activeTripId) setPassengerPendingTripDetail(null)
+  }, [activeTripId])
 
   const tripPollStalled = usePollStallHint(
     activeTripLastSuccessAt,
@@ -290,6 +365,7 @@ export function PassengerDashboard() {
         },
         token
       )
+      setPassengerPendingTripDetail(tripDetailFromCreateResponse(res, pickupLocation, dropoffLocation))
       setPassengerActiveTripId(res.trip_id)
       setStatus(passengerTripStatusLabel(res.status))
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
@@ -316,6 +392,7 @@ export function PassengerDashboard() {
     addLog('Clique: Cancelar viagem', 'action')
     try {
       await cancelTrip(activeTripId, token)
+      setPassengerPendingTripDetail(null)
       setPassengerActiveTripId(null)
       setStatus('Pronto')
       addLog('Viagem cancelada', 'success')
