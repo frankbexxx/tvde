@@ -21,11 +21,13 @@ import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
+  mergeDriverPolledWithOverride,
+  tripStateRank,
   DRIVER_AVAILABLE_TRIP_STATUS_LABEL,
   DRIVER_NEW_TRIP_LIST_HINT,
   driverActiveTripUi,
-  paymentStatusLabel,
-} from '../../constants/tripStatusLabels'
+} from '../../constants/tripStatus'
+import { paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
@@ -38,34 +40,6 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { MapView } from '../../maps/MapView'
 import { sendDriverLocation } from '../../services/locationService'
 import { toast as sonnerToast } from 'sonner'
-
-/** P3: ordem de estado até P4 centralizar em `tripStatus.ts`. */
-const TRIP_STATE_RANK: Record<string, number> = {
-  requested: 0,
-  assigned: 1,
-  accepted: 2,
-  arriving: 3,
-  ongoing: 4,
-  completed: 10,
-  cancelled: 10,
-  failed: 10,
-}
-
-function tripStateRank(s: string): number {
-  return TRIP_STATE_RANK[s] ?? -1
-}
-
-function mergeDriverPolledWithOverride(
-  polled: string | undefined,
-  override: string | null,
-  fallback: string
-): string {
-  if (!override) return polled ?? fallback
-  const pr = polled !== undefined ? tripStateRank(polled) : -1
-  const or = tripStateRank(override)
-  if (pr >= or) return polled ?? fallback
-  return override
-}
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
