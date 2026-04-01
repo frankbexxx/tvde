@@ -8,6 +8,7 @@ vi.mock('../../api/trips', () => ({
   cancelTripByDriver: vi.fn(),
 }))
 
+import type { TripStatusResponse } from '../../api/trips'
 import * as trips from '../../api/trips'
 import {
   driverPerformAccept,
@@ -17,7 +18,10 @@ import {
   driverPerformStartFromArriving,
 } from './driverTripActions'
 
-const ok = (status: string) => ({ trip_id: 't1', status } as const)
+const ok = (status: TripStatusResponse['status']): TripStatusResponse => ({
+  trip_id: 't1',
+  status,
+})
 
 beforeEach(() => {
   vi.mocked(trips.acceptTrip).mockResolvedValue(ok('accepted'))
