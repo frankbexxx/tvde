@@ -271,7 +271,9 @@ export function PassengerDashboard() {
     if (!pickupLocation || !dropoffLocation) return
     if (creating) return
 
-    console.log('Creating trip with:', { pickupLocation, dropoffLocation })
+    if (import.meta.env.DEV) {
+      console.debug('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation })
+    }
 
     setError(null)
     setCreating(true)

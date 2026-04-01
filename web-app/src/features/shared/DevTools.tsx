@@ -167,7 +167,7 @@ export function DevTools({
             `ofertas: ${d.step_3_offers?.count ?? 0}`,
           'info'
         )
-        console.log('Diagnóstico viagem:', d)
+        if (import.meta.env.DEV) console.debug('Diagnóstico viagem:', d)
       }
       setStatus('Pronto')
     } catch (err) {
@@ -192,7 +192,7 @@ export function DevTools({
             `ofertas pendentes: ${d.pending_offers_count ?? 0}`,
           'info'
         )
-        console.log('Diagnóstico motorista:', d)
+        if (import.meta.env.DEV) console.debug('Diagnóstico motorista:', d)
       }
       setStatus('Pronto')
     } catch (err) {
