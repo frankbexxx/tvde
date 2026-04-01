@@ -1,5 +1,5 @@
 import type { LineString } from 'geojson'
-import { warn as logWarn } from '../utils/logger'
+import { log as devLog } from '../utils/logger'
 
 export interface LatLng {
   lat: number
@@ -29,7 +29,8 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteGeometry 
   const fetchRoute = async () => {
     const res = await fetch(url)
     if (!res.ok) {
-      logWarn('OSRM route request failed', res.status, res.statusText)
+      // Rota no mapa é opcional; OSRM público falha ou limita muito — evitar console.warn (ruído).
+      devLog('[OSRM] route request failed', res.status, res.statusText)
       return null
     }
 
@@ -62,11 +63,11 @@ export async function getRoute(from: LatLng, to: LatLng): Promise<RouteGeometry 
   try {
     return await fetchRoute()
   } catch (err) {
-    logWarn('OSRM route request failed, retrying once...', err)
+    devLog('[OSRM] route request failed, retrying once...', err)
     try {
       return await fetchRoute()
     } catch (err2) {
-      logWarn('OSRM route retry failed, giving up.', err2)
+      devLog('[OSRM] route retry failed, giving up.', err2)
       return null
     }
   }

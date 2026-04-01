@@ -9,7 +9,7 @@ import { PassengerMarker } from './PassengerMarker'
 import { DriverMarker } from './DriverMarker'
 import { RouteLine } from './RouteLine'
 import { getRoute } from '../services/routingService'
-import { warn as logWarn } from '../utils/logger'
+import { log as devLog } from '../utils/logger'
 
 type LatLng = {
   lat: number
@@ -116,7 +116,7 @@ export function MapView({
           setRouteGeometry(geo as FeatureCollection<LineString> | null)
         }
       } catch (err) {
-        logWarn('Failed to fetch route from OSRM', err)
+        devLog('[MapView] route fetch failed (non-fatal)', err)
       }
     }
 
