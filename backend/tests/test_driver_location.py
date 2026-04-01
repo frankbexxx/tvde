@@ -132,3 +132,26 @@ def test_post_driver_location_invalid_timestamp() -> None:
 
     _reset_overrides()
     db.close()
+
+
+def test_post_driver_location_singular_path_alias() -> None:
+    """POST /driver/location mirrors POST /drivers/location."""
+    db = _make_db()
+    driver_id = _create_driver(db)
+    user_ctx = UserContext(user_id=driver_id, role=Role.driver)
+    _override_dependencies(db, user_ctx)
+
+    client = TestClient(app)
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    r = client.post(
+        "/driver/location",
+        json={"lat": 41.15, "lng": -8.61, "timestamp": now_ms},
+    )
+    assert r.status_code == 204
+
+    loc = db.query(DriverLocation).filter(DriverLocation.driver_id == driver_id).one()
+    assert float(loc.lat) == 41.15
+    assert float(loc.lng) == -8.61
+
+    _reset_overrides()
+    db.close()
