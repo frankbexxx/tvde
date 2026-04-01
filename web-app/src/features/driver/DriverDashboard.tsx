@@ -41,6 +41,7 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { MapView } from '../../maps/MapView'
 import { sendDriverLocation } from '../../services/locationService'
 import { toast as sonnerToast } from 'sonner'
+import { warn as logWarn } from '../../utils/logger'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -123,13 +124,13 @@ export function DriverDashboard() {
     let cancelled = false
 
     void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
-      if (!cancelled) console.warn('Failed to send driver location (first)', err)
+      if (!cancelled) logWarn('Failed to send driver location (first)', err)
     })
 
     const interval = setInterval(() => {
       if (cancelled || !driverLocation || !token) return
       void sendDriverLocation(driverLocation.lat, driverLocation.lng).catch((err) => {
-        if (!cancelled) console.warn('Failed to send driver location', err)
+        if (!cancelled) logWarn('Failed to send driver location', err)
       })
     }, locationSendMs)
 

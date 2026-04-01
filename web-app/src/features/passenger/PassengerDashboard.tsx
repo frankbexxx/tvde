@@ -41,6 +41,7 @@ import {
   humanizeCreateTripError,
 } from './passengerBanner'
 import { toast } from 'sonner'
+import { log as devLog, warn as logWarn } from '../../utils/logger'
 
 /** Câmara Municipal de Oeiras — centro do mapa / fallback de posição do passageiro */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
@@ -299,9 +300,7 @@ export function PassengerDashboard() {
     if (!pickupLocation || !dropoffLocation) return
     if (creating) return
 
-    if (import.meta.env.DEV) {
-      console.debug('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation })
-    }
+    devLog('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation })
 
     setError(null)
     setCreating(true)
@@ -631,11 +630,11 @@ export function PassengerDashboard() {
         if (cancelled) return
         const st = (err as { status?: number })?.status
         if (st != null && st >= 500) {
-          console.warn('getDriverLocation falha de servidor', err)
+          logWarn('getDriverLocation falha de servidor', err)
         } else if (st === 0) {
-          console.warn('getDriverLocation rede / timeout', err)
+          logWarn('getDriverLocation rede / timeout', err)
         } else {
-          console.warn('getDriverLocation', err)
+          logWarn('getDriverLocation', err)
         }
       })
     }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { VISIBILITY_VISIBLE_EVENT } from '../constants/events'
+import { error as logError } from '../utils/logger'
 
 const DEFAULT_POLL_INTERVAL_MS = 3000
 
@@ -43,7 +44,7 @@ export function usePolling<T>(
       dataRef.current = result
       setLastSuccessAt(Date.now())
     } catch (err) {
-      console.error('Poll error:', err)
+      logError('Poll error:', err)
       setPollFault(true)
     } finally {
       setIsLoading(false)

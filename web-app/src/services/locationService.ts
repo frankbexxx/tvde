@@ -1,4 +1,5 @@
 import { apiFetch } from '../api/client'
+import { warn as logWarn } from '../utils/logger'
 
 interface SendDriverLocationPayload {
   lat: number
@@ -28,14 +29,14 @@ export async function sendDriverLocation(lat: number, lng: number): Promise<void
       body: JSON.stringify(payload),
     })
   } catch (err) {
-    console.warn('sendDriverLocation failed, retrying once...', err)
+    logWarn('sendDriverLocation failed, retrying once...', err)
     try {
       await apiFetch<void>('/drivers/location', {
         method: 'POST',
         body: JSON.stringify(payload),
       })
     } catch (err2) {
-      console.warn('sendDriverLocation retry failed, giving up.', err2)
+      logWarn('sendDriverLocation retry failed, giving up.', err2)
     }
   }
 }

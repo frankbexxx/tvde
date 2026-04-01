@@ -8,6 +8,7 @@ import {
   isDemoLocationEnabled,
   setDemoLocationEnabled,
 } from '../../hooks/useGeolocation'
+import { log as devLog } from '../../utils/logger'
 
 function errMsg(err: unknown): string {
   const e = err as { detail?: string; message?: string }
@@ -167,7 +168,7 @@ export function DevTools({
             `ofertas: ${d.step_3_offers?.count ?? 0}`,
           'info'
         )
-        if (import.meta.env.DEV) console.debug('Diagnóstico viagem:', d)
+        devLog('Diagnóstico viagem:', d)
       }
       setStatus('Pronto')
     } catch (err) {
@@ -192,7 +193,7 @@ export function DevTools({
             `ofertas pendentes: ${d.pending_offers_count ?? 0}`,
           'info'
         )
-        if (import.meta.env.DEV) console.debug('Diagnóstico motorista:', d)
+        devLog('Diagnóstico motorista:', d)
       }
       setStatus('Pronto')
     } catch (err) {
