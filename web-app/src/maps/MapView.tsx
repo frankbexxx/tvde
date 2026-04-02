@@ -45,6 +45,9 @@ export interface MapViewProps {
   planningRecenter?: LatLng | null
   /** Incrementar para repetir animação para o mesmo ponto. */
   planningRecenterKey?: number
+  /** Recolha / destino da viagem ativa (marcadores distintos do planeamento). */
+  tripPickup?: LatLng | null
+  tripDropoff?: LatLng | null
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -72,6 +75,8 @@ export function MapView({
   mapVisualWeight = 'emphasized',
   planningRecenter = null,
   planningRecenterKey = 0,
+  tripPickup = null,
+  tripDropoff = null,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -228,25 +233,45 @@ export function MapView({
           mapStyle={MAPTILER_STYLE}
           onClick={onPlanningMapClick ? handleMapClick : undefined}
         >
-          {/* A015/A016: pickup âmbar; passageiro só se ainda sem pickup */}
-          {pickupSelection ? (
-            <PassengerMarker
-              longitude={pickupSelection.lng}
-              latitude={pickupSelection.lat}
-              colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
-            />
-          ) : (
-            passengerLocation && (
-              <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
-            )
-          )}
-          {dropoffSelection ? (
-            <PassengerMarker
-              longitude={dropoffSelection.lng}
-              latitude={dropoffSelection.lat}
-              colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
-            />
+          {/* Viagem ativa: recolha + destino (P30) */}
+          {tripPickup && tripDropoff ? (
+            <>
+              <PassengerMarker
+                longitude={tripPickup.lng}
+                latitude={tripPickup.lat}
+                colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
+              />
+              <PassengerMarker
+                longitude={tripDropoff.lng}
+                latitude={tripDropoff.lat}
+                colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
+              />
+            </>
           ) : null}
+
+          {/* A015/A016: pickup âmbar; passageiro só se ainda sem pickup */}
+          {!tripPickup || !tripDropoff
+            ? pickupSelection ? (
+                <PassengerMarker
+                  longitude={pickupSelection.lng}
+                  latitude={pickupSelection.lat}
+                  colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
+                />
+              ) : (
+                passengerLocation && (
+                  <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
+                )
+              )
+            : null}
+          {!tripPickup || !tripDropoff
+            ? dropoffSelection ? (
+                <PassengerMarker
+                  longitude={dropoffSelection.lng}
+                  latitude={dropoffSelection.lat}
+                  colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
+                />
+              ) : null
+            : null}
 
           {/* Driver marker */}
           {driverLocation && (

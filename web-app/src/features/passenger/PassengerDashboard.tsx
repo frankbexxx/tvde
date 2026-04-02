@@ -548,6 +548,14 @@ export function PassengerDashboard() {
     return undefined
   }, [showPassengerMap, activeTrip])
 
+  const tripMapLegs = useMemo(() => {
+    if (!showPassengerMap || !activeTrip) return { pickup: null, dropoff: null }
+    return {
+      pickup: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
+      dropoff: { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng },
+    }
+  }, [showPassengerMap, activeTrip])
+
   const mapPlaceholder = useMemo(() => {
     if (tripCompletedFromLocation) return 'Viagem concluída'
     if (activeTripId && !activeTrip) return 'A sincronizar viagem…'
@@ -714,6 +722,8 @@ export function PassengerDashboard() {
                 }
                 driverLocation={driverLocation ?? undefined}
                 route={routeForMap}
+                tripPickup={tripMapLegs.pickup}
+                tripDropoff={tripMapLegs.dropoff}
                 planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
                 mapVisualWeight={a021Layout.map}
                 planningRecenter={dropoffLocation}
@@ -787,6 +797,8 @@ export function PassengerDashboard() {
                 }
                 driverLocation={driverLocation ?? undefined}
                 route={routeForMap}
+                tripPickup={tripMapLegs.pickup}
+                tripDropoff={tripMapLegs.dropoff}
                 planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
                 mapVisualWeight={a021Layout.map}
                 planningRecenter={dropoffLocation}
