@@ -15,7 +15,9 @@ export const DriverMarker: FC<DriverMarkerProps> = ({
   return (
     <Marker anchor="center" longitude={longitude} latitude={latitude} {...props}>
       <div
-        className={`w-5 h-5 rounded-full ring-4 shadow-floating transition-transform duration-300 ease-out ${colorClassName}`}
+        role="img"
+        aria-label="Posição do motorista"
+        className={`w-5 h-5 rounded-full ring-4 shadow-floating transition-transform duration-500 ease-out motion-reduce:transition-none motion-reduce:duration-0 ${colorClassName}`}
       />
     </Marker>
   )

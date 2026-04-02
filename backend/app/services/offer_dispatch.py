@@ -22,6 +22,21 @@ logger = logging.getLogger(__name__)
 LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 
 
+def _has_active_pending_offer(
+    db: Session, *, trip_id, driver_id, now: datetime
+) -> bool:
+    """True se já existe oferta pending e ainda não expirada para este par viagem–motorista."""
+    existing = db.execute(
+        select(TripOffer).where(
+            TripOffer.trip_id == trip_id,
+            TripOffer.driver_id == driver_id,
+            TripOffer.status == OfferStatus.pending,
+            TripOffer.expires_at > now,
+        )
+    ).scalar_one_or_none()
+    return existing is not None
+
+
 def create_offers_for_trip(
     *,
     db: Session,
@@ -37,6 +52,7 @@ def create_offers_for_trip(
     timeout_sec = getattr(settings, "OFFER_TIMEOUT_SECONDS", 15)
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=timeout_sec)
     now = datetime.now(timezone.utc)
+    log_event("dispatch_attempt", trip_id=str(trip.id))
 
     origin_lat = float(trip.origin_lat)
     origin_lng = float(trip.origin_lng)
@@ -122,6 +138,15 @@ def create_offers_for_trip(
 
     offers: list[TripOffer] = []
     for driver, dist_km in selected:
+        if _has_active_pending_offer(
+            db, trip_id=trip.id, driver_id=driver.user_id, now=now
+        ):
+            log_event(
+                "offer_dispatch_skip_duplicate_pending",
+                trip_id=str(trip.id),
+                driver_id=str(driver.user_id),
+            )
+            continue
         offer = TripOffer(
             trip_id=trip.id,
             driver_id=driver.user_id,
@@ -282,6 +307,15 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         candidates.sort(key=lambda x: x[1])
         selected_redispatch = candidates[:top_n]
         for driver, dist_km in selected_redispatch:
+            if _has_active_pending_offer(
+                db, trip_id=trip.id, driver_id=driver.user_id, now=now
+            ):
+                log_event(
+                    "redispatch_skip_duplicate_pending",
+                    trip_id=str(trip.id),
+                    driver_id=str(driver.user_id),
+                )
+                continue
             offer = TripOffer(
                 trip_id=trip.id,
                 driver_id=driver.user_id,
@@ -290,10 +324,10 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             )
             db.add(offer)
             new_offers.append((offer, trip, dist_km))
-            logger.info(
-                "redispatch_expired_trips: new offer trip_id=%s driver_id=%s",
-                trip.id,
-                driver.user_id,
+            log_event(
+                "redispatch_new_offer",
+                trip_id=str(trip.id),
+                driver_id=str(driver.user_id),
             )
     if new_offers:
         db.flush()

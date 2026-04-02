@@ -9,6 +9,7 @@ import { PassengerMarker } from './PassengerMarker'
 import { DriverMarker } from './DriverMarker'
 import { RouteLine } from './RouteLine'
 import { getRoute } from '../services/routingService'
+import { useSmoothedLatLng } from '../hooks/useSmoothedLatLng'
 import { log as devLog } from '../utils/logger'
 
 type LatLng = {
@@ -45,6 +46,9 @@ export interface MapViewProps {
   planningRecenter?: LatLng | null
   /** Incrementar para repetir animação para o mesmo ponto. */
   planningRecenterKey?: number
+  /** Recolha / destino da viagem ativa (marcadores distintos do planeamento). */
+  tripPickup?: LatLng | null
+  tripDropoff?: LatLng | null
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -72,12 +76,19 @@ export function MapView({
   mapVisualWeight = 'emphasized',
   planningRecenter = null,
   planningRecenterKey = 0,
+  tripPickup = null,
+  tripDropoff = null,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
+  const mapAnchor = useMemo(
+    () => tripPickup ?? passengerLocation ?? null,
+    [tripPickup?.lat, tripPickup?.lng, passengerLocation?.lat, passengerLocation?.lng]
+  )
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
+  const smoothedDriver = useSmoothedLatLng(driverLocation, 480)
 
   const initialViewState = useMemo(
     () => ({
@@ -142,20 +153,37 @@ export function MapView({
     setHasInitialFit(true)
   }, [passengerLocation, hasInitialFit])
 
-  // When driver appears (ASSIGNED state), smooth pan to driver
+  // Passageiro + motorista: enquadrar os dois; só motorista: seguir só o motorista
   useEffect(() => {
-    if (!driverLocation) return
+    if (!showMap || !driverLocation) {
+      if (!driverLocation) prevDriverRef.current = null
+      return
+    }
     const map = mapRef.current?.getMap()
     if (!map) return
-    if (prevDriverRef.current?.lat === driverLocation.lat && prevDriverRef.current?.lng === driverLocation.lng) return
+    if (prevDriverRef.current?.lat === driverLocation.lat && prevDriverRef.current?.lng === driverLocation.lng) {
+      return
+    }
     prevDriverRef.current = driverLocation
+
+    if (mapAnchor) {
+      const bounds = new maplibregl.LngLatBounds()
+      bounds.extend([mapAnchor.lng, mapAnchor.lat])
+      bounds.extend([driverLocation.lng, driverLocation.lat])
+      map.fitBounds(bounds, {
+        padding: { top: 64, bottom: 64, left: 48, right: 48 },
+        maxZoom: 16,
+        duration: 650,
+      })
+      return
+    }
 
     map.easeTo({
       center: [driverLocation.lng, driverLocation.lat],
       duration: 700,
       zoom: 15,
     })
-  }, [driverLocation])
+  }, [showMap, driverLocation, mapAnchor])
 
   useEffect(() => {
     if (!planningRecenter || !planningRecenterKey) return
@@ -228,29 +256,49 @@ export function MapView({
           mapStyle={MAPTILER_STYLE}
           onClick={onPlanningMapClick ? handleMapClick : undefined}
         >
-          {/* A015/A016: pickup âmbar; passageiro só se ainda sem pickup */}
-          {pickupSelection ? (
-            <PassengerMarker
-              longitude={pickupSelection.lng}
-              latitude={pickupSelection.lat}
-              colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
-            />
-          ) : (
-            passengerLocation && (
-              <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
-            )
-          )}
-          {dropoffSelection ? (
-            <PassengerMarker
-              longitude={dropoffSelection.lng}
-              latitude={dropoffSelection.lat}
-              colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
-            />
+          {/* Viagem ativa: recolha + destino (P30) */}
+          {tripPickup && tripDropoff ? (
+            <>
+              <PassengerMarker
+                longitude={tripPickup.lng}
+                latitude={tripPickup.lat}
+                colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
+              />
+              <PassengerMarker
+                longitude={tripDropoff.lng}
+                latitude={tripDropoff.lat}
+                colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
+              />
+            </>
           ) : null}
 
-          {/* Driver marker */}
-          {driverLocation && (
-            <DriverMarker longitude={driverLocation.lng} latitude={driverLocation.lat} />
+          {/* A015/A016: pickup âmbar; passageiro só se ainda sem pickup */}
+          {!tripPickup || !tripDropoff
+            ? pickupSelection ? (
+                <PassengerMarker
+                  longitude={pickupSelection.lng}
+                  latitude={pickupSelection.lat}
+                  colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
+                />
+              ) : (
+                passengerLocation && (
+                  <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
+                )
+              )
+            : null}
+          {!tripPickup || !tripDropoff
+            ? dropoffSelection ? (
+                <PassengerMarker
+                  longitude={dropoffSelection.lng}
+                  latitude={dropoffSelection.lat}
+                  colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
+                />
+              ) : null
+            : null}
+
+          {/* Driver marker (posição suavizada — o enquadramento usa GPS cru) */}
+          {smoothedDriver && (
+            <DriverMarker longitude={smoothedDriver.lng} latitude={smoothedDriver.lat} />
           )}
 
           {/* Rota viagem ativa (OSRM interno via prop `route`) */}

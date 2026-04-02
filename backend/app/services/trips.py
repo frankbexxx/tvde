@@ -150,7 +150,7 @@ async def create_trip(
     # A011: trip_created before offers (log order for humans)
     log_event(
         "trip_created",
-        trip_id=trip.id,
+        trip_id=str(trip.id),
         passenger_id=passenger_id,
         created_at=trip.created_at,
     )
