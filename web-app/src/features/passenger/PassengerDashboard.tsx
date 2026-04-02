@@ -47,6 +47,11 @@ import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 /** Câmara Municipal de Oeiras — centro do mapa / fallback de posição do passageiro */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
 
+/** P33: mapa da viagem com percurso/rasto só após aceite — não em requested nem assigned. */
+function passengerLiveTripMapActive(trip: TripDetailResponse): boolean {
+  return isPassengerDriverTrackingStatus(trip.status)
+}
+
 const ESTIMATE_MOCK = '4–6'
 
 const HAS_MAPTILER_KEY = Boolean(import.meta.env.VITE_MAPTILER_KEY)
@@ -416,11 +421,11 @@ export function PassengerDashboard() {
     }
   }, [activeTrip?.status, addLog, setPassengerActiveTripId])
 
-  /** Mapa da viagem ativa: accepted | arriving | ongoing (P28 — já não exige GPS do motorista para mostrar o mapa base). */
+  /** Mapa da viagem ativa: accepted | arriving | ongoing (P28+P33 — sem assigned/requested). */
   const showPassengerMap = useMemo(() => {
     if (!activeTrip || tripCompletedFromLocation) return false
     if (['cancelled', 'failed', 'completed'].includes(activeTrip.status)) return false
-    return isPassengerDriverTrackingStatus(activeTrip.status)
+    return passengerLiveTripMapActive(activeTrip)
   }, [activeTrip, tripCompletedFromLocation])
 
   /**
