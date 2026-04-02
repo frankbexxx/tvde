@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
@@ -11,7 +11,12 @@ import {
   setDriverOnline,
   setDriverOffline,
 } from '../../api/trips'
-import type { TripAvailableItem, TripHistoryItem } from '../../api/trips'
+import type {
+  TripAvailableItem,
+  TripDetailResponse,
+  TripHistoryItem,
+  TripStatus,
+} from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
@@ -56,6 +61,23 @@ function setStoredOffline(offline: boolean) {
   }
 }
 
+/** P25: detalhe mínimo até o GET /driver/trips/:id alinhar após aceitar. */
+function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatus): TripDetailResponse {
+  const now = new Date().toISOString()
+  return {
+    trip_id: item.trip_id,
+    status,
+    passenger_id: '',
+    origin_lat: item.origin_lat,
+    origin_lng: item.origin_lng,
+    destination_lat: item.destination_lat,
+    destination_lng: item.destination_lng,
+    estimated_price: item.estimated_price,
+    created_at: now,
+    updated_at: now,
+  }
+}
+
 export function DriverDashboard() {
   const { token } = useAuth()
   const { addLog, setStatus } = useActivityLog()
@@ -69,6 +91,8 @@ export function DriverDashboard() {
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
+  /** P25: última informação conhecida se o poll falhar logo após aceitar. */
+  const [acceptedDetailFallback, setAcceptedDetailFallback] = useState<TripDetailResponse | null>(null)
   const isOnline = useOnlineStatus()
 
   const pollEnabled = !!token && !offline
@@ -142,7 +166,8 @@ export function DriverDashboard() {
     action: () => Promise<{ status: string }>,
     tripId: string,
     actionName: string,
-    onSuccess?: () => void
+    onSuccess?: () => void,
+    availableForFallback?: TripAvailableItem
   ) => {
     if (actionLoading != null) return
     setError(null)
@@ -152,6 +177,11 @@ export function DriverDashboard() {
     try {
       const res = await action()
       setDriverActiveTripId(tripId)
+      if (actionName === 'ACEITAR' && availableForFallback) {
+        setAcceptedDetailFallback(
+          tripDetailFallbackFromAccept(availableForFallback, res.status as TripStatus)
+        )
+      }
       setDriverStatusOverride(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
@@ -192,6 +222,7 @@ export function DriverDashboard() {
             onTripActionSuccess={(s) => setDriverStatusOverride(s)}
             onComplete={() => {
               setDriverStatusOverride(null)
+              setAcceptedDetailFallback(null)
               setDriverActiveTripId(null)
               setStatus('Pronto')
               refetchHistory()
@@ -317,7 +348,8 @@ export function DriverDashboard() {
                           () => acceptTrip(t.trip_id, token!),
                           t.trip_id,
                           'ACEITAR',
-                          () => setDriverActiveTripId(t.trip_id)
+                          () => setDriverActiveTripId(t.trip_id),
+                          t
                         )
                       }
                       loading={actionLoading === t.trip_id}
@@ -339,9 +371,12 @@ export function DriverDashboard() {
             tripId={activeTripId}
             token={token!}
             statusOverride={driverStatusOverride}
+            detailFallback={acceptedDetailFallback}
+            onDetailPollSuccess={() => setAcceptedDetailFallback(null)}
             onClearStatusOverride={() => setDriverStatusOverride(null)}
             onTripCancelled={() => {
               setDriverStatusOverride(null)
+              setAcceptedDetailFallback(null)
               setDriverActiveTripId(null)
               setStatus('Pronto')
               refetchAvailable()
@@ -386,12 +421,16 @@ function ActiveTripSummary({
   tripId,
   token,
   statusOverride,
+  detailFallback,
+  onDetailPollSuccess,
   onClearStatusOverride,
   onTripCancelled,
 }: {
   tripId: string
   token: string
   statusOverride: string | null
+  detailFallback: TripDetailResponse | null
+  onDetailPollSuccess: () => void
   onClearStatusOverride: () => void
   onTripCancelled: () => void
 }) {
@@ -407,7 +446,24 @@ function ActiveTripSummary({
     !!tripId && !!token,
     2000
   )
-  const displayStatus = mergeDriverPolledWithOverride(trip?.status, statusOverride, 'accepted')
+  const fallbackConsumedRef = useRef(false)
+  useEffect(() => {
+    fallbackConsumedRef.current = false
+  }, [tripId])
+
+  useEffect(() => {
+    if (trip && detailFallback && !fallbackConsumedRef.current) {
+      fallbackConsumedRef.current = true
+      onDetailPollSuccess()
+    }
+  }, [trip, detailFallback, onDetailPollSuccess])
+
+  const effectiveTrip = trip ?? detailFallback
+  const displayStatus = mergeDriverPolledWithOverride(
+    effectiveTrip?.status,
+    statusOverride,
+    'accepted'
+  )
 
   useEffect(() => {
     if (!statusOverride || !trip?.status) return
@@ -431,6 +487,11 @@ function ActiveTripSummary({
           : null
       : null
 
+  const fallbackFootnote =
+    !trip && detailFallback
+      ? 'A sincronizar com o servidor… A informação abaixo é a última que temos.'
+      : null
+
   useEffect(() => {
     if (trip?.status === 'cancelled') {
       onTripCancelled()
@@ -439,7 +500,7 @@ function ActiveTripSummary({
 
   const config = driverActiveTripUi(displayStatus)
 
-  if (!trip && tripId && token) {
+  if (!effectiveTrip && tripId && token) {
     return (
       <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card">
         <StatusHeader label="A carregar viagem…" variant="idle" emphasis="primary" />
@@ -456,9 +517,9 @@ function ActiveTripSummary({
           {driverTripBadgeShort(displayStatus)}
         </span>
       </p>
-      {tripPollFootnote ? (
+      {(tripPollFootnote || fallbackFootnote) ? (
         <p className="text-center text-xs text-foreground/55 -mt-3 mb-1 min-h-[1.25rem]" aria-live="polite">
-          {tripPollFootnote}
+          {tripPollFootnote ?? fallbackFootnote}
         </p>
       ) : null}
       {trip?.payment_status === 'failed' ? (
@@ -471,14 +532,17 @@ function ActiveTripSummary({
           Pagamento do passageiro: {paymentStatusLabel(trip.payment_status)}
         </p>
       ) : null}
-      {trip && (
+      {effectiveTrip && (
         <TripCard
-          pickup={formatPickup(trip.origin_lat, trip.origin_lng)}
-          destination={formatDestination(trip.destination_lat, trip.destination_lng)}
-          price={trip.final_price ?? trip.estimated_price ?? 0}
+          pickup={formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)}
+          destination={formatDestination(
+            effectiveTrip.destination_lat,
+            effectiveTrip.destination_lng
+          )}
+          price={effectiveTrip.final_price ?? effectiveTrip.estimated_price ?? 0}
           estimateFallback="4–6"
           priceCaption={
-            displayStatus === 'completed' && trip.final_price != null
+            displayStatus === 'completed' && effectiveTrip.final_price != null
               ? 'Preço final'
               : 'Estimativa (indicativa)'
           }
