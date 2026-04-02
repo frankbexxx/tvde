@@ -1,6 +1,7 @@
 /**
  * B002 / A014: Conteúdo visual por estado da viagem — clareza, sem depender só de logs.
  */
+import { useEffect, useState } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
@@ -9,6 +10,38 @@ import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
 
 const ESTIMATE_FALLBACK = '4–6'
+
+/** Segundos em `requested` antes de mostrar aviso de indisponibilidade (P24). */
+const SEARCHING_FALLBACK_AFTER_SEC = 10
+
+function SearchingDriverPhase({ tripCreatedAtIso }: { tripCreatedAtIso: string }) {
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((n) => n + 1), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const elapsedSec = Math.max(
+    0,
+    (Date.now() - new Date(tripCreatedAtIso).getTime()) / 1000
+  )
+  const showFallback = elapsedSec >= SEARCHING_FALLBACK_AFTER_SEC
+
+  return (
+    <div
+      key="SEARCHING_DRIVER"
+      className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 ease-out animate-in fade-in duration-300"
+    >
+      <p className="text-foreground text-lg font-semibold text-center px-2">
+        {showFallback ? 'Sem motoristas disponíveis de momento' : 'A procurar motorista…'}
+      </p>
+      <p className="text-foreground/80 text-sm text-center max-w-sm px-4">
+        {showFallback
+          ? 'Não encontrámos um motorista na zona. Podes cancelar e voltar a pedir — ou esperar mais um pouco.'
+          : 'Estamos a contactar motoristas na zona. Isto pode demorar um instante.'}
+      </p>
+    </div>
+  )
+}
 
 interface PassengerStatusCardProps {
   uxState: PassengerUxState | null
@@ -39,17 +72,7 @@ export function PassengerStatusCard({
 
   switch (uxState) {
     case 'SEARCHING_DRIVER':
-      return (
-        <div
-          key="SEARCHING_DRIVER"
-          className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 ease-out animate-in fade-in duration-300"
-        >
-          <p className="text-foreground text-lg font-semibold text-center px-2">À procura de motorista</p>
-          <p className="text-foreground/80 text-sm text-center max-w-sm px-4">
-            Isto pode demorar um pouco — estamos a contactar motoristas na zona.
-          </p>
-        </div>
-      )
+      return <SearchingDriverPhase tripCreatedAtIso={activeTrip.created_at} />
 
     case 'DRIVER_ASSIGNED': {
       const isAssignedOnly = activeTrip.status === 'assigned'
