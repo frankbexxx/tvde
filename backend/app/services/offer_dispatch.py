@@ -52,6 +52,7 @@ def create_offers_for_trip(
     timeout_sec = getattr(settings, "OFFER_TIMEOUT_SECONDS", 15)
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=timeout_sec)
     now = datetime.now(timezone.utc)
+    log_event("dispatch_attempt", trip_id=str(trip.id))
 
     origin_lat = float(trip.origin_lat)
     origin_lng = float(trip.origin_lng)
@@ -323,10 +324,10 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             )
             db.add(offer)
             new_offers.append((offer, trip, dist_km))
-            logger.info(
-                "redispatch_expired_trips: new offer trip_id=%s driver_id=%s",
-                trip.id,
-                driver.user_id,
+            log_event(
+                "redispatch_new_offer",
+                trip_id=str(trip.id),
+                driver_id=str(driver.user_id),
             )
     if new_offers:
         db.flush()
