@@ -191,6 +191,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         .all()
     )
     new_offers: list[tuple[TripOffer, Trip, float]] = []
+    zero_offer_new: list[TripOffer] = []
     for trip in all_requested:
         offers = list(
             db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
@@ -198,6 +199,10 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             .all()
         )
         if not offers:
+            created = create_offers_for_trip(db=db, trip=trip)
+            zero_offer_new.extend(created)
+            if created:
+                db.commit()
             continue
         all_expired_or_rejected = all(
             o.status in (OfferStatus.expired, OfferStatus.rejected) for o in offers
@@ -279,4 +284,4 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 expires_at=expires_at,
             )
         db.commit()
-    return [o for o, _, _ in new_offers]
+    return zero_offer_new + [o for o, _, _ in new_offers]
