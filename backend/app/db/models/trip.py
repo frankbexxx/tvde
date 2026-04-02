@@ -108,6 +108,11 @@ class Trip(Base):
         onupdate=func.now(),
         comment="Updated on state transitions or price updates.",
     )
+    last_dispatch_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Last time create_offers_for_trip ran (redispatch throttle).",
+    )
     cancellation_reason: Mapped[Optional[str]] = mapped_column(
         String(280),
         nullable=True,

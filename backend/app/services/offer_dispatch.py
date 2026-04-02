@@ -19,7 +19,7 @@ from app.utils.logging import log_debug_event, log_event
 
 logger = logging.getLogger(__name__)
 
-LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 15)
+LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 
 
 def create_offers_for_trip(
@@ -112,6 +112,13 @@ def create_offers_for_trip(
                 "origin": f"{origin_lat},{origin_lng}",
             },
         )
+        log_event(
+            "offer_dispatch_no_candidates",
+            trip_id=str(trip.id),
+            drivers_with_loc=len(drivers_with_loc),
+            fresh_count=len(fresh),
+            candidates_in_radius=len(candidates),
+        )
 
     offers: list[TripOffer] = []
     for driver, dist_km in selected:
@@ -150,6 +157,13 @@ def create_offers_for_trip(
             expires_at=expires_at,
         )
 
+    trip.last_dispatch_at = datetime.now(timezone.utc)
+    if offers:
+        log_event(
+            "offer_dispatch_offers_persisted",
+            trip_id=str(trip.id),
+            offer_count=len(offers),
+        )
     return offers
 
 
@@ -191,6 +205,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         .all()
     )
     new_offers: list[tuple[TripOffer, Trip, float]] = []
+    zero_offer_new: list[TripOffer] = []
     for trip in all_requested:
         offers = list(
             db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
@@ -198,6 +213,37 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             .all()
         )
         if not offers:
+            log_event("redispatch_zero_offers_attempt", trip_id=str(trip.id))
+            min_iv = getattr(settings, "REDISPATCH_MIN_INTERVAL_SECONDS", 10)
+            lda = trip.last_dispatch_at
+            if lda is not None:
+                if lda.tzinfo is None:
+                    lda = lda.replace(tzinfo=timezone.utc)
+                age_sec = (now - lda).total_seconds()
+                if age_sec < min_iv:
+                    log_event(
+                        "redispatch_zero_offers_throttled",
+                        trip_id=str(trip.id),
+                        age_seconds=round(age_sec, 2),
+                        min_interval_seconds=min_iv,
+                    )
+                    logger.info(
+                        "redispatch_expired_trips: zero-offer skip (throttled) trip_id=%s",
+                        trip.id,
+                    )
+                    continue
+            created = create_offers_for_trip(db=db, trip=trip)
+            zero_offer_new.extend(created)
+            if created:
+                log_event(
+                    "redispatch_zero_offers_recovered",
+                    trip_id=str(trip.id),
+                    offer_count=len(created),
+                )
+            else:
+                log_event("redispatch_zero_offers_still_empty", trip_id=str(trip.id))
+            # Persist last_dispatch_at even when 0 offers (throttle + diagnostics).
+            db.commit()
             continue
         all_expired_or_rejected = all(
             o.status in (OfferStatus.expired, OfferStatus.rejected) for o in offers
@@ -279,4 +325,4 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 expires_at=expires_at,
             )
         db.commit()
-    return [o for o, _, _ in new_offers]
+    return zero_offer_new + [o for o, _, _ in new_offers]

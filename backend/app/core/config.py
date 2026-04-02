@@ -51,12 +51,15 @@ class Settings(BaseSettings):
     # passengers are matched to drivers within this radius. Covers e.g. Lisbon metro (Oeiras, etc.).
     GEO_RADIUS_KM: float = 50.0
     # Max age (seconds) for driver location. Older locations excluded from dispatch (A006 geo stability).
-    LOCATION_MAX_AGE_SECONDS: int = 15
+    LOCATION_MAX_AGE_SECONDS: int = 45
 
     # Multi-offer dispatch: number of drivers to send offers to.
     OFFER_TOP_N: int = 5
     # Offer timeout (seconds) before offer expires. Driver has this long to accept.
     OFFER_TIMEOUT_SECONDS: int = 15
+
+    # Minimum seconds between redispatch attempts for the same trip (zero-offer recovery).
+    REDISPATCH_MIN_INTERVAL_SECONDS: int = 10
 
     # Secret for cron-job.org (no JWT). GET /cron/jobs?secret=<CRON_SECRET>
     CRON_SECRET: str | None = None

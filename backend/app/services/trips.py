@@ -156,9 +156,9 @@ async def create_trip(
     )
 
     # Multi-offer dispatch: create offers for top N drivers within radius.
-    # A006: if 0 offers, retry up to 3 times with 2s wait (driver may send location in parallel).
+    # A006: if 0 offers, retry with 2s wait (driver may send location in parallel).
     offers = create_offers_for_trip(db=db, trip=trip)
-    max_retries = 3
+    max_retries = 5
     retry_wait_sec = 2
     attempt = 1
     while len(offers) == 0 and attempt <= max_retries:
@@ -185,6 +185,20 @@ async def create_trip(
             "dispatch_retry_failed",
             trip_id=str(trip.id),
             attempts=attempt - 1,
+        )
+
+    if len(offers) == 0:
+        log_event(
+            "dispatch_trip_no_offers_after_retries",
+            trip_id=str(trip.id),
+            passenger_id=str(passenger_id),
+            max_retries=max_retries,
+        )
+    else:
+        log_event(
+            "dispatch_trip_offers_created",
+            trip_id=str(trip.id),
+            offer_count=len(offers),
         )
 
     logger.info(

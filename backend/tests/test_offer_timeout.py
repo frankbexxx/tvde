@@ -124,6 +124,42 @@ def test_ot_001_offer_expires_after_timeout() -> None:
     db.close()
 
 
+def test_ot_003_redispatch_zero_initial_offers() -> None:
+    """Requested trip with no TripOffer rows gets offers after redispatch."""
+    db = _make_db()
+    for loc in db.execute(select(DriverLocation)).scalars().all():
+        db.delete(loc)
+    db.commit()
+    _create_driver_with_location(db, 38.7, -9.1)
+    _, trip_id = _create_passenger_and_trip(db)
+    trip = db.execute(select(Trip).where(Trip.id == uuid.UUID(trip_id))).scalar_one()
+    assert (
+        len(
+            list(
+                db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+                .scalars()
+                .all()
+            )
+        )
+        == 0
+    )
+
+    new_offers = redispatch_expired_trips(db)
+    assert len(new_offers) >= 1
+
+    db.expire_all()
+    pending = [
+        o
+        for o in db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+        .scalars()
+        .all()
+        if o.status == OfferStatus.pending
+    ]
+    assert len(pending) >= 1
+
+    db.close()
+
+
 def test_ot_002_redispatch_triggered() -> None:
     """TEST-OT-002: redispatch triggered when all offers expired."""
     db = _make_db()
