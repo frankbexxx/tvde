@@ -17,7 +17,7 @@ export const DriverMarker: FC<DriverMarkerProps> = ({
       <div
         role="img"
         aria-label="Posição do motorista"
-        className={`w-5 h-5 rounded-full ring-4 shadow-floating transition-transform duration-300 ease-out ${colorClassName}`}
+        className={`w-5 h-5 rounded-full ring-4 shadow-floating transition-transform duration-500 ease-out motion-reduce:transition-none motion-reduce:duration-0 ${colorClassName}`}
       />
     </Marker>
   )

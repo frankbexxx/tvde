@@ -9,6 +9,7 @@ import { PassengerMarker } from './PassengerMarker'
 import { DriverMarker } from './DriverMarker'
 import { RouteLine } from './RouteLine'
 import { getRoute } from '../services/routingService'
+import { useSmoothedLatLng } from '../hooks/useSmoothedLatLng'
 import { log as devLog } from '../utils/logger'
 
 type LatLng = {
@@ -87,6 +88,7 @@ export function MapView({
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
+  const smoothedDriver = useSmoothedLatLng(driverLocation, 480)
 
   const initialViewState = useMemo(
     () => ({
@@ -294,9 +296,9 @@ export function MapView({
               ) : null
             : null}
 
-          {/* Driver marker */}
-          {driverLocation && (
-            <DriverMarker longitude={driverLocation.lng} latitude={driverLocation.lat} />
+          {/* Driver marker (posição suavizada — o enquadramento usa GPS cru) */}
+          {smoothedDriver && (
+            <DriverMarker longitude={smoothedDriver.lng} latitude={smoothedDriver.lat} />
           )}
 
           {/* Rota viagem ativa (OSRM interno via prop `route`) */}
