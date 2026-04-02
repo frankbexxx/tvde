@@ -80,6 +80,10 @@ export function MapView({
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
+  const mapAnchor = useMemo(
+    () => tripPickup ?? passengerLocation ?? null,
+    [tripPickup?.lat, tripPickup?.lng, passengerLocation?.lat, passengerLocation?.lng]
+  )
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
@@ -147,20 +151,37 @@ export function MapView({
     setHasInitialFit(true)
   }, [passengerLocation, hasInitialFit])
 
-  // When driver appears (ASSIGNED state), smooth pan to driver
+  // Passageiro + motorista: enquadrar os dois; só motorista: seguir só o motorista
   useEffect(() => {
-    if (!driverLocation) return
+    if (!showMap || !driverLocation) {
+      if (!driverLocation) prevDriverRef.current = null
+      return
+    }
     const map = mapRef.current?.getMap()
     if (!map) return
-    if (prevDriverRef.current?.lat === driverLocation.lat && prevDriverRef.current?.lng === driverLocation.lng) return
+    if (prevDriverRef.current?.lat === driverLocation.lat && prevDriverRef.current?.lng === driverLocation.lng) {
+      return
+    }
     prevDriverRef.current = driverLocation
+
+    if (mapAnchor) {
+      const bounds = new maplibregl.LngLatBounds()
+      bounds.extend([mapAnchor.lng, mapAnchor.lat])
+      bounds.extend([driverLocation.lng, driverLocation.lat])
+      map.fitBounds(bounds, {
+        padding: { top: 64, bottom: 64, left: 48, right: 48 },
+        maxZoom: 16,
+        duration: 650,
+      })
+      return
+    }
 
     map.easeTo({
       center: [driverLocation.lng, driverLocation.lat],
       duration: 700,
       zoom: 15,
     })
-  }, [driverLocation])
+  }, [showMap, driverLocation, mapAnchor])
 
   useEffect(() => {
     if (!planningRecenter || !planningRecenterKey) return
