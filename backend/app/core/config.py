@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     # Offer timeout (seconds) before offer expires. Driver has this long to accept.
     OFFER_TIMEOUT_SECONDS: int = 15
 
+    # Minimum seconds between redispatch attempts for the same trip (zero-offer recovery).
+    REDISPATCH_MIN_INTERVAL_SECONDS: int = 10
+
     # Secret for cron-job.org (no JWT). GET /cron/jobs?secret=<CRON_SECRET>
     CRON_SECRET: str | None = None
 

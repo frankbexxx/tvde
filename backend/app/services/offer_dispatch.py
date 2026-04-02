@@ -150,6 +150,7 @@ def create_offers_for_trip(
             expires_at=expires_at,
         )
 
+    trip.last_dispatch_at = datetime.now(timezone.utc)
     return offers
 
 
@@ -199,10 +200,21 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             .all()
         )
         if not offers:
+            min_iv = getattr(settings, "REDISPATCH_MIN_INTERVAL_SECONDS", 10)
+            lda = trip.last_dispatch_at
+            if lda is not None:
+                if lda.tzinfo is None:
+                    lda = lda.replace(tzinfo=timezone.utc)
+                if (now - lda).total_seconds() < min_iv:
+                    logger.info(
+                        "redispatch_expired_trips: zero-offer skip (throttled) trip_id=%s",
+                        trip.id,
+                    )
+                    continue
             created = create_offers_for_trip(db=db, trip=trip)
             zero_offer_new.extend(created)
-            if created:
-                db.commit()
+            # Persist last_dispatch_at even when 0 offers (throttle + diagnostics).
+            db.commit()
             continue
         all_expired_or_rejected = all(
             o.status in (OfferStatus.expired, OfferStatus.rejected) for o in offers
