@@ -11,10 +11,18 @@ import type { TripDetailResponse } from '../../api/trips'
 
 const ESTIMATE_FALLBACK = '4–6'
 
-/** Segundos em `requested` antes de mostrar aviso de indisponibilidade (P24). */
-const SEARCHING_FALLBACK_AFTER_SEC = 10
+/** Segundos em `requested` antes de mostrar aviso de indisponibilidade (P24) e botão de retry (P36). */
+export const PASSENGER_SEARCH_FALLBACK_AFTER_SEC = 10
 
-function SearchingDriverPhase({ tripCreatedAtIso }: { tripCreatedAtIso: string }) {
+function SearchingDriverPhase({
+  tripCreatedAtIso,
+  onRetrySearch,
+  retrySearchPending,
+}: {
+  tripCreatedAtIso: string
+  onRetrySearch?: () => void
+  retrySearchPending?: boolean
+}) {
   const [, setTick] = useState(0)
   useEffect(() => {
     const id = window.setInterval(() => setTick((n) => n + 1), 1000)
@@ -24,7 +32,7 @@ function SearchingDriverPhase({ tripCreatedAtIso }: { tripCreatedAtIso: string }
     0,
     (Date.now() - new Date(tripCreatedAtIso).getTime()) / 1000
   )
-  const showFallback = elapsedSec >= SEARCHING_FALLBACK_AFTER_SEC
+  const showFallback = elapsedSec >= PASSENGER_SEARCH_FALLBACK_AFTER_SEC
 
   return (
     <div
@@ -39,6 +47,16 @@ function SearchingDriverPhase({ tripCreatedAtIso }: { tripCreatedAtIso: string }
           ? 'Não encontrámos um motorista na zona. Podes cancelar e voltar a pedir — ou esperar mais um pouco.'
           : 'Estamos a contactar motoristas na zona. Isto pode demorar um instante.'}
       </p>
+      {showFallback && onRetrySearch ? (
+        <button
+          type="button"
+          className="mt-1 rounded-xl border border-primary/45 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 disabled:opacity-60 disabled:pointer-events-none transition-colors"
+          disabled={retrySearchPending}
+          onClick={onRetrySearch}
+        >
+          {retrySearchPending ? 'A processar…' : 'Tentar novamente'}
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -48,12 +66,17 @@ interface PassengerStatusCardProps {
   activeTrip: TripDetailResponse | null | undefined
   /** A014: só no pedido inicial — spinner curto, separado do estado "à procura" */
   isSubmittingTrip?: boolean
+  /** P36: cancelar pedido actual e criar novo com os mesmos pontos (após timeout de procura). */
+  onRetrySearch?: () => void
+  retrySearchPending?: boolean
 }
 
 export function PassengerStatusCard({
   uxState,
   activeTrip,
   isSubmittingTrip = false,
+  onRetrySearch,
+  retrySearchPending = false,
 }: PassengerStatusCardProps) {
   if (isSubmittingTrip) {
     return (
@@ -72,7 +95,13 @@ export function PassengerStatusCard({
 
   switch (uxState) {
     case 'SEARCHING_DRIVER':
-      return <SearchingDriverPhase tripCreatedAtIso={activeTrip.created_at} />
+      return (
+        <SearchingDriverPhase
+          tripCreatedAtIso={activeTrip.created_at}
+          onRetrySearch={onRetrySearch}
+          retrySearchPending={retrySearchPending}
+        />
+      )
 
     case 'DRIVER_ASSIGNED': {
       const isAssignedOnly = activeTrip.status === 'assigned'

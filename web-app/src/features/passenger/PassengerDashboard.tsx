@@ -71,6 +71,7 @@ export function PassengerDashboard() {
   const [creating, setCreating] = useState(false)
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [retrySearchPending, setRetrySearchPending] = useState(false)
   const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
   /** A015/A016: planeamento no mapa (sem backend até A018) */
@@ -378,6 +379,57 @@ export function PassengerDashboard() {
       setCancelling(false)
     }
   }
+
+  /** P36: cancela o pedido actual e cria um novo com a mesma recolha/destino (re-disparo de dispatch). */
+  const handleRetrySearch = useCallback(async () => {
+    if (!token || !activeTripId || !activeTrip || activeTrip.status !== 'requested' || retrySearchPending) {
+      return
+    }
+    setRetrySearchPending(true)
+    setError(null)
+    addLog('Clique: Tentar novamente', 'action')
+    try {
+      await cancelTrip(activeTripId, token)
+      const res = await createTrip(
+        {
+          origin_lat: activeTrip.origin_lat,
+          origin_lng: activeTrip.origin_lng,
+          destination_lat: activeTrip.destination_lat,
+          destination_lng: activeTrip.destination_lng,
+        },
+        token
+      )
+      setPassengerPendingTripDetail(
+        tripDetailFromCreateResponse(
+          res,
+          { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
+          { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng }
+        )
+      )
+      setPassengerActiveTripId(res.trip_id)
+      setStatus(passengerTripStatusLabel(res.status))
+      addLog('Pedido reenviado após tentar novamente', 'success')
+      toast.success('Pedido reenviado')
+      refetchHistory()
+    } catch (err: unknown) {
+      const msg = isTimeoutLikeError(err)
+        ? 'Sem ligação ou o servidor demorou a responder. Tenta outra vez.'
+        : humanizeCreateTripError((err as { detail?: string })?.detail)
+      setError(msg)
+      addLog(`Erro ao tentar novamente: ${msg}`, 'error')
+    } finally {
+      setRetrySearchPending(false)
+    }
+  }, [
+    token,
+    activeTripId,
+    activeTrip,
+    retrySearchPending,
+    addLog,
+    setPassengerActiveTripId,
+    setStatus,
+    refetchHistory,
+  ])
 
   const driverTrackingHint = useMemo(() => {
     if (!passengerLocation || !driverLocation || !activeTrip) return null
@@ -853,7 +905,12 @@ export function PassengerDashboard() {
         {/* A014: estado da viagem; A019: envio inicial usa TripPlannerPanel (searching) */}
         {(activeTripId || creating) && !showSubmittingCard && (
           uxState && activeTrip ? (
-            <PassengerStatusCard uxState={uxState} activeTrip={activeTrip} />
+            <PassengerStatusCard
+              uxState={uxState}
+              activeTrip={activeTrip}
+              onRetrySearch={activeTrip?.status === 'requested' ? handleRetrySearch : undefined}
+              retrySearchPending={retrySearchPending}
+            />
           ) : (
             <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 animate-in fade-in duration-300">
               <Spinner size="lg" />
