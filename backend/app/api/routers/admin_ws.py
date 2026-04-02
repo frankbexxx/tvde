@@ -54,4 +54,3 @@ async def admin_trips_ws(websocket: WebSocket) -> None:
     finally:
         await admin_hub.unsubscribe(websocket)
         await websocket.close()
-

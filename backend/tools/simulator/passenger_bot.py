@@ -2,6 +2,7 @@
 Passenger bot: creates trips at random intervals, optionally cancels.
 Supports flash_crowd one-shot (create trip simultaneously with others).
 """
+
 import asyncio
 import random
 from typing import TYPE_CHECKING, Optional
@@ -23,7 +24,13 @@ CANCEL_WAIT_MIN, CANCEL_WAIT_MAX = 10, 30  # seconds before optional cancel
 
 
 class PassengerBot:
-    def __init__(self, bot_id: int, token: str, stats=None, metrics: Optional["SimulatorMetrics"] = None):
+    def __init__(
+        self,
+        bot_id: int,
+        token: str,
+        stats=None,
+        metrics: Optional["SimulatorMetrics"] = None,
+    ):
         self.bot_id = bot_id
         self.token = token
         self.stats = stats
@@ -37,8 +44,10 @@ class PassengerBot:
         try:
             resp = create_trip(
                 self.token,
-                ORIGIN[0], ORIGIN[1],
-                DEST[0], DEST[1],
+                ORIGIN[0],
+                ORIGIN[1],
+                DEST[0],
+                DEST[1],
             )
             trip_id = resp.get("trip_id")
             if self.stats:

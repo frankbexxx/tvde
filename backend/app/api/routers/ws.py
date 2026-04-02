@@ -43,7 +43,9 @@ async def _authorize(websocket: WebSocket, trip_id: str) -> bool:
         if not trip:
             return False
 
-        return str(trip.passenger_id) == str(user.id) or str(trip.driver_id) == str(user.id)
+        return str(trip.passenger_id) == str(user.id) or str(trip.driver_id) == str(
+            user.id
+        )
 
 
 @router.websocket("/ws/trips/{trip_id}")
@@ -98,4 +100,3 @@ async def driver_offers_ws(websocket: WebSocket) -> None:
     finally:
         await driver_offers_hub.unsubscribe(driver_id, websocket)
         await websocket.close()
-

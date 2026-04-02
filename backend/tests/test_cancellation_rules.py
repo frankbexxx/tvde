@@ -133,6 +133,9 @@ def test_driver_cancel_penalty_recorded(db: Session) -> None:
     assert result.cancellation_reason == "emergency"
 
     from sqlalchemy import select
-    driver = db.execute(select(Driver).where(Driver.user_id == uuid.UUID(driver_id))).scalar_one_or_none()
+
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(driver_id))
+    ).scalar_one_or_none()
     assert driver is not None
     assert driver.cancellation_count >= 1

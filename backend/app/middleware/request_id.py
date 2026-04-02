@@ -1,4 +1,5 @@
 """Request ID middleware — assigns unique ID to each request for tracing."""
+
 import uuid
 from starlette.middleware.base import BaseHTTPMiddleware
 

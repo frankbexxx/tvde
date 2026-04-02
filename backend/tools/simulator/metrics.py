@@ -2,6 +2,7 @@
 Metrics collection for load testing scenarios.
 Tracks trips, latencies, and concurrent load.
 """
+
 import threading
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -122,8 +123,12 @@ class SimulatorMetrics:
             f"  Cancel failed:         {self.trips_cancel_failed}",
             f"  Accept failures:       {self.accept_failures}",
             f"  Driver skipped:        {self.driver_skipped_cancelled}",
-            f"  Avg accept latency:    {avg_accept:.2f} s" if avg_accept is not None else "  Avg accept latency:    N/A",
-            f"  Avg complete latency:  {avg_complete:.2f} s" if avg_complete is not None else "  Avg complete latency:  N/A",
+            f"  Avg accept latency:    {avg_accept:.2f} s"
+            if avg_accept is not None
+            else "  Avg accept latency:    N/A",
+            f"  Avg complete latency:  {avg_complete:.2f} s"
+            if avg_complete is not None
+            else "  Avg complete latency:  N/A",
             f"  Peak concurrent trips:  {self.max_concurrent_trips}",
             "=" * 60,
         ]

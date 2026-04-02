@@ -26,5 +26,7 @@ def test_cleanup_deletes_old_audit_events(db) -> None:
     result = run_cleanup(db)
     assert result.get("audit_events_deleted", 0) >= 1
 
-    remaining = db.execute(select(AuditEvent).where(AuditEvent.id == evt_id)).scalar_one_or_none()
+    remaining = db.execute(
+        select(AuditEvent).where(AuditEvent.id == evt_id)
+    ).scalar_one_or_none()
     assert remaining is None

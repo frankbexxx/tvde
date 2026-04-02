@@ -19,7 +19,11 @@ from app.schemas.trip import (
     TripRateRequest,
     TripStatusResponse,
 )
-from app.api.serializers import trip_to_detail, trip_to_history_item, trip_to_status_response
+from app.api.serializers import (
+    trip_to_detail,
+    trip_to_history_item,
+    trip_to_status_response,
+)
 from app.services.driver_location import (
     driver_location_embed_for_trip_detail,
     get_driver_location_for_trip,
@@ -121,7 +125,9 @@ async def create_trip(
         payment_status=payment.status if payment else None,
         final_price=float(trip.final_price) if trip.final_price is not None else None,
         commission_amount=float(payment.commission_amount) if payment else None,
-        driver_payout=float(payment.driver_payout) if payment and payment.driver_payout else None,
+        driver_payout=float(payment.driver_payout)
+        if payment and payment.driver_payout
+        else None,
         stripe_payment_intent_id=None,
     )
 
@@ -178,7 +184,8 @@ async def cancel_trip(
         payment_status=payment.status if payment else None,
         final_price=float(trip.final_price) if trip.final_price is not None else None,
         commission_amount=float(payment.commission_amount) if payment else None,
-        driver_payout=float(payment.driver_payout) if payment and payment.driver_payout else None,
+        driver_payout=float(payment.driver_payout)
+        if payment and payment.driver_payout
+        else None,
         stripe_payment_intent_id=None,
     )
-

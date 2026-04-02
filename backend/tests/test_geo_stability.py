@@ -245,9 +245,9 @@ def test_geo_stability_dispatch_retry_after_driver_sends_location() -> None:
         .all()
     )
     # Retry should have picked up the driver's location
-    assert (
-        len(offers) >= 1
-    ), "Dispatch retry should create offers when driver sends location during wait"
+    assert len(offers) >= 1, (
+        "Dispatch retry should create offers when driver sends location during wait"
+    )
 
     _reset_overrides()
     db.close()

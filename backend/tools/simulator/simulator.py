@@ -15,6 +15,7 @@ Prerequisites:
 
 Config: edit config.py or set env vars TVDE_SIM_*
 """
+
 import argparse
 import asyncio
 import os
@@ -52,6 +53,7 @@ from .metrics import SimulatorMetrics
 @dataclass
 class SimulatorStats:
     """Contadores para o resultado do teste (backward compat)."""
+
     started_at: datetime = field(default_factory=datetime.now)
     trips_created: int = 0
     trips_cancelled: int = 0
@@ -107,7 +109,9 @@ def _save_result(content: str) -> Path | None:
         return path
 
 
-def _fetch_simulator_tokens(passengers: int, drivers: int) -> tuple[list[str], list[str]]:
+def _fetch_simulator_tokens(
+    passengers: int, drivers: int
+) -> tuple[list[str], list[str]]:
     """Fetch passenger and driver token lists from /dev/seed-simulator."""
     url = f"{API_BASE_URL}/dev/seed-simulator"
     params = {"passengers": passengers, "drivers": drivers}
@@ -141,9 +145,13 @@ def main() -> None:
         driver_tokens = [TOKEN_DRIVER] * n_drivers
         print("Using tokens from environment (single user per role)")
     else:
-        print(f"Fetching tokens from /dev/seed-simulator (passengers={n_passengers}, drivers={n_drivers})...")
+        print(
+            f"Fetching tokens from /dev/seed-simulator (passengers={n_passengers}, drivers={n_drivers})..."
+        )
         try:
-            passenger_tokens, driver_tokens = _fetch_simulator_tokens(n_passengers, n_drivers)
+            passenger_tokens, driver_tokens = _fetch_simulator_tokens(
+                n_passengers, n_drivers
+            )
         except Exception as e:
             print(f"Failed to fetch tokens: {e}")
             print("Backend must be running with ENV=dev.")
@@ -159,7 +167,11 @@ def main() -> None:
     async def run_normal() -> None:
         tasks = []
         for i in range(n_passengers):
-            token = passenger_tokens[i] if i < len(passenger_tokens) else passenger_tokens[-1]
+            token = (
+                passenger_tokens[i]
+                if i < len(passenger_tokens)
+                else passenger_tokens[-1]
+            )
             bot = PassengerBot(i + 1, token, stats, metrics)
             tasks.append(asyncio.create_task(bot.run()))
         for i in range(n_drivers):
@@ -171,18 +183,36 @@ def main() -> None:
     async def run_flash_crowd() -> None:
         print("FLASH CROWD TRIGGERED")
         passenger_bots = [
-            PassengerBot(i + 1, passenger_tokens[i] if i < len(passenger_tokens) else passenger_tokens[-1], stats, metrics)
+            PassengerBot(
+                i + 1,
+                passenger_tokens[i]
+                if i < len(passenger_tokens)
+                else passenger_tokens[-1],
+                stats,
+                metrics,
+            )
             for i in range(n_passengers)
         ]
-        results = await asyncio.gather(*[bot.create_trip_once() for bot in passenger_bots])
+        results = await asyncio.gather(
+            *[bot.create_trip_once() for bot in passenger_bots]
+        )
         created = sum(1 for r in results if r is not None)
         print(f"Created {created} trips simultaneously. Drivers processing...")
         driver_tasks = [
-            asyncio.create_task(DriverBot(i + 1, driver_tokens[i] if i < len(driver_tokens) else driver_tokens[-1], stats, metrics).run())
+            asyncio.create_task(
+                DriverBot(
+                    i + 1,
+                    driver_tokens[i] if i < len(driver_tokens) else driver_tokens[-1],
+                    stats,
+                    metrics,
+                ).run()
+            )
             for i in range(n_drivers)
         ]
         try:
-            await asyncio.wait_for(asyncio.gather(*driver_tasks), timeout=FLASH_CROWD_DRIVER_DURATION_SEC)
+            await asyncio.wait_for(
+                asyncio.gather(*driver_tasks), timeout=FLASH_CROWD_DRIVER_DURATION_SEC
+            )
         except asyncio.TimeoutError:
             for t in driver_tasks:
                 t.cancel()
@@ -200,14 +230,25 @@ def main() -> None:
             if i < len(driver_tokens):
                 bot = DriverBot(i + 1, driver_tokens[i], stats, metrics)
                 all_tasks.append(asyncio.create_task(bot.run()))
-        print(f"[HeavyLoad] Phase 1: {HEAVY_LOAD_PHASES[0][1]} passengers, {HEAVY_LOAD_PHASES[0][2]} drivers")
+        print(
+            f"[HeavyLoad] Phase 1: {HEAVY_LOAD_PHASES[0][1]} passengers, {HEAVY_LOAD_PHASES[0][2]} drivers"
+        )
 
         async def add_phases() -> None:
             for phase_idx in range(1, len(HEAVY_LOAD_PHASES)):
-                wait = (HEAVY_LOAD_PHASES[phase_idx][0] - HEAVY_LOAD_PHASES[phase_idx - 1][0]) * 60
+                wait = (
+                    HEAVY_LOAD_PHASES[phase_idx][0]
+                    - HEAVY_LOAD_PHASES[phase_idx - 1][0]
+                ) * 60
                 await asyncio.sleep(wait)
-                prev_p, prev_d = HEAVY_LOAD_PHASES[phase_idx - 1][1], HEAVY_LOAD_PHASES[phase_idx - 1][2]
-                n_p, n_d = HEAVY_LOAD_PHASES[phase_idx][1], HEAVY_LOAD_PHASES[phase_idx][2]
+                prev_p, prev_d = (
+                    HEAVY_LOAD_PHASES[phase_idx - 1][1],
+                    HEAVY_LOAD_PHASES[phase_idx - 1][2],
+                )
+                n_p, n_d = (
+                    HEAVY_LOAD_PHASES[phase_idx][1],
+                    HEAVY_LOAD_PHASES[phase_idx][2],
+                )
                 for i in range(prev_p, n_p):
                     if i < len(passenger_tokens):
                         bot = PassengerBot(i + 1, passenger_tokens[i], stats, metrics)
@@ -216,11 +257,15 @@ def main() -> None:
                     if i < len(driver_tokens):
                         bot = DriverBot(i + 1, driver_tokens[i], stats, metrics)
                         all_tasks.append(asyncio.create_task(bot.run()))
-                print(f"[HeavyLoad] Phase {phase_idx + 1}: {n_p} passengers, {n_d} drivers")
+                print(
+                    f"[HeavyLoad] Phase {phase_idx + 1}: {n_p} passengers, {n_d} drivers"
+                )
 
         phase_task = asyncio.create_task(add_phases())
         try:
-            await asyncio.wait_for(asyncio.gather(*all_tasks, phase_task), timeout=duration_sec + 30)
+            await asyncio.wait_for(
+                asyncio.gather(*all_tasks, phase_task), timeout=duration_sec + 30
+            )
         except asyncio.TimeoutError:
             pass
 

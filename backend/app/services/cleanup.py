@@ -26,7 +26,11 @@ def run_cleanup(db: Session) -> dict[str, int]:
     deleted = (result.rowcount if hasattr(result, "rowcount") else 0) or 0
     if deleted > 0:
         db.commit()
-        logger.info("cleanup: deleted %d audit_events older than %s days", deleted, retention_days)
+        logger.info(
+            "cleanup: deleted %d audit_events older than %s days",
+            deleted,
+            retention_days,
+        )
         log_event(
             "cron_cleanup_audit_events",
             deleted_count=deleted,

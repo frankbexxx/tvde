@@ -57,4 +57,3 @@ async def update_location_alias(
 ) -> None:
     """Same as POST /drivers/location."""
     _persist_driver_location(db=db, user=user, payload=payload)
-

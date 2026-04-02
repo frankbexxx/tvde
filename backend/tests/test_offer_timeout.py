@@ -159,8 +159,8 @@ def test_ot_002_redispatch_triggered() -> None:
         .all()
     )
     pending = [o for o in all_offers if o.status == OfferStatus.pending]
-    assert (
-        len(pending) >= 1
-    ), f"Expected pending offers, got statuses: {[o.status for o in all_offers]}"
+    assert len(pending) >= 1, (
+        f"Expected pending offers, got statuses: {[o.status for o in all_offers]}"
+    )
 
     db.close()

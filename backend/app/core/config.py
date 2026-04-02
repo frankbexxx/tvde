@@ -21,7 +21,9 @@ class Settings(BaseSettings):
 
     STRIPE_SECRET_KEY: str
     STRIPE_WEBHOOK_SECRET: str | None = None
-    STRIPE_MOCK: bool = False  # When True, skip Stripe API calls (simulator/testing only)
+    STRIPE_MOCK: bool = (
+        False  # When True, skip Stripe API calls (simulator/testing only)
+    )
 
     ENV: str = "dev"
     # A023: optional override for security policy (CORS, dev routers). Values: dev | prod | production
@@ -106,4 +108,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # type: ignore[call-arg]
-

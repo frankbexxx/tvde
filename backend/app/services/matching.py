@@ -47,4 +47,3 @@ def find_nearest_driver(
         "lng": float(best_loc.lng),
         "distance_km": best_dist,
     }
-

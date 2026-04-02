@@ -16,40 +16,80 @@ def get_admin_metrics(db: Session) -> dict:
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
     active_statuses = (TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing)
-    active_trips = db.execute(
-        select(func.count()).select_from(Trip).where(Trip.status.in_(active_statuses))
-    ).scalar() or 0
+    active_trips = (
+        db.execute(
+            select(func.count())
+            .select_from(Trip)
+            .where(Trip.status.in_(active_statuses))
+        ).scalar()
+        or 0
+    )
 
-    drivers_available = db.execute(
-        select(func.count()).select_from(Driver).where(Driver.is_available.is_(True))
-    ).scalar() or 0
+    drivers_available = (
+        db.execute(
+            select(func.count())
+            .select_from(Driver)
+            .where(Driver.is_available.is_(True))
+        ).scalar()
+        or 0
+    )
 
-    drivers_busy = db.execute(
-        select(func.count()).select_from(Driver).where(Driver.is_available.is_(False))
-    ).scalar() or 0
+    drivers_busy = (
+        db.execute(
+            select(func.count())
+            .select_from(Driver)
+            .where(Driver.is_available.is_(False))
+        ).scalar()
+        or 0
+    )
 
-    trips_requested = db.execute(
-        select(func.count()).select_from(Trip).where(Trip.status == TripStatus.requested)
-    ).scalar() or 0
+    trips_requested = (
+        db.execute(
+            select(func.count())
+            .select_from(Trip)
+            .where(Trip.status == TripStatus.requested)
+        ).scalar()
+        or 0
+    )
 
-    trips_ongoing = db.execute(
-        select(func.count()).select_from(Trip).where(Trip.status == TripStatus.ongoing)
-    ).scalar() or 0
+    trips_ongoing = (
+        db.execute(
+            select(func.count())
+            .select_from(Trip)
+            .where(Trip.status == TripStatus.ongoing)
+        ).scalar()
+        or 0
+    )
 
-    trips_completed_today = db.execute(
-        select(func.count()).select_from(Trip).where(
-            Trip.status == TripStatus.completed,
-            Trip.completed_at >= today_start,
-        )
-    ).scalar() or 0
+    trips_completed_today = (
+        db.execute(
+            select(func.count())
+            .select_from(Trip)
+            .where(
+                Trip.status == TripStatus.completed,
+                Trip.completed_at >= today_start,
+            )
+        ).scalar()
+        or 0
+    )
 
-    trips_created_total = db.execute(select(func.count()).select_from(Trip)).scalar() or 0
-    trips_accepted_total = db.execute(
-        select(func.count()).select_from(Trip).where(Trip.driver_id.isnot(None))
-    ).scalar() or 0
-    trips_completed_total = db.execute(
-        select(func.count()).select_from(Trip).where(Trip.status == TripStatus.completed)
-    ).scalar() or 0
+    trips_created_total = (
+        db.execute(select(func.count()).select_from(Trip)).scalar() or 0
+    )
+    trips_accepted_total = (
+        db.execute(
+            select(func.count()).select_from(Trip).where(Trip.driver_id.isnot(None))
+        ).scalar()
+        or 0
+    )
+    trips_completed_total = (
+        db.execute(
+            select(func.count())
+            .select_from(Trip)
+            .where(Trip.status == TripStatus.completed)
+        ).scalar()
+        or 0
+    )
 
     return {
         "active_trips": active_trips,

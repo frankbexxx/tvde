@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 from app.api.deps import UserContext, get_db, require_role
 from app.models.enums import Role
 from app.schemas.trip import TripOfferItem, TripStatusResponse
-from app.services.trips import accept_offer as accept_offer_service, list_offers_for_driver, reject_offer as reject_offer_service
+from app.services.trips import (
+    accept_offer as accept_offer_service,
+    list_offers_for_driver,
+    reject_offer as reject_offer_service,
+)
 
 
 router = APIRouter(prefix="/driver/offers", tags=["driver"])

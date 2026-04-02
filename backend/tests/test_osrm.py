@@ -7,12 +7,16 @@ from app.services.osrm import get_route_distance_duration
 
 def test_osrm_returns_none_when_not_configured(monkeypatch: pytest.MonkeyPatch) -> None:
     """When OSRM_BASE_URL is not set, returns None (Haversine fallback)."""
-    monkeypatch.setattr("app.services.osrm.settings", type("S", (), {"OSRM_BASE_URL": None})())
+    monkeypatch.setattr(
+        "app.services.osrm.settings", type("S", (), {"OSRM_BASE_URL": None})()
+    )
     result = get_route_distance_duration(38.7, -9.1, 38.8, -9.2)
     assert result is None
 
 
-def test_osrm_returns_distance_duration_when_configured(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_osrm_returns_distance_duration_when_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """When OSRM_BASE_URL points to public demo, returns real road distance/duration."""
     monkeypatch.setattr(
         "app.services.osrm.settings",

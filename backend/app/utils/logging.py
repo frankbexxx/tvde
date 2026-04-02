@@ -3,6 +3,7 @@
 A007: Human-readable console output, trip_id in all logs, buffer.
 A008: Timeline format, trip headers, summary, operational focus.
 """
+
 import logging
 import sys
 from collections import defaultdict
@@ -27,18 +28,21 @@ _buffer_lock = Lock()
 LOCATION_CHANGE_THRESHOLD_KM = 0.05
 
 # A012: In ENV=test, skip console lines for these events (pytest readability).
-_TEST_QUIET_EVENTS = frozenset({
-    "offers_sent",
-    "dispatch_retry_attempt",
-    "dispatch_retry_success",
-    "dispatch_retry_failed",
-    "NO_READY_DRIVERS_AT_DISPATCH",
-})
+_TEST_QUIET_EVENTS = frozenset(
+    {
+        "offers_sent",
+        "dispatch_retry_attempt",
+        "dispatch_retry_success",
+        "dispatch_retry_failed",
+        "NO_READY_DRIVERS_AT_DISPATCH",
+    }
+)
 
 
 def _suppress_console_in_test(event_name: str) -> bool:
     try:
         from app.core.config import settings
+
         if getattr(settings, "ENV", "") != "test":
             return False
     except Exception:
@@ -183,7 +187,9 @@ def _compute_trip_summary(trip_id: str) -> dict:
         return int((b - a).total_seconds())
 
     # time_to_accept: from assign (or created if direct accept) to accepted
-    time_to_accept = _sec(ts_assigned, ts_accepted) if ts_assigned else _sec(ts_created, ts_accepted)
+    time_to_accept = (
+        _sec(ts_assigned, ts_accepted) if ts_assigned else _sec(ts_created, ts_accepted)
+    )
 
     return {
         "trip_id": trip_id,
@@ -273,6 +279,7 @@ def log_debug_event(event_name: str, **fields) -> None:
     """Log only when DEBUG_RUNTIME_LOGS=True."""
     try:
         from app.core.config import settings
+
         if not getattr(settings, "DEBUG_RUNTIME_LOGS", False):
             return
     except Exception:
@@ -312,6 +319,7 @@ def should_log_driver_location(
         return True
     try:
         from app.utils.geo import haversine_km
+
         dist_km = haversine_km(old_lat, old_lng, new_lat, new_lng)
         return dist_km >= LOCATION_CHANGE_THRESHOLD_KM
     except Exception:

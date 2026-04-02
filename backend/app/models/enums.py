@@ -42,4 +42,3 @@ class OfferStatus(str, Enum):
     accepted = "accepted"
     rejected = "rejected"
     expired = "expired"
-

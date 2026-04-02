@@ -48,4 +48,3 @@ class AdminRealtimeHub:
 
 
 admin_hub = AdminRealtimeHub()
-

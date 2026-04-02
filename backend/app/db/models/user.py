@@ -83,4 +83,3 @@ class User(Base):
 
 
 Index("ix_users_role_status", User.role, User.status)
-

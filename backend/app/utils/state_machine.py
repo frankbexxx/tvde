@@ -1,4 +1,5 @@
 """Trip state machine — valida transições de estado da viagem."""
+
 import logging
 from fastapi import HTTPException, status
 

@@ -1,6 +1,7 @@
 """
 HTTP client for TVDE API. Uses httpx with timeout and error handling.
 """
+
 import time
 import threading
 
@@ -24,7 +25,9 @@ def _rate_limit_sync() -> None:
             sleep_time = 1.0 - (now - _rate_timestamps[0])
             if sleep_time > 0:
                 time.sleep(sleep_time)
-            _rate_timestamps[:] = [t for t in _rate_timestamps if time.monotonic() - t < 1.0]
+            _rate_timestamps[:] = [
+                t for t in _rate_timestamps if time.monotonic() - t < 1.0
+            ]
         _rate_timestamps.append(time.monotonic())
 
 
@@ -32,7 +35,13 @@ def _headers(token: str) -> dict:
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
-def create_trip(passenger_token: str, origin_lat: float, origin_lng: float, dest_lat: float, dest_lng: float) -> dict:
+def create_trip(
+    passenger_token: str,
+    origin_lat: float,
+    origin_lng: float,
+    dest_lat: float,
+    dest_lng: float,
+) -> dict:
     """POST /trips — create trip as passenger."""
     _rate_limit_sync()
     url = f"{API_BASE_URL}/trips"
@@ -42,7 +51,12 @@ def create_trip(passenger_token: str, origin_lat: float, origin_lng: float, dest
         "destination_lat": dest_lat,
         "destination_lng": dest_lng,
     }
-    r = httpx.post(url, json=payload, headers=_headers(passenger_token), timeout=REQUEST_TIMEOUT_SEC)
+    r = httpx.post(
+        url,
+        json=payload,
+        headers=_headers(passenger_token),
+        timeout=REQUEST_TIMEOUT_SEC,
+    )
     r.raise_for_status()
     return r.json()
 
@@ -51,7 +65,9 @@ def cancel_trip(passenger_token: str, trip_id: str) -> dict:
     """POST /trips/{trip_id}/cancel — cancel trip as passenger."""
     _rate_limit_sync()
     url = f"{API_BASE_URL}/trips/{trip_id}/cancel"
-    r = httpx.post(url, json={}, headers=_headers(passenger_token), timeout=REQUEST_TIMEOUT_SEC)
+    r = httpx.post(
+        url, json={}, headers=_headers(passenger_token), timeout=REQUEST_TIMEOUT_SEC
+    )
     r.raise_for_status()
     return r.json()
 
@@ -96,6 +112,11 @@ def complete_trip(driver_token: str, trip_id: str) -> dict:
     """POST /driver/trips/{trip_id}/complete."""
     _rate_limit_sync()
     url = f"{API_BASE_URL}/driver/trips/{trip_id}/complete"
-    r = httpx.post(url, json={"final_price": 0}, headers=_headers(driver_token), timeout=REQUEST_TIMEOUT_SEC)
+    r = httpx.post(
+        url,
+        json={"final_price": 0},
+        headers=_headers(driver_token),
+        timeout=REQUEST_TIMEOUT_SEC,
+    )
     r.raise_for_status()
     return r.json()

@@ -2,6 +2,7 @@
 Dev-only router (/dev/*). Montado só fora de produção (ENVIRONMENT/ENV ≠ prod)
 e com ENV=dev ou ENABLE_DEV_TOOLS (ver Settings.dev_tools_router_enabled).
 """
+
 import random
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -280,7 +281,9 @@ async def dev_promote_to_driver(
     _require_dev()
     user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not user:
-        raise HTTPException(status_code=404, detail=f"User with phone {phone} not found")
+        raise HTTPException(
+            status_code=404, detail=f"User with phone {phone} not found"
+        )
     driver_profile = db.execute(
         select(Driver).where(Driver.user_id == user.id)
     ).scalar_one_or_none()
@@ -288,7 +291,11 @@ async def dev_promote_to_driver(
         driver_profile.is_available = True
         user.role = Role.driver
         db.commit()
-        return {"status": "ok", "message": "Driver already exists", "user_id": str(user.id)}
+        return {
+            "status": "ok",
+            "message": "Driver already exists",
+            "user_id": str(user.id),
+        }
     user.role = Role.driver
     driver_profile = Driver(
         user_id=user.id,
@@ -297,33 +304,48 @@ async def dev_promote_to_driver(
     )
     db.add(driver_profile)
     db.commit()
-    return {"status": "ok", "message": "User promoted to driver", "user_id": str(user.id)}
+    return {
+        "status": "ok",
+        "message": "User promoted to driver",
+        "user_id": str(user.id),
+    }
 
 
 @router.get("/trips")
 async def dev_list_trips(db: Session = Depends(get_db)) -> list[dict]:
     _require_dev()
 
-    trips = db.execute(
-        select(Trip)
-        .options(joinedload(Trip.payment))
-        .order_by(Trip.created_at.desc())
-    ).scalars().unique().all()
+    trips = (
+        db.execute(
+            select(Trip)
+            .options(joinedload(Trip.payment))
+            .order_by(Trip.created_at.desc())
+        )
+        .scalars()
+        .unique()
+        .all()
+    )
 
     result = []
     for trip in trips:
         payment = trip.payment
         pi_id = payment.stripe_payment_intent_id if payment else None
         pi_preview = (pi_id[:10] + "...") if pi_id and len(pi_id) > 10 else pi_id
-        result.append({
-            "id": str(trip.id),
-            "status": trip.status.value,
-            "driver_id": str(trip.driver_id) if trip.driver_id else None,
-            "started_at": trip.started_at.isoformat() if trip.started_at else None,
-            "completed_at": trip.completed_at.isoformat() if trip.completed_at else None,
-            "payment": {
-                "status": payment.status.value if payment else None,
-                "stripe_payment_intent_id": pi_preview,
-            } if payment else None,
-        })
+        result.append(
+            {
+                "id": str(trip.id),
+                "status": trip.status.value,
+                "driver_id": str(trip.driver_id) if trip.driver_id else None,
+                "started_at": trip.started_at.isoformat() if trip.started_at else None,
+                "completed_at": trip.completed_at.isoformat()
+                if trip.completed_at
+                else None,
+                "payment": {
+                    "status": payment.status.value if payment else None,
+                    "stripe_payment_intent_id": pi_preview,
+                }
+                if payment
+                else None,
+            }
+        )
     return result

@@ -241,14 +241,23 @@ def _insert_payment_for_webhook(
 
 
 # --- 3. Webhook succeeded — doc §3 ---
-def test_webhook_payment_succeeded(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_webhook_payment_succeeded(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     db = SessionLocal()
     try:
         pay = _insert_payment_for_webhook(db)
-        monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        monkeypatch.setattr(
+            settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False
+        )
         event = {
             "type": "payment_intent.succeeded",
-            "data": {"object": {"id": pay.stripe_payment_intent_id, "object": "payment_intent"}},
+            "data": {
+                "object": {
+                    "id": pay.stripe_payment_intent_id,
+                    "object": "payment_intent",
+                }
+            },
         }
         with patch(
             "app.api.routers.webhooks.stripe.stripe.Webhook.construct_event",
@@ -267,14 +276,23 @@ def test_webhook_payment_succeeded(client: TestClient, monkeypatch: pytest.Monke
 
 
 # --- 4. Webhook failed — doc §4 ---
-def test_webhook_payment_failed(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_webhook_payment_failed(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     db = SessionLocal()
     try:
         pay = _insert_payment_for_webhook(db)
-        monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        monkeypatch.setattr(
+            settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False
+        )
         event = {
             "type": "payment_intent.payment_failed",
-            "data": {"object": {"id": pay.stripe_payment_intent_id, "object": "payment_intent"}},
+            "data": {
+                "object": {
+                    "id": pay.stripe_payment_intent_id,
+                    "object": "payment_intent",
+                }
+            },
         }
         with patch(
             "app.api.routers.webhooks.stripe.stripe.Webhook.construct_event",
@@ -293,24 +311,47 @@ def test_webhook_payment_failed(client: TestClient, monkeypatch: pytest.MonkeyPa
 
 
 # --- 5. Idempotência webhook — doc §5 ---
-def test_webhook_idempotency(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_webhook_idempotency(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     db = SessionLocal()
     try:
         pay = _insert_payment_for_webhook(db)
-        monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        monkeypatch.setattr(
+            settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False
+        )
         # ID estável entre os dois POSTs, único por corrida (evita colisão com BD persistente).
         evt_id = f"evt_test_idempotency_dup_{uuid.uuid4().hex}"
         event = {
             "id": evt_id,
             "type": "payment_intent.succeeded",
-            "data": {"object": {"id": pay.stripe_payment_intent_id, "object": "payment_intent"}},
+            "data": {
+                "object": {
+                    "id": pay.stripe_payment_intent_id,
+                    "object": "payment_intent",
+                }
+            },
         }
         with patch(
             "app.api.routers.webhooks.stripe.stripe.Webhook.construct_event",
             return_value=event,
         ):
-            assert client.post("/webhooks/stripe", content=b"{}", headers={"stripe-signature": "v1=a"}).status_code == 200
-            assert client.post("/webhooks/stripe", content=b"{}", headers={"stripe-signature": "v1=b"}).status_code == 200
+            assert (
+                client.post(
+                    "/webhooks/stripe",
+                    content=b"{}",
+                    headers={"stripe-signature": "v1=a"},
+                ).status_code
+                == 200
+            )
+            assert (
+                client.post(
+                    "/webhooks/stripe",
+                    content=b"{}",
+                    headers={"stripe-signature": "v1=b"},
+                ).status_code
+                == 200
+            )
         db.refresh(pay)
         assert pay.status == PaymentStatus.succeeded
     finally:
@@ -326,7 +367,9 @@ def test_webhook_twice_same_pi_keeps_single_payment_row(
         pay = _insert_payment_for_webhook(db)
         pi = pay.stripe_payment_intent_id
         assert pi
-        monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        monkeypatch.setattr(
+            settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False
+        )
         evt_id = f"evt_a025_dup_delivery_{uuid.uuid4().hex}"
         event = {
             "id": evt_id,
@@ -354,7 +397,9 @@ def test_webhook_twice_same_pi_keeps_single_payment_row(
                 == 200
             )
         rows = db.execute(
-            select(func.count()).select_from(Payment).where(Payment.stripe_payment_intent_id == pi)
+            select(func.count())
+            .select_from(Payment)
+            .where(Payment.stripe_payment_intent_id == pi)
         ).scalar()
         assert rows == 1
         db.refresh(pay)
@@ -441,7 +486,9 @@ def test_cancel_trip(client: TestClient) -> None:
         passenger_id = _create_passenger(db)
         _create_driver_with_location(db, 38.7, -9.1)
         trip_id = _http_create_trip(client, db, passenger_id)
-        _override_user_and_db(db, UserContext(user_id=passenger_id, role=Role.passenger))
+        _override_user_and_db(
+            db, UserContext(user_id=passenger_id, role=Role.passenger)
+        )
         r = client.post(f"/trips/{trip_id}/cancel", json={})
         assert r.status_code == 200, r.text
         assert r.json()["status"] == "cancelled"

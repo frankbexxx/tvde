@@ -15,4 +15,3 @@ class LocationUpdate(BaseModel):
     heading: Optional[float] = Field(None, ge=0.0, le=360.0)
     speed: Optional[float] = Field(None, ge=0.0)
     timestamp: Optional[datetime] = None
-

@@ -1,4 +1,5 @@
 """Tests for admin operational endpoints."""
+
 import uuid
 
 import pytest

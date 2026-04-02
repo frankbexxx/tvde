@@ -48,4 +48,3 @@ class OtpCode(Base):
 
 
 Index("ix_otp_codes_phone_expires", OtpCode.phone, OtpCode.expires_at)
-
