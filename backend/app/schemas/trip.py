@@ -47,7 +47,12 @@ class TripStatusResponse(BaseModel):
 
 class TripCompletionRequest(BaseModel):
     """Body for complete_trip. final_price ignored for now (pricing real futuro)."""
-    final_price: float = Field(0.0, ge=0.0, description="Final price (>=0). Currently unused, reserved for future pricing.")
+
+    final_price: float = Field(
+        0.0,
+        ge=0.0,
+        description="Final price (>=0). Currently unused, reserved for future pricing.",
+    )
 
 
 class TripAvailableItem(BaseModel):
@@ -62,6 +67,7 @@ class TripAvailableItem(BaseModel):
 
 class TripOfferItem(BaseModel):
     """Offer sent to driver for a requested trip."""
+
     offer_id: str
     trip_id: str
     origin_lat: float
@@ -128,4 +134,3 @@ class TripDetailResponse(BaseModel):
         default=None,
         description="Última posição do motorista quando a viagem permite rasto (accepted/arriving/ongoing).",
     )
-

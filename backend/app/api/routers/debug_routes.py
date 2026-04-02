@@ -2,6 +2,7 @@
 Temporary debug routes for map/driver tracking diagnostics.
 A023: em produção só com BETA_MODE; endpoints sensíveis exigem ENV=dev ou ENABLE_DEV_TOOLS.
 """
+
 import uuid
 
 from app.utils.logging import get_recent_trip_logs, get_trip_summary
@@ -117,13 +118,15 @@ async def debug_trip_matching(
     for driver, loc in drivers_with_loc:
         dist = haversine_km(origin_lat, origin_lng, float(loc.lat), float(loc.lng))
         if dist <= radius_km:
-            candidates.append({"driver_id": str(driver.user_id), "distance_km": round(dist, 2)})
+            candidates.append(
+                {"driver_id": str(driver.user_id), "distance_km": round(dist, 2)}
+            )
     candidates.sort(key=lambda x: x["distance_km"])
 
     offers = list(
-        db.execute(
-            select(TripOffer).where(TripOffer.trip_id == trip.id)
-        ).scalars().all()
+        db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+        .scalars()
+        .all()
     )
     now = datetime.now(timezone.utc)
     step3 = [
@@ -142,12 +145,18 @@ async def debug_trip_matching(
     elif len(candidates) == 0:
         root_cause = f"ZERO_OFFERS: {len(step1)} drivers with location but 0 within {radius_km}km of trip origin"
     elif len(step3) == 0:
-        root_cause = "ZERO_OFFERS: drivers in radius but no offers in DB (bug or offers expired)"
+        root_cause = (
+            "ZERO_OFFERS: drivers in radius but no offers in DB (bug or offers expired)"
+        )
     else:
-        pending = [o for o in step3 if o["status"] == "pending" and not o.get("expired")]
+        pending = [
+            o for o in step3 if o["status"] == "pending" and not o.get("expired")
+        ]
         root_cause = f"OK: {len(pending)} pending offers"
         if len(pending) == 0:
-            root_cause = f"ZERO_OFFERS: {len(step3)} offers exist but all expired or taken"
+            root_cause = (
+                f"ZERO_OFFERS: {len(step3)} offers exist but all expired or taken"
+            )
 
     return {
         "trip_id": str(trip.id),
@@ -197,7 +206,9 @@ async def debug_driver_eligibility(
         driver_uuid = uuid.UUID(driver_id)
     except ValueError:
         return {"error": "invalid_user_id", "driver_id": driver_id}
-    driver = db.execute(select(Driver).where(Driver.user_id == driver_uuid)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_uuid)
+    ).scalar_one_or_none()
     if not driver:
         return {
             "driver_id": driver_id,
@@ -225,7 +236,9 @@ async def debug_driver_eligibility(
     pending = [(o, t) for o, t in offers]
 
     if not driver.is_available:
-        root_cause = "OFFLINE: is_available=false (driver must be 'Disponível' not 'Offline')"
+        root_cause = (
+            "OFFLINE: is_available=false (driver must be 'Disponível' not 'Offline')"
+        )
     elif driver.status != DriverStatus.approved:
         root_cause = f"NOT_APPROVED: driver status={driver.status.value}"
     elif len(pending) == 0:
@@ -242,7 +255,11 @@ async def debug_driver_eligibility(
         "status": driver.status.value,
         "pending_offers_count": len(pending),
         "pending_offers": [
-            {"offer_id": str(o.id), "trip_id": str(t.id), "expires_at": o.expires_at.isoformat() if o.expires_at else None}
+            {
+                "offer_id": str(o.id),
+                "trip_id": str(t.id),
+                "expires_at": o.expires_at.isoformat() if o.expires_at else None,
+            }
             for o, t in pending[:5]
         ],
         "root_cause": root_cause,

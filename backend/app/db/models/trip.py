@@ -154,4 +154,3 @@ class Trip(Base):
 Index("ix_trips_status", Trip.status)
 Index("ix_trips_passenger_id", Trip.passenger_id)
 Index("ix_trips_driver_id", Trip.driver_id)
-

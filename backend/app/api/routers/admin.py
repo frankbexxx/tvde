@@ -56,9 +56,11 @@ async def get_pending_users(
     """BETA: list users with status=pending."""
     if not getattr(settings, "BETA_MODE", False):
         return []
-    users = db.execute(
-        select(User).where(User.status == UserStatus.pending)
-    ).scalars().all()
+    users = (
+        db.execute(select(User).where(User.status == UserStatus.pending))
+        .scalars()
+        .all()
+    )
     return [
         PendingUserItem(
             phone=u.phone,
@@ -93,10 +95,18 @@ async def list_users(
     """BETA: list all users for admin management."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
-    users = db.execute(select(User).order_by(User.created_at.desc()).limit(limit).offset(offset)).scalars().all()
+    users = (
+        db.execute(
+            select(User).order_by(User.created_at.desc()).limit(limit).offset(offset)
+        )
+        .scalars()
+        .all()
+    )
     result = []
     for u in users:
-        driver = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+        driver = db.execute(
+            select(Driver).where(Driver.user_id == u.id)
+        ).scalar_one_or_none()
         result.append(
             AdminUserItem(
                 id=str(u.id),
@@ -136,7 +146,9 @@ async def promote_user_to_driver(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
-    existing = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+    existing = db.execute(
+        select(Driver).where(Driver.user_id == u.id)
+    ).scalar_one_or_none()
     if existing:
         u.role = Role.driver
         existing.is_available = True
@@ -171,18 +183,26 @@ async def demote_user_from_driver(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
-    driver = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == u.id)
+    ).scalar_one_or_none()
     if not driver:
         u.role = Role.passenger
         db.commit()
         return {"status": "ok", "message": "Already passenger"}
     from app.models.enums import TripStatus
-    has_active = db.execute(
-        select(Trip).where(
-            Trip.driver_id == u.id,
-            Trip.status.in_([TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]),
-        )
-    ).first() is not None
+
+    has_active = (
+        db.execute(
+            select(Trip).where(
+                Trip.driver_id == u.id,
+                Trip.status.in_(
+                    [TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]
+                ),
+            )
+        ).first()
+        is not None
+    )
     if has_active:
         raise HTTPException(status_code=409, detail="driver_has_active_trip")
     db.delete(driver)
@@ -217,10 +237,13 @@ async def update_user(
         u.name = name[:120]
     if payload.phone is not None:
         import re
+
         phone = str(payload.phone).strip()
         if not re.match(r"^\+351\d{9}$", phone):
             raise HTTPException(status_code=400, detail="invalid_phone_format")
-        existing = db.execute(select(User).where(User.phone == phone, User.id != u.id)).scalar_one_or_none()
+        existing = db.execute(
+            select(User).where(User.phone == phone, User.id != u.id)
+        ).scalar_one_or_none()
         if existing:
             raise HTTPException(status_code=409, detail="phone_already_used")
         u.phone = phone
@@ -247,13 +270,18 @@ async def delete_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_delete_admin")
-    has_trips = db.execute(select(Trip).where(Trip.passenger_id == u.id).limit(1)).first() is not None
+    has_trips = (
+        db.execute(select(Trip).where(Trip.passenger_id == u.id).limit(1)).first()
+        is not None
+    )
     if has_trips:
         raise HTTPException(
             status_code=409,
             detail="cannot_delete_user_with_trips",
         )
-    driver = db.execute(select(Driver).where(Driver.user_id == u.id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == u.id)
+    ).scalar_one_or_none()
     if driver:
         db.delete(driver)
     db.delete(u)
@@ -348,7 +376,9 @@ async def list_active_trips(
             .order_by(Trip.updated_at.desc())
             .limit(limit)
             .offset(offset)
-        ).scalars().all()
+        )
+        .scalars()
+        .all()
     )
     return [
         TripActiveItem(
@@ -383,24 +413,32 @@ async def get_trip_debug(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     """Debug endpoint: trip, payment, driver, passenger, interaction_logs."""
-    trip = db.execute(
-        select(Trip)
-        .options(
-            joinedload(Trip.payment),
-            joinedload(Trip.driver),  # type: ignore
-            joinedload(Trip.passenger),  # type: ignore
+    trip = (
+        db.execute(
+            select(Trip)
+            .options(
+                joinedload(Trip.payment),
+                joinedload(Trip.driver),  # type: ignore
+                joinedload(Trip.passenger),  # type: ignore
+            )
+            .where(Trip.id == trip_id.strip())
         )
-        .where(Trip.id == trip_id.strip())
-    ).unique().scalar_one_or_none()
+        .unique()
+        .scalar_one_or_none()
+    )
     if not trip:
         raise HTTPException(status_code=404, detail="not_found")
 
-    logs = db.execute(
-        select(InteractionLog)
-        .where(InteractionLog.trip_id == str(trip.id))
-        .order_by(InteractionLog.timestamp.desc())
-        .limit(20)
-    ).scalars().all()
+    logs = (
+        db.execute(
+            select(InteractionLog)
+            .where(InteractionLog.trip_id == str(trip.id))
+            .order_by(InteractionLog.timestamp.desc())
+            .limit(20)
+        )
+        .scalars()
+        .all()
+    )
 
     return {
         "trip": trip_to_detail(trip, include_stripe_pi=True).model_dump(),
@@ -409,14 +447,20 @@ async def get_trip_debug(
             "status": trip.payment.status.value,
             "stripe_payment_intent_id": trip.payment.stripe_payment_intent_id,
             "total_amount": float(trip.payment.total_amount),
-        } if trip.payment else None,
+        }
+        if trip.payment
+        else None,
         "driver": {
             "driver_id": str(trip.driver.user_id),
             "is_available": trip.driver.is_available,
-        } if trip.driver else None,
+        }
+        if trip.driver
+        else None,
         "passenger": {
             "passenger_id": str(trip.passenger.id),
-        } if trip.passenger else None,
+        }
+        if trip.passenger
+        else None,
         "interaction_logs": [
             {
                 "timestamp": log.timestamp.isoformat() if log.timestamp else None,
@@ -453,12 +497,18 @@ async def recover_driver(
         return RecoverDriverResponse(driver_id=str(driver.user_id), is_available=True)
 
     from app.models.enums import TripStatus
-    has_active = db.execute(
-        select(Trip).where(
-            Trip.driver_id == driver.user_id,
-            Trip.status.in_([TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]),
-        )
-    ).first() is not None
+
+    has_active = (
+        db.execute(
+            select(Trip).where(
+                Trip.driver_id == driver.user_id,
+                Trip.status.in_(
+                    [TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]
+                ),
+            )
+        ).first()
+        is not None
+    )
     if has_active:
         raise HTTPException(status_code=409, detail="driver_has_active_trip")
 
@@ -507,7 +557,9 @@ async def run_offer_expiry_admin(
     """Expire stale offers and redispatch trips with all offers expired."""
     expired = expire_stale_offers(db)
     new_offers = redispatch_expired_trips(db)
-    return RunOfferExpiryResponse(expired_count=expired, redispatch_offers_created=len(new_offers))
+    return RunOfferExpiryResponse(
+        expired_count=expired, redispatch_offers_created=len(new_offers)
+    )
 
 
 @router.get("/export-logs", response_model=None)
@@ -517,33 +569,48 @@ async def export_interaction_logs(
     format: str | None = Query(None, alias="format"),
 ) -> dict | PlainTextResponse:
     """Export interaction logs. JSON por defeito; ?format=csv para CSV."""
-    logs = db.execute(
-        select(InteractionLog).order_by(InteractionLog.timestamp.asc())
-    ).scalars().all()
+    logs = (
+        db.execute(select(InteractionLog).order_by(InteractionLog.timestamp.asc()))
+        .scalars()
+        .all()
+    )
 
     if format == "csv":
         out = io.StringIO()
         w = csv.writer(out)
-        w.writerow([
-            "timestamp", "user_id", "role", "action", "trip_id",
-            "previous_state", "new_state", "latency_ms", "payment_status",
-        ])
+        w.writerow(
+            [
+                "timestamp",
+                "user_id",
+                "role",
+                "action",
+                "trip_id",
+                "previous_state",
+                "new_state",
+                "latency_ms",
+                "payment_status",
+            ]
+        )
         for log in logs:
-            w.writerow([
-                log.timestamp.isoformat() if log.timestamp else "",
-                log.user_id or "",
-                log.role or "",
-                log.action or "",
-                log.trip_id or "",
-                log.previous_state or "",
-                log.new_state or "",
-                log.latency_ms if log.latency_ms is not None else "",
-                log.payment_status or "",
-            ])
+            w.writerow(
+                [
+                    log.timestamp.isoformat() if log.timestamp else "",
+                    log.user_id or "",
+                    log.role or "",
+                    log.action or "",
+                    log.trip_id or "",
+                    log.previous_state or "",
+                    log.new_state or "",
+                    log.latency_ms if log.latency_ms is not None else "",
+                    log.payment_status or "",
+                ]
+            )
         return PlainTextResponse(
             content=out.getvalue(),
             media_type="text/csv",
-            headers={"Content-Disposition": "attachment; filename=interaction_logs.csv"},
+            headers={
+                "Content-Disposition": "attachment; filename=interaction_logs.csv"
+            },
         )
 
     return {
@@ -575,4 +642,3 @@ async def assign_trip_admin(
         trip_id=trip_id.strip(),
     )
     return trip_to_status_response(trip, include_stripe_pi=True)
-

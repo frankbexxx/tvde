@@ -6,6 +6,7 @@ from collections import defaultdict
 from fastapi import Depends, HTTPException
 
 from app.api.deps import UserContext, get_current_user
+
 # user_id -> list of timestamps (last 60 seconds)
 _request_timestamps: dict[str, list[float]] = defaultdict(list)
 _MAX_REQUESTS_PER_MINUTE = 5

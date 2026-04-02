@@ -73,7 +73,9 @@ async def get_current_user(
     return UserContext(user_id=str(user.id), role=user.role)
 
 
-async def get_current_admin(user: UserContext = Depends(get_current_user)) -> UserContext:
+async def get_current_admin(
+    user: UserContext = Depends(get_current_user),
+) -> UserContext:
     """Admin only: authentication is handled by get_current_user; this step is role-only → 403."""
     if user.role != Role.admin:
         raise HTTPException(
@@ -87,7 +89,9 @@ def require_role(*roles: Role):
     """Admin-only routes use get_current_admin (auth → get_current_user, then role → 403)."""
     if frozenset(roles) == frozenset({Role.admin}):
 
-        async def _admin_only(admin: UserContext = Depends(get_current_admin)) -> UserContext:
+        async def _admin_only(
+            admin: UserContext = Depends(get_current_admin),
+        ) -> UserContext:
             return admin
 
         return _admin_only
@@ -121,4 +125,3 @@ async def get_optional_user(
         return UserContext(user_id=str(user.id), role=user.role)
     except InvalidTokenError:
         return None
-

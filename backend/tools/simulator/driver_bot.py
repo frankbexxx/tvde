@@ -1,6 +1,7 @@
 """
 Driver bot: polls available trips, accepts one, simulates human flow (arriving → start → complete).
 """
+
 import asyncio
 import random
 from typing import TYPE_CHECKING, Optional
@@ -25,7 +26,13 @@ NO_TRIPS_SLEEP_MIN, NO_TRIPS_SLEEP_MAX = 5, 10
 
 
 class DriverBot:
-    def __init__(self, bot_id: int, token: str, stats=None, metrics: Optional["SimulatorMetrics"] = None):
+    def __init__(
+        self,
+        bot_id: int,
+        token: str,
+        stats=None,
+        metrics: Optional["SimulatorMetrics"] = None,
+    ):
         self.bot_id = bot_id
         self.token = token
         self.stats = stats
@@ -62,7 +69,9 @@ class DriverBot:
                     self.metrics.record_accept(trip_id)
                 self._log(f"trip accepted {trip_id}")
 
-                await asyncio.sleep(random.uniform(ARRIVING_SLEEP_MIN, ARRIVING_SLEEP_MAX))
+                await asyncio.sleep(
+                    random.uniform(ARRIVING_SLEEP_MIN, ARRIVING_SLEEP_MAX)
+                )
                 try:
                     arriving_trip(self.token, trip_id)
                 except httpx.HTTPStatusError as e:
@@ -90,7 +99,9 @@ class DriverBot:
                     raise
                 self._log(f"started trip {trip_id}")
 
-                await asyncio.sleep(random.uniform(COMPLETE_SLEEP_MIN, COMPLETE_SLEEP_MAX))
+                await asyncio.sleep(
+                    random.uniform(COMPLETE_SLEEP_MIN, COMPLETE_SLEEP_MAX)
+                )
                 try:
                     complete_trip(self.token, trip_id)
                 except httpx.HTTPStatusError as e:

@@ -1,4 +1,5 @@
 """Tests for trip state guardrails (PROMPT_01)."""
+
 import uuid
 
 from fastapi.testclient import TestClient

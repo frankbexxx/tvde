@@ -2,6 +2,7 @@
 Configuration for the TVDE traffic simulator.
 Override via environment variables or edit defaults.
 """
+
 import os
 
 API_BASE_URL = os.environ.get("TVDE_SIM_API_BASE_URL", "http://localhost:8000")
@@ -15,7 +16,9 @@ SCENARIO_MODE = os.environ.get("TVDE_SIM_SCENARIO", "normal")
 
 # Flash crowd: N passengers create trips simultaneously
 FLASH_CROWD_PASSENGERS = int(os.environ.get("TVDE_SIM_FLASH_CROWD_PASSENGERS", "20"))
-FLASH_CROWD_DRIVER_DURATION_SEC = int(os.environ.get("TVDE_SIM_FLASH_CROWD_DRIVER_SEC", "600"))  # 10 min
+FLASH_CROWD_DRIVER_DURATION_SEC = int(
+    os.environ.get("TVDE_SIM_FLASH_CROWD_DRIVER_SEC", "600")
+)  # 10 min
 
 # Heavy load phases: (min_start, passengers, drivers)
 # min 0-5: 20 passengers, 8 drivers

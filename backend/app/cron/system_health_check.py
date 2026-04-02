@@ -37,7 +37,9 @@ def run_system_health_check(db: Session) -> dict[str, Any]:
                 stuck_payments=len(stuck),
                 inconsistent_financial_state=len(inc),
                 missing_payment_records=len(missing),
-                trips_accepted_too_long=len(health.get("trips_accepted_too_long") or []),
+                trips_accepted_too_long=len(
+                    health.get("trips_accepted_too_long") or []
+                ),
                 trips_ongoing_too_long=len(health.get("trips_ongoing_too_long") or []),
                 drivers_unavailable_too_long=len(
                     health.get("drivers_unavailable_too_long") or []

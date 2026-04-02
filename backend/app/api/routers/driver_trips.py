@@ -101,8 +101,7 @@ async def accept_trip(
     t0 = time.perf_counter()
     # If driver has pending offer for this trip, use accept_offer (multi-offer flow)
     offer = db.execute(
-        select(TripOffer)
-        .where(
+        select(TripOffer).where(
             and_(
                 TripOffer.trip_id == tid,
                 TripOffer.driver_id == user.user_id,
@@ -282,4 +281,3 @@ async def cancel_trip(
         payment_status=payment.status.value if payment else None,
     )
     return trip_to_status_response(trip, include_stripe_pi=False)
-

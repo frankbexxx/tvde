@@ -18,6 +18,7 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
     out: dict[str, str | bool] = {"status": "ok"}
     if diagnostic:
         from app.core.config import settings
+
         out["dev_tools"] = settings.dev_tools_router_enabled()
         out["beta_mode"] = bool(getattr(settings, "BETA_MODE", False))
     return out
@@ -27,4 +28,3 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
 async def config() -> dict[str, str | bool]:
     """Public config for frontend (e.g. BETA mode)."""
     return {"beta_mode": bool(getattr(settings, "BETA_MODE", False))}
-

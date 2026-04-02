@@ -27,7 +27,9 @@ def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
     no Driver row yet, we auto-create an approved driver profile so that
     tracking and matching work without manual admin intervention.
     """
-    driver = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one_or_none()
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_id)
+    ).scalar_one_or_none()
     if driver:
         return driver
 
@@ -86,9 +88,7 @@ def upsert_driver_location(
         )
 
     loc = db.execute(
-        select(DriverLocation)
-        .where(DriverLocation.driver_id == driver_id)
-        .limit(1)
+        select(DriverLocation).where(DriverLocation.driver_id == driver_id).limit(1)
     ).scalar_one_or_none()
     is_first_send = loc is None
     old_lat = float(loc.lat) if loc else None
@@ -110,7 +110,11 @@ def upsert_driver_location(
     active_trip = db.execute(
         select(Trip)
         .where(Trip.driver_id == driver_id)
-        .where(Trip.status.in_([TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]))
+        .where(
+            Trip.status.in_(
+                [TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]
+            )
+        )
         .limit(1)
     ).scalar_one_or_none()
     has_active_trip = active_trip is not None
@@ -126,7 +130,9 @@ def upsert_driver_location(
     ):
         log_event("driver_location_update", driver_id=driver_id, lat=lat, lng=lng)
         if is_first_send:
-            log_event("driver_location_first_send", driver_id=driver_id, lat=lat, lng=lng)
+            log_event(
+                "driver_location_first_send", driver_id=driver_id, lat=lat, lng=lng
+            )
 
     if active_trip:
         log_debug_event(
@@ -137,6 +143,7 @@ def upsert_driver_location(
             lng=lng,
         )
         from app.realtime.hub import hub
+
         hub.publish_driver_location(
             trip_id=str(active_trip.id),
             lat=lat,
@@ -147,12 +154,12 @@ def upsert_driver_location(
     # Fallback auto-dispatch for BETA/dev: when multi-offer created 0 offers
     # (no drivers had locations). Assign oldest requested trip to pool.
     from app.db.models.trip_offer import TripOffer
+
     beta_mode = getattr(settings, "BETA_MODE", False)
     if beta_mode and getattr(driver, "is_available", True):
         # Only assign trips that have no offers (multi-offer missed them)
         ids_with_offers = {
-            row[0] for row in
-            db.execute(select(TripOffer.trip_id).distinct()).all()
+            row[0] for row in db.execute(select(TripOffer.trip_id).distinct()).all()
         }
         q = (
             select(Trip)
@@ -164,7 +171,9 @@ def upsert_driver_location(
         trip = db.execute(q).scalars().first()
         if trip is not None:
             previous_status = trip.status
-            validate_trip_transition(previous_status, TripStatus.assigned, trip_id=str(trip.id))
+            validate_trip_transition(
+                previous_status, TripStatus.assigned, trip_id=str(trip.id)
+            )
             trip.status = TripStatus.assigned
             log_event(
                 "trip_auto_dispatched",
@@ -239,7 +248,11 @@ def get_driver_location_for_trip(
     if not trip:
         logger.info(
             "get_driver_location_for_trip: trip not found",
-            extra={"trip_id": str(trip_id), "user_id": str(user_id), "role": role.value},
+            extra={
+                "trip_id": str(trip_id),
+                "user_id": str(user_id),
+                "role": role.value,
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -260,7 +273,9 @@ def get_driver_location_for_trip(
                         "user_id": str(user_id),
                         "role": role.value,
                         "trip_passenger_id": str(trip.passenger_id),
-                        "trip_driver_id": str(trip.driver_id) if trip.driver_id else None,
+                        "trip_driver_id": str(trip.driver_id)
+                        if trip.driver_id
+                        else None,
                     },
                 )
                 raise HTTPException(
@@ -276,7 +291,9 @@ def get_driver_location_for_trip(
                         "user_id": str(user_id),
                         "role": role.value,
                         "trip_passenger_id": str(trip.passenger_id),
-                        "trip_driver_id": str(trip.driver_id) if trip.driver_id else None,
+                        "trip_driver_id": str(trip.driver_id)
+                        if trip.driver_id
+                        else None,
                     },
                 )
                 raise HTTPException(
@@ -286,9 +303,8 @@ def get_driver_location_for_trip(
     else:
         # BETA: still block clearly unrelated passengers, but allow either the
         # real passenger or the assigned driver, regardless of token role.
-        if (
-            str(trip.passenger_id) != str(user_id)
-            and (not trip.driver_id or str(trip.driver_id) != str(user_id))
+        if str(trip.passenger_id) != str(user_id) and (
+            not trip.driver_id or str(trip.driver_id) != str(user_id)
         ):
             logger.info(
                 "get_driver_location_for_trip: forbidden beta access",
@@ -343,4 +359,3 @@ def get_driver_location_for_trip(
 
     log_event("driver_location_requested", trip_id=trip_id, user_id=user_id)
     return float(loc.lat), float(loc.lng), loc.timestamp
-

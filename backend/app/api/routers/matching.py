@@ -47,4 +47,3 @@ async def find_driver(
             detail="no_driver_found",
         )
     return FindDriverResponse(**result)
-

@@ -90,8 +90,10 @@ def create_offers_for_trip(
     candidates: list[tuple[Driver, float]] = []
     for driver, loc in fresh:
         dist_km = haversine_km(
-            origin_lat, origin_lng,
-            float(loc.lat), float(loc.lng),
+            origin_lat,
+            origin_lng,
+            float(loc.lat),
+            float(loc.lng),
         )
         if dist_km <= radius_km:
             candidates.append((driver, dist_km))
@@ -134,6 +136,7 @@ def create_offers_for_trip(
             max_km=round(max(dists), 2),
         )
     from app.realtime.driver_offers_hub import driver_offers_hub
+
     for offer in offers:
         driver_offers_hub.publish_new_offer(
             driver_id=str(offer.driver_id),
@@ -159,7 +162,9 @@ def expire_stale_offers(db: Session, now: datetime | None = None) -> int:
                 TripOffer.status == OfferStatus.pending,
                 TripOffer.expires_at < now,
             )
-        ).scalars().all()
+        )
+        .scalars()
+        .all()
     )
     for o in stale:
         o.status = OfferStatus.expired
@@ -181,12 +186,16 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
 
     # Find trips that are requested and have only expired/rejected offers
     all_requested = list(
-        db.execute(select(Trip).where(Trip.status == TripStatus.requested)).scalars().all()
+        db.execute(select(Trip).where(Trip.status == TripStatus.requested))
+        .scalars()
+        .all()
     )
     new_offers: list[tuple[TripOffer, Trip, float]] = []
     for trip in all_requested:
         offers = list(
-            db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id)).scalars().all()
+            db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+            .scalars()
+            .all()
         )
         if not offers:
             continue
@@ -219,7 +228,9 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 loc_ts = loc_ts.replace(tzinfo=timezone.utc)
             if (now - loc_ts).total_seconds() > LOCATION_MAX_AGE_SECONDS:
                 continue
-            dist_km = haversine_km(origin_lat, origin_lng, float(loc.lat), float(loc.lng))
+            dist_km = haversine_km(
+                origin_lat, origin_lng, float(loc.lat), float(loc.lng)
+            )
             if dist_km <= radius_km:
                 candidates.append((driver, dist_km))
         candidates.sort(key=lambda x: x[1])
@@ -233,7 +244,11 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             )
             db.add(offer)
             new_offers.append((offer, trip, dist_km))
-            logger.info("redispatch_expired_trips: new offer trip_id=%s driver_id=%s", trip.id, driver.user_id)
+            logger.info(
+                "redispatch_expired_trips: new offer trip_id=%s driver_id=%s",
+                trip.id,
+                driver.user_id,
+            )
     if new_offers:
         db.flush()
         from collections import defaultdict
@@ -250,6 +265,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 max_km=round(max(dists), 2),
             )
         from app.realtime.driver_offers_hub import driver_offers_hub
+
         for offer, t, dist_km in new_offers:
             driver_offers_hub.publish_new_offer(
                 driver_id=str(offer.driver_id),

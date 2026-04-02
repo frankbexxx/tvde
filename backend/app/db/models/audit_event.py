@@ -52,4 +52,3 @@ class AuditEvent(Base):
 
 Index("ix_audit_events_entity", AuditEvent.entity_type, AuditEvent.entity_id)
 Index("ix_audit_events_occurred_at", AuditEvent.occurred_at)
-

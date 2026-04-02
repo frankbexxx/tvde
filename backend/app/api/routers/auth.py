@@ -168,7 +168,9 @@ async def login(
 ) -> TokenResponse:
     """BETA: login with phone + default password. No OTP required."""
     if not _is_beta():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not available")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
+        )
 
     phone = _normalize_phone(payload.phone)
     if not BETA_PHONE_REGEX.match(phone):

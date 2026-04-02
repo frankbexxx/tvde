@@ -23,6 +23,7 @@ class OtpVerifyRequest(BaseModel):
 
 class LoginRequest(BaseModel):
     """BETA: login with phone + default password."""
+
     phone: str = Field(..., min_length=6, max_length=32)
     password: str = Field(..., min_length=1)
     requested_role: str | None = Field(None, description="passenger or driver")
@@ -34,4 +35,3 @@ class TokenResponse(BaseModel):
     user_id: str
     role: Role
     expires_at: datetime
-

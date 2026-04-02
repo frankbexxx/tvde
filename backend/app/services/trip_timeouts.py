@@ -40,11 +40,15 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
     }
 
     # 1) assigned > 2 min → requested
-    assigned_stuck = db.execute(
-        select(Trip)
-        .where(Trip.status == TripStatus.assigned)
-        .where(Trip.updated_at < assigned_cutoff)
-    ).scalars().all()
+    assigned_stuck = (
+        db.execute(
+            select(Trip)
+            .where(Trip.status == TripStatus.assigned)
+            .where(Trip.updated_at < assigned_cutoff)
+        )
+        .scalars()
+        .all()
+    )
     for trip in assigned_stuck:
         trip.status = TripStatus.requested
         counts["assigned_to_requested"] += 1
@@ -61,11 +65,15 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
         )
 
     # 2) accepted > 10 min without start → cancelled, free driver
-    accepted_stuck = db.execute(
-        select(Trip)
-        .where(Trip.status == TripStatus.accepted)
-        .where(Trip.updated_at < accepted_cutoff)
-    ).scalars().all()
+    accepted_stuck = (
+        db.execute(
+            select(Trip)
+            .where(Trip.status == TripStatus.accepted)
+            .where(Trip.updated_at < accepted_cutoff)
+        )
+        .scalars()
+        .all()
+    )
     for trip in accepted_stuck:
         driver_id = trip.driver_id
         trip.status = TripStatus.cancelled
@@ -84,12 +92,16 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
         )
 
     # 3) ongoing > 6 hours → failed, free driver
-    ongoing_stuck = db.execute(
-        select(Trip)
-        .where(Trip.status == TripStatus.ongoing)
-        .where(Trip.started_at.isnot(None))
-        .where(Trip.started_at < ongoing_cutoff)
-    ).scalars().all()
+    ongoing_stuck = (
+        db.execute(
+            select(Trip)
+            .where(Trip.status == TripStatus.ongoing)
+            .where(Trip.started_at.isnot(None))
+            .where(Trip.started_at < ongoing_cutoff)
+        )
+        .scalars()
+        .all()
+    )
     for trip in ongoing_stuck:
         driver_id = trip.driver_id
         trip.status = TripStatus.failed
