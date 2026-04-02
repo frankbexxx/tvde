@@ -416,13 +416,12 @@ export function PassengerDashboard() {
     }
   }, [activeTrip?.status, addLog, setPassengerActiveTripId])
 
+  /** Mapa da viagem ativa: accepted | arriving | ongoing (P28 — já não exige GPS do motorista para mostrar o mapa base). */
   const showPassengerMap = useMemo(() => {
     if (!activeTrip || tripCompletedFromLocation) return false
-    if (activeTrip.status === 'requested') return false
-    if (!driverLocation) return false
     if (['cancelled', 'failed', 'completed'].includes(activeTrip.status)) return false
     return isPassengerDriverTrackingStatus(activeTrip.status)
-  }, [activeTrip, driverLocation, tripCompletedFromLocation])
+  }, [activeTrip, tripCompletedFromLocation])
 
   /**
    * A017b: prioridade — viagem ativa > modo planeamento (input) > idle neutro (mapa sem cliques).
