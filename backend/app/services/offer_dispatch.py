@@ -112,6 +112,13 @@ def create_offers_for_trip(
                 "origin": f"{origin_lat},{origin_lng}",
             },
         )
+        log_event(
+            "offer_dispatch_no_candidates",
+            trip_id=str(trip.id),
+            drivers_with_loc=len(drivers_with_loc),
+            fresh_count=len(fresh),
+            candidates_in_radius=len(candidates),
+        )
 
     offers: list[TripOffer] = []
     for driver, dist_km in selected:
@@ -151,6 +158,12 @@ def create_offers_for_trip(
         )
 
     trip.last_dispatch_at = datetime.now(timezone.utc)
+    if offers:
+        log_event(
+            "offer_dispatch_offers_persisted",
+            trip_id=str(trip.id),
+            offer_count=len(offers),
+        )
     return offers
 
 
@@ -200,12 +213,20 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             .all()
         )
         if not offers:
+            log_event("redispatch_zero_offers_attempt", trip_id=str(trip.id))
             min_iv = getattr(settings, "REDISPATCH_MIN_INTERVAL_SECONDS", 10)
             lda = trip.last_dispatch_at
             if lda is not None:
                 if lda.tzinfo is None:
                     lda = lda.replace(tzinfo=timezone.utc)
-                if (now - lda).total_seconds() < min_iv:
+                age_sec = (now - lda).total_seconds()
+                if age_sec < min_iv:
+                    log_event(
+                        "redispatch_zero_offers_throttled",
+                        trip_id=str(trip.id),
+                        age_seconds=round(age_sec, 2),
+                        min_interval_seconds=min_iv,
+                    )
                     logger.info(
                         "redispatch_expired_trips: zero-offer skip (throttled) trip_id=%s",
                         trip.id,
@@ -213,6 +234,14 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                     continue
             created = create_offers_for_trip(db=db, trip=trip)
             zero_offer_new.extend(created)
+            if created:
+                log_event(
+                    "redispatch_zero_offers_recovered",
+                    trip_id=str(trip.id),
+                    offer_count=len(created),
+                )
+            else:
+                log_event("redispatch_zero_offers_still_empty", trip_id=str(trip.id))
             # Persist last_dispatch_at even when 0 offers (throttle + diagnostics).
             db.commit()
             continue
