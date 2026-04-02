@@ -19,7 +19,7 @@ from app.utils.logging import log_debug_event, log_event
 
 logger = logging.getLogger(__name__)
 
-LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 15)
+LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 
 
 def create_offers_for_trip(

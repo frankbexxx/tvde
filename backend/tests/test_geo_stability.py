@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
@@ -107,8 +108,9 @@ def test_geo_stability_stale_drivers_excluded() -> None:
     db.commit()
 
     driver_id = _create_driver(db)
-    # Add location with old timestamp (20 seconds ago)
-    old_ts = datetime.now(timezone.utc) - timedelta(seconds=20)
+    # Older than LOCATION_MAX_AGE_SECONDS (stale for dispatch)
+    stale_sec = int(getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)) + 10
+    old_ts = datetime.now(timezone.utc) - timedelta(seconds=stale_sec)
     loc = DriverLocation(
         driver_id=uuid.UUID(driver_id),
         lat=38.7,

@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     # passengers are matched to drivers within this radius. Covers e.g. Lisbon metro (Oeiras, etc.).
     GEO_RADIUS_KM: float = 50.0
     # Max age (seconds) for driver location. Older locations excluded from dispatch (A006 geo stability).
-    LOCATION_MAX_AGE_SECONDS: int = 15
+    LOCATION_MAX_AGE_SECONDS: int = 45
 
     # Multi-offer dispatch: number of drivers to send offers to.
     OFFER_TOP_N: int = 5
