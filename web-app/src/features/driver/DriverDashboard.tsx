@@ -30,6 +30,7 @@ import {
   driverTripBadgeShort,
 } from '../../constants/tripStatus'
 import { paymentStatusLabel } from '../../constants/tripStatusLabels'
+import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
@@ -240,6 +241,12 @@ export function DriverDashboard() {
           no fim.
         </p>
       </header>
+
+      {import.meta.env.DEV && isMockLocationModeEnabled() ? (
+        <div className="rounded-lg bg-violet-500/15 border border-violet-400/40 px-3 py-2 text-sm text-violet-200">
+          <span aria-hidden>🧪</span> Modo simulação — a posição segue uma rota de teste em Oeiras.
+        </div>
+      ) : null}
 
       {geolocationUsedFallback && (
         <div className="rounded-lg bg-warning/20 border border-warning/50 px-3 py-2 text-sm text-warning">

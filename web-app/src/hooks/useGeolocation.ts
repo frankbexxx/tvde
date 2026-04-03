@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { isMockLocationModeEnabled } from '../dev/mockLocation'
+import { startRouteSimulation } from '../dev/simulateRoute'
+import { TEST_ROUTE_OEIRAS_LOOP } from '../dev/testRoutes'
 import { warn as logWarn } from '../utils/logger'
 
 type LatLng = {
@@ -83,6 +86,9 @@ export type GeolocationResult = {
  */
 export function useGeolocation(): GeolocationResult {
   const [position, setPosition] = useState<LatLng>(() => {
+    if (isMockLocationModeEnabled() && TEST_ROUTE_OEIRAS_LOOP[0]) {
+      return { lat: TEST_ROUTE_OEIRAS_LOOP[0].lat, lng: TEST_ROUTE_OEIRAS_LOOP[0].lng }
+    }
     if (isDemoLocationEnabled()) {
       return { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
     }
@@ -93,6 +99,20 @@ export function useGeolocation(): GeolocationResult {
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    if (isMockLocationModeEnabled()) {
+      const stop = startRouteSimulation(
+        TEST_ROUTE_OEIRAS_LOOP,
+        3500,
+        (pt) => {
+          lastPositionRef.current = pt
+          setPosition(pt)
+          setUsedFallback(false)
+        },
+        { loop: true }
+      )
+      return stop
+    }
+
     if (isDemoLocationEnabled()) {
       const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
       lastPositionRef.current = fallback

@@ -15,6 +15,7 @@ import {
   passengerTripStatusLabel,
 } from '../../constants/tripStatus'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
@@ -703,6 +704,12 @@ export function PassengerDashboard() {
         ) : undefined
       }
     >
+      {import.meta.env.DEV && isMockLocationModeEnabled() ? (
+        <div className="rounded-lg bg-violet-500/15 border border-violet-400/40 px-3 py-2 text-sm text-violet-200">
+          <span aria-hidden>🧪</span> Modo simulação — a tua posição no mapa segue a rota de teste (Dev).
+        </div>
+      ) : null}
+
       {geolocationUsedFallback && (
         <div className="rounded-lg bg-warning/20 border border-warning/50 px-3 py-2 text-sm text-warning">
           A usar Oeiras (localização indisponível).
