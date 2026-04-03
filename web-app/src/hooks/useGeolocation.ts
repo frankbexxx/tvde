@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isMockLocationModeEnabled } from '../dev/mockLocation'
-import { startRouteSimulation } from '../dev/simulateRoute'
+import { MOCK_ROUTE_SIMULATION_INTERVAL_MS, startRouteSimulation } from '../dev/simulateRoute'
 import { TEST_ROUTE_OEIRAS_LOOP } from '../dev/testRoutes'
 import { warn as logWarn } from '../utils/logger'
 
@@ -102,7 +102,7 @@ export function useGeolocation(): GeolocationResult {
     if (isMockLocationModeEnabled()) {
       const stop = startRouteSimulation(
         TEST_ROUTE_OEIRAS_LOOP,
-        3500,
+        MOCK_ROUTE_SIMULATION_INTERVAL_MS,
         (pt) => {
           lastPositionRef.current = pt
           setPosition(pt)
