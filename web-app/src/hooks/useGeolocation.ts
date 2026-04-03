@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { isMockLocationModeEnabled } from '../dev/mockLocation'
-import { MOCK_ROUTE_SIMULATION_INTERVAL_MS, startRouteSimulation } from '../dev/simulateRoute'
 import { MOCK_DRIVER_ROUTE, MOCK_PASSENGER_ROUTE } from '../dev/testRoutes'
 import { warn as logWarn } from '../utils/logger'
 
@@ -120,17 +119,15 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
   useEffect(() => {
     if (isMockLocationModeEnabled()) {
       const route = mockRouteForRole(mockRole)
-      const stop = startRouteSimulation(
-        route,
-        MOCK_ROUTE_SIMULATION_INTERVAL_MS,
-        (pt) => {
-          lastPositionRef.current = pt
-          setPosition(pt)
+      const fixed = route[0]
+      if (fixed) {
+        lastPositionRef.current = fixed
+        queueMicrotask(() => {
+          setPosition(fixed)
           setUsedFallback(false)
-        },
-        { loop: true }
-      )
-      return stop
+        })
+      }
+      return
     }
 
     if (isDemoLocationEnabled()) {
