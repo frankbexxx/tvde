@@ -30,9 +30,14 @@ import {
   driverTripBadgeShort,
 } from '../../constants/tripStatus'
 import { paymentStatusLabel } from '../../constants/tripStatusLabels'
+import { buildMockDriverApproachPath } from '../../dev/buildMockApproachPath'
 import { isMockLocationModeEnabled } from '../../dev/mockLocation'
+import { MOCK_DRIVER_START } from '../../dev/mockPositions'
+import { startTripSimulation } from '../../dev/tripSimulation'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
+import { sendDriverLocation } from '../../services/locationService'
+import { getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { Spinner } from '../../components/ui/Spinner'
@@ -84,9 +89,16 @@ export function DriverDashboard() {
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
-  const { position: driverLocation, usedFallback: geolocationUsedFallback } = useGeolocation({
+  const { position: geoDriverPosition, usedFallback: geolocationUsedFallback } = useGeolocation({
     mockRole: 'driver',
   })
+  const [mockSimulatedPosition, setMockSimulatedPosition] = useState<{
+    lat: number
+    lng: number
+  } | null>(null)
+  const tripSimStopRef = useRef<(() => void) | null>(null)
+
+  const driverLocation = mockSimulatedPosition ?? geoDriverPosition
   const [offline, setOffline] = useState(getStoredOffline)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -145,6 +157,21 @@ export function DriverDashboard() {
   })
 
   useEffect(() => {
+    return () => {
+      tripSimStopRef.current?.()
+      tripSimStopRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!activeTripId) {
+      tripSimStopRef.current?.()
+      tripSimStopRef.current = null
+      setMockSimulatedPosition(null)
+    }
+  }, [activeTripId])
+
+  useEffect(() => {
     setStoredOffline(offline)
   }, [offline])
 
@@ -189,6 +216,32 @@ export function DriverDashboard() {
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (actionName === 'ACEITAR') sonnerToast.success('Viagem aceite')
+      if (
+        actionName === 'ACEITAR' &&
+        import.meta.env.DEV &&
+        isMockLocationModeEnabled() &&
+        availableForFallback
+      ) {
+        const pickup = {
+          lat: availableForFallback.origin_lat,
+          lng: availableForFallback.origin_lng,
+        }
+        const from = { lat: MOCK_DRIVER_START.lat, lng: MOCK_DRIVER_START.lng }
+        tripSimStopRef.current?.()
+        tripSimStopRef.current = null
+        void (async () => {
+          const osrm = await getRoute(from, pickup)
+          const path = buildMockDriverApproachPath(from, pickup, osrm)
+          tripSimStopRef.current = startTripSimulation({
+            route: path,
+            intervalMs: 1000,
+            onUpdate: (pos) => {
+              setMockSimulatedPosition(pos)
+              void sendDriverLocation(pos.lat, pos.lng)
+            },
+          })
+        })()
+      }
       onSuccess?.()
       refetchHistory()
       refetchAvailable()
@@ -224,6 +277,9 @@ export function DriverDashboard() {
             onClearStatusOverride={() => setDriverStatusOverride(null)}
             onTripActionSuccess={(s) => setDriverStatusOverride(s)}
             onComplete={() => {
+              tripSimStopRef.current?.()
+              tripSimStopRef.current = null
+              setMockSimulatedPosition(null)
               setDriverStatusOverride(null)
               setAcceptedDetailFallback(null)
               setDriverActiveTripId(null)
@@ -384,6 +440,9 @@ export function DriverDashboard() {
             onDetailPollSuccess={() => setAcceptedDetailFallback(null)}
             onClearStatusOverride={() => setDriverStatusOverride(null)}
             onTripCancelled={() => {
+              tripSimStopRef.current?.()
+              tripSimStopRef.current = null
+              setMockSimulatedPosition(null)
               setDriverStatusOverride(null)
               setAcceptedDetailFallback(null)
               setDriverActiveTripId(null)
