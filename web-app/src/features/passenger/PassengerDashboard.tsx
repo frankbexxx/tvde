@@ -601,20 +601,17 @@ export function PassengerDashboard() {
 
   const routeForMap = useMemo(() => {
     if (showPassengerMap && activeTrip) {
+      const pickup = { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng }
+      const destination = { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng }
       const mockApproachPhase =
         import.meta.env.DEV &&
         isMockLocationModeEnabled() &&
         ['accepted', 'arriving'].includes(activeTrip.status)
       if (mockApproachPhase) {
-        return {
-          from: MOCK_DRIVER_START,
-          to: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
-        }
+        return { from: MOCK_DRIVER_START, to: pickup }
       }
-      return {
-        from: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
-        to: { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng },
-      }
+      // ongoing (+ resto): mesma linha recolha→destino (alinhado com fase 2 mock no motorista)
+      return { from: pickup, to: destination }
     }
     return undefined
   }, [showPassengerMap, activeTrip])
