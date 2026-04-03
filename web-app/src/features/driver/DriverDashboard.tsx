@@ -96,6 +96,10 @@ export function DriverDashboard() {
     lat: number
     lng: number
   } | null>(null)
+  const [mockStableRouteEndpoints, setMockStableRouteEndpoints] = useState<{
+    from: { lat: number; lng: number }
+    to: { lat: number; lng: number }
+  } | null>(null)
   const tripSimStopRef = useRef<(() => void) | null>(null)
 
   const driverLocation = mockSimulatedPosition ?? geoDriverPosition
@@ -168,6 +172,7 @@ export function DriverDashboard() {
       tripSimStopRef.current?.()
       tripSimStopRef.current = null
       setMockSimulatedPosition(null)
+      setMockStableRouteEndpoints(null)
     }
   }, [activeTripId])
 
@@ -232,6 +237,7 @@ export function DriverDashboard() {
         void (async () => {
           const osrm = await getRoute(from, pickup)
           const path = buildMockDriverApproachPath(from, pickup, osrm)
+          setMockStableRouteEndpoints({ from, to: pickup })
           tripSimStopRef.current = startTripSimulation({
             route: path,
             intervalMs: 1000,
@@ -280,6 +286,7 @@ export function DriverDashboard() {
               tripSimStopRef.current?.()
               tripSimStopRef.current = null
               setMockSimulatedPosition(null)
+              setMockStableRouteEndpoints(null)
               setDriverStatusOverride(null)
               setAcceptedDetailFallback(null)
               setDriverActiveTripId(null)
@@ -369,6 +376,14 @@ export function DriverDashboard() {
         {!offline && (
           <MapView
             driverLocation={driverLocation ?? undefined}
+            route={
+              import.meta.env.DEV &&
+              isMockLocationModeEnabled() &&
+              mockStableRouteEndpoints &&
+              activeTripId
+                ? mockStableRouteEndpoints
+                : undefined
+            }
             mapVisualWeight={
               activeTripId || (available && available.length > 0) ? 'subdued' : 'emphasized'
             }
@@ -443,6 +458,7 @@ export function DriverDashboard() {
               tripSimStopRef.current?.()
               tripSimStopRef.current = null
               setMockSimulatedPosition(null)
+              setMockStableRouteEndpoints(null)
               setDriverStatusOverride(null)
               setAcceptedDetailFallback(null)
               setDriverActiveTripId(null)

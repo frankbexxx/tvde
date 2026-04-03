@@ -16,6 +16,7 @@ import {
 } from '../../constants/tripStatus'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { isMockLocationModeEnabled } from '../../dev/mockLocation'
+import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
@@ -600,6 +601,16 @@ export function PassengerDashboard() {
 
   const routeForMap = useMemo(() => {
     if (showPassengerMap && activeTrip) {
+      const mockApproachPhase =
+        import.meta.env.DEV &&
+        isMockLocationModeEnabled() &&
+        ['accepted', 'arriving'].includes(activeTrip.status)
+      if (mockApproachPhase) {
+        return {
+          from: MOCK_DRIVER_START,
+          to: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
+        }
+      }
       return {
         from: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
         to: { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng },
