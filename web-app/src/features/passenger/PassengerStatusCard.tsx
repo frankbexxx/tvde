@@ -23,15 +23,18 @@ function SearchingDriverPhase({
   onRetrySearch?: () => void
   retrySearchPending?: boolean
 }) {
-  const [, setTick] = useState(0)
+  /** Relógio em efeito — evita `Date.now()` no render (react-hooks/purity). */
+  const [nowMs, setNowMs] = useState<number | null>(null)
   useEffect(() => {
-    const id = window.setInterval(() => setTick((n) => n + 1), 1000)
+    const tick = () => setNowMs(Date.now())
+    tick()
+    const id = window.setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [])
-  const elapsedSec = Math.max(
-    0,
-    (Date.now() - new Date(tripCreatedAtIso).getTime()) / 1000
-  )
+  const elapsedSec =
+    nowMs == null
+      ? 0
+      : Math.max(0, (nowMs - new Date(tripCreatedAtIso).getTime()) / 1000)
   const showFallback = elapsedSec >= PASSENGER_SEARCH_FALLBACK_AFTER_SEC
 
   return (

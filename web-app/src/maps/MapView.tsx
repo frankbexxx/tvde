@@ -84,7 +84,7 @@ export function MapView({
   const prevDriverRef = useRef<LatLng | null>(null)
   const mapAnchor = useMemo(
     () => tripPickup ?? passengerLocation ?? null,
-    [tripPickup?.lat, tripPickup?.lng, passengerLocation?.lat, passengerLocation?.lng]
+    [tripPickup, passengerLocation]
   )
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)

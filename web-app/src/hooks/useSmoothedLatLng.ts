@@ -21,13 +21,13 @@ export function useSmoothedLatLng(
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
       rafRef.current = null
       fromRef.current = null
-      setOut(null)
+      queueMicrotask(() => setOut(null))
       return
     }
 
     if (!fromRef.current) {
       fromRef.current = target
-      setOut(target)
+      queueMicrotask(() => setOut(target))
       return
     }
 
@@ -56,6 +56,7 @@ export function useSmoothedLatLng(
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lat/lng apenas; identidade de `target` instável
   }, [target?.lat, target?.lng, durationMs])
 
   return out
