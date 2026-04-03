@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isMockLocationModeEnabled } from '../dev/mockLocation'
-import { MOCK_DRIVER_ROUTE, MOCK_PASSENGER_ROUTE } from '../dev/testRoutes'
+import { MOCK_DRIVER_START, MOCK_PASSENGER_POSITION } from '../dev/mockPositions'
 import { warn as logWarn } from '../utils/logger'
 
 type LatLng = {
@@ -79,15 +79,12 @@ export type GeolocationResult = {
 export type GeolocationMockRole = 'passenger' | 'driver'
 
 export type UseGeolocationOptions = {
-  /**
-   * Em modo mock (dev): define qual rota simular.
-   * Passageiro = Oeiras (recolha); motorista = corredor ~3 km afastado (Cascais / Lisboa / Oeiras).
-   */
+  /** Em modo mock (dev): posição fixa — passageiro na recolha, motorista afastado (até simulação pós-aceitar). */
   mockRole?: GeolocationMockRole
 }
 
-function mockRouteForRole(role: GeolocationMockRole) {
-  return role === 'driver' ? MOCK_DRIVER_ROUTE : MOCK_PASSENGER_ROUTE
+function mockFixedPosition(role: GeolocationMockRole) {
+  return role === 'driver' ? MOCK_DRIVER_START : MOCK_PASSENGER_POSITION
 }
 
 /**
@@ -102,10 +99,8 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
 
   const [position, setPosition] = useState<LatLng>(() => {
     if (isMockLocationModeEnabled()) {
-      const route = mockRouteForRole(mockRole)
-      if (route[0]) {
-        return { lat: route[0].lat, lng: route[0].lng }
-      }
+      const p = mockFixedPosition(mockRole)
+      return { lat: p.lat, lng: p.lng }
     }
     if (isDemoLocationEnabled()) {
       return { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
@@ -118,15 +113,12 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
 
   useEffect(() => {
     if (isMockLocationModeEnabled()) {
-      const route = mockRouteForRole(mockRole)
-      const fixed = route[0]
-      if (fixed) {
-        lastPositionRef.current = fixed
-        queueMicrotask(() => {
-          setPosition(fixed)
-          setUsedFallback(false)
-        })
-      }
+      const fixed = mockFixedPosition(mockRole)
+      lastPositionRef.current = fixed
+      queueMicrotask(() => {
+        setPosition(fixed)
+        setUsedFallback(false)
+      })
       return
     }
 
