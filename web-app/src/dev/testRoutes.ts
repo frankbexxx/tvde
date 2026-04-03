@@ -15,3 +15,13 @@ export const TEST_ROUTE_1: RoutePoint[] = [
   { lat: 38.717, lng: -9.14 },
   { lat: 38.718, lng: -9.141 },
 ]
+
+/** Rota mais longa com mudanças de direção visíveis — padrão do modo mock. */
+export const TEST_ROUTE_EXTENDED: RoutePoint[] = [
+  { lat: 38.716, lng: -9.139 },
+  { lat: 38.718, lng: -9.141 },
+  { lat: 38.72, lng: -9.145 },
+  { lat: 38.722, lng: -9.15 },
+  { lat: 38.719, lng: -9.152 },
+  { lat: 38.717, lng: -9.148 },
+]
