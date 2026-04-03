@@ -101,6 +101,8 @@ export function DriverDashboard() {
     to: { lat: number; lng: number }
   } | null>(null)
   const tripSimStopRef = useRef<(() => void) | null>(null)
+  /** Invalida `getRoute` / arranque da simulação se a viagem terminar ou for cancelada antes do async acabar. */
+  const mockApproachGenRef = useRef(0)
 
   const driverLocation = mockSimulatedPosition ?? geoDriverPosition
   const [offline, setOffline] = useState(getStoredOffline)
@@ -169,6 +171,7 @@ export function DriverDashboard() {
 
   useEffect(() => {
     if (!activeTripId) {
+      mockApproachGenRef.current += 1
       tripSimStopRef.current?.()
       tripSimStopRef.current = null
       setMockSimulatedPosition(null)
@@ -221,6 +224,7 @@ export function DriverDashboard() {
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (actionName === 'ACEITAR') sonnerToast.success('Viagem aceite')
+      // Simulação de aproximação (DEV + mock): só após ACEITAR com sucesso — nunca antes, nunca sem viagem.
       if (
         actionName === 'ACEITAR' &&
         import.meta.env.DEV &&
@@ -234,18 +238,27 @@ export function DriverDashboard() {
         const from = { lat: MOCK_DRIVER_START.lat, lng: MOCK_DRIVER_START.lng }
         tripSimStopRef.current?.()
         tripSimStopRef.current = null
+        mockApproachGenRef.current += 1
+        const gen = mockApproachGenRef.current
         void (async () => {
-          const osrm = await getRoute(from, pickup)
-          const path = buildMockDriverApproachPath(from, pickup, osrm)
-          setMockStableRouteEndpoints({ from, to: pickup })
-          tripSimStopRef.current = startTripSimulation({
-            route: path,
-            intervalMs: 1000,
-            onUpdate: (pos) => {
-              setMockSimulatedPosition(pos)
-              void sendDriverLocation(pos.lat, pos.lng)
-            },
-          })
+          try {
+            const osrm = await getRoute(from, pickup)
+            if (gen !== mockApproachGenRef.current) return
+            const path = buildMockDriverApproachPath(from, pickup, osrm)
+            if (gen !== mockApproachGenRef.current) return
+            setMockStableRouteEndpoints({ from, to: pickup })
+            if (gen !== mockApproachGenRef.current) return
+            tripSimStopRef.current = startTripSimulation({
+              route: path,
+              intervalMs: 1000,
+              onUpdate: (pos) => {
+                setMockSimulatedPosition(pos)
+                void sendDriverLocation(pos.lat, pos.lng)
+              },
+            })
+          } catch {
+            /* OSRM opcional; sem rota não arrancamos movimento */
+          }
         })()
       }
       onSuccess?.()
@@ -309,7 +322,7 @@ export function DriverDashboard() {
 
       {import.meta.env.DEV && isMockLocationModeEnabled() ? (
         <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
-          <span aria-hidden>🧪</span> Simulação — rota motorista (intervalo 1&nbsp;s): começa ~3&nbsp;km de Oeiras, corredor Lisboa/Cascais/Oeiras.
+          <span aria-hidden>🧪</span> Simulação — motorista inicia parado e desloca-se após aceitar (rota real até à recolha).
         </div>
       ) : null}
 
