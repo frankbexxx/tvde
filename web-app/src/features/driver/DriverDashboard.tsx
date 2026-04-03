@@ -243,7 +243,7 @@ export function DriverDashboard() {
       </header>
 
       {import.meta.env.DEV && isMockLocationModeEnabled() ? (
-        <div className="rounded-lg bg-violet-500/15 border border-violet-400/40 px-3 py-2 text-sm text-violet-200">
+        <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
           <span aria-hidden>🧪</span> Modo simulação — a posição segue uma rota de teste em Oeiras.
         </div>
       ) : null}

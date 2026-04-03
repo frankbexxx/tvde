@@ -705,7 +705,7 @@ export function PassengerDashboard() {
       }
     >
       {import.meta.env.DEV && isMockLocationModeEnabled() ? (
-        <div className="rounded-lg bg-violet-500/15 border border-violet-400/40 px-3 py-2 text-sm text-violet-200">
+        <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
           <span aria-hidden>🧪</span> Modo simulação — a tua posição no mapa segue a rota de teste (Dev).
         </div>
       ) : null}
