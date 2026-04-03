@@ -9,6 +9,7 @@ import { PassengerMarker } from './PassengerMarker'
 import { DriverMarker } from './DriverMarker'
 import { RouteLine } from './RouteLine'
 import { getRoute } from '../services/routingService'
+import { isMockLocationModeEnabled } from '../dev/mockLocation'
 import { useSmoothedLatLng } from '../hooks/useSmoothedLatLng'
 import { log as devLog } from '../utils/logger'
 
@@ -153,7 +154,8 @@ export function MapView({
     setHasInitialFit(true)
   }, [passengerLocation, hasInitialFit])
 
-  // Passageiro + motorista: enquadrar os dois; só motorista: seguir só o motorista
+  // Passageiro + motorista: enquadrar os dois; só motorista: seguir só o motorista.
+  // Em dev + mock: centrar no motorista (easeTo) — sem alterar produção nem o fluxo normal de fitBounds.
   useEffect(() => {
     if (!showMap || !driverLocation) {
       if (!driverLocation) prevDriverRef.current = null
@@ -165,6 +167,20 @@ export function MapView({
       return
     }
     prevDriverRef.current = driverLocation
+
+    const hasActiveTripMarkers = Boolean(tripPickup && tripDropoff)
+    const mockMapFollow =
+      import.meta.env.DEV &&
+      isMockLocationModeEnabled() &&
+      (!onPlanningMapClick || hasActiveTripMarkers)
+
+    if (mockMapFollow) {
+      map.easeTo({
+        center: [driverLocation.lng, driverLocation.lat],
+        duration: 800,
+      })
+      return
+    }
 
     if (mapAnchor) {
       const bounds = new maplibregl.LngLatBounds()
@@ -183,7 +199,7 @@ export function MapView({
       duration: 700,
       zoom: 15,
     })
-  }, [showMap, driverLocation, mapAnchor])
+  }, [showMap, driverLocation, mapAnchor, onPlanningMapClick, tripPickup, tripDropoff])
 
   useEffect(() => {
     if (!planningRecenter || !planningRecenterKey) return
