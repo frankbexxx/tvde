@@ -84,7 +84,9 @@ export function DriverDashboard() {
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
-  const { position: driverLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
+  const { position: driverLocation, usedFallback: geolocationUsedFallback } = useGeolocation({
+    mockRole: 'driver',
+  })
   const [offline, setOffline] = useState(getStoredOffline)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -244,7 +246,7 @@ export function DriverDashboard() {
 
       {import.meta.env.DEV && isMockLocationModeEnabled() ? (
         <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
-          <span aria-hidden>🧪</span> Simulação — posição mock (intervalo 1&nbsp;s). Rota de teste em Lisboa.
+          <span aria-hidden>🧪</span> Simulação — rota motorista (intervalo 1&nbsp;s): começa ~3&nbsp;km de Oeiras, corredor Lisboa/Cascais/Oeiras.
         </div>
       ) : null}
 

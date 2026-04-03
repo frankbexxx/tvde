@@ -73,7 +73,9 @@ export function PassengerDashboard() {
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [retrySearchPending, setRetrySearchPending] = useState(false)
-  const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
+  const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation({
+    mockRole: 'passenger',
+  })
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
   /** A015/A016: planeamento no mapa (sem backend até A018) */
   const [pickupLocation, setPickupLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -706,7 +708,7 @@ export function PassengerDashboard() {
     >
       {import.meta.env.DEV && isMockLocationModeEnabled() ? (
         <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
-          <span aria-hidden>🧪</span> Simulação — posição mock (intervalo 1&nbsp;s). A tua posição no mapa segue a rota de teste.
+          <span aria-hidden>🧪</span> Simulação — posição em Oeiras (recolha, intervalo 1&nbsp;s). No outro browser o motorista tem rota longa (~3&nbsp;km de distância no início).
         </div>
       ) : null}
 

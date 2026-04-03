@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { isMockLocationModeEnabled } from '../dev/mockLocation'
 import { MOCK_ROUTE_SIMULATION_INTERVAL_MS, startRouteSimulation } from '../dev/simulateRoute'
-import { TEST_ROUTE_EXTENDED } from '../dev/testRoutes'
+import { MOCK_DRIVER_ROUTE, MOCK_PASSENGER_ROUTE } from '../dev/testRoutes'
 import { warn as logWarn } from '../utils/logger'
 
 type LatLng = {
@@ -77,6 +77,20 @@ export type GeolocationResult = {
   usedFallback: boolean
 }
 
+export type GeolocationMockRole = 'passenger' | 'driver'
+
+export type UseGeolocationOptions = {
+  /**
+   * Em modo mock (dev): define qual rota simular.
+   * Passageiro = Oeiras (recolha); motorista = corredor ~3 km afastado (Cascais / Lisboa / Oeiras).
+   */
+  mockRole?: GeolocationMockRole
+}
+
+function mockRouteForRole(role: GeolocationMockRole) {
+  return role === 'driver' ? MOCK_DRIVER_ROUTE : MOCK_PASSENGER_ROUTE
+}
+
 /**
  * Watches the user's geolocation using the browser Geolocation API.
  * - Returns { position, usedFallback }
@@ -84,10 +98,15 @@ export type GeolocationResult = {
  * - Uses high accuracy when possible
  * - Ignores tiny movements (< ~5m) to reduce React re-renders and jitter.
  */
-export function useGeolocation(): GeolocationResult {
+export function useGeolocation(options?: UseGeolocationOptions): GeolocationResult {
+  const mockRole = options?.mockRole ?? 'passenger'
+
   const [position, setPosition] = useState<LatLng>(() => {
-    if (isMockLocationModeEnabled() && TEST_ROUTE_EXTENDED[0]) {
-      return { lat: TEST_ROUTE_EXTENDED[0].lat, lng: TEST_ROUTE_EXTENDED[0].lng }
+    if (isMockLocationModeEnabled()) {
+      const route = mockRouteForRole(mockRole)
+      if (route[0]) {
+        return { lat: route[0].lat, lng: route[0].lng }
+      }
     }
     if (isDemoLocationEnabled()) {
       return { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
@@ -100,8 +119,9 @@ export function useGeolocation(): GeolocationResult {
 
   useEffect(() => {
     if (isMockLocationModeEnabled()) {
+      const route = mockRouteForRole(mockRole)
       const stop = startRouteSimulation(
-        TEST_ROUTE_EXTENDED,
+        route,
         MOCK_ROUTE_SIMULATION_INTERVAL_MS,
         (pt) => {
           lastPositionRef.current = pt
@@ -203,7 +223,7 @@ export function useGeolocation(): GeolocationResult {
         fallbackTimeoutRef.current = null
       }
     }
-  }, [])
+  }, [mockRole])
 
   return { position, usedFallback }
 }
