@@ -89,7 +89,9 @@ export function MapView({
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
-  const smoothedDriver = useSmoothedLatLng(driverLocation, 480)
+  const driverSmoothMs =
+    import.meta.env.DEV && isMockLocationModeEnabled() ? 320 : 480
+  const smoothedDriver = useSmoothedLatLng(driverLocation, driverSmoothMs)
 
   const initialViewState = useMemo(
     () => ({
