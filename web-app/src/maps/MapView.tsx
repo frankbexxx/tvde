@@ -84,7 +84,10 @@ export function MapView({
   const prevDriverRef = useRef<LatLng | null>(null)
   const mapAnchor = useMemo(
     () => tripPickup ?? passengerLocation ?? null,
-    [tripPickup, passengerLocation]
+    // Só lat/lng: o passageiro pode passar literais `{ lat, lng }` novos a cada render com as mesmas coordenadas;
+    // referências de objeto fariam este memo (e o efeito que usa mapAnchor) disparar sem necessidade.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tripPickup?.lat, tripPickup?.lng, passengerLocation?.lat, passengerLocation?.lng]
   )
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
