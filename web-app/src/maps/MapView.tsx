@@ -89,6 +89,12 @@ export function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [tripPickup?.lat, tripPickup?.lng, passengerLocation?.lat, passengerLocation?.lng]
   )
+  /** Só reage a coordenadas: evita reexecutar o efeito do mapa quando o pai passa novas referências com os mesmos pontos. */
+  const hasActiveTripMarkers = useMemo(
+    () => Boolean(tripPickup && tripDropoff),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mesma razão que mapAnchor: identidade dos objetos instável no passageiro
+    [tripPickup?.lat, tripPickup?.lng, tripDropoff?.lat, tripDropoff?.lng]
+  )
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
@@ -173,7 +179,6 @@ export function MapView({
     }
     prevDriverRef.current = driverLocation
 
-    const hasActiveTripMarkers = Boolean(tripPickup && tripDropoff)
     const mockMapFollow =
       import.meta.env.DEV &&
       isMockLocationModeEnabled() &&
@@ -204,10 +209,10 @@ export function MapView({
       duration: 700,
       zoom: 15,
     })
-  }, [showMap, driverLocation, mapAnchor, onPlanningMapClick, tripPickup, tripDropoff])
+  }, [showMap, driverLocation, mapAnchor, onPlanningMapClick, hasActiveTripMarkers])
 
   useEffect(() => {
-    if (!planningRecenter || !planningRecenterKey) return
+    if (!planningRecenter) return
     const map = mapRef.current?.getMap()
     if (!map) return
     map.easeTo({
@@ -215,6 +220,7 @@ export function MapView({
       duration: 650,
       zoom: Math.max(map.getZoom(), 13),
     })
+    // planningRecenterKey nas deps: 0 é válido na 1.ª vez; incrementar repete a animação para o mesmo ponto.
   }, [planningRecenter, planningRecenterKey])
 
   const handleMapClick = useCallback(
@@ -293,8 +299,8 @@ export function MapView({
             </>
           ) : null}
 
-          {/* A015/A016: pickup âmbar; passageiro só se ainda sem pickup */}
-          {!tripPickup || !tripDropoff
+          {/* A015/A016: só em planeamento — sem marcadores de viagem ativa (evita sobrepor com um só leg definido). */}
+          {!tripPickup && !tripDropoff
             ? pickupSelection ? (
                 <PassengerMarker
                   longitude={pickupSelection.lng}
@@ -307,7 +313,7 @@ export function MapView({
                 )
               )
             : null}
-          {!tripPickup || !tripDropoff
+          {!tripPickup && !tripDropoff
             ? dropoffSelection ? (
                 <PassengerMarker
                   longitude={dropoffSelection.lng}
