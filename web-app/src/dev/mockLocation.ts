@@ -1,6 +1,9 @@
 /**
  * Modo de simulação de GPS — só em desenvolvimento (Vite DEV).
  * Produção: import.meta.env.DEV é false → isto nunca activa o mock.
+ *
+ * Ativar: `localStorage.setItem('mockLocation', 'true')` e recarregar — ou botão «Simular rota» em Configuração (Dev).
+ * Desativar: `localStorage.removeItem('mockLocation')` e recarregar.
  */
 
 export const MOCK_LOCATION_STORAGE_KEY = 'mockLocation'

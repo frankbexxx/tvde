@@ -5,6 +5,10 @@ import { assignTripAdmin, runTimeoutsAdmin } from '../../api/trips'
 import { apiFetch, API_BASE } from '../../api/client'
 import { getExportFilename, getDeviceId, getCurrentRun, resetRun } from '../../utils/exportLogs'
 import {
+  isMockLocationModeEnabled,
+  setMockLocationModeEnabled,
+} from '../../dev/mockLocation'
+import {
   isDemoLocationEnabled,
   setDemoLocationEnabled,
 } from '../../hooks/useGeolocation'
@@ -138,6 +142,18 @@ export function DevTools({
     window.location.reload()
   }
 
+  const handleToggleMockLocation = () => {
+    const next = !isMockLocationModeEnabled()
+    setMockLocationModeEnabled(next)
+    addLog(
+      next
+        ? 'Simulação de rota ativada (localStorage mockLocation=true) — recarregar'
+        : 'Simulação de rota desativada',
+      'info'
+    )
+    window.location.reload()
+  }
+
   const handleSeed = async () => {
     setStatus('A executar seed...')
     addLog('Clique: Seed', 'action')
@@ -223,6 +239,18 @@ export function DevTools({
             title="Usar Oeiras (Câmara Municipal) sem pedir permissão de localização (útil no PC)"
           >
             {isDemoLocationEnabled() ? '✓ Demo Oeiras' : 'Demo Oeiras'}
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleMockLocation}
+            className={`px-3 py-1.5 text-sm rounded-lg ${
+              isMockLocationModeEnabled()
+                ? 'bg-violet-500/25 text-violet-200 border border-violet-400/40'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+            title="Simular movimento ao longo de uma rota de teste (só npm run dev). Console: localStorage.setItem('mockLocation','true')"
+          >
+            {isMockLocationModeEnabled() ? '✓ Simular rota' : 'Simular rota'}
           </button>
           <button
             onClick={handleSeed}
