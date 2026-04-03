@@ -1,5 +1,8 @@
 export type RoutePoint = { lat: number; lng: number }
 
+/** Intervalo entre pontos na simulação de rota (modo dev / mock). */
+export const MOCK_ROUTE_SIMULATION_INTERVAL_MS = 1000
+
 export type StopRouteSimulation = () => void
 
 export type RouteSimulationOptions = {

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { isMockLocationModeEnabled } from '../dev/mockLocation'
-import { startRouteSimulation } from '../dev/simulateRoute'
-import { TEST_ROUTE_OEIRAS_LOOP } from '../dev/testRoutes'
+import { MOCK_DRIVER_START, MOCK_PASSENGER_POSITION } from '../dev/mockPositions'
 import { warn as logWarn } from '../utils/logger'
 
 type LatLng = {
@@ -77,6 +76,17 @@ export type GeolocationResult = {
   usedFallback: boolean
 }
 
+export type GeolocationMockRole = 'passenger' | 'driver'
+
+export type UseGeolocationOptions = {
+  /** Em modo mock (dev): posição fixa — passageiro na recolha, motorista afastado (até simulação pós-aceitar). */
+  mockRole?: GeolocationMockRole
+}
+
+function mockFixedPosition(role: GeolocationMockRole) {
+  return role === 'driver' ? MOCK_DRIVER_START : MOCK_PASSENGER_POSITION
+}
+
 /**
  * Watches the user's geolocation using the browser Geolocation API.
  * - Returns { position, usedFallback }
@@ -84,10 +94,13 @@ export type GeolocationResult = {
  * - Uses high accuracy when possible
  * - Ignores tiny movements (< ~5m) to reduce React re-renders and jitter.
  */
-export function useGeolocation(): GeolocationResult {
+export function useGeolocation(options?: UseGeolocationOptions): GeolocationResult {
+  const mockRole = options?.mockRole ?? 'passenger'
+
   const [position, setPosition] = useState<LatLng>(() => {
-    if (isMockLocationModeEnabled() && TEST_ROUTE_OEIRAS_LOOP[0]) {
-      return { lat: TEST_ROUTE_OEIRAS_LOOP[0].lat, lng: TEST_ROUTE_OEIRAS_LOOP[0].lng }
+    if (isMockLocationModeEnabled()) {
+      const p = mockFixedPosition(mockRole)
+      return { lat: p.lat, lng: p.lng }
     }
     if (isDemoLocationEnabled()) {
       return { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
@@ -100,17 +113,13 @@ export function useGeolocation(): GeolocationResult {
 
   useEffect(() => {
     if (isMockLocationModeEnabled()) {
-      const stop = startRouteSimulation(
-        TEST_ROUTE_OEIRAS_LOOP,
-        3500,
-        (pt) => {
-          lastPositionRef.current = pt
-          setPosition(pt)
-          setUsedFallback(false)
-        },
-        { loop: true }
-      )
-      return stop
+      const fixed = mockFixedPosition(mockRole)
+      lastPositionRef.current = fixed
+      queueMicrotask(() => {
+        setPosition(fixed)
+        setUsedFallback(false)
+      })
+      return
     }
 
     if (isDemoLocationEnabled()) {
@@ -203,7 +212,7 @@ export function useGeolocation(): GeolocationResult {
         fallbackTimeoutRef.current = null
       }
     }
-  }, [])
+  }, [mockRole])
 
   return { position, usedFallback }
 }

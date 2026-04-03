@@ -16,6 +16,7 @@ import {
 } from '../../constants/tripStatus'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { isMockLocationModeEnabled } from '../../dev/mockLocation'
+import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
@@ -73,7 +74,9 @@ export function PassengerDashboard() {
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [retrySearchPending, setRetrySearchPending] = useState(false)
-  const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation()
+  const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation({
+    mockRole: 'passenger',
+  })
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
   /** A015/A016: planeamento no mapa (sem backend até A018) */
   const [pickupLocation, setPickupLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -598,10 +601,17 @@ export function PassengerDashboard() {
 
   const routeForMap = useMemo(() => {
     if (showPassengerMap && activeTrip) {
-      return {
-        from: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
-        to: { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng },
+      const pickup = { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng }
+      const destination = { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng }
+      const mockApproachPhase =
+        import.meta.env.DEV &&
+        isMockLocationModeEnabled() &&
+        ['accepted', 'arriving'].includes(activeTrip.status)
+      if (mockApproachPhase) {
+        return { from: MOCK_DRIVER_START, to: pickup }
       }
+      // ongoing (+ resto): mesma linha recolha→destino (alinhado com fase 2 mock no motorista)
+      return { from: pickup, to: destination }
     }
     return undefined
   }, [showPassengerMap, activeTrip])
@@ -705,8 +715,8 @@ export function PassengerDashboard() {
       }
     >
       {import.meta.env.DEV && isMockLocationModeEnabled() ? (
-        <div className="rounded-lg bg-violet-500/15 border border-violet-400/40 px-3 py-2 text-sm text-violet-200">
-          <span aria-hidden>🧪</span> Modo simulação — a tua posição no mapa segue a rota de teste (Dev).
+        <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
+          <span aria-hidden>🧪</span> Simulação — passageiro fixo; motorista aproxima-se em tempo real após aceitar (rota OSRM).
         </div>
       ) : null}
 
