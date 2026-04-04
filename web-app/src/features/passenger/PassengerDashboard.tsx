@@ -35,6 +35,10 @@ import {
 import { DestinationSearchField } from './DestinationSearchField'
 import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../../hooks/usePassengerDriverLocation'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
+import {
+  passengerTripPollEquals,
+  type PassengerTripPollResult,
+} from './passengerTripPollEquals'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
 import {
@@ -58,11 +62,7 @@ const ESTIMATE_MOCK = '4–6'
 
 const HAS_MAPTILER_KEY = Boolean(import.meta.env.VITE_MAPTILER_KEY)
 
-/** Resultado do poll do detalhe — `notFound` só após 404 explícito (não confundir com erro de rede). */
-type PassengerTripPollResult = {
-  trip: TripDetailResponse | null
-  notFound: boolean
-}
+function passengerDashboardNoop() {}
 
 export function PassengerDashboard() {
   const { token } = useAuth()
@@ -146,7 +146,8 @@ export function PassengerDashboard() {
     fetchPassengerActiveTrip,
     [fetchPassengerActiveTrip],
     !!activeTripId && !!token,
-    3000
+    3000,
+    { equals: passengerTripPollEquals }
   )
 
   const activeTripPolled = activeTripPoll?.trip ?? null
@@ -189,11 +190,12 @@ export function PassengerDashboard() {
     Boolean(activeTripId && activeTrip)
   )
 
+  /** Sem «A atualizar…» em cada poll de fundo — só pisca o painel; stall e erro mantêm-se. */
   const tripPollFootnote = activeTripId
     ? activeTripPollFault
       ? 'Não foi possível atualizar agora. Verifica a ligação — voltamos a tentar de seguida.'
-      : activeTripRefreshing
-        ? 'A atualizar estado…'
+      : activeTripLoading && !activeTripPolled
+        ? 'A sincronizar viagem…'
         : tripPollStalled
           ? 'Sem novidades há instantes — a última informação mantém-se válida.'
           : null
@@ -298,6 +300,18 @@ export function PassengerDashboard() {
     setGeoSuggestions([])
   }, [])
 
+  const onChoosePlanningMode = useCallback(() => {
+    setIsPlanningMode(true)
+  }, [])
+
+  const onScrollToMapAnchor = useCallback(() => {
+    mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [])
+
+  const dismissGeoSuggestions = useCallback(() => {
+    setGeoSuggestions([])
+  }, [])
+
   const handleDestinationPick = useCallback((s: GeocodeSuggestion) => {
     setDropoffLocation({ lat: s.lat, lng: s.lng })
     setDestinationQuery(s.primary)
@@ -317,7 +331,7 @@ export function PassengerDashboard() {
     setDropoffLocation(coords)
   }, [])
 
-  const handleRequestTrip = async () => {
+  const handleRequestTrip = useCallback(async () => {
     if (!token) return
     if (!pickupLocation || !dropoffLocation) return
     if (creating) return
@@ -356,9 +370,19 @@ export function PassengerDashboard() {
     } finally {
       setCreating(false)
     }
-  }
+  }, [
+    token,
+    pickupLocation,
+    dropoffLocation,
+    creating,
+    addLog,
+    setStatus,
+    refetchHistory,
+    setPassengerPendingTripDetail,
+    setPassengerActiveTripId,
+  ])
 
-  const handleCancel = async () => {
+  const handleCancel = useCallback(async () => {
     if (!activeTripId || !token || cancelling) return
     setError(null)
     setCancelling(true)
@@ -382,7 +406,16 @@ export function PassengerDashboard() {
     } finally {
       setCancelling(false)
     }
-  }
+  }, [
+    activeTripId,
+    token,
+    cancelling,
+    addLog,
+    setStatus,
+    refetchHistory,
+    setPassengerPendingTripDetail,
+    setPassengerActiveTripId,
+  ])
 
   /** P36: cancela o pedido actual e cria um novo com a mesma recolha/destino (re-disparo de dispatch). */
   const handleRetrySearch = useCallback(async () => {
@@ -672,15 +705,16 @@ export function PassengerDashboard() {
         ? 'Cancelar'
         : null
 
-  const primaryOnClick =
-    primaryLabel === 'Pedir nova viagem'
-      ? () => {
-          setPassengerActiveTripId(null)
-          setIsPlanningMode(false)
-        }
-      : primaryLabel === 'Cancelar'
-        ? handleCancel
-        : () => {}
+  const handleStartNewTripAfterComplete = useCallback(() => {
+    setPassengerActiveTripId(null)
+    setIsPlanningMode(false)
+  }, [setPassengerActiveTripId])
+
+  const primaryOnClick = useMemo(() => {
+    if (primaryLabel === 'Pedir nova viagem') return handleStartNewTripAfterComplete
+    if (primaryLabel === 'Cancelar') return handleCancel
+    return passengerDashboardNoop
+  }, [primaryLabel, handleStartNewTripAfterComplete, handleCancel])
 
   // When trip completed (from driver-location 409 or trip poll): show TRIP_COMPLETED, then clear after 2s.
   useEffect(() => {
@@ -749,7 +783,7 @@ export function PassengerDashboard() {
                   onSelect={handleDestinationPick}
                   disabled={creating}
                   geocodingUnavailable={!HAS_MAPTILER_KEY}
-                  onDismissSuggestions={() => setGeoSuggestions([])}
+                  onDismissSuggestions={dismissGeoSuggestions}
                 />
               </div>
             ) : null}
@@ -826,10 +860,8 @@ export function PassengerDashboard() {
                     ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
                     : null
                 }
-                onChooseMap={() => setIsPlanningMode(true)}
-                onSetDestinationHint={() =>
-                  mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                }
+                onChooseMap={onChoosePlanningMode}
+                onSetDestinationHint={onScrollToMapAnchor}
                 onReset={resetPlanning}
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
@@ -900,10 +932,8 @@ export function PassengerDashboard() {
                     ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
                     : null
                 }
-                onChooseMap={() => setIsPlanningMode(true)}
-                onSetDestinationHint={() =>
-                  mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                }
+                onChooseMap={onChoosePlanningMode}
+                onSetDestinationHint={onScrollToMapAnchor}
                 onReset={resetPlanning}
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
