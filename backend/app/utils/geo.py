@@ -31,3 +31,8 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     return R_EARTH_KM * c
+
+
+def haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance between two WGS84 points in metres."""
+    return haversine_km(lat1, lon1, lat2, lon2) * 1000.0

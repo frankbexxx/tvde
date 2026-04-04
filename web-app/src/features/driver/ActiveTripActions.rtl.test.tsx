@@ -44,7 +44,10 @@ function minimalTrip(status: TripDetailResponse['status']): TripDetailResponse {
   }
 }
 
-function renderActions() {
+/** ~44 m N of equator — dentro do raio de «Iniciar viagem» com origin 0,0. */
+const DRIVER_NEAR_PICKUP_0 = { lat: 0.0004, lng: 0 }
+
+function renderActions(driverLocation: { lat: number; lng: number } | null = DRIVER_NEAR_PICKUP_0) {
   const addLog = vi.fn()
   const setStatus = vi.fn()
   const onClear = vi.fn()
@@ -55,6 +58,7 @@ function renderActions() {
     <ActiveTripActions
       tripId="tid"
       token="tok"
+      driverLocation={driverLocation}
       addLog={addLog}
       setStatus={setStatus}
       statusOverride={null}
@@ -75,12 +79,21 @@ describe('ActiveTripActions (RTL)', () => {
 
   it('estado accepted: botão Iniciar viagem chama sequência start (driverPerformStartFromAccepted)', async () => {
     pollingCtx.trip = minimalTrip('accepted')
-    renderActions()
+    renderActions(DRIVER_NEAR_PICKUP_0)
     fireEvent.click(screen.getByRole('button', { name: /iniciar viagem/i }))
     await waitFor(() => {
       expect(driverTripActions.driverPerformStartFromAccepted).toHaveBeenCalledWith('tid', 'tok')
     })
     expect(driverTripActions.driverPerformComplete).not.toHaveBeenCalled()
+  })
+
+  it('estado accepted: com motorista longe do pickup, Iniciar viagem desactivado e não chama API', () => {
+    pollingCtx.trip = minimalTrip('accepted')
+    renderActions({ lat: 2, lng: 2 })
+    const btn = screen.getByRole('button', { name: /iniciar viagem/i })
+    expect(btn).toBeDisabled()
+    fireEvent.click(btn)
+    expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
   })
 
   it('estado ongoing: botão Terminar viagem chama driverPerformComplete', async () => {

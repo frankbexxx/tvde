@@ -21,7 +21,7 @@ from app.schemas.trip import TripCreateRequest
 from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import calculate_price
-from app.utils.geo import haversine_km
+from app.utils.geo import haversine_km, haversine_m
 from app.services.offer_dispatch import create_offers_for_trip
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
@@ -1027,6 +1027,36 @@ def start_trip(
     trip = _get_trip_for_driver(db=db, driver_id=driver_id, trip_id=trip_id)
     if trip.status != TripStatus.arriving:
         _raise_invalid_state()
+
+    driver_uuid = uuid.UUID(str(driver_id))
+    loc = db.execute(
+        select(DriverLocation).where(DriverLocation.driver_id == driver_uuid).limit(1)
+    ).scalar_one_or_none()
+    if loc is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="driver_location_required",
+        )
+    distance_m = haversine_m(
+        float(loc.lat),
+        float(loc.lng),
+        float(trip.origin_lat),
+        float(trip.origin_lng),
+    )
+    max_m = float(settings.DRIVER_START_TRIP_MAX_DISTANCE_M)
+    log_event(
+        "driver_start_trip_distance_check",
+        trip_id=str(trip.id),
+        driver_id=driver_id,
+        distance_m=round(distance_m, 2),
+        max_m=max_m,
+        ok=distance_m <= max_m,
+    )
+    if distance_m > max_m:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="driver_too_far_from_pickup",
+        )
 
     validate_trip_transition(trip.status, TripStatus.ongoing, trip_id=str(trip.id))
     old_status = trip.status

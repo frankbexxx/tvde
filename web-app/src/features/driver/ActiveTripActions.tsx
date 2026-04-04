@@ -5,6 +5,7 @@ import { usePolling } from '../../hooks/usePolling'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { toast as sonnerToast } from 'sonner'
+import { DRIVER_START_TRIP_MAX_DISTANCE_M } from '../../utils/geo'
 import {
   driverPerformAccept,
   driverPerformCancel,
@@ -12,10 +13,13 @@ import {
   driverPerformStartFromAccepted,
   driverPerformStartFromArriving,
 } from './driverTripActions'
+import { canDriverStartTripNearPickup } from './driverPickupGate'
 
 export interface ActiveTripActionsProps {
   tripId: string
   token: string
+  /** Posição actual do motorista (real ou simulada); necessária para o gate de «Iniciar viagem». */
+  driverLocation: { lat: number; lng: number } | null
   addLog: (msg: string, type?: 'info' | 'success' | 'error' | 'action') => void
   setStatus: (msg: string) => void
   statusOverride: string | null
@@ -28,6 +32,7 @@ export interface ActiveTripActionsProps {
 export function ActiveTripActions({
   tripId,
   token,
+  driverLocation,
   addLog,
   setStatus,
   statusOverride,
@@ -44,6 +49,13 @@ export function ActiveTripActions({
     2000
   )
   const displayStatus = mergeDriverPolledWithOverride(trip?.status, statusOverride, 'accepted')
+  const pickupCoords =
+    trip != null ? { lat: trip.origin_lat, lng: trip.origin_lng } : null
+  const startTripAllowed = canDriverStartTripNearPickup(
+    displayStatus,
+    driverLocation,
+    pickupCoords
+  )
 
   useEffect(() => {
     if (!statusOverride || !trip?.status) return
@@ -69,6 +81,16 @@ export function ActiveTripActions({
     actionName: string
   ) => {
     if (loading) return
+    if (
+      actionName === 'Iniciar viagem' &&
+      !canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
+    ) {
+      const msg = `Aproxima-te do ponto de recolha (até ~${DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar.`
+      onError(msg)
+      setStatus('Erro')
+      addLog(`Bloqueado: ${actionName} — longe do pickup`, 'error')
+      return
+    }
     setLoading(true)
     onError('')
     setStatus(`A executar: ${actionName}...`)
@@ -120,6 +142,10 @@ export function ActiveTripActions({
     displayStatus === 'accepted' ||
     displayStatus === 'arriving'
 
+  const startTripGateActive =
+    (displayStatus === 'accepted' || displayStatus === 'arriving') &&
+    buttonConfig.label === 'Iniciar viagem'
+
   return (
     <div className="space-y-2">
       {loadingLong ? (
@@ -127,11 +153,16 @@ export function ActiveTripActions({
           Ainda a processar… Se demorar muito, verifica a ligação.
         </p>
       ) : null}
+      {startTripGateActive && !startTripAllowed ? (
+        <p className="text-center text-xs text-foreground/65 px-1" aria-live="polite">
+          Aproxima-te do ponto de recolha (~{DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar a viagem.
+        </p>
+      ) : null}
       <PrimaryActionButton
         onClick={() => {
           void run(buttonConfig.action, buttonConfig.label)
         }}
-        disabled={loading}
+        disabled={loading || (startTripGateActive && !startTripAllowed)}
         loading={loading}
       >
         {buttonConfig.label}

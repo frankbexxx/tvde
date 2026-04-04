@@ -46,6 +46,10 @@ import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { ActiveTripActions } from './ActiveTripActions'
 import { formatPickup, formatDestination } from '../../utils/format'
+import {
+  DRIVER_START_TRIP_MAX_DISTANCE_M,
+  isWithinHaversineM,
+} from '../../utils/geo'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 
@@ -110,6 +114,10 @@ export function DriverDashboard() {
   } | null>(null)
 
   const driverLocation = mockSimulatedPosition ?? geoDriverPosition
+  const driverLocationRef = useRef(driverLocation ?? null)
+  useEffect(() => {
+    driverLocationRef.current = driverLocation ?? null
+  }, [driverLocation])
   const [offline, setOffline] = useState(getStoredOffline)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -313,6 +321,7 @@ export function DriverDashboard() {
           <ActiveTripActions
             tripId={activeTripId}
             token={token!}
+            driverLocation={driverLocation ?? null}
             addLog={addLog}
             setStatus={setStatus}
             statusOverride={driverStatusOverride}
@@ -327,9 +336,18 @@ export function DriverDashboard() {
                 ) => {
                   tripSimStopRef.current?.()
                   tripSimStopRef.current = null
-                  setMockSimulatedPosition(pickup)
-                  void sendDriverLocation(pickup.lat, pickup.lng)
-                  startMockOsrmLeg(pickup, destination)
+                  const pos = driverLocationRef.current
+                  const nearPickup =
+                    pos != null &&
+                    isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
+                  if (!nearPickup) {
+                    setMockSimulatedPosition(pickup)
+                    void sendDriverLocation(pickup.lat, pickup.lng)
+                  }
+                  const routeFrom = nearPickup && pos ? pos : pickup
+                  window.setTimeout(() => {
+                    startMockOsrmLeg(routeFrom, destination)
+                  }, 200)
                 }
                 const legs = acceptedTripGeoRef.current
                 if (legs) {

@@ -4,6 +4,8 @@ e com ENV=dev ou ENABLE_DEV_TOOLS (ver Settings.dev_tools_router_enabled).
 """
 
 import random
+import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, text
@@ -12,7 +14,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.auth.security import create_access_token
 from app.core.config import settings
-from app.db.models.driver import Driver
+from app.db.models.driver import Driver, DriverLocation
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.user import User
@@ -40,6 +42,29 @@ router = APIRouter(prefix="/dev", tags=["dev"])
 # --- Lisbon bounding box ---
 LISBON_LAT_MIN, LISBON_LAT_MAX = 38.70, 38.80
 LISBON_LNG_MIN, LISBON_LNG_MAX = -9.20, -9.10
+
+
+def _sync_driver_location_to_pickup(
+    db: Session, driver_user_id: uuid.UUID, origin_lat: float, origin_lng: float
+) -> None:
+    """Ensure dev auto-trip passes start_trip proximity check (pickup = contract point)."""
+    loc = db.execute(
+        select(DriverLocation).where(DriverLocation.driver_id == driver_user_id).limit(1)
+    ).scalar_one_or_none()
+    now = datetime.now(timezone.utc)
+    if loc:
+        loc.lat = origin_lat
+        loc.lng = origin_lng
+        loc.timestamp = now
+    else:
+        db.add(
+            DriverLocation(
+                driver_id=driver_user_id,
+                lat=origin_lat,
+                lng=origin_lng,
+                timestamp=now,
+            )
+        )
 
 
 def _random_lisbon_coords() -> tuple[float, float]:
@@ -237,6 +262,10 @@ async def dev_auto_trip(db: Session = Depends(get_db)) -> dict:
         payload=payload,
     )
     trip_id = str(trip.id)
+    _sync_driver_location_to_pickup(
+        db, driver.id, float(trip.origin_lat), float(trip.origin_lng)
+    )
+    db.commit()
 
     assign_trip_service(db=db, trip_id=trip_id)
     trip, _ = accept_trip_service(

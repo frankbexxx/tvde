@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     # Geographic radius (km) for driver–trip matching. Drivers see trips within this distance;
     # passengers are matched to drivers within this radius. Covers e.g. Lisbon metro (Oeiras, etc.).
     GEO_RADIUS_KM: float = 50.0
+    # Max distance (m) from trip pickup for POST /driver/trips/{id}/start. Slightly above the
+    # frontend gate (~50 m) so minor GPS jitter does not false-reject.
+    DRIVER_START_TRIP_MAX_DISTANCE_M: float = 70.0
     # Max age (seconds) for driver location. Older locations excluded from dispatch (A006 geo stability).
     LOCATION_MAX_AGE_SECONDS: int = 45
 
