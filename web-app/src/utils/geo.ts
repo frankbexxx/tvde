@@ -12,6 +12,17 @@ export function haversineKm(a: { lat: number; lng: number }, b: { lat: number; l
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)))
 }
 
+/** Raio para o motorista poder «Iniciar viagem» em relação ao ponto de recolha (contrato no mapa). */
+export const DRIVER_START_TRIP_MAX_DISTANCE_M = 50
+
+export function isWithinHaversineM(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+  maxMeters: number
+): boolean {
+  return haversineKm(a, b) * 1000 <= maxMeters
+}
+
 /** Copy curta para UI passageiro (PT). */
 export function formatApproxDistanceKm(km: number): string {
   if (km < 1) return `a ~${Math.round(km * 1000)} m`
