@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
@@ -55,7 +56,7 @@ export interface TripPlannerPanelProps {
  * A019: painel inferior com copy e ações por estado UX (Uber-like).
  * A021: hierarquia visual, contraste sem text-muted fraco em bg-muted; densidade reduzida.
  */
-export function TripPlannerPanel({
+function TripPlannerPanelInner({
   uiState,
   emphasis = 'primary',
   hasPickup,
@@ -283,3 +284,6 @@ export function TripPlannerPanel({
     </section>
   )
 }
+
+export const TripPlannerPanel = memo(TripPlannerPanelInner)
+TripPlannerPanel.displayName = 'TripPlannerPanel'

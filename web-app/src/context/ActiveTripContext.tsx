@@ -19,8 +19,21 @@ interface ActiveTripContextValue extends ActiveTripState {
 
 const ActiveTripContext = createContext<ActiveTripContextValue | null>(null)
 
+const E2E_PASSENGER_TRIP_KEY = 'e2e_passenger_trip_id'
+
+function readE2EPassengerTripId(): string | null {
+  if (import.meta.env.VITE_E2E !== 'true') return null
+  try {
+    return sessionStorage.getItem(E2E_PASSENGER_TRIP_KEY)
+  } catch {
+    return null
+  }
+}
+
 export function ActiveTripProvider({ children }: { children: ReactNode }) {
-  const [passengerActiveTripId, setPassengerActiveTripIdState] = useState<string | null>(null)
+  const [passengerActiveTripId, setPassengerActiveTripIdState] = useState<string | null>(() =>
+    readE2EPassengerTripId()
+  )
   const [driverActiveTripId, setDriverActiveTripIdState] = useState<string | null>(null)
 
   const setPassengerActiveTripId = useCallback((id: string | null) => {

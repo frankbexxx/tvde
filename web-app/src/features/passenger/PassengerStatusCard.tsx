@@ -1,7 +1,7 @@
 /**
  * B002 / A014: Conteúdo visual por estado da viagem — clareza, sem depender só de logs.
  */
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import { TripCard } from '../../components/cards/TripCard'
 import { formatPickup, formatDestination } from '../../utils/format'
@@ -74,7 +74,7 @@ interface PassengerStatusCardProps {
   retrySearchPending?: boolean
 }
 
-export function PassengerStatusCard({
+function PassengerStatusCardInner({
   uxState,
   activeTrip,
   isSubmittingTrip = false,
@@ -228,3 +228,6 @@ export function PassengerStatusCard({
       return null
   }
 }
+
+export const PassengerStatusCard = memo(PassengerStatusCardInner)
+PassengerStatusCard.displayName = 'PassengerStatusCard'

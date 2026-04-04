@@ -32,6 +32,10 @@ Coisas que **não** vamos fazer neste momento, mas queremos **não esquecer** (c
 
 ---
 
+## UI / performance
+
+- [x] [UX] Se o painel passageiro ainda tremer nalgum cenário: `React.memo(TripPlannerPanel)` + callbacks estáveis (`useCallback`) no `PassengerDashboard` (hoje há handlers inline que invalidam memo).
+
 ## Dados e contrato
 
 - [ ] [BACKEND] Garantir que `pickup` (lat/lng) é **fonte de verdade**; qualquer ajuste fino do passageiro **persiste** no registo da viagem (motorista, mapa, cobrança alinhados).

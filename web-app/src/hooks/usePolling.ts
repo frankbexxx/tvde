@@ -4,6 +4,14 @@ import { error as logError } from '../utils/logger'
 
 const DEFAULT_POLL_INTERVAL_MS = 3000
 
+export type UsePollingOptions<T> = {
+  /**
+   * When the callback returns data semantically equal to the last success, keep the
+   * previous state reference — avoids re-renders (e.g. passenger trip panel blink).
+   */
+  equals?: (prev: T, next: T) => boolean
+}
+
 /**
  * Hook for polling. Callback is invoked immediately and then every interval.
  * Pass deps to stabilize refetch (e.g. [token]) — avoids re-running on every render.
@@ -13,7 +21,8 @@ export function usePolling<T>(
   fn: () => Promise<T>,
   deps: unknown[],
   enabled = true,
-  intervalMs = DEFAULT_POLL_INTERVAL_MS
+  intervalMs = DEFAULT_POLL_INTERVAL_MS,
+  options?: UsePollingOptions<T>
 ): {
   data: T | null
   refetch: () => Promise<void>
@@ -40,8 +49,11 @@ export function usePolling<T>(
       setIsLoading(true)
       const result = await fn()
       setPollFault(false)
-      setData(result)
-      dataRef.current = result
+      const prev = dataRef.current
+      const next =
+        prev !== null && options?.equals?.(prev, result) ? prev : result
+      dataRef.current = next
+      setData(next)
       setLastSuccessAt(Date.now())
     } catch (err) {
       logError('Poll error:', err)
@@ -50,9 +62,9 @@ export function usePolling<T>(
       setIsLoading(false)
       setIsRefreshing(false)
     }
-    // deps is intentional (callers pass [token] etc.); fn is latest from closure
+    // deps + equals from caller; fn closes over latest fn from render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+  }, [...deps, options?.equals])
 
   useEffect(() => {
     if (!enabled) {
