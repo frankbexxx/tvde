@@ -12,6 +12,8 @@ from .api_client import (
     list_available_trips,
     accept_trip,
     arriving_trip,
+    get_driver_trip_detail,
+    post_driver_location,
     start_trip,
     complete_trip,
 )
@@ -84,6 +86,13 @@ class DriverBot:
                         continue
                     raise
                 self._log(f"arriving trip {trip_id}")
+
+                detail = get_driver_trip_detail(self.token, trip_id)
+                post_driver_location(
+                    self.token,
+                    float(detail["origin_lat"]),
+                    float(detail["origin_lng"]),
+                )
 
                 await asyncio.sleep(random.uniform(START_SLEEP_MIN, START_SLEEP_MAX))
                 try:

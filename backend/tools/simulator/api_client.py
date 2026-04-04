@@ -90,6 +90,33 @@ def accept_trip(driver_token: str, trip_id: str) -> dict:
     return r.json()
 
 
+def get_driver_trip_detail(driver_token: str, trip_id: str) -> dict:
+    """GET /driver/trips/{trip_id} — origin/destination for proximity sync."""
+    _rate_limit_sync()
+    url = f"{API_BASE_URL}/driver/trips/{trip_id}"
+    r = httpx.get(url, headers=_headers(driver_token), timeout=REQUEST_TIMEOUT_SEC)
+    r.raise_for_status()
+    return r.json()
+
+
+def post_driver_location(driver_token: str, lat: float, lng: float) -> None:
+    """POST /drivers/location — required before start if not already at pickup."""
+    _rate_limit_sync()
+    url = f"{API_BASE_URL}/drivers/location"
+    payload = {
+        "lat": lat,
+        "lng": lng,
+        "timestamp": int(time.time() * 1000),
+    }
+    r = httpx.post(
+        url,
+        json=payload,
+        headers=_headers(driver_token),
+        timeout=REQUEST_TIMEOUT_SEC,
+    )
+    r.raise_for_status()
+
+
 def arriving_trip(driver_token: str, trip_id: str) -> dict:
     """POST /driver/trips/{trip_id}/arriving."""
     _rate_limit_sync()
