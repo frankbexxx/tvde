@@ -5,6 +5,7 @@ class Role(str, Enum):
     passenger = "passenger"
     driver = "driver"
     admin = "admin"
+    partner = "partner"
 
 
 class UserStatus(str, Enum):

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.user import User
@@ -19,6 +20,7 @@ from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.utils.geo import haversine_m
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _require_postgres() -> None:
@@ -79,6 +81,7 @@ def _create_driver_with_location(db: Session, lat: float, lng: float) -> str:
     db.add(u)
     db.flush()
     d = Driver(
+        partner_id=DEFAULT_PARTNER_UUID,
         user_id=u.id,
         status=DriverStatus.approved,
         commission_percent=15.0,
@@ -172,7 +175,9 @@ def test_start_trip_400_when_driver_location_missing(client: TestClient) -> None
         assert client.post(f"/driver/trips/{trip_id}/arriving").status_code == 200
 
         db.execute(
-            delete(DriverLocation).where(DriverLocation.driver_id == uuid.UUID(driver_id))
+            delete(DriverLocation).where(
+                DriverLocation.driver_id == uuid.UUID(driver_id)
+            )
         )
         db.commit()
 

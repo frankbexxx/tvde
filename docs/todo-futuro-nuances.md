@@ -17,6 +17,12 @@ Coisas que **não** vamos fazer neste momento, mas queremos **não esquecer** (c
 
 ---
 
+## Produto / multi-superfície (piloto comercial)
+
+- [ ] [PRODUTO] Fila em [`prompts/pilot-commercial/`](prompts/pilot-commercial/README.md): **A001–A003** (Fase 0) redigidas; **A004 em diante** (resto da fila) por fases — **parceiro** como critical path antes de expandir polish nos outros papéis.
+
+---
+
 ## Pickup / passageiro vs pin no mapa
 
 - [ ] [EDGE CASE] [UX] Cenário típico a antecipar: motorista **no pin** na rua, passageiro **~60 m+** (interior) — o app pode dizer “chegou” e o passageiro sentir que **não chegou nada**. Conflito de expectativa; resolver com regras de produto, não só copy solta.
@@ -43,4 +49,4 @@ Coisas que **não** vamos fazer neste momento, mas queremos **não esquecer** (c
 
 ---
 
-_Última actualização: 2026-03-27_
+_Última revisão: 2026-04-05_

@@ -35,6 +35,10 @@ _TEST_QUIET_EVENTS = frozenset(
         "dispatch_retry_success",
         "dispatch_retry_failed",
         "NO_READY_DRIVERS_AT_DISPATCH",
+        "partner_org_created",
+        "partner_org_admin_created",
+        "partner_driver_assigned",
+        "partner_api_access",
     }
 )
 

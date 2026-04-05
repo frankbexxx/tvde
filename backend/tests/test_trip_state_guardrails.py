@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_db, get_current_user
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
@@ -40,6 +41,7 @@ def _create_trip_in_accepted_state(db: Session) -> tuple[str, str]:
     db.flush()
 
     driver = Driver(
+        partner_id=DEFAULT_PARTNER_UUID,
         user_id=driver_user.id,
         status=DriverStatus.approved,
         commission_percent=15.0,

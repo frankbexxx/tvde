@@ -26,6 +26,7 @@ from app.api.routers import (
     health,
     logs,
     matching,
+    partner,
     passenger_trips,
     ws,
 )
@@ -153,6 +154,7 @@ app.include_router(drivers.router)
 app.include_router(drivers.driver_router)
 app.include_router(matching.router)
 app.include_router(admin.router)
+app.include_router(partner.router)
 app.include_router(ws.router)
 app.include_router(admin_ws.router)
 app.include_router(stripe_webhook.router)

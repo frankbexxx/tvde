@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.user import User
 from app.db.session import SessionLocal
@@ -27,6 +28,7 @@ def _create_driver(db: Session) -> str:
     db.flush()
 
     driver = Driver(
+        partner_id=DEFAULT_PARTNER_UUID,
         user_id=user.id,
         status=DriverStatus.approved,
         documents=None,
