@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from jwt.exceptions import InvalidTokenError
 
@@ -21,8 +21,11 @@ bearer_scheme_optional = HTTPBearer(scheme_name="BearerAuth", auto_error=False)
 
 
 class UserContext(BaseModel):
+    """Session context. partner_id is derived from DB (driver.partner_id or user.partner_org_id)."""
+
     user_id: str
     role: Role
+    partner_id: str | None = None
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -58,7 +61,17 @@ async def get_current_user(
             detail="invalid_token",
         )
 
-    user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    user = (
+        db.execute(
+            select(User)
+            .where(User.id == user_id)
+            .options(
+                joinedload(User.driver_profile),
+            )
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -70,7 +83,17 @@ async def get_current_user(
             detail="blocked",
         )
 
-    return UserContext(user_id=str(user.id), role=user.role)
+    partner_scope: str | None = None
+    if user.role == Role.driver and user.driver_profile is not None:
+        partner_scope = str(user.driver_profile.partner_id)
+    elif user.role == Role.partner and user.partner_org_id is not None:
+        partner_scope = str(user.partner_org_id)
+
+    return UserContext(
+        user_id=str(user.id),
+        role=user.role,
+        partner_id=partner_scope,
+    )
 
 
 async def get_current_admin(
@@ -107,6 +130,23 @@ def require_role(*roles: Role):
     return _require
 
 
+async def get_current_partner(
+    user: UserContext = Depends(get_current_user),
+) -> UserContext:
+    """Partner-only: must have role partner and a resolved tenant (partner_org_id)."""
+    if user.role != Role.partner:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="forbidden",
+        )
+    if not user.partner_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="partner_org_required",
+        )
+    return user
+
+
 async def get_optional_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme_optional),
     db: Session = Depends(get_db),
@@ -119,9 +159,26 @@ async def get_optional_user(
         user_id = payload.get("sub")
         if not user_id:
             return None
-        user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        user = (
+            db.execute(
+                select(User)
+                .where(User.id == user_id)
+                .options(joinedload(User.driver_profile))
+            )
+            .unique()
+            .scalar_one_or_none()
+        )
         if not user or user.status != UserStatus.active:
             return None
-        return UserContext(user_id=str(user.id), role=user.role)
+        partner_scope: str | None = None
+        if user.role == Role.driver and user.driver_profile is not None:
+            partner_scope = str(user.driver_profile.partner_id)
+        elif user.role == Role.partner and user.partner_org_id is not None:
+            partner_scope = str(user.partner_org_id)
+        return UserContext(
+            user_id=str(user.id),
+            role=user.role,
+            partner_id=partner_scope,
+        )
     except InvalidTokenError:
         return None

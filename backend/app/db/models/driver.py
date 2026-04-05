@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 # ruff: noqa: F821  # SQLAlchemy forward refs in Mapped["..."] are valid
 
 import uuid
@@ -23,6 +24,7 @@ from app.db.base import Base
 from app.models.enums import DriverStatus
 
 if TYPE_CHECKING:
+    from app.db.models.partner import Partner
     from app.db.models.trip import Trip
     from app.db.models.trip_offer import TripOffer
     from app.db.models.user import User
@@ -36,6 +38,13 @@ class Driver(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
         comment="User identifier for the driver profile.",
+    )
+    partner_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("partners.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+        comment="Fleet / organization that owns this driver.",
     )
     status: Mapped[DriverStatus] = mapped_column(
         Enum(DriverStatus, name="driver_status_enum"),
@@ -86,9 +95,14 @@ class Driver(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="driver_profile")
+    partner: Mapped["Partner"] = relationship(back_populates="drivers")
     trips: Mapped[List["Trip"]] = relationship(back_populates="driver")
     offers: Mapped[List["TripOffer"]] = relationship(
         back_populates="driver",
+    )
+    last_location: Mapped[Optional["DriverLocation"]] = relationship(
+        back_populates="driver",
+        uselist=False,
     )
 
 
@@ -126,7 +140,7 @@ class DriverLocation(Base):
         comment="Timestamp of last location update.",
     )
 
-    driver: Mapped["Driver"] = relationship(backref="location", uselist=False)
+    driver: Mapped["Driver"] = relationship(back_populates="last_location")
 
 
 Index("ix_driver_locations_driver_id", DriverLocation.driver_id)

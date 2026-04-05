@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
@@ -33,6 +34,7 @@ def _create_driver_with_location(
     db.add(user)
     db.flush()
     driver = Driver(
+        partner_id=DEFAULT_PARTNER_UUID,
         user_id=user.id,
         status=DriverStatus.approved,
         commission_percent=15.0,

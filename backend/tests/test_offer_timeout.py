@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
@@ -35,7 +36,10 @@ def _create_driver_with_location(db: Session, lat: float, lng: float) -> str:
     db.add(user)
     db.flush()
     driver = Driver(
-        user_id=user.id, status=DriverStatus.approved, commission_percent=15.0
+        partner_id=DEFAULT_PARTNER_UUID,
+        user_id=user.id,
+        status=DriverStatus.approved,
+        commission_percent=15.0,
     )
     db.add(driver)
     db.flush()
@@ -195,8 +199,8 @@ def test_ot_002_redispatch_triggered() -> None:
         .all()
     )
     pending = [o for o in all_offers if o.status == OfferStatus.pending]
-    assert len(pending) >= 1, (
-        f"Expected pending offers, got statuses: {[o.status for o in all_offers]}"
-    )
+    assert (
+        len(pending) >= 1
+    ), f"Expected pending offers, got statuses: {[o.status for o in all_offers]}"
 
     db.close()

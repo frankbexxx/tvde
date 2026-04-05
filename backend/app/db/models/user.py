@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 # ruff: noqa: F821  # SQLAlchemy forward refs in Mapped["..."] are valid
 
 import uuid
@@ -7,9 +8,10 @@ from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
     from app.db.models.driver import Driver
+    from app.db.models.partner import Partner
     from app.db.models.trip import Trip
 
-from sqlalchemy import DateTime, Enum, Index, Numeric, String, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -53,6 +55,13 @@ class User(Base):
         nullable=True,
         comment="BETA: passenger or driver — role requested at signup.",
     )
+    partner_org_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("partners.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="Fleet tenant for partner role; should be set when role=partner for /partner/* access.",
+    )
     avg_rating_as_passenger: Mapped[Optional[float]] = mapped_column(
         Numeric(3, 2),
         nullable=True,
@@ -72,6 +81,10 @@ class User(Base):
         comment="Updated on state changes or profile edits.",
     )
 
+    partner_org: Mapped[Optional["Partner"]] = relationship(
+        back_populates="users",
+        foreign_keys=[partner_org_id],
+    )
     driver_profile: Mapped[Optional["Driver"]] = relationship(
         back_populates="user",
         uselist=False,

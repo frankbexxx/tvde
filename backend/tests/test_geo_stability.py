@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
@@ -36,6 +37,7 @@ def _create_driver(
     db.add(user)
     db.flush()
     driver = Driver(
+        partner_id=DEFAULT_PARTNER_UUID,
         user_id=user.id,
         status=DriverStatus.approved,
         commission_percent=15.0,
@@ -247,9 +249,9 @@ def test_geo_stability_dispatch_retry_after_driver_sends_location() -> None:
         .all()
     )
     # Retry should have picked up the driver's location
-    assert len(offers) >= 1, (
-        "Dispatch retry should create offers when driver sends location during wait"
-    )
+    assert (
+        len(offers) >= 1
+    ), "Dispatch retry should create offers when driver sends location during wait"
 
     _reset_overrides()
     db.close()

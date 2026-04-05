@@ -54,6 +54,7 @@ temp/
 htmlcov/
 .pytest_cache/
 backend/.pytest_cache/
+backend/.pytest_run_cache/
 
 # Relatórios de auditoria locais
 audits/

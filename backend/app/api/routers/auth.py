@@ -116,6 +116,8 @@ async def verify_otp(
             )
             db.add(user)
         elif _is_beta():
+            # Partner fleet managers are created only via POST /admin/partners/{id}/create-admin,
+            # never through public OTP (Role.partner is intentionally excluded here).
             req_role = (payload.requested_role or "passenger").lower()
             if req_role not in ("passenger", "driver"):
                 req_role = "passenger"
@@ -202,6 +204,7 @@ async def login(
             )
             db.add(user)
         else:
+            # Same rule as OTP: no public signup path for Role.partner.
             req_role = (payload.requested_role or "passenger").lower()
             if req_role not in ("passenger", "driver"):
                 req_role = "passenger"

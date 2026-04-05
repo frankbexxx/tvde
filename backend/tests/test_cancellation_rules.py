@@ -4,6 +4,7 @@ import uuid
 
 from sqlalchemy.orm import Session
 
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.trip import Trip
 from app.db.models.user import User
@@ -30,6 +31,7 @@ def _create_passenger_and_driver(db: Session) -> tuple[str, str]:
     db.add(d)
     db.flush()
     driver = Driver(
+        partner_id=DEFAULT_PARTNER_UUID,
         user_id=d.id,
         status=DriverStatus.approved,
         commission_percent=15.0,

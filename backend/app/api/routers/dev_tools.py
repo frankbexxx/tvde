@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.auth.security import create_access_token
 from app.core.config import settings
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
@@ -49,7 +50,9 @@ def _sync_driver_location_to_pickup(
 ) -> None:
     """Ensure dev auto-trip passes start_trip proximity check (pickup = contract point)."""
     loc = db.execute(
-        select(DriverLocation).where(DriverLocation.driver_id == driver_user_id).limit(1)
+        select(DriverLocation)
+        .where(DriverLocation.driver_id == driver_user_id)
+        .limit(1)
     ).scalar_one_or_none()
     now = datetime.now(timezone.utc)
     if loc:
@@ -112,6 +115,7 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
     if not driver_profile:
         driver_profile = Driver(
             user_id=driver_user.id,
+            partner_id=DEFAULT_PARTNER_UUID,
             status=DriverStatus.approved,
             commission_percent=15,
         )
@@ -177,6 +181,7 @@ async def dev_seed_simulator(
         if not driver_profile:
             driver_profile = Driver(
                 user_id=user.id,
+                partner_id=DEFAULT_PARTNER_UUID,
                 status=DriverStatus.approved,
                 commission_percent=15,
             )
@@ -328,6 +333,7 @@ async def dev_promote_to_driver(
     user.role = Role.driver
     driver_profile = Driver(
         user_id=user.id,
+        partner_id=DEFAULT_PARTNER_UUID,
         status=DriverStatus.approved,
         commission_percent=15,
     )
@@ -366,15 +372,17 @@ async def dev_list_trips(db: Session = Depends(get_db)) -> list[dict]:
                 "status": trip.status.value,
                 "driver_id": str(trip.driver_id) if trip.driver_id else None,
                 "started_at": trip.started_at.isoformat() if trip.started_at else None,
-                "completed_at": trip.completed_at.isoformat()
-                if trip.completed_at
-                else None,
-                "payment": {
-                    "status": payment.status.value if payment else None,
-                    "stripe_payment_intent_id": pi_preview,
-                }
-                if payment
-                else None,
+                "completed_at": (
+                    trip.completed_at.isoformat() if trip.completed_at else None
+                ),
+                "payment": (
+                    {
+                        "status": payment.status.value if payment else None,
+                        "stripe_payment_intent_id": pi_preview,
+                    }
+                    if payment
+                    else None
+                ),
             }
         )
     return result

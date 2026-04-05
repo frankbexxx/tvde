@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.utils.logging import log_debug_event, log_event, should_log_driver_location
 from app.utils.state_machine import validate_trip_transition
@@ -36,6 +37,7 @@ def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
     if getattr(settings, "BETA_MODE", False):
         driver = Driver(
             user_id=driver_id,
+            partner_id=DEFAULT_PARTNER_UUID,
             status=DriverStatus.approved,
             commission_percent=15,
         )
@@ -273,9 +275,9 @@ def get_driver_location_for_trip(
                         "user_id": str(user_id),
                         "role": role.value,
                         "trip_passenger_id": str(trip.passenger_id),
-                        "trip_driver_id": str(trip.driver_id)
-                        if trip.driver_id
-                        else None,
+                        "trip_driver_id": (
+                            str(trip.driver_id) if trip.driver_id else None
+                        ),
                     },
                 )
                 raise HTTPException(
@@ -291,15 +293,20 @@ def get_driver_location_for_trip(
                         "user_id": str(user_id),
                         "role": role.value,
                         "trip_passenger_id": str(trip.passenger_id),
-                        "trip_driver_id": str(trip.driver_id)
-                        if trip.driver_id
-                        else None,
+                        "trip_driver_id": (
+                            str(trip.driver_id) if trip.driver_id else None
+                        ),
                     },
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="forbidden_trip_access",
                 )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="forbidden_trip_access",
+            )
     else:
         # BETA: still block clearly unrelated passengers, but allow either the
         # real passenger or the assigned driver, regardless of token role.
