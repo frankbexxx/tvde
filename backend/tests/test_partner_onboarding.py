@@ -61,9 +61,7 @@ def test_create_partner_org_admin_success(admin_override: None) -> None:
     db = SessionLocal()
     try:
         u = db.execute(
-            text(
-                "SELECT role, partner_org_id FROM users WHERE phone = :p LIMIT 1"
-            ),
+            text("SELECT role, partner_org_id FROM users WHERE phone = :p LIMIT 1"),
             {"p": phone},
         ).first()
         assert u is not None

@@ -4,6 +4,19 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 ---
 
+## Piloto comercial — 4 superfícies (fila de prompts)
+
+**Objectivo:** preparar entrega **piloto/produção** com passageiro, motorista, **parceiro** (critical path), admin.
+
+- **Índice + fases:** [`prompts/pilot-commercial/README.md`](prompts/pilot-commercial/README.md)
+- **Alinhamento ao repo:** [`prompts/pilot-commercial/REALITY_NOTES.md`](prompts/pilot-commercial/REALITY_NOTES.md)
+- **Fase 0:** A001–A003 **redigidas** (instruções + «Execução (resultado)» + verificação ao código em `phase-0-alignment/`). A004–A007 **por redigir**.
+- **Resto da fila:** 61 ficheiros noutras fases — maioritariamente placeholders até serem trabalhados.
+
+**Ordem estratégica:** Fase 2 (parceiro) primeiro; Fases 3–4 motorista/passageiro em modo estabilizar/congelar.
+
+---
+
 ## Driver — iniciar viagem perto do pickup
 
 - [x] Mostrar «Iniciar viagem» só quando o motorista está a **≤ ~50 m** do ponto de pickup (Haversine, reutilizar `web-app/src/utils/geo.ts`), coerente com os `trip.status` válidos para esse passo.
@@ -40,4 +53,4 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 ---
 
-_Última actualização: 2026-03-27_
+_Última revisão: 2026-04-05_

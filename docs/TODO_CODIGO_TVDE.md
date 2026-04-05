@@ -223,4 +223,10 @@ O núcleo de código do projeto está em grande parte **feito**; o trabalho que 
 
 ---
 
+## Piloto comercial — superfícies (planeamento de prompts)
+
+Checklist **produto/entrega** em fila nomeada: [`prompts/pilot-commercial/README.md`](prompts/pilot-commercial/README.md). **Fase 0:** A001–A003 já redigidas (superfícies, RBAC alvo, multi-tenant alvo); resto da fila em placeholder. Complementa este ficheiro (foco técnico ops/staging) com **implementação** de parceiro + RBAC + critérios de piloto.
+
+---
+
 **Ver também:** [visao_cursor.md](visao_cursor.md) (comercialização e checklist alargado), [architecture/TVDE_ENGINEERING_ROADMAP.md](architecture/TVDE_ENGINEERING_ROADMAP.md) (anexo pré-produção A023–A035).
