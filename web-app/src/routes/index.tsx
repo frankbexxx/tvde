@@ -12,7 +12,9 @@ import { useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/ui/Spinner'
 
 function RootRedirect() {
-  const { appRouteRole } = useAuth()
+  const { appRouteRole, sessionRole } = useAuth()
+  if (sessionRole === 'admin') return <Navigate to="/admin" replace />
+  if (sessionRole === 'partner') return <Navigate to="/partner" replace />
   if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
   return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
 }
@@ -30,7 +32,8 @@ function DriverOnly({ children }: { children: ReactNode }) {
 }
 
 function AdminDeniedRedirect() {
-  const { appRouteRole } = useAuth()
+  const { appRouteRole, sessionRole } = useAuth()
+  if (sessionRole === 'partner') return <Navigate to="/partner" replace />
   if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
   return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
 }

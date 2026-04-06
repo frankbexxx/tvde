@@ -53,6 +53,8 @@ interface AuthContextValue extends AuthState {
   isAdmin: boolean
   /** True se a sessão é utilizador partner (BETA: betaRole; dev: algum JWT em tokens). */
   isPartnerUser: boolean
+  /** Papel do utilizador na BD (derivado do JWT), independente da rota atual. */
+  sessionRole: Role
   /** Papel da shell passageiro/motorista/partner (persistido; não usar URL). */
   appRouteRole: AppRouteRole
   /** A020: true durante boot + verificação de sessão */
@@ -136,6 +138,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return false
   }, [betaMode, betaRole, tokens])
+
+  /** Papel persistido (JWT) — usado para UI “Conta” e consistência. */
+  const sessionRole = useMemo<Role>(() => {
+    if (betaMode) return betaRole
+    // Em dev, pode haver múltiplos tokens; preferir role do token da rota, senão o primeiro disponível.
+    const candidates = [
+      token,
+      tokens?.admin,
+      tokens?.partner,
+      tokens?.driver,
+      tokens?.passenger,
+    ].filter(Boolean) as string[]
+    for (const t of candidates) {
+      const r = parseJwtPayload(t)?.role
+      if (r === 'admin' || r === 'partner' || r === 'driver' || r === 'passenger') return r
+    }
+    return 'passenger'
+  }, [betaMode, betaRole, token, tokens])
 
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
@@ -348,6 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = useMemo(
     () => ({
       token,
+      // role = “vista” (rota/shell). sessionRole = papel real persistido no token.
       role: uiRole,
       userId: betaMode ? betaUserId : null,
       isLoading,
@@ -356,6 +377,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       tokens,
       isAdmin,
       isPartnerUser,
+      sessionRole,
       appRouteRole,
       isLoadingAuth: isLoading,
       splashPrimary,
@@ -377,6 +399,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       tokens,
       isAdmin,
       isPartnerUser,
+      sessionRole,
       appRouteRole,
       splashPrimary,
       loadError,

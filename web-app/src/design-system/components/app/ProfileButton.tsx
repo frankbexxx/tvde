@@ -20,13 +20,14 @@ import { useAuth } from '@/context/AuthContext'
 function roleLabel(role: string): string {
   if (role === 'driver') return 'Motorista'
   if (role === 'admin') return 'Administrador'
+  if (role === 'partner') return 'Frota'
   return 'Passageiro'
 }
 
 export function ProfileButton() {
   const [open, setOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 639px)')
-  const { sessionPhone, role, betaMode, logout } = useAuth()
+  const { sessionPhone, sessionRole, betaMode, logout } = useAuth()
 
   const body = (
     <div className="mt-4 flex flex-col gap-4">
@@ -38,7 +39,7 @@ export function ProfileButton() {
       </div>
       <div className="space-y-1">
         <p className="text-xs text-muted-foreground uppercase tracking-wide">Papel</p>
-        <p className="text-base font-medium text-foreground">{roleLabel(role)}</p>
+        <p className="text-base font-medium text-foreground">{roleLabel(sessionRole)}</p>
       </div>
       {betaMode ? (
         <Button

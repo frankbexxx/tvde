@@ -27,6 +27,10 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       const res = await login(phone.trim(), password, requestedRole)
       localStorage.setItem(LS_LAST_PHONE, phone.trim())
       const r = res.role as Role
+      if (requestedRole === 'partner' && r !== 'partner') {
+        setError('Esta conta não tem acesso Frota (partner).')
+        return
+      }
       if (r === 'admin') navigate('/admin', { replace: true })
       else if (r === 'partner' || requestedRole === 'partner')
         navigate('/partner', { replace: true })
