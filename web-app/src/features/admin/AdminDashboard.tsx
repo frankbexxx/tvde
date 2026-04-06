@@ -13,6 +13,8 @@ import {
   runOfferExpiry,
   recoverDriver,
   exportLogsCsv,
+  createPartner,
+  createPartnerOrgAdmin,
   type TripActiveItem,
   type TripDetailAdmin,
   type SystemHealthResponse,
@@ -34,11 +36,12 @@ interface AdminUser {
   has_driver_profile: boolean
 }
 
-type Tab = 'pending' | 'users' | 'trips' | 'metrics' | 'ops' | 'health'
+type Tab = 'pending' | 'users' | 'frota' | 'trips' | 'metrics' | 'ops' | 'health'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pending', label: 'Pendentes' },
   { id: 'users', label: 'Utilizadores' },
+  { id: 'frota', label: 'Frota' },
   { id: 'trips', label: 'Viagens' },
   { id: 'metrics', label: 'Métricas' },
   { id: 'ops', label: 'Operações' },
@@ -70,6 +73,13 @@ export function AdminDashboard() {
   const [health, setHealth] = useState<SystemHealthResponse | null>(null)
   const [opsLoading, setOpsLoading] = useState<string | null>(null)
   const [recoverDriverId, setRecoverDriverId] = useState('')
+
+  const [frotaOrgName, setFrotaOrgName] = useState('')
+  const [frotaPartnerId, setFrotaPartnerId] = useState('')
+  const [frotaManagerName, setFrotaManagerName] = useState('')
+  const [frotaManagerPhone, setFrotaManagerPhone] = useState('')
+  const [frotaLoading, setFrotaLoading] = useState<string | null>(null)
+  const [frotaOk, setFrotaOk] = useState<string | null>(null)
 
   const fetchPending = useCallback(async () => {
     if (!token) return
@@ -238,6 +248,50 @@ export function AdminDashboard() {
     }
   }
 
+  const errDetail = (err: unknown) =>
+    typeof err === 'object' && err !== null && 'detail' in err
+      ? String((err as { detail: unknown }).detail)
+      : 'Erro'
+
+  const handleCreateFrotaOrg = async () => {
+    if (!token || !frotaOrgName.trim()) return
+    setFrotaLoading('org')
+    setFrotaOk(null)
+    setError(null)
+    try {
+      const r = await createPartner(frotaOrgName, token)
+      setFrotaPartnerId(r.id)
+      setFrotaOk(`Organização “${r.name}” criada. O ID da frota foi preenchido abaixo — usa-o para criar o gestor.`)
+    } catch (err) {
+      setError(errDetail(err))
+    } finally {
+      setFrotaLoading(null)
+    }
+  }
+
+  const handleCreateFrotaManager = async () => {
+    if (!token || !frotaPartnerId.trim() || !frotaManagerName.trim() || !frotaManagerPhone.trim()) return
+    setFrotaLoading('manager')
+    setFrotaOk(null)
+    setError(null)
+    try {
+      const r = await createPartnerOrgAdmin(
+        frotaPartnerId,
+        { name: frotaManagerName, phone: frotaManagerPhone },
+        token
+      )
+      setFrotaOk(
+        `Gestor criado: ${r.name} (${r.phone}). Pode iniciar sessão no separador Frota da app com este telefone.`
+      )
+      setFrotaManagerName('')
+      setFrotaManagerPhone('')
+    } catch (err) {
+      setError(errDetail(err))
+    } finally {
+      setFrotaLoading(null)
+    }
+  }
+
   const handleExportLogs = async () => {
     if (!token) return
     setOpsLoading('export')
@@ -390,6 +444,11 @@ export function AdminDashboard() {
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-4">{error}</p>
       )}
+      {frotaOk && tab === 'frota' && (
+        <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg mb-4">
+          {frotaOk}
+        </p>
+      )}
 
       {tab === 'pending' && (
         <section className="space-y-6">
@@ -418,6 +477,104 @@ export function AdminDashboard() {
               ))}
             </ul>
           )}
+        </section>
+      )}
+
+      {tab === 'frota' && (
+        <section className="space-y-8">
+          <h2 className="text-lg font-semibold text-foreground">Frota (parceiros)</h2>
+          <p className="text-sm text-foreground/75 -mt-4">
+            Cria uma organização e depois o gestor que inicia sessão na app no separador Frota — tudo aqui, sem
+            ferramentas externas.
+          </p>
+
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+            <h3 className="font-medium text-foreground">1. Nova organização</h3>
+            <label className="block text-sm text-foreground/80" htmlFor="frota-org-name">
+              Nome da frota / organização
+            </label>
+            <input
+              id="frota-org-name"
+              type="text"
+              value={frotaOrgName}
+              onChange={(e) => {
+                setFrotaOrgName(e.target.value)
+                setFrotaOk(null)
+              }}
+              placeholder="Ex.: Frota Lisboa Norte"
+              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+            />
+            <button
+              type="button"
+              disabled={!frotaOrgName.trim() || frotaLoading !== null}
+              onClick={() => void handleCreateFrotaOrg()}
+              className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
+            >
+              {frotaLoading === 'org' ? 'A criar…' : 'Criar organização'}
+            </button>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+            <h3 className="font-medium text-foreground">2. Gestor Frota</h3>
+            <p className="text-sm text-foreground/75">
+              ID da organização (preenche automaticamente após o passo 1, ou cola um UUID existente).
+            </p>
+            <label className="block text-sm text-foreground/80" htmlFor="frota-partner-id">
+              ID da organização (partner_id)
+            </label>
+            <input
+              id="frota-partner-id"
+              type="text"
+              value={frotaPartnerId}
+              onChange={(e) => {
+                setFrotaPartnerId(e.target.value)
+                setFrotaOk(null)
+              }}
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-mono text-sm"
+            />
+            <label className="block text-sm text-foreground/80" htmlFor="frota-mgr-name">
+              Nome do gestor
+            </label>
+            <input
+              id="frota-mgr-name"
+              type="text"
+              value={frotaManagerName}
+              onChange={(e) => {
+                setFrotaManagerName(e.target.value)
+                setFrotaOk(null)
+              }}
+              placeholder="Nome completo"
+              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+            />
+            <label className="block text-sm text-foreground/80" htmlFor="frota-mgr-phone">
+              Telefone (login OTP)
+            </label>
+            <input
+              id="frota-mgr-phone"
+              type="tel"
+              value={frotaManagerPhone}
+              onChange={(e) => {
+                setFrotaManagerPhone(e.target.value)
+                setFrotaOk(null)
+              }}
+              placeholder="+351…"
+              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+            />
+            <button
+              type="button"
+              disabled={
+                !frotaPartnerId.trim() ||
+                !frotaManagerName.trim() ||
+                !frotaManagerPhone.trim() ||
+                frotaLoading !== null
+              }
+              onClick={() => void handleCreateFrotaManager()}
+              className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
+            >
+              {frotaLoading === 'manager' ? 'A criar…' : 'Criar gestor Frota'}
+            </button>
+          </div>
         </section>
       )}
 

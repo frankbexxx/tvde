@@ -140,3 +140,47 @@ export async function exportLogsCsv(token: string): Promise<Blob> {
   if (!res.ok) throw new Error(await res.text())
   return res.blob()
 }
+
+export interface AdminPartnerCreatedResponse {
+  id: string
+  name: string
+  created_at: string
+}
+
+export interface AdminPartnerOrgAdminCreatedResponse {
+  user_id: string
+  role: string
+  partner_id: string
+  phone: string
+  name: string
+}
+
+export async function createPartner(
+  name: string,
+  token: string
+): Promise<AdminPartnerCreatedResponse> {
+  return apiFetch<AdminPartnerCreatedResponse>('/admin/partners', {
+    method: 'POST',
+    body: JSON.stringify({ name: name.trim() }),
+    token,
+  })
+}
+
+export async function createPartnerOrgAdmin(
+  partnerId: string,
+  body: { name: string; phone: string },
+  token: string
+): Promise<AdminPartnerOrgAdminCreatedResponse> {
+  const pid = partnerId.trim()
+  return apiFetch<AdminPartnerOrgAdminCreatedResponse>(
+    `/admin/partners/${encodeURIComponent(pid)}/create-admin`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: body.name.trim(),
+        phone: body.phone.trim(),
+      }),
+      token,
+    }
+  )
+}
