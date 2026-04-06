@@ -51,7 +51,7 @@ export type AppRouteRole = 'passenger' | 'driver' | 'partner'
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
   isAdmin: boolean
-  /** JWT atual com role=partner (BETA ou token dev `partner`). */
+  /** True se a sessão é utilizador partner (BETA: betaRole; dev: algum JWT em tokens). */
   isPartnerUser: boolean
   /** Papel da shell passageiro/motorista/partner (persistido; não usar URL). */
   appRouteRole: AppRouteRole
@@ -122,11 +122,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [betaMode, betaToken, tokens, tokenPickRole])
 
+  /** Papel real do utilizador — não derivar de `token` (varia com a rota / tokenPickRole). */
   const isPartnerUser = useMemo(() => {
-    const t = betaMode ? betaToken : token
-    if (!t) return false
-    return parseJwtPayload(t)?.role === 'partner'
-  }, [betaMode, betaToken, token])
+    if (betaMode) {
+      return betaRole === 'partner'
+    }
+    if (!tokens) return false
+    const seen = new Set<string>()
+    for (const raw of [tokens.partner, tokens.passenger, tokens.driver, tokens.admin]) {
+      if (!raw || seen.has(raw)) continue
+      seen.add(raw)
+      if (parseJwtPayload(raw)?.role === 'partner') return true
+    }
+    return false
+  }, [betaMode, betaRole, tokens])
 
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
