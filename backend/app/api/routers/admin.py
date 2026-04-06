@@ -44,6 +44,7 @@ from app.services.partners_admin import (
     assign_driver_to_partner,
     create_partner,
     create_partner_org_admin,
+    unassign_driver_from_partner,
 )
 
 
@@ -737,6 +738,30 @@ async def admin_assign_driver_partner(
             detail="invalid_uuid",
         )
     d = assign_driver_to_partner(db, driver_user_id=did, partner_id=pid)
+    return AdminAssignPartnerResponse(
+        user_id=str(d.user_id),
+        partner_id=str(d.partner_id),
+    )
+
+
+@router.delete(
+    "/drivers/{driver_user_id}/assign-partner",
+    response_model=AdminAssignPartnerResponse,
+)
+async def admin_unassign_driver_partner(
+    driver_user_id: str,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> AdminAssignPartnerResponse:
+    """Return driver to default fleet (DEFAULT_PARTNER_UUID). Idempotent; 409 if active trip."""
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        )
+    d = unassign_driver_from_partner(db, driver_user_id=did)
     return AdminAssignPartnerResponse(
         user_id=str(d.user_id),
         partner_id=str(d.partner_id),

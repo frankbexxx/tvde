@@ -58,3 +58,35 @@ def list_trips_for_partner(db: Session, partner_id: str) -> list[Trip]:
         .order_by(Trip.created_at.desc())
     )
     return list(db.execute(stmt).scalars().all())
+
+
+def get_driver_for_partner(
+    db: Session, partner_id: str, driver_user_id: uuid.UUID
+) -> Driver | None:
+    pid = uuid.UUID(partner_id)
+    return (
+        db.execute(
+            select(Driver)
+            .where(Driver.user_id == driver_user_id, Driver.partner_id == pid)
+            .options(
+                joinedload(Driver.user),
+                joinedload(Driver.last_location),
+            )
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
+
+
+def get_trip_for_partner(
+    db: Session, partner_id: str, trip_id: uuid.UUID
+) -> Trip | None:
+    pid = uuid.UUID(partner_id)
+    return (
+        db.execute(
+            select(Trip)
+            .join(Driver, Trip.driver_id == Driver.user_id)
+            .where(Trip.id == trip_id, Driver.partner_id == pid)
+        )
+        .scalar_one_or_none()
+    )

@@ -9,6 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.partner import Partner
 from app.db.models.trip import Trip
@@ -148,6 +149,12 @@ def assign_driver_to_partner(
             detail="partner_not_found",
         )
     if driver.partner_id == partner_id:
+        log_event(
+            "partner_driver_assigned",
+            driver_user_id=str(driver_user_id),
+            partner_id=str(partner_id),
+            idempotent="true",
+        )
         return driver
     if _driver_has_active_trip(db, driver_user_id):
         raise HTTPException(
@@ -162,6 +169,39 @@ def assign_driver_to_partner(
         "partner_driver_assigned",
         driver_user_id=str(driver_user_id),
         partner_id=str(partner_id),
+        previous_partner_id=old_pid,
+    )
+    return driver
+
+
+def unassign_driver_from_partner(db: Session, *, driver_user_id: uuid.UUID) -> Driver:
+    """
+    Move driver back to the default fleet (DEFAULT_PARTNER_UUID).
+    Idempotent if already on default partner. Same active-trip guard as assign.
+    """
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_user_id)
+    ).scalar_one_or_none()
+    if not driver:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="driver_not_found",
+        )
+    if driver.partner_id == DEFAULT_PARTNER_UUID:
+        return driver
+    if _driver_has_active_trip(db, driver_user_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="driver_has_active_trip",
+        )
+    old_pid = str(driver.partner_id)
+    driver.partner_id = DEFAULT_PARTNER_UUID
+    db.commit()
+    db.refresh(driver)
+    log_event(
+        "partner_driver_assigned",
+        driver_user_id=str(driver_user_id),
+        partner_id=str(DEFAULT_PARTNER_UUID),
         previous_partner_id=old_pid,
     )
     return driver
@@ -207,8 +247,37 @@ def partner_metrics(db: Session, partner_id: uuid.UUID) -> dict[str, int]:
         )
     ).scalar_one()
 
+    trips_completed = db.execute(
+        select(func.count())
+        .select_from(Trip)
+        .join(Driver, Trip.driver_id == Driver.user_id)
+        .where(
+            Driver.partner_id == partner_id,
+            Trip.status == TripStatus.completed,
+        )
+    ).scalar_one()
+
+    trips_cancelled = db.execute(
+        select(func.count())
+        .select_from(Trip)
+        .join(Driver, Trip.driver_id == Driver.user_id)
+        .where(
+            Driver.partner_id == partner_id,
+            Trip.status == TripStatus.cancelled,
+        )
+    ).scalar_one()
+
+    total_drivers = db.execute(
+        select(func.count())
+        .select_from(Driver)
+        .where(Driver.partner_id == partner_id)
+    ).scalar_one()
+
     return {
         "trips_total": int(trips_total or 0),
         "trips_today": int(trips_today or 0),
         "active_drivers": int(active_drivers or 0),
+        "trips_completed": int(trips_completed or 0),
+        "trips_cancelled": int(trips_cancelled or 0),
+        "total_drivers": int(total_drivers or 0),
     }

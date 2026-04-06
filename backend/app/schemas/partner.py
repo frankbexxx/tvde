@@ -38,6 +38,9 @@ class PartnerMetricsResponse(BaseModel):
     trips_today: int
     trips_total: int
     active_drivers: int
+    trips_completed: int
+    trips_cancelled: int
+    total_drivers: int
 
 
 class AdminCreatePartnerRequest(BaseModel):

@@ -18,7 +18,14 @@ class OtpRequestResponse(BaseModel):
 class OtpVerifyRequest(BaseModel):
     phone: str = Field(..., min_length=6, max_length=32)
     code: str = Field(..., min_length=4, max_length=8)
-    requested_role: str | None = Field(None, description="BETA: passenger or driver")
+    requested_role: str | None = Field(
+        None,
+        description=(
+            "BETA: passenger or driver (novo utilizador). "
+            "Valor 'admin' só é aceite se o phone coincidir com ADMIN_PHONE no .env; "
+            "após verify o role na resposta vem da BD (admin para esse telefone)."
+        ),
+    )
 
 
 class LoginRequest(BaseModel):
