@@ -92,14 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAppRouteRoleState(r)
   }, [])
 
-  /** Qual token usar: admin só em /admin; caso contrário passageiro vs motorista pela sessão. */
-  const tokenPickRole = useMemo<'passenger' | 'driver' | 'admin'>(() => {
+  /** Qual token usar: admin em /admin; partner em /partner; senão shell passageiro/motorista. */
+  const tokenPickRole = useMemo<'passenger' | 'driver' | 'admin' | 'partner'>(() => {
     if (pathname.startsWith('/admin')) return 'admin'
+    if (pathname.startsWith('/partner')) return 'partner'
     return appRouteRole === 'driver' ? 'driver' : 'passenger'
   }, [pathname, appRouteRole])
 
   const uiRole = useMemo<Role>(() => {
     if (pathname.startsWith('/admin')) return 'admin'
+    if (pathname.startsWith('/partner')) return 'partner'
     return appRouteRole === 'driver' ? 'driver' : 'passenger'
   }, [pathname, appRouteRole])
 
@@ -113,10 +115,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return tokens.driver
       case 'admin':
         return tokens.admin
+      case 'partner':
+        return tokens.partner ?? null
       default:
         return tokens.passenger
     }
   }, [betaMode, betaToken, tokens, tokenPickRole])
+
+  /** Papel real do utilizador — não derivar de `token` (varia com a rota / tokenPickRole). */
+  const isPartnerUser = useMemo(() => {
+    if (betaMode) {
+      return betaRole === 'partner'
+    }
+    if (!tokens) return false
+    const seen = new Set<string>()
+    for (const raw of [tokens.partner, tokens.passenger, tokens.driver, tokens.admin]) {
+      if (!raw || seen.has(raw)) continue
+      seen.add(raw)
+      if (parseJwtPayload(raw)?.role === 'partner') return true
+    }
+    return false
+  }, [betaMode, betaRole, tokens])
 
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
