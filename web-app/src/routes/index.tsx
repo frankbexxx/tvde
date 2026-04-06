@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { PassengerDashboard } from '../features/passenger/PassengerDashboard'
 import { DriverDashboard } from '../features/driver/DriverDashboard'
 import { AdminDashboard } from '../features/admin/AdminDashboard'
+import { PartnerDashboard } from '../features/partner/PartnerDashboard'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { SettingsButton } from '../design-system/components/app/SettingsButton'
@@ -12,6 +13,7 @@ import { Spinner } from '../components/ui/Spinner'
 
 function RootRedirect() {
   const { appRouteRole } = useAuth()
+  if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
   return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
 }
 
@@ -29,7 +31,15 @@ function DriverOnly({ children }: { children: ReactNode }) {
 
 function AdminDeniedRedirect() {
   const { appRouteRole } = useAuth()
+  if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
   return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
+}
+
+function PartnerGate({ children }: { children: React.ReactNode }) {
+  const { isPartnerUser, token } = useAuth()
+  if (!token) return <Navigate to="/passenger" replace />
+  if (!isPartnerUser) return <Navigate to="/passenger" replace />
+  return <>{children}</>
 }
 
 export function AppRoutes() {
@@ -72,7 +82,11 @@ export function AppRoutes() {
   }
 
   if (betaMode && !isAuthenticated) {
-    const requestedRole = pathname.startsWith('/driver') ? 'driver' : 'passenger'
+    const requestedRole = pathname.startsWith('/partner')
+      ? 'partner'
+      : pathname.startsWith('/driver')
+        ? 'driver'
+        : 'passenger'
     return <LoginScreen requestedRole={requestedRole} />
   }
 
@@ -115,6 +129,14 @@ export function AppRoutes() {
                 ) : (
                   <AdminDeniedRedirect />
                 )
+              }
+            />
+            <Route
+              path="/partner"
+              element={
+                <PartnerGate>
+                  <PartnerDashboard />
+                </PartnerGate>
               }
             />
             <Route path="/debug/map" element={<DebugMapPage />} />

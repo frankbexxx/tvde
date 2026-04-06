@@ -5,7 +5,7 @@ import type { Role } from '../../context/AuthContext'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
 
 interface LoginScreenProps {
-  requestedRole: 'passenger' | 'driver'
+  requestedRole: 'passenger' | 'driver' | 'partner'
 }
 
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
@@ -28,6 +28,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       localStorage.setItem(LS_LAST_PHONE, phone.trim())
       const r = res.role as Role
       if (r === 'admin') navigate('/admin', { replace: true })
+      else if (r === 'partner' || requestedRole === 'partner')
+        navigate('/partner', { replace: true })
       else if (requestedRole === 'driver') navigate('/driver', { replace: true })
       else navigate('/passenger', { replace: true })
     } catch (err: unknown) {
@@ -52,7 +54,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-background">
       <div className="w-full max-w-sm bg-card rounded-2xl shadow-card p-6">
         <h1 className="text-xl font-bold text-foreground mb-4">TVDE BETA</h1>
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <Link
             to="/passenger"
             className={`flex-1 py-2 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
@@ -72,6 +74,16 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             }`}
           >
             Motorista
+          </Link>
+          <Link
+            to="/partner"
+            className={`flex-1 py-2 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+              requestedRole === 'partner'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            Frota
           </Link>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
