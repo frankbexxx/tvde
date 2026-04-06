@@ -51,7 +51,7 @@ export type AppRouteRole = 'passenger' | 'driver' | 'partner'
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
   isAdmin: boolean
-  /** JWT atual com role=partner (BETA ou token dev `partner`). */
+  /** True se a sessão é utilizador partner (BETA: betaRole; dev: algum JWT em tokens). */
   isPartnerUser: boolean
   /** Papel da shell passageiro/motorista/partner (persistido; não usar URL). */
   appRouteRole: AppRouteRole
