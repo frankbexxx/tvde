@@ -1,0 +1,10 @@
+{
+  "base_url": "http://127.0.0.1:8000",
+  "timeout_sec": 30,
+  "strict_role_after_otp": true,
+  "assign_driver_user_id": "",
+  "phones": {
+    "admin": "+351924075365",
+    "partner": "+351911111111"
+  }
+}

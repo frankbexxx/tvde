@@ -1,0 +1,13 @@
+[
+  {
+    "name": "login_partner",
+    "type": "otp_login",
+    "user": "partner"
+  },
+  {
+    "name": "get_metrics",
+    "method": "GET",
+    "url": "/partner/metrics",
+    "auth": "partner"
+  }
+]
