@@ -35,7 +35,7 @@ import {
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { useActivityLog } from './ActivityLogContext'
 
-export type Role = 'passenger' | 'driver' | 'admin'
+export type Role = 'passenger' | 'driver' | 'admin' | 'partner'
 
 interface AuthState {
   token: string | null
@@ -46,12 +46,14 @@ interface AuthState {
   isAuthenticated: boolean
 }
 
-export type AppRouteRole = 'passenger' | 'driver'
+export type AppRouteRole = 'passenger' | 'driver' | 'partner'
 
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
   isAdmin: boolean
-  /** Papel da shell passageiro/motorista (persistido; não usar URL). */
+  /** JWT atual com role=partner (BETA ou token dev `partner`). */
+  isPartnerUser: boolean
+  /** Papel da shell passageiro/motorista/partner (persistido; não usar URL). */
   appRouteRole: AppRouteRole
   /** A020: true durante boot + verificação de sessão */
   isLoadingAuth: boolean
@@ -80,7 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [splashPrimary, setSplashPrimary] = useState('A iniciar serviço…')
-  const [appRouteRole, setAppRouteRoleState] = useState<AppRouteRole>(() => getStoredAppRouteRole())
+  const [appRouteRole, setAppRouteRoleState] = useState<AppRouteRole>(
+    () => getStoredAppRouteRole() as AppRouteRole
+  )
   const [sessionPhone, setSessionPhone] = useState<string | null>(() => getStoredLastPhone())
 
   const syncAppRouteRole = useCallback((r: AppRouteRole) => {
@@ -148,7 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setBetaUserId(p.sub)
               {
                 const savedShell = getRawStoredAppRouteRole()
-                const fromJwt: AppRouteRole = r === 'driver' ? 'driver' : 'passenger'
+                const fromJwt: AppRouteRole =
+                  r === 'driver' ? 'driver' : r === 'partner' ? 'partner' : 'passenger'
                 const shell: AppRouteRole = savedShell ?? fromJwt
                 syncAppRouteRole(shell)
               }
@@ -156,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 passenger: tok,
                 driver: tok,
                 admin: tok,
+                partner: r === 'partner' ? tok : undefined,
               })
               const ok = await validateAccessToken(tok)
               if (!ok) {
@@ -177,7 +183,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         addLog('Modo BETA ativo', 'info')
       } else {
         const t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
-        setTokens(t)
+        setTokens({
+          passenger: t.passenger,
+          driver: t.driver,
+          admin: t.admin,
+          partner: t.partner,
+        })
         setAppRouteRoleState(getStoredAppRouteRole())
         setSessionPhone(getStoredLastPhone())
         setStatus('Pronto')
@@ -259,6 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let shell: AppRouteRole
         if (requestedRole === 'driver') shell = 'driver'
         else if (requestedRole === 'passenger') shell = 'passenger'
+        else if (requestedRole === 'partner' || serverRole === 'partner') shell = 'partner'
         else shell = serverRole === 'driver' ? 'driver' : 'passenger'
         syncAppRouteRole(shell)
       }
@@ -266,6 +278,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         passenger: token,
         driver: token,
         admin: token,
+        partner: res.role === 'partner' ? token : undefined,
       })
       setStatus('Pronto')
       setSessionPhone(phone.trim())
@@ -277,7 +290,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setRole = useCallback(
     (r: Role) => {
-      if (r === 'passenger' || r === 'driver') syncAppRouteRole(r)
+      if (r === 'passenger' || r === 'driver' || r === 'partner') syncAppRouteRole(r)
     },
     [syncAppRouteRole]
   )
@@ -323,6 +336,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       tokens,
       isAdmin,
+      isPartnerUser,
       appRouteRole,
       isLoadingAuth: isLoading,
       splashPrimary,
@@ -343,6 +357,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       tokens,
       isAdmin,
+      isPartnerUser,
       appRouteRole,
       splashPrimary,
       loadError,

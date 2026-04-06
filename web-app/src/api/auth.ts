@@ -12,6 +12,8 @@ export interface AuthTokens {
   passenger: string
   admin: string
   driver: string
+  /** Present when backend dev `/dev/tokens` includes a partner seed user. */
+  partner?: string
 }
 
 export interface ConfigResponse {

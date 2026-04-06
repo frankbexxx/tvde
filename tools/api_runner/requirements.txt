@@ -1,0 +1,2 @@
+# DEV: run with backend venv (already has requests) or: pip install -r requirements.txt
+requests>=2.28.0

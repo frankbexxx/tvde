@@ -157,6 +157,18 @@ def test_partner_api_cross_tenant_isolation() -> None:
     for row in r_da.json():
         assert row["partner_id"] == str(DEFAULT_PARTNER_UUID)
 
+    r_gd_cross = client.get(
+        f"/partner/drivers/{driver_b_id}",
+        headers={"Authorization": f"Bearer {tok_a}"},
+    )
+    assert r_gd_cross.status_code == 404
+
+    r_gt_cross = client.get(
+        f"/partner/trips/{trip_b_id}",
+        headers={"Authorization": f"Bearer {tok_a}"},
+    )
+    assert r_gt_cross.status_code == 404
+
 
 def test_partner_endpoint_rejects_driver_token() -> None:
     db = SessionLocal()

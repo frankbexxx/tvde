@@ -1,0 +1,18 @@
+[
+  {
+    "name": "login_admin",
+    "type": "otp_login",
+    "user": "admin"
+  },
+  {
+    "name": "create_partner",
+    "id": "create_partner",
+    "method": "POST",
+    "url": "/admin/partners",
+    "auth": "admin",
+    "body": {
+      "name": "Frota Runner"
+    },
+    "capture_session": { "from_field": "id", "to_key": "partner_id" }
+  }
+]

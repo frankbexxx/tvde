@@ -1,0 +1,34 @@
+[
+  {
+    "name": "login_admin",
+    "type": "otp_login",
+    "user": "admin"
+  },
+  {
+    "name": "create_partner",
+    "method": "POST",
+    "url": "/admin/partners",
+    "auth": "admin",
+    "body": { "name": "Full Flow Fleet" },
+    "capture_session": { "from_field": "id", "to_key": "partner_id" }
+  },
+  {
+    "name": "assign_driver",
+    "method": "POST",
+    "url": "/admin/drivers/{{config.assign_driver_user_id}}/assign-partner",
+    "auth": "admin",
+    "body": { "partner_id": "{{session.partner_id}}" },
+    "skip_if_empty": ["assign_driver_user_id"]
+  },
+  {
+    "name": "login_partner",
+    "type": "otp_login",
+    "user": "partner"
+  },
+  {
+    "name": "get_metrics",
+    "method": "GET",
+    "url": "/partner/metrics",
+    "auth": "partner"
+  }
+]
