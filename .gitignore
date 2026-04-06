@@ -66,6 +66,9 @@ worktree.txt
 # Rascunhos locais (md, screenshots) — ver docs/README quando o PR de limpeza mergear
 docs/_local/
 
+# DEV: tokens locais do API runner (nunca commitar)
+tools/api_runner/session.json
+
 # Archive (imagens e assets de sessão — opcional manter local)
 archive/cursor_images/
 
