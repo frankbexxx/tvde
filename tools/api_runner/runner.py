@@ -146,6 +146,31 @@ def otp_login(user_key: str) -> None:
 
     _log("otp_flow_start", user=user_key, phone=phone)
 
+    # J010: Non-interactive mode for dev/beta: use /auth/login (no OTP prompt).
+    if bool(CONFIG.get("non_interactive", False)):
+        password = str(CONFIG.get("password", "123456"))
+        r = requests.post(
+            f"{base}/auth/login",
+            json={"phone": phone, "password": password},
+            timeout=timeout,
+        )
+        try:
+            data = r.json()
+        except json.JSONDecodeError:
+            data = {"raw": r.text}
+        if not r.ok:
+            _log("login_failed", status=r.status_code, body=data)
+            r.raise_for_status()
+        token = data.get("access_token")
+        if not token:
+            raise SystemExit(f"No access_token in response: {data}")
+        SESSION["tokens"][user_key] = token
+        _save_session(SESSION)
+        role_raw = data.get("role")
+        role_str = _normalize_api_role(role_raw)
+        _log("login_done", user=user_key, role=role_str or role_raw, status=r.status_code)
+        return
+
     r = requests.post(
         f"{base}/auth/otp/request",
         json={"phone": phone},

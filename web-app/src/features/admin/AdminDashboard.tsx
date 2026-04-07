@@ -88,6 +88,7 @@ export function AdminDashboard() {
   const [frotaManagerPhone, setFrotaManagerPhone] = useState('')
   const [frotaAssignDriverId, setFrotaAssignDriverId] = useState('')
   const [frotaAssignPartnerId, setFrotaAssignPartnerId] = useState('')
+  const [frotaAssignMode, setFrotaAssignMode] = useState<'select' | 'manual'>('select')
   const [frotaAssignOk, setFrotaAssignOk] = useState<string | null>(null)
   const [frotaLoading, setFrotaLoading] = useState<string | null>(null)
   const [frotaOk, setFrotaOk] = useState<string | null>(null)
@@ -187,6 +188,21 @@ export function AdminDashboard() {
       setHealth(null)
     }
   }, [token])
+
+  const ensureDataLoaded = useCallback(async () => {
+    if (!token) return
+    if (partners.length > 0 && driversList.length > 0) return
+    setDataLoading(true)
+    try {
+      const [ps, ds] = await Promise.all([listPartners(token), listDrivers(token)])
+      setPartners(ps)
+      setDriversList(ds)
+    } catch {
+      // ignore; visibility tab can retry
+    } finally {
+      setDataLoading(false)
+    }
+  }, [token, partners.length, driversList.length])
 
   const refresh = useCallback(() => {
     fetchPending()
@@ -320,13 +336,15 @@ export function AdminDashboard() {
   }
 
   const handleAssignDriverToFrota = async () => {
-    if (!token || !frotaAssignDriverId.trim() || !frotaAssignPartnerId.trim()) return
+    const pid = (frotaAssignPartnerId || frotaPartnerId).trim()
+    if (!token || !frotaAssignDriverId.trim() || !pid) return
+    if (!window.confirm('Atribuir este motorista a esta frota?')) return
     setFrotaLoading('assign-driver')
     setFrotaOk(null)
     setFrotaAssignOk(null)
     setError(null)
     try {
-      const r = await assignDriverToPartner(frotaAssignDriverId, frotaAssignPartnerId, token)
+      const r = await assignDriverToPartner(frotaAssignDriverId, pid, token)
       setFrotaAssignOk(`Motorista atribuído à frota. driver=${r.user_id} · frota=${r.partner_id}`)
     } catch (err) {
       setError(errDetail(err))
@@ -337,6 +355,7 @@ export function AdminDashboard() {
 
   const handleUnassignDriverFromFrota = async () => {
     if (!token || !frotaAssignDriverId.trim()) return
+    if (!window.confirm('Remover este motorista da frota?')) return
     setFrotaLoading('unassign-driver')
     setFrotaOk(null)
     setFrotaAssignOk(null)
@@ -386,6 +405,7 @@ export function AdminDashboard() {
     if (tab === 'health') fetchHealth()
     if (tab === 'dados') void fetchDataVisibility()
     if (tab === 'metrics') fetchUsage()
+    if (tab === 'frota') void ensureDataLoaded()
   }, [token, tab, fetchActiveTrips, fetchMetrics, fetchHealth])
 
   const fetchDataVisibility = async () => {
@@ -671,43 +691,111 @@ export function AdminDashboard() {
           <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
             <h3 className="font-medium text-foreground">3. Atribuir motorista à frota</h3>
             <p className="text-sm text-foreground/75">
-              Usa o <span className="font-mono">driver_user_id</span> (UUID do utilizador do motorista) e o{' '}
-              <span className="font-mono">partner_id</span> (UUID da frota).
+              Seleciona o motorista e a frota (sem UUIDs manuais).
             </p>
-            <label className="block text-sm text-foreground/80" htmlFor="frota-assign-driver-id">
-              Driver ID (driver_user_id)
-            </label>
-            <input
-              id="frota-assign-driver-id"
-              type="text"
-              value={frotaAssignDriverId}
-              onChange={(e) => {
-                setFrotaAssignDriverId(e.target.value)
-                setFrotaAssignOk(null)
-                setFrotaOk(null)
-              }}
-              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-mono text-sm"
-            />
-            <label className="block text-sm text-foreground/80" htmlFor="frota-assign-partner-id">
-              Frota ID (partner_id)
-            </label>
-            <input
-              id="frota-assign-partner-id"
-              type="text"
-              value={frotaAssignPartnerId}
-              onChange={(e) => {
-                setFrotaAssignPartnerId(e.target.value)
-                setFrotaAssignOk(null)
-                setFrotaOk(null)
-              }}
-              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-mono text-sm"
-            />
+
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                {dataLoading ? 'A carregar listas…' : 'Listas prontas.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => setFrotaAssignMode((m) => (m === 'select' ? 'manual' : 'select'))}
+                className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
+              >
+                {frotaAssignMode === 'select' ? 'Modo manual' : 'Modo select'}
+              </button>
+            </div>
+
+            {frotaAssignMode === 'select' ? (
+              <>
+                <label className="block text-sm text-foreground/80" htmlFor="frota-assign-driver-select">
+                  Motorista
+                </label>
+                <select
+                  id="frota-assign-driver-select"
+                  value={frotaAssignDriverId}
+                  onChange={(e) => {
+                    setFrotaAssignDriverId(e.target.value)
+                    setFrotaAssignOk(null)
+                    setFrotaOk(null)
+                  }}
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+                >
+                  <option value="">— escolher —</option>
+                  {users
+                    .filter((u) => u.role === 'driver' || u.has_driver_profile)
+                    .slice(0, 400)
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {(u.name || u.phone) + ' · ' + u.phone}
+                      </option>
+                    ))}
+                </select>
+
+                <label className="block text-sm text-foreground/80" htmlFor="frota-assign-partner-select">
+                  Frota
+                </label>
+                <select
+                  id="frota-assign-partner-select"
+                  value={frotaAssignPartnerId || frotaPartnerId}
+                  onChange={(e) => {
+                    setFrotaAssignPartnerId(e.target.value)
+                    setFrotaAssignOk(null)
+                    setFrotaOk(null)
+                  }}
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+                >
+                  <option value="">— escolher —</option>
+                  {partners.slice(0, 400).map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <>
+                <label className="block text-sm text-foreground/80" htmlFor="frota-assign-driver-id">
+                  Driver ID (driver_user_id)
+                </label>
+                <input
+                  id="frota-assign-driver-id"
+                  type="text"
+                  value={frotaAssignDriverId}
+                  onChange={(e) => {
+                    setFrotaAssignDriverId(e.target.value)
+                    setFrotaAssignOk(null)
+                    setFrotaOk(null)
+                  }}
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-mono text-sm"
+                />
+                <label className="block text-sm text-foreground/80" htmlFor="frota-assign-partner-id">
+                  Frota ID (partner_id)
+                </label>
+                <input
+                  id="frota-assign-partner-id"
+                  type="text"
+                  value={frotaAssignPartnerId || frotaPartnerId}
+                  onChange={(e) => {
+                    setFrotaAssignPartnerId(e.target.value)
+                    setFrotaAssignOk(null)
+                    setFrotaOk(null)
+                  }}
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-mono text-sm"
+                />
+              </>
+            )}
             <div className="flex gap-2">
               <button
                 type="button"
-                disabled={!frotaAssignDriverId.trim() || !frotaAssignPartnerId.trim() || frotaLoading !== null}
+                disabled={
+                  !frotaAssignDriverId.trim() ||
+                  !(frotaAssignPartnerId || frotaPartnerId).trim() ||
+                  frotaLoading !== null
+                }
                 onClick={() => void handleAssignDriverToFrota()}
                 className="flex-1 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
               >
