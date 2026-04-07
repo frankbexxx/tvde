@@ -489,9 +489,9 @@ export function AdminDashboard() {
           </p>
 
           <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
-            <h3 className="font-medium text-foreground">1. Nova organização</h3>
+            <h3 className="font-medium text-foreground">1. Nova frota</h3>
             <label className="block text-sm text-foreground/80" htmlFor="frota-org-name">
-              Nome da frota / organização
+              Nome da organização
             </label>
             <input
               id="frota-org-name"
@@ -510,7 +510,7 @@ export function AdminDashboard() {
               onClick={() => void handleCreateFrotaOrg()}
               className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
             >
-              {frotaLoading === 'org' ? 'A criar…' : 'Criar organização'}
+              {frotaLoading === 'org' ? 'A criar…' : 'Criar Frota'}
             </button>
           </div>
 
@@ -572,7 +572,7 @@ export function AdminDashboard() {
               onClick={() => void handleCreateFrotaManager()}
               className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
             >
-              {frotaLoading === 'manager' ? 'A criar…' : 'Criar gestor Frota'}
+              {frotaLoading === 'manager' ? 'A criar…' : 'Criar Gestor'}
             </button>
           </div>
         </section>

@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { PassengerDashboard } from '../features/passenger/PassengerDashboard'
 import { DriverDashboard } from '../features/driver/DriverDashboard'
 import { AdminDashboard } from '../features/admin/AdminDashboard'
-import { PartnerDashboard } from '../features/partner/PartnerDashboard'
+import { PartnerDriverDetail } from '../features/partner/PartnerDriverDetail'
+import { PartnerHome } from '../features/partner/PartnerHome'
+import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { SettingsButton } from '../design-system/components/app/SettingsButton'
@@ -138,10 +140,14 @@ export function AppRoutes() {
               path="/partner"
               element={
                 <PartnerGate>
-                  <PartnerDashboard />
+                  <Outlet />
                 </PartnerGate>
               }
-            />
+            >
+              <Route index element={<PartnerHome />} />
+              <Route path="drivers/:userId" element={<PartnerDriverDetail />} />
+              <Route path="trips/:tripId" element={<PartnerTripDetail />} />
+            </Route>
             <Route path="/debug/map" element={<DebugMapPage />} />
           </Routes>
         </main>
