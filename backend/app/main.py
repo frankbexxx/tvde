@@ -35,7 +35,6 @@ from app.middleware import RequestIDMiddleware
 
 import app.db.models  # noqa: F401
 from app.core.config import settings
-from app.db.migrations_runner import upgrade_to_head
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +58,7 @@ def custom_openapi() -> dict:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("[startup] begin")
     # Startup — log config for diagnostics (no secrets)
     _debug_logs = getattr(settings, "DEBUG_RUNTIME_LOGS", False)
     if settings.is_development_environment() or _debug_logs:
@@ -75,14 +75,6 @@ async def lifespan(app: FastAPI):
         f"[TVDE] config ENV={settings.ENV} ENVIRONMENT={settings.ENVIRONMENT!r} "
         f"prod={settings.is_production_environment()} dev_tools_mounted={_dev} BETA_MODE={_beta}"
     )
-    try:
-        upgrade_to_head()
-    except Exception as e:
-        logger.exception("Alembic upgrade failed on startup")
-        raise RuntimeError(
-            "Database migration failed. Ensure DATABASE_URL is correct and run "
-            "'alembic upgrade head' from the backend directory."
-        ) from e
 
     _env_low = settings.ENV.strip().lower()
     if _env_low not in ("dev", "development"):
@@ -97,6 +89,7 @@ async def lifespan(app: FastAPI):
             "Webhook validation will fail. "
             "Run 'stripe listen' to get the webhook secret."
         )
+    logger.info("[startup] complete")
     yield
     # Shutdown (nothing to do for now)
 
