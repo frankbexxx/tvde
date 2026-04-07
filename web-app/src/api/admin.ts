@@ -155,6 +155,11 @@ export interface AdminPartnerOrgAdminCreatedResponse {
   name: string
 }
 
+export interface AdminAssignPartnerResponse {
+  user_id: string
+  partner_id: string
+}
+
 export async function createPartner(
   name: string,
   token: string
@@ -183,4 +188,29 @@ export async function createPartnerOrgAdmin(
       token,
     }
   )
+}
+
+export async function assignDriverToPartner(
+  driverUserId: string,
+  partnerId: string,
+  token: string
+): Promise<AdminAssignPartnerResponse> {
+  const did = driverUserId.trim()
+  const pid = partnerId.trim()
+  return apiFetch<AdminAssignPartnerResponse>(`/admin/drivers/${encodeURIComponent(did)}/assign-partner`, {
+    method: 'POST',
+    body: JSON.stringify({ partner_id: pid }),
+    token,
+  })
+}
+
+export async function unassignDriverFromPartner(
+  driverUserId: string,
+  token: string
+): Promise<AdminAssignPartnerResponse> {
+  const did = driverUserId.trim()
+  return apiFetch<AdminAssignPartnerResponse>(`/admin/drivers/${encodeURIComponent(did)}/assign-partner`, {
+    method: 'DELETE',
+    token,
+  })
 }
