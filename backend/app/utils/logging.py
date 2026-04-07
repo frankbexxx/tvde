@@ -42,6 +42,15 @@ _TEST_QUIET_EVENTS = frozenset(
     }
 )
 
+def get_request_id() -> str | None:
+    """Read request_id from middleware context (G009)."""
+    try:
+        from app.middleware.request_id import request_id_ctx
+
+        return request_id_ctx.get()
+    except Exception:
+        return None
+
 
 def _suppress_console_in_test(event_name: str) -> bool:
     try:
@@ -101,6 +110,8 @@ def _format_human_readable(event_name: str, **fields) -> str:
     prefix = prefix_map.get(event_name, "TVDE")
 
     parts = []
+    if "request_id" in fields and fields["request_id"] is not None:
+        parts.append(f"request_id={_serialize_value(fields['request_id'])}")
     if "trip_id" in fields and fields["trip_id"] is not None:
         parts.append(f"trip_id={_serialize_value(fields['trip_id'])}")
 
@@ -261,6 +272,10 @@ def _print_trip_completed(trip_id: str) -> None:
 
 def log_event(event_name: str, **fields) -> None:
     """Log a structured event. Timeline format, trip headers, buffer."""
+    if "request_id" not in fields:
+        rid = get_request_id()
+        if rid:
+            fields["request_id"] = rid
     human_msg = _format_human_readable(event_name, **fields)
     line = f"{_time_prefix()} {human_msg}"
     if not _suppress_console_in_test(event_name):
