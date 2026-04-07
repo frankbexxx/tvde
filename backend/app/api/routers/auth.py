@@ -104,16 +104,8 @@ async def verify_otp(
 
     otp.consumed_at = now
 
-    req_role_raw = (payload.requested_role or "").strip().lower()
     admin_phone = getattr(settings, "ADMIN_PHONE", None)
     is_admin_phone = bool(admin_phone and _normalize_phone(admin_phone) == phone)
-
-    # "admin" no body só faz sentido com o telefone configurado (evita falso Swagger).
-    if req_role_raw == "admin" and not is_admin_phone:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="requested_role_admin_requires_admin_phone_match",
-        )
 
     user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not user:
@@ -128,6 +120,7 @@ async def verify_otp(
         elif _is_beta():
             # Partner fleet managers are created only via POST /admin/partners/{id}/create-admin,
             # never through public OTP (Role.partner is intentionally excluded here).
+            req_role_raw = (payload.requested_role or "").strip().lower()
             req_role = req_role_raw or "passenger"
             if req_role not in ("passenger", "driver"):
                 req_role = "passenger"
@@ -220,7 +213,7 @@ async def login(
             db.add(user)
         else:
             # Same rule as OTP: no public signup path for Role.partner.
-            req_role = (payload.requested_role or "passenger").lower()
+            req_role = (payload.requested_role or "passenger").strip().lower()
             if req_role not in ("passenger", "driver"):
                 req_role = "passenger"
             user = User(
