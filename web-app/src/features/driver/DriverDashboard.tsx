@@ -403,7 +403,7 @@ export function DriverDashboard() {
 
       {geolocationUsedFallback && (
         <div className="rounded-lg bg-warning/20 border border-warning/50 px-3 py-2 text-sm text-warning">
-          A usar Oeiras (localização indisponível).
+          Localização indisponível — a usar posição aproximada.
           {import.meta.env.DEV ? (
             <>
               {' '}

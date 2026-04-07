@@ -20,7 +20,7 @@ export const OEIRAS_FALLBACK = {
 const DEMO_LOCATION_KEY = 'tvde_demo_location'
 const GEOLOCATION_FAILED_KEY = 'tvde_geolocation_failed'
 
-/** Check if demo location mode is active (no geolocation, use Lisbon). */
+/** Check if demo location mode is active (no geolocation, use Oeiras fallback). */
 export function isDemoLocationEnabled(): boolean {
   if (typeof window === 'undefined') return false
   try {
@@ -32,7 +32,7 @@ export function isDemoLocationEnabled(): boolean {
   }
 }
 
-/** Enable demo location (Lisbon, no permission prompt). Persists until disabled. */
+/** Enable demo location (Oeiras fallback, no permission prompt). Persists until disabled. */
 export function setDemoLocationEnabled(enabled: boolean): void {
   try {
     if (enabled) {
@@ -72,7 +72,7 @@ function distanceMeters(a: { lat: number; lng: number }, b: { lat: number; lng: 
 
 export type GeolocationResult = {
   position: LatLng
-  /** True when using Lisbon due to error/fallback (not demo mode). */
+  /** True when using fallback due to error/timeout (not demo mode). */
   usedFallback: boolean
 }
 
@@ -132,7 +132,9 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       return
     }
 
-    // After a previous geolocation failure in this session, skip asking again (avoids repeated prompts on refresh).
+    // After a previous geolocation failure in this session:
+    // - passenger: keep fallback without prompting again (avoids repeated prompts on refresh)
+    // - driver: keep trying to obtain a real fix (driver tracking should recover when permissions are granted later)
     try {
       if (sessionStorage.getItem(GEOLOCATION_FAILED_KEY) === '1') {
         const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
@@ -141,7 +143,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
           setPosition(fallback)
           setUsedFallback(true)
         })
-        return
+        if (mockRole !== 'driver') return
       }
     } catch {
       /* ignore */
@@ -178,6 +180,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
 
       lastPositionRef.current = next
       setPosition(next)
+      setUsedFallback(false)
 
       // We have a real GPS fix – cancel any pending fallback.
       if (fallbackTimeoutRef.current) {
@@ -191,7 +194,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       applyFallback()
     }
 
-    // If we don't get any position within 3s, fall back to Lisbon center.
+    // If we don't get any position within 3s, fall back to Oeiras (Câmara Municipal).
     fallbackTimeoutRef.current = setTimeout(() => {
       if (!lastPositionRef.current) {
         logWarn('Geolocation fallback: using Oeiras (Câmara Municipal) coordinates')
