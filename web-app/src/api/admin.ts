@@ -50,6 +50,23 @@ export interface AdminMetricsResponse {
   trips_completed_total: number
 }
 
+export interface WeeklyReportRow {
+  week_start: string
+  trips_created: number
+  trips_completed: number
+}
+
+export interface AdminAlertsResponse {
+  zero_drivers_available: boolean
+  zero_trips_today: boolean
+}
+
+export interface AdminUsageSummaryResponse {
+  metrics: AdminMetricsResponse
+  alerts: AdminAlertsResponse
+  weekly: WeeklyReportRow[]
+}
+
 export interface RunTimeoutsResponse {
   assigned_to_requested: number
   accepted_to_cancelled: number
@@ -109,6 +126,18 @@ export async function getMetrics(token: string): Promise<AdminMetricsResponse> {
   return apiFetch<AdminMetricsResponse>('/admin/metrics', { token })
 }
 
+export async function getWeeklyReport(token: string): Promise<WeeklyReportRow[]> {
+  return apiFetch<WeeklyReportRow[]>('/admin/reports/weekly', { token })
+}
+
+export async function getAdminAlerts(token: string): Promise<AdminAlertsResponse> {
+  return apiFetch<AdminAlertsResponse>('/admin/alerts', { token })
+}
+
+export async function getUsageSummary(token: string): Promise<AdminUsageSummaryResponse> {
+  return apiFetch<AdminUsageSummaryResponse>('/admin/usage-summary', { token })
+}
+
 export async function runTimeouts(token: string): Promise<RunTimeoutsResponse> {
   return apiFetch<RunTimeoutsResponse>('/admin/run-timeouts', {
     method: 'POST',
@@ -155,6 +184,18 @@ export interface AdminPartnerOrgAdminCreatedResponse {
   name: string
 }
 
+export interface AdminPartnerListItem {
+  id: string
+  name: string
+  created_at: string
+}
+
+export interface AdminDriverListItem {
+  user_id: string
+  partner_id: string
+  status: string
+}
+
 export interface AdminAssignPartnerResponse {
   user_id: string
   partner_id: string
@@ -188,6 +229,14 @@ export async function createPartnerOrgAdmin(
       token,
     }
   )
+}
+
+export async function listPartners(token: string): Promise<AdminPartnerListItem[]> {
+  return apiFetch<AdminPartnerListItem[]>('/admin/partners', { token })
+}
+
+export async function listDrivers(token: string): Promise<AdminDriverListItem[]> {
+  return apiFetch<AdminDriverListItem[]>('/admin/drivers', { token })
 }
 
 export async function assignDriverToPartner(

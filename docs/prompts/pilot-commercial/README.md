@@ -10,7 +10,7 @@ Fila **nomeada por fase** (`PROMPT_*.md`): em cada ficheiro pode haver só place
 
 **Mapa da UI (cores/componentes):** [`../../UI_MAP.md`](../../UI_MAP.md)
 
-**Pacotes de execução em série («super prompts» = ordem, não substituem `PROMPT_*.md`):** [`super-prompts/README.md`](super-prompts/README.md) — pacotes **01** → **02** → **03**, cada um com uma **sequência** de prompts granulares. Inclui **C017** (onboarding admin na app) e **G008** como **prioridade máxima** (bloqueador de consistência).
+**Pacotes de execução em série («super prompts» = ordem, não substituem `PROMPT_*.md`):** [`super-prompts/README.md`](super-prompts/README.md) — pacotes **01** → **02** → **03** → **04**, cada um com uma **sequência** de prompts granulares. Inclui **C017** (onboarding admin na app) e **G008** como **prioridade máxima** (bloqueador de consistência).
 
 ---
 

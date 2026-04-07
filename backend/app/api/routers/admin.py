@@ -6,7 +6,7 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import UserContext, get_db, require_role
@@ -16,6 +16,7 @@ from app.db.models.driver import Driver
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.user import User
 from app.db.models.trip import Trip
+from app.db.models.partner import Partner
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.schemas.driver import DriverStatusResponse
 from app.schemas.system_health import (
@@ -49,6 +50,23 @@ from app.services.partners_admin import (
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class WeeklyReportRow(BaseModel):
+    week_start: str
+    trips_created: int
+    trips_completed: int
+
+
+class AdminAlertsResponse(BaseModel):
+    zero_drivers_available: bool
+    zero_trips_today: bool
+
+
+class AdminUsageSummaryResponse(BaseModel):
+    metrics: AdminMetricsResponse
+    alerts: AdminAlertsResponse
+    weekly: list[WeeklyReportRow]
 
 
 # --- BETA: pending users & approval ---
@@ -100,6 +118,18 @@ class AdminUserUpdateRequest(BaseModel):
     phone: str | None = None
 
 
+class AdminPartnerListItem(BaseModel):
+    id: str
+    name: str
+    created_at: str
+
+
+class AdminDriverListItem(BaseModel):
+    user_id: str
+    partner_id: str
+    status: str
+
+
 @router.get("/users", response_model=List[AdminUserItem])
 async def list_users(
     limit: int = Query(50, ge=1, le=1000),
@@ -134,6 +164,36 @@ async def list_users(
             )
         )
     return result
+
+
+@router.get("/partners", response_model=List[AdminPartnerListItem])
+async def admin_list_partners(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> List[AdminPartnerListItem]:
+    """List all partner orgs for visibility/operations."""
+    rows = db.execute(select(Partner).order_by(Partner.created_at.desc())).scalars().all()
+    return [
+        AdminPartnerListItem(id=str(p.id), name=p.name, created_at=p.created_at.isoformat())
+        for p in rows
+    ]
+
+
+@router.get("/drivers", response_model=List[AdminDriverListItem])
+async def admin_list_drivers(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> List[AdminDriverListItem]:
+    """List drivers (user_id, partner_id, status) for visibility/operations."""
+    rows = db.execute(select(Driver).order_by(Driver.created_at.desc())).scalars().all()
+    return [
+        AdminDriverListItem(
+            user_id=str(d.user_id),
+            partner_id=str(d.partner_id),
+            status=d.status.value,
+        )
+        for d in rows
+    ]
 
 
 def _is_admin_phone(phone: str) -> bool:
@@ -560,6 +620,79 @@ async def get_metrics(
     """Basic operational metrics for admin dashboard."""
     data = get_admin_metrics(db)
     return AdminMetricsResponse(**data)
+
+
+@router.get("/reports/weekly", response_model=list[WeeklyReportRow])
+async def admin_weekly_report(
+    weeks: int = Query(8, ge=1, le=26),
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> list[WeeklyReportRow]:
+    """H009: Weekly report (simple aggregation)."""
+    # date_trunc('week') returns timestamp; we stringify for UI.
+    week_col = func.date_trunc("week", Trip.created_at).label("week_start")
+    created_count = func.count(Trip.id).label("trips_created")
+    completed_count = func.sum(case((Trip.status == TripStatus.completed, 1), else_=0)).label(
+        "trips_completed"
+    )
+    rows = (
+        db.execute(
+            select(week_col, created_count, completed_count)
+            .select_from(Trip)
+            .group_by(week_col)
+            .order_by(week_col.desc())
+            .limit(weeks)
+        )
+        .all()
+    )
+    out: list[WeeklyReportRow] = []
+    for w, c, done in rows:
+        out.append(
+            WeeklyReportRow(
+                week_start=w.isoformat() if hasattr(w, "isoformat") else str(w),
+                trips_created=int(c or 0),
+                trips_completed=int(done or 0),
+            )
+        )
+    return out
+
+
+@router.get("/alerts", response_model=AdminAlertsResponse)
+async def admin_alerts(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> AdminAlertsResponse:
+    """H010: Minimum alerts for operations."""
+    now = func.now()
+    # today in UTC using DB now() truncated to date; acceptable for ops (simple).
+    trips_today = (
+        db.execute(
+            select(func.count())
+            .select_from(Trip)
+            .where(Trip.created_at >= func.date_trunc("day", now))
+        ).scalar()
+        or 0
+    )
+    drivers_available = (
+        db.execute(select(func.count()).select_from(Driver).where(Driver.is_available.is_(True))).scalar()
+        or 0
+    )
+    return AdminAlertsResponse(
+        zero_drivers_available=drivers_available == 0,
+        zero_trips_today=trips_today == 0,
+    )
+
+
+@router.get("/usage-summary", response_model=AdminUsageSummaryResponse)
+async def admin_usage_summary(
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> AdminUsageSummaryResponse:
+    """K008: Minimal business usage summary (ops-friendly)."""
+    metrics = AdminMetricsResponse(**get_admin_metrics(db))
+    alerts = await admin_alerts(user=user, db=db)  # reuse
+    weekly = await admin_weekly_report(weeks=8, user=user, db=db)
+    return AdminUsageSummaryResponse(metrics=metrics, alerts=alerts, weekly=weekly)
 
 
 @router.post("/run-timeouts", response_model=RunTimeoutsResponse)

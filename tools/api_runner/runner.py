@@ -110,8 +110,12 @@ def _expand_templates_str(s: str) -> str:
     pid = SESSION.get("partner_id")
     out = s.replace("{{session.partner_id}}", str(pid) if pid is not None else "")
     adv = CONFIG.get("assign_driver_user_id")
-    if isinstance(adv, str):
+    if isinstance(adv, str) and adv.strip():
         out = out.replace("{{config.assign_driver_user_id}}", adv.strip())
+    else:
+        discovered = SESSION.get("results", {}).get("assign_driver_user_id")
+        if isinstance(discovered, str) and discovered.strip():
+            out = out.replace("{{config.assign_driver_user_id}}", discovered.strip())
     return out
 
 
@@ -159,10 +163,6 @@ def otp_login(user_key: str) -> None:
         raise SystemExit("Empty OTP; aborting.")
 
     verify_body: dict[str, str] = {"phone": phone, "code": code}
-    if user_key == "admin":
-        verify_body["requested_role"] = "admin"
-    elif user_key == "partner":
-        verify_body["requested_role"] = "partner"
 
     r = requests.post(
         f"{base}/auth/otp/verify",
@@ -281,6 +281,35 @@ def run_request(step: dict[str, Any]) -> Any:
     return data
 
 
+def _discover_assign_driver_user_id() -> str | None:
+    """
+    J009: Auto-discovery for assign driver step (DEV).
+    Returns first driver user_id from /admin/drivers.
+    """
+    base = CONFIG["base_url"].rstrip("/")
+    token = SESSION["tokens"].get("admin")
+    if not token:
+        return None
+    timeout = _timeout_sec()
+    r = requests.get(
+        f"{base}/admin/drivers",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=timeout,
+    )
+    if not r.ok:
+        return None
+    try:
+        rows = r.json()
+    except Exception:
+        return None
+    if not isinstance(rows, list) or not rows:
+        return None
+    first = rows[0]
+    if isinstance(first, dict) and isinstance(first.get("user_id"), str):
+        return first["user_id"].strip()
+    return None
+
+
 def _should_skip_step(step: dict[str, Any]) -> bool:
     keys = step.get("skip_if_empty")
     if not keys:
@@ -288,6 +317,13 @@ def _should_skip_step(step: dict[str, Any]) -> bool:
     for k in keys:
         v = CONFIG.get(k)
         if v is None or (isinstance(v, str) and not v.strip()):
+            if k == "assign_driver_user_id":
+                did = _discover_assign_driver_user_id()
+                if did:
+                    SESSION.setdefault("results", {})["assign_driver_user_id"] = did
+                    _save_session(SESSION)
+                    _log("auto_discovered", key=k, value=did)
+                    continue
             _log("step_skipped", name=step.get("name"), reason=f"empty_config:{k}")
             return True
     return False
