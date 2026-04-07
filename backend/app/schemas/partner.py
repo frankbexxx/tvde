@@ -43,6 +43,24 @@ class PartnerMetricsResponse(BaseModel):
     total_drivers: int
 
 
+class PartnerDriverStatusPatchRequest(BaseModel):
+    """C013 — enable/disable driver (approved ↔ rejected)."""
+
+    enabled: bool
+
+
+class PartnerDriverAvailabilityPatchRequest(BaseModel):
+    """C014 — force online/offline (is_available)."""
+
+    online: bool
+
+
+class PartnerTripReassignRequest(BaseModel):
+    """I011 — swap driver on an assigned trip within the same fleet."""
+
+    driver_user_id: str = Field(..., min_length=1)
+
+
 class AdminCreatePartnerRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
 

@@ -3,7 +3,10 @@
 Endpoint audit (tenant scope = ctx.partner_id from get_current_partner only):
 - GET /partner/drivers
 - GET /partner/drivers/{driver_user_id}
+- PATCH /partner/drivers/{driver_user_id}/status  (C013)
+- PATCH /partner/drivers/{driver_user_id}/availability  (C014)
 - GET /partner/trips
+- POST /partner/trips/{trip_id}/reassign-driver  (I011)
 - GET /partner/trips/{trip_id}
 - GET /partner/trips/export  (CSV)
 - GET /partner/metrics
@@ -22,11 +25,18 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_partner, get_db
 from app.schemas.partner import (
+    PartnerDriverAvailabilityPatchRequest,
     PartnerDriverItem,
     PartnerDriverLastLocation,
+    PartnerDriverStatusPatchRequest,
     PartnerDriverUserBrief,
     PartnerMetricsResponse,
     PartnerTripItem,
+    PartnerTripReassignRequest,
+)
+from app.services.partner_fleet import (
+    set_partner_driver_availability,
+    set_partner_driver_enabled,
 )
 from app.services.partner_queries import (
     get_driver_for_partner,
@@ -34,6 +44,7 @@ from app.services.partner_queries import (
     list_drivers_for_partner_enriched,
     list_trips_for_partner,
 )
+from app.services.partner_trip_ops import partner_reassign_trip_driver
 from app.services.partners_admin import partner_metrics
 from app.utils.logging import log_event
 
@@ -130,6 +141,72 @@ async def partner_get_driver(
     return _driver_item(d)
 
 
+@router.patch("/drivers/{driver_user_id}/status", response_model=PartnerDriverItem)
+async def partner_patch_driver_status(
+    driver_user_id: str,
+    body: PartnerDriverStatusPatchRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerDriverItem:
+    assert ctx.partner_id is not None
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=ctx.partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    set_partner_driver_enabled(
+        db,
+        partner_id=ctx.partner_id,
+        driver_user_id=did,
+        enabled=body.enabled,
+    )
+    d = get_driver_for_partner(db, ctx.partner_id, did)
+    assert d is not None
+    return _driver_item(d)
+
+
+@router.patch("/drivers/{driver_user_id}/availability", response_model=PartnerDriverItem)
+async def partner_patch_driver_availability(
+    driver_user_id: str,
+    body: PartnerDriverAvailabilityPatchRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerDriverItem:
+    assert ctx.partner_id is not None
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=ctx.partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    set_partner_driver_availability(
+        db,
+        partner_id=ctx.partner_id,
+        driver_user_id=did,
+        online=body.online,
+    )
+    d = get_driver_for_partner(db, ctx.partner_id, did)
+    assert d is not None
+    return _driver_item(d)
+
+
 @router.get("/trips", response_model=list[PartnerTripItem])
 async def partner_list_trips(
     request: Request,
@@ -185,6 +262,38 @@ async def partner_export_trips_csv(
             "Content-Disposition": 'attachment; filename="partner_trips_export.csv"'
         },
     )
+
+
+@router.post("/trips/{trip_id}/reassign-driver", response_model=PartnerTripItem)
+async def partner_post_trip_reassign_driver(
+    trip_id: str,
+    body: PartnerTripReassignRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerTripItem:
+    assert ctx.partner_id is not None
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=ctx.partner_id,
+    )
+    try:
+        tid = uuid.UUID(trip_id.strip())
+        nid = uuid.UUID(body.driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    t = partner_reassign_trip_driver(
+        db,
+        partner_id=ctx.partner_id,
+        trip_id=tid,
+        new_driver_user_id=nid,
+    )
+    return _trip_item(t)
 
 
 @router.get("/trips/{trip_id}", response_model=PartnerTripItem)
