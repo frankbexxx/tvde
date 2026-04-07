@@ -10,7 +10,8 @@
 | --------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | 1               | [`SUPER_PROMPT_01_PARTNER_UX_CORE.md`](SUPER_PROMPT_01_PARTNER_UX_CORE.md)             | **C017 → C013 → C014 → C015 → C016 → I009 → I010 → I011**  |
 | 2               | [`SUPER_PROMPT_02_CONSISTENCY_HARDENING.md`](SUPER_PROMPT_02_CONSISTENCY_HARDENING.md) | G008 → G009 → G010 (G008 = prioridade máxima)              |
-| 3               | [`SUPER_PROMPT_03_PILOT_READY.md`](SUPER_PROMPT_03_PILOT_READY.md)                     | H009 → H010 → J009 → J010 → K008 → K009                    |
+| 3               | [`SUPER_PROMPT_03_OPERATION_VISIBILITY.md`](SUPER_PROMPT_03_OPERATION_VISIBILITY.md)   | **I012 → C018 → H009 → H010 → J009 → K008**                |
+| 4               | [`SUPER_PROMPT_04_SMOOTHING.md`](SUPER_PROMPT_04_SMOOTHING.md)                         | S001 → S002 → S003 → S004 → S005 → J010                    |
 
 **Como usar no Cursor:** para cada item da sequência, abrir ou criar o **`PROMPT_*.md`** correspondente e executar **uma prompt de cada vez**; o roteiro `SUPER_PROMPT_0N` serve para contexto e ordem, não para saltar a prompt individual.
 

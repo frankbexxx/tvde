@@ -17,6 +17,10 @@ import {
   createPartnerOrgAdmin,
   assignDriverToPartner,
   unassignDriverFromPartner,
+  listPartners,
+  listDrivers,
+  getUsageSummary,
+  type AdminUsageSummaryResponse,
   type TripActiveItem,
   type TripDetailAdmin,
   type SystemHealthResponse,
@@ -38,12 +42,13 @@ interface AdminUser {
   has_driver_profile: boolean
 }
 
-type Tab = 'pending' | 'users' | 'frota' | 'trips' | 'metrics' | 'ops' | 'health'
+type Tab = 'pending' | 'users' | 'frota' | 'dados' | 'trips' | 'metrics' | 'ops' | 'health'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pending', label: 'Pendentes' },
   { id: 'users', label: 'Utilizadores' },
   { id: 'frota', label: 'Frota' },
+  { id: 'dados', label: 'Dados' },
   { id: 'trips', label: 'Viagens' },
   { id: 'metrics', label: 'Métricas' },
   { id: 'ops', label: 'Operações' },
@@ -72,6 +77,7 @@ export function AdminDashboard() {
 
   // Métricas e Saúde
   const [metrics, setMetrics] = useState<AdminMetricsResponse | null>(null)
+  const [usage, setUsage] = useState<AdminUsageSummaryResponse | null>(null)
   const [health, setHealth] = useState<SystemHealthResponse | null>(null)
   const [opsLoading, setOpsLoading] = useState<string | null>(null)
   const [recoverDriverId, setRecoverDriverId] = useState('')
@@ -85,6 +91,11 @@ export function AdminDashboard() {
   const [frotaAssignOk, setFrotaAssignOk] = useState<string | null>(null)
   const [frotaLoading, setFrotaLoading] = useState<string | null>(null)
   const [frotaOk, setFrotaOk] = useState<string | null>(null)
+
+  const [partners, setPartners] = useState<Array<{ id: string; name: string; created_at: string }>>([])
+  const [driversList, setDriversList] = useState<Array<{ user_id: string; partner_id: string; status: string }>>([])
+  const [dataLoading, setDataLoading] = useState(false)
+  const [dataSearch, setDataSearch] = useState('')
 
   const fetchPending = useCallback(async () => {
     if (!token) return
@@ -154,6 +165,16 @@ export function AdminDashboard() {
       setMetrics(m)
     } catch {
       setMetrics(null)
+    }
+  }, [token])
+
+  const fetchUsage = useCallback(async () => {
+    if (!token) return
+    try {
+      const u = await getUsageSummary(token)
+      setUsage(u)
+    } catch {
+      setUsage(null)
     }
   }, [token])
 
@@ -363,7 +384,31 @@ export function AdminDashboard() {
     if (tab === 'trips') fetchActiveTrips()
     if (tab === 'metrics') fetchMetrics()
     if (tab === 'health') fetchHealth()
+    if (tab === 'dados') void fetchDataVisibility()
+    if (tab === 'metrics') fetchUsage()
   }, [token, tab, fetchActiveTrips, fetchMetrics, fetchHealth])
+
+  const fetchDataVisibility = async () => {
+    if (!token) return
+    setDataLoading(true)
+    try {
+      const [ps, ds] = await Promise.all([listPartners(token), listDrivers(token)])
+      setPartners(ps)
+      setDriversList(ds)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro ao carregar dados')
+    } finally {
+      setDataLoading(false)
+    }
+  }
+
+  const copy = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      // ignore (http / permissions); user can still select text
+    }
+  }
 
   useEffect(() => {
     if (selectedTripId && token) {
@@ -681,6 +726,164 @@ export function AdminDashboard() {
         </section>
       )}
 
+      {tab === 'dados' && (
+        <section className="space-y-6">
+          <h2 className="text-lg font-semibold text-foreground mb-2">Dados (visibilidade)</h2>
+          <p className="text-sm text-foreground/75">
+            IDs essenciais para operar o sistema — com botão de copiar.
+          </p>
+          <div className="space-y-2">
+            <label className="block text-sm text-foreground/80" htmlFor="admin-data-search">
+              Pesquisar (nome/telefone/UUID)
+            </label>
+            <input
+              id="admin-data-search"
+              type="search"
+              value={dataSearch}
+              onChange={(e) => setDataSearch(e.target.value)}
+              placeholder="Filtrar…"
+              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => void fetchDataVisibility()}
+              disabled={dataLoading}
+              className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 disabled:opacity-50"
+            >
+              {dataLoading ? 'A carregar…' : 'Atualizar'}
+            </button>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+            <h3 className="font-medium text-foreground">Users</h3>
+            {users.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem utilizadores.</p>
+            ) : (
+              <ul className="space-y-2">
+                {users
+                  .filter((u) => {
+                    const q = dataSearch.trim().toLowerCase()
+                    if (!q) return true
+                    return (
+                      u.id.toLowerCase().includes(q) ||
+                      u.phone.toLowerCase().includes(q) ||
+                      (u.name ?? '').toLowerCase().includes(q) ||
+                      u.role.toLowerCase().includes(q)
+                    )
+                  })
+                  .slice(0, 200)
+                  .map((u) => (
+                    <li key={u.id} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">{u.name || '—'}</p>
+                          <p className="text-muted-foreground">{u.phone}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {u.role} · {u.status}
+                          </p>
+                          <p className="text-xs font-mono text-foreground/90 break-all mt-1">{u.id}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void copy(u.id)}
+                          className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
+                        >
+                          Copiar
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+            <h3 className="font-medium text-foreground">Partners</h3>
+            {partners.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem frotas.</p>
+            ) : (
+              <ul className="space-y-2">
+                {partners
+                  .filter((p) => {
+                    const q = dataSearch.trim().toLowerCase()
+                    if (!q) return true
+                    return p.id.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+                  })
+                  .slice(0, 200)
+                  .map((p) => (
+                    <li key={p.id} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">{p.name}</p>
+                          <p className="text-xs text-muted-foreground">{p.created_at}</p>
+                          <p className="text-xs font-mono text-foreground/90 break-all mt-1">{p.id}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void copy(p.id)}
+                          className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
+                        >
+                          Copiar
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+            <h3 className="font-medium text-foreground">Drivers</h3>
+            {driversList.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem motoristas.</p>
+            ) : (
+              <ul className="space-y-2">
+                {driversList
+                  .filter((d) => {
+                    const q = dataSearch.trim().toLowerCase()
+                    if (!q) return true
+                    return (
+                      d.user_id.toLowerCase().includes(q) ||
+                      d.partner_id.toLowerCase().includes(q) ||
+                      d.status.toLowerCase().includes(q)
+                    )
+                  })
+                  .slice(0, 200)
+                  .map((d) => (
+                    <li key={d.user_id} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground">status: {d.status}</p>
+                          <p className="text-xs text-muted-foreground">partner_id</p>
+                          <p className="text-xs font-mono text-foreground/90 break-all">{d.partner_id}</p>
+                          <p className="text-xs text-muted-foreground mt-2">user_id</p>
+                          <p className="text-xs font-mono text-foreground/90 break-all">{d.user_id}</p>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            type="button"
+                            onClick={() => void copy(d.user_id)}
+                            className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
+                          >
+                            Copiar user
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void copy(d.partner_id)}
+                            className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
+                          >
+                            Copiar frota
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
+
       {tab === 'trips' && (
         <section className="space-y-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Viagens ativas</h2>
@@ -822,6 +1025,61 @@ export function AdminDashboard() {
           ) : (
             <p className="text-foreground/75">Carregar métricas...</p>
           )}
+
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-medium text-foreground">Operação (uso + alertas)</h3>
+              <button
+                type="button"
+                onClick={() => void fetchUsage()}
+                className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
+              >
+                Atualizar
+              </button>
+            </div>
+            {usage ? (
+              <>
+                {(usage.alerts.zero_drivers_available || usage.alerts.zero_trips_today) && (
+                  <div className="text-sm text-warning bg-warning/10 border border-warning/20 px-3 py-2 rounded-lg">
+                    <p className="font-medium">Alertas</p>
+                    <ul className="list-disc pl-5">
+                      {usage.alerts.zero_drivers_available && <li>Zero motoristas disponíveis</li>}
+                      {usage.alerts.zero_trips_today && <li>Zero viagens criadas hoje</li>}
+                    </ul>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-foreground">Weekly report</p>
+                  {usage.weekly.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sem dados.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="text-left text-foreground/70">
+                            <th className="py-1 pr-2">Semana</th>
+                            <th className="py-1 pr-2">Criadas</th>
+                            <th className="py-1">Concluídas</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {usage.weekly.map((r) => (
+                            <tr key={r.week_start} className="border-t border-border/60">
+                              <td className="py-1 pr-2 font-mono text-xs">{r.week_start.slice(0, 10)}</td>
+                              <td className="py-1 pr-2">{r.trips_created}</td>
+                              <td className="py-1">{r.trips_completed}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">Carregar uso...</p>
+            )}
+          </div>
         </section>
       )}
 

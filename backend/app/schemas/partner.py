@@ -61,6 +61,16 @@ class PartnerTripReassignRequest(BaseModel):
     driver_user_id: str = Field(..., min_length=1)
 
 
+class PartnerDriverDiscoveryItem(BaseModel):
+    """C018 — candidate driver to add to this fleet."""
+
+    user_id: str
+    name: str | None = None
+    phone: str | None = None
+    status: str
+    partner_id: str
+
+
 class AdminCreatePartnerRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
 

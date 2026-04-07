@@ -19,12 +19,13 @@ import io
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_partner, get_db
 from app.schemas.partner import (
+    PartnerDriverDiscoveryItem,
     PartnerDriverAvailabilityPatchRequest,
     PartnerDriverItem,
     PartnerDriverLastLocation,
@@ -33,6 +34,10 @@ from app.schemas.partner import (
     PartnerMetricsResponse,
     PartnerTripItem,
     PartnerTripReassignRequest,
+)
+from app.services.partner_driver_discovery import (
+    discover_drivers_for_partner,
+    partner_add_driver_to_fleet,
 )
 from app.services.partner_fleet import (
     set_partner_driver_availability,
@@ -135,6 +140,62 @@ async def partner_get_driver(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="invalid_uuid",
         ) from None
+    d = get_driver_for_partner(db, ctx.partner_id, did)
+    if not d:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+    return _driver_item(d)
+
+
+@router.get("/drivers/discover", response_model=list[PartnerDriverDiscoveryItem])
+async def partner_discover_drivers(
+    request: Request,
+    q: str = Query(..., min_length=2),
+    limit: int = Query(50, ge=1, le=200),
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> list[PartnerDriverDiscoveryItem]:
+    assert ctx.partner_id is not None
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=ctx.partner_id,
+    )
+    drivers = discover_drivers_for_partner(db, query=q, limit=limit)
+    out: list[PartnerDriverDiscoveryItem] = []
+    for d in drivers:
+        u = d.user
+        out.append(
+            PartnerDriverDiscoveryItem(
+                user_id=str(d.user_id),
+                name=u.name if u else None,
+                phone=u.phone if u else None,
+                status=d.status.value,
+                partner_id=str(d.partner_id),
+            )
+        )
+    return out
+
+
+@router.post("/drivers/{driver_user_id}/add-to-fleet", response_model=PartnerDriverItem)
+async def partner_add_driver(
+    driver_user_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerDriverItem:
+    assert ctx.partner_id is not None
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=ctx.partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid") from None
+    partner_add_driver_to_fleet(db, partner_id=ctx.partner_id, driver_user_id=did)
     d = get_driver_for_partner(db, ctx.partner_id, did)
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")

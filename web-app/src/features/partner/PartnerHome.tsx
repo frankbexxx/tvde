@@ -2,10 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
+  addDriverToFleet,
+  discoverPartnerDrivers,
   fetchPartnerDrivers,
   fetchPartnerMetrics,
   fetchPartnerTrips,
   partnerTripsExportUrl,
+  type PartnerDriverDiscoveryItem,
   type PartnerDriverRow,
   type PartnerMetrics,
   type PartnerTripRow,
@@ -52,6 +55,10 @@ export function PartnerHome() {
   const [driverFilter, setDriverFilter] = useState<DriverFilter>('all')
   const [tripFilter, setTripFilter] = useState<TripFilter>('all')
   const [search, setSearch] = useState('')
+  const [discoverQuery, setDiscoverQuery] = useState('')
+  const [discoverRows, setDiscoverRows] = useState<PartnerDriverDiscoveryItem[]>([])
+  const [discoverLoading, setDiscoverLoading] = useState(false)
+  const [discoverOk, setDiscoverOk] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -76,6 +83,37 @@ export function PartnerHome() {
   useEffect(() => {
     void load()
   }, [load])
+
+  const runDiscovery = async () => {
+    const q = discoverQuery.trim()
+    if (q.length < 2) return
+    setDiscoverLoading(true)
+    setDiscoverOk(null)
+    setError(null)
+    try {
+      const rows = await discoverPartnerDrivers(q)
+      setDiscoverRows(rows)
+    } catch (e: unknown) {
+      const err = e as { detail?: string }
+      setError(typeof err?.detail === 'string' ? err.detail : 'Não foi possível pesquisar motoristas.')
+    } finally {
+      setDiscoverLoading(false)
+    }
+  }
+
+  const addToFleet = async (driverUserId: string) => {
+    setDiscoverOk(null)
+    setError(null)
+    try {
+      await addDriverToFleet(driverUserId)
+      setDiscoverOk('Motorista adicionado à frota.')
+      await load()
+      void runDiscovery()
+    } catch (e: unknown) {
+      const err = e as { detail?: string }
+      setError(typeof err?.detail === 'string' ? err.detail : 'Não foi possível adicionar o motorista.')
+    }
+  }
 
   const q = normalizeSearch(search)
   const filteredDrivers = useMemo(() => {
@@ -133,6 +171,7 @@ export function PartnerHome() {
 
       {loading && <p className="text-sm text-muted-foreground">A carregar…</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {discoverOk && <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">{discoverOk}</p>}
 
       <label className="block text-sm text-foreground/80" htmlFor="partner-search">
         Pesquisar (nome, telefone ou ID de viagem)
@@ -174,6 +213,54 @@ export function PartnerHome() {
           </div>
         </div>
       )}
+
+      <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+        <h3 className="font-medium text-foreground">Adicionar motorista à frota</h3>
+        <p className="text-sm text-foreground/75">
+          Pesquisa por nome ou telefone e adiciona com um clique (sem UUIDs manuais).
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="search"
+            value={discoverQuery}
+            onChange={(e) => setDiscoverQuery(e.target.value)}
+            placeholder="Nome ou telefone…"
+            className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+          />
+          <button
+            type="button"
+            onClick={() => void runDiscovery()}
+            disabled={discoverLoading || discoverQuery.trim().length < 2}
+            className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+          >
+            {discoverLoading ? '…' : 'Procurar'}
+          </button>
+        </div>
+        {discoverRows.length > 0 ? (
+          <ul className="space-y-2">
+            {discoverRows.map((r) => (
+              <li
+                key={r.user_id}
+                className="rounded-xl border border-border bg-background/30 p-3 text-sm flex items-start justify-between gap-2"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground truncate">{r.name ?? '—'}</p>
+                  <p className="text-muted-foreground">{r.phone ?? '—'}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void addToFleet(r.user_id)}
+                  className="px-3 py-1.5 rounded-lg bg-card border border-border text-foreground/90 text-xs font-medium hover:bg-muted/40"
+                >
+                  Adicionar à frota
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">Sem resultados.</p>
+        )}
+      </div>
 
       <div>
         <div className="flex items-center justify-between mb-2">

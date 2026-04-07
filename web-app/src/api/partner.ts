@@ -9,6 +9,14 @@ export interface PartnerDriverRow {
   last_location: { lat: number; lng: number; timestamp: string } | null
 }
 
+export interface PartnerDriverDiscoveryItem {
+  user_id: string
+  name: string | null
+  phone: string | null
+  status: string
+  partner_id: string
+}
+
 export interface PartnerTripRow {
   trip_id: string
   status: string
@@ -47,6 +55,18 @@ export async function fetchPartnerTrip(tripId: string): Promise<PartnerTripRow> 
 
 export async function fetchPartnerMetrics(): Promise<PartnerMetrics> {
   return apiFetch<PartnerMetrics>('/partner/metrics')
+}
+
+export async function discoverPartnerDrivers(q: string): Promise<PartnerDriverDiscoveryItem[]> {
+  return apiFetch<PartnerDriverDiscoveryItem[]>(
+    `/partner/drivers/discover?q=${encodeURIComponent(q)}`
+  )
+}
+
+export async function addDriverToFleet(driverUserId: string): Promise<PartnerDriverRow> {
+  return apiFetch<PartnerDriverRow>(`/partner/drivers/${encodeURIComponent(driverUserId)}/add-to-fleet`, {
+    method: 'POST',
+  })
 }
 
 export async function patchPartnerDriverStatus(
