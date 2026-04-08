@@ -10,12 +10,12 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  /** Sem 2× tempo em falhas — o problema era ordem do teste, não flakiness. */
+  retries: 0,
   workers: 1,
-  /** Fluxo completo + cold start API/Vite no CI pode demorar vários minutos. */
-  timeout: process.env.CI ? 600_000 : 180_000,
-  /** Evita fallbacks de 5s em asserções quando o config não é aplicado como esperado. */
-  expect: { timeout: process.env.CI ? 120_000 : 25_000 },
+  /** CI: cold start Vite + 2 browser contexts; sem minutos “em silêncio” (falha rápida se algo está mal). */
+  timeout: process.env.CI ? 300_000 : 180_000,
+  expect: { timeout: process.env.CI ? 60_000 : 25_000 },
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     ...devices['Desktop Chrome'],
@@ -28,7 +28,7 @@ export default defineConfig({
     command: 'npm run dev -- --host 127.0.0.1 --port 5173',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: process.env.CI ? 240_000 : 120_000,
+    timeout: process.env.CI ? 180_000 : 120_000,
     env: {
       ...process.env,
       VITE_E2E: 'true',
