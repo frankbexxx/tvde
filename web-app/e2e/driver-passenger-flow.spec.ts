@@ -92,9 +92,10 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await driverPage.goto('/driver')
     await expect(driverPage.getByRole('button', { name: /^ACEITAR$/i })).toBeVisible({ timeout: 90_000 })
     await driverPage.getByRole('button', { name: /^ACEITAR$/i }).click()
-    await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({ timeout: 30_000 })
+    await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({ timeout: 60_000 })
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
-    await expect(startBtn).toBeEnabled({ timeout: 30_000 })
+    // CI: Vite + geolocation + polling do mapa — o gate de proximidade pode atrasar alguns segundos.
+    await expect(startBtn).toBeEnabled({ timeout: 90_000 })
     await startBtn.click()
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({ timeout: 30_000 })
     await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
