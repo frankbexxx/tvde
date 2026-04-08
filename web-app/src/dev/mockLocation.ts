@@ -9,8 +9,21 @@
 export const MOCK_LOCATION_STORAGE_KEY = 'mockLocation'
 
 export function isMockLocationModeEnabled(): boolean {
-  if (!import.meta.env.DEV) return false
   if (typeof window === 'undefined') return false
+  // In production builds, allow simulation only via explicit URL params.
+  // This is intended for controlled testing on mobile, without persisting a toggle.
+  if (!import.meta.env.DEV) {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const demo = params.get('demo')
+      const sim = params.get('sim')
+      const demoOn = demo === '1' || demo === 'true'
+      const simOn = sim === '1' || sim === 'true'
+      return demoOn && simOn
+    } catch {
+      return false
+    }
+  }
   try {
     return localStorage.getItem(MOCK_LOCATION_STORAGE_KEY) === 'true'
   } catch {

@@ -195,7 +195,7 @@ export function DriverDashboard() {
 
   /** Fase 1 (approach) e fase 2 (pickup→destino): mesmo pipeline OSRM + buildMockDriverApproachPath + startTripSimulation. */
   const startMockOsrmLeg = useCallback((from: { lat: number; lng: number }, to: { lat: number; lng: number }) => {
-    if (!import.meta.env.DEV || !isMockLocationModeEnabled()) return
+    if (!isMockLocationModeEnabled()) return
     tripSimStopRef.current?.()
     tripSimStopRef.current = null
     mockApproachGenRef.current += 1
@@ -282,7 +282,6 @@ export function DriverDashboard() {
       // Fase 1 mock: MOCK_DRIVER_START → pickup (só DEV + mock, após ACEITAR).
       if (
         actionName === 'ACEITAR' &&
-        import.meta.env.DEV &&
         isMockLocationModeEnabled() &&
         availableForFallback
       ) {
@@ -329,7 +328,7 @@ export function DriverDashboard() {
             onTripActionSuccess={(s) => {
               setDriverStatusOverride(s)
               // Fase 2 mock: pickup → destino (após «Iniciar viagem» → ongoing). Mesmo motor que fase 1.
-              if (s === 'ongoing' && import.meta.env.DEV && isMockLocationModeEnabled()) {
+              if (s === 'ongoing' && isMockLocationModeEnabled()) {
                 const beginPickupToDest = (
                   pickup: { lat: number; lng: number },
                   destination: { lat: number; lng: number }
