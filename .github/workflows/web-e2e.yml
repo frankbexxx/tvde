@@ -27,6 +27,15 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      JWT_SECRET_KEY: ci-jwt-secret-key-at-least-32-characters-long
+      OTP_SECRET: ci-otp-secret-key-at-least-32-characters-long
+      STRIPE_SECRET_KEY: sk_test_ci_placeholder_not_used
+      STRIPE_MOCK: "true"
+      ENV: dev
+      CI: true
+
     steps:
       - uses: actions/checkout@v4
 
@@ -36,34 +45,69 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
 
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Alembic upgrade
+        run: |
+          cd backend
+          alembic upgrade head
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: web-app/package-lock.json
 
-      - name: Install backend & migrate; start API; run Playwright
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-          JWT_SECRET_KEY: ci-jwt-secret-key-at-least-32-characters-long
-          OTP_SECRET: ci-otp-secret-key-at-least-32-characters-long
-          STRIPE_SECRET_KEY: sk_test_ci_placeholder_not_used
-          STRIPE_MOCK: "true"
-          ENV: dev
-          CI: true
+      - name: Install web-app dependencies
+        working-directory: web-app
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+
+      - name: Install Playwright (Chromium only)
+        working-directory: web-app
+        run: npx playwright install --with-deps chromium
+
+      - name: Start API (background)
         run: |
           cd backend
-          pip install -r requirements.txt
-          alembic upgrade head
-          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          nohup uvicorn app.main:app --host 127.0.0.1 --port 8000 > /tmp/tvde-api.log 2>&1 &
+          echo $! > /tmp/tvde-api.pid
           for i in $(seq 1 60); do
             if curl -sf http://127.0.0.1:8000/openapi.json >/dev/null; then
-              break
+              echo "API ready after ${i} attempts"
+              exit 0
             fi
             sleep 2
           done
-          curl -sf http://127.0.0.1:8000/openapi.json >/dev/null
-          cd ../web-app
-          npm ci
-          npx playwright install --with-deps chromium
-          npm run test:e2e
+          echo "API failed to start. Log:"
+          cat /tmp/tvde-api.log || true
+          exit 1
+
+      - name: Run Playwright E2E
+        working-directory: web-app
+        run: npm run test:e2e
+
+      - name: Upload Playwright artifacts (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-e2e-${{ github.run_id }}
+          path: |
+            web-app/test-results
+            web-app/playwright-report
+          if-no-files-found: ignore
+
+      - name: Print API log (on failure)
+        if: failure()
+        run: |
+          echo "---- /tmp/tvde-api.log ----"
+          cat /tmp/tvde-api.log || true

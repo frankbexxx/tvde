@@ -14,7 +14,7 @@ export default defineConfig({
   workers: 1,
   timeout: 180_000,
   expect: { timeout: 25_000 },
-  reporter: process.env.CI ? 'github' : 'list',
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     ...devices['Desktop Chrome'],
     baseURL,
