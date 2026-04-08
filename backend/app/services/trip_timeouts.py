@@ -38,6 +38,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
         "accepted_to_cancelled": 0,
         "ongoing_to_failed": 0,
     }
+    pending_events: list[TripStatusChangedEvent] = []
 
     # 1) assigned > 2 min → requested
     assigned_stuck = (
@@ -56,7 +57,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
             f"trip_timeouts: assigned→requested trip_id={trip.id}, "
             f"updated_at={trip.updated_at}"
         )
-        emit(
+        pending_events.append(
             TripStatusChangedEvent(
                 trip_id=str(trip.id),
                 status=trip.status,
@@ -83,7 +84,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
             f"trip_timeouts: accepted→cancelled trip_id={trip.id}, "
             f"driver_id={driver_id}, updated_at={trip.updated_at}"
         )
-        emit(
+        pending_events.append(
             TripStatusChangedEvent(
                 trip_id=str(trip.id),
                 status=trip.status,
@@ -111,7 +112,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
             f"trip_timeouts: ongoing→failed trip_id={trip.id}, "
             f"driver_id={driver_id}, started_at={trip.started_at}"
         )
-        emit(
+        pending_events.append(
             TripStatusChangedEvent(
                 trip_id=str(trip.id),
                 status=trip.status,
@@ -127,5 +128,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
             accepted_to_cancelled=counts["accepted_to_cancelled"],
             ongoing_to_failed=counts["ongoing_to_failed"],
         )
+        for ev in pending_events:
+            emit(ev)
 
     return counts
