@@ -73,14 +73,15 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await passengerCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await passengerCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const passengerPage = await passengerCtx.newPage()
-    await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded' })
-    // Shell da app (após auth dev ou ecrã BETA) — se falhar, API não respondeu (ver VITE_API_URL / proxy 127.0.0.1:8000).
-    await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({ timeout: 120_000 })
+    // Primeira compilação Vite no CI pode demorar >30s (default de navigationTimeout).
+    await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: 120_000 })
+    // O <h1>TVDE</h1> só existe após AuthContext sair de isLoading (getConfig + /dev/tokens + cold start).
+    await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({ timeout: 240_000 })
     await expect(
       passengerPage
         .getByText(/procura|motorista|pedido|viagem|Para onde|sincronizar|Entra com o teu telemóvel/i)
         .first()
-    ).toBeVisible({ timeout: 90_000 })
+    ).toBeVisible({ timeout: 120_000 })
 
     const driverCtx = await browser.newContext()
     await driverCtx.addInitScript(() => {
@@ -89,8 +90,8 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await driverCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await driverCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const driverPage = await driverCtx.newPage()
-    await driverPage.goto('/driver')
-    await expect(driverPage.getByRole('button', { name: /^ACEITAR$/i })).toBeVisible({ timeout: 90_000 })
+    await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: 120_000 })
+    await expect(driverPage.getByRole('button', { name: /^ACEITAR$/i })).toBeVisible({ timeout: 120_000 })
     await driverPage.getByRole('button', { name: /^ACEITAR$/i }).click()
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({ timeout: 60_000 })
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
