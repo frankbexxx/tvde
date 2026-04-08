@@ -36,7 +36,10 @@ import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { startTripSimulation } from '../../dev/tripSimulation'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
-import { sendDriverLocation } from '../../services/locationService'
+import {
+  fetchDriverLastServerLocation,
+  sendDriverLocation,
+} from '../../services/locationService'
 import { getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
@@ -174,6 +177,32 @@ export function DriverDashboard() {
     lng: driverLocation?.lng,
     hasActiveTrip: !!activeTripId,
   })
+
+  const [serverLoc, setServerLoc] = useState<{ lat: number; lng: number; timestamp: number } | null>(null)
+  const [serverLocErr, setServerLocErr] = useState<{ status?: number; detail?: string } | null>(null)
+  useEffect(() => {
+    if (offline || !token) return
+    let cancelled = false
+    const tick = () => {
+      void fetchDriverLastServerLocation()
+        .then((loc) => {
+          if (cancelled) return
+          setServerLoc(loc)
+          setServerLocErr(null)
+        })
+        .catch((e: unknown) => {
+          if (cancelled) return
+          const err = e as { status?: number; detail?: string }
+          setServerLocErr({ status: err?.status, detail: String(err?.detail ?? 'Erro') })
+        })
+    }
+    tick()
+    const id = window.setInterval(tick, 4000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [offline, token])
 
   useEffect(() => {
     return () => {
@@ -434,6 +463,18 @@ export function DriverDashboard() {
             <p>
               GPS upload: {gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}
             </p>
+          )}
+          {serverLoc ? (
+            <p className="mt-1 text-foreground/75">
+              Servidor: {serverLoc.lat.toFixed(5)},{' '}
+              {serverLoc.lng.toFixed(5)} (age ~{Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
+            </p>
+          ) : serverLocErr ? (
+            <p className="mt-1 text-foreground/75">
+              Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
+            </p>
+          ) : (
+            <p className="mt-1 text-foreground/75">Servidor: a obter…</p>
           )}
         </div>
       )}

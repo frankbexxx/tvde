@@ -7,6 +7,12 @@ interface SendDriverLocationPayload {
   timestamp: number
 }
 
+export interface DriverLocationServer {
+  lat: number
+  lng: number
+  timestamp: number
+}
+
 /**
  * Sends the driver's current location to the backend.
  *
@@ -40,6 +46,12 @@ export async function sendDriverLocation(lat: number, lng: number): Promise<void
       throw err2
     }
   }
+}
+
+export async function fetchDriverLastServerLocation(): Promise<DriverLocationServer> {
+  return apiFetch<DriverLocationServer>('/drivers/location/last', {
+    method: 'GET',
+  })
 }
 
 
