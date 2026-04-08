@@ -21,6 +21,7 @@ export const INITIAL_LOAD_TIMEOUT_MS = COLD_START_FIRST_TIMEOUT_MS
 export interface ApiError {
   status: number
   detail: string | { detail?: string }
+  request_id?: string
 }
 
 export type TokenGetter = () => string | null
@@ -66,14 +67,16 @@ export async function apiFetch<T>(
   }
   if (res.status === 401) {
     window.dispatchEvent(new CustomEvent('api:401'))
+    const requestId = res.headers.get('X-Request-ID') ?? undefined
     const body = await res.json().catch(() => ({}))
     const detail = body.detail ?? body.message ?? res.statusText
-    throw { status: 401, detail } as ApiError
+    throw { status: 401, detail, request_id: requestId } as ApiError
   }
   if (!res.ok) {
+    const requestId = res.headers.get('X-Request-ID') ?? undefined
     const body = await res.json().catch(() => ({}))
     const detail = body.detail ?? body.message ?? res.statusText
-    throw { status: res.status, detail } as ApiError
+    throw { status: res.status, detail, request_id: requestId } as ApiError
   }
   if (res.status === 204 || res.headers.get('content-length') === '0') {
     return undefined as T
