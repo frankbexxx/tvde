@@ -238,6 +238,13 @@ def cancel_trip_by_passenger(
     if not trip:
         _raise_not_found()
     if trip.status not in ACTIVE_PASSENGER_CANCEL:
+        log_event(
+            "trip_state_guard_blocked",
+            action="cancel_trip_by_passenger",
+            trip_id=str(trip_id),
+            expected=",".join(sorted([s.value for s in ACTIVE_PASSENGER_CANCEL])),
+            actual=trip.status.value,
+        )
         _raise_invalid_state()
 
     old_status = trip.status
@@ -282,6 +289,8 @@ def cancel_trip_by_passenger(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        from_status=old_status.value,
+        to_status=trip.status.value,
         payment_id=str(_pc.id) if _pc else None,
         payment_intent_id=(_pc.stripe_payment_intent_id or "") if _pc else "",
         **{"from": old_status.value, "to": trip.status.value},
@@ -323,6 +332,13 @@ def cancel_trip_by_driver(
     if not trip or str(trip.driver_id) != str(driver_id):
         _raise_not_found()
     if trip.status not in ACTIVE_DRIVER_CANCEL:
+        log_event(
+            "trip_state_guard_blocked",
+            action="cancel_trip_by_driver",
+            trip_id=str(trip_id),
+            expected=",".join(sorted([s.value for s in ACTIVE_DRIVER_CANCEL])),
+            actual=trip.status.value,
+        )
         _raise_invalid_state()
 
     old_status = trip.status
@@ -365,6 +381,8 @@ def cancel_trip_by_driver(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        from_status=old_status.value,
+        to_status=trip.status.value,
         payment_id=str(_pc_d.id) if _pc_d else None,
         payment_intent_id=(_pc_d.stripe_payment_intent_id or "") if _pc_d else "",
         **{"from": old_status.value, "to": trip.status.value},
@@ -398,6 +416,13 @@ def cancel_trip_by_admin(
     if not trip:
         _raise_not_found()
     if trip.status not in ADMIN_CANCEL_ALLOWED:
+        log_event(
+            "trip_state_guard_blocked",
+            action="cancel_trip_by_admin",
+            trip_id=str(trip_id),
+            expected=",".join(sorted([s.value for s in ADMIN_CANCEL_ALLOWED])),
+            actual=trip.status.value,
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"cannot_cancel_trip_in_status_{trip.status.value}",
@@ -434,6 +459,8 @@ def cancel_trip_by_admin(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        from_status=old_status.value,
+        to_status=trip.status.value,
         payment_id=str(_pc_a.id) if _pc_a else None,
         payment_intent_id=(_pc_a.stripe_payment_intent_id or "") if _pc_a else "",
         **{"from": old_status.value, "to": trip.status.value},
@@ -571,8 +598,22 @@ def accept_trip(
     if not trip:
         _raise_not_found()
     if trip.status != TripStatus.assigned:
+        log_event(
+            "trip_state_guard_blocked",
+            action="accept_trip",
+            trip_id=str(trip_id),
+            expected=TripStatus.assigned.value,
+            actual=trip.status.value,
+        )
         _raise_invalid_state()
     if trip.driver_id is not None:
+        log_event(
+            "trip_state_guard_blocked",
+            action="accept_trip_driver_already_assigned",
+            trip_id=str(trip_id),
+            expected="driver_id=None",
+            actual=f"driver_id={trip.driver_id}",
+        )
         _raise_invalid_state()
 
     validate_trip_transition(trip.status, TripStatus.accepted, trip_id=str(trip.id))
@@ -682,6 +723,8 @@ def accept_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        from_status=old_status.value,
+        to_status=trip.status.value,
         payment_id=str(payment.id),
         payment_intent_id=stripe_pi_id,
         **{"from": old_status.value, "to": trip.status.value},
@@ -994,6 +1037,13 @@ def mark_trip_arriving(
 ) -> Trip:
     trip = _get_trip_for_driver(db=db, driver_id=driver_id, trip_id=trip_id)
     if trip.status != TripStatus.accepted:
+        log_event(
+            "trip_state_guard_blocked",
+            action="mark_trip_arriving",
+            trip_id=str(trip_id),
+            expected=TripStatus.accepted.value,
+            actual=trip.status.value,
+        )
         _raise_invalid_state()
 
     validate_trip_transition(trip.status, TripStatus.arriving, trip_id=str(trip.id))
@@ -1006,6 +1056,8 @@ def mark_trip_arriving(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        from_status=old_status.value,
+        to_status=trip.status.value,
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
@@ -1026,6 +1078,13 @@ def start_trip(
 ) -> Trip:
     trip = _get_trip_for_driver(db=db, driver_id=driver_id, trip_id=trip_id)
     if trip.status != TripStatus.arriving:
+        log_event(
+            "trip_state_guard_blocked",
+            action="start_trip",
+            trip_id=str(trip_id),
+            expected=TripStatus.arriving.value,
+            actual=trip.status.value,
+        )
         _raise_invalid_state()
 
     driver_uuid = uuid.UUID(str(driver_id))
@@ -1069,6 +1128,8 @@ def start_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        from_status=old_status.value,
+        to_status=trip.status.value,
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
@@ -1148,6 +1209,7 @@ def complete_trip(
             trip_id=str(trip.id),
             payment_id=str(payment.id),
             payment_status=payment.status.value,
+            payment_intent_id=payment.stripe_payment_intent_id or "",
         )
         return trip
 
@@ -1166,6 +1228,15 @@ def complete_trip(
 
     # Block double capture: payment must be in processing state.
     if payment.status != PaymentStatus.processing:
+        log_event(
+            "trip_state_guard_blocked",
+            action="complete_trip_payment_not_processing",
+            trip_id=str(trip.id),
+            payment_id=str(payment.id),
+            payment_intent_id=payment.stripe_payment_intent_id or "",
+            expected=PaymentStatus.processing.value,
+            actual=payment.status.value,
+        )
         logger.warning(
             f"complete_trip: Payment not in processing state trip_id={trip_id}, "
             f"payment_status={payment.status}"
@@ -1356,6 +1427,8 @@ def complete_trip(
         trip_id=trip.id,
         from_state=old_status,
         to_state=trip.status,
+        from_status=old_status.value,
+        to_status=trip.status.value,
         payment_id=str(payment.id),
         payment_intent_id=payment.stripe_payment_intent_id or "",
         **{"from": old_status.value, "to": trip.status.value},

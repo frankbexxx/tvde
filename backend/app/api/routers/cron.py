@@ -1,5 +1,6 @@
 """Cron endpoint for scheduled jobs (cron-job.org). No JWT required; uses CRON_SECRET."""
 
+import time
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -51,11 +52,60 @@ async def run_scheduled_jobs(
             detail="invalid_secret",
         )
 
-    timeouts = run_trip_timeouts(db)
-    expired = expire_stale_offers(db)
-    new_offers = redispatch_expired_trips(db)
-    cleanup = run_cleanup(db)
-    system_health = run_system_health_check(db)
+    started = time.monotonic()
+    log_event("cron_started")
+
+    errors: dict[str, str] = {}
+
+    # Each sub-job is isolated: one failure must not block the others.
+    try:
+        timeouts = run_trip_timeouts(db)
+        log_event(
+            "cron_job_ok",
+            job="trip_timeouts",
+            assigned_to_requested=timeouts.get("assigned_to_requested", 0),
+            accepted_to_cancelled=timeouts.get("accepted_to_cancelled", 0),
+            ongoing_to_failed=timeouts.get("ongoing_to_failed", 0),
+        )
+    except Exception as e:
+        timeouts = {"assigned_to_requested": 0, "accepted_to_cancelled": 0, "ongoing_to_failed": 0}
+        errors["trip_timeouts"] = str(e)
+        log_event("cron_job_error", job="trip_timeouts", error=str(e))
+
+    try:
+        expired = expire_stale_offers(db)
+        log_event("cron_job_ok", job="expire_stale_offers", offers_expired=expired)
+    except Exception as e:
+        expired = 0
+        errors["expire_stale_offers"] = str(e)
+        log_event("cron_job_error", job="expire_stale_offers", error=str(e))
+
+    try:
+        new_offers = redispatch_expired_trips(db)
+        log_event("cron_job_ok", job="redispatch_expired_trips", redispatch_offers_created=len(new_offers))
+    except Exception as e:
+        new_offers = []
+        errors["redispatch_expired_trips"] = str(e)
+        log_event("cron_job_error", job="redispatch_expired_trips", error=str(e))
+
+    try:
+        cleanup = run_cleanup(db)
+        log_event("cron_job_ok", job="cleanup", audit_events_deleted=cleanup.get("audit_events_deleted", 0))
+    except Exception as e:
+        cleanup = {"audit_events_deleted": 0}
+        errors["cleanup"] = str(e)
+        log_event("cron_job_error", job="cleanup", error=str(e))
+
+    try:
+        system_health = run_system_health_check(db)
+        log_event("cron_job_ok", job="system_health_check", system_health_status=system_health.get("status", ""))
+    except Exception as e:
+        system_health = {"status": "error", "warnings": [str(e)]}
+        errors["system_health_check"] = str(e)
+        log_event("cron_job_error", job="system_health_check", error=str(e))
+
+    elapsed_ms = int(round((time.monotonic() - started) * 1000))
+    log_event("cron_finished", duration_ms=elapsed_ms, ok=(len(errors) == 0), error_count=len(errors))
 
     log_event(
         "cron_jobs_run",
@@ -66,10 +116,15 @@ async def run_scheduled_jobs(
         redispatch_offers_created=len(new_offers),
         audit_events_deleted=cleanup.get("audit_events_deleted", 0),
         system_health_status=system_health.get("status", ""),
+        duration_ms=elapsed_ms,
+        ok=(len(errors) == 0),
+        error_count=len(errors),
     )
 
     return {
-        "status": "ok",
+        "status": "ok" if len(errors) == 0 else "partial_error",
+        "duration_ms": elapsed_ms,
+        "errors": errors,
         "timeouts": {
             "assigned_to_requested": timeouts.get("assigned_to_requested", 0),
             "accepted_to_cancelled": timeouts.get("accepted_to_cancelled", 0),
