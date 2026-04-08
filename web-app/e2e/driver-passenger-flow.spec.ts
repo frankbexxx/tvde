@@ -6,11 +6,17 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 const TRIP_ORIGIN = { lat: 38.7, lng: -9.1 }
 const TRIP_DEST = { lat: 38.75, lng: -9.15 }
 
+const sec = (s: number) => s * 1000
+const pollLook = [300, 600, 1200, 2000]
+
 /**
- * Motorista primeiro no browser: ACEITAR antes de expirar ofertas (~OFFER_TIMEOUT_SECONDS, 15s por defeito).
- * O passageiro pode abrir depois (Vite/auth lentos). O workflow CI pode subir OFFER_TIMEOUT_SECONDS como rede extra.
+ * Motorista primeiro no browser: evita expirar ofertas (~OFFER_TIMEOUT_SECONDS) enquanto o Vite
+ * compila outra rota. O CI pode subir OFFER_TIMEOUT_SECONDS no workflow.
  */
-async function seedAndCreateTrip(request: APIRequestContext): Promise<{ tripId: string }> {
+async function seedAndCreateTrip(request: APIRequestContext): Promise<{
+  tripId: string
+  tokens: { passenger: string; driver: string; admin: string }
+}> {
   const seed = await request.post(`${API}/dev/seed`)
   expect(seed.ok(), `seed: ${seed.status()} ${await seed.text()}`).toBeTruthy()
 
@@ -56,11 +62,11 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{ tripId: 
         const list = (await r.json()) as unknown[]
         return list.length
       },
-      { timeout: 60_000, intervals: [500, 1000, 2000] }
+      { timeout: sec(60), intervals: [200, 500, 1000] }
     )
     .toBeGreaterThan(0)
 
-  return { tripId: trip.trip_id }
+  return { tripId: trip.trip_id, tokens }
 }
 
 test.describe('Driver + passenger (proximity gate)', () => {
@@ -68,21 +74,62 @@ test.describe('Driver + passenger (proximity gate)', () => {
     browser,
     request,
   }) => {
-    const { tripId } = await seedAndCreateTrip(request)
+    const { tripId, tokens } = await seedAndCreateTrip(request)
 
-    // --- Motorista primeiro: ACEITAR enquanto a oferta ainda é válida ---
     const driverCtx = await browser.newContext()
     await driverCtx.addInitScript(() => {
-      localStorage.setItem('tvde_app_route_role', 'driver')
+      try {
+        localStorage.setItem('tvde_app_route_role', 'driver')
+        localStorage.removeItem('tvde_driver_offline')
+      } catch {
+        /* ignore */
+      }
     })
     await driverCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await driverCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const driverPage = await driverCtx.newPage()
-    await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: 120_000 })
-    await expect(driverPage.getByRole('button', { name: /^ACEITAR$/i })).toBeVisible({ timeout: 90_000 })
-    await driverPage.getByRole('button', { name: /^ACEITAR$/i }).click()
 
-    // --- Passageiro pode demorar (cold start Vite / auth); a viagem já está aceite ---
+    await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+
+    await expect(driverPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
+      timeout: sec(120),
+    })
+
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/available`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return 0
+          return ((await r.json()) as unknown[]).length
+        },
+        { timeout: sec(60), intervals: pollLook }
+      )
+      .toBeGreaterThan(0)
+
+    await expect
+      .poll(
+        async () => driverPage.getByRole('button', { name: /^ACEITAR$/i }).isVisible(),
+        { timeout: sec(90), intervals: pollLook }
+      )
+      .toBe(true)
+
+    await driverPage.getByRole('button', { name: /^ACEITAR$/i }).click()
+    await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
+      timeout: sec(60),
+    })
+    const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
+    await expect(startBtn).toBeEnabled({ timeout: sec(45) })
+    await startBtn.click()
+    await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
+      timeout: sec(30),
+    })
+    await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
+    await expect(driverPage.getByText(/à espera de viagens|histórico/i).first()).toBeVisible({
+      timeout: sec(45),
+    })
+
     const passengerCtx = await browser.newContext()
     await passengerCtx.addInitScript((id: string) => {
       sessionStorage.setItem('e2e_passenger_trip_id', id)
@@ -90,24 +137,15 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await passengerCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await passengerCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const passengerPage = await passengerCtx.newPage()
-    await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: 120_000 })
-    await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({ timeout: 120_000 })
+    await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+    await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
+      timeout: sec(60),
+    })
     await expect(
       passengerPage
         .getByText(/procura|motorista|pedido|viagem|Para onde|sincronizar|Entra com o teu telemóvel/i)
         .first()
-    ).toBeVisible({ timeout: 120_000 })
-
-    // --- Continuar fluxo no mesmo separador do motorista ---
-    await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({ timeout: 60_000 })
-    const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
-    await expect(startBtn).toBeEnabled({ timeout: 90_000 })
-    await startBtn.click()
-    await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({ timeout: 30_000 })
-    await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
-    await expect(driverPage.getByText(/à espera de viagens|histórico/i).first()).toBeVisible({
-      timeout: 45_000,
-    })
+    ).toBeVisible({ timeout: sec(45) })
 
     await passengerCtx.close()
     await driverCtx.close()
