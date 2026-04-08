@@ -6,6 +6,8 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 const TRIP_ORIGIN = { lat: 38.7, lng: -9.1 }
 const TRIP_DEST = { lat: 38.75, lng: -9.15 }
 
+/** Ofertas: OFFER_TIMEOUT_SECONDS (15s por defeito). CI define 600s para o fluxo passageiro→motorista não expirar ofertas antes do ACEITAR. */
+
 async function seedAndCreateTrip(request: APIRequestContext): Promise<{ tripId: string }> {
   const seed = await request.post(`${API}/dev/seed`)
   expect(seed.ok(), `seed: ${seed.status()} ${await seed.text()}`).toBeTruthy()
