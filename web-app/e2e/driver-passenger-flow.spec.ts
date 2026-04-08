@@ -9,12 +9,12 @@ const TRIP_DEST = { lat: 38.75, lng: -9.15 }
 /** Timeouts em segundos (legível). */
 const sec = (s: number) => s * 1000
 
-/** Intervalos de poll tipo “olhar de vez em quando” (ms). */
+/** Intervalos de poll (ms). */
 const pollLook = [300, 600, 1200, 2000]
 
 /**
- * Ofertas: OFFER_TIMEOUT_SECONDS (15s por defeito). O fluxo E2E abre o motorista primeiro
- * para não expirar ofertas enquanto o Vite compila outra rota; o CI mantém OFFER_TIMEOUT_SECONDS alto.
+ * Motorista primeiro no browser: evita expirar ofertas (~OFFER_TIMEOUT_SECONDS) enquanto o Vite
+ * compila outra rota. O CI pode subir OFFER_TIMEOUT_SECONDS no workflow.
  */
 async function seedAndCreateTrip(request: APIRequestContext): Promise<{
   tripId: string
@@ -94,12 +94,12 @@ test.describe('Driver + passenger (proximity gate)', () => {
 
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
 
-    // Shell só com auth OK (sem isto, loadError não tem TVDE nem ACEITAR).
+    // Shell com auth OK (sem isto, loadError não mostra TVDE nem ACEITAR).
     await expect(driverPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
       timeout: sec(120),
     })
 
-    // Verdade do servidor: ainda há viagens para o motorista seed (mesmo JWT que /dev/tokens no browser).
+    // Servidor ainda lista a viagem para o motorista do seed.
     await expect
       .poll(
         async () => {
@@ -113,7 +113,6 @@ test.describe('Driver + passenger (proximity gate)', () => {
       )
       .toBeGreaterThan(0)
 
-    // UI: poll com intervalos dinâmicos — independente do ritmo do servidor.
     await expect
       .poll(
         async () => driverPage.getByRole('button', { name: /^ACEITAR$/i }).isVisible(),

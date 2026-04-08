@@ -142,7 +142,7 @@ export async function setDriverOffline(token: string): Promise<void> {
 export async function getAvailableTrips(token: string): Promise<TripAvailableItem[]> {
   return apiFetch<TripAvailableItem[]>('/driver/trips/available', {
     token,
-    /** CI / cold API: 15s default fazia o primeiro poll falhar e a lista ficar vazia (“Sem viagens”). */
+    /** Evita falha do 1.º poll (15s default) em cold start / CI. */
     timeoutMs: COLD_START_FIRST_TIMEOUT_MS,
   })
 }
