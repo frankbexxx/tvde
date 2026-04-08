@@ -10,6 +10,9 @@ export const LS_REFRESH_TOKEN = 'refresh_token'
 /** Legado — migrar para access_token */
 export const LS_TOKEN_LEGACY = 'token'
 
+/** Só em E2E (VITE_E2E): JSON de AuthTokens alinhado com o seed Playwright — evita GET/POST /dev/tokens desalinhado. */
+export const LS_E2E_DEV_TOKENS_JSON = 'tvde_e2e_dev_tokens_json'
+
 export function getStoredAccessToken(): string | null {
   const a = localStorage.getItem(LS_ACCESS_TOKEN)
   if (a) return a

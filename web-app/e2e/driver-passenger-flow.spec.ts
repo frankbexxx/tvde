@@ -77,14 +77,24 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const { tripId, tokens } = await seedAndCreateTrip(request)
 
     const driverCtx = await browser.newContext()
-    await driverCtx.addInitScript(() => {
-      try {
-        localStorage.setItem('tvde_app_route_role', 'driver')
-        localStorage.removeItem('tvde_driver_offline')
-      } catch {
-        /* ignore */
-      }
-    })
+    // Mesmos JWT do seed: o request Playwright vê viagens mas o browser pedia /dev/tokens outra vez —
+    // o primeiro poll do dashboard falhava ou desalinhava; inject evita isso (só com VITE_E2E no Vite).
+    await driverCtx.addInitScript(
+      (json: string) => {
+        try {
+          localStorage.setItem('tvde_e2e_dev_tokens_json', json)
+          localStorage.setItem('tvde_app_route_role', 'driver')
+          localStorage.removeItem('tvde_driver_offline')
+        } catch {
+          /* ignore */
+        }
+      },
+      JSON.stringify({
+        passenger: tokens.passenger,
+        driver: tokens.driver,
+        admin: tokens.admin,
+      })
+    )
     await driverCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await driverCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const driverPage = await driverCtx.newPage()

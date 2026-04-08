@@ -29,6 +29,7 @@ import {
   getStoredAccessToken,
   getStoredAppRouteRole,
   getStoredLastPhone,
+  LS_E2E_DEV_TOKENS_JSON,
   setStoredAccessToken,
   setStoredAppRouteRole,
 } from '../utils/authStorage'
@@ -221,7 +222,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus('Pronto')
         addLog('Modo BETA ativo', 'info')
       } else {
-        const t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
+        let t: AuthTokens | null = null
+        if (import.meta.env.VITE_E2E === 'true') {
+          try {
+            const raw = localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)
+            if (raw) {
+              const parsed = JSON.parse(raw) as AuthTokens
+              if (
+                typeof parsed?.passenger === 'string' &&
+                typeof parsed?.driver === 'string' &&
+                typeof parsed?.admin === 'string'
+              ) {
+                t = parsed
+              }
+            }
+          } catch {
+            /* ignorar JSON inválido */
+          }
+        }
+        if (!t) {
+          t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
+          addLog('Tokens carregados', 'success')
+        } else {
+          addLog('Tokens E2E (seed inject)', 'success')
+        }
         setTokens({
           passenger: t.passenger,
           driver: t.driver,
@@ -231,7 +255,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAppRouteRoleState(getStoredAppRouteRole())
         setSessionPhone(getStoredLastPhone())
         setStatus('Pronto')
-        addLog('Tokens carregados', 'success')
       }
     } catch (err: unknown) {
       if (import.meta.env.DEV) {
