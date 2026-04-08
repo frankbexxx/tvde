@@ -5,7 +5,7 @@ import { usePolling } from '../../hooks/usePolling'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { toast as sonnerToast } from 'sonner'
-import { DRIVER_START_TRIP_MAX_DISTANCE_M } from '../../utils/geo'
+import { DRIVER_START_TRIP_MAX_DISTANCE_M, haversineKm } from '../../utils/geo'
 import {
   driverPerformAccept,
   driverPerformCancel,
@@ -146,6 +146,11 @@ export function ActiveTripActions({
     (displayStatus === 'accepted' || displayStatus === 'arriving') &&
     buttonConfig.label === 'Iniciar viagem'
 
+  const distanceToPickupM =
+    startTripGateActive && driverLocation && pickupCoords
+      ? Math.round(haversineKm(driverLocation, pickupCoords) * 1000)
+      : null
+
   return (
     <div className="space-y-2">
       {loadingLong ? (
@@ -154,9 +159,12 @@ export function ActiveTripActions({
         </p>
       ) : null}
       {startTripGateActive && !startTripAllowed ? (
-        <p className="text-center text-xs text-foreground/65 px-1" aria-live="polite">
-          Aproxima-te do ponto de recolha (~{DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar a viagem.
-        </p>
+        <div className="text-center text-xs text-foreground/65 px-1" aria-live="polite">
+          <p>Aproxima-te do ponto de recolha (~{DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar a viagem.</p>
+          {distanceToPickupM != null ? (
+            <p className="mt-1">Distância ao pickup: ~{distanceToPickupM} m</p>
+          ) : null}
+        </div>
       ) : null}
       <PrimaryActionButton
         onClick={() => {
