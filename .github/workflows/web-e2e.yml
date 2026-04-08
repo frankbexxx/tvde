@@ -35,6 +35,8 @@ jobs:
       STRIPE_MOCK: "true"
       ENV: dev
       CI: true
+      # Default prod/dev: 15s — o E2E abre o passageiro antes do motorista; no CI isso expira ofertas antes do ACEITAR.
+      OFFER_TIMEOUT_SECONDS: "600"
 
     steps:
       - uses: actions/checkout@v4
