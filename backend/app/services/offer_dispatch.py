@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 from typing import List
 
@@ -25,8 +26,20 @@ LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 def _offer_ttl_seconds() -> int:
     """TTL efectivo das ofertas novas. Com E2E_KEEP_OFFERS_ALIVE, garante mínimo para browser/CI."""
     base = int(getattr(settings, "OFFER_TIMEOUT_SECONDS", 15))
-    if getattr(settings, "E2E_KEEP_OFFERS_ALIVE", False):
-        floor = int(getattr(settings, "E2E_OFFER_TIMEOUT_FLOOR_SECONDS", 120))
+    env_flag = os.environ.get("E2E_KEEP_OFFERS_ALIVE", "").strip().lower()
+    keep = getattr(settings, "E2E_KEEP_OFFERS_ALIVE", False) or env_flag in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    if keep:
+        try:
+            floor = int(os.environ.get("E2E_OFFER_TIMEOUT_FLOOR_SECONDS", "").strip() or "0")
+        except ValueError:
+            floor = 0
+        if floor <= 0:
+            floor = int(getattr(settings, "E2E_OFFER_TIMEOUT_FLOOR_SECONDS", 120))
         return max(base, floor)
     return base
 

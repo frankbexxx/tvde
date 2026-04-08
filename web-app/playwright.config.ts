@@ -15,7 +15,8 @@ export default defineConfig({
   workers: 1,
   /** CI: cold start Vite + 2 browser contexts; sem minutos “em silêncio” (falha rápida se algo está mal). */
   timeout: process.env.CI ? 300_000 : 180_000,
-  expect: { timeout: process.env.CI ? 60_000 : 25_000 },
+  /** CI: polls no E2E usam até 90s — o default global 60s cortava expect.poll antes do fim. */
+  expect: { timeout: process.env.CI ? 120_000 : 25_000 },
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     ...devices['Desktop Chrome'],
