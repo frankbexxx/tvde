@@ -6,9 +6,20 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 const TRIP_ORIGIN = { lat: 38.7, lng: -9.1 }
 const TRIP_DEST = { lat: 38.75, lng: -9.15 }
 
-/** Ofertas: OFFER_TIMEOUT_SECONDS (15s por defeito). CI define 600s para o fluxo passageiro→motorista não expirar ofertas antes do ACEITAR. */
+/** Timeouts em segundos (legível). */
+const sec = (s: number) => s * 1000
 
-async function seedAndCreateTrip(request: APIRequestContext): Promise<{ tripId: string }> {
+/** Intervalos de poll tipo “olhar de vez em quando” (ms). */
+const pollLook = [300, 600, 1200, 2000]
+
+/**
+ * Ofertas: OFFER_TIMEOUT_SECONDS (15s por defeito). O fluxo E2E abre o motorista primeiro
+ * para não expirar ofertas enquanto o Vite compila outra rota; o CI mantém OFFER_TIMEOUT_SECONDS alto.
+ */
+async function seedAndCreateTrip(request: APIRequestContext): Promise<{
+  tripId: string
+  tokens: { passenger: string; driver: string; admin: string }
+}> {
   const seed = await request.post(`${API}/dev/seed`)
   expect(seed.ok(), `seed: ${seed.status()} ${await seed.text()}`).toBeTruthy()
 
@@ -54,11 +65,11 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{ tripId: 
         const list = (await r.json()) as unknown[]
         return list.length
       },
-      { timeout: 60_000, intervals: [500, 1000, 2000] }
+      { timeout: sec(60), intervals: [200, 500, 1000] }
     )
     .toBeGreaterThan(0)
 
-  return { tripId: trip.trip_id }
+  return { tripId: trip.trip_id, tokens }
 }
 
 test.describe('Driver + passenger (proximity gate)', () => {
@@ -66,7 +77,64 @@ test.describe('Driver + passenger (proximity gate)', () => {
     browser,
     request,
   }) => {
-    const { tripId } = await seedAndCreateTrip(request)
+    const { tripId, tokens } = await seedAndCreateTrip(request)
+
+    const driverCtx = await browser.newContext()
+    await driverCtx.addInitScript(() => {
+      try {
+        localStorage.setItem('tvde_app_route_role', 'driver')
+        localStorage.removeItem('tvde_driver_offline')
+      } catch {
+        /* ignore */
+      }
+    })
+    await driverCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
+    await driverCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
+    const driverPage = await driverCtx.newPage()
+
+    await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+
+    // Shell só com auth OK (sem isto, loadError não tem TVDE nem ACEITAR).
+    await expect(driverPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
+      timeout: sec(120),
+    })
+
+    // Verdade do servidor: ainda há viagens para o motorista seed (mesmo JWT que /dev/tokens no browser).
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/available`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return 0
+          return ((await r.json()) as unknown[]).length
+        },
+        { timeout: sec(60), intervals: pollLook }
+      )
+      .toBeGreaterThan(0)
+
+    // UI: poll com intervalos dinâmicos — independente do ritmo do servidor.
+    await expect
+      .poll(
+        async () => driverPage.getByRole('button', { name: /^ACEITAR$/i }).isVisible(),
+        { timeout: sec(90), intervals: pollLook }
+      )
+      .toBe(true)
+
+    await driverPage.getByRole('button', { name: /^ACEITAR$/i }).click()
+    await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
+      timeout: sec(60),
+    })
+    const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
+    await expect(startBtn).toBeEnabled({ timeout: sec(45) })
+    await startBtn.click()
+    await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
+      timeout: sec(30),
+    })
+    await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
+    await expect(driverPage.getByText(/à espera de viagens|histórico/i).first()).toBeVisible({
+      timeout: sec(45),
+    })
 
     const passengerCtx = await browser.newContext()
     await passengerCtx.addInitScript((id: string) => {
@@ -75,36 +143,15 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await passengerCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await passengerCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const passengerPage = await passengerCtx.newPage()
-    // Primeira compilação Vite no CI pode demorar >30s (default de navigationTimeout).
-    await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: 120_000 })
-    // O <h1>TVDE</h1> só existe após AuthContext sair de isLoading (getConfig + /dev/tokens + cold start).
-    await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({ timeout: 240_000 })
+    await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+    await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
+      timeout: sec(60),
+    })
     await expect(
       passengerPage
         .getByText(/procura|motorista|pedido|viagem|Para onde|sincronizar|Entra com o teu telemóvel/i)
         .first()
-    ).toBeVisible({ timeout: 120_000 })
-
-    const driverCtx = await browser.newContext()
-    await driverCtx.addInitScript(() => {
-      localStorage.setItem('tvde_app_route_role', 'driver')
-    })
-    await driverCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
-    await driverCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
-    const driverPage = await driverCtx.newPage()
-    await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: 120_000 })
-    await expect(driverPage.getByRole('button', { name: /^ACEITAR$/i })).toBeVisible({ timeout: 120_000 })
-    await driverPage.getByRole('button', { name: /^ACEITAR$/i }).click()
-    await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({ timeout: 60_000 })
-    const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
-    // CI: Vite + geolocation + polling do mapa — o gate de proximidade pode atrasar alguns segundos.
-    await expect(startBtn).toBeEnabled({ timeout: 90_000 })
-    await startBtn.click()
-    await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({ timeout: 30_000 })
-    await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
-    await expect(driverPage.getByText(/à espera de viagens|histórico/i).first()).toBeVisible({
-      timeout: 45_000,
-    })
+    ).toBeVisible({ timeout: sec(45) })
 
     await passengerCtx.close()
     await driverCtx.close()
