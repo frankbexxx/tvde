@@ -13,8 +13,8 @@ const sec = (s: number) => s * 1000
 const pollLook = [300, 600, 1200, 2000]
 
 /**
- * Motorista primeiro no browser: evita expirar ofertas (~OFFER_TIMEOUT_SECONDS) enquanto o Vite
- * compila outra rota. O CI pode subir OFFER_TIMEOUT_SECONDS no workflow.
+ * Motorista primeiro no browser: evita expirar ofertas (~OFFER_TIMEOUT_SECONDS no backend) enquanto o Vite
+ * compila outra rota. O workflow CI define OFFER_TIMEOUT_SECONDS (não confundir com timeouts do Playwright).
  */
 async function seedAndCreateTrip(request: APIRequestContext): Promise<{
   tripId: string

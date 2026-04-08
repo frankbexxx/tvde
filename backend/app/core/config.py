@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     OFFER_TOP_N: int = 5
     # Offer timeout (seconds) before offer expires. Driver has this long to accept.
     OFFER_TIMEOUT_SECONDS: int = 15
+    # CI Playwright: com OFFER_TIMEOUT_SECONDS baixo no env, usar max(base, floor) ao criar ofertas.
+    E2E_KEEP_OFFERS_ALIVE: bool = False
+    E2E_OFFER_TIMEOUT_FLOOR_SECONDS: int = 120
 
     # Minimum seconds between redispatch attempts for the same trip (zero-offer recovery).
     REDISPATCH_MIN_INTERVAL_SECONDS: int = 10
