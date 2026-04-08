@@ -1,6 +1,6 @@
 """Cron endpoint for scheduled jobs (cron-job.org). No JWT required; uses CRON_SECRET."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -17,7 +17,10 @@ router = APIRouter(prefix="/cron", tags=["cron"])
 
 @router.get("/jobs")
 async def run_scheduled_jobs(
-    secret: str = Query(..., description="CRON_SECRET from env"),
+    secret: str | None = Query(None, description="CRON_SECRET from env (legacy: query string)"),
+    x_cron_secret: str | None = Header(
+        None, alias="X-Cron-Secret", description="CRON_SECRET from env (preferred: header)"
+    ),
     db: Session = Depends(get_db),
 ) -> dict:
     """
@@ -31,7 +34,9 @@ async def run_scheduled_jobs(
 
     Response: `system_health` contains counts and `warnings` only — never full diagnostic lists.
 
-    Requires: ?secret=<CRON_SECRET>
+    Auth:
+    - Preferred: Header `X-Cron-Secret: <CRON_SECRET>`
+    - Legacy:    Query `?secret=<CRON_SECRET>`
     """
     cron_secret = getattr(settings, "CRON_SECRET", None)
     if not cron_secret:
@@ -39,7 +44,8 @@ async def run_scheduled_jobs(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="CRON_SECRET not configured",
         )
-    if secret != cron_secret:
+    provided = x_cron_secret or secret
+    if not provided or provided != cron_secret:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_secret",
