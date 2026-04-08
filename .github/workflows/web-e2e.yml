@@ -35,8 +35,10 @@ jobs:
       STRIPE_MOCK: "true"
       ENV: dev
       CI: true
-      # Default prod/dev: 15s — o E2E abre o passageiro antes do motorista; no CI isso expira ofertas antes do ACEITAR.
-      OFFER_TIMEOUT_SECONDS: "600"
+      # Valor lido pelo Settings (logs). Com E2E_KEEP_OFFERS_ALIVE, o TTL real é max(isto, floor).
+      OFFER_TIMEOUT_SECONDS: "1"
+      E2E_KEEP_OFFERS_ALIVE: "true"
+      E2E_OFFER_TIMEOUT_FLOOR_SECONDS: "120"
 
     steps:
       - uses: actions/checkout@v4
