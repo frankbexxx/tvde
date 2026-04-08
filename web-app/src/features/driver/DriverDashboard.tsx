@@ -168,7 +168,7 @@ export function DriverDashboard() {
     return () => window.clearTimeout(id)
   }, [actionLoading])
 
-  useDriverLocationReporter({
+  const gpsReport = useDriverLocationReporter({
     enabled: !offline && !!token && !!driverLocation,
     lat: driverLocation?.lat,
     lng: driverLocation?.lng,
@@ -410,6 +410,31 @@ export function DriverDashboard() {
               <strong>Configuração</strong> (ícone de engrenagem).
             </>
           ) : null}
+        </div>
+      )}
+
+      {!offline && !!token && !!driverLocation && (
+        <div className="rounded-lg bg-foreground/5 border border-foreground/10 px-3 py-2 text-sm text-foreground/85">
+          {gpsReport.lastError ? (
+            <div className="flex flex-col gap-1">
+              <p className="font-medium text-foreground">
+                GPS upload: erro {gpsReport.lastError.status ?? ''}
+              </p>
+              <p className="text-foreground/75">
+                {String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}
+                {gpsReport.lastError.request_id ? (
+                  <>
+                    {' '}
+                    (<span className="font-mono">request_id {gpsReport.lastError.request_id}</span>)
+                  </>
+                ) : null}
+              </p>
+            </div>
+          ) : (
+            <p>
+              GPS upload: {gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}
+            </p>
+          )}
         </div>
       )}
 

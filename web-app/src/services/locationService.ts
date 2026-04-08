@@ -37,6 +37,7 @@ export async function sendDriverLocation(lat: number, lng: number): Promise<void
       })
     } catch (err2) {
       logWarn('sendDriverLocation retry failed, giving up.', err2)
+      throw err2
     }
   }
 }
