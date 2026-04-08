@@ -170,6 +170,56 @@ export async function exportLogsCsv(token: string): Promise<Blob> {
   return res.blob()
 }
 
+export interface AdminPhase0Response {
+  status: string
+  request_id: string
+  env: string
+  environment: string | null
+  cron_secret_set: boolean
+  stripe_webhook_secret_set: boolean
+  stripe_mock: boolean
+  beta_mode: boolean
+}
+
+export interface AdminCronRunResponse {
+  status: string
+  duration_ms: number
+  error_count: number
+  errors: Record<string, string>
+  timeouts: Record<string, number>
+  offers: Record<string, number>
+  cleanup: Record<string, unknown>
+  system_health_status: string
+  request_id: string
+}
+
+export interface AdminEnvValidateResponse {
+  status: string
+  request_id: string
+  present_keys: string[]
+  missing_required_keys: string[]
+  ignored_lines: number
+}
+
+export async function getAdminPhase0(token: string): Promise<AdminPhase0Response> {
+  return apiFetch<AdminPhase0Response>('/admin/phase0', { token })
+}
+
+export async function runAdminCron(token: string): Promise<AdminCronRunResponse> {
+  return apiFetch<AdminCronRunResponse>('/admin/cron/run', { method: 'POST', token })
+}
+
+export async function validateEnvText(
+  envText: string,
+  token: string
+): Promise<AdminEnvValidateResponse> {
+  return apiFetch<AdminEnvValidateResponse>('/admin/env/validate', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ env_text: envText }),
+  })
+}
+
 export interface AdminPartnerCreatedResponse {
   id: string
   name: string

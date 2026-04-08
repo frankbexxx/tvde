@@ -1,9 +1,10 @@
 import csv
 import io
+import time
 import uuid
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from sqlalchemy import case, func, select
@@ -33,6 +34,8 @@ from app.services.system_health import get_system_health
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
 from app.services.trip_timeouts import run_trip_timeouts
 from app.services.trips import assign_trip, cancel_trip_by_admin, get_trip_by_id
+from app.services.cleanup import run_cleanup
+from app.cron.system_health_check import run_system_health_check
 from app.schemas.partner import (
     AdminAssignPartnerRequest,
     AdminAssignPartnerResponse,
@@ -47,9 +50,218 @@ from app.services.partners_admin import (
     create_partner_org_admin,
     unassign_driver_from_partner,
 )
+from app.utils.logging import log_event
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class AdminCronRunResponse(BaseModel):
+    status: str
+    duration_ms: int
+    error_count: int
+    errors: dict[str, str]
+    timeouts: dict[str, int]
+    offers: dict[str, int]
+    cleanup: dict[str, Any]
+    system_health_status: str
+    request_id: str
+
+
+class AdminPhase0Response(BaseModel):
+    status: str
+    request_id: str
+    env: str
+    environment: str | None
+    cron_secret_set: bool
+    stripe_webhook_secret_set: bool
+    stripe_mock: bool
+    beta_mode: bool
+
+
+class AdminEnvValidateRequest(BaseModel):
+    env_text: str
+
+
+class AdminEnvValidateResponse(BaseModel):
+    status: str
+    request_id: str
+    present_keys: list[str]
+    missing_required_keys: list[str]
+    ignored_lines: int
+
+
+def _parse_dotenv_keys(text: str) -> tuple[set[str], int]:
+    keys: set[str] = set()
+    ignored = 0
+    for raw in (text or "").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            ignored += 1
+            continue
+        k = line.split("=", 1)[0].strip()
+        if not k or " " in k:
+            ignored += 1
+            continue
+        keys.add(k)
+    return keys, ignored
+
+
+@router.get("/phase0", response_model=AdminPhase0Response)
+async def admin_phase0(
+    request: Request,
+    user: UserContext = Depends(require_role(Role.admin)),
+) -> AdminPhase0Response:
+    """Minimal readiness checks surfaced in the Admin UI (no secrets exposed)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    out = AdminPhase0Response(
+        status="ok",
+        request_id=rid,
+        env=settings.ENV,
+        environment=settings.ENVIRONMENT,
+        cron_secret_set=bool(getattr(settings, "CRON_SECRET", None)),
+        stripe_webhook_secret_set=bool(getattr(settings, "STRIPE_WEBHOOK_SECRET", None)),
+        stripe_mock=bool(getattr(settings, "STRIPE_MOCK", False)),
+        beta_mode=bool(getattr(settings, "BETA_MODE", False)),
+    )
+    log_event(
+        "admin_phase0_checked",
+        cron_secret_set=out.cron_secret_set,
+        stripe_webhook_secret_set=out.stripe_webhook_secret_set,
+        stripe_mock=out.stripe_mock,
+        beta_mode=out.beta_mode,
+    )
+    return out
+
+
+@router.post("/cron/run", response_model=AdminCronRunResponse)
+async def admin_run_cron(
+    request: Request,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> AdminCronRunResponse:
+    """Run the same maintenance batch as /cron/jobs, but admin-only (no CRON_SECRET in UI)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    started = time.monotonic()
+    log_event("cron_started", invoked_by="admin")
+    errors: dict[str, str] = {}
+
+    try:
+        timeouts = run_trip_timeouts(db)
+        log_event("cron_job_ok", job="trip_timeouts", **timeouts)
+    except Exception as e:
+        timeouts = {"assigned_to_requested": 0, "accepted_to_cancelled": 0, "ongoing_to_failed": 0}
+        errors["trip_timeouts"] = str(e)
+        log_event("cron_job_error", job="trip_timeouts", error=str(e))
+
+    try:
+        expired = expire_stale_offers(db)
+        log_event("cron_job_ok", job="expire_stale_offers", offers_expired=expired)
+    except Exception as e:
+        expired = 0
+        errors["expire_stale_offers"] = str(e)
+        log_event("cron_job_error", job="expire_stale_offers", error=str(e))
+
+    try:
+        new_offers = redispatch_expired_trips(db)
+        log_event("cron_job_ok", job="redispatch_expired_trips", redispatch_offers_created=len(new_offers))
+    except Exception as e:
+        new_offers = []
+        errors["redispatch_expired_trips"] = str(e)
+        log_event("cron_job_error", job="redispatch_expired_trips", error=str(e))
+
+    try:
+        cleanup = run_cleanup(db)
+        log_event("cron_job_ok", job="cleanup", audit_events_deleted=cleanup.get("audit_events_deleted", 0))
+    except Exception as e:
+        cleanup = {"audit_events_deleted": 0}
+        errors["cleanup"] = str(e)
+        log_event("cron_job_error", job="cleanup", error=str(e))
+
+    try:
+        system_health = run_system_health_check(db)
+        sh_status = system_health.get("status", "")
+        log_event("cron_job_ok", job="system_health_check", system_health_status=sh_status)
+    except Exception as e:
+        system_health = {"status": "error", "warnings": [str(e)]}
+        sh_status = "error"
+        errors["system_health_check"] = str(e)
+        log_event("cron_job_error", job="system_health_check", error=str(e))
+
+    elapsed_ms = int(round((time.monotonic() - started) * 1000))
+    log_event(
+        "cron_finished",
+        duration_ms=elapsed_ms,
+        ok=(len(errors) == 0),
+        error_count=len(errors),
+        invoked_by="admin",
+    )
+    log_event(
+        "cron_jobs_run",
+        assigned_to_requested=timeouts.get("assigned_to_requested", 0),
+        accepted_to_cancelled=timeouts.get("accepted_to_cancelled", 0),
+        ongoing_to_failed=timeouts.get("ongoing_to_failed", 0),
+        offers_expired=expired,
+        redispatch_offers_created=len(new_offers),
+        audit_events_deleted=cleanup.get("audit_events_deleted", 0),
+        system_health_status=sh_status,
+        duration_ms=elapsed_ms,
+        ok=(len(errors) == 0),
+        error_count=len(errors),
+        invoked_by="admin",
+    )
+
+    return AdminCronRunResponse(
+        status="ok" if len(errors) == 0 else "partial_error",
+        duration_ms=elapsed_ms,
+        error_count=len(errors),
+        errors=errors,
+        timeouts={
+            "assigned_to_requested": timeouts.get("assigned_to_requested", 0),
+            "accepted_to_cancelled": timeouts.get("accepted_to_cancelled", 0),
+            "ongoing_to_failed": timeouts.get("ongoing_to_failed", 0),
+        },
+        offers={"expired_count": expired, "redispatch_created": len(new_offers)},
+        cleanup=cleanup,
+        system_health_status=sh_status,
+        request_id=rid,
+    )
+
+
+@router.post("/env/validate", response_model=AdminEnvValidateResponse)
+async def admin_validate_env(
+    request: Request,
+    body: AdminEnvValidateRequest,
+    user: UserContext = Depends(require_role(Role.admin)),
+) -> AdminEnvValidateResponse:
+    """Validate a pasted .env (key=value) WITHOUT storing it. Safe-by-default."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    keys, ignored = _parse_dotenv_keys(body.env_text)
+    required = [
+        "DATABASE_URL",
+        "JWT_SECRET_KEY",
+        "OTP_SECRET",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "CRON_SECRET",
+    ]
+    missing = sorted([k for k in required if k not in keys])
+    present = sorted(list(keys))
+    log_event(
+        "admin_env_validated",
+        required_count=len(required),
+        missing_count=len(missing),
+        ignored_lines=ignored,
+    )
+    return AdminEnvValidateResponse(
+        status="ok",
+        request_id=rid,
+        present_keys=present,
+        missing_required_keys=missing,
+        ignored_lines=ignored,
+    )
 
 
 class WeeklyReportRow(BaseModel):

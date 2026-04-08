@@ -13,6 +13,9 @@ import {
   runOfferExpiry,
   recoverDriver,
   exportLogsCsv,
+  getAdminPhase0,
+  runAdminCron,
+  validateEnvText,
   createPartner,
   createPartnerOrgAdmin,
   assignDriverToPartner,
@@ -81,6 +84,10 @@ export function AdminDashboard() {
   const [health, setHealth] = useState<SystemHealthResponse | null>(null)
   const [opsLoading, setOpsLoading] = useState<string | null>(null)
   const [recoverDriverId, setRecoverDriverId] = useState('')
+  const [phase0, setPhase0] = useState<Awaited<ReturnType<typeof getAdminPhase0>> | null>(null)
+  const [cronRun, setCronRun] = useState<Awaited<ReturnType<typeof runAdminCron>> | null>(null)
+  const [envText, setEnvText] = useState('')
+  const [envValidate, setEnvValidate] = useState<Awaited<ReturnType<typeof validateEnvText>> | null>(null)
 
   const [frotaOrgName, setFrotaOrgName] = useState('')
   const [frotaPartnerId, setFrotaPartnerId] = useState('')
@@ -269,6 +276,51 @@ export function AdminDashboard() {
       fetchMetrics()
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro offer-expiry')
+    } finally {
+      setOpsLoading(null)
+    }
+  }
+
+  const handleFetchPhase0 = async () => {
+    if (!token) return
+    setOpsLoading('phase0')
+    try {
+      const d = await getAdminPhase0(token)
+      setPhase0(d)
+      setError(null)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro fase0')
+    } finally {
+      setOpsLoading(null)
+    }
+  }
+
+  const handleRunCronNow = async () => {
+    if (!token) return
+    if (!window.confirm('Correr cron agora? (timeouts, offers, cleanup, system health)')) return
+    setOpsLoading('cron')
+    try {
+      const d = await runAdminCron(token)
+      setCronRun(d)
+      setError(null)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro cron')
+    } finally {
+      setOpsLoading(null)
+    }
+  }
+
+  const handleValidateEnv = async () => {
+    if (!token) return
+    const text = envText.trim()
+    if (!text) return
+    setOpsLoading('env-validate')
+    try {
+      const d = await validateEnvText(text, token)
+      setEnvValidate(d)
+      setError(null)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro validar .env')
     } finally {
       setOpsLoading(null)
     }
@@ -1174,6 +1226,110 @@ export function AdminDashboard() {
       {tab === 'ops' && (
         <section className="space-y-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Operações</h2>
+          <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-foreground">FASE 0 — Pronto para testes</p>
+              <button
+                type="button"
+                onClick={handleFetchPhase0}
+                disabled={!!opsLoading}
+                className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 disabled:opacity-50"
+              >
+                {opsLoading === 'phase0' ? 'A verificar…' : 'Verificar'}
+              </button>
+            </div>
+            {phase0 ? (
+              <div className="text-sm space-y-1">
+                <p className="text-foreground/80">
+                  ENV={phase0.env} · ENVIRONMENT={String(phase0.environment ?? '') || '—'} · request_id={phase0.request_id || '—'}
+                </p>
+                <ul className="list-disc pl-5 text-foreground/80">
+                  <li>CRON_SECRET set: {phase0.cron_secret_set ? 'sim' : 'não'}</li>
+                  <li>STRIPE_WEBHOOK_SECRET set: {phase0.stripe_webhook_secret_set ? 'sim' : 'não'}</li>
+                  <li>STRIPE_MOCK: {phase0.stripe_mock ? 'sim' : 'não'}</li>
+                  <li>BETA_MODE: {phase0.beta_mode ? 'sim' : 'não'}</li>
+                </ul>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Carrega “Verificar” para ver readiness.</p>
+            )}
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-foreground">Cron (admin-only)</p>
+              <button
+                type="button"
+                onClick={handleRunCronNow}
+                disabled={!!opsLoading}
+                className="px-3 py-1.5 bg-warning/20 text-warning rounded-xl font-medium disabled:opacity-50"
+              >
+                {opsLoading === 'cron' ? 'A correr…' : 'Correr cron agora'}
+              </button>
+            </div>
+            {cronRun ? (
+              <div className="text-sm space-y-1">
+                <p className="text-foreground/80">
+                  status={cronRun.status} · duration_ms={cronRun.duration_ms} · error_count={cronRun.error_count} · request_id=
+                  {cronRun.request_id || '—'}
+                </p>
+                {cronRun.error_count > 0 ? (
+                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
+                    {JSON.stringify(cronRun.errors, null, 2)}
+                  </pre>
+                ) : (
+                  <p className="text-foreground/75">Sem erros.</p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Executa para validar timeouts/offers/cleanup/health.</p>
+            )}
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
+            <p className="text-sm font-medium text-foreground">Validar .env (não guarda segredos)</p>
+            <textarea
+              value={envText}
+              onChange={(e) => setEnvText(e.target.value)}
+              placeholder="Cola aqui o .env (key=value). Isto só valida; não guarda."
+              className="w-full min-h-28 px-3 py-2 border rounded-lg text-sm font-mono"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleValidateEnv}
+                disabled={!!opsLoading || !envText.trim()}
+                className="px-3 py-1.5 bg-info/20 text-info rounded-xl font-medium disabled:opacity-50"
+              >
+                {opsLoading === 'env-validate' ? 'A validar…' : 'Validar'}
+              </button>
+              {envValidate ? (
+                <span className="text-xs text-foreground/70">
+                  request_id={envValidate.request_id || '—'} · missing={envValidate.missing_required_keys.length} · ignored_lines=
+                  {envValidate.ignored_lines}
+                </span>
+              ) : null}
+            </div>
+            {envValidate ? (
+              envValidate.missing_required_keys.length > 0 ? (
+                <div className="text-sm text-warning bg-warning/10 border border-warning/20 px-3 py-2 rounded-lg">
+                  <p className="font-medium">Faltam chaves obrigatórias</p>
+                  <ul className="list-disc pl-5">
+                    {envValidate.missing_required_keys.map((k) => (
+                      <li key={k} className="font-mono text-xs">
+                        {k}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="text-sm text-success bg-success/10 border border-success/20 px-3 py-2 rounded-lg">
+                  OK — chaves obrigatórias presentes.
+                </div>
+              )
+            ) : null}
+          </div>
+
           <div className="space-y-3">
             <button
               type="button"
