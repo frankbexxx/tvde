@@ -7,9 +7,8 @@ const TRIP_ORIGIN = { lat: 38.7, lng: -9.1 }
 const TRIP_DEST = { lat: 38.75, lng: -9.15 }
 
 /**
- * Ordem obrigatória: após criar a viagem, o motorista tem de conseguir ACEITAR antes das ofertas
- * expirarem (OFFER_TIMEOUT_SECONDS, tipicamente 15s). Abrir primeiro o passageiro e só depois o
- * motorista fazia o E2E falhar no CI sem relação com a app.
+ * Motorista primeiro no browser: ACEITAR antes de expirar ofertas (~OFFER_TIMEOUT_SECONDS, 15s por defeito).
+ * O passageiro pode abrir depois (Vite/auth lentos). O workflow CI pode subir OFFER_TIMEOUT_SECONDS como rede extra.
  */
 async function seedAndCreateTrip(request: APIRequestContext): Promise<{ tripId: string }> {
   const seed = await request.post(`${API}/dev/seed`)
