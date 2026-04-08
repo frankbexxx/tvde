@@ -112,8 +112,16 @@ async def stripe_webhook(
 
         if not payment:
             logger.warning(
-                f"webhook: Payment not found event_type={event_type}, "
-                f"payment_intent_id={payment_intent_id}"
+                "webhook: Payment not found (ack 200) event_type=%s payment_intent_id=%s stripe_event_id=%s",
+                event_type,
+                payment_intent_id,
+                stripe_event_id,
+            )
+            log_event(
+                "stripe_webhook_payment_not_found_ack",
+                event_type=event_type,
+                payment_intent_id=str(payment_intent_id),
+                stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
             )
             return {"status": "ok"}
 
@@ -132,10 +140,14 @@ async def stripe_webhook(
                     event_type,
                 )
                 return {"status": "ok"}
+            # Persist idempotency marker immediately. Without this commit, returning 200 would
+            # rollback the insert at request end and break idempotency on re-delivery.
+            db.commit()
 
         # Manual capture: only payment_intent.succeeded fires after capture.
         if event_type == "payment_intent.succeeded":
             if payment.status != PaymentStatus.succeeded:
+                prev = payment.status
                 payment.status = PaymentStatus.succeeded
                 db.commit()
                 log_event(
@@ -144,6 +156,8 @@ async def stripe_webhook(
                     payment_id=str(payment.id),
                     payment_intent_id=str(payment_intent_id),
                     stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                    from_status=prev.value if hasattr(prev, "value") else str(prev),
+                    to_status=payment.status.value,
                 )
                 logger.info(
                     f"webhook: Payment marked as succeeded event_type={event_type}, "
@@ -168,6 +182,7 @@ async def stripe_webhook(
 
         elif event_type in ("payment_intent.payment_failed", "charge.payment_failed"):
             if payment.status != PaymentStatus.failed:
+                prev = payment.status
                 payment.status = PaymentStatus.failed
                 db.commit()
                 log_event(
@@ -177,6 +192,8 @@ async def stripe_webhook(
                     payment_intent_id=str(payment_intent_id),
                     event_type=event_type,
                     stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                    from_status=prev.value if hasattr(prev, "value") else str(prev),
+                    to_status=payment.status.value,
                 )
                 logger.info(
                     f"webhook: Payment marked as failed event_type={event_type}, "
