@@ -173,6 +173,7 @@ export function DriverDashboard() {
 
   const gpsReport = useDriverLocationReporter({
     enabled: !offline && !!token && !!driverLocation,
+    accessToken: token,
     lat: driverLocation?.lat,
     lng: driverLocation?.lng,
     hasActiveTrip: !!activeTripId,
@@ -184,7 +185,7 @@ export function DriverDashboard() {
     if (offline || !token) return
     let cancelled = false
     const tick = () => {
-      void fetchDriverLastServerLocation()
+      void fetchDriverLastServerLocation(token)
         .then((loc) => {
           if (cancelled) return
           setServerLoc(loc)
@@ -242,7 +243,7 @@ export function DriverDashboard() {
           intervalMs: 1000,
           onUpdate: (pos) => {
             setMockSimulatedPosition(pos)
-            void sendDriverLocation(pos.lat, pos.lng)
+            void sendDriverLocation(pos.lat, pos.lng, token!)
           },
         })
       } catch {
@@ -370,7 +371,7 @@ export function DriverDashboard() {
                     isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
                   if (!nearPickup) {
                     setMockSimulatedPosition(pickup)
-                    void sendDriverLocation(pickup.lat, pickup.lng)
+                    void sendDriverLocation(pickup.lat, pickup.lng, token!)
                   }
                   const routeFrom = nearPickup && pos ? pos : pickup
                   window.setTimeout(() => {

@@ -115,8 +115,8 @@ async function attachRoleBundle(
   let headingsButtons = ''
   try {
     headingsButtons = await page.evaluate(() => {
-      const hs = [...document.querySelectorAll('h1,h2')].map((el) => el.textContent?.trim() ?? '')
-      const bs = [...document.querySelectorAll('button')].map((el) => el.textContent?.trim() ?? '')
+      const hs = Array.from(document.querySelectorAll('h1,h2')).map((el) => el.textContent?.trim() ?? '')
+      const bs = Array.from(document.querySelectorAll('button')).map((el) => el.textContent?.trim() ?? '')
       return `H1/H2:\n${hs.join('\n')}\n\nBUTTONS:\n${bs.join('\n')}`
     })
   } catch (e) {

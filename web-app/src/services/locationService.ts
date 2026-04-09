@@ -22,7 +22,11 @@ export interface DriverLocationServer {
  * Payload:
  *   { lat, lng, timestamp }
  */
-export async function sendDriverLocation(lat: number, lng: number): Promise<void> {
+export async function sendDriverLocation(
+  lat: number,
+  lng: number,
+  accessToken: string
+): Promise<void> {
   const payload: SendDriverLocationPayload = {
     lat,
     lng,
@@ -33,6 +37,7 @@ export async function sendDriverLocation(lat: number, lng: number): Promise<void
     await apiFetch<void>('/drivers/location', {
       method: 'POST',
       body: JSON.stringify(payload),
+      token: accessToken,
     })
   } catch (err) {
     logWarn('sendDriverLocation failed, retrying once...', err)
@@ -40,6 +45,7 @@ export async function sendDriverLocation(lat: number, lng: number): Promise<void
       await apiFetch<void>('/drivers/location', {
         method: 'POST',
         body: JSON.stringify(payload),
+        token: accessToken,
       })
     } catch (err2) {
       logWarn('sendDriverLocation retry failed, giving up.', err2)
@@ -48,9 +54,12 @@ export async function sendDriverLocation(lat: number, lng: number): Promise<void
   }
 }
 
-export async function fetchDriverLastServerLocation(): Promise<DriverLocationServer> {
+export async function fetchDriverLastServerLocation(
+  accessToken: string
+): Promise<DriverLocationServer> {
   return apiFetch<DriverLocationServer>('/drivers/location/last', {
     method: 'GET',
+    token: accessToken,
   })
 }
 

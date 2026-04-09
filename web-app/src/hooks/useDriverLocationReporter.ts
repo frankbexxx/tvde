@@ -9,6 +9,8 @@ const ACTIVE_TRIP_INTERVAL_MS = 4000
 export function useDriverLocationReporter(options: {
   /** Ex.: motorista online, com token e fix GPS. */
   enabled: boolean
+  /** JWT motorista — obrigatório quando enabled (E2E pode não ter access_token em localStorage). */
+  accessToken: string | null
   lat: number | undefined
   lng: number | undefined
   /** Se true, intervalo um pouco mais curto (ainde dentro de 3–5s). */
@@ -17,17 +19,17 @@ export function useDriverLocationReporter(options: {
   lastOkAt: number | null
   lastError: ApiError | null
 } {
-  const { enabled, lat, lng, hasActiveTrip } = options
+  const { enabled, accessToken, lat, lng, hasActiveTrip } = options
   const intervalMs = hasActiveTrip ? ACTIVE_TRIP_INTERVAL_MS : DEFAULT_INTERVAL_MS
   const [lastOkAt, setLastOkAt] = useState<number | null>(null)
   const [lastError, setLastError] = useState<ApiError | null>(null)
 
   useEffect(() => {
-    if (!enabled || lat == null || lng == null) return
+    if (!enabled || !accessToken || lat == null || lng == null) return
 
     let cancelled = false
 
-    void sendDriverLocation(lat, lng)
+    void sendDriverLocation(lat, lng, accessToken)
       .then(() => {
         if (cancelled) return
         setLastOkAt(Date.now())
@@ -41,7 +43,7 @@ export function useDriverLocationReporter(options: {
 
     const id = window.setInterval(() => {
       if (cancelled) return
-      void sendDriverLocation(lat, lng)
+      void sendDriverLocation(lat, lng, accessToken)
         .then(() => {
           if (cancelled) return
           setLastOkAt(Date.now())
@@ -58,7 +60,7 @@ export function useDriverLocationReporter(options: {
       cancelled = true
       window.clearInterval(id)
     }
-  }, [enabled, lat, lng, intervalMs])
+  }, [enabled, accessToken, lat, lng, intervalMs])
 
   return { lastOkAt, lastError }
 }
