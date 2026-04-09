@@ -1,4 +1,11 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
+import {
+  attachFailureArtifactsIfNeeded,
+  resetFailureArtifactState,
+  setFailureArtifactMeta,
+  trackDriverPageForArtifacts,
+  trackPassengerPageForArtifacts,
+} from './helpers/failureArtifacts'
 
 const API = process.env.PLAYWRIGHT_API_URL ?? 'http://127.0.0.1:8000'
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
@@ -70,11 +77,21 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{
 }
 
 test.describe('Driver + passenger (proximity gate)', () => {
+  test.beforeEach(() => {
+    resetFailureArtifactState()
+  })
+
+  test.afterEach(async ({}, testInfo) => {
+    await attachFailureArtifactsIfNeeded(testInfo)
+  })
+
   test('passenger vê viagem; motorista aceita, inicia no pickup, conclui', async ({
     browser,
     request,
   }) => {
     const { tripId, tokens } = await seedAndCreateTrip(request)
+    setFailureArtifactMeta('trip_id', tripId)
+    setFailureArtifactMeta('driver_jwt_chars', String(tokens.driver?.length ?? 0))
 
     const driverCtx = await browser.newContext()
     // Mesmos JWT do seed: o request Playwright vê viagens mas o browser pedia /dev/tokens outra vez —
@@ -98,6 +115,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await driverCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await driverCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const driverPage = await driverCtx.newPage()
+    trackDriverPageForArtifacts(driverPage)
 
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
 
@@ -147,6 +165,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await passengerCtx.grantPermissions(['geolocation'], { origin: BASE_URL })
     await passengerCtx.setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
     const passengerPage = await passengerCtx.newPage()
+    trackPassengerPageForArtifacts(passengerPage)
     await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: sec(120) })
     await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
       timeout: sec(60),

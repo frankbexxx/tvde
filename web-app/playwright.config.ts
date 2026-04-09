@@ -21,7 +21,10 @@ export default defineConfig({
   use: {
     ...devices['Desktop Chrome'],
     baseURL,
-    trace: 'on-first-retry',
+    /** Diagnóstico: em falha ficam em test-results/ (artifact CI). */
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
     /** Primeiro hit ao Vite (compilação) no CI costuma ser >30s. */
     navigationTimeout: 120_000,
   },

@@ -108,6 +108,7 @@ jobs:
           path: |
             web-app/test-results
             web-app/playwright-report
+          retention-days: 14
           if-no-files-found: ignore
 
       - name: Print API log (on failure)
