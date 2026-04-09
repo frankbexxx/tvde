@@ -1,4 +1,4 @@
-import { apiFetch } from './client'
+import { apiFetch, COLD_START_FIRST_TIMEOUT_MS } from './client'
 
 export type TripStatus =
   | 'requested'
@@ -140,7 +140,11 @@ export async function setDriverOffline(token: string): Promise<void> {
 }
 
 export async function getAvailableTrips(token: string): Promise<TripAvailableItem[]> {
-  return apiFetch<TripAvailableItem[]>('/driver/trips/available', { token })
+  return apiFetch<TripAvailableItem[]>('/driver/trips/available', {
+    token,
+    /** Evita falha do 1.º poll (15s default) em cold start / CI. */
+    timeoutMs: COLD_START_FIRST_TIMEOUT_MS,
+  })
 }
 
 export async function getDriverTripHistory(token: string): Promise<TripHistoryItem[]> {

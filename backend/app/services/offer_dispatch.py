@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 from typing import List
 
@@ -20,6 +21,27 @@ from app.utils.logging import log_debug_event, log_event
 logger = logging.getLogger(__name__)
 
 LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
+
+
+def _offer_ttl_seconds() -> int:
+    """TTL efectivo das ofertas novas. Com E2E_KEEP_OFFERS_ALIVE, garante mínimo para browser/CI."""
+    base = int(getattr(settings, "OFFER_TIMEOUT_SECONDS", 15))
+    env_flag = os.environ.get("E2E_KEEP_OFFERS_ALIVE", "").strip().lower()
+    keep = getattr(settings, "E2E_KEEP_OFFERS_ALIVE", False) or env_flag in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    if keep:
+        try:
+            floor = int(os.environ.get("E2E_OFFER_TIMEOUT_FLOOR_SECONDS", "").strip() or "0")
+        except ValueError:
+            floor = 0
+        if floor <= 0:
+            floor = int(getattr(settings, "E2E_OFFER_TIMEOUT_FLOOR_SECONDS", 120))
+        return max(base, floor)
+    return base
 
 
 def _has_active_pending_offer(
@@ -49,7 +71,7 @@ def create_offers_for_trip(
     """
     top_n = getattr(settings, "OFFER_TOP_N", 5)
     radius_km = settings.GEO_RADIUS_KM
-    timeout_sec = getattr(settings, "OFFER_TIMEOUT_SECONDS", 15)
+    timeout_sec = _offer_ttl_seconds()
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=timeout_sec)
     now = datetime.now(timezone.utc)
     log_event("dispatch_attempt", trip_id=str(trip.id))
@@ -279,7 +301,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         excluded_ids = {o.driver_id for o in offers}
         top_n = getattr(settings, "OFFER_TOP_N", 5)
         radius_km = settings.GEO_RADIUS_KM
-        timeout_sec = getattr(settings, "OFFER_TIMEOUT_SECONDS", 15)
+        timeout_sec = _offer_ttl_seconds()
         expires_at = now + timedelta(seconds=timeout_sec)
         origin_lat, origin_lng = float(trip.origin_lat), float(trip.origin_lng)
 
