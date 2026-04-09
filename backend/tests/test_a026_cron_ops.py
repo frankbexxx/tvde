@@ -42,6 +42,19 @@ def test_cron_jobs_rejects_invalid_secret(
     assert r.json()["detail"] == "invalid_secret"
 
 
+def test_cron_jobs_accepts_x_cron_secret_header(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """RFC R3: preferir header em vez de ?secret= (evita leak em logs)."""
+    monkeypatch.setattr(settings, "CRON_SECRET", "header_secret_r3", raising=False)
+    r = client.get(
+        "/cron/jobs",
+        headers={"X-Cron-Secret": "header_secret_r3"},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] == "ok"
+
+
 def test_cron_jobs_ok_and_double_call_idempotent(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:

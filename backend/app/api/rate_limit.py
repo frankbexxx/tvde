@@ -1,4 +1,8 @@
-"""Simple in-memory rate limiter for request_trip. Always active to prevent abuse."""
+"""Simple in-memory rate limiter for request_trip. Always active to prevent abuse.
+
+Best-effort only: counters vivem em memória por processo — com várias instâncias da API,
+cada uma tem o seu limite. Para abuso sério, combinar com limite no reverse proxy (RFC R4).
+"""
 
 import time
 from collections import defaultdict

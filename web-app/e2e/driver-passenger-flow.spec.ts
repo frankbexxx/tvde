@@ -141,14 +141,12 @@ test.describe('Driver + passenger (proximity gate)', () => {
       )
       .toBeGreaterThan(0)
 
+    const aceitarBtn = driverPage.getByRole('button', { name: /^ACEITAR$/i }).first()
     await expect
-      .poll(
-        async () => driverPage.getByRole('button', { name: /^ACEITAR$/i }).isVisible(),
-        { timeout: sec(90), intervals: pollLook }
-      )
+      .poll(async () => aceitarBtn.isVisible(), { timeout: sec(90), intervals: pollLook })
       .toBe(true)
 
-    await driverPage.getByRole('button', { name: /^ACEITAR$/i }).click()
+    await aceitarBtn.click()
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
