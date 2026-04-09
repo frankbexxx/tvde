@@ -40,4 +40,16 @@ export default defineConfig({
       VITE_API_URL: process.env.VITE_API_URL ?? 'http://127.0.0.1:8000',
     },
   },
+  /**
+   * Ordem: fluxo browser primeiro — os testes só-API fazem vários POST /trips com passageiros
+   * do seed; o rate limit (5/min por utilizador) acumula se o UI test correr depois com o mesmo padrão.
+   */
+  projects: [
+    { name: 'e2e-ui', testMatch: /driver-passenger-flow\.spec\.ts$/ },
+    {
+      name: 'e2e-api',
+      testMatch: /api-flows\.spec\.ts$/,
+      dependencies: ['e2e-ui'],
+    },
+  ],
 })

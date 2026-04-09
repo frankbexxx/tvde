@@ -201,6 +201,17 @@ def test_dev_routes_blocked_when_production_settings(
     assert r.status_code == 404
 
 
+def test_dev_routes_blocked_in_production_even_if_enable_dev_tools_true(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """RFC R7: produção nunca monta /dev/* mesmo com ENABLE_DEV_TOOLS=True."""
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
+    monkeypatch.setattr(settings, "ENABLE_DEV_TOOLS", True, raising=False)
+    assert settings.dev_tools_router_enabled() is False
+    r = client.post("/dev/seed")
+    assert r.status_code == 404
+
+
 def test_debug_routes_blocked_production_without_beta(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
