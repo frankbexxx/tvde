@@ -17,19 +17,21 @@ describe('useDriverLocationReporter', () => {
     renderHook(() =>
       useDriverLocationReporter({
         enabled: true,
+        accessToken: 'jwt-test',
         lat: 1,
         lng: 2,
         hasActiveTrip: false,
       })
     )
 
-    await waitFor(() => expect(sendSpy).toHaveBeenCalledWith(1, 2))
+    await waitFor(() => expect(sendSpy).toHaveBeenCalledWith(1, 2, 'jwt-test'))
   })
 
   it('does not send when disabled', () => {
     renderHook(() =>
       useDriverLocationReporter({
         enabled: false,
+        accessToken: 'jwt-test',
         lat: 1,
         lng: 2,
         hasActiveTrip: true,

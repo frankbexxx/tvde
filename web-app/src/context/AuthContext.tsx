@@ -253,6 +253,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           partner: t.partner,
         })
         setAppRouteRoleState(getStoredAppRouteRole())
+        if (import.meta.env.VITE_E2E === 'true' && localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)) {
+          const shell = getStoredAppRouteRole()
+          setStoredAccessToken(shell === 'driver' ? t.driver : t.passenger)
+        }
         setSessionPhone(getStoredLastPhone())
         setStatus('Pronto')
       }
