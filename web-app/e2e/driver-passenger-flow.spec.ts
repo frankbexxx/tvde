@@ -13,7 +13,10 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 const TRIP_ORIGIN = { lat: 38.7, lng: -9.1 }
 const TRIP_DEST = { lat: 38.75, lng: -9.15 }
 
+/** Timeouts em segundos (legível). */
 const sec = (s: number) => s * 1000
+
+/** Intervalos de poll (ms). */
 const pollLook = [300, 600, 1200, 2000]
 
 /**
@@ -119,10 +122,12 @@ test.describe('Driver + passenger (proximity gate)', () => {
 
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
 
+    // Shell com auth OK (sem isto, loadError não mostra TVDE nem ACEITAR).
     await expect(driverPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
       timeout: sec(120),
     })
 
+    // Servidor ainda lista a viagem para o motorista do seed.
     await expect
       .poll(
         async () => {
