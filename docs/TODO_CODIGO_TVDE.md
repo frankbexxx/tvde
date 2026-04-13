@@ -1,6 +1,6 @@
 # TODO código — TVDE (versão final ajustada)
 
-Checklist **top-down** para fecho técnico até operação com confiança. Complementa o anexo A023–A035 em `docs/architecture/TVDE_ENGINEERING_ROADMAP.md` e a **Seção F** de `PROXIMA_SESSAO.md` (ex-`OPERATION_CHECKLIST.md`).
+Checklist **top-down** para fecho técnico até operação com confiança. Complementa o anexo A023–A035 em `docs/architecture/TVDE_ENGINEERING_ROADMAP.md` e a **Seção F** de `docs/meta/PROXIMA_SESSAO.md` (ex-`OPERATION_CHECKLIST.md`).
 
 ---
 

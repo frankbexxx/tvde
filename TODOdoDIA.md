@@ -25,6 +25,7 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 - **`.env` e segredos** — o assistente **não** altera nem recria `.env` por iniciativa; só com **pedido explícito** teu.
 - **Raiz do repo (meta)** — objectivo: na raiz ficarem **só** `README.md` e `TODOdoDIA.md`; os outros `.md` (e auxiliares) migrar para [`docs/`](docs/) com **árvore por nexo** — nomes de pastas são convénio; o essencial é **subdivisão coerente**, não um `other` literal (era placeholder).
 - **Disciplina (com nuance)** — objectivo: **não perder a linha do foco** nem **decidir às escuras**. Se a conversa fugir do item activo **sem** alinhamento (nem tu pediste mudança nem houve troca de prós/contras), o assistente **chama à ordem** e propõe voltar ao fio ou **explicitar** o desvio. Isto **não** é «só A ou B»: pode haver **C, D, …** — o que importa é ficar **claro** o que estamos a fazer e porquê.
+- **Side project** — referências visuais ou de conversa (Docker Desktop, n8n, Telegram, `occams.*`, `ride_postgres`, etc.) a **outro** repositório ou stack **não** entram no código nem nos rituais **deste** repo salvo **decisão explícita** de integrar; tratamos como **contexto paralelo** («não contaminar»).
 
 ---
 
@@ -43,7 +44,7 @@ Metáfora: condução com ramificações reais (prioridades, bloqueios, oportuni
 1. **Compreensão mútua** — **fechado (texto base 2026-04-13):**
    - **Sinais explícitos** — «certo» / «sim» = concordo com o que foi dito; **desacordo** = reacção **efusiva** cedo → tratar como **não alinhado** até esclarecer (não assumir consenso).
    - **Correcção rápida** — preferido: corrigir o assistente **logo** com uma frase.
-   - **Verdade operativa** — [`TODOdoDIA.md`](TODOdoDIA.md) + [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) **sobre o projecto**; o chat desta sessão é continuidade **por defeito**.
+   - **Verdade operativa** — [`TODOdoDIA.md`](TODOdoDIA.md) + [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) **sobre o projecto**; o chat desta sessão é continuidade **por defeito**.
    - **Contexto (sequencial vs. tópico novo)** — se **nada** indicar o contrário, o assistente segue o fio **sequencial** do chat (esta sessão / iteracções recentes). Se **entrares com algo novo**, o foco passa a **esse tópico** — continua a ser **do projecto**, mas **não** obrigatoriamente contínuo com o fio anterior («not related, but related»); não forçar encaixe no sub-tópico que estava aí antes sem o dizeres.
    - **Motivo numa linha (opcional)** — ajuda a pesar prós/contras.
    - **Recap quando muda o dia ou o foco da sessão** — no arranque, uma linha do que muda evita puxar contexto errado.
@@ -62,12 +63,12 @@ Metáfora: condução com ramificações reais (prioridades, bloqueios, oportuni
 2. **Audits** — lint/typecheck do que tocaste; smoke rápido se for área sensível (auth, pagamentos, estado de viagem).
 3. **Correcções** — só o necessário para 1–2 ficarem verdes; **sem** scope creep.
 4. **Merge / PR** — fluxo em [`.cursor/rules/git-commit-and-pr.mdc`](.cursor/rules/git-commit-and-pr.mdc) e alinhamento `main` em [`.cursor/rules/git-main-sync.mdc`](.cursor/rules/git-main-sync.mdc).
-5. **Documentação de continuidade** — actualizar [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) onde fizer falta; **preparar** a continuidade no [`TODOdoDIA.md`](TODOdoDIA.md) (**Fecho do dia** + **Rasto para amanhã** na mudança de data, ou nota no mesmo dia se ainda for o mesmo `TODOdoDIA`).
+5. **Documentação de continuidade** — actualizar [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) onde fizer falta; **preparar** a continuidade no [`TODOdoDIA.md`](TODOdoDIA.md) (**Fecho do dia** + **Rasto para amanhã** na mudança de data, ou nota no mesmo dia se ainda for o mesmo `TODOdoDIA`).
 6. **Parar** — não abrir fio grande novo na mesma sessão após 5; o que sobrou vai para o **Rasto**.
 
 ### Abertura na sessão seguinte (validação pós-fecho)
 
-Depois de **fecho + PR** (quando aplicável), na **primeira sessão útil a seguir** — pode ser **no mesmo dia civil** ou no dia seguinte — fazer um **smoke** mínimo do que ficou acordado: por exemplo abrir o [`README.md`](README.md) e seguir 1–2 links críticos para `docs/`; reler o **Rasto**; se mergiu código, o comando de teste mais estreito ligado à mudança. Isto **substitui** tentar «validar o dia seguinte» só mudando o relógio: valida-se na **nova sessão**, com cabeça fresca.
+Depois de **fecho + PR** (quando aplicável), na **primeira sessão útil a seguir** — pode ser **no mesmo dia civil** ou no dia seguinte — fazer um **smoke** mínimo do que ficou acordado: por exemplo abrir o [`README.md`](README.md) e seguir 1–2 links críticos (ex.: [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md)); reler o **Rasto**; se mergiu código, o comando de teste mais estreito ligado à mudança. Isto **substitui** tentar «validar o dia seguinte» só mudando o relógio: valida-se na **nova sessão**, com cabeça fresca.
 
 ---
 
@@ -86,47 +87,32 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ---
 
-## Hoje — 2026-04-13
+## Hoje — 2026-04-14
 
 _Data: actualizar na noite anterior se o ficheiro for copiado._
 
 ### Prioridades
 
-- [x] [PENSAR] **Análise de projecto** — testes vs beta; GPS real vs simulação; o que prova cada camada. _(sessão: esclarecimentos + síntese no chat)_
-- [x] [CONVERSA] **Melhores práticas (free / paid)** — onde vale ferramenta paga vs disciplina gratuita (tempo, foco). _(sessão: critérios free/paid + híbrido no chat)_
-- [x] [PENSAR] **Análise de código** — _mini-audit_: `app/services/trips.py` (fluxo assigned → accept → ongoing → complete + Stripe). _(sessão: síntese no chat)_
-- [x] [CONVERSA] **Modos de conversa com o assistente** — checklist **1–5** na secção «Linha de foco»; **1–5 fechados** (texto base **1** em 2026-04-13). _Perguntas pontuais dentro deste fio._
-- [ ] [DOCS] **Limpeza raiz → `docs/`** — _só se for objectivo do dia; senão deixar no backlog._
+- [ ] [OPS] **Git remoto** — `push` + PR no **fim da sessão** dos commits **só locais** na `main` (docs `9c8355b` + TODO `e17e519` + `2a4b1ea`); merge; shell de alinhamento `main` ↔ `origin/main`.
+- [ ] [PENSAR / DOCS] **Diagramas** — Mermaid ou C4 leve (viagem+pagamento, HTTP/WS, cron/webhooks); **sessão dedicada**, não misturar com feature.
+- [x] **Surpresa (5)** — Smoke **visual** em **produção Render**: vista **passageiro** (mapa, estados «Motorista a caminho» / «Viagem em curso», pagamento a processar, distância, **Cancelar**) e vista **admin** (viagens activas, `accepted` / `arriving`, Detalhe / Cancelar, lista lateral). Confirma o produto **no ar** e o fio que falámos (acção remota / telemóvel).
 
-### Backlog — raiz → `docs/`
+### Backlog — raiz → `docs/` (**feito** em 2026-04-13)
 
-Ficheiros `.md` na raiz **fora** do par `README.md` + `TODOdoDIA.md` (para migração futura; actualizar esta tabela quando moveres):
+Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi para `docs/meta/`, `docs/deploy/`, `docs/testing/`, `docs/ops/` — ver [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md). `DEPLOY_SECRETS.md` continua **fora do Git** (`.gitignore`).
 
-| Ficheiro na raiz               | Destino sugerido (exemplo)          |
-| ------------------------------ | ----------------------------------- |
-| `DEPLOY_SECRETS.md`            | `docs/deploy/`                      |
-| `DOCS_INDEX.md`                | `docs/meta/`                        |
-| `GUIA_TESTES.md`               | `docs/testing/` ou `docs/guias/`    |
-| `INTERACTION_LOGGING.md`       | `docs/architecture/` ou `docs/ops/` |
-| `OPERATION_CHECKLIST.md`       | `docs/ops/`                         |
-| `PREPARACAO_RENDER.md`         | `docs/deploy/`                      |
-| `PROJECT.md`                   | `docs/meta/`                        |
-| `PROXIMA_SESSAO.md`            | `docs/meta/` ou `docs/handoff/`     |
-| `RELATORIO_PROJETO_ROADMAP.md` | `docs/meta/`                        |
-| `TESTE_STRIPE_COMPLETO.md`     | `docs/testing/` ou `docs/stripe/`   |
-| `VALIDACAO_HUMANA_CAMPO.md`    | `docs/testing/`                     |
+### Fecho do dia (sessão anterior 2026-04-13)
 
-_Ajustar pastas ao executar; actualizar links no `README.md` e no `DOCS_INDEX` (ou equivalente em `docs/`)._
+- **Feito:** Análise de projecto; melhores práticas free/paid; mini-audit `trips.py`; **modos de conversa** (checklist 1–5); **docs** — canónicos para `docs/meta|deploy|testing|ops`; smokes de links ok.
+- **Não feito / bloqueios:** Nada bloqueante no TVDE; **git remoto** ficou para a próxima janela (commits locais).
+- **Aprendizados (uma frase):** Raiz + índice em `docs/meta/DOCS_INDEX.md` reduz dispersão; ideias de notificação/PR/admin ficam **fora do repo** até haver decisão — **side project** (Docker/n8n/etc.) **não contamina** este trabalho.
 
-### Fecho do dia
+### Rasto para a próxima sessão
 
-- **Feito:** Análise de projecto (testes vs beta; GPS vs simulação; o que prova cada camada) — alinhado em sessão. Melhores práticas free/paid (ROI, TODO do dia, híbrido implementação vs docs) — conversa em sessão. Mini-audit de código em `trips.py` (aceitar / completar / idempotência pagamento). **Modos de conversa** — checklist 1–5; ponto **1** (sinais, contexto sequencial vs. tópico novo, TODO/PROXIMA como verdade) acordado e escrito.
-- **Não feito / bloqueios:** \_
-- **Aprendizados (uma frase):** \_
-
-### Rasto para amanhã
-
-- **Próximo da lista (prioridades):** `[DOCS]` **Limpeza raiz → `docs/`** — só quando **esse** for o objectivo do dia (evita PR gigante misturado com feature); preparar lista curta de ficheiros a mover + actualizar links em `README` / índice de docs.
+- **OPS primeiro:** fechar o ciclo **local → origin** dos commits locais de docs/TODO (fim de sessão + PR, como combinado).
+- **Side project** — automação (n8n, Telegram, outros containers) continua **explícitamente fora** deste ficheiro de prioridades TVDE até integrares.
+- **Diagramas** — quando `[PENSAR/DOCS]` for o foco.
+- **Ideias (só conversa)** — PR → telemóvel → merge → sessão seguinte com `git` + TODO assertivo; alertas operacionais → admin app — sem implementação acordada.
 
 ---
 

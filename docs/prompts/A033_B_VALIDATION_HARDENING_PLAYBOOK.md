@@ -4,7 +4,7 @@
 
 Provar que o sistema em **produção** é **confiável**, **consistente** e **operável** — não implementar features novas.
 
-**Relacionado:** [`docs/TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) (seção PROD_VALIDATION), [`OPERATION_CHECKLIST.md`](../../OPERATION_CHECKLIST.md), [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
+**Relacionado:** [`docs/TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) (seção PROD_VALIDATION), [`OPERATION_CHECKLIST.md`](../ops/OPERATION_CHECKLIST.md), [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
 
 ---
 

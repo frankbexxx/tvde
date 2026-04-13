@@ -20,4 +20,4 @@ Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura 
 
 **Histórico antigo (prompts implementados, snapshots, PDFs):** já não está no clone — ver [HISTORICO_FORA_DO_GIT.md](HISTORICO_FORA_DO_GIT.md).
 
-Índice global do repo: [DOCS_INDEX.md](../DOCS_INDEX.md).
+Índice global do repo: [DOCS_INDEX.md](meta/DOCS_INDEX.md).
