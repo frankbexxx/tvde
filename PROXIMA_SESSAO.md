@@ -236,6 +236,10 @@ Ver **GUIA_TESTES.md** para instruções completas e sequenciais.
 
 _Conteúdo fundido a partir de `OPERATION_CHECKLIST.md` na raiz; esse ficheiro passou a apontar para aqui._
 
+## F.0 Fecho de sessão antes de merge
+
+Ordem fixa: **testes → audits → correcções → merge/PR** → actualizar **`PROXIMA_SESSAO.md`** e **`TODOdoDIA.md`** (Fecho do dia + Rasto para amanhã). O assistente **chama à ordem** se o fluxo divergir **sem** alinhamento (não é binário A/B: ver **Linha de foco e ramos** no mesmo ficheiro). Detalhe do fecho: secção **Ritual de fecho de sessão** em [`TODOdoDIA.md`](TODOdoDIA.md).
+
 ## F.1 Jobs agendados (timeouts + ofertas + cleanup)
 
 ### Opção recomendada — um único endpoint
