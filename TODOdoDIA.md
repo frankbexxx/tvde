@@ -96,7 +96,7 @@ _Data: actualizar na noite anterior se o ficheiro for copiado._
 - [x] [CONVERSA] **Melhores práticas (free / paid)** — onde vale ferramenta paga vs disciplina gratuita (tempo, foco). _(sessão: critérios free/paid + híbrido no chat)_
 - [x] [PENSAR] **Análise de código** — _mini-audit_: `app/services/trips.py` (fluxo assigned → accept → ongoing → complete + Stripe). _(sessão: síntese no chat)_
 - [x] [CONVERSA] **Modos de conversa com o assistente** — checklist **1–5** na secção «Linha de foco»; **1–5 fechados** (texto base **1** em 2026-04-13). _Perguntas pontuais dentro deste fio._
-- [ ] [DOCS] **Limpeza raiz → `docs/`** — _só se for objectivo do dia; senão deixar no backlog._
+- [x] [DOCS] **Limpeza raiz → `docs/`** — migração para `docs/meta/`, `deploy/`, `testing/`, `ops/` + links; smoke README → DOCS_INDEX → GUIA ok (2026-04-13).
 
 ### Backlog — raiz → `docs/` (**feito** nesta migração)
 
@@ -104,13 +104,14 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Fecho do dia
 
-- **Feito:** Análise de projecto (testes vs beta; GPS vs simulação; o que prova cada camada) — alinhado em sessão. Melhores práticas free/paid (ROI, TODO do dia, híbrido implementação vs docs) — conversa em sessão. Mini-audit de código em `trips.py` (aceitar / completar / idempotência pagamento). **Modos de conversa** — checklist 1–5; ponto **1** (sinais, contexto sequencial vs. tópico novo, TODO/PROXIMA como verdade) acordado e escrito.
+- **Feito:** Análise de projecto (testes vs beta; GPS vs simulação; o que prova cada camada) — alinhado em sessão. Melhores práticas free/paid (ROI, TODO do dia, híbrido implementação vs docs) — conversa em sessão. Mini-audit de código em `trips.py` (aceitar / completar / idempotência pagamento). **Modos de conversa** — checklist 1–5; ponto **1** (sinais, contexto sequencial vs. tópico novo, TODO/PROXIMA como verdade) acordado e escrito. **Docs:** canónicos saíram da raiz para `docs/meta|deploy|testing|ops`; smoke de links ok.
 - **Não feito / bloqueios:** \_
-- **Aprendizados (uma frase):** \_
+- **Aprendizados (uma frase):** Raiz mais leve + índice em `docs/meta/DOCS_INDEX.md` reduz dispersão; PR + aviso mobile + “shell na sessão seguinte” é um desenho credível se o gatilho for só notificação e o merge continuar humano.
 
 ### Rasto para amanhã
 
-- **Próximo da lista (prioridades):** `[DOCS]` **Limpeza raiz → `docs/`** — só quando **esse** for o objectivo do dia (evita PR gigante misturado com feature); preparar lista curta de ficheiros a mover + actualizar links em `README` / índice de docs.
+- **[PENSAR / DOCS]** Diagramas (Mermaid ou C4 leve) — fluxo viagem+pagamento, HTTP/WS, cron/webhooks; **melhor** numa sessão dedicada (não misturar com feature).
+- **[CONVERSA / OPS] (só ideia)** — Notificação (ex. Telegram) quando existir **PR pronto** → merge no telemóvel → gatilho para a **sessão seguinte** com comandos `git` + **TODO assertivo** nessa sessão; em paralelo, ideia de **alerta operacional** (ex. viagem suspensa) → acção na **app admin** — **sem implementação** até decidires riscos (auth do bot, nada de merge automático sem humano).
 
 ---
 
