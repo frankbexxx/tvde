@@ -1,6 +1,6 @@
 # Visão geral do projeto TVDE — perspectiva Cursor
 
-_Documento gerado como síntese de contexto de repositório, conversas de implementação e leitura de `README`, `PROJECT`, `OPERATION_CHECKLIST`, `DOCS_INDEX` e roadmap. Serve de handoff mental entre sessões e de quadro para decisões de comercialização._
+_Documento gerado como síntese de contexto de repositório, conversas de implementação e leitura de `README`, `docs/meta/PROJECT.md`, `docs/ops/OPERATION_CHECKLIST.md`, `docs/meta/DOCS_INDEX.md` e roadmap. Serve de handoff mental entre sessões e de quadro para decisões de comercialização._
 
 ---
 
@@ -28,7 +28,7 @@ Uma **plataforma de ride-sharing** orientada ao mercado português — **MVP tec
 
 ### 2.3 Documentação e operação
 
-- Índice em `DOCS_INDEX.md`; checklists em `OPERATION_CHECKLIST.md`, `GUIA_TESTES.md`, prompts A022/A026/A032, etc.
+- Índice em `docs/meta/DOCS_INDEX.md`; checklists em `docs/ops/OPERATION_CHECKLIST.md`, `docs/testing/GUIA_TESTES.md`, prompts A022/A026/A032, etc.
 - O projeto **não é** só código: há explícita preocupação com **deploy Render**, **Stripe**, **cron**, **migrações SQL** e **saúde operacional**.
 
 ---

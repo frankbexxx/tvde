@@ -16,7 +16,7 @@ As pessoas não sabem explicar UX, mas sabem descrever insegurança.
 
 ## Preparação — Deploy no Render
 
-A app corre em produção no Render. Segue o guia **PREPARACAO_RENDER.md** para:
+A app corre em produção no Render. Segue o guia **[PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)** para:
 
 1. Criar PostgreSQL
 2. Deploy do backend (tvde-api)

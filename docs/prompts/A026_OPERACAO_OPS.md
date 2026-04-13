@@ -100,7 +100,7 @@ O modelo usa `TripStatus`: `requested`, `assigned`, `accepted`, `arriving`, `ong
 
 # 5. OPERATION_CHECKLIST
 
-Ver `OPERATION_CHECKLIST.md` na raiz do repo — seção **A026 — Operação**.
+Ver **`docs/ops/OPERATION_CHECKLIST.md`** (stub) e **`docs/meta/PROXIMA_SESSAO.md`** Seção F — seção **A026 — Operação**.
 
 Relatório de testes A026: arquivado fora do Git — [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md).
 
