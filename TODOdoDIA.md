@@ -25,6 +25,7 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 - **`.env` e segredos** — o assistente **não** altera nem recria `.env` por iniciativa; só com **pedido explícito** teu.
 - **Raiz do repo (meta)** — objectivo: na raiz ficarem **só** `README.md` e `TODOdoDIA.md`; os outros `.md` (e auxiliares) migrar para [`docs/`](docs/) com **árvore por nexo** — nomes de pastas são convénio; o essencial é **subdivisão coerente**, não um `other` literal (era placeholder).
 - **Disciplina (com nuance)** — objectivo: **não perder a linha do foco** nem **decidir às escuras**. Se a conversa fugir do item activo **sem** alinhamento (nem tu pediste mudança nem houve troca de prós/contras), o assistente **chama à ordem** e propõe voltar ao fio ou **explicitar** o desvio. Isto **não** é «só A ou B»: pode haver **C, D, …** — o que importa é ficar **claro** o que estamos a fazer e porquê.
+- **Side project** — referências visuais ou de conversa (Docker Desktop, n8n, Telegram, `occams.*`, `ride_postgres`, etc.) a **outro** repositório ou stack **não** entram no código nem nos rituais **deste** repo salvo **decisão explícita** de integrar; tratamos como **contexto paralelo** («não contaminar»).
 
 ---
 
@@ -86,32 +87,32 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ---
 
-## Hoje — 2026-04-13
+## Hoje — 2026-04-14
 
 _Data: actualizar na noite anterior se o ficheiro for copiado._
 
 ### Prioridades
 
-- [x] [PENSAR] **Análise de projecto** — testes vs beta; GPS real vs simulação; o que prova cada camada. _(sessão: esclarecimentos + síntese no chat)_
-- [x] [CONVERSA] **Melhores práticas (free / paid)** — onde vale ferramenta paga vs disciplina gratuita (tempo, foco). _(sessão: critérios free/paid + híbrido no chat)_
-- [x] [PENSAR] **Análise de código** — _mini-audit_: `app/services/trips.py` (fluxo assigned → accept → ongoing → complete + Stripe). _(sessão: síntese no chat)_
-- [x] [CONVERSA] **Modos de conversa com o assistente** — checklist **1–5** na secção «Linha de foco»; **1–5 fechados** (texto base **1** em 2026-04-13). _Perguntas pontuais dentro deste fio._
-- [x] [DOCS] **Limpeza raiz → `docs/`** — migração para `docs/meta/`, `deploy/`, `testing/`, `ops/` + links; smoke README → DOCS_INDEX → GUIA ok (2026-04-13).
+- [ ] [OPS] **Git remoto** — `push` + PR dos commits **só locais** na `main` (migração docs `9c8355b` + TODO `e17e519`); merge; shell de alinhamento `main` ↔ `origin/main`.
+- [ ] [PENSAR / DOCS] **Diagramas** — Mermaid ou C4 leve (viagem+pagamento, HTTP/WS, cron/webhooks); **sessão dedicada**, não misturar com feature.
+- [ ] _Reservado — surpresa (5) quando quiseres desbloquear._
 
-### Backlog — raiz → `docs/` (**feito** nesta migração)
+### Backlog — raiz → `docs/` (**feito** em 2026-04-13)
 
 Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi para `docs/meta/`, `docs/deploy/`, `docs/testing/`, `docs/ops/` — ver [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md). `DEPLOY_SECRETS.md` continua **fora do Git** (`.gitignore`).
 
-### Fecho do dia
+### Fecho do dia (sessão anterior 2026-04-13)
 
-- **Feito:** Análise de projecto (testes vs beta; GPS vs simulação; o que prova cada camada) — alinhado em sessão. Melhores práticas free/paid (ROI, TODO do dia, híbrido implementação vs docs) — conversa em sessão. Mini-audit de código em `trips.py` (aceitar / completar / idempotência pagamento). **Modos de conversa** — checklist 1–5; ponto **1** (sinais, contexto sequencial vs. tópico novo, TODO/PROXIMA como verdade) acordado e escrito. **Docs:** canónicos saíram da raiz para `docs/meta|deploy|testing|ops`; smoke de links ok.
-- **Não feito / bloqueios:** \_
-- **Aprendizados (uma frase):** Raiz mais leve + índice em `docs/meta/DOCS_INDEX.md` reduz dispersão; PR + aviso mobile + “shell na sessão seguinte” é um desenho credível se o gatilho for só notificação e o merge continuar humano.
+- **Feito:** Análise de projecto; melhores práticas free/paid; mini-audit `trips.py`; **modos de conversa** (checklist 1–5); **docs** — canónicos para `docs/meta|deploy|testing|ops`; smokes de links ok.
+- **Não feito / bloqueios:** Nada bloqueante no TVDE; **git remoto** ficou para a próxima janela (commits locais).
+- **Aprendizados (uma frase):** Raiz + índice em `docs/meta/DOCS_INDEX.md` reduz dispersão; ideias de notificação/PR/admin ficam **fora do repo** até haver decisão — **side project** (Docker/n8n/etc.) **não contamina** este trabalho.
 
-### Rasto para amanhã
+### Rasto para a próxima sessão
 
-- **[PENSAR / DOCS]** Diagramas (Mermaid ou C4 leve) — fluxo viagem+pagamento, HTTP/WS, cron/webhooks; **melhor** numa sessão dedicada (não misturar com feature).
-- **[CONVERSA / OPS] (só ideia)** — Notificação (ex. Telegram) quando existir **PR pronto** → merge no telemóvel → gatilho para a **sessão seguinte** com comandos `git` + **TODO assertivo** nessa sessão; em paralelo, ideia de **alerta operacional** (ex. viagem suspensa) → acção na **app admin** — **sem implementação** até decidires riscos (auth do bot, nada de merge automático sem humano).
+- **OPS primeiro:** fechar o ciclo **local → origin** dos dois commits de docs/TODO.
+- **Side project** — automação (n8n, Telegram, outros containers) continua **explícitamente fora** deste ficheiro de prioridades TVDE até integrares.
+- **Diagramas** — quando `[PENSAR/DOCS]` for o foco.
+- **Ideias (só conversa)** — PR → telemóvel → merge → sessão seguinte com `git` + TODO assertivo; alertas operacionais → admin app — sem implementação acordada.
 
 ---
 
