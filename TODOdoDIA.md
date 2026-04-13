@@ -93,9 +93,9 @@ _Data: actualizar na noite anterior se o ficheiro for copiado._
 
 ### Prioridades
 
-- [ ] [OPS] **Git remoto** — `push` + PR dos commits **só locais** na `main` (migração docs `9c8355b` + TODO `e17e519`); merge; shell de alinhamento `main` ↔ `origin/main`.
+- [ ] [OPS] **Git remoto** — `push` + PR no **fim da sessão** dos commits **só locais** na `main` (docs `9c8355b` + TODO `e17e519` + `2a4b1ea`); merge; shell de alinhamento `main` ↔ `origin/main`.
 - [ ] [PENSAR / DOCS] **Diagramas** — Mermaid ou C4 leve (viagem+pagamento, HTTP/WS, cron/webhooks); **sessão dedicada**, não misturar com feature.
-- [ ] _Reservado — surpresa (5) quando quiseres desbloquear._
+- [x] **Surpresa (5)** — Smoke **visual** em **produção Render**: vista **passageiro** (mapa, estados «Motorista a caminho» / «Viagem em curso», pagamento a processar, distância, **Cancelar**) e vista **admin** (viagens activas, `accepted` / `arriving`, Detalhe / Cancelar, lista lateral). Confirma o produto **no ar** e o fio que falámos (acção remota / telemóvel).
 
 ### Backlog — raiz → `docs/` (**feito** em 2026-04-13)
 
@@ -109,7 +109,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **OPS primeiro:** fechar o ciclo **local → origin** dos dois commits de docs/TODO.
+- **OPS primeiro:** fechar o ciclo **local → origin** dos commits locais de docs/TODO (fim de sessão + PR, como combinado).
 - **Side project** — automação (n8n, Telegram, outros containers) continua **explícitamente fora** deste ficheiro de prioridades TVDE até integrares.
 - **Diagramas** — quando `[PENSAR/DOCS]` for o foco.
 - **Ideias (só conversa)** — PR → telemóvel → merge → sessão seguinte com `git` + TODO assertivo; alertas operacionais → admin app — sem implementação acordada.
