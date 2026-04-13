@@ -12,39 +12,39 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Inventário e próximo arquivo
 
-| Ficheiro                                                                                 | Propósito                                                                                                                                                                                    |
-| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ficheiro                                                                          | Propósito                                                                                                                                                                                    |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [DOCUMENTATION_INVENTORY_2026-03-27.md](../DOCUMENTATION_INVENTORY_2026-03-27.md) | O que o Git rastreia (`.md` + imagens): **manter / fundir / arquivar** — fusões principais feitas; próximo passo opcional: cópia para `C:\dev\_archives\APP\` + `git rm` do que sair do repo |
 
 ---
 
 ## Documentos principais
 
-| Ficheiro                                                                                       | Propósito                                                                                                                                                             |
-| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [README.md](../../README.md)                                                                         | Entrada do projeto — estrutura, início rápido                                                                                                                         |
-| [PROJECT.md](PROJECT.md)                                                                       | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento                                                                                                      |
+| Ficheiro                                                                                     | Propósito                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [README.md](../../README.md)                                                                 | Entrada do projeto — estrutura, início rápido                                                                                                                         |
+| [PROJECT.md](PROJECT.md)                                                                     | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento                                                                                                      |
 | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (fases 1–6) + **anexo A023–A035** com colunas Estado/Evidência + **checklist entrega app**; **estado atual 2026-03-28** (Alembic, CI, gaps A028/A034) |
-| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                         | Handoff — estado, roadmap resumido; **Seção F** operação (ex-checklist); **Seção G** relatório projeto                                                                |
+| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                       | Handoff — estado, roadmap resumido; **Seção F** operação (ex-checklist); **Seção G** relatório projeto                                                                |
 | [docs/visao_cursor.md](../visao_cursor.md)                                                   | Visão geral do projeto (perspectiva Cursor), ideias e checklist de comercialização                                                                                    |
 
 ---
 
 ## Deploy e operação
 
-| Ficheiro                                               | Propósito                                                                     |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)           | Deploy no Render — PostgreSQL, backend, Stripe webhook, frontend              |
+| Ficheiro                                                          | Propósito                                                                     |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)            | Deploy no Render — PostgreSQL, backend, Stripe webhook, frontend              |
 | [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md) | Teste humano em campo — preparação, cenários, observação                      |
-| [docs/DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md) | Depuração modo BETA no Render                                                 |
-| [docs/TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md)   | TODO código top-down — validação PROD, staging, backups, migrações, hardening |
+| [docs/DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md)              | Depuração modo BETA no Render                                                 |
+| [docs/TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md)                | TODO código top-down — validação PROD, staging, backups, migrações, hardening |
 
 ---
 
 ## Testes e guias
 
-| Ficheiro                                             | Propósito                                       |
-| ---------------------------------------------------- | ----------------------------------------------- |
+| Ficheiro                                                        | Propósito                                       |
+| --------------------------------------------------------------- | ----------------------------------------------- |
 | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                     | Manual de testes passo a passo (local e Render) |
 | [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe end-to-end, troubleshooting        |
 
@@ -52,25 +52,25 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Git e GitHub
 
-| Ficheiro                                                 | Propósito                                                                                                            |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Ficheiro                                               | Propósito                                                                                                            |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
 | [docs/GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md) | Manual ordenado: antes de começar, sessão de trabalho, branch, PR, merge, limpeza — com links para `frankbexxx/tvde` |
 
 ---
 
 ## Observabilidade
 
-| Ficheiro                                                                                                     | Propósito                                                                         |
-| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                             | Telemetria comportamental — export de logs (request_trip, accept, complete, etc.) |
+| Ficheiro                                                                                                   | Propósito                                                                         |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Telemetria comportamental — export de logs (request_trip, accept, complete, etc.) |
 | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade, reconciliação via cron, roadmap escala                  |
 
 ---
 
 ## Arquitetura e prompts
 
-| Ficheiro                                                                                                     | Propósito                                                                                              |
-| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Ficheiro                                                                                                   | Propósito                                                                                              |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | [docs/README.md](../README.md)                                                                             | Mapa da pasta `docs/` (ativo vs arquivo)                                                               |
 | [docs/architecture/TVDE_SYSTEM_BLUEPRINT.md](../architecture/TVDE_SYSTEM_BLUEPRINT.md)                     | Blueprint do sistema — objetivos, camadas, trip lifecycle                                              |
 | [docs/architecture/ARCHITECTURE_STATUS.md](../architecture/ARCHITECTURE_STATUS.md)                         | Estado técnico atual — backend, frontend, pipelines                                                    |
@@ -83,10 +83,10 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Referência técnica
 
-| Ficheiro                                                         | Propósito                        |
-| ---------------------------------------------------------------- | -------------------------------- |
-| [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)           | Stack e convenções técnicas      |
-| [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                   | Estrutura da GUI (web e Android) |
+| Ficheiro                                                               | Propósito                        |
+| ---------------------------------------------------------------------- | -------------------------------- |
+| [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)                   | Stack e convenções técnicas      |
+| [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                           | Estrutura da GUI (web e Android) |
 | [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md) | Schema da base de dados          |
 | [web-app/README.md](../../web-app/README.md)                           | Web app — visão geral            |
 
@@ -104,27 +104,27 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Lista de documentos ativos
 
-| #   | Ficheiro                                                                                                     | Propósito                                                    |
-| --- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
-| 1   | [README.md](../../README.md)                                                                                       | Entrada do projeto                                           |
-| 2   | [PROJECT.md](PROJECT.md)                                                                                     | Visão geral, stack, modelo                                   |
+| #   | Ficheiro                                                                                                   | Propósito                                                    |
+| --- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | [README.md](../../README.md)                                                                               | Entrada do projeto                                           |
+| 2   | [PROJECT.md](PROJECT.md)                                                                                   | Visão geral, stack, modelo                                   |
 | 3   | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md)               | Roadmap técnico + entrega app (atualizado 2026-03-28)        |
-| 4   | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                                       | Handoff e contexto                                           |
-| 5   | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                               | Este índice                                                  |
-| 6   | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)                                                                 | Deploy no Render                                             |
-| 7   | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                             | Manual de testes                                             |
-| 8   | [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md)                                                       | Teste em campo                                               |
-| 9   | [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md)                                                         | Fluxo Stripe                                                 |
-| 10  | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                             | Logs e telemetria                                            |
+| 4   | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                                     | Handoff e contexto                                           |
+| 5   | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                             | Este índice                                                  |
+| 6   | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)                                                     | Deploy no Render                                             |
+| 7   | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                | Manual de testes                                             |
+| 8   | [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md)                                          | Teste em campo                                               |
+| 9   | [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md)                                            | Fluxo Stripe                                                 |
+| 10  | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Logs e telemetria                                            |
 | 11  | [docs/DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md)                                                       | Depuração BETA                                               |
 | 12  | [docs/README.md](../README.md)                                                                             | Mapa da documentação ativa em `docs/`                        |
 | 13  | [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)                                                       | Stack técnico                                                |
 | 14  | [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                                                               | Estrutura da GUI                                             |
 | 15  | [docs/IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md)                                             | Implementação, testes e logs (Parte II = ex-LOGS_E_TESTES)   |
 | 16  | [docs/LOGS_E_TESTES_SINTESE.md](../LOGS_E_TESTES_SINTESE.md)                                               | Redireciona para IMPLEMENTACAO_E_TESTES (Parte II)           |
-| 17  | [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md)                                             | Schema da BD                                                 |
-| 18  | [web-app/README.md](../../web-app/README.md)                                                                       | Web app                                                      |
-| 19  | [scripts/README.md](../../scripts/README.md)                                                                       | Scripts do projeto                                           |
+| 17  | [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md)                                     | Schema da BD                                                 |
+| 18  | [web-app/README.md](../../web-app/README.md)                                                               | Web app                                                      |
+| 19  | [scripts/README.md](../../scripts/README.md)                                                               | Scripts do projeto                                           |
 | 20  | [docs/visao_cursor.md](../visao_cursor.md)                                                                 | Visão Cursor + checklist comercialização                     |
 | 21  | [docs/TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md)                                                         | TODO código pré-produção (árvore ajustada)                   |
 | 22  | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD (A033-B)                             |

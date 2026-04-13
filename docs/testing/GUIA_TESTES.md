@@ -264,12 +264,12 @@ Os serviços devem ser iniciados **por esta ordem** e **todos a correr em simult
 
 Deve ter **4 janelas** do PowerShell abertas:
 
-| Janela | O que está a correr | Comando |
-|--------|---------------------|---------|
-| 1 | Base de dados | `docker start ride_postgres` (ou `docker run...`) |
-| 2 | Backend | `uvicorn app.main:app --reload --port 8000` |
-| 3 | Stripe | `stripe listen --forward-to localhost:8000/webhooks/stripe` |
-| 4 | Web app | `npm run dev` |
+| Janela | O que está a correr | Comando                                                     |
+| ------ | ------------------- | ----------------------------------------------------------- |
+| 1      | Base de dados       | `docker start ride_postgres` (ou `docker run...`)           |
+| 2      | Backend             | `uvicorn app.main:app --reload --port 8000`                 |
+| 3      | Stripe              | `stripe listen --forward-to localhost:8000/webhooks/stripe` |
+| 4      | Web app             | `npm run dev`                                               |
 
 **Todos devem estar a correr ao mesmo tempo.**
 
@@ -640,17 +640,17 @@ Executa as regras de timeout: viagens "assigned" há muito tempo voltam a "reque
 
 ## 25. Tabela de resolução
 
-| Problema | Causa provável | Solução |
-|---------|----------------|---------|
-| `docker: command not found` | Docker não instalado ou não no PATH | Instale o Docker Desktop e reinicie o PowerShell |
-| `password authentication failed` | Base de dados com credenciais erradas | Verifique `backend/.env`: `DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db` |
-| `Connection refused` na web app | Backend não está a correr | Inicie o backend (Passo 2) |
-| Página em branco ou 403 | Seed não executado | Execute o Seed (Passo 10) |
-| "Driver is not available" no Auto-trip | Motoristas não disponíveis | Execute o Seed e tente novamente |
-| "Viagem já foi aceite" ao aceitar | Outro motorista aceitou primeiro | Normal. Teste o fluxo 409 (Passo 21) |
-| Botão Assign não aparece | Não há viagem criada pelo passageiro | Crie uma viagem na vista Passageiro primeiro |
-| Stripe pede login | Não autenticado | Execute `stripe login` e complete no browser |
-| Docker não inicia | Recursos do sistema | Reinicie o computador. Abra o Docker Desktop novamente |
+| Problema                               | Causa provável                        | Solução                                                                                                 |
+| -------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `docker: command not found`            | Docker não instalado ou não no PATH   | Instale o Docker Desktop e reinicie o PowerShell                                                        |
+| `password authentication failed`       | Base de dados com credenciais erradas | Verifique `backend/.env`: `DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db` |
+| `Connection refused` na web app        | Backend não está a correr             | Inicie o backend (Passo 2)                                                                              |
+| Página em branco ou 403                | Seed não executado                    | Execute o Seed (Passo 10)                                                                               |
+| "Driver is not available" no Auto-trip | Motoristas não disponíveis            | Execute o Seed e tente novamente                                                                        |
+| "Viagem já foi aceite" ao aceitar      | Outro motorista aceitou primeiro      | Normal. Teste o fluxo 409 (Passo 21)                                                                    |
+| Botão Assign não aparece               | Não há viagem criada pelo passageiro  | Crie uma viagem na vista Passageiro primeiro                                                            |
+| Stripe pede login                      | Não autenticado                       | Execute `stripe login` e complete no browser                                                            |
+| Docker não inicia                      | Recursos do sistema                   | Reinicie o computador. Abra o Docker Desktop novamente                                                  |
 
 ---
 
