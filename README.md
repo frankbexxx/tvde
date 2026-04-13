@@ -4,6 +4,8 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 
 **Estado:** MVP validado em campo (4 dispositivos, rede móvel, fluxo completo operacional).
 
+**Dia a dia:** [`TODOdoDIA.md`](TODOdoDIA.md) — prioridades do dia, método de trabalho e fecho.
+
 ## Estrutura
 
 - `backend/` — API FastAPI, PostgreSQL, Stripe
