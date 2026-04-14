@@ -87,31 +87,42 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ---
 
-## Hoje — 2026-04-14
+## Hoje — 2026-04-15
 
 _Data: actualizar na noite anterior se o ficheiro for copiado._
 
+**Ordem acordada:** **até ao almoço** — parceiro / papelada ([`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md)); **depois do almoço** — diagramas Mermaid (viagem + pagamento + HTTP/WS + cron).
+
 ### Prioridades
 
-- [ ] [OPS] **Git remoto** — `push` + PR no **fim da sessão** dos commits **só locais** na `main` (docs `9c8355b` + TODO `e17e519` + `2a4b1ea`); merge; shell de alinhamento `main` ↔ `origin/main`.
-- [ ] [PENSAR / DOCS] **Diagramas** — Mermaid ou C4 leve (viagem+pagamento, HTTP/WS, cron/webhooks); **sessão dedicada**, não misturar com feature.
+- [x] [OPS] **Git remoto** — PR **#86** mergeado; `main` ↔ `origin/main` alinhados (sessão 2026-04-13).
+- [x] [OPS / Smoke] **Pós-PR86** — Smoke **docs no GitHub** (espinha 1–4, cruzamentos nexo 5–8, `docs/README` §9, refs 10–12: **CERTO**). **Render:** regresso contínuo com **4 vistas** (mesmo deploy, **BD única**); **manual deploy** do último commit antes de ausências (ex.: passeio) = **dupla métrica** (paridade Git↔ambiente + disciplina de teste).
+- [ ] [PENSAR / DOCS] **Diagramas** — Mermaid ou C4 leve (viagem+pagamento, HTTP/WS, cron/webhooks); **sessão dedicada**, não misturar com feature — **bloco tarde (pós-almoço)**.
+- [x] [DOCS] **Parceiro — licença e papelada** — [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md): tabelas + checklists para conversa com o titular TVDE (IMT, seguros, contratos, RGPD, Stripe/faturação); **não** é aconselhamento jurídico.
 - [x] **Surpresa (5)** — Smoke **visual** em **produção Render**: vista **passageiro** (mapa, estados «Motorista a caminho» / «Viagem em curso», pagamento a processar, distância, **Cancelar**) e vista **admin** (viagens activas, `accepted` / `arriving`, Detalhe / Cancelar, lista lateral). Confirma o produto **no ar** e o fio que falámos (acção remota / telemóvel).
 
 ### Backlog — raiz → `docs/` (**feito** em 2026-04-13)
 
 Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi para `docs/meta/`, `docs/deploy/`, `docs/testing/`, `docs/ops/` — ver [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md). `DEPLOY_SECRETS.md` continua **fora do Git** (`.gitignore`).
 
-### Fecho do dia (sessão anterior 2026-04-13)
+### Fecho do dia
 
-- **Feito:** Análise de projecto; melhores práticas free/paid; mini-audit `trips.py`; **modos de conversa** (checklist 1–5); **docs** — canónicos para `docs/meta|deploy|testing|ops`; smokes de links ok.
-- **Não feito / bloqueios:** Nada bloqueante no TVDE; **git remoto** ficou para a próxima janela (commits locais).
-- **Aprendizados (uma frase):** Raiz + índice em `docs/meta/DOCS_INDEX.md` reduz dispersão; ideias de notificação/PR/admin ficam **fora do repo** até haver decisão — **side project** (Docker/n8n/etc.) **não contamina** este trabalho.
+**2026-04-15 (esta janela)**
+
+- **Feito:** Smoke **GitHub** no percurso combinado (README → DOCS_INDEX → PROXIMA F → stubs/cross-links → refs); **Render** com **4 painéis** e hábito **redeploy manual** do último commit antes de ausências (dupla disciplina: ambiente = Git + teste contínuo). **Docs:** [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) + entrada em `DOCS_INDEX` / `docs/README`.
+- **Não feito / bloqueios:** —
+- **Aprendizados:** Links `.md` resolvem no **GitHub** ou no **IDE**; abrir em **host aleatório** → 404 (normal).
+
+**2026-04-13 (arquivo)**
+
+- **Feito:** Análise de projecto; melhores práticas free/paid; mini-audit `trips.py`; **modos de conversa** (checklist 1–5); **docs** — canónicos para `docs/meta|deploy|testing|ops`; smokes de links ok; PR #86 depois mergeado.
 
 ### Rasto para a próxima sessão
 
-- **OPS primeiro:** fechar o ciclo **local → origin** dos commits locais de docs/TODO (fim de sessão + PR, como combinado).
-- **Side project** — automação (n8n, Telegram, outros containers) continua **explícitamente fora** deste ficheiro de prioridades TVDE até integrares.
-- **Diagramas** — quando `[PENSAR/DOCS]` for o foco.
+- **Parceiro:** checklist criado — **próximo passo humano:** preencher com o parceiro / advogado; ir marcando §9 «Registo de decisões».
+- **Diagramas (Mermaid):** **depois do almoço** — novo doc em `docs/architecture/` ou secção em blueprint (definir na sessão); não misturar com feature.
+- **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
+- **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.
 - **Ideias (só conversa)** — PR → telemóvel → merge → sessão seguinte com `git` + TODO assertivo; alertas operacionais → admin app — sem implementação acordada.
 
 ---

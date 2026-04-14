@@ -7,6 +7,7 @@ Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura 
 | Pasta / ficheiro             | Uso                                                                                                                                                                        |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `architecture/`              | Blueprint, estado técnico, convenções, roadmap de engenharia                                                                                                               |
+| `legal/`                     | Checklists **operacionais** com parceiro / TVDE — ver [`legal/PARCEIRO_TVDE_CHECKLIST.md`](legal/PARCEIRO_TVDE_CHECKLIST.md) (não substitui advogado)                      |
 | `testing/`                   | Protocolos e livros de teste (passageiro, motorista, simulador, sistema completo)                                                                                          |
 | `prompts/`                   | Regras fixas, UX em curso, playbooks: `A000`, `A014`, … — **piloto comercial / 4 superfícies:** [`prompts/pilot-commercial/README.md`](prompts/pilot-commercial/README.md) |
 | `IMPLEMENTACAO_E_TESTES.md`  | Código, testes, deploy e **Parte II** (logs / buffer / pytest detalhado)                                                                                                   |
