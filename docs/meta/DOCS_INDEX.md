@@ -89,6 +89,14 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ---
 
+## Diagramas (Mermaid)
+
+| Ficheiro                                         | Propósito                                                                                        |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| [docs/diagrams/README.md](../diagrams/README.md) | **Índice** — mapa do sistema + links para fluxos (viagem, ofertas, pagamentos, WS, cron, papéis) |
+
+---
+
 ## Referência técnica
 
 | Ficheiro                                                               | Propósito                        |
@@ -142,6 +150,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 26  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                                    |
 | 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis)                  |
 | 28  | [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md)                               | Checklist operacional parceiro / licença TVDE (não é aconselhamento jurídico) |
+| 29  | [docs/diagrams/README.md](../diagrams/README.md)                                                           | Índice Mermaid — fluxos TVDE (viagem, ofertas, pagamentos, …)                 |
 
 ---
 
