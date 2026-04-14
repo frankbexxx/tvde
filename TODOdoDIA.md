@@ -89,11 +89,11 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ## Hoje 2026-04-16
 
-_Próxima sessão — depois de merges na `main` e `git pull` local (fazes tu o checkout/pull final)._
+_Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88**._
 
 ### Prioridades (ordem sugerida)
 
-1. [ ] [OPS] **Pós-merge + smoke** — Confirmar `main` local = `origin/main` (`git fetch`, `git checkout main`, `git pull --ff-only origin main`). Smoke no **GitHub** (render Mermaid): [`README.md`](README.md) → [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md) → [`docs/diagrams/README.md`](docs/diagrams/README.md). Se o PR do checklist legal (**#87**) ainda estiver aberto, merge também e repetir smoke até `docs/legal/PARCEIRO_TVDE_CHECKLIST.md`.
+1. [x] [OPS] **Pós-merge + smoke** — `main` = `origin/main`; smoke no **GitHub**: [`README.md`](README.md) → [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md) → [`docs/diagrams/README.md`](docs/diagrams/README.md) → [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md).
 2. [ ] [DOCS] **Diagramas — expansão** — [`docs/diagrams/README.md`](docs/diagrams/README.md): **sequence** por papel em `04_REALTIME.md`; novo `07_…` (ex.: OTP / auth) ou aprofundar `03_PAYMENTS.md` com eventos Stripe nomeados; manter ficheiros **pequenos** (um fluxo por PR quando couber).
 3. [ ] [CONVERSA / DOCS] **Parceiro (fora do Cursor)** — Preencher com parceiro/advogado o [`PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) (§2–§6 + §9 «Registo de decisões»).
 
@@ -133,11 +133,29 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** secção **[Hoje 2026-04-16](#hoje-2026-04-16)** — item **1** é o primeiro passo (pós-merge + smoke).
+- **Âncora:** secção **Hoje 2026-04-16** (acima) — itens **2–3**; depois tabela **Roteiro acelerado** no fim do ficheiro (**W1** = próximo bloco OPS/código para teste real).
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.
 - **Ideias (só conversa)** — alertas operacionais → admin app; pricing no accept — sem implementação até decisão em `PROXIMA`.
+
+---
+
+## Roteiro acelerado (comercialização / teste real)
+
+Objectivo: sequência **curta** de ondas (meia sessão a ~2 sessões cada), priorizando o que desbloqueia **piloto com pessoas reais** e **dinheiro com controlo**, sem misturar com side project. Detalhe técnico: [`docs/TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md), [`docs/visao_cursor.md`](docs/visao_cursor.md) §4, [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Sec. D/F.
+
+| Onda | Foco | Entregável verificável |
+| ---- | ---- | ------------------------ |
+| **W1** | **Operação PROD confiável** | Cron externo a bater `GET /cron/jobs` com segredo correcto; efeitos de timeouts verificáveis; webhook Stripe em ambiente escolhido com assinatura + idempotência **validados** (checklist em [`docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md)). |
+| **W2** | **Runbook humano** | Um `.md` curto em `docs/ops/` (1–2 páginas): pagamento preso / disputa, viagem presa em estado intermédio, «quem faz o quê» em 24h — liga a `system-health` e logs que já tens. |
+| **W3** | **Staging (A027)** | Segundo ambiente (API+DB+frontend) com Stripe **test** + webhook test; smoke repetível antes de tocar em live. |
+| **W4** | **Dados (A028)** | Backup PG automático + **um** exercício de restore documentado (mesmo que manual na primeira vez). |
+| **W5** | **Piloto numerado** | Lista fechada de beta testers; critérios de saída («o que fica para V2»); export partner + admin para reconciliação; **Stripe live** só após checklist financeiro e acordo teu ([`docs/testing/TESTE_STRIPE_COMPLETO.md`](docs/testing/TESTE_STRIPE_COMPLETO.md)). |
+| **W6** | **Pacote confiança mínimo** | Paralelo **humano**: preencher [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md); termos/privacidade **redigidos por advogado** (o repo não substitui isso — ver `visao_cursor` §4.2). |
+| **W7** | **Pós-piloto (não bloquear W1–W6)** | Alerting (uptime / erros); expansão Mermaid (`07_` auth, sequences); `ENABLE_CONFIRM_ON_ACCEPT` **só** após decisão explícita em `PROXIMA`; PWA/push conforme `visao_cursor` §4.1 — **não** antecipar antes de W5 estável. |
+
+**Regra de ouro:** uma onda **fechada** (merge + smoke) antes de abrir a seguinte, salvo trabalho humano (W6) em paralelo com W3–W5.
 
 ---
 
