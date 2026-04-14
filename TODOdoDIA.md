@@ -146,7 +146,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** **W2** (runbook incidentes) — ver tabela **«Roteiro acelerado»** mais abaixo neste ficheiro (linha **W2**). **W1** fechado com smoke PROD (cron + webhook + env). Item **3** (parceiro) **em curso** até retornos externos.
+- **Âncora:** **W2** — desenho **Admin-only / sem Swagger**: [`docs/ops/W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) (fases A–D); runbook texto [`docs/ops/W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md) a preencher na **fase A** após acordo. **W1** fechado. Item **3** (parceiro) **em curso** até retornos externos.
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.

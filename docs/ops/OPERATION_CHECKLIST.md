@@ -5,3 +5,5 @@
 Este stub em `docs/ops/` mantém-se para links antigos (prompts A022, A026, A033, etc.).
 
 Smoke **W1** (cron + webhook, teste real): **[W1_PROD_SMOKE.md](W1_PROD_SMOKE.md)**.
+
+**W2** (runbook sem Swagger — desenho UI + fases): **[W2_RUNBOOK_UI_DESIGN.md](W2_RUNBOOK_UI_DESIGN.md)** · runbook v0 (quando existir): **[W2_RUNBOOK.md](W2_RUNBOOK.md)**.
