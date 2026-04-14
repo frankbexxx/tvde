@@ -97,12 +97,16 @@ _Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88
 2. [x] [DOCS] **Diagramas — expansão** — [`04_REALTIME.md`](docs/diagrams/04_REALTIME.md): sequences passageiro (polling), motorista (polling + WS ofertas), admin WS; [`03_PAYMENTS.md`](docs/diagrams/03_PAYMENTS.md): tabela `event_type` Stripe; novo [`07_AUTH_OTP.md`](docs/diagrams/07_AUTH_OTP.md); índice em [`docs/diagrams/README.md`](docs/diagrams/README.md).
 3. [ ] [CONVERSA / DOCS] **Parceiro (em curso — externo)** — [`PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) **já enviado** a parceiros, **contabilista** (papelada do parceiro motorista) e **mentor**; aguardar retorno para §2–§9. **Não bloqueia** o passo técnico abaixo.
 
-### Próximo passo técnico — **W1** (teste real / operação)
+### W1 — smoke PROD (**fechado**)
 
-Guião único: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md). Playbook longo: [`docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md).
+Guião: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) · Playbook: [`docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md).
 
-- [ ] [OPS] **W1a — Cron** — `curl` a `/cron/jobs` com segredo correcto → **200** + JSON; agendador externo (ex. cron-job.org) confirmado a bater o mesmo URL.
-- [ ] [OPS] **W1b — Webhook Stripe** — endpoint activo; test event ou viagem controlada; logs + idempotência `evt_*` na BD.
+- [x] [OPS] **W1a — Cron** — Pedido manual à API PROD → **200** + JSON (`timeouts` / `offers` / `cleanup`); agendador externo (cron-job.org) com GET periódico → **200** consistente.
+- [x] [OPS] **W1b — Webhook Stripe** — Dashboard: entrega **200** para `payment_intent.succeeded` em `/webhooks/stripe`, resposta `{"status":"ok"}`; assinatura com `STRIPE_WEBHOOK_SECRET`; coerência BD (evidência no Stripe + logs API). *Não documentar URLs com `secret=` nem segredos no Git.*
+
+**Nota:** `system_health` pode continuar a sinalizar `stuck_payments` / estado financeiro legado — **fora do critério W1**; tratar em sessão de limpeza ou W2/W4.
+
+**Próximo roteiro:** **W2** — runbook humano curto em `docs/ops/` (ver tabela abaixo).
 
 ### Sessão encerrada — 2026-04-15 (resumo)
 
@@ -128,6 +132,8 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Fecho do dia
 
+**W1 smoke PROD (registado após execução humana)** — Env críticos confirmados no Render; cron manual e agendador externo com **200** + JSON; webhook Stripe (`payment_intent.succeeded`) **entregue** com **200** e `status: ok`. Evidências mantidas fora do Git (Stripe + Render). *ChatGPT / resumo externo: OK como rascunho; canónico continua a ser este ficheiro + `W1_PROD_SMOKE.md`.*
+
 **2026-04-15 (fecho de sessão)**
 
 - **Feito:** Smoke **GitHub** no percurso combinado (README → DOCS_INDEX → PROXIMA F → stubs/cross-links → refs); **Render** com **4 painéis** e hábito **redeploy manual** do último commit antes de ausências (dupla disciplina: ambiente = Git + teste contínuo). **Docs:** [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) + pasta [`docs/diagrams/`](docs/diagrams/) (Mermaid) + entradas em `DOCS_INDEX` / `docs/README`. **Git:** PR **#88** (`feat/docs-diagrams-mermaid` — diagramas + TODO 2026-04-16 + `PROXIMA`); PR **#87** checklist legal em paralelo se ainda aberto.
@@ -140,7 +146,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** **W1** (cron + webhook) — [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md). Item **3** (parceiro) **em curso** até retornos externos.
+- **Âncora:** **W2** (runbook incidentes) — ver tabela **«Roteiro acelerado»** mais abaixo neste ficheiro (linha **W2**). **W1** fechado com smoke PROD (cron + webhook + env). Item **3** (parceiro) **em curso** até retornos externos.
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.
