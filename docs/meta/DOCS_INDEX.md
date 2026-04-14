@@ -72,6 +72,8 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Telemetria comportamental — export de logs (request_trip, accept, complete, etc.) |
 | [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md)                                                                | Smoke W1 — cron + webhook Stripe + env (alinhado a A033 e `TODOdoDIA`)             |
+| [W2_RUNBOOK_UI_DESIGN.md](../ops/W2_RUNBOOK_UI_DESIGN.md)                                                | W2 — desenho: runbook só no Admin web, sem Swagger; fases A–D                      |
+| [W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                                    | W2 — runbook operacional v0 (placeholder até fase A)                             |
 | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade, reconciliação via cron, roadmap escala                  |
 
 ---
@@ -155,6 +157,8 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 29  | [docs/diagrams/README.md](../diagrams/README.md)                                                           | Índice Mermaid — fluxos TVDE (viagem, ofertas, pagamentos, …)                 |
 | 30  | [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md)                                               | Mermaid — OTP / login BETA / parceiro só via admin                            |
 | 31  | [docs/ops/W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md)                                                       | Smoke operacional W1 — cron + webhook (teste real)                            |
+| 32  | [docs/ops/W2_RUNBOOK_UI_DESIGN.md](../ops/W2_RUNBOOK_UI_DESIGN.md)                                         | W2 — desenho runbook Admin-only, fases A–D                                    |
+| 33  | [docs/ops/W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                           | W2 — runbook v0 (placeholder)                                               |
 
 ---
 
