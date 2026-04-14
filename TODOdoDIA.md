@@ -94,7 +94,7 @@ _Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88
 ### Prioridades (ordem sugerida)
 
 1. [x] [OPS] **Pós-merge + smoke** — `main` = `origin/main`; smoke no **GitHub**: [`README.md`](README.md) → [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md) → [`docs/diagrams/README.md`](docs/diagrams/README.md) → [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md).
-2. [ ] [DOCS] **Diagramas — expansão** — [`docs/diagrams/README.md`](docs/diagrams/README.md): **sequence** por papel em `04_REALTIME.md`; novo `07_…` (ex.: OTP / auth) ou aprofundar `03_PAYMENTS.md` com eventos Stripe nomeados; manter ficheiros **pequenos** (um fluxo por PR quando couber).
+2. [x] [DOCS] **Diagramas — expansão** — [`04_REALTIME.md`](docs/diagrams/04_REALTIME.md): sequences passageiro (polling), motorista (polling + WS ofertas), admin WS; [`03_PAYMENTS.md`](docs/diagrams/03_PAYMENTS.md): tabela `event_type` Stripe; novo [`07_AUTH_OTP.md`](docs/diagrams/07_AUTH_OTP.md); índice em [`docs/diagrams/README.md`](docs/diagrams/README.md).
 3. [ ] [CONVERSA / DOCS] **Parceiro (fora do Cursor)** — Preencher com parceiro/advogado o [`PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) (§2–§6 + §9 «Registo de decisões»).
 
 ### Sessão encerrada — 2026-04-15 (resumo)
@@ -133,7 +133,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** secção **Hoje 2026-04-16** (acima) — itens **2–3**; depois tabela **Roteiro acelerado** no fim do ficheiro (**W1** = próximo bloco OPS/código para teste real).
+- **Âncora:** secção **Hoje 2026-04-16** (acima) — item **3** (parceiro humano) ou saltar para **Roteiro W1** (cron + webhook) se quiseres priorizar teste real antes do papel.
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.

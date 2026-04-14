@@ -91,9 +91,10 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Diagramas (Mermaid)
 
-| Ficheiro                                         | Propósito                                                                                        |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Ficheiro                                           | Propósito                                                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [docs/diagrams/README.md](../diagrams/README.md) | **Índice** — mapa do sistema + links para fluxos (viagem, ofertas, pagamentos, WS, cron, papéis) |
+| [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md) | OTP + login BETA (Mermaid)                                                                     |
 
 ---
 
@@ -151,6 +152,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis)                  |
 | 28  | [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md)                               | Checklist operacional parceiro / licença TVDE (não é aconselhamento jurídico) |
 | 29  | [docs/diagrams/README.md](../diagrams/README.md)                                                           | Índice Mermaid — fluxos TVDE (viagem, ofertas, pagamentos, …)                 |
+| 30  | [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md)                                               | Mermaid — OTP / login BETA / parceiro só via admin                            |
 
 ---
 
