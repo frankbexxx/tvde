@@ -55,11 +55,11 @@ curl -sS "https://<API_HOST>/cron/jobs" -H "X-Cron-Secret: <CRON_SECRET>"
 
 ## 5. Fecho W1 (critério «feito»)
 
-- [ ] `curl` ao cron com 200 e JSON coerente.
-- [ ] Agendador externo documentado (URL + frequência) e a bater o mesmo endpoint.
-- [ ] Webhook Stripe: entrega testada + verificação de assinatura + pelo menos uma linha de evidência (log ou evento Stripe «delivered»).
+- [x] `curl` / pedido HTTP ao cron com **200** e JSON coerente.
+- [x] Agendador externo a bater o mesmo endpoint (frequência + evidência **200**).
+- [x] Webhook Stripe: entrega testada + assinatura + evidência (Stripe «delivered» / logs API / BD).
 
-Quando isto estiver **verdadeiro**, podes marcar W1 como fechada no teu ritual (e uma linha no **Fecho** do `TODOdoDIA`).
+*Registo no repo:* secção **Fecho do dia** em [`TODOdoDIA.md`](../../TODOdoDIA.md) quando fechares a onda (sem colar segredos nem URLs com `secret=`).*
 
 ---
 
