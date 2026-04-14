@@ -99,7 +99,7 @@ _Próxima sessão — depois de merges na `main` e `git pull` local (fazes tu o 
 
 ### Sessão encerrada — 2026-04-15 (resumo)
 
-- Entregue: smoke docs + Render; [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md); pasta [`docs/diagrams/`](docs/diagrams/) (`README` + `01`–`06`); índices actualizados. **PRs:** checklist legal **#87** (se ainda por mergear); diagramas **novo PR** desta sessão de fecho.
+- Entregue: smoke docs + Render; [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md); pasta [`docs/diagrams/`](docs/diagrams/) (`README` + `01`–`06`); índices actualizados. **PRs:** checklist legal **#87** (se ainda por mergear); diagramas + handoff **#88**.
 
 ---
 
@@ -123,7 +123,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 **2026-04-15 (fecho de sessão)**
 
-- **Feito:** Smoke **GitHub** no percurso combinado (README → DOCS_INDEX → PROXIMA F → stubs/cross-links → refs); **Render** com **4 painéis** e hábito **redeploy manual** do último commit antes de ausências (dupla disciplina: ambiente = Git + teste contínuo). **Docs:** [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) + pasta [`docs/diagrams/`](docs/diagrams/) (Mermaid) + entradas em `DOCS_INDEX` / `docs/README`. **Git:** commit + PR `feat/docs-diagrams-mermaid` (diagramas + TODO próxima sessão + `PROXIMA`); PR **#87** checklist legal mergeável em paralelo se ainda aberto.
+- **Feito:** Smoke **GitHub** no percurso combinado (README → DOCS_INDEX → PROXIMA F → stubs/cross-links → refs); **Render** com **4 painéis** e hábito **redeploy manual** do último commit antes de ausências (dupla disciplina: ambiente = Git + teste contínuo). **Docs:** [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) + pasta [`docs/diagrams/`](docs/diagrams/) (Mermaid) + entradas em `DOCS_INDEX` / `docs/README`. **Git:** PR **#88** (`feat/docs-diagrams-mermaid` — diagramas + TODO 2026-04-16 + `PROXIMA`); PR **#87** checklist legal em paralelo se ainda aberto.
 - **Não feito / bloqueios:** —
 - **Aprendizados:** Links `.md` resolvem no **GitHub** ou no **IDE**; abrir em **host aleatório** → 404 (normal).
 
