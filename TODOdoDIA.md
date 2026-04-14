@@ -87,17 +87,31 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ---
 
-## Hoje — 2026-04-15
+## Hoje 2026-04-16
 
-_Data: actualizar na noite anterior se o ficheiro for copiado._
+_Próxima sessão — depois de merges na `main` e `git pull` local (fazes tu o checkout/pull final)._
 
-**Ordem acordada:** **até ao almoço** — parceiro / papelada ([`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md)); **depois do almoço** — diagramas Mermaid (viagem + pagamento + HTTP/WS + cron).
+### Prioridades (ordem sugerida)
 
-### Prioridades
+1. [ ] [OPS] **Pós-merge + smoke** — Confirmar `main` local = `origin/main` (`git fetch`, `git checkout main`, `git pull --ff-only origin main`). Smoke no **GitHub** (render Mermaid): [`README.md`](README.md) → [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md) → [`docs/diagrams/README.md`](docs/diagrams/README.md). Se o PR do checklist legal (**#87**) ainda estiver aberto, merge também e repetir smoke até `docs/legal/PARCEIRO_TVDE_CHECKLIST.md`.
+2. [ ] [DOCS] **Diagramas — expansão** — [`docs/diagrams/README.md`](docs/diagrams/README.md): **sequence** por papel em `04_REALTIME.md`; novo `07_…` (ex.: OTP / auth) ou aprofundar `03_PAYMENTS.md` com eventos Stripe nomeados; manter ficheiros **pequenos** (um fluxo por PR quando couber).
+3. [ ] [CONVERSA / DOCS] **Parceiro (fora do Cursor)** — Preencher com parceiro/advogado o [`PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) (§2–§6 + §9 «Registo de decisões»).
+
+### Sessão encerrada — 2026-04-15 (resumo)
+
+- Entregue: smoke docs + Render; [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md); pasta [`docs/diagrams/`](docs/diagrams/) (`README` + `01`–`06`); índices actualizados. **PRs:** checklist legal **#87** (se ainda por mergear); diagramas **novo PR** desta sessão de fecho.
+
+---
+
+## Hoje 2026-04-15 (arquivo de sessão)
+
+**Ordem acordada:** manhã parceiro / papelada; tarde Mermaid.
+
+### Prioridades (todas concluídas nesta sessão)
 
 - [x] [OPS] **Git remoto** — PR **#86** mergeado; `main` ↔ `origin/main` alinhados (sessão 2026-04-13).
 - [x] [OPS / Smoke] **Pós-PR86** — Smoke **docs no GitHub** (espinha 1–4, cruzamentos nexo 5–8, `docs/README` §9, refs 10–12: **CERTO**). **Render:** regresso contínuo com **4 vistas** (mesmo deploy, **BD única**); **manual deploy** do último commit antes de ausências (ex.: passeio) = **dupla métrica** (paridade Git↔ambiente + disciplina de teste).
-- [ ] [PENSAR / DOCS] **Diagramas** — Mermaid ou C4 leve (viagem+pagamento, HTTP/WS, cron/webhooks); **sessão dedicada**, não misturar com feature — **bloco tarde (pós-almoço)**.
+- [x] [PENSAR / DOCS] **Diagramas** — Pasta [`docs/diagrams/`](docs/diagrams/) com **README índice** + `01`–`06` (viagem, ofertas, pagamentos, realtime, cron, roles); **expandir** por PR quando o código ganhar novos fluxos.
 - [x] [DOCS] **Parceiro — licença e papelada** — [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md): tabelas + checklists para conversa com o titular TVDE (IMT, seguros, contratos, RGPD, Stripe/faturação); **não** é aconselhamento jurídico.
 - [x] **Surpresa (5)** — Smoke **visual** em **produção Render**: vista **passageiro** (mapa, estados «Motorista a caminho» / «Viagem em curso», pagamento a processar, distância, **Cancelar**) e vista **admin** (viagens activas, `accepted` / `arriving`, Detalhe / Cancelar, lista lateral). Confirma o produto **no ar** e o fio que falámos (acção remota / telemóvel).
 
@@ -107,9 +121,9 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Fecho do dia
 
-**2026-04-15 (esta janela)**
+**2026-04-15 (fecho de sessão)**
 
-- **Feito:** Smoke **GitHub** no percurso combinado (README → DOCS_INDEX → PROXIMA F → stubs/cross-links → refs); **Render** com **4 painéis** e hábito **redeploy manual** do último commit antes de ausências (dupla disciplina: ambiente = Git + teste contínuo). **Docs:** [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) + entrada em `DOCS_INDEX` / `docs/README`.
+- **Feito:** Smoke **GitHub** no percurso combinado (README → DOCS_INDEX → PROXIMA F → stubs/cross-links → refs); **Render** com **4 painéis** e hábito **redeploy manual** do último commit antes de ausências (dupla disciplina: ambiente = Git + teste contínuo). **Docs:** [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) + pasta [`docs/diagrams/`](docs/diagrams/) (Mermaid) + entradas em `DOCS_INDEX` / `docs/README`. **Git:** commit + PR `feat/docs-diagrams-mermaid` (diagramas + TODO próxima sessão + `PROXIMA`); PR **#87** checklist legal mergeável em paralelo se ainda aberto.
 - **Não feito / bloqueios:** —
 - **Aprendizados:** Links `.md` resolvem no **GitHub** ou no **IDE**; abrir em **host aleatório** → 404 (normal).
 
@@ -119,11 +133,11 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Parceiro:** checklist criado — **próximo passo humano:** preencher com o parceiro / advogado; ir marcando §9 «Registo de decisões».
-- **Diagramas (Mermaid):** **depois do almoço** — novo doc em `docs/architecture/` ou secção em blueprint (definir na sessão); não misturar com feature.
+- **Âncora:** secção **[Hoje 2026-04-16](#hoje-2026-04-16)** — item **1** é o primeiro passo (pós-merge + smoke).
+- **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.
-- **Ideias (só conversa)** — PR → telemóvel → merge → sessão seguinte com `git` + TODO assertivo; alertas operacionais → admin app — sem implementação acordada.
+- **Ideias (só conversa)** — alertas operacionais → admin app; pricing no accept — sem implementação até decisão em `PROXIMA`.
 
 ---
 

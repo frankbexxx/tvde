@@ -146,6 +146,14 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
+### Arranque imediato (alinhado a `TODOdoDIA` — 2026-04-16)
+
+1. **Pós-merge** — `main` local = `origin/main` após merges; smoke de links no **GitHub** até [`docs/diagrams/README.md`](../diagrams/README.md) (Mermaid). Incluir [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](../legal/PARCEIRO_TVDE_CHECKLIST.md) quando o PR do checklist estiver na `main`.
+2. **Diagramas** — Expandir [`docs/diagrams/README.md`](../diagrams/README.md): sequences em `04_REALTIME.md`, novos `07_…` (auth/OTP) ou detalhe de webhooks em `03_PAYMENTS.md`.
+3. **Parceiro (humano)** — Preencher checklist §2–§9 com parceiro/advogado; o repo já tem o modelo operacional, não substitui parecer jurídico.
+
+---
+
 ## Recomendação
 
 **Prioridade 1 — Concluída**
