@@ -41,6 +41,14 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ---
 
+## Legal e parceiro (operacional)
+
+| Ficheiro                                                                     | Propósito                                                                                                                                        |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md) | Inventário **não jurídico**: perguntas e papelada para alinhar com o **titular TVDE**; liga a onboarding técnico e a `visao_cursor` (compliance) |
+
+---
+
 ## Testes e guias
 
 | Ficheiro                                                        | Propósito                                       |
@@ -104,35 +112,36 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Lista de documentos ativos
 
-| #   | Ficheiro                                                                                                   | Propósito                                                    |
-| --- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 1   | [README.md](../../README.md)                                                                               | Entrada do projeto                                           |
-| 2   | [PROJECT.md](PROJECT.md)                                                                                   | Visão geral, stack, modelo                                   |
-| 3   | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md)               | Roadmap técnico + entrega app (atualizado 2026-03-28)        |
-| 4   | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                                     | Handoff e contexto                                           |
-| 5   | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                             | Este índice                                                  |
-| 6   | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)                                                     | Deploy no Render                                             |
-| 7   | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                | Manual de testes                                             |
-| 8   | [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md)                                          | Teste em campo                                               |
-| 9   | [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md)                                            | Fluxo Stripe                                                 |
-| 10  | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Logs e telemetria                                            |
-| 11  | [docs/DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md)                                                       | Depuração BETA                                               |
-| 12  | [docs/README.md](../README.md)                                                                             | Mapa da documentação ativa em `docs/`                        |
-| 13  | [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)                                                       | Stack técnico                                                |
-| 14  | [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                                                               | Estrutura da GUI                                             |
-| 15  | [docs/IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md)                                             | Implementação, testes e logs (Parte II = ex-LOGS_E_TESTES)   |
-| 16  | [docs/LOGS_E_TESTES_SINTESE.md](../LOGS_E_TESTES_SINTESE.md)                                               | Redireciona para IMPLEMENTACAO_E_TESTES (Parte II)           |
-| 17  | [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md)                                     | Schema da BD                                                 |
-| 18  | [web-app/README.md](../../web-app/README.md)                                                               | Web app                                                      |
-| 19  | [scripts/README.md](../../scripts/README.md)                                                               | Scripts do projeto                                           |
-| 20  | [docs/visao_cursor.md](../visao_cursor.md)                                                                 | Visão Cursor + checklist comercialização                     |
-| 21  | [docs/TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md)                                                         | TODO código pré-produção (árvore ajustada)                   |
-| 22  | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD (A033-B)                             |
-| 23  | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade e reconciliação                     |
-| 24  | [docs/GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md)                                                     | Git + GitHub — fluxo TVDE (antes / durante / depois)         |
-| 25  | [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](../DOCUMENTATION_INVENTORY_2026-03-27.md)                     | Inventário docs/media tracked — plano manter/fundir/arquivar |
-| 26  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                   |
-| 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis) |
+| #   | Ficheiro                                                                                                   | Propósito                                                                     |
+| --- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1   | [README.md](../../README.md)                                                                               | Entrada do projeto                                                            |
+| 2   | [PROJECT.md](PROJECT.md)                                                                                   | Visão geral, stack, modelo                                                    |
+| 3   | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md)               | Roadmap técnico + entrega app (atualizado 2026-03-28)                         |
+| 4   | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                                     | Handoff e contexto                                                            |
+| 5   | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                             | Este índice                                                                   |
+| 6   | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)                                                     | Deploy no Render                                                              |
+| 7   | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                | Manual de testes                                                              |
+| 8   | [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md)                                          | Teste em campo                                                                |
+| 9   | [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md)                                            | Fluxo Stripe                                                                  |
+| 10  | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Logs e telemetria                                                             |
+| 11  | [docs/DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md)                                                       | Depuração BETA                                                                |
+| 12  | [docs/README.md](../README.md)                                                                             | Mapa da documentação ativa em `docs/`                                         |
+| 13  | [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)                                                       | Stack técnico                                                                 |
+| 14  | [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                                                               | Estrutura da GUI                                                              |
+| 15  | [docs/IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md)                                             | Implementação, testes e logs (Parte II = ex-LOGS_E_TESTES)                    |
+| 16  | [docs/LOGS_E_TESTES_SINTESE.md](../LOGS_E_TESTES_SINTESE.md)                                               | Redireciona para IMPLEMENTACAO_E_TESTES (Parte II)                            |
+| 17  | [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md)                                     | Schema da BD                                                                  |
+| 18  | [web-app/README.md](../../web-app/README.md)                                                               | Web app                                                                       |
+| 19  | [scripts/README.md](../../scripts/README.md)                                                               | Scripts do projeto                                                            |
+| 20  | [docs/visao_cursor.md](../visao_cursor.md)                                                                 | Visão Cursor + checklist comercialização                                      |
+| 21  | [docs/TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md)                                                         | TODO código pré-produção (árvore ajustada)                                    |
+| 22  | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD (A033-B)                                              |
+| 23  | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade e reconciliação                                      |
+| 24  | [docs/GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md)                                                     | Git + GitHub — fluxo TVDE (antes / durante / depois)                          |
+| 25  | [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](../DOCUMENTATION_INVENTORY_2026-03-27.md)                     | Inventário docs/media tracked — plano manter/fundir/arquivar                  |
+| 26  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                                    |
+| 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis)                  |
+| 28  | [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md)                               | Checklist operacional parceiro / licença TVDE (não é aconselhamento jurídico) |
 
 ---
 
