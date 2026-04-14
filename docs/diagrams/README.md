@@ -18,6 +18,7 @@ Pasta **só para fluxos em Mermaid**: cada ficheiro `.md` foca num eixo (viagem,
 | 4   | **Tempo real** (polling + WebSocket)                            | [04_REALTIME.md](04_REALTIME.md)                 | Superfícies web                              |
 | 5   | **Cron e jobs agregados**                                       | [05_CRON.md](05_CRON.md)                         | `GET /cron/jobs`, segredo, host externo      |
 | 6   | **Papéis e superfícies** (passenger / driver / admin / partner) | [06_ROLES_AND_ROUTES.md](06_ROLES_AND_ROUTES.md) | Alinhado a `Role` no backend                 |
+| 7   | **Auth OTP** (+ BETA login)                                       | [07_AUTH_OTP.md](07_AUTH_OTP.md)                 | `POST /auth/otp/*`, `login`, parceiro só admin |
 
 Quando acrescentares um fluxo novo, **actualiza esta tabela** e, se fizer sentido, uma linha em [`docs/meta/DOCS_INDEX.md`](../meta/DOCS_INDEX.md).
 
