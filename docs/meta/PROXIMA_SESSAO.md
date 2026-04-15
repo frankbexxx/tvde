@@ -146,12 +146,30 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Arranque imediato (alinhado a `TODOdoDIA` — 2026-04-16)
+### Estado repo (2026-04-08)
 
-1. **W3 — Staging (A027)** — segundo ambiente (API+DB+frontend) com Stripe **test** + webhook test; smoke repetível antes de tocar em live — ver roteiro em [`TODOdoDIA.md`](../../TODOdoDIA.md).
-2. **Smoke humano (fim de sessão)** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links; Saúde → Viagens; Operações (picker recuperar + card pagamentos + Stripe); após deploy com **W2-A**–**W2-D** na `main`.
-3. **Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** W3.
-4. **Fechado no repo (W2)** — #94–#96 (ou merges equivalentes); onda **W2** operacional fechada — ver [`TODOdoDIA.md`](../../TODOdoDIA.md).
+- **`main`:** merge do **PR #98** — onda **W2-E** (admin: viagem por `tripId` fora da lista activa; Saúde com ordenação + «Mostrar mais»; Utilizadores com paginação + bloqueio / bulk; validar `.env` mascarado; links Stripe só para PIs reais). **W2** A–E fechada em código para este eixo.
+- **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
+
+### Arranque imediato (próxima sessão útil)
+
+1. **Âncora dura — Ondas M (conta / identidade / admin)** — ver subsecção **«Ondas M»** abaixo; detalhe executável no [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-17»** (3 prioridades máx.).
+2. **W3 — Staging (A027)** — mantém-se no roteiro acelerado; **em paralelo** com M1 **só** se não diluir o ecrã-first (preferir fechar M1 antes de abrir staging, salvo decisão contrária no arranque).
+3. **Smoke pós-deploy** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links `?tab=` / `tripId=` (incl. viagem **não** na lista activa); Saúde; Operações (`.env` mascarado, recuperar motorista); Utilizadores (bloqueio). Após redeploy Render (ou ambiente escolhido).
+4. **Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** M1 nem W3.
+
+### Ondas M — Conta, password, correcções admin (compartimentado)
+
+**Objectivo:** dados de conta claros (nome, telefone, nicks, email, documentação…) **sem** atropelar o que já existe; cada onda fecha com **fluxos visíveis** (app + admin).
+
+| Onda | Foco | Entregável verificável (no ecrã) |
+| ---- | ---- | ---------------------------------- |
+| **M1** | **Identidade mínima + password simples** | Utilizador vê/edita **nome** e **telefone** (já na BD onde aplicável); fluxo **redefinir password** num modo **único e simples** (ex.: canal já confiável — SMS / link — a acordar na sessão); **admin** corrige nome/telefone **com cautela** (secções separadas, confirmação, não misturar com «Guardar» genérico); **admin** dispara **reset de password a pedido** (accção dedicada + confirmação). |
+| **M2** | **Conta «produto»** | **Email** (opcional vs obrigatório — decisão única); **nick vs nome** (visibilidade passageiro/motorista); estados «em falta» / «por verificar» **visíveis** no perfil. |
+| **M3** | **Documentação + audit** | Uploads / estados de documentos motorista-frota; **trilho de auditoria** para mudanças admin sensíveis; políticas do que o admin **não** pode mudar sozinho. |
+| **M4** (futuro) | **Vários modos de login** | Telefone+OTP, email+password, magic link, etc. — **onda própria**; não misturar com M1. |
+
+**Critérios transversais:** rate-limit em resets; bloquear edição de conta **blocked** sem fluxo explícito; telefone duplicado com erro **legível no ecrã**; logs/audit quando existir modelo.
 
 ---
 
