@@ -89,7 +89,7 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ## Hoje 2026-04-16
 
-_Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88**; runbook **#94**; **W2-B** nesta sessão._
+_Nova sessão — `main` com **W2** A–D conforme merges; smoke manual no fim da sessão._
 
 ### Prioridades (ordem sugerida)
 
@@ -113,6 +113,12 @@ _Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88
 
 - [x] [CÓDIGO] Na tab **Saúde**, cada linha de anomalia com viagem identificável tem **«Abrir em Viagens»** (deep link W2-B); listas `missing_payment_records` e `inconsistent_financial_state` também na UI.
 
+### W2-D — Picker + pagamentos Operações (**fechado** em código + API)
+
+- [x] [CÓDIGO] **Operações:** lista **Recuperar** a partir de `drivers_unavailable_too_long` (saúde); UUID manual em `<details>`.
+- [x] [CÓDIGO] **Operações:** card **Pagamentos em processing** com **Abrir em Viagens** + links Stripe (live/test) quando há `pi_…`.
+- [x] [CÓDIGO] API `system_health` — `stuck_payments` inclui `stripe_payment_intent_id`.
+
 ### W1 — smoke PROD (**fechado**)
 
 Guião: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) · Playbook: [`docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md).
@@ -122,7 +128,7 @@ Guião: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) · Playbook: [`
 
 **Nota:** `system_health` pode continuar a sinalizar `stuck_payments` / estado financeiro legado — **fora do critério W1**; tratar em sessão de limpeza ou W2/W4.
 
-**Próximo roteiro:** **W2-D** — Motorista picker + painel mínimo pagamentos (ver [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4).
+**Próximo roteiro:** **W3** — staging (segundo ambiente API+DB+frontend, Stripe test) — ver [`TODOdoDIA.md`](TODOdoDIA.md) roteiro acelerado e [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md).
 
 ### Fecho de sessão (W2-B + TODO)
 
@@ -168,7 +174,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** **W2-D** — picker «recuperar motorista» + eventual painel pagamentos (leitura + Stripe) — [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4. Runbook: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W2-A**–**W2-C** fechados. **W1** fechado. **Parceiro** **ADIA** (fora do «agora»).
+- **Âncora:** **W3** — staging (A027) — roteiro acelerado. **Onda W2** (A–D) fechada em código/docs: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W1** fechado. **Parceiro** **ADIA** (fora do «agora»).
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.

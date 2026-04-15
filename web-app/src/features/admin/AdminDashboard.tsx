@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
-import { tripIdFromHealthRow } from './healthTripLinks'
+import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
+import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
 import { apiFetch } from '../../api/client'
 import {
   getActiveTrips,
@@ -410,14 +411,16 @@ export function AdminDashboard() {
     }
   }
 
-  const handleRecoverDriver = async () => {
-    if (!token || !recoverDriverId.trim()) return
+  const runRecoverDriver = async (driverUserId: string) => {
+    if (!token) return
+    const id = driverUserId.trim()
+    if (!id) return
     setOpsLoading('recover')
     try {
-      await recoverDriver(recoverDriverId.trim(), token)
+      await recoverDriver(id, token)
       setError(null)
       setRecoverDriverId('')
-      fetchHealth()
+      await fetchHealth()
       fetchMetrics()
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro recover')
@@ -425,6 +428,8 @@ export function AdminDashboard() {
       setOpsLoading(null)
     }
   }
+
+  const handleRecoverDriver = () => void runRecoverDriver(recoverDriverId)
 
   const errDetail = (err: unknown) =>
     typeof err === 'object' && err !== null && 'detail' in err
@@ -539,6 +544,7 @@ export function AdminDashboard() {
     if (tab === 'trips') fetchActiveTrips()
     if (tab === 'metrics') fetchMetrics()
     if (tab === 'health') fetchHealth()
+    if (tab === 'ops') fetchHealth()
     if (tab === 'dados') void fetchDataVisibility()
     if (tab === 'metrics') fetchUsage()
     if (tab === 'frota') void ensureDataLoaded()
@@ -1444,28 +1450,155 @@ export function AdminDashboard() {
             >
               {opsLoading === 'export' ? 'A exportar...' : 'Exportar logs CSV'}
             </button>
-            <div className="pt-4 border-t border-border">
-              <p className="text-sm font-medium text-foreground mb-2">Recuperar motorista</p>
-              <p className="text-xs text-muted-foreground mb-2">
-                Força is_available=true para motorista bloqueado (sem viagem ativa)
-              </p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={recoverDriverId}
-                  onChange={(e) => setRecoverDriverId(e.target.value)}
-                  placeholder="driver_id (UUID)"
-                  className="flex-1 px-3 py-2 border rounded-lg text-sm"
-                />
+
+            <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium text-foreground">Pagamentos em processing (saúde)</p>
                 <button
                   type="button"
-                  onClick={handleRecoverDriver}
-                  disabled={!!opsLoading || !recoverDriverId.trim()}
-                  className="px-4 py-2 bg-success text-success-foreground rounded-lg text-sm disabled:opacity-50"
+                  onClick={() => void fetchHealth()}
+                  disabled={!!opsLoading}
+                  className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
                 >
-                  Recuperar
+                  Actualizar saúde
                 </button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Dados da mesma leitura que a tab Saúde. Links Stripe só com <span className="font-mono">pi_…</span>{' '}
+                (abre dashboard; não expõe segredos).
+              </p>
+              {!health ? (
+                <p className="text-xs text-muted-foreground">A carregar saúde…</p>
+              ) : health.stuck_payments.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Nenhum pagamento stuck nesta leitura.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {health.stuck_payments.map((row, i) => {
+                    const tid = tripIdFromHealthRow(row)
+                    const piRaw = row.stripe_payment_intent_id
+                    const pi = typeof piRaw === 'string' && piRaw.startsWith('pi_') ? piRaw.trim() : null
+                    const stripeUrls = pi ? stripePaymentIntentDashboardUrls(pi) : null
+                    return (
+                      <li
+                        key={`stuck-pay-${i}-${tid ?? String(row.id ?? i)}`}
+                        className="rounded-lg border border-border/80 bg-background p-3 space-y-2"
+                      >
+                        <div className="flex flex-wrap gap-2 items-center justify-between">
+                          {tid ? (
+                            <button
+                              type="button"
+                              className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
+                              onClick={() => syncAdminUrl({ tab: 'trips', tripId: tid })}
+                            >
+                              Abrir em Viagens
+                            </button>
+                          ) : null}
+                          {stripeUrls ? (
+                            <span className="flex flex-wrap gap-2 text-xs">
+                              <a
+                                href={stripeUrls.live}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-info underline underline-offset-2"
+                              >
+                                Stripe (live)
+                              </a>
+                              <a
+                                href={stripeUrls.test}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-info underline underline-offset-2"
+                              >
+                                Stripe (test)
+                              </a>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sem PaymentIntent na API ainda.</span>
+                          )}
+                        </div>
+                        <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-28 overflow-y-auto">
+                          {JSON.stringify(row, null, 2)}
+                        </pre>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-border space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium text-foreground">Recuperar motorista</p>
+                <button
+                  type="button"
+                  onClick={() => void fetchHealth()}
+                  disabled={!!opsLoading}
+                  className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                >
+                  Actualizar saúde
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Força <span className="font-mono">is_available=true</span> para motorista bloqueado (sem viagem ativa).
+                Lista a partir de <strong>saúde</strong> — motoristas offline há muito sem viagem.
+              </p>
+              {!health ? (
+                <p className="text-xs text-muted-foreground">A carregar saúde…</p>
+              ) : health.drivers_unavailable_too_long.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Sem candidatos nesta leitura. Se o caso não aparecer, usa UUID manual abaixo.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {health.drivers_unavailable_too_long
+                    .map((row, i) => {
+                      const did = driverIdFromHealthUnavailableRow(row)
+                      return did ? { did, i } : null
+                    })
+                    .filter((x): x is { did: string; i: number } => x !== null)
+                    .map(({ did, i }) => (
+                      <li
+                        key={`recover-suggest-${did}-${i}`}
+                        className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-background px-3 py-2"
+                      >
+                        <span className="font-mono text-xs text-foreground/90">{did.slice(0, 8)}…</span>
+                        <button
+                          type="button"
+                          onClick={() => void runRecoverDriver(did)}
+                          disabled={opsLoading === 'recover'}
+                          className="px-3 py-1.5 bg-success text-success-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                        >
+                          Recuperar
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              )}
+              <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2">
+                <summary className="text-xs cursor-pointer text-foreground/80 font-medium">
+                  UUID manual (casos raros)
+                </summary>
+                <p className="text-xs text-muted-foreground mt-2 mb-2">
+                  Só quando o motorista não aparece na lista de saúde.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={recoverDriverId}
+                    onChange={(e) => setRecoverDriverId(e.target.value)}
+                    placeholder="driver_id (UUID)"
+                    className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRecoverDriver}
+                    disabled={!!opsLoading || !recoverDriverId.trim()}
+                    className="px-4 py-2 bg-success text-success-foreground rounded-lg text-sm disabled:opacity-50"
+                  >
+                    Recuperar
+                  </button>
+                </div>
+              </details>
             </div>
           </div>
         </section>

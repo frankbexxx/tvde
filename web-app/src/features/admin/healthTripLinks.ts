@@ -6,6 +6,15 @@ function isUuid(s: string): boolean {
   return UUID_RE.test(s.trim())
 }
 
+/** Linhas `drivers_unavailable_too_long` do system_health. */
+export function driverIdFromHealthUnavailableRow(row: Record<string, unknown>): string | null {
+  const d = row.driver_id
+  if (typeof d !== 'string') return null
+  const s = d.trim()
+  if (!UUID_RE.test(s)) return null
+  return s
+}
+
 export function tripIdFromHealthRow(row: Record<string, unknown>): string | null {
   const direct = row.trip_id ?? row.tripId
   if (typeof direct === 'string' && isUuid(direct)) return direct.trim()

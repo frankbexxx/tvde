@@ -148,10 +148,10 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Arranque imediato (alinhado a `TODOdoDIA` — 2026-04-16)
 
-1. **W2-D (código)** — Picker «recuperar motorista» + painel mínimo pagamentos (leitura + links Stripe) — [`W2_RUNBOOK_UI_DESIGN.md`](../ops/W2_RUNBOOK_UI_DESIGN.md) §4.
-2. **Smoke humano** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links + **Saúde** → **Abrir em Viagens** em PROD/staging após deploy com W2-B + W2-C.
-3. **Parceiro (humano)** — **ADIA** — *fora do TODO_right_now* até informação reunida; **não bloqueia** W2.
-4. **Fechado no repo** — W2-A **#94**; W2-B **#95**; W2-C (PR desta sessão); diagramas; W1 PROD — ver [`TODOdoDIA.md`](../../TODOdoDIA.md).
+1. **W3 — Staging (A027)** — segundo ambiente (API+DB+frontend) com Stripe **test** + webhook test; smoke repetível antes de tocar em live — ver roteiro em [`TODOdoDIA.md`](../../TODOdoDIA.md).
+2. **Smoke humano (fim de sessão)** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links; Saúde → Viagens; Operações (picker recuperar + card pagamentos + Stripe); após deploy com **W2-A**–**W2-D** na `main`.
+3. **Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** W3.
+4. **Fechado no repo (W2)** — #94–#96 (ou merges equivalentes); onda **W2** operacional fechada — ver [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
 ---
 

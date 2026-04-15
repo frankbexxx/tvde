@@ -75,6 +75,7 @@ def get_system_health(db: Session) -> dict[str, Any]:
                 "status": p.status.value,
                 "created_at": _to_iso(p.created_at),
                 "updated_at": _to_iso(p.updated_at),
+                "stripe_payment_intent_id": p.stripe_payment_intent_id,
             }
         )
 

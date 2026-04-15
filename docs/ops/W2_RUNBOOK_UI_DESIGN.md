@@ -3,7 +3,7 @@
 **Estado:** desenho / acordo de produto — **não** substitui implementação até fecharmos fases abaixo.  
 **Objectivo:** responder a incidentes (pagamento preso, viagem presa, motorista bloqueado, avisos de saúde) **só com o browser**, na **área Admin** da mesma app que já usas em produção — **sem** abrir Swagger, **sem** copiar `Bearer` para o Postman, **sem** montar `curl` com `trip_id` à mão excepto quando a UI ainda não oferece atalho (interim).
 
-**Referências:** [`AdminDashboard.tsx`](../../web-app/src/features/admin/AdminDashboard.tsx) (tabs + query string), [`adminDashboardQuery.ts`](../../web-app/src/features/admin/adminDashboardQuery.ts) (parser `tab` / `tripId`), [`web-app/src/api/admin.ts`](../../web-app/src/api/admin.ts), [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) (cron/webhook já fechados).
+**Referências:** [`AdminDashboard.tsx`](../../web-app/src/features/admin/AdminDashboard.tsx) (tabs + query + Operações W2-D), [`adminDashboardQuery.ts`](../../web-app/src/features/admin/adminDashboardQuery.ts), [`healthTripLinks.ts`](../../web-app/src/features/admin/healthTripLinks.ts), [`stripeDashboard.ts`](../../web-app/src/utils/stripeDashboard.ts), [`web-app/src/api/admin.ts`](../../web-app/src/api/admin.ts), [`system_health.py`](../../backend/app/services/system_health.py), [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md).
 
 ---
 
@@ -28,7 +28,7 @@ Mapeamento **tipo de problema → tab Admin → acção**. Isto já permite um *
 | -------------------- | --- | --------------------------- |
 | «Está tudo pronto?» (env, cron, Stripe) | **Operações** | FASE 0 «Verificar»; `CRON_SECRET` / `STRIPE_WEBHOOK_SECRET` / flags; **Correr cron agora** (equiv. manual ao job agregado). |
 | Timeouts / ofertas / cleanup sem esperar agendador | **Operações** | **Executar timeouts**; **Expirar ofertas e redispatch**; **Exportar logs CSV**. |
-| Motorista `is_available` preso (sem viagem ativa) | **Operações** | **Recuperar motorista** (hoje: colar `driver_id` — **gap** §4). |
+| Motorista `is_available` preso (sem viagem ativa) | **Operações** | **Recuperar motorista** — lista a partir de saúde + UUID manual opcional (**W2-D**). |
 | Viagens activas, cancelar, ver detalhe / debug | **Viagens** | Lista + detalhe + acções admin já ligadas ao `trip_id` **sem** API manual. |
 | `system_health`, viagens longas, avisos | **Saúde** | **Atualizar**; JSON de warnings e listas (ex.: `trips_accepted_too_long`) — **gap**: saltos directos para a tab Viagens com filtro. |
 | Números agregados | **Métricas** | Indicadores; uso para contexto. |
@@ -40,9 +40,9 @@ Mapeamento **tipo de problema → tab Admin → acção**. Isto já permite um *
 
 ## 3. Gaps (prioridade para **acertarmos** depois do desenho)
 
-1. **Recuperar motorista** — pede UUID; ideal: lista de motoristas «em anomalia» ou botão **«usar motorista seleccionado na lista X»** (fonte: métricas / health / endpoint dedicado — a definir).
+1. **Recuperar motorista** — **W2-D:** lista a partir de `drivers_unavailable_too_long` + **UUID manual** em `<details>` para excepções.
 2. **Saúde → viagem** — **W2-C:** botão **«Abrir em Viagens»** por linha (usa `?tab=trips&tripId=`); linhas só com motorista continuam só com JSON + Operações.
-3. **Pagamento / Stripe** — sem tab «Pagamentos»; incidente «pagamento preso» passa por **Saúde** + **Viagens** + Stripe Dashboard; desenho pode prever **card** «Stuck payments» com `payment_intent_id` + link Stripe + link viagem (API já expõe parte disto em health — confirmar schema).
+3. **Pagamento / Stripe** — **W2-D:** em **Operações**, card **Pagamentos em processing (saúde)** com `pi_…` + links dashboard (live/test) + **Abrir em Viagens**; sem tab dedicada «Pagamentos».
 4. **Runbook textual na app** — secção colapsável «Se pagamento preso → …» **dentro** do Admin (markdown estático ou CMS futuro), espelhando [`W1_PROD_SMOKE`](W1_PROD_SMOKE.md)-style checklists — opcional fase tardia.
 
 ---
@@ -54,7 +54,7 @@ Mapeamento **tipo de problema → tab Admin → acção**. Isto já permite um *
 | **W2-A** | **Runbook v0 só docs** — [`W2_RUNBOOK.md`](W2_RUNBOOK.md) (passos literais Admin-only). | **Feito** no repo; revisão tua «consigo seguir só com isto» em campo real. |
 | **W2-B** | **Deep links mínimos** — query `?tab=health` / `?tab=trips&tripId=` (ou router state) para partilhar link contigo / mentor sem Swagger. | **Feito** na web-app (`AdminDashboard` + query); colar URL abre a tab certa; login preserva `?tab=` / `tripId`. |
 | **W2-C** | **Saúde → acções** — botão **«Abrir em Viagens»** por linha com `trip_id` / `id` de viagem (listas de saúde + financeiras); cancelar continua na tab Viagens. | **Feito** na web-app para linhas com viagem; motorista-only sem atalho de viagem. |
-| **W2-D** | **Motorista picker** + eventual **painel mínimo pagamentos** (só leitura + links externos Stripe). | Recuperar motorista sem campo UUID livre; pagamento preso com trilho guiado. |
+| **W2-D** | **Motorista picker** + eventual **painel mínimo pagamentos** (só leitura + links externos Stripe). | **Feito:** lista de recuperação a partir de saúde + manual em `<details>`; card stuck payments em Operações + `stripe_payment_intent_id` na API. |
 
 Ordem sugerida: **A → B → C → D**. Paralelo: item **parceiro** / legal continua fora deste ficheiro.
 
