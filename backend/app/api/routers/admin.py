@@ -122,7 +122,9 @@ async def admin_phase0(
         env=settings.ENV,
         environment=settings.ENVIRONMENT,
         cron_secret_set=bool(getattr(settings, "CRON_SECRET", None)),
-        stripe_webhook_secret_set=bool(getattr(settings, "STRIPE_WEBHOOK_SECRET", None)),
+        stripe_webhook_secret_set=bool(
+            getattr(settings, "STRIPE_WEBHOOK_SECRET", None)
+        ),
         stripe_mock=bool(getattr(settings, "STRIPE_MOCK", False)),
         beta_mode=bool(getattr(settings, "BETA_MODE", False)),
     )
@@ -152,7 +154,11 @@ async def admin_run_cron(
         timeouts = run_trip_timeouts(db)
         log_event("cron_job_ok", job="trip_timeouts", **timeouts)
     except Exception as e:
-        timeouts = {"assigned_to_requested": 0, "accepted_to_cancelled": 0, "ongoing_to_failed": 0}
+        timeouts = {
+            "assigned_to_requested": 0,
+            "accepted_to_cancelled": 0,
+            "ongoing_to_failed": 0,
+        }
         errors["trip_timeouts"] = str(e)
         log_event("cron_job_error", job="trip_timeouts", error=str(e))
 
@@ -166,7 +172,11 @@ async def admin_run_cron(
 
     try:
         new_offers = redispatch_expired_trips(db)
-        log_event("cron_job_ok", job="redispatch_expired_trips", redispatch_offers_created=len(new_offers))
+        log_event(
+            "cron_job_ok",
+            job="redispatch_expired_trips",
+            redispatch_offers_created=len(new_offers),
+        )
     except Exception as e:
         new_offers = []
         errors["redispatch_expired_trips"] = str(e)
@@ -174,7 +184,11 @@ async def admin_run_cron(
 
     try:
         cleanup = run_cleanup(db)
-        log_event("cron_job_ok", job="cleanup", audit_events_deleted=cleanup.get("audit_events_deleted", 0))
+        log_event(
+            "cron_job_ok",
+            job="cleanup",
+            audit_events_deleted=cleanup.get("audit_events_deleted", 0),
+        )
     except Exception as e:
         cleanup = {"audit_events_deleted": 0}
         errors["cleanup"] = str(e)
@@ -183,7 +197,9 @@ async def admin_run_cron(
     try:
         system_health = run_system_health_check(db)
         sh_status = system_health.get("status", "")
-        log_event("cron_job_ok", job="system_health_check", system_health_status=sh_status)
+        log_event(
+            "cron_job_ok", job="system_health_check", system_health_status=sh_status
+        )
     except Exception as e:
         system_health = {"status": "error", "warnings": [str(e)]}
         sh_status = "error"
@@ -384,9 +400,13 @@ async def admin_list_partners(
     db: Session = Depends(get_db),
 ) -> List[AdminPartnerListItem]:
     """List all partner orgs for visibility/operations."""
-    rows = db.execute(select(Partner).order_by(Partner.created_at.desc())).scalars().all()
+    rows = (
+        db.execute(select(Partner).order_by(Partner.created_at.desc())).scalars().all()
+    )
     return [
-        AdminPartnerListItem(id=str(p.id), name=p.name, created_at=p.created_at.isoformat())
+        AdminPartnerListItem(
+            id=str(p.id), name=p.name, created_at=p.created_at.isoformat()
+        )
         for p in rows
     ]
 
@@ -575,6 +595,75 @@ async def delete_user(
     db.delete(u)
     db.commit()
     return {"status": "ok", "message": "User deleted"}
+
+
+@router.post("/users/{user_id}/block")
+async def block_user(
+    user_id: str,
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: set user status to blocked (reversible; not a hard delete)."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    try:
+        uid = uuid.UUID(user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_user_id")
+    u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if _is_admin_phone(u.phone):
+        raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    if u.role == Role.admin:
+        raise HTTPException(status_code=400, detail="cannot_block_admin_role")
+    u.status = UserStatus.blocked
+    db.commit()
+    return {"status": "ok", "message": "User blocked"}
+
+
+class BulkBlockUsersRequest(BaseModel):
+    user_ids: list[str]
+    confirmation: str
+
+
+@router.post("/users/bulk-block")
+async def bulk_block_users(
+    payload: BulkBlockUsersRequest,
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: block many users. Requires confirmation matching BLOQUEAR_<count>."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    ids = [x.strip() for x in payload.user_ids if str(x).strip()]
+    if not ids:
+        raise HTTPException(status_code=400, detail="empty_user_ids")
+    if len(ids) > 200:
+        raise HTTPException(status_code=400, detail="too_many_user_ids")
+    expected = f"BLOQUEAR_{len(ids)}"
+    if payload.confirmation.strip() != expected:
+        raise HTTPException(status_code=400, detail="invalid_confirmation")
+
+    blocked = 0
+    skipped = 0
+    for raw in ids:
+        try:
+            uid = uuid.UUID(raw)
+        except ValueError:
+            skipped += 1
+            continue
+        u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+        if not u:
+            skipped += 1
+            continue
+        if _is_admin_phone(u.phone) or u.role == Role.admin:
+            skipped += 1
+            continue
+        u.status = UserStatus.blocked
+        blocked += 1
+    db.commit()
+    return {"status": "ok", "blocked_count": blocked, "skipped_count": skipped}
 
 
 @router.post("/approve-user")
@@ -844,19 +933,16 @@ async def admin_weekly_report(
     # date_trunc('week') returns timestamp; we stringify for UI.
     week_col = func.date_trunc("week", Trip.created_at).label("week_start")
     created_count = func.count(Trip.id).label("trips_created")
-    completed_count = func.sum(case((Trip.status == TripStatus.completed, 1), else_=0)).label(
-        "trips_completed"
-    )
-    rows = (
-        db.execute(
-            select(week_col, created_count, completed_count)
-            .select_from(Trip)
-            .group_by(week_col)
-            .order_by(week_col.desc())
-            .limit(weeks)
-        )
-        .all()
-    )
+    completed_count = func.sum(
+        case((Trip.status == TripStatus.completed, 1), else_=0)
+    ).label("trips_completed")
+    rows = db.execute(
+        select(week_col, created_count, completed_count)
+        .select_from(Trip)
+        .group_by(week_col)
+        .order_by(week_col.desc())
+        .limit(weeks)
+    ).all()
     out: list[WeeklyReportRow] = []
     for w, c, done in rows:
         out.append(
@@ -886,7 +972,11 @@ async def admin_alerts(
         or 0
     )
     drivers_available = (
-        db.execute(select(func.count()).select_from(Driver).where(Driver.is_available.is_(True))).scalar()
+        db.execute(
+            select(func.count())
+            .select_from(Driver)
+            .where(Driver.is_available.is_(True))
+        ).scalar()
         or 0
     )
     return AdminAlertsResponse(
