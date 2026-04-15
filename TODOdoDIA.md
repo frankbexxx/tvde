@@ -95,7 +95,11 @@ _Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88
 
 1. [x] [OPS] **Pós-merge + smoke** — `main` = `origin/main`; smoke no **GitHub**: [`README.md`](README.md) → [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md) → [`docs/diagrams/README.md`](docs/diagrams/README.md) → [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md).
 2. [x] [DOCS] **Diagramas — expansão** — [`04_REALTIME.md`](docs/diagrams/04_REALTIME.md): sequences passageiro (polling), motorista (polling + WS ofertas), admin WS; [`03_PAYMENTS.md`](docs/diagrams/03_PAYMENTS.md): tabela `event_type` Stripe; novo [`07_AUTH_OTP.md`](docs/diagrams/07_AUTH_OTP.md); índice em [`docs/diagrams/README.md`](docs/diagrams/README.md).
-3. [ ] [CONVERSA / DOCS] **Parceiro (em curso — externo)** — [`PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) **já enviado** a parceiros, **contabilista** (papelada do parceiro motorista) e **mentor**; aguardar retorno para §2–§9. **Não bloqueia** o passo técnico abaixo.
+3. [ ] [CONVERSA / DOCS] **Parceiro (em curso — externo)** — *Sequencial em pausa até retornos.* [`PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) enviado a parceiros, **contabilista** e **mentor**; aguardar §2–§9. **Não bloqueia** W2.
+
+### W2-A — Runbook v0 (**fechado** em docs)
+
+- [x] [DOCS] **[`docs/ops/W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md)** — Passos literais **Admin-only** (readiness, viagens, saúde, timeouts, pagamento+Stripe, motorista, métricas, fecho). Próximo código: **W2-B** (deep links) no [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md).
 
 ### W1 — smoke PROD (**fechado**)
 
@@ -146,7 +150,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** **W2** — desenho **Admin-only / sem Swagger**: [`docs/ops/W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) (fases A–D); runbook texto [`docs/ops/W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md) a preencher na **fase A** após acordo. **W1** fechado. Item **3** (parceiro) **em curso** até retornos externos.
+- **Âncora:** **W2-B** — deep links `?tab=` / `tripId=` na web-app (ver [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4). Runbook v0: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W2-A** fechado. **W1** fechado. Item **3** (parceiro) em pausa até retornos.
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.

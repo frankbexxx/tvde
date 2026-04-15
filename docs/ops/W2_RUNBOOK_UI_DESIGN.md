@@ -51,7 +51,7 @@ Mapeamento **tipo de problema → tab Admin → acção**. Isto já permite um *
 
 | Fase | Entrega | Critério «feito» |
 | ---- | ------- | ----------------- |
-| **W2-A** | **Runbook v0 só docs** — 1 página em `docs/ops/W2_RUNBOOK.md` = tabela da §2 + «login admin → …» (zero código). | Revisão tua «consigo seguir só com isto». |
+| **W2-A** | **Runbook v0 só docs** — [`W2_RUNBOOK.md`](W2_RUNBOOK.md) (passos literais Admin-only). | **Feito** no repo; revisão tua «consigo seguir só com isto» em campo real. |
 | **W2-B** | **Deep links mínimos** — query `?tab=health` / `?tab=trips&tripId=` (ou router state) para partilhar link contigo / mentor sem Swagger. | Colar URL no browser abre o sítio certo já autenticado (ou pede login e volta). |
 | **W2-C** | **Saúde → acções** — botões a partir de cada `trip_id` / warning listado (abrir viagem, cancelar se política permitir). | Zero copy de UUID para incidentes cobertos. |
 | **W2-D** | **Motorista picker** + eventual **painel mínimo pagamentos** (só leitura + links externos Stripe). | Recuperar motorista sem campo UUID livre; pagamento preso com trilho guiado. |
