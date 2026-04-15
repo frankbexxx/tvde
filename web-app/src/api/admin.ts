@@ -35,6 +35,9 @@ export interface SystemHealthResponse {
   trips_ongoing_too_long: Array<Record<string, unknown>>
   stuck_payments: Array<Record<string, unknown>>
   drivers_unavailable_too_long: Array<Record<string, unknown>>
+  /** Presentes na API; listas de anomalias financeiras / pagamento em falta. */
+  missing_payment_records?: Array<Record<string, unknown>>
+  inconsistent_financial_state?: Array<Record<string, unknown>>
   warnings: string[]
 }
 

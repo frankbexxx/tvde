@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
+import { tripIdFromHealthRow } from './healthTripLinks'
 import { apiFetch } from '../../api/client'
 import {
   getActiveTrips,
@@ -63,6 +64,50 @@ const TABS: { id: Tab; label: string }[] = [
 function readInitialAdminQuery(): { tab: Tab; tripId: string | null } {
   if (typeof window === 'undefined') return { tab: 'pending', tripId: null }
   return parseAdminDashboardQuery(new URLSearchParams(window.location.search))
+}
+
+function HealthAnomalyBlock(props: {
+  title: string
+  rows: Array<Record<string, unknown>>
+  onOpenTrip: (tripId: string) => void
+}) {
+  const { title, rows, onOpenTrip } = props
+  if (!rows.length) return null
+  return (
+    <div className="rounded-xl border border-border bg-card/50 p-3 space-y-2">
+      <p className="text-sm font-medium text-foreground">
+        {title} ({rows.length})
+      </p>
+      <ul className="space-y-2">
+        {rows.map((row, i) => {
+          const tid = tripIdFromHealthRow(row)
+          const key = tid ? `${title}-${tid}-${i}` : `${title}-row-${i}`
+          return (
+            <li key={key} className="rounded-lg border border-border/80 bg-background p-2 space-y-2">
+              <div className="flex flex-wrap gap-2 items-center justify-between">
+                {tid ? (
+                  <button
+                    type="button"
+                    className="shrink-0 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
+                    onClick={() => onOpenTrip(tid)}
+                  >
+                    Abrir em Viagens
+                  </button>
+                ) : (
+                  <p className="text-xs text-muted-foreground pr-2">
+                    Sem viagem nesta linha (ex.: motorista) — ver JSON ou Operações.
+                  </p>
+                )}
+              </div>
+              <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-32 overflow-y-auto">
+                {JSON.stringify(row, null, 2)}
+              </pre>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
 }
 
 export function AdminDashboard() {
@@ -1452,52 +1497,44 @@ export function AdminDashboard() {
                   ))}
                 </ul>
               )}
-              {health.trips_accepted_too_long.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Viagens accepted há muito ({health.trips_accepted_too_long.length})
-                  </p>
-                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
-                    {JSON.stringify(health.trips_accepted_too_long, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {health.trips_ongoing_too_long.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Viagens ongoing há muito ({health.trips_ongoing_too_long.length})
-                  </p>
-                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
-                    {JSON.stringify(health.trips_ongoing_too_long, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {health.drivers_unavailable_too_long.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Motoristas offline há muito ({health.drivers_unavailable_too_long.length})
-                  </p>
-                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
-                    {JSON.stringify(health.drivers_unavailable_too_long, null, 2)}
-                  </pre>
-                </div>
-              )}
-              {health.stuck_payments.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Pagamentos bloqueados ({health.stuck_payments.length})
-                  </p>
-                  <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
-                    {JSON.stringify(health.stuck_payments, null, 2)}
-                  </pre>
-                </div>
-              )}
+              <HealthAnomalyBlock
+                title="Viagens accepted há muito"
+                rows={health.trips_accepted_too_long}
+                onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+              />
+              <HealthAnomalyBlock
+                title="Viagens ongoing há muito"
+                rows={health.trips_ongoing_too_long}
+                onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+              />
+              <HealthAnomalyBlock
+                title="Motoristas offline há muito (sem viagem ativa)"
+                rows={health.drivers_unavailable_too_long}
+                onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+              />
+              <HealthAnomalyBlock
+                title="Pagamentos bloqueados (processing)"
+                rows={health.stuck_payments}
+                onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+              />
+              <HealthAnomalyBlock
+                title="Viagens sem registo de pagamento"
+                rows={health.missing_payment_records ?? []}
+                onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+              />
+              <HealthAnomalyBlock
+                title="Estado financeiro inconsistente"
+                rows={health.inconsistent_financial_state ?? []}
+                onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+              />
               {health.status === 'ok' &&
                 health.warnings.length === 0 &&
                 health.trips_accepted_too_long.length === 0 &&
                 health.trips_ongoing_too_long.length === 0 &&
                 health.drivers_unavailable_too_long.length === 0 &&
-                health.stuck_payments.length === 0 && (
+                health.stuck_payments.length === 0 &&
+                (health.missing_payment_records ?? []).length === 0 &&
+                (health.inconsistent_financial_state ?? []).length === 0 && (
                   <p className="text-foreground/75">Tudo OK.</p>
                 )}
             </div>

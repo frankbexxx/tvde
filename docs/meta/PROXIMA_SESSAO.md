@@ -148,10 +148,10 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Arranque imediato (alinhado a `TODOdoDIA` — 2026-04-16)
 
-1. **W2-C (código)** — Saúde → acções: atalhos a partir de `trip_id` nas listas de `system_health` sem copiar UUID — ver [`W2_RUNBOOK_UI_DESIGN.md`](../ops/W2_RUNBOOK_UI_DESIGN.md) §4.
-2. **Smoke humano** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) + deep links ` /admin?tab=… ` em PROD/staging quando deploy do merge W2-B estiver no ar.
-3. **Parceiro (humano)** — *Fora do TODO_right_now até informação reunida.* Preencher [`PARCEIRO_TVDE_CHECKLIST.md`](../legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9 quando houver resposta; **não bloqueia** W2.
-4. **Fechado no repo** — W2-A runbook **#94**; W2-B deep links (PR desta sessão); diagramas; W1 PROD — ver [`TODOdoDIA.md`](../../TODOdoDIA.md).
+1. **W2-D (código)** — Picker «recuperar motorista» + painel mínimo pagamentos (leitura + links Stripe) — [`W2_RUNBOOK_UI_DESIGN.md`](../ops/W2_RUNBOOK_UI_DESIGN.md) §4.
+2. **Smoke humano** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links + **Saúde** → **Abrir em Viagens** em PROD/staging após deploy com W2-B + W2-C.
+3. **Parceiro (humano)** — **ADIA** — *fora do TODO_right_now* até informação reunida; **não bloqueia** W2.
+4. **Fechado no repo** — W2-A **#94**; W2-B **#95**; W2-C (PR desta sessão); diagramas; W1 PROD — ver [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
 ---
 
