@@ -3,7 +3,7 @@
 **Estado:** desenho / acordo de produto — **não** substitui implementação até fecharmos fases abaixo.  
 **Objectivo:** responder a incidentes (pagamento preso, viagem presa, motorista bloqueado, avisos de saúde) **só com o browser**, na **área Admin** da mesma app que já usas em produção — **sem** abrir Swagger, **sem** copiar `Bearer` para o Postman, **sem** montar `curl` com `trip_id` à mão excepto quando a UI ainda não oferece atalho (interim).
 
-**Referências:** [`AdminDashboard.tsx`](../../web-app/src/features/admin/AdminDashboard.tsx) (tabs), [`web-app/src/api/admin.ts`](../../web-app/src/api/admin.ts), [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) (cron/webhook já fechados).
+**Referências:** [`AdminDashboard.tsx`](../../web-app/src/features/admin/AdminDashboard.tsx) (tabs + query string), [`adminDashboardQuery.ts`](../../web-app/src/features/admin/adminDashboardQuery.ts) (parser `tab` / `tripId`), [`web-app/src/api/admin.ts`](../../web-app/src/api/admin.ts), [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) (cron/webhook já fechados).
 
 ---
 
@@ -52,7 +52,7 @@ Mapeamento **tipo de problema → tab Admin → acção**. Isto já permite um *
 | Fase | Entrega | Critério «feito» |
 | ---- | ------- | ----------------- |
 | **W2-A** | **Runbook v0 só docs** — [`W2_RUNBOOK.md`](W2_RUNBOOK.md) (passos literais Admin-only). | **Feito** no repo; revisão tua «consigo seguir só com isto» em campo real. |
-| **W2-B** | **Deep links mínimos** — query `?tab=health` / `?tab=trips&tripId=` (ou router state) para partilhar link contigo / mentor sem Swagger. | Colar URL no browser abre o sítio certo já autenticado (ou pede login e volta). |
+| **W2-B** | **Deep links mínimos** — query `?tab=health` / `?tab=trips&tripId=` (ou router state) para partilhar link contigo / mentor sem Swagger. | **Feito** na web-app (`AdminDashboard` + query); colar URL abre a tab certa; login preserva `?tab=` / `tripId`. |
 | **W2-C** | **Saúde → acções** — botões a partir de cada `trip_id` / warning listado (abrir viagem, cancelar se política permitir). | Zero copy de UUID para incidentes cobertos. |
 | **W2-D** | **Motorista picker** + eventual **painel mínimo pagamentos** (só leitura + links externos Stripe). | Recuperar motorista sem campo UUID livre; pagamento preso com trilho guiado. |
 

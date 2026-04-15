@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import type { Role } from '../../context/AuthContext'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
@@ -11,6 +11,7 @@ interface LoginScreenProps {
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const { pathname, search } = useLocation()
   const [phone, setPhone] = useState(() => {
     const last = localStorage.getItem(LS_LAST_PHONE)
     return last || '+351'
@@ -31,7 +32,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         setError('Esta conta não tem acesso Frota (partner).')
         return
       }
-      if (r === 'admin') navigate('/admin', { replace: true })
+      if (r === 'admin')
+        navigate(pathname.startsWith('/admin') ? `/admin${search}` : '/admin', { replace: true })
       else if (r === 'partner' || requestedRole === 'partner')
         navigate('/partner', { replace: true })
       else if (requestedRole === 'driver') navigate('/driver', { replace: true })

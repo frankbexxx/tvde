@@ -148,10 +148,10 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Arranque imediato (alinhado a `TODOdoDIA` — 2026-04-16)
 
-1. **W2-A (docs)** — Merge do PR do runbook v0 (branch `docs/w2a-runbook-v0`; ver GitHub `tvde`); depois smoke: [`docs/ops/W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) abre e links internos batem certo.
-2. **W2-B (código)** — Deep links no Admin web-app: `?tab=health` / `?tab=trips&tripId=` conforme [`W2_RUNBOOK_UI_DESIGN.md`](../ops/W2_RUNBOOK_UI_DESIGN.md) §4.
-3. **Parceiro (humano)** — *Sequencial em pausa até retornos externos.* Preencher [`PARCEIRO_TVDE_CHECKLIST.md`](../legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9 quando houver resposta; **não bloqueia** W2.
-4. **Feito neste fio** — Smoke pós-merge #87/#88; diagramas (`04`, `03`, `07`); W1 PROD smoke (cron + webhook) — ver [`TODOdoDIA.md`](../../TODOdoDIA.md) 2026-04-16.
+1. **W2-C (código)** — Saúde → acções: atalhos a partir de `trip_id` nas listas de `system_health` sem copiar UUID — ver [`W2_RUNBOOK_UI_DESIGN.md`](../ops/W2_RUNBOOK_UI_DESIGN.md) §4.
+2. **Smoke humano** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) + deep links ` /admin?tab=… ` em PROD/staging quando deploy do merge W2-B estiver no ar.
+3. **Parceiro (humano)** — *Fora do TODO_right_now até informação reunida.* Preencher [`PARCEIRO_TVDE_CHECKLIST.md`](../legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9 quando houver resposta; **não bloqueia** W2.
+4. **Fechado no repo** — W2-A runbook **#94**; W2-B deep links (PR desta sessão); diagramas; W1 PROD — ver [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
 ---
 

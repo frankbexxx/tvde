@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
 import { apiFetch } from '../../api/client'
 import {
   getActiveTrips,
@@ -45,7 +47,7 @@ interface AdminUser {
   has_driver_profile: boolean
 }
 
-type Tab = 'pending' | 'users' | 'frota' | 'dados' | 'trips' | 'metrics' | 'ops' | 'health'
+type Tab = AdminDashboardTab
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pending', label: 'Pendentes' },
@@ -58,9 +60,16 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'health', label: 'Saúde' },
 ]
 
+function readInitialAdminQuery(): { tab: Tab; tripId: string | null } {
+  if (typeof window === 'undefined') return { tab: 'pending', tripId: null }
+  return parseAdminDashboardQuery(new URLSearchParams(window.location.search))
+}
+
 export function AdminDashboard() {
   const { token } = useAuth()
-  const [tab, setTab] = useState<Tab>('pending')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initial = readInitialAdminQuery()
+  const [tab, setTab] = useState<Tab>(() => initial.tab)
   const [pending, setPending] = useState<PendingUser[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -72,7 +81,7 @@ export function AdminDashboard() {
 
   // Viagens ativas
   const [activeTrips, setActiveTrips] = useState<TripActiveItem[]>([])
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null)
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(() => initial.tripId)
   const [tripDetail, setTripDetail] = useState<TripDetailAdmin | null>(null)
   const [tripDebug, setTripDebug] = useState<Record<string, unknown> | null>(null)
   const [tripDebugId, setTripDebugId] = useState<string | null>(null)
@@ -104,6 +113,36 @@ export function AdminDashboard() {
   const [driversList, setDriversList] = useState<Array<{ user_id: string; partner_id: string; status: string }>>([])
   const [dataLoading, setDataLoading] = useState(false)
   const [dataSearch, setDataSearch] = useState('')
+
+  const syncAdminUrl = useCallback(
+    (next: { tab: Tab; tripId: string | null }) => {
+      setSearchParams(
+        () => {
+          const p = new URLSearchParams()
+          if (next.tripId) {
+            p.set('tab', 'trips')
+            p.set('tripId', next.tripId)
+            return p
+          }
+          if (next.tab === 'pending') {
+            return p
+          }
+          p.set('tab', next.tab)
+          return p
+        },
+        { replace: true }
+      )
+    },
+    [setSearchParams]
+  )
+
+  const adminQs = searchParams.toString()
+  useEffect(() => {
+    const sp = new URLSearchParams(adminQs)
+    const { tab: t, tripId } = parseAdminDashboardQuery(sp)
+    setTab(t)
+    setSelectedTripId(tripId)
+  }, [adminQs])
 
   const fetchPending = useCallback(async () => {
     if (!token) return
@@ -226,8 +265,8 @@ export function AdminDashboard() {
       await assignTripAdmin(tripId, token)
       setError(null)
       fetchActiveTrips()
-      setSelectedTripId(null)
       setTripDetail(null)
+      syncAdminUrl({ tab: 'trips', tripId: null })
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro ao atribuir')
     } finally {
@@ -242,8 +281,8 @@ export function AdminDashboard() {
       await cancelTripAdmin(tripId, token)
       setError(null)
       fetchActiveTrips()
-      setSelectedTripId(null)
       setTripDetail(null)
+      syncAdminUrl({ tab: 'trips', tripId: null })
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro ao cancelar')
     } finally {
@@ -584,7 +623,11 @@ export function AdminDashboard() {
           <button
             key={id}
             type="button"
-            onClick={() => setTab(id)}
+            onClick={() =>
+              id === 'trips'
+                ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId })
+                : syncAdminUrl({ tab: id, tripId: null })
+            }
             className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
               tab === id
                 ? 'bg-primary text-primary-foreground shadow-sm'
@@ -1059,9 +1102,10 @@ export function AdminDashboard() {
                     <div className="flex flex-wrap gap-1">
                       <button
                         type="button"
-                        onClick={() =>
-                          setSelectedTripId(selectedTripId === t.trip_id ? null : t.trip_id)
-                        }
+                        onClick={() => {
+                          const nextId = selectedTripId === t.trip_id ? null : t.trip_id
+                          syncAdminUrl({ tab: 'trips', tripId: nextId })
+                        }}
                         className="px-2 py-1 bg-info text-info-foreground text-xs rounded"
                       >
                         {selectedTripId === t.trip_id ? 'Fechar' : 'Detalhe'}
