@@ -148,10 +148,10 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Arranque imediato (alinhado a `TODOdoDIA` — 2026-04-16)
 
-1. **Pós-merge** — `main` local = `origin/main` após merges; smoke de links no **GitHub** até [`docs/diagrams/README.md`](../diagrams/README.md) (Mermaid). Incluir [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](../legal/PARCEIRO_TVDE_CHECKLIST.md) quando o PR do checklist estiver na `main`.
-2. **Diagramas** — Expandir [`docs/diagrams/README.md`](../diagrams/README.md): sequences em `04_REALTIME.md`, novos `07_…` (auth/OTP) ou detalhe de webhooks em `03_PAYMENTS.md`.
-3. **Parceiro (humano)** — Preencher checklist §2–§9 com parceiro/advogado; o repo já tem o modelo operacional, não substitui parecer jurídico. *Doc já pode estar em circulação (parceiros, contabilista, mentor) — aguardar retorno.*
-4. **W1 operação** — Smoke [`docs/ops/W1_PROD_SMOKE.md`](../ops/W1_PROD_SMOKE.md): cron + webhook Stripe + env (paralelo ao ponto 3).
+1. **W2-A (docs)** — Merge do PR do runbook v0 (branch `docs/w2a-runbook-v0`; ver GitHub `tvde`); depois smoke: [`docs/ops/W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) abre e links internos batem certo.
+2. **W2-B (código)** — Deep links no Admin web-app: `?tab=health` / `?tab=trips&tripId=` conforme [`W2_RUNBOOK_UI_DESIGN.md`](../ops/W2_RUNBOOK_UI_DESIGN.md) §4.
+3. **Parceiro (humano)** — *Sequencial em pausa até retornos externos.* Preencher [`PARCEIRO_TVDE_CHECKLIST.md`](../legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9 quando houver resposta; **não bloqueia** W2.
+4. **Feito neste fio** — Smoke pós-merge #87/#88; diagramas (`04`, `03`, `07`); W1 PROD smoke (cron + webhook) — ver [`TODOdoDIA.md`](../../TODOdoDIA.md) 2026-04-16.
 
 ---
 
