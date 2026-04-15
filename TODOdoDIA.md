@@ -87,6 +87,31 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ---
 
+## Hoje 2026-04-17
+
+_Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D. **Ecrã-first:** cada prioridade fecha com algo **visível** na web-app ou no admin._
+
+### Prioridades (máx. 3)
+
+1. [ ] [PENSAR + CÓDIGO] **M1 — Password + perfil mínimo** — Acordar **um** canal simples para «esqueci-me» / redefinir password; fluxo utilizador **no ecrã**; não abrir M4 (vários logins) nesta sessão.
+2. [ ] [CÓDIGO] **M1 — Admin cauteloso** — Correcção **nome** / **telefone** com confirmação e secções separadas; accção dedicada **redefinir password a pedido** (não misturar com «Guardar» genérico); mensagens de erro **legíveis** no UI.
+3. [ ] [OPS] **Smoke pós-deploy (W2-E)** — Após redeploy: admin — Saúde → **Abrir em Viagens** com viagem **fora** da lista activa; `.env` mascarado; bloqueio / bulk; anotar falhas em **Fecho** abaixo.
+
+### Fecho do dia
+
+- **Feito:**
+- **Não feito / bloqueios:**
+- **Aprendizados:**
+
+### Rasto para a próxima sessão
+
+- **M2** — email, nick, estados de perfil (após M1 estável).
+- **M3** — documentos motorista + audit admin.
+- **W3** — staging (A027) quando M1 não estiver a ser empurrado para fora.
+- **Parceiro** — **ADIA** (fora do «agora»).
+
+---
+
 ## Hoje 2026-04-16
 
 _Nova sessão — `main` com **W2** A–D conforme merges; smoke manual no fim da sessão._
@@ -96,6 +121,12 @@ _Nova sessão — `main` com **W2** A–D conforme merges; smoke manual no fim d
 1. [x] [OPS] **Pós-merge + smoke** — `main` = `origin/main`; smoke no **GitHub**: [`README.md`](README.md) → [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md) → [`docs/diagrams/README.md`](docs/diagrams/README.md) → [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md).
 2. [x] [DOCS] **Diagramas — expansão** — [`04_REALTIME.md`](docs/diagrams/04_REALTIME.md): sequences passageiro (polling), motorista (polling + WS ofertas), admin WS; [`03_PAYMENTS.md`](docs/diagrams/03_PAYMENTS.md): tabela `event_type` Stripe; novo [`07_AUTH_OTP.md`](docs/diagrams/07_AUTH_OTP.md); índice em [`docs/diagrams/README.md`](docs/diagrams/README.md).
 3. [x] [CÓDIGO] **W2-B — Deep links Admin** — `?tab=` / `tripId=` na web-app; ver [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md) cabeçalho e [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4.
+
+### Fecho — merge PR #98 (W2-E) + handoff
+
+- **Feito (código na `main`):** PR **#98** — painel **Viagens** para `tripId` em URL **fora** da lista activa; **Saúde** com «Mais recentes» / «Ordem API» + «Mostrar mais»; **Utilizadores** com paginação + **Bloquear** / **bulk** (`BLOQUEAR_<n>`); **Operações** — validar `.env` **mascarado** até revelar; Stripe — sem links de dashboard para mock / `pi_test_123`.
+- **Tua vez:** redeploy + smoke admin quando fizer sentido ([`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md)).
+- **Continuidade:** **Ondas M** + **«Hoje 2026-04-17»** acima; pormenor em [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D.
 
 ### Parceiro / legal — **fora do TODO_right_now** (**ADIA**)
 
@@ -182,8 +213,11 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** **W3** — staging (A027) — roteiro acelerado. **Onda W2** (A–D) fechada em código/docs: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W1** fechado. **Parceiro** **ADIA** (fora do «agora»).
-- **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
+- **Âncora dura:** **Ondas M** (M1 → M2 → M3) — conta, password simples, correcções admin **ecrã-first**; ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (tabela M1–M4).
+- **Âncora paralela (não diluir M1):** **W3** — staging (A027) — roteiro acelerado; só se no arranque acordares **explícita** intenção de avançar W3 na mesma sessão que M1.
+- **Fechado:** **W2** A–E na `main` (incl. PR **#98**); **W1** fechado. [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md).
+- **Parceiro** **ADIA** (fora do «agora»).
+- **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D + E.
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.
 - **Ideias (só conversa)** — alertas operacionais → admin app; pricing no accept — sem implementação até decisão em `PROXIMA`.
