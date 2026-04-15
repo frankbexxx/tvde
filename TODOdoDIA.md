@@ -99,7 +99,7 @@ _Nova sessão — `main` com **W2** A–D conforme merges; smoke manual no fim d
 
 ### Parceiro / legal — **fora do TODO_right_now** (**ADIA**)
 
-*Não conta para as 3 linhas de «Hoje» até haver informação reunida (retornos externos).* **ADIA** — sem tarefas neste fio até decidires retomar. Quando avançar: [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9. **Não bloqueia** W2 nem deploy.
+_Não conta para as 3 linhas de «Hoje» até haver informação reunida (retornos externos)._ **ADIA** — sem tarefas neste fio até decidires retomar. Quando avançar: [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9. **Não bloqueia** W2 nem deploy.
 
 ### W2-A — Runbook v0 (**fechado** em docs)
 
@@ -119,12 +119,20 @@ _Nova sessão — `main` com **W2** A–D conforme merges; smoke manual no fim d
 - [x] [CÓDIGO] **Operações:** card **Pagamentos em processing** com **Abrir em Viagens** + links Stripe (live/test) quando há `pi_…`.
 - [x] [CÓDIGO] API `system_health` — `stuck_payments` inclui `stripe_payment_intent_id`.
 
+### W2-E — Admin visual (Saúde → Viagens, utilizadores, .env) (**fechado** nesta sessão)
+
+- [x] [CÓDIGO] Tab **Viagens**: painel destacado quando `tripId` está na URL mas a viagem **não** está na lista de activas — detalhe, Debug, links Stripe (só PI reais), Atribuir/Cancelar conforme estado.
+- [x] [CÓDIGO] Tab **Saúde**: blocos de anomalias com **«Mais recentes» / «Ordem API»** e **«Mostrar mais»** (paginação visual).
+- [x] [CÓDIGO] Tab **Utilizadores**: `limit`/`offset` na API já usados; **Carregar mais**; filtro + ordenação; **Bloquear** (conta) + **Bloquear seleccionados** com confirmação `BLOQUEAR_<n>` (soft, reversível); API `POST /admin/users/{id}/block` e `POST /admin/users/bulk-block`.
+- [x] [CÓDIGO] **Operações — Validar .env:** textarea em modo **mascarado** por defeito + botão **Mostrar para editar** (valores sensíveis ocultos no ecrã).
+- [x] [CÓDIGO] `stripeDashboard`: não gerar links para `pi_test_123` / IDs com `mock`.
+
 ### W1 — smoke PROD (**fechado**)
 
 Guião: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) · Playbook: [`docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md).
 
 - [x] [OPS] **W1a — Cron** — Pedido manual à API PROD → **200** + JSON (`timeouts` / `offers` / `cleanup`); agendador externo (cron-job.org) com GET periódico → **200** consistente.
-- [x] [OPS] **W1b — Webhook Stripe** — Dashboard: entrega **200** para `payment_intent.succeeded` em `/webhooks/stripe`, resposta `{"status":"ok"}`; assinatura com `STRIPE_WEBHOOK_SECRET`; coerência BD (evidência no Stripe + logs API). *Não documentar URLs com `secret=` nem segredos no Git.*
+- [x] [OPS] **W1b — Webhook Stripe** — Dashboard: entrega **200** para `payment_intent.succeeded` em `/webhooks/stripe`, resposta `{"status":"ok"}`; assinatura com `STRIPE_WEBHOOK_SECRET`; coerência BD (evidência no Stripe + logs API). _Não documentar URLs com `secret=` nem segredos no Git._
 
 **Nota:** `system_health` pode continuar a sinalizar `stuck_payments` / estado financeiro legado — **fora do critério W1**; tratar em sessão de limpeza ou W2/W4.
 
@@ -132,7 +140,7 @@ Guião: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) · Playbook: [`
 
 ### Fecho de sessão (W2-B + TODO)
 
-- **Feito:** Deep links Admin (`/admin?tab=…`, `tripId=`); testes unitários do parser; runbook + desenho actualizados; parceiro **retirado** das 3 prioridades «agora» (bloco *fora do TODO_right_now*). PR desta sessão (merge na `main` quando verdes).
+- **Feito:** Deep links Admin (`/admin?tab=…`, `tripId=`); testes unitários do parser; runbook + desenho actualizados; parceiro **retirado** das 3 prioridades «agora» (bloco _fora do TODO_right_now_). PR desta sessão (merge na `main` quando verdes).
 - **Não feito / bloqueios:** —
 - **Smoke teu (fora de sessão, quando puderes):** com sessão admin em PROD ou staging, colar `…/admin?tab=health` e `…/admin?tab=trips&tripId=<uuid_de_viagem_activa>`; confirmar tab e Detalhe; login a partir do link directo com query preservada.
 
@@ -160,7 +168,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Fecho do dia
 
-**W1 smoke PROD (registado após execução humana)** — Env críticos confirmados no Render; cron manual e agendador externo com **200** + JSON; webhook Stripe (`payment_intent.succeeded`) **entregue** com **200** e `status: ok`. Evidências mantidas fora do Git (Stripe + Render). *ChatGPT / resumo externo: OK como rascunho; canónico continua a ser este ficheiro + `W1_PROD_SMOKE.md`.*
+**W1 smoke PROD (registado após execução humana)** — Env críticos confirmados no Render; cron manual e agendador externo com **200** + JSON; webhook Stripe (`payment_intent.succeeded`) **entregue** com **200** e `status: ok`. Evidências mantidas fora do Git (Stripe + Render). _ChatGPT / resumo externo: OK como rascunho; canónico continua a ser este ficheiro + `W1_PROD_SMOKE.md`._
 
 **2026-04-15 (fecho de sessão)**
 

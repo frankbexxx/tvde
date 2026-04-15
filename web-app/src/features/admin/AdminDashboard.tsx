@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
@@ -51,6 +51,22 @@ interface AdminUser {
 
 type Tab = AdminDashboardTab
 
+const USERS_PAGE_SIZE = 50
+
+const ADMIN_TRIP_CANCEL_STATUSES = ['requested', 'assigned', 'accepted'] as const
+
+function maskSensitiveEnvDisplay(text: string): string {
+  return text.split('\n').map((line) => {
+    const eq = line.indexOf('=')
+    if (eq <= 0) return line
+    const keyPart = line.slice(0, eq).replace(/^\s*#\s*/, '').trim()
+    if (!/SECRET|PASSWORD|TOKEN|PRIVATE|WEBHOOK|API_KEY|DATABASE|BEARER|AUTH|DSN|CREDENTIAL/i.test(keyPart)) {
+      return line
+    }
+    return `${line.slice(0, eq + 1)}••••••••`
+  }).join('\n')
+}
+
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pending', label: 'Pendentes' },
   { id: 'users', label: 'Utilizadores' },
@@ -67,20 +83,81 @@ function readInitialAdminQuery(): { tab: Tab; tripId: string | null } {
   return parseAdminDashboardQuery(new URLSearchParams(window.location.search))
 }
 
+function healthRowTimestamp(row: Record<string, unknown>): string {
+  const v =
+    row.updated_at ??
+    row.created_at ??
+    row.payment_updated_at ??
+    row.trip_completed_at ??
+    ''
+  return typeof v === 'string' ? v : ''
+}
+
+/** Repõe paginação interna quando os dados de saúde mudam (via remount). */
+function healthBlockKey(title: string, rows: Array<Record<string, unknown>>): string {
+  if (!rows.length) return `${title}-0`
+  const top = rows.slice(0, 3).map((r) => tripIdFromHealthRow(r) ?? healthRowTimestamp(r))
+  return `${title}-${rows.length}-${top.join('|')}`
+}
+
 function HealthAnomalyBlock(props: {
   title: string
   rows: Array<Record<string, unknown>>
   onOpenTrip: (tripId: string) => void
+  pageSize?: number
 }) {
-  const { title, rows, onOpenTrip } = props
+  const { title, rows, onOpenTrip, pageSize = 20 } = props
+  const [sortRecent, setSortRecent] = useState(true)
+  const [shown, setShown] = useState(pageSize)
+
+  const sortedRows = useMemo(() => {
+    if (!sortRecent) return rows
+    return [...rows].sort((a, b) => healthRowTimestamp(b).localeCompare(healthRowTimestamp(a)))
+  }, [rows, sortRecent])
+
+  const slice = sortedRows.slice(0, shown)
+  const canShowMore = shown < sortedRows.length
+
   if (!rows.length) return null
   return (
     <div className="rounded-xl border border-border bg-card/50 p-3 space-y-2">
-      <p className="text-sm font-medium text-foreground">
-        {title} ({rows.length})
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium text-foreground">
+          {title} ({rows.length})
+        </p>
+        <div className="flex flex-wrap gap-1">
+          <button
+            type="button"
+            className={`px-2 py-1 text-xs rounded-lg border ${
+              sortRecent
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+            }`}
+            onClick={() => {
+              setSortRecent(true)
+              setShown(pageSize)
+            }}
+          >
+            Mais recentes
+          </button>
+          <button
+            type="button"
+            className={`px-2 py-1 text-xs rounded-lg border ${
+              !sortRecent
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+            }`}
+            onClick={() => {
+              setSortRecent(false)
+              setShown(pageSize)
+            }}
+          >
+            Ordem API
+          </button>
+        </div>
+      </div>
       <ul className="space-y-2">
-        {rows.map((row, i) => {
+        {slice.map((row, i) => {
           const tid = tripIdFromHealthRow(row)
           const key = tid ? `${title}-${tid}-${i}` : `${title}-row-${i}`
           return (
@@ -107,6 +184,15 @@ function HealthAnomalyBlock(props: {
           )
         })}
       </ul>
+      {canShowMore ? (
+        <button
+          type="button"
+          className="w-full px-3 py-2 text-xs font-medium rounded-lg border border-border bg-card text-foreground/90 hover:bg-muted/40"
+          onClick={() => setShown((n) => Math.min(n + pageSize, sortedRows.length))}
+        >
+          Mostrar mais ({sortedRows.length - shown} restantes)
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -124,11 +210,18 @@ export function AdminDashboard() {
   const [editName, setEditName] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [usersHasMore, setUsersHasMore] = useState(false)
+  const [usersLoadingMore, setUsersLoadingMore] = useState(false)
+  const [usersSort, setUsersSort] = useState<'name' | 'role' | 'status'>('name')
+  const [usersFilter, setUsersFilter] = useState('')
+  const [bulkSelectedIds, setBulkSelectedIds] = useState<Record<string, boolean>>({})
+  const [blockConfirmId, setBlockConfirmId] = useState<string | null>(null)
 
   // Viagens ativas
   const [activeTrips, setActiveTrips] = useState<TripActiveItem[]>([])
   const [selectedTripId, setSelectedTripId] = useState<string | null>(() => initial.tripId)
   const [tripDetail, setTripDetail] = useState<TripDetailAdmin | null>(null)
+  const [tripDetailLoading, setTripDetailLoading] = useState(false)
   const [tripDebug, setTripDebug] = useState<Record<string, unknown> | null>(null)
   const [tripDebugId, setTripDebugId] = useState<string | null>(null)
   const [tripActionLoading, setTripActionLoading] = useState<string | null>(null)
@@ -142,6 +235,7 @@ export function AdminDashboard() {
   const [phase0, setPhase0] = useState<Awaited<ReturnType<typeof getAdminPhase0>> | null>(null)
   const [cronRun, setCronRun] = useState<Awaited<ReturnType<typeof runAdminCron>> | null>(null)
   const [envText, setEnvText] = useState('')
+  const [envReveal, setEnvReveal] = useState(false)
   const [envValidate, setEnvValidate] = useState<Awaited<ReturnType<typeof validateEnvText>> | null>(null)
 
   const [frotaOrgName, setFrotaOrgName] = useState('')
@@ -203,8 +297,13 @@ export function AdminDashboard() {
   const fetchUsers = useCallback(async () => {
     if (!token) return
     try {
-      const data = await apiFetch<AdminUser[]>('/admin/users', { token })
+      const data = await apiFetch<AdminUser[]>(
+        `/admin/users?limit=${USERS_PAGE_SIZE}&offset=0`,
+        { token }
+      )
       setUsers(data)
+      setUsersHasMore(data.length === USERS_PAGE_SIZE)
+      setBulkSelectedIds({})
       setError(null)
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro ao carregar')
@@ -212,6 +311,27 @@ export function AdminDashboard() {
       setLoading(false)
     }
   }, [token])
+
+  const fetchUsersMore = useCallback(async () => {
+    if (!token || !usersHasMore || usersLoadingMore) return
+    setUsersLoadingMore(true)
+    try {
+      const offset = users.length
+      const data = await apiFetch<AdminUser[]>(
+        `/admin/users?limit=${USERS_PAGE_SIZE}&offset=${offset}`,
+        { token }
+      )
+      setUsers((prev) => {
+        const seen = new Set(prev.map((u) => u.id))
+        return [...prev, ...data.filter((u) => !seen.has(u.id))]
+      })
+      setUsersHasMore(data.length === USERS_PAGE_SIZE)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro ao carregar mais')
+    } finally {
+      setUsersLoadingMore(false)
+    }
+  }, [token, users.length, usersHasMore, usersLoadingMore])
 
   const fetchActiveTrips = useCallback(async () => {
     if (!token) return
@@ -226,11 +346,14 @@ export function AdminDashboard() {
   const fetchTripDetail = useCallback(
     async (tripId: string) => {
       if (!token) return
+      setTripDetailLoading(true)
       try {
         const d = await getTripDetailAdmin(tripId, token)
         setTripDetail(d)
       } catch {
         setTripDetail(null)
+      } finally {
+        setTripDetailLoading(false)
       }
     },
     [token]
@@ -548,6 +671,8 @@ export function AdminDashboard() {
     if (tab === 'dados') void fetchDataVisibility()
     if (tab === 'metrics') fetchUsage()
     if (tab === 'frota') void ensureDataLoaded()
+    // Tab-driven fetches; fetchDataVisibility / fetchUsage / ensureDataLoaded are stable enough for this pattern.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-running on every render of inline fetch helpers
   }, [token, tab, fetchActiveTrips, fetchMetrics, fetchHealth])
 
   const fetchDataVisibility = async () => {
@@ -574,8 +699,9 @@ export function AdminDashboard() {
 
   useEffect(() => {
     if (selectedTripId && token) {
-      fetchTripDetail(selectedTripId)
+      void fetchTripDetail(selectedTripId)
     } else {
+      setTripDetailLoading(false)
       setTripDetail(null)
       setTripDebug(null)
       setTripDebugId(null)
@@ -658,6 +784,76 @@ export function AdminDashboard() {
       setError((err as { detail?: string })?.detail ?? 'Erro ao eliminar')
     }
   }
+
+  const handleBlockUser = async (userId: string) => {
+    if (!token) return
+    try {
+      await apiFetch(`/admin/users/${userId}/block`, { method: 'POST', token })
+      setBlockConfirmId(null)
+      setBulkSelectedIds((m) => {
+        const next = { ...m }
+        delete next[userId]
+        return next
+      })
+      fetchUsers()
+      setError(null)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro ao bloquear')
+    }
+  }
+
+  const handleBulkBlock = async () => {
+    if (!token) return
+    const ids = Object.keys(bulkSelectedIds).filter((id) => bulkSelectedIds[id])
+    if (ids.length === 0) return
+    const expected = `BLOQUEAR_${ids.length}`
+    const typed = window.prompt(
+      `Para bloquear ${ids.length} conta(s) (reversível), escreve exactamente:\n${expected}`
+    )
+    if (typed?.trim() !== expected) return
+    try {
+      await apiFetch('/admin/users/bulk-block', {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ user_ids: ids, confirmation: expected }),
+      })
+      setBulkSelectedIds({})
+      fetchUsers()
+      setError(null)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro ao bloquear em massa')
+    }
+  }
+
+  const filteredSortedUsers = useMemo(() => {
+    const q = usersFilter.trim().toLowerCase()
+    let list = users
+    if (q) {
+      list = users.filter(
+        (u) =>
+          (u.name || '').toLowerCase().includes(q) ||
+          u.phone.toLowerCase().includes(q) ||
+          u.role.toLowerCase().includes(q) ||
+          u.status.toLowerCase().includes(q)
+      )
+    }
+    const sorted = [...list]
+    const byPhone = (a: AdminUser, b: AdminUser) => a.phone.localeCompare(b.phone)
+    if (usersSort === 'name') {
+      sorted.sort((a, b) => (a.name || a.phone).localeCompare(b.name || b.phone) || byPhone(a, b))
+    } else if (usersSort === 'role') {
+      sorted.sort((a, b) => a.role.localeCompare(b.role) || byPhone(a, b))
+    } else {
+      sorted.sort((a, b) => a.status.localeCompare(b.status) || byPhone(a, b))
+    }
+    return sorted
+  }, [users, usersFilter, usersSort])
+
+  const selectedTripInActiveList = useMemo(
+    () => Boolean(selectedTripId && activeTrips.some((t) => t.trip_id === selectedTripId)),
+    [selectedTripId, activeTrips]
+  )
+  const tripOrphanFromDeepLink = Boolean(selectedTripId && !selectedTripInActiveList)
 
   if (loading && users.length === 0) {
     return (
@@ -1128,9 +1324,112 @@ export function AdminDashboard() {
           >
             Atualizar
           </button>
-          {activeTrips.length === 0 ? (
+
+          {tripOrphanFromDeepLink && selectedTripId ? (
+            <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 px-4 py-4 shadow-card space-y-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Viagem aberta (fora da lista de activas)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Vês isto ao vires da Saúde ou de um link — não precisas da viagem estar activa para rever ou depurar.
+                  </p>
+                  <p className="text-xs font-mono text-foreground/80 mt-2 break-all">{selectedTripId}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => syncAdminUrl({ tab: 'trips', tripId: null })}
+                  className="shrink-0 px-3 py-1.5 bg-card border border-border text-foreground text-xs rounded-lg hover:bg-muted/40"
+                >
+                  Fechar viagem
+                </button>
+              </div>
+              {tripDetailLoading ? (
+                <p className="text-sm text-foreground/75">A carregar detalhe…</p>
+              ) : tripDetail && tripDetail.trip_id === selectedTripId ? (
+                <div className="space-y-2 rounded-xl border border-border bg-background/80 p-3">
+                  <p className="text-sm text-foreground">
+                    Estado: <span className="font-medium">{tripDetail.status}</span> · Estimativa:{' '}
+                    {tripDetail.estimated_price} €
+                    {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
+                  </p>
+                  {(() => {
+                    const pi = tripDetail.stripe_payment_intent_id
+                    if (typeof pi !== 'string' || !pi) return null
+                    const urls = stripePaymentIntentDashboardUrls(pi)
+                    return urls ? (
+                      <div className="flex flex-wrap gap-2 items-center text-xs">
+                        <span className="text-muted-foreground">Stripe:</span>
+                        <a
+                          href={urls.test}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-info underline font-medium"
+                        >
+                          Abrir PI (test)
+                        </a>
+                        <a
+                          href={urls.live}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-info underline font-medium"
+                        >
+                          Abrir PI (live)
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Payment intent de teste/mock — sem página no Stripe Dashboard.
+                      </p>
+                    )
+                  })()}
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => void fetchTripDebug(selectedTripId)}
+                      className="px-3 py-1.5 bg-warning text-warning-foreground text-xs font-medium rounded-lg"
+                    >
+                      Debug
+                    </button>
+                    {tripDetail.status === 'requested' && (
+                      <button
+                        type="button"
+                        onClick={() => void handleAssignTrip(selectedTripId)}
+                        disabled={tripActionLoading === selectedTripId}
+                        className="px-3 py-1.5 bg-success text-success-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                      >
+                        Atribuir
+                      </button>
+                    )}
+                    {ADMIN_TRIP_CANCEL_STATUSES.includes(
+                      tripDetail.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => void handleCancelTrip(selectedTripId)}
+                        disabled={tripActionLoading === selectedTripId}
+                        className="px-3 py-1.5 bg-destructive text-destructive-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                      >
+                        Cancelar viagem
+                      </button>
+                    )}
+                  </div>
+                  {tripDebug && tripDebugId === selectedTripId && (
+                    <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-48 overflow-y-auto">
+                      {JSON.stringify(tripDebug, null, 2)}
+                    </pre>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-warning">
+                  Não foi possível carregar o detalhe desta viagem (inexistente ou sem acesso).
+                </p>
+              )}
+            </div>
+          ) : null}
+
+          {activeTrips.length === 0 && !tripOrphanFromDeepLink ? (
             <p className="text-foreground/75">Nenhuma viagem ativa.</p>
-          ) : (
+          ) : activeTrips.length > 0 ? (
             <ul className="space-y-3">
               {activeTrips.map((t) => (
                 <li
@@ -1171,7 +1470,9 @@ export function AdminDashboard() {
                           Atribuir
                         </button>
                       )}
-                      {['requested', 'assigned', 'accepted'].includes(t.status) && (
+                      {ADMIN_TRIP_CANCEL_STATUSES.includes(
+                        t.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
+                      ) && (
                         <button
                           type="button"
                           onClick={() => handleCancelTrip(t.trip_id)}
@@ -1185,10 +1486,42 @@ export function AdminDashboard() {
                   </div>
                   {selectedTripId === t.trip_id && (
                     <div className="mt-3 pt-3 border-t border-border space-y-2">
-                      {tripDetail && (
-                        <p className="text-xs text-foreground/75">
-                          Estimativa: {tripDetail.estimated_price} € · Status: {tripDetail.status}
-                        </p>
+                      {tripDetail && tripDetail.trip_id === t.trip_id && (
+                        <>
+                          <p className="text-xs text-foreground/75">
+                            Estimativa: {tripDetail.estimated_price} € · Status: {tripDetail.status}
+                            {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
+                          </p>
+                          {(() => {
+                            const pi = tripDetail.stripe_payment_intent_id
+                            if (typeof pi !== 'string' || !pi) return null
+                            const urls = stripePaymentIntentDashboardUrls(pi)
+                            return urls ? (
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <a
+                                  href={urls.test}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-info underline"
+                                >
+                                  Stripe (test)
+                                </a>
+                                <a
+                                  href={urls.live}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-info underline"
+                                >
+                                  Stripe (live)
+                                </a>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">
+                                PI mock/teste — sem link Stripe.
+                              </p>
+                            )
+                          })()}
+                        </>
                       )}
                       <div className="flex gap-2">
                         <button
@@ -1209,7 +1542,11 @@ export function AdminDashboard() {
                 </li>
               ))}
             </ul>
-          )}
+          ) : tripOrphanFromDeepLink ? (
+            <p className="text-xs text-muted-foreground">
+              Lista de viagens activas vazia; o painel acima é a viagem que abriste por link.
+            </p>
+          ) : null}
         </section>
       )}
 
@@ -1382,13 +1719,36 @@ export function AdminDashboard() {
           </div>
 
           <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
-            <p className="text-sm font-medium text-foreground">Validar .env (não guarda segredos)</p>
-            <textarea
-              value={envText}
-              onChange={(e) => setEnvText(e.target.value)}
-              placeholder="Cola aqui o .env (key=value). Isto só valida; não guarda."
-              className="w-full min-h-28 px-3 py-2 border rounded-lg text-sm font-mono"
-            />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium text-foreground">Validar .env (não guarda segredos)</p>
+              <button
+                type="button"
+                onClick={() => setEnvReveal((v) => !v)}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:bg-muted/40"
+              >
+                {envReveal ? 'Ocultar valores sensíveis' : 'Mostrar para editar'}
+              </button>
+            </div>
+            {!envReveal ? (
+              <textarea
+                readOnly
+                value={envText ? maskSensitiveEnvDisplay(envText) : ''}
+                placeholder="Cola aqui o .env. Valores sensíveis aparecem mascarados até carregares em «Mostrar para editar»."
+                className="w-full min-h-28 px-3 py-2 border rounded-lg text-sm font-mono bg-muted/20 text-foreground"
+              />
+            ) : (
+              <textarea
+                value={envText}
+                onChange={(e) => setEnvText(e.target.value)}
+                placeholder="Cola aqui o .env (key=value). Isto só valida; não guarda."
+                className="w-full min-h-28 px-3 py-2 border rounded-lg text-sm font-mono"
+              />
+            )}
+            {!envReveal ? (
+              <p className="text-xs text-muted-foreground">
+                Modo seguro: chaves com TOKEN/SECRET/PASSWORD/etc. mostram valor oculto no ecrã.
+              </p>
+            ) : null}
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -1631,34 +1991,42 @@ export function AdminDashboard() {
                 </ul>
               )}
               <HealthAnomalyBlock
+                key={healthBlockKey('accepted', health.trips_accepted_too_long)}
                 title="Viagens accepted há muito"
                 rows={health.trips_accepted_too_long}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
               />
               <HealthAnomalyBlock
+                key={healthBlockKey('ongoing', health.trips_ongoing_too_long)}
                 title="Viagens ongoing há muito"
                 rows={health.trips_ongoing_too_long}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
               />
               <HealthAnomalyBlock
+                key={healthBlockKey('offline', health.drivers_unavailable_too_long)}
                 title="Motoristas offline há muito (sem viagem ativa)"
                 rows={health.drivers_unavailable_too_long}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
               />
               <HealthAnomalyBlock
+                key={healthBlockKey('stuck_pi', health.stuck_payments)}
                 title="Pagamentos bloqueados (processing)"
                 rows={health.stuck_payments}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+                pageSize={25}
               />
               <HealthAnomalyBlock
+                key={healthBlockKey('missing_pay', health.missing_payment_records ?? [])}
                 title="Viagens sem registo de pagamento"
                 rows={health.missing_payment_records ?? []}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
               />
               <HealthAnomalyBlock
+                key={healthBlockKey('inconsistent', health.inconsistent_financial_state ?? [])}
                 title="Estado financeiro inconsistente"
                 rows={health.inconsistent_financial_state ?? []}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+                pageSize={25}
               />
               {health.status === 'ok' &&
                 health.warnings.length === 0 &&
@@ -1683,125 +2051,240 @@ export function AdminDashboard() {
           {users.length === 0 ? (
             <p className="text-muted-foreground">Nenhum utilizador.</p>
           ) : (
-            <ul className="space-y-3">
-              {users.map((u) => (
-                <li
-                  key={u.id}
-                  className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
-                >
-                  {editingId === u.id ? (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Nickname"
-                        className="w-full px-3 py-2 border rounded-lg text-base"
-                      />
-                      <input
-                        type="tel"
-                        value={editPhone}
-                        onChange={(e) => setEditPhone(e.target.value)}
-                        placeholder="+351912345678"
-                        className="w-full px-3 py-2 border rounded-lg text-base"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={handleSaveEdit}
-                          className="px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-lg hover:opacity-90"
-                        >
-                          Guardar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelEdit}
-                          className="px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-start gap-2">
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {u.name || u.phone}
-                            {u.name && u.name !== u.phone && (
-                              <span className="text-muted-foreground text-sm ml-1">({u.phone})</span>
-                            )}
-                            {!u.name && <span className="text-muted-foreground text-sm ml-1">—</span>}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{u.phone}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {u.role} · {u.status}
-                            {u.has_driver_profile && ' · motorista'}
-                          </p>
+            <>
+              <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-card">
+                <div className="flex flex-wrap gap-2 items-end">
+                  <div className="flex-1 min-w-[12rem]">
+                    <label className="text-xs text-muted-foreground">Filtrar</label>
+                    <input
+                      type="search"
+                      value={usersFilter}
+                      onChange={(e) => setUsersFilter(e.target.value)}
+                      placeholder="Nome, telefone, papel…"
+                      className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground">Ordenar</label>
+                    <select
+                      value={usersSort}
+                      onChange={(e) => setUsersSort(e.target.value as 'name' | 'role' | 'status')}
+                      className="block mt-1 px-3 py-2 border rounded-lg text-sm bg-background"
+                    >
+                      <option value="name">Nome</option>
+                      <option value="role">Papel</option>
+                      <option value="status">Estado</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center text-xs text-muted-foreground">
+                  <span>
+                    A mostrar {filteredSortedUsers.length} de {users.length} carregados
+                    {usersHasMore ? ' (há mais na BD)' : ''}.
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void fetchUsersMore()}
+                    disabled={!usersHasMore || usersLoadingMore}
+                    className="px-3 py-1.5 bg-card border border-border text-foreground text-xs rounded-lg hover:bg-muted/40 disabled:opacity-50"
+                  >
+                    {usersLoadingMore ? 'A carregar…' : 'Carregar mais 50'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const selectable = filteredSortedUsers.filter((u) => u.role !== 'admin')
+                      const next: Record<string, boolean> = { ...bulkSelectedIds }
+                      for (const u of selectable) next[u.id] = true
+                      setBulkSelectedIds(next)
+                    }}
+                    className="px-3 py-1.5 bg-muted text-foreground text-xs rounded-lg hover:opacity-90"
+                  >
+                    Seleccionar filtrados (sem admin)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBulkSelectedIds({})}
+                    className="px-3 py-1.5 bg-muted text-foreground text-xs rounded-lg hover:opacity-90"
+                  >
+                    Limpar selecção
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleBulkBlock()}
+                    disabled={Object.keys(bulkSelectedIds).filter((id) => bulkSelectedIds[id]).length === 0}
+                    className="px-3 py-1.5 bg-warning text-warning-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                  >
+                    Bloquear seleccionados (reversível)
+                  </button>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {filteredSortedUsers.map((u) => (
+                  <li
+                    key={u.id}
+                    className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
+                  >
+                    {editingId === u.id ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          placeholder="Nickname"
+                          className="w-full px-3 py-2 border rounded-lg text-base"
+                        />
+                        <input
+                          type="tel"
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          placeholder="+351912345678"
+                          className="w-full px-3 py-2 border rounded-lg text-base"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSaveEdit}
+                            className="px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-lg hover:opacity-90"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEdit}
+                            className="px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
+                          >
+                            Cancelar
+                          </button>
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                          {u.role === 'passenger' && (
-                            <button
-                              type="button"
-                              onClick={() => handlePromote(u.id)}
-                              className="px-2 py-1 bg-success text-success-foreground text-xs rounded hover:opacity-90"
-                            >
-                              Motorista
-                            </button>
-                          )}
-                          {u.role === 'driver' && (
-                            <button
-                              type="button"
-                              onClick={() => handleDemote(u.id)}
-                              className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded hover:opacity-90"
-                            >
-                              Passageiro
-                            </button>
-                          )}
-                          {u.role !== 'admin' && (
-                            <>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="flex gap-3 min-w-0">
+                            {u.role !== 'admin' ? (
+                              <input
+                                type="checkbox"
+                                className="mt-1 h-4 w-4 shrink-0"
+                                checked={!!bulkSelectedIds[u.id]}
+                                onChange={(e) =>
+                                  setBulkSelectedIds((m) => ({
+                                    ...m,
+                                    [u.id]: e.target.checked,
+                                  }))
+                                }
+                                aria-label={`Seleccionar ${u.name || u.phone}`}
+                              />
+                            ) : (
+                              <span className="w-4 shrink-0" aria-hidden />
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground">
+                                {u.name || u.phone}
+                                {u.name && u.name !== u.phone && (
+                                  <span className="text-muted-foreground text-sm ml-1">({u.phone})</span>
+                                )}
+                                {!u.name && <span className="text-muted-foreground text-sm ml-1">—</span>}
+                              </p>
+                              <p className="text-sm text-muted-foreground">{u.phone}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {u.role} · {u.status}
+                                {u.has_driver_profile && ' · motorista'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-1 justify-end">
+                            {u.role === 'passenger' && (
                               <button
                                 type="button"
-                                onClick={() => startEdit(u)}
-                                className="px-2 py-1 bg-info text-info-foreground text-xs rounded hover:opacity-90"
+                                onClick={() => handlePromote(u.id)}
+                                className="px-2 py-1 bg-success text-success-foreground text-xs rounded hover:opacity-90"
                               >
-                                Editar
+                                Motorista
                               </button>
-                              {deleteConfirmId === u.id ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDelete(u.id)}
-                                    className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded"
-                                  >
-                                    Confirmar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setDeleteConfirmId(null)}
-                                    className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"
-                                  >
-                                    Cancelar
-                                  </button>
-                                </>
-                              ) : (
+                            )}
+                            {u.role === 'driver' && (
+                              <button
+                                type="button"
+                                onClick={() => handleDemote(u.id)}
+                                className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded hover:opacity-90"
+                              >
+                                Passageiro
+                              </button>
+                            )}
+                            {u.role !== 'admin' && (
+                              <>
                                 <button
                                   type="button"
-                                  onClick={() => setDeleteConfirmId(u.id)}
-                                  className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded hover:opacity-90"
+                                  onClick={() => startEdit(u)}
+                                  className="px-2 py-1 bg-info text-info-foreground text-xs rounded hover:opacity-90"
                                 >
-                                  Eliminar
+                                  Editar
                                 </button>
-                              )}
-                            </>
-                          )}
+                                {blockConfirmId === u.id ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleBlockUser(u.id)}
+                                      className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded"
+                                    >
+                                      Confirmar bloqueio
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setBlockConfirmId(null)}
+                                      className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setBlockConfirmId(u.id)}
+                                    className="px-2 py-1 bg-warning/80 text-foreground text-xs rounded hover:opacity-90"
+                                  >
+                                    Bloquear
+                                  </button>
+                                )}
+                                {deleteConfirmId === u.id ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDelete(u.id)}
+                                      className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded"
+                                    >
+                                      Confirmar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeleteConfirmId(null)}
+                                      className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"
+                                    >
+                                      Cancelar
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeleteConfirmId(u.id)}
+                                    className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded hover:opacity-90"
+                                  >
+                                    Eliminar
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </section>
       )}
