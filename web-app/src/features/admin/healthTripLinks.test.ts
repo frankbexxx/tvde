@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tripIdFromHealthRow } from './healthTripLinks'
+import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 
 const T1 = '11111111-1111-4111-8111-111111111111'
 const T2 = '22222222-2222-4222-8222-222222222222'
@@ -31,5 +31,17 @@ describe('tripIdFromHealthRow', () => {
 
   it('returns null for non-uuid garbage', () => {
     expect(tripIdFromHealthRow({ trip_id: 'not-a-uuid' })).toBeNull()
+  })
+})
+
+describe('driverIdFromHealthUnavailableRow', () => {
+  const d = '33333333-3333-4333-8333-333333333333'
+
+  it('reads driver_id', () => {
+    expect(driverIdFromHealthUnavailableRow({ driver_id: d })).toBe(d)
+  })
+
+  it('returns null without uuid', () => {
+    expect(driverIdFromHealthUnavailableRow({ driver_id: 'x' })).toBeNull()
   })
 })

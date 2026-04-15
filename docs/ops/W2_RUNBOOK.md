@@ -1,6 +1,6 @@
 # W2 — Runbook operacional (v0, só Admin web)
 
-**Fase:** **W2-A** (documentação) + **W2-B** (deep links) + **W2-C** (Saúde → «Abrir em Viagens»). Desenho e fases futuras: [`W2_RUNBOOK_UI_DESIGN.md`](W2_RUNBOOK_UI_DESIGN.md).  
+**Fase:** **W2-A**–**W2-D** (runbook + deep links + Saúde→Viagens + Operações picker/Stripe). Desenho: [`W2_RUNBOOK_UI_DESIGN.md`](W2_RUNBOOK_UI_DESIGN.md).  
 **Regra:** **não** uses Swagger nem `curl` com Bearer para estes fluxos — login **admin** na app; o token fica na sessão.
 
 **URL:** abre a **web-app de produção** (Render) e vai a **`/admin`** (ou o caminho equivalente que já usas). Os nomes das tabs coincidem com a UI: **Pendentes**, **Utilizadores**, **Frota**, **Dados**, **Viagens**, **Métricas**, **Operações**, **Saúde**.
@@ -70,9 +70,10 @@ Não há tab dedicada «Pagamentos» — trilho **mínimo**:
 | Passo | Onde | O quê |
 | ----- | ---- | ----- |
 | 5.1 | **Saúde** | Confirma avisos ligados a pagamentos / `stuck_payments` / inconsistências (se aparecerem). |
-| 5.2 | **Viagens** | Abre a viagem associada; confirma estado da viagem vs. o que o passageiro/motorista vê. |
-| 5.3 | **Stripe Dashboard** | PaymentIntents / eventos / webhooks — compara com o que a API processou ([`docs/diagrams/03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md)). |
-| 5.4 | Evidência | **Operações → Exportar logs CSV** se precisares de trilho para suporte ou disputa. |
+| 5.2 | **Operações** (W2-D) | Bloco **«Pagamentos em processing (saúde)»** — **Abrir em Viagens** + links **Stripe (live \| test)** quando existir `pi_…` na API. |
+| 5.3 | **Viagens** | Abre a viagem associada; confirma estado da viagem vs. o que o passageiro/motorista vê. |
+| 5.4 | **Stripe Dashboard** | PaymentIntents / eventos / webhooks — compara com o que a API processou ([`docs/diagrams/03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md)). |
+| 5.5 | Evidência | **Operações → Exportar logs CSV** se precisares de trilho para suporte ou disputa. |
 
 **Disputa / chargeback:** o runbook técnico para no **Stripe** + dados exportados; decisão comercial/jurídica fica **fora** deste ficheiro.
 
@@ -82,8 +83,8 @@ Não há tab dedicada «Pagamentos» — trilho **mínimo**:
 
 | Passo | Onde | O quê |
 | ----- | ---- | ----- |
-| 6.1 | **Operações** | Secção **«Recuperar motorista»**. |
-| 6.2 | Hoje | Cola o **`driver_id` (UUID)** — obtém-lo da tab **Utilizadores** / **Frota** / métricas ou pedido a quem tenha o id (gap: picker — **W2-D** no desenho). |
+| 6.1 | **Operações** | Secção **«Recuperar motorista»** — **Actualizar saúde** para carregar candidatos. |
+| 6.2 | Lista sugerida | Um botão **«Recuperar»** por linha (motoristas «offline há muito sem viagem» na última leitura de saúde). **UUID manual** só em `<details>` para casos raros. |
 | 6.3 | **Recuperar** | Confirma mensagem de sucesso ou erro na UI. |
 
 ---
