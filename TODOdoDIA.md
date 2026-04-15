@@ -97,9 +97,9 @@ _Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88
 2. [x] [DOCS] **Diagramas — expansão** — [`04_REALTIME.md`](docs/diagrams/04_REALTIME.md): sequences passageiro (polling), motorista (polling + WS ofertas), admin WS; [`03_PAYMENTS.md`](docs/diagrams/03_PAYMENTS.md): tabela `event_type` Stripe; novo [`07_AUTH_OTP.md`](docs/diagrams/07_AUTH_OTP.md); índice em [`docs/diagrams/README.md`](docs/diagrams/README.md).
 3. [x] [CÓDIGO] **W2-B — Deep links Admin** — `?tab=` / `tripId=` na web-app; ver [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md) cabeçalho e [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4.
 
-### Parceiro / legal — **fora do TODO_right_now**
+### Parceiro / legal — **fora do TODO_right_now** (**ADIA**)
 
-*Não conta para as 3 linhas de «Hoje» até haver informação reunida (retornos externos).* Quando avançar: [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9 com parceiro, contabilista, mentor. **Não bloqueia** W2 nem deploy.
+*Não conta para as 3 linhas de «Hoje» até haver informação reunida (retornos externos).* **ADIA** — sem tarefas neste fio até decidires retomar. Quando avançar: [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9. **Não bloqueia** W2 nem deploy.
 
 ### W2-A — Runbook v0 (**fechado** em docs)
 
@@ -108,6 +108,10 @@ _Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88
 ### W2-B — Deep links (**fechado** em código + docs)
 
 - [x] [CÓDIGO] Query `tab` + `tripId` em **`/admin`**; preservação da query no login admin e no redirect raiz → admin.
+
+### W2-C — Saúde → Viagens (**fechado** em código)
+
+- [x] [CÓDIGO] Na tab **Saúde**, cada linha de anomalia com viagem identificável tem **«Abrir em Viagens»** (deep link W2-B); listas `missing_payment_records` e `inconsistent_financial_state` também na UI.
 
 ### W1 — smoke PROD (**fechado**)
 
@@ -118,7 +122,7 @@ Guião: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) · Playbook: [`
 
 **Nota:** `system_health` pode continuar a sinalizar `stuck_payments` / estado financeiro legado — **fora do critério W1**; tratar em sessão de limpeza ou W2/W4.
 
-**Próximo roteiro:** **W2-C** — Saúde → acções na UI (ver [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4).
+**Próximo roteiro:** **W2-D** — Motorista picker + painel mínimo pagamentos (ver [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4).
 
 ### Fecho de sessão (W2-B + TODO)
 
@@ -164,7 +168,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** **W2-C** — Saúde → acções (links/botões a partir de `trip_id` nos avisos, sem copiar UUID à mão onde a UI cobrir) — [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4. Runbook: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W2-A** e **W2-B** fechados. **W1** fechado. **Parceiro** só quando houver retornos (fora do «agora»).
+- **Âncora:** **W2-D** — picker «recuperar motorista» + eventual painel pagamentos (leitura + Stripe) — [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4. Runbook: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W2-A**–**W2-C** fechados. **W1** fechado. **Parceiro** **ADIA** (fora do «agora»).
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.

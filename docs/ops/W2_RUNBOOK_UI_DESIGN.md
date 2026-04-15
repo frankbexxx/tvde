@@ -41,7 +41,7 @@ Mapeamento **tipo de problema → tab Admin → acção**. Isto já permite um *
 ## 3. Gaps (prioridade para **acertarmos** depois do desenho)
 
 1. **Recuperar motorista** — pede UUID; ideal: lista de motoristas «em anomalia» ou botão **«usar motorista seleccionado na lista X»** (fonte: métricas / health / endpoint dedicado — a definir).
-2. **Saúde → viagem** — hoje vês `trip_id` no JSON; ideal: link **«Abrir na tab Viagens»** (`?trip=<uuid>` ou estado interno) com uma linha.
+2. **Saúde → viagem** — **W2-C:** botão **«Abrir em Viagens»** por linha (usa `?tab=trips&tripId=`); linhas só com motorista continuam só com JSON + Operações.
 3. **Pagamento / Stripe** — sem tab «Pagamentos»; incidente «pagamento preso» passa por **Saúde** + **Viagens** + Stripe Dashboard; desenho pode prever **card** «Stuck payments» com `payment_intent_id` + link Stripe + link viagem (API já expõe parte disto em health — confirmar schema).
 4. **Runbook textual na app** — secção colapsável «Se pagamento preso → …» **dentro** do Admin (markdown estático ou CMS futuro), espelhando [`W1_PROD_SMOKE`](W1_PROD_SMOKE.md)-style checklists — opcional fase tardia.
 
@@ -53,7 +53,7 @@ Mapeamento **tipo de problema → tab Admin → acção**. Isto já permite um *
 | ---- | ------- | ----------------- |
 | **W2-A** | **Runbook v0 só docs** — [`W2_RUNBOOK.md`](W2_RUNBOOK.md) (passos literais Admin-only). | **Feito** no repo; revisão tua «consigo seguir só com isto» em campo real. |
 | **W2-B** | **Deep links mínimos** — query `?tab=health` / `?tab=trips&tripId=` (ou router state) para partilhar link contigo / mentor sem Swagger. | **Feito** na web-app (`AdminDashboard` + query); colar URL abre a tab certa; login preserva `?tab=` / `tripId`. |
-| **W2-C** | **Saúde → acções** — botões a partir de cada `trip_id` / warning listado (abrir viagem, cancelar se política permitir). | Zero copy de UUID para incidentes cobertos. |
+| **W2-C** | **Saúde → acções** — botão **«Abrir em Viagens»** por linha com `trip_id` / `id` de viagem (listas de saúde + financeiras); cancelar continua na tab Viagens. | **Feito** na web-app para linhas com viagem; motorista-only sem atalho de viagem. |
 | **W2-D** | **Motorista picker** + eventual **painel mínimo pagamentos** (só leitura + links externos Stripe). | Recuperar motorista sem campo UUID livre; pagamento preso com trilho guiado. |
 
 Ordem sugerida: **A → B → C → D**. Paralelo: item **parceiro** / legal continua fora deste ficheiro.

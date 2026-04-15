@@ -1,6 +1,6 @@
 # W2 — Runbook operacional (v0, só Admin web)
 
-**Fase:** **W2-A** (documentação) + **W2-B** (deep links na web-app). Desenho e fases futuras: [`W2_RUNBOOK_UI_DESIGN.md`](W2_RUNBOOK_UI_DESIGN.md).  
+**Fase:** **W2-A** (documentação) + **W2-B** (deep links) + **W2-C** (Saúde → «Abrir em Viagens»). Desenho e fases futuras: [`W2_RUNBOOK_UI_DESIGN.md`](W2_RUNBOOK_UI_DESIGN.md).  
 **Regra:** **não** uses Swagger nem `curl` com Bearer para estes fluxos — login **admin** na app; o token fica na sessão.
 
 **URL:** abre a **web-app de produção** (Render) e vai a **`/admin`** (ou o caminho equivalente que já usas). Os nomes das tabs coincidem com a UI: **Pendentes**, **Utilizadores**, **Frota**, **Dados**, **Viagens**, **Métricas**, **Operações**, **Saúde**.
@@ -48,7 +48,7 @@ Se algo crítico estiver **«não»** onde devia ser **«sim»** → corrige no 
 | ----- | ---- | ----- |
 | 3.1 | **Saúde** | **«Atualizar»**. |
 | 3.2 | Lê `status` e `warnings` | Anota mensagens (ex.: viagens `accepted` há muito tempo). |
-| 3.3 | Se listas JSON mostrarem `trip_id` | Copia o id **só para uso interno** → tab **Viagens** → localiza a mesma viagem na lista (hoje o salto é manual — **W2-B** no desenho prevê link directo). |
+| 3.3 | Em cada linha de anomalia com viagem | **«Abrir em Viagens»** (W2-C) — salta para **Viagens** com `tripId` na URL; se a viagem não estiver na lista activa, usa o JSON como contexto. |
 | 3.4 | Se mencionar pagamentos / inconsistências | Segue §5 abaixo **e** Stripe Dashboard. |
 
 ---
