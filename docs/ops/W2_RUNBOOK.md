@@ -1,9 +1,11 @@
 # W2 — Runbook operacional (v0, só Admin web)
 
-**Fase:** **W2-A** (documentação; zero código). Desenho e fases futuras: [`W2_RUNBOOK_UI_DESIGN.md`](W2_RUNBOOK_UI_DESIGN.md).  
+**Fase:** **W2-A** (documentação) + **W2-B** (deep links na web-app). Desenho e fases futuras: [`W2_RUNBOOK_UI_DESIGN.md`](W2_RUNBOOK_UI_DESIGN.md).  
 **Regra:** **não** uses Swagger nem `curl` com Bearer para estes fluxos — login **admin** na app; o token fica na sessão.
 
 **URL:** abre a **web-app de produção** (Render) e vai a **`/admin`** (ou o caminho equivalente que já usas). Os nomes das tabs coincidem com a UI: **Pendentes**, **Utilizadores**, **Frota**, **Dados**, **Viagens**, **Métricas**, **Operações**, **Saúde**.
+
+**Deep links (W2-B):** ` /admin?tab=health ` · ` /admin?tab=trips&tripId=<uuid> ` (com `tripId`, a tab efectiva é sempre **Viagens** e o painel Detalhe abre para esse id quando a viagem estiver na lista activa). Parâmetro `tab` em inglês, alinhado ao código: `pending`, `users`, `frota`, `dados`, `trips`, `metrics`, `ops`, `health`. Também se aceita `trip_id=` como alias de `tripId`. Depois do login, a query string é preservada quando abres directamente o link.
 
 ---
 

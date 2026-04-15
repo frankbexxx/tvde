@@ -89,17 +89,25 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ## Hoje 2026-04-16
 
-_Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88**._
+_Nova sessão — `main` alinhada com `origin/main` após merges **#87** + **#88**; runbook **#94**; **W2-B** nesta sessão._
 
 ### Prioridades (ordem sugerida)
 
 1. [x] [OPS] **Pós-merge + smoke** — `main` = `origin/main`; smoke no **GitHub**: [`README.md`](README.md) → [`docs/meta/DOCS_INDEX.md`](docs/meta/DOCS_INDEX.md) → [`docs/diagrams/README.md`](docs/diagrams/README.md) → [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md).
 2. [x] [DOCS] **Diagramas — expansão** — [`04_REALTIME.md`](docs/diagrams/04_REALTIME.md): sequences passageiro (polling), motorista (polling + WS ofertas), admin WS; [`03_PAYMENTS.md`](docs/diagrams/03_PAYMENTS.md): tabela `event_type` Stripe; novo [`07_AUTH_OTP.md`](docs/diagrams/07_AUTH_OTP.md); índice em [`docs/diagrams/README.md`](docs/diagrams/README.md).
-3. [ ] [CONVERSA / DOCS] **Parceiro (em curso — externo)** — *Sequencial em pausa até retornos.* [`PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) enviado a parceiros, **contabilista** e **mentor**; aguardar §2–§9. **Não bloqueia** W2.
+3. [x] [CÓDIGO] **W2-B — Deep links Admin** — `?tab=` / `tripId=` na web-app; ver [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md) cabeçalho e [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4.
+
+### Parceiro / legal — **fora do TODO_right_now**
+
+*Não conta para as 3 linhas de «Hoje» até haver informação reunida (retornos externos).* Quando avançar: [`docs/legal/PARCEIRO_TVDE_CHECKLIST.md`](docs/legal/PARCEIRO_TVDE_CHECKLIST.md) §2–§9 com parceiro, contabilista, mentor. **Não bloqueia** W2 nem deploy.
 
 ### W2-A — Runbook v0 (**fechado** em docs)
 
-- [x] [DOCS] **[`docs/ops/W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md)** — Passos literais **Admin-only** (readiness, viagens, saúde, timeouts, pagamento+Stripe, motorista, métricas, fecho). Próximo código: **W2-B** (deep links) no [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md).
+- [x] [DOCS] **[`docs/ops/W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md)** — Passos literais **Admin-only** (readiness, viagens, saúde, timeouts, pagamento+Stripe, motorista, métricas, fecho).
+
+### W2-B — Deep links (**fechado** em código + docs)
+
+- [x] [CÓDIGO] Query `tab` + `tripId` em **`/admin`**; preservação da query no login admin e no redirect raiz → admin.
 
 ### W1 — smoke PROD (**fechado**)
 
@@ -110,7 +118,13 @@ Guião: [`docs/ops/W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md) · Playbook: [`
 
 **Nota:** `system_health` pode continuar a sinalizar `stuck_payments` / estado financeiro legado — **fora do critério W1**; tratar em sessão de limpeza ou W2/W4.
 
-**Próximo roteiro:** **W2** — runbook humano curto em `docs/ops/` (ver tabela abaixo).
+**Próximo roteiro:** **W2-C** — Saúde → acções na UI (ver [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4).
+
+### Fecho de sessão (W2-B + TODO)
+
+- **Feito:** Deep links Admin (`/admin?tab=…`, `tripId=`); testes unitários do parser; runbook + desenho actualizados; parceiro **retirado** das 3 prioridades «agora» (bloco *fora do TODO_right_now*). PR desta sessão (merge na `main` quando verdes).
+- **Não feito / bloqueios:** —
+- **Smoke teu (fora de sessão, quando puderes):** com sessão admin em PROD ou staging, colar `…/admin?tab=health` e `…/admin?tab=trips&tripId=<uuid_de_viagem_activa>`; confirmar tab e Detalhe; login a partir do link directo com query preservada.
 
 ### Sessão encerrada — 2026-04-15 (resumo)
 
@@ -150,7 +164,7 @@ Na raiz ficam **`README.md`** + **`TODOdoDIA.md`**. O restante canónico foi par
 
 ### Rasto para a próxima sessão
 
-- **Âncora:** **W2-B** — deep links `?tab=` / `tripId=` na web-app (ver [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4). Runbook v0: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W2-A** fechado. **W1** fechado. Item **3** (parceiro) em pausa até retornos.
+- **Âncora:** **W2-C** — Saúde → acções (links/botões a partir de `trip_id` nos avisos, sem copiar UUID à mão onde a UI cobrir) — [`W2_RUNBOOK_UI_DESIGN.md`](docs/ops/W2_RUNBOOK_UI_DESIGN.md) §4. Runbook: [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md). **W2-A** e **W2-B** fechados. **W1** fechado. **Parceiro** só quando houver retornos (fora do «agora»).
 - **Handoff longo:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D (arranque imediato + recomendações anteriores).
 - **Hábito (manter):** 4 vistas Render + **BD única** + **manual deploy** último commit quando quiseres paridade máxima com `main`.
 - **Side project** — n8n/Telegram/etc. **fora** deste TODO TVDE até decisão explícita.

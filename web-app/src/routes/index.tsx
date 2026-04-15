@@ -15,7 +15,8 @@ import { Spinner } from '../components/ui/Spinner'
 
 function RootRedirect() {
   const { appRouteRole, sessionRole } = useAuth()
-  if (sessionRole === 'admin') return <Navigate to="/admin" replace />
+  const { search } = useLocation()
+  if (sessionRole === 'admin') return <Navigate to={`/admin${search}`} replace />
   if (sessionRole === 'partner') return <Navigate to="/partner" replace />
   if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
   return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
