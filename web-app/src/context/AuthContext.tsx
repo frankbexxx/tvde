@@ -334,7 +334,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBetaUserId(res.user_id)
       {
         let shell: AppRouteRole
-        if (requestedRole === 'driver') shell = 'driver'
+        if (requestedRole === 'admin') shell = 'passenger'
+        else if (requestedRole === 'driver') shell = 'driver'
         else if (requestedRole === 'passenger') shell = 'passenger'
         else if (requestedRole === 'partner' || serverRole === 'partner') shell = 'partner'
         else shell = serverRole === 'driver' ? 'driver' : 'passenger'
