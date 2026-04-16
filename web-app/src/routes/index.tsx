@@ -101,7 +101,9 @@ export function AppRoutes() {
       ? 'partner'
       : pathname.startsWith('/driver')
         ? 'driver'
-        : 'passenger'
+        : pathname.startsWith('/admin')
+          ? 'admin'
+          : 'passenger'
     return <LoginScreen requestedRole={requestedRole} />
   }
 
@@ -136,6 +138,7 @@ export function AppRoutes() {
                 </DriverOnly>
               }
             />
+            <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
             <Route
               path="/admin"
               element={

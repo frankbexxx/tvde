@@ -43,7 +43,8 @@ function formatLoginError(err: unknown): string {
 }
 
 interface LoginScreenProps {
-  requestedRole: 'passenger' | 'driver' | 'partner'
+  /** BETA: `admin` = fluxo dedicado ao painel (URL `/admin` ou `/admin/login`). */
+  requestedRole: 'passenger' | 'driver' | 'partner' | 'admin'
 }
 
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
@@ -68,6 +69,10 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       const r = res.role as Role
       if (requestedRole === 'partner' && r !== 'partner') {
         setError('Esta conta não tem acesso Frota (partner).')
+        return
+      }
+      if (requestedRole === 'admin' && r !== 'admin') {
+        setError('Esta conta não é administrador.')
         return
       }
       if (r === 'admin')
@@ -117,6 +122,16 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             }`}
           >
             Frota
+          </Link>
+          <Link
+            to="/admin/login"
+            className={`flex-1 min-w-[42%] py-2 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+              requestedRole === 'admin'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            Administrador
           </Link>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
