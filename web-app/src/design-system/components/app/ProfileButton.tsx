@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -75,6 +76,9 @@ export function ProfileButton() {
         <DialogContent className="max-w-[min(100vw-1.5rem,380px)] max-h-[85dvh] overflow-y-auto rounded-2xl">
           <DialogHeader>
             <DialogTitle>Conta</DialogTitle>
+            <DialogDescription className="sr-only">
+              Telemóvel e papel da sessão. Em modo BETA podes terminar sessão aqui.
+            </DialogDescription>
           </DialogHeader>
           {body}
         </DialogContent>

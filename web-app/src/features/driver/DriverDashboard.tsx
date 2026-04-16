@@ -250,7 +250,7 @@ export function DriverDashboard() {
         /* OSRM opcional; sem rota não arrancamos movimento */
       }
     })()
-  }, [])
+  }, [token])
 
   useEffect(() => {
     setStoredOffline(offline)

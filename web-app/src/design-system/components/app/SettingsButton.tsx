@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -155,6 +156,11 @@ export function SettingsButton() {
         >
           <DialogHeader>
             <DialogTitle>{view === "main" ? "Configuração" : "Registo de atividade"}</DialogTitle>
+            <DialogDescription className="sr-only">
+              {view === "main"
+                ? "Tema, modo passageiro ou motorista, painel administrativo e registo de actividade."
+                : "Lista cronológica de eventos da sessão."}
+            </DialogDescription>
           </DialogHeader>
           {view === "main" ? mainBody : logsBody}
         </DialogContent>
