@@ -134,6 +134,24 @@ export async function cancelTripAdmin(
   })
 }
 
+/** SP-A: transição manual (accepted→arriving, arriving→ongoing). Motivo ≥10 chars; confirmação automática. */
+export async function adminTripTransition(
+  tripId: string,
+  token: string,
+  payload: { to_status: 'arriving' | 'ongoing'; reason: string }
+): Promise<{ trip_id: string; status: string }> {
+  const confirmation = payload.to_status === 'arriving' ? 'FORCAR_ARRIVING' : 'FORCAR_ONGOING'
+  return apiFetch(`/admin/trips/${tripId}/transition`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      to_status: payload.to_status,
+      confirmation,
+      reason: payload.reason.trim(),
+    }),
+  })
+}
+
 export async function getSystemHealth(token: string): Promise<SystemHealthResponse> {
   return apiFetch<SystemHealthResponse>('/admin/system-health', { token })
 }

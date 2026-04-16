@@ -11,6 +11,7 @@ import {
   getTripDetailAdmin,
   getTripDebug,
   assignTripAdmin,
+  adminTripTransition,
   cancelTripAdmin,
   getSystemHealth,
   getMetrics,
@@ -535,6 +536,39 @@ export function AdminDashboard() {
       syncAdminUrl({ tab: 'trips', tripId: null })
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro ao cancelar')
+    } finally {
+      setTripActionLoading(null)
+    }
+  }
+
+  const handleAdminTripTransition = async (tripId: string, toStatus: 'arriving' | 'ongoing') => {
+    if (!token) return
+    const msg =
+      toStatus === 'arriving'
+        ? 'Forçar estado «arriving» (a caminho do passageiro)?'
+        : 'Forçar «ongoing» (viagem iniciada)? Isto contorna a exigência de proximidade (~50 m) ao pickup.'
+    if (!window.confirm(msg)) return
+    const reason = window.prompt(
+      'Motivo da intervenção (mínimo 10 caracteres; fica em auditoria):',
+      'Correção operacional: motorista no local, app sem GPS preciso'
+    )
+    if (reason === null) return
+    const trimmed = reason.trim()
+    if (trimmed.length < 10) {
+      window.alert('O motivo precisa de pelo menos 10 caracteres.')
+      return
+    }
+    setTripActionLoading(tripId)
+    try {
+      await adminTripTransition(tripId, token, { to_status: toStatus, reason: trimmed })
+      setError(null)
+      await fetchActiveTrips()
+      if (selectedTripId === tripId) {
+        const d = await getTripDetailAdmin(tripId, token)
+        setTripDetail(d)
+      }
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro na transição admin')
     } finally {
       setTripActionLoading(null)
     }
@@ -1582,6 +1616,26 @@ export function AdminDashboard() {
                         Atribuir
                       </button>
                     )}
+                    {tripDetail.status === 'accepted' && (
+                      <button
+                        type="button"
+                        onClick={() => void handleAdminTripTransition(selectedTripId, 'arriving')}
+                        disabled={tripActionLoading === selectedTripId}
+                        className="px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                      >
+                        Forçar arriving
+                      </button>
+                    )}
+                    {tripDetail.status === 'arriving' && (
+                      <button
+                        type="button"
+                        onClick={() => void handleAdminTripTransition(selectedTripId, 'ongoing')}
+                        disabled={tripActionLoading === selectedTripId}
+                        className="px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                      >
+                        Forçar ongoing
+                      </button>
+                    )}
                     {ADMIN_TRIP_CANCEL_STATUSES.includes(
                       tripDetail.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
                     ) && (
@@ -1652,6 +1706,28 @@ export function AdminDashboard() {
                               className="px-2 py-1 bg-success text-success-foreground text-xs rounded disabled:opacity-50"
                             >
                               Atribuir
+                            </button>
+                          )}
+                          {t.status === 'accepted' && (
+                            <button
+                              type="button"
+                              onClick={() => void handleAdminTripTransition(t.trip_id, 'arriving')}
+                              disabled={tripActionLoading === t.trip_id}
+                              className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
+                              title="Quando o motorista já está a caminho mas o estado API ficou em accepted"
+                            >
+                              → arriving
+                            </button>
+                          )}
+                          {t.status === 'arriving' && (
+                            <button
+                              type="button"
+                              onClick={() => void handleAdminTripTransition(t.trip_id, 'ongoing')}
+                              disabled={tripActionLoading === t.trip_id}
+                              className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
+                              title="Quando o pickup GPS bloqueia «Iniciar viagem» mas o motorista já está no local"
+                            >
+                              → ongoing
                             </button>
                           )}
                           {ADMIN_TRIP_CANCEL_STATUSES.includes(
