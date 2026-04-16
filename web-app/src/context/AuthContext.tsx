@@ -29,9 +29,11 @@ import {
   getStoredAccessToken,
   getStoredAppRouteRole,
   getStoredLastPhone,
+  getStoredSessionDisplayName,
   LS_E2E_DEV_TOKENS_JSON,
   setStoredAccessToken,
   setStoredAppRouteRole,
+  setStoredSessionDisplayName,
 } from '../utils/authStorage'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { useActivityLog } from './ActivityLogContext'
@@ -70,6 +72,8 @@ interface AuthContextValue extends AuthState {
   logout: () => void
   /** Telemóvel da sessão BETA (ou último gravado); sem API extra. */
   sessionPhone: string | null
+  /** Nome vindo do login BETA (`display_name`); pode ser null em dev/E2E. */
+  sessionDisplayName: string | null
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -89,6 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => getStoredAppRouteRole() as AppRouteRole
   )
   const [sessionPhone, setSessionPhone] = useState<string | null>(() => getStoredLastPhone())
+  const [sessionDisplayName, setSessionDisplayName] = useState<string | null>(() =>
+    getStoredSessionDisplayName()
+  )
 
   const syncAppRouteRole = useCallback((r: AppRouteRole) => {
     setStoredAppRouteRole(r)
@@ -178,6 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             clearAuthStorage()
             setAppRouteRoleState('passenger')
             setSessionPhone(null)
+            setSessionDisplayName(null)
             addLog('Sessão expirada (token)', 'info')
           } else {
             const p = parseJwtPayload(tok)
@@ -185,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               clearAuthStorage()
               setAppRouteRoleState('passenger')
               setSessionPhone(null)
+              setSessionDisplayName(null)
             } else {
               const r = (p.role as Role) ?? 'passenger'
               setBetaToken(tok)
@@ -211,9 +220,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setTokens(null)
                 setAppRouteRoleState('passenger')
                 setSessionPhone(null)
+                setSessionDisplayName(null)
                 addLog('Sessão inválida no servidor', 'info')
               } else {
                 setSessionPhone(getStoredLastPhone())
+                setSessionDisplayName(getStoredSessionDisplayName())
                 addLog('Sessão restaurada', 'success')
               }
             }
@@ -258,6 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setStoredAccessToken(shell === 'driver' ? t.driver : t.passenger)
         }
         setSessionPhone(getStoredLastPhone())
+        setSessionDisplayName(getStoredSessionDisplayName())
         setStatus('Pronto')
       }
     } catch (err: unknown) {
@@ -282,6 +294,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBetaToken(null)
       setBetaUserId(null)
       setSessionPhone(null)
+      setSessionDisplayName(null)
 
       const FINAL_FAIL =
         'Não foi possível ligar ao servidor. Tenta novamente.'
@@ -349,6 +362,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       setStatus('Pronto')
       setSessionPhone(phone.trim())
+      {
+        const dn = (res.display_name ?? '').trim()
+        setSessionDisplayName(dn || null)
+        setStoredSessionDisplayName(dn)
+      }
       addLog('Sessão iniciada', 'success')
       return res
     },
@@ -372,6 +390,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setBetaUserId(null)
     setAppRouteRoleState('passenger')
     setSessionPhone(null)
+    setSessionDisplayName(null)
   }, [])
 
   useEffect(() => {
@@ -416,6 +435,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       sessionPhone,
+      sessionDisplayName,
     }),
     [
       token,
@@ -437,6 +457,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       sessionPhone,
+      sessionDisplayName,
     ]
   )
 

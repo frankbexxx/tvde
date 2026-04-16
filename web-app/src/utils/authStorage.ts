@@ -4,6 +4,8 @@
 export const LS_APP_ROUTE_ROLE = 'tvde_app_route_role'
 /** Último telemóvel usado no login BETA (sincronizado com LoginScreen). */
 export const LS_LAST_PHONE = 'tvde_last_phone'
+/** Nome mostrado no cabeçalho (resposta `display_name` do login BETA). */
+export const LS_SESSION_DISPLAY_NAME = 'tvde_session_display_name'
 
 export const LS_ACCESS_TOKEN = 'access_token'
 export const LS_REFRESH_TOKEN = 'refresh_token'
@@ -56,9 +58,29 @@ export function getStoredLastPhone(): string | null {
   }
 }
 
+export function getStoredSessionDisplayName(): string | null {
+  try {
+    const s = localStorage.getItem(LS_SESSION_DISPLAY_NAME)?.trim()
+    return s || null
+  } catch {
+    return null
+  }
+}
+
+export function setStoredSessionDisplayName(name: string): void {
+  try {
+    const t = name.trim()
+    if (t) localStorage.setItem(LS_SESSION_DISPLAY_NAME, t)
+    else localStorage.removeItem(LS_SESSION_DISPLAY_NAME)
+  } catch {
+    /* ignore */
+  }
+}
+
 export function clearAuthStorage(): void {
   localStorage.removeItem(LS_ACCESS_TOKEN)
   localStorage.removeItem(LS_REFRESH_TOKEN)
   localStorage.removeItem(LS_TOKEN_LEGACY)
   localStorage.removeItem(LS_APP_ROUTE_ROLE)
+  localStorage.removeItem(LS_SESSION_DISPLAY_NAME)
 }

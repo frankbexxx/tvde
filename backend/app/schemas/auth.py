@@ -41,6 +41,10 @@ class TokenResponse(BaseModel):
     user_id: str
     role: Role
     expires_at: datetime
+    display_name: str = Field(
+        default="",
+        description="Snapshot de User.name na emissão do token (BETA / OTP).",
+    )
 
 
 class PasswordChangeRequest(BaseModel):

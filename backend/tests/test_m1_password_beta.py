@@ -44,6 +44,7 @@ def test_login_rejects_default_when_hash_set(
 
     ok = client.post("/auth/login", json={"phone": phone, "password": "Custompass1"})
     assert ok.status_code == 200
+    assert ok.json().get("display_name") == "PwdTester"
 
     bad = client.post("/auth/login", json={"phone": phone, "password": "123456"})
     assert bad.status_code == 401

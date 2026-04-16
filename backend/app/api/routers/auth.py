@@ -171,6 +171,7 @@ async def verify_otp(
         user_id=str(user.id),
         role=user.role,
         expires_at=token_data["expires_at"],
+        display_name=(user.name or "").strip(),
     )
 
 
@@ -256,6 +257,7 @@ async def login(
         user_id=str(user.id),
         role=user.role,
         expires_at=token_data["expires_at"],
+        display_name=(user.name or "").strip(),
     )
 
 
