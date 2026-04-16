@@ -130,6 +130,10 @@ class TripDetailResponse(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    stripe_dashboard_url: Optional[str] = Field(
+        default=None,
+        description="Link para o pagamento no dashboard Stripe (só admin, se PI real).",
+    )
     driver_location: Optional[DriverLocationResponse] = Field(
         default=None,
         description="Última posição do motorista quando a viagem permite rasto (accepted/arriving/ongoing).",
