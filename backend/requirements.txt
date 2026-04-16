@@ -11,6 +11,8 @@ python-dotenv
 
 PyJWT
 
+bcrypt>=4.0.0
+
 stripe>=8.0.0
 
 # CVE-2026-25645 (pip-audit)

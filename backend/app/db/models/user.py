@@ -80,6 +80,11 @@ class User(Base):
         onupdate=func.now(),
         comment="Updated on state changes or profile edits.",
     )
+    password_hash: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="Optional bcrypt hash; if null, BETA login uses DEFAULT_PASSWORD.",
+    )
 
     partner_org: Mapped[Optional["Partner"]] = relationship(
         back_populates="users",

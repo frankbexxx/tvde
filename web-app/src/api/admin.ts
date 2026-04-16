@@ -2,6 +2,7 @@
  * Admin API — all endpoints needed for mobile admin management.
  */
 import { apiFetch, API_BASE } from './client'
+import type { TripHistoryItem } from './trips'
 
 export interface TripActiveItem {
   trip_id: string
@@ -88,6 +89,18 @@ export interface RecoverDriverResponse {
 
 export async function getActiveTrips(token: string): Promise<TripActiveItem[]> {
   return apiFetch<TripActiveItem[]>('/admin/trips/active', { token })
+}
+
+/** Viagens concluídas / canceladas / falha (mais recentes primeiro; paginação opcional). */
+export async function getAdminTripHistory(
+  token: string,
+  opts?: { limit?: number; offset?: number }
+): Promise<TripHistoryItem[]> {
+  const q = new URLSearchParams()
+  if (opts?.limit != null) q.set('limit', String(opts.limit))
+  if (opts?.offset != null) q.set('offset', String(opts.offset))
+  const qs = q.toString()
+  return apiFetch<TripHistoryItem[]>(`/admin/trip-history${qs ? `?${qs}` : ''}`, { token })
 }
 
 export async function getTripDetailAdmin(

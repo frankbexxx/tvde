@@ -27,8 +27,17 @@ from app.schemas.system_health import (
     RunTimeoutsResponse,
     SystemHealthResponse,
 )
-from app.api.serializers import trip_to_detail, trip_to_status_response
-from app.schemas.trip import TripActiveItem, TripDetailResponse, TripStatusResponse
+from app.api.serializers import (
+    trip_to_detail,
+    trip_to_history_item,
+    trip_to_status_response,
+)
+from app.schemas.trip import (
+    TripActiveItem,
+    TripDetailResponse,
+    TripHistoryItem,
+    TripStatusResponse,
+)
 from app.services.admin_metrics import get_admin_metrics
 from app.services.system_health import get_system_health
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
@@ -666,6 +675,36 @@ async def bulk_block_users(
     return {"status": "ok", "blocked_count": blocked, "skipped_count": skipped}
 
 
+class AdminClearPasswordRequest(BaseModel):
+    confirmation: str
+
+
+@router.post("/users/{user_id}/password/clear")
+async def admin_clear_user_password(
+    user_id: str,
+    payload: AdminClearPasswordRequest,
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: remove password_hash so the user can log in again with DEFAULT_PASSWORD (support / reset)."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    if payload.confirmation.strip() != "LIMPAR_SENHA":
+        raise HTTPException(status_code=400, detail="invalid_confirmation")
+    try:
+        uid = uuid.UUID(user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_user_id")
+    u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if _is_admin_phone(u.phone) or u.role == Role.admin:
+        raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    u.password_hash = None
+    db.commit()
+    return {"status": "ok", "message": "password_cleared"}
+
+
 @router.post("/approve-user")
 async def approve_user(
     payload: ApproveUserRequest,
@@ -771,6 +810,39 @@ async def list_active_trips(
         )
         for t in trips
     ]
+
+
+@router.get("/trip-history", response_model=List[TripHistoryItem])
+async def list_trip_history_admin(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> List[TripHistoryItem]:
+    """Viagens em estado terminal (concluída, cancelada, falha), mais recentes primeiro.
+
+    Path é `/admin/trip-history` (não sob `/trips/...`) para nunca colidir com `GET /admin/trips/{trip_id}`
+    em versões antigas onde «history» era interpretado como UUID de viagem.
+    """
+    terminal_statuses = (
+        TripStatus.completed,
+        TripStatus.cancelled,
+        TripStatus.failed,
+    )
+    trips = (
+        db.execute(
+            select(Trip)
+            .options(joinedload(Trip.payment))
+            .where(Trip.status.in_(terminal_statuses))
+            .order_by(Trip.updated_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        .unique()
+        .scalars()
+        .all()
+    )
+    return [trip_to_history_item(t, include_stripe_pi=True) for t in trips]
 
 
 @router.get("/trips/{trip_id}", response_model=TripDetailResponse)
