@@ -2,7 +2,45 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import type { Role } from '../../context/AuthContext'
+import type { ApiError } from '../../api/client'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
+
+function formatLoginError(err: unknown): string {
+  if (err !== null && typeof err === 'object' && 'status' in err) {
+    const e = err as ApiError
+    const st = e.status ?? 0
+    const d = e.detail
+    if (typeof d === 'string') {
+      const s = d.trim()
+      if (s === 'pending_approval') return 'Aguardar aprovação do administrador.'
+      if (s === 'BETA cheio' || s.includes('cheio')) return 'BETA cheio. Tenta mais tarde.'
+      if (s === 'invalid_credentials') return 'Password incorrecta.'
+      if (s === 'blocked') return 'Conta bloqueada.'
+      if (s.toLowerCase() === 'not available')
+        return 'Login BETA indisponível neste servidor (modo BETA desligado).'
+      if (st >= 500) {
+        if (/password_hash|column|undefinedcolumn|relation/i.test(s)) {
+          return 'Servidor e base de dados desalinhados (falta coluna ou tabela). No host da API corre: alembic upgrade head.'
+        }
+        return `Erro no servidor (${st}). Após deploy recente, confirma migrações (Alembic) e logs da API. Detalhe: ${s.slice(0, 180)}`
+      }
+      return s.length > 280 ? `${s.slice(0, 280)}…` : s
+    }
+    if (Array.isArray(d)) {
+      const parts = d.map((x) =>
+        typeof x === 'object' && x !== null && 'msg' in x ? String((x as { msg?: unknown }).msg) : JSON.stringify(x)
+      )
+      return parts.join(' · ') || 'Pedido inválido.'
+    }
+    if (st >= 500) {
+      return `Erro no servidor (${st}). Após deploy recente, confirma migrações na base de dados (Alembic) e dependências.`
+    }
+  }
+  if (err instanceof Error && err.message) {
+    return `Falha de ligação: ${err.message}`
+  }
+  return 'Erro ao iniciar sessão.'
+}
 
 interface LoginScreenProps {
   requestedRole: 'passenger' | 'driver' | 'partner'
@@ -39,18 +77,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       else if (requestedRole === 'driver') navigate('/driver', { replace: true })
       else navigate('/passenger', { replace: true })
     } catch (err: unknown) {
-      const e = err as { detail?: string }
-      const msg =
-        e?.detail === 'pending_approval'
-          ? 'Aguardar aprovação do administrador.'
-          : e?.detail === 'BETA cheio'
-            ? 'BETA cheio. Tente mais tarde.'
-            : e?.detail === 'invalid_credentials'
-              ? 'Password incorreta.'
-              : typeof e?.detail === 'string'
-                ? e.detail
-                : 'Erro ao iniciar sessão.'
-      setError(msg)
+      setError(formatLoginError(err))
     } finally {
       setLoading(false)
     }
