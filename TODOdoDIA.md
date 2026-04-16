@@ -87,6 +87,31 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ---
 
+## Hoje 2026-04-18
+
+_Âncora: **super-prompts** (sequência **B → A** fechada em `main` + testado em PROD); seguir **SP-G** antes de reabrir peso das **Ondas M1** salvo decisão no arranque. Ver [`docs/super-prompts/README.md`](docs/super-prompts/README.md)._
+
+### Prioridades (máx. 3)
+
+1. [ ] [CÓDIGO] **SP-G — Estado agora (30 s)** — Bloco no admin: «o que está mal agora» + links para Viagens / Saúde / Operações; critérios em [`docs/super-prompts/SP-G-estado-agora.md`](docs/super-prompts/SP-G-estado-agora.md) (sem BI novo).
+2. [ ] [CONVERSA + CÓDIGO] **Tweaks pós-merge** — Lista curta do que notaste após testar (admin / transições / viagens); fechar só o que couber em fatia pequena.
+3. [ ] [OPS] **pytest admin** — Com venv + PostgreSQL: `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py`; ou confirmar **CI verde** na `main` após últimos merges.
+
+### Fecho do dia
+
+- **Feito (herança — encerramento sessão noite):** merges na `main` (SP-B auditoria + SP-A API, botões **→ arriving** / **→ ongoing** no admin, doc SP-A API vs UI); smoke humano **OK**; tweaks a listar na próxima abertura.
+- **Não feito / bloqueios:**
+- **Aprendizados:**
+
+### Rasto para a próxima sessão
+
+- **SP-D** → **SP-C** → **SP-E** → **SP-F** (ordem em [`docs/super-prompts/README.md`](docs/super-prompts/README.md)).
+- **Ondas M1** — retoma quando SP-G (e tweaks imediatos) estiverem claros; tabela em [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D.
+- **SP-B opcional** — UI rica do audit trail / export CSV (não bloqueia SP-G).
+- **Parceiro / W3 / Connect / push / `ENABLE_CONFIRM_ON_ACCEPT`** — **fora** até decisão explícita (ver **Não fazer ainda** em `PROXIMA`).
+
+---
+
 ## Hoje 2026-04-17
 
 _Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D. **Ecrã-first:** cada prioridade fecha com algo **visível** na web-app ou no admin._
@@ -105,6 +130,7 @@ _Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA
 
 ### Rasto para a próxima sessão
 
+- **Manhã 2026-04-18:** ver bloco **«Hoje 2026-04-18»** acima (SP-G + tweaks + pytest).
 - **M2** — email, nick, estados de perfil (após M1 estável).
 - **M3** — documentos motorista + audit admin.
 - **W3** — staging (A027) quando M1 não estiver a ser empurrado para fora.

@@ -146,17 +146,28 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Estado repo (2026-04-08)
+### Estado repo (2026-04-17 — pós-merge SP + admin UI)
 
-- **`main`:** merge do **PR #98** — onda **W2-E** (admin: viagem por `tripId` fora da lista activa; Saúde com ordenação + «Mostrar mais»; Utilizadores com paginação + bloqueio / bulk; validar `.env` mascarado; links Stripe só para PIs reais). **W2** A–E fechada em código para este eixo.
+- **`main`:** **W2** A–E (incl. PR **#98**) + **super-prompts B e A** — trilho `admin.*` em `audit_events` (`record_admin_action`, `GET /admin/audit-trail`), operações SP-A (unblock, `POST /admin/trips/.../transition`, cancel com motivo opcional, nota pagamento, `stripe_dashboard_url` no detalhe), botões **→ arriving** / **→ ongoing** no painel Admin (**web-app**). Docs: `docs/super-prompts/*`, clarificação UI vs `FORCAR_*` no SP-A. PRs exemplares **#108–#110** (histórico GitHub); **merge e smoke humano: OK** (pequenos tweaks anotar no arranque).
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
-### Arranque imediato (próxima sessão útil)
+### Arranque imediato (próxima sessão útil — manhã fresca)
 
-1. **Âncora dura — Ondas M (conta / identidade / admin)** — ver subsecção **«Ondas M»** abaixo; detalhe executável no [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-17»** (3 prioridades máx.).
-2. **W3 — Staging (A027)** — mantém-se no roteiro acelerado; **em paralelo** com M1 **só** se não diluir o ecrã-first (preferir fechar M1 antes de abrir staging, salvo decisão contrária no arranque).
-3. **Smoke pós-deploy** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links `?tab=` / `tripId=` (incl. viagem **não** na lista activa); Saúde; Operações (`.env` mascarado, recuperar motorista); Utilizadores (bloqueio). Após redeploy Render (ou ambiente escolhido).
-4. **Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** M1 nem W3.
+1. **SP-G — Estado agora** — [`docs/super-prompts/SP-G-estado-agora.md`](../super-prompts/SP-G-estado-agora.md): bloco «30 segundos» no admin (indicadores + links para tabs existentes); **sem** novo motor de métricas paralelo.
+2. **Tweaks** — lista curta do que sobrou do teste pós-merge (admin / viagens); fechar só o que for rápido e acordado.
+3. **pytest** — `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py` no venv com Alembic/PostgreSQL; ou validar **CI** na `main` se o ambiente local continuar a falhar no `alembic.command`.
+
+**Depois de SP-G (ordem acordada):** **SP-D** → **SP-C** → **SP-E** → **SP-F** — índice em [`docs/super-prompts/README.md`](../super-prompts/README.md).
+
+**Âncora paralela (não diluir sem decisão):** **Ondas M1** — [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-18»** e bloco **2026-04-17** (M1); retomar quando SP-G + tweaks estiverem claros.
+
+**Smoke pós-deploy (W2)** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links, Saúde, Operações, Utilizadores — quando houver redeploy após mudanças.
+
+**Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** SP-G nem M1.
+
+### Não fazer ainda (inalterado)
+
+- **Stripe Connect**; **`ENABLE_CONFIRM_ON_ACCEPT`** até decisão de pricing; **notificações push**; **M4** (vários modos de login); **API de rotas** estável além do existente — ver também **Seção D** «Não fazer ainda» histórica e **W7** no `TODOdoDIA` roteiro acelerado.
 
 ### Ondas M — Conta, password, correcções admin (compartimentado)
 
