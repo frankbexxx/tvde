@@ -4,18 +4,20 @@ import time
 import uuid
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import UserContext, get_db, require_role
+from app.db.models.audit_event import AuditEvent
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.core.config import settings
 from app.db.models.driver import Driver
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.user import User
+from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.partner import Partner
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
@@ -42,7 +44,12 @@ from app.services.admin_metrics import get_admin_metrics
 from app.services.system_health import get_system_health
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
 from app.services.trip_timeouts import run_trip_timeouts
-from app.services.trips import assign_trip, cancel_trip_by_admin, get_trip_by_id
+from app.services.trips import (
+    admin_apply_trip_transition,
+    assign_trip,
+    cancel_trip_by_admin,
+    get_trip_by_id,
+)
 from app.services.cleanup import run_cleanup
 from app.cron.system_health_check import run_system_health_check
 from app.schemas.partner import (
@@ -59,10 +66,22 @@ from app.services.partners_admin import (
     create_partner_org_admin,
     unassign_driver_from_partner,
 )
+from app.services.admin_audit import record_admin_action
 from app.utils.logging import log_event
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class AdminAuditTrailItem(BaseModel):
+    """Linha de auditoria admin (`event_type` prefixado com `admin.`)."""
+
+    id: str
+    event_type: str
+    entity_type: str
+    entity_id: str
+    occurred_at: str
+    payload: dict
 
 
 class AdminCronRunResponse(BaseModel):
@@ -355,6 +374,28 @@ class AdminUserUpdateRequest(BaseModel):
     phone: str | None = None
 
 
+class AdminTripTransitionRequest(BaseModel):
+    """Transição manual (SP-A): só pares suportados pelo serviço."""
+
+    to_status: TripStatus
+    confirmation: str
+    reason: str = Field(..., min_length=10, max_length=500)
+
+
+class AdminCancelTripRequest(BaseModel):
+    confirmation: str
+    reason: str = Field(..., min_length=10, max_length=280)
+
+
+class AdminPaymentOpsNoteRequest(BaseModel):
+    confirmation: str
+    note: str = Field(..., min_length=3, max_length=2000)
+
+
+def _admin_trip_transition_confirmation_token(to: TripStatus) -> str:
+    return f"FORCAR_{to.value.upper()}"
+
+
 class AdminPartnerListItem(BaseModel):
     id: str
     name: str
@@ -447,7 +488,7 @@ def _is_admin_phone(phone: str) -> bool:
 @router.post("/users/{user_id}/promote-driver")
 async def promote_user_to_driver(
     user_id: str,
-    user: UserContext = Depends(require_role(Role.admin)),
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
     """BETA: promote user to driver (create driver_profile, set role=driver)."""
@@ -468,6 +509,14 @@ async def promote_user_to_driver(
     if existing:
         u.role = Role.driver
         existing.is_available = True
+        record_admin_action(
+            db,
+            actor_user_id=admin_ctx.user_id,
+            action="user_promote_driver",
+            entity_type="user",
+            entity_id=str(u.id),
+            payload={"note": "driver_profile_existed"},
+        )
         db.commit()
         return {"status": "ok", "message": "Driver already exists, role updated"}
     u.role = Role.driver
@@ -478,6 +527,14 @@ async def promote_user_to_driver(
         commission_percent=15,
     )
     db.add(driver)
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="user_promote_driver",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={"created_driver_profile": True},
+    )
     db.commit()
     return {"status": "ok", "message": "User promoted to driver"}
 
@@ -485,7 +542,7 @@ async def promote_user_to_driver(
 @router.post("/users/{user_id}/demote-driver")
 async def demote_user_from_driver(
     user_id: str,
-    user: UserContext = Depends(require_role(Role.admin)),
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
     """BETA: remove driver role (delete driver_profile, set role=passenger)."""
@@ -505,6 +562,14 @@ async def demote_user_from_driver(
     ).scalar_one_or_none()
     if not driver:
         u.role = Role.passenger
+        record_admin_action(
+            db,
+            actor_user_id=admin_ctx.user_id,
+            action="user_demote_driver",
+            entity_type="user",
+            entity_id=str(u.id),
+            payload={"note": "no_driver_profile"},
+        )
         db.commit()
         return {"status": "ok", "message": "Already passenger"}
     from app.models.enums import TripStatus
@@ -524,6 +589,14 @@ async def demote_user_from_driver(
         raise HTTPException(status_code=409, detail="driver_has_active_trip")
     db.delete(driver)
     u.role = Role.passenger
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="user_demote_driver",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={"removed_driver_profile": True},
+    )
     db.commit()
     return {"status": "ok", "message": "User demoted to passenger"}
 
@@ -547,6 +620,11 @@ async def update_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    before = {
+        "name": u.name,
+        "phone": u.phone,
+        "status": u.status.value if u.status else None,
+    }
     if payload.name is not None:
         name = str(payload.name).strip()
         if len(name) < 1:
@@ -564,6 +642,14 @@ async def update_user(
         if existing:
             raise HTTPException(status_code=409, detail="phone_already_used")
         u.phone = phone
+    record_admin_action(
+        db,
+        actor_user_id=admin_user.user_id,
+        action="user_patch",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={"before": before, "after": {"name": u.name, "phone": u.phone}},
+    )
     db.commit()
     db.refresh(u)
     return {"status": "ok", "user_id": str(u.id)}
@@ -601,6 +687,14 @@ async def delete_user(
     ).scalar_one_or_none()
     if driver:
         db.delete(driver)
+    record_admin_action(
+        db,
+        actor_user_id=admin_user.user_id,
+        action="user_delete",
+        entity_type="user",
+        entity_id=str(uid),
+        payload={"phone": u.phone, "role": u.role.value},
+    )
     db.delete(u)
     db.commit()
     return {"status": "ok", "message": "User deleted"}
@@ -609,7 +703,7 @@ async def delete_user(
 @router.post("/users/{user_id}/block")
 async def block_user(
     user_id: str,
-    _admin: UserContext = Depends(require_role(Role.admin)),
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
     """BETA: set user status to blocked (reversible; not a hard delete)."""
@@ -626,9 +720,54 @@ async def block_user(
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if u.role == Role.admin:
         raise HTTPException(status_code=400, detail="cannot_block_admin_role")
+    prev = u.status.value if u.status else None
     u.status = UserStatus.blocked
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="user_block",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={"previous_status": prev},
+    )
     db.commit()
     return {"status": "ok", "message": "User blocked"}
+
+
+@router.post("/users/{user_id}/unblock")
+async def unblock_user(
+    user_id: str,
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """BETA: reativar utilizador bloqueado (status → active)."""
+    if not getattr(settings, "BETA_MODE", False):
+        raise HTTPException(status_code=404, detail="Not available")
+    try:
+        uid = uuid.UUID(user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_user_id")
+    u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not u:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    if _is_admin_phone(u.phone):
+        raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    if u.role == Role.admin:
+        raise HTTPException(status_code=400, detail="cannot_unblock_admin_role")
+    if u.status != UserStatus.blocked:
+        raise HTTPException(status_code=400, detail="user_not_blocked")
+    prev = u.status.value if u.status else None
+    u.status = UserStatus.active
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="user_unblock",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={"previous_status": prev},
+    )
+    db.commit()
+    return {"status": "ok", "message": "User unblocked"}
 
 
 class BulkBlockUsersRequest(BaseModel):
@@ -639,7 +778,7 @@ class BulkBlockUsersRequest(BaseModel):
 @router.post("/users/bulk-block")
 async def bulk_block_users(
     payload: BulkBlockUsersRequest,
-    _admin: UserContext = Depends(require_role(Role.admin)),
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
     """BETA: block many users. Requires confirmation matching BLOQUEAR_<count>."""
@@ -656,6 +795,7 @@ async def bulk_block_users(
 
     blocked = 0
     skipped = 0
+    blocked_ids: list[str] = []
     for raw in ids:
         try:
             uid = uuid.UUID(raw)
@@ -670,7 +810,20 @@ async def bulk_block_users(
             skipped += 1
             continue
         u.status = UserStatus.blocked
+        blocked_ids.append(str(u.id))
         blocked += 1
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="user_bulk_block",
+        entity_type="bulk",
+        entity_id="user-block",
+        payload={
+            "blocked_count": blocked,
+            "skipped_count": skipped,
+            "blocked_user_ids": blocked_ids[:200],
+        },
+    )
     db.commit()
     return {"status": "ok", "blocked_count": blocked, "skipped_count": skipped}
 
@@ -683,7 +836,7 @@ class AdminClearPasswordRequest(BaseModel):
 async def admin_clear_user_password(
     user_id: str,
     payload: AdminClearPasswordRequest,
-    _admin: UserContext = Depends(require_role(Role.admin)),
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
     """BETA: remove password_hash so the user can log in again with DEFAULT_PASSWORD (support / reset)."""
@@ -701,6 +854,14 @@ async def admin_clear_user_password(
     if _is_admin_phone(u.phone) or u.role == Role.admin:
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
     u.password_hash = None
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="user_password_clear",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={},
+    )
     db.commit()
     return {"status": "ok", "message": "password_cleared"}
 
@@ -735,8 +896,50 @@ async def approve_user(
                 commission_percent=15,
             )
             db.add(driver)
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="user_approve",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={
+            "phone": phone,
+            "requested_role": req_role,
+            "role": u.role.value,
+        },
+    )
     db.commit()
     return {"status": "ok", "phone": phone}
+
+
+@router.get("/audit-trail", response_model=list[AdminAuditTrailItem])
+async def admin_audit_trail(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    entity_type: str | None = Query(None, description="Filtrar por entity_type"),
+    entity_id: str | None = Query(None, description="Filtrar por entity_id"),
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> list[AdminAuditTrailItem]:
+    """Lista eventos `admin.*` persistidos em `audit_events` (SP-B)."""
+    stmt = select(AuditEvent).where(AuditEvent.event_type.like("admin.%"))
+    if entity_type:
+        stmt = stmt.where(AuditEvent.entity_type == entity_type.strip()[:32])
+    if entity_id:
+        stmt = stmt.where(AuditEvent.entity_id == entity_id.strip()[:64])
+    stmt = stmt.order_by(AuditEvent.occurred_at.desc()).limit(limit).offset(offset)
+    rows = db.execute(stmt).scalars().all()
+    return [
+        AdminAuditTrailItem(
+            id=str(r.id),
+            event_type=r.event_type,
+            entity_type=r.entity_type,
+            entity_id=r.entity_id,
+            occurred_at=r.occurred_at.isoformat(),
+            payload=dict(r.payload) if isinstance(r.payload, dict) else {},
+        )
+        for r in rows
+    ]
 
 
 @router.get("/system-health", response_model=SystemHealthResponse)
@@ -856,6 +1059,71 @@ async def get_trip_detail_admin(
     return trip_to_detail(trip, include_stripe_pi=True)
 
 
+@router.post("/trips/{trip_id}/transition", response_model=TripStatusResponse)
+async def admin_trip_transition(
+    trip_id: str,
+    payload: AdminTripTransitionRequest,
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> TripStatusResponse:
+    """SP-A: corrigir estado com transição válida (accepted→arriving, arriving→ongoing)."""
+    expected = _admin_trip_transition_confirmation_token(payload.to_status)
+    if payload.confirmation.strip() != expected:
+        raise HTTPException(status_code=400, detail="invalid_confirmation")
+    trip = admin_apply_trip_transition(
+        db=db,
+        trip_id=trip_id.strip(),
+        to_status=payload.to_status,
+    )
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="trip_transition_admin",
+        entity_type="trip",
+        entity_id=str(trip.id),
+        payload={
+            "to_status": payload.to_status.value,
+            "reason": payload.reason.strip()[:500],
+        },
+    )
+    db.commit()
+    return trip_to_status_response(trip, include_stripe_pi=True)
+
+
+@router.post("/trips/{trip_id}/payment-ops-note")
+async def admin_trip_payment_ops_note(
+    trip_id: str,
+    payload: AdminPaymentOpsNoteRequest,
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """SP-A: nota operacional sobre pagamento (audit); reembolso continua manual no Stripe."""
+    if payload.confirmation.strip() != "REGISTAR_NOTA_PAGAMENTO":
+        raise HTTPException(status_code=400, detail="invalid_confirmation")
+    tid = trip_id.strip()
+    trip = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    if not trip:
+        raise HTTPException(status_code=404, detail="not_found")
+    pay = db.execute(select(Payment).where(Payment.trip_id == trip.id)).scalar_one_or_none()
+    if not pay:
+        raise HTTPException(status_code=404, detail="no_payment_for_trip")
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="payment_ops_note",
+        entity_type="payment",
+        entity_id=str(pay.id),
+        payload={
+            "trip_id": str(trip.id),
+            "note": payload.note.strip()[:2000],
+            "payment_status": pay.status.value,
+            "stripe_payment_intent_id": pay.stripe_payment_intent_id,
+        },
+    )
+    db.commit()
+    return {"status": "ok", "payment_id": str(pay.id)}
+
+
 @router.get("/trip-debug/{trip_id}")
 async def get_trip_debug(
     trip_id: str,
@@ -969,6 +1237,14 @@ async def recover_driver(
         raise HTTPException(status_code=409, detail="driver_has_active_trip")
 
     driver.is_available = True
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="driver_recover",
+        entity_type="driver",
+        entity_id=str(driver.user_id),
+        payload={},
+    )
     db.commit()
     db.refresh(driver)
     return RecoverDriverResponse(driver_id=str(driver.user_id), is_available=True)
@@ -979,9 +1255,33 @@ async def cancel_trip_admin(
     trip_id: str,
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
+    payload: AdminCancelTripRequest | None = Body(default=None),
 ) -> TripStatusResponse:
-    """Admin force cancel. Only for requested, assigned, accepted."""
-    trip = cancel_trip_by_admin(db=db, trip_id=trip_id.strip())
+    """Admin force cancel. Only for requested, assigned, accepted.
+
+    Corpo opcional: ``confirmation`` = ``CANCELAR_VIAGEM`` e ``reason`` (≥10 chars)
+    para gravar motivo em ``cancellation_reason`` (SP-A).
+    """
+    reason: str | None = None
+    if payload is not None:
+        if payload.confirmation.strip() != "CANCELAR_VIAGEM":
+            raise HTTPException(status_code=400, detail="invalid_confirmation")
+        reason = payload.reason.strip()
+    trip = cancel_trip_by_admin(
+        db=db, trip_id=trip_id.strip(), cancellation_reason=reason
+    )
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="trip_cancel_admin",
+        entity_type="trip",
+        entity_id=str(trip.id),
+        payload={
+            "status": trip.status.value if trip.status else None,
+            "reason_provided": bool(reason),
+        },
+    )
+    db.commit()
     return trip_to_status_response(trip, include_stripe_pi=True)
 
 
@@ -1167,10 +1467,20 @@ async def assign_trip_admin(
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
+    tid = trip_id.strip()
     trip = assign_trip(
         db=db,
-        trip_id=trip_id.strip(),
+        trip_id=tid,
     )
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="trip_assign_admin",
+        entity_type="trip",
+        entity_id=tid,
+        payload={"status": trip.status.value if trip.status else None},
+    )
+    db.commit()
     return trip_to_status_response(trip, include_stripe_pi=True)
 
 
@@ -1185,6 +1495,15 @@ async def admin_create_partner(
 ) -> AdminPartnerCreatedResponse:
     """Create a fleet org. UUID generated by DB default."""
     p = create_partner(db, body.name)
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="partner_create",
+        entity_type="partner",
+        entity_id=str(p.id),
+        payload={"name": p.name},
+    )
+    db.commit()
     return AdminPartnerCreatedResponse(
         id=str(p.id),
         name=p.name,
@@ -1216,6 +1535,15 @@ async def admin_create_partner_org_admin(
         name=body.name,
         phone=body.phone,
     )
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="partner_org_admin_create",
+        entity_type="user",
+        entity_id=str(u.id),
+        payload={"partner_id": str(pid), "phone": u.phone},
+    )
+    db.commit()
     return AdminPartnerOrgAdminCreatedResponse(
         user_id=str(u.id),
         role=u.role.value,
@@ -1245,6 +1573,15 @@ async def admin_assign_driver_partner(
             detail="invalid_uuid",
         )
     d = assign_driver_to_partner(db, driver_user_id=did, partner_id=pid)
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="driver_assign_partner",
+        entity_type="driver",
+        entity_id=str(d.user_id),
+        payload={"partner_id": str(d.partner_id)},
+    )
+    db.commit()
     return AdminAssignPartnerResponse(
         user_id=str(d.user_id),
         partner_id=str(d.partner_id),
@@ -1269,6 +1606,15 @@ async def admin_unassign_driver_partner(
             detail="invalid_uuid",
         )
     d = unassign_driver_from_partner(db, driver_user_id=did)
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="driver_unassign_partner",
+        entity_type="driver",
+        entity_id=str(d.user_id),
+        payload={"partner_id": str(d.partner_id)},
+    )
+    db.commit()
     return AdminAssignPartnerResponse(
         user_id=str(d.user_id),
         partner_id=str(d.partner_id),

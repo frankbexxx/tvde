@@ -408,6 +408,7 @@ def cancel_trip_by_admin(
     *,
     db: Session,
     trip_id: str,
+    cancellation_reason: str | None = None,
 ) -> Trip:
     """Admin force cancel. Only for requested, assigned, accepted."""
     trip = db.execute(
@@ -450,6 +451,10 @@ def cancel_trip_by_admin(
 
     trip.status = TripStatus.cancelled
     trip.cancelled_by = "admin"
+    if cancellation_reason is not None:
+        cr = cancellation_reason.strip()
+        if cr:
+            trip.cancellation_reason = cr[:280]
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
@@ -464,6 +469,60 @@ def cancel_trip_by_admin(
         payment_id=str(_pc_a.id) if _pc_a else None,
         payment_intent_id=(_pc_a.stripe_payment_intent_id or "") if _pc_a else "",
         **{"from": old_status.value, "to": trip.status.value},
+    )
+    emit(
+        TripStatusChangedEvent(
+            trip_id=str(trip.id),
+            status=trip.status,
+            timestamp=datetime.now(timezone.utc),
+        )
+    )
+    return trip
+
+
+def admin_apply_trip_transition(
+    *,
+    db: Session,
+    trip_id: str,
+    to_status: TripStatus,
+) -> Trip:
+    """Correção operacional (SP-A): só pares seguros sem captura Stripe.
+
+    - accepted → arriving
+    - arriving → ongoing (define ``started_at`` se ainda nulo; sem validação GPS)
+    """
+    trip = db.execute(
+        select(Trip).where(Trip.id == trip_id).with_for_update(of=Trip)
+    ).scalar_one_or_none()
+    if not trip:
+        _raise_not_found()
+    old = trip.status
+    if old == to_status:
+        return trip
+    validate_trip_transition(old, to_status, trip_id=str(trip.id))
+    allowed_pairs = {
+        (TripStatus.accepted, TripStatus.arriving),
+        (TripStatus.arriving, TripStatus.ongoing),
+    }
+    if (old, to_status) not in allowed_pairs:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="admin_transition_pair_not_supported",
+        )
+    trip.status = to_status
+    if to_status == TripStatus.ongoing and trip.started_at is None:
+        trip.started_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(trip)
+    log_event(
+        "trip_state_change",
+        trip_id=trip.id,
+        from_state=old,
+        to_state=trip.status,
+        from_status=old.value,
+        to_status=trip.status.value,
+        admin_transition=True,
+        **{"from": old.value, "to": trip.status.value},
     )
     emit(
         TripStatusChangedEvent(

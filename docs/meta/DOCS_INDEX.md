@@ -27,6 +27,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (fases 1–6) + **anexo A023–A035** com colunas Estado/Evidência + **checklist entrega app**; **estado atual 2026-03-28** (Alembic, CI, gaps A028/A034) |
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                       | Handoff — estado, roadmap resumido; **Seção F** operação (ex-checklist); **Seção G** relatório projeto                                                                |
 | [docs/visao_cursor.md](../visao_cursor.md)                                                   | Visão geral do projeto (perspectiva Cursor), ideias e checklist de comercialização                                                                                    |
+| [docs/super-prompts/README.md](../super-prompts/README.md)                                   | Roadmap operacional (super-prompts B→A→G→D→C→E→F) — especificação por ondas                                                                                           |
 
 ---
 
@@ -71,9 +72,9 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | Ficheiro                                                                                                   | Propósito                                                                         |
 | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Telemetria comportamental — export de logs (request_trip, accept, complete, etc.) |
-| [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md)                                                                | Smoke W1 — cron + webhook Stripe + env (alinhado a A033 e `TODOdoDIA`)             |
-| [W2_RUNBOOK_UI_DESIGN.md](../ops/W2_RUNBOOK_UI_DESIGN.md)                                                | W2 — desenho: runbook só no Admin web, sem Swagger; fases A–D                      |
-| [W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                                    | W2 — runbook operacional v0 (placeholder até fase A)                             |
+| [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md)                                                                | Smoke W1 — cron + webhook Stripe + env (alinhado a A033 e `TODOdoDIA`)            |
+| [W2_RUNBOOK_UI_DESIGN.md](../ops/W2_RUNBOOK_UI_DESIGN.md)                                                  | W2 — desenho: runbook só no Admin web, sem Swagger; fases A–D                     |
+| [W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                                      | W2 — runbook operacional v0 (placeholder até fase A)                              |
 | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade, reconciliação via cron, roadmap escala                  |
 
 ---
@@ -94,9 +95,9 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 ## Diagramas (Mermaid)
 
-| Ficheiro                                           | Propósito                                                                                        |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [docs/diagrams/README.md](../diagrams/README.md) | **Índice** — mapa do sistema + links para fluxos (viagem, ofertas, pagamentos, WS, cron, papéis) |
+| Ficheiro                                                   | Propósito                                                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [docs/diagrams/README.md](../diagrams/README.md)           | **Índice** — mapa do sistema + links para fluxos (viagem, ofertas, pagamentos, WS, cron, papéis) |
 | [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md) | OTP + login BETA (Mermaid)                                                                       |
 
 ---
@@ -155,10 +156,10 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis)                  |
 | 28  | [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md)                               | Checklist operacional parceiro / licença TVDE (não é aconselhamento jurídico) |
 | 29  | [docs/diagrams/README.md](../diagrams/README.md)                                                           | Índice Mermaid — fluxos TVDE (viagem, ofertas, pagamentos, …)                 |
-| 30  | [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md)                                               | Mermaid — OTP / login BETA / parceiro só via admin                            |
+| 30  | [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md)                                                 | Mermaid — OTP / login BETA / parceiro só via admin                            |
 | 31  | [docs/ops/W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md)                                                       | Smoke operacional W1 — cron + webhook (teste real)                            |
 | 32  | [docs/ops/W2_RUNBOOK_UI_DESIGN.md](../ops/W2_RUNBOOK_UI_DESIGN.md)                                         | W2 — desenho runbook Admin-only, fases A–D                                    |
-| 33  | [docs/ops/W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                           | W2 — runbook v0 (placeholder)                                               |
+| 33  | [docs/ops/W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                             | W2 — runbook v0 (placeholder)                                                 |
 
 ---
 

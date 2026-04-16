@@ -1,6 +1,7 @@
 """Shared trip-to-response serializers. Used by passenger, driver, admin routers."""
 
 from app.db.models.trip import Trip
+from app.utils.stripe_links import stripe_payment_intent_dashboard_url
 from app.schemas.driver import DriverLocationResponse
 from app.schemas.trip import TripDetailResponse, TripHistoryItem, TripStatusResponse
 
@@ -63,6 +64,11 @@ def trip_to_detail(
         stripe_payment_intent_id=payment.stripe_payment_intent_id
         if payment and include_stripe_pi
         else None,
+        stripe_dashboard_url=(
+            stripe_payment_intent_dashboard_url(payment.stripe_payment_intent_id)
+            if payment and include_stripe_pi
+            else None
+        ),
         driver_location=driver_location,
     )
 
