@@ -1,4 +1,5 @@
 import re
+import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -6,8 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
+from app.auth.passwords import hash_password, verify_password
 from app.auth.otp import (
     generate_otp_code,
     hash_otp_code,
@@ -23,6 +25,7 @@ from app.schemas.auth import (
     OtpRequest,
     OtpRequestResponse,
     OtpVerifyRequest,
+    PasswordChangeRequest,
     TokenResponse,
 )
 
@@ -188,12 +191,6 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
         )
-    if payload.password != getattr(settings, "DEFAULT_PASSWORD", "123456"):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="invalid_credentials",
-        )
-
     user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not user:
         count = db.execute(select(func.count()).select_from(User)).scalar() or 0
@@ -227,6 +224,19 @@ async def login(
         db.commit()
         db.refresh(user)
 
+    if user.password_hash:
+        if not verify_password(payload.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="invalid_credentials",
+            )
+    else:
+        if payload.password != getattr(settings, "DEFAULT_PASSWORD", "123456"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="invalid_credentials",
+            )
+
     if user.status == UserStatus.pending:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -247,3 +257,39 @@ async def login(
         role=user.role,
         expires_at=token_data["expires_at"],
     )
+
+
+@router.post("/me/password")
+async def change_my_password(
+    payload: PasswordChangeRequest,
+    user_ctx: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Define ou altera a palavra-passe (BETA). Com hash existente, current_password é obrigatório."""
+    if not _is_beta():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
+        )
+    try:
+        uid = uuid.UUID(user_ctx.user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_user_id"
+        )
+    user = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="user_not_found"
+        )
+
+    if user.password_hash:
+        if not payload.current_password or not verify_password(
+            payload.current_password, user.password_hash
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid_current_password",
+            )
+    user.password_hash = hash_password(payload.new_password)
+    db.commit()
+    return {"status": "ok"}

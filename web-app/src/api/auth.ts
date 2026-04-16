@@ -66,3 +66,17 @@ export async function login(
     }),
   })
 }
+
+export async function changeMyPassword(
+  token: string,
+  body: { current_password?: string | null; new_password: string }
+): Promise<{ status: string }> {
+  return apiFetch<{ status: string }>('/auth/me/password', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      new_password: body.new_password,
+      current_password: body.current_password ?? undefined,
+    }),
+  })
+}

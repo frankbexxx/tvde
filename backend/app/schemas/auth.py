@@ -30,7 +30,8 @@ class LoginRequest(BaseModel):
     phone: str = Field(..., min_length=6, max_length=32)
     password: str = Field(..., min_length=1)
     requested_role: str | None = Field(
-        None, description="BETA: passenger or driver (só usado ao criar novo utilizador pendente)."
+        None,
+        description="BETA: passenger or driver (só usado ao criar novo utilizador pendente).",
     )
 
 
@@ -40,3 +41,10 @@ class TokenResponse(BaseModel):
     user_id: str
     role: Role
     expires_at: datetime
+
+
+class PasswordChangeRequest(BaseModel):
+    """Alterar palavra-passe autenticado. Se já existe hash, current_password é obrigatório."""
+
+    current_password: str | None = Field(None, min_length=1, max_length=128)
+    new_password: str = Field(..., min_length=8, max_length=128)

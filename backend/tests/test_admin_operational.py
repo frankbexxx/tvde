@@ -71,6 +71,13 @@ def test_system_health_returns_expected_structure(client: TestClient) -> None:
 
 
 @pytest.mark.usefixtures("admin_auth_override")
+def test_trip_history_list_ok(client: TestClient) -> None:
+    r = client.get("/admin/trip-history")
+    assert r.status_code == 200
+    assert isinstance(r.json(), list)
+
+
+@pytest.mark.usefixtures("admin_auth_override")
 def test_metrics_returns_expected_structure(client: TestClient) -> None:
     r = client.get("/admin/metrics")
     assert r.status_code == 200

@@ -1,12 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
-import { apiFetch } from '../../api/client'
+import { apiFetch, type ApiError } from '../../api/client'
 import {
   getActiveTrips,
+  getAdminTripHistory,
   getTripDetailAdmin,
   getTripDebug,
   assignTripAdmin,
@@ -33,6 +34,7 @@ import {
   type SystemHealthResponse,
   type AdminMetricsResponse,
 } from '../../api/admin'
+import type { TripHistoryItem } from '../../api/trips'
 
 interface PendingUser {
   phone: string
@@ -78,8 +80,10 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'health', label: 'Saúde' },
 ]
 
-function readInitialAdminQuery(): { tab: Tab; tripId: string | null } {
-  if (typeof window === 'undefined') return { tab: 'pending', tripId: null }
+function readInitialAdminQuery(): ReturnType<typeof parseAdminDashboardQuery> {
+  if (typeof window === 'undefined') {
+    return { tab: 'pending', tripId: null, tripsList: 'active' }
+  }
   return parseAdminDashboardQuery(new URLSearchParams(window.location.search))
 }
 
@@ -217,9 +221,15 @@ export function AdminDashboard() {
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Record<string, boolean>>({})
   const [blockConfirmId, setBlockConfirmId] = useState<string | null>(null)
 
-  // Viagens ativas
+  // Viagens (lista activa + histórico terminal)
   const [activeTrips, setActiveTrips] = useState<TripActiveItem[]>([])
+  const [tripsListMode, setTripsListMode] = useState<'active' | 'history'>(() => initial.tripsList)
+  const [historyTrips, setHistoryTrips] = useState<TripHistoryItem[]>([])
+  const [historyTripsError, setHistoryTripsError] = useState<string | null>(null)
   const [selectedTripId, setSelectedTripId] = useState<string | null>(() => initial.tripId)
+  /** Evita aplicar resposta de GET /admin/trips/:id se o utilizador já mudou de viagem. */
+  const selectedTripForDetailRef = useRef<string | null>(selectedTripId)
+  selectedTripForDetailRef.current = selectedTripId
   const [tripDetail, setTripDetail] = useState<TripDetailAdmin | null>(null)
   const [tripDetailLoading, setTripDetailLoading] = useState(false)
   const [tripDebug, setTripDebug] = useState<Record<string, unknown> | null>(null)
@@ -255,19 +265,25 @@ export function AdminDashboard() {
   const [dataSearch, setDataSearch] = useState('')
 
   const syncAdminUrl = useCallback(
-    (next: { tab: Tab; tripId: string | null }) => {
+    (next: { tab: Tab; tripId: string | null; tripsList?: 'active' | 'history' }) => {
       setSearchParams(
         () => {
           const p = new URLSearchParams()
           if (next.tripId) {
             p.set('tab', 'trips')
             p.set('tripId', next.tripId)
+            if (next.tripsList === 'history') {
+              p.set('tripsList', 'history')
+            }
             return p
           }
           if (next.tab === 'pending') {
             return p
           }
           p.set('tab', next.tab)
+          if (next.tab === 'trips' && next.tripsList === 'history') {
+            p.set('tripsList', 'history')
+          }
           return p
         },
         { replace: true }
@@ -276,12 +292,21 @@ export function AdminDashboard() {
     [setSearchParams]
   )
 
+  const selectTripsListMode = useCallback(
+    (mode: 'active' | 'history') => {
+      setTripsListMode(mode)
+      syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: mode })
+    },
+    [syncAdminUrl, selectedTripId]
+  )
+
   const adminQs = searchParams.toString()
   useEffect(() => {
     const sp = new URLSearchParams(adminQs)
-    const { tab: t, tripId } = parseAdminDashboardQuery(sp)
+    const { tab: t, tripId, tripsList } = parseAdminDashboardQuery(sp)
     setTab(t)
     setSelectedTripId(tripId)
+    setTripsListMode(t === 'trips' ? tripsList : 'active')
   }, [adminQs])
 
   const fetchPending = useCallback(async () => {
@@ -343,17 +368,45 @@ export function AdminDashboard() {
     }
   }, [token])
 
+  const fetchHistoryTrips = useCallback(async () => {
+    if (!token) return
+    setHistoryTripsError(null)
+    try {
+      const data = await getAdminTripHistory(token, { limit: 50 })
+      setHistoryTrips(data)
+    } catch (e) {
+      setHistoryTrips([])
+      const err = e as ApiError
+      const raw = err.detail
+      const detail = typeof raw === 'string' ? raw : ''
+      if (err.status === 404) {
+        setHistoryTripsError(
+          'O backend não expõe o histórico (404). Faz deploy do backend com GET /admin/trip-history, ou confirma o URL da API (VITE_API_URL).'
+        )
+      } else {
+        setHistoryTripsError(
+          detail || (err.status ? `Erro ao carregar histórico (${err.status}).` : 'Erro ao carregar histórico.')
+        )
+      }
+    }
+  }, [token])
+
   const fetchTripDetail = useCallback(
     async (tripId: string) => {
       if (!token) return
       setTripDetailLoading(true)
+      setTripDetail(null)
       try {
         const d = await getTripDetailAdmin(tripId, token)
+        if (selectedTripForDetailRef.current !== tripId) return
         setTripDetail(d)
       } catch {
+        if (selectedTripForDetailRef.current !== tripId) return
         setTripDetail(null)
       } finally {
-        setTripDetailLoading(false)
+        if (selectedTripForDetailRef.current === tripId) {
+          setTripDetailLoading(false)
+        }
       }
     },
     [token]
@@ -423,9 +476,10 @@ export function AdminDashboard() {
     fetchPending()
     fetchUsers()
     fetchActiveTrips()
+    fetchHistoryTrips()
     fetchMetrics()
     fetchHealth()
-  }, [fetchPending, fetchUsers, fetchActiveTrips, fetchMetrics, fetchHealth])
+  }, [fetchPending, fetchUsers, fetchActiveTrips, fetchHistoryTrips, fetchMetrics, fetchHealth])
 
   const handleAssignTrip = async (tripId: string) => {
     if (!token) return
@@ -664,7 +718,10 @@ export function AdminDashboard() {
 
   useEffect(() => {
     if (!token) return
-    if (tab === 'trips') fetchActiveTrips()
+    if (tab === 'trips') {
+      if (tripsListMode === 'active') void fetchActiveTrips()
+      else void fetchHistoryTrips()
+    }
     if (tab === 'metrics') fetchMetrics()
     if (tab === 'health') fetchHealth()
     if (tab === 'ops') fetchHealth()
@@ -673,7 +730,7 @@ export function AdminDashboard() {
     if (tab === 'frota') void ensureDataLoaded()
     // Tab-driven fetches; fetchDataVisibility / fetchUsage / ensureDataLoaded are stable enough for this pattern.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-running on every render of inline fetch helpers
-  }, [token, tab, fetchActiveTrips, fetchMetrics, fetchHealth])
+  }, [token, tab, tripsListMode, fetchActiveTrips, fetchHistoryTrips, fetchMetrics, fetchHealth])
 
   const fetchDataVisibility = async () => {
     if (!token) return
@@ -802,6 +859,25 @@ export function AdminDashboard() {
     }
   }
 
+  const handleClearUserPassword = async (userId: string) => {
+    if (!token) return
+    const typed = window.prompt(
+      'Repor login BETA (password por defeito). Escreve exactamente: LIMPAR_SENHA'
+    )
+    if (typed?.trim() !== 'LIMPAR_SENHA') return
+    try {
+      await apiFetch(`/admin/users/${userId}/password/clear`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ confirmation: 'LIMPAR_SENHA' }),
+      })
+      setError(null)
+      fetchUsers()
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro ao limpar palavra-passe')
+    }
+  }
+
   const handleBulkBlock = async () => {
     if (!token) return
     const ids = Object.keys(bulkSelectedIds).filter((id) => bulkSelectedIds[id])
@@ -853,7 +929,16 @@ export function AdminDashboard() {
     () => Boolean(selectedTripId && activeTrips.some((t) => t.trip_id === selectedTripId)),
     [selectedTripId, activeTrips]
   )
-  const tripOrphanFromDeepLink = Boolean(selectedTripId && !selectedTripInActiveList)
+  const selectedTripInHistoryList = useMemo(
+    () => Boolean(selectedTripId && historyTrips.some((t) => t.trip_id === selectedTripId)),
+    [selectedTripId, historyTrips]
+  )
+  /** Viagem seleccionada que não está na lista activa; no modo Histórico deixa de ser «órfã» se já aparece na lista. */
+  const tripOrphanFromDeepLink = Boolean(
+    selectedTripId &&
+      !selectedTripInActiveList &&
+      !(tripsListMode === 'history' && selectedTripInHistoryList)
+  )
 
   if (loading && users.length === 0) {
     return (
@@ -872,7 +957,7 @@ export function AdminDashboard() {
             type="button"
             onClick={() =>
               id === 'trips'
-                ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId })
+                ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: tripsListMode })
                 : syncAdminUrl({ tab: id, tripId: null })
             }
             className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
@@ -1316,10 +1401,38 @@ export function AdminDashboard() {
 
       {tab === 'trips' && (
         <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Viagens ativas</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-1">Viagens</h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            Activas: pedido até em curso. Histórico: concluídas, canceladas ou falha (últimas 50 por ordem de
+            actualização).
+          </p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            <button
+              type="button"
+              onClick={() => selectTripsListMode('active')}
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium border ${
+                tripsListMode === 'active'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+              }`}
+            >
+              Activas
+            </button>
+            <button
+              type="button"
+              onClick={() => selectTripsListMode('history')}
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium border ${
+                tripsListMode === 'history'
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+              }`}
+            >
+              Histórico
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => fetchActiveTrips()}
+            onClick={() => (tripsListMode === 'active' ? void fetchActiveTrips() : void fetchHistoryTrips())}
             className="mb-3 px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
           >
             Atualizar
@@ -1337,7 +1450,7 @@ export function AdminDashboard() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => syncAdminUrl({ tab: 'trips', tripId: null })}
+                  onClick={() => syncAdminUrl({ tab: 'trips', tripId: null, tripsList: tripsListMode })}
                   className="shrink-0 px-3 py-1.5 bg-card border border-border text-foreground text-xs rounded-lg hover:bg-muted/40"
                 >
                   Fechar viagem
@@ -1427,126 +1540,258 @@ export function AdminDashboard() {
             </div>
           ) : null}
 
-          {activeTrips.length === 0 && !tripOrphanFromDeepLink ? (
-            <p className="text-foreground/75">Nenhuma viagem ativa.</p>
-          ) : activeTrips.length > 0 ? (
-            <ul className="space-y-3">
-              {activeTrips.map((t) => (
-                <li
-                  key={t.trip_id}
-                  className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {t.trip_id.slice(0, 8)}… · {t.status}
-                      </p>
-                      <p className="text-sm text-foreground/75">
-                        {t.origin_lat.toFixed(4)}, {t.origin_lng.toFixed(4)} →{' '}
-                        {t.destination_lat.toFixed(4)}, {t.destination_lng.toFixed(4)}
-                      </p>
-                      {t.driver_id && (
-                        <p className="text-xs text-foreground/70">Driver: {t.driver_id.slice(0, 8)}…</p>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextId = selectedTripId === t.trip_id ? null : t.trip_id
-                          syncAdminUrl({ tab: 'trips', tripId: nextId })
-                        }}
-                        className="px-2 py-1 bg-info text-info-foreground text-xs rounded"
-                      >
-                        {selectedTripId === t.trip_id ? 'Fechar' : 'Detalhe'}
-                      </button>
-                      {t.status === 'requested' && (
-                        <button
-                          type="button"
-                          onClick={() => handleAssignTrip(t.trip_id)}
-                          disabled={tripActionLoading === t.trip_id}
-                          className="px-2 py-1 bg-success text-success-foreground text-xs rounded disabled:opacity-50"
-                        >
-                          Atribuir
-                        </button>
-                      )}
-                      {ADMIN_TRIP_CANCEL_STATUSES.includes(
-                        t.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
-                      ) && (
-                        <button
-                          type="button"
-                          onClick={() => handleCancelTrip(t.trip_id)}
-                          disabled={tripActionLoading === t.trip_id}
-                          className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded disabled:opacity-50"
-                        >
-                          Cancelar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  {selectedTripId === t.trip_id && (
-                    <div className="mt-3 pt-3 border-t border-border space-y-2">
-                      {tripDetail && tripDetail.trip_id === t.trip_id && (
-                        <>
-                          <p className="text-xs text-foreground/75">
-                            Estimativa: {tripDetail.estimated_price} € · Status: {tripDetail.status}
-                            {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
+          {tripsListMode === 'active' && (
+            <>
+              {activeTrips.length === 0 && !tripOrphanFromDeepLink ? (
+                <p className="text-foreground/75">Nenhuma viagem ativa.</p>
+              ) : activeTrips.length > 0 ? (
+                <ul className="space-y-3">
+                  {activeTrips.map((t) => (
+                    <li
+                      key={t.trip_id}
+                      className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {t.trip_id.slice(0, 8)}… · {t.status}
                           </p>
-                          {(() => {
-                            const pi = tripDetail.stripe_payment_intent_id
-                            if (typeof pi !== 'string' || !pi) return null
-                            const urls = stripePaymentIntentDashboardUrls(pi)
-                            return urls ? (
-                              <div className="flex flex-wrap gap-2 text-xs">
-                                <a
-                                  href={urls.test}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-info underline"
-                                >
-                                  Stripe (test)
-                                </a>
-                                <a
-                                  href={urls.live}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-info underline"
-                                >
-                                  Stripe (live)
-                                </a>
-                              </div>
-                            ) : (
-                              <p className="text-xs text-muted-foreground">
-                                PI mock/teste — sem link Stripe.
+                          <p className="text-sm text-foreground/75">
+                            {t.origin_lat.toFixed(4)}, {t.origin_lng.toFixed(4)} →{' '}
+                            {t.destination_lat.toFixed(4)}, {t.destination_lng.toFixed(4)}
+                          </p>
+                          {t.driver_id && (
+                            <p className="text-xs text-foreground/70">Driver: {t.driver_id.slice(0, 8)}…</p>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nextId = selectedTripId === t.trip_id ? null : t.trip_id
+                              syncAdminUrl({ tab: 'trips', tripId: nextId, tripsList: tripsListMode })
+                            }}
+                            className="px-2 py-1 bg-info text-info-foreground text-xs rounded"
+                          >
+                            {selectedTripId === t.trip_id ? 'Fechar' : 'Detalhe'}
+                          </button>
+                          {t.status === 'requested' && (
+                            <button
+                              type="button"
+                              onClick={() => handleAssignTrip(t.trip_id)}
+                              disabled={tripActionLoading === t.trip_id}
+                              className="px-2 py-1 bg-success text-success-foreground text-xs rounded disabled:opacity-50"
+                            >
+                              Atribuir
+                            </button>
+                          )}
+                          {ADMIN_TRIP_CANCEL_STATUSES.includes(
+                            t.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
+                          ) && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelTrip(t.trip_id)}
+                              disabled={tripActionLoading === t.trip_id}
+                              className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded disabled:opacity-50"
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {selectedTripId === t.trip_id && (
+                        <div className="mt-3 pt-3 border-t border-border space-y-2">
+                          <p className="text-xs text-foreground/85">
+                            Estado (lista): <span className="font-medium text-foreground">{t.status}</span>
+                          </p>
+                          {tripDetailLoading ? (
+                            <p className="text-xs text-foreground/70">A carregar detalhe…</p>
+                          ) : tripDetail && tripDetail.trip_id === t.trip_id ? (
+                            <>
+                              <p className="text-xs text-foreground/75">
+                                Estimativa: {tripDetail.estimated_price} € · Status (API): {tripDetail.status}
+                                {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
                               </p>
-                            )
-                          })()}
-                        </>
+                              {(() => {
+                                const pi = tripDetail.stripe_payment_intent_id
+                                if (typeof pi !== 'string' || !pi) return null
+                                const urls = stripePaymentIntentDashboardUrls(pi)
+                                return urls ? (
+                                  <div className="flex flex-wrap gap-2 text-xs">
+                                    <a
+                                      href={urls.test}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-info underline"
+                                    >
+                                      Stripe (test)
+                                    </a>
+                                    <a
+                                      href={urls.live}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-info underline"
+                                    >
+                                      Stripe (live)
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground">
+                                    PI mock/teste — sem link Stripe.
+                                  </p>
+                                )
+                              })()}
+                            </>
+                          ) : (
+                            <p className="text-xs text-warning">
+                              Não foi possível carregar o detalhe (rede, timeout ou viagem inexistente). Tenta
+                              &quot;Atualizar&quot; na lista ou &quot;Debug&quot; abaixo.
+                            </p>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => fetchTripDebug(t.trip_id)}
+                              className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded"
+                            >
+                              Debug
+                            </button>
+                          </div>
+                          {tripDebug && tripDebugId === t.trip_id && (
+                            <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
+                              {JSON.stringify(tripDebug, null, 2)}
+                            </pre>
+                          )}
+                        </div>
                       )}
-                      <div className="flex gap-2">
+                    </li>
+                  ))}
+                </ul>
+              ) : tripOrphanFromDeepLink ? (
+                <p className="text-xs text-muted-foreground">
+                  Lista de viagens activas vazia; o painel acima é a viagem que abriste por link.
+                </p>
+              ) : null}
+            </>
+          )}
+
+          {tripsListMode === 'history' && (
+            <>
+              {historyTripsError ? (
+                <p className="text-sm text-destructive bg-destructive/10 border border-destructive/25 px-3 py-2 rounded-lg">
+                  {historyTripsError}
+                </p>
+              ) : null}
+              {!historyTripsError && historyTrips.length === 0 ? (
+                <p className="text-foreground/75">
+                  Nenhuma viagem no histórico recente (concluída, cancelada ou falha) nesta base de dados.
+                </p>
+              ) : historyTrips.length > 0 ? (
+                <ul className="space-y-3">
+                  {historyTrips.map((h) => (
+                    <li
+                      key={h.trip_id}
+                      className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <p className="font-medium text-foreground">
+                            {h.trip_id.slice(0, 8)}… · {h.status}
+                          </p>
+                          <p className="text-sm text-foreground/75">
+                            {h.origin_lat.toFixed(4)}, {h.origin_lng.toFixed(4)} →{' '}
+                            {h.destination_lat.toFixed(4)}, {h.destination_lng.toFixed(4)}
+                          </p>
+                          <p className="text-xs text-foreground/70">
+                            Fim:{' '}
+                            {h.completed_at
+                              ? new Date(h.completed_at).toLocaleString('pt-PT')
+                              : '— (sem data de conclusão)'}
+                            {h.final_price != null ? ` · ${h.final_price} €` : null}
+                          </p>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => fetchTripDebug(t.trip_id)}
-                          className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded"
+                          onClick={() => {
+                            const nextId = selectedTripId === h.trip_id ? null : h.trip_id
+                            syncAdminUrl({ tab: 'trips', tripId: nextId, tripsList: tripsListMode })
+                          }}
+                          className="px-2 py-1 bg-info text-info-foreground text-xs rounded shrink-0"
                         >
-                          Debug
+                          {selectedTripId === h.trip_id ? 'Fechar' : 'Detalhe'}
                         </button>
                       </div>
-                      {tripDebug && tripDebugId === t.trip_id && (
-                        <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
-                          {JSON.stringify(tripDebug, null, 2)}
-                        </pre>
+                      {selectedTripId === h.trip_id && (
+                        <div className="mt-3 pt-3 border-t border-border space-y-2">
+                          <p className="text-xs text-foreground/85">
+                            Estado (lista): <span className="font-medium text-foreground">{h.status}</span>
+                          </p>
+                          {tripDetailLoading ? (
+                            <p className="text-xs text-foreground/70">A carregar detalhe…</p>
+                          ) : tripDetail && tripDetail.trip_id === h.trip_id ? (
+                            <>
+                              <p className="text-xs text-foreground/75">
+                                Estimativa: {tripDetail.estimated_price} € · Status (API): {tripDetail.status}
+                                {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
+                              </p>
+                              {(() => {
+                                const pi = tripDetail.stripe_payment_intent_id
+                                if (typeof pi !== 'string' || !pi) return null
+                                const urls = stripePaymentIntentDashboardUrls(pi)
+                                return urls ? (
+                                  <div className="flex flex-wrap gap-2 text-xs">
+                                    <a
+                                      href={urls.test}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-info underline"
+                                    >
+                                      Stripe (test)
+                                    </a>
+                                    <a
+                                      href={urls.live}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-info underline"
+                                    >
+                                      Stripe (live)
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground">
+                                    PI mock/teste — sem link Stripe.
+                                  </p>
+                                )
+                              })()}
+                            </>
+                          ) : (
+                            <p className="text-xs text-warning">
+                              Não foi possível carregar o detalhe (rede, timeout ou viagem inexistente). Tenta
+                              &quot;Atualizar&quot; na lista ou &quot;Debug&quot; abaixo.
+                            </p>
+                          )}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => fetchTripDebug(h.trip_id)}
+                              className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded"
+                            >
+                              Debug
+                            </button>
+                          </div>
+                          {tripDebug && tripDebugId === h.trip_id && (
+                            <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
+                              {JSON.stringify(tripDebug, null, 2)}
+                            </pre>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : tripOrphanFromDeepLink ? (
-            <p className="text-xs text-muted-foreground">
-              Lista de viagens activas vazia; o painel acima é a viagem que abriste por link.
-            </p>
-          ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </>
+          )}
         </section>
       )}
 
@@ -1597,6 +1842,21 @@ export function AdminDashboard() {
           ) : (
             <p className="text-foreground/75">Carregar métricas...</p>
           )}
+
+          {metrics ? (
+            <p className="text-sm text-foreground/80 -mt-2">
+              Os totais são agregados. Para ver{' '}
+              <span className="font-medium text-foreground">viagens concluídas / canceladas</span> em lista:{' '}
+              <button
+                type="button"
+                className="text-info underline font-medium"
+                onClick={() => syncAdminUrl({ tab: 'trips', tripId: null, tripsList: 'history' })}
+              >
+                Viagens → Histórico
+              </button>{' '}
+              (últimas 50).
+            </p>
+          ) : null}
 
           <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
             <div className="flex items-center justify-between gap-2">
@@ -2222,6 +2482,13 @@ export function AdminDashboard() {
                                   className="px-2 py-1 bg-info text-info-foreground text-xs rounded hover:opacity-90"
                                 >
                                   Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleClearUserPassword(u.id)}
+                                  className="px-2 py-1 bg-muted text-foreground text-xs rounded border border-border hover:opacity-90"
+                                >
+                                  Limpar palavra-passe
                                 </button>
                                 {blockConfirmId === u.id ? (
                                   <>
