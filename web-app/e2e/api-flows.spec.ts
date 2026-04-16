@@ -124,4 +124,26 @@ test.describe('API flows (sem browser)', () => {
     const list = (await avail.json()) as unknown[]
     expect(list.length).toBe(0)
   })
+
+  test('BETA login inclui display_name (admin seed)', async ({ request }) => {
+    const cfg = await request.get(`${API}/config`)
+    expect(cfg.ok()).toBeTruthy()
+    const { beta_mode: beta } = (await cfg.json()) as { beta_mode?: boolean }
+    test.skip(!beta, 'API sem BETA_MODE — login BETA indisponível')
+
+    const seed = await request.post(`${API}/dev/seed`)
+    expect(seed.ok(), await seed.text()).toBeTruthy()
+
+    const login = await request.post(`${API}/auth/login`, {
+      headers: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({
+        phone: '+351900000000',
+        password: '123456',
+      }),
+    })
+    expect(login.ok(), await login.text()).toBeTruthy()
+    const body = (await login.json()) as { display_name?: string; role?: string }
+    expect(body.role).toBe('admin')
+    expect(body.display_name).toBe('+351900000000')
+  })
 })

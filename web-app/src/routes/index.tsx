@@ -8,8 +8,7 @@ import { PartnerHome } from '../features/partner/PartnerHome'
 import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
-import { SettingsButton } from '../design-system/components/app/SettingsButton'
-import { ProfileButton } from '../design-system/components/app/ProfileButton'
+import { AppHeaderBar } from '../components/layout/AppHeaderBar'
 import { useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/ui/Spinner'
 
@@ -24,6 +23,9 @@ function RootRedirect() {
 
 function PassengerOnly({ children }: { children: ReactNode }) {
   const { appRouteRole, sessionRole } = useAuth()
+  if (appRouteRole === 'partner' && sessionRole === 'partner') {
+    return <Navigate to="/partner" replace />
+  }
   /** Só enviar para /driver se o JWT for mesmo de motorista (evita 403 e loop com DriverOnly). */
   if (appRouteRole === 'driver' && sessionRole === 'driver') {
     return <Navigate to="/driver" replace />
@@ -109,15 +111,7 @@ export function AppRoutes() {
 
   return (
     <div className="min-h-dvh bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0">
-        <div className="flex justify-between items-center px-4 py-3 gap-2">
-          <h1 className="text-lg font-bold text-foreground">TVDE</h1>
-          <div className="flex items-center gap-1 shrink-0">
-            <ProfileButton />
-            <SettingsButton />
-          </div>
-        </div>
-      </header>
+      <AppHeaderBar />
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
         <main className="flex-1 overflow-y-auto min-h-0 min-w-0">
           <Routes>

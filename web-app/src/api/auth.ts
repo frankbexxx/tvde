@@ -6,6 +6,8 @@ export interface TokenResponse {
   user_id: string
   role: string
   expires_at: string
+  /** Snapshot de `User.name` na emissão do token (BETA / OTP). */
+  display_name?: string
 }
 
 export interface AuthTokens {
