@@ -35,6 +35,7 @@ from app.middleware import RequestIDMiddleware
 
 import app.db.models  # noqa: F401
 from app.core.config import settings
+from app.db.migrations_runner import upgrade_to_head
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,11 @@ async def lifespan(app: FastAPI):
         f"[TVDE] config ENV={settings.ENV} ENVIRONMENT={settings.ENVIRONMENT!r} "
         f"prod={settings.is_production_environment()} dev_tools_mounted={_dev} BETA_MODE={_beta}"
     )
+
+    if settings.is_production_environment():
+        logger.info("[startup] alembic upgrade head (produção)")
+        upgrade_to_head()
+        logger.info("[startup] alembic em head")
 
     _env_low = settings.ENV.strip().lower()
     if _env_low not in ("dev", "development"):
