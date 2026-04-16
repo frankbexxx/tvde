@@ -23,14 +23,23 @@ function RootRedirect() {
 }
 
 function PassengerOnly({ children }: { children: ReactNode }) {
-  const { appRouteRole } = useAuth()
-  if (appRouteRole === 'driver') return <Navigate to="/driver" replace />
+  const { appRouteRole, sessionRole } = useAuth()
+  /** Só enviar para /driver se o JWT for mesmo de motorista (evita 403 e loop com DriverOnly). */
+  if (appRouteRole === 'driver' && sessionRole === 'driver') {
+    return <Navigate to="/driver" replace />
+  }
   return <>{children}</>
 }
 
 function DriverOnly({ children }: { children: ReactNode }) {
-  const { appRouteRole } = useAuth()
+  const { appRouteRole, sessionRole } = useAuth()
   if (appRouteRole === 'passenger') return <Navigate to="/passenger" replace />
+  /** Em BETA o mesmo token preenche passenger/driver/admin; só motoristas podem usar estas APIs. */
+  if (sessionRole !== 'driver') {
+    if (sessionRole === 'admin') return <Navigate to="/admin" replace />
+    if (sessionRole === 'partner') return <Navigate to="/partner" replace />
+    return <Navigate to="/passenger" replace />
+  }
   return <>{children}</>
 }
 

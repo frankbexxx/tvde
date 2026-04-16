@@ -31,7 +31,7 @@ export function SettingsButton() {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<ConfigView>("main")
   const isMobile = useMediaQuery("(max-width: 639px)")
-  const { appRouteRole, setAppRouteRole, isAdmin, token, betaMode } = useAuth()
+  const { appRouteRole, setAppRouteRole, isAdmin, token, betaMode, sessionRole } = useAuth()
   const navigate = useNavigate()
   const { passengerActiveTripId } = useActiveTrip()
   const { notifyAfterDevMutation } = useDevToolsCallbacks()
@@ -70,6 +70,12 @@ export function SettingsButton() {
             type="button"
             variant={appRouteRole === "driver" ? "default" : "outline"}
             className="flex-1 font-medium"
+            disabled={sessionRole !== "driver"}
+            title={
+              sessionRole !== "driver"
+                ? "A conta não tem perfil de motorista; o painel motorista exige JWT de motorista."
+                : undefined
+            }
             onClick={() => {
               setAppRouteRole("driver")
               navigate("/driver", { replace: true })
