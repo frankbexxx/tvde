@@ -57,6 +57,30 @@ const USERS_PAGE_SIZE = 50
 
 const ADMIN_TRIP_CANCEL_STATUSES = ['requested', 'assigned', 'accepted'] as const
 
+/** Erros do PATCH /admin/users/{id} (BETA) em texto legível. */
+function formatAdminUserPatchError(detail: unknown): string {
+  if (typeof detail === 'string') {
+    const key = detail.trim()
+    const map: Record<string, string> = {
+      invalid_phone_format: 'Telefone inválido. Usa +351 seguido de 9 dígitos (ex.: +351912345678).',
+      phone_already_used: 'Esse telefone já está a ser usado por outra conta.',
+      cannot_modify_admin: 'Não podes alterar a conta de administrador.',
+      user_not_found: 'Utilizador não encontrado.',
+      invalid_user_id: 'Identificador de utilizador inválido.',
+      'Not available': 'Esta acção só está disponível em modo BETA.',
+    }
+    return map[key] ?? key
+  }
+  if (Array.isArray(detail)) {
+    const parts = detail.map((d) => {
+      if (typeof d === 'object' && d !== null && 'msg' in d) return String((d as { msg?: unknown }).msg)
+      return JSON.stringify(d)
+    })
+    return parts.join(' · ') || 'Pedido inválido.'
+  }
+  return 'Não foi possível guardar. Tenta outra vez.'
+}
+
 function maskSensitiveEnvDisplay(text: string): string {
   return text.split('\n').map((line) => {
     const eq = line.indexOf('=')
@@ -213,6 +237,9 @@ export function AdminDashboard() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const [editPhone, setEditPhone] = useState('')
+  /** Valores no momento em que se abriu «Editar» — para comparar e confirmar mudanças. */
+  const [editOriginalName, setEditOriginalName] = useState('')
+  const [editOriginalPhone, setEditOriginalPhone] = useState('')
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [usersHasMore, setUsersHasMore] = useState(false)
   const [usersLoadingMore, setUsersLoadingMore] = useState(false)
@@ -803,30 +830,72 @@ export function AdminDashboard() {
   }
 
   const startEdit = (u: AdminUser) => {
+    setError(null)
     setEditingId(u.id)
-    setEditName(u.name)
-    setEditPhone(u.phone)
+    const n = u.name || ''
+    const p = u.phone
+    setEditName(n)
+    setEditPhone(p)
+    setEditOriginalName(n.trim())
+    setEditOriginalPhone(p.trim())
   }
 
   const cancelEdit = () => {
     setEditingId(null)
     setEditName('')
     setEditPhone('')
+    setEditOriginalName('')
+    setEditOriginalPhone('')
   }
 
-  const handleSaveEdit = async () => {
+  const handleSaveUserName = async () => {
     if (!token || !editingId) return
+    const next = editName.trim()
+    if (next === editOriginalName.trim()) {
+      setError('O nome não mudou em relação ao valor actual.')
+      return
+    }
+    const prevLabel = editOriginalName.trim() || '(sem nome, mostra telefone)'
+    if (!window.confirm(`Alterar o nome?\n\nDe: ${prevLabel}\nPara: ${next || '(vazio — o servidor pode repor o telefone como nome)'}`)) {
+      return
+    }
     try {
       await apiFetch(`/admin/users/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ name: editName || undefined, phone: editPhone || undefined }),
+        body: JSON.stringify({ name: next || undefined }),
         token,
       })
-      cancelEdit()
-      fetchUsers()
+      setEditOriginalName(next)
       setError(null)
+      fetchUsers()
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao guardar')
+      setError(formatAdminUserPatchError((err as ApiError).detail))
+    }
+  }
+
+  const handleSaveUserPhone = async () => {
+    if (!token || !editingId) return
+    const next = editPhone.trim()
+    if (next === editOriginalPhone.trim()) {
+      setError('O telefone não mudou em relação ao valor actual.')
+      return
+    }
+    const typed = window.prompt(
+      `Alterar telefone de ${editOriginalPhone} para ${next}.\n\nPara confirmar, escreve exactamente: ALTERAR_TELEFONE`
+    )
+    if (typed?.trim() !== 'ALTERAR_TELEFONE') return
+    try {
+      await apiFetch(`/admin/users/${editingId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ phone: next }),
+        token,
+      })
+      setEditOriginalPhone(next)
+      setEditPhone(next)
+      setError(null)
+      fetchUsers()
+    } catch (err) {
+      setError(formatAdminUserPatchError((err as ApiError).detail))
     }
   }
 
@@ -2388,37 +2457,61 @@ export function AdminDashboard() {
                     className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
                   >
                     {editingId === u.id ? (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          placeholder="Nickname"
-                          className="w-full px-3 py-2 border rounded-lg text-base"
-                        />
-                        <input
-                          type="tel"
-                          value={editPhone}
-                          onChange={(e) => setEditPhone(e.target.value)}
-                          placeholder="+351912345678"
-                          className="w-full px-3 py-2 border rounded-lg text-base"
-                        />
-                        <div className="flex gap-2">
+                      <div className="space-y-4">
+                        <div className="rounded-xl border border-border bg-background/60 p-3 space-y-2">
+                          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                            Nome (alcunha)
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Valor quando abriste a edição:{' '}
+                            <span className="font-mono text-foreground/90">{editOriginalName || '—'}</span>
+                          </p>
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="Nome ou alcunha"
+                            className="w-full px-3 py-2 border rounded-lg text-base bg-background"
+                          />
                           <button
                             type="button"
-                            onClick={handleSaveEdit}
+                            onClick={() => void handleSaveUserName()}
                             className="px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-lg hover:opacity-90"
                           >
-                            Guardar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={cancelEdit}
-                            className="px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
-                          >
-                            Cancelar
+                            Guardar só o nome
                           </button>
                         </div>
+                        <div className="rounded-xl border border-border bg-background/60 p-3 space-y-2">
+                          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Telefone</p>
+                          <p className="text-xs text-muted-foreground">
+                            Valor quando abriste a edição:{' '}
+                            <span className="font-mono text-foreground/90">{editOriginalPhone}</span>
+                          </p>
+                          <p className="text-xs text-warning">
+                            Mudar o telefone afecta o login (OTP / BETA). Confirma com a palavra indicada no aviso.
+                          </p>
+                          <input
+                            type="tel"
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(e.target.value)}
+                            placeholder="+351912345678"
+                            className="w-full px-3 py-2 border rounded-lg text-base bg-background"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveUserPhone()}
+                            className="px-3 py-1.5 bg-warning text-warning-foreground text-sm font-medium rounded-lg hover:opacity-90"
+                          >
+                            Guardar só o telefone
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          className="px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
+                        >
+                          Fechar edição
+                        </button>
                       </div>
                     ) : (
                       <>
