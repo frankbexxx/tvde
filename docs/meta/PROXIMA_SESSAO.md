@@ -146,16 +146,18 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Estado repo (2026-04-17 — pós-merge SP-F v2 + unblock UI)
+### Estado repo (2026-04-08 — fecho sessão noite)
 
-- **`main`:** **SP-F v2** (#117) + **Desbloquear** (#118) + dica M1 no login BETA (#119); smoke **Render** 2026-04-17 **OK** (bloquear / motivo / desbloquear / motivo).
-- **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
+- **`main`:** SP-F v2 (#117) + Desbloquear (#118) + M1 login dica (#119) + fix tab Pendentes (#122); **M1 Conta** (#121) já mergido antes desta sessão.
+- **Em PR (merge pendente):** admin **M1 cauteloso** — repor palavra-passe BETA só dentro de **Editar** + só `super_admin`; erros admin mapeados (`formatAdminApiDetail`).
+- **OPS (Frank):** smoke **W2-E** pós-redeploy quando couber; BD PROD/Render: um só `super_admin` (alinhado a Docker local se aplicável).
+- **Princípio contínuo:** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **Ondas M1** — **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md): perfil **no ecrã** (`/auth/me` + secção Conta BETA); canal «esqueci-me» = **admin** até haver decisão explícita; admin cauteloso (nome/telefone/clear password + dica login **#119**).
-2. **Smoke residual** — Operações / Frota / Viagens com **super_admin** onde a matriz SP-F exige.
-3. **Tweaks** — lista curta após M1 ou smoke mais largo.
+1. **Merge** do PR M1 admin cauteloso (se ainda aberto) → `git pull` → smoke rápido **Utilizadores** (Editar → nome / telefone / repor password como `super_admin`).
+2. **Smoke W2-E** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) (prioridade 3 em [`TODOdoDIA.md`](../../TODOdoDIA.md) «Hoje 2026-04-17»).
+3. **M2 / tweaks** — após M1 estável na PROD que uses: email, nick, ou lista curta de tweaks pós-smoke.
 
 **Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md) (fila **fechada** para novas letras; **F** pode evoluir em v2+ sem nova letra). **O que vem a seguir** (legal na app, theming Portugal/ícone, vídeos + checklist) está **mapeado com nexo** no mesmo README, secção **«Depois da sequência»** — **sessões seguintes**, sem roubar foco a **M1**.
 
