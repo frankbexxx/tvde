@@ -148,22 +148,22 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Estado repo (2026-04-17 — pós-merge SP + admin UI)
 
-- **`main`:** **W2** A–E (incl. PR **#98**) + **super-prompts B e A** — trilho `admin.*` em `audit_events` (`record_admin_action`, `GET /admin/audit-trail`), operações SP-A (unblock, `POST /admin/trips/.../transition`, cancel com motivo opcional, nota pagamento, `stripe_dashboard_url` no detalhe), botões **→ arriving** / **→ ongoing** no painel Admin (**web-app**). Docs: `docs/super-prompts/*`, clarificação UI vs `FORCAR_*` no SP-A. PRs exemplares **#108–#110** (histórico GitHub); **merge e smoke humano: OK** (pequenos tweaks anotar no arranque).
+- **`main`:** **W2** A–E + **super-prompts B, A, G, D** (web-app): SP-B/A como antes; **SP-G** tab **Agora**; **SP-D** guias anti-stuck na **Saúde** (3 passos por classe de anomalia, banner, ponto na tab, lembrete no Agora). Docs `docs/super-prompts/*`. Tweaks pós-merge quando listares.
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
-### Arranque imediato (próxima sessão útil — manhã fresca)
+### Arranque imediato (próxima sessão útil)
 
-1. **SP-G — Estado agora** — [`docs/super-prompts/SP-G-estado-agora.md`](../super-prompts/SP-G-estado-agora.md): bloco «30 segundos» no admin (indicadores + links para tabs existentes); **sem** novo motor de métricas paralelo.
+1. **SP-C — Partner autónomo** — [`docs/super-prompts/SP-C-partner-autonomo.md`](../super-prompts/SP-C-partner-autonomo.md) (frota sem TI no dia-a-dia; dentro das exclusões do doc).
 2. **Tweaks** — lista curta do que sobrou do teste pós-merge (admin / viagens); fechar só o que for rápido e acordado.
-3. **pytest** — `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py` no venv com Alembic/PostgreSQL; ou validar **CI** na `main` se o ambiente local continuar a falhar no `alembic.command`.
+3. **pytest** — `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py` no venv; ou **CI** na `main`.
 
-**Depois de SP-G (ordem acordada):** **SP-D** → **SP-C** → **SP-E** → **SP-F** — índice em [`docs/super-prompts/README.md`](../super-prompts/README.md).
+**Depois de SP-C:** **SP-E** → **SP-F** — [`docs/super-prompts/README.md`](../super-prompts/README.md).
 
-**Âncora paralela (não diluir sem decisão):** **Ondas M1** — [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-18»** e bloco **2026-04-17** (M1); retomar quando SP-G + tweaks estiverem claros.
+**Âncora paralela:** **Ondas M1** — [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-17»** quando fizer sentido.
 
-**Smoke pós-deploy (W2)** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links, Saúde, Operações, Utilizadores — quando houver redeploy após mudanças.
+**Smoke pós-deploy (W2)** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links, Saúde (guias SP-D), Operações, Utilizadores.
 
-**Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** SP-G nem M1.
+**Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** SP-C nem M1.
 
 ### Não fazer ainda (inalterado)
 
