@@ -5,6 +5,7 @@ import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboa
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
 import { apiFetch, type ApiError } from '../../api/client'
+import { parseJwtPayload } from '../../utils/jwt'
 import {
   getActiveTrips,
   getAdminTripHistory,
@@ -78,8 +79,14 @@ function promptGovernanceReason(prompt: string): string | null {
   return t
 }
 
-/** Erros do PATCH /admin/users/{id} (BETA) em texto legível. */
-function formatAdminUserPatchError(detail: unknown): string {
+/** Erros das rotas admin (PATCH utilizador, bloqueio, password, etc.) em texto legível. */
+function formatAdminApiDetail(detail: unknown): string {
+  if (detail && typeof detail === 'object' && 'detail' in detail) {
+    return formatAdminApiDetail((detail as { detail: unknown }).detail)
+  }
+  if (detail === 'timeout') {
+    return 'Pedido expirou (rede lenta ou servidor a aquecer). Tenta de novo.'
+  }
   if (typeof detail === 'string') {
     const key = detail.trim()
     const map: Record<string, string> = {
@@ -88,13 +95,20 @@ function formatAdminUserPatchError(detail: unknown): string {
       cannot_modify_admin: 'Não podes alterar a conta de administrador.',
       cannot_modify_staff_role: 'Esta conta é de backoffice (admin / super_admin) — não podes alterá-la por aqui.',
       governance_reason_required_for_phone_change:
-        'Para mudar o telefone, o pedido tem de incluir governance_reason (≥10 caracteres) — usa o fluxo «Guardar só o telefone» actualizado.',
+        'Para mudar o telefone, usa «Guardar só o telefone»: confirma com ALTERAR_TELEFONE e indica um motivo de auditoria com pelo menos 10 caracteres.',
       cannot_delete_staff_role: 'Não é permitido eliminar contas admin / super_admin.',
+      cannot_delete_admin: 'Não é permitido eliminar esta conta de administrador.',
       cannot_block_staff_role: 'Não é permitido bloquear contas admin / super_admin.',
       cannot_unblock_staff_role: 'Estado de conta de backoffice não pode ser alterado por aqui.',
-      super_admin_required: 'Esta acção exige sessão de super_admin (eliminar conta ou bloqueio em massa).',
+      super_admin_required: 'Esta acção exige sessão de super_admin (eliminar conta, bloqueio em massa ou repor palavra-passe).',
       user_not_found: 'Utilizador não encontrado.',
       invalid_user_id: 'Identificador de utilizador inválido.',
+      user_not_blocked: 'Esta conta não está bloqueada.',
+      invalid_confirmation: 'Confirmação incorrecta — escreve exactamente o texto pedido no aviso ou cancela.',
+      cannot_delete_user_with_trips: 'Não é possível eliminar: o utilizador tem viagens como passageiro.',
+      driver_has_active_trip: 'O motorista tem viagem activa — fecha ou cancela antes de repor passageiro.',
+      empty_user_ids: 'Nenhum utilizador seleccionado para bloqueio em massa.',
+      too_many_user_ids: 'Demasiados IDs num único pedido (máximo 200).',
       'Not available': 'Esta acção só está disponível em modo BETA.',
     }
     return map[key] ?? key
@@ -106,7 +120,12 @@ function formatAdminUserPatchError(detail: unknown): string {
     })
     return parts.join(' · ') || 'Pedido inválido.'
   }
-  return 'Não foi possível guardar. Tenta outra vez.'
+  return 'Não foi possível concluir o pedido. Tenta outra vez.'
+}
+
+function sessionJwtIsSuperAdmin(token: string | null): boolean {
+  if (!token) return false
+  return parseJwtPayload(token)?.role === 'super_admin'
 }
 
 function maskSensitiveEnvDisplay(text: string): string {
@@ -345,6 +364,7 @@ function HealthAnomalyBlock(props: {
 
 export function AdminDashboard() {
   const { token } = useAuth()
+  const isSuperAdminSession = sessionJwtIsSuperAdmin(token)
   const [searchParams, setSearchParams] = useSearchParams()
   const initial = readInitialAdminQuery()
   const [tab, setTab] = useState<Tab>(() => initial.tab)
@@ -845,7 +865,7 @@ export function AdminDashboard() {
 
   const errDetail = (err: unknown) =>
     typeof err === 'object' && err !== null && 'detail' in err
-      ? String((err as { detail: unknown }).detail)
+      ? formatAdminApiDetail((err as ApiError).detail)
       : 'Erro'
 
   const handleCreateFrotaOrg = async () => {
@@ -1053,7 +1073,7 @@ export function AdminDashboard() {
       fetchUsers()
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro')
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -1071,7 +1091,7 @@ export function AdminDashboard() {
       fetchUsers()
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro')
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -1116,7 +1136,7 @@ export function AdminDashboard() {
       invalidateUserAudit(editingId)
       fetchUsers()
     } catch (err) {
-      setError(formatAdminUserPatchError((err as ApiError).detail))
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -1145,7 +1165,7 @@ export function AdminDashboard() {
       invalidateUserAudit(editingId)
       fetchUsers()
     } catch (err) {
-      setError(formatAdminUserPatchError((err as ApiError).detail))
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -1174,9 +1194,9 @@ export function AdminDashboard() {
       const d = ae?.detail
       const msg =
         typeof d === 'string'
-          ? formatAdminUserPatchError(d)
+          ? formatAdminApiDetail(d)
           : Array.isArray(d)
-            ? formatAdminUserPatchError(d)
+            ? formatAdminApiDetail(d)
             : 'Erro ao eliminar'
       setError(msg)
     }
@@ -1202,7 +1222,7 @@ export function AdminDashboard() {
       fetchUsers()
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao bloquear')
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -1221,7 +1241,7 @@ export function AdminDashboard() {
       fetchUsers()
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao desbloquear')
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -1243,7 +1263,7 @@ export function AdminDashboard() {
       invalidateUserAudit(userId)
       fetchUsers()
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao limpar palavra-passe')
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -1278,7 +1298,7 @@ export function AdminDashboard() {
       fetchUsers()
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao bloquear em massa')
+      setError(formatAdminApiDetail((err as ApiError).detail))
     }
   }
 
@@ -3044,6 +3064,33 @@ export function AdminDashboard() {
                             Guardar só o telefone
                           </button>
                         </div>
+                        <div className="rounded-xl border border-border bg-background/60 p-3 space-y-2">
+                          <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                            Palavra-passe (login BETA)
+                          </p>
+                          {isSuperAdminSession ? (
+                            <>
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                Acção dedicada: remove o hash da palavra-passe para o utilizador voltar ao fluxo por
+                                defeito. Não mistura com nome nem telefone — vais confirmar com{' '}
+                                <code className="rounded bg-muted px-1 py-0.5 text-foreground/90">LIMPAR_SENHA</code> e
+                                um motivo de auditoria (≥10 caracteres).
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => void handleClearUserPassword(editingId)}
+                                className="px-3 py-1.5 bg-muted text-foreground text-sm rounded-lg border border-border hover:bg-muted/80"
+                              >
+                                Repor palavra-passe a pedido…
+                              </button>
+                            </>
+                          ) : (
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              Só uma sessão <code className="text-foreground/90">super_admin</code> pode repor a
+                              palavra-passe BETA. O teu papel actual não inclui esta acção.
+                            </p>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={cancelEdit}
@@ -3114,13 +3161,6 @@ export function AdminDashboard() {
                                   className="px-2 py-1 bg-info text-info-foreground text-xs rounded hover:opacity-90"
                                 >
                                   Editar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => void handleClearUserPassword(u.id)}
-                                  className="px-2 py-1 bg-muted text-foreground text-xs rounded border border-border hover:opacity-90"
-                                >
-                                  Limpar palavra-passe
                                 </button>
                                 {u.status === 'blocked' ? (
                                   unblockConfirmId === u.id ? (
