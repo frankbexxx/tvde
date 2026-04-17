@@ -148,16 +148,16 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Estado repo (2026-04-17 — pós-merge SP + admin UI)
 
-- **`main`:** **W2** A–E + **super-prompts B, A, G, D** (web-app): SP-B/A como antes; **SP-G** tab **Agora**; **SP-D** guias anti-stuck na **Saúde** (3 passos por classe de anomalia, banner, ponto na tab, lembrete no Agora). Docs `docs/super-prompts/*`. Tweaks pós-merge quando listares.
+- **`main`:** **W2** A–E + **super-prompts B, A, G, D, C** (web-app): SP-B/A como antes; **SP-G** tab **Agora**; **SP-D** guias anti-stuck na **Saúde**; **SP-C** partner (fila atenção, filtros viagens, CSV). **SP-E** em curso: revisões identidade em `audit_events` + trilho na tab Utilizadores (ver `SP-E-mutabilidade-memoria.md` § Estado). Docs `docs/super-prompts/*`.
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **SP-C — Partner autónomo** — [`docs/super-prompts/SP-C-partner-autonomo.md`](../super-prompts/SP-C-partner-autonomo.md) (frota sem TI no dia-a-dia; dentro das exclusões do doc).
+1. **SP-E — Mutabilidade com memória** — fechar o que faltar em [`SP-E-mutabilidade-memoria.md`](../super-prompts/SP-E-mutabilidade-memoria.md) (revisões / UI); depois **SP-F** (RBAC fino + motivo obrigatório).
 2. **Tweaks** — lista curta do que sobrou do teste pós-merge (admin / viagens); fechar só o que for rápido e acordado.
-3. **pytest** — `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py` no venv; ou **CI** na `main`.
+3. **pytest / CI** — regressão admin após mudanças em `admin.py` / `AdminDashboard`.
 
-**Depois de SP-C:** **SP-E** → **SP-F** — [`docs/super-prompts/README.md`](../super-prompts/README.md).
+**Sequência global:** **SP-C** (na `main`) → **SP-E** → **SP-F** — [`docs/super-prompts/README.md`](../super-prompts/README.md).
 
 **Âncora paralela:** **Ondas M1** — [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-17»** quando fizer sentido.
 

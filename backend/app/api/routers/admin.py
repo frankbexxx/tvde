@@ -642,13 +642,18 @@ async def update_user(
         if existing:
             raise HTTPException(status_code=409, detail="phone_already_used")
         u.phone = phone
+    after = {
+        "name": u.name,
+        "phone": u.phone,
+        "status": u.status.value if u.status else None,
+    }
     record_admin_action(
         db,
         actor_user_id=admin_user.user_id,
         action="user_patch",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"before": before, "after": {"name": u.name, "phone": u.phone}},
+        payload={"before": before, "after": after},
     )
     db.commit()
     db.refresh(u)
@@ -720,7 +725,7 @@ async def block_user(
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if u.role == Role.admin:
         raise HTTPException(status_code=400, detail="cannot_block_admin_role")
-    prev = u.status.value if u.status else None
+    before_status = u.status.value if u.status else None
     u.status = UserStatus.blocked
     record_admin_action(
         db,
@@ -728,7 +733,11 @@ async def block_user(
         action="user_block",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"previous_status": prev},
+        payload={
+            "before_status": before_status,
+            "after_status": UserStatus.blocked.value,
+            "previous_status": before_status,
+        },
     )
     db.commit()
     return {"status": "ok", "message": "User blocked"}
@@ -756,7 +765,7 @@ async def unblock_user(
         raise HTTPException(status_code=400, detail="cannot_unblock_admin_role")
     if u.status != UserStatus.blocked:
         raise HTTPException(status_code=400, detail="user_not_blocked")
-    prev = u.status.value if u.status else None
+    before_status = u.status.value if u.status else None
     u.status = UserStatus.active
     record_admin_action(
         db,
@@ -764,7 +773,11 @@ async def unblock_user(
         action="user_unblock",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"previous_status": prev},
+        payload={
+            "before_status": before_status,
+            "after_status": UserStatus.active.value,
+            "previous_status": before_status,
+        },
     )
     db.commit()
     return {"status": "ok", "message": "User unblocked"}
@@ -853,6 +866,7 @@ async def admin_clear_user_password(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone) or u.role == Role.admin:
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    had_password = u.password_hash is not None
     u.password_hash = None
     record_admin_action(
         db,
@@ -860,7 +874,7 @@ async def admin_clear_user_password(
         action="user_password_clear",
         entity_type="user",
         entity_id=str(u.id),
-        payload={},
+        payload={"had_password": had_password},
     )
     db.commit()
     return {"status": "ok", "message": "password_cleared"}

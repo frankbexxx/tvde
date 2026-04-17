@@ -347,3 +347,26 @@ export async function unassignDriverFromPartner(
     token,
   })
 }
+
+/** SP-B / SP-E: eventos `admin.*` persistidos; filtrar por utilizador com entity_type=user. */
+export interface AdminAuditTrailItem {
+  id: string
+  event_type: string
+  entity_type: string
+  entity_id: string
+  occurred_at: string
+  payload: Record<string, unknown>
+}
+
+export async function getAdminAuditTrail(
+  token: string,
+  opts?: { limit?: number; offset?: number; entity_type?: string; entity_id?: string }
+): Promise<AdminAuditTrailItem[]> {
+  const q = new URLSearchParams()
+  if (opts?.limit != null) q.set('limit', String(opts.limit))
+  if (opts?.offset != null) q.set('offset', String(opts.offset))
+  if (opts?.entity_type?.trim()) q.set('entity_type', opts.entity_type.trim())
+  if (opts?.entity_id?.trim()) q.set('entity_id', opts.entity_id.trim())
+  const qs = q.toString()
+  return apiFetch<AdminAuditTrailItem[]>(`/admin/audit-trail${qs ? `?${qs}` : ''}`, { token })
+}

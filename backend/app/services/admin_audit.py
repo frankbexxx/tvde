@@ -2,6 +2,10 @@
 
 Reutiliza a tabela `audit_events`: eventos de domínio (ex. mudança de estado de viagem)
 usam `event_type` livre; acções admin usam prefixo `admin.` no `event_type`.
+
+**SP-E (mutabilidade com memória):** para alterações a dados identificáveis, o `payload`
+pode incluir chaves `before` e `after` com o mesmo conjunto de campos (ex.: nome, telefone,
+estado da conta), para reconstruir o histórico sem apagar factos financeiros.
 """
 
 from __future__ import annotations
