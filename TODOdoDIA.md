@@ -87,6 +87,29 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ---
 
+## Hoje 2026-04-08
+
+_Âncora: **SP-F v2** — governança alargada (motivos + `super_admin` onde definido); código + testes prontos **localmente**; **PR por ti** antes de contar como entregue em `main`._
+
+### Prioridades (máx. 3)
+
+1. [ ] [OPS] **PR SP-F v2** — Branch + commit na raiz; abrir PR para `main`; smoke admin com JWT **super_admin** nas rotas restritas.
+2. [ ] [OPS] **Smoke** — Lista curta em [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) § Arranque imediato (cron, frota, viagens, utilizadores).
+3. [ ] [CÓDIGO] **M1** (quando SP-F v2 estiver mergido) — retomar «Hoje 2026-04-17» abaixo ou compactar num novo dia.
+
+### Fecho do dia
+
+- **Feito (local):** SP-F v2 backend + web-app + pytest 130 OK + lint/build web-app; doc `SP-F-governanca.md` v2; `PROXIMA_SESSAO` actualizado.
+- **Não feito / bloqueios:** merge em `main` — à tua vez (PR).
+- **Aprendizados:** `AdminGovernanceReasonBody` tem de estar declarado **antes** das rotas que o usam (evita `NameError` ao import).
+
+### Rasto para a próxima sessão
+
+- Após merge: actualizar **PROXIMA** «Estado repo» para data/código em `main`; **Seção F** nota `super_admin` nos POSTs operacionais admin.
+- **M1** password + perfil quando quiseres retomar Ondas M.
+
+---
+
 ## Hoje 2026-04-18
 
 _Âncora: **super-prompts** (sequência **B → A** fechada em `main` + testado em PROD); seguir **SP-G** antes de reabrir peso das **Ondas M1** salvo decisão no arranque. Ver [`docs/super-prompts/README.md`](docs/super-prompts/README.md)._

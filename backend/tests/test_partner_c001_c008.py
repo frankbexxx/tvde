@@ -19,6 +19,8 @@ from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 
+_GOVERNANCE_REASON = "motivo teste integração parceiros SP-F."
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _require_postgres() -> None:
@@ -31,12 +33,13 @@ def _require_postgres() -> None:
 
 @pytest.fixture
 def admin_ctx_override() -> None:
+    """SP-F: criar frota / atribuir motorista exige `super_admin` + motivo."""
     aid = str(uuid.uuid4())
 
-    async def _admin() -> UserContext:
-        return UserContext(user_id=aid, role=Role.admin)
+    async def _super() -> UserContext:
+        return UserContext(user_id=aid, role=Role.super_admin)
 
-    app.dependency_overrides[get_current_user] = _admin
+    app.dependency_overrides[get_current_user] = _super
     yield aid
     app.dependency_overrides.pop(get_current_user, None)
 
@@ -44,7 +47,11 @@ def admin_ctx_override() -> None:
 def test_c001_admin_create_partner_persisted(admin_ctx_override: str) -> None:
     client = TestClient(app)
     r = client.post(
-        "/admin/partners", json={"name": f"Fleet E2E {uuid.uuid4().hex[:8]}"}
+        "/admin/partners",
+        json={
+            "name": f"Fleet E2E {uuid.uuid4().hex[:8]}",
+            "governance_reason": _GOVERNANCE_REASON,
+        },
     )
     assert r.status_code == 200
     data = r.json()
@@ -64,7 +71,10 @@ def test_c001_admin_create_partner_persisted(admin_ctx_override: str) -> None:
 
 def test_c001_create_partner_name_required(admin_ctx_override: str) -> None:
     client = TestClient(app)
-    r = client.post("/admin/partners", json={"name": "   "})
+    r = client.post(
+        "/admin/partners",
+        json={"name": "   ", "governance_reason": _GOVERNANCE_REASON},
+    )
     assert r.status_code == 400
     assert r.json().get("detail") == "name_required"
 
@@ -98,7 +108,7 @@ def test_c002_assign_driver_partner(admin_ctx_override: str) -> None:
     client = TestClient(app)
     r = client.post(
         f"/admin/drivers/{driver_id}/assign-partner",
-        json={"partner_id": str(pid_new)},
+        json={"partner_id": str(pid_new), "governance_reason": _GOVERNANCE_REASON},
     )
     assert r.status_code == 200, r.text
     assert r.json() == {"user_id": driver_id, "partner_id": str(pid_new)}
@@ -160,7 +170,7 @@ def test_c006_assign_blocked_when_active_trip(admin_ctx_override: str) -> None:
     client = TestClient(app)
     r = client.post(
         f"/admin/drivers/{driver_id}/assign-partner",
-        json={"partner_id": str(p_b)},
+        json={"partner_id": str(p_b), "governance_reason": _GOVERNANCE_REASON},
     )
     assert r.status_code == 409
     assert r.json().get("detail") == "driver_has_active_trip"
@@ -272,8 +282,8 @@ def test_c008_full_flow_admin_to_partner_views() -> None:
     db = SessionLocal()
     try:
         admin_u = User(
-            role=Role.admin,
-            name="Flow Admin",
+            role=Role.super_admin,
+            name="Flow SuperAdmin",
             phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
             status=UserStatus.active,
         )
@@ -288,7 +298,10 @@ def test_c008_full_flow_admin_to_partner_views() -> None:
     ah = {"Authorization": f"Bearer {admin_tok}"}
     pr = client.post(
         "/admin/partners",
-        json={"name": f"Flow {uuid.uuid4().hex[:6]}"},
+        json={
+            "name": f"Flow {uuid.uuid4().hex[:6]}",
+            "governance_reason": _GOVERNANCE_REASON,
+        },
         headers=ah,
     )
     assert pr.status_code == 200
@@ -338,7 +351,7 @@ def test_c008_full_flow_admin_to_partner_views() -> None:
 
     ar = client.post(
         f"/admin/drivers/{driver_id}/assign-partner",
-        json={"partner_id": fleet_id},
+        json={"partner_id": fleet_id, "governance_reason": _GOVERNANCE_REASON},
         headers=ah,
     )
     assert ar.status_code == 200

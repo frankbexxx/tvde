@@ -4,6 +4,10 @@
 import { apiFetch, API_BASE } from './client'
 import type { TripHistoryItem } from './trips'
 
+/** Motivo mínimo SP-F (10+ chars) para POST operacionais quando a UI não recolhe texto (ex.: DevTools). */
+export const DEFAULT_ADMIN_GOVERNANCE_REASON =
+  'Operação manual validada no painel ou DevTools (ambiente de desenvolvimento / testes).'
+
 export interface TripActiveItem {
   trip_id: string
   status: string
@@ -116,21 +120,28 @@ export async function getTripDebug(tripId: string, token: string): Promise<Recor
 
 export async function assignTripAdmin(
   tripId: string,
-  token: string
+  token: string,
+  governanceReason: string
 ): Promise<{ trip_id: string; status: string }> {
   return apiFetch(`/admin/trips/${tripId}/assign`, {
     method: 'POST',
     token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
   })
 }
 
 export async function cancelTripAdmin(
   tripId: string,
-  token: string
+  token: string,
+  reason: string
 ): Promise<{ trip_id: string; status: string }> {
   return apiFetch(`/admin/cancel-trip/${tripId}`, {
     method: 'POST',
     token,
+    body: JSON.stringify({
+      confirmation: 'CANCELAR_VIAGEM',
+      reason: reason.trim(),
+    }),
   })
 }
 
@@ -172,27 +183,37 @@ export async function getUsageSummary(token: string): Promise<AdminUsageSummaryR
   return apiFetch<AdminUsageSummaryResponse>('/admin/usage-summary', { token })
 }
 
-export async function runTimeouts(token: string): Promise<RunTimeoutsResponse> {
+export async function runTimeouts(
+  token: string,
+  governanceReason: string = DEFAULT_ADMIN_GOVERNANCE_REASON
+): Promise<RunTimeoutsResponse> {
   return apiFetch<RunTimeoutsResponse>('/admin/run-timeouts', {
     method: 'POST',
     token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
   })
 }
 
-export async function runOfferExpiry(token: string): Promise<RunOfferExpiryResponse> {
+export async function runOfferExpiry(
+  token: string,
+  governanceReason: string = DEFAULT_ADMIN_GOVERNANCE_REASON
+): Promise<RunOfferExpiryResponse> {
   return apiFetch<RunOfferExpiryResponse>('/admin/run-offer-expiry', {
     method: 'POST',
     token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
   })
 }
 
 export async function recoverDriver(
   driverId: string,
-  token: string
+  token: string,
+  governanceReason: string
 ): Promise<RecoverDriverResponse> {
   return apiFetch<RecoverDriverResponse>(`/admin/recover-driver/${driverId}`, {
     method: 'POST',
     token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
   })
 }
 
@@ -239,8 +260,15 @@ export async function getAdminPhase0(token: string): Promise<AdminPhase0Response
   return apiFetch<AdminPhase0Response>('/admin/phase0', { token })
 }
 
-export async function runAdminCron(token: string): Promise<AdminCronRunResponse> {
-  return apiFetch<AdminCronRunResponse>('/admin/cron/run', { method: 'POST', token })
+export async function runAdminCron(
+  token: string,
+  governanceReason: string = DEFAULT_ADMIN_GOVERNANCE_REASON
+): Promise<AdminCronRunResponse> {
+  return apiFetch<AdminCronRunResponse>('/admin/cron/run', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
+  })
 }
 
 export async function validateEnvText(
@@ -287,11 +315,15 @@ export interface AdminAssignPartnerResponse {
 
 export async function createPartner(
   name: string,
-  token: string
+  token: string,
+  governanceReason: string
 ): Promise<AdminPartnerCreatedResponse> {
   return apiFetch<AdminPartnerCreatedResponse>('/admin/partners', {
     method: 'POST',
-    body: JSON.stringify({ name: name.trim() }),
+    body: JSON.stringify({
+      name: name.trim(),
+      governance_reason: governanceReason.trim(),
+    }),
     token,
   })
 }
@@ -299,7 +331,8 @@ export async function createPartner(
 export async function createPartnerOrgAdmin(
   partnerId: string,
   body: { name: string; phone: string },
-  token: string
+  token: string,
+  governanceReason: string
 ): Promise<AdminPartnerOrgAdminCreatedResponse> {
   const pid = partnerId.trim()
   return apiFetch<AdminPartnerOrgAdminCreatedResponse>(
@@ -309,6 +342,7 @@ export async function createPartnerOrgAdmin(
       body: JSON.stringify({
         name: body.name.trim(),
         phone: body.phone.trim(),
+        governance_reason: governanceReason.trim(),
       }),
       token,
     }
@@ -326,25 +360,31 @@ export async function listDrivers(token: string): Promise<AdminDriverListItem[]>
 export async function assignDriverToPartner(
   driverUserId: string,
   partnerId: string,
-  token: string
+  token: string,
+  governanceReason: string
 ): Promise<AdminAssignPartnerResponse> {
   const did = driverUserId.trim()
   const pid = partnerId.trim()
   return apiFetch<AdminAssignPartnerResponse>(`/admin/drivers/${encodeURIComponent(did)}/assign-partner`, {
     method: 'POST',
-    body: JSON.stringify({ partner_id: pid }),
+    body: JSON.stringify({
+      partner_id: pid,
+      governance_reason: governanceReason.trim(),
+    }),
     token,
   })
 }
 
 export async function unassignDriverFromPartner(
   driverUserId: string,
-  token: string
+  token: string,
+  governanceReason: string
 ): Promise<AdminAssignPartnerResponse> {
   const did = driverUserId.trim()
   return apiFetch<AdminAssignPartnerResponse>(`/admin/drivers/${encodeURIComponent(did)}/assign-partner`, {
     method: 'DELETE',
     token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
   })
 }
 

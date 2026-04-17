@@ -15,6 +15,8 @@ from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import Role, UserStatus
 
+_GOVERNANCE_REASON = "motivo teste onboarding gestor frota SP-F."
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _require_postgres() -> None:
@@ -29,10 +31,10 @@ def _require_postgres() -> None:
 def admin_override() -> None:
     aid = str(uuid.uuid4())
 
-    async def _adm() -> UserContext:
-        return UserContext(user_id=aid, role=Role.admin)
+    async def _super() -> UserContext:
+        return UserContext(user_id=aid, role=Role.super_admin)
 
-    app.dependency_overrides[get_current_user] = _adm
+    app.dependency_overrides[get_current_user] = _super
     yield
     app.dependency_overrides.pop(get_current_user, None)
 
@@ -50,7 +52,12 @@ def test_create_partner_org_admin_success(admin_override: None) -> None:
     client = TestClient(app)
     r = client.post(
         f"/admin/partners/{pid}/create-admin",
-        json={"name": "Fleet Boss", "phone": phone, "email": None},
+        json={
+            "name": "Fleet Boss",
+            "phone": phone,
+            "email": None,
+            "governance_reason": _GOVERNANCE_REASON,
+        },
     )
     assert r.status_code == 200, r.text
     data = r.json()
@@ -90,6 +97,6 @@ def test_create_partner_org_admin_duplicate_phone(admin_override: None) -> None:
 
     r = TestClient(app).post(
         f"/admin/partners/{pid}/create-admin",
-        json={"name": "Boss", "phone": phone},
+        json={"name": "Boss", "phone": phone, "governance_reason": _GOVERNANCE_REASON},
     )
     assert r.status_code == 409

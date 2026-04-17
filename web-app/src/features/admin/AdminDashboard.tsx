@@ -66,6 +66,18 @@ function isBackofficeStaffRole(role: string): boolean {
   return role === 'admin' || role === 'super_admin'
 }
 
+/** SP-F: motivo ≥10 caracteres; cancela com `null`. */
+function promptGovernanceReason(prompt: string): string | null {
+  const raw = window.prompt(prompt)
+  if (raw === null) return null
+  const t = raw.trim()
+  if (t.length < 10) {
+    window.alert('O motivo precisa de pelo menos 10 caracteres.')
+    return null
+  }
+  return t
+}
+
 /** Erros do PATCH /admin/users/{id} (BETA) em texto legível. */
 function formatAdminUserPatchError(detail: unknown): string {
   if (typeof detail === 'string') {
@@ -75,6 +87,8 @@ function formatAdminUserPatchError(detail: unknown): string {
       phone_already_used: 'Esse telefone já está a ser usado por outra conta.',
       cannot_modify_admin: 'Não podes alterar a conta de administrador.',
       cannot_modify_staff_role: 'Esta conta é de backoffice (admin / super_admin) — não podes alterá-la por aqui.',
+      governance_reason_required_for_phone_change:
+        'Para mudar o telefone, o pedido tem de incluir governance_reason (≥10 caracteres) — usa o fluxo «Guardar só o telefone» actualizado.',
       cannot_delete_staff_role: 'Não é permitido eliminar contas admin / super_admin.',
       cannot_block_staff_role: 'Não é permitido bloquear contas admin / super_admin.',
       cannot_unblock_staff_role: 'Estado de conta de backoffice não pode ser alterado por aqui.',
@@ -651,9 +665,11 @@ export function AdminDashboard() {
 
   const handleAssignTrip = async (tripId: string) => {
     if (!token) return
+    const gr = promptGovernanceReason('Motivo para atribuir a viagem (SP-F, mín. 10 caracteres):')
+    if (!gr) return
     setTripActionLoading(tripId)
     try {
-      await assignTripAdmin(tripId, token)
+      await assignTripAdmin(tripId, token, gr)
       setError(null)
       fetchActiveTrips()
       setTripDetail(null)
@@ -667,9 +683,11 @@ export function AdminDashboard() {
 
   const handleCancelTrip = async (tripId: string) => {
     if (!token) return
+    const gr = promptGovernanceReason('Motivo do cancelamento admin (mín. 10; fica na viagem):')
+    if (!gr) return
     setTripActionLoading(tripId)
     try {
-      await cancelTripAdmin(tripId, token)
+      await cancelTripAdmin(tripId, token, gr)
       setError(null)
       fetchActiveTrips()
       setTripDetail(null)
@@ -716,9 +734,13 @@ export function AdminDashboard() {
 
   const handleRunTimeouts = async () => {
     if (!token) return
+    const gr = promptGovernanceReason(
+      'Motivo para correr timeouts (SP-F). Requer sessão super_admin; mín. 10 caracteres.'
+    )
+    if (!gr) return
     setOpsLoading('timeouts')
     try {
-      await runTimeouts(token)
+      await runTimeouts(token, gr)
       setError(null)
       fetchActiveTrips()
       fetchMetrics()
@@ -731,9 +753,13 @@ export function AdminDashboard() {
 
   const handleRunOfferExpiry = async () => {
     if (!token) return
+    const gr = promptGovernanceReason(
+      'Motivo para expirar ofertas / redispatch (SP-F). Requer super_admin; mín. 10 caracteres.'
+    )
+    if (!gr) return
     setOpsLoading('offer-expiry')
     try {
-      await runOfferExpiry(token)
+      await runOfferExpiry(token, gr)
       setError(null)
       fetchActiveTrips()
       fetchMetrics()
@@ -761,9 +787,13 @@ export function AdminDashboard() {
   const handleRunCronNow = async () => {
     if (!token) return
     if (!window.confirm('Correr cron agora? (timeouts, offers, cleanup, system health)')) return
+    const gr = promptGovernanceReason(
+      'Motivo para correr o lote cron completo (SP-F). Requer super_admin; mín. 10 caracteres.'
+    )
+    if (!gr) return
     setOpsLoading('cron')
     try {
-      const d = await runAdminCron(token)
+      const d = await runAdminCron(token, gr)
       setCronRun(d)
       setError(null)
     } catch (err) {
@@ -793,9 +823,11 @@ export function AdminDashboard() {
     if (!token) return
     const id = driverUserId.trim()
     if (!id) return
+    const gr = promptGovernanceReason('Motivo para recuperar motorista (disponível=true; SP-F):')
+    if (!gr) return
     setOpsLoading('recover')
     try {
-      await recoverDriver(id, token)
+      await recoverDriver(id, token, gr)
       setError(null)
       setRecoverDriverId('')
       await fetchHealth()
@@ -816,11 +848,13 @@ export function AdminDashboard() {
 
   const handleCreateFrotaOrg = async () => {
     if (!token || !frotaOrgName.trim()) return
+    const gr = promptGovernanceReason('Motivo para criar organização / frota (SP-F, mín. 10 caracteres):')
+    if (!gr) return
     setFrotaLoading('org')
     setFrotaOk(null)
     setError(null)
     try {
-      const r = await createPartner(frotaOrgName, token)
+      const r = await createPartner(frotaOrgName, token, gr)
       setFrotaPartnerId(r.id)
       setFrotaOk(`Organização “${r.name}” criada. O ID da frota foi preenchido abaixo — usa-o para criar o gestor.`)
     } catch (err) {
@@ -832,6 +866,8 @@ export function AdminDashboard() {
 
   const handleCreateFrotaManager = async () => {
     if (!token || !frotaPartnerId.trim() || !frotaManagerName.trim() || !frotaManagerPhone.trim()) return
+    const gr = promptGovernanceReason('Motivo para criar gestor de frota (SP-F, mín. 10 caracteres):')
+    if (!gr) return
     setFrotaLoading('manager')
     setFrotaOk(null)
     setFrotaAssignOk(null)
@@ -840,7 +876,8 @@ export function AdminDashboard() {
       const r = await createPartnerOrgAdmin(
         frotaPartnerId,
         { name: frotaManagerName, phone: frotaManagerPhone },
-        token
+        token,
+        gr
       )
       setFrotaOk(
         `Gestor criado: ${r.name} (${r.phone}). Pode iniciar sessão no separador Frota da app com este telefone.`
@@ -858,12 +895,14 @@ export function AdminDashboard() {
     const pid = (frotaAssignPartnerId || frotaPartnerId).trim()
     if (!token || !frotaAssignDriverId.trim() || !pid) return
     if (!window.confirm('Atribuir este motorista a esta frota?')) return
+    const gr = promptGovernanceReason('Motivo para atribuir motorista à frota (SP-F, mín. 10 caracteres):')
+    if (!gr) return
     setFrotaLoading('assign-driver')
     setFrotaOk(null)
     setFrotaAssignOk(null)
     setError(null)
     try {
-      const r = await assignDriverToPartner(frotaAssignDriverId, pid, token)
+      const r = await assignDriverToPartner(frotaAssignDriverId, pid, token, gr)
       setFrotaAssignOk(`Motorista atribuído à frota. driver=${r.user_id} · frota=${r.partner_id}`)
     } catch (err) {
       setError(errDetail(err))
@@ -875,12 +914,14 @@ export function AdminDashboard() {
   const handleUnassignDriverFromFrota = async () => {
     if (!token || !frotaAssignDriverId.trim()) return
     if (!window.confirm('Remover este motorista da frota?')) return
+    const gr = promptGovernanceReason('Motivo para remover motorista da frota (SP-F, mín. 10 caracteres):')
+    if (!gr) return
     setFrotaLoading('unassign-driver')
     setFrotaOk(null)
     setFrotaAssignOk(null)
     setError(null)
     try {
-      const r = await unassignDriverFromPartner(frotaAssignDriverId, token)
+      const r = await unassignDriverFromPartner(frotaAssignDriverId, token, gr)
       setFrotaAssignOk(`Motorista removido da frota. driver=${r.user_id} · frota=${r.partner_id}`)
     } catch (err) {
       setError(errDetail(err))
@@ -998,8 +1039,14 @@ export function AdminDashboard() {
 
   const handlePromote = async (userId: string) => {
     if (!token) return
+    const gr = promptGovernanceReason('Motivo para promover a motorista (super_admin; SP-F):')
+    if (!gr) return
     try {
-      await apiFetch(`/admin/users/${userId}/promote-driver`, { method: 'POST', token })
+      await apiFetch(`/admin/users/${userId}/promote-driver`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ governance_reason: gr }),
+      })
       invalidateUserAudit(userId)
       fetchUsers()
       setError(null)
@@ -1010,8 +1057,14 @@ export function AdminDashboard() {
 
   const handleDemote = async (userId: string) => {
     if (!token) return
+    const gr = promptGovernanceReason('Motivo para repor passageiro (super_admin; SP-F):')
+    if (!gr) return
     try {
-      await apiFetch(`/admin/users/${userId}/demote-driver`, { method: 'POST', token })
+      await apiFetch(`/admin/users/${userId}/demote-driver`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ governance_reason: gr }),
+      })
       invalidateUserAudit(userId)
       fetchUsers()
       setError(null)
@@ -1076,10 +1129,12 @@ export function AdminDashboard() {
       `Alterar telefone de ${editOriginalPhone} para ${next}.\n\nPara confirmar, escreve exactamente: ALTERAR_TELEFONE`
     )
     if (typed?.trim() !== 'ALTERAR_TELEFONE') return
+    const gr = promptGovernanceReason('Motivo de auditoria para mudança de telefone (SP-F, mín. 10 caracteres):')
+    if (!gr) return
     try {
       await apiFetch(`/admin/users/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ phone: next }),
+        body: JSON.stringify({ phone: next, governance_reason: gr }),
         token,
       })
       setEditOriginalPhone(next)
@@ -1127,8 +1182,14 @@ export function AdminDashboard() {
 
   const handleBlockUser = async (userId: string) => {
     if (!token) return
+    const gr = promptGovernanceReason('Motivo para bloquear conta (SP-F, mín. 10 caracteres):')
+    if (!gr) return
     try {
-      await apiFetch(`/admin/users/${userId}/block`, { method: 'POST', token })
+      await apiFetch(`/admin/users/${userId}/block`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ governance_reason: gr }),
+      })
       setBlockConfirmId(null)
       invalidateUserAudit(userId)
       setBulkSelectedIds((m) => {
@@ -1149,11 +1210,13 @@ export function AdminDashboard() {
       'Repor login BETA (password por defeito). Escreve exactamente: LIMPAR_SENHA'
     )
     if (typed?.trim() !== 'LIMPAR_SENHA') return
+    const gr = promptGovernanceReason('Motivo para repor palavra-passe BETA (super_admin; SP-F):')
+    if (!gr) return
     try {
       await apiFetch(`/admin/users/${userId}/password/clear`, {
         method: 'POST',
         token,
-        body: JSON.stringify({ confirmation: 'LIMPAR_SENHA' }),
+        body: JSON.stringify({ confirmation: 'LIMPAR_SENHA', governance_reason: gr }),
       })
       setError(null)
       invalidateUserAudit(userId)

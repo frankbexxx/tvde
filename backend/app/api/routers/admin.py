@@ -10,7 +10,12 @@ from pydantic import BaseModel, Field
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import UserContext, get_current_super_admin, get_db, require_role
+from app.api.deps import (
+    UserContext,
+    get_current_super_admin,
+    get_db,
+    require_role,
+)
 from app.db.models.audit_event import AuditEvent
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.core.config import settings
@@ -124,6 +129,12 @@ class AdminEnvValidateResponse(BaseModel):
     ignored_lines: int
 
 
+class AdminGovernanceReasonBody(BaseModel):
+    """SP-F: justificação mínima para acções sensíveis (fica em `audit_events` quando aplicável)."""
+
+    governance_reason: str = Field(..., min_length=10, max_length=500)
+
+
 def _parse_dotenv_keys(text: str) -> tuple[set[str], int]:
     keys: set[str] = set()
     ignored = 0
@@ -174,13 +185,14 @@ async def admin_phase0(
 @router.post("/cron/run", response_model=AdminCronRunResponse)
 async def admin_run_cron(
     request: Request,
-    user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminGovernanceReasonBody,
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> AdminCronRunResponse:
-    """Run the same maintenance batch as /cron/jobs, but admin-only (no CRON_SECRET in UI)."""
+    """Run the same maintenance batch as /cron/jobs. SP-F: só `super_admin` + motivo (audit)."""
     rid = getattr(getattr(request, "state", None), "request_id", "") or ""
     started = time.monotonic()
-    log_event("cron_started", invoked_by="admin")
+    log_event("cron_started", invoked_by="super_admin")
     errors: dict[str, str] = {}
 
     try:
@@ -262,6 +274,25 @@ async def admin_run_cron(
         invoked_by="admin",
     )
 
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="admin_cron_panel_run",
+        entity_type="system",
+        entity_id="cron",
+        payload={
+            "governance_reason": body.governance_reason.strip()[:500],
+            "duration_ms": elapsed_ms,
+            "error_count": len(errors),
+            "timeouts": timeouts,
+            "offers_expired": expired,
+            "redispatch_offers": len(new_offers),
+            "audit_events_deleted": cleanup.get("audit_events_deleted", 0),
+            "system_health_status": sh_status,
+        },
+    )
+    db.commit()
+
     return AdminCronRunResponse(
         status="ok" if len(errors) == 0 else "partial_error",
         duration_ms=elapsed_ms,
@@ -283,9 +314,9 @@ async def admin_run_cron(
 async def admin_validate_env(
     request: Request,
     body: AdminEnvValidateRequest,
-    user: UserContext = Depends(require_role(Role.admin)),
+    user: UserContext = Depends(get_current_super_admin),
 ) -> AdminEnvValidateResponse:
-    """Validate a pasted .env (key=value) WITHOUT storing it. Safe-by-default."""
+    """Validate a pasted .env (key=value) WITHOUT storing it. SP-F: só `super_admin` (dados sensíveis)."""
     rid = getattr(getattr(request, "state", None), "request_id", "") or ""
     keys, ignored = _parse_dotenv_keys(body.env_text)
     required = [
@@ -377,11 +408,22 @@ class AdminUserItem(BaseModel):
 class AdminUserUpdateRequest(BaseModel):
     name: str | None = None
     phone: str | None = None
+    governance_reason: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Obrigatório (≥10 chars) quando `phone` é enviado.",
+    )
 
 
-class AdminGovernanceReasonBody(BaseModel):
-    """SP-F: justificação obrigatória para eliminação de conta (fica em `audit_events`)."""
+class AdminPartnerCreateGoverned(AdminCreatePartnerRequest):
+    governance_reason: str = Field(..., min_length=10, max_length=500)
 
+
+class AdminPartnerOrgAdminGoverned(AdminCreatePartnerOrgAdminRequest):
+    governance_reason: str = Field(..., min_length=10, max_length=500)
+
+
+class AdminAssignPartnerGoverned(AdminAssignPartnerRequest):
     governance_reason: str = Field(..., min_length=10, max_length=500)
 
 
@@ -499,10 +541,11 @@ def _is_admin_phone(phone: str) -> bool:
 @router.post("/users/{user_id}/promote-driver")
 async def promote_user_to_driver(
     user_id: str,
-    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    body: AdminGovernanceReasonBody,
+    admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: promote user to driver (create driver_profile, set role=driver)."""
+    """BETA: promote user to driver. SP-F: só `super_admin` + motivo."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
     try:
@@ -528,7 +571,10 @@ async def promote_user_to_driver(
             action="user_promote_driver",
             entity_type="user",
             entity_id=str(u.id),
-            payload={"note": "driver_profile_existed"},
+            payload={
+                "note": "driver_profile_existed",
+                "governance_reason": body.governance_reason.strip()[:500],
+            },
         )
         db.commit()
         return {"status": "ok", "message": "Driver already exists, role updated"}
@@ -546,7 +592,10 @@ async def promote_user_to_driver(
         action="user_promote_driver",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"created_driver_profile": True},
+        payload={
+            "created_driver_profile": True,
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return {"status": "ok", "message": "User promoted to driver"}
@@ -555,10 +604,11 @@ async def promote_user_to_driver(
 @router.post("/users/{user_id}/demote-driver")
 async def demote_user_from_driver(
     user_id: str,
-    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    body: AdminGovernanceReasonBody,
+    admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: remove driver role (delete driver_profile, set role=passenger)."""
+    """BETA: remove driver role. SP-F: só `super_admin` + motivo."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
     try:
@@ -583,7 +633,10 @@ async def demote_user_from_driver(
             action="user_demote_driver",
             entity_type="user",
             entity_id=str(u.id),
-            payload={"note": "no_driver_profile"},
+            payload={
+                "note": "no_driver_profile",
+                "governance_reason": body.governance_reason.strip()[:500],
+            },
         )
         db.commit()
         return {"status": "ok", "message": "Already passenger"}
@@ -610,7 +663,10 @@ async def demote_user_from_driver(
         action="user_demote_driver",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"removed_driver_profile": True},
+        payload={
+            "removed_driver_profile": True,
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return {"status": "ok", "message": "User demoted to passenger"}
@@ -637,6 +693,13 @@ async def update_user(
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
+    if payload.phone is not None:
+        gr = (payload.governance_reason or "").strip()
+        if len(gr) < 10:
+            raise HTTPException(
+                status_code=400,
+                detail="governance_reason_required_for_phone_change",
+            )
     before = {
         "name": u.name,
         "phone": u.phone,
@@ -664,13 +727,16 @@ async def update_user(
         "phone": u.phone,
         "status": u.status.value if u.status else None,
     }
+    audit_payload: dict[str, Any] = {"before": before, "after": after}
+    if payload.phone is not None and payload.governance_reason:
+        audit_payload["governance_reason"] = payload.governance_reason.strip()[:500]
     record_admin_action(
         db,
         actor_user_id=admin_user.user_id,
         action="user_patch",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"before": before, "after": after},
+        payload=audit_payload,
     )
     db.commit()
     db.refresh(u)
@@ -732,10 +798,11 @@ async def delete_user(
 @router.post("/users/{user_id}/block")
 async def block_user(
     user_id: str,
+    body: AdminGovernanceReasonBody,
     admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: set user status to blocked (reversible; not a hard delete)."""
+    """BETA: set user status to blocked (reversible). SP-F: motivo obrigatório."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
     try:
@@ -761,6 +828,7 @@ async def block_user(
             "before_status": before_status,
             "after_status": UserStatus.blocked.value,
             "previous_status": before_status,
+            "governance_reason": body.governance_reason.strip()[:500],
         },
     )
     db.commit()
@@ -770,10 +838,11 @@ async def block_user(
 @router.post("/users/{user_id}/unblock")
 async def unblock_user(
     user_id: str,
+    body: AdminGovernanceReasonBody,
     admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: reativar utilizador bloqueado (status → active)."""
+    """BETA: reativar utilizador bloqueado. SP-F: motivo obrigatório."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
     try:
@@ -801,6 +870,7 @@ async def unblock_user(
             "before_status": before_status,
             "after_status": UserStatus.active.value,
             "previous_status": before_status,
+            "governance_reason": body.governance_reason.strip()[:500],
         },
     )
     db.commit()
@@ -869,16 +939,17 @@ async def bulk_block_users(
 
 class AdminClearPasswordRequest(BaseModel):
     confirmation: str
+    governance_reason: str = Field(..., min_length=10, max_length=500)
 
 
 @router.post("/users/{user_id}/password/clear")
 async def admin_clear_user_password(
     user_id: str,
     payload: AdminClearPasswordRequest,
-    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: remove password_hash so the user can log in again with DEFAULT_PASSWORD (support / reset)."""
+    """BETA: remove password_hash. SP-F: só `super_admin` + confirmação + motivo."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
     if payload.confirmation.strip() != "LIMPAR_SENHA":
@@ -900,7 +971,10 @@ async def admin_clear_user_password(
         action="user_password_clear",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"had_password": had_password},
+        payload={
+            "had_password": had_password,
+            "governance_reason": payload.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return {"status": "ok", "message": "password_cleared"}
@@ -1144,7 +1218,9 @@ async def admin_trip_payment_ops_note(
     trip = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
     if not trip:
         raise HTTPException(status_code=404, detail="not_found")
-    pay = db.execute(select(Payment).where(Payment.trip_id == trip.id)).scalar_one_or_none()
+    pay = db.execute(
+        select(Payment).where(Payment.trip_id == trip.id)
+    ).scalar_one_or_none()
     if not pay:
         raise HTTPException(status_code=404, detail="no_payment_for_trip")
     record_admin_action(
@@ -1167,10 +1243,10 @@ async def admin_trip_payment_ops_note(
 @router.get("/trip-debug/{trip_id}")
 async def get_trip_debug(
     trip_id: str,
-    user: UserContext = Depends(require_role(Role.admin)),
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    """Debug endpoint: trip, payment, driver, passenger, interaction_logs."""
+    """Debug endpoint (PII). SP-F: só `super_admin`."""
     trip = (
         db.execute(
             select(Trip)
@@ -1244,10 +1320,11 @@ async def get_trip_debug(
 @router.post("/recover-driver/{driver_id}", response_model=RecoverDriverResponse)
 async def recover_driver(
     driver_id: str,
+    body: AdminGovernanceReasonBody,
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> RecoverDriverResponse:
-    """Force is_available=True for stuck driver (no active trip)."""
+    """Force is_available=True for stuck driver (no active trip). SP-F: motivo obrigatório."""
     try:
         driver_uuid = uuid.UUID(driver_id.strip())
     except ValueError:
@@ -1283,7 +1360,7 @@ async def recover_driver(
         action="driver_recover",
         entity_type="driver",
         entity_id=str(driver.user_id),
-        payload={},
+        payload={"governance_reason": body.governance_reason.strip()[:500]},
     )
     db.commit()
     db.refresh(driver)
@@ -1293,20 +1370,17 @@ async def recover_driver(
 @router.post("/cancel-trip/{trip_id}", response_model=TripStatusResponse)
 async def cancel_trip_admin(
     trip_id: str,
+    payload: AdminCancelTripRequest,
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
-    payload: AdminCancelTripRequest | None = Body(default=None),
 ) -> TripStatusResponse:
     """Admin force cancel. Only for requested, assigned, accepted.
 
-    Corpo opcional: ``confirmation`` = ``CANCELAR_VIAGEM`` e ``reason`` (≥10 chars)
-    para gravar motivo em ``cancellation_reason`` (SP-A).
+    SP-F: corpo obrigatório com ``confirmation`` = ``CANCELAR_VIAGEM`` e ``reason`` (≥10 chars).
     """
-    reason: str | None = None
-    if payload is not None:
-        if payload.confirmation.strip() != "CANCELAR_VIAGEM":
-            raise HTTPException(status_code=400, detail="invalid_confirmation")
-        reason = payload.reason.strip()
+    if payload.confirmation.strip() != "CANCELAR_VIAGEM":
+        raise HTTPException(status_code=400, detail="invalid_confirmation")
+    reason = payload.reason.strip()
     trip = cancel_trip_by_admin(
         db=db, trip_id=trip_id.strip(), cancellation_reason=reason
     )
@@ -1319,6 +1393,7 @@ async def cancel_trip_admin(
         payload={
             "status": trip.status.value if trip.status else None,
             "reason_provided": bool(reason),
+            "reason": (reason or "")[:280],
         },
     )
     db.commit()
@@ -1411,22 +1486,49 @@ async def admin_usage_summary(
 
 @router.post("/run-timeouts", response_model=RunTimeoutsResponse)
 async def run_timeouts_admin(
-    user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminGovernanceReasonBody,
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> RunTimeoutsResponse:
-    """Run trip timeout rules (assigned→requested, accepted→cancelled, ongoing→failed)."""
+    """Run trip timeout rules. SP-F: só `super_admin` + motivo."""
     counts = run_trip_timeouts(db)
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="admin_run_timeouts",
+        entity_type="system",
+        entity_id="trip_timeouts",
+        payload={
+            "governance_reason": body.governance_reason.strip()[:500],
+            **counts,
+        },
+    )
+    db.commit()
     return RunTimeoutsResponse(**counts)
 
 
 @router.post("/run-offer-expiry", response_model=RunOfferExpiryResponse)
 async def run_offer_expiry_admin(
-    user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminGovernanceReasonBody,
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> RunOfferExpiryResponse:
-    """Expire stale offers and redispatch trips with all offers expired."""
+    """Expire stale offers and redispatch. SP-F: só `super_admin` + motivo."""
     expired = expire_stale_offers(db)
     new_offers = redispatch_expired_trips(db)
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="admin_run_offer_expiry",
+        entity_type="system",
+        entity_id="offers",
+        payload={
+            "governance_reason": body.governance_reason.strip()[:500],
+            "expired_count": expired,
+            "redispatch_offers_created": len(new_offers),
+        },
+    )
+    db.commit()
     return RunOfferExpiryResponse(
         expired_count=expired, redispatch_offers_created=len(new_offers)
     )
@@ -1434,11 +1536,11 @@ async def run_offer_expiry_admin(
 
 @router.get("/export-logs", response_model=None)
 async def export_interaction_logs(
-    user: UserContext = Depends(require_role(Role.admin)),
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
     format: str | None = Query(None, alias="format"),
 ) -> dict | PlainTextResponse:
-    """Export interaction logs. JSON por defeito; ?format=csv para CSV."""
+    """Export interaction logs (PII). SP-F: só `super_admin`. JSON por defeito; ?format=csv para CSV."""
     logs = (
         db.execute(select(InteractionLog).order_by(InteractionLog.timestamp.asc()))
         .scalars()
@@ -1504,6 +1606,7 @@ async def export_interaction_logs(
 @router.post("/trips/{trip_id}/assign", response_model=TripStatusResponse)
 async def assign_trip_admin(
     trip_id: str,
+    body: AdminGovernanceReasonBody,
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
@@ -1518,7 +1621,10 @@ async def assign_trip_admin(
         action="trip_assign_admin",
         entity_type="trip",
         entity_id=tid,
-        payload={"status": trip.status.value if trip.status else None},
+        payload={
+            "status": trip.status.value if trip.status else None,
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return trip_to_status_response(trip, include_stripe_pi=True)
@@ -1529,11 +1635,11 @@ async def assign_trip_admin(
 
 @router.post("/partners", response_model=AdminPartnerCreatedResponse)
 async def admin_create_partner(
-    body: AdminCreatePartnerRequest,
-    user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminPartnerCreateGoverned,
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> AdminPartnerCreatedResponse:
-    """Create a fleet org. UUID generated by DB default."""
+    """Create a fleet org. SP-F: só `super_admin` + motivo."""
     p = create_partner(db, body.name)
     record_admin_action(
         db,
@@ -1541,7 +1647,10 @@ async def admin_create_partner(
         action="partner_create",
         entity_type="partner",
         entity_id=str(p.id),
-        payload={"name": p.name},
+        payload={
+            "name": p.name,
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return AdminPartnerCreatedResponse(
@@ -1557,11 +1666,11 @@ async def admin_create_partner(
 )
 async def admin_create_partner_org_admin(
     partner_id: str,
-    body: AdminCreatePartnerOrgAdminRequest,
-    user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminPartnerOrgAdminGoverned,
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> AdminPartnerOrgAdminCreatedResponse:
-    """Provision a fleet manager (role=partner). Not available via public auth signup."""
+    """Provision a fleet manager. SP-F: só `super_admin` + motivo."""
     try:
         pid = uuid.UUID(partner_id.strip())
     except ValueError:
@@ -1581,7 +1690,11 @@ async def admin_create_partner_org_admin(
         action="partner_org_admin_create",
         entity_type="user",
         entity_id=str(u.id),
-        payload={"partner_id": str(pid), "phone": u.phone},
+        payload={
+            "partner_id": str(pid),
+            "phone": u.phone,
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return AdminPartnerOrgAdminCreatedResponse(
@@ -1599,11 +1712,11 @@ async def admin_create_partner_org_admin(
 )
 async def admin_assign_driver_partner(
     driver_user_id: str,
-    body: AdminAssignPartnerRequest,
-    user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminAssignPartnerGoverned,
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> AdminAssignPartnerResponse:
-    """Set driver.partner_id. Blocked if driver has an active trip (assigned→ongoing)."""
+    """Set driver.partner_id. SP-F: só `super_admin` + motivo."""
     try:
         did = uuid.UUID(driver_user_id.strip())
         pid = uuid.UUID(body.partner_id.strip())
@@ -1619,7 +1732,10 @@ async def admin_assign_driver_partner(
         action="driver_assign_partner",
         entity_type="driver",
         entity_id=str(d.user_id),
-        payload={"partner_id": str(d.partner_id)},
+        payload={
+            "partner_id": str(d.partner_id),
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return AdminAssignPartnerResponse(
@@ -1634,10 +1750,11 @@ async def admin_assign_driver_partner(
 )
 async def admin_unassign_driver_partner(
     driver_user_id: str,
-    user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminGovernanceReasonBody,
+    user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> AdminAssignPartnerResponse:
-    """Return driver to default fleet (DEFAULT_PARTNER_UUID). Idempotent; 409 if active trip."""
+    """Return driver to default fleet. SP-F: só `super_admin` + motivo (corpo JSON)."""
     try:
         did = uuid.UUID(driver_user_id.strip())
     except ValueError:
@@ -1652,7 +1769,10 @@ async def admin_unassign_driver_partner(
         action="driver_unassign_partner",
         entity_type="driver",
         entity_id=str(d.user_id),
-        payload={"partner_id": str(d.partner_id)},
+        payload={
+            "partner_id": str(d.partner_id),
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.commit()
     return AdminAssignPartnerResponse(

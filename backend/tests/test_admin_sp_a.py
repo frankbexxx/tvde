@@ -49,7 +49,10 @@ def test_unblock_user_beta(client: TestClient, monkeypatch: pytest.MonkeyPatch) 
     finally:
         db.close()
 
-    r = client.post(f"/admin/users/{uid}/unblock")
+    r = client.post(
+        f"/admin/users/{uid}/unblock",
+        json={"governance_reason": "desbloqueio após revisão operacional SP-F"},
+    )
     assert r.status_code == 200, r.text
     db2 = SessionLocal()
     try:
@@ -127,7 +130,41 @@ def test_admin_trip_transition_accepted_to_arriving(client: TestClient) -> None:
 
 
 @pytest.mark.usefixtures("admin_ctx")
-def test_admin_cancel_trip_optional_body_reason(client: TestClient) -> None:
+def test_admin_cancel_trip_requires_json_body(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        passenger = User(
+            role=Role.passenger,
+            name=f"P {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        db.add(passenger)
+        db.flush()
+        trip = Trip(
+            passenger_id=passenger.id,
+            status=TripStatus.requested,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=5.0,
+        )
+        db.add(trip)
+        db.commit()
+        trip_id = str(trip.id)
+    finally:
+        db.close()
+
+    r_empty = client.post(f"/admin/cancel-trip/{trip_id}", json={})
+    assert r_empty.status_code == 422
+
+    r_no_body = client.post(f"/admin/cancel-trip/{trip_id}")
+    assert r_no_body.status_code == 422
+
+
+@pytest.mark.usefixtures("admin_ctx")
+def test_admin_cancel_trip_with_reason_and_confirmation(client: TestClient) -> None:
     db = SessionLocal()
     try:
         passenger = User(

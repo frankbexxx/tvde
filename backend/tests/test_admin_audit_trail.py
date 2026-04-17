@@ -50,7 +50,10 @@ def test_admin_block_writes_audit_row(
     finally:
         db.close()
 
-    r = client.post(f"/admin/users/{uid}/block")
+    r = client.post(
+        f"/admin/users/{uid}/block",
+        json={"governance_reason": "bloqueio por teste de auditoria SP-F"},
+    )
     assert r.status_code == 200, r.text
 
     db2 = SessionLocal()
@@ -70,6 +73,7 @@ def test_admin_block_writes_audit_row(
         assert last.payload.get("actor_user_id") == ADMIN_ACTOR_ID
         assert last.payload.get("before_status") == "active"
         assert last.payload.get("after_status") == "blocked"
+        assert "bloqueio por teste" in (last.payload.get("governance_reason") or "")
     finally:
         db2.close()
 
@@ -95,7 +99,13 @@ def test_admin_audit_trail_lists_admin_events(
     finally:
         db.close()
 
-    assert client.post(f"/admin/users/{uid}/block").status_code == 200
+    assert (
+        client.post(
+            f"/admin/users/{uid}/block",
+            json={"governance_reason": "bloqueio para listagem audit trail"},
+        ).status_code
+        == 200
+    )
 
     r = client.get("/admin/audit-trail?limit=20")
     assert r.status_code == 200
