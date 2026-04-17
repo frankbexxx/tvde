@@ -149,7 +149,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 ### Estado repo (2026-04-08 — pós-merge SP-F v2 na `main`)
 
 - **`main`:** inclui **SP-F v2** (PR **#117**, fast-forward `ca7575b`): matriz `governance_reason` / `super_admin` alargada; web-app com prompts; testes + docs `SP-F-governanca.md` v2; **Seção F** actualizada (POSTs operacionais com `super_admin`).
-- **Seguinte (pequeno):** UI **Desbloquear** na tab Utilizadores (POST `/unblock` com motivo) — PR dedicada se ainda não mergida.
+- **Seguinte (pequeno):** UI **Desbloquear** na tab Utilizadores — PR **#118** (merge quando validado).
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
