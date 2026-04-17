@@ -49,6 +49,7 @@ import {
 import { toast } from 'sonner'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
+import { BetaAccountPanel } from '../account/BetaAccountPanel'
 
 /** Câmara Municipal de Oeiras — centro do mapa / fallback de posição do passageiro */
 const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
@@ -1004,6 +1005,8 @@ export function PassengerDashboard() {
             </p>
           </section>
         ) : null}
+
+        {token ? <BetaAccountPanel /> : null}
       </div>
     </ScreenContainer>
   )

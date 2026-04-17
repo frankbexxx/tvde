@@ -19,6 +19,7 @@ import { validateAccessToken } from '../api/session'
 import {
   getConfig,
   getDevTokens,
+  getMeProfile,
   login as loginApi,
   type AuthTokens,
   type TokenResponse,
@@ -33,6 +34,7 @@ import {
   LS_E2E_DEV_TOKENS_JSON,
   setStoredAccessToken,
   setStoredAppRouteRole,
+  setStoredLastPhone,
   setStoredSessionDisplayName,
 } from '../utils/authStorage'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
@@ -74,6 +76,8 @@ interface AuthContextValue extends AuthState {
   sessionPhone: string | null
   /** Nome vindo do login BETA (`display_name`); pode ser null em dev/E2E. */
   sessionDisplayName: string | null
+  /** BETA: sincronizar nome/telemóvel a partir de `GET /auth/me` (ex.: após PATCH perfil). */
+  refreshSessionProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -393,6 +397,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionDisplayName(null)
   }, [])
 
+  const refreshSessionProfile = useCallback(async () => {
+    if (!token || !betaMode) return
+    try {
+      const me = await getMeProfile(token)
+      setSessionPhone(me.phone.trim())
+      setStoredLastPhone(me.phone.trim())
+      const dn = (me.name || '').trim()
+      setSessionDisplayName(dn || null)
+      setStoredSessionDisplayName(dn)
+    } catch {
+      /* silencioso: painel Conta mostra erro próprio ao carregar */
+    }
+  }, [betaMode, token])
+
   useEffect(() => {
     loadTokens()
   }, [loadTokens])
@@ -436,6 +454,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       sessionPhone,
       sessionDisplayName,
+      refreshSessionProfile,
     }),
     [
       token,
@@ -458,6 +477,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       sessionPhone,
       sessionDisplayName,
+      refreshSessionProfile,
     ]
   )
 

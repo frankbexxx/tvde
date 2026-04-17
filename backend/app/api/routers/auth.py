@@ -22,6 +22,8 @@ from app.db.models.user import User
 from app.models.enums import Role, UserStatus
 from app.schemas.auth import (
     LoginRequest,
+    MeProfilePatchRequest,
+    MeProfileResponse,
     OtpRequest,
     OtpRequestResponse,
     OtpVerifyRequest,
@@ -259,6 +261,67 @@ async def login(
         expires_at=token_data["expires_at"],
         display_name=(user.name or "").strip(),
     )
+
+
+def _me_profile_from_user(u: User) -> MeProfileResponse:
+    return MeProfileResponse(
+        user_id=str(u.id),
+        phone=u.phone,
+        name=(u.name or "").strip(),
+        has_custom_password=bool(u.password_hash),
+    )
+
+
+@router.get("/me", response_model=MeProfileResponse)
+async def get_my_profile(
+    user_ctx: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MeProfileResponse:
+    """BETA: dados mínimos da conta para o ecrã (M1)."""
+    if not _is_beta():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
+        )
+    try:
+        uid = uuid.UUID(user_ctx.user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_user_id"
+        )
+    user = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="user_not_found"
+        )
+    return _me_profile_from_user(user)
+
+
+@router.patch("/me", response_model=MeProfileResponse)
+async def patch_my_profile(
+    payload: MeProfilePatchRequest,
+    user_ctx: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MeProfileResponse:
+    """BETA: alterar nome visível (M1). Telefone só via admin."""
+    if not _is_beta():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
+        )
+    try:
+        uid = uuid.UUID(user_ctx.user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_user_id"
+        )
+    user = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="user_not_found"
+        )
+    user.name = payload.name.strip()[:120]
+    db.commit()
+    db.refresh(user)
+    return _me_profile_from_user(user)
 
 
 @router.post("/me/password")

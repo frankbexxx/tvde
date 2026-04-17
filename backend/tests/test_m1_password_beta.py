@@ -97,3 +97,47 @@ def test_me_password_unauthenticated(
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     r = client.post("/auth/me/password", json={"new_password": "abcdefgh"})
     assert r.status_code == 401
+
+
+def test_me_get_unauthenticated(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    assert client.get("/auth/me").status_code == 401
+
+
+def test_me_get_and_patch_name_beta(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "DEFAULT_PASSWORD", "123456", raising=False)
+    phone = _unique_beta_phone()
+    u = User(
+        id=uuid.uuid4(),
+        role=Role.passenger,
+        name="NomeAntigo",
+        phone=phone,
+        status=UserStatus.active,
+    )
+    db.add(u)
+    db.commit()
+
+    tok = client.post(
+        "/auth/login", json={"phone": phone, "password": "123456"}
+    ).json()["access_token"]
+    h = {"Authorization": f"Bearer {tok}"}
+
+    r = client.get("/auth/me", headers=h)
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["phone"] == phone
+    assert data["name"] == "NomeAntigo"
+    assert data["has_custom_password"] is False
+
+    p = client.patch("/auth/me", headers=h, json={"name": "Nome Novo M1"})
+    assert p.status_code == 200, p.text
+    assert p.json()["name"] == "Nome Novo M1"
+
+    login2 = client.post("/auth/login", json={"phone": phone, "password": "123456"})
+    assert login2.status_code == 200
+    assert login2.json().get("display_name") == "Nome Novo M1"

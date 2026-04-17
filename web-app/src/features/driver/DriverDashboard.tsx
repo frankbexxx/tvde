@@ -55,6 +55,7 @@ import {
 } from '../../utils/geo'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
+import { BetaAccountPanel } from '../account/BetaAccountPanel'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -651,6 +652,8 @@ export function DriverDashboard() {
             </ul>
           </section>
         )}
+
+        {token ? <BetaAccountPanel /> : null}
       </div>
     </ScreenContainer>
   )
