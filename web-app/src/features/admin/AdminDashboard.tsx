@@ -147,13 +147,74 @@ function healthBlockKey(title: string, rows: Array<Record<string, unknown>>): st
   return `${title}-${rows.length}-${top.join('|')}`
 }
 
+/** SP-D: texto humano + 3 passos por classe de anomalia (Saúde). */
+type HealthAnomalyPlaybook = {
+  what: string
+  steps: readonly [string, string, string]
+}
+
+const PB_TRIPS_ACCEPTED_LONG: HealthAnomalyPlaybook = {
+  what: 'Viagens que ficaram em «accepted» mais tempo do que o esperado: o motorista aceitou mas o fluxo não avançou (ex.: não passou a «arriving» / início).',
+  steps: [
+    'Abre cada linha em Viagens, confirma o estado real e se o motorista já se deslocou — usa «Forçar arriving» ou «Forçar ongoing» no admin quando fizer sentido operacional.',
+    'Se o motorista desistiu ou há erro de dados, cancela ou re-atribui conforme a vossa política; regista motivo quando usares cancelamento com motivo.',
+    'Corre em Operações «Correr cron agora» (timeouts) e volta a Atualizar a Saúde; se o volume for alto, verifica agendador externo do `/cron/jobs`.',
+  ],
+}
+
+const PB_TRIPS_ONGOING_LONG: HealthAnomalyPlaybook = {
+  what: 'Viagens em «ongoing» há tempo excessivo: viagem iniciada mas não concluída nem falhou pelo motor automático.',
+  steps: [
+    'Abre a viagem em Viagens: confirma se o motorista ainda está em serviço ou se a app perdeu o «Complete».',
+    'Se a viagem já terminou no mundo real, orienta o motorista a concluir na app; se está presa por bug, avalia cancelamento admin ou suporte em campo.',
+    'Operações → cron + Atualizar Saúde; investiga logs Stripe se o pagamento ficou em processing.',
+  ],
+}
+
+const PB_DRIVERS_UNAVAILABLE: HealthAnomalyPlaybook = {
+  what: 'Motoristas marcados indisponíveis há muito tempo sem viagem ativa associada — podem estar «presos» após falha ou timeout.',
+  steps: [
+    'Vai a Operações → «Recuperar motorista» para os UUID sugeridos (só com segurança: sem viagem activa).',
+    'Se o caso não aparece na lista, usa UUID manual na mesma secção após confirmar no JSON da Saúde.',
+    'Depois de recuperar, confirma na tab Frota / motorista que voltaram disponíveis e re-corre Saúde.',
+  ],
+}
+
+const PB_STUCK_PAYMENTS: HealthAnomalyPlaybook = {
+  what: 'Pagamentos cujo estado interno não bate com o esperado (ex.: processing prolongado, incoerência com Stripe).',
+  steps: [
+    'Abre a viagem em Viagens e usa os links Stripe (test/live) do PaymentIntent para ver o estado real no dashboard.',
+    'Confirma que o webhook Stripe está a receber eventos (Operações / deploy); sem webhook o capture pode ficar incompleto.',
+    'Se precisares de nota interna sem alterar BD de pagamento, usa nota operacional de pagamento (audit); reembolso manual continua no Stripe até haver API dedicada.',
+  ],
+}
+
+const PB_MISSING_PAYMENT: HealthAnomalyPlaybook = {
+  what: 'Viagens em estado que normalmente exigem registo de pagamento mas a linha de pagamento falta na base de dados.',
+  steps: [
+    'Abre em Viagens o trip_id indicado; confirma se a aceitação falhou a meio ou se houve duplicação.',
+    'Não inventes pagamento manual na BD — escala com contexto (logs `trip_accepted`, Stripe).',
+    'Cron + re-leitura da Saúde; se for bug de corrida, regista para correção de código na próxima sessão.',
+  ],
+}
+
+const PB_INCONSISTENT_FINANCIAL: HealthAnomalyPlaybook = {
+  what: 'Incoerência entre viagem concluída e valores de pagamento (totais, comissão, payout) face às regras actuais.',
+  steps: [
+    'Abre a viagem e o PI no Stripe; cruza com o JSON desta linha antes de qualquer ajuste manual.',
+    'Documenta o caso (nota operacional / suporte); não alteres valores financeiros sem processo acordado.',
+    'Se for padrão recorrente, prioriza fix no motor de preços / webhook — lista para engenharia.',
+  ],
+}
+
 function HealthAnomalyBlock(props: {
   title: string
   rows: Array<Record<string, unknown>>
   onOpenTrip: (tripId: string) => void
   pageSize?: number
+  playbook?: HealthAnomalyPlaybook
 }) {
-  const { title, rows, onOpenTrip, pageSize = 20 } = props
+  const { title, rows, onOpenTrip, pageSize = 20, playbook } = props
   const [sortRecent, setSortRecent] = useState(true)
   const [shown, setShown] = useState(pageSize)
 
@@ -168,6 +229,19 @@ function HealthAnomalyBlock(props: {
   if (!rows.length) return null
   return (
     <div className="rounded-xl border border-border bg-card/50 p-3 space-y-2">
+      {playbook ? (
+        <details className="rounded-lg border border-info/40 bg-info/10 px-2 py-1.5 text-xs">
+          <summary className="cursor-pointer font-medium text-foreground select-none">
+            O que é · O que fazer (3 passos)
+          </summary>
+          <p className="mt-2 text-foreground/85 leading-relaxed">{playbook.what}</p>
+          <ol className="mt-2 list-decimal pl-4 space-y-1.5 text-foreground/85">
+            {playbook.steps.map((s, idx) => (
+              <li key={idx}>{s}</li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-foreground">
           {title} ({rows.length})
@@ -1096,6 +1170,16 @@ export function AdminDashboard() {
       !(tripsListMode === 'history' && selectedTripInHistoryList)
   )
 
+  /** SP-D: indicador na tab Saúde quando há linhas ou avisos. */
+  const healthTabHasSignals = useMemo(
+    () =>
+      Boolean(
+        health &&
+          (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
+      ),
+    [health]
+  )
+
   if (loading && users.length === 0) {
     return (
       <div className="p-4">
@@ -1107,24 +1191,36 @@ export function AdminDashboard() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-4 px-4">
-        {TABS.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() =>
-              id === 'trips'
-                ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: tripsListMode })
-                : syncAdminUrl({ tab: id, tripId: null })
-            }
-            className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
-              tab === id
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        {TABS.map(({ id, label }) => {
+          const healthDot = id === 'health' && healthTabHasSignals
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() =>
+                id === 'trips'
+                  ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: tripsListMode })
+                  : syncAdminUrl({ tab: id, tripId: null })
+              }
+              className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+                tab === id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
+              }`}
+              title={healthDot ? 'Há anomalias ou avisos na Saúde' : undefined}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                {label}
+                {healthDot ? (
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full bg-destructive"
+                    aria-hidden
+                  />
+                ) : null}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {error && (
@@ -1172,6 +1268,11 @@ export function AdminDashboard() {
                   ) : (
                     <p className="text-xs text-foreground/65 mt-1">Pagamentos presos: 0</p>
                   )}
+                  {signalRows > 0 ? (
+                    <p className="text-xs text-foreground/75 mt-2">
+                      Em <strong>Saúde</strong>, cada bloco com linhas inclui «O que é · O que fazer (3 passos)» (SP-D).
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -2567,6 +2668,20 @@ export function AdminDashboard() {
             </button>
           {health ? (
             <div className="space-y-3">
+              {countHealthSignalRows(health) + health.warnings.length > 0 ? (
+                <div className="rounded-xl border border-warning/50 bg-warning/10 px-3 py-2 text-sm text-foreground flex flex-wrap items-center justify-between gap-2">
+                  <span>
+                    <strong>Há anomalias ou avisos.</strong> Expande «O que é · O que fazer» em cada bloco abaixo.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'ops', tripId: null })}
+                    className="shrink-0 px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-medium hover:bg-muted/40"
+                  >
+                    Ir para Operações (cron / recuperar)
+                  </button>
+                </div>
+              ) : null}
               <p
                 className={`font-medium ${
                   health.status === 'ok' ? 'text-success' : 'text-warning'
@@ -2586,18 +2701,21 @@ export function AdminDashboard() {
                 title="Viagens accepted há muito"
                 rows={health.trips_accepted_too_long}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+                playbook={PB_TRIPS_ACCEPTED_LONG}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('ongoing', health.trips_ongoing_too_long)}
                 title="Viagens ongoing há muito"
                 rows={health.trips_ongoing_too_long}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+                playbook={PB_TRIPS_ONGOING_LONG}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('offline', health.drivers_unavailable_too_long)}
                 title="Motoristas offline há muito (sem viagem ativa)"
                 rows={health.drivers_unavailable_too_long}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+                playbook={PB_DRIVERS_UNAVAILABLE}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('stuck_pi', health.stuck_payments)}
@@ -2605,12 +2723,14 @@ export function AdminDashboard() {
                 rows={health.stuck_payments}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
                 pageSize={25}
+                playbook={PB_STUCK_PAYMENTS}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('missing_pay', health.missing_payment_records ?? [])}
                 title="Viagens sem registo de pagamento"
                 rows={health.missing_payment_records ?? []}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
+                playbook={PB_MISSING_PAYMENT}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('inconsistent', health.inconsistent_financial_state ?? [])}
@@ -2618,6 +2738,7 @@ export function AdminDashboard() {
                 rows={health.inconsistent_financial_state ?? []}
                 onOpenTrip={(tripId) => syncAdminUrl({ tab: 'trips', tripId })}
                 pageSize={25}
+                playbook={PB_INCONSISTENT_FINANCIAL}
               />
               {health.status === 'ok' &&
                 health.warnings.length === 0 &&
