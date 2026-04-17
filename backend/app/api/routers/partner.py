@@ -303,15 +303,30 @@ async def partner_export_trips_csv(
 
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["trip_id", "driver_id", "status", "created_at", "completed_at"])
+    # SP-C: contrato estável — só acrescentar colunas no fim; versão no comentário da doc partner + UI.
+    w.writerow(
+        [
+            "trip_id",
+            "driver_id",
+            "passenger_id",
+            "status",
+            "created_at",
+            "started_at",
+            "completed_at",
+            "updated_at",
+        ]
+    )
     for t in trips:
         w.writerow(
             [
                 str(t.id),
                 str(t.driver_id) if t.driver_id else "",
+                str(t.passenger_id),
                 t.status.value,
                 _utc_iso(t.created_at),
+                _utc_iso(t.started_at),
                 _utc_iso(t.completed_at),
+                _utc_iso(t.updated_at),
             ]
         )
 
