@@ -365,6 +365,7 @@ export function AdminDashboard() {
   const [usersFilter, setUsersFilter] = useState('')
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Record<string, boolean>>({})
   const [blockConfirmId, setBlockConfirmId] = useState<string | null>(null)
+  const [unblockConfirmId, setUnblockConfirmId] = useState<string | null>(null)
   /** SP-E: cache de `GET /admin/audit-trail` por utilizador (ausência de chave = ainda não carregado). */
   const [userAuditRows, setUserAuditRows] = useState<Record<string, AdminAuditTrailItem[]>>({})
   const [userAuditLoading, setUserAuditLoading] = useState<string | null>(null)
@@ -1201,6 +1202,25 @@ export function AdminDashboard() {
       setError(null)
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro ao bloquear')
+    }
+  }
+
+  const handleUnblockUser = async (userId: string) => {
+    if (!token) return
+    const gr = promptGovernanceReason('Motivo para desbloquear conta (SP-F, mín. 10 caracteres):')
+    if (!gr) return
+    try {
+      await apiFetch(`/admin/users/${userId}/unblock`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ governance_reason: gr }),
+      })
+      setUnblockConfirmId(null)
+      invalidateUserAudit(userId)
+      fetchUsers()
+      setError(null)
+    } catch (err) {
+      setError((err as { detail?: string })?.detail ?? 'Erro ao desbloquear')
     }
   }
 
@@ -3101,7 +3121,37 @@ export function AdminDashboard() {
                                 >
                                   Limpar palavra-passe
                                 </button>
-                                {blockConfirmId === u.id ? (
+                                {u.status === 'blocked' ? (
+                                  unblockConfirmId === u.id ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        onClick={() => void handleUnblockUser(u.id)}
+                                        className="px-2 py-1 bg-success text-success-foreground text-xs rounded"
+                                      >
+                                        Confirmar desbloqueio
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setUnblockConfirmId(null)}
+                                        className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"
+                                      >
+                                        Cancelar
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setBlockConfirmId(null)
+                                        setUnblockConfirmId(u.id)
+                                      }}
+                                      className="px-2 py-1 bg-success/90 text-success-foreground text-xs rounded hover:opacity-90"
+                                    >
+                                      Desbloquear
+                                    </button>
+                                  )
+                                ) : blockConfirmId === u.id ? (
                                   <>
                                     <button
                                       type="button"
@@ -3121,7 +3171,10 @@ export function AdminDashboard() {
                                 ) : (
                                   <button
                                     type="button"
-                                    onClick={() => setBlockConfirmId(u.id)}
+                                    onClick={() => {
+                                      setUnblockConfirmId(null)
+                                      setBlockConfirmId(u.id)
+                                    }}
                                     className="px-2 py-1 bg-warning/80 text-foreground text-xs rounded hover:opacity-90"
                                   >
                                     Bloquear

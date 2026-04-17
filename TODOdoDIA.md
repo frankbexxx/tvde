@@ -89,24 +89,23 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ## Hoje 2026-04-08
 
-_Âncora: **SP-F v2** — governança alargada (motivos + `super_admin` onde definido); código + testes prontos **localmente**; **PR por ti** antes de contar como entregue em `main`._
+_Âncora: **SP-F v2** mergido na **`main`** (PR #117); seguir **smoke super_admin** + **M1** quando fizer sentido._
 
 ### Prioridades (máx. 3)
 
-1. [ ] [OPS] **PR SP-F v2** — Branch + commit na raiz; abrir PR para `main`; smoke admin com JWT **super_admin** nas rotas restritas.
-2. [ ] [OPS] **Smoke** — Lista curta em [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) § Arranque imediato (cron, frota, viagens, utilizadores).
-3. [ ] [CÓDIGO] **M1** (quando SP-F v2 estiver mergido) — retomar «Hoje 2026-04-17» abaixo ou compactar num novo dia.
+1. [x] [OPS] **PR SP-F v2** — Merge na `main` (fast-forward).
+2. [ ] [OPS] **Smoke** — [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) § Arranque imediato (cron, frota, viagens, utilizadores incl. desbloquear).
+3. [ ] [CÓDIGO] **M1** — retomar «Hoje 2026-04-17» abaixo (password + perfil + admin cauteloso).
 
 ### Fecho do dia
 
-- **Feito (local):** SP-F v2 backend + web-app + pytest 130 OK + lint/build web-app; doc `SP-F-governanca.md` v2; `PROXIMA_SESSAO` actualizado.
-- **Não feito / bloqueios:** merge em `main` — à tua vez (PR).
-- **Aprendizados:** `AdminGovernanceReasonBody` tem de estar declarado **antes** das rotas que o usam (evita `NameError` ao import).
+- **Feito:** SP-F v2 em `main`; documentação de continuidade actualizada.
+- **Em curso:** PR **#118** — botão **Desbloquear** no admin (Utilizadores) + motivo SP-F.
+- **Aprendizados:** `AdminGovernanceReasonBody` antes das rotas no `admin.py`.
 
 ### Rasto para a próxima sessão
 
-- Após merge: actualizar **PROXIMA** «Estado repo» para data/código em `main`; **Seção F** nota `super_admin` nos POSTs operacionais admin.
-- **M1** password + perfil quando quiseres retomar Ondas M.
+- Smoke **super_admin**; depois **M1** (Ondas M).
 
 ---
 
