@@ -442,6 +442,7 @@ export function AdminDashboard() {
             return p
           }
           if (next.tab === 'pending') {
+            p.set('tab', 'pending')
             return p
           }
           p.set('tab', next.tab)
