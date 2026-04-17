@@ -149,7 +149,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 ### Estado repo (2026-04-08 — fecho sessão noite)
 
 - **`main`:** SP-F v2 (#117) + Desbloquear (#118) + M1 login dica (#119) + fix tab Pendentes (#122); **M1 Conta** (#121) já mergido antes desta sessão.
-- **Em PR (merge pendente):** admin **M1 cauteloso** — repor palavra-passe BETA só dentro de **Editar** + só `super_admin`; erros admin mapeados (`formatAdminApiDetail`).
+- **Em PR (merge pendente):** admin **M1 cauteloso** (PR #123) — repor palavra-passe BETA só dentro de **Editar** + só `super_admin`; erros admin mapeados (`formatAdminApiDetail`).
 - **OPS (Frank):** smoke **W2-E** pós-redeploy quando couber; BD PROD/Render: um só `super_admin` (alinhado a Docker local se aplicável).
 - **Princípio contínuo:** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 

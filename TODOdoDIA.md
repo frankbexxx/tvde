@@ -142,18 +142,18 @@ _Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA
 ### Prioridades (máx. 3)
 
 1. [x] [PENSAR + CÓDIGO] **M1 — Password + perfil mínimo** — Na `main`: `GET/PATCH /auth/me` + **Conta (BETA)** (#121); canal «esqueci-me» = **admin** (repor password só com `super_admin`, dentro de **Editar** na UI desta sessão).
-2. [x] [CÓDIGO] **M1 — Admin cauteloso** — Secções nome / telefone / password (password só ao abrir **Editar** + só `super_admin`); `formatAdminApiDetail` para erros legíveis; PR desta sessão.
+2. [x] [CÓDIGO] **M1 — Admin cauteloso** — Secções nome / telefone / password (password só ao abrir **Editar** + só `super_admin`); `formatAdminApiDetail` para erros legíveis; **PR #123**.
 3. [ ] [OPS] **Smoke pós-deploy (W2-E)** — Frank: após redeploy, guião W2-E (Saúde → Viagens órfã, `.env` mascarado, bloqueio / bulk).
 
 ### Fecho do dia
 
-- **Feito:** M1 admin cauteloso na web-app (PR abaixo); BD Docker: um só `super_admin` (OPS).
+- **Feito:** M1 admin cauteloso na web-app (**PR #123**); BD Docker: um só `super_admin` (OPS).
 - **Não feito / bloqueios:** Smoke W2-E (prioridade 3) — manual quando houver redeploy / energia.
 - **Aprendizados:** `super_admin` no JWT via `parseJwtPayload` para mostrar secção «Repor palavra-passe» no admin.
 
 ### Rasto para a próxima sessão
 
-- **Merge PR M1 admin cauteloso** → smoke admin Utilizadores; depois **W2-E** (Frank).
+- **Merge** https://github.com/frankbexxx/tvde/pull/123 → smoke admin Utilizadores; depois **W2-E** (Frank).
 - **Manhã 2026-04-18:** ver bloco **«Hoje 2026-04-18»** acima (SP-G + tweaks + pytest).
 - **Roteiro pós-super-prompts** (legal, tema, vídeos): [`docs/super-prompts/README.md`](docs/super-prompts/README.md) — **Depois da sequência**.
 - **M2** — email, nick, estados de perfil (após M1 estável).
