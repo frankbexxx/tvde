@@ -5,6 +5,7 @@ class Role(str, Enum):
     passenger = "passenger"
     driver = "driver"
     admin = "admin"
+    super_admin = "super_admin"
     partner = "partner"
 
 

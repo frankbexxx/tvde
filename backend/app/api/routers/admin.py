@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import UserContext, get_db, require_role
+from app.api.deps import UserContext, get_current_super_admin, get_db, require_role
 from app.db.models.audit_event import AuditEvent
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.core.config import settings
@@ -71,6 +71,11 @@ from app.utils.logging import log_event
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def _is_protected_staff_account(u: User) -> bool:
+    """Contas de backoffice — não eliminar / bloquear / editar por vias normais BETA."""
+    return u.role in (Role.admin, Role.super_admin)
 
 
 class AdminAuditTrailItem(BaseModel):
@@ -374,6 +379,12 @@ class AdminUserUpdateRequest(BaseModel):
     phone: str | None = None
 
 
+class AdminGovernanceReasonBody(BaseModel):
+    """SP-F: justificação obrigatória para eliminação de conta (fica em `audit_events`)."""
+
+    governance_reason: str = Field(..., min_length=10, max_length=500)
+
+
 class AdminTripTransitionRequest(BaseModel):
     """Transição manual (SP-A): só pares suportados pelo serviço."""
 
@@ -503,6 +514,8 @@ async def promote_user_to_driver(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    if _is_protected_staff_account(u):
+        raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
     existing = db.execute(
         select(Driver).where(Driver.user_id == u.id)
     ).scalar_one_or_none()
@@ -557,6 +570,8 @@ async def demote_user_from_driver(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    if _is_protected_staff_account(u):
+        raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
     driver = db.execute(
         select(Driver).where(Driver.user_id == u.id)
     ).scalar_one_or_none()
@@ -620,6 +635,8 @@ async def update_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    if _is_protected_staff_account(u):
+        raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
     before = {
         "name": u.name,
         "phone": u.phone,
@@ -663,10 +680,11 @@ async def update_user(
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
-    admin_user: UserContext = Depends(require_role(Role.admin)),
+    body: AdminGovernanceReasonBody,
+    admin_user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: delete user. Fails if user has trips as passenger."""
+    """BETA: delete user. Só `super_admin` + motivo (SP-F). Falha se tiver viagens como passageiro."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
     try:
@@ -678,6 +696,8 @@ async def delete_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_delete_admin")
+    if _is_protected_staff_account(u):
+        raise HTTPException(status_code=400, detail="cannot_delete_staff_role")
     has_trips = (
         db.execute(select(Trip).where(Trip.passenger_id == u.id).limit(1)).first()
         is not None
@@ -698,7 +718,11 @@ async def delete_user(
         action="user_delete",
         entity_type="user",
         entity_id=str(uid),
-        payload={"phone": u.phone, "role": u.role.value},
+        payload={
+            "phone": u.phone,
+            "role": u.role.value,
+            "governance_reason": body.governance_reason.strip()[:500],
+        },
     )
     db.delete(u)
     db.commit()
@@ -723,8 +747,8 @@ async def block_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
-    if u.role == Role.admin:
-        raise HTTPException(status_code=400, detail="cannot_block_admin_role")
+    if _is_protected_staff_account(u):
+        raise HTTPException(status_code=400, detail="cannot_block_staff_role")
     before_status = u.status.value if u.status else None
     u.status = UserStatus.blocked
     record_admin_action(
@@ -761,8 +785,8 @@ async def unblock_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if _is_admin_phone(u.phone):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
-    if u.role == Role.admin:
-        raise HTTPException(status_code=400, detail="cannot_unblock_admin_role")
+    if _is_protected_staff_account(u):
+        raise HTTPException(status_code=400, detail="cannot_unblock_staff_role")
     if u.status != UserStatus.blocked:
         raise HTTPException(status_code=400, detail="user_not_blocked")
     before_status = u.status.value if u.status else None
@@ -786,15 +810,16 @@ async def unblock_user(
 class BulkBlockUsersRequest(BaseModel):
     user_ids: list[str]
     confirmation: str
+    governance_reason: str = Field(..., min_length=10, max_length=500)
 
 
 @router.post("/users/bulk-block")
 async def bulk_block_users(
     payload: BulkBlockUsersRequest,
-    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: block many users. Requires confirmation matching BLOQUEAR_<count>."""
+    """BETA: block many users. Só `super_admin` + confirmação + motivo (SP-F)."""
     if not getattr(settings, "BETA_MODE", False):
         raise HTTPException(status_code=404, detail="Not available")
     ids = [x.strip() for x in payload.user_ids if str(x).strip()]
@@ -819,7 +844,7 @@ async def bulk_block_users(
         if not u:
             skipped += 1
             continue
-        if _is_admin_phone(u.phone) or u.role == Role.admin:
+        if _is_admin_phone(u.phone) or _is_protected_staff_account(u):
             skipped += 1
             continue
         u.status = UserStatus.blocked
@@ -835,6 +860,7 @@ async def bulk_block_users(
             "blocked_count": blocked,
             "skipped_count": skipped,
             "blocked_user_ids": blocked_ids[:200],
+            "governance_reason": payload.governance_reason.strip()[:500],
         },
     )
     db.commit()
@@ -864,7 +890,7 @@ async def admin_clear_user_password(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone) or u.role == Role.admin:
+    if _is_admin_phone(u.phone) or _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
     had_password = u.password_hash is not None
     u.password_hash = None
