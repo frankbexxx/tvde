@@ -1,4 +1,5 @@
 export const ADMIN_DASHBOARD_TAB_IDS = [
+  'agora',
   'pending',
   'users',
   'frota',
@@ -41,5 +42,6 @@ export function parseAdminDashboardQuery(sp: URLSearchParams): {
     const tripsList: AdminTripsListMode = tab === 'trips' ? tripsListFromUrl : 'active'
     return { tab, tripId: null, tripsList }
   }
-  return { tab: 'pending', tripId: null, tripsList: 'active' }
+  /* SP-G: entrada sem tab válido → «Agora» (resumo operacional em segundos). */
+  return { tab: 'agora', tripId: null, tripsList: 'active' }
 }

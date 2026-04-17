@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { parseAdminDashboardQuery } from './adminDashboardQuery'
 
 describe('parseAdminDashboardQuery', () => {
-  it('defaults to pending when empty', () => {
+  it('defaults to agora when empty (SP-G)', () => {
     expect(parseAdminDashboardQuery(new URLSearchParams())).toEqual({
-      tab: 'pending',
+      tab: 'agora',
       tripId: null,
       tripsList: 'active',
     })
@@ -30,8 +30,13 @@ describe('parseAdminDashboardQuery', () => {
     expect(parseAdminDashboardQuery(sp)).toEqual({ tab: 'trips', tripId: null, tripsList: 'history' })
   })
 
-  it('ignores invalid tab', () => {
+  it('ignores invalid tab and falls back to agora', () => {
     const sp = new URLSearchParams('tab=nope')
-    expect(parseAdminDashboardQuery(sp)).toEqual({ tab: 'pending', tripId: null, tripsList: 'active' })
+    expect(parseAdminDashboardQuery(sp)).toEqual({ tab: 'agora', tripId: null, tripsList: 'active' })
+  })
+
+  it('parses tab=agora', () => {
+    const sp = new URLSearchParams('tab=agora')
+    expect(parseAdminDashboardQuery(sp)).toEqual({ tab: 'agora', tripId: null, tripsList: 'active' })
   })
 })

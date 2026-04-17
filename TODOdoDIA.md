@@ -93,7 +93,7 @@ _Âncora: **super-prompts** (sequência **B → A** fechada em `main` + testado 
 
 ### Prioridades (máx. 3)
 
-1. [ ] [CÓDIGO] **SP-G — Estado agora (30 s)** — Bloco no admin: «o que está mal agora» + links para Viagens / Saúde / Operações; critérios em [`docs/super-prompts/SP-G-estado-agora.md`](docs/super-prompts/SP-G-estado-agora.md) (sem BI novo).
+1. [x] [CÓDIGO] **SP-G — Estado agora (30 s)** — Tab **Agora** no admin (URL sem `tab` → Agora): saúde + contagens + atalhos Viagens/Saúde/Operações/Métricas; spec em [`docs/super-prompts/SP-G-estado-agora.md`](docs/super-prompts/SP-G-estado-agora.md).
 2. [ ] [CONVERSA + CÓDIGO] **Tweaks pós-merge** — Lista curta do que notaste após testar (admin / transições / viagens); fechar só o que couber em fatia pequena.
 3. [ ] [OPS] **pytest admin** — Com venv + PostgreSQL: `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py`; ou confirmar **CI verde** na `main` após últimos merges.
 
