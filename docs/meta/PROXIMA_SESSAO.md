@@ -148,16 +148,16 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Estado repo (2026-04-17 — pós-merge SP-F v2 + unblock UI)
 
-- **`main`:** **SP-F v2** (PR **#117**) + **Desbloquear** na tab Utilizadores (PR **#118**, incl. `be19034`); smoke **Render** 2026-04-17 **OK** (bloquear / motivo / desbloquear / motivo).
+- **`main`:** **SP-F v2** (#117) + **Desbloquear** (#118) + dica M1 no login BETA (#119); smoke **Render** 2026-04-17 **OK** (bloquear / motivo / desbloquear / motivo).
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **Ondas M1** — ver **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md): canal de **redefinir password** (decisão única); perfil utilizador **no ecrã**; admin já tem nome/telefone/clear password — fechar lacunas (ex.: texto de ajuda no login BETA → PR pequena quando existir).
-2. **Smoke residual** — Operações / Frota / Viagens com **super_admin** (cron, timeouts, assign…) se ainda não passaste; `admin` só onde matriz permitir.
+1. **Ondas M1** — **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md): canal de **redefinir password**; perfil **no ecrã**; admin cauteloso (já há nome/telefone/clear password + dica no login pós-PR **#119**).
+2. **Smoke residual** — Operações / Frota / Viagens com **super_admin** onde a matriz SP-F exige.
 3. **Tweaks** — lista curta após M1 ou smoke mais largo.
 
-**Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md); **F v1** pode evoluir sem reordenar letras.
+**Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md) (fila **fechada** para novas letras; **F** pode evoluir em v2+ sem nova letra). **O que vem a seguir** (legal na app, theming Portugal/ícone, vídeos + checklist) está **mapeado com nexo** no mesmo README, secção **«Depois da sequência»** — **sessões seguintes**, sem roubar foco a **M1**.
 
 **Âncora paralela:** **Ondas M1** — [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-17»** quando fizer sentido.
 

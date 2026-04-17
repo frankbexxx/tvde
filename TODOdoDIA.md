@@ -95,16 +95,17 @@ _Âncora: **SP-F v2** (#117) + **Desbloquear** (#118) na **`main`**; smoke Rende
 
 1. [x] [OPS] **PR SP-F v2** — Merge na `main`.
 2. [x] [OPS] **Smoke** — Bloquear / desbloquear + motivos SP-F em PROD (capturas validadas).
-3. [ ] [CÓDIGO] **M1** — «Hoje 2026-04-17» + ajuda no login BETA (PR quando existir).
+3. [x] [CÓDIGO] **M1 (micro)** — Dica no login BETA → **#119** em `main`.
 
 ### Fecho do dia
 
-- **Feito:** #117 + #118 em `main`; smoke utilizadores OK.
+- **Feito:** #117 + #118 + #119 em `main`; smoke utilizadores OK.
 - **Aprendizados:** `AdminGovernanceReasonBody` antes das rotas no `admin.py`.
 
 ### Rasto para a próxima sessão
 
-- **M1** (password + perfil no ecrã); smoke alargado super_admin se útil.
+- **M1** restante — «Hoje 2026-04-17» (password + perfil no ecrã); smoke **super_admin** alargado se útil.
+- **Pós-SP (nexo)** — legal na app + theming PT/ícone + vídeos/checklist: ver [`docs/super-prompts/README.md`](docs/super-prompts/README.md) secção **«Depois da sequência»** (não entra no «Hoje» até M1 estabilizar).
 
 ---
 
@@ -153,6 +154,7 @@ _Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA
 ### Rasto para a próxima sessão
 
 - **Manhã 2026-04-18:** ver bloco **«Hoje 2026-04-18»** acima (SP-G + tweaks + pytest).
+- **Roteiro pós-super-prompts** (legal, tema, vídeos): [`docs/super-prompts/README.md`](docs/super-prompts/README.md) — **Depois da sequência**.
 - **M2** — email, nick, estados de perfil (após M1 estável).
 - **M3** — documentos motorista + audit admin.
 - **W3** — staging (A027) quando M1 não estiver a ser empurrado para fora.
