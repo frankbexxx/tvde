@@ -5,7 +5,7 @@
 
 **URL:** abre a **web-app de produção** (Render) e vai a **`/admin`** (ou o caminho equivalente que já usas). Os nomes das tabs coincidem com a UI: **Pendentes**, **Utilizadores**, **Frota**, **Dados**, **Viagens**, **Métricas**, **Operações**, **Saúde**.
 
-**Deep links (W2-B):** ` /admin?tab=health ` · ` /admin?tab=trips&tripId=<uuid> ` (com `tripId`, a tab efectiva é sempre **Viagens** e o painel Detalhe abre para esse id quando a viagem estiver na lista activa). Parâmetro `tab` em inglês, alinhado ao código: `pending`, `users`, `frota`, `dados`, `trips`, `metrics`, `ops`, `health`. Também se aceita `trip_id=` como alias de `tripId`. Depois do login, a query string é preservada quando abres directamente o link.
+**Deep links (W2-B):** ` /admin?tab=health ` · ` /admin?tab=trips&tripId=<uuid> ` (com `tripId`, a tab efectiva é sempre **Viagens** e o painel Detalhe abre para esse id quando a viagem estiver na lista activa). Parâmetro `tab` em inglês, alinhado ao código: `agora` (resumo SP-G; **omissão** de `tab` também abre **Agora**), `pending`, `users`, `frota`, `dados`, `trips`, `metrics`, `ops`, `health`. Também se aceita `trip_id=` como alias de `tripId`. Depois do login, a query string é preservada quando abres directamente o link.
 
 ---
 

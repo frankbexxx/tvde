@@ -29,7 +29,9 @@ import {
   listPartners,
   listDrivers,
   getUsageSummary,
+  getAdminAlerts,
   type AdminUsageSummaryResponse,
+  type AdminAlertsResponse,
   type TripActiveItem,
   type TripDetailAdmin,
   type SystemHealthResponse,
@@ -95,6 +97,7 @@ function maskSensitiveEnvDisplay(text: string): string {
 }
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'agora', label: 'Agora' },
   { id: 'pending', label: 'Pendentes' },
   { id: 'users', label: 'Utilizadores' },
   { id: 'frota', label: 'Frota' },
@@ -107,9 +110,24 @@ const TABS: { id: Tab; label: string }[] = [
 
 function readInitialAdminQuery(): ReturnType<typeof parseAdminDashboardQuery> {
   if (typeof window === 'undefined') {
-    return { tab: 'pending', tripId: null, tripsList: 'active' }
+    return { tab: 'agora', tripId: null, tripsList: 'active' }
   }
   return parseAdminDashboardQuery(new URLSearchParams(window.location.search))
+}
+
+/** SP-G: contagens de linhas de anomalia + avisos (alinhado a system-health). */
+function countHealthSignalRows(h: SystemHealthResponse | null): number {
+  if (!h) return 0
+  const n = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0)
+  return (
+    n(h.trips_accepted_too_long) +
+    n(h.trips_ongoing_too_long) +
+    n(h.stuck_payments) +
+    n(h.drivers_unavailable_too_long) +
+    n(h.missing_payment_records) +
+    n(h.inconsistent_financial_state) +
+    (h.warnings?.length ?? 0)
+  )
 }
 
 function healthRowTimestamp(row: Record<string, unknown>): string {
@@ -268,6 +286,7 @@ export function AdminDashboard() {
   const [metrics, setMetrics] = useState<AdminMetricsResponse | null>(null)
   const [usage, setUsage] = useState<AdminUsageSummaryResponse | null>(null)
   const [health, setHealth] = useState<SystemHealthResponse | null>(null)
+  const [adminAlerts, setAdminAlerts] = useState<AdminAlertsResponse | null>(null)
   const [opsLoading, setOpsLoading] = useState<string | null>(null)
   const [recoverDriverId, setRecoverDriverId] = useState('')
   const [phase0, setPhase0] = useState<Awaited<ReturnType<typeof getAdminPhase0>> | null>(null)
@@ -485,6 +504,16 @@ export function AdminDashboard() {
     }
   }, [token])
 
+  const fetchAdminAlerts = useCallback(async () => {
+    if (!token) return
+    try {
+      const a = await getAdminAlerts(token)
+      setAdminAlerts(a)
+    } catch {
+      setAdminAlerts(null)
+    }
+  }, [token])
+
   const ensureDataLoaded = useCallback(async () => {
     if (!token) return
     if (partners.length > 0 && driversList.length > 0) return
@@ -507,7 +536,16 @@ export function AdminDashboard() {
     fetchHistoryTrips()
     fetchMetrics()
     fetchHealth()
-  }, [fetchPending, fetchUsers, fetchActiveTrips, fetchHistoryTrips, fetchMetrics, fetchHealth])
+    void fetchAdminAlerts()
+  }, [
+    fetchPending,
+    fetchUsers,
+    fetchActiveTrips,
+    fetchHistoryTrips,
+    fetchMetrics,
+    fetchHealth,
+    fetchAdminAlerts,
+  ])
 
   const handleAssignTrip = async (tripId: string) => {
     if (!token) return
@@ -779,6 +817,12 @@ export function AdminDashboard() {
 
   useEffect(() => {
     if (!token) return
+    if (tab === 'agora') {
+      void fetchActiveTrips()
+      void fetchMetrics()
+      void fetchHealth()
+      void fetchAdminAlerts()
+    }
     if (tab === 'trips') {
       if (tripsListMode === 'active') void fetchActiveTrips()
       else void fetchHistoryTrips()
@@ -791,7 +835,16 @@ export function AdminDashboard() {
     if (tab === 'frota') void ensureDataLoaded()
     // Tab-driven fetches; fetchDataVisibility / fetchUsage / ensureDataLoaded are stable enough for this pattern.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-running on every render of inline fetch helpers
-  }, [token, tab, tripsListMode, fetchActiveTrips, fetchHistoryTrips, fetchMetrics, fetchHealth])
+  }, [
+    token,
+    tab,
+    tripsListMode,
+    fetchActiveTrips,
+    fetchHistoryTrips,
+    fetchMetrics,
+    fetchHealth,
+    fetchAdminAlerts,
+  ])
 
   const fetchDataVisibility = async () => {
     if (!token) return
@@ -1077,6 +1130,139 @@ export function AdminDashboard() {
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-4">{error}</p>
       )}
+
+      {tab === 'agora' && (
+        <section className="space-y-4 mb-6" aria-labelledby="admin-agora-heading">
+          <h2 id="admin-agora-heading" className="text-lg font-semibold text-foreground">
+            Estado agora
+          </h2>
+          <p className="text-sm text-foreground/70 -mt-2">
+            Resumo em segundos (actualiza com o painel, ~8 s). Usa as tabs abaixo para agir.
+          </p>
+
+          {(() => {
+            const stuckN = health?.stuck_payments?.length ?? 0
+            const signalRows = countHealthSignalRows(health)
+            const hStatus = health?.status ?? '—'
+            const degraded = hStatus === 'degraded' || signalRows > 0
+            const activeN = metrics?.active_trips ?? activeTrips.length
+            const pendingN = pending.length
+
+            return (
+              <>
+                <div
+                  className={`rounded-2xl border px-4 py-3 shadow-card ${
+                    degraded
+                      ? 'border-warning/60 bg-warning/10'
+                      : 'border-border bg-card'
+                  }`}
+                >
+                  <p className="text-sm font-medium text-foreground">
+                    Saúde API: <span className="text-foreground">{hStatus}</span>
+                    {signalRows > 0 ? (
+                      <span className="text-warning"> · {signalRows} linha(s) de anomalia</span>
+                    ) : (
+                      <span className="text-muted-foreground"> · sem linhas de anomalia</span>
+                    )}
+                  </p>
+                  {stuckN > 0 ? (
+                    <p className="text-sm text-destructive mt-1 font-medium">
+                      Pagamentos presos (stuck): {stuckN} — ver Saúde ou Operações.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-foreground/65 mt-1">Pagamentos presos: 0</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'trips', tripId: null, tripsList: 'active' })}
+                    className="rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-card hover:bg-muted/40 transition-colors"
+                  >
+                    <p className="text-xs text-foreground/70">Viagens activas</p>
+                    <p className="text-2xl font-semibold text-foreground tabular-nums">{activeN}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'pending', tripId: null })}
+                    className="rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-card hover:bg-muted/40 transition-colors"
+                  >
+                    <p className="text-xs text-foreground/70">Pendentes aprovação</p>
+                    <p className="text-2xl font-semibold text-foreground tabular-nums">{pendingN}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'metrics', tripId: null })}
+                    className="rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-card hover:bg-muted/40 transition-colors"
+                  >
+                    <p className="text-xs text-foreground/70">Motoristas disponíveis</p>
+                    <p className="text-2xl font-semibold text-foreground tabular-nums">
+                      {metrics?.drivers_available ?? '—'}
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'metrics', tripId: null })}
+                    className="rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-card hover:bg-muted/40 transition-colors"
+                  >
+                    <p className="text-xs text-foreground/70">Em curso (métricas)</p>
+                    <p className="text-2xl font-semibold text-foreground tabular-nums">
+                      {metrics?.trips_ongoing ?? '—'}
+                    </p>
+                  </button>
+                </div>
+
+                {adminAlerts &&
+                  (adminAlerts.zero_drivers_available || adminAlerts.zero_trips_today) && (
+                    <div className="rounded-xl border border-info/40 bg-info/10 px-3 py-2 text-sm text-foreground">
+                      {adminAlerts.zero_drivers_available ? (
+                        <p>Alerta métricas: nenhum motorista disponível agora.</p>
+                      ) : null}
+                      {adminAlerts.zero_trips_today ? (
+                        <p className={adminAlerts.zero_drivers_available ? 'mt-1' : ''}>
+                          Alerta métricas: zero viagens criadas hoje (UTC).
+                        </p>
+                      ) : null}
+                    </div>
+                  )}
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'trips', tripId: null, tripsList: 'active' })}
+                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+                  >
+                    Ir para Viagens
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'health', tripId: null })}
+                    className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
+                  >
+                    Ir para Saúde
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'ops', tripId: null })}
+                    className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
+                  >
+                    Ir para Operações
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => syncAdminUrl({ tab: 'metrics', tripId: null })}
+                    className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
+                  >
+                    Métricas
+                  </button>
+                </div>
+              </>
+            )
+          })()}
+        </section>
+      )}
+
       {frotaOk && tab === 'frota' && (
         <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg mb-4">
           {frotaOk}
