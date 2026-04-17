@@ -146,17 +146,17 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Estado repo (2026-04-08 — SP-F v2 em branch local, não mergido)
+### Estado repo (2026-04-08 — pós-merge SP-F v2 na `main`)
 
-- **`main` remota:** inclui **SP-F v1** (`super_admin`, delete/bulk-block + motivo, migração role) conforme último pull.
-- **Trabalho local (esta sessão):** **SP-F v2** — corpo JSON com `governance_reason` (e onde aplicável só `super_admin`) alargado a cancelamento admin, block/unblock, recover, cron/run-timeouts/run-offer-expiry, assign viagem, partners/create-admin/assign/unassign (DELETE com body), promote/demote, clear password, `trip-debug` só super, PATCH telefone com motivo quando muda telefone; **fix** ordem de declaração de `AdminGovernanceReasonBody` em `admin.py` (evita `NameError` ao importar a app). **Web-app:** `AdminDashboard` com `promptGovernanceReason` nas acções afectadas; `admin.ts` + `trips.ts` (DevTools) com corpos alinhados. **Testes:** `test_admin_*` + partners/onboarding actualizados para `super_admin` + motivo; suite `pytest` verde (130 testes com Postgres).
+- **`main`:** inclui **SP-F v2** (PR **#117**, fast-forward `ca7575b`): matriz `governance_reason` / `super_admin` alargada; web-app com prompts; testes + docs `SP-F-governanca.md` v2; **Seção F** actualizada (POSTs operacionais com `super_admin`).
+- **Seguinte (pequeno):** UI **Desbloquear** na tab Utilizadores — PR **#118** (merge quando validado).
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **PR SP-F v2** — `git status` → branch `feat/sp-f-governanca-v2` (ou nome acordado) → commit completo → **tu abres/revisas a PR** (o assistente **não** assume merge; pedir quando quiseres o texto do PR).
-2. **Smoke humano** — login **super_admin** no admin: operações (cron, timeouts, ofertas), frota (criar org, assign), viagens (assign/cancel com motivo), utilizadores (promote/demote, bloqueio, telefone, limpar password); confirmar 403 esperado com token só `admin` onde a matriz exige super.
-3. **Docs operação** — actualizar nota em **Seção F** (`run-timeouts` / `run-offer-expiry` / `cron/run` requerem **super_admin** + JSON) quando a PR estiver prestes a merge.
+1. **Smoke humano** — JWT **super_admin**: Operações (cron, timeouts, ofertas), Frota, Viagens (assign/cancel), Utilizadores (promote/demote, bloqueio, **desbloqueio**, telefone, limpar password); com token só `admin`, confirmar **403** onde a matriz exige super.
+2. **Ondas M1** — password + perfil (ver bloco **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md)) quando quiseres retomar.
+3. **Tweaks** — lista curta pós-smoke (admin / viagens); fechar só o que for rápido e acordado.
 
 **Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md); **F v1** pode evoluir sem reordenar letras.
 
