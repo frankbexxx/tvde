@@ -22,6 +22,8 @@ from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.services.partners_admin import partner_metrics
 
+_GOVERNANCE_REASON = "motivo teste unassign partner SP-F."
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _require_postgres() -> None:
@@ -36,10 +38,10 @@ def _require_postgres() -> None:
 def admin_ctx_override() -> None:
     aid = str(uuid.uuid4())
 
-    async def _admin() -> UserContext:
-        return UserContext(user_id=aid, role=Role.admin)
+    async def _super() -> UserContext:
+        return UserContext(user_id=aid, role=Role.super_admin)
 
-    app.dependency_overrides[get_current_user] = _admin
+    app.dependency_overrides[get_current_user] = _super
     yield aid
     app.dependency_overrides.pop(get_current_user, None)
 
@@ -237,19 +239,29 @@ def test_c012_delete_unassign_idempotent(admin_ctx_override: str) -> None:
 
     client = TestClient(app)
 
-    r1 = client.delete(
+    r1 = client.request(
+        "DELETE",
         f"/admin/drivers/{driver_id}/assign-partner",
+        json={"governance_reason": _GOVERNANCE_REASON},
     )
     assert r1.status_code == 200
     assert r1.json()["partner_id"] == str(DEFAULT_PARTNER_UUID)
 
-    r2 = client.delete(f"/admin/drivers/{driver_id}/assign-partner")
+    r2 = client.request(
+        "DELETE",
+        f"/admin/drivers/{driver_id}/assign-partner",
+        json={"governance_reason": _GOVERNANCE_REASON},
+    )
     assert r2.status_code == 200
     assert r2.json()["partner_id"] == str(DEFAULT_PARTNER_UUID)
 
 
 def test_c012_delete_unassign_unknown_driver(admin_ctx_override: str) -> None:
     client = TestClient(app)
-    r = client.delete(f"/admin/drivers/{uuid.uuid4()}/assign-partner")
+    r = client.request(
+        "DELETE",
+        f"/admin/drivers/{uuid.uuid4()}/assign-partner",
+        json={"governance_reason": _GOVERNANCE_REASON},
+    )
     assert r.status_code == 404
     assert r.json().get("detail") == "driver_not_found"

@@ -78,6 +78,19 @@ def test_trip_history_list_ok(client: TestClient) -> None:
 
 
 @pytest.mark.usefixtures("admin_auth_override")
+def test_trip_debug_forbidden_for_plain_admin(client: TestClient) -> None:
+    r = client.get("/admin/trip-debug/00000000-0000-0000-0000-000000000000")
+    assert r.status_code == 403
+    assert r.json().get("detail") == "super_admin_required"
+
+
+@pytest.mark.usefixtures("admin_auth_override")
+def test_recover_driver_requires_governance_body(client: TestClient) -> None:
+    r = client.post("/admin/recover-driver/00000000-0000-0000-0000-000000000000")
+    assert r.status_code == 422
+
+
+@pytest.mark.usefixtures("admin_auth_override")
 def test_metrics_returns_expected_structure(client: TestClient) -> None:
     r = client.get("/admin/metrics")
     assert r.status_code == 200

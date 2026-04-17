@@ -43,7 +43,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 | Driver Dashboard                   | ✅ Lista assigned, Accept/Arriving/Start/Complete |
 | Polling 5s                         | ✅                                                |
 | Painel de atividade (log + estado) | ✅ Implementado                                   |
-| Guia de testes                     | ✅ [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                 |
+| Guia de testes                     | ✅ [GUIA_TESTES.md](../testing/GUIA_TESTES.md)    |
 
 ---
 
@@ -146,16 +146,17 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Estado repo (2026-04-17 — pós-merge SP + admin UI)
+### Estado repo (2026-04-08 — SP-F v2 em branch local, não mergido)
 
-- **`main`:** **W2** A–E + **super-prompts B, A, G, D, C, E** (web-app): SP-B/A como antes; **SP-G** tab **Agora**; **SP-D** guias anti-stuck na **Saúde**; **SP-C** partner; **SP-E** revisões identidade + trilho Utilizadores. **SP-F v1** (governança: `super_admin`, delete/bulk-block + motivo) — integrar via PR + `alembic upgrade head`; doc `SP-F-governanca.md` § Estado.
+- **`main` remota:** inclui **SP-F v1** (`super_admin`, delete/bulk-block + motivo, migração role) conforme último pull.
+- **Trabalho local (esta sessão):** **SP-F v2** — corpo JSON com `governance_reason` (e onde aplicável só `super_admin`) alargado a cancelamento admin, block/unblock, recover, cron/run-timeouts/run-offer-expiry, assign viagem, partners/create-admin/assign/unassign (DELETE com body), promote/demote, clear password, `trip-debug` só super, PATCH telefone com motivo quando muda telefone; **fix** ordem de declaração de `AdminGovernanceReasonBody` em `admin.py` (evita `NameError` ao importar a app). **Web-app:** `AdminDashboard` com `promptGovernanceReason` nas acções afectadas; `admin.ts` + `trips.ts` (DevTools) com corpos alinhados. **Testes:** `test_admin_*` + partners/onboarding actualizados para `super_admin` + motivo; suite `pytest` verde (130 testes com Postgres).
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **SP-F — evolução** — alargar matriz (mais acções só `super_admin`); motivo obrigatório noutros overrides; doc por endpoint em [`SP-F-governanca.md`](../super-prompts/SP-F-governanca.md).
-2. **Tweaks** — lista curta do que sobrou do teste pós-merge (admin / viagens); fechar só o que for rápido e acordado.
-3. **pytest / CI** — regressão após mudanças em `admin.py` / migrações Alembic.
+1. **PR SP-F v2** — `git status` → branch `feat/sp-f-governanca-v2` (ou nome acordado) → commit completo → **tu abres/revisas a PR** (o assistente **não** assume merge; pedir quando quiseres o texto do PR).
+2. **Smoke humano** — login **super_admin** no admin: operações (cron, timeouts, ofertas), frota (criar org, assign), viagens (assign/cancel com motivo), utilizadores (promote/demote, bloqueio, telefone, limpar password); confirmar 403 esperado com token só `admin` onde a matriz exige super.
+3. **Docs operação** — actualizar nota em **Seção F** (`run-timeouts` / `run-offer-expiry` / `cron/run` requerem **super_admin** + JSON) quando a PR estiver prestes a merge.
 
 **Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md); **F v1** pode evoluir sem reordenar letras.
 
@@ -163,7 +164,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 **Smoke pós-deploy (W2)** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links, Saúde (guias SP-D), Operações, Utilizadores.
 
-**Parceiro (humano)** — **ADIA** — *fora do TODO_right_now*; **não bloqueia** SP-C nem M1.
+**Parceiro (humano)** — **ADIA** — _fora do TODO_right_now_; **não bloqueia** SP-C nem M1.
 
 ### Não fazer ainda (inalterado)
 
@@ -173,12 +174,12 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 **Objectivo:** dados de conta claros (nome, telefone, nicks, email, documentação…) **sem** atropelar o que já existe; cada onda fecha com **fluxos visíveis** (app + admin).
 
-| Onda | Foco | Entregável verificável (no ecrã) |
-| ---- | ---- | ---------------------------------- |
-| **M1** | **Identidade mínima + password simples** | Utilizador vê/edita **nome** e **telefone** (já na BD onde aplicável); fluxo **redefinir password** num modo **único e simples** (ex.: canal já confiável — SMS / link — a acordar na sessão); **admin** corrige nome/telefone **com cautela** (secções separadas, confirmação, não misturar com «Guardar» genérico); **admin** dispara **reset de password a pedido** (accção dedicada + confirmação). |
-| **M2** | **Conta «produto»** | **Email** (opcional vs obrigatório — decisão única); **nick vs nome** (visibilidade passageiro/motorista); estados «em falta» / «por verificar» **visíveis** no perfil. |
-| **M3** | **Documentação + audit** | Uploads / estados de documentos motorista-frota; **trilho de auditoria** para mudanças admin sensíveis; políticas do que o admin **não** pode mudar sozinho. |
-| **M4** (futuro) | **Vários modos de login** | Telefone+OTP, email+password, magic link, etc. — **onda própria**; não misturar com M1. |
+| Onda            | Foco                                     | Entregável verificável (no ecrã)                                                                                                                                                                                                                                                                                                                                                                        |
+| --------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **M1**          | **Identidade mínima + password simples** | Utilizador vê/edita **nome** e **telefone** (já na BD onde aplicável); fluxo **redefinir password** num modo **único e simples** (ex.: canal já confiável — SMS / link — a acordar na sessão); **admin** corrige nome/telefone **com cautela** (secções separadas, confirmação, não misturar com «Guardar» genérico); **admin** dispara **reset de password a pedido** (accção dedicada + confirmação). |
+| **M2**          | **Conta «produto»**                      | **Email** (opcional vs obrigatório — decisão única); **nick vs nome** (visibilidade passageiro/motorista); estados «em falta» / «por verificar» **visíveis** no perfil.                                                                                                                                                                                                                                 |
+| **M3**          | **Documentação + audit**                 | Uploads / estados de documentos motorista-frota; **trilho de auditoria** para mudanças admin sensíveis; políticas do que o admin **não** pode mudar sozinho.                                                                                                                                                                                                                                            |
+| **M4** (futuro) | **Vários modos de login**                | Telefone+OTP, email+password, magic link, etc. — **onda própria**; não misturar com M1.                                                                                                                                                                                                                                                                                                                 |
 
 **Critérios transversais:** rate-limit em resets; bloquear edição de conta **blocked** sem fluxo explícito; telefone duplicado com erro **legível no ecrã**; logs/audit quando existir modelo.
 
@@ -266,7 +267,7 @@ Ver **[GUIA_TESTES.md](../testing/GUIA_TESTES.md)** para instruções completas 
 | `web-app/src/context/AuthContext.tsx`        | Token em memory; role derivado do pathname               |
 | `web-app/src/context/ActivityLogContext.tsx` | Log e estado                                             |
 | `web-app/src/components/ActivityPanel.tsx`   | Painel direito                                           |
-| [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                             | Guia passo a passo para testes                           |
+| [GUIA_TESTES.md](../testing/GUIA_TESTES.md)  | Guia passo a passo para testes                           |
 
 ---
 
@@ -289,12 +290,13 @@ Ordem fixa: **testes → audits → correcções → merge/PR** → actualizar *
 
 Se `CRON_SECRET` não estiver definido, o endpoint responde **503** — configurar antes de confiar no agendador.
 
-### Opção alternativa — JWT admin
+### Opção alternativa — JWT backoffice
 
-- `POST /admin/run-timeouts`
-- `POST /admin/run-offer-expiry`
+- `POST /admin/run-timeouts` — **super_admin** + JSON `{ "governance_reason": "…" }` (≥10 caracteres).
+- `POST /admin/run-offer-expiry` — idem.
+- `POST /admin/cron/run` — idem (lote completo).
 
-Ambos requerem token de **admin**.
+Token só **admin** (sem `super_admin`) recebe **403** `super_admin_required` nestes três.
 
 ## F.2 Verificações diárias (ou após deploy)
 
@@ -470,15 +472,15 @@ O núcleo (**financeiro + UI validável**) está **fechado** em “funciona de p
 
 ## G.7 Onde está cada coisa
 
-| Necessidade                         | Onde ir                                                                                                                                                |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Continuar amanhã                    | Este ficheiro (`PROXIMA_SESSAO.md`)                                                                                                                    |
-| Roadmap engenharia + A023–A035      | [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md)                                                                                                        |
-| UX web-app (mini roadmap + prompts) | [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                                                                                                            |
+| Necessidade                         | Onde ir                                                                                                                                         |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Continuar amanhã                    | Este ficheiro (`PROXIMA_SESSAO.md`)                                                                                                             |
+| Roadmap engenharia + A023–A035      | [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md)                                                                    |
+| UX web-app (mini roadmap + prompts) | [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                                                                       |
 | Roadmap histórico / Stripe futuro   | Snapshot local — [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) (`archive/docs_2026_03_22/ROADMAP.md`, `STRIPE_CONFIRMACAO_FUTURA.md`) |
-| Testes manuais                      | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                                                                                       |
-| Observabilidade backend             | [`TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md)                                                                                                 |
-| Índice de docs                      | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                                                                                        |
-| Implementação + logs + pytest       | [`IMPLEMENTACAO_E_TESTES.md`](../IMPLEMENTACAO_E_TESTES.md)                                                                                                                       |
+| Testes manuais                      | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                                                     |
+| Observabilidade backend             | [`TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md)                                         |
+| Índice de docs                      | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                                                                  |
+| Implementação + logs + pytest       | [`IMPLEMENTACAO_E_TESTES.md`](../IMPLEMENTACAO_E_TESTES.md)                                                                                     |
 
 _Relatório fundido para apoio à decisão; não substitui o código._

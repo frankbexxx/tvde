@@ -1,4 +1,5 @@
 import { apiFetch, COLD_START_FIRST_TIMEOUT_MS } from './client'
+import { DEFAULT_ADMIN_GOVERNANCE_REASON } from './admin'
 
 export type TripStatus =
   | 'requested'
@@ -184,10 +185,15 @@ export async function completeTrip(tripId: string, token: string): Promise<TripS
   })
 }
 
-export async function assignTripAdmin(tripId: string, token: string): Promise<TripStatusResponse> {
+export async function assignTripAdmin(
+  tripId: string,
+  token: string,
+  governanceReason: string = DEFAULT_ADMIN_GOVERNANCE_REASON
+): Promise<TripStatusResponse> {
   return apiFetch<TripStatusResponse>(`/admin/trips/${tripId}/assign`, {
     method: 'POST',
     token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
   })
 }
 
@@ -197,10 +203,14 @@ export interface RunTimeoutsResponse {
   ongoing_to_failed: number
 }
 
-export async function runTimeoutsAdmin(token: string): Promise<RunTimeoutsResponse> {
+export async function runTimeoutsAdmin(
+  token: string,
+  governanceReason: string = DEFAULT_ADMIN_GOVERNANCE_REASON
+): Promise<RunTimeoutsResponse> {
   return apiFetch<RunTimeoutsResponse>('/admin/run-timeouts', {
     method: 'POST',
     token,
+    body: JSON.stringify({ governance_reason: governanceReason.trim() }),
   })
 }
 
