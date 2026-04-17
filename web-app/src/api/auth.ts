@@ -82,3 +82,22 @@ export async function changeMyPassword(
     }),
   })
 }
+
+export interface MeProfileResponse {
+  user_id: string
+  phone: string
+  name: string
+  has_custom_password: boolean
+}
+
+export async function getMeProfile(token: string): Promise<MeProfileResponse> {
+  return apiFetch<MeProfileResponse>('/auth/me', { token })
+}
+
+export async function patchMeProfile(token: string, name: string): Promise<MeProfileResponse> {
+  return apiFetch<MeProfileResponse>('/auth/me', {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify({ name: name.trim() }),
+  })
+}

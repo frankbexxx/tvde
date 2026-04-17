@@ -52,3 +52,18 @@ class PasswordChangeRequest(BaseModel):
 
     current_password: str | None = Field(None, min_length=1, max_length=128)
     new_password: str = Field(..., min_length=8, max_length=128)
+
+
+class MeProfileResponse(BaseModel):
+    """Perfil mínimo do utilizador autenticado (BETA)."""
+
+    user_id: str
+    phone: str
+    name: str
+    has_custom_password: bool
+
+
+class MeProfilePatchRequest(BaseModel):
+    """M1: o próprio utilizador altera o nome visível; telefone continua só via admin."""
+
+    name: str = Field(..., min_length=1, max_length=120)

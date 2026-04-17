@@ -14,6 +14,7 @@ import {
   type PartnerMetrics,
   type PartnerTripRow,
 } from '../../api/partner'
+import { BetaAccountPanel } from '../account/BetaAccountPanel'
 
 function locationLabel(d: PartnerDriverRow): string {
   const loc = d.last_location
@@ -468,6 +469,8 @@ export function PartnerHome() {
           <p className="text-sm text-muted-foreground">Sem viagens neste filtro.</p>
         )}
       </div>
+
+      <BetaAccountPanel />
 
       <button
         type="button"

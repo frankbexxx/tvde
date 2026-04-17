@@ -141,7 +141,7 @@ _Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA
 
 ### Prioridades (máx. 3)
 
-1. [ ] [PENSAR + CÓDIGO] **M1 — Password + perfil mínimo** — Acordar **um** canal simples para «esqueci-me» / redefinir password; fluxo utilizador **no ecrã**; não abrir M4 (vários logins) nesta sessão.
+1. [ ] [PENSAR + CÓDIGO] **M1 — Password + perfil mínimo** — **Em curso:** `GET/PATCH /auth/me` + painel **Conta (BETA)** (nome + palavra-passe) passageiro/motorista/partner; canal «esqueci-me» fora da app continua **admin / Limpar palavra-passe** até decisão; não abrir M4.
 2. [ ] [CÓDIGO] **M1 — Admin cauteloso** — Correcção **nome** / **telefone** com confirmação e secções separadas; accção dedicada **redefinir password a pedido** (não misturar com «Guardar» genérico); mensagens de erro **legíveis** no UI.
 3. [ ] [OPS] **Smoke pós-deploy (W2-E)** — Após redeploy: admin — Saúde → **Abrir em Viagens** com viagem **fora** da lista activa; `.env` mascarado; bloqueio / bulk; anotar falhas em **Fecho** abaixo.
 

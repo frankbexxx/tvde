@@ -58,6 +58,15 @@ export function getStoredLastPhone(): string | null {
   }
 }
 
+export function setStoredLastPhone(phone: string): void {
+  try {
+    const t = phone.trim()
+    if (t) localStorage.setItem(LS_LAST_PHONE, t)
+  } catch {
+    /* ignore */
+  }
+}
+
 export function getStoredSessionDisplayName(): string | null {
   try {
     const s = localStorage.getItem(LS_SESSION_DISPLAY_NAME)?.trim()

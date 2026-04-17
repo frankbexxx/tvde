@@ -153,7 +153,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **Ondas M1** — **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md): canal de **redefinir password**; perfil **no ecrã**; admin cauteloso (já há nome/telefone/clear password + dica no login pós-PR **#119**).
+1. **Ondas M1** — **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md): perfil **no ecrã** (`/auth/me` + secção Conta BETA); canal «esqueci-me» = **admin** até haver decisão explícita; admin cauteloso (nome/telefone/clear password + dica login **#119**).
 2. **Smoke residual** — Operações / Frota / Viagens com **super_admin** onde a matriz SP-F exige.
 3. **Tweaks** — lista curta após M1 ou smoke mais largo.
 
