@@ -89,23 +89,22 @@ Se o dia for **só pensar**, os passos 2–4 encolhem para `[PENSAR]` / `[CONVER
 
 ## Hoje 2026-04-08
 
-_Âncora: **SP-F v2** mergido na **`main`** (PR #117); seguir **smoke super_admin** + **M1** quando fizer sentido._
+_Âncora: **SP-F v2** (#117) + **Desbloquear** (#118) na **`main`**; smoke Render utilizadores **OK** (2026-04-17)._
 
 ### Prioridades (máx. 3)
 
-1. [x] [OPS] **PR SP-F v2** — Merge na `main` (fast-forward).
-2. [ ] [OPS] **Smoke** — [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) § Arranque imediato (cron, frota, viagens, utilizadores incl. desbloquear).
-3. [ ] [CÓDIGO] **M1** — retomar «Hoje 2026-04-17» abaixo (password + perfil + admin cauteloso).
+1. [x] [OPS] **PR SP-F v2** — Merge na `main`.
+2. [x] [OPS] **Smoke** — Bloquear / desbloquear + motivos SP-F em PROD (capturas validadas).
+3. [ ] [CÓDIGO] **M1** — «Hoje 2026-04-17» + ajuda no login BETA (PR quando existir).
 
 ### Fecho do dia
 
-- **Feito:** SP-F v2 em `main`; documentação de continuidade actualizada.
-- **Em curso:** PR **#118** — botão **Desbloquear** no admin (Utilizadores) + motivo SP-F.
+- **Feito:** #117 + #118 em `main`; smoke utilizadores OK.
 - **Aprendizados:** `AdminGovernanceReasonBody` antes das rotas no `admin.py`.
 
 ### Rasto para a próxima sessão
 
-- Smoke **super_admin**; depois **M1** (Ondas M).
+- **M1** (password + perfil no ecrã); smoke alargado super_admin se útil.
 
 ---
 

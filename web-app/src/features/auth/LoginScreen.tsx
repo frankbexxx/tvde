@@ -164,7 +164,10 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               className="w-full px-3 py-2 border border-input rounded-xl bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent"
               required
             />
-            <p className="text-xs text-muted-foreground mt-1">Pré-preenchida: 123456</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Pré-preenchida com a password BETA por defeito (ex.: 123456). Se não entrares, o administrador pode
+              repor a palavra-passe por defeito no painel → Utilizadores → <span className="font-medium">Limpar palavra-passe</span>.
+            </p>
           </div>
           {error && (
             <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-xl">{error}</p>

@@ -146,17 +146,16 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Estado repo (2026-04-08 — pós-merge SP-F v2 na `main`)
+### Estado repo (2026-04-17 — pós-merge SP-F v2 + unblock UI)
 
-- **`main`:** inclui **SP-F v2** (PR **#117**, fast-forward `ca7575b`): matriz `governance_reason` / `super_admin` alargada; web-app com prompts; testes + docs `SP-F-governanca.md` v2; **Seção F** actualizada (POSTs operacionais com `super_admin`).
-- **Seguinte (pequeno):** UI **Desbloquear** na tab Utilizadores — PR **#118** (merge quando validado).
+- **`main`:** **SP-F v2** (PR **#117**) + **Desbloquear** na tab Utilizadores (PR **#118**, incl. `be19034`); smoke **Render** 2026-04-17 **OK** (bloquear / motivo / desbloquear / motivo).
 - **Princípio contínuo (Frank):** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **Smoke humano** — JWT **super_admin**: Operações (cron, timeouts, ofertas), Frota, Viagens (assign/cancel), Utilizadores (promote/demote, bloqueio, **desbloqueio**, telefone, limpar password); com token só `admin`, confirmar **403** onde a matriz exige super.
-2. **Ondas M1** — password + perfil (ver bloco **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md)) quando quiseres retomar.
-3. **Tweaks** — lista curta pós-smoke (admin / viagens); fechar só o que for rápido e acordado.
+1. **Ondas M1** — ver **«Hoje 2026-04-17»** em [`TODOdoDIA.md`](../../TODOdoDIA.md): canal de **redefinir password** (decisão única); perfil utilizador **no ecrã**; admin já tem nome/telefone/clear password — fechar lacunas (ex.: texto de ajuda no login BETA → PR pequena quando existir).
+2. **Smoke residual** — Operações / Frota / Viagens com **super_admin** (cron, timeouts, assign…) se ainda não passaste; `admin` só onde matriz permitir.
+3. **Tweaks** — lista curta após M1 ou smoke mais largo.
 
 **Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md); **F v1** pode evoluir sem reordenar letras.
 
