@@ -38,7 +38,7 @@ async def _authorize_admin(websocket: WebSocket) -> bool:
         user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if not user or user.status != UserStatus.active:
             return False
-        return user.role == Role.admin
+        return user.role in (Role.admin, Role.super_admin)
 
 
 @router.websocket("/ws/admin/trips")

@@ -96,14 +96,31 @@ async def get_current_user(
     )
 
 
+def _is_staff_admin_role(role: Role) -> bool:
+    """SP-F: painel backoffice — `admin` ou `super_admin` (matriz fina no router)."""
+    return role in (Role.admin, Role.super_admin)
+
+
 async def get_current_admin(
     user: UserContext = Depends(get_current_user),
 ) -> UserContext:
-    """Admin only: authentication is handled by get_current_user; this step is role-only → 403."""
-    if user.role != Role.admin:
+    """Staff backoffice: `admin` ou `super_admin` (403 para outros papéis)."""
+    if not _is_staff_admin_role(user.role):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
+        )
+    return user
+
+
+async def get_current_super_admin(
+    user: UserContext = Depends(get_current_user),
+) -> UserContext:
+    """SP-F: acções destrutivas em massa / eliminação de conta — só `super_admin`."""
+    if user.role != Role.super_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="super_admin_required",
         )
     return user
 

@@ -62,6 +62,10 @@ const USERS_PAGE_SIZE = 50
 
 const ADMIN_TRIP_CANCEL_STATUSES = ['requested', 'assigned', 'accepted'] as const
 
+function isBackofficeStaffRole(role: string): boolean {
+  return role === 'admin' || role === 'super_admin'
+}
+
 /** Erros do PATCH /admin/users/{id} (BETA) em texto legível. */
 function formatAdminUserPatchError(detail: unknown): string {
   if (typeof detail === 'string') {
@@ -70,6 +74,11 @@ function formatAdminUserPatchError(detail: unknown): string {
       invalid_phone_format: 'Telefone inválido. Usa +351 seguido de 9 dígitos (ex.: +351912345678).',
       phone_already_used: 'Esse telefone já está a ser usado por outra conta.',
       cannot_modify_admin: 'Não podes alterar a conta de administrador.',
+      cannot_modify_staff_role: 'Esta conta é de backoffice (admin / super_admin) — não podes alterá-la por aqui.',
+      cannot_delete_staff_role: 'Não é permitido eliminar contas admin / super_admin.',
+      cannot_block_staff_role: 'Não é permitido bloquear contas admin / super_admin.',
+      cannot_unblock_staff_role: 'Estado de conta de backoffice não pode ser alterado por aqui.',
+      super_admin_required: 'Esta acção exige sessão de super_admin (eliminar conta ou bloqueio em massa).',
       user_not_found: 'Utilizador não encontrado.',
       invalid_user_id: 'Identificador de utilizador inválido.',
       'Not available': 'Esta acção só está disponível em modo BETA.',
@@ -1085,14 +1094,34 @@ export function AdminDashboard() {
 
   const handleDelete = async (userId: string) => {
     if (!token) return
+    const reason = window.prompt(
+      'Motivo da eliminação (mínimo 10 caracteres; fica em auditoria — SP-F). Só super_admin pode eliminar contas.'
+    )
+    if (!reason || reason.trim().length < 10) {
+      setError('Eliminação cancelada: motivo com pelo menos 10 caracteres é obrigatório.')
+      setDeleteConfirmId(null)
+      return
+    }
     try {
-      await apiFetch(`/admin/users/${userId}`, { method: 'DELETE', token })
+      await apiFetch(`/admin/users/${userId}`, {
+        method: 'DELETE',
+        token,
+        body: JSON.stringify({ governance_reason: reason.trim() }),
+      })
       setDeleteConfirmId(null)
       invalidateUserAudit(userId)
       fetchUsers()
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao eliminar')
+      const ae = err as ApiError
+      const d = ae?.detail
+      const msg =
+        typeof d === 'string'
+          ? formatAdminUserPatchError(d)
+          : Array.isArray(d)
+            ? formatAdminUserPatchError(d)
+            : 'Erro ao eliminar'
+      setError(msg)
     }
   }
 
@@ -1143,11 +1172,22 @@ export function AdminDashboard() {
       `Para bloquear ${ids.length} conta(s) (reversível), escreve exactamente:\n${expected}`
     )
     if (typed?.trim() !== expected) return
+    const reason = window.prompt(
+      'Motivo do bloqueio em massa (mínimo 10 caracteres; fica em auditoria — SP-F). Só super_admin pode executar.'
+    )
+    if (!reason || reason.trim().length < 10) {
+      setError('Bloqueio em massa cancelado: motivo com pelo menos 10 caracteres é obrigatório.')
+      return
+    }
     try {
       await apiFetch('/admin/users/bulk-block', {
         method: 'POST',
         token,
-        body: JSON.stringify({ user_ids: ids, confirmation: expected }),
+        body: JSON.stringify({
+          user_ids: ids,
+          confirmation: expected,
+          governance_reason: reason.trim(),
+        }),
       })
       for (const id of ids) invalidateUserAudit(id)
       setBulkSelectedIds({})
@@ -2787,6 +2827,11 @@ export function AdminDashboard() {
       {tab === 'users' && (
         <section className="space-y-6">
           <h2 className="text-lg font-semibold text-foreground mb-4">Gestão de Utilizadores</h2>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+            SP-F: <strong className="text-foreground/90">Eliminar conta</strong> e{' '}
+            <strong className="text-foreground/90">Bloquear seleccionados</strong> exigem utilizador com papel{' '}
+            <code className="text-foreground/90">super_admin</code> na BD e motivo de auditoria (prompt ao confirmar).
+          </p>
           {users.length === 0 ? (
             <p className="text-muted-foreground">Nenhum utilizador.</p>
           ) : (
@@ -2834,7 +2879,7 @@ export function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => {
-                      const selectable = filteredSortedUsers.filter((u) => u.role !== 'admin')
+                      const selectable = filteredSortedUsers.filter((u) => !isBackofficeStaffRole(u.role))
                       const next: Record<string, boolean> = { ...bulkSelectedIds }
                       for (const u of selectable) next[u.id] = true
                       setBulkSelectedIds(next)
@@ -2927,7 +2972,7 @@ export function AdminDashboard() {
                       <>
                         <div className="flex justify-between items-start gap-2">
                           <div className="flex gap-3 min-w-0">
-                            {u.role !== 'admin' ? (
+                            {!isBackofficeStaffRole(u.role) ? (
                               <input
                                 type="checkbox"
                                 className="mt-1 h-4 w-4 shrink-0"
@@ -2977,7 +3022,7 @@ export function AdminDashboard() {
                                 Passageiro
                               </button>
                             )}
-                            {u.role !== 'admin' && (
+                            {!isBackofficeStaffRole(u.role) && (
                               <>
                                 <button
                                   type="button"
@@ -3051,7 +3096,7 @@ export function AdminDashboard() {
                         </div>
                       </>
                     )}
-                    {u.role !== 'admin' && (
+                    {!isBackofficeStaffRole(u.role) && (
                       <details
                         className="mt-3 rounded-xl border border-border/80 bg-background/40 px-3 py-2"
                         onToggle={async (e) => {

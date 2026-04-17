@@ -106,7 +106,7 @@ _Âncora: **super-prompts** (sequência **B → A** fechada em `main` + testado 
 
 ### Rasto para a próxima sessão
 
-- **SP-E** (completar) → **SP-F** (ordem em [`docs/super-prompts/README.md`](docs/super-prompts/README.md)); **tweaks** pós-merge quando listares.
+- **SP-F** (evolução da matriz + mais motivos) após merge do v1; **tweaks** pós-merge quando listares.
 - **Ondas M1** — retoma quando SP-G (e tweaks imediatos) estiverem claros; tabela em [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D.
 - **SP-B opcional** — UI rica do audit trail / export CSV (não bloqueia SP-G).
 - **Parceiro / W3 / Connect / push / `ENABLE_CONFIRM_ON_ACCEPT`** — **fora** até decisão explícita (ver **Não fazer ainda** em `PROXIMA`).
