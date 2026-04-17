@@ -68,6 +68,8 @@ def test_admin_block_writes_audit_row(
         assert len(rows) >= 1
         last = rows[-1]
         assert last.payload.get("actor_user_id") == ADMIN_ACTOR_ID
+        assert last.payload.get("before_status") == "active"
+        assert last.payload.get("after_status") == "blocked"
     finally:
         db2.close()
 
@@ -103,3 +105,53 @@ def test_admin_audit_trail_lists_admin_events(
         row.get("event_type") == "admin.user_block" and row.get("entity_id") == str(uid)
         for row in data
     )
+
+
+@pytest.mark.usefixtures("admin_audit_actor")
+def test_admin_user_patch_audit_before_after_symmetric(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """SP-E: PATCH utilizador regista before/after com os mesmos campos."""
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    uid = uuid.uuid4()
+    db = SessionLocal()
+    try:
+        u = User(
+            id=uid,
+            role=Role.passenger,
+            name="PatchMe",
+            phone=phone,
+            status=UserStatus.active,
+        )
+        db.add(u)
+        db.commit()
+    finally:
+        db.close()
+
+    r = client.patch(
+        f"/admin/users/{uid}",
+        json={"name": "PatchMeRenamed"},
+    )
+    assert r.status_code == 200, r.text
+
+    db2 = SessionLocal()
+    try:
+        rows = (
+            db2.execute(
+                select(AuditEvent).where(
+                    AuditEvent.event_type == "admin.user_patch",
+                    AuditEvent.entity_id == str(uid),
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert len(rows) >= 1
+        last = rows[-1]
+        pl = last.payload
+        assert set((pl.get("before") or {}).keys()) == {"name", "phone", "status"}
+        assert set((pl.get("after") or {}).keys()) == {"name", "phone", "status"}
+        assert pl["after"]["name"] == "PatchMeRenamed"
+    finally:
+        db2.close()

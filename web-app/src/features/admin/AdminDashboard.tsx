@@ -30,8 +30,10 @@ import {
   listDrivers,
   getUsageSummary,
   getAdminAlerts,
+  getAdminAuditTrail,
   type AdminUsageSummaryResponse,
   type AdminAlertsResponse,
+  type AdminAuditTrailItem,
   type TripActiveItem,
   type TripDetailAdmin,
   type SystemHealthResponse,
@@ -340,6 +342,23 @@ export function AdminDashboard() {
   const [usersFilter, setUsersFilter] = useState('')
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Record<string, boolean>>({})
   const [blockConfirmId, setBlockConfirmId] = useState<string | null>(null)
+  /** SP-E: cache de `GET /admin/audit-trail` por utilizador (ausência de chave = ainda não carregado). */
+  const [userAuditRows, setUserAuditRows] = useState<Record<string, AdminAuditTrailItem[]>>({})
+  const [userAuditLoading, setUserAuditLoading] = useState<string | null>(null)
+  const [userAuditError, setUserAuditError] = useState<Record<string, string>>({})
+
+  const invalidateUserAudit = useCallback((userId: string) => {
+    setUserAuditRows((m) => {
+      const next = { ...m }
+      delete next[userId]
+      return next
+    })
+    setUserAuditError((m) => {
+      const next = { ...m }
+      delete next[userId]
+      return next
+    })
+  }, [])
 
   // Viagens (lista activa + histórico terminal)
   const [activeTrips, setActiveTrips] = useState<TripActiveItem[]>([])
@@ -972,6 +991,7 @@ export function AdminDashboard() {
     if (!token) return
     try {
       await apiFetch(`/admin/users/${userId}/promote-driver`, { method: 'POST', token })
+      invalidateUserAudit(userId)
       fetchUsers()
       setError(null)
     } catch (err) {
@@ -983,6 +1003,7 @@ export function AdminDashboard() {
     if (!token) return
     try {
       await apiFetch(`/admin/users/${userId}/demote-driver`, { method: 'POST', token })
+      invalidateUserAudit(userId)
       fetchUsers()
       setError(null)
     } catch (err) {
@@ -1028,6 +1049,7 @@ export function AdminDashboard() {
       })
       setEditOriginalName(next)
       setError(null)
+      invalidateUserAudit(editingId)
       fetchUsers()
     } catch (err) {
       setError(formatAdminUserPatchError((err as ApiError).detail))
@@ -1054,6 +1076,7 @@ export function AdminDashboard() {
       setEditOriginalPhone(next)
       setEditPhone(next)
       setError(null)
+      invalidateUserAudit(editingId)
       fetchUsers()
     } catch (err) {
       setError(formatAdminUserPatchError((err as ApiError).detail))
@@ -1065,6 +1088,7 @@ export function AdminDashboard() {
     try {
       await apiFetch(`/admin/users/${userId}`, { method: 'DELETE', token })
       setDeleteConfirmId(null)
+      invalidateUserAudit(userId)
       fetchUsers()
       setError(null)
     } catch (err) {
@@ -1077,6 +1101,7 @@ export function AdminDashboard() {
     try {
       await apiFetch(`/admin/users/${userId}/block`, { method: 'POST', token })
       setBlockConfirmId(null)
+      invalidateUserAudit(userId)
       setBulkSelectedIds((m) => {
         const next = { ...m }
         delete next[userId]
@@ -1102,6 +1127,7 @@ export function AdminDashboard() {
         body: JSON.stringify({ confirmation: 'LIMPAR_SENHA' }),
       })
       setError(null)
+      invalidateUserAudit(userId)
       fetchUsers()
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro ao limpar palavra-passe')
@@ -1123,6 +1149,7 @@ export function AdminDashboard() {
         token,
         body: JSON.stringify({ user_ids: ids, confirmation: expected }),
       })
+      for (const id of ids) invalidateUserAudit(id)
       setBulkSelectedIds({})
       fetchUsers()
       setError(null)
@@ -3023,6 +3050,71 @@ export function AdminDashboard() {
                           </div>
                         </div>
                       </>
+                    )}
+                    {u.role !== 'admin' && (
+                      <details
+                        className="mt-3 rounded-xl border border-border/80 bg-background/40 px-3 py-2"
+                        onToggle={async (e) => {
+                          const el = e.currentTarget
+                          if (!el.open || !token) return
+                          if (userAuditRows[u.id] !== undefined) return
+                          setUserAuditLoading(u.id)
+                          setUserAuditError((m) => {
+                            const next = { ...m }
+                            delete next[u.id]
+                            return next
+                          })
+                          try {
+                            const rows = await getAdminAuditTrail(token, {
+                              entity_type: 'user',
+                              entity_id: u.id,
+                              limit: 50,
+                            })
+                            setUserAuditRows((m) => ({ ...m, [u.id]: rows }))
+                          } catch {
+                            setUserAuditError((m) => ({
+                              ...m,
+                              [u.id]: 'Não foi possível carregar o trilho.',
+                            }))
+                          } finally {
+                            setUserAuditLoading(null)
+                          }
+                        }}
+                      >
+                        <summary className="cursor-pointer text-xs font-medium text-foreground select-none">
+                          Trilho admin (identidade · SP-E)
+                        </summary>
+                        <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                          Eventos <code className="text-foreground/90">admin.*</code> em que este utilizador é a entidade
+                          (últimos 50). Útil para rever alterações de nome, telefone ou bloqueio.
+                        </p>
+                        {userAuditLoading === u.id ? (
+                          <p className="mt-2 text-xs text-muted-foreground">A carregar…</p>
+                        ) : null}
+                        {userAuditError[u.id] ? (
+                          <p className="mt-2 text-xs text-destructive">{userAuditError[u.id]}</p>
+                        ) : null}
+                        {userAuditRows[u.id] !== undefined && userAuditLoading !== u.id ? (
+                          userAuditRows[u.id].length === 0 ? (
+                            <p className="mt-2 text-xs text-muted-foreground">Sem eventos registados.</p>
+                          ) : (
+                            <ul className="mt-2 space-y-2 max-h-64 overflow-y-auto">
+                              {userAuditRows[u.id].map((row) => (
+                                <li
+                                  key={row.id}
+                                  className="rounded-lg border border-border/70 bg-card/50 p-2 text-xs space-y-1"
+                                >
+                                  <p className="font-medium text-foreground">{row.event_type}</p>
+                                  <p className="text-muted-foreground">{row.occurred_at}</p>
+                                  <pre className="text-[11px] text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto whitespace-pre-wrap break-words">
+                                    {JSON.stringify(row.payload, null, 2)}
+                                  </pre>
+                                </li>
+                              ))}
+                            </ul>
+                          )
+                        ) : null}
+                      </details>
                     )}
                   </li>
                 ))}

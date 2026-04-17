@@ -95,17 +95,18 @@ _Âncora: **super-prompts** (sequência **B → A** fechada em `main` + testado 
 
 1. [x] [CÓDIGO] **SP-G — Estado agora (30 s)** — Tab **Agora** no admin (URL sem `tab` → Agora): saúde + contagens + atalhos Viagens/Saúde/Operações/Métricas; spec em [`docs/super-prompts/SP-G-estado-agora.md`](docs/super-prompts/SP-G-estado-agora.md).
 2. [x] [CÓDIGO] **SP-D — Anti-stuck (Saúde)** — Guias «O que é · 3 passos» por classe de anomalia; banner + atalho Operações; ponto na tab Saúde; lembrete na tab Agora; [`docs/super-prompts/SP-D-anti-stuck.md`](docs/super-prompts/SP-D-anti-stuck.md).
-3. [ ] [OPS] **pytest admin** — Com venv + PostgreSQL: `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py`; ou confirmar **CI verde** na `main` após últimos merges.
+3. [x] [OPS] **pytest admin** — `tests/test_admin_audit_trail.py` + `tests/test_admin_sp_a.py` no venv (7 testes OK em 2026-04-17).
 
 ### Fecho do dia
 
 - **Feito (herança — encerramento sessão noite):** merges na `main` (SP-B auditoria + SP-A API, botões **→ arriving** / **→ ongoing** no admin, doc SP-A API vs UI); smoke humano **OK**; tweaks a listar na próxima abertura.
+- **Feito (2026-04-17 manhã):** merge **SP-C** partner na `main`; arranque **SP-E** (payloads `before`/`after` + trilho na tab Utilizadores; ver PR quando existir).
 - **Não feito / bloqueios:**
 - **Aprendizados:**
 
 ### Rasto para a próxima sessão
 
-- **SP-C** → **SP-E** → **SP-F** (ordem em [`docs/super-prompts/README.md`](docs/super-prompts/README.md)); **tweaks** pós-merge quando listares.
+- **SP-E** (completar) → **SP-F** (ordem em [`docs/super-prompts/README.md`](docs/super-prompts/README.md)); **tweaks** pós-merge quando listares.
 - **Ondas M1** — retoma quando SP-G (e tweaks imediatos) estiverem claros; tabela em [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D.
 - **SP-B opcional** — UI rica do audit trail / export CSV (não bloqueia SP-G).
 - **Parceiro / W3 / Connect / push / `ENABLE_CONFIRM_ON_ACCEPT`** — **fora** até decisão explícita (ver **Não fazer ainda** em `PROXIMA`).
