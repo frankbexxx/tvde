@@ -109,3 +109,15 @@ export function partnerTripsExportUrl(): string {
   const base = API_BASE.replace(/\/$/, '')
   return `${base}/partner/trips/export`
 }
+
+/** SP-C: cabeçalho CSV `GET /partner/trips/export` (UTF-8). Não reordenar colunas; só acrescentar no fim em versões futuras. */
+export const PARTNER_TRIPS_CSV_COLUMNS = [
+  'trip_id',
+  'driver_id',
+  'passenger_id',
+  'status',
+  'created_at',
+  'started_at',
+  'completed_at',
+  'updated_at',
+] as const

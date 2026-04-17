@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
+  PARTNER_TRIPS_CSV_COLUMNS,
   addDriverToFleet,
   discoverPartnerDrivers,
   fetchPartnerDrivers,
@@ -21,9 +22,20 @@ function locationLabel(d: PartnerDriverRow): string {
 }
 
 type DriverFilter = 'all' | 'active' | 'online' | 'offline'
-type TripFilter = 'all' | 'ongoing' | 'completed'
+type TripFilter = 'all' | 'ongoing' | 'completed' | 'cancelled' | 'failed' | 'assigned'
 
 const ONGOING = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
+const PIPELINE = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
+
+/** Minutos sem `updated_at` numa viagem ainda activa → aviso de possível bloqueio. */
+const STUCK_MINUTES = 25
+const LONG_ONGOING_HOURS = 4
+
+function parseIsoMs(s: string | null | undefined): number | null {
+  if (!s) return null
+  const t = Date.parse(s)
+  return Number.isFinite(t) ? t : null
+}
 
 function matchesDriverFilter(d: PartnerDriverRow, f: DriverFilter): boolean {
   if (f === 'all') return true
@@ -38,6 +50,9 @@ function matchesTripFilter(t: PartnerTripRow, f: TripFilter): boolean {
   if (f === 'all') return true
   if (f === 'ongoing') return ONGOING.has(t.status)
   if (f === 'completed') return t.status === 'completed'
+  if (f === 'cancelled') return t.status === 'cancelled'
+  if (f === 'failed') return t.status === 'failed'
+  if (f === 'assigned') return t.status === 'assigned'
   return true
 }
 
@@ -133,8 +148,71 @@ export function PartnerHome() {
     if (q) {
       list = list.filter((t) => t.trip_id.toLowerCase().includes(q))
     }
+    list = [...list].sort((a, b) => {
+      const ua = parseIsoMs(a.updated_at) ?? 0
+      const ub = parseIsoMs(b.updated_at) ?? 0
+      return ub - ua
+    })
     return list
   }, [trips, tripFilter, q])
+
+  const attentionList = useMemo(() => {
+    const now = Date.now()
+    const stuckMs = STUCK_MINUTES * 60_000
+    const longOngoingMs = LONG_ONGOING_HOURS * 60 * 60_000
+    const driverById = new Map(drivers.map((d) => [d.user_id, d]))
+    const reasonsByTrip = new Map<string, string[]>()
+
+    const pushReason = (tripId: string, msg: string) => {
+      const arr = reasonsByTrip.get(tripId) ?? []
+      if (!arr.includes(msg)) arr.push(msg)
+      reasonsByTrip.set(tripId, arr)
+    }
+
+    for (const t of trips) {
+      const updMs = parseIsoMs(t.updated_at)
+      const ageMs = updMs != null ? now - updMs : null
+
+      if (PIPELINE.has(t.status) && ageMs != null && ageMs > stuckMs) {
+        const mins = Math.round(ageMs / 60_000)
+        pushReason(
+          t.trip_id,
+          `Sem alteração de estado há ~${mins} min — pode estar bloqueada ou o motorista não está a responder.`,
+        )
+      }
+
+      const startedMs = parseIsoMs(t.started_at)
+      if (t.status === 'ongoing' && startedMs != null && now - startedMs > longOngoingMs) {
+        const hours = Math.round(((now - startedMs) / 3_600_000) * 10) / 10
+        pushReason(
+          t.trip_id,
+          `Em curso há cerca de ${hours} h — confirme GPS e se a viagem decorre normalmente; escale à operação se persistir.`,
+        )
+      }
+
+      if (t.status === 'assigned' && t.driver_id) {
+        const dr = driverById.get(t.driver_id)
+        if (dr && !dr.is_available && ageMs != null && ageMs > stuckMs) {
+          pushReason(
+            t.trip_id,
+            'Viagem atribuída mas o motorista aparece indisponível — confirme se vai aceitar ou reatribua.',
+          )
+        }
+      }
+    }
+
+    return Array.from(reasonsByTrip.entries())
+      .map(([tripId, reasons]) => {
+        const trip = trips.find((x) => x.trip_id === tripId)
+        return trip ? { tripId, reasons, trip } : null
+      })
+      .filter((x): x is { tripId: string; reasons: string[]; trip: PartnerTripRow } => x != null)
+      .sort((a, b) => {
+        const ua = parseIsoMs(a.trip.updated_at) ?? 0
+        const ub = parseIsoMs(b.trip.updated_at) ?? 0
+        return ub - ua
+      })
+  }, [trips, drivers])
 
   const downloadCsv = async () => {
     if (!token) return
@@ -214,6 +292,35 @@ export function PartnerHome() {
         </div>
       )}
 
+      <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-4 space-y-3">
+        <h3 className="text-base font-medium text-foreground">Precisa de atenção</h3>
+        <p className="text-xs text-foreground/75">
+          Heurísticas em linguagem de negócio (não substituem o mapa nem o suporte). Se o problema continuar após contactar o
+          motorista, escale à operação com o ID da viagem.
+        </p>
+        {attentionList.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nada destacado neste momento.</p>
+        ) : (
+          <ul className="space-y-3">
+            {attentionList.map(({ tripId, reasons, trip }) => (
+              <li key={tripId} className="rounded-xl border border-border bg-background/40 p-3 text-sm">
+                <Link
+                  to={`/partner/trips/${encodeURIComponent(tripId)}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {tripId.slice(0, 8)}… · {trip.status}
+                </Link>
+                <ul className="mt-2 list-disc pl-4 space-y-1 text-foreground/85">
+                  {reasons.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
         <h3 className="font-medium text-foreground">Adicionar motorista à frota</h3>
         <p className="text-sm text-foreground/75">
@@ -263,16 +370,7 @@ export function PartnerHome() {
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base font-medium text-foreground">Motoristas</h3>
-          <button
-            type="button"
-            onClick={() => void downloadCsv()}
-            className="text-xs font-medium text-primary underline-offset-2 hover:underline"
-          >
-            CSV viagens
-          </button>
-        </div>
+        <h3 className="text-base font-medium text-foreground mb-2">Motoristas</h3>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {(
             [
@@ -315,13 +413,29 @@ export function PartnerHome() {
       </div>
 
       <div>
-        <h3 className="text-base font-medium text-foreground mb-2">Viagens</h3>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="text-base font-medium text-foreground">Viagens</h3>
+          <button
+            type="button"
+            onClick={() => void downloadCsv()}
+            className="shrink-0 text-xs font-medium text-primary underline-offset-2 hover:underline"
+          >
+            Exportar CSV
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Colunas do CSV (UTF-8): {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}. Contrato estável: em versões futuras só se acrescentam
+          colunas no fim — quem importa por posição deve usar o cabeçalho.
+        </p>
         <div className="flex flex-wrap gap-1.5 mb-3">
           {(
             [
               ['all', 'Todas'],
               ['ongoing', 'Em curso'],
               ['completed', 'Concluídas'],
+              ['cancelled', 'Canceladas'],
+              ['failed', 'Falhadas'],
+              ['assigned', 'Só atribuídas'],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -343,7 +457,10 @@ export function PartnerHome() {
               >
                 {t.trip_id.slice(0, 8)}… · {t.status}
               </Link>
-              <p className="text-muted-foreground text-xs mt-1">{t.created_at}</p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Criada: {t.created_at}
+                {t.updated_at ? ` · Atualizada: ${t.updated_at}` : null}
+              </p>
             </li>
           ))}
         </ul>

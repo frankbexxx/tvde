@@ -199,9 +199,12 @@ def test_c010_c011_partner_detail_and_h007_csv() -> None:
     assert rows[0] == [
         "trip_id",
         "driver_id",
+        "passenger_id",
         "status",
         "created_at",
+        "started_at",
         "completed_at",
+        "updated_at",
     ]
     assert any(r[0] == trip_id for r in rows[1:])
 
