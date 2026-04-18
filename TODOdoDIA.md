@@ -10,16 +10,18 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 Coisas **adiadas**, **«não é hoje»** ou **ADIA**; voltam quando abrires um bloco dedicado (não roubam foco à Onda T1).
 
-| Área | Notas |
-|------|--------|
-| **T4 — Tickets** | Sistema de mensagens / pedidos de suporte. |
-| **Parceiro** | Checklist legal, papelada humana; fora do fluxo operacional diário. |
-| **M2** | Perfil «produto»: email, morada, preferências, … |
-| **M3** | Documentos motorista + políticas de audit. |
-| **W3** | Staging (segundo ambiente API+DB+frontend). |
-| **SP-B opcional** | UI rica do audit trail / export CSV. |
+| Área                  | Notas                                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **T4 — Tickets**      | Sistema de mensagens / pedidos de suporte.                                                                               |
+| **Parceiro**          | Checklist legal, papelada humana; fora do fluxo operacional diário.                                                      |
+| **M2**                | Perfil «produto»: email, morada, preferências, …                                                                         |
+| **M3**                | Documentos motorista + políticas de audit.                                                                               |
+| **W3**                | Staging (segundo ambiente API+DB+frontend).                                                                              |
+| **SP-B opcional**     | UI rica do audit trail / export CSV.                                                                                     |
 | **Pós-super-prompts** | Legal na app, theming PT, vídeos — [`docs/super-prompts/README.md`](docs/super-prompts/README.md) «Depois da sequência». |
-| **Não fazer ainda** | Stripe Connect, `ENABLE_CONFIRM_ON_ACCEPT`, push, M4 — ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D. |
+| **Admin — tabs**      | Tabs do painel admin num ecrã visível, **sem scroll horizontal**; dispor em **2–3 linhas** de botões (tabs).             |
+| **Admin — Operações** | Lista **Pagamentos em processing (saúde)**: muitas linhas empurram reconciliação para baixo — **paginação** (ex.: 10 por página + pág. 2/3) ou **misturar** com bloco de reconciliação já **acima** da lista (feito: reconciliação logo após Exportar CSV). Avaliar paginação na mesma sessão. |
+| **Não fazer ainda**   | Stripe Connect, `ENABLE_CONFIRM_ON_ACCEPT`, push, M4 — ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D.  |
 
 ---
 

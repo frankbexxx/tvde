@@ -2809,81 +2809,6 @@ export function AdminDashboard() {
               {opsLoading === 'export' ? 'A exportar...' : 'Exportar logs CSV'}
             </button>
 
-            <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-medium text-foreground">Pagamentos em processing (saúde)</p>
-                <button
-                  type="button"
-                  onClick={() => void fetchHealth()}
-                  disabled={!!opsLoading}
-                  className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
-                >
-                  Actualizar saúde
-                </button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Dados da mesma leitura que a tab Saúde. Links Stripe só com <span className="font-mono">pi_…</span>{' '}
-                (abre dashboard; não expõe segredos).
-              </p>
-              {!health ? (
-                <p className="text-xs text-muted-foreground">A carregar saúde…</p>
-              ) : health.stuck_payments.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhum pagamento stuck nesta leitura.</p>
-              ) : (
-                <ul className="space-y-2">
-                  {health.stuck_payments.map((row, i) => {
-                    const tid = tripIdFromHealthRow(row)
-                    const piRaw = row.stripe_payment_intent_id
-                    const pi = typeof piRaw === 'string' && piRaw.startsWith('pi_') ? piRaw.trim() : null
-                    const stripeUrls = pi ? stripePaymentIntentDashboardUrls(pi) : null
-                    return (
-                      <li
-                        key={`stuck-pay-${i}-${tid ?? String(row.id ?? i)}`}
-                        className="rounded-lg border border-border/80 bg-background p-3 space-y-2"
-                      >
-                        <div className="flex flex-wrap gap-2 items-center justify-between">
-                          {tid ? (
-                            <button
-                              type="button"
-                              className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
-                              onClick={() => syncAdminUrl({ tab: 'trips', tripId: tid })}
-                            >
-                              Abrir em Viagens
-                            </button>
-                          ) : null}
-                          {stripeUrls ? (
-                            <span className="flex flex-wrap gap-2 text-xs">
-                              <a
-                                href={stripeUrls.live}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-info underline underline-offset-2"
-                              >
-                                Stripe (live)
-                              </a>
-                              <a
-                                href={stripeUrls.test}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-info underline underline-offset-2"
-                              >
-                                Stripe (test)
-                              </a>
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Sem PaymentIntent na API ainda.</span>
-                          )}
-                        </div>
-                        <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-28 overflow-y-auto">
-                          {JSON.stringify(row, null, 2)}
-                        </pre>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </div>
-
             {isSuperAdminSession ? (
               <div className="rounded-2xl border border-warning/30 bg-warning/5 px-4 py-4 shadow-card space-y-3">
                 <p className="text-sm font-medium text-foreground">Reconciliar pagamentos (super_admin)</p>
@@ -2982,6 +2907,81 @@ export function AdminDashboard() {
                 ) : null}
               </div>
             ) : null}
+
+            <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium text-foreground">Pagamentos em processing (saúde)</p>
+                <button
+                  type="button"
+                  onClick={() => void fetchHealth()}
+                  disabled={!!opsLoading}
+                  className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                >
+                  Actualizar saúde
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Dados da mesma leitura que a tab Saúde. Links Stripe só com <span className="font-mono">pi_…</span>{' '}
+                (abre dashboard; não expõe segredos).
+              </p>
+              {!health ? (
+                <p className="text-xs text-muted-foreground">A carregar saúde…</p>
+              ) : health.stuck_payments.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Nenhum pagamento stuck nesta leitura.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {health.stuck_payments.map((row, i) => {
+                    const tid = tripIdFromHealthRow(row)
+                    const piRaw = row.stripe_payment_intent_id
+                    const pi = typeof piRaw === 'string' && piRaw.startsWith('pi_') ? piRaw.trim() : null
+                    const stripeUrls = pi ? stripePaymentIntentDashboardUrls(pi) : null
+                    return (
+                      <li
+                        key={`stuck-pay-${i}-${tid ?? String(row.id ?? i)}`}
+                        className="rounded-lg border border-border/80 bg-background p-3 space-y-2"
+                      >
+                        <div className="flex flex-wrap gap-2 items-center justify-between">
+                          {tid ? (
+                            <button
+                              type="button"
+                              className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
+                              onClick={() => syncAdminUrl({ tab: 'trips', tripId: tid })}
+                            >
+                              Abrir em Viagens
+                            </button>
+                          ) : null}
+                          {stripeUrls ? (
+                            <span className="flex flex-wrap gap-2 text-xs">
+                              <a
+                                href={stripeUrls.live}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-info underline underline-offset-2"
+                              >
+                                Stripe (live)
+                              </a>
+                              <a
+                                href={stripeUrls.test}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-info underline underline-offset-2"
+                              >
+                                Stripe (test)
+                              </a>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sem PaymentIntent na API ainda.</span>
+                          )}
+                        </div>
+                        <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-28 overflow-y-auto">
+                          {JSON.stringify(row, null, 2)}
+                        </pre>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
 
             <div className="pt-4 border-t border-border space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
