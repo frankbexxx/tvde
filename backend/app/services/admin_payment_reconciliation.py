@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
 from app.db.models.payment import Payment
@@ -21,6 +21,10 @@ from app.services.admin_audit import record_admin_action
 from app.services.stripe_service import retrieve_payment_intent
 
 logger = logging.getLogger(__name__)
+
+_SINGLE_RECONCILE_TRIP_STATUSES = frozenset(
+    {TripStatus.completed, TripStatus.cancelled, TripStatus.failed}
+)
 
 
 def sql_select_completed_processing(limit: int = 200) -> str:
@@ -295,4 +299,158 @@ def preview_reconciliation(
         "count": len(candidates),
         "candidates": candidates,
         "select_sql": sql_select_completed_processing(limit),
+    }
+
+
+def reconcile_single_trip_payment_with_stripe(
+    db: Session,
+    *,
+    trip_id: str,
+    actor_user_id: str,
+    governance_reason: str,
+    dry_run: bool,
+) -> dict[str, Any]:
+    """
+    Alinha um único pagamento `processing` ao PaymentIntent no Stripe.
+
+    Só para viagens terminais (`completed`, `cancelled`, `failed`) — ex.: viagem
+    `cancelled` com `payment.processing` e PI real (webhook / cancelamento Stripe
+    não reflectos na BD).
+
+    - PI `succeeded` -> `payment.succeeded` (não altera o estado da viagem).
+    - PI terminal falho (`canceled`, `requires_payment_method`) -> `payment.failed`;
+      se a viagem estava `completed`, passa a `failed` (igual ao lote); se já era
+      `cancelled` ou `failed`, mantém o estado da viagem.
+    """
+    trip = (
+        db.execute(
+            select(Trip)
+            .where(Trip.id == trip_id.strip())
+            .options(joinedload(Trip.payment))
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
+    if not trip:
+        return {"error": "not_found", "detail": "trip_not_found"}
+    pay = trip.payment
+    if not pay:
+        return {"error": "not_found", "detail": "no_payment_for_trip"}
+
+    base: dict[str, Any] = {
+        "dry_run": dry_run,
+        "trip_id": str(trip.id),
+        "payment_id": str(pay.id),
+        "trip_status_before": trip.status.value,
+        "stripe_payment_intent_id": pay.stripe_payment_intent_id,
+    }
+
+    if trip.status not in _SINGLE_RECONCILE_TRIP_STATUSES:
+        return {
+            **base,
+            "skipped": True,
+            "reason": "trip_status_not_eligible",
+            "detail": "only_completed_cancelled_failed",
+        }
+    if pay.status != PaymentStatus.processing:
+        return {
+            **base,
+            "skipped": True,
+            "reason": "payment_not_processing",
+            "payment_status": pay.status.value,
+        }
+
+    pi_id = (pay.stripe_payment_intent_id or "").strip()
+    if not pi_id:
+        return {**base, "skipped": True, "reason": "sem_stripe_payment_intent_id"}
+
+    if settings.STRIPE_MOCK:
+        return {
+            **base,
+            "skipped": True,
+            "reason": "stripe_mock",
+            "message": "STRIPE_MOCK=true: não se consulta Stripe neste endpoint.",
+        }
+
+    try:
+        intent = retrieve_payment_intent(pi_id)
+        st = getattr(intent, "status", None) or (
+            intent.get("status") if isinstance(intent, dict) else None
+        )
+        st_s = str(st) if st is not None else ""
+    except Exception as e:
+        logger.warning("reconcile_single retrieve failed trip=%s pi=%s err=%s", trip_id, pi_id, e)
+        return {
+            **base,
+            "action": "error",
+            "detail": f"stripe_retrieve_error:{e!s}",
+            "stripe_status": None,
+        }
+
+    if st_s == "succeeded":
+        if not dry_run:
+            pay.status = PaymentStatus.succeeded
+            record_admin_action(
+                db,
+                actor_user_id=actor_user_id,
+                action="reconcile_single_payment_stripe_succeeded",
+                entity_type="payment",
+                entity_id=str(pay.id),
+                payload={
+                    "governance_reason": governance_reason.strip()[:500],
+                    "trip_id": str(trip.id),
+                    "stripe_payment_intent_id": pi_id,
+                    "stripe_status": st_s,
+                },
+            )
+            db.commit()
+        out = {
+            **base,
+            "action": "dry_run_succeeded" if dry_run else "updated_succeeded",
+            "detail": "payment_marked_succeeded",
+            "stripe_status": st_s,
+        }
+        return {**out, "trip_status_after": trip.status.value}
+
+    if st_s in ("canceled", "requires_payment_method"):
+        trip_was_completed = trip.status == TripStatus.completed
+        if not dry_run:
+            pay.status = PaymentStatus.failed
+            if trip_was_completed:
+                trip.status = TripStatus.failed
+            record_admin_action(
+                db,
+                actor_user_id=actor_user_id,
+                action="reconcile_single_payment_stripe_terminal_failed",
+                entity_type="payment",
+                entity_id=str(pay.id),
+                payload={
+                    "governance_reason": governance_reason.strip()[:500],
+                    "trip_id": str(trip.id),
+                    "stripe_payment_intent_id": pi_id,
+                    "stripe_status": st_s,
+                    "trip_status_before": base["trip_status_before"],
+                    "trip_status_after": trip.status.value,
+                    "trip_set_failed": trip_was_completed,
+                },
+            )
+            db.commit()
+        if dry_run and trip_was_completed:
+            trip_after = TripStatus.failed.value
+        else:
+            trip_after = trip.status.value
+        return {
+            **base,
+            "action": "dry_run_failed" if dry_run else "updated_failed",
+            "detail": "payment_failed_trip_failed_if_completed",
+            "stripe_status": st_s,
+            "trip_status_after": trip_after,
+        }
+
+    return {
+        **base,
+        "action": "skip",
+        "detail": f"stripe_status_no_change:{st_s}",
+        "stripe_status": st_s,
+        "trip_status_after": trip.status.value,
     }

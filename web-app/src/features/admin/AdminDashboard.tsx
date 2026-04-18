@@ -35,6 +35,7 @@ import {
   getReconcilePaymentsPreview,
   postReconcilePaymentsStripeSync,
   postReconcilePaymentsCloseNoPi,
+  postAdminTripReconcilePaymentStripe,
   type AdminUsageSummaryResponse,
   type AdminAlertsResponse,
   type AdminAuditTrailItem,
@@ -65,6 +66,16 @@ type Tab = AdminDashboardTab
 const USERS_PAGE_SIZE = 50
 
 const ADMIN_TRIP_CANCEL_STATUSES = ['requested', 'assigned', 'accepted'] as const
+
+const SINGLE_TRIP_PAYMENT_RECONCILE_STATUSES = ['completed', 'cancelled', 'failed'] as const
+
+function tripDetailEligibleSinglePaymentReconcile(d: TripDetailAdmin | null): boolean {
+  if (!d) return false
+  if (d.payment_status !== 'processing') return false
+  const pi = d.stripe_payment_intent_id
+  if (typeof pi !== 'string' || !pi.trim()) return false
+  return (SINGLE_TRIP_PAYMENT_RECONCILE_STATUSES as readonly string[]).includes(d.status)
+}
 
 function isBackofficeStaffRole(role: string): boolean {
   return role === 'admin' || role === 'super_admin'
@@ -644,6 +655,40 @@ export function AdminDashboard() {
     },
     [token]
   )
+
+  const handleReconcileSingleTripPayment = async (tripId: string) => {
+    if (!token) return
+    if (
+      !window.confirm(
+        'Alinhar este pagamento ao PaymentIntent na Stripe? Se o PI estiver cancelado, o pagamento passa a failed; viagem cancelada ou failed mantém-se; viagem completed pode passar a failed.'
+      )
+    ) {
+      return
+    }
+    const gr = promptGovernanceReason('Motivo SP-F para alinhar pagamento desta viagem com Stripe:')
+    if (!gr) return
+    setTripActionLoading(`${tripId}-reconcile-pay`)
+    try {
+      const out = await postAdminTripReconcilePaymentStripe(token, tripId, {
+        governance_reason: gr,
+        dry_run: false,
+      })
+      if (out.skipped) {
+        window.alert(`Operação não aplicada: ${String(out.reason ?? '—')}\n\n${JSON.stringify(out, null, 2)}`)
+      } else if (out.error) {
+        window.alert(String(out.detail ?? JSON.stringify(out)))
+      } else {
+        window.alert(`OK — action=${String(out.action)}\ntrip_status=${String(out.trip_status_after ?? '—')}`)
+      }
+      setError(null)
+      await fetchTripDetail(tripId)
+      await fetchHealth()
+    } catch (err) {
+      setError(adminErrDetail(err, 'Erro ao alinhar pagamento com Stripe'))
+    } finally {
+      setTripActionLoading(null)
+    }
+  }
 
   const fetchMetrics = useCallback(async () => {
     if (!token) return
@@ -2199,6 +2244,19 @@ export function AdminDashboard() {
                     >
                       Debug
                     </button>
+                    {isSuperAdminSession && tripDetailEligibleSinglePaymentReconcile(tripDetail) ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleReconcileSingleTripPayment(selectedTripId)}
+                        disabled={tripActionLoading === `${selectedTripId}-reconcile-pay`}
+                        className="px-3 py-1.5 bg-info/25 text-info text-xs font-medium rounded-lg border border-info/30 disabled:opacity-50"
+                        title="Consulta Stripe e actualiza o pagamento processing (viagens completed, cancelled ou failed)."
+                      >
+                        {tripActionLoading === `${selectedTripId}-reconcile-pay`
+                          ? 'A alinhar…'
+                          : 'Alinhar pagamento (Stripe)'}
+                      </button>
+                    ) : null}
                     {tripDetail.status === 'requested' && (
                       <button
                         type="button"
