@@ -2899,6 +2899,105 @@ export function AdminDashboard() {
               {opsLoading === 'export' ? 'A exportar...' : 'Exportar logs CSV'}
             </button>
 
+            {isSuperAdminSession ? (
+              <div className="rounded-2xl border border-warning/30 bg-warning/5 px-4 py-4 shadow-card space-y-3">
+                <p className="text-sm font-medium text-foreground">Reconciliar pagamentos (super_admin)</p>
+                <p className="text-xs text-muted-foreground">
+                  Pares <span className="font-mono">trip.completed</span> + <span className="font-mono">payment.processing</span>
+                  : pré-visualizar, alinhar com Stripe (se existir PI), ou fechar como failed quando não há PI. Com auditoria
+                  (motivo SP-F). Em ambiente com <span className="font-mono">STRIPE_MOCK</span>, o Stripe sync não chama a API
+                  externa.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleReconcilePreview()}
+                    disabled={!!opsLoading}
+                    className="px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                  >
+                    {opsLoading === 'reconcile-preview' ? 'A carregar…' : 'Pré-visualizar'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleReconcileStripeSync(true)}
+                    disabled={!!opsLoading}
+                    className="px-3 py-1.5 bg-info/20 text-info text-xs font-medium rounded-xl disabled:opacity-50"
+                  >
+                    {opsLoading === 'reconcile-stripe-dry' ? '…' : 'Stripe sync (dry-run)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleReconcileStripeSync(false)}
+                    disabled={!!opsLoading}
+                    className="px-3 py-1.5 bg-warning/25 text-warning text-xs font-medium rounded-xl disabled:opacity-50"
+                  >
+                    {opsLoading === 'reconcile-stripe-run' ? '…' : 'Stripe sync (aplicar)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleReconcileCloseNoPi(true)}
+                    disabled={!!opsLoading}
+                    className="px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                  >
+                    {opsLoading === 'reconcile-close-dry' ? '…' : 'Fechar sem PI (dry-run)'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleReconcileCloseNoPi(false)}
+                    disabled={!!opsLoading}
+                    className="px-3 py-1.5 bg-destructive/20 text-destructive text-xs font-medium rounded-xl disabled:opacity-50"
+                  >
+                    {opsLoading === 'reconcile-close-run' ? '…' : 'Fechar sem PI (aplicar)'}
+                  </button>
+                </div>
+                {reconcilePreview ? (
+                  <div className="space-y-2">
+                    <p className="text-xs text-foreground/80">
+                      candidatos={reconcilePreview.count} · request_id={reconcilePreview.request_id ?? '—'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void copyAdminClipboard('SQL', reconcilePreview.select_sql)}
+                        className="px-2 py-1 text-xs rounded-lg border border-border bg-background hover:bg-muted/40"
+                      >
+                        Copiar SQL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void copyAdminClipboard('JSON', JSON.stringify(reconcilePreview.candidates, null, 2))
+                        }
+                        className="px-2 py-1 text-xs rounded-lg border border-border bg-background hover:bg-muted/40"
+                      >
+                        Copiar candidatos (JSON)
+                      </button>
+                    </div>
+                    <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-36 overflow-y-auto whitespace-pre-wrap">
+                      {reconcilePreview.select_sql}
+                    </pre>
+                  </div>
+                ) : null}
+                {reconcileRun ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2 items-center justify-between">
+                      <p className="text-xs font-medium text-foreground/90">Última execução POST</p>
+                      <button
+                        type="button"
+                        onClick={() => void copyAdminClipboard('resposta', JSON.stringify(reconcileRun, null, 2))}
+                        className="px-2 py-1 text-xs rounded-lg border border-border bg-background hover:bg-muted/40"
+                      >
+                        Copiar JSON
+                      </button>
+                    </div>
+                    <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-48 overflow-y-auto">
+                      {JSON.stringify(reconcileRun, null, 2)}
+                    </pre>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-medium text-foreground">Pagamentos em processing (saúde)</p>
@@ -3010,105 +3109,6 @@ export function AdminDashboard() {
                 </ul>
               )}
             </div>
-
-            {isSuperAdminSession ? (
-              <div className="rounded-2xl border border-warning/30 bg-warning/5 px-4 py-4 shadow-card space-y-3">
-                <p className="text-sm font-medium text-foreground">Reconciliar pagamentos (super_admin)</p>
-                <p className="text-xs text-muted-foreground">
-                  Pares <span className="font-mono">trip.completed</span> + <span className="font-mono">payment.processing</span>
-                  : pré-visualizar, alinhar com Stripe (se existir PI), ou fechar como failed quando não há PI. Com auditoria
-                  (motivo SP-F). Em ambiente com <span className="font-mono">STRIPE_MOCK</span>, o Stripe sync não chama a API
-                  externa.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void handleReconcilePreview()}
-                    disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
-                  >
-                    {opsLoading === 'reconcile-preview' ? 'A carregar…' : 'Pré-visualizar'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleReconcileStripeSync(true)}
-                    disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-info/20 text-info text-xs font-medium rounded-xl disabled:opacity-50"
-                  >
-                    {opsLoading === 'reconcile-stripe-dry' ? '…' : 'Stripe sync (dry-run)'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleReconcileStripeSync(false)}
-                    disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-warning/25 text-warning text-xs font-medium rounded-xl disabled:opacity-50"
-                  >
-                    {opsLoading === 'reconcile-stripe-run' ? '…' : 'Stripe sync (aplicar)'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleReconcileCloseNoPi(true)}
-                    disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
-                  >
-                    {opsLoading === 'reconcile-close-dry' ? '…' : 'Fechar sem PI (dry-run)'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleReconcileCloseNoPi(false)}
-                    disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-destructive/20 text-destructive text-xs font-medium rounded-xl disabled:opacity-50"
-                  >
-                    {opsLoading === 'reconcile-close-run' ? '…' : 'Fechar sem PI (aplicar)'}
-                  </button>
-                </div>
-                {reconcilePreview ? (
-                  <div className="space-y-2">
-                    <p className="text-xs text-foreground/80">
-                      candidatos={reconcilePreview.count} · request_id={reconcilePreview.request_id ?? '—'}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void copyAdminClipboard('SQL', reconcilePreview.select_sql)}
-                        className="px-2 py-1 text-xs rounded-lg border border-border bg-background hover:bg-muted/40"
-                      >
-                        Copiar SQL
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void copyAdminClipboard('JSON', JSON.stringify(reconcilePreview.candidates, null, 2))
-                        }
-                        className="px-2 py-1 text-xs rounded-lg border border-border bg-background hover:bg-muted/40"
-                      >
-                        Copiar candidatos (JSON)
-                      </button>
-                    </div>
-                    <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-36 overflow-y-auto whitespace-pre-wrap">
-                      {reconcilePreview.select_sql}
-                    </pre>
-                  </div>
-                ) : null}
-                {reconcileRun ? (
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap gap-2 items-center justify-between">
-                      <p className="text-xs font-medium text-foreground/90">Última execução POST</p>
-                      <button
-                        type="button"
-                        onClick={() => void copyAdminClipboard('resposta', JSON.stringify(reconcileRun, null, 2))}
-                        className="px-2 py-1 text-xs rounded-lg border border-border bg-background hover:bg-muted/40"
-                      >
-                        Copiar JSON
-                      </button>
-                    </div>
-                    <pre className="text-xs text-foreground/90 bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-48 overflow-y-auto">
-                      {JSON.stringify(reconcileRun, null, 2)}
-                    </pre>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
 
             <div className="pt-4 border-t border-border space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
