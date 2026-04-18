@@ -6,6 +6,40 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Próxima sessão — geladeira (fora do código activo de hoje)
+
+Coisas **adiadas**, **«não é hoje»** ou **ADIA**; voltam quando abrires um bloco dedicado (não roubam foco à Onda T1).
+
+| Área | Notas |
+|------|--------|
+| **T4 — Tickets** | Sistema de mensagens / pedidos de suporte. |
+| **Parceiro** | Checklist legal, papelada humana; fora do fluxo operacional diário. |
+| **M2** | Perfil «produto»: email, morada, preferências, … |
+| **M3** | Documentos motorista + políticas de audit. |
+| **W3** | Staging (segundo ambiente API+DB+frontend). |
+| **SP-B opcional** | UI rica do audit trail / export CSV. |
+| **Pós-super-prompts** | Legal na app, theming PT, vídeos — [`docs/super-prompts/README.md`](docs/super-prompts/README.md) «Depois da sequência». |
+| **Não fazer ainda** | Stripe Connect, `ENABLE_CONFIRM_ON_ACCEPT`, push, M4 — ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D. |
+
+---
+
+## Hoje 2026-04-09
+
+_Âncora: **Onda T1** — purge SQL **guiado** em `ride_db` (Docker local `ride_postgres`), 1–2 comandos por passo com pausa; **não** é sessão para PROD/Render._
+
+### Prioridades (máx. 3)
+
+1. [ ] [OPS] **Onda T1 — inventário + purge** — `psql` em `ride_db`: mapear `users` / `trips`; `DELETE` só com critério acordado; manter contas staff que precisares.
+2. [ ] [OPS] **Smoke curto** — Admin **Utilizadores** (lista manejável) + login BETA se alteraste contas.
+3. [ ] [OPS] **Smoke W2-E** — quando houver redeploy; guião [`W2_RUNBOOK.md`](docs/ops/W2_RUNBOOK.md).
+
+### Rasto (após T1 estável)
+
+- Seed documentado **10 passageiros + 5 motoristas + staff** (`_test`), mesma ideia em **local e staging** quando aplicares o mesmo desenho.
+- **Onda T2** — pytest / E2E sem inflacionar `users`.
+
+---
+
 ## Método simples (cada dia civil ou arranque de sessão)
 
 1. **Abrir** `README.md` + este ficheiro — orientação sem dispersão.
@@ -153,15 +187,9 @@ _Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA
 
 ### Rasto para a próxima sessão
 
-- **[ ] [OPS] Purge SQL guiado `ride_db`** — **adiado** até avisares (foco 100% no PC); guia 1–2 comandos de cada vez; ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Onda **T1** (passo 1 = inventário só leitura).
-- [x] **Onda T0** — #124 na `main`: selecção em massa mantém-se no refresh; smoke Utilizadores quando couber.
-- **Smoke W2-E** (Frank) — guião após redeploy.
-- **Manhã 2026-04-18:** ver bloco **«Hoje 2026-04-18»** acima (SP-G + tweaks + pytest).
-- **Roteiro pós-super-prompts** (legal, tema, vídeos): [`docs/super-prompts/README.md`](docs/super-prompts/README.md) — **Depois da sequência**.
-- **M2** — email, nick, estados de perfil (após M1 estável).
-- **M3** — documentos motorista + audit admin.
-- **W3** — staging (A027) quando M1 não estiver a ser empurrado para fora.
-- **Parceiro** — **ADIA** (fora do «agora»).
+- **Onda T1** — ver bloco **«Hoje 2026-04-09»** no topo deste ficheiro (purge guiado `ride_db`).
+- [x] **Onda T0** — #124 + #125 na `main` (selecção no refresh; limpeza ao sair da tab Utilizadores).
+- **Geladeira** — tabela **«Próxima sessão — geladeira»** no topo deste ficheiro (tickets, parceiro, M2/M3/W3, SP-B, pós-SP, «não fazer ainda»).
 
 ---
 
