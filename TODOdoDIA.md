@@ -6,6 +6,30 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Fecho sessão 2026-04-18 (noite)
+
+- **Merge na `main`:** **#132** (`3458d0b`) — `POST /admin/trips/{trip_id}/reconcile-payment-stripe` + botão **«Alinhar pagamento (Stripe)»** na vista Viagens (`super_admin`): viagem **cancelled/failed** + `payment.processing` alinha ao PI **sem** forçar a viagem para `failed`; `completed` + PI terminal falho mantém regra do lote (trip → failed).
+- **Pull local:** `git pull --ff-only origin main` OK (working tree limpa).
+- **PROD / BD:** sessão DB **pausa até amanhã** (descanso olhos); **continua** na mesma linha: ~38× `pi_mock` + eventual `SELECT`/`UPDATE` guiado; smoke do botão novo + **Actualizar saúde** quando houver energia.
+
+---
+
+## Hoje / próxima abertura — 2026-04-19
+
+_Âncora: **remate BD PROD** (1–2 comandos por passo) + **smoke** pós-#132._
+
+### Prioridades (máx. 3)
+
+1. [ ] [OPS] **BD — `pi_mock` + completed + processing** — `SELECT` contagem → `UPDATE` só com `WHERE` explícito (ex. `stripe_payment_intent_id LIKE 'pi_mock_%'`); **não** misturar com `pi_3…` no mesmo bloco sem rever Stripe.
+2. [ ] [OPS] **Smoke pós-deploy #132** — Viagem **2853939b-1e99-4dfe-9f69-71ca62b29936** (cancelada): **Alinhar pagamento (Stripe)** → **Actualizar saúde** (stuck vs inconsistent).
+3. [ ] [CÓDIGO / ADIA] **Admin UI (geladeira)** — tabs **2–3 linhas** sem scroll horizontal; Operações: lista stuck com **paginação** (ex. 10/página) — só se abrires bloco UI nesse dia.
+
+### Rasto (se sobrar tempo)
+
+- Revisitar **80 stuck** vs **38 inconsistent** (origens diferentes na `system_health`); amostrar mais 1–2 `trip_id` se ainda houver ruído.
+
+---
+
 ## Próxima sessão — geladeira (fora do código activo de hoje)
 
 Coisas **adiadas**, **«não é hoje»** ou **ADIA**; voltam quando abrires um bloco dedicado (não roubam foco à Onda T1).
@@ -19,8 +43,8 @@ Coisas **adiadas**, **«não é hoje»** ou **ADIA**; voltam quando abrires um b
 | **W3**                | Staging (segundo ambiente API+DB+frontend).                                                                              |
 | **SP-B opcional**     | UI rica do audit trail / export CSV.                                                                                     |
 | **Pós-super-prompts** | Legal na app, theming PT, vídeos — [`docs/super-prompts/README.md`](docs/super-prompts/README.md) «Depois da sequência». |
-| **Admin — tabs**      | Tabs do painel admin num ecrã visível, **sem scroll horizontal**; dispor em **2–3 linhas** de botões (tabs).             |
-| **Admin — Operações** | Lista **Pagamentos em processing (saúde)**: muitas linhas empurram reconciliação para baixo — **paginação** (ex.: 10 por página + pág. 2/3) ou **misturar** com bloco de reconciliação já **acima** da lista (feito: reconciliação logo após Exportar CSV). Avaliar paginação na mesma sessão. |
+| **Admin — tabs**      | **Feito 2026-04-18 noite:** `flex-wrap` + `role="tablist"` — sem `overflow-x-auto`; quebra em **2–3 linhas** em ecrã estreito. |
+| **Admin — Operações** | Reconciliação **acima** da lista longa (#131). **Feito 2026-04-18 noite:** paginação **10/página** (Anterior/Seguinte) na lista «Pagamentos em processing» quando há mais de 10 linhas. |
 | **Não fazer ainda**   | Stripe Connect, `ENABLE_CONFIRM_ON_ACCEPT`, push, M4 — ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D.  |
 
 ---
