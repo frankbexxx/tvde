@@ -154,7 +154,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **Smoke** admin **Utilizadores** — selecção no refresh (#124); limpeza ao sair da tab (PR quando existir).
+1. **Smoke** admin **Utilizadores** — selecção no refresh (#124); limpeza ao sair da tab (**#125** quando mergiado).
 2. **Smoke W2-E** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) (prioridade 3 em [`TODOdoDIA.md`](../../TODOdoDIA.md) «Hoje 2026-04-17»).
 3. **M2 / tweaks** — após M1 estável na PROD que uses: email, nick, ou lista curta de tweaks pós-smoke.
 
