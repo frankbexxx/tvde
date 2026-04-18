@@ -146,16 +146,15 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Estado repo (2026-04-08 — fecho sessão noite)
+### Estado repo (2026-04-17 — pós-merge #123 + #124)
 
-- **`main`:** SP-F v2 (#117) + Desbloquear (#118) + M1 login dica (#119) + fix tab Pendentes (#122); **M1 Conta** (#121) já mergido antes desta sessão.
-- **Em PR (merge pendente):** admin **M1 cauteloso** (PR #123) — repor palavra-passe BETA só dentro de **Editar** + só `super_admin`; erros admin mapeados (`formatAdminApiDetail`).
-- **OPS (Frank):** smoke **W2-E** pós-redeploy quando couber; BD PROD/Render: um só `super_admin` (alinhado a Docker local se aplicável).
+- **`main`:** SP-F v2 (#117) + Desbloquear (#118) + M1 login dica (#119) + fix tab Pendentes (#122) + **M1 Conta** (#121) + **M1 admin cauteloso** (#123) + **Onda T0** refresh Utilizadores (#124).
+- **OPS (Frank):** smoke **W2-E** pós-redeploy quando couber; purge SQL `ride_db` (Onda **T1**) quando focado no PC; BD PROD: um só `super_admin` se ainda aplicável.
 - **Princípio contínuo:** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (próxima sessão útil)
 
-1. **Merge** do PR M1 admin cauteloso (se ainda aberto) → `git pull` → smoke rápido **Utilizadores** (Editar → nome / telefone / repor password como `super_admin`).
+1. **Smoke** admin **Utilizadores** — selecção no refresh (#124); limpeza ao sair da tab (**#125** quando mergiado).
 2. **Smoke W2-E** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) (prioridade 3 em [`TODOdoDIA.md`](../../TODOdoDIA.md) «Hoje 2026-04-17»).
 3. **M2 / tweaks** — após M1 estável na PROD que uses: email, nick, ou lista curta de tweaks pós-smoke.
 
@@ -169,6 +168,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 - **Filtro:** aceitável perder ao fechar o separador do browser ou fazer hard refresh — é o comportamento típico sem `sessionStorage`. Se quiseres **persistir filtro** entre reloads na mesma origem, o passo seguinte é `sessionStorage` só para chaves `adminUsersFilter` / `adminUsersSort` (opt-in).
 - **Selecção:** **não** usar TTL de 30 s para desmarcar: é surpreendente; melhor **persistir até limpar** ou até sair da tab.
 - **Código (2026-04-08):** `fetchUsers` deixou de limpar toda a selecção; mantém-se `bulkSelectedIds` e poda-se só a entradas cujo `id` não vem na 1.ª página devolvida (evita contagem fantasma após refresh).
+- **Código (2026-04-17):** ao mudar `tab` para fora de `users`, limpar selecção em massa, confirmações (bloquear / eliminar / desbloquear) e campos de edição inline.
 
 **T1 — Reduzir cardinalidade (local `ride_db`, não PROD)**  
 **Adiado até aviso explícito do Frank** — requer PC 100% focado; não correr purge em sessão distrída. Quando retomar: primeiro passo já definido no chat (2× `SELECT` inventário: `users` por `role`/`status` + `trips` totais / passageiros com viagem); seguir guia 1–2 comandos de cada vez.
