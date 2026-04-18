@@ -1,7 +1,7 @@
 /**
  * Admin API — all endpoints needed for mobile admin management.
  */
-import { apiFetch, API_BASE } from './client'
+import { apiFetch, API_BASE, type ApiError } from './client'
 import type { TripHistoryItem } from './trips'
 
 /** Motivo mínimo SP-F (10+ chars) para POST operacionais quando a UI não recolhe texto (ex.: DevTools). */
@@ -221,7 +221,15 @@ export async function exportLogsCsv(token: string): Promise<Blob> {
   const res = await fetch(`${API_BASE}/admin/export-logs?format=csv`, {
     headers: { Authorization: `Bearer ${token}` },
   })
-  if (!res.ok) throw new Error(await res.text())
+  if (!res.ok) {
+    const requestId = res.headers.get('X-Request-ID') ?? undefined
+    const body = (await res.json().catch(() => ({}))) as {
+      detail?: unknown
+      message?: unknown
+    }
+    const detail = body.detail ?? body.message ?? res.statusText
+    throw { status: res.status, detail, request_id: requestId } as ApiError
+  }
   return res.blob()
 }
 
