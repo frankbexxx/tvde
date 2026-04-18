@@ -16,11 +16,11 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { useAuth } from '@/context/AuthContext'
+import { isBackofficeStaffRole, useAuth } from '@/context/AuthContext'
 
 function roleLabel(role: string): string {
   if (role === 'driver') return 'Motorista'
-  if (role === 'admin') return 'Administrador'
+  if (isBackofficeStaffRole(role)) return 'Administrador'
   if (role === 'partner') return 'Frota'
   return 'Passageiro'
 }

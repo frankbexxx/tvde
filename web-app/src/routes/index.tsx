@@ -9,13 +9,13 @@ import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { AppHeaderBar } from '../components/layout/AppHeaderBar'
-import { useAuth } from '../context/AuthContext'
+import { isBackofficeStaffRole, useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/ui/Spinner'
 
 function RootRedirect() {
   const { appRouteRole, sessionRole } = useAuth()
   const { search } = useLocation()
-  if (sessionRole === 'admin') return <Navigate to={`/admin${search}`} replace />
+  if (isBackofficeStaffRole(sessionRole)) return <Navigate to={`/admin${search}`} replace />
   if (sessionRole === 'partner') return <Navigate to="/partner" replace />
   if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
   return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
@@ -23,6 +23,9 @@ function RootRedirect() {
 
 function PassengerOnly({ children }: { children: ReactNode }) {
   const { appRouteRole, sessionRole } = useAuth()
+  if (isBackofficeStaffRole(sessionRole)) {
+    return <Navigate to="/admin" replace />
+  }
   if (appRouteRole === 'partner' && sessionRole === 'partner') {
     return <Navigate to="/partner" replace />
   }
@@ -38,7 +41,7 @@ function DriverOnly({ children }: { children: ReactNode }) {
   if (appRouteRole === 'passenger') return <Navigate to="/passenger" replace />
   /** Em BETA o mesmo token preenche passenger/driver/admin; só motoristas podem usar estas APIs. */
   if (sessionRole !== 'driver') {
-    if (sessionRole === 'admin') return <Navigate to="/admin" replace />
+    if (isBackofficeStaffRole(sessionRole)) return <Navigate to="/admin" replace />
     if (sessionRole === 'partner') return <Navigate to="/partner" replace />
     return <Navigate to="/passenger" replace />
   }

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import type { Role } from '../../context/AuthContext'
+import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
 import type { ApiError } from '../../api/client'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
 
@@ -71,11 +70,11 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         setError('Esta conta não tem acesso Frota (partner).')
         return
       }
-      if (requestedRole === 'admin' && r !== 'admin') {
+      if (requestedRole === 'admin' && !isBackofficeStaffRole(r)) {
         setError('Esta conta não é administrador.')
         return
       }
-      if (r === 'admin')
+      if (isBackofficeStaffRole(r))
         navigate(pathname.startsWith('/admin') ? `/admin${search}` : '/admin', { replace: true })
       else if (r === 'partner' || requestedRole === 'partner')
         navigate('/partner', { replace: true })
