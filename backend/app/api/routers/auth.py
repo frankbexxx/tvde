@@ -116,7 +116,7 @@ async def verify_otp(
     if not user:
         if is_admin_phone:
             user = User(
-                role=Role.admin,
+                role=Role.super_admin,
                 name=phone,
                 phone=phone,
                 status=UserStatus.active,
@@ -146,9 +146,9 @@ async def verify_otp(
             )
             db.add(user)
 
-    # Telefone = ADMIN_PHONE: sessão admin (novo ou existente; corrige passenger acidental).
+    # Telefone = ADMIN_PHONE: sessão super_admin (novo ou existente; corrige passenger/admin legado).
     if is_admin_phone:
-        user.role = Role.admin
+        user.role = Role.super_admin
         user.status = UserStatus.active
 
     if user.status == UserStatus.pending:
@@ -205,7 +205,7 @@ async def login(
         admin_phone = getattr(settings, "ADMIN_PHONE", None)
         if admin_phone and _normalize_phone(admin_phone) == phone:
             user = User(
-                role=Role.admin,
+                role=Role.super_admin,
                 name=phone,
                 phone=phone,
                 status=UserStatus.active,
@@ -250,6 +250,13 @@ async def login(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="blocked",
         )
+
+    admin_phone_login = getattr(settings, "ADMIN_PHONE", None)
+    if admin_phone_login and _normalize_phone(admin_phone_login) == phone:
+        user.role = Role.super_admin
+        user.status = UserStatus.active
+        db.commit()
+        db.refresh(user)
 
     token_data = create_access_token(subject=str(user.id), role=user.role.value)
 
