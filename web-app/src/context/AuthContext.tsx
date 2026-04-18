@@ -40,7 +40,12 @@ import {
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { useActivityLog } from './ActivityLogContext'
 
-export type Role = 'passenger' | 'driver' | 'admin' | 'partner'
+export type Role = 'passenger' | 'driver' | 'admin' | 'super_admin' | 'partner'
+
+/** Conta de gestão: `super_admin` é o escalão máximo mas trata-se como admin em toda a shell. */
+export function isBackofficeStaffRole(role: Role | string | undefined): boolean {
+  return role === 'admin' || role === 'super_admin'
+}
 
 interface AuthState {
   token: string | null
@@ -164,7 +169,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ].filter(Boolean) as string[]
     for (const t of candidates) {
       const r = parseJwtPayload(t)?.role
-      if (r === 'admin' || r === 'partner' || r === 'driver' || r === 'passenger') return r
+      if (
+        r === 'admin' ||
+        r === 'super_admin' ||
+        r === 'partner' ||
+        r === 'driver' ||
+        r === 'passenger'
+      ) {
+        return r as Role
+      }
     }
     return 'passenger'
   }, [betaMode, betaRole, token, tokens])
@@ -428,7 +441,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [logout])
 
   const isAuthenticated = !!(betaMode ? betaToken : tokens)
-  const isAdmin = betaMode ? betaRole === 'admin' : !!tokens?.admin
+  const isAdmin = betaMode ? isBackofficeStaffRole(betaRole) : !!tokens?.admin
 
   const value: AuthContextValue = useMemo(
     () => ({
