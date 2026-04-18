@@ -159,11 +159,48 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 2. **Smoke W2-E** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) (prioridade 3 em [`TODOdoDIA.md`](../../TODOdoDIA.md) «Hoje 2026-04-17»).
 3. **M2 / tweaks** — após M1 estável na PROD que uses: email, nick, ou lista curta de tweaks pós-smoke.
 
+### Onda T — Lista admin + higiene de BD local (prioridade após alinhamento 2026-04)
+
+**Contexto:** ~5000 `users` numa BD Docker de desenvolvimento torna a tab Utilizadores inútil (paginação 50 em 50); selecção em massa não pode perder-se a cada refresh; filtros devem ser previsíveis.
+
+**T0 — Comportamento UI (rápido, sem tocar na BD)**
+
+- Preservar `bulkSelectedIds` (e, se possível, texto de **Filtrar**) em cada refresh automático da lista; limpar só após acção confirmada (ex.: bulk block), mudança de tab, ou botão «Limpar selecção».
+- **Filtro:** aceitável perder ao fechar o separador do browser ou fazer hard refresh — é o comportamento típico sem `sessionStorage`. Se quiseres **persistir filtro** entre reloads na mesma origem, o passo seguinte é `sessionStorage` só para chaves `adminUsersFilter` / `adminUsersSort` (opt-in).
+- **Selecção:** **não** usar TTL de 30 s para desmarcar: é surpreendente; melhor **persistir até limpar** ou até sair da tab.
+- **Código (2026-04-08):** `fetchUsers` deixou de limpar toda a selecção; mantém-se `bulkSelectedIds` e poda-se só a entradas cujo `id` não vem na 1.ª página devolvida (evita contagem fantasma após refresh).
+
+**T1 — Reduzir cardinalidade (local `ride_db`, não PROD)**  
+**Adiado até aviso explícito do Frank** — requer PC 100% focado; não correr purge em sessão distrída. Quando retomar: primeiro passo já definido no chat (2× `SELECT` inventário: `users` por `role`/`status` + `trips` totais / passageiros com viagem); seguir guia 1–2 comandos de cada vez.
+
+Escolher **um** caminho (da mais rápida à mais controlada):
+
+1. **Nuclear (mais rápido em dev):** `docker compose down -v` (ou apagar volume PG) + `alembic upgrade head` + **um** seed documentado → 10 passageiros + 5 motoristas + admins; perdes histórico local (aceitável se não há dados que precises).
+2. **Purge SQL guiado:** identificar padrão (ex.: telefones `+351900…`, nomes `%_test`, contas sem viagens) + `DELETE` em lotes com revisão de FKs; manténs migrações; mais trabalho de uma vez, zero downtime de “reaprender” volume.
+3. **Bulk-delete na app:** só para **subconjuntos** já filtrados; com 4967 linhas continua penoso; útil como **remate** depois de T1.1 ou T1.2 terem cortado a cauda.
+
+**T2 — Testes automáticos (backend) vs smoke no telefone (Frank)**
+
+- **pytest / E2E:** utilizadores criados no teste devem ter **nome/telefone únicos por run** ou **teardown** que apaga; nunca depender de “lista curta” na BD global.
+- **Telefone:** lista de contas no picker não deve crescer sem limite — convenção `_test` + BD local pequena (T1) resolve o dia-a-dia.
+
+**T3 — Convenção de nomes (já alinhada)**  
+`Driver_N_test`, `Passenger_N_test` (ou equivalente); parceiros/demo com sufixo claro; evitar hashes longas no `name` para leitura humana.
+
+**T4 — Tickets / mensagens**  
+Fora do «hoje» até bloco dedicado; não bloqueia T0–T2.
+
 **Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md) (fila **fechada** para novas letras; **F** pode evoluir em v2+ sem nova letra). **O que vem a seguir** (legal na app, theming Portugal/ícone, vídeos + checklist) está **mapeado com nexo** no mesmo README, secção **«Depois da sequência»** — **sessões seguintes**, sem roubar foco a **M1**.
 
-**Âncora paralela:** **Ondas M1** — [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-17»** quando fizer sentido.
+**Âncora paralela:** **Ondas M1** — [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-17»** quando fizer sentido. **Onda T** (acima) — dados + lista admin até a BD local ser **manejável**.
 
 **Smoke pós-deploy (W2)** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md): deep links, Saúde (guias SP-D), Operações, Utilizadores.
+
+### Decisões Frank (purge + UI + paridade visual)
+
+1. **T1 purge:** **SQL guiado**, 1–2 comandos de cada vez, com pausa para aprender — **não** nuclear por volume (para já).
+2. **Filtro admin:** **sem `sessionStorage`** por agora; só corrigir perda no refresh dentro da SPA.
+3. **Paridade “o cérebro só vê o que vê”:** alvo mental **10 passageiros + 5 motoristas** (+ staff) em **todos** os sítios onde mexes (local **e** staging/Render quando aplicável), com o **mesmo** seed / convenção `_test`, para a lista na app **parecer** igual.
 
 **Parceiro (humano)** — **ADIA** — _fora do TODO_right_now_; **não bloqueia** SP-C nem M1.
 

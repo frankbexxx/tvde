@@ -513,7 +513,15 @@ export function AdminDashboard() {
       )
       setUsers(data)
       setUsersHasMore(data.length === USERS_PAGE_SIZE)
-      setBulkSelectedIds({})
+      // Preservar selecção em massa no refresh (intervalo / tab); só podar IDs que já não vêm na 1.ª página.
+      const allowedIds = new Set(data.map((u) => u.id))
+      setBulkSelectedIds((prev) => {
+        const next: Record<string, boolean> = {}
+        for (const [id, on] of Object.entries(prev)) {
+          if (on && allowedIds.has(id)) next[id] = true
+        }
+        return next
+      })
       setError(null)
     } catch (err) {
       setError((err as { detail?: string })?.detail ?? 'Erro ao carregar')
