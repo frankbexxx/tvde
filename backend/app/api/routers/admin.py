@@ -75,6 +75,7 @@ from app.services.admin_audit import record_admin_action
 from app.services.admin_payment_reconciliation import (
     close_completed_processing_without_pi,
     preview_reconciliation,
+    reconcile_single_trip_payment_with_stripe,
     reconcile_stripe_for_completed_processing,
 )
 from app.utils.logging import log_event
@@ -145,6 +146,12 @@ class AdminReconcilePaymentsRunBody(AdminGovernanceReasonBody):
 
     dry_run: bool = True
     limit: int = Field(50, ge=1, le=500)
+
+
+class AdminSingleTripPaymentReconcileBody(AdminGovernanceReasonBody):
+    """Alinhar um pagamento à Stripe para uma viagem terminal (completed/cancelled/failed)."""
+
+    dry_run: bool = True
 
 
 def _parse_dotenv_keys(text: str) -> tuple[set[str], int]:
@@ -1250,6 +1257,40 @@ async def admin_trip_payment_ops_note(
     )
     db.commit()
     return {"status": "ok", "payment_id": str(pay.id)}
+
+
+@router.post("/trips/{trip_id}/reconcile-payment-stripe")
+async def admin_trip_reconcile_payment_stripe(
+    trip_id: str,
+    body: AdminSingleTripPaymentReconcileBody,
+    request: Request,
+    user: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Alinha `payment.processing` ao PaymentIntent (viagem completed/cancelled/failed)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    tid = trip_id.strip()
+    out = reconcile_single_trip_payment_with_stripe(
+        db,
+        trip_id=tid,
+        actor_user_id=user.user_id,
+        governance_reason=body.governance_reason,
+        dry_run=body.dry_run,
+    )
+    if out.get("error") == "not_found":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=out.get("detail", "not_found"),
+        )
+    log_event(
+        "admin_reconcile_single_trip_payment_stripe",
+        trip_id=tid,
+        dry_run=body.dry_run,
+        action=out.get("action"),
+        skipped=out.get("skipped"),
+        request_id=rid,
+    )
+    return {**out, "request_id": rid}
 
 
 @router.get("/trip-debug/{trip_id}")

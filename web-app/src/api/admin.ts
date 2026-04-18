@@ -479,3 +479,20 @@ export async function postReconcilePaymentsCloseNoPi(
     }),
   })
 }
+
+/** Uma viagem: alinhar `payment.processing` ao PI no Stripe (super_admin; viagem completed/cancelled/failed). */
+export async function postAdminTripReconcilePaymentStripe(
+  token: string,
+  tripId: string,
+  body: { governance_reason: string; dry_run?: boolean }
+): Promise<Record<string, unknown>> {
+  const tid = tripId.trim()
+  return apiFetch<Record<string, unknown>>(`/admin/trips/${encodeURIComponent(tid)}/reconcile-payment-stripe`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      governance_reason: body.governance_reason.trim(),
+      dry_run: body.dry_run ?? false,
+    }),
+  })
+}

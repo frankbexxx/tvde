@@ -229,3 +229,164 @@ def test_stripe_sync_dry_run_updates_when_succeeded(
         assert p3.status == PaymentStatus.succeeded
     finally:
         db3.close()
+
+
+@pytest.mark.usefixtures("super_admin_ctx")
+def test_single_trip_reconcile_cancelled_processing_canceled_pi_keeps_trip(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Viagem cancelada + payment processing: PI canceled no Stripe -> payment failed, viagem continua cancelled."""
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    db = SessionLocal()
+    try:
+        passenger = User(
+            role=Role.passenger,
+            name=f"P {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        driver_u = User(
+            role=Role.driver,
+            name=f"D {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        db.add(passenger)
+        db.add(driver_u)
+        db.flush()
+        db.add(
+            Driver(
+                partner_id=DEFAULT_PARTNER_UUID,
+                user_id=driver_u.id,
+                status=DriverStatus.approved,
+                commission_percent=15.0,
+            )
+        )
+        trip = Trip(
+            passenger_id=passenger.id,
+            driver_id=driver_u.id,
+            status=TripStatus.cancelled,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=4.05,
+        )
+        db.add(trip)
+        db.flush()
+        pi = f"pi_test_{uuid.uuid4().hex[:16]}"
+        pay = Payment(
+            trip_id=trip.id,
+            total_amount=0.5,
+            commission_amount=0.08,
+            driver_amount=0.42,
+            currency="EUR",
+            status=PaymentStatus.processing,
+            stripe_payment_intent_id=pi,
+        )
+        db.add(pay)
+        db.commit()
+        tid = str(trip.id)
+        pid = str(pay.id)
+    finally:
+        db.close()
+
+    def fake_retrieve(_pi: str) -> MagicMock:
+        m = MagicMock()
+        m.status = "canceled"
+        return m
+
+    monkeypatch.setattr(
+        "app.services.admin_payment_reconciliation.retrieve_payment_intent",
+        fake_retrieve,
+    )
+
+    r = client.post(
+        f"/admin/trips/{tid}/reconcile-payment-stripe",
+        json={
+            "governance_reason": "reconciliar pagamento viagem cancelada teste",
+            "dry_run": False,
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["action"] == "updated_failed"
+    assert body["trip_status_after"] == "cancelled"
+    db2 = SessionLocal()
+    try:
+        t2 = db2.execute(select(Trip).where(Trip.id == tid)).scalar_one()
+        p2 = db2.execute(select(Payment).where(Payment.id == pid)).scalar_one()
+        assert t2.status == TripStatus.cancelled
+        assert p2.status == PaymentStatus.failed
+    finally:
+        db2.close()
+
+
+@pytest.mark.usefixtures("super_admin_ctx")
+def test_single_trip_reconcile_skips_non_terminal_trip(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    db = SessionLocal()
+    try:
+        passenger = User(
+            role=Role.passenger,
+            name=f"P {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        driver_u = User(
+            role=Role.driver,
+            name=f"D {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        db.add(passenger)
+        db.add(driver_u)
+        db.flush()
+        db.add(
+            Driver(
+                partner_id=DEFAULT_PARTNER_UUID,
+                user_id=driver_u.id,
+                status=DriverStatus.approved,
+                commission_percent=15.0,
+            )
+        )
+        trip = Trip(
+            passenger_id=passenger.id,
+            driver_id=driver_u.id,
+            status=TripStatus.ongoing,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=10.0,
+        )
+        db.add(trip)
+        db.flush()
+        db.add(
+            Payment(
+                trip_id=trip.id,
+                total_amount=10.0,
+                commission_amount=1.5,
+                driver_amount=8.5,
+                currency="EUR",
+                status=PaymentStatus.processing,
+                stripe_payment_intent_id=f"pi_test_{uuid.uuid4().hex[:12]}",
+            )
+        )
+        db.commit()
+        tid = str(trip.id)
+    finally:
+        db.close()
+
+    r = client.post(
+        f"/admin/trips/{tid}/reconcile-payment-stripe",
+        json={
+            "governance_reason": "tentativa reconciliar viagem ongoing",
+            "dry_run": True,
+        },
+    )
+    assert r.status_code == 200, r.text
+    assert r.json().get("skipped") is True
+    assert r.json().get("reason") == "trip_status_not_eligible"
