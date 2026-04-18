@@ -1522,19 +1522,25 @@ export function AdminDashboard() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-4 px-4">
+      <nav
+        className="flex flex-wrap gap-2 mb-4 pb-1"
+        role="tablist"
+        aria-label="Secções do painel admin"
+      >
         {TABS.map(({ id, label }) => {
           const healthDot = id === 'health' && healthTabHasSignals
           return (
             <button
               key={id}
               type="button"
+              role="tab"
+              aria-selected={tab === id}
               onClick={() =>
                 id === 'trips'
                   ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: tripsListMode })
                   : syncAdminUrl({ tab: id, tripId: null })
               }
-              className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
                 tab === id
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
@@ -1553,7 +1559,7 @@ export function AdminDashboard() {
             </button>
           )
         })}
-      </div>
+      </nav>
 
       {token ? (
         <p className="text-xs text-muted-foreground mb-3 -mt-2" role="status" aria-live="polite">
