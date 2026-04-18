@@ -154,7 +154,7 @@ _Âncora: **Ondas M** (conta / password / admin), alinhado a [`docs/meta/PROXIMA
 ### Rasto para a próxima sessão
 
 - **[ ] [OPS] Purge SQL guiado `ride_db`** — **adiado** até avisares (foco 100% no PC); guia 1–2 comandos de cada vez; ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Onda **T1** (passo 1 = inventário só leitura).
-- **Onda T0 (admin Utilizadores):** PR em curso — selecção em massa já **não** é apagada a cada refresh da lista; ver `PROXIMA` T0.
+- **Onda T0 (admin Utilizadores):** https://github.com/frankbexxx/tvde/pull/124 — selecção em massa já **não** é apagada a cada refresh da lista; ver `PROXIMA` T0.
 - **Merge** https://github.com/frankbexxx/tvde/pull/123 → smoke admin Utilizadores; depois **W2-E** (Frank).
 - **Manhã 2026-04-18:** ver bloco **«Hoje 2026-04-18»** acima (SP-G + tweaks + pytest).
 - **Roteiro pós-super-prompts** (legal, tema, vídeos): [`docs/super-prompts/README.md`](docs/super-prompts/README.md) — **Depois da sequência**.
