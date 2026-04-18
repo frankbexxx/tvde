@@ -65,6 +65,9 @@ type Tab = AdminDashboardTab
 
 const USERS_PAGE_SIZE = 50
 
+/** Operações — lista «Pagamentos em processing» da saúde (evita lista infinita). */
+const OPS_STUCK_PAYMENTS_PAGE_SIZE = 10
+
 const ADMIN_TRIP_CANCEL_STATUSES = ['requested', 'assigned', 'accepted'] as const
 
 const SINGLE_TRIP_PAYMENT_RECONCILE_STATUSES = ['completed', 'cancelled', 'failed'] as const
@@ -467,6 +470,7 @@ export function AdminDashboard() {
     ReturnType<typeof getReconcilePaymentsPreview>
   > | null>(null)
   const [reconcileRun, setReconcileRun] = useState<Record<string, unknown> | null>(null)
+  const [opsStuckPaymentsPage, setOpsStuckPaymentsPage] = useState(0)
 
   const [frotaOrgName, setFrotaOrgName] = useState('')
   const [frotaPartnerId, setFrotaPartnerId] = useState('')
@@ -529,6 +533,14 @@ export function AdminDashboard() {
     setSelectedTripId(tripId)
     setTripsListMode(t === 'trips' ? tripsList : 'active')
   }, [adminQs])
+
+  const stuckPaymentsListLen = health?.stuck_payments?.length ?? 0
+  useEffect(() => {
+    setOpsStuckPaymentsPage((prev) => {
+      const maxPage = Math.max(0, Math.ceil(stuckPaymentsListLen / OPS_STUCK_PAYMENTS_PAGE_SIZE) - 1)
+      return Math.min(prev, maxPage)
+    })
+  }, [stuckPaymentsListLen])
 
   const fetchPending = useCallback(async () => {
     if (!token) return
@@ -1512,6 +1524,20 @@ export function AdminDashboard() {
     [health]
   )
 
+  const opsStuckPaymentsPageData = useMemo(() => {
+    const rows = health?.stuck_payments ?? []
+    const total = rows.length
+    const start = opsStuckPaymentsPage * OPS_STUCK_PAYMENTS_PAGE_SIZE
+    const maxPage = Math.max(0, Math.ceil(total / OPS_STUCK_PAYMENTS_PAGE_SIZE) - 1)
+    return {
+      slice: rows.slice(start, start + OPS_STUCK_PAYMENTS_PAGE_SIZE),
+      total,
+      maxPage,
+      from: total === 0 ? 0 : start + 1,
+      to: Math.min(start + OPS_STUCK_PAYMENTS_PAGE_SIZE, total),
+    }
+  }, [health?.stuck_payments, opsStuckPaymentsPage])
+
   if (loading && users.length === 0) {
     return (
       <div className="p-4">
@@ -1522,19 +1548,25 @@ export function AdminDashboard() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-4 px-4">
+      <nav
+        className="flex flex-wrap gap-2 mb-4 pb-1"
+        role="tablist"
+        aria-label="Secções do painel admin"
+      >
         {TABS.map(({ id, label }) => {
           const healthDot = id === 'health' && healthTabHasSignals
           return (
             <button
               key={id}
               type="button"
+              role="tab"
+              aria-selected={tab === id}
               onClick={() =>
                 id === 'trips'
                   ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: tripsListMode })
                   : syncAdminUrl({ tab: id, tripId: null })
               }
-              className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
                 tab === id
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
@@ -1553,7 +1585,7 @@ export function AdminDashboard() {
             </button>
           )
         })}
-      </div>
+      </nav>
 
       {token ? (
         <p className="text-xs text-muted-foreground mb-3 -mt-2" role="status" aria-live="polite">
@@ -2883,20 +2915,57 @@ export function AdminDashboard() {
                 Dados da mesma leitura que a tab Saúde. Links Stripe só com <span className="font-mono">pi_…</span>{' '}
                 (abre dashboard; não expõe segredos).
               </p>
+              {health && health.stuck_payments.length > OPS_STUCK_PAYMENTS_PAGE_SIZE ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 text-xs text-foreground/85">
+                  <span>
+                    A mostrar{' '}
+                    <span className="font-medium tabular-nums">
+                      {opsStuckPaymentsPageData.from}–{opsStuckPaymentsPageData.to}
+                    </span>{' '}
+                    de {opsStuckPaymentsPageData.total} · página{' '}
+                    <span className="font-mono tabular-nums">
+                      {opsStuckPaymentsPage + 1}/{opsStuckPaymentsPageData.maxPage + 1}
+                    </span>
+                  </span>
+                  <span className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={opsStuckPaymentsPage <= 0}
+                      onClick={() => setOpsStuckPaymentsPage((p) => Math.max(0, p - 1))}
+                      className="px-2 py-1 rounded-lg border border-border bg-card hover:bg-muted/50 disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      type="button"
+                      disabled={opsStuckPaymentsPage >= opsStuckPaymentsPageData.maxPage}
+                      onClick={() =>
+                        setOpsStuckPaymentsPage((p) =>
+                          Math.min(opsStuckPaymentsPageData.maxPage, p + 1)
+                        )
+                      }
+                      className="px-2 py-1 rounded-lg border border-border bg-card hover:bg-muted/50 disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                      Seguinte
+                    </button>
+                  </span>
+                </div>
+              ) : null}
               {!health ? (
                 <p className="text-xs text-muted-foreground">A carregar saúde…</p>
               ) : health.stuck_payments.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nenhum pagamento stuck nesta leitura.</p>
               ) : (
                 <ul className="space-y-2">
-                  {health.stuck_payments.map((row, i) => {
+                  {opsStuckPaymentsPageData.slice.map((row, i) => {
                     const tid = tripIdFromHealthRow(row)
                     const piRaw = row.stripe_payment_intent_id
                     const pi = typeof piRaw === 'string' && piRaw.startsWith('pi_') ? piRaw.trim() : null
                     const stripeUrls = pi ? stripePaymentIntentDashboardUrls(pi) : null
+                    const rowKey = String(row.id ?? row.trip_id ?? `idx-${opsStuckPaymentsPage}-${i}`)
                     return (
                       <li
-                        key={`stuck-pay-${i}-${tid ?? String(row.id ?? i)}`}
+                        key={`stuck-pay-${opsStuckPaymentsPage}-${rowKey}`}
                         className="rounded-lg border border-border/80 bg-background p-3 space-y-2"
                       >
                         <div className="flex flex-wrap gap-2 items-center justify-between">
