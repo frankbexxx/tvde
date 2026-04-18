@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     )
 
     # BETA mode for 15-20 real users (presential tests)
-    ADMIN_PHONE: str | None = None  # e.g. +351924075365 — auto-admin, no approval
+    ADMIN_PHONE: str | None = None  # e.g. +351924075365 — auto super_admin backoffice, no approval
     MAX_BETA_USERS: int = 30
     DEFAULT_PASSWORD: str = "123456"  # Pre-filled for BETA testers
 
