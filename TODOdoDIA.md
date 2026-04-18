@@ -44,8 +44,8 @@ Coisas **adiadas**, **«não é hoje»** ou **ADIA**; voltam quando abrires um b
 | **W3** | Staging (segundo ambiente API+DB+frontend). |
 | **SP-B opcional** | UI rica do audit trail / export CSV. |
 | **Pós-super-prompts** | Legal na app, theming PT, vídeos — [`docs/super-prompts/README.md`](docs/super-prompts/README.md) «Depois da sequência». |
-| **Admin — tabs** | **Feito 2026-04-18 noite:** `flex-wrap` + `role="tablist"` — sem scroll horizontal na barra de secções. |
-| **Admin — Operações** | **Feito 2026-04-18 noite:** lista **Pagamentos em processing** na tab Operações com **paginação 10/página** (Anterior/Seguinte) quando há mais de 10 linhas; reconciliação continua **acima** da lista (#131). |
+| **Admin — tabs** | **Feito 2026-04-18 noite:** `flex-wrap` + `role="tablist"` — sem `overflow-x-auto`; quebra em **2–3 linhas** em ecrã estreito. |
+| **Admin — Operações** | **Feito 2026-04-18 noite:** lista «Pagamentos em processing» na tab Operações com **paginação 10/página** (Anterior/Seguinte) quando há mais de 10 linhas; reconciliação **acima** da lista (#131). |
 | **Não fazer ainda** | Stripe Connect, `ENABLE_CONFIRM_ON_ACCEPT`, push, M4 — ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D. |
 
 ---
