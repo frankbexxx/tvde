@@ -44,6 +44,7 @@ tmp/
 temp/
 
 # Dumps (BD / exports locais)
+backend/list_partners.txt
 *.sql
 # Migrações SQL versionadas em backend/sql/
 !backend/sql/*.sql

@@ -100,7 +100,8 @@ function formatAdminApiDetail(detail: unknown): string {
       cannot_delete_admin: 'Não é permitido eliminar esta conta de administrador.',
       cannot_block_staff_role: 'Não é permitido bloquear contas admin / super_admin.',
       cannot_unblock_staff_role: 'Estado de conta de backoffice não pode ser alterado por aqui.',
-      super_admin_required: 'Esta acção exige sessão de super_admin (eliminar conta, bloqueio em massa ou repor palavra-passe).',
+      super_admin_required:
+        'Esta acção exige sessão de super_admin (exportar logs CSV, cron, validar .env, eliminar conta, bloqueio em massa ou repor palavra-passe).',
       user_not_found: 'Utilizador não encontrado.',
       invalid_user_id: 'Identificador de utilizador inválido.',
       user_not_blocked: 'Esta conta não está bloqueada.',
@@ -121,6 +122,14 @@ function formatAdminApiDetail(detail: unknown): string {
     return parts.join(' · ') || 'Pedido inválido.'
   }
   return 'Não foi possível concluir o pedido. Tenta outra vez.'
+}
+
+function adminErrDetail(err: unknown, fallback: string): string {
+  if (typeof err === 'object' && err !== null && 'detail' in err) {
+    return formatAdminApiDetail((err as ApiError).detail)
+  }
+  if (err instanceof Error && err.message) return err.message
+  return fallback
 }
 
 function sessionJwtIsSuperAdmin(token: string | null): boolean {
@@ -524,7 +533,7 @@ export function AdminDashboard() {
       })
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao carregar')
+      setError(adminErrDetail(err, 'Erro ao carregar'))
     } finally {
       setLoading(false)
     }
@@ -545,7 +554,7 @@ export function AdminDashboard() {
       })
       setUsersHasMore(data.length === USERS_PAGE_SIZE)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao carregar mais')
+      setError(adminErrDetail(err, 'Erro ao carregar mais'))
     } finally {
       setUsersLoadingMore(false)
     }
@@ -705,7 +714,7 @@ export function AdminDashboard() {
       setTripDetail(null)
       syncAdminUrl({ tab: 'trips', tripId: null })
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao atribuir')
+      setError(adminErrDetail(err, 'Erro ao atribuir'))
     } finally {
       setTripActionLoading(null)
     }
@@ -723,7 +732,7 @@ export function AdminDashboard() {
       setTripDetail(null)
       syncAdminUrl({ tab: 'trips', tripId: null })
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao cancelar')
+      setError(adminErrDetail(err, 'Erro ao cancelar'))
     } finally {
       setTripActionLoading(null)
     }
@@ -756,7 +765,7 @@ export function AdminDashboard() {
         setTripDetail(d)
       }
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro na transição admin')
+      setError(adminErrDetail(err, 'Erro na transição admin'))
     } finally {
       setTripActionLoading(null)
     }
@@ -775,7 +784,7 @@ export function AdminDashboard() {
       fetchActiveTrips()
       fetchMetrics()
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro timeouts')
+      setError(adminErrDetail(err, 'Erro timeouts'))
     } finally {
       setOpsLoading(null)
     }
@@ -794,7 +803,7 @@ export function AdminDashboard() {
       fetchActiveTrips()
       fetchMetrics()
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro offer-expiry')
+      setError(adminErrDetail(err, 'Erro offer-expiry'))
     } finally {
       setOpsLoading(null)
     }
@@ -808,7 +817,7 @@ export function AdminDashboard() {
       setPhase0(d)
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro fase0')
+      setError(adminErrDetail(err, 'Erro fase0'))
     } finally {
       setOpsLoading(null)
     }
@@ -827,7 +836,7 @@ export function AdminDashboard() {
       setCronRun(d)
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro cron')
+      setError(adminErrDetail(err, 'Erro cron'))
     } finally {
       setOpsLoading(null)
     }
@@ -843,7 +852,7 @@ export function AdminDashboard() {
       setEnvValidate(d)
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro validar .env')
+      setError(adminErrDetail(err, 'Erro validar .env'))
     } finally {
       setOpsLoading(null)
     }
@@ -863,18 +872,13 @@ export function AdminDashboard() {
       await fetchHealth()
       fetchMetrics()
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro recover')
+      setError(adminErrDetail(err, 'Erro recover'))
     } finally {
       setOpsLoading(null)
     }
   }
 
   const handleRecoverDriver = () => void runRecoverDriver(recoverDriverId)
-
-  const errDetail = (err: unknown) =>
-    typeof err === 'object' && err !== null && 'detail' in err
-      ? formatAdminApiDetail((err as ApiError).detail)
-      : 'Erro'
 
   const handleCreateFrotaOrg = async () => {
     if (!token || !frotaOrgName.trim()) return
@@ -888,7 +892,7 @@ export function AdminDashboard() {
       setFrotaPartnerId(r.id)
       setFrotaOk(`Organização “${r.name}” criada. O ID da frota foi preenchido abaixo — usa-o para criar o gestor.`)
     } catch (err) {
-      setError(errDetail(err))
+      setError(adminErrDetail(err, 'Erro'))
     } finally {
       setFrotaLoading(null)
     }
@@ -915,7 +919,7 @@ export function AdminDashboard() {
       setFrotaManagerName('')
       setFrotaManagerPhone('')
     } catch (err) {
-      setError(errDetail(err))
+      setError(adminErrDetail(err, 'Erro'))
     } finally {
       setFrotaLoading(null)
     }
@@ -935,7 +939,7 @@ export function AdminDashboard() {
       const r = await assignDriverToPartner(frotaAssignDriverId, pid, token, gr)
       setFrotaAssignOk(`Motorista atribuído à frota. driver=${r.user_id} · frota=${r.partner_id}`)
     } catch (err) {
-      setError(errDetail(err))
+      setError(adminErrDetail(err, 'Erro'))
     } finally {
       setFrotaLoading(null)
     }
@@ -954,7 +958,7 @@ export function AdminDashboard() {
       const r = await unassignDriverFromPartner(frotaAssignDriverId, token, gr)
       setFrotaAssignOk(`Motorista removido da frota. driver=${r.user_id} · frota=${r.partner_id}`)
     } catch (err) {
-      setError(errDetail(err))
+      setError(adminErrDetail(err, 'Erro'))
     } finally {
       setFrotaLoading(null)
     }
@@ -973,7 +977,7 @@ export function AdminDashboard() {
       URL.revokeObjectURL(url)
       setError(null)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro export')
+      setError(adminErrDetail(err, 'Erro export'))
     } finally {
       setOpsLoading(null)
     }
@@ -1027,7 +1031,7 @@ export function AdminDashboard() {
       setPartners(ps)
       setDriversList(ds)
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao carregar dados')
+      setError(adminErrDetail(err, 'Erro ao carregar dados'))
     } finally {
       setDataLoading(false)
     }
@@ -1063,7 +1067,7 @@ export function AdminDashboard() {
       setPending((p) => p.filter((u) => u.phone !== phone))
       fetchUsers()
     } catch (err) {
-      setError((err as { detail?: string })?.detail ?? 'Erro ao aprovar')
+      setError(adminErrDetail(err, 'Erro ao aprovar'))
     }
   }
 
@@ -1416,6 +1420,25 @@ export function AdminDashboard() {
           )
         })}
       </div>
+
+      {token ? (
+        <p className="text-xs text-muted-foreground mb-3 -mt-2" role="status" aria-live="polite">
+          Sessão (JWT):{' '}
+          <span
+            className={`font-mono font-medium ${
+              isSuperAdminSession ? 'text-foreground' : 'text-warning'
+            }`}
+          >
+            {parseJwtPayload(token)?.role ?? '—'}
+          </span>
+          {!isSuperAdminSession ? (
+            <span className="text-muted-foreground">
+              {' '}
+              · Exportar CSV, cron completo e validar .env exigem <code className="text-foreground/90">super_admin</code>
+            </span>
+          ) : null}
+        </p>
+      ) : null}
 
       {error && (
         <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-4">{error}</p>
