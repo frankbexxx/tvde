@@ -418,3 +418,64 @@ export async function getAdminAuditTrail(
   const qs = q.toString()
   return apiFetch<AdminAuditTrailItem[]>(`/admin/audit-trail${qs ? `?${qs}` : ''}`, { token })
 }
+
+/** Pré-visualização read-only: candidatos `completed`+`processing` + SQL para copiar. */
+export interface ReconcilePaymentsPreviewResponse {
+  count: number
+  candidates: Array<Record<string, unknown>>
+  select_sql: string
+  request_id?: string
+}
+
+export async function getReconcilePaymentsPreview(
+  token: string,
+  opts?: { limit?: number }
+): Promise<ReconcilePaymentsPreviewResponse> {
+  const q = new URLSearchParams()
+  if (opts?.limit != null) q.set('limit', String(opts.limit))
+  const qs = q.toString()
+  return apiFetch<ReconcilePaymentsPreviewResponse>(
+    `/admin/ops/reconcile-payments/preview${qs ? `?${qs}` : ''}`,
+    { token }
+  )
+}
+
+export type ReconcilePaymentsRunResponse = Record<string, unknown> & {
+  dry_run?: boolean
+  count?: number
+  items?: unknown[]
+  request_id?: string
+  skipped?: boolean
+  reason?: string
+  message?: string
+}
+
+export async function postReconcilePaymentsStripeSync(
+  token: string,
+  body: { governance_reason: string; dry_run: boolean; limit?: number }
+): Promise<ReconcilePaymentsRunResponse> {
+  return apiFetch<ReconcilePaymentsRunResponse>('/admin/ops/reconcile-payments/stripe-sync', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      governance_reason: body.governance_reason.trim(),
+      dry_run: body.dry_run,
+      limit: body.limit ?? 50,
+    }),
+  })
+}
+
+export async function postReconcilePaymentsCloseNoPi(
+  token: string,
+  body: { governance_reason: string; dry_run: boolean; limit?: number }
+): Promise<ReconcilePaymentsRunResponse> {
+  return apiFetch<ReconcilePaymentsRunResponse>('/admin/ops/reconcile-payments/close-no-pi', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      governance_reason: body.governance_reason.trim(),
+      dry_run: body.dry_run,
+      limit: body.limit ?? 50,
+    }),
+  })
+}

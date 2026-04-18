@@ -72,6 +72,11 @@ from app.services.partners_admin import (
     unassign_driver_from_partner,
 )
 from app.services.admin_audit import record_admin_action
+from app.services.admin_payment_reconciliation import (
+    close_completed_processing_without_pi,
+    preview_reconciliation,
+    reconcile_stripe_for_completed_processing,
+)
 from app.utils.logging import log_event
 
 
@@ -133,6 +138,13 @@ class AdminGovernanceReasonBody(BaseModel):
     """SP-F: justificação mínima para acções sensíveis (fica em `audit_events` quando aplicável)."""
 
     governance_reason: str = Field(..., min_length=10, max_length=500)
+
+
+class AdminReconcilePaymentsRunBody(AdminGovernanceReasonBody):
+    """Execução reconciliação: dry-run por defeito; limite de linhas por pedido."""
+
+    dry_run: bool = True
+    limit: int = Field(50, ge=1, le=500)
 
 
 def _parse_dotenv_keys(text: str) -> tuple[set[str], int]:
@@ -1779,3 +1791,72 @@ async def admin_unassign_driver_partner(
         user_id=str(d.user_id),
         partner_id=str(d.partner_id),
     )
+
+
+# --- Reconciliação pagamentos legado (super_admin) ---
+
+
+@router.get("/ops/reconcile-payments/preview")
+async def admin_reconcile_payments_preview(
+    request: Request,
+    limit: int = Query(200, ge=1, le=500),
+    user: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Lista `completed` + `processing` + SQL SELECT para copiar (read-only)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    _ = user
+    return {**preview_reconciliation(db, limit=limit), "request_id": rid}
+
+
+@router.post("/ops/reconcile-payments/stripe-sync")
+async def admin_reconcile_payments_stripe_sync(
+    request: Request,
+    body: AdminReconcilePaymentsRunBody,
+    user: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Alinha `payments` com estado do PaymentIntent no Stripe (succeeded / canceled abandonado)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    out = reconcile_stripe_for_completed_processing(
+        db,
+        actor_user_id=user.user_id,
+        governance_reason=body.governance_reason,
+        dry_run=body.dry_run,
+        limit=body.limit,
+    )
+    log_event(
+        "admin_reconcile_stripe_sync",
+        dry_run=body.dry_run,
+        limit=body.limit,
+        result_count=out.get("count", 0),
+        skipped=out.get("skipped"),
+        request_id=rid,
+    )
+    return {**out, "request_id": rid}
+
+
+@router.post("/ops/reconcile-payments/close-no-pi")
+async def admin_reconcile_payments_close_no_pi(
+    request: Request,
+    body: AdminReconcilePaymentsRunBody,
+    user: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Fecha pares `completed`+`processing` sem `stripe_payment_intent_id` (failed / failed)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    out = close_completed_processing_without_pi(
+        db,
+        actor_user_id=user.user_id,
+        governance_reason=body.governance_reason,
+        dry_run=body.dry_run,
+        limit=body.limit,
+    )
+    log_event(
+        "admin_reconcile_close_no_pi",
+        dry_run=body.dry_run,
+        limit=body.limit,
+        result_count=out.get("count", 0),
+        request_id=rid,
+    )
+    return {**out, "request_id": rid}
