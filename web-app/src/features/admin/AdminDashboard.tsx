@@ -1122,6 +1122,21 @@ export function AdminDashboard() {
     setEditOriginalPhone('')
   }
 
+  /** Ao sair da tab Utilizadores, limpar selecção em massa e edição — evita estado «pendurado» nas outras tabs. */
+  useEffect(() => {
+    if (tab !== 'users') {
+      setBulkSelectedIds({})
+      setDeleteConfirmId(null)
+      setBlockConfirmId(null)
+      setUnblockConfirmId(null)
+      setEditingId(null)
+      setEditName('')
+      setEditPhone('')
+      setEditOriginalName('')
+      setEditOriginalPhone('')
+    }
+  }, [tab])
+
   const handleSaveUserName = async () => {
     if (!token || !editingId) return
     const next = editName.trim()
