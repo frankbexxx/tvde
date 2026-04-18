@@ -11,7 +11,7 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 - **Merge na `main`:** **#132** (`3458d0b`) — `POST /admin/trips/{trip_id}/reconcile-payment-stripe` + botão **«Alinhar pagamento (Stripe)»** na vista Viagens (`super_admin`): viagem **cancelled/failed** + `payment.processing` alinha ao PI **sem** forçar a viagem para `failed`; `completed` + PI terminal falho mantém regra do lote (trip → failed).
 - **Pull local:** `git pull --ff-only origin main` OK (working tree limpa).
 - **PROD / BD:** sessão DB **pausa até amanhã** (descanso olhos); **continua** na mesma linha: ~38× `pi_mock` + eventual `SELECT`/`UPDATE` guiado; smoke do botão novo + **Actualizar saúde** quando houver energia.
-- **Onda UI (geladeira, sem BD):** barra de **tabs** com `flex-wrap` + `tablist`; **Operações** — lista «Pagamentos em processing» com **paginação 10/página** quando há mais de 10 entradas (PR único).
+- **Merge `main` (noite):** **#131** — reconciliação **acima** da lista stuck em Operações; **#135** — tabs `flex-wrap` + `tablist`, paginação **10/pág.** na lista «Pagamentos em processing» (`c70d357`).
 
 ---
 
@@ -23,7 +23,7 @@ _Âncora: **remate BD PROD** (1–2 comandos por passo) + **smoke** pós-#132._
 
 1. [ ] [OPS] **BD — `pi_mock` + completed + processing** — `SELECT` contagem → `UPDATE` só com `WHERE` explícito (ex. `stripe_payment_intent_id LIKE 'pi_mock_%'`); **não** misturar com `pi_3…` no mesmo bloco sem rever Stripe.
 2. [ ] [OPS] **Smoke pós-deploy #132** — Viagem **2853939b-1e99-4dfe-9f69-71ca62b29936** (cancelada): **Alinhar pagamento (Stripe)** → **Actualizar saúde** (stuck vs inconsistent).
-3. [x] [CÓDIGO] **Admin UI (geladeira)** — tabs + paginação stuck em Operações (**feito 2026-04-18 noite**; merge PR quando verde).
+3. [x] [CÓDIGO] **Admin UI (geladeira)** — tabs + paginação stuck em Operações (**feito**; **#131** + **#135** na `main`, `c70d357`).
 
 ### Rasto (se sobrar tempo)
 
