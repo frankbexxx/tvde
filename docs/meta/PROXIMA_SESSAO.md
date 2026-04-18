@@ -146,6 +146,15 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
+### Estado repo (2026-04-19 — pós-merge #132 + continuidade BD)
+
+- **`main`:** inclui **#132** (`3458d0b` em diante) — reconciliação **por viagem**: `POST /admin/trips/{trip_id}/reconcile-payment-stripe` + botão **«Alinhar pagamento (Stripe)»** na tab **Viagens** (`super_admin`); cobre **cancelled/failed/completed** + `payment.processing` + PI real (cancelled não vira `failed` só por alinhar pagamento).
+- **BD PROD (continuar):** ~38 linhas `pi_mock` + `completed` + `processing` — **SQL guiado** (SELECT contagem → UPDATE com `WHERE` fechado); ver [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje / próxima abertura — 2026-04-19»**.
+- **Smoke:** viagem exemplo **2853939b-1e99-4dfe-9f69-71ca62b29936** após redeploy; **Saúde** (`stuck_payments` vs `inconsistent_financial_state` — critérios diferentes).
+- **Sessão activa (paralelo):** **Onda T1** local `ride_db` quando retomares ([`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-09»**).
+- **Geladeira UI:** tabs admin + paginação lista stuck — tabela no topo do [`TODOdoDIA.md`](../../TODOdoDIA.md).
+- **Princípio contínuo:** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
+
 ### Estado repo (2026-04-17 — pós-merge #123 + #124 + #125)
 
 - **`main`:** SP-F v2 (#117) + Desbloquear (#118) + M1 login dica (#119) + fix tab Pendentes (#122) + **M1 Conta** (#121) + **M1 admin cauteloso** (#123) + **Onda T0** (#124 + #125).
@@ -155,6 +164,8 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 - **Princípio contínuo:** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
 ### Arranque imediato (esta sessão)
+
+**Nota (2026-04-18 noite):** na próxima abertura com foco **BD PROD + smoke #132**, seguir primeiro o bloco **Estado repo (2026-04-19)** e o [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje / próxima abertura — 2026-04-19»**; o tri abaixo mantém-se para **Onda T1** em `ride_db` **local** quando esse for o fio.
 
 1. **Onda T1** — inventário + purge em `ride_db` (Docker local), 1–2 comandos por passo; **não** PROD neste fio.
 2. **Smoke curto** — Admin Utilizadores + BETA após BD manejável.
