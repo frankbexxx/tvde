@@ -146,17 +146,19 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
-### Estado repo (2026-04-17 — pós-merge #123 + #124)
+### Estado repo (2026-04-17 — pós-merge #123 + #124 + #125)
 
-- **`main`:** SP-F v2 (#117) + Desbloquear (#118) + M1 login dica (#119) + fix tab Pendentes (#122) + **M1 Conta** (#121) + **M1 admin cauteloso** (#123) + **Onda T0** refresh Utilizadores (#124).
-- **OPS (Frank):** smoke **W2-E** pós-redeploy quando couber; purge SQL `ride_db` (Onda **T1**) quando focado no PC; BD PROD: um só `super_admin` se ainda aplicável.
+- **`main`:** SP-F v2 (#117) + Desbloquear (#118) + M1 login dica (#119) + fix tab Pendentes (#122) + **M1 Conta** (#121) + **M1 admin cauteloso** (#123) + **Onda T0** (#124 + #125).
+- **Sessão activa:** **Onda T1** — purge SQL guiado `ride_db` **local** (ver [`TODOdoDIA.md`](../../TODOdoDIA.md) **«Hoje 2026-04-09»**).
+- **OPS (Frank):** smoke **W2-E** pós-redeploy; BD PROD: um só `super_admin` se ainda aplicável.
+- **Geladeira (não competir com T1):** tabela **«Próxima sessão — geladeira»** no [`TODOdoDIA.md`](../../TODOdoDIA.md).
 - **Princípio contínuo:** o que **não** estiver **no ecrã** não conta como entregue para validação operacional.
 
-### Arranque imediato (próxima sessão útil)
+### Arranque imediato (esta sessão)
 
-1. **Smoke** admin **Utilizadores** — selecção no refresh (#124); limpeza ao sair da tab (**#125** quando mergiado).
-2. **Smoke W2-E** — [`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md) (prioridade 3 em [`TODOdoDIA.md`](../../TODOdoDIA.md) «Hoje 2026-04-17»).
-3. **M2 / tweaks** — após M1 estável na PROD que uses: email, nick, ou lista curta de tweaks pós-smoke.
+1. **Onda T1** — inventário + purge em `ride_db` (Docker local), 1–2 comandos por passo; **não** PROD neste fio.
+2. **Smoke curto** — Admin Utilizadores + BETA após BD manejável.
+3. **Smoke W2-E** — quando houver redeploy ([`W2_RUNBOOK.md`](../ops/W2_RUNBOOK.md)).
 
 ### Onda T — Lista admin + higiene de BD local (prioridade após alinhamento 2026-04)
 
@@ -171,7 +173,7 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 - **Código (2026-04-17):** ao mudar `tab` para fora de `users`, limpar selecção em massa, confirmações (bloquear / eliminar / desbloquear) e campos de edição inline.
 
 **T1 — Reduzir cardinalidade (local `ride_db`, não PROD)**  
-**Adiado até aviso explícito do Frank** — requer PC 100% focado; não correr purge em sessão distrída. Quando retomar: primeiro passo já definido no chat (2× `SELECT` inventário: `users` por `role`/`status` + `trips` totais / passageiros com viagem); seguir guia 1–2 comandos de cada vez.
+**Em curso (sessão guiada)** — `psql` no `ride_db` local; primeiro passo: 2× `SELECT` inventário (`users` por `role`/`status` + `trips` totais / passageiros com viagem); depois `DELETE` só com critério acordado, 1–2 comandos de cada vez com pausa. **Não** aplicar este guia à BD Render/PROD nesta sessão salvo decisão explícita.
 
 Escolher **um** caminho (da mais rápida à mais controlada):
 
@@ -188,7 +190,7 @@ Escolher **um** caminho (da mais rápida à mais controlada):
 `Driver_N_test`, `Passenger_N_test` (ou equivalente); parceiros/demo com sufixo claro; evitar hashes longas no `name` para leitura humana.
 
 **T4 — Tickets / mensagens**  
-Fora do «hoje» até bloco dedicado; não bloqueia T0–T2.
+Na **geladeira** do [`TODOdoDIA.md`](../../TODOdoDIA.md); não bloqueia T0–T2.
 
 **Sequência global (super-prompts):** **B → A → G → D → C → E → F** — [`docs/super-prompts/README.md`](../super-prompts/README.md) (fila **fechada** para novas letras; **F** pode evoluir em v2+ sem nova letra). **O que vem a seguir** (legal na app, theming Portugal/ícone, vídeos + checklist) está **mapeado com nexo** no mesmo README, secção **«Depois da sequência»** — **sessões seguintes**, sem roubar foco a **M1**.
 
