@@ -34,18 +34,18 @@ _Âncora: **remate BD PROD** (1–2 comandos por passo) + **smoke** pós-#132._
 
 Coisas **adiadas**, **«não é hoje»** ou **ADIA**; voltam quando abrires um bloco dedicado (não roubam foco à Onda T1).
 
-| Área | Notas |
-|------|--------|
-| **T4 — Tickets** | Sistema de mensagens / pedidos de suporte. |
-| **Parceiro** | Checklist legal, papelada humana; fora do fluxo operacional diário. |
-| **M2** | Perfil «produto»: email, morada, preferências, … |
-| **M3** | Documentos motorista + políticas de audit. |
-| **W3** | Staging (segundo ambiente API+DB+frontend). |
-| **SP-B opcional** | UI rica do audit trail / export CSV. |
+| Área                  | Notas                                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **T4 — Tickets**      | Sistema de mensagens / pedidos de suporte.                                                                               |
+| **Parceiro**          | Checklist legal, papelada humana; fora do fluxo operacional diário.                                                      |
+| **M2**                | Perfil «produto»: email, morada, preferências, …                                                                         |
+| **M3**                | Documentos motorista + políticas de audit.                                                                               |
+| **W3**                | Staging (segundo ambiente API+DB+frontend).                                                                              |
+| **SP-B opcional**     | UI rica do audit trail / export CSV.                                                                                     |
 | **Pós-super-prompts** | Legal na app, theming PT, vídeos — [`docs/super-prompts/README.md`](docs/super-prompts/README.md) «Depois da sequência». |
-| **Admin — tabs** | **Feito 2026-04-18 noite:** barra com `flex-wrap` + `role="tablist"` — sem `overflow-x-auto`; quebra em **2–3 linhas** em ecrã estreito. |
-| **Admin — Operações** | Lista **Pagamentos em processing (saúde)** longa: **paginação** (ex. 10/pág. + pág. 2/3); reconciliação já **acima** da lista após merge #131. |
-| **Não fazer ainda** | Stripe Connect, `ENABLE_CONFIRM_ON_ACCEPT`, push, M4 — ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D. |
+| **Admin — tabs**      | **Feito 2026-04-18 noite:** `flex-wrap` + `role="tablist"` — sem `overflow-x-auto`; quebra em **2–3 linhas** em ecrã estreito. |
+| **Admin — Operações** | Reconciliação **acima** da lista longa (#131). **Feito 2026-04-18 noite:** paginação **10/página** (Anterior/Seguinte) na lista «Pagamentos em processing» quando há mais de 10 linhas. |
+| **Não fazer ainda**   | Stripe Connect, `ENABLE_CONFIRM_ON_ACCEPT`, push, M4 — ver [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) Secção D.  |
 
 ---
 
