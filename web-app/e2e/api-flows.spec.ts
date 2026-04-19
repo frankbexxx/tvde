@@ -125,6 +125,34 @@ test.describe('API flows (sem browser)', () => {
     expect(list.length).toBe(0)
   })
 
+  test('admin regista nota operacional de pagamento (audit)', async ({ request }) => {
+    const seed = await request.post(`${API}/dev/seed`)
+    expect(seed.ok(), await seed.text()).toBeTruthy()
+
+    const auto = await request.post(`${API}/dev/auto-trip`)
+    expect(auto.ok(), await auto.text()).toBeTruthy()
+    const { trip_id: tripId } = (await auto.json()) as { trip_id: string }
+
+    const tokRes = await request.post(`${API}/dev/tokens`)
+    expect(tokRes.ok()).toBeTruthy()
+    const { admin } = (await tokRes.json()) as { admin: string }
+
+    const noteRes = await request.post(`${API}/admin/trips/${tripId}/payment-ops-note`, {
+      headers: {
+        Authorization: `Bearer ${admin}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        confirmation: 'REGISTAR_NOTA_PAGAMENTO',
+        note: 'Nota e2e — contacto operacional (mín. 3 chars).',
+      },
+    })
+    expect(noteRes.ok(), await noteRes.text()).toBeTruthy()
+    const body = (await noteRes.json()) as { status?: string; payment_id?: string }
+    expect(body.status).toBe('ok')
+    expect(body.payment_id).toBeTruthy()
+  })
+
   test('BETA login inclui display_name (admin seed)', async ({ request }) => {
     const cfg = await request.get(`${API}/config`)
     expect(cfg.ok()).toBeTruthy()
