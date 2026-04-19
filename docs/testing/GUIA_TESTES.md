@@ -4,6 +4,8 @@ Manual completo e extensivo, passo a passo, para testar toda a aplicação. Incl
 
 **Teste no Render (produção):** Ver [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md) para deploy e teste em `https://tvde-app-j51f.onrender.com`.
 
+**Nota (2026-04-08) — critério de validação:** para trabalho novo de **admin / gestão**, considerar **entregue** apenas o que for **utilizável no telemóvel** (layout, botões, leitura). Viewport móvel no desktop ajuda no desenvolvimento; o teste de aceitação preferencial é **device real**. Smokes **localizados** e gaps UI ↔ API: ver [`UI_VISIBILITY_IMPLEMENTATION_TODO.md`](../meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md). **Playwright** cobre o que for automatizável cedo; este guia continua a servir passos **manuais** quando a presença humana for inevitável.
+
 ---
 
 # PARTE I — PREPARAÇÃO

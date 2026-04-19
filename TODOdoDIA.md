@@ -6,6 +6,23 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Alinhamento 2026-04-08 — visibilidade, roles, cruzeiro (Frank)
+
+- **Merge `main`:** **#139** — **«Alinhar pagamento (Stripe)»** também no detalhe expandido das listas **Activas** e **Histórico** (Viagens), mesma elegibilidade que o painel órfão (`super_admin`). Pull local: `git pull --ff-only origin main`.
+- **Telemóvel = barreira:** o que não couber / não for utilizável **no telemóvel** **não conta** como entregue para validação; viewport móvel no desktop é **apoio**, não substituto do device.
+- **Roles:** **admin** — operações correntes **sem** “grande decisão” de sistema (ex.: aceitar utilizador, password a pedido, leituras operacionais). **super_admin** — **omnisciente** / o que o admin **não** resolve (reconcile, stuck profundo, overrides perigosos).
+- **Velocidade:** **bulk com juízo** quando vários gaps partilham o mesmo ecrã ou padrão; **Playwright cedo**; smoke **manual** só quando a tua presença for inevitável.
+- **Backlog canónico (preencher à medida):** [`docs/meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md`](docs/meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md).
+- **Naming** dos `.md` do repo: **não** mexer agora; correcção de nomes fica para outra altura.
+
+### Prioridades cruzeiro (stack com 2026-04-19)
+
+1. [ ] [CÓDIGO+TESTES] **Inventário → implementação** a partir do doc de visibilidade; **Admin** primeiro; cada fio com **Playwright** quando estável.
+2. [ ] [OPS] Manter **BD PROD + smoke #132** quando fores a essa abertura — ver bloco **«Hoje / próxima abertura — 2026-04-19»** abaixo (não compete com o inventário UI).
+3. [ ] [MOBILE] Passar **smoke essencial** no **telemóvel** após cada PR relevante.
+
+---
+
 ## Fecho sessão 2026-04-18 (noite)
 
 - **Merge na `main`:** **#132** (`3458d0b`) — `POST /admin/trips/{trip_id}/reconcile-payment-stripe` + botão **«Alinhar pagamento (Stripe)»** na vista Viagens (`super_admin`): viagem **cancelled/failed** + `payment.processing` alinha ao PI **sem** forçar a viagem para `failed`; `completed` + PI terminal falho mantém regra do lote (trip → failed).

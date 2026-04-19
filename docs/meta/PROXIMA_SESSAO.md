@@ -146,6 +146,14 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
+### Alinhamento produto & visibilidade (2026-04-08)
+
+- **`main`:** inclui **#139** — botão **«Alinhar pagamento (Stripe)»** nas listas **Activas** e **Histórico** (detalhe expandido), além do fluxo órfão; continua **`super_admin`**.
+- **Critério de “existe”:** capacidade só conta como **entregue para validação** se for **visível e utilizável no telemóvel** (Frank: deslocação / WC / fora de casa). DevTools com viewport móvel é apoio ao dev, não substituto.
+- **Roles:** **admin** — tarefas do dia-a-dia **sem** grande decisão de sistema (ex.: aceitar utilizador, alterar password a pedido). **super_admin** — visão **omnisciente** e o que o admin **não** pode resolver com segurança (reconcile, overrides, ferramentas sensíveis).
+- **Ritmo:** implementação em **bulk com juízo** + **Playwright o mais cedo possível**; smoke manual só quando for **inevitável**. Renomear ficheiros `.md` do repo fica **adiado**.
+- **Backlog único:** [`UI_VISIBILITY_IMPLEMENTATION_TODO.md`](UI_VISIBILITY_IMPLEMENTATION_TODO.md) — inventário `TBD` → estados `visível` / `parcial` / `invisível` com notas e testes.
+
 ### Estado repo (2026-04-19 — pós-merge #132 + continuidade BD)
 
 - **`main`:** inclui **#132** (`3458d0b` em diante) — reconciliação **por viagem**: `POST /admin/trips/{trip_id}/reconcile-payment-stripe` + botão **«Alinhar pagamento (Stripe)»** na tab **Viagens** (`super_admin`); cobre **cancelled/failed/completed** + `payment.processing` + PI real (cancelled não vira `failed` só por alinhar pagamento).

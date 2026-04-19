@@ -3,6 +3,8 @@
 Documento vivo: ideias **sem implementação obrigatória** até decisão conjunta.  
 Última entrada inicial: consolidação do relatório externo + auditorias automáticas possíveis neste ambiente.
 
+**Cruzeiro UI (implementação activa):** gaps **ecrã ↔ API**, critério **telemóvel** e smokes localizados vivem em [`meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md`](meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) — actualizar **esse** ficheiro ao fechar tarefas de visibilidade; este documento mantém sobretudo **macro / pós-decisão**.
+
 ---
 
 ## A. Consustanciação — Hard audit ChatGPT (só ideias, sem código)
