@@ -2476,7 +2476,7 @@ export function AdminDashboard() {
                               &quot;Atualizar&quot; na lista ou &quot;Debug&quot; abaixo.
                             </p>
                           )}
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
                               onClick={() => fetchTripDebug(t.trip_id)}
@@ -2484,6 +2484,19 @@ export function AdminDashboard() {
                             >
                               Debug
                             </button>
+                            {isSuperAdminSession && tripDetailEligibleSinglePaymentReconcile(tripDetail) ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleReconcileSingleTripPayment(t.trip_id)}
+                                disabled={tripActionLoading === `${t.trip_id}-reconcile-pay`}
+                                className="px-2 py-1 bg-info/25 text-info text-xs font-medium rounded border border-info/30 disabled:opacity-50"
+                                title="Consulta Stripe e actualiza o pagamento processing (viagens completed, cancelled ou failed)."
+                              >
+                                {tripActionLoading === `${t.trip_id}-reconcile-pay`
+                                  ? 'A alinhar…'
+                                  : 'Alinhar pagamento (Stripe)'}
+                              </button>
+                            ) : null}
                           </div>
                           {tripDebug && tripDebugId === t.trip_id && (
                             <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
@@ -2598,7 +2611,7 @@ export function AdminDashboard() {
                               &quot;Atualizar&quot; na lista ou &quot;Debug&quot; abaixo.
                             </p>
                           )}
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               type="button"
                               onClick={() => fetchTripDebug(h.trip_id)}
@@ -2606,6 +2619,19 @@ export function AdminDashboard() {
                             >
                               Debug
                             </button>
+                            {isSuperAdminSession && tripDetailEligibleSinglePaymentReconcile(tripDetail) ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleReconcileSingleTripPayment(h.trip_id)}
+                                disabled={tripActionLoading === `${h.trip_id}-reconcile-pay`}
+                                className="px-2 py-1 bg-info/25 text-info text-xs font-medium rounded border border-info/30 disabled:opacity-50"
+                                title="Consulta Stripe e actualiza o pagamento processing (viagens completed, cancelled ou failed)."
+                              >
+                                {tripActionLoading === `${h.trip_id}-reconcile-pay`
+                                  ? 'A alinhar…'
+                                  : 'Alinhar pagamento (Stripe)'}
+                              </button>
+                            ) : null}
                           </div>
                           {tripDebug && tripDebugId === h.trip_id && (
                             <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
