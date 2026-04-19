@@ -55,7 +55,7 @@
 | ID | Capacidade / superfície | Estado (UI) | Role | Mobile OK | Playwright | Notas |
 |----|-------------------------|-------------|------|-----------|------------|-------|
 | P1 | Pedido / matching / cancel | parcial / visível | passenger | TBD | existente E2E | Confirmar mobile-first em cada passo. |
-| P2 | Mensagens de erro acionáveis | TBD | passenger | TBD | TBD | |
+| P2 | Mensagens de erro acionáveis | parcial | passenger | melhorado | Vitest | `formatApiErrorDetail` + humanize com `err` completo; caixa de erro com «Fechar». |
 
 ---
 

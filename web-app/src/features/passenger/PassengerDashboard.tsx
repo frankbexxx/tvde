@@ -364,7 +364,7 @@ export function PassengerDashboard() {
     } catch (err: unknown) {
       const msg = isTimeoutLikeError(err)
         ? 'Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta de novo.'
-        : humanizeCreateTripError((err as { detail?: string })?.detail)
+        : humanizeCreateTripError(err)
       setError(msg)
       setStatus('Não foi possível pedir a viagem')
       addLog(`Erro: ${msg}`, 'error')
@@ -400,7 +400,7 @@ export function PassengerDashboard() {
     } catch (err: unknown) {
       const msg = isTimeoutLikeError(err)
         ? 'Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta cancelar de novo.'
-        : humanizeCancelError((err as { detail?: string })?.detail)
+        : humanizeCancelError(err)
       setError(msg)
       setStatus('Não foi possível cancelar')
       addLog(`Erro: ${msg}`, 'error')
@@ -452,7 +452,7 @@ export function PassengerDashboard() {
     } catch (err: unknown) {
       const msg = isTimeoutLikeError(err)
         ? 'Sem ligação ou o servidor demorou a responder. Tenta outra vez.'
-        : humanizeCreateTripError((err as { detail?: string })?.detail)
+        : humanizeCreateTripError(err)
       setError(msg)
       addLog(`Erro ao tentar novamente: ${msg}`, 'error')
     } finally {
@@ -945,8 +945,16 @@ export function PassengerDashboard() {
         )}
 
         {error && (
-          <div className="rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-destructive text-base">
-            {error}
+          <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 pr-12 text-destructive text-base touch-manipulation">
+            <button
+              type="button"
+              className="absolute right-2 top-2 min-h-9 min-w-9 rounded-lg border border-destructive/40 bg-background/80 text-destructive text-lg font-medium leading-none hover:bg-background"
+              aria-label="Fechar mensagem de erro"
+              onClick={() => setError(null)}
+            >
+              ×
+            </button>
+            <p className="leading-snug">{error}</p>
           </div>
         )}
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TripDetailResponse } from '../../api/trips'
-import { getPassengerBannerState } from './passengerBanner'
+import { getPassengerBannerState, humanizeCreateTripError } from './passengerBanner'
 import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 
 function minimalTrip(status: TripDetailResponse['status']): TripDetailResponse {
@@ -24,6 +24,17 @@ const onlineTrip = {
   activeTripLoading: false,
   isOnline: true,
 }
+
+describe('humanizeCreateTripError', () => {
+  it('extrai lista de validação de um ApiError-like', () => {
+    const msg = humanizeCreateTripError({
+      status: 422,
+      detail: [{ msg: 'origem fora da área' }, { msg: 'destino inválido' }],
+    })
+    expect(msg).toContain('origem fora da área')
+    expect(msg).toContain('destino inválido')
+  })
+})
 
 describe('getPassengerBannerState — messaging por estado da viagem', () => {
   it('assigned → Motorista atribuído', () => {

@@ -5,6 +5,7 @@ import type { StatusVariant } from '../../components/layout/StatusHeader'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
+import { formatApiErrorFromUnknown } from '../../utils/apiErrorDetail'
 
 export function getPassengerBannerState(params: {
   creating: boolean
@@ -107,8 +108,8 @@ export function getPassengerBannerState(params: {
   }
 }
 
-export function humanizeCreateTripError(detail: unknown): string {
-  const raw = typeof detail === 'string' ? detail : detail != null ? String(detail) : ''
+export function humanizeCreateTripError(errOrDetail: unknown): string {
+  const raw = formatApiErrorFromUnknown(errOrDetail)
   const s = raw.toLowerCase()
   if (s.includes('timeout') || s.includes('indispon') || s.includes('abort')) {
     return 'Servidor lento ou indisponível. Tenta novamente dentro de momentos.'
@@ -122,8 +123,8 @@ export function humanizeCreateTripError(detail: unknown): string {
   return 'Não foi possível pedir a viagem. Verifica a ligação e tenta de novo.'
 }
 
-export function humanizeCancelError(detail: unknown): string {
-  const raw = typeof detail === 'string' ? detail : detail != null ? String(detail) : ''
+export function humanizeCancelError(errOrDetail: unknown): string {
+  const raw = formatApiErrorFromUnknown(errOrDetail)
   const s = raw.toLowerCase()
   if (s.includes('timeout') || s.includes('indispon') || s.includes('network')) {
     return 'Não foi possível cancelar agora — verifica a ligação e tenta de novo.'
