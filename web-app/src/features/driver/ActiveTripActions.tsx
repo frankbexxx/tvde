@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getDriverTripDetail } from '../../api/trips'
+import { getDriverTripDetail, type TripDetailResponse } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { usePolling } from '../../hooks/usePolling'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
@@ -19,6 +19,11 @@ import { googleMapsDirectionsUrl, wazeNavigateUrl } from '../../utils/externalNa
 export interface ActiveTripActionsProps {
   tripId: string
   token: string
+  /**
+   * Último detalhe conhecido (ex.: logo após aceitar) enquanto o poll deste bloco ainda não devolveu `trip`.
+   * O `ActiveTripSummary` já usa o mesmo fallback; sem isto, links Waze/Maps e o gate de distância ficam invisíveis.
+   */
+  tripDetailFallback?: TripDetailResponse | null
   /** Posição actual do motorista (real ou simulada); necessária para o gate de «Iniciar viagem». */
   driverLocation: { lat: number; lng: number } | null
   addLog: (msg: string, type?: 'info' | 'success' | 'error' | 'action') => void
@@ -33,6 +38,7 @@ export interface ActiveTripActionsProps {
 export function ActiveTripActions({
   tripId,
   token,
+  tripDetailFallback = null,
   driverLocation,
   addLog,
   setStatus,
@@ -49,9 +55,10 @@ export function ActiveTripActions({
     !!tripId && !!token,
     2000
   )
-  const displayStatus = mergeDriverPolledWithOverride(trip?.status, statusOverride, 'accepted')
+  const coordsSource = trip ?? tripDetailFallback
+  const displayStatus = mergeDriverPolledWithOverride(coordsSource?.status, statusOverride, 'accepted')
   const pickupCoords =
-    trip != null ? { lat: trip.origin_lat, lng: trip.origin_lng } : null
+    coordsSource != null ? { lat: coordsSource.origin_lat, lng: coordsSource.origin_lng } : null
   const startTripAllowed = canDriverStartTripNearPickup(
     displayStatus,
     driverLocation,
@@ -64,6 +71,12 @@ export function ActiveTripActions({
       onClearStatusOverride()
     }
   }, [trip?.status, statusOverride, onClearStatusOverride])
+
+  const navPickup = pickupCoords
+  const navDestination =
+    coordsSource != null
+      ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
+      : null
 
   const [loading, setLoading] = useState(false)
   const [loadingLong, setLoadingLong] = useState(false)
@@ -167,13 +180,13 @@ export function ActiveTripActions({
           ) : null}
         </div>
       ) : null}
-      {trip &&
+      {navPickup &&
       (displayStatus === 'assigned' ||
         displayStatus === 'accepted' ||
         displayStatus === 'arriving') ? (
         <div className="flex flex-col gap-2 sm:flex-row">
           <a
-            href={wazeNavigateUrl(trip.origin_lat, trip.origin_lng)}
+            href={wazeNavigateUrl(navPickup.lat, navPickup.lng)}
             target="_blank"
             rel="noopener noreferrer"
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
@@ -181,7 +194,7 @@ export function ActiveTripActions({
             Pickup no Waze
           </a>
           <a
-            href={googleMapsDirectionsUrl(trip.origin_lat, trip.origin_lng)}
+            href={googleMapsDirectionsUrl(navPickup.lat, navPickup.lng)}
             target="_blank"
             rel="noopener noreferrer"
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
@@ -190,10 +203,10 @@ export function ActiveTripActions({
           </a>
         </div>
       ) : null}
-      {trip && displayStatus === 'ongoing' ? (
+      {navDestination && displayStatus === 'ongoing' ? (
         <div className="flex flex-col gap-2 sm:flex-row">
           <a
-            href={wazeNavigateUrl(trip.destination_lat, trip.destination_lng)}
+            href={wazeNavigateUrl(navDestination.lat, navDestination.lng)}
             target="_blank"
             rel="noopener noreferrer"
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
@@ -201,7 +214,7 @@ export function ActiveTripActions({
             Destino no Waze
           </a>
           <a
-            href={googleMapsDirectionsUrl(trip.destination_lat, trip.destination_lng)}
+            href={googleMapsDirectionsUrl(navDestination.lat, navDestination.lng)}
             target="_blank"
             rel="noopener noreferrer"
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
