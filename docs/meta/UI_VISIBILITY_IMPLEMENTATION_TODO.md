@@ -46,7 +46,7 @@
 | ID | Capacidade / superfície | Estado (UI) | Role | Mobile OK | Playwright | Notas |
 |----|-------------------------|-------------|------|-----------|------------|-------|
 | D1 | Ofertas / fila antes de accept | TBD | driver | TBD | TBD | WS vs polling — documentar o que o motorista **vê**. |
-| D2 | Estados da viagem activa (accept → complete) | visível | driver | TBD | existente E2E | Ver `e2e/`; alinhar com mobile. |
+| D2 | Estados da viagem activa (accept → complete) | visível | driver | melhorado | existente E2E | Deep links **Waze** + **Google Maps** (pickup em assigned/accepted/arriving; destino em ongoing). |
 
 ---
 

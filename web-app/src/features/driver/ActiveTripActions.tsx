@@ -14,6 +14,7 @@ import {
   driverPerformStartFromArriving,
 } from './driverTripActions'
 import { canDriverStartTripNearPickup } from './driverPickupGate'
+import { googleMapsDirectionsUrl, wazeNavigateUrl } from '../../utils/externalNavigation'
 
 export interface ActiveTripActionsProps {
   tripId: string
@@ -164,6 +165,49 @@ export function ActiveTripActions({
           {distanceToPickupM != null ? (
             <p className="mt-1">Distância ao pickup: ~{distanceToPickupM} m</p>
           ) : null}
+        </div>
+      ) : null}
+      {trip &&
+      (displayStatus === 'assigned' ||
+        displayStatus === 'accepted' ||
+        displayStatus === 'arriving') ? (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <a
+            href={wazeNavigateUrl(trip.origin_lat, trip.origin_lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Pickup no Waze
+          </a>
+          <a
+            href={googleMapsDirectionsUrl(trip.origin_lat, trip.origin_lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Pickup no Google Maps
+          </a>
+        </div>
+      ) : null}
+      {trip && displayStatus === 'ongoing' ? (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <a
+            href={wazeNavigateUrl(trip.destination_lat, trip.destination_lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Destino no Waze
+          </a>
+          <a
+            href={googleMapsDirectionsUrl(trip.destination_lat, trip.destination_lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Destino no Google Maps
+          </a>
         </div>
       ) : null}
       <PrimaryActionButton
