@@ -33,7 +33,7 @@
 |----|-------------------------|-------------|-------------|-----------|------------|-------|
 | A1 | Reconciliar pagamento Stripe (por viagem) | visível | super_admin | TBD | TBD | #132 + #139 — Activas/Histórico + órfã; validar viewport estreita. |
 | A2 | Notas / ops de pagamento por viagem (`POST …/payment-ops-note`) | visível | admin | TBD | `e2e/api-flows` | Painel em Viagens (órfã + Activas + Histórico) com textarea + «Registar nota (audit)»; não altera Stripe. |
-| A3 | Saúde do sistema / stuck vs inconsistent | parcial | admin+ | melhorado | TBD | Tab Saúde: cabeçalho + «Atualizar» empilhados em mobile; blocos SP-D com `touch-manipulation` e alvos ≥44px nos botões principais. |
+| A3 | Saúde do sistema / stuck vs inconsistent | parcial | admin+ | melhorado | existente E2E | Tab Saúde: `e2e/admin-health-tab.spec.ts` (UI + `Status: ok|degraded`); só API: `e2e/api-flows` (`GET /admin/system-health`). Confirmar **mobile** no device (TBD). |
 | A4 | Timeouts manuais / cron-adjacent | visível | super_admin (API) | melhorado | — | Operações: botões timeouts/offers/export/cron/validar .env **desactivados** para `admin` com texto alinhado à API (evita 403 após prompt). |
 | A5 | Lista utilizadores — bulk / filtros / paginação | parcial | admin | TBD | TBD | Ver Onda T0/T1 em `PROXIMA_SESSAO`. |
 
@@ -67,4 +67,4 @@
 
 ---
 
-_Última revisão: 2026-04-09_
+_Última revisão: 2026-04-09 (noite — A3 Playwright tab Saúde)_

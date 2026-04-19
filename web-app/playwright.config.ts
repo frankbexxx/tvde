@@ -45,7 +45,10 @@ export default defineConfig({
    * do seed; o rate limit (5/min por utilizador) acumula se o UI test correr depois com o mesmo padrão.
    */
   projects: [
-    { name: 'e2e-ui', testMatch: /driver-passenger-flow\.spec\.ts$/ },
+    {
+      name: 'e2e-ui',
+      testMatch: /(driver-passenger-flow|admin-health-tab)\.spec\.ts$/,
+    },
     {
       name: 'e2e-api',
       testMatch: /api-flows\.spec\.ts$/,

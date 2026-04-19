@@ -10,7 +10,8 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 - [ ] Inventariar gaps no doc canónico: [`meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md`](meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) (marcar `TBD` → real).
 - [ ] **Admin** primeiro: fechar `invisível`/`parcial` que bloqueiem operação ou smoke.
-- [ ] Acrescentar **Playwright** por PR/fio onde não haja dependência que exija humano.
+- [x] **Playwright tab Saúde (admin)** — `web-app/e2e/admin-health-tab.spec.ts` (2026-04-09); continua pendente: **A5** lista utilizadores, **A1** reconcile (mobile + E2E se estável), **D1** ofertas motorista, smokes **telemóvel** nos merges relevantes.
+- [ ] Acrescentar **Playwright** por PR/fio onde não haja dependência que exija humano (além do já feito: API `system-health`, UI tab Saúde).
 - [ ] **Smoke no telemóvel** após merges UI admin críticos.
 
 **Handoff:** [`PROXIMA_SESSAO.md`](meta/PROXIMA_SESSAO.md) Secção D — bloco **Alinhamento produto & visibilidade (2026-04-08)**.
@@ -66,4 +67,4 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 ---
 
-_Última revisão: 2026-04-08_
+_Última revisão: 2026-04-09_
