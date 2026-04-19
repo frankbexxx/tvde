@@ -4,6 +4,19 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 ---
 
+## Visibilidade UI + smokes (cruzeiro — desde 2026-04-08)
+
+**Objectivo:** tudo o que a gestão e o visionamento precisam **no telemóvel**, com **admin** vs **super_admin** claros; **Playwright** por fluxo estável; implementação em **bulk** quando fizer sentido.
+
+- [ ] Inventariar gaps no doc canónico: [`meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md`](meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) (marcar `TBD` → real).
+- [ ] **Admin** primeiro: fechar `invisível`/`parcial` que bloqueiem operação ou smoke.
+- [ ] Acrescentar **Playwright** por PR/fio onde não haja dependência que exija humano.
+- [ ] **Smoke no telemóvel** após merges UI admin críticos.
+
+**Handoff:** [`PROXIMA_SESSAO.md`](meta/PROXIMA_SESSAO.md) Secção D — bloco **Alinhamento produto & visibilidade (2026-04-08)**.
+
+---
+
 ## Piloto comercial — 4 superfícies (fila de prompts)
 
 **Objectivo:** preparar entrega **piloto/produção** com passageiro, motorista, **parceiro** (critical path), admin.
@@ -53,4 +66,4 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 ---
 
-_Última revisão: 2026-04-05_
+_Última revisão: 2026-04-08_
