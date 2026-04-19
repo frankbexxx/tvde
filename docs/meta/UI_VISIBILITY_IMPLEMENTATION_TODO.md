@@ -46,7 +46,7 @@
 | ID | Capacidade / superfície | Estado (UI) | Role | Mobile OK | Playwright | Notas |
 |----|-------------------------|-------------|------|-----------|------------|-------|
 | D1 | Ofertas / fila antes de accept | TBD | driver | TBD | TBD | WS vs polling — documentar o que o motorista **vê**. |
-| D2 | Estados da viagem activa (accept → complete) | visível | driver | melhorado | existente E2E | Deep links **Waze** + **Google Maps** (pickup em assigned/accepted/arriving; destino em ongoing). |
+| D2 | Estados da viagem activa (accept → complete) | visível | driver | melhorado | existente E2E | Waze/Maps usam `trip` **ou** `acceptedDetailFallback` no footer (alinhado ao `ActiveTripSummary`) para não sumir antes do poll. |
 
 ---
 

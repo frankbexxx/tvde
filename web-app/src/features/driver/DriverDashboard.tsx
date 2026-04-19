@@ -351,6 +351,7 @@ export function DriverDashboard() {
           <ActiveTripActions
             tripId={activeTripId}
             token={token!}
+            tripDetailFallback={acceptedDetailFallback}
             driverLocation={driverLocation ?? null}
             addLog={addLog}
             setStatus={setStatus}

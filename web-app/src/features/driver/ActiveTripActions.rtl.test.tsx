@@ -47,7 +47,10 @@ function minimalTrip(status: TripDetailResponse['status']): TripDetailResponse {
 /** ~44 m N of equator — dentro do raio de «Iniciar viagem» com origin 0,0. */
 const DRIVER_NEAR_PICKUP_0 = { lat: 0.0004, lng: 0 }
 
-function renderActions(driverLocation: { lat: number; lng: number } | null = DRIVER_NEAR_PICKUP_0) {
+function renderActions(
+  driverLocation: { lat: number; lng: number } | null = DRIVER_NEAR_PICKUP_0,
+  opts?: { tripDetailFallback?: TripDetailResponse | null }
+) {
   const addLog = vi.fn()
   const setStatus = vi.fn()
   const onClear = vi.fn()
@@ -58,6 +61,7 @@ function renderActions(driverLocation: { lat: number; lng: number } | null = DRI
     <ActiveTripActions
       tripId="tid"
       token="tok"
+      tripDetailFallback={opts?.tripDetailFallback ?? null}
       driverLocation={driverLocation}
       addLog={addLog}
       setStatus={setStatus}
@@ -94,6 +98,19 @@ describe('ActiveTripActions (RTL)', () => {
     expect(btn).toBeDisabled()
     fireEvent.click(btn)
     expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
+  })
+
+  it('poll sem trip ainda: com tripDetailFallback mostra links Pickup Waze/Maps (coordenadas do fallback)', () => {
+    pollingCtx.trip = null
+    const fb = minimalTrip('accepted')
+    renderActions(DRIVER_NEAR_PICKUP_0, { tripDetailFallback: fb })
+    const waze = screen.getByRole('link', { name: /pickup no waze/i })
+    expect(waze).toHaveAttribute('href', expect.stringContaining('waze.com'))
+    expect(waze.getAttribute('href')).toContain(encodeURIComponent(`${fb.origin_lat},${fb.origin_lng}`))
+    expect(screen.getByRole('link', { name: /pickup no google maps/i })).toHaveAttribute(
+      'href',
+      expect.stringContaining('google.com/maps')
+    )
   })
 
   it('estado ongoing: botão Terminar viagem chama driverPerformComplete', async () => {
