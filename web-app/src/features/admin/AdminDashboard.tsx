@@ -36,6 +36,7 @@ import {
   postReconcilePaymentsStripeSync,
   postReconcilePaymentsCloseNoPi,
   postAdminTripReconcilePaymentStripe,
+  postAdminTripPaymentOpsNote,
   type AdminUsageSummaryResponse,
   type AdminAlertsResponse,
   type AdminAuditTrailItem,
@@ -82,6 +83,63 @@ function tripDetailEligibleSinglePaymentReconcile(d: TripDetailAdmin | null): bo
 
 function isBackofficeStaffRole(role: string): boolean {
   return role === 'admin' || role === 'super_admin'
+}
+
+function AdminTripPaymentOpsNotePanel({
+  tripId,
+  tripDetail,
+  enabled,
+  draft,
+  onDraftChange,
+  onSubmit,
+  submitting,
+}: {
+  tripId: string
+  tripDetail: TripDetailAdmin | null
+  enabled: boolean
+  draft: string
+  onDraftChange: (v: string) => void
+  onSubmit: () => void
+  submitting: boolean
+}) {
+  if (!enabled || !tripDetail || tripDetail.trip_id !== tripId) return null
+  const psRaw = tripDetail.payment_status
+  const psStr =
+    psRaw != null && String(psRaw).trim() ? String(psRaw).trim() : null
+  const canSubmit = draft.trim().length >= 3 && draft.trim().length <= 2000
+  return (
+    <div className="mt-2 rounded-xl border border-border bg-muted/15 px-3 py-2 space-y-2">
+      <p className="text-xs font-medium text-foreground">Nota operacional (pagamento)</p>
+      <p className="text-[11px] text-muted-foreground leading-snug">
+        Regista texto no audit trail — <span className="font-medium">não altera Stripe</span> nem estados de
+        pagamento.
+        {psStr ? (
+          <>
+            {' '}
+            Estado (API): <span className="font-mono text-foreground/90">{psStr}</span>.
+          </>
+        ) : null}
+      </p>
+      <textarea
+        id={`admin-payment-ops-note-${tripId}`}
+        name={`admin-payment-ops-note-${tripId}`}
+        value={draft}
+        onChange={(e) => onDraftChange(e.target.value)}
+        rows={3}
+        maxLength={2000}
+        placeholder="Ex.: cliente contactado; referência interna… (mín. 3 caracteres)"
+        className="w-full min-h-[4.5rem] resize-y rounded-lg border border-input bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/70"
+      />
+      <button
+        type="button"
+        onClick={() => onSubmit()}
+        disabled={submitting || !canSubmit}
+        className="w-full sm:w-auto px-3 py-2 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium disabled:opacity-50"
+      >
+        {submitting ? 'A registar…' : 'Registar nota (audit)'}
+      </button>
+    </div>
+  )
 }
 
 /** SP-F: motivo ≥10 caracteres; cancela com `null`. */
@@ -453,6 +511,12 @@ export function AdminDashboard() {
   const [tripDebug, setTripDebug] = useState<Record<string, unknown> | null>(null)
   const [tripDebugId, setTripDebugId] = useState<string | null>(null)
   const [tripActionLoading, setTripActionLoading] = useState<string | null>(null)
+  const [paymentOpsNoteText, setPaymentOpsNoteText] = useState('')
+
+  const canPostPaymentOpsNote = useMemo(
+    () => isBackofficeStaffRole(parseJwtPayload(token ?? '')?.role ?? ''),
+    [token]
+  )
 
   // Métricas e Saúde
   const [metrics, setMetrics] = useState<AdminMetricsResponse | null>(null)
@@ -533,6 +597,10 @@ export function AdminDashboard() {
     setSelectedTripId(tripId)
     setTripsListMode(t === 'trips' ? tripsList : 'active')
   }, [adminQs])
+
+  useEffect(() => {
+    setPaymentOpsNoteText('')
+  }, [selectedTripId])
 
   const stuckPaymentsListLen = health?.stuck_payments?.length ?? 0
   useEffect(() => {
@@ -697,6 +765,34 @@ export function AdminDashboard() {
       await fetchHealth()
     } catch (err) {
       setError(adminErrDetail(err, 'Erro ao alinhar pagamento com Stripe'))
+    } finally {
+      setTripActionLoading(null)
+    }
+  }
+
+  const handlePaymentOpsNote = async (tripId: string) => {
+    if (!token) return
+    const note = paymentOpsNoteText.trim()
+    if (note.length < 3) {
+      window.alert('A nota precisa de pelo menos 3 caracteres.')
+      return
+    }
+    if (
+      !window.confirm(
+        'Registar esta nota no audit trail? Não altera o Stripe nem o estado do pagamento — fica apenas registado para suporte e operações.'
+      )
+    ) {
+      return
+    }
+    setTripActionLoading(`${tripId}-payment-ops-note`)
+    try {
+      const out = await postAdminTripPaymentOpsNote(token, tripId, { note })
+      window.alert(`Nota registada. payment_id=${out.payment_id}`)
+      setPaymentOpsNoteText('')
+      setError(null)
+      await fetchTripDetail(tripId)
+    } catch (err) {
+      setError(adminErrDetail(err, 'Erro ao registar nota operacional'))
     } finally {
       setTripActionLoading(null)
     }
@@ -2332,6 +2428,17 @@ export function AdminDashboard() {
                       </button>
                     )}
                   </div>
+                  {selectedTripId ? (
+                    <AdminTripPaymentOpsNotePanel
+                      tripId={selectedTripId}
+                      tripDetail={tripDetail}
+                      enabled={canPostPaymentOpsNote}
+                      draft={paymentOpsNoteText}
+                      onDraftChange={setPaymentOpsNoteText}
+                      onSubmit={() => void handlePaymentOpsNote(selectedTripId)}
+                      submitting={tripActionLoading === `${selectedTripId}-payment-ops-note`}
+                    />
+                  ) : null}
                   {tripDebug && tripDebugId === selectedTripId && (
                     <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-48 overflow-y-auto">
                       {JSON.stringify(tripDebug, null, 2)}
@@ -2498,6 +2605,15 @@ export function AdminDashboard() {
                               </button>
                             ) : null}
                           </div>
+                          <AdminTripPaymentOpsNotePanel
+                            tripId={t.trip_id}
+                            tripDetail={tripDetail}
+                            enabled={canPostPaymentOpsNote}
+                            draft={paymentOpsNoteText}
+                            onDraftChange={setPaymentOpsNoteText}
+                            onSubmit={() => void handlePaymentOpsNote(t.trip_id)}
+                            submitting={tripActionLoading === `${t.trip_id}-payment-ops-note`}
+                          />
                           {tripDebug && tripDebugId === t.trip_id && (
                             <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
                               {JSON.stringify(tripDebug, null, 2)}
@@ -2633,6 +2749,15 @@ export function AdminDashboard() {
                               </button>
                             ) : null}
                           </div>
+                          <AdminTripPaymentOpsNotePanel
+                            tripId={h.trip_id}
+                            tripDetail={tripDetail}
+                            enabled={canPostPaymentOpsNote}
+                            draft={paymentOpsNoteText}
+                            onDraftChange={setPaymentOpsNoteText}
+                            onSubmit={() => void handlePaymentOpsNote(h.trip_id)}
+                            submitting={tripActionLoading === `${h.trip_id}-payment-ops-note`}
+                          />
                           {tripDebug && tripDebugId === h.trip_id && (
                             <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
                               {JSON.stringify(tripDebug, null, 2)}

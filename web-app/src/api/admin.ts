@@ -496,3 +496,23 @@ export async function postAdminTripReconcilePaymentStripe(
     }),
   })
 }
+
+/** SP-A: nota operacional sobre pagamento (só audit); `admin` ou `super_admin`. */
+export async function postAdminTripPaymentOpsNote(
+  token: string,
+  tripId: string,
+  body: { note: string }
+): Promise<{ status: string; payment_id: string }> {
+  const tid = tripId.trim()
+  return apiFetch<{ status: string; payment_id: string }>(
+    `/admin/trips/${encodeURIComponent(tid)}/payment-ops-note`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify({
+        confirmation: 'REGISTAR_NOTA_PAGAMENTO',
+        note: body.note.trim(),
+      }),
+    }
+  )
+}

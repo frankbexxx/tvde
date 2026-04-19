@@ -32,7 +32,7 @@
 | ID | Capacidade / superfície | Estado (UI) | Role mínimo | Mobile OK | Playwright | Notas |
 |----|-------------------------|-------------|-------------|-----------|------------|-------|
 | A1 | Reconciliar pagamento Stripe (por viagem) | visível | super_admin | TBD | TBD | #132 + #139 — Activas/Histórico + órfã; validar viewport estreita. |
-| A2 | Notas / ops de pagamento por viagem (`payment-ops-note` ou equivalente) | TBD | TBD | TBD | TBD | Inventariar endpoint + tab; expor se operação for frequente. |
+| A2 | Notas / ops de pagamento por viagem (`POST …/payment-ops-note`) | visível | admin | TBD | `e2e/api-flows` | Painel em Viagens (órfã + Activas + Histórico) com textarea + «Registar nota (audit)»; não altera Stripe. |
 | A3 | Saúde do sistema / stuck vs inconsistent | parcial | admin+ | TBD | TBD | Já existe painel; confirmar leitura e acções em mobile. |
 | A4 | Timeouts manuais / cron-adjacent | parcial | TBD | TBD | TBD | DevTools + admin; definir o que é só `super_admin`. |
 | A5 | Lista utilizadores — bulk / filtros / paginação | parcial | admin | TBD | TBD | Ver Onda T0/T1 em `PROXIMA_SESSAO`. |
@@ -67,4 +67,4 @@
 
 ---
 
-_Última revisão: 2026-04-08_
+_Última revisão: 2026-04-09_
