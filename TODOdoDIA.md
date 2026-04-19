@@ -12,12 +12,16 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 - **Pull local:** `git pull --ff-only origin main` OK (working tree limpa).
 - **PROD / BD:** sessão DB **pausa até amanhã** (descanso olhos); **continua** na mesma linha: ~38× `pi_mock` + eventual `SELECT`/`UPDATE` guiado; smoke do botão novo + **Actualizar saúde** quando houver energia.
 - **Merge `main` (noite):** **#131** — reconciliação **acima** da lista stuck em Operações; **#135** — tabs `flex-wrap` + `tablist`, paginação **10/pág.** na lista «Pagamentos em processing» (`c70d357`).
+- **Docs:** **#136** — `TODOdoDIA` alinhado com os merges acima (`1791071`).
+- **Fecho assistente (fim sessão):** sessão encerrada; **amanhã** retomar o bloco abaixo («Hoje 2026-04-19») — prioridades **1–2** (BD + smoke) + rasto se der tempo; no arranque: `git pull --ff-only origin main` (esperado `1791071` ou posterior).
 
 ---
 
 ## Hoje / próxima abertura — 2026-04-19
 
 _Âncora: **remate BD PROD** (1–2 comandos por passo) + **smoke** pós-#132._
+
+**Código admin (geladeira):** fechado na `main` (#131 + #135); não reabrir neste fio salvo regressão.
 
 ### Prioridades (máx. 3)
 
