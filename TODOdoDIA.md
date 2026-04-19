@@ -9,6 +9,7 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 ## Abertura 2026-04-09 — consulta obrigatória
 
 - **Ler primeiro:** [`docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md`](docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md) — circuito de implementação, compliance incremental, integrações tipo «import», aceleração (bulk visual + Playwright + telemóvel).
+- **Fecho noite 2026-04-09:** E2E Playwright tab **Saúde** (`web-app/e2e/admin-health-tab.spec.ts`); restante inventário / A5 / D1 / smokes telemóvel / OPS — [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) secção **Fecho 2026-04-09 (noite)**.
 
 ---
 

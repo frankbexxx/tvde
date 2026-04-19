@@ -146,6 +146,11 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
+### Fecho 2026-04-09 (noite) — handoff técnico curto
+
+- **Feito nesta sessão:** E2E Playwright **`admin-health-tab.spec.ts`** — `/admin?tab=health` com tokens dev inject (`tvde_e2e_dev_tokens_json`), asserções em «Saúde do sistema» + `Status: ok|degraded`; `playwright.config` inclui o spec no project `e2e-ui`. Documentação: [`UI_VISIBILITY_IMPLEMENTATION_TODO.md`](UI_VISIBILITY_IMPLEMENTATION_TODO.md) linha **A3** (Playwright); [`todo-em-curso.md`](../todo-em-curso.md).
+- **Para a próxima abertura (não bloqueado por código de hoje):** Passo 0 do inventário (`TBD` → estados com evidência); **A5** utilizadores; **A1** reconcile + viewport telemóvel; **D1** motorista ofertas/fila; bloco **OPS/BD** em [`TODOdoDIA.md`](../../TODOdoDIA.md) quando fores a essa janela (ex. 2026-04-19); smokes manuais onde o doc exigir device real.
+
 ### Abertura 2026-04-09 — consulta obrigatória
 
 - **Ler em primeiro lugar:** [`CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md`](CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md) — resume circuito de implementação, compliance incremental (PT), integrações, audits externos, aceleração (bulk visual + Playwright + telemóvel).
