@@ -146,6 +146,10 @@ A **validação em contexto real** foi concluída com sucesso (4 dispositivos, r
 
 # Seção D — O que Deve Ser a Próxima Sessão
 
+### Abertura 2026-04-09 — consulta obrigatória
+
+- **Ler em primeiro lugar:** [`CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md`](CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md) — resume circuito de implementação, compliance incremental (PT), integrações, audits externos, aceleração (bulk visual + Playwright + telemóvel).
+
 ### Alinhamento produto & visibilidade (2026-04-08)
 
 - **`main`:** inclui **#139** — botão **«Alinhar pagamento (Stripe)»** nas listas **Activas** e **Histórico** (detalhe expandido), além do fluxo órfão; continua **`super_admin`**.

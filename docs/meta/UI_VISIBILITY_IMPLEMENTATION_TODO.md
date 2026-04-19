@@ -1,5 +1,7 @@
 # UI — visibilidade, capacidades e implementação (TODO vivo)
 
+**Consulta ao abrir a sessão (2026-04-09):** ler primeiro [`CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md`](CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md) (circuito, compliance, aceleração).
+
 **Objectivo:** uma única referência para **o que falta no ecrã** (ou está incompleto) face ao backend / ao processo real. Quando um **smoke** ou uma operação exigir um controlo, implementa-se a partir daqui e marca-se o estado.
 
 **Política acordada (2026-04-08):**
