@@ -6,6 +6,12 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Abertura 2026-04-09 — consulta obrigatória
+
+- **Ler primeiro:** [`docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md`](docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md) — circuito de implementação, compliance incremental, integrações tipo «import», aceleração (bulk visual + Playwright + telemóvel).
+
+---
+
 ## Alinhamento 2026-04-08 — visibilidade, roles, cruzeiro (Frank)
 
 - **Merge `main`:** **#139** — **«Alinhar pagamento (Stripe)»** também no detalhe expandido das listas **Activas** e **Histórico** (Viagens), mesma elegibilidade que o painel órfão (`super_admin`). Pull local: `git pull --ff-only origin main`.
