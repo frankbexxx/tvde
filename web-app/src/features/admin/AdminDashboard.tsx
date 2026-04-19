@@ -365,10 +365,10 @@ function HealthAnomalyBlock(props: {
 
   if (!rows.length) return null
   return (
-    <div className="rounded-xl border border-border bg-card/50 p-3 space-y-2">
+    <div className="rounded-xl border border-border bg-card/50 p-3 space-y-2 touch-manipulation">
       {playbook ? (
         <details className="rounded-lg border border-info/40 bg-info/10 px-2 py-1.5 text-xs">
-          <summary className="cursor-pointer font-medium text-foreground select-none">
+          <summary className="cursor-pointer font-medium text-foreground select-none min-h-10 flex items-center py-1">
             O que é · O que fazer (3 passos)
           </summary>
           <p className="mt-2 text-foreground/85 leading-relaxed">{playbook.what}</p>
@@ -386,7 +386,7 @@ function HealthAnomalyBlock(props: {
         <div className="flex flex-wrap gap-1">
           <button
             type="button"
-            className={`px-2 py-1 text-xs rounded-lg border ${
+            className={`min-h-9 px-2 py-1.5 text-xs rounded-lg border ${
               sortRecent
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
@@ -400,7 +400,7 @@ function HealthAnomalyBlock(props: {
           </button>
           <button
             type="button"
-            className={`px-2 py-1 text-xs rounded-lg border ${
+            className={`min-h-9 px-2 py-1.5 text-xs rounded-lg border ${
               !sortRecent
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
@@ -424,7 +424,7 @@ function HealthAnomalyBlock(props: {
                 {tid ? (
                   <button
                     type="button"
-                    className="shrink-0 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
+                    className="w-full min-h-10 px-3 py-2 sm:w-auto shrink-0 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
                     onClick={() => onOpenTrip(tid)}
                   >
                     Abrir em Viagens
@@ -445,7 +445,7 @@ function HealthAnomalyBlock(props: {
       {canShowMore ? (
         <button
           type="button"
-          className="w-full px-3 py-2 text-xs font-medium rounded-lg border border-border bg-card text-foreground/90 hover:bg-muted/40"
+          className="w-full min-h-10 px-3 py-2 text-xs font-medium rounded-lg border border-border bg-card text-foreground/90 hover:bg-muted/40"
           onClick={() => setShown((n) => Math.min(n + pageSize, sortedRows.length))}
         >
           Mostrar mais ({sortedRows.length - shown} restantes)
@@ -1696,7 +1696,8 @@ export function AdminDashboard() {
           {!isSuperAdminSession ? (
             <span className="text-muted-foreground">
               {' '}
-              · Exportar CSV, cron completo e validar .env exigem <code className="text-foreground/90">super_admin</code>
+              · Executar timeouts, expirar ofertas, exportar CSV, cron completo e validar .env exigem{' '}
+              <code className="text-foreground/90">super_admin</code>
             </span>
           ) : null}
         </p>
@@ -2785,7 +2786,7 @@ export function AdminDashboard() {
             Atualizar
           </button>
           {metrics ? (
-            <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
               <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
                 <p className="text-foreground/70">Viagens ativas</p>
                 <p className="font-bold text-foreground">{metrics.active_trips}</p>
@@ -2810,7 +2811,7 @@ export function AdminDashboard() {
                 <p className="text-foreground/70">Concluídas hoje</p>
                 <p className="font-bold text-foreground">{metrics.trips_completed_today}</p>
               </div>
-              <div className="bg-card border border-border rounded-2xl px-3 py-2 col-span-2 shadow-card">
+              <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card sm:col-span-2">
                 <p className="text-foreground/70">Total criadas / aceites / concluídas</p>
                 <p className="font-bold text-foreground">
                   {metrics.trips_created_total} / {metrics.trips_accepted_total} /{' '}
@@ -2932,7 +2933,12 @@ export function AdminDashboard() {
               <button
                 type="button"
                 onClick={handleRunCronNow}
-                disabled={!!opsLoading}
+                disabled={!!opsLoading || !isSuperAdminSession}
+                title={
+                  !isSuperAdminSession
+                    ? 'Requer sessão super_admin (mesma regra que na API).'
+                    : undefined
+                }
                 className="px-3 py-1.5 bg-warning/20 text-warning rounded-xl font-medium disabled:opacity-50"
               >
                 {opsLoading === 'cron' ? 'A correr…' : 'Correr cron agora'}
@@ -2992,7 +2998,12 @@ export function AdminDashboard() {
               <button
                 type="button"
                 onClick={handleValidateEnv}
-                disabled={!!opsLoading || !envText.trim()}
+                disabled={!!opsLoading || !envText.trim() || !isSuperAdminSession}
+                title={
+                  !isSuperAdminSession
+                    ? 'Validar .env na API exige super_admin (dados sensíveis).'
+                    : undefined
+                }
                 className="px-3 py-1.5 bg-info/20 text-info rounded-xl font-medium disabled:opacity-50"
               >
                 {opsLoading === 'env-validate' ? 'A validar…' : 'Validar'}
@@ -3025,27 +3036,39 @@ export function AdminDashboard() {
           </div>
 
           <div className="space-y-3">
+            {!isSuperAdminSession ? (
+              <p className="text-xs text-muted-foreground rounded-xl border border-border/80 bg-muted/15 px-3 py-2 leading-relaxed">
+                <span className="font-medium text-foreground/90">Operação:</span> os três botões abaixo chamam rotas{' '}
+                <code className="font-mono text-[11px]">/admin/run-timeouts</code>,{' '}
+                <code className="font-mono text-[11px]">/admin/run-offer-expiry</code> e{' '}
+                <code className="font-mono text-[11px]">/admin/export-logs</code> — na API só{' '}
+                <code className="font-mono text-[11px]">super_admin</code>. Usa sessão elevada ou pede a quem a tenha.
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={handleRunTimeouts}
-              disabled={!!opsLoading}
-              className="w-full px-4 py-3 bg-warning/20 text-warning rounded-lg font-medium disabled:opacity-50"
+              disabled={!!opsLoading || !isSuperAdminSession}
+              title={!isSuperAdminSession ? 'Requer sessão super_admin.' : undefined}
+              className="w-full min-h-11 px-4 py-3 bg-warning/20 text-warning rounded-lg font-medium disabled:opacity-50 touch-manipulation"
             >
               {opsLoading === 'timeouts' ? 'A executar...' : 'Executar timeouts'}
             </button>
             <button
               type="button"
               onClick={handleRunOfferExpiry}
-              disabled={!!opsLoading}
-              className="w-full px-4 py-3 bg-warning/20 text-warning rounded-lg font-medium disabled:opacity-50"
+              disabled={!!opsLoading || !isSuperAdminSession}
+              title={!isSuperAdminSession ? 'Requer sessão super_admin.' : undefined}
+              className="w-full min-h-11 px-4 py-3 bg-warning/20 text-warning rounded-lg font-medium disabled:opacity-50 touch-manipulation"
             >
               {opsLoading === 'offer-expiry' ? 'A executar...' : 'Expirar ofertas e redispatch'}
             </button>
             <button
               type="button"
               onClick={handleExportLogs}
-              disabled={!!opsLoading}
-              className="w-full px-4 py-3 bg-info/20 text-info rounded-lg font-medium disabled:opacity-50"
+              disabled={!!opsLoading || !isSuperAdminSession}
+              title={!isSuperAdminSession ? 'Requer sessão super_admin.' : undefined}
+              className="w-full min-h-11 px-4 py-3 bg-info/20 text-info rounded-lg font-medium disabled:opacity-50 touch-manipulation"
             >
               {opsLoading === 'export' ? 'A exportar...' : 'Exportar logs CSV'}
             </button>
@@ -3341,14 +3364,16 @@ export function AdminDashboard() {
 
       {tab === 'health' && (
         <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Saúde do sistema</h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-1">
+            <h2 className="text-lg font-semibold text-foreground">Saúde do sistema</h2>
             <button
               type="button"
               onClick={() => fetchHealth()}
-              className="mb-3 px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
+              className="min-h-11 w-full px-4 py-2.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 sm:w-auto shrink-0"
             >
               Atualizar
             </button>
+          </div>
           {health ? (
             <div className="space-y-3">
               {countHealthSignalRows(health) + health.warnings.length > 0 ? (
