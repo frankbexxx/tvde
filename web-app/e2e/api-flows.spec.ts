@@ -153,6 +153,28 @@ test.describe('API flows (sem browser)', () => {
     expect(body.payment_id).toBeTruthy()
   })
 
+  test('GET /admin/system-health (JWT admin)', async ({ request }) => {
+    const seed = await request.post(`${API}/dev/seed`)
+    expect(seed.ok(), await seed.text()).toBeTruthy()
+
+    const tokRes = await request.post(`${API}/dev/tokens`)
+    expect(tokRes.ok()).toBeTruthy()
+    const { admin } = (await tokRes.json()) as { admin: string }
+
+    const r = await request.get(`${API}/admin/system-health`, {
+      headers: { Authorization: `Bearer ${admin}` },
+    })
+    expect(r.ok(), await r.text()).toBeTruthy()
+    const body = (await r.json()) as {
+      status?: string
+      stuck_payments?: unknown[]
+      warnings?: unknown[]
+    }
+    expect(body.status).toMatch(/^(ok|degraded)$/)
+    expect(Array.isArray(body.stuck_payments)).toBe(true)
+    expect(Array.isArray(body.warnings)).toBe(true)
+  })
+
   test('BETA login inclui display_name (admin seed)', async ({ request }) => {
     const cfg = await request.get(`${API}/config`)
     expect(cfg.ok()).toBeTruthy()
