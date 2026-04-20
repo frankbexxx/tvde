@@ -8,10 +8,11 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 **Objectivo:** tudo o que a gestão e o visionamento precisam **no telemóvel**, com **admin** vs **super_admin** claros; **Playwright** por fluxo estável; implementação em **bulk** quando fizer sentido.
 
-- [ ] Inventariar gaps no doc canónico: [`meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md`](meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) (marcar `TBD` → real).
-- [ ] **Admin** primeiro: fechar `invisível`/`parcial` que bloqueiem operação ou smoke.
-- [x] **Playwright tab Saúde (admin)** — `web-app/e2e/admin-health-tab.spec.ts` (2026-04-09); continua pendente: **A5** lista utilizadores, **A1** reconcile (mobile + E2E se estável), **D1** ofertas motorista, smokes **telemóvel** nos merges relevantes.
-- [ ] Acrescentar **Playwright** por PR/fio onde não haja dependência que exija humano (além do já feito: API `system-health`, UI tab Saúde).
+- [x] Inventariar gaps no doc canónico (Passo 0): [`meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md`](meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) — `TBD` removidos com evidência (ficheiro/linha); `parcial` = gap concreto (mobile device ou E2E dependente de BD/Stripe).
+- [ ] **Admin** primeiro: fechar `parcial` mobile — subir botões A1/A5 (`px-3 py-1.5 text-xs` → `min-h-11` + `touch-manipulation`, padrão A3).
+- [x] **Playwright tab Saúde (admin)** — `web-app/e2e/admin-health-tab.spec.ts` (2026-04-09).
+- [ ] **Playwright A5 bulk block** + **P1 cancel flow UI** — quando BD local ficar manejável (depende da Onda T1).
+- [ ] Smoke no telemóvel após merges UI relevantes (critério de verdade do doc).
 - [ ] **Smoke no telemóvel** após merges UI admin críticos.
 
 **Handoff:** [`PROXIMA_SESSAO.md`](meta/PROXIMA_SESSAO.md) Secção D — bloco **Alinhamento produto & visibilidade (2026-04-08)**.
@@ -67,4 +68,4 @@ Lista curta do que estamos a implementar **agora**. Marca `[x]` quando fechar; a
 
 ---
 
-_Última revisão: 2026-04-09_
+_Última revisão: 2026-04-20_
