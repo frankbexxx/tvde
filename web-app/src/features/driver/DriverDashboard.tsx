@@ -512,14 +512,30 @@ export function DriverDashboard() {
         />
 
         {toast && (
-          <div className="rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 text-warning text-base animate-toast-enter">
-            {toast}
+          <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
+            <button
+              type="button"
+              className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
+              aria-label="Fechar aviso"
+              onClick={() => setToast(null)}
+            >
+              ×
+            </button>
+            <p className="leading-snug">{toast}</p>
           </div>
         )}
 
         {error && (
-          <div className="rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-destructive text-base">
-            {error}
+          <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+            <button
+              type="button"
+              className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+              aria-label="Fechar mensagem de erro"
+              onClick={() => setError(null)}
+            >
+              ×
+            </button>
+            <p className="leading-snug">{error}</p>
           </div>
         )}
 
