@@ -14,16 +14,23 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - **Ondas 0–5 com super-prompts prontas a colar** (§7) — uma por dia, cada uma contém contexto, tarefas, regras, entregáveis e critérios de aceitação.
 - Preparação operacional (§8), log de smokes (§9), checklist do dia do piloto (§10), plano de contingência (§11), pós-piloto (§12).
 
-**Próxima sessão concreta (Onda 0 — seg 2026-04-20 restante):**
+**Fecho 2026-04-20 (fim do dia) — Onda 0 (quase) terminada:**
 
-1. **Não é código.** É operacional puro.
-2. Copiar para a sessão a super-prompt de [`ALPHA_2026-04-25.md §7.1`](ALPHA_2026-04-25.md). Em resumo:
-   - Fechar **OPS-BD-PI** em prod (SQL guiado: contagem `pi_mock` + `UPDATE` com `WHERE` explícito).
-   - Fechar **OPS-SMOKE-132** (botão «Alinhar pagamento (Stripe)» + «Actualizar saúde» na viagem `2853939b-1e99-4dfe-9f69-71ca62b29936`).
-   - Confirmar `BETA_MODE=True` na env do Render.
-   - Criar/confirmar 5 contas passageiro + 2–3 motorista + 1 admin dedicado.
-   - Redigir mensagem WhatsApp de convocatória para os 5 testers (curta, PT-PT).
-3. No fim: actualizar este ficheiro com "Fecho 2026-04-20 (tarde)" e apontar para a Onda 1.
+- [x] B — `BETA_MODE=true` confirmado em prod (Render API env).
+- [x] C — OPS-BD-PI **+ cleanup profundo** em prod (ver `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §Registo de execução 2026-04-20`). Trips 301 → 11, payments 202 → 11, stuck = 1 legítimo, inconsistent = 0.
+- [x] D — OPS-SMOKE-132: botão «Alinhar pagamento (Stripe)» validado no fluxo Bloco 1.
+- [x] F (extra) — **Bloco 2 code fix SP-F**: `reconcile_stripe_for_completed_processing` passa a marcar `failed` + audit `reconcile_payment_stripe_no_such_pi` quando o Stripe devolve `InvalidRequestError/resource_missing` (ex.: `pi_mock_…`, `pi_test_…` antigos). Fecha o buraco que antes deixava items só como `action=error`. 2 testes unit novos, ruff clean, 8/8 testes do módulo passam.
+- [ ] A — Convocatória WhatsApp (template pronto em `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A`; falta redigir com hora/ponto definitivo).
+- [ ] E — Criar 5 passageiros + 2–3 motoristas + 1 admin piloto em prod com smoke de login.
+
+**Arranque da próxima sessão (ter 2026-04-21 — Onda 1 + rabicho da Onda 0):**
+
+1. Fechar Onda 0 (5–10 min): redigir convocatória WhatsApp e criar as contas piloto (via registo normal ou seed admin). Ver `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A` e `§E`.
+2. Arrancar **Onda 1 — mobile polish core** (super-prompt em `ALPHA_2026-04-25.md §7.2`):
+   - Foco: `PassengerDashboard` + `DriverDashboard`.
+   - Requisitos: botões ≥ 44×44 px (`min-h-[44px] min-w-[44px] touch-manipulation`), texto ≥ 14 px, sem scroll horizontal de 320–400 px, banners fechaveis.
+   - Smoke duplo real à noite (2 Android, trajecto curto Oeiras/Cascais).
+3. **Não tocar** em lógica backend, state machine, matching, Stripe, docs legais — polish visual apenas.
 
 **Ondas seguintes (alto nível):**
 - **Onda 1 (ter 21/04)** — mobile polish core em `PassengerDashboard` + `DriverDashboard` (touch ≥ 44 px, banners legíveis a 360 px, sem scroll horizontal). Smoke duplo real à noite.

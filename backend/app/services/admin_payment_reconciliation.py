@@ -10,6 +10,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
+import stripe
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -25,6 +26,23 @@ logger = logging.getLogger(__name__)
 _SINGLE_RECONCILE_TRIP_STATUSES = frozenset(
     {TripStatus.completed, TripStatus.cancelled, TripStatus.failed}
 )
+
+
+def _is_pi_not_found_error(exc: BaseException) -> bool:
+    """
+    Detecta o caso «PI inexistente no Stripe» (ex.: `pi_mock_…`, `pi_test_…`).
+
+    Stripe devolve `InvalidRequestError` com `code='resource_missing'` e mensagem
+    do tipo «No such payment_intent: '…'». Tratamos como estado terminal falhado.
+    """
+    try:
+        if isinstance(exc, stripe.error.InvalidRequestError):
+            code = getattr(exc, "code", None) or ""
+            if code == "resource_missing":
+                return True
+    except Exception:  # pragma: no cover - defensive against stripe SDK variations
+        pass
+    return "No such payment_intent" in str(exc)
 
 
 def sql_select_completed_processing(limit: int = 200) -> str:
@@ -80,7 +98,10 @@ def reconcile_stripe_for_completed_processing(
 
     - PI `succeeded` -> `payments.status = succeeded`
     - PI terminal falho (`canceled`, …) -> `payments.failed` e `trips.failed` (fecha inconsistência)
-    - Outros estados Stripe -> sem alteração (reportado em `detail`)
+    - PI **não encontrado** no Stripe (`resource_missing`: `pi_mock_…`, `pi_test_…` antigos,
+      PI fora do account actual) -> `payments.failed` + `trips.failed` + audit
+      `reconcile_payment_stripe_no_such_pi`. Fecha inconsistência sem deixar erro silencioso.
+    - Outros estados Stripe / erros inesperados -> sem alteração (reportado em `detail`)
     """
     if settings.STRIPE_MOCK:
         return {
@@ -114,6 +135,39 @@ def reconcile_stripe_for_completed_processing(
             )
             st_s = str(st) if st is not None else ""
         except Exception as e:
+            if _is_pi_not_found_error(e):
+                logger.info(
+                    "reconcile_stripe pi_not_found -> marking payment+trip failed pi=%s", pi_id
+                )
+                if not dry_run:
+                    pay.status = PaymentStatus.failed
+                    trip.status = TripStatus.failed
+                    record_admin_action(
+                        db,
+                        actor_user_id=actor_user_id,
+                        action="reconcile_payment_stripe_no_such_pi",
+                        entity_type="trip",
+                        entity_id=str(trip.id),
+                        payload={
+                            "governance_reason": governance_reason.strip()[:500],
+                            "payment_id": str(pay.id),
+                            "stripe_payment_intent_id": pi_id,
+                            "reason": "pi_not_found_in_stripe",
+                            "trip_status_after": TripStatus.failed.value,
+                            "payment_status_after": PaymentStatus.failed.value,
+                        },
+                    )
+                items.append(
+                    StripeSyncItemResult(
+                        trip_id=str(trip.id),
+                        payment_id=str(pay.id),
+                        stripe_payment_intent_id=pi_id,
+                        action="dry_run_no_such_pi" if dry_run else "updated_no_such_pi",
+                        detail="pi_not_found_in_stripe_marked_failed",
+                        stripe_status=None,
+                    )
+                )
+                continue
             logger.warning("reconcile_stripe retrieve failed pi=%s err=%s", pi_id, e)
             items.append(
                 StripeSyncItemResult(

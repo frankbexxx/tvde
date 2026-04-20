@@ -7,6 +7,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+import stripe
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 
@@ -390,3 +391,205 @@ def test_single_trip_reconcile_skips_non_terminal_trip(
     assert r.status_code == 200, r.text
     assert r.json().get("skipped") is True
     assert r.json().get("reason") == "trip_status_not_eligible"
+
+
+@pytest.mark.usefixtures("super_admin_ctx")
+def test_stripe_sync_marks_failed_when_pi_not_found_in_stripe(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """PI inválido em Stripe (ex: `pi_mock_…` antigo) -> payment+trip passam a failed com audit próprio.
+
+    Fecha o buraco «stripe_retrieve_error: No such payment_intent» que antes ficava como
+    `action=error` sem qualquer alteração na DB, deixando pares inconsistentes indefinidamente.
+    """
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    db = SessionLocal()
+    try:
+        passenger = User(
+            role=Role.passenger,
+            name=f"P {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        driver_u = User(
+            role=Role.driver,
+            name=f"D {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        db.add(passenger)
+        db.add(driver_u)
+        db.flush()
+        db.add(
+            Driver(
+                partner_id=DEFAULT_PARTNER_UUID,
+                user_id=driver_u.id,
+                status=DriverStatus.approved,
+                commission_percent=15.0,
+            )
+        )
+        trip = Trip(
+            passenger_id=passenger.id,
+            driver_id=driver_u.id,
+            status=TripStatus.completed,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=10.0,
+        )
+        db.add(trip)
+        db.flush()
+        pi = f"pi_mock_{uuid.uuid4().hex[:16]}"
+        pay = Payment(
+            trip_id=trip.id,
+            total_amount=10.0,
+            commission_amount=1.5,
+            driver_amount=8.5,
+            currency="EUR",
+            status=PaymentStatus.processing,
+            stripe_payment_intent_id=pi,
+        )
+        db.add(pay)
+        db.flush()
+        pay.updated_at = pay.updated_at - timedelta(days=30)
+        db.commit()
+        pid = pay.id
+        tid = trip.id
+    finally:
+        db.close()
+
+    def fake_retrieve(_pi: str) -> MagicMock:
+        raise stripe.error.InvalidRequestError(
+            message=f"No such payment_intent: '{_pi}'",
+            param="intent",
+            code="resource_missing",
+        )
+
+    monkeypatch.setattr(
+        "app.services.admin_payment_reconciliation.retrieve_payment_intent",
+        fake_retrieve,
+    )
+
+    r = client.post(
+        "/admin/ops/reconcile-payments/stripe-sync",
+        json={
+            "governance_reason": "reconciliação PI inexistente no Stripe (pi_mock legado)",
+            "dry_run": False,
+            "limit": 50,
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert any(
+        it.get("payment_id") == str(pid) and it.get("action") == "updated_no_such_pi"
+        for it in body.get("items", [])
+    ), body
+
+    db2 = SessionLocal()
+    try:
+        p2 = db2.execute(select(Payment).where(Payment.id == pid)).scalar_one()
+        t2 = db2.execute(select(Trip).where(Trip.id == tid)).scalar_one()
+        assert p2.status == PaymentStatus.failed
+        assert t2.status == TripStatus.failed
+    finally:
+        db2.close()
+
+
+@pytest.mark.usefixtures("super_admin_ctx")
+def test_stripe_sync_dry_run_pi_not_found_reports_without_mutation(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Dry-run sobre PI inexistente: reporta `dry_run_no_such_pi` sem mexer na DB."""
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    db = SessionLocal()
+    try:
+        passenger = User(
+            role=Role.passenger,
+            name=f"P {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        driver_u = User(
+            role=Role.driver,
+            name=f"D {uuid.uuid4().hex[:6]}",
+            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            status=UserStatus.active,
+        )
+        db.add(passenger)
+        db.add(driver_u)
+        db.flush()
+        db.add(
+            Driver(
+                partner_id=DEFAULT_PARTNER_UUID,
+                user_id=driver_u.id,
+                status=DriverStatus.approved,
+                commission_percent=15.0,
+            )
+        )
+        trip = Trip(
+            passenger_id=passenger.id,
+            driver_id=driver_u.id,
+            status=TripStatus.completed,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=10.0,
+        )
+        db.add(trip)
+        db.flush()
+        pi = f"pi_mock_{uuid.uuid4().hex[:16]}"
+        pay = Payment(
+            trip_id=trip.id,
+            total_amount=10.0,
+            commission_amount=1.5,
+            driver_amount=8.5,
+            currency="EUR",
+            status=PaymentStatus.processing,
+            stripe_payment_intent_id=pi,
+        )
+        db.add(pay)
+        db.flush()
+        pay.updated_at = pay.updated_at - timedelta(days=30)
+        db.commit()
+        pid = pay.id
+        tid = trip.id
+    finally:
+        db.close()
+
+    def fake_retrieve(_pi: str) -> MagicMock:
+        raise stripe.error.InvalidRequestError(
+            message=f"No such payment_intent: '{_pi}'",
+            param="intent",
+            code="resource_missing",
+        )
+
+    monkeypatch.setattr(
+        "app.services.admin_payment_reconciliation.retrieve_payment_intent",
+        fake_retrieve,
+    )
+
+    r = client.post(
+        "/admin/ops/reconcile-payments/stripe-sync",
+        json={
+            "governance_reason": "dry-run reconciliação PI inexistente",
+            "dry_run": True,
+            "limit": 50,
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert any(
+        it.get("payment_id") == str(pid) and it.get("action") == "dry_run_no_such_pi"
+        for it in body.get("items", [])
+    ), body
+
+    db2 = SessionLocal()
+    try:
+        p2 = db2.execute(select(Payment).where(Payment.id == pid)).scalar_one()
+        t2 = db2.execute(select(Trip).where(Trip.id == tid)).scalar_one()
+        assert p2.status == PaymentStatus.processing
+        assert t2.status == TripStatus.completed
+    finally:
+        db2.close()
