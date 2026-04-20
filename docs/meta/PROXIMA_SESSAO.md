@@ -23,6 +23,30 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - [ ] A — Convocatória WhatsApp (template pronto em `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A`; falta redigir com hora/ponto definitivo).
 - [ ] E — Criar 5 passageiros + 2–3 motoristas + 1 admin piloto em prod com smoke de login.
 
+**Fecho 2026-04-21 (sessão de Onda 2 antecipada) — resto Onda 0 adiado para sexta; Onda 2 código feito:**
+
+Decisão do Frank: A (convocatória WhatsApp) e E (script de criar contas piloto) adiados para sexta-feira (Onda 4, mesmo dia de correcções finais) porque dependem só de acção operacional e não desbloqueiam desenvolvimento. Onda 2 (AdminDashboard afinado) arrancou hoje.
+
+Onda 2 — alterações deste PR:
+
+- **Backend** — `GET /admin/trips/active` passa a devolver `updated_at` (aditivo).
+  - `backend/app/schemas/trip.py` — `TripActiveItem.updated_at: Optional[datetime]`.
+  - `backend/app/api/routers/admin.py` — response builder inclui `updated_at=t.updated_at`.
+- **AdminDashboard — aba Viagens (modo "Activas")**:
+  - linha mostra agora **id curto · estado · P:passageiro-curto · D:motorista-curto · atualizado há X**.
+  - badge laranja `stuck Nmin` quando `accepted` há ≥ 5 min (bordo da linha também muda).
+  - `handleAdminTripTransition` mostra no `confirm` o header `Viagem <8-chars>… (<from> → <to>)` antes de pedir o motivo — paridade para «Forçar arriving» e «Forçar ongoing».
+  - botão «↻ Atualizar lista» reforçado (texto + ícone + nota «polling natural activo»). Polling 5 s continua no `usePolling`; o botão é refresh manual imediato.
+- **Helpers novos** — `web-app/src/utils/relativeTime.ts` (`formatRelativeAgo`, `minutesSince`) com suite dedicada (`relativeTime.test.ts`, 11 casos).
+
+Testes: `tsc -b` 0 erros, `npm run lint` 0 erros, `vitest run` **21 files / 90 tests passed** (11 novos), `pytest` **140/140** (ruff clean).
+
+Onda 0 — estado (resto adiado para sexta):
+
+- [x] B, C, D, F (Bloco 1 cleanup prod + Bloco 2 fix `pi_not_found_in_stripe`) — mergidos em #151.
+- [x] A — template final da convocatória WhatsApp guardado em `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A`. Enviar sexta com hora/ponto confirmados.
+- [x] E — script Python self-contained pronto no runbook `§E.2` para colar no Render Shell. Correr sexta de manhã + spot-check login.
+
 **Fecho 2026-04-21 (sessão intermédia) — resto Onda 0 preparado + Onda 1 core feita:**
 
 Onda 0 (pré-alpha operacional) — estado:
@@ -43,13 +67,17 @@ Testes: `tsc -b` OK, `eslint .` OK, `vitest run` 79/79, `pytest test_admin_payme
 
 Layout global: `ScreenContainer` usa `max-w-md mx-auto w-full`; `body { overflow-x: hidden; min-width: 320px }` em `web-app/src/index.css` — zero scroll horizontal 320–400 px garantido.
 
-**Arranque da próxima sessão (qua 2026-04-22 — smoke Onda 1 + Onda 2):**
+**Arranque da próxima sessão (qua 2026-04-22 — smoke real Onda 1 + smoke Nível 2 Onda 2):**
 
-1. **Smoke duplo real** (2 Android, Frank + 1 convidado). Trajecto curto Oeiras/Cascais. Nível 1 obrigatório + tentativa Nível 2. Anotar no `ALPHA_2026-04-25.md §9`. Se algum bloqueio crítico, tratar antes de avançar.
-2. Correr o script de seed de contas piloto (`ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E.2`) e fazer spot-check de login.
-3. Enviar convocatória WhatsApp final (`§A`) com horário/ponto confirmados. Objectivo: ter ≥ 5 confirmados até quarta à noite.
-4. **Onda 2 — Admin operacional + smoke reforçado** (`ALPHA_2026-04-25.md §7.3`). Foco no AdminDashboard desktop: badges de stuck, botão «Atualizar» visível, confirmar `trip_id` curto em diálogos, smoke Nível 2 completo.
-5. **Freeze opcional às 22:00 de quarta** conforme plano original.
+1. **Smoke duplo real Nível 1 + tentativa Nível 2** (2 Android, Frank + 1 convidado, Oeiras/Cascais). Validar:
+   - mobile polish (botões ≥ 44 px, banners ×, zero scroll horizontal a 360 px);
+   - linha da aba Viagens do admin mostra id curto + P/D + updated_at + badge stuck quando aplicável;
+   - confirm dialog em «Forçar arriving» mostra `Viagem <8-chars>… (accepted → arriving)` antes de pedir motivo;
+   - botão «↻ Atualizar lista» reage imediatamente.
+   - Anotar em `ALPHA_2026-04-25.md §9`.
+2. Se smoke Nível 2 completo sem S1 → **freeze opcional às 22:00** de quarta.
+3. Onda 3 (qui) arranca com ensaio reduzido.
+4. Sexta (Onda 4) — primeiras tarefas da manhã: (a) executar `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E.2` em Render Shell + spot-check login P1/D1/Admin; (b) enviar convocatória WhatsApp (`§A`) com hora/ponto finais.
 
 **Ondas seguintes (alto nível):**
 - **Onda 1 (ter 21/04)** — mobile polish core em `PassengerDashboard` + `DriverDashboard` (touch ≥ 44 px, banners legíveis a 360 px, sem scroll horizontal). Smoke duplo real à noite.

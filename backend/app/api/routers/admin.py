@@ -1143,6 +1143,7 @@ async def list_active_trips(
             origin_lng=float(t.origin_lng),
             destination_lat=float(t.destination_lat),
             destination_lng=float(t.destination_lng),
+            updated_at=t.updated_at,
         )
         for t in trips
     ]

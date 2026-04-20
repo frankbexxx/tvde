@@ -17,6 +17,8 @@ export interface TripActiveItem {
   origin_lng: number
   destination_lat: number
   destination_lng: number
+  /** ISO timestamp do último update da viagem. Usado no admin para destacar stuck. */
+  updated_at?: string | null
 }
 
 export interface TripDetailAdmin {
