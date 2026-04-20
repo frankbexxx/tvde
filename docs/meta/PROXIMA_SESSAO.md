@@ -4,6 +4,40 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+# Abertura 2026-04-20 (tarde) → rumo ao piloto 2026-04-25
+
+**Contexto em 3 linhas:** decidimos entregar uma **alpha controlada** no sábado 2026-04-25 em **Oeiras/Cascais**, com **5 testers**, **Android via link Render**, **sem pagamento real**, canal de reporte **WhatsApp + chamada**. Frank como admin observador. O GPS real e o fluxo "uber-like" (passageiro vê motorista a aproximar-se ao vivo) **já estão em produção e validados em campo** na semana passada — não é preciso implementar GPS.
+
+**Doc mestre:** [`ALPHA_2026-04-25.md`](ALPHA_2026-04-25.md) — ler antes de tudo o resto. Tem:
+- Decisões validadas (§1), âmbito IN/OUT (§2), inventário confirmado do que já está pronto (§3).
+- Riscos e mitigação (§4), cenários de teste Nível 1 e 2 (§5), calendário (§6).
+- **Ondas 0–5 com super-prompts prontas a colar** (§7) — uma por dia, cada uma contém contexto, tarefas, regras, entregáveis e critérios de aceitação.
+- Preparação operacional (§8), log de smokes (§9), checklist do dia do piloto (§10), plano de contingência (§11), pós-piloto (§12).
+
+**Próxima sessão concreta (Onda 0 — seg 2026-04-20 restante):**
+
+1. **Não é código.** É operacional puro.
+2. Copiar para a sessão a super-prompt de [`ALPHA_2026-04-25.md §7.1`](ALPHA_2026-04-25.md). Em resumo:
+   - Fechar **OPS-BD-PI** em prod (SQL guiado: contagem `pi_mock` + `UPDATE` com `WHERE` explícito).
+   - Fechar **OPS-SMOKE-132** (botão «Alinhar pagamento (Stripe)» + «Actualizar saúde» na viagem `2853939b-1e99-4dfe-9f69-71ca62b29936`).
+   - Confirmar `BETA_MODE=True` na env do Render.
+   - Criar/confirmar 5 contas passageiro + 2–3 motorista + 1 admin dedicado.
+   - Redigir mensagem WhatsApp de convocatória para os 5 testers (curta, PT-PT).
+3. No fim: actualizar este ficheiro com "Fecho 2026-04-20 (tarde)" e apontar para a Onda 1.
+
+**Ondas seguintes (alto nível):**
+- **Onda 1 (ter 21/04)** — mobile polish core em `PassengerDashboard` + `DriverDashboard` (touch ≥ 44 px, banners legíveis a 360 px, sem scroll horizontal). Smoke duplo real à noite.
+- **Onda 2 (qua 22/04)** — afinar aba Viagens do `AdminDashboard` para o piloto. Freeze 22:00.
+- **Onda 3 (qui 23/04)** — ensaio com 1–2 testers externos.
+- **Onda 4 (sex 24/04)** — só S1+S2; deploy até 18:00.
+- **Onda 5 (sáb 25/04)** — piloto; **zero deploys durante a janela**.
+
+**Fora do âmbito até sábado** (não abrir por engano): Stripe real, Stripe Connect, app nativa, PWA install, WebSockets no front, `/driver/offers`, `matching/find-driver` na UI, push, staging, CI de segurança (GHAS/Snyk/Semgrep/pentest), docs legais, M2-PERFIL, M3-DOCS.
+
+**Snapshots de referência:** [`docs/snapshots/SNAPSHOT_2026-04-19.md`](../snapshots/SNAPSHOT_2026-04-19.md) (histórico) e [`docs/snapshots/SNAPSHOT_2026-04-20.md`](../snapshots/SNAPSHOT_2026-04-20.md) (estado actual com deltas).
+
+---
+
 # Seção A — Resumo do ROADMAP Completo
 
 ## ROADMAP — Fase Atual (MVP Público Web)
