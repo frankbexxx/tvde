@@ -4,6 +4,35 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Amanhã (qua 2026-04-22) — arranque rápido
+
+**Estado git:** `main` limpo, sem PRs pendentes. Ondas 0 (código), 1 e 2 mergidas (#151, #152, #153).
+
+**Objectivo do dia:** validar no terreno o que já foi construído para o piloto de sábado. Nenhum código novo obrigatório; só smoke real e ajustes reactivos se aparecerem S1/S2.
+
+**Plano (por esta ordem):**
+
+1. **De manhã / tarde:** nada de código novo; rever dispositivos, credenciais de 1 passageiro + 1 motorista de teste no Render, e confirmar que a API está quente (`/health`, uma viagem fantasma curta).
+2. **À noite (prime-time do smoke):** **smoke duplo real** em Oeiras/Cascais com 2 Android (Frank passageiro + 1 convidado motorista, ou vice-versa).
+   - **Nível 1 obrigatório:** pedido + cancelamento passageiro; pedido + cancelamento admin; pedido + intervenção «Forçar arriving» e «Forçar ongoing» pelo admin.
+   - **Nível 2 (tentativa):** uber-like completo — trajecto curto real, passageiro vê motorista a aproximar-se, chegar, iniciar, concluir.
+   - Validar no AdminDashboard (desktop, admin = Frank): linhas mostram id curto · P · D · `atualizado há X`; badge `stuck Nmin` aparece se `accepted` parar ≥ 5 min; `confirm` de forçar arriving/ongoing traz `Viagem <8ch>… (from → to)`; botão «↻ Atualizar lista» reage imediatamente.
+   - Tirar notas em `docs/meta/ALPHA_2026-04-25.md §9` (log de smokes).
+3. **Se smoke Nível 2 passa sem S1:** **freeze opcional às 22:00** conforme plano original.
+4. **Se aparecerem S1:** abrir branch `fix/alpha-smoke-<descr>`, corrigir o mínimo viável, commit + PR. Não atacar S2/S3 hoje.
+
+**Não fazer hoje:**
+- Não abrir features novas.
+- Não mexer na state machine do backend, regras SP-F, auditoria.
+- Não começar ainda o script de contas piloto (`§E.2`) nem enviar convocatória WhatsApp (`§A`) — ficam para sexta de manhã.
+
+**Referências vivas:**
+- `docs/meta/ALPHA_2026-04-25.md §7.3` (super-prompt Onda 2, com critérios de aceitação).
+- `docs/meta/ALPHA_2026-04-25.md §9` (log de smokes — **anotar aqui**).
+- `docs/meta/ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A` e `§E.2` (guardados para sexta).
+
+---
+
 # Abertura 2026-04-20 (tarde) → rumo ao piloto 2026-04-25
 
 **Contexto em 3 linhas:** decidimos entregar uma **alpha controlada** no sábado 2026-04-25 em **Oeiras/Cascais**, com **5 testers**, **Android via link Render**, **sem pagamento real**, canal de reporte **WhatsApp + chamada**. Frank como admin observador. O GPS real e o fluxo "uber-like" (passageiro vê motorista a aproximar-se ao vivo) **já estão em produção e validados em campo** na semana passada — não é preciso implementar GPS.
@@ -47,25 +76,10 @@ Onda 0 — estado (resto adiado para sexta):
 - [x] A — template final da convocatória WhatsApp guardado em `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A`. Enviar sexta com hora/ponto confirmados.
 - [x] E — script Python self-contained pronto no runbook `§E.2` para colar no Render Shell. Correr sexta de manhã + spot-check login.
 
-**Fecho 2026-04-21 (sessão intermédia) — resto Onda 0 preparado + Onda 1 core feita:**
+**Onda 1 (mobile polish core) — mergido em #152:**
 
-Onda 0 (pré-alpha operacional) — estado:
-
-- [x] B, C, D, F (Bloco 1 cleanup prod + Bloco 2 fix `pi_not_found_in_stripe`) — mergidos em #151.
-- [x] A — template final da convocatória WhatsApp guardado em `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A`. Falta só enviar quando tiveres horário/ponto definitivos.
-- [x] E — script Python self-contained pronto no runbook `§E.2` para colar no Render Shell. Cria as 9 contas piloto (5P + 3D + 1A) idempotentemente. Depois de correr, validar login 1× por role.
-
-Onda 1 (mobile polish core) — alterações incluídas neste PR:
-
-- `web-app/src/components/layout/PrimaryActionButton.tsx` — `min-w-[44px]` + `touch-manipulation`.
-- `web-app/src/components/cards/RequestCard.tsx` — botão ACEITAR com `min-w-[44px]` + `touch-manipulation`.
-- `web-app/src/features/driver/ActiveTripActions.tsx` — «Cancelar viagem» passa a `min-h-[44px] rounded-lg touch-manipulation` com hover visível.
-- `web-app/src/features/passenger/PassengerDashboard.tsx` — botão × do banner de erro sobe para `44×44 px` com `touch-manipulation`.
-- `web-app/src/features/driver/DriverDashboard.tsx` — banners de erro e toast ganham botão × (paridade com passenger), ambos com `44×44 px`.
-
-Testes: `tsc -b` OK, `eslint .` OK, `vitest run` 79/79, `pytest test_admin_payment_reconciliation.py` 8/8.
-
-Layout global: `ScreenContainer` usa `max-w-md mx-auto w-full`; `body { overflow-x: hidden; min-width: 320px }` em `web-app/src/index.css` — zero scroll horizontal 320–400 px garantido.
+- `PrimaryActionButton`, `RequestCard`, `ActiveTripActions`, `PassengerDashboard` (botão × erro), `DriverDashboard` (banners × paridade) — todos com `min-h/min-w ≥ 44 px` + `touch-manipulation`.
+- Layout global: `ScreenContainer` `max-w-md mx-auto w-full`; `body { overflow-x: hidden; min-width: 320px }` — zero scroll horizontal 320–400 px garantido.
 
 **Arranque da próxima sessão (qua 2026-04-22 — smoke real Onda 1 + smoke Nível 2 Onda 2):**
 
@@ -80,10 +94,10 @@ Layout global: `ScreenContainer` usa `max-w-md mx-auto w-full`; `body { overflow
 4. Sexta (Onda 4) — primeiras tarefas da manhã: (a) executar `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E.2` em Render Shell + spot-check login P1/D1/Admin; (b) enviar convocatória WhatsApp (`§A`) com hora/ponto finais.
 
 **Ondas seguintes (alto nível):**
-- **Onda 1 (ter 21/04)** — mobile polish core em `PassengerDashboard` + `DriverDashboard` (touch ≥ 44 px, banners legíveis a 360 px, sem scroll horizontal). Smoke duplo real à noite.
-- **Onda 2 (qua 22/04)** — afinar aba Viagens do `AdminDashboard` para o piloto. Freeze 22:00.
+- **Onda 1 (ter 21/04)** — ✅ código mergido (#152). Falta só smoke duplo real (quarta à noite).
+- **Onda 2 (qua 22/04)** — ✅ código mergido antecipadamente (#153). Falta smoke Nível 2 real + freeze 22:00.
 - **Onda 3 (qui 23/04)** — ensaio com 1–2 testers externos.
-- **Onda 4 (sex 24/04)** — só S1+S2; deploy até 18:00.
+- **Onda 4 (sex 24/04)** — só S1+S2 + executar resto Onda 0 (A convocatória + E contas piloto); deploy até 18:00.
 - **Onda 5 (sáb 25/04)** — piloto; **zero deploys durante a janela**.
 
 **Fora do âmbito até sábado** (não abrir por engano): Stripe real, Stripe Connect, app nativa, PWA install, WebSockets no front, `/driver/offers`, `matching/find-driver` na UI, push, staging, CI de segurança (GHAS/Snyk/Semgrep/pentest), docs legais, M2-PERFIL, M3-DOCS.
