@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
+import { formatRelativeAgo, minutesSince } from '../../utils/relativeTime'
 import { apiFetch, type ApiError } from '../../api/client'
 import { parseJwtPayload } from '../../utils/jwt'
 import {
@@ -907,13 +908,19 @@ export function AdminDashboard() {
     }
   }
 
-  const handleAdminTripTransition = async (tripId: string, toStatus: 'arriving' | 'ongoing') => {
+  const handleAdminTripTransition = async (
+    tripId: string,
+    toStatus: 'arriving' | 'ongoing',
+    fromStatus?: string,
+  ) => {
     if (!token) return
-    const msg =
+    const shortId = tripId.slice(0, 8)
+    const header = `Viagem ${shortId}…${fromStatus ? ` (${fromStatus} → ${toStatus})` : ` → ${toStatus}`}`
+    const body =
       toStatus === 'arriving'
         ? 'Forçar estado «arriving» (a caminho do passageiro)?'
         : 'Forçar «ongoing» (viagem iniciada)? Isto contorna a exigência de proximidade (~50 m) ao pickup.'
-    if (!window.confirm(msg)) return
+    if (!window.confirm(`${header}\n\n${body}`)) return
     const reason = window.prompt(
       'Motivo da intervenção (mínimo 10 caracteres; fica em auditoria):',
       'Correção operacional: motorista no local, app sem GPS preciso'
@@ -2300,13 +2307,19 @@ export function AdminDashboard() {
               Histórico
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => (tripsListMode === 'active' ? void fetchActiveTrips() : void fetchHistoryTrips())}
-            className="mb-3 px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
-          >
-            Atualizar
-          </button>
+          <div className="mb-3 flex items-center gap-2 text-xs text-foreground/60">
+            <button
+              type="button"
+              onClick={() =>
+                tripsListMode === 'active' ? void fetchActiveTrips() : void fetchHistoryTrips()
+              }
+              className="px-3 py-1.5 bg-card border border-border text-foreground/85 text-sm font-medium rounded-xl hover:bg-muted/40"
+              title="Força refresh imediato; polling automático continua a cada poucos segundos"
+            >
+              ↻ Atualizar lista
+            </button>
+            <span>Polling natural activo — usa o botão para refresh imediato.</span>
+          </div>
 
           {tripOrphanFromDeepLink && selectedTripId ? (
             <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 px-4 py-4 shadow-card space-y-3">
@@ -2399,7 +2412,9 @@ export function AdminDashboard() {
                     {tripDetail.status === 'accepted' && (
                       <button
                         type="button"
-                        onClick={() => void handleAdminTripTransition(selectedTripId, 'arriving')}
+                        onClick={() =>
+                          void handleAdminTripTransition(selectedTripId, 'arriving', tripDetail.status)
+                        }
                         disabled={tripActionLoading === selectedTripId}
                         className="px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                       >
@@ -2409,7 +2424,9 @@ export function AdminDashboard() {
                     {tripDetail.status === 'arriving' && (
                       <button
                         type="button"
-                        onClick={() => void handleAdminTripTransition(selectedTripId, 'ongoing')}
+                        onClick={() =>
+                          void handleAdminTripTransition(selectedTripId, 'ongoing', tripDetail.status)
+                        }
                         disabled={tripActionLoading === selectedTripId}
                         className="px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                       >
@@ -2460,23 +2477,39 @@ export function AdminDashboard() {
                 <p className="text-foreground/75">Nenhuma viagem ativa.</p>
               ) : activeTrips.length > 0 ? (
                 <ul className="space-y-3">
-                  {activeTrips.map((t) => (
+                  {activeTrips.map((t) => {
+                    const ageMin = minutesSince(t.updated_at)
+                    const stuckAccepted = t.status === 'accepted' && ageMin != null && ageMin >= 5
+                    return (
                     <li
                       key={t.trip_id}
-                      className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
+                      className={`bg-card border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors ${
+                        stuckAccepted ? 'border-warning/60' : 'border-border'
+                      }`}
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <p className="font-medium text-foreground">
-                            {t.trip_id.slice(0, 8)}… · {t.status}
+                          <p className="font-medium text-foreground flex flex-wrap items-center gap-2">
+                            <span>{t.trip_id.slice(0, 8)}… · {t.status}</span>
+                            {stuckAccepted && (
+                              <span
+                                className="inline-flex items-center rounded-full bg-warning/20 border border-warning/50 px-2 py-0.5 text-[11px] font-semibold text-warning"
+                                title="Potencial stuck: accepted há mais de 5 min sem progredir"
+                              >
+                                stuck {Math.round(ageMin!)}′
+                              </span>
+                            )}
                           </p>
                           <p className="text-sm text-foreground/75">
                             {t.origin_lat.toFixed(4)}, {t.origin_lng.toFixed(4)} →{' '}
                             {t.destination_lat.toFixed(4)}, {t.destination_lng.toFixed(4)}
                           </p>
-                          {t.driver_id && (
-                            <p className="text-xs text-foreground/70">Driver: {t.driver_id.slice(0, 8)}…</p>
-                          )}
+                          <p className="text-xs text-foreground/70">
+                            P: {t.passenger_id.slice(0, 8)}…
+                            {t.driver_id ? <> · D: {t.driver_id.slice(0, 8)}…</> : <> · D: —</>}
+                            {' · '}
+                            <span title={t.updated_at ?? ''}>atualizado {formatRelativeAgo(t.updated_at)}</span>
+                          </p>
                         </div>
                         <div className="flex flex-wrap gap-1">
                           <button
@@ -2502,7 +2535,9 @@ export function AdminDashboard() {
                           {t.status === 'accepted' && (
                             <button
                               type="button"
-                              onClick={() => void handleAdminTripTransition(t.trip_id, 'arriving')}
+                              onClick={() =>
+                                void handleAdminTripTransition(t.trip_id, 'arriving', t.status)
+                              }
                               disabled={tripActionLoading === t.trip_id}
                               className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
                               title="Quando o motorista já está a caminho mas o estado API ficou em accepted"
@@ -2513,7 +2548,9 @@ export function AdminDashboard() {
                           {t.status === 'arriving' && (
                             <button
                               type="button"
-                              onClick={() => void handleAdminTripTransition(t.trip_id, 'ongoing')}
+                              onClick={() =>
+                                void handleAdminTripTransition(t.trip_id, 'ongoing', t.status)
+                              }
                               disabled={tripActionLoading === t.trip_id}
                               className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
                               title="Quando o pickup GPS bloqueia «Iniciar viagem» mas o motorista já está no local"
@@ -2623,7 +2660,8 @@ export function AdminDashboard() {
                         </div>
                       )}
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
               ) : tripOrphanFromDeepLink ? (
                 <p className="text-xs text-muted-foreground">

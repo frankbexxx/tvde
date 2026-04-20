@@ -87,6 +87,7 @@ class TripActiveItem(BaseModel):
     origin_lng: float
     destination_lat: float
     destination_lng: float
+    updated_at: Optional[datetime] = None
 
 
 class TripHistoryItem(BaseModel):
