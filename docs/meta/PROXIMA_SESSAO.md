@@ -23,14 +23,33 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - [ ] A — Convocatória WhatsApp (template pronto em `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A`; falta redigir com hora/ponto definitivo).
 - [ ] E — Criar 5 passageiros + 2–3 motoristas + 1 admin piloto em prod com smoke de login.
 
-**Arranque da próxima sessão (ter 2026-04-21 — Onda 1 + rabicho da Onda 0):**
+**Fecho 2026-04-21 (sessão intermédia) — resto Onda 0 preparado + Onda 1 core feita:**
 
-1. Fechar Onda 0 (5–10 min): redigir convocatória WhatsApp e criar as contas piloto (via registo normal ou seed admin). Ver `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A` e `§E`.
-2. Arrancar **Onda 1 — mobile polish core** (super-prompt em `ALPHA_2026-04-25.md §7.2`):
-   - Foco: `PassengerDashboard` + `DriverDashboard`.
-   - Requisitos: botões ≥ 44×44 px (`min-h-[44px] min-w-[44px] touch-manipulation`), texto ≥ 14 px, sem scroll horizontal de 320–400 px, banners fechaveis.
-   - Smoke duplo real à noite (2 Android, trajecto curto Oeiras/Cascais).
-3. **Não tocar** em lógica backend, state machine, matching, Stripe, docs legais — polish visual apenas.
+Onda 0 (pré-alpha operacional) — estado:
+
+- [x] B, C, D, F (Bloco 1 cleanup prod + Bloco 2 fix `pi_not_found_in_stripe`) — mergidos em #151.
+- [x] A — template final da convocatória WhatsApp guardado em `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A`. Falta só enviar quando tiveres horário/ponto definitivos.
+- [x] E — script Python self-contained pronto no runbook `§E.2` para colar no Render Shell. Cria as 9 contas piloto (5P + 3D + 1A) idempotentemente. Depois de correr, validar login 1× por role.
+
+Onda 1 (mobile polish core) — alterações incluídas neste PR:
+
+- `web-app/src/components/layout/PrimaryActionButton.tsx` — `min-w-[44px]` + `touch-manipulation`.
+- `web-app/src/components/cards/RequestCard.tsx` — botão ACEITAR com `min-w-[44px]` + `touch-manipulation`.
+- `web-app/src/features/driver/ActiveTripActions.tsx` — «Cancelar viagem» passa a `min-h-[44px] rounded-lg touch-manipulation` com hover visível.
+- `web-app/src/features/passenger/PassengerDashboard.tsx` — botão × do banner de erro sobe para `44×44 px` com `touch-manipulation`.
+- `web-app/src/features/driver/DriverDashboard.tsx` — banners de erro e toast ganham botão × (paridade com passenger), ambos com `44×44 px`.
+
+Testes: `tsc -b` OK, `eslint .` OK, `vitest run` 79/79, `pytest test_admin_payment_reconciliation.py` 8/8.
+
+Layout global: `ScreenContainer` usa `max-w-md mx-auto w-full`; `body { overflow-x: hidden; min-width: 320px }` em `web-app/src/index.css` — zero scroll horizontal 320–400 px garantido.
+
+**Arranque da próxima sessão (qua 2026-04-22 — smoke Onda 1 + Onda 2):**
+
+1. **Smoke duplo real** (2 Android, Frank + 1 convidado). Trajecto curto Oeiras/Cascais. Nível 1 obrigatório + tentativa Nível 2. Anotar no `ALPHA_2026-04-25.md §9`. Se algum bloqueio crítico, tratar antes de avançar.
+2. Correr o script de seed de contas piloto (`ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E.2`) e fazer spot-check de login.
+3. Enviar convocatória WhatsApp final (`§A`) com horário/ponto confirmados. Objectivo: ter ≥ 5 confirmados até quarta à noite.
+4. **Onda 2 — Admin operacional + smoke reforçado** (`ALPHA_2026-04-25.md §7.3`). Foco no AdminDashboard desktop: badges de stuck, botão «Atualizar» visível, confirmar `trip_id` curto em diálogos, smoke Nível 2 completo.
+5. **Freeze opcional às 22:00 de quarta** conforme plano original.
 
 **Ondas seguintes (alto nível):**
 - **Onda 1 (ter 21/04)** — mobile polish core em `PassengerDashboard` + `DriverDashboard` (touch ≥ 44 px, banners legíveis a 360 px, sem scroll horizontal). Smoke duplo real à noite.

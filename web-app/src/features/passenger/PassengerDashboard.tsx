@@ -945,10 +945,10 @@ export function PassengerDashboard() {
         )}
 
         {error && (
-          <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 pr-12 text-destructive text-base touch-manipulation">
+          <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
             <button
               type="button"
-              className="absolute right-2 top-2 min-h-9 min-w-9 rounded-lg border border-destructive/40 bg-background/80 text-destructive text-lg font-medium leading-none hover:bg-background"
+              className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
               aria-label="Fechar mensagem de erro"
               onClick={() => setError(null)}
             >

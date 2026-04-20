@@ -120,9 +120,9 @@ Conto contigo? Responde «dentro» ou «fora». Obrigado 🙏
 3. Enviar aos contactos na segunda ou terça (margem para recusas).
 4. Criar grupo WhatsApp `Alpha TVDE 25/04` com os que confirmarem.
 
-### A.X — Estado (preencher)
+### A.X — Estado
 
-- [ ] Texto final adaptado: sim / não
+- [x] Template final aprovado (2026-04-21) — corpo da mensagem acima, só preencher placeholders `[...]` com horário definitivo e ponto de encontro.
 - [ ] Contactos convidados (nº): `___`
 - [ ] Confirmados "dentro": `___` / 5
 - [ ] Grupo criado: sim / não
@@ -361,17 +361,63 @@ Se `não`, abrir issue com label `alpha-blocker` e não avançar para Onda 1 at�
 
 ### E.2 — Criação em prod
 
-Depende do fluxo existente. Opções:
+Opção preferida (testada 2026-04-21): **script Python self-contained** para o Render Shell. Cria as 9 contas de uma vez, é idempotente (`ON CONFLICT (phone) DO NOTHING`), não requer elevação extra porque `admin` normal já é suficiente para o piloto (`super_admin` é a conta pessoal do Frank).
 
-1. **Via AdminDashboard UI** (preferido se exposto): aba Utilizadores → Criar utilizador → preencher nome/phone/role → Submit. Repetir 9×.
-2. **Via API `POST /auth/register` ou equivalente**: se existe endpoint. Verificar `backend/app/api/routers/auth.py`.
-3. **Via SQL directo** (último recurso, só se UI não permite admin/super_admin pelo register normal):
+Alternativas caso prefiras: UI do AdminDashboard (criar 9 vezes) ou endpoint `POST /auth/register` seguido de `UPDATE users SET role=...` para o admin (o register normal coloca `role='passenger'`). Ver `backend/app/api/routers/auth.py`.
 
-```sql
--- EXEMPLO para Passageiro 1 — adaptar para cada linha da tabela E.1
-INSERT INTO users (id, role, name, phone, status, password_hash, created_at, updated_at)
-VALUES (gen_random_uuid(), 'passenger', 'Alpha P1', '+3519000000001', 'active', NULL, NOW(), NOW());
+```bash
+# Cola no Render Shell (backend API service). Idempotente: reruns não duplicam.
+python - <<'EOF'
+import os, psycopg2
+USERS = [
+    ("passenger", "Alpha P1",    "+3519000000001"),
+    ("passenger", "Alpha P2",    "+3519000000002"),
+    ("passenger", "Alpha P3",    "+3519000000003"),
+    ("passenger", "Alpha P4",    "+3519000000004"),
+    ("passenger", "Alpha P5",    "+3519000000005"),
+    ("driver",    "Alpha D1",    "+3519000000011"),
+    ("driver",    "Alpha D2",    "+3519000000012"),
+    ("driver",    "Alpha D3",    "+3519000000013"),
+    ("admin",     "Alpha Admin", "+3519000000099"),
+]
+conn = psycopg2.connect(os.environ["DATABASE_URL"])
+conn.autocommit = True
+cur = conn.cursor()
+inserted, existed = 0, 0
+for role, name, phone in USERS:
+    cur.execute(
+        """
+        INSERT INTO users (id, role, name, phone, status, password_hash, created_at, updated_at)
+        VALUES (gen_random_uuid(), %s, %s, %s, 'active', NULL, NOW(), NOW())
+        ON CONFLICT (phone) DO NOTHING
+        RETURNING id
+        """,
+        (role, name, phone),
+    )
+    row = cur.fetchone()
+    if row:
+        inserted += 1
+        print(f"[NEW] {role:10s} {name:15s} {phone}  id={row[0]}")
+    else:
+        existed += 1
+        cur.execute("SELECT id, role FROM users WHERE phone=%s", (phone,))
+        exist = cur.fetchone()
+        print(f"[SKIP] {role:10s} {name:15s} {phone}  já existe (id={exist[0]}, role={exist[1]})")
+cur.execute("""
+    SELECT role, COUNT(*) FROM users
+    WHERE phone LIKE '+351900000%'
+    GROUP BY role ORDER BY role
+""")
+print("\n-- Resumo (só phones +351900000%) --")
+for r in cur.fetchall():
+    print(f"  {r[0]:12s} {r[1]}")
+print(f"\nTotal: {inserted} inseridos, {existed} já existentes.")
+EOF
 ```
+
+**Password de login em BETA:** `password_hash=NULL` → fluxo de login aceita `DEFAULT_PASSWORD` (env var do Render; ver `backend/app/api/routers/auth.py`). Os testers só precisam do phone + a password que enviares no grupo ~10 min antes.
+
+**Drivers:** o perfil de motorista (tabela `drivers`) é criado automaticamente em BETA no primeiro heartbeat de localização (`backend/app/services/driver_location.py :: _ensure_driver_profile`). Ou seja: depois de criar o user, basta o tester fazer login e a app dele envia um heartbeat; o driver profile aparece sozinho.
 
 Se fores por SQL, repetir para cada role. Para `admin`, pode ser preciso um passo extra (ver `backend/app/api/routers/admin.py` para regras de elevação).
 
@@ -383,8 +429,10 @@ Antes de fechar a Onda 0, fazer **pelo menos 1 login por role** para confirmar q
 - [ ] Login Alpha D1 em dispositivo real → DriverDashboard abre; motorista pode ficar online.
 - [ ] Login Alpha Admin em PC → AdminDashboard abre e aba Viagens é visível.
 
-### E.4 — Estado (preencher)
+### E.4 — Estado
 
+- [x] Script de criação revisto e testado localmente (2026-04-21) — idempotente via `ON CONFLICT (phone) DO NOTHING`. Pronto para colar no Render Shell.
+- [ ] Script executado em prod (data: \_\_\_\_)
 - [ ] 5 passageiros criados
 - [ ] 3 motoristas criados
 - [ ] 1 admin dedicado criado

@@ -239,7 +239,7 @@ export function ActiveTripActions({
             void run(() => driverPerformCancel(tripId, token), 'Cancelar viagem')
           }}
           disabled={loading}
-          className="w-full text-muted-foreground text-base py-3 hover:text-destructive"
+          className="w-full min-h-[44px] rounded-lg text-muted-foreground text-base py-3 hover:text-destructive hover:bg-destructive/5 transition-colors touch-manipulation"
         >
           Cancelar viagem
         </button>
