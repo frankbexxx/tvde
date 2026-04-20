@@ -6,6 +6,29 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Âncora 2026-04-20 → 2026-04-25 — ALPHA OEIRAS/CASCAIS
+
+**Documento mestre:** [`docs/meta/ALPHA_2026-04-25.md`](docs/meta/ALPHA_2026-04-25.md) — ler antes de qualquer sessão até sábado.
+
+**Ondas (resumo):**
+
+| Dia | Onda | Foco | Tipo |
+|---|---|---|---|
+| Seg 2026-04-20 | **0** | OPS-BD-PI + OPS-SMOKE-132 + BETA_MODE + contas + convocatória | Operacional (zero código) |
+| Ter 2026-04-21 | **1** | Mobile polish core (touch ≥ 44 px, banners, 360 px) + smoke duplo | Código UI + smoke |
+| Qua 2026-04-22 | **2** | Admin `AdminDashboard` aba Viagens afinada + smoke Nível 2 | Código UI + smoke. **Freeze 22:00.** |
+| Qui 2026-04-23 | **3** | Ensaio com 1–2 testers externos | Execução + log bugs |
+| Sex 2026-04-24 | **4** | Só S1+S2; deploy até 18:00; smoke final | Código mínimo |
+| Sáb 2026-04-25 | **5** | **Piloto 2 h em Oeiras/Cascais** | Execução; zero deploys |
+
+**Fora do âmbito até sábado:** Stripe real, app nativa, PWA, WebSockets no front, `/driver/offers` REST, `matching/find-driver` na UI, push, Stripe Connect, staging W3, CI de segurança, docs legais. Ver [`ALPHA_2026-04-25.md §2.2`](docs/meta/ALPHA_2026-04-25.md).
+
+**Decisões do Frank (2026-04-20):** sem pagamento real · Oeiras+Cascais · Android web via link Render · reporte WhatsApp + talk. Detalhe em [`ALPHA_2026-04-25.md §1`](docs/meta/ALPHA_2026-04-25.md).
+
+**Super-prompts prontas a colar por sessão:** [`ALPHA_2026-04-25.md §7`](docs/meta/ALPHA_2026-04-25.md).
+
+---
+
 ## Abertura 2026-04-09 — consulta obrigatória
 
 - **Ler primeiro:** [`docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md`](docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md) — circuito de implementação, compliance incremental, integrações tipo «import», aceleração (bulk visual + Playwright + telemóvel).
