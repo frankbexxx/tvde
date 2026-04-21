@@ -91,9 +91,11 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-background">
       <div className="w-full max-w-sm bg-card rounded-2xl shadow-card p-6">
         <h1 className="text-xl font-bold text-foreground mb-4">TVDE BETA</h1>
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        <div role="tablist" aria-label="Tipo de utilizador" className="grid grid-cols-2 gap-2 mb-4">
           <Link
             to="/passenger"
+            role="tab"
+            aria-selected={requestedRole === 'passenger'}
             className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
               requestedRole === 'passenger'
                 ? 'bg-primary text-primary-foreground'
@@ -104,6 +106,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
           </Link>
           <Link
             to="/driver"
+            role="tab"
+            aria-selected={requestedRole === 'driver'}
             className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
               requestedRole === 'driver'
                 ? 'bg-primary text-primary-foreground'
@@ -114,6 +118,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
           </Link>
           <Link
             to="/partner"
+            role="tab"
+            aria-selected={requestedRole === 'partner'}
             className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
               requestedRole === 'partner'
                 ? 'bg-primary text-primary-foreground'
@@ -124,6 +130,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
           </Link>
           <Link
             to="/admin/login"
+            role="tab"
+            aria-selected={requestedRole === 'admin'}
             className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
               requestedRole === 'admin'
                 ? 'bg-primary text-primary-foreground'
