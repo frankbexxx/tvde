@@ -243,7 +243,7 @@ export function MapView({
         <div
           className="h-[45vh] min-h-[220px] max-h-[420px] flex flex-col items-center justify-center gap-3 px-6 bg-muted/60 border border-dashed border-border animate-in fade-in duration-500"
           role="region"
-          aria-label="Mapa"
+          aria-label="Mapa em espera"
         >
           <p className="text-center text-base font-medium text-foreground max-w-sm">{mapPlaceholder}</p>
           <p className="text-center text-sm text-foreground/80 max-w-xs">
@@ -268,7 +268,11 @@ export function MapView({
   ) : null
 
   return (
-    <div className={`${frameClass} animate-in fade-in duration-500 relative`}>
+    <div
+      className={`${frameClass} animate-in fade-in duration-500 relative`}
+      role="region"
+      aria-label={onPlanningMapClick ? 'Mapa interactivo — selecciona recolha e destino' : 'Mapa da viagem'}
+    >
       <div className="relative h-[45vh] min-h-[220px] max-h-[420px]">
         <Map
           ref={mapRef}

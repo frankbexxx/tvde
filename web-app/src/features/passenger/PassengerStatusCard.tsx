@@ -48,7 +48,7 @@ function SearchingDriverPhase({
       <p className="text-foreground/80 text-sm text-center max-w-sm px-4">
         {showFallback
           ? 'Não encontrámos um motorista na zona. Podes cancelar e voltar a pedir — ou esperar mais um pouco.'
-          : 'Estamos a contactar motoristas na zona. Isto pode demorar um instante.'}
+          : 'Estamos a contactar motoristas na zona. Pode demorar um instante.'}
       </p>
       {showFallback && onRetrySearch ? (
         <button

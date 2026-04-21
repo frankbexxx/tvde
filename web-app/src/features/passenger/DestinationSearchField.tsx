@@ -50,7 +50,7 @@ export function DestinationSearchField({
         type="search"
         autoComplete="off"
         enterKeyHint="search"
-        placeholder="Para onde vais?"
+        placeholder="Ex.: Cascais, Oeiras, 2780…"
         value={query}
         disabled={disabled}
         onChange={(e) => onQueryChange(e.target.value)}
