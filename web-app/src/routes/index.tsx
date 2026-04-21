@@ -80,7 +80,7 @@ export function AppRoutes() {
         <Spinner size="lg" />
         <p className="text-foreground text-base font-medium text-center">{splashPrimary}</p>
         <p className="text-muted-foreground/90 text-sm text-center max-w-xs">
-          Isto pode demorar alguns segundos na primeira utilização
+          Pode demorar alguns segundos na primeira utilização.
         </p>
       </div>
     )

@@ -135,7 +135,7 @@ export function BetaAccountPanel() {
               type="button"
               disabled={savingName || nameDraft.trim() === (profile.name || '').trim()}
               onClick={() => void saveName()}
-              className="mt-2 px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-lg disabled:opacity-50"
+              className="mt-2 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
             >
               {savingName ? 'A guardar…' : 'Guardar nome'}
             </button>
@@ -188,7 +188,7 @@ export function BetaAccountPanel() {
               type="button"
               disabled={savingPw || newPw.length < 8}
               onClick={() => void savePassword()}
-              className="px-3 py-1.5 bg-secondary text-secondary-foreground text-sm rounded-lg disabled:opacity-50"
+              className="px-3 py-1.5 bg-secondary text-secondary-foreground text-sm font-medium rounded-lg disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
             >
               {savingPw ? 'A actualizar…' : 'Actualizar palavra-passe'}
             </button>

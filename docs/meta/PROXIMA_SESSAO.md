@@ -8,17 +8,19 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 **Nota de calendário:** Ondas 1 e 2 foram feitas em antecipação nas sessões de segunda/terça-manhã (PRs #152 e #153 já mergidos). Isto liberta **quarta 22/04 inteira** para a nova **Onda 2.5 — A11y + mobile polish com Firefox Developer Edition**. Ver `ALPHA_2026-04-25.md §7.3.5`.
 
-**Estado git:** `main` limpa. #151, #152, #153 mergidos.
+**Estado git (meio-dia terça):** `main` com #151–#156 mergidos. Branch `fix/onda-2.5-a11y-passenger-pass` aberto com primeira vaga de fixes a11y (PR em preparação).
 
-**Plano para hoje (3 fases sequenciais):**
+**Plano para hoje (3 fases sequenciais) — revisto ao meio-dia:**
 
-1. **Middle session solo (manhã, sem o Frank):** varrimento pré-audit do caminho crítico. Fixes de `text-xs` em mensagens operacionais do driver/passenger que não aguentam 360 px em Chrome Android em movimento. PR pequeno, mergeável antes do smoke.
-2. **Tarde (com o Frank):** arrancar ataque ao **Firefox Developer Edition** — abrir app em RDM, primeiro contacto com Accessibility Inspector, desenhar ordem de ecrãs e critérios de fix. Não precisa sair PR desta tarde; o PR grande é amanhã.
+1. **Manhã (feito):** Setup Firefox Dev Edition + RDM 360×640 + Accessibility Inspector. Resolução ao longo do caminho do bloqueio Windows Location Policy (registry key removida, backup no Desktop). Primeiro audit sobre `PassengerDashboard` idle + accepted/arriving (fluxo real com 2 tabs driver+passenger). Primeira vaga de fixes a11y aplicada (A1 contraste 1.47→AA, A2 placeholder duplicado, A3 "Isto pode demorar", A5 mapa aria-label). 2 bugs funcionais apontados para Onda 4 (B1 race viagem no driver, B2 polling passenger atrasado). Ver `ALPHA_2026-04-25.md §9.1`.
+2. **Tarde:** continuar o audit — Driver `requests`, Driver `active`, `ActiveTripActions`, LoginScreen (role=tab), recolher mais P1/P2 e aplicar no mesmo branch (ou novo).
 3. **À noite:** **smoke duplo real** em Oeiras/Cascais (Frank + 1 convidado, 2 Android). Nível 1 obrigatório + tentativa Nível 2. Validar no `AdminDashboard` desktop o que foi feito ontem (linha com P/D/updated_at, badge stuck, confirm de forçar arriving). Anotar em `ALPHA_2026-04-25.md §9`.
 
 **Amanhã (qua 2026-04-22) — Onda 2.5 completa:**
 
-Sessão inteira em Firefox Dev Edition, fazendo audit sistemático de 5–7 ecrãs seguindo `ALPHA_2026-04-25.md §7.3.5`. Mini-smoke solo no fim do dia. PR único «mobile: a11y audit pass com Firefox Dev Edition (Onda 2.5)».
+Se sobrarem ecrãs por auditar, sessão inteira em Firefox Dev Edition a fechar o audit + fixes. Mini-smoke solo no fim do dia.
+
+**Nota sobre X1 (pesquisa de destino por nome/código postal):** o user quer substituir o mapa-como-selector por pesquisa de texto (`DestinationSearchField` já existe mas o mapa é primário no idle). Isto é **feature/UX, não a11y** — PR separado depois do audit. Placeholder já foi ajustado ("Ex.: Cascais, Oeiras, 2780…") para preparar mentalmente o fluxo.
 
 **Não fazer agora:**
 - Não abrir features novas.
