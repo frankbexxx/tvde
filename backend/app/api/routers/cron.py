@@ -18,9 +18,13 @@ router = APIRouter(prefix="/cron", tags=["cron"])
 
 @router.get("/jobs")
 async def run_scheduled_jobs(
-    secret: str | None = Query(None, description="CRON_SECRET from env (legacy: query string)"),
+    secret: str | None = Query(
+        None, description="CRON_SECRET from env (legacy: query string)"
+    ),
     x_cron_secret: str | None = Header(
-        None, alias="X-Cron-Secret", description="CRON_SECRET from env (preferred: header)"
+        None,
+        alias="X-Cron-Secret",
+        description="CRON_SECRET from env (preferred: header)",
     ),
     db: Session = Depends(get_db),
 ) -> dict:
@@ -68,7 +72,11 @@ async def run_scheduled_jobs(
             ongoing_to_failed=timeouts.get("ongoing_to_failed", 0),
         )
     except Exception as e:
-        timeouts = {"assigned_to_requested": 0, "accepted_to_cancelled": 0, "ongoing_to_failed": 0}
+        timeouts = {
+            "assigned_to_requested": 0,
+            "accepted_to_cancelled": 0,
+            "ongoing_to_failed": 0,
+        }
         errors["trip_timeouts"] = str(e)
         log_event("cron_job_error", job="trip_timeouts", error=str(e))
 
@@ -82,7 +90,11 @@ async def run_scheduled_jobs(
 
     try:
         new_offers = redispatch_expired_trips(db)
-        log_event("cron_job_ok", job="redispatch_expired_trips", redispatch_offers_created=len(new_offers))
+        log_event(
+            "cron_job_ok",
+            job="redispatch_expired_trips",
+            redispatch_offers_created=len(new_offers),
+        )
     except Exception as e:
         new_offers = []
         errors["redispatch_expired_trips"] = str(e)
@@ -90,7 +102,11 @@ async def run_scheduled_jobs(
 
     try:
         cleanup = run_cleanup(db)
-        log_event("cron_job_ok", job="cleanup", audit_events_deleted=cleanup.get("audit_events_deleted", 0))
+        log_event(
+            "cron_job_ok",
+            job="cleanup",
+            audit_events_deleted=cleanup.get("audit_events_deleted", 0),
+        )
     except Exception as e:
         cleanup = {"audit_events_deleted": 0}
         errors["cleanup"] = str(e)
@@ -98,14 +114,23 @@ async def run_scheduled_jobs(
 
     try:
         system_health = run_system_health_check(db)
-        log_event("cron_job_ok", job="system_health_check", system_health_status=system_health.get("status", ""))
+        log_event(
+            "cron_job_ok",
+            job="system_health_check",
+            system_health_status=system_health.get("status", ""),
+        )
     except Exception as e:
         system_health = {"status": "error", "warnings": [str(e)]}
         errors["system_health_check"] = str(e)
         log_event("cron_job_error", job="system_health_check", error=str(e))
 
     elapsed_ms = int(round((time.monotonic() - started) * 1000))
-    log_event("cron_finished", duration_ms=elapsed_ms, ok=(len(errors) == 0), error_count=len(errors))
+    log_event(
+        "cron_finished",
+        duration_ms=elapsed_ms,
+        ok=(len(errors) == 0),
+        error_count=len(errors),
+    )
 
     log_event(
         "cron_jobs_run",

@@ -35,7 +35,9 @@ def _offer_ttl_seconds() -> int:
     )
     if keep:
         try:
-            floor = int(os.environ.get("E2E_OFFER_TIMEOUT_FLOOR_SECONDS", "").strip() or "0")
+            floor = int(
+                os.environ.get("E2E_OFFER_TIMEOUT_FLOOR_SECONDS", "").strip() or "0"
+            )
         except ValueError:
             floor = 0
         if floor <= 0:

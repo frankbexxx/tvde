@@ -89,7 +89,9 @@ def test_delete_user_requires_governance_reason(
     finally:
         db.close()
 
-    r = client.request("DELETE", f"/admin/users/{uid}", json={"governance_reason": "short"})
+    r = client.request(
+        "DELETE", f"/admin/users/{uid}", json={"governance_reason": "short"}
+    )
     assert r.status_code == 422
 
 

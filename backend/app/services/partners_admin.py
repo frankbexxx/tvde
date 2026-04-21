@@ -268,9 +268,7 @@ def partner_metrics(db: Session, partner_id: uuid.UUID) -> dict[str, int]:
     ).scalar_one()
 
     total_drivers = db.execute(
-        select(func.count())
-        .select_from(Driver)
-        .where(Driver.partner_id == partner_id)
+        select(func.count()).select_from(Driver).where(Driver.partner_id == partner_id)
     ).scalar_one()
 
     return {
