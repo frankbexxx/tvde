@@ -18,15 +18,22 @@ def _db_ping() -> None:
         conn.execute(text("SELECT 1"))
 
 
-@router.get("/")
+@router.api_route("/", methods=["GET", "HEAD"])
 async def root() -> dict:
-    """Root — usado por load balancers (ex: Render) para health check."""
+    """Root — usado por load balancers (ex: Render) para health check.
+
+    Aceita HEAD para compatibilidade com monitores (UptimeRobot free tier só envia HEAD).
+    """
     return {"status": "ok"}
 
 
-@router.get("/health")
+@router.api_route("/health", methods=["GET", "HEAD"])
 async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
-    """Health check. diagnostic=1 adds config hints for simulator/tools."""
+    """Health check. diagnostic=1 adds config hints for simulator/tools.
+
+    Aceita GET e HEAD. Monitores externos (UptimeRobot free tier) enviam HEAD
+    por defeito; o FastAPI executa o mesmo handler e responde sem body.
+    """
     try:
         await anyio.to_thread.run_sync(_db_ping)
     except Exception:
