@@ -4,31 +4,31 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
-## Amanhã (qua 2026-04-22) — arranque rápido
+## Hoje (ter 2026-04-21) — recalibrado
 
-**Estado git:** `main` limpo, sem PRs pendentes. Ondas 0 (código), 1 e 2 mergidas (#151, #152, #153).
+**Nota de calendário:** Ondas 1 e 2 foram feitas em antecipação nas sessões de segunda/terça-manhã (PRs #152 e #153 já mergidos). Isto liberta **quarta 22/04 inteira** para a nova **Onda 2.5 — A11y + mobile polish com Firefox Developer Edition**. Ver `ALPHA_2026-04-25.md §7.3.5`.
 
-**Objectivo do dia:** validar no terreno o que já foi construído para o piloto de sábado. Nenhum código novo obrigatório; só smoke real e ajustes reactivos se aparecerem S1/S2.
+**Estado git:** `main` limpa. #151, #152, #153 mergidos.
 
-**Plano (por esta ordem):**
+**Plano para hoje (3 fases sequenciais):**
 
-1. **De manhã / tarde:** nada de código novo; rever dispositivos, credenciais de 1 passageiro + 1 motorista de teste no Render, e confirmar que a API está quente (`/health`, uma viagem fantasma curta).
-2. **À noite (prime-time do smoke):** **smoke duplo real** em Oeiras/Cascais com 2 Android (Frank passageiro + 1 convidado motorista, ou vice-versa).
-   - **Nível 1 obrigatório:** pedido + cancelamento passageiro; pedido + cancelamento admin; pedido + intervenção «Forçar arriving» e «Forçar ongoing» pelo admin.
-   - **Nível 2 (tentativa):** uber-like completo — trajecto curto real, passageiro vê motorista a aproximar-se, chegar, iniciar, concluir.
-   - Validar no AdminDashboard (desktop, admin = Frank): linhas mostram id curto · P · D · `atualizado há X`; badge `stuck Nmin` aparece se `accepted` parar ≥ 5 min; `confirm` de forçar arriving/ongoing traz `Viagem <8ch>… (from → to)`; botão «↻ Atualizar lista» reage imediatamente.
-   - Tirar notas em `docs/meta/ALPHA_2026-04-25.md §9` (log de smokes).
-3. **Se smoke Nível 2 passa sem S1:** **freeze opcional às 22:00** conforme plano original.
-4. **Se aparecerem S1:** abrir branch `fix/alpha-smoke-<descr>`, corrigir o mínimo viável, commit + PR. Não atacar S2/S3 hoje.
+1. **Middle session solo (manhã, sem o Frank):** varrimento pré-audit do caminho crítico. Fixes de `text-xs` em mensagens operacionais do driver/passenger que não aguentam 360 px em Chrome Android em movimento. PR pequeno, mergeável antes do smoke.
+2. **Tarde (com o Frank):** arrancar ataque ao **Firefox Developer Edition** — abrir app em RDM, primeiro contacto com Accessibility Inspector, desenhar ordem de ecrãs e critérios de fix. Não precisa sair PR desta tarde; o PR grande é amanhã.
+3. **À noite:** **smoke duplo real** em Oeiras/Cascais (Frank + 1 convidado, 2 Android). Nível 1 obrigatório + tentativa Nível 2. Validar no `AdminDashboard` desktop o que foi feito ontem (linha com P/D/updated_at, badge stuck, confirm de forçar arriving). Anotar em `ALPHA_2026-04-25.md §9`.
 
-**Não fazer hoje:**
+**Amanhã (qua 2026-04-22) — Onda 2.5 completa:**
+
+Sessão inteira em Firefox Dev Edition, fazendo audit sistemático de 5–7 ecrãs seguindo `ALPHA_2026-04-25.md §7.3.5`. Mini-smoke solo no fim do dia. PR único «mobile: a11y audit pass com Firefox Dev Edition (Onda 2.5)».
+
+**Não fazer agora:**
 - Não abrir features novas.
-- Não mexer na state machine do backend, regras SP-F, auditoria.
-- Não começar ainda o script de contas piloto (`§E.2`) nem enviar convocatória WhatsApp (`§A`) — ficam para sexta de manhã.
+- Não mexer na state machine, SP-F, auditoria, pagamentos, matching.
+- Não começar §A (convocatória) nem §E (contas piloto) — ficam para sexta de manhã.
 
 **Referências vivas:**
-- `docs/meta/ALPHA_2026-04-25.md §7.3` (super-prompt Onda 2, com critérios de aceitação).
-- `docs/meta/ALPHA_2026-04-25.md §9` (log de smokes — **anotar aqui**).
+- `docs/meta/ALPHA_2026-04-25.md §6` (calendário recalibrado).
+- `docs/meta/ALPHA_2026-04-25.md §7.3.5` (super-prompt Onda 2.5, para amanhã).
+- `docs/meta/ALPHA_2026-04-25.md §9` (log de smokes — **anotar aqui hoje à noite**).
 - `docs/meta/ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A` e `§E.2` (guardados para sexta).
 
 ---
