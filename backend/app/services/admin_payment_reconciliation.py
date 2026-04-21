@@ -60,7 +60,9 @@ def sql_select_completed_processing(limit: int = 200) -> str:
     )
 
 
-def list_completed_processing_pairs(db: Session, *, limit: int) -> list[tuple[Trip, Payment]]:
+def list_completed_processing_pairs(
+    db: Session, *, limit: int
+) -> list[tuple[Trip, Payment]]:
     lim = max(1, min(int(limit), 500))
     rows = db.execute(
         select(Trip, Payment)
@@ -137,7 +139,8 @@ def reconcile_stripe_for_completed_processing(
         except Exception as e:
             if _is_pi_not_found_error(e):
                 logger.info(
-                    "reconcile_stripe pi_not_found -> marking payment+trip failed pi=%s", pi_id
+                    "reconcile_stripe pi_not_found -> marking payment+trip failed pi=%s",
+                    pi_id,
                 )
                 if not dry_run:
                     pay.status = PaymentStatus.failed
@@ -162,7 +165,9 @@ def reconcile_stripe_for_completed_processing(
                         trip_id=str(trip.id),
                         payment_id=str(pay.id),
                         stripe_payment_intent_id=pi_id,
-                        action="dry_run_no_such_pi" if dry_run else "updated_no_such_pi",
+                        action="dry_run_no_such_pi"
+                        if dry_run
+                        else "updated_no_such_pi",
                         detail="pi_not_found_in_stripe_marked_failed",
                         stripe_status=None,
                     )
@@ -288,20 +293,17 @@ def close_completed_processing_without_pi(
 ) -> dict[str, Any]:
     """Viagem completed + payment processing sem `stripe_payment_intent_id` -> failed + failed."""
     lim = max(1, min(int(limit), 500))
-    rows = (
-        db.execute(
-            select(Trip, Payment)
-            .join(Payment, Payment.trip_id == Trip.id)
-            .where(
-                Trip.status == TripStatus.completed,
-                Payment.status == PaymentStatus.processing,
-                Payment.stripe_payment_intent_id.is_(None),
-            )
-            .order_by(Payment.updated_at.asc())
-            .limit(lim)
+    rows = db.execute(
+        select(Trip, Payment)
+        .join(Payment, Payment.trip_id == Trip.id)
+        .where(
+            Trip.status == TripStatus.completed,
+            Payment.status == PaymentStatus.processing,
+            Payment.stripe_payment_intent_id.is_(None),
         )
-        .all()
-    )
+        .order_by(Payment.updated_at.asc())
+        .limit(lim)
+    ).all()
     items: list[CloseNoPiItemResult] = []
     for trip, pay in rows:
         if not dry_run:
@@ -332,9 +334,7 @@ def close_completed_processing_without_pi(
     return {"dry_run": dry_run, "count": len(items), "items": [vars(x) for x in items]}
 
 
-def preview_reconciliation(
-    db: Session, *, limit: int
-) -> dict[str, Any]:
+def preview_reconciliation(db: Session, *, limit: int) -> dict[str, Any]:
     pairs = list_completed_processing_pairs(db, limit=limit)
     candidates = []
     for trip, pay in pairs:
@@ -433,7 +433,9 @@ def reconcile_single_trip_payment_with_stripe(
         )
         st_s = str(st) if st is not None else ""
     except Exception as e:
-        logger.warning("reconcile_single retrieve failed trip=%s pi=%s err=%s", trip_id, pi_id, e)
+        logger.warning(
+            "reconcile_single retrieve failed trip=%s pi=%s err=%s", trip_id, pi_id, e
+        )
         return {
             **base,
             "action": "error",
