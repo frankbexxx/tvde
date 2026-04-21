@@ -12,6 +12,10 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
+from app.sentry import init_sentry
+
+init_sentry()
+
 from app.api.routers import (
     admin,
     admin_ws,
