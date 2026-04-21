@@ -173,10 +173,10 @@ export function ActiveTripActions({
         </p>
       ) : null}
       {startTripGateActive && !startTripAllowed ? (
-        <div className="text-center text-xs text-foreground/65 px-1" aria-live="polite">
+        <div className="text-center text-sm text-foreground/75 px-1 leading-snug" aria-live="polite">
           <p>Aproxima-te do ponto de recolha (~{DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar a viagem.</p>
           {distanceToPickupM != null ? (
-            <p className="mt-1">Distância ao pickup: ~{distanceToPickupM} m</p>
+            <p className="mt-1 font-medium">Distância ao pickup: ~{distanceToPickupM} m</p>
           ) : null}
         </div>
       ) : null}

@@ -805,7 +805,7 @@ export function PassengerDashboard() {
                       : 'Escolhe recolha e destino para pedir uma viagem'}
                   </p>
                   {passengerUiState === 'idle' ? (
-                    <p className="text-xs text-muted-foreground leading-snug">
+                    <p className="text-sm text-muted-foreground leading-snug">
                       Começa por indicar o destino
                     </p>
                   ) : null}
