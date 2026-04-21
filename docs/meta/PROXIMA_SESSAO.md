@@ -4,34 +4,85 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
-## Hoje (ter 2026-04-21) — recalibrado
+## Fecho 2026-04-21 (noite) — sessão fechada, piloto D-4
 
-**Nota de calendário:** Ondas 1 e 2 foram feitas em antecipação nas sessões de segunda/terça-manhã (PRs #152 e #153 já mergidos). Isto liberta **quarta 22/04 inteira** para a nova **Onda 2.5 — A11y + mobile polish com Firefox Developer Edition**. Ver `ALPHA_2026-04-25.md §7.3.5`.
+**Estado git:** `main` sincronizada com origin, working tree clean, sem branches extras (15 remotos + 119 locais apagados na sessão). Último commit em `main`: PR #164 (login a11y).
 
-**Estado git (meio-dia terça):** `main` com #151–#156 mergidos. Branch `fix/onda-2.5-a11y-passenger-pass` aberto com primeira vaga de fixes a11y (PR em preparação).
+**Entregas da sessão (9 PRs + ops):**
 
-**Plano para hoje (3 fases sequenciais) — revisto ao meio-dia:**
+| PR | Conteúdo |
+|----|----------|
+| #157 | Onda 2.5 parte 1 — A1 contraste BetaAccountPanel, A2 placeholder, A3 "Isto pode demorar", A5 mapa aria-label. |
+| #158 | CI baseline (ruff + tsc adicionados aos workflows existentes) + Dependabot (npm/pip/gh-actions, weekly). |
+| #159 | `docs/meta/AUDIT_DEEP_2026-04-21.md` — audit code-only exaustivo com findings A/B/C para LoginScreen, DriverDashboard, PassengerDashboard, ActiveTripActions, RequestCard, StatusHeader, PrimaryActionButton, TripPlannerPanel. |
+| #160 | ruff format em 13 backend files (mecânico). |
+| #161 | **Sentry** frontend (`@sentry/react`) + backend (`sentry-sdk[fastapi]`) com inicialização condicional (só se DSN + MODE≠development), filtros de ruído, `sendDefaultPii=false`, sampling=0. |
+| #162 | **B1+B2 (P0 alpha)** — `OFFER_TIMEOUT_SECONDS` 15→60, `REDISPATCH_MIN_INTERVAL_SECONDS` 10→5, `PASSENGER_SEARCH_FALLBACK_AFTER_SEC` 10→25. Fecha a race "viagem desaparece do ecrã do motorista". |
+| #163 | `/` e `/health` aceitam HEAD — UptimeRobot free tier (só permite HEAD). |
+| #164 | Login tabs — `role="tablist"` + `role="tab"` + `aria-selected` nos 4 Links. |
 
-1. **Manhã (feito):** Setup Firefox Dev Edition + RDM 360×640 + Accessibility Inspector. Resolução ao longo do caminho do bloqueio Windows Location Policy (registry key removida, backup no Desktop). Primeiro audit sobre `PassengerDashboard` idle + accepted/arriving (fluxo real com 2 tabs driver+passenger). Primeira vaga de fixes a11y aplicada (A1 contraste 1.47→AA, A2 placeholder duplicado, A3 "Isto pode demorar", A5 mapa aria-label). 2 bugs funcionais apontados para Onda 4 (B1 race viagem no driver, B2 polling passenger atrasado). Ver `ALPHA_2026-04-25.md §9.1`.
-2. **Tarde:** continuar o audit — Driver `requests`, Driver `active`, `ActiveTripActions`, LoginScreen (role=tab), recolher mais P1/P2 e aplicar no mesmo branch (ou novo).
-3. **À noite:** **smoke duplo real** em Oeiras/Cascais (Frank + 1 convidado, 2 Android). Nível 1 obrigatório + tentativa Nível 2. Validar no `AdminDashboard` desktop o que foi feito ontem (linha com P/D/updated_at, badge stuck, confirm de forçar arriving). Anotar em `ALPHA_2026-04-25.md §9`.
+**Ops:**
+- **UptimeRobot** configurado (`TVDE API` + `TVDE APP`), ambos Up após #163.
+- **Sentry** configurado em Render env vars.
+- **Cron-job.org** mantido (worker scheduler) — distinto do UptimeRobot (liveness probe).
+- **Windows Location Policy** resolvida (registry + lfsvc, backup `.reg` no Desktop).
+- Audit Firefox Dev Edition feito sobre PassengerDashboard idle + accepted/arriving (a11y inspector + RDM 360×640).
 
-**Amanhã (qua 2026-04-22) — Onda 2.5 completa:**
+**Bugs ainda abertos no plano alpha (ver `ALPHA_2026-04-25.md §9.1`):**
+- Nenhum P0/P1. B1+B2 fixed em #162.
 
-Se sobrarem ecrãs por auditar, sessão inteira em Firefox Dev Edition a fechar o audit + fixes. Mini-smoke solo no fim do dia.
+---
 
-**Nota sobre X1 (pesquisa de destino por nome/código postal):** o user quer substituir o mapa-como-selector por pesquisa de texto (`DestinationSearchField` já existe mas o mapa é primário no idle). Isto é **feature/UX, não a11y** — PR separado depois do audit. Placeholder já foi ajustado ("Ex.: Cascais, Oeiras, 2780…") para preparar mentalmente o fluxo.
+## Amanhã (qua 2026-04-22) — **Onda 2.5 parte 2** + mini-smoke
 
-**Não fazer agora:**
-- Não abrir features novas.
+**Prioridade 1 — Fixes P1/P2 do audit deep (`AUDIT_DEEP_2026-04-21.md` §B)**
+
+PR único "Onda 2.5 parte 2" cobrindo:
+
+1. **`disabled:opacity-50` → `disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed`** em 4 ficheiros (contraste colapsa com opacity):
+   - `web-app/src/components/buttons/PrimaryActionButton.tsx`
+   - `web-app/src/features/driver/RequestCard.tsx`
+   - `web-app/src/features/auth/LoginScreen.tsx` (botão "Entrar")
+   - `web-app/src/features/passenger/TripPlannerPanel.tsx`
+2. **DriverDashboard** — remover GPS panel verboso (ou esconder atrás de toggle dev); badge contrast para estado; polling footnote simplificado.
+3. **ActiveTripActions** — cancel button visual weight (reduzir proeminência); avisar antes de abrir Waze/Google Maps em nova tab.
+4. **RequestCard** — `text-xs` labels com ratio insuficiente → `text-sm`.
+5. **StatusHeader** — ongoing variant contrast.
+6. **LoginScreen** — touch targets ≥ 44×44 nos 4 Links (actualmente ~40), focus ring visível, password hint com `text-base` em vez de `text-xs`.
+
+Verificação: `tsc` + `vitest` + `ruff` + visual diff em Firefox RDM 360×640.
+
+**Prioridade 2 — Mini-smoke solo no fim do dia**
+
+Só Frank, 1 Android, Oeiras:
+- Passageiro cria trip → confirma que com novo `OFFER_TIMEOUT=60` o motorista vê a oferta calmamente.
+- Passageiro espera ≥10s → confirma que **não** aparece "Sem motoristas" (antes aparecia).
+- Driver expira uma oferta propositadamente → confirma que a viagem volta em ~5s (novo redispatch interval).
+
+**Prioridade 3 (se sobrar tempo) — s15 smoke duplo**
+
+À noite com 1 convidado, 2 Android, Oeiras/Cascais. Nível 1 + tentativa Nível 2. Anotar em `ALPHA_2026-04-25.md §9`.
+
+**Não fazer ainda:**
+- Não abrir features novas (X1 pesquisa por nome/postal fica para depois de sábado).
 - Não mexer na state machine, SP-F, auditoria, pagamentos, matching.
-- Não começar §A (convocatória) nem §E (contas piloto) — ficam para sexta de manhã.
+- Não começar §A (convocatória) nem §E (contas piloto) — sexta de manhã.
+
+---
+
+## Calendário até ao piloto
+
+| Data | Onda | Foco |
+|------|------|------|
+| qua 22/04 | 2.5 parte 2 | PR a11y/visual (B.1 + DriverDashboard + ActiveTripActions + etc.) + mini-smoke solo |
+| qui 23/04 | 3 | Ensaio com 1-2 testers externos. Anotar S1/S2 em `ALPHA_2026-04-25.md §9`. |
+| sex 24/04 | 4 | **Manhã:** `§E.2` do ONDA0 runbook (criar contas piloto em Render Shell) + `§A` convocatória WhatsApp com hora/ponto. **Tarde:** só S1+S2 do audit, deploy até 18:00. |
+| sáb 25/04 | 5 | **Piloto em Oeiras/Cascais.** Zero deploys durante a janela. |
 
 **Referências vivas:**
-- `docs/meta/ALPHA_2026-04-25.md §6` (calendário recalibrado).
-- `docs/meta/ALPHA_2026-04-25.md §7.3.5` (super-prompt Onda 2.5, para amanhã).
-- `docs/meta/ALPHA_2026-04-25.md §9` (log de smokes — **anotar aqui hoje à noite**).
-- `docs/meta/ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A` e `§E.2` (guardados para sexta).
+- `docs/meta/ALPHA_2026-04-25.md §6` (calendário), `§7.3.5` (super-prompt Onda 2.5), `§9` (log de smokes).
+- `docs/meta/AUDIT_DEEP_2026-04-21.md` (lista completa de findings com secção/linha).
+- `docs/meta/ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A` (template WhatsApp) e `§E.2` (script contas piloto).
 
 ---
 
