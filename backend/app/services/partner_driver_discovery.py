@@ -52,4 +52,3 @@ def partner_add_driver_to_fleet(
     pid = uuid.UUID(partner_id)
     # reuse admin service with its active-trip guard + partner existence check
     return assign_driver_to_partner(db, driver_user_id=driver_user_id, partner_id=pid)
-

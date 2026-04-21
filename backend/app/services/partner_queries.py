@@ -82,11 +82,8 @@ def get_trip_for_partner(
     db: Session, partner_id: str, trip_id: uuid.UUID
 ) -> Trip | None:
     pid = uuid.UUID(partner_id)
-    return (
-        db.execute(
-            select(Trip)
-            .join(Driver, Trip.driver_id == Driver.user_id)
-            .where(Trip.id == trip_id, Driver.partner_id == pid)
-        )
-        .scalar_one_or_none()
-    )
+    return db.execute(
+        select(Trip)
+        .join(Driver, Trip.driver_id == Driver.user_id)
+        .where(Trip.id == trip_id, Driver.partner_id == pid)
+    ).scalar_one_or_none()

@@ -194,7 +194,9 @@ async def partner_add_driver(
     try:
         did = uuid.UUID(driver_user_id.strip())
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid") from None
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
     partner_add_driver_to_fleet(db, partner_id=ctx.partner_id, driver_user_id=did)
     d = get_driver_for_partner(db, ctx.partner_id, did)
     if not d:
@@ -235,7 +237,9 @@ async def partner_patch_driver_status(
     return _driver_item(d)
 
 
-@router.patch("/drivers/{driver_user_id}/availability", response_model=PartnerDriverItem)
+@router.patch(
+    "/drivers/{driver_user_id}/availability", response_model=PartnerDriverItem
+)
 async def partner_patch_driver_availability(
     driver_user_id: str,
     body: PartnerDriverAvailabilityPatchRequest,

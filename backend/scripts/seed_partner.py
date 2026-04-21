@@ -6,6 +6,7 @@ Run from backend directory:
 
 Requires ENV=dev or ENABLE_DEV_TOOLS=true and a reachable DATABASE_URL.
 """
+
 from __future__ import annotations
 
 import sys

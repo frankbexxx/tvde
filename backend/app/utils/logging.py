@@ -42,6 +42,7 @@ _TEST_QUIET_EVENTS = frozenset(
     }
 )
 
+
 def get_request_id() -> str | None:
     """Read request_id from middleware context (G009)."""
     try:
