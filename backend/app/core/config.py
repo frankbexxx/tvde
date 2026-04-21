@@ -61,13 +61,16 @@ class Settings(BaseSettings):
     # Multi-offer dispatch: number of drivers to send offers to.
     OFFER_TOP_N: int = 5
     # Offer timeout (seconds) before offer expires. Driver has this long to accept.
-    OFFER_TIMEOUT_SECONDS: int = 15
+    # B1 (alpha 2026-04-25): subido de 15→60 para eliminar a janela (~10s) em que, após
+    # expirar a oferta, a viagem desaparecia do ecrã do motorista antes de redespachar.
+    OFFER_TIMEOUT_SECONDS: int = 60
     # CI Playwright: com OFFER_TIMEOUT_SECONDS baixo no env, usar max(base, floor) ao criar ofertas.
     E2E_KEEP_OFFERS_ALIVE: bool = False
     E2E_OFFER_TIMEOUT_FLOOR_SECONDS: int = 120
 
     # Minimum seconds between redispatch attempts for the same trip (zero-offer recovery).
-    REDISPATCH_MIN_INTERVAL_SECONDS: int = 10
+    # B1 (alpha 2026-04-25): descido de 10→5 para reduzir o gap se a oferta expirar.
+    REDISPATCH_MIN_INTERVAL_SECONDS: int = 5
 
     # Secret for cron-job.org (no JWT). GET /cron/jobs?secret=<CRON_SECRET>
     CRON_SECRET: str | None = None

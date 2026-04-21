@@ -11,8 +11,13 @@ import type { TripDetailResponse } from '../../api/trips'
 
 const ESTIMATE_FALLBACK = '4–6'
 
-/** Segundos em `requested` antes de mostrar aviso de indisponibilidade (P24) e botão de retry (P36). */
-export const PASSENGER_SEARCH_FALLBACK_AFTER_SEC = 10
+/**
+ * Segundos em `requested` antes de mostrar aviso de indisponibilidade (P24) e botão de retry (P36).
+ *
+ * B2 (alpha 2026-04-25): subido de 10→25 para ficar alinhado com OFFER_TIMEOUT_SECONDS=60 do backend.
+ * Antes, o passageiro via "Sem motoristas disponíveis" enquanto a oferta ainda estava viva no driver.
+ */
+export const PASSENGER_SEARCH_FALLBACK_AFTER_SEC = 25
 
 function SearchingDriverPhase({
   tripCreatedAtIso,
