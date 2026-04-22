@@ -33,7 +33,9 @@ export function RequestCard({
       : `${estimateFallback} €`
 
   return (
-    <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm p-4 space-y-2 shadow-card transition-all duration-200">
+    <div
+      className="rounded-2xl border border-border border-l-4 border-l-primary bg-card/95 backdrop-blur-sm p-4 space-y-2 shadow-card transition-all duration-200"
+    >
       {contextHint ? (
         <p className="text-xs font-semibold text-primary">{contextHint}</p>
       ) : null}

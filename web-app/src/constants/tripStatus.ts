@@ -106,6 +106,26 @@ export function driverTripBadgeShort(status: string): string {
   return DRIVER_STATUS_BADGE_SHORT[status] ?? status
 }
 
+/**
+ * Classe Tailwind para um dot de 8px colorido, usado no histórico de viagens
+ * (passenger e driver). Pattern semântico alinhado com a paleta do tema
+ * (ver docs/meta/THEME_REFACTOR_2026-04-20.md):
+ *
+ *  - completed → verde `success` (resultado positivo).
+ *  - failed    → `destructive/70` (algo correu mal, vale a atenção).
+ *  - cancelled → cinza muted (cancelada é comum e normal; vermelho seria
+ *                 alarmista para algo que o utilizador frequentemente inicia).
+ *  - outros    → cinza muted (fallback defensivo).
+ *
+ * Uso típico:
+ *   <span className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`} />
+ */
+export function historyStatusDotColor(status: string): string {
+  if (status === 'completed') return 'bg-success'
+  if (status === 'failed') return 'bg-destructive/70'
+  return 'bg-muted-foreground/40'
+}
+
 export function tripDetailFromCreateResponse(
   res: TripCreateResponse,
   pickup: { lat: number; lng: number },

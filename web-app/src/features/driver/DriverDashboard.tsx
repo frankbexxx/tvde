@@ -28,6 +28,7 @@ import {
   DRIVER_NEW_TRIP_LIST_HINT,
   driverActiveTripUi,
   driverTripBadgeShort,
+  historyStatusDotColor,
 } from '../../constants/tripStatus'
 import { paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { buildMockDriverApproachPath } from '../../dev/buildMockApproachPath'
@@ -670,13 +671,19 @@ export function DriverDashboard() {
               {history.slice(0, 5).map((t: TripHistoryItem) => (
                 <li
                   key={t.trip_id}
-                  className="flex justify-between items-center py-2 border-b border-border last:border-0 transition-opacity duration-150"
+                  className="flex justify-between items-center gap-3 py-2 border-b border-border last:border-0 transition-opacity duration-150"
                 >
-                  <span className="text-base text-foreground/85">
-                    {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                    {formatDestination(t.destination_lat, t.destination_lng)}
+                  <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
+                    <span
+                      aria-hidden="true"
+                      className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
+                    />
+                    <span className="truncate">
+                      {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                      {formatDestination(t.destination_lat, t.destination_lng)}
+                    </span>
                   </span>
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-foreground shrink-0">
                     {t.final_price != null ? `${t.final_price} €` : '—'}
                   </span>
                 </li>
