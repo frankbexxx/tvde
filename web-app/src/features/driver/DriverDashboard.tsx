@@ -775,12 +775,12 @@ function ActiveTripSummary({
     <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out">
       <StatusHeader label={config.label} variant={config.variant} emphasis="primary" />
       <p className="text-center -mt-2 mb-1">
-        <span className="inline-block rounded-full bg-primary/15 text-primary text-xs font-semibold px-3 py-1">
+        <span className="inline-block rounded-full bg-primary text-primary-foreground text-xs font-semibold px-3 py-1">
           {driverTripBadgeShort(displayStatus)}
         </span>
       </p>
       {(tripPollFootnote || fallbackFootnote) ? (
-        <p className="text-center text-xs text-foreground/55 -mt-3 mb-1 min-h-[1.25rem]" aria-live="polite">
+        <p className="text-center text-sm text-foreground/75 -mt-3 mb-1 min-h-[1.25rem]" aria-live="polite">
           {tripPollFootnote ?? fallbackFootnote}
         </p>
       ) : null}

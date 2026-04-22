@@ -124,7 +124,7 @@ function TripPlannerPanelInner({
               <p className="text-sm text-foreground/80">
                 Escolhe recolha e destino para pedir uma viagem
               </p>
-              <p className="text-xs text-muted-foreground">Começa por indicar o destino</p>
+              <p className="text-sm text-muted-foreground">Começa por indicar o destino</p>
             </>
           )}
           {embedded ? (
