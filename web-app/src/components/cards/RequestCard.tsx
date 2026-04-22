@@ -61,7 +61,7 @@ export function RequestCard({
           type="button"
           onClick={onAccept}
           disabled={loading}
-          className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-lg shadow-floating hover:from-primary/95 hover:to-accent/95 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:opacity-50 disabled:hover:scale-100 touch-manipulation"
+          className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-lg shadow-floating hover:from-primary/95 hover:to-accent/95 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
         >
           {loading ? (
             <span className="inline-flex items-center gap-2">

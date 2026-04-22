@@ -1,0 +1,73 @@
+/* ============================================================================
+ * TEMA DEV — sandbox de experimentação.
+ *
+ * Edita as variáveis abaixo, guarda o ficheiro. O Vite faz reload automático e
+ * vês o efeito imediatamente no browser.
+ *
+ * Regras:
+ *   1. NÃO usar em produção — este tema é só para validar paletas rapidamente.
+ *   2. Selecionar via ThemeSelector (canto superior direito das telas).
+ *   3. Valores HSL: "H S% L%" (espaço, percentagens, sem vírgulas) — é a
+ *      convenção Tailwind para que `hsl(var(--color-primary))` funcione.
+ *   4. Se quiseres partir de um hex, usa https://hslpicker.com para converter.
+ *
+ * Paleta inicial: variante dark da bandeira (herança do antigo portugal-dark).
+ * À vontade para trocar tudo por qualquer outra paleta que queiras testar.
+ * ============================================================================
+ */
+:root[data-theme="dev"] {
+  /* === Marca / CTA ======================================================== */
+  --color-primary: 150 55% 42%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-primary-soft: 150 45% 18%;
+  --color-primary-soft-foreground: 150 35% 85%;
+  --color-primary-muted: 150 35% 30%;
+
+  /* === Temperos da bandeira (disponíveis para uso pontual) ================ */
+  --color-flag-red: 355 80% 58%;
+  --color-flag-red-foreground: 0 0% 100%;
+  --color-flag-yellow: 42 100% 60%;
+  --color-flag-yellow-foreground: 0 0% 10%;
+  --color-flag-blue: 218 80% 60%;
+  --color-flag-blue-foreground: 0 0% 100%;
+
+  /* === Accents / secondary =============================================== */
+  --color-accent: 42 100% 60%;
+  --color-accent-foreground: 0 0% 10%;
+  --color-secondary: 222 35% 22%;
+  --color-secondary-foreground: 0 0% 95%;
+
+  /* === Semântica ========================================================= */
+  --color-success: 150 55% 42%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning: 42 100% 55%;
+  --color-warning-foreground: 0 0% 10%;
+  --color-info: 215 70% 55%;
+  --color-info-foreground: 0 0% 100%;
+  --color-danger: 0 70% 55%;
+  --color-destructive: 0 70% 55%;
+  --color-destructive-foreground: 0 0% 100%;
+
+  /* === Superfície (dark) ================================================= */
+  --color-background: 222 47% 8%;
+  --color-foreground: 0 0% 98%;
+  --color-surface: 222 47% 12%;
+  --color-surface-raised: 222 47% 14%;
+  --color-surface-overlay: 0 0% 0%;
+  --color-card: 222 47% 12%;
+  --color-card-foreground: 0 0% 98%;
+  --color-text: 0 0% 98%;
+  --color-popover: 222 47% 12%;
+  --color-popover-foreground: 0 0% 98%;
+
+  /* === Muted / borders =================================================== */
+  --color-muted: 222 47% 15%;
+  --color-muted-foreground: 215 20% 65%;
+  --color-border: 222 47% 20%;
+  --color-input: 222 47% 20%;
+  --color-ring: 150 55% 42%;
+
+  /* === Atmosfera ========================================================= */
+  --bg-atmo-mid: 222 47% 15%;
+  --bg-atmo-shape: 150 55% 42%;
+}

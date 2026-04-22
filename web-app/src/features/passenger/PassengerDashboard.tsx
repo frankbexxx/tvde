@@ -756,7 +756,10 @@ export function PassengerDashboard() {
       ) : null}
 
       {geolocationUsedFallback && (
-        <div className="rounded-lg bg-warning/20 border border-warning/50 px-3 py-2 text-sm text-warning">
+        <div
+          className="rounded-lg bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+          style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
+        >
           Localização indisponível — a usar posição aproximada.
           {import.meta.env.DEV ? (
             <>
@@ -945,7 +948,7 @@ export function PassengerDashboard() {
         )}
 
         {error && (
-          <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+          <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
             <button
               type="button"
               className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
