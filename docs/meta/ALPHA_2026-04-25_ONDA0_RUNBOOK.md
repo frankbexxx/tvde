@@ -122,7 +122,12 @@ Conto contigo? Responde «dentro» ou «fora». Obrigado 🙏
 
 ### A.X — Estado
 
-- [x] Template final aprovado (2026-04-21) — corpo da mensagem acima, só preencher placeholders `[...]` com horário definitivo e ponto de encontro.
+- [x] Template final aprovado (2026-04-21) — corpo acima.
+- [x] **Revisão 2026-04-22:** texto pronto para envio; só falta decisão final sobre ponto de encontro exacto. Placeholders que ainda **podem** precisar de ajuste:
+  - `[Largo Marquês de Pombal, Oeiras]` — confirmar sexta de manhã (proximidade do ponto de partida dos motoristas); alternativa: `[Estação de Oeiras (saída principal)]` (mais genérico, sem erro de busca).
+  - Horário `10h00 – 12h00` — manter (conservador, já dá janela de 2h que cobre 3-4 viagens por tester com folga).
+  - "Link + credenciais envio no grupo ~10 min antes" — manter (a execução do script §E.2 só acontece sexta de manhã, credenciais só são conhecidas nesse momento).
+- [x] **Sequência sexta de manhã:** §E.2 em Render Shell → receber 5+3+1 outputs `[NEW]` → registar credenciais num ficheiro local (não comitado) → preencher placeholders na mensagem → enviar.
 - [ ] Contactos convidados (nº): `___`
 - [ ] Confirmados "dentro": `___` / 5
 - [ ] Grupo criado: sim / não
@@ -423,11 +428,15 @@ Se fores por SQL, repetir para cada role. Para `admin`, pode ser preciso um pass
 
 ### E.3 — Confirmação de login (spot-check obrigatório)
 
-Antes de fechar a Onda 0, fazer **pelo menos 1 login por role** para confirmar que as contas estão funcionais:
+Antes de fechar a Onda 0, fazer **pelo menos 1 login por role** para confirmar que as contas estão funcionais.
 
-- [ ] Login Alpha P1 em dispositivo real → PassengerDashboard abre.
-- [ ] Login Alpha D1 em dispositivo real → DriverDashboard abre; motorista pode ficar online.
-- [ ] Login Alpha Admin em PC → AdminDashboard abre e aba Viagens é visível.
+**Plano adaptado 2026-04-22** (Oppo 77 avariado, Reno 12 chega sexta):
+
+- [ ] Login Alpha P1 no **Samsung A13** → PassengerDashboard abre (serve para validar contas passageiro sem depender do Reno 12).
+- [ ] Login Alpha D1 no **Reno 12** quando chegar sexta → DriverDashboard abre; motorista pode ficar online; heartbeat cria driver profile em BETA (auto). **Se Reno 12 não estiver pronto a tempo**, fazer spot-check do D1 em browser desktop (Firefox/Vivaldi janela privada) só para confirmar login, adiando heartbeat real para sábado de manhã.
+- [ ] Login Alpha Admin em **PC** → AdminDashboard abre e aba Viagens é visível. Independente de hardware Android.
+
+**Nota sobre driver profile:** em BETA, o perfil de motorista (tabela `drivers`) só é criado quando a app envia o primeiro heartbeat de localização. Isso significa que um login desktop do D1 **não** cria o profile — só confirma que o user existe. O profile aparece no primeiro login mobile real com GPS activo.
 
 ### E.4 — Estado
 
