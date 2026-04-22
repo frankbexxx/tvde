@@ -883,7 +883,7 @@ export function PassengerDashboard() {
             />
             {tripPollFootnote ? (
               <p
-                className="text-center text-xs text-foreground/55 -mt-3 mb-5 min-h-[1.25rem]"
+                className="text-center text-sm text-foreground/75 -mt-3 mb-5 min-h-[1.25rem]"
                 aria-live="polite"
               >
                 {tripPollFootnote}

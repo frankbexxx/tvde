@@ -99,7 +99,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             to="/passenger"
             role="tab"
             aria-selected={requestedRole === 'passenger'}
-            className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
               requestedRole === 'passenger'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -111,7 +111,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             to="/driver"
             role="tab"
             aria-selected={requestedRole === 'driver'}
-            className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
               requestedRole === 'driver'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -123,7 +123,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             to="/partner"
             role="tab"
             aria-selected={requestedRole === 'partner'}
-            className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
               requestedRole === 'partner'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -135,7 +135,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             to="/admin/login"
             role="tab"
             aria-selected={requestedRole === 'admin'}
-            className={`py-2.5 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${
               requestedRole === 'admin'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -174,7 +174,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               className="w-full px-3 py-2 border border-input rounded-xl bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent"
               required
             />
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-1 leading-snug">
               Pré-preenchida com a password BETA por defeito (ex.: 123456). Se não entrares, o administrador pode
               repor a palavra-passe por defeito no painel → Utilizadores → <span className="font-medium">Limpar palavra-passe</span>.
             </p>
@@ -187,7 +187,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+            className="w-full min-h-[44px] py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
           >
             {loading ? 'A entrar...' : 'Entrar'}
           </button>
