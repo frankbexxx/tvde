@@ -4,6 +4,36 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-04-22 (manhã) — Onda 2.5 parte 2 concluída + P0 geolocation, piloto D-3
+
+**Estado git:** `main` sincronizada com origin (`354dcd9`), working tree clean. Branches locais da sessão apagadas localmente após merge (PRs #166–#171 todos mergidos).
+
+**Entregas da manhã (6 PRs mergidos):**
+
+| PR | Conteúdo |
+|----|----------|
+| #166 | **Theme Portugal refactor** — base silver/white neutra + verde pastel (tokens `primary`/`accent`) + novas CSS vars de acento bandeira (`--color-flag-red`, `--color-flag-yellow`, `--color-flag-blue`). Renomeado "portugal-dark" → **"dev (sandbox)"** com migração silenciosa (`LEGACY_THEME_MAP` em `useTheme.ts`). Novo componente `BrandStripe` (3px ribbon 60% verde / 30% vermelho / 10% amarelo) no topo do `AppHeaderBar`. |
+| #167 | **Onda 2.5 parte 2 — a11y** — `LoginScreen` com `role="tablist"`/`role="tab"` + `BrandStripe`; `disabled:opacity-50` → `disabled:bg-muted disabled:text-muted-foreground` em `PrimaryActionButton`, `RequestCard`, `LoginScreen`, `TripPlannerPanel` (4 instâncias); focus rings visíveis; polling footnotes simplificados; badge driver com contraste sólido. |
+| #168 | **`ActiveTripActions`** — botão "Cancelar viagem" em estilo **ghost outline** (menos peso visual que sólido); novo helper `confirmExternalNav` com `window.confirm()` antes de abrir Waze / Google Maps (4 links protegidos). |
+| #169 | **Geolocation robustness** — `FALLBACK_AFTER_MS` 3s → 10s e `WATCH_POSITION_TIMEOUT_MS` 8s → 15s; novo `retry()` exposto em `useGeolocation`; botão **"Tentar outra vez"** dentro do banner de aviso em ambos os dashboards. |
+| #170 | **P0 fix — pin preso em Oeiras Câmara Municipal** mesmo com GPS real OK. Causa: `DEMO_ORIGIN` hardcoded (idêntico a `OEIRAS_FALLBACK`) servia de fallback a `MapView`, e como o `easeTo` só re-centra **uma vez**, a câmara ficava presa em Oeiras mesmo depois do GPS real chegar. Fix: remover `DEMO_ORIGIN` e passar `undefined` (sem pin falso). Confirmado Desktop + Android em anónimo. |
+| #171 | **Accents em listas** — `RequestCard` (driver "Viagens disponíveis") com `border-l-4 border-l-primary`; histórico (passenger + driver) com dot de 8px por estado (`completed` verde / `failed` vermelho atenuado / `cancelled` cinza); helper único `historyStatusDotColor`; texto longo trunca com `…` mantendo preço visível em 360px. |
+
+**Padrão consolidado para cores/acentos (aplicar daqui em diante):**
+
+- `border-l-4 border-l-primary` → CTA positivo / verde bandeira
+- `border-l-4 border-l-success` → estado final positivo
+- `border-l-4 style='borderLeftColor: hsl(var(--color-flag-blue))'` → estados neutros em curso (`TRIP_ONGOING`)
+- `border-l-4 style='borderLeftColor: hsl(var(--color-flag-yellow))'` → warnings (localização indisponível, etc.)
+- `border-l-4 border-l-destructive` → erros reais (raro em UI do dia-a-dia)
+- Dots em listas minimalistas: `historyStatusDotColor(status)` (já existe helper).
+
+**Checks globais no fim da sessão:** `tsc -b --noEmit` 0 erros · `vitest` **90/90** (21 files) · CI GitHub **3/3 verdes** em todos os PRs.
+
+**Bugs fechados:** P0 map pin Oeiras (#170). B1+B2 (#162 já anteriores). Nenhum P0/P1 aberto no plano alpha.
+
+---
+
 ## Fecho 2026-04-21 (noite) — sessão fechada, piloto D-4
 
 **Estado git:** `main` sincronizada com origin, working tree clean, sem branches extras (15 remotos + 119 locais apagados na sessão). Último commit em `main`: PR #164 (login a11y).
@@ -33,40 +63,39 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
-## Amanhã (qua 2026-04-22) — **Onda 2.5 parte 2** + mini-smoke
+## Tarde 2026-04-22 / quinta 2026-04-23 — **mini-smoke real** + polimento opcional
 
-**Prioridade 1 — Fixes P1/P2 do audit deep (`AUDIT_DEEP_2026-04-21.md` §B)**
+A **parte 2 da Onda 2.5 foi toda feita na manhã** (#166–#171). Todos os items P1/P2 do `AUDIT_DEEP_2026-04-21.md` §B estão cobertos (a11y, disabled states, ghost cancel, confirm external nav, accents semânticos, geolocation robustness, P0 geolocation pin).
 
-PR único "Onda 2.5 parte 2" cobrindo:
-
-1. **`disabled:opacity-50` → `disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed`** em 4 ficheiros (contraste colapsa com opacity):
-   - `web-app/src/components/buttons/PrimaryActionButton.tsx`
-   - `web-app/src/features/driver/RequestCard.tsx`
-   - `web-app/src/features/auth/LoginScreen.tsx` (botão "Entrar")
-   - `web-app/src/features/passenger/TripPlannerPanel.tsx`
-2. **DriverDashboard** — remover GPS panel verboso (ou esconder atrás de toggle dev); badge contrast para estado; polling footnote simplificado.
-3. **ActiveTripActions** — cancel button visual weight (reduzir proeminência); avisar antes de abrir Waze/Google Maps em nova tab.
-4. **RequestCard** — `text-xs` labels com ratio insuficiente → `text-sm`.
-5. **StatusHeader** — ongoing variant contrast.
-6. **LoginScreen** — touch targets ≥ 44×44 nos 4 Links (actualmente ~40), focus ring visível, password hint com `text-base` em vez de `text-xs`.
-
-Verificação: `tsc` + `vitest` + `ruff` + visual diff em Firefox RDM 360×640.
-
-**Prioridade 2 — Mini-smoke solo no fim do dia**
+**Prioridade 1 — Mini-smoke solo (quando Frank voltar ao telemóvel)**
 
 Só Frank, 1 Android, Oeiras:
-- Passageiro cria trip → confirma que com novo `OFFER_TIMEOUT=60` o motorista vê a oferta calmamente.
-- Passageiro espera ≥10s → confirma que **não** aparece "Sem motoristas" (antes aparecia).
-- Driver expira uma oferta propositadamente → confirma que a viagem volta em ~5s (novo redispatch interval).
+- Passageiro cria trip → confirma que com `OFFER_TIMEOUT=60` o motorista vê a oferta calmamente.
+- Passageiro espera ≥10s → confirma que **não** aparece "Sem motoristas" (antes aparecia, B2).
+- Driver expira uma oferta propositadamente → confirma que a viagem volta em ~5s (novo redispatch interval, B1).
+- **Novo checklist pós-manhã:**
+  - Histórico mostra dots por estado (verde/vermelho/cinza).
+  - `RequestCard` tem risca verde à esquerda.
+  - Botão "Cancelar viagem" em ghost outline (não destructivo sólido).
+  - Waze/Google Maps pedem confirmação antes de abrir.
+  - Banner "Localização indisponível" tem botão "Tentar outra vez" funcional.
+  - Pin do mapa resolve-se rapidamente para a localização real (sem ficar preso em Oeiras).
 
-**Prioridade 3 (se sobrar tempo) — s15 smoke duplo**
+**Prioridade 2 — s15 smoke duplo (qui 23/04 à noite)**
 
-À noite com 1 convidado, 2 Android, Oeiras/Cascais. Nível 1 + tentativa Nível 2. Anotar em `ALPHA_2026-04-25.md §9`.
+Com 1 convidado, 2 Android, Oeiras/Cascais. Nível 1 + tentativa Nível 2. Anotar em `ALPHA_2026-04-25.md §9`. Se correr limpo → **freeze opcional às 22:00** de quarta já ganho.
+
+**Prioridade 3 (se sobrar tempo antes do ensaio) — polimento opcional**
+
+Candidatos identificados mas **não** obrigatórios para o piloto:
+- `StatusHeader` ongoing variant contrast (marginal).
+- `TripPlannerPanel` hint text weight (cosmético).
+- `DriverDashboard` GPS panel verboso atrás de toggle dev (refactor maior, pode adiar).
 
 **Não fazer ainda:**
 - Não abrir features novas (X1 pesquisa por nome/postal fica para depois de sábado).
 - Não mexer na state machine, SP-F, auditoria, pagamentos, matching.
-- Não começar §A (convocatória) nem §E (contas piloto) — sexta de manhã.
+- Não começar §A (convocatória) nem §E (contas piloto) — **sexta de manhã**.
 
 ---
 
@@ -74,7 +103,8 @@ Só Frank, 1 Android, Oeiras:
 
 | Data | Onda | Foco |
 |------|------|------|
-| qua 22/04 | 2.5 parte 2 | PR a11y/visual (B.1 + DriverDashboard + ActiveTripActions + etc.) + mini-smoke solo |
+| qua 22/04 manhã | 2.5 parte 2 | ✅ **Concluída** (#166–#171: theme, a11y, ghost cancel, accents, geolocation P0). |
+| qua 22/04 tarde | smoke solo | Mini-smoke 1 Android em Oeiras (B1/B2 + checklist manhã). |
 | qui 23/04 | 3 | Ensaio com 1-2 testers externos. Anotar S1/S2 em `ALPHA_2026-04-25.md §9`. |
 | sex 24/04 | 4 | **Manhã:** `§E.2` do ONDA0 runbook (criar contas piloto em Render Shell) + `§A` convocatória WhatsApp com hora/ponto. **Tarde:** só S1+S2 do audit, deploy até 18:00. |
 | sáb 25/04 | 5 | **Piloto em Oeiras/Cascais.** Zero deploys durante a janela. |
