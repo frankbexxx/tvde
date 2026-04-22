@@ -81,6 +81,23 @@ export function ActiveTripActions({
   const [loading, setLoading] = useState(false)
   const [loadingLong, setLoadingLong] = useState(false)
 
+  /**
+   * Guarda simples: quando o motorista toca num link para Waze ou Google Maps,
+   * pergunta antes de sair da app. Evita saídas acidentais durante demo/viagem
+   * activa. Se o motorista cancelar, intercepta `preventDefault` para impedir
+   * a abertura do separador.
+   *
+   * Nota: este é um `window.confirm` nativo. Propositadamente não adicionamos
+   * "don't ask again" — é baixo-frequência (1-2x por viagem) e a segurança
+   * vale o click extra.
+   */
+  const confirmExternalNav = (mapName: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const ok = window.confirm(
+      `Abrir ${mapName} num separador novo?\n\nA app TVDE fica aberta — volta ao separador quando estiveres pronto.`
+    )
+    if (!ok) e.preventDefault()
+  }
+
   useEffect(() => {
     if (!loading) {
       setLoadingLong(false)
@@ -189,6 +206,7 @@ export function ActiveTripActions({
             href={wazeNavigateUrl(navPickup.lat, navPickup.lng)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={confirmExternalNav('Waze')}
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
           >
             Pickup no Waze
@@ -197,6 +215,7 @@ export function ActiveTripActions({
             href={googleMapsDirectionsUrl(navPickup.lat, navPickup.lng)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={confirmExternalNav('Google Maps')}
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
           >
             Pickup no Google Maps
@@ -209,6 +228,7 @@ export function ActiveTripActions({
             href={wazeNavigateUrl(navDestination.lat, navDestination.lng)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={confirmExternalNav('Waze')}
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
           >
             Destino no Waze
@@ -217,6 +237,7 @@ export function ActiveTripActions({
             href={googleMapsDirectionsUrl(navDestination.lat, navDestination.lng)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={confirmExternalNav('Google Maps')}
             className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
           >
             Destino no Google Maps
@@ -239,7 +260,7 @@ export function ActiveTripActions({
             void run(() => driverPerformCancel(tripId, token), 'Cancelar viagem')
           }}
           disabled={loading}
-          className="w-full min-h-[44px] rounded-lg text-muted-foreground text-base py-3 hover:text-destructive hover:bg-destructive/5 transition-colors touch-manipulation"
+          className="w-full min-h-[44px] rounded-lg border border-destructive/40 bg-transparent text-destructive text-base font-medium py-3 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 disabled:border-border disabled:bg-muted/50 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
           Cancelar viagem
         </button>
