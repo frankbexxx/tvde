@@ -75,7 +75,11 @@ export function PassengerDashboard() {
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [retrySearchPending, setRetrySearchPending] = useState(false)
-  const { position: passengerLocation, usedFallback: geolocationUsedFallback } = useGeolocation({
+  const {
+    position: passengerLocation,
+    usedFallback: geolocationUsedFallback,
+    retry: retryGeolocation,
+  } = useGeolocation({
     mockRole: 'passenger',
   })
   const [tripCompletedFromLocation, setTripCompletedFromLocation] = useState(false)
@@ -760,13 +764,21 @@ export function PassengerDashboard() {
           className="rounded-lg bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
           style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
         >
-          Localização indisponível — a usar posição aproximada.
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>Localização indisponível — a usar posição aproximada.</span>
+            <button
+              type="button"
+              onClick={retryGeolocation}
+              className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
+            >
+              Tentar outra vez
+            </button>
+          </div>
           {import.meta.env.DEV ? (
-            <>
-              {' '}
+            <div className="mt-1">
               Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
               <strong>Configuração</strong> (ícone de engrenagem).
-            </>
+            </div>
           ) : null}
         </div>
       )}

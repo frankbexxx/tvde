@@ -74,6 +74,14 @@ export type GeolocationResult = {
   position: LatLng
   /** True when using fallback due to error/timeout (not demo mode). */
   usedFallback: boolean
+  /**
+   * Tenta novamente obter a localização real: limpa o flag de «falha desta sessão»
+   * e re-subscreve `watchPosition`. Útil quando o utilizador move-se para um
+   * local com melhor sinal, ou acabou de conceder permissão.
+   *
+   * No-op se o hook estiver em mock mode ou demo mode (não há o que tentar).
+   */
+  retry: () => void
 }
 
 export type GeolocationMockRole = 'passenger' | 'driver'
@@ -88,9 +96,28 @@ function mockFixedPosition(role: GeolocationMockRole) {
 }
 
 /**
+ * Timeout (ms) antes de cair para Oeiras quando o browser ainda não deu posição.
+ *
+ * Valor subido de 3s para 10s em 2026-04-22: em desktop (Vivaldi/Firefox) a
+ * geolocalização wifi via Google costuma demorar 3-8s; com 3s caíamos quase
+ * sempre para fallback, marcávamos `sessionStorage.tvde_geolocation_failed=1`
+ * e o passenger ficava preso em Oeiras para o resto da sessão. 10s dá uma
+ * janela razoável sem tornar a app lenta no arranque em mobile (onde o GPS
+ * hardware responde quase sempre em <1s e cancela o timer).
+ */
+const FALLBACK_AFTER_MS = 10_000
+
+/**
+ * Timeout (ms) do próprio `navigator.geolocation.watchPosition`. Mais generoso
+ * que o nosso timer de fallback — se o browser responder entre os 10s e 15s
+ * ainda aproveitamos a posição real. O onError tratará a janela >15s.
+ */
+const WATCH_POSITION_TIMEOUT_MS = 15_000
+
+/**
  * Watches the user's geolocation using the browser Geolocation API.
- * - Returns { position, usedFallback }
- * - After first failure, uses Lisbon without prompting again (sessionStorage).
+ * - Returns { position, usedFallback, retry }
+ * - After first failure, uses Oeiras without prompting again (sessionStorage).
  * - Uses high accuracy when possible
  * - Ignores tiny movements (< ~5m) to reduce React re-renders and jitter.
  */
@@ -108,6 +135,12 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     return null
   })
   const [usedFallback, setUsedFallback] = useState(false)
+  /**
+   * Contador de tentativas. Quando `retry()` é chamado, incrementamos este
+   * valor — está nas dependências do `useEffect`, por isso força a re-execução
+   * (re-subscribe do watchPosition + novo fallback timer).
+   */
+  const [retryCounter, setRetryCounter] = useState(0)
   const lastPositionRef = useRef<LatLng>(position)
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -194,18 +227,18 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       applyFallback()
     }
 
-    // If we don't get any position within 3s, fall back to Oeiras (Câmara Municipal).
+    // If we don't get any position within FALLBACK_AFTER_MS, fall back to Oeiras (Câmara Municipal).
     fallbackTimeoutRef.current = setTimeout(() => {
       if (!lastPositionRef.current) {
         logWarn('Geolocation fallback: using Oeiras (Câmara Municipal) coordinates')
         applyFallback()
       }
-    }, 3000)
+    }, FALLBACK_AFTER_MS)
 
     const watchId = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
       maximumAge: 0,
-      timeout: 8000,
+      timeout: WATCH_POSITION_TIMEOUT_MS,
     })
 
     return () => {
@@ -215,9 +248,23 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
         fallbackTimeoutRef.current = null
       }
     }
-  }, [mockRole])
+  }, [mockRole, retryCounter])
 
-  return { position, usedFallback }
+  const retry = () => {
+    // Em mock/demo não há o que retentar — posição vem de uma constante.
+    if (isMockLocationModeEnabled() || isDemoLocationEnabled()) return
+    try {
+      sessionStorage.removeItem(GEOLOCATION_FAILED_KEY)
+    } catch {
+      /* ignore */
+    }
+    setUsedFallback(false)
+    lastPositionRef.current = null
+    setPosition(null)
+    setRetryCounter((n) => n + 1)
+  }
+
+  return { position, usedFallback, retry }
 }
 
 
