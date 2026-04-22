@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
 import type { ApiError } from '../../api/client'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
+import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 
 function formatLoginError(err: unknown): string {
   if (err !== null && typeof err === 'object' && 'status' in err) {
@@ -89,7 +90,9 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-sm bg-card rounded-2xl shadow-card p-6">
+      <div className="w-full max-w-sm bg-card rounded-2xl shadow-card overflow-hidden">
+        <BrandStripe />
+        <div className="p-6">
         <h1 className="text-xl font-bold text-foreground mb-4">TVDE BETA</h1>
         <div role="tablist" aria-label="Tipo de utilizador" className="grid grid-cols-2 gap-2 mb-4">
           <Link
@@ -177,16 +180,19 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             </p>
           </div>
           {error && (
-            <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-xl">{error}</p>
+            <p className="text-sm text-destructive bg-destructive/10 border-l-4 border-destructive px-3 py-2 rounded-xl">
+              {error}
+            </p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className="w-full py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
           >
             {loading ? 'A entrar...' : 'Entrar'}
           </button>
         </form>
+        </div>
       </div>
     </div>
   )

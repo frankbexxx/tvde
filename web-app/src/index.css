@@ -1,7 +1,7 @@
 /* Design system - @import must be first */
 @import "./design-system/tokens.css";
 @import "./design-system/themes/portugal.css";
-@import "./design-system/themes/portugal-dark.css";
+@import "./design-system/themes/dev.css";
 @import "./design-system/themes/minimal.css";
 @import "./design-system/themes/neon.css";
 

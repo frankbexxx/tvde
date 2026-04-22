@@ -4,21 +4,36 @@ const THEME_KEY = "tvde_theme"
 
 export type ThemeId =
   | "portugal"
-  | "portugal-dark"
+  | "dev"
   | "minimal"
   | "neon"
 
 const THEMES: ThemeId[] = [
   "portugal",
-  "portugal-dark",
+  "dev",
   "minimal",
   "neon",
 ]
 
+/**
+ * Migração transparente: utilizadores com "portugal-dark" em localStorage
+ * (antes do rename 2026-04-20) recebem "dev" no próximo load, sem flicker nem
+ * erro. Não tentar migrar para "portugal" — perderia a escolha deliberada
+ * de dark mode. "dev" agora é o slot onde o dark vive.
+ */
+const LEGACY_THEME_MAP: Record<string, ThemeId> = {
+  "portugal-dark": "dev",
+}
+
 export function getTheme(): ThemeId {
   if (typeof window === "undefined") return "portugal"
-  const stored = localStorage.getItem(THEME_KEY) as ThemeId | null
-  if (stored && THEMES.includes(stored)) return stored
+  const stored = localStorage.getItem(THEME_KEY)
+  if (stored && stored in LEGACY_THEME_MAP) {
+    const migrated = LEGACY_THEME_MAP[stored]!
+    localStorage.setItem(THEME_KEY, migrated)
+    return migrated
+  }
+  if (stored && (THEMES as string[]).includes(stored)) return stored as ThemeId
   return "portugal"
 }
 

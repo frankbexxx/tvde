@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
+import { BrandStripe } from '@/design-system/components/brand/BrandStripe'
 import { useAuth } from '@/context/AuthContext'
 
 /**
@@ -24,6 +25,7 @@ export function AppHeaderBar() {
 
   return (
     <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0">
+      <BrandStripe />
       <div className="flex justify-between items-start px-4 py-3 gap-2">
         <div className="min-w-0 flex-1 pr-2">
           <h1 className="text-lg font-bold text-foreground leading-tight">TVDE</h1>

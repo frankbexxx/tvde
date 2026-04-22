@@ -128,15 +128,20 @@ function TripPlannerPanelInner({
             </>
           )}
           {embedded ? (
-            <p className="text-sm text-muted-foreground text-center leading-snug px-0.5">
-              Indica um destino para começar — pesquisa em cima ou abre o mapa com o botão.
-            </p>
+            <div
+              className="rounded-lg bg-muted/40 border border-border/50 border-l-4 px-3 py-2"
+              style={{ borderLeftColor: 'hsl(var(--color-flag-blue, 218 100% 23%))' }}
+            >
+              <p className="text-sm text-muted-foreground text-center leading-snug">
+                Indica um destino para começar — pesquisa em cima ou abre o mapa com o botão.
+              </p>
+            </div>
           ) : null}
           <button
             type="button"
             onClick={onChooseMap}
             disabled={confirmTripPending}
-            className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
           >
             Pedir viagem
           </button>
@@ -165,7 +170,7 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onReset}
               disabled={confirmTripPending}
-              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
             >
               Repor
             </button>
@@ -199,7 +204,7 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onConfirmTrip}
               disabled={confirmTripPending || routeMetaLoading}
-              className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity duration-200 disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity duration-200 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
             >
               {confirmTripPending ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -217,7 +222,7 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onReset}
               disabled={confirmTripPending}
-              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
+              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
             >
               Repor
             </button>

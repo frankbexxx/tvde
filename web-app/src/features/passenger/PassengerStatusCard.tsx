@@ -117,7 +117,7 @@ function PassengerStatusCardInner({
         return (
           <div
             key="DRIVER_ASSIGNED_ASSIGNED"
-            className="space-y-4 rounded-2xl border border-primary/35 bg-primary/10 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
+            className="space-y-4 rounded-2xl border border-primary/35 border-l-4 border-l-primary bg-primary/10 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
           >
             <div>
               <p className="text-primary font-semibold text-lg">Motorista encontrado</p>
@@ -138,7 +138,7 @@ function PassengerStatusCardInner({
       return (
         <div
           key="DRIVER_ASSIGNED_ACCEPTED"
-          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
+          className="space-y-4 rounded-2xl border border-success/30 border-l-4 border-l-success bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
           <p className="text-success font-semibold text-lg">Motorista a caminho</p>
           <TripCard
@@ -158,7 +158,7 @@ function PassengerStatusCardInner({
       return (
         <div
           key="DRIVER_ARRIVING"
-          className="space-y-4 rounded-2xl border border-success/30 bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
+          className="space-y-4 rounded-2xl border border-success/30 border-l-4 border-l-success bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
         >
           <div>
             <p className="text-success font-semibold text-lg">{passengerTripStatusLabel('arriving')}</p>
@@ -185,7 +185,8 @@ function PassengerStatusCardInner({
       return (
         <div
           key="TRIP_ONGOING"
-          className="space-y-4 rounded-2xl border border-secondary/40 bg-secondary/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
+          className="space-y-4 rounded-2xl border border-secondary/40 border-l-4 bg-secondary/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
+          style={{ borderLeftColor: 'hsl(var(--color-flag-blue, 218 100% 23%))' }}
         >
           <div>
             <p className="text-secondary-foreground font-semibold text-lg">Viagem em curso</p>

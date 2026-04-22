@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 const THEME_OPTIONS: { id: ThemeId; label: string }[] = [
   { id: "portugal", label: "Portugal" },
-  { id: "portugal-dark", label: "Portugal Dark" },
+  { id: "dev", label: "Dev (sandbox)" },
   { id: "minimal", label: "Minimal" },
   { id: "neon", label: "Neon" },
 ]

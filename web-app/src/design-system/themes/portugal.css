@@ -1,44 +1,81 @@
-/* Tema Portugal - vermelho, amarelo e verde em tons suaves (bandeira) */
+/* Tema Portugal — base neutra silver/branco, verde bandeira em pastéis como maestro,
+ * vermelho/amarelo/azul bandeira como temperos pontuais.
+ *
+ * Filosofia: a bandeira está presente mas nunca domina. A superfície é branca/prata
+ * (~70-80% do ecrã), verde conduz o olhar (CTAs, sucesso, marca), vermelho/amarelo/azul
+ * aparecem em bordos finos, dots, underlines, focus rings — temperos, não molho.
+ *
+ * As variáveis --color-flag-* estão disponíveis para os componentes usarem em sítios
+ * pontuais (ex.: border-l-[3px] border-[hsl(var(--color-flag-red))]). A Fase 1 do
+ * refactor apenas define as variáveis. A Fase 2 aplica-as nos componentes críticos.
+ */
 :root,
 :root[data-theme="portugal"] {
-  /* Verde suave (bandeira) */
-  --color-primary: 120 45% 38%;
+  /* === Marca / CTA — verde bandeira em família ============================ */
+  /* Verde principal: vivo mas não gritante, alinhado com #00824F aprox. */
+  --color-primary: 150 55% 36%;
   --color-primary-foreground: 0 0% 100%;
-  /* Amarelo suave (bandeira) */
-  --color-accent: 45 75% 58%;
-  --color-accent-foreground: 0 0% 12%;
-  /* Vermelho suave (bandeira) - usado em secundário/destaques */
-  --color-secondary: 0 55% 55%;
-  --color-secondary-foreground: 0 0% 100%;
-  --color-danger: 0 55% 50%;
-  --color-destructive: 0 55% 50%;
+  /* Verde pastel claro — backgrounds de banners de sucesso, cards de estado activo. */
+  --color-primary-soft: 150 45% 92%;
+  --color-primary-soft-foreground: 150 60% 18%;
+  /* Verde médio — hover/active states, segundo realce. */
+  --color-primary-muted: 150 35% 70%;
+
+  /* === Temperos da bandeira (variáveis disponíveis, uso pontual) =========== */
+  /* Vermelho heráldico (~#DA291C) — bordos finos, dots de status, underlines. */
+  --color-flag-red: 355 75% 48%;
+  --color-flag-red-foreground: 0 0% 100%;
+  /* Amarelo/ouro (~#FFB612) — detalhes, realces de texto importante. */
+  --color-flag-yellow: 42 100% 54%;
+  --color-flag-yellow-foreground: 0 0% 12%;
+  /* Azul heráldico (~#002776) — muito escuro, usar com moderação. */
+  --color-flag-blue: 218 100% 23%;
+  --color-flag-blue-foreground: 0 0% 100%;
+
+  /* === Accents / secondary — neutros com hint de verde =================== */
+  /* Accent usado no gradient do PrimaryActionButton (primary → accent): verde soft. */
+  --color-accent: 150 40% 55%;
+  --color-accent-foreground: 0 0% 100%;
+  /* Secondary: silver neutral (antes era vermelho, agora os botões bg-secondary
+   * ficam com aparência de "neutro elegante" em vez de "alerta"). */
+  --color-secondary: 210 15% 92%;
+  --color-secondary-foreground: 220 20% 20%;
+
+  /* === Semântica (respeita convenções UI) ================================ */
+  /* Sucesso = verde primary (confirmações, accept, completed). */
+  --color-success: 150 55% 36%;
+  --color-success-foreground: 0 0% 100%;
+  /* Warning = amarelo bandeira (culturalmente alinhado + convenção UI). */
+  --color-warning: 42 100% 54%;
+  --color-warning-foreground: 0 0% 12%;
+  /* Info = azul UI-friendly (não o azul escuro da bandeira, mais legível). */
+  --color-info: 218 75% 48%;
+  --color-info-foreground: 0 0% 100%;
+  /* Destructive = vermelho standard (distinto do flag-red; usado em cancel/delete). */
+  --color-danger: 0 65% 50%;
+  --color-destructive: 0 65% 50%;
   --color-destructive-foreground: 0 0% 100%;
 
-  --color-background: 45 25% 97%;
-  --color-foreground: 222 40% 15%;
+  /* === Superfície — silver/branco domina ================================= */
+  --color-background: 210 20% 99%;
+  --color-foreground: 220 25% 12%;
   --color-surface: 0 0% 100%;
+  --color-surface-raised: 210 15% 97%;
+  --color-surface-overlay: 220 25% 5%;
   --color-card: 0 0% 100%;
-  --color-card-foreground: 222 40% 15%;
-  --color-text: 222 40% 15%;
-
-  --color-muted: 45 30% 94%;
-  --color-muted-foreground: 222 25% 45%;
-
-  --color-success: 145 50% 38%;
-  --color-success-foreground: 0 0% 100%;
-  --color-warning: 45 90% 55%;
-  --color-warning-foreground: 0 0% 12%;
-  --color-info: 222 50% 45%;
-  --color-info-foreground: 0 0% 100%;
-  --color-surface-raised: 0 0% 97%;
-  --color-surface-overlay: 222 40% 5%;
-
-  --color-border: 45 20% 88%;
-  --color-input: 45 20% 88%;
-  --color-ring: 120 45% 38%;
+  --color-card-foreground: 220 25% 12%;
+  --color-text: 220 25% 12%;
   --color-popover: 0 0% 100%;
-  --color-popover-foreground: 222 40% 15%;
+  --color-popover-foreground: 220 25% 12%;
 
-  --bg-atmo-mid: 45 30% 94%;
-  --bg-atmo-shape: 120 45% 38%;
+  /* === Muted / borders — silver subtil ==================================== */
+  --color-muted: 210 15% 95%;
+  --color-muted-foreground: 215 15% 42%;
+  --color-border: 210 15% 88%;
+  --color-input: 210 15% 88%;
+  --color-ring: 150 55% 36%;
+
+  /* === Atmosfera (bg gradients decorativos) =============================== */
+  --bg-atmo-mid: 210 15% 96%;
+  --bg-atmo-shape: 150 45% 82%;
 }
