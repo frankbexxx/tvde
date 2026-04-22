@@ -51,10 +51,19 @@ import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
 
-/** Câmara Municipal de Oeiras — centro do mapa / fallback de posição do passageiro */
-const DEMO_ORIGIN = { lat: 38.6973, lng: -9.30836 }
-
-/** P33: mapa da viagem com percurso/rasto só após aceite — não em requested nem assigned. */
+/**
+ * P33: mapa da viagem com percurso/rasto só após aceite — não em requested nem assigned.
+ *
+ * Nota histórica (2026-04-22): aqui existia uma constante `DEMO_ORIGIN` igual a
+ * OEIRAS_FALLBACK que era passada ao `MapView` enquanto `passengerLocation` era
+ * null. Causava bug "pin sempre em Câmara de Oeiras": o MapView só recentra
+ * uma vez (via `easeTo` em `hasInitialFit`), por isso se o primeiro valor não
+ * nulo era DEMO_ORIGIN, a câmara ficava colada a Oeiras mesmo depois do GPS
+ * real resolver — o pin mexia, mas saía do viewport, e o utilizador via
+ * sempre o centro de Oeiras. Solução: passar `undefined` enquanto não há GPS,
+ * MapView não desenha pin, câmara começa em OEIRAS_CENTER (só câmara, sem
+ * pin), e quando a posição real chega, easeTo centra correctamente.
+ */
 function passengerLiveTripMapActive(trip: TripDetailResponse): boolean {
   return isPassengerDriverTrackingStatus(trip.status)
 }
@@ -842,7 +851,7 @@ export function PassengerDashboard() {
                         lat: activeTrip.origin_lat,
                         lng: activeTrip.origin_lng,
                       }
-                    : DEMO_ORIGIN)
+                    : undefined)
                 }
                 driverLocation={driverLocation ?? undefined}
                 route={routeForMap}
@@ -915,7 +924,7 @@ export function PassengerDashboard() {
                         lat: activeTrip.origin_lat,
                         lng: activeTrip.origin_lng,
                       }
-                    : DEMO_ORIGIN)
+                    : undefined)
                 }
                 driverLocation={driverLocation ?? undefined}
                 route={routeForMap}
