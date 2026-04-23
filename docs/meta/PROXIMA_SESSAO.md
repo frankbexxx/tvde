@@ -4,6 +4,23 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Manhã 2026-04-23 (quinta, D-2) — trabalho autónomo de verificação + templates
+
+**Enquanto Frank esteve fora (tarefas domésticas)**, sessão autónoma zero-código focada em preparação e auditoria:
+
+- **Baseline D-2 confirmada** em `main` @ `55b3052`: pytest 140/140, vitest 90/90 (21 files), tsc 0 erros, ruff check clean, eslint clean. Único ponto: `backend/app/sentry.py` por reformatar (escapou ao #160) — mecânico, adiar pós-piloto.
+- **Templates novos em `docs/meta/`:**
+  - `ALPHA_2026-04-25_RELATO.md` — estrutura pronta para Frank preencher em tempo real durante a janela do piloto.
+  - `ALPHA_2026-04-25_RETRO.md` — estrutura curta para domingo 26/04.
+- **Ficheiro local (gitignored)** `docs/_local/ALPHA_ACCOUNTS.md` — lugar único para colar outputs do `§E.2` do ONDA0 runbook na sexta; já coberto por `docs/_local/` em `.gitignore:73`.
+- **Relatório consolidado** em `docs/meta/AUDIT_STATUS_2026-04-23.md`:
+  - Cobertura de testes dos PRs críticos (#162/#168/#169/#170/#171). Gaps identificados: `useGeolocation`, `DEMO_ORIGIN` regression, `historyStatusDotColor`, `confirmExternalNav`, cross-boundary config. Total ~90 min de "test hardening" pós-piloto.
+  - Cross-check exaustivo `AUDIT_DEEP_2026-04-21` vs `main`: 15/23 findings ✅ Fechados, 5 `⚠️ Verificar` (low priority), 3 `🟡 Em aberto` por decisão (H.1 StatusHeader, G.2 RequestCard labels, D.3 GPS panel verboso).
+  - Higiene repo: 0 ficheiros trackeados que deviam estar ignorados. `.gitignore` saudável.
+- **Pendentes para quando Frank voltar:** dry-run indoor 3 janelas, dashboards Sentry + UptimeRobot, 10 min opcional a cruzar os 5 items `⚠️ Verificar`.
+
+---
+
 ## Fecho 2026-04-22 (manhã) — Onda 2.5 parte 2 concluída + P0 geolocation, piloto D-3
 
 **Estado git:** `main` sincronizada com origin (`354dcd9`), working tree clean. Branches locais da sessão apagadas localmente após merge (PRs #166–#171 todos mergidos).
