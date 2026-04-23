@@ -4,6 +4,44 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-04-23 noite (quinta, D-2) — validações operacionais concluídas
+
+Sessão dividida entre **operacional TVDE** (validado) e **side project Sueca** (em curso, side-track).
+
+### TVDE — tudo verde
+
+- **Sentry frontend** corrigido: DSN estava apontar para project que não existia (`4511257925976144`); agora `VITE_SENTRY_DSN` no Render static `tvde-app` aponta para `.../4511257927876688` (key `f17ae561...`). Após Manual Deploy, smoke event `sentry-smoke-*` recebido em `javascript-react`. Issue marcado Resolved. Backend 🟡 (sem evento directo, dashboard mostra sinais positivos — aceitável para piloto).
+- **UptimeRobot** validado: TVDE API + TVDE APP, 100% uptime, 0 incidents.
+- **Smoke indoor 3 janelas** ✅: Chrome (driver) + Vivaldi anónimo (passenger) + Firefox Dev (admin). Viagem Oeiras→Oeiras completa, estados sincronizados, polling 200 OK. Evidência fotográfica no momento do `Terminar viagem`.
+- **Cross-check dos 5 `⚠️ Verificar` em `AUDIT_STATUS_2026-04-23.md §3`**: **todos fechados** por leitura de código — B.1e, B.1g (TripPlannerPanel Repor planning/confirming), C.2 (tabs `min-h-[44px]`), C.4 (password hint `text-sm`), E.3 (hint non-embedded). PR #167 foi mais exaustivo do que o relatório original documentava. Tabela actualizada: **20/23 findings ✅ Fechados** (era 15/23), só restam 3 🟡 polish opcional + 3 🟡 por design pós-alpha.
+- **`main` sync** com origin, working tree clean antes do PR desta sessão.
+
+### Side project — Sueca VM (side-track, não afecta TVDE)
+
+- Criado WSL distro `Ubuntu-Sueca` em `E:\wsl\Ubuntu-Sueca` (exportado→unregistered→reimportado para libertar C:). Criado user `frank` com sudo. Node instalado via nvm (era npm do Windows a vazar no WSL). Clone de `frankbexxx/sueca` + `git checkout v2-main` + `npm install` — `npm start` dá 2 erros de compile no repo (bugs de imports, não do ambiente).
+- **Decisão:** Sueca não vai funcionar em Remote-WSL (Frank quer IDE "só Linux"). Caminho escolhido: **VirtualBox + Ubuntu Desktop + Cursor Linux** isolado. VM `Sueca-Dev` a criar em `E:\VBoxVMs\Sueca-Dev`, ISO a descarregar para `E:\ISOs` (download a 5 GB com servidor lento — continua ao fim do dia). **Não mexe em nada do TVDE.**
+- **Migração WSL Ubuntu principal (`Ubuntu-24.04`) de C: para E:** também feita com sucesso no mesmo fluxo. Docker Desktop integração re-activada após edição de `/etc/wsl.conf` (`systemd=true` removido → conflito com Docker integration). `docker version` dentro do WSL confirma Client + Server.
+
+### Estado git
+
+`main` @ `c7ce474` (pré-sessão). Este PR adiciona documentação do dia: updates ao `AUDIT_STATUS_2026-04-23.md` (5→20/23 findings fechados) + log smoke em `ALPHA_2026-04-25.md §9` + esta secção no `PROXIMA_SESSAO.md`. **Zero código**.
+
+### Pendentes para sexta 24/04
+
+1. **`§E.2` Render Shell** → criar 9 contas piloto → colar outputs em `docs/_local/ALPHA_ACCOUNTS.md`.
+2. **Convocatória WhatsApp** com credenciais + link.
+3. **Tarde:** Reno 12 activo → smoke duplo real 2 Android.
+4. **18h:** freeze (zero deploys até sábado 12h).
+
+### Opcional pós-piloto (seg 27/04+)
+
+- PR "test hardening" (~90 min; `useGeolocation`, DEMO_ORIGIN regression, `historyStatusDotColor`, `confirmExternalNav`, cross-boundary config). Detalhes em `AUDIT_STATUS_2026-04-23.md §2`.
+- PR "ruff format `app/sentry.py`" (mecânico, 2 min).
+- PR "polish P3 residuais" se decidires atacar H.1 (StatusHeader ongoing), G.2 (RequestCard labels), D.3 (GPS panel verboso).
+- Limpar `stuck_payments=4` local (admin mostra Saúde=degraded — 4 pagamentos presos antigos de testes, não afectam o piloto produção).
+
+---
+
 ## Manhã 2026-04-23 (quinta, D-2) — trabalho autónomo de verificação + templates
 
 **Enquanto Frank esteve fora (tarefas domésticas)**, sessão autónoma zero-código focada em preparação e auditoria:
