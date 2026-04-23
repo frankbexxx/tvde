@@ -65,49 +65,49 @@ Tabela completa dos 23 findings do `AUDIT_DEEP_2026-04-21.md`. Cada linha indica
 | **B.1b** | P1 | `RequestCard` ACEITAR disabled opacity | ✅ Fechado | #167 | |
 | **B.1c** | P1 | `LoginScreen` Entrar disabled opacity | ✅ Fechado | #167 | |
 | **B.1d** | P1 | `TripPlannerPanel` Pedir viagem (idle) | ✅ Fechado | #167 | |
-| **B.1e** | P1 | `TripPlannerPanel` Repor (planning) | ⚠️ **Verificar** | #167? | Possível aplicado mas não confirmado (usa `bg-transparent`, P1 mais brando). |
+| **B.1e** | P1 | `TripPlannerPanel` Repor (planning) | ✅ Fechado | #167 | Confirmado 2026-04-23 tarde: `TripPlannerPanel.tsx:173` → `disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed`. |
 | **B.1f** | P1 | `TripPlannerPanel` Confirmar viagem | ✅ Fechado | #167 | |
-| **B.1g** | P1 | `TripPlannerPanel` Repor (confirming) | ⚠️ **Verificar** | #167? | Idem B.1e. |
+| **B.1g** | P1 | `TripPlannerPanel` Repor (confirming) | ✅ Fechado | #167 | Confirmado 2026-04-23 tarde: `TripPlannerPanel.tsx:225` → idêntico a B.1e. |
 | **B.2** | skip | Admin/Partner `disabled:opacity-50` | 🟡 Adiado | — | Por design; pós-alpha. |
 | **B.3** | skip | shadcn base components | 🟡 Adiado | — | Por design; pós-alpha. |
 | **C.1** | P2 | LoginScreen `aria-current` nos Links | ✅ Fechado (superado) | #164 + #167 | `role="tablist"` + `role="tab"` + `aria-selected` substituem; mais rico semanticamente. |
-| **C.2** | P2 | LoginScreen tabs touch <44px | ⚠️ **Verificar** | #167? | Relatório PR #167 menciona "focus + disabled + BrandStripe" mas não explicitamente `py-3`. |
+| **C.2** | P2 | LoginScreen tabs touch <44px | ✅ Fechado | #167 | Confirmado 2026-04-23 tarde: `LoginScreen.tsx:102,114,126,138` → todos os 4 tabs têm `min-h-[44px] py-3`. |
 | **C.3** | P3 | LoginScreen focus ring | ✅ Fechado | #167 | |
-| **C.4** | P2 | LoginScreen hint password `text-xs` | ⚠️ **Verificar** | #167? | Possível aplicado no bloco de styling do error box. |
+| **C.4** | P2 | LoginScreen hint password `text-xs` | ✅ Fechado | #167 | Confirmado 2026-04-23 tarde: `LoginScreen.tsx:177` → `text-sm text-muted-foreground mt-1 leading-snug`. |
 | **D.1** | P2 | DriverDashboard polling footnote | ✅ Fechado | #167 | |
 | **D.2** | P2 | DriverDashboard badge `bg-primary/15` | ✅ Fechado | #167 | Passou a solid `bg-primary text-primary-foreground`. |
 | **D.3** | P2 | DriverDashboard GPS panel verboso | 🟡 **Em aberto** | — | Adiado como polish opcional. Testers leigos vão ver "request_id". Candidato P3 pós-piloto. |
 | **D.4** | P3 | DriverDashboard "Sem viagens" vazio | ✅ OK | — | Audit confirmou sem fix necessário. |
 | **E.1** | P2 | PassengerDashboard polling footnote | ✅ Fechado | #166/#167 | |
 | **E.2** | info | "Indica recolha e destino no mapa" (X1) | 🟡 Adiado | — | Por design; pós-alpha. Feature nova. |
-| **E.3** | P3 | TripPlannerPanel hint (non-embedded) | ⚠️ **Verificar** | — | O embedded já foi harmonizado em #167; non-embedded talvez não. |
+| **E.3** | P3 | TripPlannerPanel hint (non-embedded) | ✅ Fechado | #167 | Confirmado 2026-04-23 tarde: `TripPlannerPanel.tsx:127` → `text-sm text-muted-foreground` (não-embedded). |
 | **F.1** | P2 | ActiveTripActions cancelar sem peso | ✅ Fechado | #168 | **Ghost outline** em vez de só adicionar peso — aceite pelo Frank ("Ghost, acho eu, que te parece?"). |
 | **F.2** | P3 | ActiveTripActions Waze target=_blank | ✅ Fechado (superado) | #168 | `confirmExternalNav` oferece mais que o `aria-label` proposto; pede confirmação. |
 | **G.1** | P1 | RequestCard ACEITAR disabled | ✅ Fechado | #167 (ver B.1b) | |
 | **G.2** | P3 | RequestCard labels `text-xs` | 🟡 **Em aberto** | — | Audit marcou "sem fix agora" (padrão caption). Manter. |
 | **H.1** | P3 | StatusHeader `ongoing` bg-secondary vermelho | 🟡 **Em aberto** | — | Passa AA em texto grande; só não em texto pequeno. Candidato post-alpha. |
 
-### Sumário
+### Sumário (actualizado 2026-04-23 tarde)
 
 | Status | Qtd | % |
 |---|---|---|
-| ✅ Fechado | 15 | 65% |
-| ⚠️ Verificar (≈ possivelmente fechado em #167) | 5 | 22% |
-| 🟡 Em aberto por design (pós-alpha) | 4 | 17% |
+| ✅ Fechado | **20** | **87%** |
+| 🟡 Em aberto por design (pós-alpha) | 3 | 13% |
 | 🟡 Em aberto por decisão (polish opcional) | 3 | 13% |
 
-(Percentagens não somam 100% por sobreposição "em aberto por design" vs. "por decisão".)
+(B.2, B.3, E.2 são "em aberto por design"; D.3, G.2, H.1 são "em aberto por decisão".)
 
-### Itens a verificar com o Frank no próximo sit-down
+### Itens verificados em 2026-04-23 tarde
 
-5 items marcados `⚠️ Verificar` — todos **low priority**, possivelmente fechados sem tracking fino:
+Os 5 items marcados `⚠️ Verificar` no relatório original foram **todos confirmados fechados** por leitura do código em `main` @ `c7ce474`:
 
-- **B.1e + B.1g:** `disabled:opacity-50` em botões **transparentes** do `TripPlannerPanel` (Repor planning/confirming). Audit sugeriu `disabled:opacity-70`. Ver rapidamente no código actual.
-- **C.2:** altura dos tabs do LoginScreen (≥44px).
-- **C.4:** password hint em `text-sm` em vez de `text-xs`.
-- **E.3:** TripPlannerPanel non-embedded harmonizado.
+- **B.1e** — `TripPlannerPanel.tsx:173` → `disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed` ✅
+- **B.1g** — `TripPlannerPanel.tsx:225` → idêntico a B.1e ✅
+- **C.2** — `LoginScreen.tsx:102,114,126,138` → todos os 4 tabs têm `min-h-[44px] py-3` (44px garantido para touch) ✅
+- **C.4** — `LoginScreen.tsx:177` → password hint em `text-sm text-muted-foreground mt-1 leading-snug` ✅
+- **E.3** — `TripPlannerPanel.tsx:127` → hint non-embedded em `text-sm text-muted-foreground` ✅
 
-**Acção sugerida:** 10 min ao voltares, ler as linhas apontadas, e: (a) se já fechado — marcar ✅ neste relatório; (b) se aberto — decidir se entra em PR pequeno pré-piloto ou fica post-piloto.
+**Conclusão:** PR #167 foi mais exaustivo do que o relatório PR registou explicitamente. Nada a fazer pré-piloto.
 
 ---
 
@@ -127,10 +127,11 @@ Tabela completa dos 23 findings do `AUDIT_DEEP_2026-04-21.md`. Cada linha indica
 
 ## 5. Recomendações imediatas
 
-### Para o resto da quinta
-- Fazer o dry-run indoor 3 janelas (item 3 da lista de ontem) quando voltares.
-- Verificar Sentry + UptimeRobot dashboards (item 4).
-- **Opcional:** 10 min a cruzar os 5 items `⚠️ Verificar` da secção 3.
+### Quinta 2026-04-23 — fechada ✅
+- ✅ Sentry frontend **verificado** (DSN corrigido no Render, smoke event recebido em `javascript-react`). Backend 🟡 (dashboard mostra sinais, sem evento directo).
+- ✅ UptimeRobot **validado** (TVDE API + APP, 100% uptime).
+- ✅ Smoke indoor **3 janelas** (Chrome driver + Vivaldi anónimo passenger + Firefox Dev admin): viagem Oeiras→Oeiras completa até "Terminar viagem", tudo a verde.
+- ✅ Cross-check dos 5 `⚠️ Verificar` → todos fechados (ver secção 3).
 
 ### Para sexta 24/04
 - De manhã: `§E.2` Render Shell → colar outputs em `docs/_local/ALPHA_ACCOUNTS.md` → spot-check logins.
@@ -147,4 +148,4 @@ Tabela completa dos 23 findings do `AUDIT_DEEP_2026-04-21.md`. Cada linha indica
 
 ---
 
-*Gerado em modo autónomo, 2026-04-23 de manhã. Se algum item marcado `⚠️ Verificar` ou `🟡 Em aberto` estiver mal classificado, marcar neste ficheiro e re-comitar.*
+*Gerado em modo autónomo, 2026-04-23 de manhã. Actualizado 2026-04-23 tarde com cross-check dos 5 `⚠️ Verificar` + fecho das validações operacionais (Sentry, UptimeRobot, smoke 3 janelas).*
