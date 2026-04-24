@@ -103,7 +103,7 @@ function TripPlannerPanelInner({
 
   const pickupLine =
     !hasPickup
-      ? 'Toca no mapa para confirmar recolha'
+      ? 'Escreve a recolha em cima ou toca no mapa'
       : pickupAddressLoading
         ? 'A obter morada…'
         : (pickupAddress ?? 'Local selecionado')
@@ -122,9 +122,9 @@ function TripPlannerPanelInner({
             <>
               <p className="text-lg font-semibold text-foreground">Confirma a recolha</p>
               <p className="text-sm text-foreground/80">
-                Primeiro confirma onde queres entrar no carro.
+                Primeiro escreve onde queres entrar no carro.
               </p>
-              <p className="text-sm text-muted-foreground">Depois escreves o destino.</p>
+              <p className="text-sm text-muted-foreground">Também podes tocar no mapa.</p>
             </>
           )}
           {embedded ? (
@@ -133,7 +133,7 @@ function TripPlannerPanelInner({
               style={{ borderLeftColor: 'hsl(var(--color-flag-blue, 218 100% 23%))' }}
             >
               <p className="text-sm text-muted-foreground text-center leading-snug">
-                Começa por confirmar a recolha no mapa. Depois escreves o destino.
+                Começa por escrever a recolha em cima. Também podes tocar no mapa.
               </p>
             </div>
           ) : null}
@@ -143,7 +143,7 @@ function TripPlannerPanelInner({
             disabled={confirmTripPending}
             className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
           >
-            Escolher recolha
+            Escolher recolha no mapa
           </button>
         </>
       )}
