@@ -71,8 +71,6 @@ function passengerLiveTripMapActive(trip: TripDetailResponse): boolean {
 
 const ESTIMATE_MOCK = '4–6'
 
-const HAS_MAPTILER_KEY = Boolean(import.meta.env.VITE_MAPTILER_KEY)
-
 function passengerDashboardNoop() {}
 
 export function PassengerDashboard() {
@@ -257,7 +255,7 @@ export function PassengerDashboard() {
 
   useEffect(() => {
     const q = destinationQuery.trim()
-    if (q.length < 2 || !HAS_MAPTILER_KEY) {
+    if (q.length < 2) {
       setGeoSuggestions([])
       setGeoLoading(false)
       return
@@ -808,7 +806,7 @@ export function PassengerDashboard() {
                   loading={geoLoading}
                   onSelect={handleDestinationPick}
                   disabled={creating}
-                  geocodingUnavailable={!HAS_MAPTILER_KEY}
+                  geocodingUnavailable={false}
                   onDismissSuggestions={dismissGeoSuggestions}
                 />
               </div>
