@@ -18,7 +18,8 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 - Frank + parceiro no Chá da Barra Vila, Oeiras, a acolher e monitorizar
 - 4 contas principais + 2 reserva (ver `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E`)
 - Handouts bilingue EN+PT em PDF distribuídos via WhatsApp (ver `docs/_local/pilot_handouts/`)
-- Freeze D-1 continua aplicado: **zero código novo pós-freeze**. As ideias abaixo entram **depois** do piloto + retro.
+- Excepção D-1 aplicada por risco de UX no piloto: PRs **#177**, **#178**, **#179** corrigiram geocoding/texto (fallback Nominatim, Portugal-first, recolha/destino por texto). Smoke real sexta noite passou.
+- A partir daqui volta a regra: **zero código novo durante a janela do piloto**. As ideias abaixo entram **depois** do piloto + retro.
 
 ---
 
@@ -75,6 +76,22 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 **Problema/hipótese:** hoje, o driver tem de manualmente partilhar live location via WhatsApp. No futuro, o admin já vê o driver no mini-mapa (P1.1), o que torna isto redundante. **Mas:** o passageiro também beneficia de saber "onde o motorista está", e hoje vê-o no PassengerDashboard mapa. OK, talvez não haja nada novo aqui.
 
 **Decisão:** parquear até pós-P1.1. Se a P1.1 estiver feita e a experiência for boa, esta fica `N/A`. Se ficar claro que há necessidade adicional (ex.: alguém exterior à viagem quer acompanhar), reavaliar.
+
+---
+
+### P1.4 Tutorial com prints — transformar dry-run em onboarding
+
+**Origem:** decisão Frank 2026-04-24 noite, após smoke real casa (`Rua Caldas Xavier`) → Oeiras Parque.
+
+**Problema:** a app já faz o fluxo, mas testers novos precisam de 4-6 prints simples no telemóvel para perceber: recolha por texto, destino por texto, aceitar no motorista, abrir Waze, concluir.
+
+**Proposta:**
+
+- Produzir tutorial curto com prints reais do Oppo Reno 13 5G.
+- Versão 1 fica local/WhatsApp para o piloto; versão 2 pode entrar em `docs/` ou onboarding da app pós-retro.
+- Separar **passageiro** e **motorista**; evitar screenshots com credenciais/telefones reais.
+
+**Custo estimado:** 30-60 min para v1 local; 1-2 h se virar doc polido no repo.
 
 ---
 

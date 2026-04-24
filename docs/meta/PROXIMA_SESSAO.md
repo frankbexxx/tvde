@@ -4,6 +4,31 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-04-24 noite (sexta, D-1) — smoke real sucesso + produção pronta
+
+### TVDE — código S1/S2 fechado e validado em produção
+
+- **PR #177** — `fix(passenger): destino por texto funciona sem chave MapTiler (fallback Nominatim)`: destino por texto deixa de depender de `VITE_MAPTILER_KEY`; MapTiler continua primário, Nominatim entra como fallback.
+- **PR #178** — `fix(passenger): recolha primeiro e pesquisa Portugal-first`: copy/fluxo corrigidos para **recolha primeiro, destino depois**; MapTiler usa `country=pt` + proximity Lisboa; sugestões fora de Portugal filtradas (evita Brasil/Angola para ruas portuguesas).
+- **PR #179** — `fix(passenger): permitir recolha por texto antes do destino`: fluxo passa a ser **texto-first** também na recolha; mapa fica como alternativa.
+- **Smoke real D-1** ✅: Frank fez viagem com o parceiro, de casa (`Rua Caldas Xavier`) até **Oeiras Parque**; parceiro aceitou como motorista; **Waze abriu correctamente** no telefone do motorista; fluxo end-to-end passou.
+- **Produção validada:** <https://tvde-app-j51f.onrender.com> em `main` @ `68acf7c`.
+- **Repo:** `main` local sincronizada com `origin/main`, working tree limpa antes deste PR de docs.
+
+### Continuidade sábado 25/04 manhã
+
+1. **Oppo Reno 13 5G** — terminar setup, instalar/iniciar o necessário, login e permissões de localização.
+2. **Tutorial com prints** — documentar no próprio telemóvel: recolha por texto, destino por texto, fallback mapa, motorista aceita, Waze abre.
+3. **Relato do piloto** — usar `ALPHA_2026-04-25_RELATO.md` durante a janela; não tentar escrever perfeito em tempo real.
+4. **Zero deploys durante a janela** salvo S1 bloqueador real. S2/S3 vão para `BACKLOG_POST_PILOTO.md` / retro.
+5. **Docs locais** (`docs/_local/`) continuam fora do Git: contas, credenciais, PDFs e handouts não entram no PR.
+
+### Open PR de docs
+
+- **PR #176** (`docs/alpha-6-account-redesign`) é o fecho documental da sexta: 6 contas/handouts/backlog pós-piloto + este registo de smoke real. Merge antes de encerrar a noite se o diff estiver certo.
+
+---
+
 ## Fecho 2026-04-23 noite (quinta, D-2) — validações operacionais concluídas
 
 Sessão dividida entre **operacional TVDE** (validado) e **side project Sueca** (em curso, side-track).

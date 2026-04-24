@@ -14,10 +14,10 @@
 | Janela planeada | 10h00 – 12h00 |
 | Zona | Oeiras ↔ Cascais |
 | Ponto de encontro | _(preencher sexta)_ |
-| Link app enviado | _(hora)_ |
+| Link app enviado | <https://tvde-app-j51f.onrender.com> |
 | Grupo WhatsApp | `Alpha TVDE 25/04` |
 | Admin observador | Frank (super_admin pessoal) + Alpha Admin dedicado |
-| Release deploy | _(commit SHA em `main` à sexta 18h)_ |
+| Release deploy | `68acf7c` (`main` após #177/#178/#179) |
 | `BETA_MODE` em prod | `true` (confirmado na Onda 0) |
 
 ---
@@ -47,12 +47,13 @@
 ## 2. T–90 min — preparação (8h30)
 
 - [ ] Render dashboard aberto, backend up, logs sem alarmes.
-- [ ] Frank faz 1 viagem fantasma para aquecer API (cold start Render).
+- [x] Smoke D-1 real concluído sexta noite: casa (`Rua Caldas Xavier`) → **Oeiras Parque**, motorista aceitou, Waze abriu OK.
+- [ ] Frank faz 1 viagem fantasma / health check para aquecer API (cold start Render).
 - [ ] `GET /admin/system-health`: `stuck_payments`, `inconsistent_financial_state` registados.
-- [ ] Spot-check login: P1 no Reno 12 · D1 no Reno 12 · Admin no PC.
+- [ ] Spot-check login: P1 no Oppo Reno 13 · D1 no Oppo Reno 13 / telefone parceiro · Admin no PC.
 - [ ] Sentry dashboard aberto (errors = 0 esperado).
 - [ ] UptimeRobot dashboard aberto (ambos serviços Up).
-- [ ] Oppo 77 — _(estado final; se continuar avariado, A13 como backup do Frank)_.
+- [ ] Oppo Reno 13 5G — setup concluído, permissões de localização, Chrome/Waze prontos. A13 fica backup.
 
 **Snapshot Saúde T–90:**
 
