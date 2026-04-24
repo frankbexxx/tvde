@@ -454,7 +454,7 @@ Antes de fechar a Onda 0, fazer **1 login por cada principal** para confirmar qu
 - [ ] Handouts bilingue gerados (`docs/_local/pilot_handouts/*.pdf`)
 - [ ] Handouts enviados por WhatsApp (P1, D1, Admin2)
 - [ ] Spot-check dos 4 principais: passou / falhou (detalhes: \_\_\_)
-- [ ] Dry-run D-1 (6ª à tarde): P1/D1/Admin2 confirmam "instalei PWA + login OK" — detalhes: \_\_\_
+- [x] Dry-run D-1 (6ª noite): Frank + parceiro fizeram viagem real casa (`Rua Caldas Xavier`) → **Oeiras Parque**; motorista aceitou; Waze abriu OK; produção validada em <https://tvde-app-j51f.onrender.com>.
 
 ---
 
