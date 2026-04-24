@@ -8,6 +8,8 @@ export interface DestinationSearchFieldProps {
   suggestions: GeocodeSuggestion[]
   loading: boolean
   onSelect: (s: GeocodeSuggestion) => void
+  label?: string
+  placeholder?: string
   disabled?: boolean
   /** Sem chave MapTiler — mostrar aviso discreto. */
   geocodingUnavailable?: boolean
@@ -21,6 +23,8 @@ export function DestinationSearchField({
   suggestions,
   loading,
   onSelect,
+  label = 'Destino da viagem',
+  placeholder = 'Destino: rua, localidade, código postal…',
   disabled,
   geocodingUnavailable,
   onDismissSuggestions,
@@ -43,14 +47,14 @@ export function DestinationSearchField({
   return (
     <div ref={wrapRef} className="relative space-y-1.5">
       <label htmlFor={id} className="sr-only">
-        Destino da viagem
+        {label}
       </label>
       <Input
         id={id}
         type="search"
         autoComplete="off"
         enterKeyHint="search"
-        placeholder="Destino: rua, localidade, código postal…"
+        placeholder={placeholder}
         value={query}
         disabled={disabled}
         onChange={(e) => onQueryChange(e.target.value)}

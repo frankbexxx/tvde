@@ -113,6 +113,9 @@ export function PassengerDashboard() {
   } | null>(null)
   const [confirmRouteMetaLoading, setConfirmRouteMetaLoading] = useState(false)
   const mapAnchorRef = useRef<HTMLDivElement | null>(null)
+  const [pickupQuery, setPickupQuery] = useState('')
+  const [pickupGeoSuggestions, setPickupGeoSuggestions] = useState<GeocodeSuggestion[]>([])
+  const [pickupGeoLoading, setPickupGeoLoading] = useState(false)
   const [destinationQuery, setDestinationQuery] = useState('')
   const [geoSuggestions, setGeoSuggestions] = useState<GeocodeSuggestion[]>([])
   const [geoLoading, setGeoLoading] = useState(false)
@@ -254,8 +257,30 @@ export function PassengerDashboard() {
   }, [pickupLocation])
 
   useEffect(() => {
+    const q = pickupQuery.trim()
+    if (pickupLocation || q.length < 2) {
+      setPickupGeoSuggestions([])
+      setPickupGeoLoading(false)
+      return
+    }
+    let cancelled = false
+    const t = window.setTimeout(() => {
+      setPickupGeoLoading(true)
+      void forwardGeocodeSearch(q, 5).then((rows) => {
+        if (!cancelled) setPickupGeoSuggestions(rows)
+      }).finally(() => {
+        if (!cancelled) setPickupGeoLoading(false)
+      })
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [pickupQuery, pickupLocation])
+
+  useEffect(() => {
     const q = destinationQuery.trim()
-    if (q.length < 2) {
+    if (!pickupLocation || q.length < 2) {
       setGeoSuggestions([])
       setGeoLoading(false)
       return
@@ -298,6 +323,10 @@ export function PassengerDashboard() {
       setDropoffLocation(null)
       pickupLocationRef.current = null
       setIsPlanningMode(false)
+      setPickupQuery('')
+      setPickupGeoSuggestions([])
+      setDestinationQuery('')
+      setGeoSuggestions([])
     }
   }, [activeTripId])
 
@@ -309,6 +338,8 @@ export function PassengerDashboard() {
     setPickupAddress(null)
     setDropoffAddress(null)
     setConfirmRouteMeta(null)
+    setPickupQuery('')
+    setPickupGeoSuggestions([])
     setDestinationQuery('')
     setGeoSuggestions([])
   }, [])
@@ -323,6 +354,21 @@ export function PassengerDashboard() {
 
   const dismissGeoSuggestions = useCallback(() => {
     setGeoSuggestions([])
+  }, [])
+
+  const dismissPickupGeoSuggestions = useCallback(() => {
+    setPickupGeoSuggestions([])
+  }, [])
+
+  const handlePickupPick = useCallback((s: GeocodeSuggestion) => {
+    const coords = { lat: s.lat, lng: s.lng }
+    pickupLocationRef.current = coords
+    setPickupLocation(coords)
+    setPickupQuery(s.primary)
+    setPickupGeoSuggestions([])
+    setIsPlanningMode(true)
+    setMapRecenterKey((k) => k + 1)
+    toast.success('Recolha selecionada')
   }, [])
 
   const handleDestinationPick = useCallback((s: GeocodeSuggestion) => {
@@ -749,13 +795,16 @@ export function PassengerDashboard() {
   const showDestinationSearch =
     passengerUiState !== 'confirming' && Boolean(pickupLocation)
 
+  const showPickupSearch =
+    passengerUiState !== 'confirming' && !pickupLocation
+
   const planningTitle =
     passengerUiState === 'planning' && pickupLocation ? 'Indica o destino' : 'Confirma a recolha'
 
   const planningDescription =
     passengerUiState === 'planning' && pickupLocation
       ? 'Escreve a morada de destino ou toca no mapa.'
-      : 'Toca no mapa para confirmar onde queres entrar no carro.'
+      : 'Escreve a morada de recolha ou toca no mapa.'
 
   return (
     <ScreenContainer
@@ -808,7 +857,22 @@ export function PassengerDashboard() {
             className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"
             aria-label="Pedir viagem"
           >
-            {showDestinationSearch ? (
+            {showPickupSearch ? (
+              <div className="px-4 pt-4 pb-1 space-y-2">
+                <DestinationSearchField
+                  query={pickupQuery}
+                  onQueryChange={setPickupQuery}
+                  suggestions={pickupGeoSuggestions}
+                  loading={pickupGeoLoading}
+                  onSelect={handlePickupPick}
+                  label="Recolha da viagem"
+                  placeholder="Recolha: rua, localidade, código postal…"
+                  disabled={creating}
+                  geocodingUnavailable={false}
+                  onDismissSuggestions={dismissPickupGeoSuggestions}
+                />
+              </div>
+            ) : showDestinationSearch ? (
               <div className="px-4 pt-4 pb-1 space-y-2">
                 <DestinationSearchField
                   query={destinationQuery}
@@ -816,6 +880,8 @@ export function PassengerDashboard() {
                   suggestions={geoSuggestions}
                   loading={geoLoading}
                   onSelect={handleDestinationPick}
+                  label="Destino da viagem"
+                  placeholder="Destino: rua, localidade, código postal…"
                   disabled={creating}
                   geocodingUnavailable={false}
                   onDismissSuggestions={dismissGeoSuggestions}
@@ -838,7 +904,7 @@ export function PassengerDashboard() {
                   </p>
                   {passengerUiState === 'idle' ? (
                     <p className="text-sm text-muted-foreground leading-snug">
-                      Começa por confirmar a recolha.
+                      Começa por escrever ou escolher a recolha.
                     </p>
                   ) : null}
                 </>
@@ -867,7 +933,7 @@ export function PassengerDashboard() {
                 tripDropoff={tripMapLegs.dropoff}
                 planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
                 mapVisualWeight={a021Layout.map}
-                planningRecenter={dropoffLocation}
+                planningRecenter={dropoffLocation ?? pickupLocation}
                 planningRecenterKey={mapRecenterKey}
               />
             </div>
