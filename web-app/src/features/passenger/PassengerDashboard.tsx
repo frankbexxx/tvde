@@ -746,6 +746,17 @@ export function PassengerDashboard() {
       passengerUiState === 'planning' ||
       passengerUiState === 'confirming')
 
+  const showDestinationSearch =
+    passengerUiState !== 'confirming' && Boolean(pickupLocation)
+
+  const planningTitle =
+    passengerUiState === 'planning' && pickupLocation ? 'Indica o destino' : 'Confirma a recolha'
+
+  const planningDescription =
+    passengerUiState === 'planning' && pickupLocation
+      ? 'Escreve a morada de destino ou toca no mapa.'
+      : 'Toca no mapa para confirmar onde queres entrar no carro.'
+
   return (
     <ScreenContainer
       bottomButton={
@@ -797,7 +808,7 @@ export function PassengerDashboard() {
             className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"
             aria-label="Pedir viagem"
           >
-            {passengerUiState !== 'confirming' ? (
+            {showDestinationSearch ? (
               <div className="px-4 pt-4 pb-1 space-y-2">
                 <DestinationSearchField
                   query={destinationQuery}
@@ -821,15 +832,13 @@ export function PassengerDashboard() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">Para onde vais?</h2>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">{planningTitle}</h2>
                   <p className="text-sm text-foreground/80 leading-snug">
-                    {passengerUiState === 'planning'
-                      ? 'Indica recolha e destino no mapa.'
-                      : 'Escolhe recolha e destino para pedir uma viagem'}
+                    {planningDescription}
                   </p>
                   {passengerUiState === 'idle' ? (
                     <p className="text-sm text-muted-foreground leading-snug">
-                      Começa por indicar o destino
+                      Começa por confirmar a recolha.
                     </p>
                   ) : null}
                 </>

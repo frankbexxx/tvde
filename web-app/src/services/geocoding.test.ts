@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  isLikelyInPortugal,
   mapMtilerFeatureToSuggestion,
   mapNominatimItemToSuggestion,
   splitPlaceName,
@@ -39,6 +40,18 @@ describe('mapMtilerFeatureToSuggestion', () => {
   it('returns null without coordinates', () => {
     expect(mapMtilerFeatureToSuggestion({ place_name: 'Somewhere' }, 0)).toBeNull()
   })
+
+  it('filters out suggestions outside Portugal', () => {
+    expect(
+      mapMtilerFeatureToSuggestion(
+        {
+          geometry: { coordinates: [-43.2, -22.9] },
+          place_name: 'Rua Caldas Xavier, Rio de Janeiro, Brasil',
+        },
+        0
+      )
+    ).toBeNull()
+  })
 })
 
 describe('mapNominatimItemToSuggestion', () => {
@@ -71,6 +84,19 @@ describe('mapNominatimItemToSuggestion', () => {
   })
 
   it('returns null without a display name', () => {
-    expect(mapNominatimItemToSuggestion({ lat: '1', lon: '2' }, 0)).toBeNull()
+    expect(mapNominatimItemToSuggestion({ lat: '38.72', lon: '-9.14' }, 0)).toBeNull()
+  })
+})
+
+describe('isLikelyInPortugal', () => {
+  it('accepts mainland Portugal, Madeira and Azores coordinates', () => {
+    expect(isLikelyInPortugal(-9.14, 38.72)).toBe(true)
+    expect(isLikelyInPortugal(-16.92, 32.65)).toBe(true)
+    expect(isLikelyInPortugal(-25.67, 37.74)).toBe(true)
+  })
+
+  it('rejects Brasil and Angola coordinates', () => {
+    expect(isLikelyInPortugal(-43.2, -22.9)).toBe(false)
+    expect(isLikelyInPortugal(13.23, -8.84)).toBe(false)
   })
 })

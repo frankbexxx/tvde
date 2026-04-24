@@ -103,13 +103,13 @@ function TripPlannerPanelInner({
 
   const pickupLine =
     !hasPickup
-      ? 'Toca no mapa — recolha'
+      ? 'Toca no mapa para confirmar recolha'
       : pickupAddressLoading
         ? 'A obter morada…'
         : (pickupAddress ?? 'Local selecionado')
   const dropLine =
     !hasDropoff
-      ? 'Indica o destino (pesquisa em cima ou mapa)'
+      ? 'Indica o destino por texto ou no mapa'
       : dropoffAddressLoading
         ? 'A obter morada…'
         : (dropoffAddress ?? 'Local selecionado')
@@ -120,11 +120,11 @@ function TripPlannerPanelInner({
         <>
           {!embedded && (
             <>
-              <p className="text-lg font-semibold text-foreground">Para onde vais?</p>
+              <p className="text-lg font-semibold text-foreground">Confirma a recolha</p>
               <p className="text-sm text-foreground/80">
-                Escolhe recolha e destino para pedir uma viagem
+                Primeiro confirma onde queres entrar no carro.
               </p>
-              <p className="text-sm text-muted-foreground">Começa por indicar o destino</p>
+              <p className="text-sm text-muted-foreground">Depois escreves o destino.</p>
             </>
           )}
           {embedded ? (
@@ -133,7 +133,7 @@ function TripPlannerPanelInner({
               style={{ borderLeftColor: 'hsl(var(--color-flag-blue, 218 100% 23%))' }}
             >
               <p className="text-sm text-muted-foreground text-center leading-snug">
-                Indica um destino para começar — pesquisa em cima ou abre o mapa com o botão.
+                Começa por confirmar a recolha no mapa. Depois escreves o destino.
               </p>
             </div>
           ) : null}
@@ -143,7 +143,7 @@ function TripPlannerPanelInner({
             disabled={confirmTripPending}
             className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
           >
-            Pedir viagem
+            Escolher recolha
           </button>
         </>
       )}
@@ -157,13 +157,13 @@ function TripPlannerPanelInner({
             <span className="text-foreground">{dropLine}</span>
           </p>
           <div className="flex flex-col gap-2 pt-1">
-            {!hasDropoff && (
+            {hasPickup && !hasDropoff && (
               <button
                 type="button"
                 onClick={onSetDestinationHint}
                 className="w-full rounded-2xl border border-border bg-muted/50 py-3 text-base font-medium text-foreground hover:bg-muted transition-colors"
               >
-                Centrar mapa no destino
+                Também podes tocar no mapa para marcar destino
               </button>
             )}
             <button
