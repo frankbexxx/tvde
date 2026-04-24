@@ -29,6 +29,29 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Fecho sexta 2026-04-24 — D-1 Alpha
+
+_Âncora:_ produção validada em smoke real. Amanhã é execução, prints e relato — não abrir feature nova.
+
+### Feito
+
+- [x] [CÓDIGO] **Destino/recolha por texto** — PRs **#177**, **#178**, **#179** em `main`: fallback Nominatim, Portugal-first, recolha primeiro e texto-first para recolha+destino.
+- [x] [SMOKE] **Viagem real D-1** — Frank + parceiro: casa (`Rua Caldas Xavier`) → **Oeiras Parque**; motorista aceitou; **Waze abriu correctamente**; produção <https://tvde-app-j51f.onrender.com>.
+- [x] [OPS] **`main` sincronizada** — `origin/main` @ `68acf7c`; working tree limpa antes do PR de docs.
+
+### Amanhã 2026-04-25 — primeira sessão
+
+1. [ ] [OPS] **Oppo Reno 13 5G** — terminar setup; login; permissões de localização; Chrome/Waze prontos.
+2. [ ] [DOCS] **Tutorial com prints** — recolha por texto → destino por texto → motorista aceita → Waze abre; guardar prints para handoff/tutorial.
+3. [ ] [OPS] **Piloto/relato** — preencher `docs/meta/ALPHA_2026-04-25_RELATO.md` durante a janela; S1 bloqueia, S2/S3 anotar.
+
+### Regra de sábado
+
+- **Zero deploys durante a janela** salvo S1 bloqueador real. Qualquer polish fica para `docs/meta/BACKLOG_POST_PILOTO.md` e retro.
+- Credenciais, handouts e prints operacionais ficam em `docs/_local/` / dispositivo; **não comitar segredos**.
+
+---
+
 ## Abertura 2026-04-09 — consulta obrigatória
 
 - **Ler primeiro:** [`docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md`](docs/meta/CONSULTA_OBRIGATORIA_SESSAO_2026-04-09.md) — circuito de implementação, compliance incremental, integrações tipo «import», aceleração (bulk visual + Playwright + telemóvel).
