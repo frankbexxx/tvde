@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { mapMtilerFeatureToSuggestion, splitPlaceName } from './geocoding'
+import {
+  mapMtilerFeatureToSuggestion,
+  mapNominatimItemToSuggestion,
+  splitPlaceName,
+} from './geocoding'
 
 describe('splitPlaceName', () => {
   it('splits on first comma', () => {
@@ -34,5 +38,39 @@ describe('mapMtilerFeatureToSuggestion', () => {
 
   it('returns null without coordinates', () => {
     expect(mapMtilerFeatureToSuggestion({ place_name: 'Somewhere' }, 0)).toBeNull()
+  })
+})
+
+describe('mapNominatimItemToSuggestion', () => {
+  it('maps Nominatim-like item', () => {
+    const s = mapNominatimItemToSuggestion(
+      {
+        place_id: 42,
+        lat: '38.72',
+        lon: '-9.14',
+        display_name: 'Alfama, Lisboa, Portugal',
+      },
+      0
+    )
+    expect(s).toMatchObject({
+      primary: 'Alfama',
+      secondary: 'Lisboa, Portugal',
+      lat: 38.72,
+      lng: -9.14,
+    })
+    expect(s?.id).toContain('nom-42')
+  })
+
+  it('returns null without valid coordinates', () => {
+    expect(
+      mapNominatimItemToSuggestion(
+        { lat: 'abc', lon: 'def', display_name: 'X' },
+        0
+      )
+    ).toBeNull()
+  })
+
+  it('returns null without a display name', () => {
+    expect(mapNominatimItemToSuggestion({ lat: '1', lon: '2' }, 0)).toBeNull()
   })
 })
