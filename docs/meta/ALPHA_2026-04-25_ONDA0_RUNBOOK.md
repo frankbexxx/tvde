@@ -16,7 +16,7 @@
 - [x] **B.** `BETA_MODE=True` confirmado na env do Render (prod backend).
 - [x] **C.** OPS-BD-PI: cleanup profundo em prod (ver «Registo de execução 2026-04-20» abaixo).
 - [x] **D.** OPS-SMOKE-132: smoke do botão «Alinhar pagamento (Stripe)» feito no ciclo de Bloco 1.
-- [ ] **E.** 5 passageiros + 2–3 motoristas + 1 admin criados em prod com login confirmado manualmente 1× por tipo.
+- [ ] **E.** 4 principais (1P + 1D + 2 admin) + 2 reserva (P2 / D2) criados em prod; spot-check login dos 4 principais.
 - [x] **F.** Bloco 2 — fix de código para PI inexistente em Stripe (ver «Bloco 2» abaixo).
 
 ---
@@ -127,7 +127,7 @@ Conto contigo? Responde «dentro» ou «fora». Obrigado 🙏
   - `[Largo Marquês de Pombal, Oeiras]` — confirmar sexta de manhã (proximidade do ponto de partida dos motoristas); alternativa: `[Estação de Oeiras (saída principal)]` (mais genérico, sem erro de busca).
   - Horário `10h00 – 12h00` — manter (conservador, já dá janela de 2h que cobre 3-4 viagens por tester com folga).
   - "Link + credenciais envio no grupo ~10 min antes" — manter (a execução do script §E.2 só acontece sexta de manhã, credenciais só são conhecidas nesse momento).
-- [x] **Sequência sexta de manhã:** §E.2 em Render Shell → receber 5+3+1 outputs `[NEW]` → registar credenciais num ficheiro local (não comitado) → preencher placeholders na mensagem → enviar.
+- [x] **Sequência sexta/sábado manhã:** §E.2 em Render Shell → receber 6 outputs `[NEW]` (4 principais + 2 reserva) → registar credenciais num ficheiro local (não comitado) → gerar PDFs dos handouts bilingue a partir de `docs/_local/pilot_handouts/` → enviar por WhatsApp a P1, D1 e Admin2 (parceiro).
 - [ ] Contactos convidados (nº): `___`
 - [ ] Confirmados "dentro": `___` / 5
 - [ ] Grupo criado: sim / não
@@ -344,46 +344,51 @@ Se `não`, abrir issue com label `alpha-blocker` e não avançar para Onda 1 at�
 
 ---
 
-## Passo E — Contas para o piloto (5P + 3D + 1A)
+## Passo E — Contas para o piloto (1P + 1D + 2A + 2 reserva)
 
-**Modelo de login em BETA:** user com `password_hash=NULL` usa `DEFAULT_PASSWORD` — ver `backend/app/db/models/user.py:83` (comentário "Optional bcrypt hash; if null, BETA login uses DEFAULT_PASSWORD"). Login por phone + password.
+**Redesenho 2026-04-23 (noite):** plano inicial (5P + 3D + 1A = 9 contas) foi substituído pelo **piloto informal reduzido** — 1 casal amigo (pessoa A = passenger, pessoa B = driver) vindo de Cascais para Oeiras, com Frank + parceiro em Oeiras a acolher/monitorizar. **4 contas principais + 2 de reserva**, total 6. Handouts bilingues EN+PT em PDF enviados por WhatsApp (ver `docs/_local/pilot_handouts/`).
 
-### E.1 — Lista proposta
+**Modelo de login em BETA:** user com `password_hash=NULL` usa `DEFAULT_PASSWORD` — ver `backend/app/db/models/user.py:83` (comentário "Optional bcrypt hash; if null, BETA login uses DEFAULT_PASSWORD"). Login por phone + password. **Zero SMS/OTP** (confirmado em `backend/app/api/routers/auth.py:70-71`: em prod sem `ENABLE_DEV_TOOLS` o código OTP não sai para lado nenhum; fluxo do piloto é phone + password).
 
-| Papel        | Nome display | Phone (sugestão) | Role      | Notas                                                         |
-| ------------ | ------------ | ---------------- | --------- | ------------------------------------------------------------- |
-| Passageiro 1 | Alpha P1     | `+3519000000001` | passenger | Tester 1                                                      |
-| Passageiro 2 | Alpha P2     | `+3519000000002` | passenger | Tester 2                                                      |
-| Passageiro 3 | Alpha P3     | `+3519000000003` | passenger | Tester 3                                                      |
-| Passageiro 4 | Alpha P4     | `+3519000000004` | passenger | Tester 4                                                      |
-| Passageiro 5 | Alpha P5     | `+3519000000005` | passenger | Tester 5                                                      |
-| Motorista 1  | Alpha D1     | `+3519000000011` | driver    | Auto-aprovado em BETA via `_ensure_driver_profile`            |
-| Motorista 2  | Alpha D2     | `+3519000000012` | driver    | Idem                                                          |
-| Motorista 3  | Alpha D3     | `+3519000000013` | driver    | Reserva                                                       |
-| Admin piloto | Alpha Admin  | `+3519000000099` | admin     | Dedicado para o sábado (não misturar com super_admin pessoal) |
+### E.1 — Lista proposta (6 contas)
 
-**Nota:** os phones são sugestões — se a tua prod tem validação E.164 estrita ou se já usaste alguns destes, ajusta. O importante é serem **memorizáveis** e **segregados** do resto dos users reais.
+| Papel                | Nome display | Phone (placeholder)\* | Role      | Distribuído? | Notas                                                                       |
+| -------------------- | ------------ | --------------------- | --------- | ------------ | --------------------------------------------------------------------------- |
+| Passageiro principal | Alpha P1     | `+3519000000001`      | passenger | ✅ Handout   | Casal amigo — pessoa A. Pede a viagem Cascais→Oeiras.                       |
+| Motorista principal  | Alpha D1     | `+3519000000011`      | driver    | ✅ Handout   | Casal amigo — pessoa B. Auto-aprovado em BETA via `_ensure_driver_profile`. |
+| Admin piloto 1       | Alpha Admin1 | `+3519000000091`      | admin     | ❌ Frank     | **Frank** no PC — monitor Admin Viagens + Saúde durante o piloto.           |
+| Admin piloto 2       | Alpha Admin2 | `+3519000000092`      | admin     | ✅ Handout   | **Parceiro** em Oeiras — observador com AdminDashboard no telemóvel.        |
+| Reserva passenger    | Alpha P2     | `+3519000000002`      | passenger | ❌ Idle      | Backup se P1 falhar; credenciais comunicadas verbalmente no momento.        |
+| Reserva driver       | Alpha D2     | `+3519000000012`      | driver    | ❌ Idle      | Backup se D1 falhar; idem.                                                  |
 
-### E.2 — Criação em prod
+**\*Placeholders:** os phones da tabela são **memoráveis mas irreais**. Antes de correr §E.2 em produção, os 4 principais (P1, D1, Admin1, Admin2) têm de ser substituídos pelos **números reais** recolhidos (casal, Frank, parceiro). As 2 reservas (P2, D2) podem ficar com phones placeholder — nunca são distribuídas; se forem precisas, cria-se **um utilizador real adicional à mão** no momento (1 comando extra).
 
-Opção preferida (testada 2026-04-21): **script Python self-contained** para o Render Shell. Cria as 9 contas de uma vez, é idempotente (`ON CONFLICT (phone) DO NOTHING`), não requer elevação extra porque `admin` normal já é suficiente para o piloto (`super_admin` é a conta pessoal do Frank).
+**Racional do piloto reduzido:**
 
-Alternativas caso prefiras: UI do AdminDashboard (criar 9 vezes) ou endpoint `POST /auth/register` seguido de `UPDATE users SET role=...` para o admin (o register normal coloca `role='passenger'`). Ver `backend/app/api/routers/auth.py`.
+- Evita risco de eclipse de sessões (Frank não loga em P1 nem D1 — as contas ficam exclusivas do casal).
+- Reduz variáveis: 1 viagem real, 2 pessoas a testar, 2 pessoas a observar.
+- Suficiente para validar o produto end-to-end e demonstrar a investidor.
+- Pós-piloto, tudo é rinsed: `DELETE` das 6 contas + `ON DELETE CASCADE` limpa tudo. Criação dos primeiros users reais (Frank, esposa, família, amigos) arranca do zero com dados completos (email, morada, conformidade legal).
+
+### E.2 — Criação em prod (script Python 6 contas)
+
+Script para Render Shell (backend API service). Idempotente: reruns não duplicam (`ON CONFLICT (phone) DO NOTHING`).
+
+**Antes de correr:** abrir `docs/_local/ALPHA_ACCOUNTS.md` e substituir os 4 phones placeholder (P1, D1, Admin1, Admin2) pelos reais recolhidos. Copiar o bloco `USERS` actualizado para o script abaixo.
 
 ```bash
-# Cola no Render Shell (backend API service). Idempotente: reruns não duplicam.
+# Cola no Render Shell (backend API service) depois de substituir phones reais.
 python - <<'EOF'
 import os, psycopg2
 USERS = [
-    ("passenger", "Alpha P1",    "+3519000000001"),
-    ("passenger", "Alpha P2",    "+3519000000002"),
-    ("passenger", "Alpha P3",    "+3519000000003"),
-    ("passenger", "Alpha P4",    "+3519000000004"),
-    ("passenger", "Alpha P5",    "+3519000000005"),
-    ("driver",    "Alpha D1",    "+3519000000011"),
-    ("driver",    "Alpha D2",    "+3519000000012"),
-    ("driver",    "Alpha D3",    "+3519000000013"),
-    ("admin",     "Alpha Admin", "+3519000000099"),
+    # 4 principais (substituir phones placeholder pelos reais antes de correr)
+    ("passenger", "Alpha P1",     "+3519000000001"),  # casal — pessoa A
+    ("driver",    "Alpha D1",     "+3519000000011"),  # casal — pessoa B
+    ("admin",     "Alpha Admin1", "+3519000000091"),  # Frank (monitor PC)
+    ("admin",     "Alpha Admin2", "+3519000000092"),  # parceiro (observador)
+    # 2 reserva (placeholders OK, nunca distribuídos)
+    ("passenger", "Alpha P2",     "+3519000000002"),  # reserva idle
+    ("driver",    "Alpha D2",     "+3519000000012"),  # reserva idle
 ]
 conn = psycopg2.connect(os.environ["DATABASE_URL"])
 conn.autocommit = True
@@ -402,51 +407,54 @@ for role, name, phone in USERS:
     row = cur.fetchone()
     if row:
         inserted += 1
-        print(f"[NEW] {role:10s} {name:15s} {phone}  id={row[0]}")
+        print(f"[NEW] {role:10s} {name:13s} {phone}  id={row[0]}")
     else:
         existed += 1
         cur.execute("SELECT id, role FROM users WHERE phone=%s", (phone,))
         exist = cur.fetchone()
-        print(f"[SKIP] {role:10s} {name:15s} {phone}  já existe (id={exist[0]}, role={exist[1]})")
+        print(f"[SKIP] {role:10s} {name:13s} {phone}  já existe (id={exist[0]}, role={exist[1]})")
 cur.execute("""
     SELECT role, COUNT(*) FROM users
-    WHERE phone LIKE '+351900000%'
+    WHERE name LIKE 'Alpha %'
     GROUP BY role ORDER BY role
 """)
-print("\n-- Resumo (só phones +351900000%) --")
+print("\n-- Resumo (só Alpha %) --")
 for r in cur.fetchall():
     print(f"  {r[0]:12s} {r[1]}")
 print(f"\nTotal: {inserted} inseridos, {existed} já existentes.")
 EOF
 ```
 
-**Password de login em BETA:** `password_hash=NULL` → fluxo de login aceita `DEFAULT_PASSWORD` (env var do Render; ver `backend/app/api/routers/auth.py`). Os testers só precisam do phone + a password que enviares no grupo ~10 min antes.
+**Password de login em BETA:** `password_hash=NULL` → fluxo de login aceita `DEFAULT_PASSWORD` (env var do Render; ver `backend/app/api/routers/auth.py`). Os 4 principais recebem a password no handout PDF bilingue.
 
-**Drivers:** o perfil de motorista (tabela `drivers`) é criado automaticamente em BETA no primeiro heartbeat de localização (`backend/app/services/driver_location.py :: _ensure_driver_profile`). Ou seja: depois de criar o user, basta o tester fazer login e a app dele envia um heartbeat; o driver profile aparece sozinho.
+**Drivers:** o perfil de motorista (tabela `drivers`) é criado automaticamente em BETA no primeiro heartbeat de localização (`backend/app/services/driver_location.py :: _ensure_driver_profile`). Ou seja: depois de criar o user D1, basta o tester fazer login na Reno 12 real e a app envia um heartbeat; o driver profile aparece sozinho.
 
-Se fores por SQL, repetir para cada role. Para `admin`, pode ser preciso um passo extra (ver `backend/app/api/routers/admin.py` para regras de elevação).
+### E.3 — Confirmação de login (spot-check obrigatório — 4 principais)
 
-### E.3 — Confirmação de login (spot-check obrigatório)
+Antes de fechar a Onda 0, fazer **1 login por cada principal** para confirmar que as contas estão funcionais.
 
-Antes de fechar a Onda 0, fazer **pelo menos 1 login por role** para confirmar que as contas estão funcionais.
+**Plano 2026-04-23 (noite) — Sueca side track terminado, TVDE retomado:**
 
-**Plano adaptado 2026-04-22** (Oppo 77 avariado, Reno 12 chega sexta):
+- [ ] **Alpha P1** em browser desktop (Firefox janela privada) → PassengerDashboard abre → deslogar. Serve só para confirmar credenciais; experiência mobile fica para o casal.
+- [ ] **Alpha D1** em browser desktop (Vivaldi anónima) → DriverDashboard abre → deslogar. **Não ligar GPS** no desktop (criaria driver profile sem querer num contexto desktop) — profile aparecerá sozinho quando o casal logar no telemóvel real no sábado.
+- [ ] **Alpha Admin1** em **PC** (conta de monitorização do Frank) → AdminDashboard abre, aba Viagens visível, aba Saúde funcional.
+- [ ] **Alpha Admin2** em **telemóvel do parceiro** (ou browser desktop, quando for mais prático) → AdminDashboard responsive mobile OK.
 
-- [ ] Login Alpha P1 no **Samsung A13** → PassengerDashboard abre (serve para validar contas passageiro sem depender do Reno 12).
-- [ ] Login Alpha D1 no **Reno 12** quando chegar sexta → DriverDashboard abre; motorista pode ficar online; heartbeat cria driver profile em BETA (auto). **Se Reno 12 não estiver pronto a tempo**, fazer spot-check do D1 em browser desktop (Firefox/Vivaldi janela privada) só para confirmar login, adiando heartbeat real para sábado de manhã.
-- [ ] Login Alpha Admin em **PC** → AdminDashboard abre e aba Viagens é visível. Independente de hardware Android.
-
-**Nota sobre driver profile:** em BETA, o perfil de motorista (tabela `drivers`) só é criado quando a app envia o primeiro heartbeat de localização. Isso significa que um login desktop do D1 **não** cria o profile — só confirma que o user existe. O profile aparece no primeiro login mobile real com GPS activo.
+**P2 / D2:** **não** spot-checked. Ficam idle na BD; se forem precisas no sábado, Frank fone verbalmente o phone + password e o utilizador reserva loga no momento.
 
 ### E.4 — Estado
 
-- [x] Script de criação revisto e testado localmente (2026-04-21) — idempotente via `ON CONFLICT (phone) DO NOTHING`. Pronto para colar no Render Shell.
+- [x] Script de criação revisto 2026-04-23 (noite) — 6 contas (4 principais + 2 reserva), idempotente.
 - [ ] Script executado em prod (data: \_\_\_\_)
-- [ ] 5 passageiros criados
-- [ ] 3 motoristas criados
-- [ ] 1 admin dedicado criado
-- [ ] Credenciais documentadas offline (ficheiro local não comitado)
-- [ ] Spot-check P1/D1/Admin: passou / falhou (detalhes: \_\_\_)
+- [ ] 1 passenger principal (P1) criado
+- [ ] 1 driver principal (D1) criado
+- [ ] 2 admin dedicados (Admin1 = Frank, Admin2 = parceiro) criados
+- [ ] 2 reserva (P2, D2) criados
+- [ ] Credenciais documentadas offline (`docs/_local/ALPHA_ACCOUNTS.md`)
+- [ ] Handouts bilingue gerados (`docs/_local/pilot_handouts/*.pdf`)
+- [ ] Handouts enviados por WhatsApp (P1, D1, Admin2)
+- [ ] Spot-check dos 4 principais: passou / falhou (detalhes: \_\_\_)
+- [ ] Dry-run D-1 (6ª à tarde): P1/D1/Admin2 confirmam "instalei PWA + login OK" — detalhes: \_\_\_
 
 ---
 
@@ -459,12 +467,12 @@ Quando todos os checklists acima (A–E) estiverem marcados:
 3. Actualizar `docs/meta/PROXIMA_SESSAO.md` com secção `Fecho Onda 0 — 2026-04-20 (tarde/noite)` e indicação para arrancar Onda 1 na terça 2026-04-21.
 4. Commit + push + PR `ops(alpha): Onda 0 operacional concluída`.
 
-**Critério de passagem para Onda 1:**
+**Critério de passagem para Onda 1 (revisto 2026-04-23 para piloto reduzido):**
 
 - OPS-BD-PI sem `processing + pi_mock + trip.completed` residual (ou explicado).
 - OPS-SMOKE-132 passou.
 - `BETA_MODE=True` em prod confirmado.
-- Mínimo 5P + 1D + 1 admin com login testado (os restantes podem ficar para terça de manhã).
-- Convocatória enviada a pelo menos 7 contactos para ter margem de 5 confirmados.
+- 4 principais (P1, D1, Admin1, Admin2) + 2 reserva (P2, D2) criados; spot-check login dos 4 principais passado.
+- Handouts PDF bilingue distribuídos a P1, D1, Admin2 via WhatsApp; dry-run D-1 confirmado.
 
-Se algum dos 3 primeiros falhar, **adiar Onda 1** até resolver. Se só E falhar parcialmente, arrancar Onda 1 na mesma e fechar E na terça.
+Se algum dos 3 primeiros falhar, **adiar Onda 1** até resolver. Se spot-check ou dry-run falhar parcialmente, triagem caso-a-caso.
