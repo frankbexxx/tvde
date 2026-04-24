@@ -15,6 +15,11 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY as string | undefined
  * aproxima-os geograficamente.
  */
 const LISBON_PROXIMITY = { lng: -9.1393, lat: 38.7223 }
+const PORTUGAL_BOUNDS = [
+  { minLng: -9.7, minLat: 36.8, maxLng: -6.1, maxLat: 42.3 }, // Continente
+  { minLng: -17.4, minLat: 32.2, maxLng: -16.1, maxLat: 33.3 }, // Madeira
+  { minLng: -31.4, minLat: 36.8, maxLng: -24.8, maxLat: 40.1 }, // Acores
+]
 
 export type GeocodeSuggestion = {
   id: string
@@ -40,6 +45,12 @@ type NominatimItem = {
   address?: Record<string, string | undefined>
 }
 
+export function isLikelyInPortugal(lng: number, lat: number): boolean {
+  return PORTUGAL_BOUNDS.some(
+    (b) => lng >= b.minLng && lng <= b.maxLng && lat >= b.minLat && lat <= b.maxLat
+  )
+}
+
 /** Expõe para testes unitários. */
 export function splitPlaceName(placeName: string): { primary: string; secondary: string } {
   const trimmed = placeName.trim()
@@ -60,6 +71,7 @@ export function mapMtilerFeatureToSuggestion(
   const lng = Number(coords[0])
   const lat = Number(coords[1])
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  if (!isLikelyInPortugal(lng, lat)) return null
   const raw =
     typeof feature.place_name === 'string' && feature.place_name.trim()
       ? feature.place_name.trim()
@@ -84,6 +96,7 @@ export function mapNominatimItemToSuggestion(
   const lat = Number(item.lat)
   const lng = Number(item.lon)
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+  if (!isLikelyInPortugal(lng, lat)) return null
   const display =
     typeof item.display_name === 'string' && item.display_name.trim()
       ? item.display_name.trim()
@@ -105,7 +118,14 @@ export function mapNominatimItemToSuggestion(
 async function maptilerForwardSearch(q: string, limit: number): Promise<GeocodeSuggestion[]> {
   if (!MAPTILER_KEY) return []
   try {
-    const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json?key=${encodeURIComponent(MAPTILER_KEY)}&limit=${limit}&language=pt`
+    const params = new URLSearchParams({
+      key: MAPTILER_KEY,
+      limit: String(limit),
+      language: 'pt',
+      country: 'pt',
+      proximity: `${LISBON_PROXIMITY.lng},${LISBON_PROXIMITY.lat}`,
+    })
+    const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json?${params.toString()}`
     const res = await fetch(url)
     if (!res.ok) return []
     const data = (await res.json()) as { features?: MTFeature[] }
