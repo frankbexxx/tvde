@@ -23,6 +23,13 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 4. **Zero deploys durante a janela** salvo S1 bloqueador real. S2/S3 vão para `BACKLOG_POST_PILOTO.md` / retro.
 5. **Docs locais** (`docs/_local/`) continuam fora do Git: contas, credenciais, PDFs e handouts não entram no PR.
 
+### Pack de documentos para sessao de campo (25/04)
+
+- `docs/meta/PILOTO_2026-04-25_ROTEIRO_CAMPO.md` — folha frente/verso para recolha rapida (sim/nao/check).
+- `docs/meta/PARCEIRO_ESTADO_VS_FALTA_2026-04-25.md` — resumo assertivo "estado atual vs falta".
+- `docs/meta/MARKETING_IDEIA_APP_2026-04-25.md` — narrativa users + investidor (sem overpromise).
+- `docs/meta/PILOTO_2026-04-25_QUESTOES_ISSUES.md` — bloco de ideias/perguntas/issues durante a sessao.
+
 ### Open PR de docs
 
 - **PR #176** (`docs/alpha-6-account-redesign`) é o fecho documental da sexta: 6 contas/handouts/backlog pós-piloto + este registo de smoke real. Merge antes de encerrar a noite se o diff estiver certo.
@@ -90,14 +97,14 @@ Sessão dividida entre **operacional TVDE** (validado) e **side project Sueca** 
 
 **Entregas da manhã (6 PRs mergidos):**
 
-| PR | Conteúdo |
-|----|----------|
+| PR   | Conteúdo                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | #166 | **Theme Portugal refactor** — base silver/white neutra + verde pastel (tokens `primary`/`accent`) + novas CSS vars de acento bandeira (`--color-flag-red`, `--color-flag-yellow`, `--color-flag-blue`). Renomeado "portugal-dark" → **"dev (sandbox)"** com migração silenciosa (`LEGACY_THEME_MAP` em `useTheme.ts`). Novo componente `BrandStripe` (3px ribbon 60% verde / 30% vermelho / 10% amarelo) no topo do `AppHeaderBar`. |
-| #167 | **Onda 2.5 parte 2 — a11y** — `LoginScreen` com `role="tablist"`/`role="tab"` + `BrandStripe`; `disabled:opacity-50` → `disabled:bg-muted disabled:text-muted-foreground` em `PrimaryActionButton`, `RequestCard`, `LoginScreen`, `TripPlannerPanel` (4 instâncias); focus rings visíveis; polling footnotes simplificados; badge driver com contraste sólido. |
-| #168 | **`ActiveTripActions`** — botão "Cancelar viagem" em estilo **ghost outline** (menos peso visual que sólido); novo helper `confirmExternalNav` com `window.confirm()` antes de abrir Waze / Google Maps (4 links protegidos). |
-| #169 | **Geolocation robustness** — `FALLBACK_AFTER_MS` 3s → 10s e `WATCH_POSITION_TIMEOUT_MS` 8s → 15s; novo `retry()` exposto em `useGeolocation`; botão **"Tentar outra vez"** dentro do banner de aviso em ambos os dashboards. |
-| #170 | **P0 fix — pin preso em Oeiras Câmara Municipal** mesmo com GPS real OK. Causa: `DEMO_ORIGIN` hardcoded (idêntico a `OEIRAS_FALLBACK`) servia de fallback a `MapView`, e como o `easeTo` só re-centra **uma vez**, a câmara ficava presa em Oeiras mesmo depois do GPS real chegar. Fix: remover `DEMO_ORIGIN` e passar `undefined` (sem pin falso). Confirmado Desktop + Android em anónimo. |
-| #171 | **Accents em listas** — `RequestCard` (driver "Viagens disponíveis") com `border-l-4 border-l-primary`; histórico (passenger + driver) com dot de 8px por estado (`completed` verde / `failed` vermelho atenuado / `cancelled` cinza); helper único `historyStatusDotColor`; texto longo trunca com `…` mantendo preço visível em 360px. |
+| #167 | **Onda 2.5 parte 2 — a11y** — `LoginScreen` com `role="tablist"`/`role="tab"` + `BrandStripe`; `disabled:opacity-50` → `disabled:bg-muted disabled:text-muted-foreground` em `PrimaryActionButton`, `RequestCard`, `LoginScreen`, `TripPlannerPanel` (4 instâncias); focus rings visíveis; polling footnotes simplificados; badge driver com contraste sólido.                                                                      |
+| #168 | **`ActiveTripActions`** — botão "Cancelar viagem" em estilo **ghost outline** (menos peso visual que sólido); novo helper `confirmExternalNav` com `window.confirm()` antes de abrir Waze / Google Maps (4 links protegidos).                                                                                                                                                                                                       |
+| #169 | **Geolocation robustness** — `FALLBACK_AFTER_MS` 3s → 10s e `WATCH_POSITION_TIMEOUT_MS` 8s → 15s; novo `retry()` exposto em `useGeolocation`; botão **"Tentar outra vez"** dentro do banner de aviso em ambos os dashboards.                                                                                                                                                                                                        |
+| #170 | **P0 fix — pin preso em Oeiras Câmara Municipal** mesmo com GPS real OK. Causa: `DEMO_ORIGIN` hardcoded (idêntico a `OEIRAS_FALLBACK`) servia de fallback a `MapView`, e como o `easeTo` só re-centra **uma vez**, a câmara ficava presa em Oeiras mesmo depois do GPS real chegar. Fix: remover `DEMO_ORIGIN` e passar `undefined` (sem pin falso). Confirmado Desktop + Android em anónimo.                                       |
+| #171 | **Accents em listas** — `RequestCard` (driver "Viagens disponíveis") com `border-l-4 border-l-primary`; histórico (passenger + driver) com dot de 8px por estado (`completed` verde / `failed` vermelho atenuado / `cancelled` cinza); helper único `historyStatusDotColor`; texto longo trunca com `…` mantendo preço visível em 360px.                                                                                            |
 
 **Padrão consolidado para cores/acentos (aplicar daqui em diante):**
 
@@ -120,18 +127,19 @@ Sessão dividida entre **operacional TVDE** (validado) e **side project Sueca** 
 
 **Entregas da sessão (9 PRs + ops):**
 
-| PR | Conteúdo |
-|----|----------|
-| #157 | Onda 2.5 parte 1 — A1 contraste BetaAccountPanel, A2 placeholder, A3 "Isto pode demorar", A5 mapa aria-label. |
-| #158 | CI baseline (ruff + tsc adicionados aos workflows existentes) + Dependabot (npm/pip/gh-actions, weekly). |
+| PR   | Conteúdo                                                                                                                                                                                                                        |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #157 | Onda 2.5 parte 1 — A1 contraste BetaAccountPanel, A2 placeholder, A3 "Isto pode demorar", A5 mapa aria-label.                                                                                                                   |
+| #158 | CI baseline (ruff + tsc adicionados aos workflows existentes) + Dependabot (npm/pip/gh-actions, weekly).                                                                                                                        |
 | #159 | `docs/meta/AUDIT_DEEP_2026-04-21.md` — audit code-only exaustivo com findings A/B/C para LoginScreen, DriverDashboard, PassengerDashboard, ActiveTripActions, RequestCard, StatusHeader, PrimaryActionButton, TripPlannerPanel. |
-| #160 | ruff format em 13 backend files (mecânico). |
-| #161 | **Sentry** frontend (`@sentry/react`) + backend (`sentry-sdk[fastapi]`) com inicialização condicional (só se DSN + MODE≠development), filtros de ruído, `sendDefaultPii=false`, sampling=0. |
-| #162 | **B1+B2 (P0 alpha)** — `OFFER_TIMEOUT_SECONDS` 15→60, `REDISPATCH_MIN_INTERVAL_SECONDS` 10→5, `PASSENGER_SEARCH_FALLBACK_AFTER_SEC` 10→25. Fecha a race "viagem desaparece do ecrã do motorista". |
-| #163 | `/` e `/health` aceitam HEAD — UptimeRobot free tier (só permite HEAD). |
-| #164 | Login tabs — `role="tablist"` + `role="tab"` + `aria-selected` nos 4 Links. |
+| #160 | ruff format em 13 backend files (mecânico).                                                                                                                                                                                     |
+| #161 | **Sentry** frontend (`@sentry/react`) + backend (`sentry-sdk[fastapi]`) com inicialização condicional (só se DSN + MODE≠development), filtros de ruído, `sendDefaultPii=false`, sampling=0.                                     |
+| #162 | **B1+B2 (P0 alpha)** — `OFFER_TIMEOUT_SECONDS` 15→60, `REDISPATCH_MIN_INTERVAL_SECONDS` 10→5, `PASSENGER_SEARCH_FALLBACK_AFTER_SEC` 10→25. Fecha a race "viagem desaparece do ecrã do motorista".                               |
+| #163 | `/` e `/health` aceitam HEAD — UptimeRobot free tier (só permite HEAD).                                                                                                                                                         |
+| #164 | Login tabs — `role="tablist"` + `role="tab"` + `aria-selected` nos 4 Links.                                                                                                                                                     |
 
 **Ops:**
+
 - **UptimeRobot** configurado (`TVDE API` + `TVDE APP`), ambos Up após #163.
 - **Sentry** configurado em Render env vars.
 - **Cron-job.org** mantido (worker scheduler) — distinto do UptimeRobot (liveness probe).
@@ -139,6 +147,7 @@ Sessão dividida entre **operacional TVDE** (validado) e **side project Sueca** 
 - Audit Firefox Dev Edition feito sobre PassengerDashboard idle + accepted/arriving (a11y inspector + RDM 360×640).
 
 **Bugs ainda abertos no plano alpha (ver `ALPHA_2026-04-25.md §9.1`):**
+
 - Nenhum P0/P1. B1+B2 fixed em #162.
 
 ---
@@ -150,6 +159,7 @@ A **parte 2 da Onda 2.5 foi toda feita na manhã** (#166–#171). Todos os items
 **Prioridade 1 — Mini-smoke solo (quando Frank voltar ao telemóvel)**
 
 Só Frank, 1 Android, Oeiras:
+
 - Passageiro cria trip → confirma que com `OFFER_TIMEOUT=60` o motorista vê a oferta calmamente.
 - Passageiro espera ≥10s → confirma que **não** aparece "Sem motoristas" (antes aparecia, B2).
 - Driver expira uma oferta propositadamente → confirma que a viagem volta em ~5s (novo redispatch interval, B1).
@@ -168,11 +178,13 @@ Com 1 convidado, 2 Android, Oeiras/Cascais. Nível 1 + tentativa Nível 2. Anota
 **Prioridade 3 (se sobrar tempo antes do ensaio) — polimento opcional**
 
 Candidatos identificados mas **não** obrigatórios para o piloto:
+
 - `StatusHeader` ongoing variant contrast (marginal).
 - `TripPlannerPanel` hint text weight (cosmético).
 - `DriverDashboard` GPS panel verboso atrás de toggle dev (refactor maior, pode adiar).
 
 **Não fazer ainda:**
+
 - Não abrir features novas (X1 pesquisa por nome/postal fica para depois de sábado).
 - Não mexer na state machine, SP-F, auditoria, pagamentos, matching.
 - Não começar §A (convocatória) nem §E (contas piloto) — **sexta de manhã**.
@@ -181,15 +193,16 @@ Candidatos identificados mas **não** obrigatórios para o piloto:
 
 ## Calendário até ao piloto
 
-| Data | Onda | Foco |
-|------|------|------|
-| qua 22/04 manhã | 2.5 parte 2 | ✅ **Concluída** (#166–#171: theme, a11y, ghost cancel, accents, geolocation P0). |
-| qua 22/04 tarde | smoke solo | Mini-smoke 1 Android em Oeiras (B1/B2 + checklist manhã). |
-| qui 23/04 | 3 | Ensaio com 1-2 testers externos. Anotar S1/S2 em `ALPHA_2026-04-25.md §9`. |
-| sex 24/04 | 4 | **Manhã:** `§E.2` do ONDA0 runbook (criar contas piloto em Render Shell) + `§A` convocatória WhatsApp com hora/ponto. **Tarde:** só S1+S2 do audit, deploy até 18:00. |
-| sáb 25/04 | 5 | **Piloto em Oeiras/Cascais.** Zero deploys durante a janela. |
+| Data            | Onda        | Foco                                                                                                                                                                  |
+| --------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| qua 22/04 manhã | 2.5 parte 2 | ✅ **Concluída** (#166–#171: theme, a11y, ghost cancel, accents, geolocation P0).                                                                                     |
+| qua 22/04 tarde | smoke solo  | Mini-smoke 1 Android em Oeiras (B1/B2 + checklist manhã).                                                                                                             |
+| qui 23/04       | 3           | Ensaio com 1-2 testers externos. Anotar S1/S2 em `ALPHA_2026-04-25.md §9`.                                                                                            |
+| sex 24/04       | 4           | **Manhã:** `§E.2` do ONDA0 runbook (criar contas piloto em Render Shell) + `§A` convocatória WhatsApp com hora/ponto. **Tarde:** só S1+S2 do audit, deploy até 18:00. |
+| sáb 25/04       | 5           | **Piloto em Oeiras/Cascais.** Zero deploys durante a janela.                                                                                                          |
 
 **Referências vivas:**
+
 - `docs/meta/ALPHA_2026-04-25.md §6` (calendário), `§7.3.5` (super-prompt Onda 2.5), `§9` (log de smokes).
 - `docs/meta/AUDIT_DEEP_2026-04-21.md` (lista completa de findings com secção/linha).
 - `docs/meta/ALPHA_2026-04-25_ONDA0_RUNBOOK.md §A` (template WhatsApp) e `§E.2` (script contas piloto).
@@ -201,6 +214,7 @@ Candidatos identificados mas **não** obrigatórios para o piloto:
 **Contexto em 3 linhas:** decidimos entregar uma **alpha controlada** no sábado 2026-04-25 em **Oeiras/Cascais**, com **5 testers**, **Android via link Render**, **sem pagamento real**, canal de reporte **WhatsApp + chamada**. Frank como admin observador. O GPS real e o fluxo "uber-like" (passageiro vê motorista a aproximar-se ao vivo) **já estão em produção e validados em campo** na semana passada — não é preciso implementar GPS.
 
 **Doc mestre:** [`ALPHA_2026-04-25.md`](ALPHA_2026-04-25.md) — ler antes de tudo o resto. Tem:
+
 - Decisões validadas (§1), âmbito IN/OUT (§2), inventário confirmado do que já está pronto (§3).
 - Riscos e mitigação (§4), cenários de teste Nível 1 e 2 (§5), calendário (§6).
 - **Ondas 0–5 com super-prompts prontas a colar** (§7) — uma por dia, cada uma contém contexto, tarefas, regras, entregáveis e critérios de aceitação.
@@ -257,6 +271,7 @@ Onda 0 — estado (resto adiado para sexta):
 4. Sexta (Onda 4) — primeiras tarefas da manhã: (a) executar `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E.2` em Render Shell + spot-check login P1/D1/Admin; (b) enviar convocatória WhatsApp (`§A`) com hora/ponto finais.
 
 **Ondas seguintes (alto nível):**
+
 - **Onda 1 (ter 21/04)** — ✅ código mergido (#152). Falta só smoke duplo real (quarta à noite).
 - **Onda 2 (qua 22/04)** — ✅ código mergido antecipadamente (#153). Falta smoke Nível 2 real + freeze 22:00.
 - **Onda 3 (qui 23/04)** — ensaio com 1–2 testers externos.
