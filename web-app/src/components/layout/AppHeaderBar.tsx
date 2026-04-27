@@ -29,7 +29,10 @@ export function AppHeaderBar() {
       <div className="flex justify-between items-start px-4 py-3 gap-2">
         <div className="min-w-0 flex-1 pr-2">
           <div className="inline-flex items-center rounded-md border border-border/70 bg-card px-2 py-1 mb-0.5">
-            <span className="text-base font-semibold tracking-tight text-foreground">V@mulá</span>
+            <span className="text-base font-extrabold tracking-tight text-[#ff0000]">v</span>
+            <span className="text-base font-extrabold tracking-tight text-[#006600]">@</span>
+            <span className="text-base font-extrabold tracking-tight text-[#ff0000]">mul</span>
+            <span className="text-base font-extrabold tracking-tight text-[#ffff00]">á</span>
           </div>
           <h1 className="text-xs font-bold uppercase tracking-wide text-muted-foreground leading-tight">TVDE</h1>
           <p
