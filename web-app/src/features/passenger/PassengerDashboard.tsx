@@ -116,9 +116,11 @@ export function PassengerDashboard() {
   const [pickupQuery, setPickupQuery] = useState('')
   const [pickupGeoSuggestions, setPickupGeoSuggestions] = useState<GeocodeSuggestion[]>([])
   const [pickupGeoLoading, setPickupGeoLoading] = useState(false)
+  const [pickupCandidate, setPickupCandidate] = useState<GeocodeSuggestion | null>(null)
   const [destinationQuery, setDestinationQuery] = useState('')
   const [geoSuggestions, setGeoSuggestions] = useState<GeocodeSuggestion[]>([])
   const [geoLoading, setGeoLoading] = useState(false)
+  const [destinationCandidate, setDestinationCandidate] = useState<GeocodeSuggestion | null>(null)
   const [mapRecenterKey, setMapRecenterKey] = useState(0)
   /** P3: snapshot do POST /trips até o primeiro GET alinhar. */
   const [passengerPendingTripDetail, setPassengerPendingTripDetail] = useState<TripDetailResponse | null>(
@@ -327,6 +329,8 @@ export function PassengerDashboard() {
       setPickupGeoSuggestions([])
       setDestinationQuery('')
       setGeoSuggestions([])
+      setPickupCandidate(null)
+      setDestinationCandidate(null)
     }
   }, [activeTripId])
 
@@ -342,6 +346,8 @@ export function PassengerDashboard() {
     setPickupGeoSuggestions([])
     setDestinationQuery('')
     setGeoSuggestions([])
+    setPickupCandidate(null)
+    setDestinationCandidate(null)
   }, [])
 
   const onChoosePlanningMode = useCallback(() => {
@@ -361,23 +367,49 @@ export function PassengerDashboard() {
   }, [])
 
   const handlePickupPick = useCallback((s: GeocodeSuggestion) => {
-    const coords = { lat: s.lat, lng: s.lng }
-    pickupLocationRef.current = coords
-    setPickupLocation(coords)
+    setPickupCandidate(s)
     setPickupQuery(s.primary)
     setPickupGeoSuggestions([])
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
-    toast.success('Recolha selecionada')
+    toast.success('Recolha em pré-visualização')
   }, [])
 
+  const confirmPickupCandidate = useCallback(() => {
+    if (!pickupCandidate) return
+    const coords = { lat: pickupCandidate.lat, lng: pickupCandidate.lng }
+    pickupLocationRef.current = coords
+    setPickupLocation(coords)
+    setPickupCandidate(null)
+    setIsPlanningMode(true)
+    setMapRecenterKey((k) => k + 1)
+    toast.success('Recolha confirmada')
+  }, [pickupCandidate])
+
   const handleDestinationPick = useCallback((s: GeocodeSuggestion) => {
-    setDropoffLocation({ lat: s.lat, lng: s.lng })
+    setDestinationCandidate(s)
     setDestinationQuery(s.primary)
     setGeoSuggestions([])
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
-    toast.success('Destino selecionado')
+    toast.success('Destino em pré-visualização')
+  }, [])
+
+  const confirmDestinationCandidate = useCallback(() => {
+    if (!destinationCandidate) return
+    setDropoffLocation({ lat: destinationCandidate.lat, lng: destinationCandidate.lng })
+    setDestinationCandidate(null)
+    setIsPlanningMode(true)
+    setMapRecenterKey((k) => k + 1)
+    toast.success('Destino confirmado')
+  }, [destinationCandidate])
+
+  const clearPickupCandidate = useCallback(() => {
+    setPickupCandidate(null)
+  }, [])
+
+  const clearDestinationCandidate = useCallback(() => {
+    setDestinationCandidate(null)
   }, [])
 
   /** A019: com pickup+dropoff, novo clique atualiza só o destino */
@@ -389,6 +421,16 @@ export function PassengerDashboard() {
     }
     setDropoffLocation(coords)
   }, [])
+
+  const handlePickupQueryChange = useCallback((value: string) => {
+    setPickupQuery(value)
+    if (pickupCandidate) setPickupCandidate(null)
+  }, [pickupCandidate])
+
+  const handleDestinationQueryChange = useCallback((value: string) => {
+    setDestinationQuery(value)
+    if (destinationCandidate) setDestinationCandidate(null)
+  }, [destinationCandidate])
 
   const handleRequestTrip = useCallback(async () => {
     if (!token) return
@@ -799,12 +841,30 @@ export function PassengerDashboard() {
     passengerUiState !== 'confirming' && !pickupLocation
 
   const planningTitle =
-    passengerUiState === 'planning' && pickupLocation ? 'Indica o destino' : 'Confirma a recolha'
+    passengerUiState === 'planning' && pickupLocation ? 'Indica o destino' : 'Onde te vamos buscar?'
 
   const planningDescription =
     passengerUiState === 'planning' && pickupLocation
       ? 'Escreve a morada de destino ou toca no mapa.'
       : 'Escreve a morada de recolha ou toca no mapa.'
+
+  const handleEditDestinationOnly = useCallback(() => {
+    setDropoffLocation(null)
+    setDestinationCandidate(null)
+    setDropoffAddress(null)
+    setConfirmRouteMeta(null)
+    setDestinationQuery('')
+    setGeoSuggestions([])
+    setIsPlanningMode(true)
+    mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [])
+
+  const pickupPreviewLocation = pickupLocation ?? (pickupCandidate
+    ? { lat: pickupCandidate.lat, lng: pickupCandidate.lng }
+    : null)
+  const dropoffPreviewLocation = dropoffLocation ?? (destinationCandidate
+    ? { lat: destinationCandidate.lat, lng: destinationCandidate.lng }
+    : null)
 
   return (
     <ScreenContainer
@@ -861,7 +921,7 @@ export function PassengerDashboard() {
               <div className="px-4 pt-4 pb-1 space-y-2">
                 <DestinationSearchField
                   query={pickupQuery}
-                  onQueryChange={setPickupQuery}
+                  onQueryChange={handlePickupQueryChange}
                   suggestions={pickupGeoSuggestions}
                   loading={pickupGeoLoading}
                   onSelect={handlePickupPick}
@@ -871,12 +931,37 @@ export function PassengerDashboard() {
                   geocodingUnavailable={false}
                   onDismissSuggestions={dismissPickupGeoSuggestions}
                 />
+                {pickupCandidate ? (
+                  <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                    <p className="text-sm font-medium text-foreground">Recolha em pré-visualização</p>
+                    <p className="text-xs text-muted-foreground leading-snug">
+                      {pickupCandidate.primary}
+                      {pickupCandidate.secondary ? ` · ${pickupCandidate.secondary}` : ''}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={confirmPickupCandidate}
+                        className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity"
+                      >
+                        Confirmar recolha
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearPickupCandidate}
+                        className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors"
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : showDestinationSearch ? (
               <div className="px-4 pt-4 pb-1 space-y-2">
                 <DestinationSearchField
                   query={destinationQuery}
-                  onQueryChange={setDestinationQuery}
+                  onQueryChange={handleDestinationQueryChange}
                   suggestions={geoSuggestions}
                   loading={geoLoading}
                   onSelect={handleDestinationPick}
@@ -886,6 +971,31 @@ export function PassengerDashboard() {
                   geocodingUnavailable={false}
                   onDismissSuggestions={dismissGeoSuggestions}
                 />
+                {destinationCandidate ? (
+                  <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                    <p className="text-sm font-medium text-foreground">Destino em pré-visualização</p>
+                    <p className="text-xs text-muted-foreground leading-snug">
+                      {destinationCandidate.primary}
+                      {destinationCandidate.secondary ? ` · ${destinationCandidate.secondary}` : ''}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={confirmDestinationCandidate}
+                        className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity"
+                      >
+                        Confirmar destino
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearDestinationCandidate}
+                        className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors"
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
             <div className="px-4 pt-4 pb-3 space-y-2">
@@ -916,8 +1026,8 @@ export function PassengerDashboard() {
                 className="rounded-none shadow-none"
                 showMap={showMapOnScreen}
                 mapPlaceholder={mapPlaceholder}
-                pickupSelection={isPickupPlanningMode ? pickupLocation : null}
-                dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
+                pickupSelection={isPickupPlanningMode ? pickupPreviewLocation : null}
+                dropoffSelection={isPickupPlanningMode ? dropoffPreviewLocation : null}
                 onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
                 passengerLocation={
                   passengerLocation ?? (activeTrip
@@ -933,7 +1043,7 @@ export function PassengerDashboard() {
                 tripDropoff={tripMapLegs.dropoff}
                 planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
                 mapVisualWeight={a021Layout.map}
-                planningRecenter={dropoffLocation ?? pickupLocation}
+                planningRecenter={dropoffPreviewLocation ?? pickupPreviewLocation}
                 planningRecenterKey={mapRecenterKey}
               />
             </div>
@@ -962,6 +1072,7 @@ export function PassengerDashboard() {
                 onChooseMap={onChoosePlanningMode}
                 onSetDestinationHint={onScrollToMapAnchor}
                 onReset={resetPlanning}
+                onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
                 visualWeight={a021Layout.panel}
@@ -989,8 +1100,8 @@ export function PassengerDashboard() {
               <MapView
                 showMap={showMapOnScreen}
                 mapPlaceholder={mapPlaceholder}
-                pickupSelection={isPickupPlanningMode ? pickupLocation : null}
-                dropoffSelection={isPickupPlanningMode ? dropoffLocation : null}
+                pickupSelection={isPickupPlanningMode ? pickupPreviewLocation : null}
+                dropoffSelection={isPickupPlanningMode ? dropoffPreviewLocation : null}
                 onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
                 passengerLocation={
                   passengerLocation ?? (activeTrip
@@ -1006,7 +1117,7 @@ export function PassengerDashboard() {
                 tripDropoff={tripMapLegs.dropoff}
                 planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
                 mapVisualWeight={a021Layout.map}
-                planningRecenter={dropoffLocation}
+                planningRecenter={dropoffPreviewLocation}
                 planningRecenterKey={mapRecenterKey}
               />
             </div>
@@ -1034,6 +1145,7 @@ export function PassengerDashboard() {
                 onChooseMap={onChoosePlanningMode}
                 onSetDestinationHint={onScrollToMapAnchor}
                 onReset={resetPlanning}
+                onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
                 visualWeight={a021Layout.panel}

@@ -45,6 +45,7 @@ export interface TripPlannerPanelProps {
   onChooseMap: () => void
   onSetDestinationHint: () => void
   onReset: () => void
+  onEditDestination?: () => void
   onConfirmTrip: () => void
   /** A021: quando o foco está no header/mapa, o painel baixa contraste */
   visualWeight?: TripPlannerVisualWeight
@@ -75,6 +76,7 @@ function TripPlannerPanelInner({
   onChooseMap,
   onSetDestinationHint,
   onReset,
+  onEditDestination,
   onConfirmTrip,
   visualWeight = 'default',
   embedded = false,
@@ -200,6 +202,16 @@ function TripPlannerPanelInner({
             )}
           </div>
           <div className="flex flex-col gap-2 pt-1">
+            {onEditDestination ? (
+              <button
+                type="button"
+                onClick={onEditDestination}
+                disabled={confirmTripPending}
+                className="w-full rounded-2xl border border-border bg-muted/40 py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:bg-muted/30 disabled:text-muted-foreground disabled:cursor-not-allowed"
+              >
+                Alterar destino
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={onConfirmTrip}
