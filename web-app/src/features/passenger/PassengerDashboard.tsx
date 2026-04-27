@@ -843,10 +843,11 @@ export function PassengerDashboard() {
   const planningTitle =
     passengerUiState === 'planning' && pickupLocation ? 'Indica o destino' : 'Onde te vamos buscar?'
 
+  /** No cartão unificado o campo + botão do mapa já comunicam a acção; evitar repetir a mesma frase em várias linhas. */
   const planningDescription =
     passengerUiState === 'planning' && pickupLocation
-      ? 'Escreve a morada de destino ou toca no mapa.'
-      : 'Escreve a morada de recolha ou toca no mapa.'
+      ? 'Escreve o destino ou toca no mapa.'
+      : null
 
   const handleEditDestinationOnly = useCallback(() => {
     setDropoffLocation(null)
@@ -1009,13 +1010,8 @@ export function PassengerDashboard() {
               ) : (
                 <>
                   <h2 className="text-xl font-bold text-foreground tracking-tight">{planningTitle}</h2>
-                  <p className="text-sm text-foreground/80 leading-snug">
-                    {planningDescription}
-                  </p>
-                  {passengerUiState === 'idle' ? (
-                    <p className="text-sm text-muted-foreground leading-snug">
-                      Começa por escrever ou escolher a recolha.
-                    </p>
+                  {planningDescription ? (
+                    <p className="text-sm text-foreground/80 leading-snug">{planningDescription}</p>
                   ) : null}
                 </>
               )}
