@@ -3,6 +3,7 @@ import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 import { BrandStripe } from '@/design-system/components/brand/BrandStripe'
 import { useAuth } from '@/context/AuthContext'
+import vamulaLogo from '../../../../image/vamula_1.png'
 
 /**
  * Cabeçalho global: marca + data (pt-PT) + identificador (nome BETA ou telemóvel).
@@ -28,7 +29,13 @@ export function AppHeaderBar() {
       <BrandStripe />
       <div className="flex justify-between items-start px-4 py-3 gap-2">
         <div className="min-w-0 flex-1 pr-2">
-          <h1 className="text-lg font-bold text-foreground leading-tight">TVDE</h1>
+          <div className="h-8 w-auto max-w-[220px] mb-0.5">
+            <img
+              src={vamulaLogo}
+              alt="V@mulá"
+              className="h-full w-auto object-contain rounded-md"
+            />
+          </div>
           <p
             className="text-xs text-muted-foreground mt-0.5 truncate"
             title={who ? `${dateStr} · ${who}` : dateStr}
