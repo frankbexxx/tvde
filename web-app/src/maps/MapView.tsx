@@ -50,6 +50,8 @@ export interface MapViewProps {
   /** Recolha / destino da viagem ativa (marcadores distintos do planeamento). */
   tripPickup?: LatLng | null
   tripDropoff?: LatLng | null
+  /** Usa altura mais compacta para manter CTAs visíveis em ecrãs curtos. */
+  compactHeight?: boolean
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -79,6 +81,7 @@ export function MapView({
   planningRecenterKey = 0,
   tripPickup = null,
   tripDropoff = null,
+  compactHeight = false,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -273,7 +276,13 @@ export function MapView({
       role="region"
       aria-label={onPlanningMapClick ? 'Mapa interactivo — selecciona recolha e destino' : 'Mapa da viagem'}
     >
-      <div className="relative h-[45vh] min-h-[220px] max-h-[420px]">
+      <div
+        className={`relative ${
+          compactHeight
+            ? 'h-[33vh] min-h-[170px] max-h-[280px]'
+            : 'h-[45vh] min-h-[220px] max-h-[420px]'
+        }`}
+      >
         <Map
           ref={mapRef}
           mapLib={maplibregl}

@@ -157,6 +157,8 @@ export function DriverDashboard() {
     !!token,
     10000
   )
+  const hasAvailableTrips = Boolean(available && available.length > 0)
+  const compactDriverSurface = !activeTripId && !offline && hasAvailableTrips
 
   const { setDriverOnAssigned } = useDevToolsCallbacks()
   useEffect(() => {
@@ -423,9 +425,8 @@ export function DriverDashboard() {
         ) : undefined
       }
     >
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Motorista</h1>
-        <p className="text-foreground/80 mt-1 text-base">
+      <header className="mb-4">
+        <p className="text-foreground/80 text-sm leading-snug">
           O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong>{' '}
           no fim.
         </p>
@@ -462,39 +463,41 @@ export function DriverDashboard() {
       )}
 
       {!offline && !!token && !!driverLocation && (
-        <div className="rounded-lg bg-foreground/5 border border-foreground/10 px-3 py-2 text-sm text-foreground/85">
+        <div className="rounded-lg bg-foreground/5 border border-foreground/15 px-3 py-2 text-xs text-foreground/75">
           {gpsReport.lastError ? (
-            <div className="flex flex-col gap-1">
-              <p className="font-medium text-foreground">
+            <div className="flex flex-col gap-1.5">
+              <p className="font-medium text-foreground/90">
                 GPS upload: erro {gpsReport.lastError.status ?? ''}
               </p>
-              <p className="text-foreground/75">
-                {String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}
-                {gpsReport.lastError.request_id ? (
-                  <>
-                    {' '}
-                    (<span className="font-mono">request_id {gpsReport.lastError.request_id}</span>)
-                  </>
-                ) : null}
-              </p>
+              <p>{String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}</p>
+              {gpsReport.lastError.request_id ? (
+                <p className="font-mono text-[11px] text-foreground/60">
+                  request_id {gpsReport.lastError.request_id}
+                </p>
+              ) : null}
             </div>
           ) : (
             <p>
               GPS upload: {gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}
             </p>
           )}
-          {serverLoc ? (
-            <p className="mt-1 text-foreground/75">
-              Servidor: {serverLoc.lat.toFixed(5)},{' '}
-              {serverLoc.lng.toFixed(5)} (age ~{Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
-            </p>
-          ) : serverLocErr ? (
-            <p className="mt-1 text-foreground/75">
-              Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
-            </p>
-          ) : (
-            <p className="mt-1 text-foreground/75">Servidor: a obter…</p>
-          )}
+          <details className="mt-1">
+            <summary className="cursor-pointer select-none text-[11px] text-foreground/65">
+              Diagnóstico técnico
+            </summary>
+            {serverLoc ? (
+              <p className="mt-1 text-[11px] text-foreground/65">
+                Servidor: {serverLoc.lat.toFixed(5)},{' '}
+                {serverLoc.lng.toFixed(5)} (age ~{Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
+              </p>
+            ) : serverLocErr ? (
+              <p className="mt-1 text-[11px] text-foreground/65">
+                Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
+              </p>
+            ) : (
+              <p className="mt-1 text-[11px] text-foreground/65">Servidor: a obter…</p>
+            )}
+          </details>
         </div>
       )}
 
@@ -514,7 +517,7 @@ export function DriverDashboard() {
         </div>
       )}
 
-      <div className="space-y-6 transition-opacity duration-150">
+      <div className="space-y-4 transition-opacity duration-150">
         <Toggle
           label="Estado"
           checked={!offline}
@@ -575,6 +578,7 @@ export function DriverDashboard() {
             mapVisualWeight={
               activeTripId || (available && available.length > 0) ? 'subdued' : 'emphasized'
             }
+            compactHeight={compactDriverSurface}
           />
         )}
 
