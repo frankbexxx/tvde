@@ -913,14 +913,31 @@ export function PassengerDashboard() {
         </div>
       )}
 
-      <div className="space-y-6 mt-6 transition-opacity duration-300 ease-out">
+      <div className="space-y-5 mt-3 transition-opacity duration-300 ease-out">
         {unifiedPassengerPlanning ? (
           <section
             className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"
             aria-label="Pedir viagem"
           >
+            <div className="px-4 pt-3 pb-2 space-y-2 border-b border-border">
+              {passengerUiState === 'confirming' ? (
+                <>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Confirma a viagem</h2>
+                  <p className="text-sm text-foreground/80 leading-snug">
+                    Estimativa ao pedir; o preço final aparece no fim da viagem.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">{planningTitle}</h2>
+                  {planningDescription ? (
+                    <p className="text-sm text-foreground/80 leading-snug">{planningDescription}</p>
+                  ) : null}
+                </>
+              )}
+            </div>
             {showPickupSearch ? (
-              <div className="px-4 pt-4 pb-1 space-y-2">
+              <div className="px-4 pt-3 pb-1 space-y-2">
                 <DestinationSearchField
                   query={pickupQuery}
                   onQueryChange={handlePickupQueryChange}
@@ -960,7 +977,7 @@ export function PassengerDashboard() {
                 ) : null}
               </div>
             ) : showDestinationSearch ? (
-              <div className="px-4 pt-4 pb-1 space-y-2">
+              <div className="px-4 pt-3 pb-1 space-y-2">
                 <DestinationSearchField
                   query={destinationQuery}
                   onQueryChange={handleDestinationQueryChange}
@@ -1000,23 +1017,6 @@ export function PassengerDashboard() {
                 ) : null}
               </div>
             ) : null}
-            <div className="px-4 pt-4 pb-3 space-y-2">
-              {passengerUiState === 'confirming' ? (
-                <>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">Confirma a viagem</h2>
-                  <p className="text-sm text-foreground/80 leading-snug">
-                    Estimativa ao pedir; o preço final aparece no fim da viagem.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">{planningTitle}</h2>
-                  {planningDescription ? (
-                    <p className="text-sm text-foreground/80 leading-snug">{planningDescription}</p>
-                  ) : null}
-                </>
-              )}
-            </div>
 
             <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4 border-t border-border">
               <MapView

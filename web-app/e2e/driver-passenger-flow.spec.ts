@@ -122,8 +122,8 @@ test.describe('Driver + passenger (proximity gate)', () => {
 
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
 
-    // Shell com auth OK (sem isto, loadError não mostra TVDE nem ACEITAR).
-    await expect(driverPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
+    // Shell com auth OK (âncora estável, sem depender de copy visível).
+    await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({
       timeout: sec(120),
     })
 
@@ -170,7 +170,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const passengerPage = await passengerCtx.newPage()
     trackPassengerPageForArtifacts(passengerPage)
     await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: sec(120) })
-    await expect(passengerPage.getByRole('heading', { name: /TVDE/i })).toBeVisible({
+    await expect(passengerPage.getByTestId('app-header-brand')).toBeVisible({
       timeout: sec(60),
     })
     await expect(
