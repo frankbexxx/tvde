@@ -611,6 +611,7 @@ export function DriverDashboard() {
                       destination={formatDestination(t.destination_lat, t.destination_lng)}
                       statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
                       estimatedPrice={t.estimated_price}
+                      acceptButtonTestId={`driver-accept-${t.trip_id}`}
                       onAccept={() =>
                         runAction(
                           () => acceptTrip(t.trip_id, token!),

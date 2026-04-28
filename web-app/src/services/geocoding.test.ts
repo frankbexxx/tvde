@@ -3,6 +3,8 @@ import {
   isLikelyInPortugal,
   mapMtilerFeatureToSuggestion,
   mapNominatimItemToSuggestion,
+  rankSuggestionForQuery,
+  reorderGeocodeSuggestions,
   splitPlaceName,
 } from './geocoding'
 
@@ -98,5 +100,48 @@ describe('isLikelyInPortugal', () => {
   it('rejects Brasil and Angola coordinates', () => {
     expect(isLikelyInPortugal(-43.2, -22.9)).toBe(false)
     expect(isLikelyInPortugal(13.23, -8.84)).toBe(false)
+  })
+})
+
+describe('ranking helpers', () => {
+  it('boosts entries that match postal code and house number', () => {
+    const query = 'Rua Caldas Xavier, 3 Oeiras 2780-010'
+    const exact = {
+      id: 'a',
+      lat: 38.7,
+      lng: -9.3,
+      primary: 'Rua Caldas Xavier, 3',
+      secondary: '2780-010 Oeiras, Lisboa',
+    }
+    const similar = {
+      id: 'b',
+      lat: 38.7,
+      lng: -9.3,
+      primary: 'Rua Caldas Xavier',
+      secondary: '2700-027 Amadora, Lisboa',
+    }
+    expect(rankSuggestionForQuery(query, exact)).toBeGreaterThan(rankSuggestionForQuery(query, similar))
+  })
+
+  it('reorders suggestions by query relevance while preserving ties', () => {
+    const query = 'Rua Caldas Xavier 2780-010'
+    const out = reorderGeocodeSuggestions(query, [
+      {
+        id: '1',
+        lat: 0,
+        lng: 0,
+        primary: 'Rua Caldas Xavier',
+        secondary: '2700-027 Amadora',
+      },
+      {
+        id: '2',
+        lat: 0,
+        lng: 0,
+        primary: 'Rua Caldas Xavier, 3',
+        secondary: '2780-010 Oeiras',
+      },
+    ])
+    expect(out[0].id).toBe('2')
+    expect(out[1].id).toBe('1')
   })
 })
