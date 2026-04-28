@@ -91,6 +91,23 @@ describe('ActiveTripActions (RTL)', () => {
     expect(driverTripActions.driverPerformComplete).not.toHaveBeenCalled()
   })
 
+  it('estado assigned: mostra dica contextual antes da ação de aceitar', () => {
+    pollingCtx.trip = minimalTrip('assigned')
+    renderActions(DRIVER_NEAR_PICKUP_0)
+    expect(screen.getByText(/aceita para começar a aproximação ao passageiro/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /aceitar/i })).toBeInTheDocument()
+  })
+
+  it('estado arriving: botão Iniciar viagem chama sequência start arriving->ongoing', async () => {
+    pollingCtx.trip = minimalTrip('arriving')
+    renderActions(DRIVER_NEAR_PICKUP_0)
+    fireEvent.click(screen.getByRole('button', { name: /iniciar viagem/i }))
+    await waitFor(() => {
+      expect(driverTripActions.driverPerformStartFromArriving).toHaveBeenCalledWith('tid', 'tok')
+    })
+    expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
+  })
+
   it('estado accepted: com motorista longe do pickup, Iniciar viagem desactivado e não chama API', () => {
     pollingCtx.trip = minimalTrip('accepted')
     renderActions({ lat: 2, lng: 2 })
@@ -111,6 +128,13 @@ describe('ActiveTripActions (RTL)', () => {
       'href',
       expect.stringContaining('google.com/maps')
     )
+  })
+
+  it('poll sem trip e sem fallback: mostra estado de sincronização e não expõe CTA de iniciar', () => {
+    pollingCtx.trip = null
+    renderActions(DRIVER_NEAR_PICKUP_0, { tripDetailFallback: null })
+    expect(screen.getByText(/a sincronizar estado da viagem/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /iniciar viagem/i })).not.toBeInTheDocument()
   })
 
   it('estado ongoing: botão Terminar viagem chama driverPerformComplete', async () => {
