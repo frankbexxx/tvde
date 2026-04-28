@@ -28,18 +28,23 @@ export function AppHeaderBar() {
       <BrandStripe />
       <div className="flex justify-between items-start px-4 py-3 gap-2">
         <div className="min-w-0 flex-1 pr-2">
-          <img
-            src="/brand/vamula-wordmark.png"
-            alt="V@mulá"
-            className="mb-0.5 h-8 w-auto rounded-sm object-contain"
-          />
-          <h1 className="text-xs font-bold uppercase tracking-wide text-muted-foreground leading-tight">TVDE</h1>
+          <div className="mb-0.5 flex items-end gap-3 min-w-0">
+            <img
+              src="/brand/vamula-wordmark.png"
+              alt="V@mulá"
+              className="h-7 w-auto rounded-sm object-contain shrink-0"
+            />
+            {who ? (
+              <span className="min-w-0 truncate text-sm italic font-medium text-foreground/85 tracking-tight">
+                {who}
+              </span>
+            ) : null}
+          </div>
           <p
-            className="text-xs text-muted-foreground mt-0.5 truncate"
-            title={who ? `${dateStr} · ${who}` : dateStr}
+            className="text-xs text-muted-foreground truncate"
+            title={dateStr}
           >
             {dateStr}
-            {who ? ` · ${who}` : null}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0 pt-0.5">
