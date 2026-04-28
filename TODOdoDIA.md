@@ -6,20 +6,34 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Hoje 2026-04-28 — velocidade de cruzeiro
+## Painel rápido da sessão (2026-04-28)
 
-_Âncora: passageiro quase fechado; driver fica para bloco dedicado mais tarde. Cosmética em pausa._
+_Usar este painel como fonte de verdade da sessão atual. O restante ficheiro mantém histórico/contexto._
 
-### Prioridades (máx. 3)
+### Agora
 
-1. [ ] [CÓDIGO] **Passageiro — fechar último gap funcional** (sem redesign): manter fluxo C+B estável e verificável.
-2. [ ] [DOCS] **TODOs e prompts em modo execução**: lista curta de trabalho ativo + pack de prompts para ondas/super-prompts.
-3. [ ] [OPS] **Fecho de sessão limpo**: build/teste curto + commit/PR objetivo + `main` sincronizada no fim.
+- [ ] [CÓDIGO] Fechar o último gap funcional do passageiro.
+- [ ] [CÓDIGO] Confirmar visibilidade operacional do **ACEITAR** no driver em viewport curta.
 
-### Fora de foco (hoje)
+### Hoje (resto do dia)
 
-- Theming, branding fino, ícones e restantes ajustes cosméticos.
-- Refactors largos que não fechem fluxo crítico.
+- [ ] [OPS] Smoke final combinado (passageiro + driver), com foco em regressões S1/S2.
+- [ ] [CÓDIGO] Ajustes mínimos pós-smoke (só se necessário).
+- [ ] [OPS] Fecho limpo: commit/PR do que faltar + `main` alinhada.
+
+### Amanhã
+
+- [ ] [DOCS] Atualizar estado real dos TODOs (agora/hoje/amanhã/backlog) sem ruído histórico.
+- [ ] [CÓDIGO] Passe curto de densidade visual (light theme), sem redesign global.
+- [ ] [OPS] Revalidação curta no device após os ajustes.
+- [ ] [CÓDIGO] Driver: UI explícita de rejeição de oferta (gap do `FEATURE_CHECKLIST`).
+- [ ] [CÓDIGO] Passenger: iniciar UI de rating pós-viagem (API já existente).
+- [ ] [TESTES] Expandir smoke/e2e no cenário de cancelamento/rejeição multi-user.
+
+### Backlog
+
+- [ ] [PENSAR] Theming/polish amplo e iconografia final (não bloqueador).
+- [ ] [PENSAR] Refactors estruturais fora do fluxo crítico.
 
 ---
 
