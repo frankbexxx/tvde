@@ -6,6 +6,7 @@ import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { toast as sonnerToast } from 'sonner'
 import { DRIVER_START_TRIP_MAX_DISTANCE_M, haversineKm } from '../../utils/geo'
+import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
   driverPerformAccept,
   driverPerformCancel,
@@ -49,7 +50,12 @@ export function ActiveTripActions({
   onError,
 }: ActiveTripActionsProps) {
   const fetchTrip = useCallback(() => getDriverTripDetail(tripId, token), [tripId, token])
-  const { data: trip } = usePolling(
+  const {
+    data: trip,
+    isRefreshing: tripRefreshing,
+    lastSuccessAt: tripLastSuccessAt,
+    pollFault: tripPollFault,
+  } = usePolling(
     fetchTrip,
     [tripId, token],
     !!tripId && !!token,
@@ -80,6 +86,21 @@ export function ActiveTripActions({
 
   const [loading, setLoading] = useState(false)
   const [loadingLong, setLoadingLong] = useState(false)
+  const hasTripContext = Boolean(coordsSource)
+  const tripPollStalled = usePollStallHint(
+    tripLastSuccessAt,
+    tripRefreshing,
+    Boolean(tripId && token && trip)
+  )
+  const tripPollHint = tripPollFault
+    ? 'Não foi possível atualizar agora. Mantemos a última informação e tentamos de novo.'
+    : trip
+      ? tripRefreshing
+        ? 'A atualizar estado…'
+        : tripPollStalled
+          ? 'Sem novidades há instantes — a última informação mantém-se válida.'
+          : null
+      : null
 
   /**
    * Guarda simples: quando o motorista toca num link para Waze ou Google Maps,
@@ -148,6 +169,13 @@ export function ActiveTripActions({
   }
 
   if (displayStatus === 'completed' || displayStatus === 'cancelled') return null
+  if (!hasTripContext && !statusOverride) {
+    return (
+      <div className="rounded-xl border border-border/80 bg-muted/30 px-4 py-3 text-center text-sm text-foreground/75">
+        A sincronizar estado da viagem… Se persistir, recarrega a página.
+      </div>
+    )
+  }
 
   const buttonConfig =
     displayStatus === 'assigned'
@@ -172,6 +200,14 @@ export function ActiveTripActions({
     displayStatus === 'assigned' ||
     displayStatus === 'accepted' ||
     displayStatus === 'arriving'
+  const nextStepHint =
+    displayStatus === 'assigned'
+      ? 'Aceita para começar a aproximação ao passageiro.'
+      : (displayStatus === 'accepted' || displayStatus === 'arriving')
+        ? 'Confirma a chegada ao ponto de recolha antes de iniciar viagem.'
+        : displayStatus === 'ongoing'
+          ? 'Segue para o destino e termina a viagem no fim.'
+          : null
 
   const startTripGateActive =
     (displayStatus === 'accepted' || displayStatus === 'arriving') &&
@@ -187,6 +223,16 @@ export function ActiveTripActions({
       {loadingLong ? (
         <p className="text-center text-sm text-foreground/70 px-1" aria-live="polite">
           Ainda a processar… Se demorar muito, verifica a ligação.
+        </p>
+      ) : null}
+      {tripPollHint ? (
+        <p className="text-center text-sm text-foreground/70 px-1 -mt-1" aria-live="polite">
+          {tripPollHint}
+        </p>
+      ) : null}
+      {nextStepHint ? (
+        <p className="text-center text-sm text-foreground/75 px-1 -mt-1" aria-live="polite">
+          {nextStepHint}
         </p>
       ) : null}
       {startTripGateActive && !startTripAllowed ? (

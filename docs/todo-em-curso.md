@@ -25,7 +25,8 @@ Lista curta do que está **ativo agora**. Tudo o que não estiver aqui vai para 
 
 ## Fio ativo B — Driver (arranque após A)
 
-- [ ] Abrir sessão dedicada de driver com super-prompt focada (sem redesign visual).
+- [x] Abrir sessão dedicada de driver com super-prompt focada (sem redesign visual).
+- [x] Evitar estado confuso sem detalhe polled: mostrar "A sincronizar estado…" em vez de CTA bloqueada.
 - [ ] Validar percurso aceite → chegada → iniciar → terminar no device.
 - [ ] Capturar apenas gaps S1/S2 de operação; resto entra em backlog.
 
