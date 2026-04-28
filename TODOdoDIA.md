@@ -6,6 +6,23 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Hoje 2026-04-28 — velocidade de cruzeiro
+
+_Âncora: passageiro quase fechado; driver fica para bloco dedicado mais tarde. Cosmética em pausa._
+
+### Prioridades (máx. 3)
+
+1. [ ] [CÓDIGO] **Passageiro — fechar último gap funcional** (sem redesign): manter fluxo C+B estável e verificável.
+2. [ ] [DOCS] **TODOs e prompts em modo execução**: lista curta de trabalho ativo + pack de prompts para ondas/super-prompts.
+3. [ ] [OPS] **Fecho de sessão limpo**: build/teste curto + commit/PR objetivo + `main` sincronizada no fim.
+
+### Fora de foco (hoje)
+
+- Theming, branding fino, ícones e restantes ajustes cosméticos.
+- Refactors largos que não fechem fluxo crítico.
+
+---
+
 ## Âncora 2026-04-20 → 2026-04-25 — ALPHA OEIRAS/CASCAIS
 
 **Documento mestre:** [`docs/meta/ALPHA_2026-04-25.md`](docs/meta/ALPHA_2026-04-25.md) — ler antes de qualquer sessão até sábado.
