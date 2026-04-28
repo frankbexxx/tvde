@@ -350,8 +350,9 @@ export function PassengerDashboard() {
     setDestinationCandidate(null)
   }, [])
 
-  const onChoosePlanningMode = useCallback(() => {
+  const onChoosePlanningModeAndScrollToMap = useCallback(() => {
     setIsPlanningMode(true)
+    mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [])
 
   const onScrollToMapAnchor = useCallback(() => {
@@ -1065,7 +1066,7 @@ export function PassengerDashboard() {
                     ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
                     : null
                 }
-                onChooseMap={onChoosePlanningMode}
+                onChooseMap={onChoosePlanningModeAndScrollToMap}
                 onSetDestinationHint={onScrollToMapAnchor}
                 onReset={resetPlanning}
                 onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
@@ -1138,7 +1139,7 @@ export function PassengerDashboard() {
                     ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
                     : null
                 }
-                onChooseMap={onChoosePlanningMode}
+                onChooseMap={onChoosePlanningModeAndScrollToMap}
                 onSetDestinationHint={onScrollToMapAnchor}
                 onReset={resetPlanning}
                 onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
