@@ -7,6 +7,8 @@ Formato:
 - **Não**: não existe (ou não está exposto de forma utilizável)
 
 > Nota: Este documento é um snapshot do estado observado no repo e na app web. Vamos atualizando à medida que adicionares itens e/ou implementarmos.
+>
+> Última atualização: **2026-04-28** (após ciclos de melhoria Passenger/Driver e smokes manuais).
 
 ---
 
@@ -63,9 +65,10 @@ Formato:
 - **Aceitar / rejeitar viagem**: **Parcial**
   - Aceitar: sim.
   - Rejeitar (oferta): API existe; UI explícita de rejeição não está evidente no front principal.
-- **Navegação até passageiro**: **Parcial**
-  - Existe mapa/rota; integração com apps externas (Waze/Google Maps) não.
-- **Navegação durante viagem**: **Parcial**
+- **Navegação até passageiro**: **Sim**
+  - Links dedicados para Waze/Google Maps no estado de aproximação.
+- **Navegação durante viagem**: **Sim**
+  - Links dedicados para Waze/Google Maps durante `ongoing`.
 - **Iniciar / terminar viagem**: **Sim**
 - **Ver ganhos por viagem**: **Parcial**
   - Existe `final_price` e campos de payout em respostas; não é dashboard de ganhos completo.
@@ -85,7 +88,7 @@ Formato:
 
 - **Bonus / incentivos**: **Não**
 - **Metas (ex: 10 viagens = extra €)**: **Não**
-- **Integração com apps de navegação**: **Não**
+- **Integração com apps de navegação**: **Sim**
 - **Suporte in-app**: **Não**
 - **Gestão de horários**: **Não**
 - **Score do motorista (qualidade)**: **Parcial**
@@ -193,3 +196,14 @@ Formato:
 - **E2E**: **Parcial**
   - Há base Playwright (`test:e2e`), mas não cobre tudo.
 - **Multi-user scenarios**: **Parcial**
+
+---
+
+## 6) Faltas com maior impacto (próximas iterações)
+
+Para manter foco operacional, este é o recorte recomendado do que falta com melhor retorno:
+
+1. **Driver — rejeitar oferta na UI** (hoje está só aceitar/cancelar depois de aceitar).
+2. **Passenger — rating do motorista na UI** (API já existe; falta fluxo visível no fim da viagem).
+3. **Passenger — método de pagamento first-class** (escolha explícita pré-viagem e feedback claro).
+4. **E2E — ampliar cobertura multi-user em cenários de falha/cancelamento** (hoje está parcial).

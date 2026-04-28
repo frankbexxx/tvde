@@ -669,7 +669,7 @@ export function DriverDashboard() {
           </div>
         )}
 
-        {history && history.length > 0 && (
+        {!hasAvailableTrips && history && history.length > 0 && (
           <section className="pt-6 mt-6 border-t border-border">
             <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
             <ul className="space-y-2">

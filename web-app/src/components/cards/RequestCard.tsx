@@ -36,7 +36,7 @@ export function RequestCard({
 
   return (
     <div
-      className="rounded-2xl border border-border border-l-4 border-l-primary bg-card/95 backdrop-blur-sm p-4 space-y-2 shadow-card transition-all duration-200"
+      className="rounded-2xl border border-border/80 border-l-4 border-l-primary bg-card p-4 space-y-2 shadow-card transition-all duration-200"
     >
       {contextHint ? (
         <p className="text-xs font-semibold text-primary">{contextHint}</p>
