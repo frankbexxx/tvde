@@ -29,6 +29,73 @@ export type GeocodeSuggestion = {
   secondary: string
 }
 
+function normalizeForMatch(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function extractPostalCode(query: string): string | null {
+  const m = query.match(/\b\d{4}-?\d{3}\b/)
+  if (!m) return null
+  const raw = m[0].replace(/\s+/g, '')
+  return raw.includes('-') ? raw : `${raw.slice(0, 4)}-${raw.slice(4)}`
+}
+
+function extractHouseNumber(query: string): string | null {
+  const m = query.match(/(?:^|[\s,])(\d{1,4})(?:[\s,]|$)/)
+  return m ? m[1] : null
+}
+
+/** Expõe para testes unitários e para ordenar resultados de providers externos. */
+export function rankSuggestionForQuery(query: string, suggestion: GeocodeSuggestion): number {
+  const q = normalizeForMatch(query.trim())
+  const haystack = normalizeForMatch(`${suggestion.primary} ${suggestion.secondary}`)
+  if (!q || !haystack) return 0
+
+  let score = 0
+
+  if (haystack.startsWith(q)) score += 80
+  if (haystack.includes(q)) score += 35
+
+  const qTokens = q.split(/[\s,]+/).filter((t) => t.length >= 3)
+  for (const token of qTokens) {
+    if (haystack.includes(token)) score += 8
+  }
+
+  const postal = extractPostalCode(query)
+  if (postal) {
+    const noDash = postal.replace('-', '')
+    if (haystack.includes(normalizeForMatch(postal))) score += 45
+    if (haystack.includes(noDash)) score += 30
+  }
+
+  const door = extractHouseNumber(query)
+  if (door) {
+    const doorRegex = new RegExp(`(^|[^\\d])${door}([^\\d]|$)`)
+    if (doorRegex.test(haystack)) score += 28
+  }
+
+  return score
+}
+
+export function reorderGeocodeSuggestions(
+  query: string,
+  suggestions: GeocodeSuggestion[]
+): GeocodeSuggestion[] {
+  const scored = suggestions.map((s, idx) => ({
+    s,
+    idx,
+    score: rankSuggestionForQuery(query, s),
+  }))
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score
+    return a.idx - b.idx
+  })
+  return scored.map((x) => x.s)
+}
+
 type MTFeature = {
   type?: string
   geometry?: { type?: string; coordinates?: number[] }
@@ -184,9 +251,10 @@ export async function forwardGeocodeSearch(
 
   if (MAPTILER_KEY) {
     const primary = await maptilerForwardSearch(q, limit)
-    if (primary.length > 0) return primary
+    if (primary.length > 0) return reorderGeocodeSuggestions(q, primary)
   }
-  return nominatimForwardSearch(q, limit)
+  const fallback = await nominatimForwardSearch(q, limit)
+  return reorderGeocodeSuggestions(q, fallback)
 }
 
 async function maptilerReverseGeocode(lng: number, lat: number): Promise<string | null> {

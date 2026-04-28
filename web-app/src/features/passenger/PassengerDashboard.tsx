@@ -913,7 +913,10 @@ export function PassengerDashboard() {
         </div>
       )}
 
-      <div className="space-y-5 mt-3 transition-opacity duration-300 ease-out">
+      <div
+        className="space-y-5 mt-3 transition-opacity duration-300 ease-out"
+        data-testid="passenger-main"
+      >
         {unifiedPassengerPlanning ? (
           <section
             className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"

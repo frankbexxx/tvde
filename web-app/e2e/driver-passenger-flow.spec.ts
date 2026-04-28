@@ -141,7 +141,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
       )
       .toBeGreaterThan(0)
 
-    const aceitarBtn = driverPage.getByRole('button', { name: /^ACEITAR$/i }).first()
+    const aceitarBtn = driverPage.getByTestId(`driver-accept-${tripId}`)
     await expect
       .poll(async () => aceitarBtn.isVisible(), { timeout: sec(90), intervals: pollLook })
       .toBe(true)
@@ -173,11 +173,9 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await expect(passengerPage.getByTestId('app-header-brand')).toBeVisible({
       timeout: sec(60),
     })
-    await expect(
-      passengerPage
-        .getByText(/procura|motorista|pedido|viagem|Para onde|sincronizar|Entra com o teu telemóvel/i)
-        .first()
-    ).toBeVisible({ timeout: sec(45) })
+    await expect(passengerPage.getByTestId('passenger-main')).toBeVisible({
+      timeout: sec(45),
+    })
 
     await passengerCtx.close()
     await driverCtx.close()
