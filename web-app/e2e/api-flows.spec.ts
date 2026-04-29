@@ -1,13 +1,52 @@
 /**
  * Fluxos só API (sem browser): rápidos e estáveis no CI.
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, type APIRequestContext, type APIResponse } from '@playwright/test'
 import { attachFailureArtifactsIfNeeded, resetFailureArtifactState } from './helpers/failureArtifacts'
 
 const API = process.env.PLAYWRIGHT_API_URL ?? 'http://127.0.0.1:8000'
 
 const ORIGIN = { lat: 38.7, lng: -9.1 }
 const DEST = { lat: 38.75, lng: -9.15 }
+
+async function createTripWithRateLimitRetry(
+  request: APIRequestContext,
+  passengerToken: string,
+  timeoutMs = 70000
+): Promise<APIResponse> {
+  let lastDetail = 'trip_retry_failed'
+  let lastStatus = 500
+  const startedAt = Date.now()
+  let attempt = 0
+
+  while (Date.now() - startedAt < timeoutMs) {
+    attempt += 1
+    const tripRes = await request.post(`${API}/trips`, {
+      headers: {
+        Authorization: `Bearer ${passengerToken}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        origin_lat: ORIGIN.lat,
+        origin_lng: ORIGIN.lng,
+        destination_lat: DEST.lat,
+        destination_lng: DEST.lng,
+      },
+    })
+
+    if (tripRes.ok()) return tripRes
+
+    const detail = await tripRes.text()
+    lastDetail = detail
+    lastStatus = tripRes.status()
+    const isRateLimited = tripRes.status() === 429 || detail.includes('rate_limit_exceeded')
+    if (!isRateLimited) break
+
+    await new Promise((resolve) => setTimeout(resolve, Math.min(2000 + attempt * 400, 5000)))
+  }
+
+  throw new Error(`create trip failed (${lastStatus}): ${lastDetail}`)
+}
 
 test.describe('API flows (sem browser)', () => {
   test.beforeEach(() => {
@@ -33,18 +72,7 @@ test.describe('API flows (sem browser)', () => {
     expect(tokRes.ok()).toBeTruthy()
     const tokens = (await tokRes.json()) as { passenger: string }
 
-    const tripRes = await request.post(`${API}/trips`, {
-      headers: {
-        Authorization: `Bearer ${tokens.passenger}`,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        origin_lat: ORIGIN.lat,
-        origin_lng: ORIGIN.lng,
-        destination_lat: DEST.lat,
-        destination_lng: DEST.lng,
-      },
-    })
+    const tripRes = await createTripWithRateLimitRetry(request, tokens.passenger)
     expect(tripRes.ok(), await tripRes.text()).toBeTruthy()
     const { trip_id: tripId } = (await tripRes.json()) as { trip_id: string }
 
@@ -88,18 +116,7 @@ test.describe('API flows (sem browser)', () => {
       headers: { Authorization: `Bearer ${tokens.driver}` },
     })
 
-    const tripRes = await request.post(`${API}/trips`, {
-      headers: {
-        Authorization: `Bearer ${tokens.passenger}`,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        origin_lat: ORIGIN.lat,
-        origin_lng: ORIGIN.lng,
-        destination_lat: DEST.lat,
-        destination_lng: DEST.lng,
-      },
-    })
+    const tripRes = await createTripWithRateLimitRetry(request, tokens.passenger)
     expect(tripRes.ok(), await tripRes.text()).toBeTruthy()
 
     await expect
