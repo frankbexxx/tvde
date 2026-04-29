@@ -115,12 +115,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const tokenPickRole = useMemo<'passenger' | 'driver' | 'admin' | 'partner'>(() => {
     if (pathname.startsWith('/admin')) return 'admin'
     if (pathname.startsWith('/partner')) return 'partner'
+    if (pathname.startsWith('/passenger')) return 'passenger'
+    if (pathname.startsWith('/driver')) return 'driver'
     return appRouteRole === 'driver' ? 'driver' : 'passenger'
   }, [pathname, appRouteRole])
 
   const uiRole = useMemo<Role>(() => {
     if (pathname.startsWith('/admin')) return 'admin'
     if (pathname.startsWith('/partner')) return 'partner'
+    if (pathname.startsWith('/passenger')) return 'passenger'
+    if (pathname.startsWith('/driver')) return 'driver'
     return appRouteRole === 'driver' ? 'driver' : 'passenger'
   }, [pathname, appRouteRole])
 
