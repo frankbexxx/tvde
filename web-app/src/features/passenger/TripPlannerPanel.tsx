@@ -141,7 +141,7 @@ function TripPlannerPanelInner({
             type="button"
             onClick={onChooseMap}
             disabled={confirmTripPending}
-            className="w-full min-h-[52px] rounded-full bg-primary text-primary-foreground py-3 text-base font-bold shadow-floating hover:opacity-95 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
+            className="w-full min-h-[52px] rounded-full bg-info text-info-foreground py-3 text-base font-bold shadow-floating hover:bg-info/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
           >
             {embedded ? 'Marcar recolha no mapa' : 'Escolher recolha no mapa'}
           </button>
@@ -214,12 +214,12 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onConfirmTrip}
               disabled={confirmTripPending || routeMetaLoading}
-              className="w-full rounded-2xl bg-primary text-primary-foreground py-3 text-base font-semibold shadow-floating hover:opacity-95 transition-opacity duration-200 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
+              className="w-full rounded-2xl bg-success text-success-foreground py-3 text-base font-semibold shadow-floating hover:bg-success/90 transition-opacity duration-200 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
             >
               {confirmTripPending ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <span
-                    className="h-5 w-5 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
+                    className="h-5 w-5 animate-spin rounded-full border-2 border-success-foreground border-t-transparent"
                     aria-hidden
                   />
                   A confirmar…

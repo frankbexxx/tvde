@@ -60,7 +60,7 @@ function DriverExternalNavLinks({
   const secondaryTestId =
     phase === 'pickup' ? 'driver-nav-pickup-secondary' : 'driver-nav-destination-secondary'
   const linkClassPrimary =
-    'min-h-11 flex flex-1 items-center justify-center rounded-xl border-2 border-primary/80 bg-primary/10 px-3 text-sm font-semibold text-foreground hover:bg-primary/15 touch-manipulation'
+    'min-h-11 flex flex-1 items-center justify-center rounded-xl border-2 border-info/80 bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/15 touch-manipulation'
   const linkClassSecondary =
     'min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation'
 
@@ -346,6 +346,7 @@ export function ActiveTripActions({
         />
       ) : null}
       <PrimaryActionButton
+        variant="confirm"
         onClick={() => {
           void run(buttonConfig.action, buttonConfig.label)
         }}
