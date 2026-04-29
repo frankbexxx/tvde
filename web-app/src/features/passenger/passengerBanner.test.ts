@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { TripDetailResponse } from '../../api/trips'
 import { getPassengerBannerState, humanizeCreateTripError } from './passengerBanner'
-import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 
 function minimalTrip(status: TripDetailResponse['status']): TripDetailResponse {
   return {
@@ -44,7 +43,7 @@ describe('getPassengerBannerState — messaging por estado da viagem', () => {
       uxState: 'DRIVER_ASSIGNED',
     })
     expect(b.label).toBe('Motorista atribuído')
-    expect(b.subLabel).toBe(`Estado: ${passengerTripStatusLabel('assigned')}`)
+    expect(b.subLabel).toBeUndefined()
   })
 
   it('accepted → Motorista a caminho (DRIVER_ASSIGNED branch)', () => {
@@ -54,7 +53,7 @@ describe('getPassengerBannerState — messaging por estado da viagem', () => {
       uxState: 'DRIVER_ASSIGNED',
     })
     expect(b.label).toBe('Motorista a caminho')
-    expect(b.subLabel).toContain(passengerTripStatusLabel('accepted'))
+    expect(b.subLabel).toBeUndefined()
   })
 
   it('arriving → texto de motorista quase a chegar', () => {
@@ -63,8 +62,8 @@ describe('getPassengerBannerState — messaging por estado da viagem', () => {
       activeTrip: minimalTrip('arriving'),
       uxState: 'DRIVER_ARRIVING',
     })
-    expect(b.label).toBe(passengerTripStatusLabel('arriving'))
-    expect(b.subLabel).toContain('Estado:')
+    expect(b.label).toBe('Motorista quase a chegar')
+    expect(b.subLabel).toBeUndefined()
   })
 
   it('ongoing → Viagem em curso', () => {
@@ -74,6 +73,6 @@ describe('getPassengerBannerState — messaging por estado da viagem', () => {
       uxState: 'TRIP_ONGOING',
     })
     expect(b.label).toBe('Viagem em curso')
-    expect(b.subLabel).toContain(passengerTripStatusLabel('ongoing'))
+    expect(b.subLabel).toBeUndefined()
   })
 })

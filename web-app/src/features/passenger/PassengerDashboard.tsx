@@ -75,7 +75,7 @@ const ESTIMATE_MOCK = '4–6'
 function passengerDashboardNoop() {}
 
 export function PassengerDashboard() {
-  const { token, appRouteRole } = useAuth()
+  const { token, role } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { passengerActiveTripId, setPassengerActiveTripId } = useActiveTrip()
   const activeTripId = passengerActiveTripId
@@ -665,6 +665,12 @@ export function PassengerDashboard() {
     return 'subdued' as const
   }, [passengerUiState])
 
+  /** A021: com StatusHeader + PassengerStatusCard, não repetir «Estado» no TripPlannerPanel em viagem. */
+  const inTripSuppressPlannerEstadoEcho = useMemo(
+    () => passengerUiState === 'in_trip' && Boolean(uxState && activeTrip),
+    [passengerUiState, uxState, activeTrip]
+  )
+
   /** Painel inferior: omitir "searching" duplicado quando já há PassengerStatusCard em requested */
   const showTripPlannerPanel = useMemo(() => {
     if (tripCompletedFromLocation) return false
@@ -829,7 +835,7 @@ export function PassengerDashboard() {
     !!activeTripId &&
     !!token &&
     !!activeTrip &&
-    appRouteRole === 'passenger' &&
+    role === 'passenger' &&
     activeTrip.status === 'completed' &&
     !!activeTrip.driver_id &&
     (activeTrip.driver_rating == null || activeTrip.driver_rating === undefined)
@@ -1105,6 +1111,7 @@ export function PassengerDashboard() {
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
                 visualWeight={a021Layout.panel}
+                inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
               />
             </div>
           </section>
@@ -1178,6 +1185,7 @@ export function PassengerDashboard() {
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
                 visualWeight={a021Layout.panel}
+                inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
               />
             )}
           </>
