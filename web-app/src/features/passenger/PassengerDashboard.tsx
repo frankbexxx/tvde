@@ -36,6 +36,7 @@ import {
 import { DestinationSearchField } from './DestinationSearchField'
 import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../../hooks/usePassengerDriverLocation'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
+import { PassengerTripRatingPanel } from './PassengerTripRatingPanel'
 import {
   passengerTripPollEquals,
   type PassengerTripPollResult,
@@ -156,6 +157,7 @@ export function PassengerDashboard() {
 
   const {
     data: activeTripPoll,
+    refetch: refetchActiveTrip,
     isLoading: activeTripLoading,
     isRefreshing: activeTripRefreshing,
     lastSuccessAt: activeTripLastSuccessAt,
@@ -809,6 +811,7 @@ export function PassengerDashboard() {
 
   const handleStartNewTripAfterComplete = useCallback(() => {
     setPassengerActiveTripId(null)
+    setTripCompletedFromLocation(false)
     setIsPlanningMode(false)
   }, [setPassengerActiveTripId])
 
@@ -818,15 +821,38 @@ export function PassengerDashboard() {
     return passengerDashboardNoop
   }, [primaryLabel, handleStartNewTripAfterComplete, handleCancel])
 
-  // When trip completed (from driver-location 409 or trip poll): show TRIP_COMPLETED, then clear after 2s.
+  const handleRatingSubmitted = useCallback(() => {
+    void refetchActiveTrip()
+  }, [refetchActiveTrip])
+
+  // Após conclusão: limpar automaticamente só quando não estamos à espera de avaliação opcional.
   useEffect(() => {
     if (!tripCompletedFromLocation) return
+    const awaitingRating =
+      activeTrip?.status === 'completed' &&
+      !!activeTrip?.driver_id &&
+      (activeTrip.driver_rating == null || activeTrip.driver_rating === undefined)
+    if (awaitingRating) return
     const t = setTimeout(() => {
       setPassengerActiveTripId(null)
       setTripCompletedFromLocation(false)
     }, 2000)
     return () => clearTimeout(t)
-  }, [tripCompletedFromLocation, setPassengerActiveTripId])
+  }, [
+    tripCompletedFromLocation,
+    activeTrip?.status,
+    activeTrip?.driver_id,
+    activeTrip?.driver_rating,
+    setPassengerActiveTripId,
+  ])
+
+  const showPassengerRatingPanel =
+    !!activeTripId &&
+    !!token &&
+    !!activeTrip &&
+    activeTrip.status === 'completed' &&
+    !!activeTrip.driver_id &&
+    (activeTrip.driver_rating == null || activeTrip.driver_rating === undefined)
 
   /** Bloco único: título, regra de preço, mapa, estado compacto, acções (sem cartões empilhados). */
   const unifiedPassengerPlanning =
@@ -917,6 +943,14 @@ export function PassengerDashboard() {
         className="space-y-5 mt-3 transition-opacity duration-300 ease-out"
         data-testid="passenger-main"
       >
+        {showPassengerRatingPanel ? (
+          <PassengerTripRatingPanel
+            tripId={activeTripId}
+            token={token}
+            onSubmitted={handleRatingSubmitted}
+            onSkip={handleStartNewTripAfterComplete}
+          />
+        ) : null}
         {unifiedPassengerPlanning ? (
           <section
             className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"

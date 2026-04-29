@@ -6,34 +6,39 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel rápido da sessão (2026-04-28)
+## Painel rápido da sessão (2026-04-29)
 
 _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro mantém histórico/contexto._
 
 ### Agora
 
-- [ ] [CÓDIGO] Fechar o último gap funcional do passageiro.
-- [ ] [CÓDIGO] Confirmar visibilidade operacional do **ACEITAR** no driver em viewport curta.
+- [ ] [OPS] Smoke curto passageiro + driver após merge (rating + rejeitar + preferência navegação).
+- [ ] [DOCS] Respostas do Manuel em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md` quando chegarem.
 
 ### Hoje (resto do dia)
 
-- [ ] [OPS] Smoke final combinado (passageiro + driver), com foco em regressões S1/S2.
-- [ ] [CÓDIGO] Ajustes mínimos pós-smoke (só se necessário).
-- [ ] [OPS] Fecho limpo: commit/PR do que faltar + `main` alinhada.
+- [x] [CÓDIGO] Driver: rejeitar oferta na UI (`REJEITAR` + `POST /driver/offers/.../reject`).
+- [x] [CÓDIGO] Passenger: rating pós-viagem + `driver_rating` / `passenger_rating` no GET detalhe.
+- [x] [CÓDIGO] Preferência Waze/Google persistida + wake lock na viagem activa (quando o browser permite).
+- [x] [CÓDIGO] Bordas um pouco mais visíveis no light theme (minimal + portugal).
+- [ ] [TESTES] Expandir smoke/e2e (rejeição + rating) quando o fluxo seed estiver estável.
 
 ### Amanhã
 
-- [ ] [DOCS] Atualizar estado real dos TODOs (agora/hoje/amanhã/backlog) sem ruído histórico.
-- [ ] [CÓDIGO] Passe curto de densidade visual (light theme), sem redesign global.
-- [ ] [OPS] Revalidação curta no device após os ajustes.
-- [ ] [CÓDIGO] Driver: UI explícita de rejeição de oferta (gap do `FEATURE_CHECKLIST`).
-- [ ] [CÓDIGO] Passenger: iniciar UI de rating pós-viagem (API já existente).
-- [ ] [TESTES] Expandir smoke/e2e no cenário de cancelamento/rejeição multi-user.
+- [ ] [CÓDIGO] Categorias de veículo (X/XL/…) + toggles — modelo de dados + alinhamento com Manuel.
+- [ ] [CÓDIGO] «Dois destinos por dia» — após conversa com Manuel.
+- [ ] [DOCS] Menu motorista (rendimentos, histórico, documentos) — por fatias.
 
 ### Backlog
 
 - [ ] [PENSAR] Theming/polish amplo e iconografia final (não bloqueador).
 - [ ] [PENSAR] Refactors estruturais fora do fluxo crítico.
+
+---
+
+## Painel 2026-04-28 (fechado)
+
+- [x] Gap passageiro, ACEITAR visível, smoke combinado, PR mergeada, `main` alinhada.
 
 ---
 

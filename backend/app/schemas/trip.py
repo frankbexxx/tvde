@@ -139,3 +139,11 @@ class TripDetailResponse(BaseModel):
         default=None,
         description="Última posição do motorista quando a viagem permite rasto (accepted/arriving/ongoing).",
     )
+    driver_rating: Optional[int] = Field(
+        default=None,
+        description="Avaliação do passageiro ao motorista (1–5), após conclusão.",
+    )
+    passenger_rating: Optional[int] = Field(
+        default=None,
+        description="Avaliação do motorista ao passageiro (1–5), após conclusão.",
+    )

@@ -8,6 +8,7 @@ import {
   getDriverTripHistory,
   getDriverTripDetail,
   acceptTrip,
+  rejectDriverOffer,
   setDriverOnline,
   setDriverOffline,
 } from '../../api/trips'
@@ -57,6 +58,11 @@ import {
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import {
+  getDriverNavApp,
+  setDriverNavApp,
+  type DriverNavApp,
+} from '../../services/driverNavPreference'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -131,6 +137,7 @@ export function DriverDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [driverNavPref, setDriverNavPref] = useState<DriverNavApp>(() => getDriverNavApp())
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
@@ -351,6 +358,32 @@ export function DriverDashboard() {
     }
   }
 
+  const runRejectOffer = async (offerId: string, tripId: string) => {
+    if (actionLoading != null || !token) return
+    if (!window.confirm('Recusar esta oferta? A viagem pode ser atribuída a outro motorista.')) return
+    setError(null)
+    setActionLoading(`reject:${tripId}`)
+    setStatus('A recusar oferta…')
+    addLog('Clique: REJEITAR', 'action')
+    try {
+      await rejectDriverOffer(offerId, token)
+      sonnerToast.success('Oferta recusada')
+      addLog('REJEITAR concluído', 'success')
+      refetchAvailable()
+      setStatus('Pronto')
+    } catch (err: unknown) {
+      const e = err as { status?: number; detail?: string }
+      const msg = isTimeoutLikeError(err) || e?.status === 0
+        ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
+        : String(e?.detail ?? 'Erro')
+      setError(msg)
+      setStatus('Erro')
+      addLog(`Erro REJEITAR: ${msg}`, 'error')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   return (
     <ScreenContainer
       bottomButton={
@@ -530,6 +563,47 @@ export function DriverDashboard() {
           offLabel="Offline"
         />
 
+        <div className="rounded-xl border border-border/80 bg-card/60 px-3 py-3 space-y-2">
+          <p className="text-xs font-medium text-foreground/75">Navegação externa (preferência)</p>
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            Os botões «Recolha / Destino» usam primeiro esta app; o segundo botão abre a alternativa.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              data-testid="driver-nav-pref-waze"
+              onClick={() => {
+                setDriverNavApp('waze')
+                setDriverNavPref('waze')
+                addLog('Preferência navegação: Waze', 'info')
+              }}
+              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
+                driverNavPref === 'waze'
+                  ? 'border-primary bg-primary/15 text-foreground'
+                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+              }`}
+            >
+              Waze
+            </button>
+            <button
+              type="button"
+              data-testid="driver-nav-pref-google"
+              onClick={() => {
+                setDriverNavApp('google_maps')
+                setDriverNavPref('google_maps')
+                addLog('Preferência navegação: Google Maps', 'info')
+              }}
+              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
+                driverNavPref === 'google_maps'
+                  ? 'border-primary bg-primary/15 text-foreground'
+                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+              }`}
+            >
+              Google Maps
+            </button>
+          </div>
+        </div>
+
         {toast && (
           <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
             <button
@@ -615,7 +689,14 @@ export function DriverDashboard() {
                       destination={formatDestination(t.destination_lat, t.destination_lng)}
                       statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
                       estimatedPrice={t.estimated_price}
+                      offerId={t.offer_id ?? null}
+                      onReject={
+                        t.offer_id
+                          ? () => void runRejectOffer(t.offer_id!, t.trip_id)
+                          : undefined
+                      }
                       acceptButtonTestId={`driver-accept-${t.trip_id}`}
+                      rejectButtonTestId={`driver-reject-${t.trip_id}`}
                       onAccept={() =>
                         runAction(
                           () => acceptTrip(t.trip_id, token!),
@@ -626,6 +707,7 @@ export function DriverDashboard() {
                         )
                       }
                       loading={actionLoading === t.trip_id}
+                      rejectLoading={actionLoading === `reject:${t.trip_id}`}
                     />
                   </li>
                 ))}

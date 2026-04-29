@@ -16,6 +16,79 @@ import {
 } from './driverTripActions'
 import { canDriverStartTripNearPickup } from './driverPickupGate'
 import { googleMapsDirectionsUrl, wazeNavigateUrl } from '../../utils/externalNavigation'
+import { getDriverNavApp, type DriverNavApp } from '../../services/driverNavPreference'
+import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
+
+function DriverExternalNavLinks({
+  phase,
+  lat,
+  lng,
+  navApp,
+  confirmExternalNav,
+}: {
+  phase: 'pickup' | 'destination'
+  lat: number
+  lng: number
+  navApp: DriverNavApp
+  confirmExternalNav: (mapName: string) => (e: React.MouseEvent<HTMLAnchorElement>) => void
+}) {
+  const wazeHref = wazeNavigateUrl(lat, lng)
+  const googleHref = googleMapsDirectionsUrl(lat, lng)
+  const preferWaze = navApp === 'waze'
+  const primaryHref = preferWaze ? wazeHref : googleHref
+  const secondaryHref = preferWaze ? googleHref : wazeHref
+  const primaryMapName = preferWaze ? 'Waze' : 'Google Maps'
+  const secondaryMapName = preferWaze ? 'Google Maps' : 'Waze'
+  const primaryLabel =
+    phase === 'pickup'
+      ? preferWaze
+        ? 'Recolha — Waze'
+        : 'Recolha — Google Maps'
+      : preferWaze
+        ? 'Destino — Waze'
+        : 'Destino — Google Maps'
+  const secondaryLabel =
+    phase === 'pickup'
+      ? preferWaze
+        ? 'Recolha — Google Maps'
+        : 'Recolha — Waze'
+      : preferWaze
+        ? 'Destino — Google Maps'
+        : 'Destino — Waze'
+  const primaryTestId =
+    phase === 'pickup' ? 'driver-nav-pickup-primary' : 'driver-nav-destination-primary'
+  const secondaryTestId =
+    phase === 'pickup' ? 'driver-nav-pickup-secondary' : 'driver-nav-destination-secondary'
+  const linkClassPrimary =
+    'min-h-11 flex flex-1 items-center justify-center rounded-xl border-2 border-primary/80 bg-primary/10 px-3 text-sm font-semibold text-foreground hover:bg-primary/15 touch-manipulation'
+  const linkClassSecondary =
+    'min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation'
+
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row">
+      <a
+        href={primaryHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid={primaryTestId}
+        onClick={confirmExternalNav(primaryMapName)}
+        className={linkClassPrimary}
+      >
+        {primaryLabel}
+      </a>
+      <a
+        href={secondaryHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-testid={secondaryTestId}
+        onClick={confirmExternalNav(secondaryMapName)}
+        className={linkClassSecondary}
+      >
+        {secondaryLabel}
+      </a>
+    </div>
+  )
+}
 
 export interface ActiveTripActionsProps {
   tripId: string
@@ -70,6 +143,7 @@ export function ActiveTripActions({
     driverLocation,
     pickupCoords
   )
+  const navApp = getDriverNavApp()
 
   useEffect(() => {
     if (!statusOverride || !trip?.status) return
@@ -92,6 +166,13 @@ export function ActiveTripActions({
     tripRefreshing,
     Boolean(tripId && token && trip)
   )
+  const wakeLockEnabled =
+    displayStatus === 'assigned' ||
+    displayStatus === 'accepted' ||
+    displayStatus === 'arriving' ||
+    displayStatus === 'ongoing'
+  useScreenWakeLock(wakeLockEnabled)
+
   const tripPollHint = tripPollFault
     ? 'Não foi possível atualizar agora. Mantemos a última informação e tentamos de novo.'
     : trip
@@ -247,48 +328,22 @@ export function ActiveTripActions({
       (displayStatus === 'assigned' ||
         displayStatus === 'accepted' ||
         displayStatus === 'arriving') ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <a
-            href={wazeNavigateUrl(navPickup.lat, navPickup.lng)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={confirmExternalNav('Waze')}
-            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-          >
-            Pickup no Waze
-          </a>
-          <a
-            href={googleMapsDirectionsUrl(navPickup.lat, navPickup.lng)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={confirmExternalNav('Google Maps')}
-            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-          >
-            Pickup no Google Maps
-          </a>
-        </div>
+        <DriverExternalNavLinks
+          phase="pickup"
+          lat={navPickup.lat}
+          lng={navPickup.lng}
+          navApp={navApp}
+          confirmExternalNav={confirmExternalNav}
+        />
       ) : null}
       {navDestination && displayStatus === 'ongoing' ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <a
-            href={wazeNavigateUrl(navDestination.lat, navDestination.lng)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={confirmExternalNav('Waze')}
-            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-          >
-            Destino no Waze
-          </a>
-          <a
-            href={googleMapsDirectionsUrl(navDestination.lat, navDestination.lng)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={confirmExternalNav('Google Maps')}
-            className="min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-          >
-            Destino no Google Maps
-          </a>
-        </div>
+        <DriverExternalNavLinks
+          phase="destination"
+          lat={navDestination.lat}
+          lng={navDestination.lng}
+          navApp={navApp}
+          confirmExternalNav={confirmExternalNav}
+        />
       ) : null}
       <PrimaryActionButton
         onClick={() => {

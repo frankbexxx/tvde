@@ -70,6 +70,8 @@ def trip_to_detail(
             else None
         ),
         driver_location=driver_location,
+        driver_rating=trip.driver_rating,
+        passenger_rating=trip.passenger_rating,
     )
 
 

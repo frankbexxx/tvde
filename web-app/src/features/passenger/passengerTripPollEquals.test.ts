@@ -49,4 +49,13 @@ describe('passengerTripPollEquals', () => {
       false
     )
   })
+
+  it('returns false when driver_rating changes', () => {
+    const a: PassengerTripPollResult = { notFound: false, trip: baseTrip({ status: 'completed', driver_rating: null }) }
+    const b: PassengerTripPollResult = {
+      notFound: false,
+      trip: baseTrip({ status: 'completed', driver_rating: 5 }),
+    }
+    expect(passengerTripPollEquals(a, b)).toBe(false)
+  })
 })

@@ -21,4 +21,21 @@ describe('RequestCard (RTL)', () => {
     fireEvent.click(accept)
     expect(onAccept).toHaveBeenCalledTimes(1)
   })
+
+  it('com offer_id mostra REJEITAR e chama onReject', () => {
+    const onAccept = vi.fn()
+    const onReject = vi.fn()
+    render(
+      <RequestCard
+        pickup="Rua A"
+        estimatedPrice={10}
+        offerId="off-1"
+        onAccept={onAccept}
+        onReject={onReject}
+      />
+    )
+    fireEvent.click(screen.getByRole('button', { name: /rejeitar/i }))
+    expect(onReject).toHaveBeenCalledTimes(1)
+    expect(onAccept).not.toHaveBeenCalled()
+  })
 })
