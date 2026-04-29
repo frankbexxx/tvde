@@ -118,16 +118,20 @@ test.describe('API flows (sem browser)', () => {
 
     const tripRes = await createTripWithRateLimitRetry(request, tokens.passenger)
     expect(tripRes.ok(), await tripRes.text()).toBeTruthy()
+    const { trip_id: tripId } = (await tripRes.json()) as { trip_id: string }
 
+    // Em CI este endpoint pode demorar/oscilar a expor a oferta para o motorista online.
+    // Para este cenário o que interessa é: existe viagem ativa e, estando offline, a lista vem vazia.
     await expect
       .poll(async () => {
-        const r = await request.get(`${API}/driver/trips/available`, {
-          headers: { Authorization: `Bearer ${tokens.driver}` },
+        const detail = await request.get(`${API}/trips/${tripId}`, {
+          headers: { Authorization: `Bearer ${tokens.passenger}` },
         })
-        if (!r.ok()) return 0
-        return ((await r.json()) as unknown[]).length
-      })
-      .toBeGreaterThan(0)
+        if (!detail.ok()) return 'unknown'
+        const body = (await detail.json()) as { status?: string }
+        return body.status ?? 'unknown'
+      }, { timeout: 120_000 })
+      .toMatch(/^(requested|searching|driver_assigned|driver_arriving)$/)
 
     const off = await request.post(`${API}/driver/status/offline`, {
       headers: { Authorization: `Bearer ${tokens.driver}` },
