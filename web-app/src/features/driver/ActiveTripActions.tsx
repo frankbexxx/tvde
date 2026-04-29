@@ -296,7 +296,7 @@ export function ActiveTripActions({
 
   const distanceToPickupM =
     startTripGateActive && driverLocation && pickupCoords
-      ? Math.round(haversineKm(driverLocation, pickupCoords) * 1000)
+      ? Math.max(0, Math.round(Math.abs(haversineKm(driverLocation, pickupCoords) * 1000)))
       : null
 
   return (

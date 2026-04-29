@@ -75,7 +75,7 @@ const ESTIMATE_MOCK = '4–6'
 function passengerDashboardNoop() {}
 
 export function PassengerDashboard() {
-  const { token } = useAuth()
+  const { token, appRouteRole } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { passengerActiveTripId, setPassengerActiveTripId } = useActiveTrip()
   const activeTripId = passengerActiveTripId
@@ -825,14 +825,19 @@ export function PassengerDashboard() {
     void refetchActiveTrip()
   }, [refetchActiveTrip])
 
-  // Após conclusão: limpar automaticamente só quando não estamos à espera de avaliação opcional.
+  const showPassengerRatingPanel =
+    !!activeTripId &&
+    !!token &&
+    !!activeTrip &&
+    appRouteRole === 'passenger' &&
+    activeTrip.status === 'completed' &&
+    !!activeTrip.driver_id &&
+    (activeTrip.driver_rating == null || activeTrip.driver_rating === undefined)
+
+  // Após conclusão: limpar automaticamente só quando não estamos à espera do painel de avaliação.
   useEffect(() => {
     if (!tripCompletedFromLocation) return
-    const awaitingRating =
-      activeTrip?.status === 'completed' &&
-      !!activeTrip?.driver_id &&
-      (activeTrip.driver_rating == null || activeTrip.driver_rating === undefined)
-    if (awaitingRating) return
+    if (showPassengerRatingPanel) return
     const t = setTimeout(() => {
       setPassengerActiveTripId(null)
       setTripCompletedFromLocation(false)
@@ -840,19 +845,9 @@ export function PassengerDashboard() {
     return () => clearTimeout(t)
   }, [
     tripCompletedFromLocation,
-    activeTrip?.status,
-    activeTrip?.driver_id,
-    activeTrip?.driver_rating,
+    showPassengerRatingPanel,
     setPassengerActiveTripId,
   ])
-
-  const showPassengerRatingPanel =
-    !!activeTripId &&
-    !!token &&
-    !!activeTrip &&
-    activeTrip.status === 'completed' &&
-    !!activeTrip.driver_id &&
-    (activeTrip.driver_rating == null || activeTrip.driver_rating === undefined)
 
   /** Bloco único: título, regra de preço, mapa, estado compacto, acções (sem cartões empilhados). */
   const unifiedPassengerPlanning =
@@ -1203,7 +1198,7 @@ export function PassengerDashboard() {
         )}
 
         {/* A014: estado da viagem; A019: envio inicial usa TripPlannerPanel (searching) */}
-        {(activeTripId || creating) && !showSubmittingCard && (
+        {(activeTripId || creating) && !showSubmittingCard && !showPassengerRatingPanel && (
           uxState && activeTrip ? (
             <PassengerStatusCard
               uxState={uxState}

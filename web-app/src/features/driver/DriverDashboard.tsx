@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
@@ -63,6 +63,7 @@ import {
   setDriverNavApp,
   type DriverNavApp,
 } from '../../services/driverNavPreference'
+import { getStoredSessionDisplayName } from '../../utils/authStorage'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 
@@ -138,12 +139,14 @@ export function DriverDashboard() {
   const [toast, setToast] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [driverNavPref, setDriverNavPref] = useState<DriverNavApp>(() => getDriverNavApp())
+  const [menuOpen, setMenuOpen] = useState(false)
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
   /** P25: última informação conhecida se o poll falhar logo após aceitar. */
   const [acceptedDetailFallback, setAcceptedDetailFallback] = useState<TripDetailResponse | null>(null)
   const isOnline = useOnlineStatus()
+  const sessionDisplayName = useMemo(() => getStoredSessionDisplayName(), [])
 
   const pollEnabled = !!token && !offline
 
@@ -296,6 +299,16 @@ export function DriverDashboard() {
     availableForFallback?: TripAvailableItem
   ) => {
     if (actionLoading != null) return
+    const optimisticAccept = actionName === 'ACEITAR'
+    if (optimisticAccept) {
+      setDriverActiveTripId(tripId)
+      if (availableForFallback) {
+        setAcceptedDetailFallback(
+          tripDetailFallbackFromAccept(availableForFallback, 'accepted')
+        )
+      }
+      setDriverStatusOverride('accepted')
+    }
     setError(null)
     setActionLoading(tripId)
     setStatus(`A executar: ${actionName}...`)
@@ -341,6 +354,11 @@ export function DriverDashboard() {
       refetchAvailable()
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string }
+      if (optimisticAccept) {
+        setDriverActiveTripId(null)
+        setAcceptedDetailFallback(null)
+        setDriverStatusOverride(null)
+      }
       if (e?.status === 409) {
         setToast('Viagem já foi aceite por outro motorista.')
         addLog('409: Viagem já aceite por outro motorista', 'error')
@@ -458,22 +476,54 @@ export function DriverDashboard() {
         ) : undefined
       }
     >
-      <header className="mb-4">
+      <header className="mb-4 flex items-start justify-between gap-3">
         <p className="text-foreground/80 text-sm leading-snug">
           O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong>{' '}
           no fim.
         </p>
+        <button
+          type="button"
+          data-testid="driver-open-menu"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+        >
+          {menuOpen ? 'Fechar menu' : 'Menu'}
+        </button>
       </header>
 
-      {import.meta.env.DEV && isMockLocationModeEnabled() ? (
-        <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
+      {menuOpen ? (
+        <DriverOperationsMenu
+          sessionDisplayName={sessionDisplayName}
+          history={history}
+          navPref={driverNavPref}
+          onSelectNavPref={(app) => {
+            setDriverNavApp(app)
+            setDriverNavPref(app)
+            addLog(
+              app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps',
+              'info'
+            )
+          }}
+          onReportIncident={(tripId) => {
+            const note = window.prompt(
+              'Reportar ocorrência (texto curto):\n\nEx.: objeto esquecido, comportamento, tarifa.'
+            )
+            if (!note || !note.trim()) return
+            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
+            addLog(`Ocorrência registada para ${tripId}: ${note.trim()}`, 'info')
+          }}
+        />
+      ) : null}
+
+      {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
+        <div className="rounded-xl bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
           <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»: até ao destino (OSRM, 1&nbsp;s por ponto).
         </div>
       ) : null}
 
       {geolocationUsedFallback && (
         <div
-          className="rounded-lg bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+          className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
           style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
         >
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -496,7 +546,7 @@ export function DriverDashboard() {
       )}
 
       {!offline && !!token && !!driverLocation && (
-        <div className="rounded-lg bg-foreground/5 border border-foreground/15 px-3 py-2 text-xs text-foreground/75">
+        <div className="rounded-xl bg-foreground/5 border border-foreground/15 px-3 py-2 text-xs text-foreground/75">
           {gpsReport.lastError ? (
             <div className="flex flex-col gap-1.5">
               <p className="font-medium text-foreground/90">
@@ -535,7 +585,7 @@ export function DriverDashboard() {
       )}
 
       {!isOnline && (
-        <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+        <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
           <p className="font-medium text-foreground">Sem ligação à internet</p>
           <p className="text-foreground/80 mt-1">
             Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se precisares.
@@ -544,65 +594,26 @@ export function DriverDashboard() {
       )}
 
       {pollEnabled && availablePollFault && (
-        <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+        <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
           Não foi possível atualizar a lista de viagens. A última informação mantém-se; voltamos a tentar
           automaticamente — verifica a ligação se persistir.
         </div>
       )}
 
       <div className="space-y-4 transition-opacity duration-150">
-        <Toggle
-          label="Estado"
-          checked={!offline}
-          onChange={(checked) => {
-            setOffline(!checked)
-            addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
-            setStatus(checked ? 'Disponível' : 'Offline')
-          }}
-          onLabel="Disponível"
-          offLabel="Offline"
-        />
-
-        <div className="rounded-xl border border-border/80 bg-card/60 px-3 py-3 space-y-2">
-          <p className="text-xs font-medium text-foreground/75">Navegação externa (preferência)</p>
-          <p className="text-[11px] text-muted-foreground leading-snug">
-            Os botões «Recolha / Destino» usam primeiro esta app; o segundo botão abre a alternativa.
-          </p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              data-testid="driver-nav-pref-waze"
-              onClick={() => {
-                setDriverNavApp('waze')
-                setDriverNavPref('waze')
-                addLog('Preferência navegação: Waze', 'info')
-              }}
-              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
-                driverNavPref === 'waze'
-                  ? 'border-primary bg-primary/15 text-foreground'
-                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
-              }`}
-            >
-              Waze
-            </button>
-            <button
-              type="button"
-              data-testid="driver-nav-pref-google"
-              onClick={() => {
-                setDriverNavApp('google_maps')
-                setDriverNavPref('google_maps')
-                addLog('Preferência navegação: Google Maps', 'info')
-              }}
-              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
-                driverNavPref === 'google_maps'
-                  ? 'border-primary bg-primary/15 text-foreground'
-                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
-              }`}
-            >
-              Google Maps
-            </button>
-          </div>
-        </div>
+        {!activeTripId ? (
+          <Toggle
+            label="Estado"
+            checked={!offline}
+            onChange={(checked) => {
+              setOffline(!checked)
+              addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
+              setStatus(checked ? 'Disponível' : 'Offline')
+            }}
+            onLabel="Disponível"
+            offLabel="Offline"
+          />
+        ) : null}
 
         {toast && (
           <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
@@ -917,5 +928,135 @@ function ActiveTripSummary({
         />
       )}
     </div>
+  )
+}
+
+function DriverOperationsMenu({
+  sessionDisplayName,
+  history,
+  navPref,
+  onSelectNavPref,
+  onReportIncident,
+}: {
+  sessionDisplayName: string | null
+  history: TripHistoryItem[] | null
+  navPref: DriverNavApp
+  onSelectNavPref: (app: DriverNavApp) => void
+  onReportIncident: (tripId: string) => void
+}) {
+  const now = new Date()
+  const startOfThisWeek = new Date(now)
+  const day = startOfThisWeek.getDay()
+  const shift = day === 0 ? 6 : day - 1
+  startOfThisWeek.setDate(startOfThisWeek.getDate() - shift)
+  startOfThisWeek.setHours(0, 0, 0, 0)
+  const startOfLastWeek = new Date(startOfThisWeek)
+  startOfLastWeek.setDate(startOfLastWeek.getDate() - 7)
+
+  const completedTrips = (history ?? []).filter((t) => t.status === 'completed' && t.completed_at)
+  const thisWeekRevenue = completedTrips.reduce((sum, t) => {
+    const when = t.completed_at ? new Date(t.completed_at) : null
+    if (!when || when < startOfThisWeek) return sum
+    return sum + (t.final_price ?? t.estimated_price ?? 0)
+  }, 0)
+  const lastWeekRevenue = completedTrips.reduce((sum, t) => {
+    const when = t.completed_at ? new Date(t.completed_at) : null
+    if (!when || when < startOfLastWeek || when >= startOfThisWeek) return sum
+    return sum + (t.final_price ?? t.estimated_price ?? 0)
+  }, 0)
+  const closedTrips = (history ?? []).filter((t) => t.status === 'completed' || t.status === 'cancelled').length
+  const cancelledTrips = (history ?? []).filter((t) => t.status === 'cancelled').length
+  const cancelRate = closedTrips > 0 ? Math.round((cancelledTrips / closedTrips) * 100) : 0
+
+  return (
+    <section
+      className="mb-2 rounded-2xl border border-border/80 bg-card p-4 space-y-4 shadow-card"
+      data-testid="driver-ops-menu"
+      aria-label="Menu do motorista"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-foreground">Menu do motorista</h2>
+          <p className="text-sm text-foreground/75">
+            {sessionDisplayName ?? 'Motorista'} · canceladas após aceitar: {cancelRate}%
+          </p>
+        </div>
+        <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/75">
+          Rating: em breve
+        </span>
+      </div>
+
+      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <p className="text-sm font-medium text-foreground">Rendimentos</p>
+        <p className="text-xs text-muted-foreground">Totais operacionais (estimativa) por semana.</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+            <p className="text-[11px] text-foreground/70">Semana atual</p>
+            <p className="text-base font-semibold text-foreground">{thisWeekRevenue.toFixed(2)} €</p>
+          </div>
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+            <p className="text-[11px] text-foreground/70">Semana anterior</p>
+            <p className="text-base font-semibold text-foreground">{lastWeekRevenue.toFixed(2)} €</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <p className="text-sm font-medium text-foreground">Navegação (preferência)</p>
+        <p className="text-xs text-muted-foreground">
+          Os botões «Recolha / Destino» usam primeiro esta app; o segundo botão abre a alternativa.
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            data-testid="driver-nav-pref-waze"
+            onClick={() => onSelectNavPref('waze')}
+            className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
+              navPref === 'waze'
+                ? 'border-primary bg-primary/15 text-foreground'
+                : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+            }`}
+          >
+            Waze
+          </button>
+          <button
+            type="button"
+            data-testid="driver-nav-pref-google"
+            onClick={() => onSelectNavPref('google_maps')}
+            className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
+              navPref === 'google_maps'
+                ? 'border-primary bg-primary/15 text-foreground'
+                : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+            }`}
+          >
+            Google Maps
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <p className="text-sm font-medium text-foreground">Historial de viagens</p>
+        {history && history.length > 0 ? (
+          <ul className="space-y-2">
+            {history.slice(0, 3).map((t) => (
+              <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-foreground/80 truncate">#{t.trip_id.slice(0, 8)} · {t.status}</p>
+                  <button
+                    type="button"
+                    onClick={() => onReportIncident(t.trip_id)}
+                    className="min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50"
+                  >
+                    Reportar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground">Sem viagens recentes para reportar.</p>
+        )}
+      </div>
+    </section>
   )
 }

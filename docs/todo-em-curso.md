@@ -6,7 +6,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ## Agora (foco único)
 
-- [ ] Smoke pós-merge: **rejeitar oferta**, **rating pós-viagem**, **preferência Waze/Google** + regressões S1/S2.
+- [x] Smoke pós-merge: **rejeitar oferta**, **rating pós-viagem**, **preferência Waze/Google** + regressões S1/S2.
 
 ---
 
@@ -24,7 +24,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 - [ ] Categorias de veículo e «dois destinos por dia» — depende de alinhamento com Manuel e modelo de dados.
 - [ ] Menu motorista (rendimentos, histórico, documentos) — por fatias; suspensão/documentos: regra **admin** primeiro.
-- [ ] E2E: cenário **rejeitar** + **rating** (quando estável com seed).
+- [x] E2E: cenário **rejeitar** + **rating** (+ persistência de preferência de navegação).
 
 ---
 
