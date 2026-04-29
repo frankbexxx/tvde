@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/sheet'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { isBackofficeStaffRole, useAuth } from '@/context/AuthContext'
+import { BetaPasswordChangeForm } from './BetaPasswordChangeForm'
 
 function roleLabel(role: string): string {
   if (role === 'driver') return 'Motorista'
@@ -28,10 +29,16 @@ function roleLabel(role: string): string {
 export function ProfileButton() {
   const [open, setOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 639px)')
-  const { sessionPhone, sessionRole, betaMode, logout } = useAuth()
+  const { sessionPhone, sessionDisplayName, sessionRole, betaMode, token, logout } = useAuth()
 
   const body = (
     <div className="mt-4 flex flex-col gap-4">
+      {sessionDisplayName?.trim() ? (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">Nome</p>
+          <p className="text-base font-medium text-foreground break-words">{sessionDisplayName.trim()}</p>
+        </div>
+      ) : null}
       <div className="space-y-1">
         <p className="text-xs text-muted-foreground uppercase tracking-wide">Telemóvel</p>
         <p className="text-base font-medium text-foreground break-all">
@@ -42,6 +49,7 @@ export function ProfileButton() {
         <p className="text-xs text-muted-foreground uppercase tracking-wide">Papel</p>
         <p className="text-base font-medium text-foreground">{roleLabel(sessionRole)}</p>
       </div>
+      {betaMode && token ? <BetaPasswordChangeForm token={token} /> : null}
       {betaMode ? (
         <Button
           type="button"
@@ -77,7 +85,7 @@ export function ProfileButton() {
           <DialogHeader>
             <DialogTitle>Conta</DialogTitle>
             <DialogDescription className="sr-only">
-              Telemóvel e papel da sessão. Em modo BETA podes terminar sessão aqui.
+              Dados da conta: nome, telemóvel, papel e palavra-passe em BETA. Terminar sessão aqui.
             </DialogDescription>
           </DialogHeader>
           {body}
