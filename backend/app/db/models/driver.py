@@ -56,6 +56,11 @@ class Driver(Base):
         nullable=True,
         comment="Document references or URLs.",
     )
+    vehicle_categories: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Preferred vehicle categories for this driver (csv, ex: x,xl,pet).",
+    )
     commission_percent: Mapped[float] = mapped_column(
         Numeric(5, 2),
         nullable=False,

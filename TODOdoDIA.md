@@ -13,7 +13,9 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 ### Agora
 
 - [x] [OPS] Smoke curto passageiro + driver após merge (rating + rejeitar + preferência navegação).
+- [x] [OPS] PRs de estabilização E2E/CI mergeadas em `main` (tipagem + retry rate-limit + ajuste teste offline).
 - [ ] [DOCS] Respostas do Manuel em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md` quando chegarem.
+- [ ] [CÓDIGO] Arrancar fatia 1 de «categorias de veículo» (modelo + toggles base no painel do motorista).
 
 ### Hoje (resto do dia)
 
@@ -22,12 +24,13 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 - [x] [CÓDIGO] Preferência Waze/Google persistida + wake lock na viagem activa (quando o browser permite).
 - [x] [CÓDIGO] Bordas um pouco mais visíveis no light theme (minimal + portugal).
 - [x] [TESTES] Expandir smoke/e2e (rejeição + rating + persistência Waze/Google) com fluxo seed estável.
+- [x] [TESTES] Estabilizar CI E2E (`rate_limit_exceeded` + flaky no cenário "motorista offline").
 
 ### Amanhã
 
-- [ ] [CÓDIGO] Categorias de veículo (X/XL/…) + toggles — modelo de dados + alinhamento com Manuel.
+- [ ] [CÓDIGO] Categorias de veículo (X/XL/…) + toggles — fechar integração backend + regras de disponibilidade.
 - [ ] [CÓDIGO] «Dois destinos por dia» — após conversa com Manuel.
-- [ ] [DOCS] Menu motorista (rendimentos, histórico, documentos) — por fatias.
+- [ ] [DOCS] Menu motorista (rendimentos, histórico, documentos) — especificar campos mínimos e estados.
 
 ### Backlog
 

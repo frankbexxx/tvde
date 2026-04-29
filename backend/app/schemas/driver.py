@@ -20,3 +20,14 @@ class DriverLocationResponse(BaseModel):
     lat: float
     lng: float
     timestamp: int
+
+
+class DriverVehicleCategoriesPayload(BaseModel):
+    categories: list[str] = Field(
+        ...,
+        description="Categorias ativas para o motorista (x, xl, pet, comfort, black, electric, van).",
+    )
+
+
+class DriverVehicleCategoriesResponse(BaseModel):
+    categories: list[str]

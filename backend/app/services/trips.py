@@ -23,6 +23,7 @@ from app.core.config import settings
 from app.core.pricing import calculate_price
 from app.utils.geo import haversine_km, haversine_m
 from app.services.offer_dispatch import create_offers_for_trip
+from app.services.driver_preferences import decode_driver_categories_csv
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.stripe_service import (
@@ -1047,11 +1048,16 @@ def list_available_trips(
         )
         return []
 
+    driver_categories = decode_driver_categories_csv(getattr(driver, "vehicle_categories", None))
+    allow_x = "x" in driver_categories
+
     result: list[tuple[Trip, TripOffer | None]] = []
 
     # Multi-offer: pending offers for this driver
     for offer, trip in list_offers_for_driver(db=db, driver_id=driver_id):
-        result.append((trip, offer))
+        # Fase 3: até termos categorias por trip no matching, assumimos pedidos como categoria "x".
+        if allow_x:
+            result.append((trip, offer))
 
     # Legacy: assigned trips (from admin assign or driver_location auto-dispatch)
     assigned_trips = list(
@@ -1072,11 +1078,13 @@ def list_available_trips(
             if dist_km <= settings.GEO_RADIUS_KM:
                 candidates.append((trip, dist_km))
         candidates.sort(key=lambda x: x[1])
-        for trip, _ in candidates:
-            result.append((trip, None))
+        if allow_x:
+            for trip, _ in candidates:
+                result.append((trip, None))
     else:
-        for trip in assigned_trips:
-            result.append((trip, None))
+        if allow_x:
+            for trip in assigned_trips:
+                result.append((trip, None))
 
     logger.info(
         "list_available_trips: fetched for driver",

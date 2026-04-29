@@ -47,6 +47,10 @@ export interface TripAvailableItem {
   destination_lat: number
   destination_lng: number
   estimated_price: number
+  /** Categoria principal enviada pelo backend (quando disponível). */
+  vehicle_category?: string | null
+  /** Categorias disponíveis para o pedido (quando disponível). */
+  vehicle_categories?: string[] | null
   offer_id?: string | null
 }
 
@@ -186,6 +190,21 @@ export async function rejectDriverOffer(
   return apiFetch<{ status: string }>(`/driver/offers/${offerId}/reject`, {
     method: 'POST',
     token,
+  })
+}
+
+export async function getDriverVehicleCategories(token: string): Promise<{ categories: string[] }> {
+  return apiFetch<{ categories: string[] }>('/driver/preferences/vehicle-categories', { token })
+}
+
+export async function patchDriverVehicleCategories(
+  token: string,
+  categories: string[]
+): Promise<{ categories: string[] }> {
+  return apiFetch<{ categories: string[] }>('/driver/preferences/vehicle-categories', {
+    method: 'PATCH',
+    token,
+    body: JSON.stringify({ categories }),
   })
 }
 
