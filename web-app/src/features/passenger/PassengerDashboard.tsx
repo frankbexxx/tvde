@@ -75,7 +75,7 @@ const ESTIMATE_MOCK = '4–6'
 function passengerDashboardNoop() {}
 
 export function PassengerDashboard() {
-  const { token, appRouteRole, sessionRole } = useAuth()
+  const { token, appRouteRole } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { passengerActiveTripId, setPassengerActiveTripId } = useActiveTrip()
   const activeTripId = passengerActiveTripId
@@ -830,7 +830,6 @@ export function PassengerDashboard() {
     !!token &&
     !!activeTrip &&
     appRouteRole === 'passenger' &&
-    sessionRole === 'passenger' &&
     activeTrip.status === 'completed' &&
     !!activeTrip.driver_id &&
     (activeTrip.driver_rating == null || activeTrip.driver_rating === undefined)
