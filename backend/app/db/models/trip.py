@@ -70,6 +70,11 @@ class Trip(Base):
         nullable=False,
         comment="Estimated price at request time.",
     )
+    vehicle_category: Mapped[Optional[str]] = mapped_column(
+        String(24),
+        nullable=True,
+        comment="Requested vehicle category (x, xl, pet, comfort, black, electric, van).",
+    )
     distance_km: Mapped[Optional[float]] = mapped_column(
         Numeric(8, 2),
         nullable=True,

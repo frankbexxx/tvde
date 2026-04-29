@@ -12,6 +12,10 @@ class TripCreateRequest(BaseModel):
     origin_lng: float = Field(..., ge=-180.0, le=180.0)
     destination_lat: float = Field(..., ge=-90.0, le=90.0)
     destination_lng: float = Field(..., ge=-180.0, le=180.0)
+    vehicle_category: Optional[str] = Field(
+        default=None,
+        description="Requested vehicle category (x, xl, pet, comfort, black, electric, van).",
+    )
 
 
 class TripCreateResponse(BaseModel):

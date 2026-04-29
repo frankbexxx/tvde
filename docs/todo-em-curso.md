@@ -9,6 +9,8 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] Smoke pós-merge: **rejeitar oferta**, **rating pós-viagem**, **preferência Waze/Google** + regressões S1/S2.
 - [x] PR de estabilização E2E/CI mergeado: tipagem Playwright + retry rate-limit + fix cenário offline.
 - [ ] Iniciar implementação de **categorias de veículo** (fatia 1: estrutura + toggles base no driver).
+- [ ] Aplicar semântica de botões/estados: **vermelho cancelar**, **verde confirmar**, **azul disponível** (dark com azul claro legível).
+- [ ] Linha de topo: cores 35/5/60 (verde/amarelo/vermelho) + incluir **hora** no timestamp.
 
 ---
 
@@ -28,6 +30,9 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [ ] Categorias de veículo e «dois destinos por dia» — fechar regras com Manuel e contrato de dados.
 - [ ] Menu motorista (rendimentos, histórico, documentos) — por fatias; suspensão/documentos: **admin** como fonte de verdade.
 - [x] E2E: cenário **rejeitar** + **rating** (+ persistência de preferência de navegação).
+- [ ] Separar **Conta** e **Configurações** em navegação e conteúdo.
+- [ ] Avaliar linha rotacional (data-hora + info operacional) em v1 sem APIs externas.
+- [ ] Planeamento de login social (Google e afins) como onda própria.
 
 ---
 
