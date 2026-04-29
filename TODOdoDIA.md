@@ -16,6 +16,9 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 - [x] [OPS] PRs de estabilização E2E/CI mergeadas em `main` (tipagem + retry rate-limit + ajuste teste offline).
 - [ ] [DOCS] Respostas do Manuel em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md` quando chegarem.
 - [ ] [CÓDIGO] Arrancar fatia 1 de «categorias de veículo» (modelo + toggles base no painel do motorista).
+- [ ] [CÓDIGO] Aplicar semântica visual fechada: **vermelho=cancelar**, **verde=confirmar**, **azul=disponível** (com variante legível em dark).
+- [ ] [CÓDIGO] Linha superior refletir cores da bandeira (35% verde, 5% amarelo, 60% vermelho).
+- [ ] [CÓDIGO] Incluir **hora** junto de dia/data na linha superior.
 
 ### Hoje (resto do dia)
 
@@ -31,6 +34,9 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 - [ ] [CÓDIGO] Categorias de veículo (X/XL/…) + toggles — fechar integração backend + regras de disponibilidade.
 - [ ] [CÓDIGO] «Dois destinos por dia» — após conversa com Manuel.
 - [ ] [DOCS] Menu motorista (rendimentos, histórico, documentos) — especificar campos mínimos e estados.
+- [ ] [CÓDIGO] Separar claramente **Conta** vs **Configurações** (navegação e conteúdos).
+- [ ] [PENSAR] Linha rotacional (data-hora + informação operacional, ex. trânsito) — definir v1 sem dependências externas.
+- [ ] [PENSAR] Login social (Google e afins) — definir onda dedicada (OAuth + fallback + compliance).
 
 ### Backlog
 

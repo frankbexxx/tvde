@@ -18,6 +18,7 @@ export interface TripCreateRequest {
   origin_lng: number
   destination_lat: number
   destination_lng: number
+  vehicle_category?: string
 }
 
 export interface TripCreateResponse {

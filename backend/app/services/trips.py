@@ -23,7 +23,10 @@ from app.core.config import settings
 from app.core.pricing import calculate_price
 from app.utils.geo import haversine_km, haversine_m
 from app.services.offer_dispatch import create_offers_for_trip
-from app.services.driver_preferences import decode_driver_categories_csv
+from app.services.driver_preferences import (
+    decode_driver_categories_csv,
+    normalize_driver_categories,
+)
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.stripe_service import (
@@ -132,6 +135,7 @@ async def create_trip(
     payload: TripCreateRequest,
 ) -> tuple[Trip, int]:
     estimated_price, distance_km, duration_min, eta = _estimate_trip(payload)
+    requested_category = normalize_driver_categories([payload.vehicle_category or "x"])[0]
     trip = Trip(
         passenger_id=passenger_id,
         status=TripStatus.requested,
@@ -140,6 +144,7 @@ async def create_trip(
         destination_lat=payload.destination_lat,
         destination_lng=payload.destination_lng,
         estimated_price=estimated_price,
+        vehicle_category=requested_category,
         distance_km=distance_km,
         duration_min=duration_min,
         final_price=None,
@@ -1049,14 +1054,12 @@ def list_available_trips(
         return []
 
     driver_categories = decode_driver_categories_csv(getattr(driver, "vehicle_categories", None))
-    allow_x = "x" in driver_categories
-
     result: list[tuple[Trip, TripOffer | None]] = []
 
     # Multi-offer: pending offers for this driver
     for offer, trip in list_offers_for_driver(db=db, driver_id=driver_id):
-        # Fase 3: até termos categorias por trip no matching, assumimos pedidos como categoria "x".
-        if allow_x:
+        trip_category = (trip.vehicle_category or "x").strip().lower()
+        if trip_category in driver_categories:
             result.append((trip, offer))
 
     # Legacy: assigned trips (from admin assign or driver_location auto-dispatch)
@@ -1078,12 +1081,14 @@ def list_available_trips(
             if dist_km <= settings.GEO_RADIUS_KM:
                 candidates.append((trip, dist_km))
         candidates.sort(key=lambda x: x[1])
-        if allow_x:
-            for trip, _ in candidates:
+        for trip, _ in candidates:
+            trip_category = (trip.vehicle_category or "x").strip().lower()
+            if trip_category in driver_categories:
                 result.append((trip, None))
     else:
-        if allow_x:
-            for trip in assigned_trips:
+        for trip in assigned_trips:
+            trip_category = (trip.vehicle_category or "x").strip().lower()
+            if trip_category in driver_categories:
                 result.append((trip, None))
 
     logger.info(
