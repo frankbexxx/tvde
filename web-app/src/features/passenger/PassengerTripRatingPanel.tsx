@@ -62,7 +62,7 @@ export function PassengerTripRatingPanel({
             onClick={() => setRating(n)}
             className={`min-h-[44px] min-w-[44px] rounded-xl border text-lg font-semibold transition-colors touch-manipulation ${
               rating === n
-                ? 'border-primary bg-primary text-primary-foreground'
+                ? 'border-success bg-success text-success-foreground'
                 : 'border-border bg-muted/40 text-foreground hover:bg-muted/70'
             } disabled:opacity-50`}
             aria-pressed={rating === n}
@@ -84,7 +84,7 @@ export function PassengerTripRatingPanel({
           type="button"
           disabled={busy || rating == null}
           onClick={() => void submit()}
-          className="min-h-[44px] rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-95 disabled:opacity-50 touch-manipulation"
+          className="min-h-[44px] rounded-xl bg-success px-4 text-sm font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 touch-manipulation"
         >
           {busy ? 'A enviar…' : 'Enviar avaliação'}
         </button>

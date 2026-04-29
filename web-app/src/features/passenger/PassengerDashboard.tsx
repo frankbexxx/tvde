@@ -903,7 +903,7 @@ export function PassengerDashboard() {
             onClick={primaryOnClick}
             disabled={primaryLabel === 'Cancelar' ? cancelling : false}
             loading={primaryLabel === 'Cancelar' && cancelling}
-            variant={primaryLabel === 'Cancelar' ? 'danger' : 'primary'}
+            variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
           >
             {primaryLabel}
           </PrimaryActionButton>

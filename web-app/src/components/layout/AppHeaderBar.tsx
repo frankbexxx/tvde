@@ -5,14 +5,14 @@ import { BrandStripe } from '@/design-system/components/brand/BrandStripe'
 import { useAuth } from '@/context/AuthContext'
 
 /**
- * Cabeçalho global: marca + data (pt-PT) + identificador (nome BETA ou telemóvel).
+ * Cabeçalho global: marca + data e hora (pt-PT) + identificador (nome BETA ou telemóvel).
  */
 export function AppHeaderBar() {
   const { sessionDisplayName, sessionPhone } = useAuth()
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 60_000)
+    const id = window.setInterval(() => setNow(new Date()), 30_000)
     return () => window.clearInterval(id)
   }, [])
 
@@ -21,6 +21,11 @@ export function AppHeaderBar() {
     day: 'numeric',
     month: 'short',
   })
+  const timeStr = now.toLocaleTimeString('pt-PT', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const dateTimeLine = `${dateStr} · ${timeStr}`
   const who = sessionDisplayName?.trim() || sessionPhone?.trim() || null
 
   return (
@@ -45,9 +50,9 @@ export function AppHeaderBar() {
           </div>
           <p
             className="text-xs text-muted-foreground truncate"
-            title={dateStr}
+            title={dateTimeLine}
           >
-            {dateStr}
+            {dateTimeLine}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0 pt-0.5">

@@ -47,10 +47,10 @@ export function RequestCard({
 
   return (
     <div
-      className="rounded-2xl border border-border/80 border-l-4 border-l-primary bg-card p-4 space-y-2 shadow-card transition-all duration-200"
+      className="rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-4 space-y-2 shadow-card transition-all duration-200"
     >
       {contextHint ? (
-        <p className="text-xs font-semibold text-primary">{contextHint}</p>
+        <p className="text-xs font-semibold text-info">{contextHint}</p>
       ) : null}
       {statusLabel ? (
         <p className="text-xs font-medium text-foreground/70">
@@ -84,7 +84,7 @@ export function RequestCard({
               onClick={onReject}
               disabled={Boolean(loading || rejectLoading)}
               data-testid={rejectButtonTestId}
-              className="min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-border bg-transparent px-4 text-sm font-semibold text-foreground hover:bg-muted/40 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+              className="min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-destructive/70 bg-transparent px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
             >
               {rejectLoading ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -101,7 +101,7 @@ export function RequestCard({
             onClick={onAccept}
             disabled={Boolean(loading || rejectLoading)}
             data-testid={acceptButtonTestId}
-            className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold text-lg shadow-floating hover:from-primary/95 hover:to-accent/95 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
+            className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-info text-info-foreground font-bold text-lg shadow-floating hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
           >
             {loading ? (
               <span className="inline-flex items-center gap-2">

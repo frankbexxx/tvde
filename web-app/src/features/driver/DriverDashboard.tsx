@@ -1100,7 +1100,7 @@ function DriverOperationsMenu({
             onClick={() => onSelectNavPref('waze')}
             className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
               navPref === 'waze'
-                ? 'border-primary bg-primary/15 text-foreground'
+                ? 'border-info bg-info/15 text-foreground'
                 : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
             }`}
           >
@@ -1112,7 +1112,7 @@ function DriverOperationsMenu({
             onClick={() => onSelectNavPref('google_maps')}
             className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${
               navPref === 'google_maps'
-                ? 'border-primary bg-primary/15 text-foreground'
+                ? 'border-info bg-info/15 text-foreground'
                 : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
             }`}
           >
@@ -1148,7 +1148,7 @@ function DriverOperationsMenu({
                 onClick={() => onToggleVehicleCategory(key)}
                 className={`min-h-[40px] rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${
                   active
-                    ? 'border-primary bg-primary/15 text-foreground'
+                    ? 'border-info bg-info/15 text-foreground'
                     : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                 }`}
               >

@@ -5,7 +5,13 @@ interface PrimaryActionButtonProps {
   onClick: () => void
   disabled?: boolean
   loading?: boolean
-  variant?: 'primary' | 'danger'
+  /**
+   * `danger` — cancelar / destrutivo (vermelho).
+   * `confirm` — confirmar / avançar viagem (verde).
+   * `available` — acção «disponível» / oferta (azul legível no tema).
+   * `primary` — CTA de marca (gradiente primário → accent).
+   */
+  variant?: 'primary' | 'danger' | 'confirm' | 'available'
 }
 
 /**
@@ -24,7 +30,20 @@ export function PrimaryActionButton({
   const styles =
     variant === 'danger'
       ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-      : 'bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/95 hover:to-accent/95'
+      : variant === 'confirm'
+        ? 'bg-success text-success-foreground hover:bg-success/90'
+        : variant === 'available'
+          ? 'bg-info text-info-foreground hover:bg-info/90'
+          : 'bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/95 hover:to-accent/95'
+
+  const spinnerRing =
+    variant === 'danger'
+      ? 'border-destructive-foreground'
+      : variant === 'confirm'
+        ? 'border-success-foreground'
+        : variant === 'available'
+          ? 'border-info-foreground'
+          : 'border-primary-foreground'
 
   return (
     <button
@@ -35,7 +54,10 @@ export function PrimaryActionButton({
     >
       {loading ? (
         <span className="inline-flex items-center justify-center gap-2">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          <span
+            className={`h-5 w-5 animate-spin rounded-full border-2 border-t-transparent ${spinnerRing}`}
+            aria-hidden
+          />
           A processar...
         </span>
       ) : (
