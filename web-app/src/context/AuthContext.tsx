@@ -129,20 +129,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [pathname, appRouteRole])
 
   const token = useMemo(() => {
-    if (betaMode && betaToken) return betaToken
-    if (!tokens) return null
-    switch (tokenPickRole) {
-      case 'passenger':
-        return tokens.passenger
-      case 'driver':
-        return tokens.driver
-      case 'admin':
-        return tokens.admin
-      case 'partner':
-        return tokens.partner ?? null
-      default:
-        return tokens.passenger
+    if (!tokens) {
+      return betaMode && betaToken ? betaToken : null
     }
+
+    const pickForRoute = (): string | null => {
+      switch (tokenPickRole) {
+        case 'passenger':
+          return tokens.passenger
+        case 'driver':
+          return tokens.driver
+        case 'admin':
+          return tokens.admin
+        case 'partner':
+          return tokens.partner ?? null
+        default:
+          return tokens.passenger
+      }
+    }
+
+    const picked = pickForRoute()
+
+    if (betaMode && betaToken) {
+      const singleJwtAcrossRoles =
+        tokens.passenger === tokens.driver &&
+        (!tokens.admin || tokens.admin === tokens.passenger) &&
+        (!tokens.partner || tokens.partner === tokens.passenger)
+      if (singleJwtAcrossRoles) {
+        return betaToken
+      }
+      return picked ?? betaToken
+    }
+
+    return picked
   }, [betaMode, betaToken, tokens, tokenPickRole])
 
   /** Papel real do utilizador — não derivar de `token` (varia com a rota / tokenPickRole). */

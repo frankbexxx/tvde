@@ -7,6 +7,15 @@ import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
 import { formatApiErrorFromUnknown } from '../../utils/apiErrorDetail'
 
+/** Evita «Estado: X» quando X já é o título — menos ruído com StatusHeader + cartão A014. */
+function dedupeEstadoSubLabel(label: string, subLabel?: string): string | undefined {
+  if (!subLabel) return undefined
+  if (!/^Estado:\s*/i.test(subLabel)) return subLabel
+  const tail = subLabel.replace(/^Estado:\s*/i, '').trim()
+  if (tail === label.trim()) return undefined
+  return subLabel
+}
+
 export function getPassengerBannerState(params: {
   creating: boolean
   activeTripId: string | null
@@ -53,37 +62,47 @@ export function getPassengerBannerState(params: {
   const statusLine = (s: string) => `Estado: ${passengerTripStatusLabel(s)}`
 
   switch (uxState) {
-    case 'SEARCHING_DRIVER':
+    case 'SEARCHING_DRIVER': {
+      const label = 'À procura de motorista'
       return {
-        label: 'À procura de motorista',
-        variant: 'requested',
-        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+        label,
+        variant: 'requested' as const,
+        subLabel: activeTrip ? dedupeEstadoSubLabel(label, statusLine(activeTrip.status)) : undefined,
       }
+    }
     case 'DRIVER_ASSIGNED':
       if (activeTrip?.status === 'assigned') {
+        const label = 'Motorista atribuído'
         return {
-          label: 'Motorista atribuído',
+          label,
           variant: 'assigned',
-          subLabel: statusLine(activeTrip.status),
+          subLabel: dedupeEstadoSubLabel(label, statusLine(activeTrip.status)),
         }
       }
-      return {
-        label: 'Motorista a caminho',
-        variant: 'accepted',
-        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+      {
+        const label = 'Motorista a caminho'
+        return {
+          label,
+          variant: 'accepted',
+          subLabel: activeTrip ? dedupeEstadoSubLabel(label, statusLine(activeTrip.status)) : undefined,
+        }
       }
-    case 'DRIVER_ARRIVING':
+    case 'DRIVER_ARRIVING': {
+      const label = passengerTripStatusLabel('arriving')
       return {
-        label: passengerTripStatusLabel('arriving'),
+        label,
         variant: 'arriving',
-        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+        subLabel: activeTrip ? dedupeEstadoSubLabel(label, statusLine(activeTrip.status)) : undefined,
       }
-    case 'TRIP_ONGOING':
+    }
+    case 'TRIP_ONGOING': {
+      const label = 'Viagem em curso'
       return {
-        label: 'Viagem em curso',
+        label,
         variant: 'ongoing',
-        subLabel: activeTrip ? statusLine(activeTrip.status) : undefined,
+        subLabel: activeTrip ? dedupeEstadoSubLabel(label, statusLine(activeTrip.status)) : undefined,
       }
+    }
     case 'TRIP_COMPLETED': {
       const ps = activeTrip?.payment_status
       if (ps === 'succeeded') {

@@ -51,6 +51,11 @@ export interface TripPlannerPanelProps {
   visualWeight?: TripPlannerVisualWeight
   /** Sem cartão próprio — títulos/copy no bloco pai (fluxo unificado passageiro). */
   embedded?: boolean
+  /**
+   * Com `PassengerStatusCard` + `StatusHeader`, omitir a linha «Estado: …» e a cópia genérica do mapa
+   * em `in_trip`, mantendo pagamento / distância ao motorista / polling.
+   */
+  inTripSuppressEstadoEcho?: boolean
 }
 
 /**
@@ -80,6 +85,7 @@ function TripPlannerPanelInner({
   onConfirmTrip,
   visualWeight = 'default',
   embedded = false,
+  inTripSuppressEstadoEcho = false,
 }: TripPlannerPanelProps) {
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
 
@@ -251,12 +257,14 @@ function TripPlannerPanelInner({
 
       {uiState === 'in_trip' && activeTrip && (
         <div className="space-y-1">
-          <p className="text-sm text-foreground/85">
-            Estado:{' '}
-            <span className="text-foreground font-semibold">
-              {passengerTripStatusLabel(activeTrip.status)}
-            </span>
-          </p>
+          {!inTripSuppressEstadoEcho ? (
+            <p className="text-sm text-foreground/85">
+              Estado:{' '}
+              <span className="text-foreground font-semibold">
+                {passengerTripStatusLabel(activeTrip.status)}
+              </span>
+            </p>
+          ) : null}
           {inTripPaymentLine ? (
             <p className="text-sm text-foreground/80">Pagamento: {inTripPaymentLine}</p>
           ) : null}
@@ -270,7 +278,9 @@ function TripPlannerPanelInner({
               {tripPollHint}
             </p>
           ) : null}
-          <p className="text-sm text-foreground/80 pt-0.5">Acompanha o mapa e o estado acima.</p>
+          {!inTripSuppressEstadoEcho ? (
+            <p className="text-sm text-foreground/80 pt-0.5">Acompanha o mapa e o estado acima.</p>
+          ) : null}
         </div>
       )}
     </>
