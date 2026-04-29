@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import UserContext, get_db, require_role
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
+from app.db.models.driver import Driver
 from app.models.enums import OfferStatus
 from app.models.enums import Role
 from app.schemas.trip import (
@@ -37,6 +38,7 @@ from app.services.trips import (
     rate_trip_as_driver,
     start_trip as start_trip_service,
 )
+from app.services.driver_preferences import decode_driver_categories_csv
 
 
 router = APIRouter(prefix="/driver/trips", tags=["driver"])
@@ -61,6 +63,10 @@ async def list_available_trips(
         db=db,
         driver_id=user.user_id,
     )
+    # Fase 3: categoria da oferta ainda não vem do matching; expomos "x" por compatibilidade.
+    driver = db.execute(select(Driver).where(Driver.user_id == user.user_id)).scalar_one_or_none()
+    categories = decode_driver_categories_csv(driver.vehicle_categories if driver else None)
+    fallback_category = "x" if "x" in categories else (categories[0] if categories else "x")
     return [
         TripAvailableItem(
             trip_id=str(trip.id),
@@ -69,6 +75,8 @@ async def list_available_trips(
             destination_lat=float(trip.destination_lat),
             destination_lng=float(trip.destination_lng),
             estimated_price=float(trip.estimated_price),
+            vehicle_category=fallback_category,
+            vehicle_categories=[fallback_category],
             offer_id=str(offer.id) if offer else None,
         )
         for trip, offer in items

@@ -8,7 +8,7 @@ Formato:
 
 > Nota: Este documento é um snapshot do estado observado no repo e na app web. Vamos atualizando à medida que adicionares itens e/ou implementarmos.
 >
-> Última atualização: **2026-04-29** (rejeitar oferta, rating pós-viagem, preferência de navegação, wake lock opcional).
+> Última atualização: **2026-04-29** (rejeitar oferta, rating pós-viagem, preferência de navegação, wake lock opcional, estabilização E2E/CI).
 
 ---
 
@@ -77,7 +77,8 @@ Formato:
 ### Crescimento
 
 - **Heatmap (zonas com procura)**: **Não**
-- **Earnings dashboard (dia/semana)**: **Não**
+- **Earnings dashboard (dia/semana)**: **Parcial**
+  - Existe bloco resumido no menu do motorista (semana atual/anterior); faltam filtros/fecho financeiro completo.
 - **Histórico de viagens**: **Parcial**
 - **Cancelamento com motivo**: **Parcial**
 - **Pausa / descanso**: **Não**
@@ -204,7 +205,7 @@ Formato:
 
 Para manter foco operacional, este é o recorte recomendado do que falta com melhor retorno:
 
-1. **Driver — rejeitar oferta na UI** (hoje está só aceitar/cancelar depois de aceitar).
-2. **Passenger — rating do motorista na UI** (API já existe; falta fluxo visível no fim da viagem).
-3. **Passenger — método de pagamento first-class** (escolha explícita pré-viagem e feedback claro).
-4. **E2E — ampliar cobertura multi-user em cenários de falha/cancelamento** (hoje está parcial).
+1. **Driver — categorias de veículo (X/XL/Pet/...)** com toggles e persistência.
+2. **Driver — "dois destinos por dia"** com regra temporal/duração e limites operacionais.
+3. **Driver/Partner/Admin — documentos e suspensão** (admin como fonte de verdade + alertas de expiração).
+4. **Passenger — método de pagamento first-class** (escolha explícita pré-viagem e feedback claro).

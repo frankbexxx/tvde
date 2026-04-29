@@ -9,6 +9,8 @@ import {
   getDriverTripDetail,
   acceptTrip,
   rejectDriverOffer,
+  getDriverVehicleCategories as getDriverVehicleCategoriesApi,
+  patchDriverVehicleCategories as patchDriverVehicleCategoriesApi,
   setDriverOnline,
   setDriverOffline,
 } from '../../api/trips'
@@ -63,6 +65,13 @@ import {
   setDriverNavApp,
   type DriverNavApp,
 } from '../../services/driverNavPreference'
+import {
+  getDriverVehicleCategories,
+  setDriverVehicleCategories,
+  normalizeDriverVehicleCategory,
+  driverVehicleCategoryLabel,
+  type DriverVehicleCategory,
+} from '../../services/driverVehicleCategories'
 import { getStoredSessionDisplayName } from '../../utils/authStorage'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
@@ -139,6 +148,9 @@ export function DriverDashboard() {
   const [toast, setToast] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [driverNavPref, setDriverNavPref] = useState<DriverNavApp>(() => getDriverNavApp())
+  const [vehicleCategories, setVehicleCategories] = useState<DriverVehicleCategory[]>(() =>
+    getDriverVehicleCategories()
+  )
   const [menuOpen, setMenuOpen] = useState(false)
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
@@ -167,7 +179,31 @@ export function DriverDashboard() {
     !!token,
     10000
   )
-  const hasAvailableTrips = Boolean(available && available.length > 0)
+  const availableWithCategoryMeta = useMemo(() => {
+    return (available ?? []).map((trip) => {
+      const raw = Array.isArray(trip.vehicle_categories) && trip.vehicle_categories.length > 0
+        ? trip.vehicle_categories
+        : trip.vehicle_category
+          ? [trip.vehicle_category]
+          : []
+      const normalized = raw
+        .map((c) => normalizeDriverVehicleCategory(c))
+        .filter((c): c is DriverVehicleCategory => c != null)
+      return {
+        trip,
+        categories: normalized,
+      }
+    })
+  }, [available])
+
+  const hasAnyCategoryAwareOffer = availableWithCategoryMeta.some((x) => x.categories.length > 0)
+  const filteredAvailable = useMemo(() => {
+    return availableWithCategoryMeta
+      .filter(({ categories }) => categories.length === 0 || categories.some((c) => vehicleCategories.includes(c)))
+      .map((x) => x.trip)
+  }, [availableWithCategoryMeta, vehicleCategories])
+  const filteredOutCount = Math.max(0, (available?.length ?? 0) - filteredAvailable.length)
+  const hasAvailableTrips = filteredAvailable.length > 0
   const compactDriverSurface = !activeTripId && !offline && hasAvailableTrips
 
   const { setDriverOnAssigned } = useDevToolsCallbacks()
@@ -273,6 +309,27 @@ export function DriverDashboard() {
   useEffect(() => {
     setStoredOffline(offline)
   }, [offline])
+
+  useEffect(() => {
+    if (!token) return
+    let cancelled = false
+    void getDriverVehicleCategoriesApi(token)
+      .then((res) => {
+        if (cancelled) return
+        const next = res.categories
+          .map((c) => normalizeDriverVehicleCategory(c))
+          .filter((c): c is DriverVehicleCategory => c != null)
+        if (next.length === 0) return
+        setVehicleCategories(next)
+        setDriverVehicleCategories(next)
+      })
+      .catch(() => {
+        /* fallback local */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token])
 
   // Sync backend status when token becomes available (ensures backend is_available matches frontend)
   useEffect(() => {
@@ -496,6 +553,7 @@ export function DriverDashboard() {
           sessionDisplayName={sessionDisplayName}
           history={history}
           navPref={driverNavPref}
+          vehicleCategories={vehicleCategories}
           onSelectNavPref={(app) => {
             setDriverNavApp(app)
             setDriverNavPref(app)
@@ -503,6 +561,23 @@ export function DriverDashboard() {
               app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps',
               'info'
             )
+          }}
+          onToggleVehicleCategory={(category) => {
+            setVehicleCategories((prev) => {
+              const exists = prev.includes(category)
+              // Garantimos que o motorista mantém sempre pelo menos 1 categoria ativa.
+              const next = exists
+                ? prev.filter((c) => c !== category)
+                : [...prev, category]
+              const safe = next.length > 0 ? next : prev
+              setDriverVehicleCategories(safe)
+              if (token) {
+                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
+                  /* keep local preference even if backend fails */
+                })
+              }
+              return safe
+            })
           }}
           onReportIncident={(tripId) => {
             const note = window.prompt(
@@ -678,27 +753,31 @@ export function DriverDashboard() {
           <>
             <StatusHeader
               label={
-                available && available.length > 0
-                  ? `${available.length} viagem(ns) disponível(eis)`
+                hasAvailableTrips
+                  ? `${filteredAvailable.length} viagem(ns) disponível(eis)`
                   : 'À espera de viagens'
               }
               variant="idle"
-              emphasis={available && available.length > 0 ? 'subdued' : 'primary'}
+              emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
             />
             {pollEnabled && availableLoading && available == null ? (
               <div className="flex flex-col items-center justify-center gap-3 py-12 text-foreground/80">
                 <Spinner size="md" />
                 <p className="text-sm">A carregar viagens…</p>
               </div>
-            ) : available && available.length > 0 ? (
+            ) : hasAvailableTrips ? (
               <ul className="space-y-4">
-                {available.map((t: TripAvailableItem) => (
+                {filteredAvailable.map((t: TripAvailableItem) => (
                   <li key={t.trip_id}>
                     <RequestCard
                       contextHint={DRIVER_NEW_TRIP_LIST_HINT}
                       pickup={formatPickup(t.origin_lat, t.origin_lng)}
                       destination={formatDestination(t.destination_lat, t.destination_lng)}
                       statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                      vehicleCategoryLabel={(() => {
+                        const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
+                        return one ? driverVehicleCategoryLabel(one) : null
+                      })()}
                       estimatedPrice={t.estimated_price}
                       offerId={t.offer_id ?? null}
                       onReject={
@@ -726,7 +805,11 @@ export function DriverDashboard() {
             ) : (
               <div className="py-8 text-center text-foreground/80">
                 <p className="text-base">Sem viagens disponíveis.</p>
-                <p className="text-sm mt-1">Fica disponível para receberes novos pedidos.</p>
+                <p className="text-sm mt-1">
+                  {hasAnyCategoryAwareOffer && filteredOutCount > 0
+                    ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias ativas.`
+                    : 'Fica disponível para receberes novos pedidos.'}
+                </p>
               </div>
             )}
           </>
@@ -935,13 +1018,17 @@ function DriverOperationsMenu({
   sessionDisplayName,
   history,
   navPref,
+  vehicleCategories,
   onSelectNavPref,
+  onToggleVehicleCategory,
   onReportIncident,
 }: {
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
+  vehicleCategories: DriverVehicleCategory[]
   onSelectNavPref: (app: DriverNavApp) => void
+  onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onReportIncident: (tripId: string) => void
 }) {
   const now = new Date()
@@ -1031,6 +1118,44 @@ function DriverOperationsMenu({
           >
             Google Maps
           </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <p className="text-sm font-medium text-foreground">Categorias de veículo</p>
+        <p className="text-xs text-muted-foreground">
+          Fase 1: preferência local para mostrar categorias ativas (integração operacional vem a seguir).
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            [
+              ['x', 'X'],
+              ['xl', 'XL'],
+              ['pet', 'Pet'],
+              ['comfort', 'Comfort'],
+              ['black', 'Black'],
+              ['electric', 'Elétrico'],
+              ['van', 'Van'],
+            ] as Array<[DriverVehicleCategory, string]>
+          ).map(([key, label]) => {
+            const active = vehicleCategories.includes(key)
+            return (
+              <button
+                key={key}
+                type="button"
+                data-testid={`driver-category-${key}`}
+                aria-pressed={active}
+                onClick={() => onToggleVehicleCategory(key)}
+                className={`min-h-[40px] rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${
+                  active
+                    ? 'border-primary bg-primary/15 text-foreground'
+                    : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       </div>
 

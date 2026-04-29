@@ -13,6 +13,7 @@ interface RequestCardProps {
   estimateFallback?: string
   /** Linha curta acima da recolha (ex.: nova viagem na lista). */
   contextHint?: string
+  vehicleCategoryLabel?: string | null
   onAccept: () => void
   /** Quando existe `offer_id` no backend, o motorista pode recusar a oferta. */
   offerId?: string | null
@@ -30,6 +31,7 @@ export function RequestCard({
   estimatedPrice,
   estimateFallback = '4–6',
   contextHint,
+  vehicleCategoryLabel,
   onAccept,
   offerId,
   onReject,
@@ -53,6 +55,11 @@ export function RequestCard({
       {statusLabel ? (
         <p className="text-xs font-medium text-foreground/70">
           Estado: <span className="text-foreground">{statusLabel}</span>
+        </p>
+      ) : null}
+      {vehicleCategoryLabel ? (
+        <p className="text-xs font-medium text-foreground/70">
+          Categoria: <span className="text-foreground">{vehicleCategoryLabel}</span>
         </p>
       ) : null}
       <div className="space-y-0.5">

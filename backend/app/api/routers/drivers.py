@@ -8,8 +8,14 @@ from app.api.deps import UserContext, get_db, require_role
 from app.models.enums import Role
 from app.schemas.driver import DriverLocationPayload
 from app.schemas.driver import DriverLocationResponse
+from app.schemas.driver import DriverVehicleCategoriesPayload, DriverVehicleCategoriesResponse
 from app.db.models.driver import DriverLocation
+from app.db.models.driver import Driver
 from app.services.driver_location import upsert_driver_location
+from app.services.driver_preferences import (
+    decode_driver_categories_csv,
+    encode_driver_categories_csv,
+)
 
 
 router = APIRouter(prefix="/drivers", tags=["driver"])
@@ -95,3 +101,45 @@ async def update_location_alias(
 ) -> None:
     """Same as POST /drivers/location."""
     _persist_driver_location(db=db, user=user, payload=payload)
+
+
+@driver_router.get(
+    "/preferences/vehicle-categories",
+    response_model=DriverVehicleCategoriesResponse,
+    summary="Get driver vehicle categories",
+)
+async def get_vehicle_categories(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverVehicleCategoriesResponse:
+    driver = db.execute(select(Driver).where(Driver.user_id == user.user_id)).scalar_one_or_none()
+    if driver is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="driver_not_found")
+    return DriverVehicleCategoriesResponse(
+        categories=decode_driver_categories_csv(driver.vehicle_categories)
+    )
+
+
+@driver_router.patch(
+    "/preferences/vehicle-categories",
+    response_model=DriverVehicleCategoriesResponse,
+    summary="Update driver vehicle categories",
+)
+async def patch_vehicle_categories(
+    payload: DriverVehicleCategoriesPayload,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverVehicleCategoriesResponse:
+    driver = db.execute(select(Driver).where(Driver.user_id == user.user_id)).scalar_one_or_none()
+    if driver is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="driver_not_found")
+    driver.vehicle_categories = encode_driver_categories_csv(payload.categories)
+    db.commit()
+    db.refresh(driver)
+    return DriverVehicleCategoriesResponse(
+        categories=decode_driver_categories_csv(driver.vehicle_categories)
+    )

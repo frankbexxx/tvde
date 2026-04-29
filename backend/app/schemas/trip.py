@@ -62,6 +62,8 @@ class TripAvailableItem(BaseModel):
     destination_lat: float
     destination_lng: float
     estimated_price: float
+    vehicle_category: Optional[str] = None
+    vehicle_categories: Optional[list[str]] = None
     offer_id: Optional[str] = None  # When from multi-offer dispatch
 
 
