@@ -93,6 +93,10 @@ export interface TripDetailResponse {
   commission_amount?: number
   driver_payout?: number
   driver_location?: DriverLocationSnapshot | null
+  /** Passageiro avaliou o motorista (1–5); só após conclusão. */
+  driver_rating?: number | null
+  /** Motorista avaliou o passageiro (1–5); só após conclusão. */
+  passenger_rating?: number | null
 }
 
 // --- Passenger ---
@@ -112,6 +116,18 @@ export async function cancelTrip(tripId: string, token: string): Promise<TripSta
   return apiFetch<TripStatusResponse>(`/trips/${tripId}/cancel`, {
     method: 'POST',
     body: JSON.stringify({}),
+    token,
+  })
+}
+
+export async function rateTripPassenger(
+  tripId: string,
+  token: string,
+  rating: number
+): Promise<TripStatusResponse> {
+  return apiFetch<TripStatusResponse>(`/trips/${tripId}/rate`, {
+    method: 'POST',
+    body: JSON.stringify({ rating }),
     token,
   })
 }
@@ -158,6 +174,16 @@ export async function getDriverTripDetail(tripId: string, token: string): Promis
 
 export async function acceptTrip(tripId: string, token: string): Promise<TripStatusResponse> {
   return apiFetch<TripStatusResponse>(`/driver/trips/${tripId}/accept`, {
+    method: 'POST',
+    token,
+  })
+}
+
+export async function rejectDriverOffer(
+  offerId: string,
+  token: string
+): Promise<{ status: string }> {
+  return apiFetch<{ status: string }>(`/driver/offers/${offerId}/reject`, {
     method: 'POST',
     token,
   })

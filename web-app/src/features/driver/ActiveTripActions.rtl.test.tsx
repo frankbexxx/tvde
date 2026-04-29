@@ -117,14 +117,14 @@ describe('ActiveTripActions (RTL)', () => {
     expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
   })
 
-  it('poll sem trip ainda: com tripDetailFallback mostra links Pickup Waze/Maps (coordenadas do fallback)', () => {
+  it('poll sem trip ainda: com tripDetailFallback mostra links de navegação (preferência Waze por omissão)', () => {
     pollingCtx.trip = null
     const fb = minimalTrip('accepted')
     renderActions(DRIVER_NEAR_PICKUP_0, { tripDetailFallback: fb })
-    const waze = screen.getByRole('link', { name: /pickup no waze/i })
-    expect(waze).toHaveAttribute('href', expect.stringContaining('waze.com'))
-    expect(waze.getAttribute('href')).toContain(encodeURIComponent(`${fb.origin_lat},${fb.origin_lng}`))
-    expect(screen.getByRole('link', { name: /pickup no google maps/i })).toHaveAttribute(
+    const primary = screen.getByTestId('driver-nav-pickup-primary')
+    expect(primary).toHaveAttribute('href', expect.stringContaining('waze.com'))
+    expect(primary.getAttribute('href')).toContain(encodeURIComponent(`${fb.origin_lat},${fb.origin_lng}`))
+    expect(screen.getByTestId('driver-nav-pickup-secondary')).toHaveAttribute(
       'href',
       expect.stringContaining('google.com/maps')
     )

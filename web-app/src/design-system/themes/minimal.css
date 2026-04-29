@@ -27,7 +27,8 @@
   --color-surface-raised: 0 0% 98%;
   --color-surface-overlay: 220 14% 5%;
 
-  --color-border: 220 13% 91%;
+  /* Ligeiramente mais escuro para bordas legíveis no light theme (cartões / inputs). */
+  --color-border: 220 13% 84%;
   --color-input: 220 13% 91%;
   --color-ring: 220 14% 30%;
   --color-popover: 0 0% 100%;

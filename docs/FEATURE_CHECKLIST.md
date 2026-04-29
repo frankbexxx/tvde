@@ -8,7 +8,7 @@ Formato:
 
 > Nota: Este documento é um snapshot do estado observado no repo e na app web. Vamos atualizando à medida que adicionares itens e/ou implementarmos.
 >
-> Última atualização: **2026-04-28** (após ciclos de melhoria Passenger/Driver e smokes manuais).
+> Última atualização: **2026-04-29** (rejeitar oferta, rating pós-viagem, preferência de navegação, wake lock opcional).
 
 ---
 
@@ -32,8 +32,8 @@ Formato:
   - “Dinheiro” como método de pagamento first-class: não.
 - **Histórico de viagens**: **Parcial**
   - UI mostra histórico recente; sem exploração avançada.
-- **Avaliação do motorista**: **Parcial**
-  - API existe (`POST /trips/{id}/rate`); UI dedicada de rating não está clara/total no passenger.
+- **Avaliação do motorista**: **Sim**
+  - API + UI após conclusão (estrelas 1–5, opcional «Agora não»); detalhe da viagem expõe `driver_rating`.
 
 ### Crescimento
 
@@ -62,9 +62,9 @@ Formato:
 ### Core
 
 - **Receber pedidos**: **Sim**
-- **Aceitar / rejeitar viagem**: **Parcial**
+- **Aceitar / rejeitar viagem**: **Sim**
   - Aceitar: sim.
-  - Rejeitar (oferta): API existe; UI explícita de rejeição não está evidente no front principal.
+  - Rejeitar (oferta): sim na lista de disponíveis (`REJEITAR` com `offer_id`).
 - **Navegação até passageiro**: **Sim**
   - Links dedicados para Waze/Google Maps no estado de aproximação.
 - **Navegação durante viagem**: **Sim**
@@ -89,6 +89,7 @@ Formato:
 - **Bonus / incentivos**: **Não**
 - **Metas (ex: 10 viagens = extra €)**: **Não**
 - **Integração com apps de navegação**: **Sim**
+  - Preferência Waze/Google persistida; links primário/secundário na viagem activa; wake lock de ecrã quando o browser permite.
 - **Suporte in-app**: **Não**
 - **Gestão de horários**: **Não**
 - **Score do motorista (qualidade)**: **Parcial**
