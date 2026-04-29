@@ -1,4 +1,4 @@
-import { test, expect, type APIRequestContext } from '@playwright/test'
+import { test, expect, type APIRequestContext, type Browser, type Dialog } from '@playwright/test'
 import {
   attachFailureArtifactsIfNeeded,
   resetFailureArtifactState,
@@ -18,6 +18,44 @@ const sec = (s: number) => s * 1000
 
 /** Intervalos de poll (ms). */
 const pollLook = [300, 600, 1200, 2000]
+
+async function createTripWithRateLimitRetry(
+  request: APIRequestContext,
+  passengerToken: string,
+  timeoutMs = 70000
+) {
+  let lastDetail = 'trip_retry_failed'
+  let lastStatus = 500
+  const startedAt = Date.now()
+  let attempt = 0
+
+  while (Date.now() - startedAt < timeoutMs) {
+    attempt += 1
+    const tripRes = await request.post(`${API}/trips`, {
+      headers: {
+        Authorization: `Bearer ${passengerToken}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        origin_lat: TRIP_ORIGIN.lat,
+        origin_lng: TRIP_ORIGIN.lng,
+        destination_lat: TRIP_DEST.lat,
+        destination_lng: TRIP_DEST.lng,
+      },
+    })
+    if (tripRes.ok()) return tripRes
+
+    const detail = await tripRes.text()
+    lastDetail = detail
+    lastStatus = tripRes.status()
+    const isRateLimited = tripRes.status() === 429 || detail.includes('rate_limit_exceeded')
+    if (!isRateLimited) break
+
+    await new Promise((resolve) => setTimeout(resolve, Math.min(2000 + attempt * 400, 5000)))
+  }
+
+  throw new Error(`create trip failed (${lastStatus}): ${lastDetail}`)
+}
 
 /**
  * Motorista primeiro no browser: evita expirar ofertas (~OFFER_TIMEOUT_SECONDS no backend) enquanto o Vite
@@ -47,18 +85,7 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{
   })
   expect(locRes.ok(), `driver location: ${locRes.status()} ${await locRes.text()}`).toBeTruthy()
 
-  const tripRes = await request.post(`${API}/trips`, {
-    headers: {
-      Authorization: `Bearer ${tokens.passenger}`,
-      'Content-Type': 'application/json',
-    },
-    data: {
-      origin_lat: TRIP_ORIGIN.lat,
-      origin_lng: TRIP_ORIGIN.lng,
-      destination_lat: TRIP_DEST.lat,
-      destination_lng: TRIP_DEST.lng,
-    },
-  })
+  const tripRes = await createTripWithRateLimitRetry(request, tokens.passenger)
   expect(tripRes.ok(), `create trip: ${tripRes.status()} ${await tripRes.text()}`).toBeTruthy()
   const trip = (await tripRes.json()) as { trip_id: string }
 
@@ -80,7 +107,7 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{
 }
 
 async function createAuthenticatedContext(
-  browser: Parameters<typeof test>[0]['browser'],
+  browser: Browser,
   tokens: { passenger: string; driver: string; admin: string },
   role: 'driver' | 'passenger',
   tripIdForPassenger?: string
@@ -206,7 +233,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
 
     const rejectBtn = driverPage.getByTestId(`driver-reject-${tripId}`)
     await expect.poll(async () => rejectBtn.isVisible(), { timeout: sec(90), intervals: pollLook }).toBe(true)
-    driverPage.once('dialog', (d) => d.accept())
+    driverPage.once('dialog', (d: Dialog) => d.accept())
     await rejectBtn.click()
 
     await expect
