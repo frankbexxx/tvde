@@ -12,7 +12,7 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 
 ### Agora
 
-- [ ] [OPS] Smoke curto passageiro + driver após merge (rating + rejeitar + preferência navegação).
+- [x] [OPS] Smoke curto passageiro + driver após merge (rating + rejeitar + preferência navegação).
 - [ ] [DOCS] Respostas do Manuel em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md` quando chegarem.
 
 ### Hoje (resto do dia)
@@ -21,7 +21,7 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 - [x] [CÓDIGO] Passenger: rating pós-viagem + `driver_rating` / `passenger_rating` no GET detalhe.
 - [x] [CÓDIGO] Preferência Waze/Google persistida + wake lock na viagem activa (quando o browser permite).
 - [x] [CÓDIGO] Bordas um pouco mais visíveis no light theme (minimal + portugal).
-- [ ] [TESTES] Expandir smoke/e2e (rejeição + rating) quando o fluxo seed estiver estável.
+- [x] [TESTES] Expandir smoke/e2e (rejeição + rating + persistência Waze/Google) com fluxo seed estável.
 
 ### Amanhã
 

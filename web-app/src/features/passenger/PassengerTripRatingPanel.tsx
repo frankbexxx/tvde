@@ -30,7 +30,13 @@ export function PassengerTripRatingPanel({
       const e = err as { status?: number; detail?: string }
       const msg = isTimeoutLikeError(err) || e?.status === 0
         ? 'Sem ligação ou o pedido demorou demasiado. Tenta de novo.'
-        : String(e?.detail ?? 'Não foi possível enviar a avaliação.')
+        : e?.status === 403
+          ? 'Sem permissão para avaliar esta viagem nesta sessão. Entra como passageiro e tenta novamente.'
+          : e?.status === 404
+            ? 'Viagem não encontrada para avaliação. Pede nova viagem e tenta novamente no fim.'
+            : e?.detail === 'trip_not_completed'
+              ? 'A viagem ainda não está concluída. Aguarda alguns segundos e tenta de novo.'
+              : String(e?.detail ?? 'Não foi possível enviar a avaliação.')
       toast.error(msg)
     } finally {
       setBusy(false)
