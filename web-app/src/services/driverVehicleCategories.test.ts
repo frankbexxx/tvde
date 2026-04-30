@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  driverVehicleCategoryLabel,
   getDriverVehicleCategories,
   setDriverVehicleCategories,
   type DriverVehicleCategory,
@@ -24,6 +25,10 @@ describe('driverVehicleCategories', () => {
   it('keeps at least one category selected', () => {
     setDriverVehicleCategories([])
     expect(getDriverVehicleCategories()).toEqual(['x'])
+  })
+
+  it('label electric uses Portuguese accent', () => {
+    expect(driverVehicleCategoryLabel('electric')).toBe('Elétrico')
   })
 })
 

@@ -6,42 +6,43 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel rápido da sessão (2026-04-29)
+## Painel rápido da sessão (2026-04-30)
 
 _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro mantém histórico/contexto._
 
 ### Agora
 
-- [x] [OPS] Smoke curto passageiro + driver após merge (rating + rejeitar + preferência navegação).
-- [x] [OPS] PRs de estabilização E2E/CI mergeadas em `main` (tipagem + retry rate-limit + ajuste teste offline).
-- [ ] [DOCS] Respostas do Manuel em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md` quando chegarem.
-- [ ] [CÓDIGO] Arrancar fatia 1 de «categorias de veículo» (modelo + toggles base no painel do motorista).
-- [ ] [CÓDIGO] Aplicar semântica visual fechada: **vermelho=cancelar**, **verde=confirmar**, **azul=disponível** (com variante legível em dark).
-- [ ] [CÓDIGO] Linha superior refletir cores da bandeira (35% verde, 5% amarelo, 60% vermelho).
-- [ ] [CÓDIGO] Incluir **hora** junto de dia/data na linha superior.
+- [ ] [DOCS] **Aguardar** respostas do Manuel em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md`.
+- [ ] [CÓDIGO] **Aguardar** regras finas: categorias + **«dois destinos por dia»** (pós-Manuel).
+- [x] [CÓDIGO] Linha rotacional no cabeçalho (`AppHeaderBar` + `headerRotatingHints.ts`, v1 sem APIs).
+- [x] [DOCS] Menu motorista — `docs/product/DRIVER_MENU_SPEC.md`.
+- [x] [CÓDIGO] Categorias no menu: copy servidor + filtro; label **Elétrico**; título **Histórico**.
 
-### Hoje (resto do dia)
+### Já em `main` (merge 2026-04-29)
 
-- [x] [CÓDIGO] Driver: rejeitar oferta na UI (`REJEITAR` + `POST /driver/offers/.../reject`).
-- [x] [CÓDIGO] Passenger: rating pós-viagem + `driver_rating` / `passenger_rating` no GET detalhe.
-- [x] [CÓDIGO] Preferência Waze/Google persistida + wake lock na viagem activa (quando o browser permite).
-- [x] [CÓDIGO] Bordas um pouco mais visíveis no light theme (minimal + portugal).
-- [x] [TESTES] Expandir smoke/e2e (rejeição + rating + persistência Waze/Google) com fluxo seed estável.
-- [x] [TESTES] Estabilizar CI E2E (`rate_limit_exceeded` + flaky no cenário "motorista offline").
+- [x] Token/rating por rota + banner + passageiro (#201).
+- [x] Semântica vermelho/verde/azul + faixa 35/5/60 + data e hora no header (#202).
+- [x] **Conta** vs **Configurações** + password BETA no perfil (#203).
 
-### Amanhã
+### Amanhã / ondas
 
-- [ ] [CÓDIGO] Categorias de veículo (X/XL/…) + toggles — fechar integração backend + regras de disponibilidade.
-- [ ] [CÓDIGO] «Dois destinos por dia» — após conversa com Manuel.
-- [ ] [DOCS] Menu motorista (rendimentos, histórico, documentos) — especificar campos mínimos e estados.
-- [ ] [CÓDIGO] Separar claramente **Conta** vs **Configurações** (navegação e conteúdos).
-- [ ] [PENSAR] Linha rotacional (data-hora + informação operacional, ex. trânsito) — definir v1 sem dependências externas.
-- [ ] [PENSAR] Login social (Google e afins) — definir onda dedicada (OAuth + fallback + compliance).
+- [ ] [CÓDIGO] Menu motorista por fatias (conforme `DRIVER_MENU_SPEC.md`).
+- [ ] [PENSAR] Login social — onda dedicada (OAuth + fallback + compliance).
 
 ### Backlog
 
 - [ ] [PENSAR] Theming/polish amplo e iconografia final (não bloqueador).
 - [ ] [PENSAR] Refactors estruturais fora do fluxo crítico.
+
+---
+
+## Painel 2026-04-29 (fechado)
+
+- [x] [OPS] Smoke curto passageiro + driver após merge (rating + rejeitar + preferência navegação).
+- [x] [OPS] PRs de estabilização E2E/CI em `main` (tipagem + retry rate-limit + teste offline).
+- [x] [CÓDIGO] Driver: rejeitar oferta; passageiro: rating; Waze/Google + wake lock; bordas light theme.
+- [x] [TESTES] Smoke/e2e rejeição + rating + nav; CI E2E estável.
+- [x] Semântica UI + faixa + hora no header; Conta vs Config (#201–#203).
 
 ---
 
