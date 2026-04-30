@@ -18,6 +18,7 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 - [x] [DOCS] Menu motorista — `docs/product/DRIVER_MENU_SPEC.md`.
 - [x] [CÓDIGO] Categorias no menu: copy servidor + filtro; label **Elétrico**; título **Histórico**.
 - [x] [CÓDIGO] Menu motorista: **Documentos** (copy + admin se `isAdmin`), **histórico** com data/preço/label PT, **rendimentos** com aviso sem `completed`.
+- [x] [CÓDIGO] Menu motorista: histórico com **percurso** + **Mostrar mais** (+5) e contador.
 
 ### Já em `main` (merge 2026-04-29)
 
@@ -27,7 +28,7 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 
 ### Amanhã / ondas
 
-- [ ] [CÓDIGO] Menu motorista — próximas fatias: detalhe de viagem, paginação histórico (`DRIVER_MENU_SPEC.md`).
+- [ ] [CÓDIGO] Menu motorista — detalhe de viagem (ecrã ou modal) conforme `DRIVER_MENU_SPEC.md`.
 - [ ] [PENSAR] Login social — onda dedicada (OAuth + fallback + compliance).
 
 ### Backlog

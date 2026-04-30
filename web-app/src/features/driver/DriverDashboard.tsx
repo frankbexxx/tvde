@@ -552,6 +552,7 @@ export function DriverDashboard() {
 
       {menuOpen ? (
         <DriverOperationsMenu
+          menuOpen={menuOpen}
           sessionDisplayName={sessionDisplayName}
           history={history}
           navPref={driverNavPref}
@@ -1038,6 +1039,7 @@ function driverHistoryPriceLabel(t: TripHistoryItem): string {
 }
 
 function DriverOperationsMenu({
+  menuOpen,
   sessionDisplayName,
   history,
   navPref,
@@ -1047,6 +1049,7 @@ function DriverOperationsMenu({
   onToggleVehicleCategory,
   onReportIncident,
 }: {
+  menuOpen: boolean
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
@@ -1057,6 +1060,12 @@ function DriverOperationsMenu({
   onReportIncident: (tripId: string) => void
 }) {
   const { isAdmin } = useAuth()
+  const [historyVisible, setHistoryVisible] = useState(5)
+
+  useEffect(() => {
+    if (menuOpen) setHistoryVisible(5)
+  }, [menuOpen])
+
   const now = new Date()
   const startOfThisWeek = new Date(now)
   const day = startOfThisWeek.getDay()
@@ -1208,38 +1217,60 @@ function DriverOperationsMenu({
       </div>
 
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <p className="text-sm font-medium text-foreground">Histórico de viagens</p>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-sm font-medium text-foreground">Histórico de viagens</p>
+          {history && history.length > 0 ? (
+            <p className="text-[11px] text-muted-foreground shrink-0">
+              {Math.min(historyVisible, history.length)} de {history.length}
+            </p>
+          ) : null}
+        </div>
         {history && history.length > 0 ? (
-          <ul className="space-y-2">
-            {history.slice(0, 3).map((t) => (
-              <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1 space-y-0.5">
-                    <p className="text-xs font-medium text-foreground truncate">
-                      #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {t.completed_at
-                        ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
-                        : t.status === 'completed'
-                          ? 'Data de conclusão indisponível'
-                          : 'Viagem ainda não concluída neste resumo'}
-                    </p>
-                    <p className="text-[11px] text-foreground/85">
-                      {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
-                    </p>
+          <>
+            <ul className="space-y-2 max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain pr-0.5">
+              {history.slice(0, historyVisible).map((t) => (
+                <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <p className="text-xs font-medium text-foreground truncate">
+                        #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
+                      </p>
+                      <p className="text-[11px] text-foreground/75 truncate" title={`${formatPickup(t.origin_lat, t.origin_lng)} → ${formatDestination(t.destination_lat, t.destination_lng)}`}>
+                        {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                        {formatDestination(t.destination_lat, t.destination_lng)}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {t.completed_at
+                          ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
+                          : t.status === 'completed'
+                            ? 'Data de conclusão indisponível'
+                            : 'Viagem ainda não concluída neste resumo'}
+                      </p>
+                      <p className="text-[11px] text-foreground/85">
+                        {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onReportIncident(t.trip_id)}
+                      className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                    >
+                      Reportar
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onReportIncident(t.trip_id)}
-                    className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-                  >
-                    Reportar
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+            {history.length > historyVisible ? (
+              <button
+                type="button"
+                className="w-full min-h-[40px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                onClick={() => setHistoryVisible((n) => Math.min(n + 5, history.length))}
+              >
+                Mostrar mais
+              </button>
+            ) : null}
+          </>
         ) : (
           <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
         )}

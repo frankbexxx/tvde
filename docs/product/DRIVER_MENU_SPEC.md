@@ -23,8 +23,8 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 
 | Campo | v1 | Evolução |
 |--------|-----|----------|
-| Lista | Últimas N viagens (hoje N=3) a partir de `GET` histórico já usado no dashboard. | Paginação ou ecrã dedicado. |
-| Linha | `#trip_id` truncado + `status` legível (API). | Mostrar data/hora, origem/destino resumidos. |
+| Lista | Primeiras 5 no menu; **Mostrar mais** (+5) até ao fim da lista; scroll suave (`max-h`). | Ecrã dedicado ou link para detalhe. |
+| Linha | `#trip_id` + estado PT, percurso resumido (recolha→destino), data, preço. | Detalhe completo (`GET` trip). |
 | Acção **Reportar** | Placeholder / ocorrência local (comportamento actual). | Workflow com ticket + admin. |
 
 **Estados `status` relevantes para o motorista:** `requested`, `assigned`, `accepted`, `arriving`, `ongoing`, `completed`, `cancelled`, `failed` — mapear labels em PT num único sítio (ex.: constantes partilhadas com passageiro onde fizer sentido).
@@ -51,7 +51,7 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 ## 5. Checklist de implementação por fatia
 
 1. [x] Rendimentos: totais semanais mínimos (UI actual) + mensagem quando não há viagens `completed`.
-2. [x] Histórico (menu): estado em PT (`passengerTripStatusLabel`), data (`completed_at` quando existe), preço final vs estimativa.
+2. [x] Histórico (menu): estado PT, percurso resumido, data, preço; 5 iniciais + **Mostrar mais** + contador «n de total».
 3. [x] Documentos: bloco estático + link **Abrir painel admin** quando `isAdmin` (JWT admin).
 4. [ ] Admin: endpoints e UI para documentos antes de reflectir listas reais no motorista.
 
