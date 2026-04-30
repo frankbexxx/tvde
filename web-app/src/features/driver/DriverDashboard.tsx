@@ -49,6 +49,13 @@ import { getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { Button } from '../../components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog'
 import { Spinner } from '../../components/ui/Spinner'
 import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
@@ -74,6 +81,18 @@ import {
   driverVehicleCategoryLabel,
   type DriverVehicleCategory,
 } from '../../services/driverVehicleCategories'
+import {
+  driverDocumentLabel,
+  driverDocumentStatusLabel,
+  getDriverDocumentsState,
+  isDriverDocumentsGateEnabled,
+  isDriverDocumentsReady,
+  REQUIRED_DRIVER_DOCUMENTS,
+  setDriverDocumentsState,
+  type DriverDocumentsState,
+  type DriverDocumentStatus,
+  type DriverRequiredDocument,
+} from '../../services/driverDocuments'
 import { getStoredSessionDisplayName } from '../../utils/authStorage'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
@@ -152,6 +171,9 @@ export function DriverDashboard() {
   const [driverNavPref, setDriverNavPref] = useState<DriverNavApp>(() => getDriverNavApp())
   const [vehicleCategories, setVehicleCategories] = useState<DriverVehicleCategory[]>(() =>
     getDriverVehicleCategories()
+  )
+  const [driverDocuments, setDriverDocuments] = useState<DriverDocumentsState>(() =>
+    getDriverDocumentsState()
   )
   const [menuOpen, setMenuOpen] = useState(false)
   const [actionTakingLong, setActionTakingLong] = useState(false)
@@ -556,6 +578,7 @@ export function DriverDashboard() {
           history={history}
           navPref={driverNavPref}
           vehicleCategories={vehicleCategories}
+          driverDocuments={driverDocuments}
           onCloseMenu={() => setMenuOpen(false)}
           onSelectNavPref={(app) => {
             setDriverNavApp(app)
@@ -580,6 +603,16 @@ export function DriverDashboard() {
                 })
               }
               return safe
+            })
+          }}
+          onPatchDriverDocument={(doc, status) => {
+            setDriverDocuments((prev) => {
+              const next: DriverDocumentsState = {
+                docs: { ...prev.docs, [doc]: status },
+                onboardingCompleted: prev.onboardingCompleted || status === 'approved',
+              }
+              setDriverDocumentsState(next)
+              return next
             })
           }}
           onReportIncident={(tripId) => {
@@ -684,6 +717,11 @@ export function DriverDashboard() {
             label="Estado"
             checked={!offline}
             onChange={(checked) => {
+              if (checked && isDriverDocumentsGateEnabled() && !isDriverDocumentsReady(driverDocuments)) {
+                setToast('Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.')
+                addLog('Bloqueado: documentos obrigatórios em falta', 'error')
+                return
+              }
               setOffline(!checked)
               addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
               setStatus(checked ? 'Disponível' : 'Offline')
@@ -1042,22 +1080,31 @@ function DriverOperationsMenu({
   history,
   navPref,
   vehicleCategories,
+  driverDocuments,
   onCloseMenu,
   onSelectNavPref,
   onToggleVehicleCategory,
+  onPatchDriverDocument,
   onReportIncident,
 }: {
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
   vehicleCategories: DriverVehicleCategory[]
+  driverDocuments: DriverDocumentsState
   onCloseMenu: () => void
   onSelectNavPref: (app: DriverNavApp) => void
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
+  onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
   onReportIncident: (tripId: string) => void
 }) {
   const { isAdmin } = useAuth()
   const [historyVisible, setHistoryVisible] = useState(5)
+  const [historyDetailTripId, setHistoryDetailTripId] = useState<string | null>(null)
+  const historyDetailTrip = useMemo(
+    () => (history ?? []).find((t) => t.trip_id === historyDetailTripId) ?? null,
+    [history, historyDetailTripId]
+  )
 
   const now = new Date()
   const startOfThisWeek = new Date(now)
@@ -1197,8 +1244,50 @@ function DriverOperationsMenu({
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
         <p className="text-xs text-muted-foreground leading-snug">
-          Validades e ficheiros oficiais gerem-se no painel da operação (admin). Esta app não duplica documentos
-          sensíveis.
+          Primeira entrada: completa os documentos obrigatórios aqui no painel. Depois podes corrigir/atualizar mais
+          tarde nas definições do motorista.
+        </p>
+        <div className="space-y-2">
+          {REQUIRED_DRIVER_DOCUMENTS.map((doc) => {
+            const status = driverDocuments.docs[doc]
+            const badgeClass =
+              status === 'approved'
+                ? 'border-success/45 bg-success/15 text-foreground'
+                : status === 'pending_review'
+                  ? 'border-warning/45 bg-warning/15 text-foreground'
+                  : status === 'rejected' || status === 'expired'
+                    ? 'border-destructive/45 bg-destructive/10 text-foreground'
+                    : 'border-border bg-card text-foreground/85'
+            return (
+              <div key={doc} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-foreground truncate">{driverDocumentLabel(doc)}</p>
+                  <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
+                    {driverDocumentStatusLabel(status)}
+                  </span>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    className="min-h-[32px] flex-1 rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"
+                    onClick={() => onPatchDriverDocument(doc, 'pending_review')}
+                  >
+                    Marcar entregue
+                  </button>
+                  <button
+                    type="button"
+                    className="min-h-[32px] flex-1 rounded-md border border-success/50 bg-success/10 px-2 text-xs font-medium text-foreground hover:bg-success/20"
+                    onClick={() => onPatchDriverDocument(doc, 'approved')}
+                  >
+                    Marcar aprovado
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Gate de bloqueio da disponibilidade está preparado mas desligado por defeito no ambiente de teste.
         </p>
         {isAdmin ? (
           <Button type="button" variant="outline" className="w-full min-h-[40px] text-sm font-medium" asChild>
@@ -1251,6 +1340,13 @@ function DriverOperationsMenu({
                       Reportar
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryDetailTripId(t.trip_id)}
+                    className="mt-2 min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                  >
+                    Ver detalhe
+                  </button>
                 </li>
               ))}
             </ul>
@@ -1268,6 +1364,63 @@ function DriverOperationsMenu({
           <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
         )}
       </div>
+
+      <Dialog
+        open={Boolean(historyDetailTrip)}
+        onOpenChange={(next) => {
+          if (!next) setHistoryDetailTripId(null)
+        }}
+      >
+        <DialogContent className="max-w-[min(100vw-1.5rem,520px)] max-h-[85dvh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalhe da viagem</DialogTitle>
+            <DialogDescription>
+              Resumo operacional para referência rápida no menu do motorista.
+            </DialogDescription>
+          </DialogHeader>
+          {historyDetailTrip ? (
+            <div className="space-y-2 text-sm">
+              <p className="text-foreground/85">
+                <span className="font-medium text-foreground">ID:</span> #{historyDetailTrip.trip_id}
+              </p>
+              <p className="text-foreground/85">
+                <span className="font-medium text-foreground">Estado:</span>{' '}
+                {passengerTripStatusLabel(historyDetailTrip.status)}
+              </p>
+              <p className="text-foreground/85">
+                <span className="font-medium text-foreground">Recolha:</span>{' '}
+                {formatPickup(historyDetailTrip.origin_lat, historyDetailTrip.origin_lng)}
+              </p>
+              <p className="text-foreground/85">
+                <span className="font-medium text-foreground">Destino:</span>{' '}
+                {formatDestination(historyDetailTrip.destination_lat, historyDetailTrip.destination_lng)}
+              </p>
+              <p className="text-foreground/85">
+                <span className="font-medium text-foreground">Data:</span>{' '}
+                {historyDetailTrip.completed_at
+                  ? formatDriverHistoryWhen(historyDetailTrip.completed_at)
+                  : 'Sem data de conclusão'}
+              </p>
+              <p className="text-foreground/85">
+                <span className="font-medium text-foreground">
+                  {historyDetailTrip.status === 'completed' ? 'Preço final' : 'Estimativa'}:
+                </span>{' '}
+                {driverHistoryPriceLabel(historyDetailTrip)}
+              </p>
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => onReportIncident(historyDetailTrip.trip_id)}
+                >
+                  Reportar ocorrência desta viagem
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

@@ -236,6 +236,7 @@ function maskSensitiveEnvDisplay(text: string): string {
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'agora', label: 'Agora' },
+  { id: 'docs', label: 'Documentos' },
   { id: 'pending', label: 'Pendentes' },
   { id: 'users', label: 'Utilizadores' },
   { id: 'frota', label: 'Frota' },
@@ -1839,6 +1840,13 @@ export function AdminDashboard() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => syncAdminUrl({ tab: 'docs', tripId: null })}
+                    className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
+                  >
+                    Documentos
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => syncAdminUrl({ tab: 'metrics', tripId: null })}
                     className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
                   >
@@ -1848,6 +1856,50 @@ export function AdminDashboard() {
               </>
             )
           })()}
+        </section>
+      )}
+
+      {tab === 'docs' && (
+        <section className="space-y-4 mb-6" aria-labelledby="admin-docs-heading">
+          <h2 id="admin-docs-heading" className="text-lg font-semibold text-foreground">
+            Documentos e licenças
+          </h2>
+          <div className="rounded-2xl border border-border bg-card px-4 py-4 space-y-3 shadow-card">
+            <p className="text-sm text-foreground/85">
+              Esta secção centraliza documentos operacionais (motorista e viatura) e validações.
+            </p>
+            <div className="rounded-xl border border-warning/50 bg-warning/10 px-3 py-2 text-sm text-foreground">
+              Módulo em implementação. Nesta fase, a validação continua via operação/admin.
+            </div>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-foreground/80">
+              <li>Estado por documento: válido, pendente, rejeitado, expirado.</li>
+              <li>Alertas de validade e bloqueios operacionais.</li>
+              <li>Auditoria de alterações e responsável da revisão.</li>
+            </ul>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => syncAdminUrl({ tab: 'frota', tripId: null })}
+                className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
+              >
+                Ir para Frota
+              </button>
+              <button
+                type="button"
+                onClick={() => syncAdminUrl({ tab: 'users', tripId: null })}
+                className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
+              >
+                Ir para Utilizadores
+              </button>
+              <button
+                type="button"
+                onClick={() => syncAdminUrl({ tab: 'ops', tripId: null })}
+                className="px-4 py-2 rounded-xl bg-card border border-border text-sm font-medium text-foreground hover:bg-muted/40"
+              >
+                Ir para Operações
+              </button>
+            </div>
+          </div>
         </section>
       )}
 

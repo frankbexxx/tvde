@@ -1,5 +1,6 @@
 export const ADMIN_DASHBOARD_TAB_IDS = [
   'agora',
+  'docs',
   'pending',
   'users',
   'frota',
