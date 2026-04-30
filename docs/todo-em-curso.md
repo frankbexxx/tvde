@@ -26,7 +26,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ## Amanhã (próxima sessão útil)
 
-- [ ] Menu motorista por fatias (rendimentos, histórico, documentos) — ver `docs/product/DRIVER_MENU_SPEC.md`.
+- [ ] Menu motorista — próximas fatias (detalhe viagem, paginação) — ver `docs/product/DRIVER_MENU_SPEC.md` (histórico + documentos v1 no menu).
 - [ ] Categorias + «dois destinos por dia» — contrato de dados após Manuel.
 - [ ] Linha rotacional v2 (mais mensagens ou dados internos da app, ainda sem APIs externas).
 - [ ] Planeamento de login social (Google e afins) como onda própria.

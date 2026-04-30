@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
@@ -33,7 +34,7 @@ import {
   driverTripBadgeShort,
   historyStatusDotColor,
 } from '../../constants/tripStatus'
-import { paymentStatusLabel } from '../../constants/tripStatusLabels'
+import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { buildMockDriverApproachPath } from '../../dev/buildMockApproachPath'
 import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { MOCK_DRIVER_START } from '../../dev/mockPositions'
@@ -47,6 +48,7 @@ import {
 import { getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
+import { Button } from '../../components/ui/button'
 import { Spinner } from '../../components/ui/Spinner'
 import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
@@ -554,6 +556,7 @@ export function DriverDashboard() {
           history={history}
           navPref={driverNavPref}
           vehicleCategories={vehicleCategories}
+          onCloseMenu={() => setMenuOpen(false)}
           onSelectNavPref={(app) => {
             setDriverNavApp(app)
             setDriverNavPref(app)
@@ -1014,11 +1017,32 @@ function ActiveTripSummary({
   )
 }
 
+function formatDriverHistoryWhen(iso: string | undefined): string {
+  if (!iso) return '—'
+  try {
+    return new Date(iso).toLocaleString('pt-PT', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return '—'
+  }
+}
+
+function driverHistoryPriceLabel(t: TripHistoryItem): string {
+  const v = t.final_price ?? t.estimated_price
+  if (v == null || Number.isNaN(Number(v))) return '—'
+  return `${Number(v).toFixed(2)} €`
+}
+
 function DriverOperationsMenu({
   sessionDisplayName,
   history,
   navPref,
   vehicleCategories,
+  onCloseMenu,
   onSelectNavPref,
   onToggleVehicleCategory,
   onReportIncident,
@@ -1027,10 +1051,12 @@ function DriverOperationsMenu({
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
   vehicleCategories: DriverVehicleCategory[]
+  onCloseMenu: () => void
   onSelectNavPref: (app: DriverNavApp) => void
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onReportIncident: (tripId: string) => void
 }) {
+  const { isAdmin } = useAuth()
   const now = new Date()
   const startOfThisWeek = new Date(now)
   const day = startOfThisWeek.getDay()
@@ -1086,6 +1112,12 @@ function DriverOperationsMenu({
             <p className="text-base font-semibold text-foreground">{lastWeekRevenue.toFixed(2)} €</p>
           </div>
         </div>
+        {completedTrips.length === 0 ? (
+          <p className="text-xs text-muted-foreground leading-snug">
+            Sem viagens concluídas a contar para já — os totais actualizam quando concluíres viagens com data
+            de fim.
+          </p>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
@@ -1161,17 +1193,46 @@ function DriverOperationsMenu({
       </div>
 
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
+        <p className="text-xs text-muted-foreground leading-snug">
+          Validades e ficheiros oficiais gerem-se no painel da operação (admin). Esta app não duplica documentos
+          sensíveis.
+        </p>
+        {isAdmin ? (
+          <Button type="button" variant="outline" className="w-full min-h-[40px] text-sm font-medium" asChild>
+            <Link to="/admin" onClick={() => onCloseMenu()}>
+              Abrir painel admin
+            </Link>
+          </Button>
+        ) : null}
+      </div>
+
+      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <p className="text-sm font-medium text-foreground">Histórico de viagens</p>
         {history && history.length > 0 ? (
           <ul className="space-y-2">
             {history.slice(0, 3).map((t) => (
               <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-foreground/80 truncate">#{t.trip_id.slice(0, 8)} · {t.status}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <p className="text-xs font-medium text-foreground truncate">
+                      #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t.completed_at
+                        ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
+                        : t.status === 'completed'
+                          ? 'Data de conclusão indisponível'
+                          : 'Viagem ainda não concluída neste resumo'}
+                    </p>
+                    <p className="text-[11px] text-foreground/85">
+                      {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => onReportIncident(t.trip_id)}
-                    className="min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50"
+                    className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
                   >
                     Reportar
                   </button>
@@ -1180,7 +1241,7 @@ function DriverOperationsMenu({
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground">Sem viagens recentes para reportar.</p>
+          <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
         )}
       </div>
     </section>

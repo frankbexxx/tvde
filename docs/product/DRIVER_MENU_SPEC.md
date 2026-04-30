@@ -50,10 +50,10 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 
 ## 5. Checklist de implementação por fatia
 
-1. [x] Rendimentos: totais semanais mínimos (UI actual).
-2. [ ] Histórico: mais colunas (data, valor) + link opcional para detalhe.
-3. [ ] Documentos: bloco estático com redireccionamento / copy para admin.
-4. [ ] Admin: endpoints e UI para documentos antes de reflectir no motorista.
+1. [x] Rendimentos: totais semanais mínimos (UI actual) + mensagem quando não há viagens `completed`.
+2. [x] Histórico (menu): estado em PT (`passengerTripStatusLabel`), data (`completed_at` quando existe), preço final vs estimativa.
+3. [x] Documentos: bloco estático + link **Abrir painel admin** quando `isAdmin` (JWT admin).
+4. [ ] Admin: endpoints e UI para documentos antes de reflectir listas reais no motorista.
 
 ---
 
