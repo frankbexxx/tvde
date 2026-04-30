@@ -12,8 +12,8 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 
 ### Agora
 
-- [ ] [DOCS] **Aguardar** respostas do Manuel em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md`.
-- [ ] [CÓDIGO] **Aguardar** regras finas: categorias + **«dois destinos por dia»** (pós-Manuel).
+- [x] [DOCS] Respostas do Manuel recebidas e registadas em `docs/partner/MANUEL_DRIVER_QA_2026-04-29.md`.
+- [x] [DOCS] Contrato técnico v1 definido em `docs/product/DRIVER_MENU_SPEC.md`: categorias + **«2 mudanças de zona/dia»**.
 - [x] [CÓDIGO] Linha rotacional no cabeçalho (`AppHeaderBar` + `headerRotatingHints.ts`, v1 sem APIs).
 - [x] [DOCS] Menu motorista — `docs/product/DRIVER_MENU_SPEC.md`.
 - [x] [CÓDIGO] Categorias no menu: copy servidor + filtro; label **Elétrico**; título **Histórico**.
@@ -28,7 +28,7 @@ _Usar este painel como fonte de verdade da sessão atual. O restante ficheiro ma
 
 ### Amanhã / ondas
 
-- [ ] [CÓDIGO] Menu motorista — detalhe de viagem (ecrã ou modal) conforme `DRIVER_MENU_SPEC.md`.
+- [x] [CÓDIGO] Menu motorista — detalhe de viagem em modal (com ação de ocorrência) conforme `DRIVER_MENU_SPEC.md`.
 - [ ] [PENSAR] Login social — onda dedicada (OAuth + fallback + compliance).
 
 ### Backlog

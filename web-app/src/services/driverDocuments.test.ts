@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   driverDocumentsApprovedCount,
   getDriverDocumentsState,
+  isDriverDocumentsGateEnabled,
   isDriverDocumentsReady,
+  setDriverDocumentsGateEnabled,
   setDriverDocumentsState,
   type DriverDocumentsState,
 } from './driverDocuments'
@@ -56,5 +58,13 @@ describe('driverDocuments service', () => {
     const stored = getDriverDocumentsState()
     expect(stored.onboardingCompleted).toBe(true)
     expect(driverDocumentsApprovedCount(stored)).toBe(1)
+  })
+
+  it('toggles documents gate flag in local storage', () => {
+    expect(isDriverDocumentsGateEnabled()).toBe(false)
+    setDriverDocumentsGateEnabled(true)
+    expect(isDriverDocumentsGateEnabled()).toBe(true)
+    setDriverDocumentsGateEnabled(false)
+    expect(isDriverDocumentsGateEnabled()).toBe(false)
   })
 })
