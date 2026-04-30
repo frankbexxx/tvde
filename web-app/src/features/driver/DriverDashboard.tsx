@@ -89,6 +89,7 @@ import {
   isDriverDocumentsGateEnabled,
   isDriverDocumentsReady,
   REQUIRED_DRIVER_DOCUMENTS,
+  setDriverDocumentsGateEnabled,
   setDriverDocumentsState,
   type DriverDocumentsState,
   type DriverDocumentStatus,
@@ -97,6 +98,14 @@ import {
 import { getStoredSessionDisplayName } from '../../utils/authStorage'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
+const DRIVER_INCIDENT_TYPES = [
+  'Objeto esquecido',
+  'Tarifa',
+  'Comportamento',
+  'Limpeza',
+  'Segurança',
+  'Outro',
+] as const
 
 function getStoredOffline(): boolean {
   try {
@@ -175,6 +184,9 @@ export function DriverDashboard() {
   )
   const [driverDocuments, setDriverDocuments] = useState<DriverDocumentsState>(() =>
     getDriverDocumentsState()
+  )
+  const [driverDocsGateEnabled, setDriverDocsGateEnabled] = useState<boolean>(() =>
+    isDriverDocumentsGateEnabled()
   )
   const [menuOpen, setMenuOpen] = useState(false)
   const [actionTakingLong, setActionTakingLong] = useState(false)
@@ -580,6 +592,7 @@ export function DriverDashboard() {
           navPref={driverNavPref}
           vehicleCategories={vehicleCategories}
           driverDocuments={driverDocuments}
+          driverDocsGateEnabled={driverDocsGateEnabled}
           onCloseMenu={() => setMenuOpen(false)}
           onSelectNavPref={(app) => {
             setDriverNavApp(app)
@@ -617,13 +630,30 @@ export function DriverDashboard() {
               return next
             })
           }}
-          onReportIncident={(tripId) => {
-            const note = window.prompt(
-              'Reportar ocorrência (texto curto):\n\nEx.: objeto esquecido, comportamento, tarifa.'
+          onToggleDriverDocsGate={(enabled) => {
+            setDriverDocsGateEnabled(enabled)
+            setDriverDocumentsGateEnabled(enabled)
+            addLog(
+              enabled
+                ? 'Gate documentos: bloqueio de disponibilidade ativo'
+                : 'Gate documentos: bloqueio de disponibilidade desativado',
+              'info'
             )
+          }}
+          onReportIncident={(tripId) => {
+            const typeInput = window.prompt(
+              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
+            )
+            if (!typeInput || !typeInput.trim()) return
+            const parsed = Number.parseInt(typeInput.trim(), 10)
+            const type =
+              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
+                ? DRIVER_INCIDENT_TYPES[parsed - 1]
+                : typeInput.trim()
+            const note = window.prompt('Descrição curta da ocorrência:')
             if (!note || !note.trim()) return
             sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
-            addLog(`Ocorrência registada para ${tripId}: ${note.trim()}`, 'info')
+            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
           }}
         />
       ) : null}
@@ -719,7 +749,7 @@ export function DriverDashboard() {
             label="Estado"
             checked={!offline}
             onChange={(checked) => {
-              if (checked && isDriverDocumentsGateEnabled() && !isDriverDocumentsReady(driverDocuments)) {
+              if (checked && driverDocsGateEnabled && !isDriverDocumentsReady(driverDocuments)) {
                 setToast('Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.')
                 addLog('Bloqueado: documentos obrigatórios em falta', 'error')
                 return
@@ -1083,10 +1113,12 @@ function DriverOperationsMenu({
   navPref,
   vehicleCategories,
   driverDocuments,
+  driverDocsGateEnabled,
   onCloseMenu,
   onSelectNavPref,
   onToggleVehicleCategory,
   onPatchDriverDocument,
+  onToggleDriverDocsGate,
   onReportIncident,
 }: {
   sessionDisplayName: string | null
@@ -1094,10 +1126,12 @@ function DriverOperationsMenu({
   navPref: DriverNavApp
   vehicleCategories: DriverVehicleCategory[]
   driverDocuments: DriverDocumentsState
+  driverDocsGateEnabled: boolean
   onCloseMenu: () => void
   onSelectNavPref: (app: DriverNavApp) => void
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
+  onToggleDriverDocsGate: (enabled: boolean) => void
   onReportIncident: (tripId: string) => void
 }) {
   const { isAdmin } = useAuth()
@@ -1302,9 +1336,26 @@ function DriverOperationsMenu({
             )
           })}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Gate de bloqueio da disponibilidade está preparado mas desligado por defeito no ambiente de teste.
-        </p>
+        <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-foreground/85">Bloquear disponibilidade até 4/4 aprovados</p>
+            <button
+              type="button"
+              aria-pressed={driverDocsGateEnabled}
+              onClick={() => onToggleDriverDocsGate(!driverDocsGateEnabled)}
+              className={`min-h-[30px] rounded-md border px-2 text-[11px] font-medium transition-colors ${
+                driverDocsGateEnabled
+                  ? 'border-success/50 bg-success/15 text-foreground'
+                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+              }`}
+            >
+              {driverDocsGateEnabled ? 'Ligado' : 'Desligado'}
+            </button>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Em teste fica normalmente desligado. Ativa só para validar o bloqueio antes de aceitares viagens.
+          </p>
+        </div>
         {isAdmin ? (
           <Button type="button" variant="outline" className="w-full min-h-[40px] text-sm font-medium" asChild>
             <Link to="/admin" onClick={() => onCloseMenu()}>

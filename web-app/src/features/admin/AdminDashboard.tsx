@@ -51,6 +51,8 @@ import {
   driverDocumentLabel,
   driverDocumentStatusLabel,
   REQUIRED_DRIVER_DOCUMENTS,
+  type DriverDocumentStatus,
+  type DriverDocumentsState,
 } from '../../services/driverDocuments'
 
 interface PendingUser {
@@ -71,6 +73,31 @@ interface AdminUser {
 type Tab = AdminDashboardTab
 
 const USERS_PAGE_SIZE = 50
+const ADMIN_DRIVER_DOCS_REGISTRY_KEY = 'tvde_admin_driver_docs_registry_v1'
+
+function emptyDriverDocs(): DriverDocumentsState['docs'] {
+  return {
+    carta_tvde: 'missing',
+    certificado_motorista_tvde: 'missing',
+    seguro_responsabilidade_civil: 'missing',
+    inspecao_viatura: 'missing',
+  }
+}
+
+function docsApprovedCount(docs: DriverDocumentsState['docs']): number {
+  return REQUIRED_DRIVER_DOCUMENTS.filter((k) => docs[k] === 'approved').length
+}
+
+function approvedDriverDocs(): DriverDocumentsState['docs'] {
+  return {
+    carta_tvde: 'approved',
+    certificado_motorista_tvde: 'approved',
+    seguro_responsabilidade_civil: 'approved',
+    inspecao_viatura: 'approved',
+  }
+}
+
+const DRIVER_DOC_STATUSES = ['missing', 'pending_review', 'approved', 'rejected', 'expired'] as const
 
 /** Operações — lista «Pagamentos em processing» da saúde (evita lista infinita). */
 const OPS_STUCK_PAYMENTS_PAGE_SIZE = 10
@@ -483,6 +510,8 @@ export function AdminDashboard() {
   const [usersLoadingMore, setUsersLoadingMore] = useState(false)
   const [usersSort, setUsersSort] = useState<'name' | 'role' | 'status'>('name')
   const [usersFilter, setUsersFilter] = useState('')
+  const [driverDocsRegistry, setDriverDocsRegistry] = useState<Record<string, DriverDocumentsState['docs']>>({})
+  const [docsStatusFilter, setDocsStatusFilter] = useState<'all' | DriverDocumentStatus>('all')
   const [bulkSelectedIds, setBulkSelectedIds] = useState<Record<string, boolean>>({})
   const [blockConfirmId, setBlockConfirmId] = useState<string | null>(null)
   const [unblockConfirmId, setUnblockConfirmId] = useState<string | null>(null)
@@ -1396,6 +1425,34 @@ export function AdminDashboard() {
     }
   }, [tab])
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ADMIN_DRIVER_DOCS_REGISTRY_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as Record<string, Partial<DriverDocumentsState['docs']>>
+      const next: Record<string, DriverDocumentsState['docs']> = {}
+      for (const [userId, docs] of Object.entries(parsed)) {
+        next[userId] = {
+          carta_tvde: docs.carta_tvde ?? 'missing',
+          certificado_motorista_tvde: docs.certificado_motorista_tvde ?? 'missing',
+          seguro_responsabilidade_civil: docs.seguro_responsabilidade_civil ?? 'missing',
+          inspecao_viatura: docs.inspecao_viatura ?? 'missing',
+        }
+      }
+      setDriverDocsRegistry(next)
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(ADMIN_DRIVER_DOCS_REGISTRY_KEY, JSON.stringify(driverDocsRegistry))
+    } catch {
+      /* ignore */
+    }
+  }, [driverDocsRegistry])
+
   const handleSaveUserName = async () => {
     if (!token || !editingId) return
     const next = editName.trim()
@@ -1607,6 +1664,35 @@ export function AdminDashboard() {
     }
     return sorted
   }, [users, usersFilter, usersSort])
+
+  const driverUsers = useMemo(
+    () => users.filter((u) => u.has_driver_profile || u.role === 'driver'),
+    [users]
+  )
+  const docsRowsData = useMemo(() => {
+    const totals = DRIVER_DOC_STATUSES.reduce(
+      (acc, st) => {
+        acc[st] = 0
+        return acc
+      },
+      {} as Record<DriverDocumentStatus, number>
+    )
+    const rows = driverUsers
+      .slice(0, 20)
+      .map((u) => {
+        const docs = driverDocsRegistry[u.id] ?? emptyDriverDocs()
+        const approved = docsApprovedCount(docs)
+        const missing = REQUIRED_DRIVER_DOCUMENTS.filter((k) => docs[k] !== 'approved')
+        return { user: u, docs, approved, missing }
+      })
+      .sort((a, b) => a.approved - b.approved || (a.user.name || a.user.phone).localeCompare(b.user.name || b.user.phone))
+    for (const row of rows) {
+      for (const doc of REQUIRED_DRIVER_DOCUMENTS) {
+        totals[row.docs[doc]] += 1
+      }
+    }
+    return { rows, totals }
+  }, [driverUsers, driverDocsRegistry])
 
   const selectedTripInActiveList = useMemo(
     () => Boolean(selectedTripId && activeTrips.some((t) => t.trip_id === selectedTripId)),
@@ -1887,7 +1973,7 @@ export function AdminDashboard() {
             <div className="rounded-xl border border-border/70 bg-card px-3 py-3 space-y-2">
               <p className="text-sm font-medium text-foreground">Estados esperados</p>
               <div className="flex flex-wrap gap-2">
-                {(['missing', 'pending_review', 'approved', 'rejected', 'expired'] as const).map((st) => (
+                {DRIVER_DOC_STATUSES.map((st) => (
                   <span
                     key={st}
                     className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-foreground/85"
@@ -1896,6 +1982,137 @@ export function AdminDashboard() {
                   </span>
                 ))}
               </div>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-card px-3 py-3 space-y-2">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-sm font-medium text-foreground">Motoristas (controle rápido v1)</p>
+                <p className="text-xs text-muted-foreground">{driverUsers.length} com perfil motorista</p>
+              </div>
+              <div className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
+                <p className="text-xs text-foreground/85">Totais por estado (20 motoristas visíveis)</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {DRIVER_DOC_STATUSES.map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setDocsStatusFilter((prev) => (prev === st ? 'all' : st))}
+                      className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                        docsStatusFilter === st
+                          ? 'border-info/60 bg-info/15 text-foreground'
+                          : 'border-border bg-card text-foreground/85'
+                      }`}
+                    >
+                      {driverDocumentStatusLabel(st)}: {docsRowsData.totals[st]}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setDocsStatusFilter('all')}
+                    className={`rounded-full border px-2 py-0.5 text-[11px] ${
+                      docsStatusFilter === 'all'
+                        ? 'border-info/60 bg-info/15 text-foreground'
+                        : 'border-border bg-card text-foreground/85'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                </div>
+              </div>
+              {driverUsers.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Sem motoristas carregados nesta página.</p>
+              ) : (
+                <ul className="space-y-2 max-h-[min(46vh,20rem)] overflow-y-auto pr-0.5">
+                  {docsRowsData.rows.map(({ user: u, docs, approved, missing }) => {
+                    return (
+                      <li key={u.id} className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-foreground truncate">{u.name || u.phone}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{u.phone}</p>
+                          </div>
+                          <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] text-foreground/85">
+                            {approved}/{REQUIRED_DRIVER_DOCUMENTS.length} aprovados
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-foreground/80">
+                          {missing.length === 0
+                            ? 'Checklist completo.'
+                            : `Em falta: ${missing.map((k) => driverDocumentLabel(k)).join(', ')}`}
+                        </p>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {REQUIRED_DRIVER_DOCUMENTS.filter((doc) =>
+                            docsStatusFilter === 'all' ? true : docs[doc] === docsStatusFilter
+                          ).map((doc) => (
+                            <div
+                              key={doc}
+                              className="rounded-md border border-border/70 bg-card px-2 py-1.5 flex flex-wrap items-center justify-between gap-1"
+                            >
+                              <p className="text-[11px] text-foreground/85">{driverDocumentLabel(doc)}</p>
+                              <div className="flex flex-wrap gap-1">
+                                {DRIVER_DOC_STATUSES.map((st) => (
+                                  <button
+                                    key={`${u.id}-${doc}-${st}`}
+                                    type="button"
+                                    onClick={() =>
+                                      setDriverDocsRegistry((prev) => ({
+                                        ...prev,
+                                        [u.id]: {
+                                          ...(prev[u.id] ?? emptyDriverDocs()),
+                                          [doc]: st,
+                                        },
+                                      }))
+                                    }
+                                    className={`rounded border px-1.5 py-0.5 text-[10px] ${
+                                      docs[doc] === st
+                                        ? 'border-info/60 bg-info/15 text-foreground'
+                                        : 'border-border bg-background text-foreground/75 hover:bg-muted/40'
+                                    }`}
+                                  >
+                                    {driverDocumentStatusLabel(st)}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                          {REQUIRED_DRIVER_DOCUMENTS.every((doc) =>
+                            docsStatusFilter === 'all' ? false : docs[doc] !== docsStatusFilter
+                          ) ? (
+                            <p className="text-[11px] text-muted-foreground">
+                              Sem documentos deste estado para este motorista.
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDriverDocsRegistry((prev) => ({
+                                ...prev,
+                                [u.id]: approvedDriverDocs(),
+                              }))
+                            }
+                            className="min-h-[32px] flex-1 rounded-md border border-success/50 bg-success/10 px-2 text-xs font-medium text-foreground hover:bg-success/20"
+                          >
+                            Aprovar tudo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDriverDocsRegistry((prev) => ({
+                                ...prev,
+                                [u.id]: emptyDriverDocs(),
+                              }))
+                            }
+                            className="min-h-[32px] flex-1 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50"
+                          >
+                            Limpar
+                          </button>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
               <button

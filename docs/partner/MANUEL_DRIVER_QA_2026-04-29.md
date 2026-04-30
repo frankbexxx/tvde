@@ -10,21 +10,21 @@ Contexto: alinhar expectativas antes de implementar na app motorista. Cada pergu
 
 | # | Tema | Pergunta curta | Resposta (Manel) |
 |---|---|---|---|
-| 1 | Navegação | Guardamos app preferida (Waze/Google) até mudar? |  |
-| 2 | Navegação | Confirmas 2 momentos: (a) ir à recolha, (b) ir ao destino? |  |
-| 3 | Navegação | Problema principal ao voltar do Waze: a) desbloquear b) achar que app morreu c) outro |  |
-| 4 | Navegação | “Manter ecrã ligado” durante viagem ativa: Sim / Não / Só com carregador |  |
-| 5 | Navegação | No nosso mapa: só posição+rota primeiro, ou já quer voz/turn-by-turn? |  |
-| 6 | Menu MVP | Top 3 itens indispensáveis no menu motorista (por ordem) |  |
-| 7 | Rendimentos | MVP: totais semanais chegam, ou precisa lista por viagem já? |  |
-| 8 | Ocorrências | Reportar com texto livre apenas, ou texto + tipo (esquecimento/tarifa/etc.)? |  |
-| 9 | Categorias | Lista de categorias está fechada? Se não, quais faltam? |  |
-| 10 | Categorias | Quem manda no máximo de categorias: partner/admin ou motorista também? |  |
-| 11 | 2 destinos/dia | “Destino” aqui significa o quê exatamente? |  |
-| 12 | 2 destinos/dia | Janela mínima para distância curta (ex. 5 km) = quanto tempo? |  |
-| 13 | 2 destinos/dia | Reset dos 2 usos: 00:00, 06:00, ou outro? |  |
-| 14 | 2 destinos/dia | Se cancelar/não houver viagens: consome uso ou não? |  |
-| 15 | Fecho | Falta algo essencial para piloto real com motoristas? |  |
+| 1 | Navegação | Guardamos app preferida (Waze/Google) até mudar? | Sim |
+| 2 | Navegação | Confirmas 2 momentos: (a) ir à recolha, (b) ir ao destino? | Sim |
+| 3 | Navegação | Problema principal ao voltar do Waze: a) desbloquear b) achar que app morreu c) outro | a) |
+| 4 | Navegação | “Manter ecrã ligado” durante viagem ativa: Sim / Não / Só com carregador | Sim, sempre (com aviso bateria) |
+| 5 | Navegação | No nosso mapa: só posição+rota primeiro, ou já quer voz/turn-by-turn? | Posição+rota primeiro; voz/turn depois |
+| 6 | Menu MVP | Top 3 itens indispensáveis no menu motorista (por ordem) | Falta |
+| 7 | Rendimentos | MVP: totais semanais chegam, ou precisa lista por viagem já? | Totais semanais |
+| 8 | Ocorrências | Reportar com texto livre apenas, ou texto + tipo (esquecimento/tarifa/etc.)? | Texto + tipo |
+| 9 | Categorias | Lista de categorias está fechada? Se não, quais faltam? | Fechada |
+| 10 | Categorias | Quem manda no máximo de categorias: partner/admin ou motorista também? | Partner define política; motorista ajusta no dia dentro dos limites |
+| 11 | 2 destinos/dia | “Destino” aqui significa o quê exatamente? | Zona operacional (ex.: Cascais, Oeiras, Lisboa, Algarve) |
+| 12 | 2 destinos/dia | Janela mínima para distância curta (ex. 5 km) = quanto tempo? | Dinâmica: ETA Waze + margem; pode pedir mais tempo com justificação |
+| 13 | 2 destinos/dia | Reset dos 2 usos: 00:00, 06:00, ou outro? | 00:00 (por agora) |
+| 14 | 2 destinos/dia | Se cancelar/não houver viagens: consome uso ou não? | Só consome ao concluir a 1.ª viagem na zona nova |
+| 15 | Fecho | Falta algo essencial para piloto real com motoristas? | Ainda não sei; devemos estar perto |
 
 ---
 

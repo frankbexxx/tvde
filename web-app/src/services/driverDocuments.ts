@@ -82,6 +82,14 @@ export function isDriverDocumentsGateEnabled(): boolean {
   }
 }
 
+export function setDriverDocumentsGateEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(DOCS_GATE_KEY, enabled ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+}
+
 export function driverDocumentLabel(key: DriverRequiredDocument): string {
   switch (key) {
     case 'carta_tvde':
