@@ -552,7 +552,6 @@ export function DriverDashboard() {
 
       {menuOpen ? (
         <DriverOperationsMenu
-          menuOpen={menuOpen}
           sessionDisplayName={sessionDisplayName}
           history={history}
           navPref={driverNavPref}
@@ -1039,7 +1038,6 @@ function driverHistoryPriceLabel(t: TripHistoryItem): string {
 }
 
 function DriverOperationsMenu({
-  menuOpen,
   sessionDisplayName,
   history,
   navPref,
@@ -1049,7 +1047,6 @@ function DriverOperationsMenu({
   onToggleVehicleCategory,
   onReportIncident,
 }: {
-  menuOpen: boolean
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
@@ -1061,10 +1058,6 @@ function DriverOperationsMenu({
 }) {
   const { isAdmin } = useAuth()
   const [historyVisible, setHistoryVisible] = useState(5)
-
-  useEffect(() => {
-    if (menuOpen) setHistoryVisible(5)
-  }, [menuOpen])
 
   const now = new Date()
   const startOfThisWeek = new Date(now)
