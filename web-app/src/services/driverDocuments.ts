@@ -28,13 +28,21 @@ function defaultDocsState(): DriverDocumentsState {
   }
 }
 
+function sanitizeState(next: DriverDocumentsState): DriverDocumentsState {
+  const ready = isDriverDocumentsReady(next)
+  return {
+    ...next,
+    onboardingCompleted: Boolean(next.onboardingCompleted || ready),
+  }
+}
+
 export function getDriverDocumentsState(): DriverDocumentsState {
   try {
     const raw = localStorage.getItem(DOCS_STATE_KEY)
     if (!raw) return defaultDocsState()
     const parsed = JSON.parse(raw) as Partial<DriverDocumentsState>
     const base = defaultDocsState()
-    return {
+    return sanitizeState({
       onboardingCompleted: Boolean(parsed.onboardingCompleted),
       docs: {
         carta_tvde: parsed.docs?.carta_tvde ?? base.docs.carta_tvde,
@@ -44,7 +52,7 @@ export function getDriverDocumentsState(): DriverDocumentsState {
           parsed.docs?.seguro_responsabilidade_civil ?? base.docs.seguro_responsabilidade_civil,
         inspecao_viatura: parsed.docs?.inspecao_viatura ?? base.docs.inspecao_viatura,
       },
-    }
+    })
   } catch {
     return defaultDocsState()
   }
@@ -52,7 +60,7 @@ export function getDriverDocumentsState(): DriverDocumentsState {
 
 export function setDriverDocumentsState(next: DriverDocumentsState): void {
   try {
-    localStorage.setItem(DOCS_STATE_KEY, JSON.stringify(next))
+    localStorage.setItem(DOCS_STATE_KEY, JSON.stringify(sanitizeState(next)))
   } catch {
     /* ignore */
   }
@@ -101,4 +109,8 @@ export function driverDocumentStatusLabel(status: DriverDocumentStatus): string 
     default:
       return 'Em falta'
   }
+}
+
+export function driverDocumentsApprovedCount(state: DriverDocumentsState): number {
+  return REQUIRED_DRIVER_DOCUMENTS.filter((k) => state.docs[k] === 'approved').length
 }

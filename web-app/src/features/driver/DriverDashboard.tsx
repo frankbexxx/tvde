@@ -83,6 +83,7 @@ import {
 } from '../../services/driverVehicleCategories'
 import {
   driverDocumentLabel,
+  driverDocumentsApprovedCount,
   driverDocumentStatusLabel,
   getDriverDocumentsState,
   isDriverDocumentsGateEnabled,
@@ -607,9 +608,10 @@ export function DriverDashboard() {
           }}
           onPatchDriverDocument={(doc, status) => {
             setDriverDocuments((prev) => {
+              const docs = { ...prev.docs, [doc]: status }
               const next: DriverDocumentsState = {
-                docs: { ...prev.docs, [doc]: status },
-                onboardingCompleted: prev.onboardingCompleted || status === 'approved',
+                docs,
+                onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
               }
               setDriverDocumentsState(next)
               return next
@@ -1247,6 +1249,20 @@ function DriverOperationsMenu({
           Primeira entrada: completa os documentos obrigatórios aqui no painel. Depois podes corrigir/atualizar mais
           tarde nas definições do motorista.
         </p>
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card px-3 py-2">
+          <p className="text-xs text-foreground/85">
+            Aprovados: {driverDocumentsApprovedCount(driverDocuments)} / {REQUIRED_DRIVER_DOCUMENTS.length}
+          </p>
+          <span
+            className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+              isDriverDocumentsReady(driverDocuments)
+                ? 'border-success/45 bg-success/15 text-foreground'
+                : 'border-warning/45 bg-warning/15 text-foreground'
+            }`}
+          >
+            {isDriverDocumentsReady(driverDocuments) ? 'Pronto para disponibilidade' : 'Documentos em falta'}
+          </span>
+        </div>
         <div className="space-y-2">
           {REQUIRED_DRIVER_DOCUMENTS.map((doc) => {
             const status = driverDocuments.docs[doc]
