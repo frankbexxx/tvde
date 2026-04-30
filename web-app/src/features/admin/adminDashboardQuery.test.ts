@@ -15,6 +15,11 @@ describe('parseAdminDashboardQuery', () => {
     expect(parseAdminDashboardQuery(sp)).toEqual({ tab: 'health', tripId: null, tripsList: 'active' })
   })
 
+  it('parses tab=docs', () => {
+    const sp = new URLSearchParams('tab=docs')
+    expect(parseAdminDashboardQuery(sp)).toEqual({ tab: 'docs', tripId: null, tripsList: 'active' })
+  })
+
   it('forces trips when tripId is set', () => {
     const sp = new URLSearchParams('tab=health&tripId=abc-123')
     expect(parseAdminDashboardQuery(sp)).toEqual({ tab: 'trips', tripId: 'abc-123', tripsList: 'active' })
