@@ -1123,8 +1123,9 @@ function DriverOperationsMenu({
 
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <p className="text-sm font-medium text-foreground">Categorias de veículo</p>
-        <p className="text-xs text-muted-foreground">
-          Fase 1: preferência local para mostrar categorias ativas (integração operacional vem a seguir).
+        <p className="text-xs text-muted-foreground leading-snug">
+          Sincroniza com o servidor e filtra os pedidos que vês na lista. Mantém pelo menos uma categoria
+          activa.
         </p>
         <div className="grid grid-cols-2 gap-2">
           {(
@@ -1160,7 +1161,7 @@ function DriverOperationsMenu({
       </div>
 
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <p className="text-sm font-medium text-foreground">Historial de viagens</p>
+        <p className="text-sm font-medium text-foreground">Histórico de viagens</p>
         {history && history.length > 0 ? (
           <ul className="space-y-2">
             {history.slice(0, 3).map((t) => (

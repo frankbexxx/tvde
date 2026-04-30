@@ -43,7 +43,7 @@ export function driverVehicleCategoryLabel(category: DriverVehicleCategory): str
     case 'black':
       return 'Black'
     case 'electric':
-      return 'Eletrico'
+      return 'Elétrico'
     case 'van':
       return 'Van'
   }

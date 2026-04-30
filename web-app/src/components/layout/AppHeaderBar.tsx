@@ -3,16 +3,27 @@ import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 import { BrandStripe } from '@/design-system/components/brand/BrandStripe'
 import { useAuth } from '@/context/AuthContext'
+import { HEADER_ROTATING_HINTS } from '@/components/layout/headerRotatingHints'
 
 /**
- * Cabeçalho global: marca + data e hora (pt-PT) + identificador (nome BETA ou telemóvel).
+ * Cabeçalho global: marca + data e hora (pt-PT) + identificador (nome BETA ou telemóvel)
+ * + linha rotacional de dicas (v1 sem APIs externas).
  */
 export function AppHeaderBar() {
   const { sessionDisplayName, sessionPhone } = useAuth()
   const [now, setNow] = useState(() => new Date())
+  const [hintIndex, setHintIndex] = useState(0)
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    if (HEADER_ROTATING_HINTS.length <= 1) return
+    const id = window.setInterval(() => {
+      setHintIndex((i) => (i + 1) % HEADER_ROTATING_HINTS.length)
+    }, 14_000)
     return () => window.clearInterval(id)
   }, [])
 
@@ -27,6 +38,7 @@ export function AppHeaderBar() {
   })
   const dateTimeLine = `${dateStr} · ${timeStr}`
   const who = sessionDisplayName?.trim() || sessionPhone?.trim() || null
+  const rotatingHint = HEADER_ROTATING_HINTS[hintIndex] ?? HEADER_ROTATING_HINTS[0]
 
   return (
     <header
@@ -48,11 +60,15 @@ export function AppHeaderBar() {
               </span>
             ) : null}
           </div>
-          <p
-            className="text-xs text-muted-foreground truncate"
-            title={dateTimeLine}
-          >
+          <p className="text-xs text-muted-foreground truncate" title={dateTimeLine}>
             {dateTimeLine}
+          </p>
+          <p
+            className="text-xs text-foreground/70 truncate mt-0.5 min-h-[1.125rem] transition-opacity duration-300"
+            title={rotatingHint}
+            aria-live="polite"
+          >
+            {rotatingHint}
           </p>
         </div>
         <div className="flex items-center gap-1 shrink-0 pt-0.5">
