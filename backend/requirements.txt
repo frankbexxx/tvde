@@ -9,6 +9,9 @@ pydantic
 pydantic-settings
 python-dotenv
 
+# IANA time zones for zoneinfo (Windows / minimal Python images).
+tzdata
+
 PyJWT
 
 bcrypt>=4.0.0

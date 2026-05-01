@@ -6,9 +6,35 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel rápido da sessão (2026-04-30)
+## Painel rápido da sessão (2026-05-01)
 
-_Usar este painel como fonte de verdade da sessão atual. O restante ficheiro mantém histórico/contexto._
+_Reunião Manel + benchmarks; docs consolidados. Sem entrega de código nesta sessão._
+
+### Feito hoje
+
+- [x] [DOCS] Regra **2 zonas** confirmada (pernadas **não** consomem; 1.ª **completed** na zona-alvo consome) + princípio **regras não restritivas** em `docs/product/DRIVER_MENU_SPEC.md`.
+- [x] [DOCS] `docs/research/driver-app-benchmarks.md` (Manel: QR, portagens, ecrã, wireframes, tiers Diamond, lista 2 anos, registo criminal 3/3 meses, LIS; links RSG/Uber).
+
+### Em curso (bloco grande — PR própria)
+
+- [ ] [CÓDIGO] **Zonas v1 esqueleto** — migração `driver_zone_day_budgets` + `driver_zone_sessions`; `GET /driver/zones/budget/today`; `POST /driver/zones/sessions`; testes `tests/test_driver_zones.py` (pytest com PostgreSQL, ex. CI). Falta: consumo ao `trip completed`, extensão partner, UI.
+
+### Amanhã / onda seguinte
+
+- [ ] [DOCS ou CÓDIGO] **Portagens** — spec técnica mínima + TODOs de recálculo / pagamento.
+- [ ] [CÓDIGO] **Zonas v1** — restante conforme §7 `DRIVER_MENU_SPEC.md` (após merge do esqueleto).
+- [ ] [DOCS] **Top 3 menu** — quando Manel enviar ranking final.
+- [ ] [PENSAR] Login social (inalterado).
+
+### Opcional hoje
+
+- [ ] [DOCS] Entrada `docs/research/` em `docs/meta/DOCS_INDEX.md` (se quiseres índice).
+
+---
+
+## Painel rápido da sessão (2026-04-30) — fechado
+
+_Usar como histórico da sessão anterior._
 
 ### Agora
 

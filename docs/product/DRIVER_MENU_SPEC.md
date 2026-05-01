@@ -64,8 +64,11 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 - Regra «2 destinos/dia»: interpreta-se como **2 mudanças de zona por dia**.
 - Reset diário dos usos: **00:00 local** (v1).
 - Consumo de uso: só ao concluir a 1.ª viagem na nova zona; sem viagem concluída, não consome.
+- **Confirmado com Manel (2026-05-01):** viagens “no caminho” até à zona-alvo **não** debitam o uso; só a **1.ª concluída na zona-alvo** conta.
 - Exceções/extra mudanças de zona: autorização pelo **partner**.
 - Janela de entrada em nova zona: ETA (Waze) + margem percentual; extensão/reset com justificação do motorista.
+
+**Princípio geral (produto):** preferir regras **não restritivas**; reservar restrições fortes a **contextos necessários** (ex.: obrigações legais, pandemia, eventos de grande impacto operacional).
 
 ---
 
@@ -80,6 +83,8 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 7. [ ] Regra de zonas «2 por dia»: fechar modelo de zona/reset/exceções e implementar política.
 8. [ ] Menu MVP: fechar «top 3» indispensável (aguarda resposta final do Manuel).
 
+**Pós-reunião Manel (2026-05-01) — fora do menu imediato, documentado em** [`docs/research/driver-app-benchmarks.md`](../research/driver-app-benchmarks.md)**:** QR Driver/Passenger; portagens (dois percursos, preferências, recálculo contínuo — TODO técnico); tiers tipo Pro (Diamond/Silver/Gold); lista de viagens rica + retenção 2 anos; registo criminal 3/3 meses; fila aeroporto Lisboa como referência operacional.
+
 ---
 
 ## 7. Contrato técnico v1 — zonas dinâmicas («2 por dia»)
@@ -91,6 +96,7 @@ Objetivo: permitir ao motorista declarar uma zona operacional temporária (ex.: 
 - Limite base: **2 mudanças de zona por dia** por motorista.
 - Reset diário: **00:00 local** (timezone de operação PT).
 - Um uso só é consumido quando existir **1.ª viagem concluída** na nova zona.
+- **Corridas aceites “a caminho” da zona-alvo** (ex.: pernadas até Portimão) **não** gastam o uso até essa conclusão na zona-alvo (confirmado Manel 2026-05-01).
 - Se não houver viagem concluída na nova zona, ao regressar não consome uso.
 - Mudança extra (>2) só com **autorização do partner**.
 - Janela de entrada na zona: ETA (Waze/Google) + margem percentual configurável.
@@ -175,4 +181,4 @@ driver_zone_session
 
 ---
 
-_Última revisão: 2026-04-30_
+_Última revisão: 2026-05-01_
