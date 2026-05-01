@@ -32,6 +32,14 @@ class DriverZoneSessionResponse(BaseModel):
     eta_seconds_baseline: int
     eta_margin_percent: int
     deadline_at: datetime
+    arrived_at: datetime | None = None
+    first_completed_trip_id: uuid.UUID | None = None
+    first_completed_at: datetime | None = None
+    consume_reason: str | None = None
     status: str
 
     model_config = {"from_attributes": True}
+
+
+class DriverZoneSessionCancelRequest(BaseModel):
+    cancel_reason: str | None = Field(default=None, max_length=2000)
