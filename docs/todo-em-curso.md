@@ -12,23 +12,26 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] Linha rotacional no topo (`AppHeaderBar`, hints estáticos — v1).
 - [x] Spec menu motorista: `docs/product/DRIVER_MENU_SPEC.md`.
 - [x] Categorias: copy no menu + label PT; integração GET/PATCH já existente — evolução depende de regras de negócio.
+- [x] **Zonas v1 núcleo em `main`** — API budget/sessions, consumo na 1.ª viagem concluída após «cheguei», menu web + `GET /sessions/open` (#211–#213). _Fase seguinte (não bloqueia): extensão partner, expiração `deadline_at`, catálogo zonas, geo._
 
 ---
 
-## Hoje (2026-05-01)
+## Hoje (2026-05-01) — fechado
 
 - [x] Pesquisa benchmarks (RSG, Uber web, Lyft destination filter) + notas visuais.
 - [x] Reunião Manel: QR, portagens (princípios), ecrã persistente, wireframes, lista viagens + 2 anos, registo criminal 3/3 meses, fila LIS; princípio produto **não restritivo**.
 - [x] Documento `docs/research/driver-app-benchmarks.md` + actualização `DRIVER_MENU_SPEC.md`.
+- [x] Código zonas v1 (backend + web) mergeado em `main`; `.gitignore` `test-results/` (Playwright).
 
 ---
 
-## Amanhã (próxima sessão útil)
+## Amanhã (2026-05-02) — primeira sessão útil
 
+- [ ] [OPS] **Smokes curtos em série** — ver `TODOdoDIA.md` painel **2026-05-02**: um passo de cada vez após «bom dia»; pausas entre passos; concentração para blocos longos **após 10h** se fizer falta.
 - [ ] Spec técnica mínima **portagens** (ou primeira fatia de implementação).
-- [ ] Implementação **zonas v1** (backend/frontend) conforme §7 `DRIVER_MENU_SPEC.md`.
+- [ ] **Zonas v1 — fase 2** — extensão partner, job expiração, catálogo `zone_id` (conforme §7 `DRIVER_MENU_SPEC.md`).
 - [x] Menu motorista — detalhe de viagem em modal com ação de ocorrência (histórico com percurso + «Mostrar mais»).
-- [x] Categorias + «dois destinos por dia» — contrato técnico v1 fechado (falta implementação backend/frontend).
+- [x] Categorias + «dois destinos por dia» — contrato + implementação v1 núcleo em `main`.
 - [ ] Linha rotacional v2 (mais mensagens ou dados internos da app, ainda sem APIs externas).
 - [ ] Planeamento de login social (Google e afins) como onda própria.
 
@@ -41,4 +44,4 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-_Última revisão: 2026-05-01_
+_Última revisão: 2026-05-01 (noite — fecho sessão + abertura 2026-05-02)._

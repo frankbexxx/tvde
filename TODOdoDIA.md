@@ -6,29 +6,49 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel rápido da sessão (2026-05-01)
+## Painel rápido da sessão (2026-05-02) — abertura
 
-_Reunião Manel + benchmarks; docs consolidados. Sem entrega de código nesta sessão._
+_Arranque quando deres **bom dia** — **série de smokes curtos** (um de cada vez, podes parar entre passos). PC antes das 7h é OK; não é obrigatório abrir o chat nessa janela. Fluxos que exijam concentração → preferir **após as 10h**._
 
-### Feito hoje
+### Smokes curtos (ordem sugerida)
 
-- [x] [DOCS] Regra **2 zonas** confirmada (pernadas **não** consomem; 1.ª **completed** na zona-alvo consome) + princípio **regras não restritivas** em `docs/product/DRIVER_MENU_SPEC.md`.
-- [x] [DOCS] `docs/research/driver-app-benchmarks.md` (Manel: QR, portagens, ecrã, wireframes, tiers Diamond, lista 2 anos, registo criminal 3/3 meses, LIS; links RSG/Uber).
+1. [ ] [OPS] `main` local = `origin/main`; app abre (Render ou local).
+2. [ ] [OPS] **Motorista** — Menu → secção **Mudança de zona (v1)**: orçamento carrega ou erro legível (API indisponível).
+3. [ ] [OPS] **Zonas** — Com API+BD: pedir zona → **Cheguei** → **Cancelar intenção** (ou fluxo mínimo que couber no tempo).
+4. [ ] [OPS] **Regressão leve** — toggle disponível/offline; preferência navegação ou histórico (1 clique).
 
-### Em curso (bloco grande — PR própria)
+### Depois dos smokes (não bloqueia o arranque)
 
-- [ ] [CÓDIGO] **Zonas v1 esqueleto** — migração `driver_zone_day_budgets` + `driver_zone_sessions`; `GET /driver/zones/budget/today`; `POST /driver/zones/sessions`; testes `tests/test_driver_zones.py` (pytest com PostgreSQL, ex. CI). Falta: consumo ao `trip completed`, extensão partner, UI.
-
-### Amanhã / onda seguinte
-
-- [ ] [DOCS ou CÓDIGO] **Portagens** — spec técnica mínima + TODOs de recálculo / pagamento.
-- [ ] [CÓDIGO] **Zonas v1** — restante conforme §7 `DRIVER_MENU_SPEC.md` (após merge do esqueleto).
+- [ ] [DOCS ou CÓDIGO] **Portagens** — spec técnica mínima (onda própria).
+- [ ] [CÓDIGO] **Zonas v1 — fase seguinte** — extensão partner, expiração ao `deadline_at`, catálogo `zone_id`, geo quando houver dados.
 - [ ] [DOCS] **Top 3 menu** — quando Manel enviar ranking final.
-- [ ] [PENSAR] Login social (inalterado).
+- [ ] [PENSAR] Login social (onda dedicada).
 
-### Opcional hoje
+### Opcional
 
-- [ ] [DOCS] Entrada `docs/research/` em `docs/meta/DOCS_INDEX.md` (se quiseres índice).
+- [ ] [DOCS] Entrada `docs/research/` em `docs/meta/DOCS_INDEX.md`.
+
+---
+
+## Painel rápido da sessão (2026-05-01) — fechado
+
+_Documentação Manel/benchmarks + **entregas código** em `main` (#211 esqueleto zonas, #212 consumo + arrived/cancel, #213 web + `GET /sessions/open` + `.gitignore` `test-results/`)._
+
+### Feito nesta sessão / dia
+
+- [x] [DOCS] Regra **2 zonas** + benchmarks (painel anterior; mantém-se canónico em `DRIVER_MENU_SPEC.md` e `docs/research/driver-app-benchmarks.md`).
+- [x] [CÓDIGO] **Zonas v1 (núcleo)** — migração + modelos + `GET /driver/zones/budget/today` + `POST /driver/zones/sessions` + testes pytest (#211).
+- [x] [CÓDIGO] **Zonas v1 (consumo)** — `arrived`, `cancel`, consumo na 1.ª `completed` após `arrived_at`; hook em `complete_trip` (#212).
+- [x] [CÓDIGO] **Zonas v1 (web)** — `web-app/src/api/driverZones.ts` + bloco no menu motorista; `GET /driver/zones/sessions/open`; `.gitignore` para `test-results/` (#213).
+
+### Fecho noite 2026-05-01
+
+- **Smokes formais:** amanhã (série curta no arranque); hoje código mergeado com CI/ruff/build web verificados em PR.
+- **Sessão fechada** — sem novo fio grande até ao «bom dia» + smokes.
+
+### Rasto (não esquecer)
+
+- Pendência humana: **Top 3 menu** (Manuel/Manel) quando chegar resposta final.
 
 ---
 
