@@ -22,6 +22,15 @@ import type {
   TripStatus,
 } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
+import {
+  createDriverZoneSession,
+  fetchOpenDriverZoneSession,
+  getDriverZoneBudgetToday,
+  postDriverZoneSessionArrived,
+  postDriverZoneSessionCancel,
+  type DriverZoneBudgetToday,
+  type DriverZoneSession,
+} from '../../api/driverZones'
 import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
@@ -1107,6 +1116,18 @@ function driverHistoryPriceLabel(t: TripHistoryItem): string {
   return `${Number(v).toFixed(2)} €`
 }
 
+function formatZoneDeadlineLocal(iso: string, timeZone: string): string {
+  try {
+    return new Intl.DateTimeFormat('pt-PT', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone,
+    }).format(new Date(iso))
+  } catch {
+    return iso
+  }
+}
+
 function DriverOperationsMenu({
   sessionDisplayName,
   history,
@@ -1134,7 +1155,7 @@ function DriverOperationsMenu({
   onToggleDriverDocsGate: (enabled: boolean) => void
   onReportIncident: (tripId: string) => void
 }) {
-  const { isAdmin } = useAuth()
+  const { isAdmin, token } = useAuth()
   const [historyVisible, setHistoryVisible] = useState(5)
   const [historyDetailTripId, setHistoryDetailTripId] = useState<string | null>(null)
   const historyDetailTrip = useMemo(
@@ -1165,6 +1186,118 @@ function DriverOperationsMenu({
   const closedTrips = (history ?? []).filter((t) => t.status === 'completed' || t.status === 'cancelled').length
   const cancelledTrips = (history ?? []).filter((t) => t.status === 'cancelled').length
   const cancelRate = closedTrips > 0 ? Math.round((cancelledTrips / closedTrips) * 100) : 0
+
+  const [zoneBudget, setZoneBudget] = useState<DriverZoneBudgetToday | null>(null)
+  const [zoneSession, setZoneSession] = useState<DriverZoneSession | null>(null)
+  const [zoneLoadErr, setZoneLoadErr] = useState<string | null>(null)
+  const [zoneBusy, setZoneBusy] = useState(false)
+  const [zoneNewZoneId, setZoneNewZoneId] = useState('portimao')
+  const [zoneEtaMinutes, setZoneEtaMinutes] = useState(30)
+  const [zoneMarginPct, setZoneMarginPct] = useState(25)
+
+  const reloadZones = useCallback(async () => {
+    if (!token) {
+      setZoneBudget(null)
+      setZoneSession(null)
+      return
+    }
+    setZoneLoadErr(null)
+    try {
+      const [bud, open] = await Promise.all([
+        getDriverZoneBudgetToday(token),
+        fetchOpenDriverZoneSession(token),
+      ])
+      setZoneBudget(bud)
+      setZoneSession(open)
+    } catch (e) {
+      const detail =
+        e !== null && typeof e === 'object' && 'detail' in e
+          ? String((e as { detail: unknown }).detail)
+          : 'Erro ao carregar zonas'
+      setZoneLoadErr(detail)
+    }
+  }, [token])
+
+  useEffect(() => {
+    void reloadZones()
+  }, [reloadZones])
+
+  const zoneTz = zoneBudget?.timezone ?? 'Europe/Lisbon'
+  const zoneStateLabel =
+    zoneSession == null
+      ? null
+      : zoneSession.status === 'open' && !zoneSession.arrived_at
+        ? 'A caminho da zona-alvo'
+        : zoneSession.status === 'open' && zoneSession.arrived_at
+          ? 'Em zona — o uso conta na 1.ª viagem concluída aqui'
+          : zoneSession.status
+
+  const handleCreateZoneSession = async () => {
+    if (!token || zoneBusy) return
+    const zid = zoneNewZoneId.trim()
+    if (!zid) {
+      sonnerToast.error('Indica um ID de zona.')
+      return
+    }
+    const etaSec = Math.min(86400 * 2, Math.max(60, Math.round(zoneEtaMinutes * 60)))
+    setZoneBusy(true)
+    try {
+      const s = await createDriverZoneSession(token, {
+        zone_id: zid,
+        eta_seconds_baseline: etaSec,
+        eta_margin_percent: Math.min(200, Math.max(0, Math.round(zoneMarginPct))),
+      })
+      setZoneSession(s)
+      setZoneBudget(await getDriverZoneBudgetToday(token))
+      sonnerToast.success('Pedido de mudança de zona registado.')
+    } catch (e) {
+      const detail =
+        e !== null && typeof e === 'object' && 'detail' in e
+          ? String((e as { detail: unknown }).detail)
+          : 'Erro'
+      sonnerToast.error(detail)
+    } finally {
+      setZoneBusy(false)
+    }
+  }
+
+  const handleZoneArrived = async () => {
+    if (!token || !zoneSession || zoneBusy) return
+    setZoneBusy(true)
+    try {
+      const s = await postDriverZoneSessionArrived(token, zoneSession.id)
+      setZoneSession(s)
+      sonnerToast.success('Entrada na zona registada.')
+    } catch (e) {
+      const detail =
+        e !== null && typeof e === 'object' && 'detail' in e
+          ? String((e as { detail: unknown }).detail)
+          : 'Erro'
+      sonnerToast.error(detail)
+    } finally {
+      setZoneBusy(false)
+    }
+  }
+
+  const handleZoneCancel = async () => {
+    if (!token || !zoneSession || zoneBusy) return
+    if (!window.confirm('Cancelar este pedido de mudança de zona?')) return
+    setZoneBusy(true)
+    try {
+      await postDriverZoneSessionCancel(token, zoneSession.id, null)
+      setZoneSession(null)
+      setZoneBudget(await getDriverZoneBudgetToday(token))
+      sonnerToast.success('Pedido cancelado.')
+    } catch (e) {
+      const detail =
+        e !== null && typeof e === 'object' && 'detail' in e
+          ? String((e as { detail: unknown }).detail)
+          : 'Erro'
+      sonnerToast.error(detail)
+    } finally {
+      setZoneBusy(false)
+    }
+  }
 
   return (
     <section
@@ -1201,6 +1334,122 @@ function DriverOperationsMenu({
           <p className="text-xs text-muted-foreground leading-snug">
             Sem viagens concluídas a contar para já — os totais actualizam quando concluíres viagens com data
             de fim.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
+          <button
+            type="button"
+            data-testid="driver-zones-refresh"
+            onClick={() => void reloadZones()}
+            disabled={!token || zoneBusy}
+            className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+          >
+            Atualizar
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground leading-snug">
+          Contador diário (meia-noite Lisboa). O uso só desce quando concluíres a primeira viagem na zona-alvo
+          depois de confirmares «Cheguei».
+        </p>
+        {zoneLoadErr ? (
+          <p className="text-xs text-destructive">{zoneLoadErr}</p>
+        ) : zoneBudget ? (
+          <p className="text-sm text-foreground/90">
+            Mudanças hoje:{' '}
+            <span className="font-semibold">
+              {zoneBudget.used_changes}/{zoneBudget.max_changes}
+            </span>{' '}
+            · restantes {zoneBudget.remaining}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">A carregar orçamento…</p>
+        )}
+        {zoneSession && zoneStateLabel ? (
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
+            <p className="text-xs font-medium text-foreground">
+              Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
+            </p>
+            <p className="text-xs text-foreground/85">{zoneStateLabel}</p>
+            <p className="text-[11px] text-muted-foreground">
+              Prazo (local): {formatZoneDeadlineLocal(zoneSession.deadline_at, zoneTz)}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {!zoneSession.arrived_at ? (
+                <button
+                  type="button"
+                  data-testid="driver-zones-arrived"
+                  onClick={() => void handleZoneArrived()}
+                  disabled={zoneBusy}
+                  className="min-h-[40px] rounded-lg border border-info bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/20 disabled:opacity-50 touch-manipulation"
+                >
+                  Cheguei à zona
+                </button>
+              ) : null}
+              <button
+                type="button"
+                data-testid="driver-zones-cancel"
+                onClick={() => void handleZoneCancel()}
+                disabled={zoneBusy}
+                className="min-h-[40px] rounded-lg border border-border px-3 text-sm font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+              >
+                Cancelar intenção
+              </button>
+            </div>
+          </div>
+        ) : zoneBudget && zoneBudget.remaining > 0 ? (
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
+            <label className="block space-y-1">
+              <span className="text-[11px] text-muted-foreground">ID da zona (ex.: portimao, faro, lisboa)</span>
+              <input
+                value={zoneNewZoneId}
+                onChange={(ev) => setZoneNewZoneId(ev.target.value)}
+                className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block space-y-1">
+                <span className="text-[11px] text-muted-foreground">ETA (min)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={2880}
+                  value={zoneEtaMinutes}
+                  onChange={(ev) => setZoneEtaMinutes(Number(ev.target.value) || 1)}
+                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                />
+              </label>
+              <label className="block space-y-1">
+                <span className="text-[11px] text-muted-foreground">Margem (%)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={200}
+                  value={zoneMarginPct}
+                  onChange={(ev) => setZoneMarginPct(Number(ev.target.value) || 0)}
+                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              data-testid="driver-zones-create"
+              onClick={() => void handleCreateZoneSession()}
+              disabled={zoneBusy || !token}
+              className="w-full min-h-[44px] rounded-lg border border-info bg-info/15 text-sm font-semibold text-foreground hover:bg-info/25 disabled:opacity-50 touch-manipulation"
+            >
+              Pedir mudança de zona
+            </button>
+          </div>
+        ) : zoneBudget && zoneBudget.remaining <= 0 ? (
+          <p className="text-xs text-muted-foreground">
+            Limite diário atingido. Amanhã volta a haver vagas ou pede ao teu partner uma excepção.
           </p>
         ) : null}
       </div>

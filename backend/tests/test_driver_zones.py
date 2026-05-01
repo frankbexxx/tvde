@@ -388,3 +388,38 @@ def test_maybe_consume_ignores_completed_trips_before_arrived() -> None:
     assert sess.first_completed_trip_id == trip_new.id
 
     db.close()
+
+
+def test_zone_session_open_not_found() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r = client.get("/driver/zones/sessions/open")
+        assert r.status_code == 404
+        assert r.json()["detail"] == "no_open_zone_session"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_zone_session_open_ok() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r0 = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": "faro", "eta_seconds_baseline": 400, "eta_margin_percent": 10},
+        )
+        assert r0.status_code == 201
+        sid = r0.json()["id"]
+        r = client.get("/driver/zones/sessions/open")
+        assert r.status_code == 200
+        assert r.json()["id"] == sid
+        assert r.json()["status"] == "open"
+    finally:
+        _reset_overrides()
+        db.close()

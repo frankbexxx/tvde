@@ -25,6 +25,25 @@ def service_date_local_now() -> date:
     return datetime.now(ZONE_TZ).date()
 
 
+def get_open_zone_session(db: Session, *, driver_id: uuid.UUID) -> DriverZoneSession | None:
+    """Latest session with ``status == open`` for this driver (at most one in v1)."""
+    return (
+        db.execute(
+            select(DriverZoneSession)
+            .where(
+                and_(
+                    DriverZoneSession.driver_id == driver_id,
+                    DriverZoneSession.status == "open",
+                )
+            )
+            .order_by(DriverZoneSession.started_at.desc())
+            .limit(1)
+        )
+        .scalars()
+        .first()
+    )
+
+
 def count_open_sessions(db: Session, *, driver_id: uuid.UUID) -> int:
     q = select(DriverZoneSession).where(
         and_(

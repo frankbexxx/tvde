@@ -54,6 +54,7 @@ backend/list_partners.txt
 !backend/sql/*.sql
 
 # Saídas de teste
+test-results/
 *_pytest_out.txt
 .coverage
 htmlcov/

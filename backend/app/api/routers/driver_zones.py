@@ -23,6 +23,7 @@ from app.services.driver_zones import (
     budget_values,
     cancel_zone_session,
     create_zone_session,
+    get_open_zone_session,
     mark_session_arrived,
     service_date_local_now,
 )
@@ -46,6 +47,21 @@ async def get_zone_budget_today(
         remaining=remaining,
         timezone=tz,
     )
+
+
+@router.get("/sessions/open", response_model=DriverZoneSessionResponse)
+async def get_zone_session_open(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverZoneSessionResponse:
+    driver_id = uuid.UUID(user.user_id)
+    sess = get_open_zone_session(db, driver_id=driver_id)
+    if sess is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="no_open_zone_session",
+        )
+    return DriverZoneSessionResponse.model_validate(sess)
 
 
 @router.post("/sessions", response_model=DriverZoneSessionResponse, status_code=status.HTTP_201_CREATED)
