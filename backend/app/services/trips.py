@@ -29,6 +29,7 @@ from app.services.driver_preferences import (
 )
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
+from app.services.driver_zones import maybe_consume_zone_session_on_trip_complete
 from app.services.stripe_service import (
     cancel_payment_intent,
     capture_payment_intent,
@@ -1492,6 +1493,13 @@ def complete_trip(
         payment_id=str(payment.id),
         payment_intent_id=payment.stripe_payment_intent_id or "",
     )
+    if trip.driver_id is not None:
+        maybe_consume_zone_session_on_trip_complete(
+            db,
+            driver_id=trip.driver_id,
+            trip_id=trip.id,
+            trip_completed_at=trip.completed_at,
+        )
     db.commit()
     db.refresh(trip)
     log_event(

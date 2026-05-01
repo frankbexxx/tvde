@@ -1,6 +1,7 @@
-"""Driver zone-change API (v1 skeleton).
+"""Driver zone-change API (v1).
 
-See ``docs/product/DRIVER_MENU_SPEC.md`` §7. Consumption on trip completion is not wired yet.
+See ``docs/product/DRIVER_MENU_SPEC.md`` §7. Mark ``arrived`` then first completed trip
+consumes the daily budget slot for the session's ``started_at`` local day.
 """
 
 from __future__ import annotations
@@ -14,10 +15,17 @@ from app.api.deps import UserContext, get_db, require_role
 from app.models.enums import Role
 from app.schemas.driver_zones import (
     DriverZoneBudgetResponse,
+    DriverZoneSessionCancelRequest,
     DriverZoneSessionCreateRequest,
     DriverZoneSessionResponse,
 )
-from app.services.driver_zones import budget_values, create_zone_session, service_date_local_now
+from app.services.driver_zones import (
+    budget_values,
+    cancel_zone_session,
+    create_zone_session,
+    mark_session_arrived,
+    service_date_local_now,
+)
 
 router = APIRouter(prefix="/driver/zones", tags=["driver"])
 
@@ -68,6 +76,61 @@ async def post_zone_session(
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=code,
+            ) from exc
+        raise
+    return DriverZoneSessionResponse.model_validate(sess)
+
+
+@router.post(
+    "/sessions/{session_id}/arrived",
+    response_model=DriverZoneSessionResponse,
+)
+async def post_zone_session_arrived(
+    session_id: uuid.UUID,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverZoneSessionResponse:
+    driver_id = uuid.UUID(user.user_id)
+    try:
+        sess = mark_session_arrived(db, driver_id=driver_id, session_id=session_id)
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        if str(exc) == "zone_session_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=exc.args[0],
+            ) from exc
+        raise
+    return DriverZoneSessionResponse.model_validate(sess)
+
+
+@router.post(
+    "/sessions/{session_id}/cancel",
+    response_model=DriverZoneSessionResponse,
+)
+async def post_zone_session_cancel(
+    session_id: uuid.UUID,
+    body: DriverZoneSessionCancelRequest | None = None,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverZoneSessionResponse:
+    driver_id = uuid.UUID(user.user_id)
+    reason = body.cancel_reason if body else None
+    try:
+        sess = cancel_zone_session(
+            db,
+            driver_id=driver_id,
+            session_id=session_id,
+            cancel_reason=reason,
+        )
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        if str(exc) == "zone_session_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=exc.args[0],
             ) from exc
         raise
     return DriverZoneSessionResponse.model_validate(sess)

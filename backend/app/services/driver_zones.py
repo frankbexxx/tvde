@@ -1,19 +1,22 @@
 """Driver «zone change» sessions and daily budget (v1).
 
-Hook on trip completion (consume budget) is intentionally deferred.
+Consumption: first ``TripStatus.completed`` after ``arrived_at`` closes the session
+and increments the day budget (honour-system until geo is wired).
 """
 
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
+from app.db.models.trip import Trip
+from app.models.enums import TripStatus
 
 ZONE_TZ = ZoneInfo("Europe/Lisbon")
 
@@ -73,3 +76,156 @@ def create_zone_session(
     db.add(sess)
     db.flush()
     return sess
+
+
+def mark_session_arrived(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    session_id: uuid.UUID,
+) -> DriverZoneSession:
+    sess = (
+        db.execute(
+            select(DriverZoneSession)
+            .where(
+                and_(
+                    DriverZoneSession.id == session_id,
+                    DriverZoneSession.driver_id == driver_id,
+                    DriverZoneSession.status == "open",
+                )
+            )
+            .with_for_update()
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if sess is None:
+        raise ValueError("zone_session_not_found")
+    if sess.arrived_at is not None:
+        return sess
+    sess.arrived_at = datetime.now(timezone.utc)
+    return sess
+
+
+def cancel_zone_session(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    session_id: uuid.UUID,
+    cancel_reason: str | None,
+) -> DriverZoneSession:
+    sess = (
+        db.execute(
+            select(DriverZoneSession)
+            .where(
+                and_(
+                    DriverZoneSession.id == session_id,
+                    DriverZoneSession.driver_id == driver_id,
+                    DriverZoneSession.status == "open",
+                )
+            )
+            .with_for_update()
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if sess is None:
+        raise ValueError("zone_session_not_found")
+    sess.status = "cancelled"
+    if cancel_reason:
+        sess.cancel_reason = cancel_reason.strip()[:2000]
+    return sess
+
+
+def _increment_day_budget_used(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    service_date: date,
+) -> None:
+    row = db.get(DriverZoneDayBudget, (driver_id, service_date))
+    if row is None:
+        row = DriverZoneDayBudget(
+            driver_id=driver_id,
+            service_date=service_date,
+            used_changes_count=0,
+            max_changes_count=2,
+            timezone="Europe/Lisbon",
+        )
+        db.add(row)
+        db.flush()
+    row.used_changes_count = int(row.used_changes_count) + 1
+
+
+def maybe_consume_zone_session_on_trip_complete(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    trip_id: uuid.UUID,
+    trip_completed_at: datetime,
+) -> None:
+    """If driver has an open zone session with ``arrived_at`` set and this trip is
+    the chronologically first completed trip at/after ``arrived_at``, close session
+    and bump day budget (same transaction as trip completion).
+    """
+    if trip_completed_at.tzinfo is None:
+        trip_completed_at = trip_completed_at.replace(tzinfo=timezone.utc)
+
+    sess = (
+        db.execute(
+            select(DriverZoneSession)
+            .where(
+                and_(
+                    DriverZoneSession.driver_id == driver_id,
+                    DriverZoneSession.status == "open",
+                    DriverZoneSession.arrived_at.is_not(None),
+                    DriverZoneSession.first_completed_trip_id.is_(None),
+                )
+            )
+            .with_for_update()
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if sess is None:
+        return
+
+    arrived = sess.arrived_at
+    assert arrived is not None
+    if arrived.tzinfo is None:
+        arrived = arrived.replace(tzinfo=timezone.utc)
+    if trip_completed_at < arrived:
+        return
+
+    earlier = (
+        db.execute(
+            select(Trip.id)
+            .where(
+                and_(
+                    Trip.driver_id == driver_id,
+                    Trip.status == TripStatus.completed,
+                    Trip.id != trip_id,
+                    Trip.completed_at.is_not(None),
+                    Trip.completed_at >= arrived,
+                    or_(
+                        Trip.completed_at < trip_completed_at,
+                        and_(
+                            Trip.completed_at == trip_completed_at,
+                            Trip.id < trip_id,
+                        ),
+                    ),
+                )
+            )
+            .limit(1)
+        )
+        .scalar_one_or_none()
+    )
+    if earlier is not None:
+        return
+
+    sess.first_completed_trip_id = trip_id
+    sess.first_completed_at = trip_completed_at
+    sess.consume_reason = "completed_trip"
+    sess.status = "consumed"
+    service_day = sess.started_at.astimezone(ZONE_TZ).date()
+    _increment_day_budget_used(db, driver_id=driver_id, service_date=service_day)
