@@ -1,5 +1,7 @@
 from app.db.models.audit_event import AuditEvent
 from app.db.models.driver import Driver
+from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
+from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.partner import Partner
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.otp import OtpCode
@@ -13,6 +15,8 @@ __all__ = [
     "User",
     "Partner",
     "Driver",
+    "DriverZoneDayBudget",
+    "DriverZoneSession",
     "Trip",
     "Payment",
     "TripOffer",

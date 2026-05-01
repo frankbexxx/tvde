@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+import uuid
+from datetime import date, datetime
+
+from pydantic import BaseModel, Field
+
+
+class DriverZoneBudgetResponse(BaseModel):
+    service_date: date
+    used_changes: int
+    max_changes: int
+    remaining: int
+    timezone: str
+    resets_at_next_midnight_local: bool = Field(
+        default=True,
+        description="v1: counter resets at 00:00 local (Europe/Lisbon).",
+    )
+
+
+class DriverZoneSessionCreateRequest(BaseModel):
+    zone_id: str = Field(..., min_length=1, max_length=128)
+    eta_seconds_baseline: int = Field(..., gt=0, le=86400 * 2)
+    eta_margin_percent: int = Field(default=25, ge=0, le=200)
+
+
+class DriverZoneSessionResponse(BaseModel):
+    id: uuid.UUID
+    driver_id: uuid.UUID
+    zone_id: str
+    started_at: datetime
+    eta_seconds_baseline: int
+    eta_margin_percent: int
+    deadline_at: datetime
+    status: str
+
+    model_config = {"from_attributes": True}
