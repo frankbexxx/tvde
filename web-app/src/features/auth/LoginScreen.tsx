@@ -93,7 +93,14 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       <div className="w-full max-w-sm bg-card rounded-2xl shadow-card overflow-hidden">
         <BrandStripe />
         <div className="p-6">
-        <h1 className="text-xl font-bold text-foreground mb-4">TVDE BETA</h1>
+        <div className="flex flex-wrap items-end gap-2 mb-4" data-testid="login-brand">
+          <img
+            src="/brand/vamula-wordmark.png"
+            alt="V@mulá"
+            className="h-8 w-auto rounded-sm object-contain"
+          />
+          <span className="text-sm font-normal text-muted-foreground pb-0.5">(beta mode)</span>
+        </div>
         <div role="tablist" aria-label="Tipo de utilizador" className="grid grid-cols-2 gap-2 mb-4">
           <Link
             to="/passenger"
@@ -174,10 +181,6 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               className="w-full px-3 py-2 border border-input rounded-xl bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent"
               required
             />
-            <p className="text-sm text-muted-foreground mt-1 leading-snug">
-              Pré-preenchida com a password BETA por defeito (ex.: 123456). Se não entrares, o administrador pode
-              repor a palavra-passe por defeito no painel → Utilizadores → <span className="font-medium">Limpar palavra-passe</span>.
-            </p>
           </div>
           {error && (
             <p className="text-sm text-destructive bg-destructive/10 border-l-4 border-destructive px-3 py-2 rounded-xl">
