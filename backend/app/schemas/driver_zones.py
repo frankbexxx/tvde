@@ -50,6 +50,11 @@ class DriverZoneCatalogItem(BaseModel):
     zone_id: str
     label_pt: str
     kind: Literal["generic", "airport"] = "generic"
+    ops_note_pt: str | None = Field(
+        default=None,
+        max_length=2000,
+        description="Optional operator-facing note for this zone (e.g. airport queue UX roadmap).",
+    )
 
 
 class DriverZoneCatalogResponse(BaseModel):

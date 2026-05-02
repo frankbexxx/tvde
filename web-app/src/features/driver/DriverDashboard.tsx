@@ -1349,6 +1349,13 @@ function DriverOperationsMenu({
     const hit = zoneCatalog?.find((z) => z.zone_id === zoneSession.zone_id)
     return hit?.label_pt ?? null
   }, [zoneSession, zoneCatalog])
+  const activeZoneOpsNotePt = useMemo(() => {
+    if (!zoneSession) return null
+    const hit = zoneCatalog?.find((z) => z.zone_id === zoneSession.zone_id)
+    const raw = hit?.ops_note_pt
+    const s = raw != null && typeof raw === 'string' ? raw.trim() : ''
+    return s.length > 0 ? s : null
+  }, [zoneSession, zoneCatalog])
   const zoneStateLabel =
     zoneSession == null
       ? null
@@ -1507,6 +1514,14 @@ function DriverOperationsMenu({
             <p className="text-[11px] text-muted-foreground">
               Prazo (local): {formatZoneDeadlineLocal(zoneSession.deadline_at, zoneTz)}
             </p>
+            {activeZoneOpsNotePt ? (
+              <p
+                className="text-[11px] text-foreground/80 leading-snug rounded-md border border-border/80 bg-muted/30 px-2 py-1.5"
+                data-testid="driver-zones-ops-note"
+              >
+                {activeZoneOpsNotePt}
+              </p>
+            ) : null}
             <div className="flex flex-wrap gap-2">
               {!zoneSession.arrived_at ? (
                 <button

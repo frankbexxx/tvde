@@ -9,6 +9,7 @@ export interface DriverZoneCatalogItem {
   zone_id: string
   label_pt: string
   kind: DriverZoneKind
+  ops_note_pt?: string | null
 }
 
 export interface DriverZoneCatalogResponse {

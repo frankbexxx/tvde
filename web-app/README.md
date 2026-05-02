@@ -21,6 +21,7 @@ src/
 - **Base URL:** `VITE_API_URL` em `.env` (default: `/api` para proxy dev)
 - **Auth:** Token em memory via `/dev/tokens` (dev)
 - **401:** Interceptor dispara `api:401` → logout
+- **Motorista — home em 2 passos (beta):** `VITE_DRIVER_HOME_TWO_STEP=true` — mapa + disponibilidade primeiro, depois ecrã completo com pedidos (ver `docs/product/DRIVER_HOME_TOP3_MANEL.md`).
 
 ## Como correr
 
