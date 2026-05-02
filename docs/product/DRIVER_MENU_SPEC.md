@@ -2,6 +2,8 @@
 
 Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por fatias, sem bloquear o fluxo de viagem.
 
+**Ecrã principal (fora do menu):** fluxo **Top 3 Manel** — mapa largo + inactivo/activo → segundo ecrã com botões inferiores — ver **[`DRIVER_HOME_TOP3_MANEL.md`](DRIVER_HOME_TOP3_MANEL.md)** (desenho canónico, prompts e métricas).
+
 **Fonte de verdade para suspensão, documentos e conformidade legal:** painel **admin** (backoffice), não este menu.
 
 ---
@@ -81,7 +83,7 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 5. [x] Ocorrências: fluxo local com tipo + texto.
 6. [ ] Admin/backend: endpoints e workflow real de documentos antes de refletir estado oficial no motorista.
 7. [ ] Regra de zonas «2 por dia»: fechar modelo de zona/reset/exceções e implementar política.
-8. [ ] Menu MVP: fechar «top 3» indispensável (aguarda resposta final do Manuel).
+8. [ ] Menu MVP: «top 3» Manel — **especificado** em [`DRIVER_HOME_TOP3_MANEL.md`](DRIVER_HOME_TOP3_MANEL.md) (esboço 2026-05); implementação UI por fatias com feature-flag quando arrancar código.
 
 **Pós-reunião Manel (2026-05-01) — fora do menu imediato, documentado em** [`docs/research/driver-app-benchmarks.md`](../research/driver-app-benchmarks.md)**:** QR Driver/Passenger; portagens (dois percursos, preferências, recálculo contínuo — TODO técnico); tiers tipo Pro (Diamond/Silver/Gold); lista de viagens rica + retenção 2 anos; registo criminal 3/3 meses; fila aeroporto Lisboa como referência operacional.
 

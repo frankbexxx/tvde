@@ -1,0 +1,105 @@
+# Ecrã principal motorista — «Top 3» Manel (esboço 2026-05)
+
+Documento **canónico** para o fluxo acordado com **Manel**: substituir / preceder o layout actual do `DriverDashboard` por um **fluxo em dois ecrãs** — mapa largo + disponibilidade, depois ecrã de trabalho com **acções em baixo**.  
+Complementa [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) (menu **Menu** continua a existir para preferências, histórico, zonas v1, etc.).
+
+**Estado:** desenho alinhado em sessão (Frank + Manel); **sem implementação** nesta fase — este ficheiro guia código, prompts e métricas.
+
+---
+
+## 1. Objectivo do produto
+
+- Reduzir ruído: **um ecrã para “estar ou não no jogo”** com contexto geográfico claro.
+- Depois de **activo / disponível**, o motorista entra no **modo operação** com **botões grandes** ao pé do polegar (aceitar fluxo, navegação, estado da viagem, etc. — detalhe por fatia).
+- Manter **regras não restritivas** (ver `DRIVER_MENU_SPEC.md` §5): o toggle não deve “punir” por tentativa honesta de voltar a disponível; mensagens claras se GPS ou rede falharem.
+
+---
+
+## 2. Ecrã 1 — «Mapa + contexto + inactivo/activo»
+
+| Elemento | Comportamento esperado (v1 alvo) |
+|----------|----------------------------------|
+| **Mapa** | Ocupa **área larga** (viewport principal); mostra posição (e, quando existir, rota ou área útil). Fallback coerente com o actual (demo / última posição servidor). |
+| **Inactivo / activo** | Controlo **claro** (ex.: toggle ou dois estados) para **não disponível** vs **disponível para receber pedidos**. Sincronizar com o conceito actual de offline/disponível sem surpresas para quem já usa a app. |
+| **Info adicional** | Pequena zona de texto ou ícones (rede, GPS, próximo reset zonas, lembrete bateria — **priorizar 1–2 linhas**; evitar painel denso). Lista exacta **fecha em UX** antes do primeiro PR de implementação. |
+| **Transição** | Só quando passa a **activo/disponível** é que navega para o **Ecrã 2** (ou revela o ecrã 2 no mesmo route — decisão de implementação: **stack vs route**; documentar na PR). |
+
+**Casos limite (Ecrã 1):**
+
+- GPS indisponível: mensagem curta + acção «tentar outra vez» (reuso de padrões actuais).
+- Rede fraca: não bloquear toggle; aviso não intrusivo.
+- Viagem já **aceite / em curso**: não forçar o motorista a “desactivar” sem sentido — **comportamento actual** de priorizar `ActiveTripActions` mantém-se como referência; o esboço não pode quebrar isso.
+
+---
+
+## 3. Ecrã 2 — «Modo operação + botões em baixo»
+
+| Elemento | Comportamento esperado (v1 alvo) |
+|----------|----------------------------------|
+| **Conteúdo central** | Lista de pedidos / cartão de viagem activa / estado vazio — **reutilizar** componentes actuais (`RequestCard`, `TripCard`, `ActiveTripActions`) sempre que possível. |
+| **Botões em baixo** | Faixa fixa (safe-area) com **2–4 acções máx.** por contexto: ex. aceitar / recusar, abrir navegação, menu, estado da viagem. **Não** duplicar tudo do menu lateral de uma vez. |
+| **Regresso ao Ecrã 1** | Passar a **inactivo** ou gesto «voltar» — definir na PR (evitar dead-ends). |
+
+---
+
+## 4. Fora de âmbito nesta onda (explícito)
+
+- Paridade feature-a-feature com Uber/Bolt (ver benchmarks em `docs/research/driver-app-benchmarks.md` só como inspiração).
+- Novo sistema de zonas além do **contrato v1** já em `DRIVER_MENU_SPEC.md` §7 (integração futura: ecrã 1 pode **mostrar** resumo de orçamento zonas, mas não é obrigatório na primeira fatia).
+- Alterações legais / novos documentos — continuam no **admin**.
+
+---
+
+## 5. Prompts (copiar para sessões de implementação)
+
+### 5.1 Prompt «antes de codificar»
+
+```
+Contexto: implementar o fluxo em 2 ecrãs do ficheiro docs/product/DRIVER_HOME_TOP3_MANEL.md
+Regras: não alterar contrato de API sem PR à parte; reutilizar RequestCard/TripCard/ActiveTripActions onde couber;
+Não expandir o menu Menu nesta PR; feature-flag se necessário para deploy seguro.
+Entregável: lista de ficheiros tocados + screenshots ou notas de smoke + risco residual.
+```
+
+### 5.2 Prompt «definição de feito» (PR)
+
+- [ ] Ecrã 1: mapa largo + toggle inactivo/activo + pelo menos **uma** linha de info contextual acordada.
+- [ ] Activar → utilizador vê Ecrã 2 com **faixa inferior** de botões; **sem** regressão em viagem activa (aceitar → ongoing → complete).
+- [ ] Desactivar → regresso previsível ao Ecrã 1 (ou estado equivalente documentado).
+- [ ] Smoke manual: disponível → vê pedido → offline → pedido some → online → pedido volta (já validado em prod; repetir após refactor).
+- [ ] Telemóvel 360–400px: áreas tácteis ≥ 44px nos botões inferiores.
+
+### 5.3 Prompt «não fazer nesta PR»
+
+- Redesenhar histórico completo, documentos, zonas v1, admin.
+- Novos endpoints só se o fluxo **exigir** — preferir composição de estado no cliente.
+
+---
+
+## 6. Métricas (v1 mínimo — evolução por fases)
+
+| Métrica | O quê medir | Onde (ideal) | Notas v1 |
+|---------|-------------|----------------|----------|
+| **M1 — Tempo até «activo»** | Segundos entre abrir app (Ecrã 1) e primeiro toggle para disponível | `log_event` ou analytics futuro | Smoke: cronómetro manual nas primeiras sessões |
+| **M2 — Abandono Ecrã 1** | Sessões que fecham app sem nunca passar a disponível | idem | Definir «sessão» (ex.: foreground > 30s) quando houver telemetria |
+| **M3 — Erro GPS no Ecrã 1** | Contagem de fallback / retry | reutilizar padrão GPS actual | Comparar antes/depois do refactor |
+| **M4 — Regressão lista pedidos** | Taxa de erro ao listar `available` após mudança de ecrã | logs API + UI | Manter smoke #2 do `TODOdoDIA` |
+| **M5 — Acções inferiores** | Toques em cada botão da faixa (quando existir instrumentação) | futuro | Opcional pós-MVP |
+
+**Princípio:** até existir pipeline de analytics, **M1–M4** podem ser verificadas por **smoke + logs existentes** + notas no `TODOdoDIA`.
+
+---
+
+## 7. Próximo passo recomendado (código)
+
+1. **Spike UI** (1 PR): layout shell — Ecrã 1 + navegação para Ecrã 2 mock ou vazio, feature-flag `VITE_DRIVER_HOME_TWO_STEP` (ou equivalente).
+2. **Integração**: encaixar lista actual e `ActiveTripActions` no Ecrã 2.
+3. **Remover flag** quando smoke em produção estiver verde.
+
+---
+
+## 8. Referências
+
+- [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1.
+- [`driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) — contexto competitivo.
+- [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md) — princípios gerais de UX web.

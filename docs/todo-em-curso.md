@@ -7,7 +7,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 ## Agora (foco único)
 
 - [x] Regra **2 zonas** confirmada com Manel (pernadas no caminho **não** consomem uso; consumo na 1.ª **completed** na zona-alvo) — ver `docs/product/DRIVER_MENU_SPEC.md` + `docs/research/driver-app-benchmarks.md`.
-- [ ] Fechar apenas pendente do QA: Top 3 itens do menu motorista (resposta final do Manuel).
+- [ ] **Top 3 Manel** — especificação canónica em [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md); implementação UI quando abrirmos essa onda (já não depende de «resposta Manuel» para o desenho).
 - [x] Contrato técnico v1 definido em `docs/product/DRIVER_MENU_SPEC.md` (zona dinâmica + exceções + budget diário).
 - [x] Linha rotacional no topo (`AppHeaderBar`, hints estáticos — v1).
 - [x] Spec menu motorista: `docs/product/DRIVER_MENU_SPEC.md`.
@@ -44,4 +44,4 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-_Última revisão: 2026-05-01 (noite — fecho sessão + abertura 2026-05-02)._
+_Última revisão: 2026-05-02 (Opção A — doc Top 3 Manel + prompts + métricas)._
