@@ -1191,16 +1191,18 @@ function DriverOperationsMenu({
   const [zoneSession, setZoneSession] = useState<DriverZoneSession | null>(null)
   const [zoneLoadErr, setZoneLoadErr] = useState<string | null>(null)
   const [zoneBusy, setZoneBusy] = useState(false)
+  const [zoneRefreshing, setZoneRefreshing] = useState(false)
   const [zoneNewZoneId, setZoneNewZoneId] = useState('portimao')
   const [zoneEtaMinutes, setZoneEtaMinutes] = useState(30)
   const [zoneMarginPct, setZoneMarginPct] = useState(25)
 
-  const reloadZones = useCallback(async () => {
+  const reloadZones = useCallback(async (showTapFeedback?: boolean) => {
     if (!token) {
       setZoneBudget(null)
       setZoneSession(null)
       return
     }
+    if (showTapFeedback) setZoneRefreshing(true)
     setZoneLoadErr(null)
     try {
       const [bud, open] = await Promise.all([
@@ -1209,12 +1211,17 @@ function DriverOperationsMenu({
       ])
       setZoneBudget(bud)
       setZoneSession(open)
+      if (showTapFeedback) {
+        sonnerToast.success('Zonas actualizadas.', { duration: 2500 })
+      }
     } catch (e) {
       const detail =
         e !== null && typeof e === 'object' && 'detail' in e
           ? String((e as { detail: unknown }).detail)
           : 'Erro ao carregar zonas'
       setZoneLoadErr(detail)
+    } finally {
+      if (showTapFeedback) setZoneRefreshing(false)
     }
   }, [token])
 
@@ -1344,11 +1351,12 @@ function DriverOperationsMenu({
           <button
             type="button"
             data-testid="driver-zones-refresh"
-            onClick={() => void reloadZones()}
-            disabled={!token || zoneBusy}
+            onClick={() => void reloadZones(true)}
+            disabled={!token || zoneBusy || zoneRefreshing}
+            aria-busy={zoneRefreshing}
             className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
           >
-            Atualizar
+            {zoneRefreshing ? 'A actualizar…' : 'Atualizar'}
           </button>
         </div>
         <p className="text-xs text-muted-foreground leading-snug">
