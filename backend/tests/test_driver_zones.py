@@ -11,6 +11,7 @@ from app.api.deps import UserContext, get_current_user, get_db
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
+from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.db.session import SessionLocal
@@ -18,6 +19,7 @@ from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.services.driver_zones import (
     create_zone_session,
+    expire_open_zone_sessions_past_deadline,
     maybe_consume_zone_session_on_trip_complete,
     mark_session_arrived,
 )
@@ -64,6 +66,27 @@ def _override_deps(db: Session, user_ctx: UserContext) -> None:
 
 def _reset_overrides() -> None:
     app.dependency_overrides.clear()
+
+
+def test_zone_catalog_lists_known_zones() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r = client.get("/driver/zones/catalog")
+        assert r.status_code == 200
+        data = r.json()
+        ids = {z["zone_id"] for z in data["zones"]}
+        assert "portimao" in ids
+        assert "faro" in ids
+        assert "lisboa" in ids
+        assert "lis" in ids
+        lis = next(z for z in data["zones"] if z["zone_id"] == "lis")
+        assert lis["kind"] == "airport"
+    finally:
+        _reset_overrides()
+        db.close()
 
 
 def test_zone_budget_today_defaults() -> None:
@@ -387,6 +410,59 @@ def test_maybe_consume_ignores_completed_trips_before_arrived() -> None:
     assert sess.status == "consumed"
     assert sess.first_completed_trip_id == trip_new.id
 
+    db.close()
+
+
+def test_expire_open_zone_sessions_past_deadline() -> None:
+    db = _make_db()
+    driver_id_str = _create_driver(db)
+    driver_uuid = uuid.UUID(driver_id_str)
+    t_now = datetime(2025, 6, 10, 14, 0, 0, tzinfo=timezone.utc)
+    past_deadline = t_now - timedelta(hours=1)
+    sess = DriverZoneSession(
+        driver_id=driver_uuid,
+        zone_id="lisboa",
+        started_at=past_deadline - timedelta(hours=2),
+        eta_seconds_baseline=3600,
+        eta_margin_percent=0,
+        deadline_at=past_deadline,
+        status="open",
+    )
+    db.add(sess)
+    db.commit()
+    db.refresh(sess)
+
+    n = expire_open_zone_sessions_past_deadline(db, now=t_now)
+    assert n == 1
+    db.refresh(sess)
+    assert sess.status == "expired"
+    assert sess.cancel_reason == "deadline_passed"
+    db.close()
+
+
+def test_expire_open_zone_sessions_future_deadline_unchanged() -> None:
+    db = _make_db()
+    driver_id_str = _create_driver(db)
+    driver_uuid = uuid.UUID(driver_id_str)
+    t_now = datetime(2025, 6, 11, 10, 0, 0, tzinfo=timezone.utc)
+    future_deadline = t_now + timedelta(hours=2)
+    sess = DriverZoneSession(
+        driver_id=driver_uuid,
+        zone_id="portimao",
+        started_at=t_now - timedelta(hours=1),
+        eta_seconds_baseline=7200,
+        eta_margin_percent=0,
+        deadline_at=future_deadline,
+        status="open",
+    )
+    db.add(sess)
+    db.commit()
+
+    n = expire_open_zone_sessions_past_deadline(db, now=t_now)
+    assert n == 0
+    db.refresh(sess)
+    assert sess.status == "open"
+    assert sess.cancel_reason is None
     db.close()
 
 

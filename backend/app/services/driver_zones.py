@@ -17,6 +17,7 @@ from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.trip import Trip
 from app.models.enums import TripStatus
+from app.utils.logging import log_event
 
 ZONE_TZ = ZoneInfo("Europe/Lisbon")
 
@@ -248,3 +249,38 @@ def maybe_consume_zone_session_on_trip_complete(
     sess.status = "consumed"
     service_day = sess.started_at.astimezone(ZONE_TZ).date()
     _increment_day_budget_used(db, driver_id=driver_id, service_date=service_day)
+
+
+def expire_open_zone_sessions_past_deadline(
+    db: Session,
+    *,
+    now: datetime | None = None,
+) -> int:
+    """Close ``open`` zone sessions whose ``deadline_at`` is in the past.
+
+    Sets ``status`` to ``expired`` and ``cancel_reason`` to ``deadline_passed``.
+    Commits only when at least one row was updated (same pattern as trip timeouts).
+    """
+    utc_now = now or datetime.now(timezone.utc)
+    rows = (
+        db.execute(
+            select(DriverZoneSession).where(
+                and_(
+                    DriverZoneSession.status == "open",
+                    DriverZoneSession.deadline_at < utc_now,
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for row in rows:
+        row.status = "expired"
+        row.cancel_reason = "deadline_passed"
+    if rows:
+        db.commit()
+        log_event(
+            "driver_zone_sessions_expired",
+            count=len(rows),
+        )
+    return len(rows)

@@ -93,6 +93,8 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 
 Objetivo: permitir ao motorista declarar uma zona operacional temporária (ex.: Aeroporto, Baixa, Porto Centro), com controlo simples e auditável pelo partner, sem bloquear viagens normais.
 
+**Referência visual (fila / zona de espera LIS):** três capturas do ecossistema Uber (Manel) + notas de produto em [`docs/research/driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) §6 e em `docs/research/assets/lis-uber-waiting-zone-ref/` — inspiração UX, não contrato com terceiros.
+
 ### 7.1 Regras de negócio (v1)
 
 - Limite base: **2 mudanças de zona por dia** por motorista.
@@ -146,6 +148,8 @@ driver_zone_session
   - partner aprova segundos extra.
 - `GET /driver/zones/budget/today`
   - devolve `used`, `max`, `remaining`, `resets_at`.
+- `GET /driver/zones/catalog`
+  - lista estática v1 de `zone_id` + `label_pt` + `kind` (`generic` \| `airport`) para dropdown na app; o `POST` de sessão continua a aceitar qualquer `zone_id` válido (parceiro pode alargar no servidor sem obrigar actualização imediata do catálogo).
 
 ### 7.4 Comportamento frontend (driver)
 

@@ -56,6 +56,7 @@ from app.services.trips import (
     get_trip_by_id,
 )
 from app.services.cleanup import run_cleanup
+from app.services.driver_zones import expire_open_zone_sessions_past_deadline
 from app.cron.system_health_check import run_system_health_check
 from app.schemas.partner import (
     AdminAssignPartnerRequest,
@@ -109,6 +110,7 @@ class AdminCronRunResponse(BaseModel):
     offers: dict[str, int]
     cleanup: dict[str, Any]
     system_health_status: str
+    driver_zone_sessions_expired: int = 0
     request_id: str
 
 
@@ -213,6 +215,7 @@ async def admin_run_cron(
     started = time.monotonic()
     log_event("cron_started", invoked_by="super_admin")
     errors: dict[str, str] = {}
+    zone_sessions_expired = 0
 
     try:
         timeouts = run_trip_timeouts(db)
@@ -270,6 +273,18 @@ async def admin_run_cron(
         errors["system_health_check"] = str(e)
         log_event("cron_job_error", job="system_health_check", error=str(e))
 
+    try:
+        zone_sessions_expired = expire_open_zone_sessions_past_deadline(db)
+        log_event(
+            "cron_job_ok",
+            job="expire_driver_zone_sessions",
+            zone_sessions_expired=zone_sessions_expired,
+        )
+    except Exception as e:
+        zone_sessions_expired = 0
+        errors["expire_driver_zone_sessions"] = str(e)
+        log_event("cron_job_error", job="expire_driver_zone_sessions", error=str(e))
+
     elapsed_ms = int(round((time.monotonic() - started) * 1000))
     log_event(
         "cron_finished",
@@ -287,6 +302,7 @@ async def admin_run_cron(
         redispatch_offers_created=len(new_offers),
         audit_events_deleted=cleanup.get("audit_events_deleted", 0),
         system_health_status=sh_status,
+        zone_sessions_expired=zone_sessions_expired,
         duration_ms=elapsed_ms,
         ok=(len(errors) == 0),
         error_count=len(errors),
@@ -308,6 +324,7 @@ async def admin_run_cron(
             "redispatch_offers": len(new_offers),
             "audit_events_deleted": cleanup.get("audit_events_deleted", 0),
             "system_health_status": sh_status,
+            "driver_zone_sessions_expired": zone_sessions_expired,
         },
     )
     db.commit()
@@ -325,6 +342,7 @@ async def admin_run_cron(
         offers={"expired_count": expired, "redispatch_created": len(new_offers)},
         cleanup=cleanup,
         system_health_status=sh_status,
+        driver_zone_sessions_expired=zone_sessions_expired,
         request_id=rid,
     )
 

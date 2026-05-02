@@ -101,5 +101,5 @@ Entregável: lista de ficheiros tocados + screenshots ou notas de smoke + risco 
 ## 8. Referências
 
 - [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1.
-- [`driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) — contexto competitivo.
+- [`driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) — contexto competitivo; **§6** — capturas LIS (fila aeroporto / zona de espera, ref. Manel).
 - [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md) — princípios gerais de UX web.

@@ -15,6 +15,8 @@ from app.api.deps import UserContext, get_db, require_role
 from app.models.enums import Role
 from app.schemas.driver_zones import (
     DriverZoneBudgetResponse,
+    DriverZoneCatalogItem,
+    DriverZoneCatalogResponse,
     DriverZoneSessionCancelRequest,
     DriverZoneSessionCreateRequest,
     DriverZoneSessionResponse,
@@ -27,8 +29,17 @@ from app.services.driver_zones import (
     mark_session_arrived,
     service_date_local_now,
 )
+from app.services.zone_catalog import list_zone_catalog
 
 router = APIRouter(prefix="/driver/zones", tags=["driver"])
+
+
+@router.get("/catalog", response_model=DriverZoneCatalogResponse)
+async def get_zone_catalog(
+    _user: UserContext = Depends(require_role(Role.driver)),
+) -> DriverZoneCatalogResponse:
+    rows = list_zone_catalog()
+    return DriverZoneCatalogResponse(zones=[DriverZoneCatalogItem.model_validate(r) for r in rows])
 
 
 @router.get("/budget/today", response_model=DriverZoneBudgetResponse)

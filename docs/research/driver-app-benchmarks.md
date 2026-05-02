@@ -1,6 +1,6 @@
 # Benchmarks e inspiração — app motorista / passageiro
 
-Referências externas e notas de pesquisa (não são especificação implementável por si só). Última revisão: **2026-05-01**.
+Referências externas e notas de pesquisa (não são especificação implementável por si só). Última revisão: **2026-05-02**.
 
 ---
 
@@ -18,7 +18,7 @@ Referências externas e notas de pesquisa (não são especificação implementá
 | [The Rideshare Guy — Uber destination filter](https://therideshareguy.com/how-does-ubers-destination-filter-work/) | Mental model: 2 usos/dia, direcção vs destino fixo, quando consome. |
 | [The Rideshare Guy — Lyft driver app tutorial](https://therideshareguy.com/how-to-use-lyft-app/) | Location filters (stay in area / head to destination), bonus slide-up, nav Waze/Lyft Maps, toggle Lyft↔Waze. |
 
-**Screenshots no repo (assets):** capturas Uber/Lyft offline, navegação, menu, pedido entrante, split-screen — ver pasta `assets/` referenciada nas sessões Cursor.
+**Screenshots no repo (assets):** capturas Uber/Lyft offline, navegação, menu, pedido entrante, split-screen — ver pasta `assets/` referenciada nas sessões Cursor. **Fila LIS (aeroporto):** ver §6 (fim do documento).
 
 ---
 
@@ -40,7 +40,7 @@ Referências externas e notas de pesquisa (não são especificação implementá
 - **2 mudanças de zona / dia:** **confirmado** — pernadas no caminho até à zona-alvo **não consomem** o uso; consumo na **1.ª viagem concluída** na zona-alvo (alinhado a `DRIVER_MENU_SPEC.md`).
 - **Lista de viagens:** percurso, mapa, distância, duração, preço, avaliação, …; retenção mínima **2 anos** (legal/ops a validar).
 - **Registo criminal:** renovação / entrega **de 3 em 3 meses** (processo + compliance).
-- **Aeroporto Lisboa:** zona de espera tipo fila **Uber/Bolt** — referência para futura **zona dinâmica** / operações.
+- **Aeroporto Lisboa:** zona de espera tipo fila **Uber/Bolt** — referência para futura **zona dinâmica** / operações; capturas Manel em §6 (fim do documento).
 
 ---
 
@@ -55,3 +55,25 @@ Referências externas e notas de pesquisa (não são especificação implementá
 ## 5. O que não priorizar aqui
 
 - Requisitos legais US, listas longas de concorrentes, papers de incentivos até haver motor de pricing/incentivos.
+
+---
+
+## 6. LIS — zona de espera / fila (Uber, ref. Manel, 2026-05-02)
+
+Três capturas do dashboard Uber do Manel, só como **referência de UX/ops** para a futura experiência “zona dinâmica” / aeroporto (ver `DRIVER_MENU_SPEC.md` §7). **Não** são requisitos de paridade com a Uber.
+
+Ficheiros (repo):
+
+| # | Ficheiro | O que mostra (resumo) |
+|---|----------|------------------------|
+| 1 | [`docs/research/assets/lis-uber-waiting-zone-ref/01-trip-planner-queue-by-tier.png`](assets/lis-uber-waiting-zone-ref/01-trip-planner-queue-by-tier.png) | Ecrã tipo “Planeador”: fila **por produto** (UberX, Comfort, Prioridade, Share…), contagens em **intervalos** (ex. 101–105), **“Atualizado há X seg”**, CTA de feedback. |
+| 2 | [`docs/research/assets/lis-uber-waiting-zone-ref/02-map-geofence-queue-drawer.png`](assets/lis-uber-waiting-zone-ref/02-map-geofence-queue-drawer.png) | Mapa com **polígono** da zona + painel inferior com a mesma informação de filas. |
+| 3 | [`docs/research/assets/lis-uber-waiting-zone-ref/03-map-heatmap-queue-minibar.png`](assets/lis-uber-waiting-zone-ref/03-map-heatmap-queue-minibar.png) | Mapa com bolhas de tempo / procura; **barra compacta** “N–M [produto] à tua frente” + estado “À espera na fila”. |
+
+**Ideias para evolução TVDE (quando houver dados):**
+
+- Fila ou posição **por produto** alinhável às **categorias** do motorista (não um único número global se o mercado for segmentado).
+- Mostrar **intervalos** ou arredondamentos se reduzirem ruído e disputas com refresh frequente.
+- **Carimbo temporal** da última actualização (“há X seg”) — polling ou push, conforme arquitectura.
+- **Mapa**: delimitar zona de espera (polígono ou geofence) quando existir catálogo geo por `zone_id`.
+- **Superfícies duplas**: resumo no mapa + detalhe num painel / planeador (como nas refs).
