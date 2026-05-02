@@ -12,10 +12,10 @@ _Arranque quando deres **bom dia** — **série de smokes curtos** (um de cada v
 
 ### Smokes curtos (ordem sugerida)
 
-1. [ ] [OPS] `main` local = `origin/main`; app abre (Render ou local).
-2. [ ] [OPS] **Motorista** — Menu → secção **Mudança de zona (v1)**: orçamento carrega ou erro legível (API indisponível).
-3. [ ] [OPS] **Zonas** — Com API+BD: pedir zona → **Cheguei** → **Cancelar intenção** (ou fluxo mínimo que couber no tempo).
-4. [ ] [OPS] **Regressão leve** — toggle disponível/offline; preferência navegação ou histórico (1 clique).
+1. [x] [OPS] `main` local = `origin/main`; app abre (Render ou local).
+2. [x] [OPS] **Motorista** — Menu → secção **Mudança de zona (v1)**: orçamento carrega ou erro legível (API indisponível).
+3. [x] [OPS] **Zonas** — Com API+BD: pedir zona → **Cheguei** → **Cancelar intenção** (ou fluxo mínimo que couber no tempo).
+4. [ ] [OPS] **Regressão leve** — toggle disponível/offline; preferência navegação ou histórico (1 clique). _Histórico «Mostrar mais» até 23/23 OK; falta confirmar toggle + nav se ainda não fizeste._
 
 ### Depois dos smokes (não bloqueia o arranque)
 
