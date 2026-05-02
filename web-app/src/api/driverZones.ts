@@ -3,6 +3,18 @@
  */
 import { apiFetch, type ApiError } from './client'
 
+export type DriverZoneKind = 'generic' | 'airport'
+
+export interface DriverZoneCatalogItem {
+  zone_id: string
+  label_pt: string
+  kind: DriverZoneKind
+}
+
+export interface DriverZoneCatalogResponse {
+  zones: DriverZoneCatalogItem[]
+}
+
 export interface DriverZoneBudgetToday {
   service_date: string
   used_changes: number
@@ -29,6 +41,10 @@ export interface DriverZoneSession {
 
 export async function getDriverZoneBudgetToday(token: string): Promise<DriverZoneBudgetToday> {
   return apiFetch<DriverZoneBudgetToday>('/driver/zones/budget/today', { token })
+}
+
+export async function getDriverZoneCatalog(token: string): Promise<DriverZoneCatalogResponse> {
+  return apiFetch<DriverZoneCatalogResponse>('/driver/zones/catalog', { token })
 }
 
 /** ``null`` quando não há sessão aberta (404). */

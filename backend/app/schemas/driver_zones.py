@@ -4,6 +4,7 @@ import uuid
 from datetime import date, datetime
 
 from pydantic import BaseModel, Field
+from typing import Literal
 
 
 class DriverZoneBudgetResponse(BaseModel):
@@ -43,3 +44,13 @@ class DriverZoneSessionResponse(BaseModel):
 
 class DriverZoneSessionCancelRequest(BaseModel):
     cancel_reason: str | None = Field(default=None, max_length=2000)
+
+
+class DriverZoneCatalogItem(BaseModel):
+    zone_id: str
+    label_pt: str
+    kind: Literal["generic", "airport"] = "generic"
+
+
+class DriverZoneCatalogResponse(BaseModel):
+    zones: list[DriverZoneCatalogItem]

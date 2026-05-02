@@ -26,9 +26,11 @@ import {
   createDriverZoneSession,
   fetchOpenDriverZoneSession,
   getDriverZoneBudgetToday,
+  getDriverZoneCatalog,
   postDriverZoneSessionArrived,
   postDriverZoneSessionCancel,
   type DriverZoneBudgetToday,
+  type DriverZoneCatalogItem,
   type DriverZoneSession,
 } from '../../api/driverZones'
 import { usePolling } from '../../hooks/usePolling'
@@ -105,6 +107,7 @@ import {
   type DriverRequiredDocument,
 } from '../../services/driverDocuments'
 import { getStoredSessionDisplayName } from '../../utils/authStorage'
+import { isDriverHomeTwoStepEnabled } from '../../config/driverHomeFeatures'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 const DRIVER_INCIDENT_TYPES = [
@@ -198,6 +201,11 @@ export function DriverDashboard() {
     isDriverDocumentsGateEnabled()
   )
   const [menuOpen, setMenuOpen] = useState(false)
+  const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
+  const [driverHomeStep, setDriverHomeStep] = useState<1 | 2>(() =>
+    isDriverHomeTwoStepEnabled() ? 1 : 2
+  )
+  const showDriverHomeStep1 = driverHomeTwoStep && !activeTripId && driverHomeStep === 1
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
@@ -311,6 +319,10 @@ export function DriverDashboard() {
       tripSimStopRef.current = null
     }
   }, [])
+
+  useEffect(() => {
+    if (activeTripId) setDriverHomeStep(2)
+  }, [activeTripId])
 
   useEffect(() => {
     if (!activeTripId) {
@@ -579,95 +591,103 @@ export function DriverDashboard() {
         ) : undefined
       }
     >
-      <header className="mb-4 flex items-start justify-between gap-3">
-        <p className="text-foreground/80 text-sm leading-snug">
-          O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong>{' '}
-          no fim.
-        </p>
-        <button
-          type="button"
-          data-testid="driver-open-menu"
-          onClick={() => setMenuOpen((v) => !v)}
-          className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+      {showDriverHomeStep1 ? (
+        <div
+          className="space-y-4 transition-opacity duration-150"
+          data-testid="driver-home-step1"
         >
-          {menuOpen ? 'Fechar menu' : 'Menu'}
-        </button>
-      </header>
-
-      {menuOpen ? (
-        <DriverOperationsMenu
-          sessionDisplayName={sessionDisplayName}
-          history={history}
-          navPref={driverNavPref}
-          vehicleCategories={vehicleCategories}
-          driverDocuments={driverDocuments}
-          driverDocsGateEnabled={driverDocsGateEnabled}
-          onCloseMenu={() => setMenuOpen(false)}
-          onSelectNavPref={(app) => {
-            setDriverNavApp(app)
-            setDriverNavPref(app)
-            addLog(
-              app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps',
-              'info'
-            )
-          }}
-          onToggleVehicleCategory={(category) => {
-            setVehicleCategories((prev) => {
-              const exists = prev.includes(category)
-              // Garantimos que o motorista mantém sempre pelo menos 1 categoria ativa.
-              const next = exists
-                ? prev.filter((c) => c !== category)
-                : [...prev, category]
-              const safe = next.length > 0 ? next : prev
-              setDriverVehicleCategories(safe)
-              if (token) {
-                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
-                  /* keep local preference even if backend fails */
-                })
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-muted-foreground leading-snug">
+              Mapa e disponibilidade primeiro; depois vês pedidos e o ecrã completo.
+            </p>
+            <button
+              type="button"
+              data-testid="driver-open-menu"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+            >
+              {menuOpen ? 'Fechar menu' : 'Menu'}
+            </button>
+          </div>
+          <Toggle
+            label="Estado"
+            checked={!offline}
+            onChange={(checked) => {
+              if (checked && driverDocsGateEnabled && !isDriverDocumentsReady(driverDocuments)) {
+                setToast('Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.')
+                addLog('Bloqueado: documentos obrigatórios em falta', 'error')
+                return
               }
-              return safe
-            })
-          }}
-          onPatchDriverDocument={(doc, status) => {
-            setDriverDocuments((prev) => {
-              const docs = { ...prev.docs, [doc]: status }
-              const next: DriverDocumentsState = {
-                docs,
-                onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
-              }
-              setDriverDocumentsState(next)
-              return next
-            })
-          }}
-          onToggleDriverDocsGate={(enabled) => {
-            setDriverDocsGateEnabled(enabled)
-            setDriverDocumentsGateEnabled(enabled)
-            addLog(
-              enabled
-                ? 'Gate documentos: bloqueio de disponibilidade ativo'
-                : 'Gate documentos: bloqueio de disponibilidade desativado',
-              'info'
-            )
-          }}
-          onReportIncident={(tripId) => {
-            const typeInput = window.prompt(
-              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
-            )
-            if (!typeInput || !typeInput.trim()) return
-            const parsed = Number.parseInt(typeInput.trim(), 10)
-            const type =
-              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
-                ? DRIVER_INCIDENT_TYPES[parsed - 1]
-                : typeInput.trim()
-            const note = window.prompt('Descrição curta da ocorrência:')
-            if (!note || !note.trim()) return
-            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
-            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
-          }}
-        />
-      ) : null}
+              setOffline(!checked)
+              addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
+              setStatus(checked ? 'Disponível' : 'Offline')
+            }}
+            onLabel="Disponível"
+            offLabel="Offline"
+          />
+          {!offline && (
+            <div className="min-h-[min(52vh,24rem)] rounded-xl border border-border overflow-hidden">
+              <MapView
+                driverLocation={driverLocation ?? undefined}
+                route={
+                  import.meta.env.DEV &&
+                  isMockLocationModeEnabled() &&
+                  mockStableRouteEndpoints &&
+                  activeTripId
+                    ? mockStableRouteEndpoints
+                    : undefined
+                }
+                mapVisualWeight="emphasized"
+                compactHeight={false}
+              />
+            </div>
+          )}
+          {offline && (
+            <div className="py-8 text-center rounded-xl border border-border">
+              <p className="text-foreground/85 text-base">Estás offline.</p>
+              <p className="text-foreground/75 mt-2 text-sm">Activa a disponibilidade para veres o mapa.</p>
+            </div>
+          )}
+          <button
+            type="button"
+            data-testid="driver-home-step1-continue"
+            disabled={offline}
+            onClick={() => setDriverHomeStep(2)}
+            className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
+          >
+            Ver pedidos e mapa completo
+          </button>
+        </div>
+      ) : (
+        <>
+          <header className="mb-4 flex items-start justify-between gap-3">
+            <p className="text-foreground/80 text-sm leading-snug">
+              O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong>{' '}
+              no fim.
+            </p>
+            <div className="flex flex-col items-end gap-1.5 shrink-0">
+              {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
+                <button
+                  type="button"
+                  data-testid="driver-home-map-initial"
+                  onClick={() => setDriverHomeStep(1)}
+                  className="min-h-[40px] w-full rounded-xl border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+                >
+                  Mapa inicial
+                </button>
+              ) : null}
+              <button
+                type="button"
+                data-testid="driver-open-menu"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+              >
+                {menuOpen ? 'Fechar menu' : 'Menu'}
+              </button>
+            </div>
+          </header>
 
-      {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
+          {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
         <div className="rounded-xl bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
           <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»: até ao destino (OSRM, 1&nbsp;s por ponto).
         </div>
@@ -957,6 +977,81 @@ export function DriverDashboard() {
 
         {token ? <BetaAccountPanel /> : null}
       </div>
+        </>
+      )}
+
+      {menuOpen ? (
+        <DriverOperationsMenu
+          sessionDisplayName={sessionDisplayName}
+          history={history}
+          navPref={driverNavPref}
+          vehicleCategories={vehicleCategories}
+          driverDocuments={driverDocuments}
+          driverDocsGateEnabled={driverDocsGateEnabled}
+          onCloseMenu={() => setMenuOpen(false)}
+          onSelectNavPref={(app) => {
+            setDriverNavApp(app)
+            setDriverNavPref(app)
+            addLog(
+              app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps',
+              'info'
+            )
+          }}
+          onToggleVehicleCategory={(category) => {
+            setVehicleCategories((prev) => {
+              const exists = prev.includes(category)
+              // Garantimos que o motorista mantém sempre pelo menos 1 categoria ativa.
+              const next = exists
+                ? prev.filter((c) => c !== category)
+                : [...prev, category]
+              const safe = next.length > 0 ? next : prev
+              setDriverVehicleCategories(safe)
+              if (token) {
+                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
+                  /* keep local preference even if backend fails */
+                })
+              }
+              return safe
+            })
+          }}
+          onPatchDriverDocument={(doc, status) => {
+            setDriverDocuments((prev) => {
+              const docs = { ...prev.docs, [doc]: status }
+              const next: DriverDocumentsState = {
+                docs,
+                onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
+              }
+              setDriverDocumentsState(next)
+              return next
+            })
+          }}
+          onToggleDriverDocsGate={(enabled) => {
+            setDriverDocsGateEnabled(enabled)
+            setDriverDocumentsGateEnabled(enabled)
+            addLog(
+              enabled
+                ? 'Gate documentos: bloqueio de disponibilidade ativo'
+                : 'Gate documentos: bloqueio de disponibilidade desativado',
+              'info'
+            )
+          }}
+          onReportIncident={(tripId) => {
+            const typeInput = window.prompt(
+              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
+            )
+            if (!typeInput || !typeInput.trim()) return
+            const parsed = Number.parseInt(typeInput.trim(), 10)
+            const type =
+              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
+                ? DRIVER_INCIDENT_TYPES[parsed - 1]
+                : typeInput.trim()
+            const note = window.prompt('Descrição curta da ocorrência:')
+            if (!note || !note.trim()) return
+            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
+            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
+          }}
+        />
+      ) : null}
     </ScreenContainer>
   )
 }
@@ -1189,6 +1284,8 @@ function DriverOperationsMenu({
 
   const [zoneBudget, setZoneBudget] = useState<DriverZoneBudgetToday | null>(null)
   const [zoneSession, setZoneSession] = useState<DriverZoneSession | null>(null)
+  const [zoneCatalog, setZoneCatalog] = useState<DriverZoneCatalogItem[] | null>(null)
+  const [zoneCatalogErr, setZoneCatalogErr] = useState<string | null>(null)
   const [zoneLoadErr, setZoneLoadErr] = useState<string | null>(null)
   const [zoneBusy, setZoneBusy] = useState(false)
   const [zoneRefreshing, setZoneRefreshing] = useState(false)
@@ -1200,6 +1297,8 @@ function DriverOperationsMenu({
     if (!token) {
       setZoneBudget(null)
       setZoneSession(null)
+      setZoneCatalog(null)
+      setZoneCatalogErr(null)
       return
     }
     if (showTapFeedback) setZoneRefreshing(true)
@@ -1211,6 +1310,14 @@ function DriverOperationsMenu({
       ])
       setZoneBudget(bud)
       setZoneSession(open)
+      try {
+        const cat = await getDriverZoneCatalog(token)
+        setZoneCatalog(cat.zones)
+        setZoneCatalogErr(null)
+      } catch {
+        setZoneCatalog(null)
+        setZoneCatalogErr('Catálogo de zonas indisponível — usa o ID manual se precisares.')
+      }
       if (showTapFeedback) {
         sonnerToast.success('Zonas actualizadas.', { duration: 2500 })
       }
@@ -1229,7 +1336,19 @@ function DriverOperationsMenu({
     void reloadZones()
   }, [reloadZones])
 
+  useEffect(() => {
+    if (!zoneCatalog?.length) return
+    if (!zoneCatalog.some((z) => z.zone_id === zoneNewZoneId)) {
+      setZoneNewZoneId(zoneCatalog[0].zone_id)
+    }
+  }, [zoneCatalog, zoneNewZoneId])
+
   const zoneTz = zoneBudget?.timezone ?? 'Europe/Lisbon'
+  const activeZoneLabelPt = useMemo(() => {
+    if (!zoneSession) return null
+    const hit = zoneCatalog?.find((z) => z.zone_id === zoneSession.zone_id)
+    return hit?.label_pt ?? null
+  }, [zoneSession, zoneCatalog])
   const zoneStateLabel =
     zoneSession == null
       ? null
@@ -1380,6 +1499,9 @@ function DriverOperationsMenu({
           <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
             <p className="text-xs font-medium text-foreground">
               Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
+              {activeZoneLabelPt ? (
+                <span className="text-muted-foreground font-normal"> — {activeZoneLabelPt}</span>
+              ) : null}
             </p>
             <p className="text-xs text-foreground/85">{zoneStateLabel}</p>
             <p className="text-[11px] text-muted-foreground">
@@ -1411,15 +1533,41 @@ function DriverOperationsMenu({
         ) : zoneBudget && zoneBudget.remaining > 0 ? (
           <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
             <label className="block space-y-1">
-              <span className="text-[11px] text-muted-foreground">ID da zona (ex.: portimao, faro, lisboa)</span>
-              <input
-                value={zoneNewZoneId}
-                onChange={(ev) => setZoneNewZoneId(ev.target.value)}
-                className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-              />
+              <span className="text-[11px] text-muted-foreground">
+                Zona-alvo · catálogo v1 (também podes escrever à mão se o catálogo falhar)
+              </span>
+              {zoneCatalog && zoneCatalog.length > 0 ? (
+                <select
+                  value={zoneNewZoneId}
+                  onChange={(ev) => setZoneNewZoneId(ev.target.value)}
+                  data-testid="driver-zones-zone-select"
+                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                >
+                  {zoneCatalog.map((z) => (
+                    <option key={z.zone_id} value={z.zone_id}>
+                      {z.label_pt}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <>
+                  {zoneCatalogErr ? (
+                    <p className="text-[11px] text-warning" data-testid="driver-zones-catalog-fallback-hint">
+                      {zoneCatalogErr}
+                    </p>
+                  ) : null}
+                  <input
+                    value={zoneNewZoneId}
+                    onChange={(ev) => setZoneNewZoneId(ev.target.value)}
+                    data-testid="driver-zones-zone-input"
+                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder="portimao, faro, lisboa, lis…"
+                  />
+                </>
+              )}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <label className="block space-y-1">

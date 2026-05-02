@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.cron.system_health_check import run_system_health_check
 from app.services.cleanup import run_cleanup
 from app.utils.logging import log_event
+from app.services.driver_zones import expire_open_zone_sessions_past_deadline
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
 from app.services.trip_timeouts import run_trip_timeouts
 
@@ -36,6 +37,7 @@ async def run_scheduled_jobs(
     2. Offer expiry + redispatch (expire stale offers, create new for trips with all expired)
     3. Cleanup (audit_events retention)
     4. System health snapshot (read-only; log_event on transition into degraded only)
+    5. Driver zone sessions past ``deadline_at`` → ``expired``
 
     Response: `system_health` contains counts and `warnings` only — never full diagnostic lists.
 
@@ -60,6 +62,7 @@ async def run_scheduled_jobs(
     log_event("cron_started")
 
     errors: dict[str, str] = {}
+    zone_sessions_expired = 0
 
     # Each sub-job is isolated: one failure must not block the others.
     try:
@@ -124,6 +127,18 @@ async def run_scheduled_jobs(
         errors["system_health_check"] = str(e)
         log_event("cron_job_error", job="system_health_check", error=str(e))
 
+    try:
+        zone_sessions_expired = expire_open_zone_sessions_past_deadline(db)
+        log_event(
+            "cron_job_ok",
+            job="expire_driver_zone_sessions",
+            zone_sessions_expired=zone_sessions_expired,
+        )
+    except Exception as e:
+        zone_sessions_expired = 0
+        errors["expire_driver_zone_sessions"] = str(e)
+        log_event("cron_job_error", job="expire_driver_zone_sessions", error=str(e))
+
     elapsed_ms = int(round((time.monotonic() - started) * 1000))
     log_event(
         "cron_finished",
@@ -141,6 +156,7 @@ async def run_scheduled_jobs(
         redispatch_offers_created=len(new_offers),
         audit_events_deleted=cleanup.get("audit_events_deleted", 0),
         system_health_status=system_health.get("status", ""),
+        zone_sessions_expired=zone_sessions_expired,
         duration_ms=elapsed_ms,
         ok=(len(errors) == 0),
         error_count=len(errors),
@@ -170,5 +186,8 @@ async def run_scheduled_jobs(
                 system_health.get("missing_payment_records") or []
             ),
             "warnings": system_health.get("warnings") or [],
+        },
+        "driver_zones": {
+            "expired_sessions": zone_sessions_expired,
         },
     }
