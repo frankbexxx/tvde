@@ -45,4 +45,4 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-_Última revisão: 2026-05-02 (UI driver: menu no topo, GPS compacto, copy estimativa no menu — ver `DRIVER_MENU_SPEC` §7.8 smoke)._
+_Última revisão: 2026-05-02 (merge `main` + conflito §7.8 resolvido a favor do checklist; auditoria `docs/audit/PROJECT_AUDIT_2026-05-02.md` → primeiro item 2026-05-03)._
