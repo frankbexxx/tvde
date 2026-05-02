@@ -25,8 +25,9 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Amanhã (2026-05-02) — primeira sessão útil
+## Amanhã (2026-05-03) — primeira sessão útil
 
+- [ ] **Auditoria projecto (agente)** — ler [`docs/audit/PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md) na **primeira** abertura do dia (output externo; **não** para hoje).
 - [ ] [OPS] **Smokes curtos em série** — ver `TODOdoDIA.md` painel **2026-05-02**: um passo de cada vez após «bom dia»; pausas entre passos; concentração para blocos longos **após 10h** se fizer falta.
 - [ ] Spec técnica mínima **portagens** (ou primeira fatia de implementação).
 - [ ] **Zonas v1 — fase 2** — extensão partner, job expiração, catálogo `zone_id` (conforme §7 `DRIVER_MENU_SPEC.md`).
