@@ -149,7 +149,7 @@ driver_zone_session
 - `GET /driver/zones/budget/today`
   - devolve `used`, `max`, `remaining`, `resets_at`.
 - `GET /driver/zones/catalog`
-  - lista estática v1 de `zone_id` + `label_pt` + `kind` (`generic` \| `airport`) para dropdown na app; o `POST` de sessão continua a aceitar qualquer `zone_id` válido (parceiro pode alargar no servidor sem obrigar actualização imediata do catálogo).
+  - lista estática v1 de `zone_id` + `label_pt` + `kind` (`generic` \| `airport`) + `ops_note_pt` opcional (nota curta para o motorista, ex. roadmap fila LIS) para dropdown na app; o `POST` de sessão continua a aceitar qualquer `zone_id` válido (parceiro pode alargar no servidor sem obrigar actualização imediata do catálogo).
 
 ### 7.4 Comportamento frontend (driver)
 

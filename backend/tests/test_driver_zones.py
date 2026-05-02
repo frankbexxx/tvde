@@ -84,6 +84,9 @@ def test_zone_catalog_lists_known_zones() -> None:
         assert "lis" in ids
         lis = next(z for z in data["zones"] if z["zone_id"] == "lis")
         assert lis["kind"] == "airport"
+        assert lis.get("ops_note_pt")
+        faro = next(z for z in data["zones"] if z["zone_id"] == "faro")
+        assert faro.get("ops_note_pt") is None
     finally:
         _reset_overrides()
         db.close()
