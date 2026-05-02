@@ -153,6 +153,8 @@ driver_zone_session
 
 ### 7.4 Comportamento frontend (driver)
 
+- **Ecrã principal (fora do menu):** não manter parágrafo fixo sobre «estimativa vs preço final» — essa explicação vive no **Menu** (secção reentrante «Preços nos pedidos (estimativa)»). O estado de **GPS envio** mostra-se numa **linha compacta**; pormenores técnicos ficam dentro de **diagnóstico** reentrante (fechado por defeito).
+- **Menu aberto:** o painel do menu ocupa o ecrã (conteúdo principal); o botão **Fechar** no topo do menu fecha o painel (o botão **Menu** / «Fechar menu» no cabeçalho do dashboard continua a alternar o mesmo estado).
 - No menu, mostrar cartão:
   - `Mudanças de zona hoje: X/2`
   - botão `Definir zona temporária`
@@ -185,6 +187,15 @@ driver_zone_session
 5. Partner aprova extra e motorista consegue nova sessão.
 6. À meia-noite local, contador volta a 0/2.
 
+### 7.8 Smoke rápido — UI motorista (pós-onda 2026-05-02)
+
+Executar **após** alterações ao `DriverDashboard` / menu:
+
+1. Abrir **Menu** — o painel aparece **no topo** (sem obrigar a scroll até ao fim da página); **Fechar** no menu regressa ao mapa/lista.
+2. No menu, abrir **Preços nos pedidos (estimativa)** — texto da estimativa vs preço final visível; no ecrã principal **não** deve aparecer o parágrafo antigo sob o cabeçalho.
+3. Com disponível e GPS activo: bloco **GPS envio** é **uma linha**; expandir **Diagnóstico** mostra servidor / erros.
+4. `npm run build` no `web-app`.
+
 ---
 
-_Última revisão: 2026-05-01_
+_Última revisão: 2026-05-02_

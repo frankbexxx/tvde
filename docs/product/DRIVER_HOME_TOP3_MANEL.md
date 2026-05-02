@@ -36,7 +36,7 @@ Complementa [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) (menu **Menu** continua
 
 | Elemento | Comportamento esperado (v1 alvo) |
 |----------|----------------------------------|
-| **Conteúdo central** | Lista de pedidos / cartão de viagem activa / estado vazio — **reutilizar** componentes actuais (`RequestCard`, `TripCard`, `ActiveTripActions`) sempre que possível. |
+| **Conteúdo central** | Lista de pedidos / cartão de viagem activa / estado vazio — **reutilizar** componentes actuais (`RequestCard`, `TripCard`, `ActiveTripActions`) sempre que possível. Copy sobre **estimativa vs preço final** não deve ocupar o cabeçalho do ecrã — fica no **Menu** (condições legíveis ao motorista). |
 | **Botões em baixo** | Faixa fixa (safe-area) com **2–4 acções máx.** por contexto: ex. aceitar / recusar, abrir navegação, menu, estado da viagem. **Não** duplicar tudo do menu lateral de uma vez. |
 | **Regresso ao Ecrã 1** | Passar a **inactivo** ou gesto «voltar» — definir na PR (evitar dead-ends). |
 
@@ -100,6 +100,6 @@ Entregável: lista de ficheiros tocados + screenshots ou notas de smoke + risco 
 
 ## 8. Referências
 
-- [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1.
+- [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1; **§7.8** smoke UI motorista (menu no topo, GPS, copy estimativa).
 - [`driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) — contexto competitivo; **§6** — capturas LIS (fila aeroporto / zona de espera, ref. Manel).
 - [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md) — princípios gerais de UX web.
