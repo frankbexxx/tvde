@@ -591,7 +591,77 @@ export function DriverDashboard() {
         ) : undefined
       }
     >
-      {showDriverHomeStep1 ? (
+      {menuOpen ? (
+        <DriverOperationsMenu
+          sessionDisplayName={sessionDisplayName}
+          history={history}
+          navPref={driverNavPref}
+          vehicleCategories={vehicleCategories}
+          driverDocuments={driverDocuments}
+          driverDocsGateEnabled={driverDocsGateEnabled}
+          onCloseMenu={() => setMenuOpen(false)}
+          onSelectNavPref={(app) => {
+            setDriverNavApp(app)
+            setDriverNavPref(app)
+            addLog(
+              app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps',
+              'info'
+            )
+          }}
+          onToggleVehicleCategory={(category) => {
+            setVehicleCategories((prev) => {
+              const exists = prev.includes(category)
+              const next = exists
+                ? prev.filter((c) => c !== category)
+                : [...prev, category]
+              const safe = next.length > 0 ? next : prev
+              setDriverVehicleCategories(safe)
+              if (token) {
+                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
+                  /* keep local preference even if backend fails */
+                })
+              }
+              return safe
+            })
+          }}
+          onPatchDriverDocument={(doc, status) => {
+            setDriverDocuments((prev) => {
+              const docs = { ...prev.docs, [doc]: status }
+              const next: DriverDocumentsState = {
+                docs,
+                onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
+              }
+              setDriverDocumentsState(next)
+              return next
+            })
+          }}
+          onToggleDriverDocsGate={(enabled) => {
+            setDriverDocsGateEnabled(enabled)
+            setDriverDocumentsGateEnabled(enabled)
+            addLog(
+              enabled
+                ? 'Gate documentos: bloqueio de disponibilidade ativo'
+                : 'Gate documentos: bloqueio de disponibilidade desativado',
+              'info'
+            )
+          }}
+          onReportIncident={(tripId) => {
+            const typeInput = window.prompt(
+              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
+            )
+            if (!typeInput || !typeInput.trim()) return
+            const parsed = Number.parseInt(typeInput.trim(), 10)
+            const type =
+              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
+                ? DRIVER_INCIDENT_TYPES[parsed - 1]
+                : typeInput.trim()
+            const note = window.prompt('Descrição curta da ocorrência:')
+            if (!note || !note.trim()) return
+            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
+            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
+          }}
+        />
+      ) : showDriverHomeStep1 ? (
         <div
           className="space-y-4 transition-opacity duration-150"
           data-testid="driver-home-step1"
@@ -660,11 +730,7 @@ export function DriverDashboard() {
         </div>
       ) : (
         <>
-          <header className="mb-4 flex items-start justify-between gap-3">
-            <p className="text-foreground/80 text-sm leading-snug">
-              O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong>{' '}
-              no fim.
-            </p>
+          <header className="mb-4 flex items-start justify-end gap-3">
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
                 <button
@@ -718,42 +784,46 @@ export function DriverDashboard() {
       )}
 
       {!offline && !!token && !!driverLocation && (
-        <div className="rounded-xl bg-foreground/5 border border-foreground/15 px-3 py-2 text-xs text-foreground/75">
-          {gpsReport.lastError ? (
-            <div className="flex flex-col gap-1.5">
-              <p className="font-medium text-foreground/90">
-                GPS upload: erro {gpsReport.lastError.status ?? ''}
-              </p>
-              <p>{String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}</p>
-              {gpsReport.lastError.request_id ? (
-                <p className="font-mono text-[11px] text-foreground/60">
-                  request_id {gpsReport.lastError.request_id}
-                </p>
-              ) : null}
-            </div>
-          ) : (
-            <p>
-              GPS upload: {gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}
-            </p>
-          )}
-          <details className="mt-1">
-            <summary className="cursor-pointer select-none text-[11px] text-foreground/65">
-              Diagnóstico técnico
-            </summary>
+        <details
+          className="rounded-lg border border-foreground/10 bg-foreground/[0.03] px-2 py-1.5 text-[11px] text-foreground/75"
+          data-testid="driver-gps-upload-details"
+        >
+          <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+            <span>
+              GPS envio:{' '}
+              {gpsReport.lastError ? (
+                <span className="text-destructive font-medium">erro {gpsReport.lastError.status ?? ''}</span>
+              ) : (
+                <span className="text-foreground/85">{gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}</span>
+              )}
+            </span>
+            <span className="text-foreground/55 shrink-0">Diagnóstico</span>
+          </summary>
+          <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[11px] text-foreground/70">
+            {gpsReport.lastError ? (
+              <>
+                <p>{String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}</p>
+                {gpsReport.lastError.request_id ? (
+                  <p className="font-mono text-[10px] text-foreground/55">
+                    request_id {gpsReport.lastError.request_id}
+                  </p>
+                ) : null}
+              </>
+            ) : null}
             {serverLoc ? (
-              <p className="mt-1 text-[11px] text-foreground/65">
+              <p>
                 Servidor: {serverLoc.lat.toFixed(5)},{' '}
                 {serverLoc.lng.toFixed(5)} (age ~{Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
               </p>
             ) : serverLocErr ? (
-              <p className="mt-1 text-[11px] text-foreground/65">
+              <p>
                 Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
               </p>
             ) : (
-              <p className="mt-1 text-[11px] text-foreground/65">Servidor: a obter…</p>
+              <p>Servidor: a obter…</p>
             )}
-          </details>
-        </div>
+          </div>
+        </details>
       )}
 
       {!isOnline && (
@@ -979,79 +1049,6 @@ export function DriverDashboard() {
       </div>
         </>
       )}
-
-      {menuOpen ? (
-        <DriverOperationsMenu
-          sessionDisplayName={sessionDisplayName}
-          history={history}
-          navPref={driverNavPref}
-          vehicleCategories={vehicleCategories}
-          driverDocuments={driverDocuments}
-          driverDocsGateEnabled={driverDocsGateEnabled}
-          onCloseMenu={() => setMenuOpen(false)}
-          onSelectNavPref={(app) => {
-            setDriverNavApp(app)
-            setDriverNavPref(app)
-            addLog(
-              app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps',
-              'info'
-            )
-          }}
-          onToggleVehicleCategory={(category) => {
-            setVehicleCategories((prev) => {
-              const exists = prev.includes(category)
-              // Garantimos que o motorista mantém sempre pelo menos 1 categoria ativa.
-              const next = exists
-                ? prev.filter((c) => c !== category)
-                : [...prev, category]
-              const safe = next.length > 0 ? next : prev
-              setDriverVehicleCategories(safe)
-              if (token) {
-                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
-                  /* keep local preference even if backend fails */
-                })
-              }
-              return safe
-            })
-          }}
-          onPatchDriverDocument={(doc, status) => {
-            setDriverDocuments((prev) => {
-              const docs = { ...prev.docs, [doc]: status }
-              const next: DriverDocumentsState = {
-                docs,
-                onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
-              }
-              setDriverDocumentsState(next)
-              return next
-            })
-          }}
-          onToggleDriverDocsGate={(enabled) => {
-            setDriverDocsGateEnabled(enabled)
-            setDriverDocumentsGateEnabled(enabled)
-            addLog(
-              enabled
-                ? 'Gate documentos: bloqueio de disponibilidade ativo'
-                : 'Gate documentos: bloqueio de disponibilidade desativado',
-              'info'
-            )
-          }}
-          onReportIncident={(tripId) => {
-            const typeInput = window.prompt(
-              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
-            )
-            if (!typeInput || !typeInput.trim()) return
-            const parsed = Number.parseInt(typeInput.trim(), 10)
-            const type =
-              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
-                ? DRIVER_INCIDENT_TYPES[parsed - 1]
-                : typeInput.trim()
-            const note = window.prompt('Descrição curta da ocorrência:')
-            if (!note || !note.trim()) return
-            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
-            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
-          }}
-        />
-      ) : null}
     </ScreenContainer>
   )
 }
@@ -1439,16 +1436,36 @@ function DriverOperationsMenu({
       aria-label="Menu do motorista"
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1">
           <h2 className="text-base font-semibold text-foreground">Menu do motorista</h2>
           <p className="text-sm text-foreground/75">
             {sessionDisplayName ?? 'Motorista'} · canceladas após aceitar: {cancelRate}%
           </p>
         </div>
-        <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/75">
-          Rating: em breve
-        </span>
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <button
+            type="button"
+            data-testid="driver-close-menu"
+            onClick={() => onCloseMenu()}
+            className="min-h-[40px] rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Fechar
+          </button>
+          <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/75">
+            Rating: em breve
+          </span>
+        </div>
       </div>
+
+      <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm">
+        <summary className="cursor-pointer font-medium text-foreground select-none">
+          Preços nos pedidos (estimativa)
+        </summary>
+        <p className="mt-2 text-xs text-foreground/85 leading-snug">
+          O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no
+          fim da viagem.
+        </p>
+      </details>
 
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <p className="text-sm font-medium text-foreground">Rendimentos</p>
