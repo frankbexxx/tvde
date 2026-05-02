@@ -196,6 +196,20 @@ Executar **após** alterações ao `DriverDashboard` / menu:
 3. Com disponível e GPS activo: bloco **GPS envio** é **uma linha**; expandir **Diagnóstico** mostra servidor / erros.
 4. `npm run build` no `web-app`.
 
+#### Checklist de prints (confirmar smoke visual)
+
+| # | Print | O que deve aparecer |
+|---|--------|----------------------|
+| **P1** | Ecrã principal **com menu fechado** | **Sem** o parágrafo longo «estimativa / preço final» debaixo do cabeçalho; só botões **Menu** (e **Mapa inicial** se two-step). |
+| **P2** | **Menu aberto** (primeiro ecrã após tocar em Menu) | Painel **Menu do motorista** no **topo** (título + botão **Fechar** + rating); **não** é preciso scroll até ao fundo da página para ver isto. |
+| **P3** | Menu com **«Preços nos pedidos (estimativa)»** expandido | Texto completo estimativa vs preço final **só** aqui. |
+| **P4** | Ecrã principal com **GPS** visível, **details fechado** | Uma **linha** tipo «GPS envio: ok» + indício «Diagnóstico» (bloco baixo, não cartão alto). |
+| **P5** | Mesmo bloco GPS com **details aberto** | Linhas de diagnóstico (servidor / erro) **dentro** do expandível. |
+
+_Opcional:_ captura do terminal ou CI com `npm run build` concluído (passo 4 do smoke).
+
+**E2E:** fluxos que abrem o menu e depois tocam em **ACEITAR** têm de **fechar o menu** antes (`driver-close-menu`) — com o menu aberto o dashboard não está montado.
+
 ---
 
 _Última revisão: 2026-05-02_

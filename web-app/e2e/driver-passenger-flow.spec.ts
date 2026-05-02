@@ -311,6 +311,10 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await driverPage.getByTestId('driver-open-menu').click()
     await expect(driverPage.getByTestId('driver-nav-pref-google')).toBeVisible()
 
+    // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
+    await driverPage.getByTestId('driver-close-menu').click()
+    await expect(driverPage.getByTestId(`driver-accept-${tripId}`)).toBeVisible({ timeout: sec(60) })
+
     await driverPage.getByTestId(`driver-accept-${tripId}`).click()
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
