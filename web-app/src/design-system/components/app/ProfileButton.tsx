@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -18,6 +18,7 @@ import {
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { isBackofficeStaffRole, useAuth } from '@/context/AuthContext'
 import { BetaPasswordChangeForm } from './BetaPasswordChangeForm'
+import { DRIVER_OPEN_ACCOUNT_EVENT } from '@/features/driver/driverShellEvents'
 
 function roleLabel(role: string): string {
   if (role === 'driver') return 'Motorista'
@@ -30,6 +31,12 @@ export function ProfileButton() {
   const [open, setOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 639px)')
   const { sessionPhone, sessionDisplayName, sessionRole, betaMode, token, logout } = useAuth()
+
+  useEffect(() => {
+    const onOpen = () => setOpen(true)
+    window.addEventListener(DRIVER_OPEN_ACCOUNT_EVENT, onOpen)
+    return () => window.removeEventListener(DRIVER_OPEN_ACCOUNT_EVENT, onOpen)
+  }, [])
 
   const body = (
     <div className="mt-4 flex flex-col gap-4">

@@ -125,7 +125,7 @@ Referência visual (rascunho 4×4):
 
 ### 9.3 Barra inferior fixa (alinhamento Uber / Lyft)
 
-Ordem alvo: **HOME** | **EARNINGS** | **INBOX** | **MENU** (safe-area, sempre visível no shell principal).
+Ordem alvo: **HOME** | **EARNINGS** | **INBOX** | **MENU** (safe-area, sempre visível no shell principal). **Web (beta):** `VITE_DRIVER_BOTTOM_NAV=true` no `web-app` — ver `README.md`.
 
 | Tab | Comportamento |
 |-----|----------------|

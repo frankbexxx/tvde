@@ -108,7 +108,13 @@ import {
   type DriverRequiredDocument,
 } from '../../services/driverDocuments'
 import { getStoredSessionDisplayName } from '../../utils/authStorage'
-import { isDriverHomeTwoStepEnabled } from '../../config/driverHomeFeatures'
+import { isDriverBottomNavEnabled, isDriverHomeTwoStepEnabled } from '../../config/driverHomeFeatures'
+import {
+  DRIVER_OPEN_ACCOUNT_EVENT,
+  DRIVER_OPEN_ACTIVITY_LOG_EVENT,
+  DRIVER_OPEN_SETTINGS_EVENT,
+} from './driverShellEvents'
+import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 const DRIVER_INCIDENT_TYPES = [
@@ -134,6 +140,22 @@ function setStoredOffline(offline: boolean) {
   } catch {
     /* ignore */
   }
+}
+
+/** §9.4 — pill sobre o mapa (barra inferior activa): disponível → toque passa a offline. */
+function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void }) {
+  return (
+    <button
+      type="button"
+      data-testid="driver-map-availability-pill"
+      onClick={onGoOffline}
+      aria-label="Estás disponível. Toca para ficar offline."
+      className="flex min-h-[48px] max-w-[18rem] items-center justify-center gap-2 rounded-full border border-border/90 bg-background/95 px-4 py-2 text-center text-sm font-semibold text-foreground shadow-lg backdrop-blur-sm touch-manipulation hover:bg-background"
+    >
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-400/55" aria-hidden />
+      <span className="leading-snug">Disponível — tocar para offline</span>
+    </button>
+  )
 }
 
 /** P25: detalhe mínimo até o GET /driver/trips/:id alinhar após aceitar. */
@@ -202,7 +224,9 @@ export function DriverDashboard() {
     isDriverDocumentsGateEnabled()
   )
   const [menuOpen, setMenuOpen] = useState(false)
+  const [driverShellTab, setDriverShellTab] = useState<DriverShellTab>('home')
   const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
+  const driverBottomNav = isDriverBottomNavEnabled()
   const [driverHomeStep, setDriverHomeStep] = useState<1 | 2>(() =>
     isDriverHomeTwoStepEnabled() ? 1 : 2
   )
@@ -215,7 +239,31 @@ export function DriverDashboard() {
   const isOnline = useOnlineStatus()
   const sessionDisplayName = useMemo(() => getStoredSessionDisplayName(), [])
 
+  const handleDriverAvailabilityChange = useCallback(
+    (checked: boolean) => {
+      if (checked && driverDocsGateEnabled && !isDriverDocumentsReady(driverDocuments)) {
+        setToast(
+          'Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.'
+        )
+        addLog('Bloqueado: documentos obrigatórios em falta', 'error')
+        return
+      }
+      setOffline(!checked)
+      addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
+      setStatus(checked ? 'Disponível' : 'Offline')
+    },
+    [addLog, driverDocsGateEnabled, driverDocuments, setStatus]
+  )
+
   const pollEnabled = !!token && !offline
+
+  useEffect(() => {
+    if (!menuOpen || driverShellTab === 'home' || driverShellTab === 'menu') return
+    const id = driverShellTab === 'earnings' ? 'driver-menu-earnings' : 'driver-menu-inbox'
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [menuOpen, driverShellTab])
 
   const {
     data: available,
@@ -518,79 +566,111 @@ export function DriverDashboard() {
     }
   }
 
-  return (
-    <ScreenContainer
-      bottomButton={
-        activeTripId ? (
-          <ActiveTripActions
-            tripId={activeTripId}
-            token={token!}
-            tripDetailFallback={acceptedDetailFallback}
-            driverLocation={driverLocation ?? null}
-            addLog={addLog}
-            setStatus={setStatus}
-            statusOverride={driverStatusOverride}
-            onClearStatusOverride={() => setDriverStatusOverride(null)}
-            onTripActionSuccess={(s) => {
-              setDriverStatusOverride(s)
-              // Fase 2 mock: pickup → destino (após «Iniciar viagem» → ongoing). Mesmo motor que fase 1.
-              if (s === 'ongoing' && isMockLocationModeEnabled()) {
-                const beginPickupToDest = (
-                  pickup: { lat: number; lng: number },
-                  destination: { lat: number; lng: number }
-                ) => {
-                  tripSimStopRef.current?.()
-                  tripSimStopRef.current = null
-                  const pos = driverLocationRef.current
-                  const nearPickup =
-                    pos != null &&
-                    isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
-                  if (!nearPickup) {
-                    setMockSimulatedPosition(pickup)
-                    void sendDriverLocation(pickup.lat, pickup.lng, token!)
-                  }
-                  const routeFrom = nearPickup && pos ? pos : pickup
-                  window.setTimeout(() => {
-                    startMockOsrmLeg(routeFrom, destination)
-                  }, 200)
-                }
-                const legs = acceptedTripGeoRef.current
-                if (legs) {
-                  beginPickupToDest(legs.pickup, legs.destination)
-                } else if (token && activeTripId) {
-                  const genSnapshot = mockApproachGenRef.current
-                  void (async () => {
-                    try {
-                      const d = await getDriverTripDetail(activeTripId, token)
-                      if (genSnapshot !== mockApproachGenRef.current) return
-                      beginPickupToDest(
-                        { lat: d.origin_lat, lng: d.origin_lng },
-                        { lat: d.destination_lat, lng: d.destination_lng }
-                      )
-                    } catch {
-                      /* sem detalhe não há fase 2 */
-                    }
-                  })()
-                }
-              }
-            }}
-            onComplete={() => {
+  const closeDriverMenu = useCallback(() => {
+    setMenuOpen(false)
+    setDriverShellTab('home')
+  }, [])
+
+  const handleBottomNav = useCallback(
+    (tab: DriverShellTab) => {
+      if (tab === 'home') {
+        setDriverShellTab('home')
+        setMenuOpen(false)
+        if (driverHomeTwoStep && !activeTripId) setDriverHomeStep(2)
+        document.getElementById('driver-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+      if (tab === 'menu') {
+        setMenuOpen((prev) => {
+          const next = !prev
+          setDriverShellTab(next ? 'menu' : 'home')
+          return next
+        })
+        return
+      }
+      setDriverShellTab(tab)
+      setMenuOpen(true)
+    },
+    [activeTripId, driverHomeTwoStep]
+  )
+
+  const bottomChrome =
+    activeTripId != null ? (
+      <ActiveTripActions
+        tripId={activeTripId}
+        token={token!}
+        tripDetailFallback={acceptedDetailFallback}
+        driverLocation={driverLocation ?? null}
+        addLog={addLog}
+        setStatus={setStatus}
+        statusOverride={driverStatusOverride}
+        onClearStatusOverride={() => setDriverStatusOverride(null)}
+        onTripActionSuccess={(s) => {
+          setDriverStatusOverride(s)
+          // Fase 2 mock: pickup → destino (após «Iniciar viagem» → ongoing). Mesmo motor que fase 1.
+          if (s === 'ongoing' && isMockLocationModeEnabled()) {
+            const beginPickupToDest = (
+              pickup: { lat: number; lng: number },
+              destination: { lat: number; lng: number }
+            ) => {
               tripSimStopRef.current?.()
               tripSimStopRef.current = null
-              setMockSimulatedPosition(null)
-              setMockStableRouteEndpoints(null)
-              acceptedTripGeoRef.current = null
-              setDriverStatusOverride(null)
-              setAcceptedDetailFallback(null)
-              setDriverActiveTripId(null)
-              setStatus('Pronto')
-              refetchHistory()
-              refetchAvailable()
-            }}
-            onError={setError}
-          />
-        ) : undefined
-      }
+              const pos = driverLocationRef.current
+              const nearPickup =
+                pos != null && isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
+              if (!nearPickup) {
+                setMockSimulatedPosition(pickup)
+                void sendDriverLocation(pickup.lat, pickup.lng, token!)
+              }
+              const routeFrom = nearPickup && pos ? pos : pickup
+              window.setTimeout(() => {
+                startMockOsrmLeg(routeFrom, destination)
+              }, 200)
+            }
+            const legs = acceptedTripGeoRef.current
+            if (legs) {
+              beginPickupToDest(legs.pickup, legs.destination)
+            } else if (token && activeTripId) {
+              const genSnapshot = mockApproachGenRef.current
+              void (async () => {
+                try {
+                  const d = await getDriverTripDetail(activeTripId, token)
+                  if (genSnapshot !== mockApproachGenRef.current) return
+                  beginPickupToDest(
+                    { lat: d.origin_lat, lng: d.origin_lng },
+                    { lat: d.destination_lat, lng: d.destination_lng }
+                  )
+                } catch {
+                  /* sem detalhe não há fase 2 */
+                }
+              })()
+            }
+          }
+        }}
+        onComplete={() => {
+          tripSimStopRef.current?.()
+          tripSimStopRef.current = null
+          setMockSimulatedPosition(null)
+          setMockStableRouteEndpoints(null)
+          acceptedTripGeoRef.current = null
+          setDriverStatusOverride(null)
+          setAcceptedDetailFallback(null)
+          setDriverActiveTripId(null)
+          setStatus('Pronto')
+          refetchHistory()
+          refetchAvailable()
+        }}
+        onError={setError}
+      />
+    ) : driverBottomNav ? (
+      <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
+    ) : undefined
+
+  return (
+    <ScreenContainer
+      bottomButton={bottomChrome}
+      bottomBarVariant={activeTripId ? 'inset' : driverBottomNav ? 'flush' : 'inset'}
+      mainScrollId="driver-main-scroll"
     >
       {menuOpen ? (
         <DriverOperationsMenu
@@ -600,7 +680,7 @@ export function DriverDashboard() {
           vehicleCategories={vehicleCategories}
           driverDocuments={driverDocuments}
           driverDocsGateEnabled={driverDocsGateEnabled}
-          onCloseMenu={() => setMenuOpen(false)}
+          onCloseMenu={closeDriverMenu}
           onSelectNavPref={(app) => {
             setDriverNavApp(app)
             setDriverNavPref(app)
@@ -671,28 +751,21 @@ export function DriverDashboard() {
             <p className="text-xs font-medium text-muted-foreground leading-snug">
               Mapa e disponibilidade primeiro; depois vês pedidos e o ecrã completo.
             </p>
-            <button
-              type="button"
-              data-testid="driver-open-menu"
-              onClick={() => setMenuOpen((v) => !v)}
-              className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-            >
-              {menuOpen ? 'Fechar menu' : 'Menu'}
-            </button>
+            {!driverBottomNav ? (
+              <button
+                type="button"
+                data-testid="driver-open-menu"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+              >
+                {menuOpen ? 'Fechar menu' : 'Menu'}
+              </button>
+            ) : null}
           </div>
           <Toggle
             label="Estado"
             checked={!offline}
-            onChange={(checked) => {
-              if (checked && driverDocsGateEnabled && !isDriverDocumentsReady(driverDocuments)) {
-                setToast('Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.')
-                addLog('Bloqueado: documentos obrigatórios em falta', 'error')
-                return
-              }
-              setOffline(!checked)
-              addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
-              setStatus(checked ? 'Disponível' : 'Offline')
-            }}
+            onChange={handleDriverAvailabilityChange}
             onLabel="Disponível"
             offLabel="Offline"
           />
@@ -743,14 +816,21 @@ export function DriverDashboard() {
                   Mapa inicial
                 </button>
               ) : null}
-              <button
-                type="button"
-                data-testid="driver-open-menu"
-                onClick={() => setMenuOpen((v) => !v)}
-                className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-              >
-                {menuOpen ? 'Fechar menu' : 'Menu'}
-              </button>
+              {!driverBottomNav ? (
+                <button
+                  type="button"
+                  data-testid="driver-open-menu"
+                  onClick={() => {
+                    setMenuOpen((v) => {
+                      const next = !v
+                      return next
+                    })
+                  }}
+                  className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+                >
+                  {menuOpen ? 'Fechar menu' : 'Menu'}
+                </button>
+              ) : null}
             </div>
           </header>
 
@@ -845,22 +925,15 @@ export function DriverDashboard() {
 
       <div className="space-y-4 transition-opacity duration-150">
         {!activeTripId ? (
-          <Toggle
-            label="Estado"
-            checked={!offline}
-            onChange={(checked) => {
-              if (checked && driverDocsGateEnabled && !isDriverDocumentsReady(driverDocuments)) {
-                setToast('Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.')
-                addLog('Bloqueado: documentos obrigatórios em falta', 'error')
-                return
-              }
-              setOffline(!checked)
-              addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
-              setStatus(checked ? 'Disponível' : 'Offline')
-            }}
-            onLabel="Disponível"
-            offLabel="Offline"
-          />
+          driverBottomNav && !offline ? null : (
+            <Toggle
+              label="Estado"
+              checked={!offline}
+              onChange={handleDriverAvailabilityChange}
+              onLabel="Disponível"
+              offLabel="Offline"
+            />
+          )
         ) : null}
 
         {toast && (
@@ -912,6 +985,11 @@ export function DriverDashboard() {
               activeTripId || (available && available.length > 0) ? 'subdued' : 'emphasized'
             }
             compactHeight={compactDriverSurface}
+            overlay={
+              driverBottomNav && !activeTripId ? (
+                <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+              ) : undefined
+            }
           />
         )}
 
@@ -1046,7 +1124,7 @@ export function DriverDashboard() {
           </section>
         )}
 
-        {token ? <BetaAccountPanel /> : null}
+        {token && !driverBottomNav ? <BetaAccountPanel /> : null}
       </div>
         </>
       )}
@@ -1484,17 +1562,7 @@ function DriverOperationsMenu({
         </div>
       </div>
 
-      <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm">
-        <summary className="cursor-pointer font-medium text-foreground select-none">
-          Preços nos pedidos (estimativa)
-        </summary>
-        <p className="mt-2 text-xs text-foreground/85 leading-snug">
-          O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no
-          fim da viagem.
-        </p>
-      </details>
-
-      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+      <div id="driver-menu-earnings" className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <p className="text-sm font-medium text-foreground">Rendimentos</p>
         <p className="text-xs text-muted-foreground">Totais operacionais (estimativa) por semana.</p>
         <div className="grid grid-cols-2 gap-2">
@@ -1514,6 +1582,127 @@ function DriverOperationsMenu({
           </p>
         ) : null}
       </div>
+
+      <div id="driver-menu-trips" className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-sm font-medium text-foreground">Viagens</p>
+          {history && history.length > 0 ? (
+            <p className="text-[11px] text-muted-foreground shrink-0">
+              {Math.min(historyVisible, history.length)} de {history.length}
+            </p>
+          ) : null}
+        </div>
+        {history && history.length > 0 ? (
+          <>
+            <ul className="space-y-2 max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain pr-0.5">
+              {history.slice(0, historyVisible).map((t) => (
+                <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <p className="text-xs font-medium text-foreground truncate">
+                        #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
+                      </p>
+                      <p
+                        className="text-[11px] text-foreground/75 truncate"
+                        title={`${formatPickup(t.origin_lat, t.origin_lng)} → ${formatDestination(t.destination_lat, t.destination_lng)}`}
+                      >
+                        {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                        {formatDestination(t.destination_lat, t.destination_lng)}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {t.completed_at
+                          ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
+                          : t.status === 'completed'
+                            ? 'Data de conclusão indisponível'
+                            : 'Viagem ainda não concluída neste resumo'}
+                      </p>
+                      <p className="text-[11px] text-foreground/85">
+                        {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onReportIncident(t.trip_id)}
+                      className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                    >
+                      Reportar
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryDetailTripId(t.trip_id)}
+                    className="mt-2 min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                  >
+                    Ver detalhe
+                  </button>
+                </li>
+              ))}
+            </ul>
+            {history.length > historyVisible ? (
+              <button
+                type="button"
+                className="w-full min-h-[40px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                onClick={() => setHistoryVisible((n) => Math.min(n + 5, history.length))}
+              >
+                Mostrar mais
+              </button>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
+        )}
+      </div>
+
+      <div
+        id="driver-menu-inbox"
+        className="rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+        data-testid="driver-menu-inbox"
+      >
+        <p className="text-sm font-medium text-foreground">Caixa de entrada</p>
+        <p className="text-xs text-muted-foreground leading-snug">
+          Ainda sem avisos do partner nesta versão. Quando a operação enviar avisos, aparecem aqui.
+        </p>
+        <button
+          type="button"
+          data-testid="driver-menu-open-activity-log"
+          onClick={() => {
+            onCloseMenu()
+            window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
+          }}
+          className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+        >
+          Ver registo de atividade
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          data-testid="driver-menu-open-account"
+          onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))}
+          className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+        >
+          Conta (perfil)
+        </button>
+        <button
+          type="button"
+          data-testid="driver-menu-open-settings"
+          onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))}
+          className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+        >
+          Definições
+        </button>
+      </div>
+
+      <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm">
+        <summary className="cursor-pointer font-medium text-foreground select-none">
+          Preços nos pedidos (estimativa)
+        </summary>
+        <p className="mt-2 text-xs text-foreground/85 leading-snug">
+          O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no
+          fim da viagem.
+        </p>
+      </details>
 
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <div className="flex items-baseline justify-between gap-2">
@@ -1701,9 +1890,28 @@ function DriverOperationsMenu({
             </button>
           </div>
         ) : zoneBudget && zoneBudget.remaining <= 0 ? (
-          <p className="text-xs text-muted-foreground">
-            Limite diário atingido. Amanhã volta a haver vagas ou pede ao teu partner uma excepção.
-          </p>
+          <div
+            className="rounded-lg border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2"
+            data-testid="driver-zones-budget-exhausted"
+          >
+            <p className="text-sm font-semibold text-foreground">Orçamento de mudanças esgotado hoje</p>
+            <p className="text-xs text-foreground/85 leading-snug">
+              Não é possível abrir um novo pedido automático até ao reset (meia-noite Lisboa) ou até o partner
+              autorizar uma excepção. Usa o <strong>canal habitual da operação</strong> se precisares de entrar
+              numa zona extra hoje — em breve poderás enviar esse pedido também aqui.
+            </p>
+            <button
+              type="button"
+              data-testid="driver-zones-budget-exhausted-activity"
+              onClick={() => {
+                onCloseMenu()
+                window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
+              }}
+              className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+            >
+              Abrir registo de atividade
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -1865,73 +2073,6 @@ function DriverOperationsMenu({
             </Link>
           </Button>
         ) : null}
-      </div>
-
-      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm font-medium text-foreground">Histórico de viagens</p>
-          {history && history.length > 0 ? (
-            <p className="text-[11px] text-muted-foreground shrink-0">
-              {Math.min(historyVisible, history.length)} de {history.length}
-            </p>
-          ) : null}
-        </div>
-        {history && history.length > 0 ? (
-          <>
-            <ul className="space-y-2 max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain pr-0.5">
-              {history.slice(0, historyVisible).map((t) => (
-                <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <p className="text-xs font-medium text-foreground truncate">
-                        #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
-                      </p>
-                      <p className="text-[11px] text-foreground/75 truncate" title={`${formatPickup(t.origin_lat, t.origin_lng)} → ${formatDestination(t.destination_lat, t.destination_lng)}`}>
-                        {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                        {formatDestination(t.destination_lat, t.destination_lng)}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {t.completed_at
-                          ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
-                          : t.status === 'completed'
-                            ? 'Data de conclusão indisponível'
-                            : 'Viagem ainda não concluída neste resumo'}
-                      </p>
-                      <p className="text-[11px] text-foreground/85">
-                        {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => onReportIncident(t.trip_id)}
-                      className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-                    >
-                      Reportar
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setHistoryDetailTripId(t.trip_id)}
-                    className="mt-2 min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-                  >
-                    Ver detalhe
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {history.length > historyVisible ? (
-              <button
-                type="button"
-                className="w-full min-h-[40px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-                onClick={() => setHistoryVisible((n) => Math.min(n + 5, history.length))}
-              >
-                Mostrar mais
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
-        )}
       </div>
 
       <Dialog
