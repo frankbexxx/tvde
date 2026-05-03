@@ -4,6 +4,14 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-05-02 (noite) — shell motorista + Render
+
+- **`main`:** merge do shell Top 3 / §9 (barra inferior, mapa offline, strip §9.5, dois passos, menu §10, CTAs). Detalhe: `TODOdoDIA.md` painel **2026-05-02 noite**.
+- **Render (app estática):** `VITE_DRIVER_BOTTOM_NAV=true` e `VITE_DRIVER_HOME_TWO_STEP=true` + **rebuild** para a UI entrar no bundle.
+- **Próxima abertura (2026-05-03 manhã):** smokes + prints (lista guardada; Firefox + Vivaldi incógnito; **um trilho** na app deployada). Experimentação informal desta noite: **OK / muito bom**.
+
+---
+
 ## Fecho 2026-04-24 noite (sexta, D-1) — smoke real sucesso + produção pronta
 
 ### TVDE — código S1/S2 fechado e validado em produção
