@@ -158,6 +158,22 @@ function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void })
   )
 }
 
+/** §9.2 — com barra inferior, mapa em fundo mesmo offline; toque passa a disponível (mesmas regras que o toggle). */
+function DriverMapOfflinePill({ onGoOnline }: { onGoOnline: () => void }) {
+  return (
+    <button
+      type="button"
+      data-testid="driver-map-offline-pill"
+      onClick={onGoOnline}
+      aria-label="Estás offline. Toca para ficares disponível."
+      className="flex min-h-[48px] max-w-[18rem] items-center justify-center gap-2 rounded-full border border-border/90 bg-background/95 px-4 py-2 text-center text-sm font-semibold text-foreground shadow-lg backdrop-blur-sm touch-manipulation hover:bg-background"
+    >
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
+      <span className="leading-snug">Offline — tocar para disponível</span>
+    </button>
+  )
+}
+
 /** P25: detalhe mínimo até o GET /driver/trips/:id alinhar após aceitar. */
 function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatus): TripDetailResponse {
   const now = new Date().toISOString()
@@ -338,6 +354,12 @@ export function DriverDashboard() {
 
   const [serverLoc, setServerLoc] = useState<{ lat: number; lng: number; timestamp: number } | null>(null)
   const [serverLocErr, setServerLocErr] = useState<{ status?: number; detail?: string } | null>(null)
+  /** GPS → última posição servidor → mapa centrado na região (§9.2). */
+  const mapDotLatLng = useMemo(() => {
+    if (driverLocation) return driverLocation
+    if (serverLoc) return { lat: serverLoc.lat, lng: serverLoc.lng }
+    return undefined
+  }, [driverLocation, serverLoc])
   useEffect(() => {
     if (offline || !token) return
     let cancelled = false
@@ -925,7 +947,7 @@ export function DriverDashboard() {
 
       <div className="space-y-4 transition-opacity duration-150">
         {!activeTripId ? (
-          driverBottomNav && !offline ? null : (
+          driverBottomNav ? null : (
             <Toggle
               label="Estado"
               checked={!offline}
@@ -970,9 +992,9 @@ export function DriverDashboard() {
           </p>
         )}
 
-        {!offline && (
+        {(!offline || (driverBottomNav && !activeTripId)) && (
           <MapView
-            driverLocation={driverLocation ?? undefined}
+            driverLocation={mapDotLatLng}
             route={
               import.meta.env.DEV &&
               isMockLocationModeEnabled() &&
@@ -982,18 +1004,26 @@ export function DriverDashboard() {
                 : undefined
             }
             mapVisualWeight={
-              activeTripId || (available && available.length > 0) ? 'subdued' : 'emphasized'
+              offline && driverBottomNav && !activeTripId
+                ? 'subdued'
+                : activeTripId || (available && available.length > 0)
+                  ? 'subdued'
+                  : 'emphasized'
             }
             compactHeight={compactDriverSurface}
             overlay={
               driverBottomNav && !activeTripId ? (
-                <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+                offline ? (
+                  <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
+                ) : (
+                  <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+                )
               ) : undefined
             }
           />
         )}
 
-        {offline && (
+        {offline && !(driverBottomNav && !activeTripId) && (
           <div className="py-12 text-center">
             <p className="text-foreground/85 text-lg">Estás offline.</p>
             <p className="text-foreground/75 mt-2">Ativa a disponibilidade para receber viagens.</p>
