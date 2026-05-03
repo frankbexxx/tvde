@@ -6,6 +6,27 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Painel rápido da sessão (2026-05-02 noite) — fechado
+
+_Fecho após merge do **shell motorista** (barra inferior, mapa offline §9.2, pills §9.4, strip §9.5, dois passos + passo 1 alinhados). **App Render** com `VITE_DRIVER_BOTTOM_NAV` + `VITE_DRIVER_HOME_TWO_STEP` = `true` (rebuild); experimentação manual **muito boa** — **smokes formais + prints** ficam para **2026-05-03 manhã** (lista guardada; Firefox + Vivaldi incógnito, **um trilho** na app deployada)._
+
+### Feito nesta sessão / vaga (já em `main`)
+
+- [x] [CÓDIGO] Shell motorista — barra inferior, eventos Conta/Definições/Registo, menu §10, CTA zonas esgotadas, E2E `openDriverMenu`, mapa offline + pills, `DriverShellTopChips`, passo 1 com barra inferior.
+- [x] [OPS] Render app — flags acima na build estática; teste = **só o que se vê na app** (sem ramos paralelos de checklist).
+
+### Manhã 2026-05-03 (primeiro bloco)
+
+- [ ] [OPS] **Smokes + prints** — lista Frank; mesma URL Render; pasta `smokes/…` (ou equivalente).
+- [ ] [OPS] `npm run build` no `web-app` se após smokes quiserem confirmação extra.
+
+### Rasto (não esquecer)
+
+- [ ] [DOCS] **Top 3 menu** — ranking final Manel quando chegar resposta.
+- [ ] [OPS] **Auditoria projecto** — `docs/audit/PROJECT_AUDIT_2026-05-02.md` na primeira abertura do dia em que for o foco.
+
+---
+
 ## Painel rápido da sessão (2026-05-02) — fechado (smokes 2026-05-03)
 
 _Série de smokes curtos concluída; `npm run build` no `web-app` OK._

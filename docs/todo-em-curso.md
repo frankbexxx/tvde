@@ -7,7 +7,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 ## Agora (foco único)
 
 - [x] Regra **2 zonas** confirmada com Manel (pernadas no caminho **não** consomem uso; consumo na 1.ª **completed** na zona-alvo) — ver `docs/product/DRIVER_MENU_SPEC.md` + `docs/research/driver-app-benchmarks.md`.
-- [ ] **Top 3 Manel** — especificação canónica em [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md); fluxo **dois passos** com `VITE_DRIVER_HOME_TWO_STEP` em `main`; polish contínuo (ver `DRIVER_MENU_SPEC.md` §7.4 / §7.8).
+- [ ] **Top 3 Manel** — spec em [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md); **shell web** (barra inferior, §9.2–9.5, dois passos, menu §10) **em `main`** + flags na app Render; **próximo:** smokes+prints 2026-05-03 manhã; ranking final Manel quando houver; polish `DRIVER_MENU_SPEC.md` §7.4 / §7.8.
 - [x] Contrato técnico v1 definido em `docs/product/DRIVER_MENU_SPEC.md` (zona dinâmica + exceções + budget diário).
 - [x] Linha rotacional no topo (`AppHeaderBar`, hints estáticos — v1).
 - [x] Spec menu motorista: `docs/product/DRIVER_MENU_SPEC.md`.
