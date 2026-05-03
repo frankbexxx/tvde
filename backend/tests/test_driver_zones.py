@@ -21,7 +21,6 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.services.driver_zones import (
-    approve_zone_session_extension,
     create_zone_session,
     expire_open_zone_sessions_past_deadline,
     maybe_consume_zone_session_on_trip_complete,
