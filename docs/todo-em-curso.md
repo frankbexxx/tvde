@@ -12,7 +12,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] Linha rotacional no topo (`AppHeaderBar`, hints estáticos — v1).
 - [x] Spec menu motorista: `docs/product/DRIVER_MENU_SPEC.md`.
 - [x] Categorias: copy no menu + label PT; integração GET/PATCH já existente — evolução depende de regras de negócio.
-- [x] **Zonas v1 núcleo em `main`** — API budget/sessions, consumo na 1.ª viagem concluída após «cheguei», menu web + `GET /sessions/open` (#211–#213). **Também em `main`:** expiração `deadline_at`, `GET /catalog`, `ops_note_pt` (LIS). _Fase seguinte: extensão partner, **geo** por `zone_id`._
+- [x] **Zonas v1 núcleo em `main`** — API budget/sessions, consumo na 1.ª viagem concluída após «cheguei», menu web + `GET /sessions/open` (#211–#213). **Também em `main`:** expiração `deadline_at`, `GET /catalog`, `ops_note_pt` (LIS), **pedido + aprovação de extensão de prazo** (driver + partner, merge 2026-05-03). _Ainda em aberto:_ **geo** por `zone_id`, orçamento extra >2/dia via partner (se aplicável)._
 
 ---
 
@@ -29,8 +29,8 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 - [ ] **Auditoria projecto (agente)** — ler [`docs/audit/PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md) na **primeira** abertura do dia (output externo; **não** para hoje).
 - [x] [OPS] **Smokes curtos em série** — `TODOdoDIA.md` painel **2026-05-02** fechado 2026-05-03 (nav + P1–P5 §7.8 + build).
-- [ ] Spec técnica mínima **portagens** (ou primeira fatia de implementação).
-- [ ] **Zonas v1 — fase 2** — extensão partner, job expiração, catálogo `zone_id` (conforme §7 `DRIVER_MENU_SPEC.md`).
+- [x] [DOCS] **Portagens** — spec mínima em [`docs/product/PORTAGENS_SPEC.md`](product/PORTAGENS_SPEC.md) (merge `main` 2026-05-03).
+- [x] [CÓDIGO] **Zonas v1 — extensão de prazo (partner)** — merge `main` 2026-05-03; **pendente** na mesma linha: geo `zone_id`, políticas extra-orçamento.
 - [x] Menu motorista — detalhe de viagem em modal com ação de ocorrência (histórico com percurso + «Mostrar mais»).
 - [x] Categorias + «dois destinos por dia» — contrato + implementação v1 núcleo em `main`.
 - [ ] Linha rotacional v2 (mais mensagens ou dados internos da app, ainda sem APIs externas).
@@ -45,4 +45,4 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-_Última revisão: 2026-05-03 (smokes curtos + §7.8 P1–P5 + preferência navegação validados; merge `main` anterior em 2026-05-02)._
+_Última revisão: 2026-05-03 (merge `main` com portagens spec + extensão zonas; smokes §7.8 já validados)._
