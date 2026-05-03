@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,6 +23,10 @@ import { useActiveTrip } from "@/context/ActiveTripContext"
 import { useDevToolsCallbacks } from "@/context/DevToolsCallbackContext"
 import { ActivityPanel } from "@/components/ActivityPanel"
 import { DevTools } from "@/features/shared/DevTools"
+import {
+  DRIVER_OPEN_ACTIVITY_LOG_EVENT,
+  DRIVER_OPEN_SETTINGS_EVENT,
+} from "@/features/driver/driverShellEvents"
 
 type ConfigView = "main" | "logs"
 
@@ -30,6 +34,23 @@ export function SettingsButton() {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<ConfigView>("main")
   const isMobile = useMediaQuery("(max-width: 639px)")
+
+  useEffect(() => {
+    const onOpen = () => {
+      setView("main")
+      setOpen(true)
+    }
+    const onOpenActivity = () => {
+      setView("logs")
+      setOpen(true)
+    }
+    window.addEventListener(DRIVER_OPEN_SETTINGS_EVENT, onOpen)
+    window.addEventListener(DRIVER_OPEN_ACTIVITY_LOG_EVENT, onOpenActivity)
+    return () => {
+      window.removeEventListener(DRIVER_OPEN_SETTINGS_EVENT, onOpen)
+      window.removeEventListener(DRIVER_OPEN_ACTIVITY_LOG_EVENT, onOpenActivity)
+    }
+  }, [])
   const { appRouteRole, setAppRouteRole, isAdmin, sessionRole } = useAuth()
   const navigate = useNavigate()
   const { passengerActiveTripId } = useActiveTrip()

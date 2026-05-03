@@ -363,7 +363,11 @@ export function MapView({
         {supportOverlay}
       </div>
 
-      {overlay && <div className="pointer-events-none absolute inset-0 z-[2]">{overlay}</div>}
+      {overlay ? (
+        <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center px-3">
+          <div className="pointer-events-auto max-w-[min(100%,20rem)]">{overlay}</div>
+        </div>
+      ) : null}
     </div>
   )
 }

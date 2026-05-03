@@ -1,4 +1,11 @@
-import { test, expect, type APIRequestContext, type Browser, type Dialog } from '@playwright/test'
+import {
+  test,
+  expect,
+  type APIRequestContext,
+  type Browser,
+  type Dialog,
+  type Page,
+} from '@playwright/test'
 import {
   attachFailureArtifactsIfNeeded,
   resetFailureArtifactState,
@@ -18,6 +25,16 @@ const sec = (s: number) => s * 1000
 
 /** Intervalos de poll (ms). */
 const pollLook = [300, 600, 1200, 2000]
+
+/** Menu do motorista: cabeçalho ou barra inferior (`VITE_DRIVER_BOTTOM_NAV`). */
+async function openDriverMenu(page: Page) {
+  const bottom = page.locator('[data-testid="driver-bottom-nav-menu"]')
+  if ((await bottom.count()) > 0 && (await bottom.first().isVisible())) {
+    await bottom.first().click()
+    return
+  }
+  await page.getByTestId('driver-open-menu').click()
+}
 
 async function createTripWithRateLimitRetry(
   request: APIRequestContext,
@@ -305,10 +322,10 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const driverPage = await driverCtx.newPage()
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
 
-    await driverPage.getByTestId('driver-open-menu').click()
+    await openDriverMenu(driverPage)
     await driverPage.getByTestId('driver-nav-pref-google').click()
     await driverPage.reload({ waitUntil: 'domcontentloaded' })
-    await driverPage.getByTestId('driver-open-menu').click()
+    await openDriverMenu(driverPage)
     await expect(driverPage.getByTestId('driver-nav-pref-google')).toBeVisible()
 
     // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
