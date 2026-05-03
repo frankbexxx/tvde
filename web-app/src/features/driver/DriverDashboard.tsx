@@ -115,6 +115,7 @@ import {
   DRIVER_OPEN_SETTINGS_EVENT,
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
+import { DriverShellTopChips } from './DriverShellTopChips'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 const DRIVER_INCIDENT_TYPES = [
@@ -770,7 +771,7 @@ export function DriverDashboard() {
           data-testid="driver-home-step1"
         >
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs font-medium text-muted-foreground leading-snug">
+            <p className="min-w-0 flex-1 text-xs font-medium text-muted-foreground leading-snug">
               Mapa e disponibilidade primeiro; depois vês pedidos e o ecrã completo.
             </p>
             {!driverBottomNav ? (
@@ -784,17 +785,22 @@ export function DriverDashboard() {
               </button>
             ) : null}
           </div>
-          <Toggle
-            label="Estado"
-            checked={!offline}
-            onChange={handleDriverAvailabilityChange}
-            onLabel="Disponível"
-            offLabel="Offline"
-          />
-          {!offline && (
+          {driverBottomNav ? (
+            <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
+          ) : null}
+          {!driverBottomNav ? (
+            <Toggle
+              label="Estado"
+              checked={!offline}
+              onChange={handleDriverAvailabilityChange}
+              onLabel="Disponível"
+              offLabel="Offline"
+            />
+          ) : null}
+          {(!offline || driverBottomNav) && (
             <div className="min-h-[min(52vh,24rem)] rounded-xl border border-border overflow-hidden">
               <MapView
-                driverLocation={driverLocation ?? undefined}
+                driverLocation={mapDotLatLng}
                 route={
                   import.meta.env.DEV &&
                   isMockLocationModeEnabled() &&
@@ -803,12 +809,21 @@ export function DriverDashboard() {
                     ? mockStableRouteEndpoints
                     : undefined
                 }
-                mapVisualWeight="emphasized"
+                mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                 compactHeight={false}
+                overlay={
+                  driverBottomNav ? (
+                    offline ? (
+                      <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
+                    ) : (
+                      <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+                    )
+                  ) : undefined
+                }
               />
             </div>
           )}
-          {offline && (
+          {offline && !driverBottomNav && (
             <div className="py-8 text-center rounded-xl border border-border">
               <p className="text-foreground/85 text-base">Estás offline.</p>
               <p className="text-foreground/75 mt-2 text-sm">Activa a disponibilidade para veres o mapa.</p>
@@ -826,8 +841,13 @@ export function DriverDashboard() {
         </div>
       ) : (
         <>
-          <header className="mb-4 flex items-start justify-end gap-3">
-            <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <header
+            className={`mb-4 flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
+          >
+            {driverBottomNav ? (
+              <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
+            ) : null}
+            <div className={`flex flex-col items-end gap-1.5 shrink-0 ${driverBottomNav ? '' : 'ml-auto'}`}>
               {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
                 <button
                   type="button"
