@@ -85,7 +85,7 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 7. [ ] Regra de zonas «2 por dia»: fechar modelo de zona/reset/exceções e implementar política.
 8. [ ] Menu MVP: «top 3» Manel — **especificado** em [`DRIVER_HOME_TOP3_MANEL.md`](DRIVER_HOME_TOP3_MANEL.md) (esboço 2026-05); implementação UI por fatias com feature-flag quando arrancar código.
 
-**Pós-reunião Manel (2026-05-01) — fora do menu imediato, documentado em** [`docs/research/driver-app-benchmarks.md`](../research/driver-app-benchmarks.md)**:** QR Driver/Passenger; portagens (dois percursos, preferências, recálculo contínuo — TODO técnico); tiers tipo Pro (Diamond/Silver/Gold); lista de viagens rica + retenção 2 anos; registo criminal 3/3 meses; fila aeroporto Lisboa como referência operacional.
+**Pós-reunião Manel (2026-05-01) — fora do menu imediato, documentado em** [`docs/research/driver-app-benchmarks.md`](../research/driver-app-benchmarks.md)**:** QR Driver/Passenger; **portagens** — spec técnica mínima em [`PORTAGENS_SPEC.md`](PORTAGENS_SPEC.md); tiers tipo Pro (Diamond/Silver/Gold); lista de viagens rica + retenção 2 anos; registo criminal 3/3 meses; fila aeroporto Lisboa como referência operacional.
 
 ---
 
@@ -142,10 +142,11 @@ driver_zone_session
   - cria intenção de mudança de zona (abre sessão com ETA + margem).
 - `POST /driver/zones/sessions/{id}/arrived`
   - motorista confirma entrada na zona (opcional para UX; backend pode validar por geodado no futuro).
-- `POST /driver/zones/sessions/{id}/request-extension`
-  - pede extensão com motivo.
-- `POST /partner/drivers/{driver_id}/zones/sessions/{id}/approve-extension`
-  - partner aprova segundos extra.
+- `POST /driver/zones/sessions/{id}/request-extension` ✅ *(2026-05-03)*
+  - pede extensão com motivo (`reason` 3–2000 chars); uma extensão **pendente** ou **já aprovada** por sessão → `409`.
+- `POST /partner/drivers/{driver_id}/zones/sessions/{id}/approve-extension` ✅ *(2026-05-03)*
+  - partner aprova `extra_seconds` (1…172800) e **adianta** `deadline_at`; requer `extension_requested` sem aprovação prévia.
+- **Cron / expiração:** `expire_open_zone_sessions_past_deadline` em job agregado — ver `GET /cron/jobs` / resposta `driver_zones.expired_sessions`.
 - `GET /driver/zones/budget/today`
   - devolve `used`, `max`, `remaining`, `resets_at`.
 - `GET /driver/zones/catalog`
@@ -212,4 +213,4 @@ _Opcional:_ captura do terminal ou CI com `npm run build` concluído (passo 4 do
 
 ---
 
-_Última revisão: 2026-05-02_
+_Última revisão: 2026-05-03_

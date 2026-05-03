@@ -6,27 +6,28 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel rápido da sessão (2026-05-02) — abertura
+## Painel rápido da sessão (2026-05-02) — fechado (smokes 2026-05-03)
 
-_Arranque quando deres **bom dia** — **série de smokes curtos** (um de cada vez, podes parar entre passos). PC antes das 7h é OK; não é obrigatório abrir o chat nessa janela. Fluxos que exijam concentração → preferir **após as 10h**._
+_Série de smokes curtos concluída; `npm run build` no `web-app` OK._
 
 ### Smokes curtos (ordem sugerida)
 
 1. [x] [OPS] `main` local = `origin/main`; app abre (Render ou local).
 2. [x] [OPS] **Motorista** — Menu → secção **Mudança de zona (v1)**: orçamento carrega ou erro legível (API indisponível).
 3. [x] [OPS] **Zonas** — Com API+BD: pedir zona → **Cheguei** → **Cancelar intenção** (ou fluxo mínimo que couber no tempo).
-4. [ ] [OPS] **Regressão leve** — toggle disponível/offline; preferência navegação ou histórico (1 clique). _Histórico «Mostrar mais» até 23/23 OK; falta confirmar toggle + nav se ainda não fizeste._
+4. [x] [OPS] **Regressão leve** — toggle disponível/offline (validado); **preferência navegação** Google → Waze em viagem («Recolha — Waze»); **persistência** após logout/login; histórico já OK. **`DRIVER_MENU_SPEC.md` §7.8** prints **P1–P5** confirmados (2026-05-03).
 
 ### Depois dos smokes (não bloqueia o arranque)
 
-- [ ] [DOCS ou CÓDIGO] **Portagens** — spec técnica mínima (onda própria).
-- [ ] [CÓDIGO] **Zonas v1 — fase seguinte** — extensão partner, expiração ao `deadline_at`, catálogo `zone_id`, geo quando houver dados.
+- [x] [DOCS] **Portagens** — spec mínima: `docs/product/PORTAGENS_SPEC.md` (2026-05-03).
+- [x] [CÓDIGO] **Zonas v1 — extensão prazo** — `POST …/request-extension` + `POST /partner/.../approve-extension` + UI menu; **fica pendente:** geo por `zone_id`, outras extensões partner além do prazo.
 - [ ] [DOCS] **Top 3 menu** — quando Manel enviar ranking final.
 - [ ] [PENSAR] Login social (onda dedicada).
 
 ### Opcional
 
 - [ ] [DOCS] Entrada `docs/research/` em `docs/meta/DOCS_INDEX.md`.
+- [ ] [PENSAR] **Infos motorista no menu** — com o tempo, deslocar copy densa (rendimentos, zonas, preços estimativa, etc.) para **help / docs / tutoriais**; menu fica acções + atalhos. **Não** é prioridade nesta onda.
 
 ---
 

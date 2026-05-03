@@ -19,6 +19,7 @@ from app.schemas.driver_zones import (
     DriverZoneCatalogResponse,
     DriverZoneSessionCancelRequest,
     DriverZoneSessionCreateRequest,
+    DriverZoneSessionExtensionRequest,
     DriverZoneSessionResponse,
 )
 from app.services.driver_zones import (
@@ -27,6 +28,7 @@ from app.services.driver_zones import (
     create_zone_session,
     get_open_zone_session,
     mark_session_arrived,
+    request_zone_session_extension,
     service_date_local_now,
 )
 from app.services.zone_catalog import list_zone_catalog
@@ -127,6 +129,47 @@ async def post_zone_session_arrived(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=exc.args[0],
+            ) from exc
+        raise
+    return DriverZoneSessionResponse.model_validate(sess)
+
+
+@router.post(
+    "/sessions/{session_id}/request-extension",
+    response_model=DriverZoneSessionResponse,
+)
+async def post_zone_session_request_extension(
+    session_id: uuid.UUID,
+    body: DriverZoneSessionExtensionRequest,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverZoneSessionResponse:
+    driver_id = uuid.UUID(user.user_id)
+    try:
+        sess = request_zone_session_extension(
+            db,
+            driver_id=driver_id,
+            session_id=session_id,
+            reason=body.reason,
+        )
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        code = str(exc)
+        if code == "zone_session_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=code,
+            ) from exc
+        if code == "extension_reason_too_short":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=code,
+            ) from exc
+        if code in ("extension_pending", "extension_already_used"):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=code,
             ) from exc
         raise
     return DriverZoneSessionResponse.model_validate(sess)

@@ -3,7 +3,7 @@
 Documento **canónico** para o fluxo acordado com **Manel**: substituir / preceder o layout actual do `DriverDashboard` por um **fluxo em dois ecrãs** — mapa largo + disponibilidade, depois ecrã de trabalho com **acções em baixo**.  
 Complementa [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) (menu **Menu** continua a existir para preferências, histórico, zonas v1, etc.).
 
-**Estado:** desenho alinhado em sessão (Frank + Manel); **sem implementação** nesta fase — este ficheiro guia código, prompts e métricas.
+**Estado:** desenho alinhado em sessão (Frank + Manel); existe **implementação parcial** do fluxo em dois passos (`VITE_DRIVER_HOME_TWO_STEP`); o **§9** (shell mapa + barra inferior estilo Uber/Lyft) é a **próxima camada** de produto a fechar em UX e código. **Ranking «Top 3»** de itens no menu — **aguarda** resposta final do Manel (sem bloquear entregas técnicas).
 
 ---
 
@@ -100,6 +100,52 @@ Entregável: lista de ficheiros tocados + screenshots ou notas de smoke + risco 
 
 ## 8. Referências
 
-- [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1; **§7.8** smoke UI motorista (menu no topo, GPS, copy estimativa).
+- [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1; **§7** mudanças de zona / excepção partner; **§7.8** smoke UI motorista (menu no topo, GPS, copy estimativa).
 - [`driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) — contexto competitivo; **§6** — capturas LIS (fila aeroporto / zona de espera, ref. Manel).
 - [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md) — princípios gerais de UX web.
+
+---
+
+## 9. Wireframe Manel — mapa em «background» + barra inferior (2026-05-03)
+
+Referência visual (rascunho 4×4):
+
+![Wireframe ecrã principal + ecrã mapa](../research/assets/manel-driver-wireframe-2026-05.png)
+
+### 9.1 O que **não** queremos («vazio»)
+
+- **Não** reservar uma faixa alta do ecrã só a conteúdo estático ou a um «painel vazio» quando o mapa devia dar contexto. O **mapa preenche o fundo** do shell principal; texto e controlos sobrepõem-se de forma compacta (Uber / Lyft).
+
+### 9.2 Mapa sempre visível (mesmo indisponível / GPS fraco)
+
+- O mapa permanece em **background** em **HOME** (ecrã principal).
+- Quando o motorista está **offline**, **GPS fraco** ou ainda sem posição fiável, mostrar na mesma **área aproximada** (raio da ordem de **5–10 km** — valor exacto a calibrar em UX) com **pistas úteis**: posição aproximada, última posição conhecida no servidor, ou vista centrada numa **zona do catálogo** próxima.
+- Objectivo Manel: o motorista **vê possibilidades** na região e pode **escolher uma zona próxima** para «começar» (alinhar com catálogo de zonas e fluxo de sessão em `DRIVER_MENU_SPEC.md` **§7**), em vez de um ecrã morto.
+
+### 9.3 Barra inferior fixa (alinhamento Uber / Lyft)
+
+Ordem alvo: **HOME** | **EARNINGS** | **INBOX** | **MENU** (safe-area, sempre visível no shell principal).
+
+| Tab | Comportamento |
+|-----|----------------|
+| **HOME** | Volta ao **mapa** (ecrã principal com mapa em fundo). |
+| **EARNINGS** | Rendimentos / resumo (reutilizar rotas ou conteúdo já previsto no menu; pode ser placeholder até haver ecrã dedicado). |
+| **INBOX** | Caixa de entrada / avisos (placeholder ou integração futura). |
+| **MENU** | Abre o **menu** lateral ou painel já existente (`DriverOperationsMenu` / spec §7.8). |
+
+### 9.4 GO / disponível e controlos sobre o mapa
+
+- **GO** (ou estado **activo / disponível**) fica **no centro**, **sobre o mapa**, visualmente **pequeno** (FAB ou pill), não numa gaveta separada do mapa.
+- Outros botões (ex.: atalho mapa, filtros) podem ser **pequenos overlays** no mapa, sem duplicar toda a navegação do Menu.
+
+### 9.5 Ecrã «mapa activo» — topo: ESTATUTO, DIAMOND, LUPA
+
+- **ESTATUTO** — estado operacional (offline / disponível / em viagem, etc.).
+- **DIAMOND** — tier / programa (referência competitiva; ver benchmarks §3).
+- **LUPA** — **modo destino** (filtro de direcção / destino para o motorista alinhado ao mental model tipo Uber destination filter).
+
+### 9.6 «Mais um destino» / limite de mudanças — pedido ao **partner**
+
+- Quando o orçamento diário de **mudanças de zona** estiver esgotado (ex. **2/2**), a UI **não** pode ficar só com texto morto: deve existir caminho claro para o motorista **pedir ao partner** uma **mudança extra** ou **extensão** (mensagem, formulário curto, ou deep-link para fluxo partner).
+- Regras e API alvo: `DRIVER_MENU_SPEC.md` **§7** (ex.: `POST …/request-extension`, aprovação partner, `consume_reason` / `partner_override`).
+- Até o endpoint e o painel partner estarem prontos: CTA visível + copy honesta («Enviaremos o pedido quando a função estiver activa») ou canal já usado pela operação — **evitar** sensação de «app partida».

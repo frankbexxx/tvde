@@ -38,6 +38,10 @@ export interface DriverZoneSession {
   first_completed_at?: string | null
   consume_reason?: string | null
   status: string
+  extension_requested?: boolean
+  extension_reason?: string | null
+  extension_seconds_approved?: number | null
+  approved_by_partner_user_id?: string | null
 }
 
 export async function getDriverZoneBudgetToday(token: string): Promise<DriverZoneBudgetToday> {
@@ -90,5 +94,17 @@ export async function postDriverZoneSessionCancel(
     method: 'POST',
     token,
     body: JSON.stringify({ cancel_reason: cancelReason ?? null }),
+  })
+}
+
+export async function postDriverZoneSessionRequestExtension(
+  token: string,
+  sessionId: string,
+  reason: string,
+): Promise<DriverZoneSession> {
+  return apiFetch<DriverZoneSession>(`/driver/zones/sessions/${sessionId}/request-extension`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ reason }),
   })
 }

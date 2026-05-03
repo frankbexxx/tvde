@@ -29,6 +29,7 @@ import {
   getDriverZoneCatalog,
   postDriverZoneSessionArrived,
   postDriverZoneSessionCancel,
+  postDriverZoneSessionRequestExtension,
   type DriverZoneBudgetToday,
   type DriverZoneCatalogItem,
   type DriverZoneSession,
@@ -1289,6 +1290,7 @@ function DriverOperationsMenu({
   const [zoneNewZoneId, setZoneNewZoneId] = useState('portimao')
   const [zoneEtaMinutes, setZoneEtaMinutes] = useState(30)
   const [zoneMarginPct, setZoneMarginPct] = useState(25)
+  const [zoneExtensionReason, setZoneExtensionReason] = useState('')
 
   const reloadZones = useCallback(async (showTapFeedback?: boolean) => {
     if (!token) {
@@ -1416,8 +1418,33 @@ function DriverOperationsMenu({
     try {
       await postDriverZoneSessionCancel(token, zoneSession.id, null)
       setZoneSession(null)
+      setZoneExtensionReason('')
       setZoneBudget(await getDriverZoneBudgetToday(token))
       sonnerToast.success('Pedido cancelado.')
+    } catch (e) {
+      const detail =
+        e !== null && typeof e === 'object' && 'detail' in e
+          ? String((e as { detail: unknown }).detail)
+          : 'Erro'
+      sonnerToast.error(detail)
+    } finally {
+      setZoneBusy(false)
+    }
+  }
+
+  const handleZoneRequestExtension = async () => {
+    if (!token || !zoneSession || zoneBusy) return
+    const reason = zoneExtensionReason.trim()
+    if (reason.length < 3) {
+      sonnerToast.error('Explica o motivo em pelo menos 3 caracteres.')
+      return
+    }
+    setZoneBusy(true)
+    try {
+      const s = await postDriverZoneSessionRequestExtension(token, zoneSession.id, reason)
+      setZoneSession(s)
+      setZoneExtensionReason('')
+      sonnerToast.success('Pedido de mais tempo enviado ao partner.')
     } catch (e) {
       const detail =
         e !== null && typeof e === 'object' && 'detail' in e
@@ -1561,6 +1588,44 @@ function DriverOperationsMenu({
                 Cancelar intenção
               </button>
             </div>
+            {zoneSession.status === 'open' && zoneSession.extension_seconds_approved == null ? (
+              zoneSession.extension_requested ? (
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Pedido de mais tempo enviado ao partner. Quando for aceite, o prazo (acima) actualiza
+                  automaticamente.
+                </p>
+              ) : (
+                <div className="space-y-1.5 pt-1 border-t border-border/60">
+                  <label className="block text-[11px] text-muted-foreground" htmlFor="driver-zone-ext-reason">
+                    Pedir mais tempo (bloqueio, fila, etc.)
+                  </label>
+                  <textarea
+                    id="driver-zone-ext-reason"
+                    value={zoneExtensionReason}
+                    onChange={(ev) => setZoneExtensionReason(ev.target.value)}
+                    rows={2}
+                    maxLength={2000}
+                    placeholder="Ex.: Acidente na A5; preciso de mais 15 min para chegar."
+                    className="w-full min-h-[44px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                  />
+                  <button
+                    type="button"
+                    data-testid="driver-zones-request-extension"
+                    onClick={() => void handleZoneRequestExtension()}
+                    disabled={zoneBusy}
+                    className="min-h-[40px] rounded-lg border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                  >
+                    Pedir mais tempo ao partner
+                  </button>
+                </div>
+              )
+            ) : null}
+            {zoneSession.extension_seconds_approved != null && zoneSession.extension_seconds_approved > 0 ? (
+              <p className="text-[11px] text-foreground/90">
+                Partner concedeu +{Math.max(1, Math.round(zoneSession.extension_seconds_approved / 60))} min ao
+                prazo de entrada.
+              </p>
+            ) : null}
           </div>
         ) : zoneBudget && zoneBudget.remaining > 0 ? (
           <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">

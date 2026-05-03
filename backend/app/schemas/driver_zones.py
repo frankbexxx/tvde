@@ -38,12 +38,24 @@ class DriverZoneSessionResponse(BaseModel):
     first_completed_at: datetime | None = None
     consume_reason: str | None = None
     status: str
+    extension_requested: bool = False
+    extension_reason: str | None = None
+    extension_seconds_approved: int | None = None
+    approved_by_partner_user_id: uuid.UUID | None = None
 
     model_config = {"from_attributes": True}
 
 
 class DriverZoneSessionCancelRequest(BaseModel):
     cancel_reason: str | None = Field(default=None, max_length=2000)
+
+
+class DriverZoneSessionExtensionRequest(BaseModel):
+    reason: str = Field(..., min_length=3, max_length=2000)
+
+
+class PartnerZoneSessionApproveExtensionRequest(BaseModel):
+    extra_seconds: int = Field(..., gt=0, le=86400 * 2)
 
 
 class DriverZoneCatalogItem(BaseModel):

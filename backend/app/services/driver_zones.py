@@ -17,6 +17,7 @@ from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.trip import Trip
 from app.models.enums import TripStatus
+from app.services.partner_queries import get_driver_for_partner
 from app.utils.logging import log_event
 
 ZONE_TZ = ZoneInfo("Europe/Lisbon")
@@ -249,6 +250,105 @@ def maybe_consume_zone_session_on_trip_complete(
     sess.status = "consumed"
     service_day = sess.started_at.astimezone(ZONE_TZ).date()
     _increment_day_budget_used(db, driver_id=driver_id, service_date=service_day)
+
+
+def request_zone_session_extension(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    session_id: uuid.UUID,
+    reason: str,
+) -> DriverZoneSession:
+    """Driver asks partner for more time before ``deadline_at`` (v1).
+
+    Sets ``extension_requested`` + ``extension_reason``. Partner approves via
+    ``approve_zone_session_extension`` which extends ``deadline_at``.
+    """
+    text = (reason or "").strip()
+    if len(text) < 3:
+        raise ValueError("extension_reason_too_short")
+
+    sess = (
+        db.execute(
+            select(DriverZoneSession)
+            .where(
+                and_(
+                    DriverZoneSession.id == session_id,
+                    DriverZoneSession.driver_id == driver_id,
+                    DriverZoneSession.status == "open",
+                )
+            )
+            .with_for_update()
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if sess is None:
+        raise ValueError("zone_session_not_found")
+    if sess.extension_requested and sess.extension_seconds_approved is None:
+        raise ValueError("extension_pending")
+    if sess.extension_seconds_approved is not None:
+        raise ValueError("extension_already_used")
+    sess.extension_requested = True
+    sess.extension_reason = text[:2000]
+    log_event(
+        "driver_zone_session_extension_requested",
+        session_id=str(sess.id),
+        driver_id=str(driver_id),
+    )
+    return sess
+
+
+def approve_zone_session_extension(
+    db: Session,
+    *,
+    partner_id: str,
+    driver_user_id: uuid.UUID,
+    session_id: uuid.UUID,
+    extra_seconds: int,
+    partner_actor_user_id: uuid.UUID,
+) -> DriverZoneSession:
+    """Partner approves extra seconds; extends ``deadline_at`` (v1, once per session)."""
+    if extra_seconds <= 0 or extra_seconds > 86400 * 2:
+        raise ValueError("extension_extra_seconds_invalid")
+
+    drv = get_driver_for_partner(db, partner_id, driver_user_id)
+    if drv is None:
+        raise ValueError("driver_not_found_for_partner")
+
+    sess = (
+        db.execute(
+            select(DriverZoneSession)
+            .where(
+                and_(
+                    DriverZoneSession.id == session_id,
+                    DriverZoneSession.driver_id == driver_user_id,
+                    DriverZoneSession.status == "open",
+                )
+            )
+            .with_for_update()
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if sess is None:
+        raise ValueError("zone_session_not_found")
+    if not sess.extension_requested:
+        raise ValueError("extension_not_requested")
+    if sess.extension_seconds_approved is not None:
+        raise ValueError("extension_already_approved")
+
+    sess.extension_seconds_approved = int(extra_seconds)
+    sess.approved_by_partner_user_id = partner_actor_user_id
+    sess.deadline_at = sess.deadline_at + timedelta(seconds=int(extra_seconds))
+    log_event(
+        "driver_zone_session_extension_approved",
+        session_id=str(sess.id),
+        driver_id=str(driver_user_id),
+        partner_id=partner_id,
+        extra_seconds=extra_seconds,
+    )
+    return sess
 
 
 def expire_open_zone_sessions_past_deadline(
