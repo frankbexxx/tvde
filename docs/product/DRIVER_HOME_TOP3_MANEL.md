@@ -3,7 +3,7 @@
 Documento **canónico** para o fluxo acordado com **Manel**: substituir / preceder o layout actual do `DriverDashboard` por um **fluxo em dois ecrãs** — mapa largo + disponibilidade, depois ecrã de trabalho com **acções em baixo**.  
 Complementa [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) (menu **Menu** continua a existir para preferências, histórico, zonas v1, etc.).
 
-**Estado:** desenho alinhado em sessão (Frank + Manel); existe **implementação parcial** do fluxo em dois passos (`VITE_DRIVER_HOME_TWO_STEP`); o **§9** (shell mapa + barra inferior estilo Uber/Lyft) é a **próxima camada** de produto a fechar em UX e código. **Ranking «Top 3»** de itens no menu — **aguarda** resposta final do Manel (sem bloquear entregas técnicas).
+**Estado:** desenho alinhado em sessão (Frank + Manel); existe **implementação parcial** do fluxo em dois passos (`VITE_DRIVER_HOME_TWO_STEP`); o **§9** (shell mapa + barra inferior) e o **§10** (Top 3 + ordem do menu) são a **próxima camada** de produto a fechar em UX e código. A **ordem** no §10 é **proposta canónica** até o Manel afinar; depois só se troca a ordem, não a lista de destinos.
 
 ---
 
@@ -100,6 +100,7 @@ Entregável: lista de ficheiros tocados + screenshots ou notas de smoke + risco 
 
 ## 8. Referências
 
+- **§10** — Top 3 + ordem completa do menu motorista (proposta canónica até feedback Manel).
 - [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1; **§7** mudanças de zona / excepção partner; **§7.8** smoke UI motorista (menu no topo, GPS, copy estimativa).
 - [`driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) — contexto competitivo; **§6** — capturas LIS (fila aeroporto / zona de espera, ref. Manel).
 - [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md) — princípios gerais de UX web.
@@ -149,3 +150,47 @@ Ordem alvo: **HOME** | **EARNINGS** | **INBOX** | **MENU** (safe-area, sempre vi
 - Quando o orçamento diário de **mudanças de zona** estiver esgotado (ex. **2/2**), a UI **não** pode ficar só com texto morto: deve existir caminho claro para o motorista **pedir ao partner** uma **mudança extra** ou **extensão** (mensagem, formulário curto, ou deep-link para fluxo partner).
 - Regras e API alvo: `DRIVER_MENU_SPEC.md` **§7** (ex.: `POST …/request-extension`, aprovação partner, `consume_reason` / `partner_override`).
 - Até o endpoint e o painel partner estarem prontos: CTA visível + copy honesta («Enviaremos o pedido quando a função estiver activa») ou canal já usado pela operação — **evitar** sensação de «app partida».
+
+---
+
+## 10. Top 3 + ordem do menu motorista (proposta canónica — 2026-05-03)
+
+Alinhado ao que **já existe** no código (`DriverOperationsMenu` + ícones **Conta** / **Configurações** no cabeçalho via `ProfileButton` / `SettingsButton`) e à barra inferior do **§9**.
+
+### 10.1 O que significa «Top 3» aqui
+
+Os **três destinos** que o motorista deve encontrar **sem esforço** (barra inferior **e** topo do conteúdo do Menu):
+
+| # | Destino | Racional (1 linha) |
+|---|---------|-------------------|
+| **1** | **Rendimentos (Earnings)** | Motivação e clareza financeira imediata. |
+| **2** | **Viagens** | Lista + detalhe (histórico) — o «livro de bordo» do dia. |
+| **3** | **Inbox** | Avisos do partner / sistema; hoje pode ser **placeholder** ou atalho ao registo de actividade até haver API dedicada. |
+
+Na **barra inferior** (§9.3), isso mapeia directamente: **HOME** | **EARNINGS** | **INBOX** | **MENU**.
+
+### 10.2 Ordem completa **dentro** do painel «Menu do motorista»
+
+Ordem de **scroll** sugerida (blocos / secções). **Conta** e **Definições** ficam também no cabeçalho; no menu repetimos como **atalhos** que abrem os **mesmos** fluxos já existentes (zero duplicação de lógica).
+
+1. **Cabeçalho** — título, Fechar, linha de contexto (nome / taxa cancelamento), badge rating quando existir.
+2. **Rendimentos** — semana actual / anterior (como hoje).
+3. **Viagens** — bloco actual «Histórico de viagens» (só renomear copy para **Viagens** se quiserem linguagem única com a barra).
+4. **Inbox** — secção curta: «Sem novidades» ou lista v1 + link «Ver registo de actividade» se fizer sentido.
+5. **Conta (perfil)** — atalho: abre **Conta** (BETA / palavra-passe / dados) igual ao botão perfil.
+6. **Definições** — atalho: abre **Configurações** (sheet/dialog actual).
+7. **Preços nos pedidos (estimativa)** — `<details>` (como hoje).
+8. **Mudança de zona (v1)** — orçamento, sessão, extensão (como hoje).
+9. **Navegação (preferência)** — Waze / Google (como hoje).
+10. **Categorias de veículo** — toggles (como hoje).
+11. **Documentos e licenças** — (como hoje).
+12. **Admin** — só se `isAdmin`: link painel admin (como hoje).
+
+### 10.3 O que **não** muda na primeira PR de reordenação
+
+- Contratos de API, regras de zonas, GPS, two-step: **só** reordenação de JSX / rotas de atalho e labels.
+- **EARNINGS** na barra pode abrir o menu já com **scroll** ou âncora na secção Rendimentos — decisão de implementação; o conteúdo canónico continua no Menu até haver ecrã dedicado.
+
+### 10.4 Ajuste com o Manel
+
+Quando houver ranking final: permutar linhas **2–4** (ex.: Inbox acima de Viagens) **sem** retirar Conta, Definições, Zonas, Navegação, Categorias ou Documentos da lista.
