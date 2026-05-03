@@ -10,6 +10,7 @@ Endpoint audit (tenant scope = ctx.partner_id from get_current_partner only):
 - GET /partner/trips/{trip_id}
 - GET /partner/trips/export  (CSV)
 - GET /partner/metrics
+- POST /partner/drivers/{driver_user_id}/zones/sessions/{session_id}/approve-extension
 
 No global aggregates; partner role cannot call admin-only dependencies (require_role(admin)).
 """
@@ -24,6 +25,10 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_partner, get_db
+from app.schemas.driver_zones import (
+    DriverZoneSessionResponse,
+    PartnerZoneSessionApproveExtensionRequest,
+)
 from app.schemas.partner import (
     PartnerDriverDiscoveryItem,
     PartnerDriverAvailabilityPatchRequest,
@@ -49,6 +54,7 @@ from app.services.partner_queries import (
     list_drivers_for_partner_enriched,
     list_trips_for_partner,
 )
+from app.services.driver_zones import approve_zone_session_extension
 from app.services.partner_trip_ops import partner_reassign_trip_driver
 from app.services.partners_admin import partner_metrics
 from app.utils.logging import log_event
@@ -401,6 +407,64 @@ async def partner_get_trip(
     if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _trip_item(t)
+
+
+@router.post(
+    "/drivers/{driver_user_id}/zones/sessions/{session_id}/approve-extension",
+    response_model=DriverZoneSessionResponse,
+)
+async def partner_approve_zone_session_extension(
+    driver_user_id: str,
+    session_id: str,
+    body: PartnerZoneSessionApproveExtensionRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> DriverZoneSessionResponse:
+    assert ctx.partner_id is not None
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=ctx.partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+        sid = uuid.UUID(session_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    try:
+        sess = approve_zone_session_extension(
+            db,
+            partner_id=ctx.partner_id,
+            driver_user_id=did,
+            session_id=sid,
+            extra_seconds=body.extra_seconds,
+            partner_actor_user_id=uuid.UUID(ctx.user_id),
+        )
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        code = str(exc)
+        if code in ("driver_not_found_for_partner", "zone_session_not_found"):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=code,
+            ) from exc
+        if code in (
+            "extension_not_requested",
+            "extension_already_approved",
+            "extension_extra_seconds_invalid",
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=code,
+            ) from exc
+        raise
+    return DriverZoneSessionResponse.model_validate(sess)
 
 
 @router.get("/metrics", response_model=PartnerMetricsResponse)

@@ -3,13 +3,16 @@
 import uuid
 from datetime import date, datetime, timedelta, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from zoneinfo import ZoneInfo
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.auth.security import create_access_token
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
+from app.db.models.partner import Partner
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.trip import Trip
@@ -22,6 +25,7 @@ from app.services.driver_zones import (
     expire_open_zone_sessions_past_deadline,
     maybe_consume_zone_session_on_trip_complete,
     mark_session_arrived,
+    request_zone_session_extension,
 )
 
 
@@ -481,6 +485,132 @@ def test_zone_session_open_not_found() -> None:
     finally:
         _reset_overrides()
         db.close()
+
+
+def _ensure_default_partner_row(db: Session) -> None:
+    if db.get(Partner, DEFAULT_PARTNER_UUID) is None:
+        db.add(Partner(id=DEFAULT_PARTNER_UUID, name="Default fleet"))
+        db.commit()
+
+
+def test_zone_session_request_extension_and_partner_approve() -> None:
+    db = _make_db()
+    _ensure_default_partner_row(db)
+    driver_id_str = _create_driver(db)
+    u_p = User(
+        role=Role.partner,
+        name="Zone partner mgr",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+        partner_org_id=DEFAULT_PARTNER_UUID,
+    )
+    db.add(u_p)
+    db.commit()
+    partner_user_id_str = str(u_p.id)
+    partner_tok = create_access_token(subject=partner_user_id_str, role=Role.partner.value)["token"]
+
+    _override_deps(db, UserContext(user_id=driver_id_str, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r0 = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": "faro", "eta_seconds_baseline": 400, "eta_margin_percent": 10},
+        )
+        assert r0.status_code == 201
+        sid = r0.json()["id"]
+        deadline_before = r0.json()["deadline_at"]
+
+        r_bad = client.post(
+            f"/driver/zones/sessions/{sid}/request-extension",
+            json={"reason": "no"},
+        )
+        assert r_bad.status_code == 422  # Pydantic: reason min_length=3
+
+        r1 = client.post(
+            f"/driver/zones/sessions/{sid}/request-extension",
+            json={"reason": "Bloqueio na A2, preciso de mais 10 minutos."},
+        )
+        assert r1.status_code == 200
+        d1 = r1.json()
+        assert d1["extension_requested"] is True
+        assert d1["extension_seconds_approved"] is None
+
+        r_dup = client.post(
+            f"/driver/zones/sessions/{sid}/request-extension",
+            json={"reason": "Segundo pedido não deve passar."},
+        )
+        assert r_dup.status_code == 409
+        assert r_dup.json()["detail"] == "extension_pending"
+    finally:
+        _reset_overrides()
+        db.close()
+
+    c2 = TestClient(app)
+    h = {"Authorization": f"Bearer {partner_tok}"}
+    r2 = c2.post(
+        f"/partner/drivers/{driver_id_str}/zones/sessions/{sid}/approve-extension",
+        json={"extra_seconds": 600},
+        headers=h,
+    )
+    assert r2.status_code == 200
+    d2 = r2.json()
+    assert d2["extension_seconds_approved"] == 600
+    assert d2["approved_by_partner_user_id"] == partner_user_id_str
+    assert d2["deadline_at"] != deadline_before
+
+    db = _make_db()
+    try:
+        with pytest.raises(ValueError, match="extension_already_used"):
+            request_zone_session_extension(
+                db,
+                driver_id=uuid.UUID(driver_id_str),
+                session_id=uuid.UUID(sid),
+                reason="Terceiro pedido na mesma sessão.",
+            )
+    finally:
+        db.close()
+
+
+def test_partner_approve_extension_wrong_fleet() -> None:
+    db = _make_db()
+    pid_other = uuid.uuid4()
+    db.add(Partner(id=pid_other, name="Other fleet"))
+    driver_id_str = _create_driver(db)
+    u_p = User(
+        role=Role.partner,
+        name="Wrong mgr",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+        partner_org_id=pid_other,
+    )
+    db.add(u_p)
+    db.flush()
+    sess = create_zone_session(
+        db,
+        driver_id=uuid.UUID(driver_id_str),
+        zone_id="lisboa",
+        eta_seconds_baseline=600,
+        eta_margin_percent=0,
+    )
+    request_zone_session_extension(
+        db,
+        driver_id=uuid.UUID(driver_id_str),
+        session_id=sess.id,
+        reason="Motivo válido aqui.",
+    )
+    db.commit()
+    sid = str(sess.id)
+    partner_tok = create_access_token(subject=str(u_p.id), role=Role.partner.value)["token"]
+    db.close()
+
+    c = TestClient(app)
+    r = c.post(
+        f"/partner/drivers/{driver_id_str}/zones/sessions/{sid}/approve-extension",
+        json={"extra_seconds": 120},
+        headers={"Authorization": f"Bearer {partner_tok}"},
+    )
+    assert r.status_code == 404
+    assert r.json()["detail"] == "driver_not_found_for_partner"
 
 
 def test_zone_session_open_ok() -> None:

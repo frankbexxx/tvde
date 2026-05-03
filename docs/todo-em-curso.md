@@ -28,7 +28,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 ## Amanhã (2026-05-03) — primeira sessão útil
 
 - [ ] **Auditoria projecto (agente)** — ler [`docs/audit/PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md) na **primeira** abertura do dia (output externo; **não** para hoje).
-- [ ] [OPS] **Smokes curtos em série** — ver `TODOdoDIA.md` painel **2026-05-02**: um passo de cada vez após «bom dia»; pausas entre passos; concentração para blocos longos **após 10h** se fizer falta.
+- [x] [OPS] **Smokes curtos em série** — `TODOdoDIA.md` painel **2026-05-02** fechado 2026-05-03 (nav + P1–P5 §7.8 + build).
 - [ ] Spec técnica mínima **portagens** (ou primeira fatia de implementação).
 - [ ] **Zonas v1 — fase 2** — extensão partner, job expiração, catálogo `zone_id` (conforme §7 `DRIVER_MENU_SPEC.md`).
 - [x] Menu motorista — detalhe de viagem em modal com ação de ocorrência (histórico com percurso + «Mostrar mais»).
@@ -45,4 +45,4 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-_Última revisão: 2026-05-02 (merge `main` + conflito §7.8 resolvido a favor do checklist; auditoria `docs/audit/PROJECT_AUDIT_2026-05-02.md` → primeiro item 2026-05-03)._
+_Última revisão: 2026-05-03 (smokes curtos + §7.8 P1–P5 + preferência navegação validados; merge `main` anterior em 2026-05-02)._
