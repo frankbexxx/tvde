@@ -1430,6 +1430,16 @@ function DriverHistoryTripMoney({ t }: { t: TripHistoryItem }) {
   )
 }
 
+function zoneArrivedErrorMessagePt(detail: string): string {
+  if (detail === 'driver_location_required_for_zone_arrived') {
+    return 'Sem posição GPS recente no servidor — espera uns segundos ou abre o mapa e tenta outra vez.'
+  }
+  if (detail === 'driver_outside_zone_for_arrived') {
+    return 'A tua posição está longe da zona seleccionada. Aproxima-te ou cancela e corrige o pedido.'
+  }
+  return detail
+}
+
 function formatZoneDeadlineLocal(iso: string, timeZone: string): string {
   try {
     return new Intl.DateTimeFormat('pt-PT', {
@@ -1580,6 +1590,14 @@ function DriverOperationsMenu({
     const s = raw != null && typeof raw === 'string' ? raw.trim() : ''
     return s.length > 0 ? s : null
   }, [zoneSession, zoneCatalog])
+  const activeZoneArrivedGateHint = useMemo(() => {
+    if (!zoneSession) return null
+    const hit = zoneCatalog?.find((z) => z.zone_id === zoneSession.zone_id)
+    const km = hit?.arrived_max_km
+    if (km == null || typeof km !== 'number' || Number.isNaN(km)) return null
+    const rounded = Math.max(1, Math.round(km))
+    return `O «Cheguei» usa a última posição no servidor face ao centro da zona (até ~${rounded} km). Mantém o GPS activo.`
+  }, [zoneSession, zoneCatalog])
   const zoneStateLabel =
     zoneSession == null
       ? null
@@ -1630,7 +1648,7 @@ function DriverOperationsMenu({
         e !== null && typeof e === 'object' && 'detail' in e
           ? String((e as { detail: unknown }).detail)
           : 'Erro'
-      sonnerToast.error(detail)
+      sonnerToast.error(zoneArrivedErrorMessagePt(detail))
     } finally {
       setZoneBusy(false)
     }
@@ -1917,6 +1935,11 @@ function DriverOperationsMenu({
                 data-testid="driver-zones-ops-note"
               >
                 {activeZoneOpsNotePt}
+              </p>
+            ) : null}
+            {activeZoneArrivedGateHint ? (
+              <p className="text-[11px] text-muted-foreground leading-snug" data-testid="driver-zones-arrived-gate-hint">
+                {activeZoneArrivedGateHint}
               </p>
             ) : null}
             <div className="flex flex-wrap gap-2">

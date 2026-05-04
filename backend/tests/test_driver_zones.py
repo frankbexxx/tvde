@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from app.api.deps import UserContext, get_current_user, get_db
 from app.auth.security import create_access_token
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
-from app.db.models.driver import Driver
+from app.db.models.driver import Driver, DriverLocation
 from app.db.models.partner import Partner
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
@@ -31,6 +31,16 @@ from app.services.driver_zones import (
 
 def _make_db() -> Session:
     return SessionLocal()
+
+
+def _set_driver_location(db: Session, driver_id: uuid.UUID, lat: float, lng: float) -> None:
+    loc = db.get(DriverLocation, driver_id)
+    if loc is None:
+        db.add(DriverLocation(driver_id=driver_id, lat=lat, lng=lng))
+    else:
+        loc.lat = lat
+        loc.lng = lng
+    db.commit()
 
 
 def _create_driver(db: Session) -> str:
@@ -91,6 +101,9 @@ def test_zone_catalog_lists_known_zones() -> None:
         assert lis.get("ops_note_pt")
         faro = next(z for z in data["zones"] if z["zone_id"] == "faro")
         assert faro.get("ops_note_pt") is None
+        assert faro.get("arrived_anchor_lat") is not None
+        assert faro.get("arrived_anchor_lng") is not None
+        assert faro.get("arrived_max_km") is not None
     finally:
         _reset_overrides()
         db.close()
@@ -187,6 +200,7 @@ def _create_passenger(db: Session) -> uuid.UUID:
 def test_zone_session_arrived() -> None:
     db = _make_db()
     driver_id = _create_driver(db)
+    _set_driver_location(db, uuid.UUID(driver_id), 37.1370, -8.5360)
     _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
     client = TestClient(app)
     try:
@@ -202,6 +216,68 @@ def test_zone_session_arrived() -> None:
         r2 = client.post(f"/driver/zones/sessions/{sid}/arrived")
         assert r2.status_code == 200
         assert r2.json()["arrived_at"] == r1.json()["arrived_at"]
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_zone_session_arrived_rejects_without_driver_location() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r0 = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": "faro", "eta_seconds_baseline": 600, "eta_margin_percent": 25},
+        )
+        assert r0.status_code == 201
+        sid = r0.json()["id"]
+        r1 = client.post(f"/driver/zones/sessions/{sid}/arrived")
+        assert r1.status_code == 400
+        assert r1.json()["detail"] == "driver_location_required_for_zone_arrived"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_zone_session_arrived_rejects_when_too_far_from_anchor() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    # Porto area — well outside Faro gate
+    _set_driver_location(db, uuid.UUID(driver_id), 41.1579, -8.6291)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r0 = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": "faro", "eta_seconds_baseline": 600, "eta_margin_percent": 25},
+        )
+        assert r0.status_code == 201
+        sid = r0.json()["id"]
+        r1 = client.post(f"/driver/zones/sessions/{sid}/arrived")
+        assert r1.status_code == 400
+        assert r1.json()["detail"] == "driver_outside_zone_for_arrived"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_zone_session_arrived_skips_geo_for_unknown_zone_slug() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r0 = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": "custom_partner_zone_x", "eta_seconds_baseline": 600, "eta_margin_percent": 25},
+        )
+        assert r0.status_code == 201
+        sid = r0.json()["id"]
+        r1 = client.post(f"/driver/zones/sessions/{sid}/arrived")
+        assert r1.status_code == 200
+        assert r1.json()["arrived_at"] is not None
     finally:
         _reset_overrides()
         db.close()
@@ -247,6 +323,7 @@ def test_maybe_consume_first_completed_after_arrived() -> None:
         eta_seconds_baseline=600,
         eta_margin_percent=25,
     )
+    _set_driver_location(db, driver_uuid, 37.1370, -8.5360)
     mark_session_arrived(db, driver_id=driver_uuid, session_id=sess.id)
     t_arrived = datetime(2025, 6, 1, 8, 0, 0, tzinfo=timezone.utc)
     sess.arrived_at = t_arrived
@@ -302,6 +379,7 @@ def test_maybe_consume_only_first_chronological_completed() -> None:
         eta_seconds_baseline=500,
         eta_margin_percent=10,
     )
+    _set_driver_location(db, driver_uuid, 37.0193, -7.9323)
     mark_session_arrived(db, driver_id=driver_uuid, session_id=sess.id)
     sess.arrived_at = datetime(2025, 6, 2, 7, 0, 0, tzinfo=timezone.utc)
     db.commit()
@@ -374,6 +452,7 @@ def test_maybe_consume_ignores_completed_trips_before_arrived() -> None:
         eta_seconds_baseline=400,
         eta_margin_percent=5,
     )
+    _set_driver_location(db, driver_uuid, 38.7223, -9.1393)
     mark_session_arrived(db, driver_id=driver_uuid, session_id=sess.id)
     arrived = datetime(2025, 6, 3, 12, 0, 0, tzinfo=timezone.utc)
     sess.arrived_at = arrived

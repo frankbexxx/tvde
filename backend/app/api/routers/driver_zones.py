@@ -125,10 +125,19 @@ async def post_zone_session_arrived(
         db.commit()
     except ValueError as exc:
         db.rollback()
-        if str(exc) == "zone_session_not_found":
+        code = str(exc)
+        if code == "zone_session_not_found":
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=exc.args[0],
+            ) from exc
+        if code in (
+            "driver_location_required_for_zone_arrived",
+            "driver_outside_zone_for_arrived",
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=code,
             ) from exc
         raise
     return DriverZoneSessionResponse.model_validate(sess)

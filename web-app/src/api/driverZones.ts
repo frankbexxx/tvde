@@ -10,6 +10,10 @@ export interface DriverZoneCatalogItem {
   label_pt: string
   kind: DriverZoneKind
   ops_note_pt?: string | null
+  /** WGS84 anchor for server-side «Cheguei» distance check (when arrived_max_km is set). */
+  arrived_anchor_lat?: number | null
+  arrived_anchor_lng?: number | null
+  arrived_max_km?: number | null
 }
 
 export interface DriverZoneCatalogResponse {
