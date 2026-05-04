@@ -43,6 +43,7 @@ import {
 } from './passengerTripPollEquals'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
+import { PassengerPaymentConfirmCard } from './PassengerPaymentConfirmCard'
 import {
   getPassengerBannerState,
   humanizeCancelError,
@@ -1292,12 +1293,24 @@ export function PassengerDashboard() {
         {/* A014: estado da viagem; A019: envio inicial usa TripPlannerPanel (searching) */}
         {(activeTripId || creating) && !showSubmittingCard && !showPassengerRatingPanel && (
           uxState && activeTrip ? (
-            <PassengerStatusCard
-              uxState={uxState}
-              activeTrip={activeTrip}
-              onRetrySearch={activeTrip?.status === 'requested' ? handleRetrySearch : undefined}
-              retrySearchPending={retrySearchPending}
-            />
+            <>
+              <PassengerStatusCard
+                uxState={uxState}
+                activeTrip={activeTrip}
+                onRetrySearch={activeTrip?.status === 'requested' ? handleRetrySearch : undefined}
+                retrySearchPending={retrySearchPending}
+              />
+              {activeTrip.payment_status === 'processing' &&
+              typeof activeTrip.payment_intent_client_secret === 'string' &&
+              activeTrip.payment_intent_client_secret.length > 0 ? (
+                <div className="mt-4">
+                  <PassengerPaymentConfirmCard
+                    clientSecret={activeTrip.payment_intent_client_secret}
+                    onConfirmed={() => void refetchActiveTrip()}
+                  />
+                </div>
+              ) : null}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 animate-in fade-in duration-300">
               <Spinner size="lg" />
