@@ -117,10 +117,16 @@ export async function createTrip(
   })
 }
 
-export async function cancelTrip(tripId: string, token: string): Promise<TripStatusResponse> {
+export async function cancelTrip(
+  tripId: string,
+  token: string,
+  opts?: { reason?: string | null }
+): Promise<TripStatusResponse> {
+  const reason = opts?.reason?.trim()
+  const body = reason ? { reason: reason.slice(0, 280) } : {}
   return apiFetch<TripStatusResponse>(`/trips/${tripId}/cancel`, {
     method: 'POST',
-    body: JSON.stringify({}),
+    body: JSON.stringify(body),
     token,
   })
 }
@@ -262,10 +268,14 @@ export async function runTimeoutsAdmin(
 
 export async function cancelTripByDriver(
   tripId: string,
-  token: string
+  token: string,
+  opts?: { reason?: string | null }
 ): Promise<TripStatusResponse> {
+  const reason = opts?.reason?.trim()
+  const body = reason ? { reason: reason.slice(0, 280) } : {}
   return apiFetch<TripStatusResponse>(`/driver/trips/${tripId}/cancel`, {
     method: 'POST',
+    body: JSON.stringify(body),
     token,
   })
 }

@@ -18,6 +18,11 @@ import { canDriverStartTripNearPickup } from './driverPickupGate'
 import { googleMapsDirectionsUrl, wazeNavigateUrl } from '../../utils/externalNavigation'
 import { getDriverNavApp, type DriverNavApp } from '../../services/driverNavPreference'
 import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
+import {
+  DRIVER_TRIP_CANCEL_PRESETS,
+  TRIP_CANCEL_SELECT_OTHER,
+  tripCancelReasonForApi,
+} from '../../constants/tripCancelReasons'
 
 function DriverExternalNavLinks({
   phase,
@@ -160,6 +165,15 @@ export function ActiveTripActions({
 
   const [loading, setLoading] = useState(false)
   const [loadingLong, setLoadingLong] = useState(false)
+  const [cancelPanelOpen, setCancelPanelOpen] = useState(false)
+  const [cancelPreset, setCancelPreset] = useState('')
+  const [cancelOtherDetail, setCancelOtherDetail] = useState('')
+
+  useEffect(() => {
+    setCancelPanelOpen(false)
+    setCancelPreset('')
+    setCancelOtherDetail('')
+  }, [tripId])
   const hasTripContext = Boolean(coordsSource)
   const tripPollStalled = usePollStallHint(
     tripLastSuccessAt,
@@ -212,8 +226,8 @@ export function ActiveTripActions({
   const run = async (
     action: () => Promise<{ status: string }>,
     actionName: string
-  ) => {
-    if (loading) return
+  ): Promise<boolean> => {
+    if (loading) return false
     if (
       actionName === 'Iniciar viagem' &&
       !canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
@@ -222,7 +236,7 @@ export function ActiveTripActions({
       onError(msg)
       setStatus('Erro')
       addLog(`Bloqueado: ${actionName} — longe do pickup`, 'error')
-      return
+      return false
     }
     setLoading(true)
     onError('')
@@ -236,6 +250,7 @@ export function ActiveTripActions({
       if (res.status === 'ongoing') sonnerToast.success('Viagem iniciada')
       if (res.status === 'completed') sonnerToast.success('Viagem concluída')
       if (res.status === 'completed' || res.status === 'cancelled') onComplete()
+      return true
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string }
       const msg = isTimeoutLikeError(err) || e?.status === 0
@@ -244,6 +259,7 @@ export function ActiveTripActions({
       onError(msg)
       setStatus('Erro')
       addLog(`Erro ${actionName}: ${msg}`, 'error')
+      return false
     } finally {
       setLoading(false)
     }
@@ -355,18 +371,90 @@ export function ActiveTripActions({
       >
         {buttonConfig.label}
       </PrimaryActionButton>
-      {showCancel && (
+      {showCancel && !cancelPanelOpen ? (
         <button
           type="button"
-          onClick={() => {
-            void run(() => driverPerformCancel(tripId, token), 'Cancelar viagem')
-          }}
+          data-testid="driver-trip-cancel-open"
+          onClick={() => setCancelPanelOpen(true)}
           disabled={loading}
           className="w-full min-h-[44px] rounded-lg border border-destructive/40 bg-transparent text-destructive text-base font-medium py-3 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 disabled:border-border disabled:bg-muted/50 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
           Cancelar viagem
         </button>
-      )}
+      ) : null}
+      {showCancel && cancelPanelOpen ? (
+        <div
+          className="rounded-xl border border-destructive/35 bg-destructive/5 px-3 py-3 space-y-3"
+          data-testid="driver-trip-cancel-panel"
+        >
+          <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
+          <label className="block text-xs text-muted-foreground" htmlFor="driver-cancel-preset">
+            Escolha rápida
+          </label>
+          <select
+            id="driver-cancel-preset"
+            data-testid="driver-cancel-preset"
+            className="w-full min-h-[44px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+            value={cancelPreset}
+            onChange={(e) => setCancelPreset(e.target.value)}
+            disabled={loading}
+          >
+            {DRIVER_TRIP_CANCEL_PRESETS.map((o) => (
+              <option key={o.value || 'none'} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          {cancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
+            <textarea
+              data-testid="driver-cancel-other"
+              className="w-full min-h-[72px] rounded-lg border border-border bg-background px-2 py-2 text-sm text-foreground"
+              placeholder="Descreve em poucas palavras (opcional)."
+              maxLength={280}
+              value={cancelOtherDetail}
+              onChange={(e) => setCancelOtherDetail(e.target.value)}
+              disabled={loading}
+            />
+          ) : null}
+          <div className="flex flex-col gap-2 sm:flex-row-reverse">
+            <button
+              type="button"
+              data-testid="driver-trip-cancel-confirm"
+              onClick={() => {
+                void (async () => {
+                  const reason = tripCancelReasonForApi(cancelPreset, cancelOtherDetail)
+                  const ok = await run(
+                    () => driverPerformCancel(tripId, token, reason),
+                    'Cancelar viagem'
+                  )
+                  if (ok) {
+                    setCancelPanelOpen(false)
+                    setCancelPreset('')
+                    setCancelOtherDetail('')
+                  }
+                })()
+              }}
+              disabled={loading}
+              className="min-h-[44px] flex-1 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 disabled:opacity-50 touch-manipulation"
+            >
+              Confirmar cancelamento
+            </button>
+            <button
+              type="button"
+              data-testid="driver-trip-cancel-back"
+              onClick={() => {
+                setCancelPanelOpen(false)
+                setCancelPreset('')
+                setCancelOtherDetail('')
+              }}
+              disabled={loading}
+              className="min-h-[44px] flex-1 rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+            >
+              Voltar
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

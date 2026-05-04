@@ -52,6 +52,11 @@ import { toast } from 'sonner'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import {
+  PASSENGER_TRIP_CANCEL_PRESETS,
+  TRIP_CANCEL_SELECT_OTHER,
+  tripCancelReasonForApi,
+} from '../../constants/tripCancelReasons'
 
 /**
  * P33: mapa da viagem com percurso/rasto só após aceite — não em requested nem assigned.
@@ -83,6 +88,9 @@ export function PassengerDashboard() {
   const [creating, setCreating] = useState(false)
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [passengerCancelOpen, setPassengerCancelOpen] = useState(false)
+  const [passengerCancelPreset, setPassengerCancelPreset] = useState('')
+  const [passengerCancelOther, setPassengerCancelOther] = useState('')
   const [retrySearchPending, setRetrySearchPending] = useState(false)
   const {
     position: passengerLocation,
@@ -140,6 +148,12 @@ export function PassengerDashboard() {
     setPassengerOnAssigned(refetchHistory)
     return () => setPassengerOnAssigned(undefined)
   }, [setPassengerOnAssigned, refetchHistory])
+
+  useEffect(() => {
+    setPassengerCancelOpen(false)
+    setPassengerCancelPreset('')
+    setPassengerCancelOther('')
+  }, [activeTripId])
 
   const isOnline = useOnlineStatus()
   const fetchPassengerActiveTrip = useCallback((): Promise<PassengerTripPollResult> => {
@@ -486,40 +500,47 @@ export function PassengerDashboard() {
     setPassengerActiveTripId,
   ])
 
-  const handleCancel = useCallback(async () => {
-    if (!activeTripId || !token || cancelling) return
-    setError(null)
-    setCancelling(true)
-    setStatus('A cancelar...')
-    addLog('Clique: Cancelar viagem', 'action')
-    try {
-      await cancelTrip(activeTripId, token)
-      setPassengerPendingTripDetail(null)
-      setPassengerActiveTripId(null)
-      setStatus('Pronto')
-      addLog('Viagem cancelada', 'success')
-      toast.success('Viagem cancelada')
-      refetchHistory()
-    } catch (err: unknown) {
-      const msg = isTimeoutLikeError(err)
-        ? 'Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta cancelar de novo.'
-        : humanizeCancelError(err)
-      setError(msg)
-      setStatus('Não foi possível cancelar')
-      addLog(`Erro: ${msg}`, 'error')
-    } finally {
-      setCancelling(false)
-    }
-  }, [
-    activeTripId,
-    token,
-    cancelling,
-    addLog,
-    setStatus,
-    refetchHistory,
-    setPassengerPendingTripDetail,
-    setPassengerActiveTripId,
-  ])
+  const handleCancel = useCallback(
+    async (reasonForApi?: string | null) => {
+      if (!activeTripId || !token || cancelling) return
+      setError(null)
+      setCancelling(true)
+      setStatus('A cancelar...')
+      addLog('Clique: Cancelar viagem', 'action')
+      try {
+        const r = reasonForApi?.trim()
+        await cancelTrip(activeTripId, token, r ? { reason: r.slice(0, 280) } : undefined)
+        setPassengerPendingTripDetail(null)
+        setPassengerActiveTripId(null)
+        setPassengerCancelOpen(false)
+        setPassengerCancelPreset('')
+        setPassengerCancelOther('')
+        setStatus('Pronto')
+        addLog('Viagem cancelada', 'success')
+        toast.success('Viagem cancelada')
+        refetchHistory()
+      } catch (err: unknown) {
+        const msg = isTimeoutLikeError(err)
+          ? 'Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta cancelar de novo.'
+          : humanizeCancelError(err)
+        setError(msg)
+        setStatus('Não foi possível cancelar')
+        addLog(`Erro: ${msg}`, 'error')
+      } finally {
+        setCancelling(false)
+      }
+    },
+    [
+      activeTripId,
+      token,
+      cancelling,
+      addLog,
+      setStatus,
+      refetchHistory,
+      setPassengerPendingTripDetail,
+      setPassengerActiveTripId,
+    ]
+  )
 
   /** P36: cancela o pedido actual e cria um novo com a mesma recolha/destino (re-disparo de dispatch). */
   const handleRetrySearch = useCallback(async () => {
@@ -530,7 +551,7 @@ export function PassengerDashboard() {
     setError(null)
     addLog('Clique: Tentar novamente', 'action')
     try {
-      await cancelTrip(activeTripId, token)
+      await cancelTrip(activeTripId, token, { reason: 'retry_dispatch' })
       const res = await createTrip(
         {
           origin_lat: activeTrip.origin_lat,
@@ -823,9 +844,9 @@ export function PassengerDashboard() {
 
   const primaryOnClick = useMemo(() => {
     if (primaryLabel === 'Pedir nova viagem') return handleStartNewTripAfterComplete
-    if (primaryLabel === 'Cancelar') return handleCancel
+    if (primaryLabel === 'Cancelar') return () => setPassengerCancelOpen(true)
     return passengerDashboardNoop
-  }, [primaryLabel, handleStartNewTripAfterComplete, handleCancel])
+  }, [primaryLabel, handleStartNewTripAfterComplete])
 
   const handleRatingSubmitted = useCallback(() => {
     void refetchActiveTrip()
@@ -899,14 +920,76 @@ export function PassengerDashboard() {
     <ScreenContainer
       bottomButton={
         showBottomPrimary && primaryLabel ? (
-          <PrimaryActionButton
-            onClick={primaryOnClick}
-            disabled={primaryLabel === 'Cancelar' ? cancelling : false}
-            loading={primaryLabel === 'Cancelar' && cancelling}
-            variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
-          >
-            {primaryLabel}
-          </PrimaryActionButton>
+          primaryLabel === 'Cancelar' && passengerCancelOpen ? (
+            <div
+              className="w-full space-y-3 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+              data-testid="passenger-cancel-panel"
+            >
+              <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
+              <label className="block text-xs text-muted-foreground" htmlFor="passenger-cancel-preset">
+                Escolha rápida
+              </label>
+              <select
+                id="passenger-cancel-preset"
+                data-testid="passenger-cancel-preset"
+                className="w-full min-h-[44px] rounded-lg border border-border bg-card px-2 text-sm text-foreground"
+                value={passengerCancelPreset}
+                onChange={(e) => setPassengerCancelPreset(e.target.value)}
+                disabled={cancelling}
+              >
+                {PASSENGER_TRIP_CANCEL_PRESETS.map((o) => (
+                  <option key={o.value || 'none'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              {passengerCancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
+                <textarea
+                  data-testid="passenger-cancel-other"
+                  className="w-full min-h-[72px] rounded-lg border border-border bg-card px-2 py-2 text-sm text-foreground"
+                  placeholder="Descreve em poucas palavras (opcional)."
+                  maxLength={280}
+                  value={passengerCancelOther}
+                  onChange={(e) => setPassengerCancelOther(e.target.value)}
+                  disabled={cancelling}
+                />
+              ) : null}
+              <div className="flex flex-col gap-2 sm:flex-row-reverse">
+                <PrimaryActionButton
+                  variant="danger"
+                  loading={cancelling}
+                  disabled={cancelling}
+                  onClick={() =>
+                    void handleCancel(tripCancelReasonForApi(passengerCancelPreset, passengerCancelOther))
+                  }
+                >
+                  Confirmar cancelamento
+                </PrimaryActionButton>
+                <button
+                  type="button"
+                  data-testid="passenger-cancel-back"
+                  className="min-h-[44px] flex-1 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                  disabled={cancelling}
+                  onClick={() => {
+                    setPassengerCancelOpen(false)
+                    setPassengerCancelPreset('')
+                    setPassengerCancelOther('')
+                  }}
+                >
+                  Voltar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <PrimaryActionButton
+              onClick={primaryOnClick}
+              disabled={primaryLabel === 'Cancelar' ? cancelling : false}
+              loading={primaryLabel === 'Cancelar' && cancelling}
+              variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
+            >
+              {primaryLabel}
+            </PrimaryActionButton>
+          )
         ) : undefined
       }
     >
