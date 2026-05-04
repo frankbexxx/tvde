@@ -28,6 +28,7 @@ def trip_to_history_item(
         stripe_payment_intent_id=payment.stripe_payment_intent_id
         if payment and include_stripe_pi
         else None,
+        cancellation_reason=trip.cancellation_reason,
     )
 
 
@@ -72,6 +73,7 @@ def trip_to_detail(
         driver_location=driver_location,
         driver_rating=trip.driver_rating,
         passenger_rating=trip.passenger_rating,
+        cancellation_reason=trip.cancellation_reason,
     )
 
 

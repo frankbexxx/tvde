@@ -72,6 +72,7 @@ import { Spinner } from '../../components/ui/Spinner'
 import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
+import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { ActiveTripActions } from './ActiveTripActions'
 import { formatPickup, formatDestination } from '../../utils/format'
 import {
@@ -1198,21 +1199,24 @@ export function DriverDashboard() {
               {history.slice(0, 5).map((t: TripHistoryItem) => (
                 <li
                   key={t.trip_id}
-                  className="flex justify-between items-center gap-3 py-2 border-b border-border last:border-0 transition-opacity duration-150"
+                  className="flex flex-col gap-1 py-2 border-b border-border last:border-0 transition-opacity duration-150"
                 >
-                  <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
-                    <span
-                      aria-hidden="true"
-                      className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
-                    />
-                    <span className="truncate">
-                      {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                      {formatDestination(t.destination_lat, t.destination_lng)}
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
+                      <span
+                        aria-hidden="true"
+                        className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
+                      />
+                      <span className="truncate">
+                        {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                        {formatDestination(t.destination_lat, t.destination_lng)}
+                      </span>
                     </span>
-                  </span>
-                  <span className="font-medium text-foreground shrink-0">
-                    {t.final_price != null ? `${t.final_price} €` : '—'}
-                  </span>
+                    <span className="font-medium text-foreground shrink-0">
+                      {t.final_price != null ? `${t.final_price} €` : '—'}
+                    </span>
+                  </div>
+                  <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
                 </li>
               ))}
             </ul>
@@ -1717,6 +1721,7 @@ function DriverOperationsMenu({
                       <p className="text-[11px] text-foreground/85">
                         {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
                       </p>
+                      <CancellationReasonMuted reason={t.cancellation_reason} />
                     </div>
                     <button
                       type="button"
@@ -2215,6 +2220,7 @@ function DriverOperationsMenu({
                 </span>{' '}
                 {driverHistoryPriceLabel(historyDetailTrip)}
               </p>
+              <CancellationReasonMuted reason={historyDetailTrip.cancellation_reason} className="text-sm" />
               <div className="pt-2">
                 <Button
                   type="button"

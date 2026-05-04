@@ -47,6 +47,7 @@ import {
   type AdminMetricsResponse,
 } from '../../api/admin'
 import type { TripHistoryItem } from '../../api/trips'
+import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import {
   driverDocumentLabel,
   driverDocumentStatusLabel,
@@ -2638,6 +2639,7 @@ export function AdminDashboard() {
                     {tripDetail.estimated_price} €
                     {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
                   </p>
+                  <CancellationReasonMuted reason={tripDetail.cancellation_reason} className="text-xs" />
                   {(() => {
                     const pi = tripDetail.stripe_payment_intent_id
                     if (typeof pi !== 'string' || !pi) return null
@@ -2875,6 +2877,7 @@ export function AdminDashboard() {
                                 Estimativa: {tripDetail.estimated_price} € · Status (API): {tripDetail.status}
                                 {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
                               </p>
+                              <CancellationReasonMuted reason={tripDetail.cancellation_reason} className="text-xs" />
                               {(() => {
                                 const pi = tripDetail.stripe_payment_intent_id
                                 if (typeof pi !== 'string' || !pi) return null
@@ -3012,6 +3015,7 @@ export function AdminDashboard() {
                           <p className="text-xs text-foreground/85">
                             Estado (lista): <span className="font-medium text-foreground">{h.status}</span>
                           </p>
+                          <CancellationReasonMuted reason={h.cancellation_reason} className="text-xs" />
                           {tripDetailLoading ? (
                             <p className="text-xs text-foreground/70">A carregar detalhe…</p>
                           ) : tripDetail && tripDetail.trip_id === h.trip_id ? (

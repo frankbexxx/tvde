@@ -112,6 +112,10 @@ class TripHistoryItem(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    cancellation_reason: Optional[str] = Field(
+        default=None,
+        description="Motivo registado quando a viagem foi cancelada (passageiro, motorista ou admin).",
+    )
 
 
 class TripDetailResponse(BaseModel):
@@ -152,4 +156,8 @@ class TripDetailResponse(BaseModel):
     passenger_rating: Optional[int] = Field(
         default=None,
         description="Avaliação do motorista ao passageiro (1–5), após conclusão.",
+    )
+    cancellation_reason: Optional[str] = Field(
+        default=None,
+        description="Motivo registado quando a viagem foi cancelada (passageiro, motorista ou admin).",
     )
