@@ -1212,9 +1212,14 @@ export function DriverDashboard() {
                         {formatDestination(t.destination_lat, t.destination_lng)}
                       </span>
                     </span>
-                    <span className="font-medium text-foreground shrink-0">
-                      {t.final_price != null ? `${t.final_price} €` : '—'}
-                    </span>
+                    <div className="shrink-0 text-right">
+                      <p className="font-medium text-foreground">{driverHistoryPriceLabel(t)}</p>
+                      {formatMoneyEur(t.driver_payout) ? (
+                        <p className="text-[11px] text-muted-foreground">
+                          Parte motorista: {formatMoneyEur(t.driver_payout)}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
                   <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
                 </li>
@@ -1386,6 +1391,60 @@ function driverHistoryPriceLabel(t: TripHistoryItem): string {
   return `${Number(v).toFixed(2)} €`
 }
 
+function formatMoneyEur(n: number | null | undefined): string | null {
+  if (n == null || Number.isNaN(Number(n))) return null
+  return `${Number(n).toFixed(2)} €`
+}
+
+function sumDriverPayoutInRange(
+  trips: TripHistoryItem[],
+  startInclusive: Date,
+  endExclusive: Date | null
+): number {
+  return trips.reduce((sum, t) => {
+    if (t.status !== 'completed' || !t.completed_at) return sum
+    const when = new Date(t.completed_at)
+    if (when < startInclusive) return sum
+    if (endExclusive != null && when >= endExclusive) return sum
+    const p = t.driver_payout
+    if (p == null || Number.isNaN(Number(p))) return sum
+    return sum + Number(p)
+  }, 0)
+}
+
+function weekHasDriverPayout(
+  trips: TripHistoryItem[],
+  startInclusive: Date,
+  endExclusive: Date | null
+): boolean {
+  return trips.some((t) => {
+    if (t.status !== 'completed' || !t.completed_at || t.driver_payout == null) return false
+    const when = new Date(t.completed_at)
+    if (when < startInclusive) return false
+    if (endExclusive != null && when >= endExclusive) return false
+    return !Number.isNaN(Number(t.driver_payout))
+  })
+}
+
+/** Preço / payout / comissão por linha de histórico (menu motorista). */
+function DriverHistoryTripMoney({ t }: { t: TripHistoryItem }) {
+  const payout = formatMoneyEur(t.driver_payout)
+  const commission = formatMoneyEur(t.commission_amount)
+  return (
+    <>
+      <p className="text-[11px] text-foreground/85">
+        {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
+      </p>
+      {payout ? (
+        <p className="text-[11px] text-foreground/75">Parte motorista (payout): {payout}</p>
+      ) : null}
+      {t.status === 'completed' && commission ? (
+        <p className="text-[10px] text-muted-foreground">Comissão plataforma: {commission}</p>
+      ) : null}
+    </>
+  )
+}
+
 function formatZoneDeadlineLocal(iso: string, timeZone: string): string {
   try {
     return new Intl.DateTimeFormat('pt-PT', {
@@ -1453,6 +1512,10 @@ function DriverOperationsMenu({
     if (!when || when < startOfLastWeek || when >= startOfThisWeek) return sum
     return sum + (t.final_price ?? t.estimated_price ?? 0)
   }, 0)
+  const thisWeekPayoutSum = sumDriverPayoutInRange(completedTrips, startOfThisWeek, null)
+  const lastWeekPayoutSum = sumDriverPayoutInRange(completedTrips, startOfLastWeek, startOfThisWeek)
+  const showThisWeekPayout = weekHasDriverPayout(completedTrips, startOfThisWeek, null)
+  const showLastWeekPayout = weekHasDriverPayout(completedTrips, startOfLastWeek, startOfThisWeek)
   const closedTrips = (history ?? []).filter((t) => t.status === 'completed' || t.status === 'cancelled').length
   const cancelledTrips = (history ?? []).filter((t) => t.status === 'cancelled').length
   const cancelRate = closedTrips > 0 ? Math.round((cancelledTrips / closedTrips) * 100) : 0
@@ -1666,15 +1729,30 @@ function DriverOperationsMenu({
         className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
       >
         <p className="text-sm font-medium text-foreground">Rendimentos</p>
-        <p className="text-xs text-muted-foreground">Totais operacionais (estimativa) por semana.</p>
+        <p className="text-xs text-muted-foreground leading-snug">
+          Soma do <span className="font-medium text-foreground/85">preço final</span> das viagens concluídas na
+          semana. A linha «Parte motorista» aparece quando a API envia payout por viagem.
+        </p>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
             <p className="text-[11px] text-foreground/70">Semana atual</p>
             <p className="text-base font-semibold text-foreground">{thisWeekRevenue.toFixed(2)} €</p>
+            {showThisWeekPayout ? (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Parte motorista:{' '}
+                <span className="font-medium text-foreground/85">{thisWeekPayoutSum.toFixed(2)} €</span>
+              </p>
+            ) : null}
           </div>
           <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
             <p className="text-[11px] text-foreground/70">Semana anterior</p>
             <p className="text-base font-semibold text-foreground">{lastWeekRevenue.toFixed(2)} €</p>
+            {showLastWeekPayout ? (
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Parte motorista:{' '}
+                <span className="font-medium text-foreground/85">{lastWeekPayoutSum.toFixed(2)} €</span>
+              </p>
+            ) : null}
           </div>
         </div>
         {completedTrips.length === 0 ? (
@@ -1718,9 +1796,7 @@ function DriverOperationsMenu({
                             ? 'Data de conclusão indisponível'
                             : 'Viagem ainda não concluída neste resumo'}
                       </p>
-                      <p className="text-[11px] text-foreground/85">
-                        {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
-                      </p>
+                      <DriverHistoryTripMoney t={t} />
                       <CancellationReasonMuted reason={t.cancellation_reason} />
                     </div>
                     <button
@@ -2214,12 +2290,9 @@ function DriverOperationsMenu({
                   ? formatDriverHistoryWhen(historyDetailTrip.completed_at)
                   : 'Sem data de conclusão'}
               </p>
-              <p className="text-foreground/85">
-                <span className="font-medium text-foreground">
-                  {historyDetailTrip.status === 'completed' ? 'Preço final' : 'Estimativa'}:
-                </span>{' '}
-                {driverHistoryPriceLabel(historyDetailTrip)}
-              </p>
+              <div className="space-y-1 text-foreground/85">
+                <DriverHistoryTripMoney t={historyDetailTrip} />
+              </div>
               <CancellationReasonMuted reason={historyDetailTrip.cancellation_reason} className="text-sm" />
               <div className="pt-2">
                 <Button
