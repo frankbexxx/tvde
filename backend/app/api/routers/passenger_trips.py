@@ -64,7 +64,12 @@ async def get_trip_detail(
         trip_id=trip_id.strip(),
     )
     emb = driver_location_embed_for_trip_detail(db, trip)
-    return trip_to_detail(trip, include_stripe_pi=False, driver_location=emb)
+    return trip_to_detail(
+        trip,
+        include_stripe_pi=False,
+        driver_location=emb,
+        include_passenger_payment_client_secret=True,
+    )
 
 
 @router.get("/{trip_id}/driver-location", response_model=DriverLocationResponse)

@@ -721,18 +721,19 @@ def accept_trip(
 
     # STEP 1: Create Stripe PaymentIntent (or mock when STRIPE_MOCK).
     stripe_pi_id: str
+    intent_obj: stripe.PaymentIntent | None = None
     if getattr(settings, "STRIPE_MOCK", False):
         stripe_pi_id = f"pi_mock_{uuid.uuid4().hex[:24]}"
         logger.info(f"accept_trip: STRIPE_MOCK — fake PI trip_id={trip_id}")
     else:
         try:
-            intent = create_authorization_payment_intent(
+            intent_obj = create_authorization_payment_intent(
                 amount_cents=amount_cents,
                 currency="EUR",
                 metadata={"trip_id": str(trip.id)},
                 idempotency_key=f"tvde-pi-auth-{trip.id}",
             )
-            stripe_pi_id = intent.id
+            stripe_pi_id = intent_obj.id
             logger.info(
                 f"accept_trip: PaymentIntent created (requires_confirmation) trip_id={trip_id}, "
                 f"payment_intent_id={stripe_pi_id}"
@@ -805,8 +806,12 @@ def accept_trip(
         )
     )
 
-    # Future: when ENABLE_CONFIRM_ON_ACCEPT, return client_secret for frontend confirmation.
-    client_secret = None
+    client_secret: str | None = None
+    if settings.ENABLE_CONFIRM_ON_ACCEPT:
+        if getattr(settings, "STRIPE_MOCK", False):
+            client_secret = f"{stripe_pi_id}_secret_mock"
+        elif intent_obj is not None:
+            client_secret = intent_obj.client_secret
     return trip, client_secret
 
 
@@ -878,17 +883,18 @@ def accept_offer(
     driver_amount = _money(total_amount - commission_amount)
 
     stripe_pi_id: str
+    intent_obj: stripe.PaymentIntent | None = None
     if getattr(settings, "STRIPE_MOCK", False):
         stripe_pi_id = f"pi_mock_{uuid.uuid4().hex[:24]}"
     else:
         try:
-            intent = create_authorization_payment_intent(
+            intent_obj = create_authorization_payment_intent(
                 amount_cents=amount_cents,
                 currency="EUR",
                 metadata={"trip_id": str(trip.id)},
                 idempotency_key=f"tvde-pi-auth-{trip.id}",
             )
-            stripe_pi_id = intent.id
+            stripe_pi_id = intent_obj.id
         except stripe.error.StripeError as e:
             logger.error(f"accept_offer: Stripe failed trip_id={trip.id}, error={e}")
             raise HTTPException(
@@ -943,7 +949,13 @@ def accept_offer(
             timestamp=datetime.now(timezone.utc),
         )
     )
-    return trip, None
+    client_secret: str | None = None
+    if settings.ENABLE_CONFIRM_ON_ACCEPT:
+        if getattr(settings, "STRIPE_MOCK", False):
+            client_secret = f"{stripe_pi_id}_secret_mock"
+        elif intent_obj is not None:
+            client_secret = intent_obj.client_secret
+    return trip, client_secret
 
 
 def reject_offer(

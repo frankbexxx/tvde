@@ -105,6 +105,8 @@ export interface TripDetailResponse {
   /** Motorista avaliou o passageiro (1–5); só após conclusão. */
   passenger_rating?: number | null
   cancellation_reason?: string | null
+  /** Quando o backend expõe confirmação Stripe (ENABLE_CONFIRM_ON_ACCEPT). */
+  payment_intent_client_secret?: string | null
 }
 
 // --- Passenger ---
