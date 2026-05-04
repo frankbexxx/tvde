@@ -2,6 +2,10 @@ import { memo } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
+import {
+  PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING,
+  PASSENGER_PAYMENT_DISCLOSURE_SEARCHING,
+} from '../../constants/passengerPaymentCopy'
 
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
 
@@ -199,6 +203,13 @@ function TripPlannerPanelInner({
               <span>Percurso estimado indisponível</span>
             )}
           </div>
+          <div
+            className="rounded-xl border border-border/80 bg-muted/30 px-3 py-2.5 text-xs text-foreground/85 leading-snug"
+            data-testid="passenger-payment-disclosure-confirming"
+          >
+            <p className="font-semibold text-foreground text-[13px] mb-0.5">Pagamento</p>
+            <p>{PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING}</p>
+          </div>
           <div className="flex flex-col gap-2 pt-1">
             {onEditDestination ? (
               <button
@@ -246,6 +257,12 @@ function TripPlannerPanelInner({
           <p className="text-base font-semibold text-foreground text-center">À procura de motorista…</p>
           <p className="text-sm text-foreground/75 text-center">
             {activeTrip ? `Pedido ${activeTrip.trip_id.slice(0, 8)}…` : 'A enviar o teu pedido…'}
+          </p>
+          <p
+            className="text-xs text-foreground/65 text-center max-w-sm px-3 leading-snug"
+            data-testid="passenger-payment-disclosure-searching"
+          >
+            {PASSENGER_PAYMENT_DISCLOSURE_SEARCHING}
           </p>
           {slowRequestHint ? (
             <p className="text-xs text-foreground/70 text-center px-2" aria-live="polite">

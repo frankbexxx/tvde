@@ -8,6 +8,7 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
+import { PASSENGER_PAYMENT_DISCLOSURE_SEARCHING } from '../../constants/passengerPaymentCopy'
 
 const ESTIMATE_FALLBACK = '4–6'
 
@@ -55,6 +56,14 @@ function SearchingDriverPhase({
           ? 'Não encontrámos um motorista na zona. Podes cancelar e voltar a pedir — ou esperar mais um pouco.'
           : 'Estamos a contactar motoristas na zona. Pode demorar um instante.'}
       </p>
+      {!showFallback ? (
+        <p
+          className="text-xs text-foreground/65 text-center max-w-sm px-4 leading-snug"
+          data-testid="passenger-search-payment-hint"
+        >
+          {PASSENGER_PAYMENT_DISCLOSURE_SEARCHING}
+        </p>
+      ) : null}
       {showFallback && onRetrySearch ? (
         <button
           type="button"
