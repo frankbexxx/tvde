@@ -52,6 +52,7 @@ import { toast } from 'sonner'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import {
   PASSENGER_TRIP_CANCEL_PRESETS,
   TRIP_CANCEL_SELECT_OTHER,
@@ -1321,21 +1322,24 @@ export function PassengerDashboard() {
               {history.slice(0, 5).map((t: TripHistoryItem) => (
                 <li
                   key={t.trip_id}
-                  className="flex justify-between items-center gap-3 py-2 border-b border-border last:border-0 transition-opacity duration-150"
+                  className="flex flex-col gap-1 py-2 border-b border-border last:border-0 transition-opacity duration-150"
                 >
-                  <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
-                    <span
-                      aria-hidden="true"
-                      className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
-                    />
-                    <span className="truncate">
-                      {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                      {formatDestination(t.destination_lat, t.destination_lng)}
+                  <div className="flex justify-between items-center gap-3">
+                    <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
+                      <span
+                        aria-hidden="true"
+                        className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
+                      />
+                      <span className="truncate">
+                        {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                        {formatDestination(t.destination_lat, t.destination_lng)}
+                      </span>
                     </span>
-                  </span>
-                  <span className="font-medium text-foreground shrink-0">
-                    {t.final_price != null ? `${t.final_price} €` : '—'}
-                  </span>
+                    <span className="font-medium text-foreground shrink-0">
+                      {t.final_price != null ? `${t.final_price} €` : '—'}
+                    </span>
+                  </div>
+                  <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
                 </li>
               ))}
             </ul>

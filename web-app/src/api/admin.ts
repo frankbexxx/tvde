@@ -33,6 +33,7 @@ export interface TripDetailAdmin {
   estimated_price: number
   final_price?: number
   stripe_payment_intent_id?: string
+  cancellation_reason?: string | null
   [key: string]: unknown
 }
 

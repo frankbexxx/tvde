@@ -68,6 +68,8 @@ export interface TripHistoryItem {
   payment_status?: PaymentStatus
   commission_amount?: number
   driver_payout?: number
+  /** Preenchido quando a viagem foi cancelada e há motivo registado. */
+  cancellation_reason?: string | null
 }
 
 /** Snapshot from GET /trips/:id (accepted | arriving | ongoing) or GET …/driver-location. */
@@ -102,6 +104,7 @@ export interface TripDetailResponse {
   driver_rating?: number | null
   /** Motorista avaliou o passageiro (1–5); só após conclusão. */
   passenger_rating?: number | null
+  cancellation_reason?: string | null
 }
 
 // --- Passenger ---
