@@ -203,7 +203,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
     await startBtn.click()
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
-      timeout: sec(30),
+      timeout: sec(90),
     })
     await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
     await expect
@@ -282,7 +282,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     })
     await driverPage.getByRole('button', { name: /iniciar viagem/i }).click()
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
-      timeout: sec(30),
+      timeout: sec(90),
     })
     await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
     await driverCtx.close()

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getDriverTripDetail, type TripDetailResponse } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { usePolling } from '../../hooks/usePolling'
@@ -139,7 +139,16 @@ export function ActiveTripActions({
     !!tripId && !!token,
     2000
   )
-  const coordsSource = trip ?? tripDetailFallback
+  /** Evita janela sem dados quando `trip` e `tripDetailFallback` estão ambos null entre polls. */
+  const lastCoordsRef = useRef<TripDetailResponse | null>(null)
+  useEffect(() => {
+    lastCoordsRef.current = null
+  }, [tripId])
+  const rawCoords = trip ?? tripDetailFallback
+  useEffect(() => {
+    if (rawCoords) lastCoordsRef.current = rawCoords
+  }, [rawCoords])
+  const coordsSource = rawCoords ?? lastCoordsRef.current
   const displayStatus = mergeDriverPolledWithOverride(coordsSource?.status, statusOverride, 'accepted')
   const pickupCoords =
     coordsSource != null ? { lat: coordsSource.origin_lat, lng: coordsSource.origin_lng } : null

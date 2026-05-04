@@ -1262,12 +1262,6 @@ function ActiveTripSummary({
     !!tripId && !!token,
     2000
   )
-  /**
-   * Não limpar `acceptedDetailFallback` no parent quando este poll recebe `trip`:
-   * `ActiveTripActions` tem o seu próprio `usePolling` — limpar cedo deixa `trip ?? fallback`
-   * momentaneamente sem dados e some o botão «Iniciar viagem» (e2e CI).
-   * O fallback é limpo em `onComplete` / cancelamento.
-   */
   const effectiveTrip = trip ?? detailFallback
   const displayStatus = mergeDriverPolledWithOverride(
     effectiveTrip?.status,
