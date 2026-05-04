@@ -1168,7 +1168,6 @@ export function DriverDashboard() {
             token={token!}
             statusOverride={driverStatusOverride}
             detailFallback={acceptedDetailFallback}
-            onDetailPollSuccess={() => setAcceptedDetailFallback(null)}
             onClearStatusOverride={() => setDriverStatusOverride(null)}
             onTripCancelled={() => {
               tripSimStopRef.current?.()
@@ -1241,7 +1240,6 @@ function ActiveTripSummary({
   token,
   statusOverride,
   detailFallback,
-  onDetailPollSuccess,
   onClearStatusOverride,
   onTripCancelled,
 }: {
@@ -1249,7 +1247,6 @@ function ActiveTripSummary({
   token: string
   statusOverride: string | null
   detailFallback: TripDetailResponse | null
-  onDetailPollSuccess: () => void
   onClearStatusOverride: () => void
   onTripCancelled: () => void
 }) {
@@ -1265,18 +1262,12 @@ function ActiveTripSummary({
     !!tripId && !!token,
     2000
   )
-  const fallbackConsumedRef = useRef(false)
-  useEffect(() => {
-    fallbackConsumedRef.current = false
-  }, [tripId])
-
-  useEffect(() => {
-    if (trip && detailFallback && !fallbackConsumedRef.current) {
-      fallbackConsumedRef.current = true
-      onDetailPollSuccess()
-    }
-  }, [trip, detailFallback, onDetailPollSuccess])
-
+  /**
+   * Não limpar `acceptedDetailFallback` no parent quando este poll recebe `trip`:
+   * `ActiveTripActions` tem o seu próprio `usePolling` — limpar cedo deixa `trip ?? fallback`
+   * momentaneamente sem dados e some o botão «Iniciar viagem» (e2e CI).
+   * O fallback é limpo em `onComplete` / cancelamento.
+   */
   const effectiveTrip = trip ?? detailFallback
   const displayStatus = mergeDriverPolledWithOverride(
     effectiveTrip?.status,
