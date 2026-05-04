@@ -143,7 +143,7 @@ function setStoredOffline(offline: boolean) {
   }
 }
 
-/** §9.4 — pill sobre o mapa (barra inferior activa): disponível → toque passa a offline. */
+/** §9.4 — barra sob o mapa (barra inferior activa): disponível → toque passa a offline. */
 function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void }) {
   return (
     <button
@@ -151,10 +151,10 @@ function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void })
       data-testid="driver-map-availability-pill"
       onClick={onGoOffline}
       aria-label="Estás disponível. Toca para ficar offline."
-      className="flex min-h-[48px] max-w-[18rem] items-center justify-center gap-2 rounded-full border border-border/90 bg-background/95 px-4 py-2 text-center text-sm font-semibold text-foreground shadow-lg backdrop-blur-sm touch-manipulation hover:bg-background"
+      className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
     >
-      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-400/55" aria-hidden />
-      <span className="leading-snug">Disponível — tocar para offline</span>
+      <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-400/55" aria-hidden />
+      <span className="leading-snug truncate">Disponível — tocar para offline</span>
     </button>
   )
 }
@@ -167,10 +167,10 @@ function DriverMapOfflinePill({ onGoOnline }: { onGoOnline: () => void }) {
       data-testid="driver-map-offline-pill"
       onClick={onGoOnline}
       aria-label="Estás offline. Toca para ficares disponível."
-      className="flex min-h-[48px] max-w-[18rem] items-center justify-center gap-2 rounded-full border border-border/90 bg-background/95 px-4 py-2 text-center text-sm font-semibold text-foreground shadow-lg backdrop-blur-sm touch-manipulation hover:bg-background"
+      className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
     >
-      <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
-      <span className="leading-snug">Offline — tocar para disponível</span>
+      <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
+      <span className="leading-snug truncate">Offline — tocar para disponível</span>
     </button>
   )
 }
@@ -241,6 +241,9 @@ export function DriverDashboard() {
     isDriverDocumentsGateEnabled()
   )
   const [menuOpen, setMenuOpen] = useState(false)
+  /** Leitura síncrona no bottom nav (evita setDriverShellTab dentro do updater de setMenuOpen). */
+  const menuOpenRef = useRef(menuOpen)
+  menuOpenRef.current = menuOpen
   const [driverShellTab, setDriverShellTab] = useState<DriverShellTab>('home')
   const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
   const driverBottomNav = isDriverBottomNavEnabled()
@@ -277,9 +280,13 @@ export function DriverDashboard() {
   useEffect(() => {
     if (!menuOpen || driverShellTab === 'home' || driverShellTab === 'menu') return
     const id = driverShellTab === 'earnings' ? 'driver-menu-earnings' : 'driver-menu-inbox'
-    requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
+    // Dois rAF: o painel do menu tem de montar; scroll-margin nas secções alinha com o header.
+    const t = window.setTimeout(() => {
+      requestAnimationFrame(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    }, 32)
+    return () => window.clearTimeout(t)
   }, [menuOpen, driverShellTab])
 
   const {
@@ -325,6 +332,16 @@ export function DriverDashboard() {
   const filteredOutCount = Math.max(0, (available?.length ?? 0) - filteredAvailable.length)
   const hasAvailableTrips = filteredAvailable.length > 0
   const compactDriverSurface = !activeTripId && !offline && hasAvailableTrips
+  /** Primeira oferta na categoria: marcadores no mapa sem viagem activa (P6). */
+  const availableOfferMapPreview = useMemo(() => {
+    if (activeTripId) return null
+    const t = filteredAvailable[0]
+    if (!t) return null
+    return {
+      pickup: { lat: t.origin_lat, lng: t.origin_lng },
+      dropoff: { lat: t.destination_lat, lng: t.destination_lng },
+    }
+  }, [activeTripId, filteredAvailable])
 
   const { setDriverOnAssigned } = useDevToolsCallbacks()
   useEffect(() => {
@@ -335,6 +352,16 @@ export function DriverDashboard() {
     setDriverOnAssigned(fn)
     return () => setDriverOnAssigned(undefined)
   }, [setDriverOnAssigned, refetchHistory, refetchAvailable])
+
+  const prevDriverHomeStepRef = useRef(driverHomeStep)
+  useEffect(() => {
+    const prev = prevDriverHomeStepRef.current
+    prevDriverHomeStepRef.current = driverHomeStep
+    if (!driverHomeTwoStep || !token || !pollEnabled) return
+    if (prev === 1 && driverHomeStep === 2) {
+      void refetchAvailable()
+    }
+  }, [driverHomeStep, driverHomeTwoStep, token, pollEnabled, refetchAvailable])
 
   useEffect(() => {
     if (!actionLoading) {
@@ -601,20 +628,19 @@ export function DriverDashboard() {
         setMenuOpen(false)
         if (driverHomeTwoStep && !activeTripId) setDriverHomeStep(2)
         document.getElementById('driver-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
+        if (token && pollEnabled) void refetchAvailable()
         return
       }
       if (tab === 'menu') {
-        setMenuOpen((prev) => {
-          const next = !prev
-          setDriverShellTab(next ? 'menu' : 'home')
-          return next
-        })
+        const nextOpen = !menuOpenRef.current
+        setMenuOpen(nextOpen)
+        setDriverShellTab(nextOpen ? 'menu' : 'home')
         return
       }
       setDriverShellTab(tab)
       setMenuOpen(true)
     },
-    [activeTripId, driverHomeTwoStep]
+    [activeTripId, driverHomeTwoStep, pollEnabled, refetchAvailable, token]
   )
 
   const bottomChrome =
@@ -798,9 +824,12 @@ export function DriverDashboard() {
             />
           ) : null}
           {(!offline || driverBottomNav) && (
-            <div className="min-h-[min(52vh,24rem)] rounded-xl border border-border overflow-hidden">
+            <div className="min-h-[min(52vh,24rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
               <MapView
+                className="!rounded-none border-0 !shadow-none"
                 driverLocation={mapDotLatLng}
+                tripPickup={availableOfferMapPreview?.pickup ?? null}
+                tripDropoff={availableOfferMapPreview?.dropoff ?? null}
                 route={
                   import.meta.env.DEV &&
                   isMockLocationModeEnabled() &&
@@ -811,16 +840,16 @@ export function DriverDashboard() {
                 }
                 mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                 compactHeight={false}
-                overlay={
-                  driverBottomNav ? (
-                    offline ? (
-                      <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
-                    ) : (
-                      <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
-                    )
-                  ) : undefined
-                }
               />
+              {driverBottomNav ? (
+                <div className="border-t border-border bg-muted/35">
+                  {offline ? (
+                    <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
+                  ) : (
+                    <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+                  )}
+                </div>
+              ) : null}
             </div>
           )}
           {offline && !driverBottomNav && (
@@ -834,9 +863,20 @@ export function DriverDashboard() {
             data-testid="driver-home-step1-continue"
             disabled={offline}
             onClick={() => setDriverHomeStep(2)}
-            className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
+            className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
           >
-            Ver pedidos e mapa completo
+            <span className="flex items-center justify-center gap-2 px-1">
+              <span>Ver pedidos e mapa completo</span>
+              {hasAvailableTrips && !offline ? (
+                <span
+                  data-testid="driver-home-step1-pending-count"
+                  className="min-h-[1.5rem] min-w-[1.5rem] shrink-0 rounded-full bg-primary-foreground/25 px-1.5 text-xs font-bold tabular-nums leading-none inline-flex items-center justify-center"
+                  aria-label={`${filteredAvailable.length} pedido(s) em espera`}
+                >
+                  {filteredAvailable.length > 99 ? '99+' : filteredAvailable.length}
+                </span>
+              ) : null}
+            </span>
           </button>
         </div>
       ) : (
@@ -1013,34 +1053,39 @@ export function DriverDashboard() {
         )}
 
         {(!offline || (driverBottomNav && !activeTripId)) && (
-          <MapView
-            driverLocation={mapDotLatLng}
-            route={
-              import.meta.env.DEV &&
-              isMockLocationModeEnabled() &&
-              mockStableRouteEndpoints &&
-              activeTripId
-                ? mockStableRouteEndpoints
-                : undefined
-            }
-            mapVisualWeight={
-              offline && driverBottomNav && !activeTripId
-                ? 'subdued'
-                : activeTripId || (available && available.length > 0)
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <MapView
+              className="!rounded-none border-0 !shadow-none"
+              driverLocation={mapDotLatLng}
+              tripPickup={availableOfferMapPreview?.pickup ?? null}
+              tripDropoff={availableOfferMapPreview?.dropoff ?? null}
+              route={
+                import.meta.env.DEV &&
+                isMockLocationModeEnabled() &&
+                mockStableRouteEndpoints &&
+                activeTripId
+                  ? mockStableRouteEndpoints
+                  : undefined
+              }
+              mapVisualWeight={
+                offline && driverBottomNav && !activeTripId
                   ? 'subdued'
-                  : 'emphasized'
-            }
-            compactHeight={compactDriverSurface}
-            overlay={
-              driverBottomNav && !activeTripId ? (
-                offline ? (
+                  : activeTripId || (available && available.length > 0)
+                    ? 'subdued'
+                    : 'emphasized'
+              }
+              compactHeight={compactDriverSurface}
+            />
+            {driverBottomNav && !activeTripId ? (
+              <div className="border-t border-border bg-muted/35">
+                {offline ? (
                   <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
                 ) : (
                   <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
-                )
-              ) : undefined
-            }
-          />
+                )}
+              </div>
+            ) : null}
+          </div>
         )}
 
         {offline && !(driverBottomNav && !activeTripId) && (
@@ -1612,7 +1657,10 @@ function DriverOperationsMenu({
         </div>
       </div>
 
-      <div id="driver-menu-earnings" className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+      <div
+        id="driver-menu-earnings"
+        className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+      >
         <p className="text-sm font-medium text-foreground">Rendimentos</p>
         <p className="text-xs text-muted-foreground">Totais operacionais (estimativa) por semana.</p>
         <div className="grid grid-cols-2 gap-2">
@@ -1705,7 +1753,7 @@ function DriverOperationsMenu({
 
       <div
         id="driver-menu-inbox"
-        className="rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+        className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
         data-testid="driver-menu-inbox"
       >
         <p className="text-sm font-medium text-foreground">Caixa de entrada</p>

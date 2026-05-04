@@ -32,7 +32,7 @@ export function ScreenContainer({
         {children}
       </div>
       {bottomButton ? (
-        <div className="fixed bottom-0 left-0 right-0 z-20 bg-background border-t border-border shadow-card">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background border-t border-border shadow-card">
           <div
             className={
               bottomBarVariant === 'flush'
