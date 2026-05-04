@@ -49,12 +49,16 @@ async def accept_offer(
     """Accept an offer. First accept wins; others get 409."""
     from app.api.serializers import trip_to_status_response
 
-    trip, _ = accept_offer_service(
+    trip, client_secret = accept_offer_service(
         db=db,
         driver_id=user.user_id,
         offer_id=offer_id.strip(),
     )
-    return trip_to_status_response(trip, include_stripe_pi=False)
+    return trip_to_status_response(
+        trip,
+        include_stripe_pi=False,
+        payment_intent_client_secret=client_secret,
+    )
 
 
 @router.post("/{offer_id}/reject", status_code=200)
