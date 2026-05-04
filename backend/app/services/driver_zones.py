@@ -1,7 +1,7 @@
 """Driver «zone change» sessions and daily budget (v1).
 
 Consumption: first ``TripStatus.completed`` after ``arrived_at`` closes the session
-and increments the day budget (honour-system until geo is wired).
+and increments the day budget. «Cheguei» validates last driver GPS vs catalog anchors when defined.
 """
 
 from __future__ import annotations
@@ -13,11 +13,14 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
+from app.db.models.driver import DriverLocation
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.trip import Trip
 from app.models.enums import TripStatus
 from app.services.partner_queries import get_driver_for_partner
+from app.services.zone_catalog import zone_arrived_geo_gate
+from app.utils.geo import haversine_km
 from app.utils.logging import log_event
 
 ZONE_TZ = ZoneInfo("Europe/Lisbon")
@@ -99,6 +102,28 @@ def create_zone_session(
     return sess
 
 
+def _assert_driver_inside_zone_for_arrived(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    zone_id: str,
+) -> None:
+    gate = zone_arrived_geo_gate(zone_id)
+    if gate is None:
+        return
+    anchor_lat, anchor_lng, max_km = gate
+    loc = (
+        db.execute(select(DriverLocation).where(DriverLocation.driver_id == driver_id))
+        .scalars()
+        .one_or_none()
+    )
+    if loc is None:
+        raise ValueError("driver_location_required_for_zone_arrived")
+    dist_km = haversine_km(float(loc.lat), float(loc.lng), anchor_lat, anchor_lng)
+    if dist_km > max_km:
+        raise ValueError("driver_outside_zone_for_arrived")
+
+
 def mark_session_arrived(
     db: Session,
     *,
@@ -124,6 +149,7 @@ def mark_session_arrived(
         raise ValueError("zone_session_not_found")
     if sess.arrived_at is not None:
         return sess
+    _assert_driver_inside_zone_for_arrived(db, driver_id=driver_id, zone_id=sess.zone_id)
     sess.arrived_at = datetime.now(timezone.utc)
     return sess
 

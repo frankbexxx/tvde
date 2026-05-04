@@ -67,6 +67,18 @@ class DriverZoneCatalogItem(BaseModel):
         max_length=2000,
         description="Optional operator-facing note for this zone (e.g. airport queue UX roadmap).",
     )
+    arrived_anchor_lat: float | None = Field(
+        default=None,
+        description="WGS84 anchor used with arrived_max_km when validating «Cheguei».",
+    )
+    arrived_anchor_lng: float | None = Field(
+        default=None,
+        description="WGS84 anchor used with arrived_max_km when validating «Cheguei».",
+    )
+    arrived_max_km: float | None = Field(
+        default=None,
+        description="Max great-circle distance (km) from anchor for «Cheguei»; null = no server-side gate.",
+    )
 
 
 class DriverZoneCatalogResponse(BaseModel):
