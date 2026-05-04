@@ -74,8 +74,13 @@ describe('driverPerformComplete', () => {
 })
 
 describe('driverPerformCancel', () => {
-  it('calls cancelTripByDriver', async () => {
+  it('calls cancelTripByDriver without opts when no reason', async () => {
     await driverPerformCancel('abc', 'tok')
-    expect(trips.cancelTripByDriver).toHaveBeenCalledWith('abc', 'tok')
+    expect(trips.cancelTripByDriver).toHaveBeenCalledWith('abc', 'tok', undefined)
+  })
+
+  it('passes trimmed reason to cancelTripByDriver', async () => {
+    await driverPerformCancel('abc', 'tok', '  Imprevisto  ')
+    expect(trips.cancelTripByDriver).toHaveBeenCalledWith('abc', 'tok', { reason: 'Imprevisto' })
   })
 })

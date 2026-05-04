@@ -146,4 +146,16 @@ describe('ActiveTripActions (RTL)', () => {
     })
     expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
   })
+
+  it('painel cancelamento: envia motivo escolhido a driverPerformCancel', async () => {
+    pollingCtx.trip = minimalTrip('accepted')
+    renderActions(DRIVER_NEAR_PICKUP_0)
+    fireEvent.click(screen.getByTestId('driver-trip-cancel-open'))
+    expect(screen.getByTestId('driver-trip-cancel-panel')).toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('driver-cancel-preset'), { target: { value: 'Imprevisto' } })
+    fireEvent.click(screen.getByTestId('driver-trip-cancel-confirm'))
+    await waitFor(() => {
+      expect(driverTripActions.driverPerformCancel).toHaveBeenCalledWith('tid', 'tok', 'Imprevisto')
+    })
+  })
 })
