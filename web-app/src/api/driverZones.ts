@@ -55,6 +55,11 @@ export interface DriverZoneEtaEstimateResponse {
   distance_km: number
 }
 
+export interface DriverZoneCustomItem {
+  zone_id: string
+  created_at: string
+}
+
 export async function getDriverZoneBudgetToday(token: string): Promise<DriverZoneBudgetToday> {
   return apiFetch<DriverZoneBudgetToday>('/driver/zones/budget/today', { token })
 }
@@ -93,6 +98,26 @@ export async function postDriverZoneEtaEstimate(
     method: 'POST',
     token,
     body: JSON.stringify({ zone_id: zoneId }),
+  })
+}
+
+export async function getDriverZoneCustomZones(token: string): Promise<DriverZoneCustomItem[]> {
+  const res = await apiFetch<{ zones: DriverZoneCustomItem[] }>('/driver/zones/custom-zones', { token })
+  return res.zones ?? []
+}
+
+export async function postDriverZoneCustomZone(token: string, zoneId: string): Promise<DriverZoneCustomItem> {
+  return apiFetch<DriverZoneCustomItem>('/driver/zones/custom-zones', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ zone_id: zoneId }),
+  })
+}
+
+export async function deleteDriverZoneCustomZone(token: string, zoneId: string): Promise<void> {
+  await apiFetch<void>(`/driver/zones/custom-zones/${encodeURIComponent(zoneId)}`, {
+    method: 'DELETE',
+    token,
   })
 }
 

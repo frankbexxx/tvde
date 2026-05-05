@@ -17,6 +17,9 @@ from app.schemas.driver_zones import (
     DriverZoneBudgetResponse,
     DriverZoneCatalogItem,
     DriverZoneCatalogResponse,
+    DriverZoneCustomCreateRequest,
+    DriverZoneCustomItem,
+    DriverZoneCustomListResponse,
     DriverZoneEtaEstimateRequest,
     DriverZoneEtaEstimateResponse,
     DriverZoneSessionCancelRequest,
@@ -25,12 +28,15 @@ from app.schemas.driver_zones import (
     DriverZoneSessionResponse,
 )
 from app.services.driver_zones import (
+    add_driver_custom_zone,
     budget_values,
     cancel_zone_session,
     create_zone_session,
     estimate_zone_eta_seconds,
     get_open_zone_session,
+    list_driver_custom_zones,
     mark_session_arrived,
+    remove_driver_custom_zone,
     request_zone_session_extension,
     service_date_local_now,
 )
@@ -63,6 +69,53 @@ async def get_zone_budget_today(
         remaining=remaining,
         timezone=tz,
     )
+
+
+@router.get("/custom-zones", response_model=DriverZoneCustomListResponse)
+async def get_driver_custom_zones(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverZoneCustomListResponse:
+    driver_id = uuid.UUID(user.user_id)
+    rows = list_driver_custom_zones(db, driver_id=driver_id)
+    return DriverZoneCustomListResponse(
+        zones=[DriverZoneCustomItem.model_validate(r) for r in rows]
+    )
+
+
+@router.post("/custom-zones", response_model=DriverZoneCustomItem, status_code=status.HTTP_201_CREATED)
+async def post_driver_custom_zone(
+    body: DriverZoneCustomCreateRequest,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverZoneCustomItem:
+    driver_id = uuid.UUID(user.user_id)
+    try:
+        row = add_driver_custom_zone(db, driver_id=driver_id, zone_id=body.zone_id)
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        code = str(exc)
+        if code == "custom_zone_invalid":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=code) from exc
+        if code in ("custom_zone_conflicts_catalog", "custom_zone_limit_reached"):
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=code) from exc
+        raise
+    return DriverZoneCustomItem.model_validate(row)
+
+
+@router.delete("/custom-zones/{zone_id}", status_code=status.HTTP_200_OK)
+async def delete_driver_custom_zone(
+    zone_id: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> dict[str, bool]:
+    driver_id = uuid.UUID(user.user_id)
+    removed = remove_driver_custom_zone(db, driver_id=driver_id, zone_id=zone_id)
+    db.commit()
+    if not removed:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="custom_zone_not_found")
+    return {"ok": True}
 
 
 @router.post("/eta-estimate", response_model=DriverZoneEtaEstimateResponse)

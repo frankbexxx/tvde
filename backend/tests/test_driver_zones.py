@@ -5,6 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from zoneinfo import ZoneInfo
 
@@ -123,6 +124,84 @@ def test_zone_budget_today_defaults() -> None:
         assert data["remaining"] == 2
         assert data["timezone"] == "Europe/Lisbon"
         assert "service_date" in data
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_driver_custom_zones_crud() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r0 = client.get("/driver/zones/custom-zones")
+        assert r0.status_code == 200
+        assert r0.json()["zones"] == []
+
+        r1 = client.post("/driver/zones/custom-zones", json={"zone_id": " LISBOA-NORTE "})
+        assert r1.status_code == 201
+        assert r1.json()["zone_id"] == "lisboa-norte"
+
+        r2 = client.post("/driver/zones/custom-zones", json={"zone_id": "lisboa-norte"})
+        assert r2.status_code == 201
+        assert r2.json()["zone_id"] == "lisboa-norte"
+
+        r3 = client.get("/driver/zones/custom-zones")
+        assert r3.status_code == 200
+        zones = r3.json()["zones"]
+        assert len(zones) == 1
+        assert zones[0]["zone_id"] == "lisboa-norte"
+
+        r4 = client.delete("/driver/zones/custom-zones/lisboa-norte")
+        assert r4.status_code == 200
+        assert r4.json()["ok"] is True
+
+        r5 = client.delete("/driver/zones/custom-zones/lisboa-norte")
+        assert r5.status_code == 404
+        assert r5.json()["detail"] == "custom_zone_not_found"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_driver_custom_zone_rejects_catalog_slug() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r = client.post("/driver/zones/custom-zones", json={"zone_id": "lisboa"})
+        assert r.status_code == 409
+        assert r.json()["detail"] == "custom_zone_conflicts_catalog"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_driver_custom_zone_rejects_when_limit_reached() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    uid = uuid.UUID(driver_id)
+    for i in range(30):
+        db.execute(
+            text(
+                "INSERT INTO driver_zone_customs (id, driver_id, zone_id) "
+                "VALUES (:id, :driver_id, :zone_id)"
+            ),
+            {
+                "id": str(uuid.uuid4()),
+                "driver_id": str(uid),
+                "zone_id": f"custom-{i}",
+            },
+        )
+    db.commit()
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r = client.post("/driver/zones/custom-zones", json={"zone_id": "custom-overflow"})
+        assert r.status_code == 409
+        assert r.json()["detail"] == "custom_zone_limit_reached"
     finally:
         _reset_overrides()
         db.close()
