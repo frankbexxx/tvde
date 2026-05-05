@@ -40,7 +40,7 @@ def _is_pi_not_found_error(exc: BaseException) -> bool:
             code = getattr(exc, "code", None) or ""
             if code == "resource_missing":
                 return True
-    except Exception:  # pragma: no cover - defensive against stripe SDK variations
+    except (AttributeError, TypeError):  # pragma: no cover - defensive against stripe SDK variations
         pass
     return "No such payment_intent" in str(exc)
 
@@ -49,7 +49,7 @@ def sql_select_completed_processing(limit: int = 200) -> str:
     """SQL read-only para operadores copiarem (PostgreSQL)."""
     lim = max(1, min(int(limit), 500))
     return (
-        "SELECT t.id AS trip_id, p.id AS payment_id, p.stripe_payment_intent_id, "
+        "SELECT t.id AS trip_id, p.id AS payment_id, p.stripe_payment_intent_id, "  # nosec B608
         "p.status AS payment_status, t.status AS trip_status, "
         "t.completed_at, p.updated_at AS payment_updated_at\n"
         "FROM trips t\n"

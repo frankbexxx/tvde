@@ -202,6 +202,24 @@ def test_zone_session_create_and_conflict_open() -> None:
         db.close()
 
 
+def test_zone_session_create_normalizes_zone_id_lowercase() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r1 = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": " LISBOA ", "eta_seconds_baseline": 600, "eta_margin_percent": 25},
+        )
+        assert r1.status_code == 201
+        body = r1.json()
+        assert body["zone_id"] == "lisboa"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
 def test_zone_session_budget_exhausted() -> None:
     db = _make_db()
     driver_id = _create_driver(db)

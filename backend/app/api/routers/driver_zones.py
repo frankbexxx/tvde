@@ -87,7 +87,7 @@ async def post_zone_eta_estimate(
             ) from exc
         raise
     return DriverZoneEtaEstimateResponse(
-        zone_id=body.zone_id.strip(),
+        zone_id=body.zone_id.strip().lower(),
         eta_seconds_baseline=eta_seconds,
         source="server_haversine",
         distance_km=round(distance_km, 3),

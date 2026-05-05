@@ -73,6 +73,16 @@ def _utc_iso(dt: datetime | None) -> str:
 router = APIRouter(prefix="/partner", tags=["partner"])
 
 
+def _require_partner_id(ctx: UserContext) -> str:
+    pid = ctx.partner_id
+    if pid is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="partner_scope_required",
+        )
+    return pid
+
+
 def _driver_item(d) -> PartnerDriverItem:
     loc = None
     if d.last_location is not None:
@@ -114,14 +124,14 @@ async def partner_list_drivers(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> list[PartnerDriverItem]:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
-    drivers = list_drivers_for_partner_enriched(db, ctx.partner_id)
+    drivers = list_drivers_for_partner_enriched(db, partner_id)
     return [_driver_item(d) for d in drivers]
 
 
@@ -132,12 +142,12 @@ async def partner_get_driver(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> PartnerDriverItem:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     try:
         did = uuid.UUID(driver_user_id.strip())
@@ -146,7 +156,7 @@ async def partner_get_driver(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="invalid_uuid",
         ) from None
-    d = get_driver_for_partner(db, ctx.partner_id, did)
+    d = get_driver_for_partner(db, partner_id, did)
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _driver_item(d)
@@ -160,12 +170,12 @@ async def partner_discover_drivers(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> list[PartnerDriverDiscoveryItem]:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     drivers = discover_drivers_for_partner(db, query=q, limit=limit)
     out: list[PartnerDriverDiscoveryItem] = []
@@ -190,12 +200,12 @@ async def partner_add_driver(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> PartnerDriverItem:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     try:
         did = uuid.UUID(driver_user_id.strip())
@@ -203,8 +213,8 @@ async def partner_add_driver(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
         ) from None
-    partner_add_driver_to_fleet(db, partner_id=ctx.partner_id, driver_user_id=did)
-    d = get_driver_for_partner(db, ctx.partner_id, did)
+    partner_add_driver_to_fleet(db, partner_id=partner_id, driver_user_id=did)
+    d = get_driver_for_partner(db, partner_id, did)
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _driver_item(d)
@@ -218,12 +228,12 @@ async def partner_patch_driver_status(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> PartnerDriverItem:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     try:
         did = uuid.UUID(driver_user_id.strip())
@@ -234,12 +244,13 @@ async def partner_patch_driver_status(
         ) from None
     set_partner_driver_enabled(
         db,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
         driver_user_id=did,
         enabled=body.enabled,
     )
-    d = get_driver_for_partner(db, ctx.partner_id, did)
-    assert d is not None
+    d = get_driver_for_partner(db, partner_id, did)
+    if d is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _driver_item(d)
 
 
@@ -253,12 +264,12 @@ async def partner_patch_driver_availability(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> PartnerDriverItem:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     try:
         did = uuid.UUID(driver_user_id.strip())
@@ -269,12 +280,13 @@ async def partner_patch_driver_availability(
         ) from None
     set_partner_driver_availability(
         db,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
         driver_user_id=did,
         online=body.online,
     )
-    d = get_driver_for_partner(db, ctx.partner_id, did)
-    assert d is not None
+    d = get_driver_for_partner(db, partner_id, did)
+    if d is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _driver_item(d)
 
 
@@ -284,14 +296,14 @@ async def partner_list_trips(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> list[PartnerTripItem]:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
-    trips = list_trips_for_partner(db, ctx.partner_id)
+    trips = list_trips_for_partner(db, partner_id)
     return [_trip_item(t) for t in trips]
 
 
@@ -302,14 +314,14 @@ async def partner_export_trips_csv(
     db: Session = Depends(get_db),
 ):
     """Must be registered before /trips/{trip_id} so 'export' is not parsed as UUID."""
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
-    trips = list_trips_for_partner(db, ctx.partner_id)
+    trips = list_trips_for_partner(db, partner_id)
 
     buf = io.StringIO()
     w = csv.writer(buf)
@@ -358,12 +370,12 @@ async def partner_post_trip_reassign_driver(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> PartnerTripItem:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     try:
         tid = uuid.UUID(trip_id.strip())
@@ -375,7 +387,7 @@ async def partner_post_trip_reassign_driver(
         ) from None
     t = partner_reassign_trip_driver(
         db,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
         trip_id=tid,
         new_driver_user_id=nid,
     )
@@ -389,12 +401,12 @@ async def partner_get_trip(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> PartnerTripItem:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     try:
         tid = uuid.UUID(trip_id.strip())
@@ -403,7 +415,7 @@ async def partner_get_trip(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="invalid_uuid",
         ) from None
-    t = get_trip_for_partner(db, ctx.partner_id, tid)
+    t = get_trip_for_partner(db, partner_id, tid)
     if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _trip_item(t)
@@ -421,12 +433,12 @@ async def partner_approve_zone_session_extension(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> DriverZoneSessionResponse:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
     try:
         did = uuid.UUID(driver_user_id.strip())
@@ -439,7 +451,7 @@ async def partner_approve_zone_session_extension(
     try:
         sess = approve_zone_session_extension(
             db,
-            partner_id=ctx.partner_id,
+            partner_id=partner_id,
             driver_user_id=did,
             session_id=sid,
             extra_seconds=body.extra_seconds,
@@ -473,12 +485,12 @@ async def partner_get_metrics(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> PartnerMetricsResponse:
-    assert ctx.partner_id is not None
+    partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
         path=request.url.path,
         user_id=ctx.user_id,
-        partner_id=ctx.partner_id,
+        partner_id=partner_id,
     )
-    m = partner_metrics(db, uuid.UUID(ctx.partner_id))
+    m = partner_metrics(db, uuid.UUID(partner_id))
     return PartnerMetricsResponse(**m)

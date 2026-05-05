@@ -49,7 +49,7 @@ _ZONE_ARRIVED_GATES: dict[str, tuple[float, float, float]] = {
 
 def zone_arrived_geo_gate(zone_id: str) -> tuple[float, float, float] | None:
     """Return ``(anchor_lat, anchor_lng, max_km)`` if ``Cheguei`` must validate GPS, else ``None``."""
-    return _ZONE_ARRIVED_GATES.get(zone_id.strip())
+    return _ZONE_ARRIVED_GATES.get(zone_id.strip().lower())
 
 
 def list_zone_catalog() -> list[dict[str, str | float | None]]:
