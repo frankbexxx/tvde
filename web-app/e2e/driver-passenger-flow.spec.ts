@@ -218,6 +218,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     })
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
+    await refreshDriverLocationNearPickup(request, tokens.driver)
     await startBtn.click()
     await expect
       .poll(
@@ -324,6 +325,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     })
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
+    await refreshDriverLocationNearPickup(request, tokens.driver)
     await startBtn.click()
     await expect
       .poll(

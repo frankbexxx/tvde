@@ -107,6 +107,9 @@ function mockFixedPosition(role: GeolocationMockRole) {
  */
 const FALLBACK_AFTER_MS = 10_000
 
+/** Playwright em CI pode demorar >10s a devolver a primeira posição; Oeiras fica longe do pickup típico do e2e e o reporter sobrescreve `/drivers/location`. */
+const E2E_DRIVER_FALLBACK_AFTER_MS = 120_000
+
 /**
  * Timeout (ms) do próprio `navigator.geolocation.watchPosition`. Mais generoso
  * que o nosso timer de fallback — se o browser responder entre os 10s e 15s
@@ -227,13 +230,18 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       applyFallback()
     }
 
-    // If we don't get any position within FALLBACK_AFTER_MS, fall back to Oeiras (Câmara Municipal).
+    const fallbackAfterMs =
+      import.meta.env.VITE_E2E === 'true' && mockRole === 'driver'
+        ? E2E_DRIVER_FALLBACK_AFTER_MS
+        : FALLBACK_AFTER_MS
+
+    // If we don't get any position within fallbackAfterMs, fall back to Oeiras (Câmara Municipal).
     fallbackTimeoutRef.current = setTimeout(() => {
       if (!lastPositionRef.current) {
         logWarn('Geolocation fallback: using Oeiras (Câmara Municipal) coordinates')
         applyFallback()
       }
-    }, FALLBACK_AFTER_MS)
+    }, fallbackAfterMs)
 
     const watchId = navigator.geolocation.watchPosition(onSuccess, onError, {
       enableHighAccuracy: true,
