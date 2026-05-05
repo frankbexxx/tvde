@@ -36,7 +36,7 @@ async function openDriverMenu(page: Page) {
   await page.getByTestId('driver-open-menu').click()
 }
 
-/** Actualiza posição no servidor — gates no backend podem exigir timestamp recente. */
+/** Refresca última posição no servidor (o start valida contra isto; gates no backend podem exigir timestamp recente). */
 async function refreshDriverLocationNearPickup(request: APIRequestContext, driverToken: string) {
   const locRes = await request.post(`${API}/drivers/location`, {
     headers: {
@@ -219,6 +219,19 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
     await startBtn.click()
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/${tripId}`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return null
+          const d = (await r.json()) as { status?: string }
+          return d.status ?? null
+        },
+        { timeout: sec(90), intervals: pollLook }
+      )
+      .toBe('ongoing')
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
       timeout: sec(90),
     })
@@ -312,6 +325,19 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
     await startBtn.click()
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/${tripId}`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return null
+          const d = (await r.json()) as { status?: string }
+          return d.status ?? null
+        },
+        { timeout: sec(90), intervals: pollLook }
+      )
+      .toBe('ongoing')
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
       timeout: sec(90),
     })

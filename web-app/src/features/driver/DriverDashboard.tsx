@@ -689,7 +689,7 @@ export function DriverDashboard() {
         tripId={activeTripId}
         token={token!}
         tripDetailFallback={acceptedDetailFallback}
-        driverLocation={driverLocation ?? null}
+        driverLocation={mapDotLatLng ?? null}
         addLog={addLog}
         setStatus={setStatus}
         statusOverride={driverStatusOverride}
