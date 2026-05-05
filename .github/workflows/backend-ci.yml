@@ -45,6 +45,18 @@ jobs:
       - name: Ruff check
         run: ruff check .
 
+      - name: Install audit/type tools
+        run: pip install mypy bandit pip-audit
+
+      - name: Mypy (critical backend modules)
+        run: mypy --config-file mypy.ini app/api/routers/webhooks/stripe.py app/sentry.py
+
+      - name: Bandit (SAST)
+        run: bandit -r app -c bandit.yaml -q
+
+      - name: pip-audit (requirements)
+        run: pip-audit -r requirements.txt
+
       - name: Apply Alembic migrations
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db

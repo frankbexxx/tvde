@@ -26,6 +26,10 @@ from app.utils.logging import log_event
 ZONE_TZ = ZoneInfo("Europe/Lisbon")
 
 
+def _normalize_zone_id(raw: str) -> str:
+    return raw.strip().lower()
+
+
 def service_date_local_now() -> date:
     return datetime.now(ZONE_TZ).date()
 
@@ -90,7 +94,7 @@ def create_zone_session(
     sess = DriverZoneSession(
         id=uuid.uuid4(),
         driver_id=driver_id,
-        zone_id=zone_id.strip(),
+        zone_id=_normalize_zone_id(zone_id),
         started_at=now,
         eta_seconds_baseline=eta_seconds_baseline,
         eta_margin_percent=eta_margin_percent,
