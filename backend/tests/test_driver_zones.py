@@ -128,6 +128,54 @@ def test_zone_budget_today_defaults() -> None:
         db.close()
 
 
+def test_zone_eta_estimate_ok() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _set_driver_location(db, uuid.UUID(driver_id), 38.7223, -9.1393)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r = client.post("/driver/zones/eta-estimate", json={"zone_id": "lisboa"})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["zone_id"] == "lisboa"
+        assert data["source"] == "server_haversine"
+        assert data["eta_seconds_baseline"] > 0
+        assert data["distance_km"] >= 0
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_zone_eta_estimate_requires_driver_location() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r = client.post("/driver/zones/eta-estimate", json={"zone_id": "lisboa"})
+        assert r.status_code == 400
+        assert r.json()["detail"] == "driver_location_required_for_zone_eta"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_zone_eta_estimate_rejects_unknown_anchor() -> None:
+    db = _make_db()
+    driver_id = _create_driver(db)
+    _set_driver_location(db, uuid.UUID(driver_id), 38.7223, -9.1393)
+    _override_deps(db, UserContext(user_id=driver_id, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r = client.post("/driver/zones/eta-estimate", json={"zone_id": "zona_custom_sem_ancora"})
+        assert r.status_code == 400
+        assert r.json()["detail"] == "zone_eta_anchor_not_available"
+    finally:
+        _reset_overrides()
+        db.close()
+
+
 def test_zone_session_create_and_conflict_open() -> None:
     db = _make_db()
     driver_id = _create_driver(db)

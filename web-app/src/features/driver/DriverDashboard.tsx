@@ -27,6 +27,7 @@ import {
   fetchOpenDriverZoneSession,
   getDriverZoneBudgetToday,
   getDriverZoneCatalog,
+  postDriverZoneEtaEstimate,
   postDriverZoneSessionArrived,
   postDriverZoneSessionCancel,
   postDriverZoneSessionRequestExtension,
@@ -57,7 +58,7 @@ import {
   fetchDriverLastServerLocation,
   sendDriverLocation,
 } from '../../services/locationService'
-import { getRoute } from '../../services/routingService'
+import { getOsrmRouteMeta, getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { Button } from '../../components/ui/button'
@@ -77,6 +78,7 @@ import { ActiveTripActions } from './ActiveTripActions'
 import { formatPickup, formatDestination } from '../../utils/format'
 import {
   DRIVER_START_TRIP_MAX_DISTANCE_M,
+  haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
 import { MapView } from '../../maps/MapView'
@@ -726,6 +728,7 @@ export function DriverDashboard() {
         <DriverOperationsMenu
           sessionDisplayName={sessionDisplayName}
           history={history}
+          driverLocationForZones={mapDotLatLng ?? null}
           navPref={driverNavPref}
           vehicleCategories={vehicleCategories}
           driverDocuments={driverDocuments}
@@ -1452,9 +1455,38 @@ function formatZoneDeadlineLocal(iso: string, timeZone: string): string {
   }
 }
 
+const DRIVER_ZONE_CUSTOM_IDS_LS_KEY = 'driver.zoneCustomIds.v1'
+
+function loadDriverZoneCustomIds(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(DRIVER_ZONE_CUSTOM_IDS_LS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    const ids = parsed
+      .map((v) => (typeof v === 'string' ? v.trim() : ''))
+      .filter((v) => v.length > 0)
+      .map((v) => v.toLowerCase())
+    return Array.from(new Set(ids)).slice(0, 30)
+  } catch {
+    return []
+  }
+}
+
+function saveDriverZoneCustomIds(ids: string[]): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(DRIVER_ZONE_CUSTOM_IDS_LS_KEY, JSON.stringify(ids))
+  } catch {
+    // Ignore localStorage quota/privacy issues.
+  }
+}
+
 function DriverOperationsMenu({
   sessionDisplayName,
   history,
+  driverLocationForZones,
   navPref,
   vehicleCategories,
   driverDocuments,
@@ -1468,6 +1500,7 @@ function DriverOperationsMenu({
 }: {
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
+  driverLocationForZones: { lat: number; lng: number } | null
   navPref: DriverNavApp
   vehicleCategories: DriverVehicleCategory[]
   driverDocuments: DriverDocumentsState
@@ -1523,6 +1556,9 @@ function DriverOperationsMenu({
   const [zoneBusy, setZoneBusy] = useState(false)
   const [zoneRefreshing, setZoneRefreshing] = useState(false)
   const [zoneNewZoneId, setZoneNewZoneId] = useState('portimao')
+  const [zoneCustomIds, setZoneCustomIds] = useState<string[]>(() => loadDriverZoneCustomIds())
+  const [zoneEtaAutoBusy, setZoneEtaAutoBusy] = useState(false)
+  const [zoneEtaManuallyEdited, setZoneEtaManuallyEdited] = useState(false)
   const [zoneEtaMinutes, setZoneEtaMinutes] = useState(30)
   const [zoneMarginPct, setZoneMarginPct] = useState(25)
   const [zoneExtensionReason, setZoneExtensionReason] = useState('')
@@ -1576,6 +1612,136 @@ function DriverOperationsMenu({
       setZoneNewZoneId(zoneCatalog[0].zone_id)
     }
   }, [zoneCatalog, zoneNewZoneId])
+
+  useEffect(() => {
+    saveDriverZoneCustomIds(zoneCustomIds)
+  }, [zoneCustomIds])
+
+  const zoneCatalogIds = useMemo(() => {
+    return new Set((zoneCatalog ?? []).map((z) => z.zone_id.trim().toLowerCase()))
+  }, [zoneCatalog])
+
+  const zoneSelectableItems = useMemo(() => {
+    const items = (zoneCatalog ?? []).map((z) => ({
+      id: z.zone_id.trim(),
+      label: z.label_pt,
+      custom: false,
+    }))
+    for (const raw of zoneCustomIds) {
+      const id = raw.trim()
+      if (!id) continue
+      if (zoneCatalogIds.has(id.toLowerCase())) continue
+      items.push({
+        id,
+        label: `${id} (custom)`,
+        custom: true,
+      })
+    }
+    return items
+  }, [zoneCatalog, zoneCustomIds, zoneCatalogIds])
+
+  const selectedZoneCatalogItem = useMemo(() => {
+    const zid = zoneNewZoneId.trim().toLowerCase()
+    if (!zid) return null
+    return (zoneCatalog ?? []).find((z) => z.zone_id.trim().toLowerCase() === zid) ?? null
+  }, [zoneCatalog, zoneNewZoneId])
+
+  const handleAddCustomZone = () => {
+    const zid = zoneNewZoneId.trim().toLowerCase()
+    if (!zid) {
+      sonnerToast.error('Indica um ID de zona para guardar.')
+      return
+    }
+    if (zoneCatalogIds.has(zid)) {
+      sonnerToast.error('Essa zona já existe no catálogo.')
+      return
+    }
+    if (zoneCustomIds.includes(zid)) {
+      sonnerToast.error('Essa zona custom já está guardada.')
+      return
+    }
+    setZoneCustomIds((prev) => Array.from(new Set([...prev, zid])).slice(0, 30))
+    sonnerToast.success(`Zona custom «${zid}» guardada.`)
+  }
+
+  const handleRemoveCustomZone = () => {
+    const zid = zoneNewZoneId.trim().toLowerCase()
+    if (!zid || !zoneCustomIds.includes(zid)) {
+      sonnerToast.error('A zona actual não é custom guardada.')
+      return
+    }
+    setZoneCustomIds((prev) => prev.filter((id) => id !== zid))
+    sonnerToast.success(`Zona custom «${zid}» removida.`)
+  }
+
+  const estimateZoneEtaFromCurrentLocation = useCallback(
+    async (showToast: boolean) => {
+      const zid = zoneNewZoneId.trim()
+      if (!zid) return
+      setZoneEtaAutoBusy(true)
+      try {
+        if (token) {
+          try {
+            const serverEstimate = await postDriverZoneEtaEstimate(token, zid)
+            const etaServerMin = Math.max(1, Math.min(2880, Math.round(serverEstimate.eta_seconds_baseline / 60)))
+            setZoneEtaMinutes(etaServerMin)
+            if (showToast) sonnerToast.success(`ETA estimado no servidor (~${etaServerMin} min).`)
+            return
+          } catch {
+            // Fallback below (OSRM/haversine) when server estimate is unavailable for this zone/context.
+          }
+        }
+        if (!driverLocationForZones) {
+          if (showToast) sonnerToast.error('Sem posição actual para estimar ETA.')
+          return
+        }
+        const target =
+          selectedZoneCatalogItem?.arrived_anchor_lat != null && selectedZoneCatalogItem?.arrived_anchor_lng != null
+            ? {
+                lat: selectedZoneCatalogItem.arrived_anchor_lat,
+                lng: selectedZoneCatalogItem.arrived_anchor_lng,
+              }
+            : null
+        if (!target) {
+          if (showToast) sonnerToast.error('Sem âncora desta zona no catálogo para calcular ETA.')
+          return
+        }
+        const meta = await getOsrmRouteMeta(driverLocationForZones, target)
+        let etaMin: number
+        let source: 'route' | 'fallback'
+        if (meta && Number.isFinite(meta.durationSec) && meta.durationSec > 0) {
+          etaMin = Math.round(meta.durationSec / 60)
+          source = 'route'
+        } else {
+          const km = haversineKm(driverLocationForZones, target)
+          etaMin = Math.round((km / 45) * 60 * 1.25)
+          source = 'fallback'
+        }
+        etaMin = Math.max(1, Math.min(2880, etaMin))
+        setZoneEtaMinutes(etaMin)
+        if (showToast) {
+          sonnerToast.success(
+            source === 'route'
+              ? `ETA atualizado automaticamente (~${etaMin} min).`
+              : `ETA estimado por distância (~${etaMin} min).`
+          )
+        }
+      } finally {
+        setZoneEtaAutoBusy(false)
+      }
+    },
+    [driverLocationForZones, selectedZoneCatalogItem, token, zoneNewZoneId]
+  )
+
+  useEffect(() => {
+    setZoneEtaManuallyEdited(false)
+  }, [zoneNewZoneId])
+
+  useEffect(() => {
+    if (zoneEtaManuallyEdited) return
+    if (zoneSession != null) return
+    void estimateZoneEtaFromCurrentLocation(false)
+  }, [zoneEtaManuallyEdited, zoneSession, estimateZoneEtaFromCurrentLocation])
 
   const zoneTz = zoneBudget?.timezone ?? 'Europe/Lisbon'
   const activeZoneLabelPt = useMemo(() => {
@@ -2009,38 +2175,53 @@ function DriverOperationsMenu({
               <span className="text-[11px] text-muted-foreground">
                 Zona-alvo · catálogo v1 (também podes escrever à mão se o catálogo falhar)
               </span>
-              {zoneCatalog && zoneCatalog.length > 0 ? (
+              {zoneSelectableItems.length > 0 ? (
                 <select
                   value={zoneNewZoneId}
                   onChange={(ev) => setZoneNewZoneId(ev.target.value)}
                   data-testid="driver-zones-zone-select"
                   className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
                 >
-                  {zoneCatalog.map((z) => (
-                    <option key={z.zone_id} value={z.zone_id}>
-                      {z.label_pt}
+                  {zoneSelectableItems.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.label}
                     </option>
                   ))}
                 </select>
-              ) : (
-                <>
-                  {zoneCatalogErr ? (
-                    <p className="text-[11px] text-warning" data-testid="driver-zones-catalog-fallback-hint">
-                      {zoneCatalogErr}
-                    </p>
-                  ) : null}
-                  <input
-                    value={zoneNewZoneId}
-                    onChange={(ev) => setZoneNewZoneId(ev.target.value)}
-                    data-testid="driver-zones-zone-input"
-                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    placeholder="portimao, faro, lisboa, lis…"
-                  />
-                </>
-              )}
+              ) : null}
+              {zoneCatalogErr ? (
+                <p className="text-[11px] text-warning" data-testid="driver-zones-catalog-fallback-hint">
+                  {zoneCatalogErr}
+                </p>
+              ) : null}
+              <input
+                value={zoneNewZoneId}
+                onChange={(ev) => setZoneNewZoneId(ev.target.value)}
+                data-testid="driver-zones-zone-input"
+                className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="Escreve ID manual (ex.: lisboa-norte)"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomZone()}
+                  disabled={zoneBusy}
+                  className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                >
+                  Guardar zona custom
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCustomZone()}
+                  disabled={zoneBusy}
+                  className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                >
+                  Remover custom
+                </button>
+              </div>
             </label>
             <div className="grid grid-cols-2 gap-2">
               <label className="block space-y-1">
@@ -2050,7 +2231,10 @@ function DriverOperationsMenu({
                   min={1}
                   max={2880}
                   value={zoneEtaMinutes}
-                  onChange={(ev) => setZoneEtaMinutes(Number(ev.target.value) || 1)}
+                  onChange={(ev) => {
+                    setZoneEtaManuallyEdited(true)
+                    setZoneEtaMinutes(Number(ev.target.value) || 1)
+                  }}
                   className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
                 />
               </label>
@@ -2066,6 +2250,14 @@ function DriverOperationsMenu({
                 />
               </label>
             </div>
+            <button
+              type="button"
+              onClick={() => void estimateZoneEtaFromCurrentLocation(true)}
+              disabled={zoneBusy || zoneEtaAutoBusy}
+              className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+            >
+              {zoneEtaAutoBusy ? 'A calcular ETA…' : 'Calcular ETA automático'}
+            </button>
             <button
               type="button"
               data-testid="driver-zones-create"

@@ -124,6 +124,35 @@ def _assert_driver_inside_zone_for_arrived(
         raise ValueError("driver_outside_zone_for_arrived")
 
 
+def estimate_zone_eta_seconds(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    zone_id: str,
+) -> tuple[int, float]:
+    """Estimate baseline ETA seconds from last driver location to zone anchor.
+
+    v1 generic model:
+    - Requires catalog gate anchor for ``zone_id``.
+    - Uses haversine distance with speed 45 km/h and +25% buffer.
+    """
+    gate = zone_arrived_geo_gate(zone_id)
+    if gate is None:
+        raise ValueError("zone_eta_anchor_not_available")
+    anchor_lat, anchor_lng, _max_km = gate
+    loc = (
+        db.execute(select(DriverLocation).where(DriverLocation.driver_id == driver_id))
+        .scalars()
+        .one_or_none()
+    )
+    if loc is None:
+        raise ValueError("driver_location_required_for_zone_eta")
+    dist_km = haversine_km(float(loc.lat), float(loc.lng), anchor_lat, anchor_lng)
+    eta_hours = (dist_km / 45.0) * 1.25
+    eta_seconds = int(max(60, min(86400 * 2, round(eta_hours * 3600))))
+    return eta_seconds, dist_km
+
+
 def mark_session_arrived(
     db: Session,
     *,

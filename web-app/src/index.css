@@ -98,3 +98,45 @@
 .animate-toast-enter {
   animation: slideDown 0.2s ease-out;
 }
+
+@keyframes app-header-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.app-header-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.app-header-marquee-track {
+  display: inline-flex;
+  min-width: 200%;
+  animation: app-header-marquee 24s linear infinite;
+}
+
+.app-header-marquee-item {
+  display: inline-block;
+  width: 50%;
+  padding-right: 2rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: hsl(var(--color-text) / 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-header-marquee-track {
+    animation: none;
+    min-width: 100%;
+  }
+
+  .app-header-marquee-item {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

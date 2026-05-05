@@ -39,6 +39,7 @@ export function AppHeaderBar() {
   const dateTimeLine = `${dateStr} · ${timeStr}`
   const who = sessionDisplayName?.trim() || sessionPhone?.trim() || null
   const rotatingHint = HEADER_ROTATING_HINTS[hintIndex] ?? HEADER_ROTATING_HINTS[0]
+  const shouldMarqueeHint = rotatingHint.length > 54
 
   return (
     <header
@@ -63,13 +64,24 @@ export function AppHeaderBar() {
           <p className="text-xs text-muted-foreground truncate" title={dateTimeLine}>
             {dateTimeLine}
           </p>
-          <p
-            className="text-xs text-foreground/70 truncate mt-0.5 min-h-[1.125rem] transition-opacity duration-300"
-            title={rotatingHint}
-            aria-live="polite"
-          >
-            {rotatingHint}
-          </p>
+          {shouldMarqueeHint ? (
+            <div
+              className="app-header-marquee mt-0.5 min-h-[1.125rem]"
+              title={rotatingHint}
+              aria-live="polite"
+            >
+              <div className="app-header-marquee-track">
+                <span className="app-header-marquee-item">{rotatingHint}</span>
+                <span className="app-header-marquee-item" aria-hidden="true">
+                  {rotatingHint}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-foreground/70 mt-0.5 min-h-[1.125rem]" title={rotatingHint} aria-live="polite">
+              {rotatingHint}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1 shrink-0 pt-0.5">
           <ProfileButton />

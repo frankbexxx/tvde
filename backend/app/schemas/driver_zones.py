@@ -25,6 +25,17 @@ class DriverZoneSessionCreateRequest(BaseModel):
     eta_margin_percent: int = Field(default=25, ge=0, le=200)
 
 
+class DriverZoneEtaEstimateRequest(BaseModel):
+    zone_id: str = Field(..., min_length=1, max_length=128)
+
+
+class DriverZoneEtaEstimateResponse(BaseModel):
+    zone_id: str
+    eta_seconds_baseline: int = Field(..., gt=0, le=86400 * 2)
+    source: Literal["server_haversine"] = "server_haversine"
+    distance_km: float = Field(..., ge=0)
+
+
 class DriverZoneSessionResponse(BaseModel):
     id: uuid.UUID
     driver_id: uuid.UUID
