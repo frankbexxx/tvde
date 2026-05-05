@@ -277,6 +277,21 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const driverPage = await driverCtx.newPage()
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
     await driverPage.getByTestId(`driver-accept-${tripId}`).click()
+
+    // CI pode demorar mais tempo entre seed → click, e alguns gates usam "last driver location" recente.
+    const locRefresh = await request.post(`${API}/drivers/location`, {
+      headers: {
+        Authorization: `Bearer ${tokens.driver}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        lat: TRIP_ORIGIN.lat,
+        lng: TRIP_ORIGIN.lng,
+        timestamp: Date.now(),
+      },
+    })
+    expect(locRefresh.ok(), `driver location refresh: ${locRefresh.status()} ${await locRefresh.text()}`).toBeTruthy()
+
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
