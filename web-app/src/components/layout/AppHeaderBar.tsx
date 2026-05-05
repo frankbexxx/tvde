@@ -78,7 +78,11 @@ export function AppHeaderBar() {
               </div>
             </div>
           ) : (
-            <p className="text-xs text-foreground/70 mt-0.5 min-h-[1.125rem]" title={rotatingHint} aria-live="polite">
+            <p
+              className="text-xs text-foreground/70 mt-0.5 min-h-[1.125rem] whitespace-nowrap overflow-hidden text-ellipsis"
+              title={rotatingHint}
+              aria-live="polite"
+            >
               {rotatingHint}
             </p>
           )}

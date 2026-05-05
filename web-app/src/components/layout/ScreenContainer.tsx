@@ -22,7 +22,7 @@ export function ScreenContainer({
   mainScrollId,
 }: ScreenContainerProps) {
   const scrollBottomPad =
-    bottomButton && bottomBarVariant === 'flush' ? 'pb-24' : bottomButton ? 'pb-20' : 'pb-8'
+    bottomButton && bottomBarVariant === 'flush' ? 'pb-36' : bottomButton ? 'pb-20' : 'pb-8'
   return (
     <div className="min-h-dvh flex flex-col max-w-md mx-auto w-full bg-background">
       <div
