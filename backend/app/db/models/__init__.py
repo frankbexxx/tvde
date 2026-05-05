@@ -1,5 +1,6 @@
 from app.db.models.audit_event import AuditEvent
 from app.db.models.driver import Driver
+from app.db.models.driver_zone_custom import DriverZoneCustom
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.partner import Partner
@@ -15,6 +16,7 @@ __all__ = [
     "User",
     "Partner",
     "Driver",
+    "DriverZoneCustom",
     "DriverZoneDayBudget",
     "DriverZoneSession",
     "Trip",

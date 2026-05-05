@@ -14,16 +14,18 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.db.models.driver import DriverLocation
+from app.db.models.driver_zone_custom import DriverZoneCustom
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.trip import Trip
 from app.models.enums import TripStatus
 from app.services.partner_queries import get_driver_for_partner
-from app.services.zone_catalog import zone_arrived_geo_gate
+from app.services.zone_catalog import list_zone_catalog, zone_arrived_geo_gate
 from app.utils.geo import haversine_km
 from app.utils.logging import log_event
 
 ZONE_TZ = ZoneInfo("Europe/Lisbon")
+MAX_DRIVER_CUSTOM_ZONES = 30
 
 
 def _normalize_zone_id(raw: str) -> str:
@@ -155,6 +157,83 @@ def estimate_zone_eta_seconds(
     eta_hours = (dist_km / 45.0) * 1.25
     eta_seconds = int(max(60, min(86400 * 2, round(eta_hours * 3600))))
     return eta_seconds, dist_km
+
+
+def list_driver_custom_zones(db: Session, *, driver_id: uuid.UUID) -> list[DriverZoneCustom]:
+    return (
+        db.execute(
+            select(DriverZoneCustom)
+            .where(DriverZoneCustom.driver_id == driver_id)
+            .order_by(DriverZoneCustom.created_at.asc())
+        )
+        .scalars()
+        .all()
+    )
+
+
+def add_driver_custom_zone(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    zone_id: str,
+) -> DriverZoneCustom:
+    zid = _normalize_zone_id(zone_id)
+    if not zid:
+        raise ValueError("custom_zone_invalid")
+    catalog_ids = {str(z["zone_id"]).strip().lower() for z in list_zone_catalog()}
+    if zid in catalog_ids:
+        raise ValueError("custom_zone_conflicts_catalog")
+    row = (
+        db.execute(
+            select(DriverZoneCustom).where(
+                and_(
+                    DriverZoneCustom.driver_id == driver_id,
+                    DriverZoneCustom.zone_id == zid,
+                )
+            )
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if row is not None:
+        return row
+    current_total = (
+        db.execute(select(DriverZoneCustom.id).where(DriverZoneCustom.driver_id == driver_id))
+        .scalars()
+        .all()
+    )
+    if len(current_total) >= MAX_DRIVER_CUSTOM_ZONES:
+        raise ValueError("custom_zone_limit_reached")
+    row = DriverZoneCustom(driver_id=driver_id, zone_id=zid)
+    db.add(row)
+    db.flush()
+    return row
+
+
+def remove_driver_custom_zone(
+    db: Session,
+    *,
+    driver_id: uuid.UUID,
+    zone_id: str,
+) -> bool:
+    zid = _normalize_zone_id(zone_id)
+    row = (
+        db.execute(
+            select(DriverZoneCustom).where(
+                and_(
+                    DriverZoneCustom.driver_id == driver_id,
+                    DriverZoneCustom.zone_id == zid,
+                )
+            )
+        )
+        .scalars()
+        .one_or_none()
+    )
+    if row is None:
+        return False
+    db.delete(row)
+    db.flush()
+    return True
 
 
 def mark_session_arrived(

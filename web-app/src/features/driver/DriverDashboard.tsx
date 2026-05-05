@@ -24,10 +24,13 @@ import type {
 import { isTimeoutLikeError } from '../../api/client'
 import {
   createDriverZoneSession,
+  deleteDriverZoneCustomZone,
   fetchOpenDriverZoneSession,
   getDriverZoneBudgetToday,
   getDriverZoneCatalog,
+  getDriverZoneCustomZones,
   postDriverZoneEtaEstimate,
+  postDriverZoneCustomZone,
   postDriverZoneSessionArrived,
   postDriverZoneSessionCancel,
   postDriverZoneSessionRequestExtension,
@@ -1455,34 +1458,6 @@ function formatZoneDeadlineLocal(iso: string, timeZone: string): string {
   }
 }
 
-const DRIVER_ZONE_CUSTOM_IDS_LS_KEY = 'driver.zoneCustomIds.v1'
-
-function loadDriverZoneCustomIds(): string[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const raw = window.localStorage.getItem(DRIVER_ZONE_CUSTOM_IDS_LS_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    const ids = parsed
-      .map((v) => (typeof v === 'string' ? v.trim() : ''))
-      .filter((v) => v.length > 0)
-      .map((v) => v.toLowerCase())
-    return Array.from(new Set(ids)).slice(0, 30)
-  } catch {
-    return []
-  }
-}
-
-function saveDriverZoneCustomIds(ids: string[]): void {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(DRIVER_ZONE_CUSTOM_IDS_LS_KEY, JSON.stringify(ids))
-  } catch {
-    // Ignore localStorage quota/privacy issues.
-  }
-}
-
 function normalizeZoneIdInput(raw: string): string {
   return raw.replace(/\s+/g, '').toLowerCase()
 }
@@ -1560,7 +1535,7 @@ function DriverOperationsMenu({
   const [zoneBusy, setZoneBusy] = useState(false)
   const [zoneRefreshing, setZoneRefreshing] = useState(false)
   const [zoneNewZoneId, setZoneNewZoneId] = useState('portimao')
-  const [zoneCustomIds, setZoneCustomIds] = useState<string[]>(() => loadDriverZoneCustomIds())
+  const [zoneCustomIds, setZoneCustomIds] = useState<string[]>([])
   const [zoneEtaAutoBusy, setZoneEtaAutoBusy] = useState(false)
   const [zoneEtaManuallyEdited, setZoneEtaManuallyEdited] = useState(false)
   const [zoneEtaHint, setZoneEtaHint] = useState<string | null>(null)
@@ -1573,6 +1548,7 @@ function DriverOperationsMenu({
       setZoneBudget(null)
       setZoneSession(null)
       setZoneCatalog(null)
+      setZoneCustomIds([])
       setZoneCatalogErr(null)
       return
     }
@@ -1592,6 +1568,12 @@ function DriverOperationsMenu({
       } catch {
         setZoneCatalog(null)
         setZoneCatalogErr('Catálogo de zonas indisponível — usa o ID manual se precisares.')
+      }
+      try {
+        const custom = await getDriverZoneCustomZones(token)
+        setZoneCustomIds(custom.map((z) => z.zone_id))
+      } catch {
+        setZoneCustomIds([])
       }
       if (showTapFeedback) {
         sonnerToast.success('Zonas actualizadas.', { duration: 2500 })
@@ -1616,10 +1598,6 @@ function DriverOperationsMenu({
     if (zoneNewZoneId.trim().length > 0) return
     setZoneNewZoneId(zoneCatalog[0].zone_id)
   }, [zoneCatalog, zoneNewZoneId])
-
-  useEffect(() => {
-    saveDriverZoneCustomIds(zoneCustomIds)
-  }, [zoneCustomIds])
 
   const zoneCatalogIds = useMemo(() => {
     return new Set((zoneCatalog ?? []).map((z) => z.zone_id.trim().toLowerCase()))
@@ -1651,6 +1629,7 @@ function DriverOperationsMenu({
   }, [zoneCatalog, zoneNewZoneId])
 
   const handleAddCustomZone = () => {
+    if (!token) return
     const zid = zoneNewZoneId.trim().toLowerCase()
     if (!zid) {
       sonnerToast.error('Indica um ID de zona para guardar.')
@@ -1664,18 +1643,55 @@ function DriverOperationsMenu({
       sonnerToast.error('Essa zona custom já está guardada.')
       return
     }
-    setZoneCustomIds((prev) => Array.from(new Set([...prev, zid])).slice(0, 30))
-    sonnerToast.success(`Zona custom «${zid}» guardada.`)
+    setZoneBusy(true)
+    void postDriverZoneCustomZone(token, zid)
+      .then(() => {
+        setZoneCustomIds((prev) => Array.from(new Set([...prev, zid])).slice(0, 30))
+        sonnerToast.success(`Zona custom «${zid}» guardada.`)
+      })
+      .catch((e: unknown) => {
+        const detail =
+          e !== null && typeof e === 'object' && 'detail' in e
+            ? String((e as { detail: unknown }).detail)
+            : ''
+        if (detail === 'custom_zone_conflicts_catalog') {
+          sonnerToast.error('Essa zona já existe no catálogo oficial.')
+          return
+        }
+        if (detail === 'custom_zone_limit_reached') {
+          sonnerToast.error('Atingiste o limite de 30 zonas custom.')
+          return
+        }
+        sonnerToast.error('Não foi possível guardar a zona custom.')
+      })
+      .finally(() => setZoneBusy(false))
   }
 
   const handleRemoveCustomZone = () => {
+    if (!token) return
     const zid = zoneNewZoneId.trim().toLowerCase()
     if (!zid || !zoneCustomIds.includes(zid)) {
       sonnerToast.error('A zona actual não é custom guardada.')
       return
     }
-    setZoneCustomIds((prev) => prev.filter((id) => id !== zid))
-    sonnerToast.success(`Zona custom «${zid}» removida.`)
+    setZoneBusy(true)
+    void deleteDriverZoneCustomZone(token, zid)
+      .then(() => {
+        setZoneCustomIds((prev) => prev.filter((id) => id !== zid))
+        sonnerToast.success(`Zona custom «${zid}» removida.`)
+      })
+      .catch((e: unknown) => {
+        const detail =
+          e !== null && typeof e === 'object' && 'detail' in e
+            ? String((e as { detail: unknown }).detail)
+            : 'Não foi possível remover a zona custom.'
+        if (detail === 'custom_zone_not_found') {
+          sonnerToast.error('Essa zona custom já não existe no servidor.')
+          return
+        }
+        sonnerToast.error(detail)
+      })
+      .finally(() => setZoneBusy(false))
   }
 
   const estimateZoneEtaFromCurrentLocation = useCallback(

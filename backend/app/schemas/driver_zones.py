@@ -94,3 +94,18 @@ class DriverZoneCatalogItem(BaseModel):
 
 class DriverZoneCatalogResponse(BaseModel):
     zones: list[DriverZoneCatalogItem]
+
+
+class DriverZoneCustomItem(BaseModel):
+    zone_id: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DriverZoneCustomCreateRequest(BaseModel):
+    zone_id: str = Field(..., min_length=1, max_length=128)
+
+
+class DriverZoneCustomListResponse(BaseModel):
+    zones: list[DriverZoneCustomItem]
