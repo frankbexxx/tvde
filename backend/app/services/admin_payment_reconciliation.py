@@ -48,8 +48,8 @@ def _is_pi_not_found_error(exc: BaseException) -> bool:
 def sql_select_completed_processing(limit: int = 200) -> str:
     """SQL read-only para operadores copiarem (PostgreSQL)."""
     lim = max(1, min(int(limit), 500))
-    return (  # nosec B608 - static read-only operator query, lim is int-clamped above
-        "SELECT t.id AS trip_id, p.id AS payment_id, p.stripe_payment_intent_id, "
+    return (
+        "SELECT t.id AS trip_id, p.id AS payment_id, p.stripe_payment_intent_id, "  # nosec B608
         "p.status AS payment_status, t.status AS trip_status, "
         "t.completed_at, p.updated_at AS payment_updated_at\n"
         "FROM trips t\n"
