@@ -36,6 +36,22 @@ async function openDriverMenu(page: Page) {
   await page.getByTestId('driver-open-menu').click()
 }
 
+/** Refresca última posição no servidor (o start valida contra isto; gates no backend podem exigir timestamp recente). */
+async function refreshDriverLocationNearPickup(request: APIRequestContext, driverToken: string) {
+  const locRes = await request.post(`${API}/drivers/location`, {
+    headers: {
+      Authorization: `Bearer ${driverToken}`,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      lat: TRIP_ORIGIN.lat,
+      lng: TRIP_ORIGIN.lng,
+      timestamp: Date.now(),
+    },
+  })
+  expect(locRes.ok(), `driver location refresh: ${locRes.status()} ${await locRes.text()}`).toBeTruthy()
+}
+
 async function createTripWithRateLimitRetry(
   request: APIRequestContext,
   passengerToken: string,
@@ -196,12 +212,27 @@ test.describe('Driver + passenger (proximity gate)', () => {
       .toBe(true)
 
     await aceitarBtn.click()
+    await refreshDriverLocationNearPickup(request, tokens.driver)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
+    await refreshDriverLocationNearPickup(request, tokens.driver)
     await startBtn.click()
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/${tripId}`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return null
+          const d = (await r.json()) as { status?: string }
+          return d.status ?? null
+        },
+        { timeout: sec(90), intervals: pollLook }
+      )
+      .toBe('ongoing')
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
       timeout: sec(90),
     })
@@ -275,12 +306,40 @@ test.describe('Driver + passenger (proximity gate)', () => {
 
     const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
     const driverPage = await driverCtx.newPage()
+    trackDriverPageForArtifacts(driverPage)
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
-    await driverPage.getByTestId(`driver-accept-${tripId}`).click()
+
+    await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({
+      timeout: sec(120),
+    })
+
+    const aceitarBtn = driverPage.getByTestId(`driver-accept-${tripId}`)
+    await expect
+      .poll(async () => aceitarBtn.isVisible(), { timeout: sec(90), intervals: pollLook })
+      .toBe(true)
+
+    await aceitarBtn.click()
+    await refreshDriverLocationNearPickup(request, tokens.driver)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
-    await driverPage.getByRole('button', { name: /iniciar viagem/i }).click()
+    const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
+    await expect(startBtn).toBeEnabled({ timeout: sec(45) })
+    await refreshDriverLocationNearPickup(request, tokens.driver)
+    await startBtn.click()
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/${tripId}`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return null
+          const d = (await r.json()) as { status?: string }
+          return d.status ?? null
+        },
+        { timeout: sec(90), intervals: pollLook }
+      )
+      .toBe('ongoing')
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
       timeout: sec(90),
     })
