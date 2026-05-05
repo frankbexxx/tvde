@@ -17,6 +17,8 @@ from app.schemas.driver_zones import (
     DriverZoneBudgetResponse,
     DriverZoneCatalogItem,
     DriverZoneCatalogResponse,
+    DriverZoneEtaEstimateRequest,
+    DriverZoneEtaEstimateResponse,
     DriverZoneSessionCancelRequest,
     DriverZoneSessionCreateRequest,
     DriverZoneSessionExtensionRequest,
@@ -26,6 +28,7 @@ from app.services.driver_zones import (
     budget_values,
     cancel_zone_session,
     create_zone_session,
+    estimate_zone_eta_seconds,
     get_open_zone_session,
     mark_session_arrived,
     request_zone_session_extension,
@@ -59,6 +62,35 @@ async def get_zone_budget_today(
         max_changes=max_c,
         remaining=remaining,
         timezone=tz,
+    )
+
+
+@router.post("/eta-estimate", response_model=DriverZoneEtaEstimateResponse)
+async def post_zone_eta_estimate(
+    body: DriverZoneEtaEstimateRequest,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverZoneEtaEstimateResponse:
+    driver_id = uuid.UUID(user.user_id)
+    try:
+        eta_seconds, distance_km = estimate_zone_eta_seconds(
+            db,
+            driver_id=driver_id,
+            zone_id=body.zone_id,
+        )
+    except ValueError as exc:
+        code = str(exc)
+        if code in ("driver_location_required_for_zone_eta", "zone_eta_anchor_not_available"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=code,
+            ) from exc
+        raise
+    return DriverZoneEtaEstimateResponse(
+        zone_id=body.zone_id.strip(),
+        eta_seconds_baseline=eta_seconds,
+        source="server_haversine",
+        distance_km=round(distance_km, 3),
     )
 
 

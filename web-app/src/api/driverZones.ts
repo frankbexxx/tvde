@@ -48,6 +48,13 @@ export interface DriverZoneSession {
   approved_by_partner_user_id?: string | null
 }
 
+export interface DriverZoneEtaEstimateResponse {
+  zone_id: string
+  eta_seconds_baseline: number
+  source: 'server_haversine'
+  distance_km: number
+}
+
 export async function getDriverZoneBudgetToday(token: string): Promise<DriverZoneBudgetToday> {
   return apiFetch<DriverZoneBudgetToday>('/driver/zones/budget/today', { token })
 }
@@ -75,6 +82,17 @@ export async function createDriverZoneSession(
     method: 'POST',
     token,
     body: JSON.stringify(body),
+  })
+}
+
+export async function postDriverZoneEtaEstimate(
+  token: string,
+  zoneId: string,
+): Promise<DriverZoneEtaEstimateResponse> {
+  return apiFetch<DriverZoneEtaEstimateResponse>('/driver/zones/eta-estimate', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ zone_id: zoneId }),
   })
 }
 

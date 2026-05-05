@@ -1,9 +1,12 @@
 """Stripe webhook endpoint - single source of truth for payment status."""
 
 import logging
+from typing import Any, cast
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -131,7 +134,7 @@ async def stripe_webhook(
                 .values(stripe_event_id=str(stripe_event_id))
                 .on_conflict_do_nothing()
             )
-            ins_result = db.execute(ins)
+            ins_result = cast(CursorResult[Any], db.execute(ins))
             if ins_result.rowcount == 0:
                 logger.info(
                     "webhook: duplicate Stripe delivery (evt idempotent) "
@@ -147,7 +150,7 @@ async def stripe_webhook(
         # Manual capture: only payment_intent.succeeded fires after capture.
         if event_type == "payment_intent.succeeded":
             if payment.status != PaymentStatus.succeeded:
-                prev = payment.status
+                status_before_succeeded = payment.status
                 payment.status = PaymentStatus.succeeded
                 db.commit()
                 log_event(
@@ -156,7 +159,11 @@ async def stripe_webhook(
                     payment_id=str(payment.id),
                     payment_intent_id=str(payment_intent_id),
                     stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
-                    from_status=prev.value if hasattr(prev, "value") else str(prev),
+                    from_status=(
+                        status_before_succeeded.value
+                        if hasattr(status_before_succeeded, "value")
+                        else str(status_before_succeeded)
+                    ),
                     to_status=payment.status.value,
                 )
                 logger.info(
@@ -182,7 +189,7 @@ async def stripe_webhook(
 
         elif event_type in ("payment_intent.payment_failed", "charge.payment_failed"):
             if payment.status != PaymentStatus.failed:
-                prev = payment.status
+                status_before_failed = payment.status
                 payment.status = PaymentStatus.failed
                 db.commit()
                 log_event(
@@ -192,7 +199,11 @@ async def stripe_webhook(
                     payment_intent_id=str(payment_intent_id),
                     event_type=event_type,
                     stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
-                    from_status=prev.value if hasattr(prev, "value") else str(prev),
+                    from_status=(
+                        status_before_failed.value
+                        if hasattr(status_before_failed, "value")
+                        else str(status_before_failed)
+                    ),
                     to_status=payment.status.value,
                 )
                 logger.info(

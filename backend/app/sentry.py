@@ -17,7 +17,10 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from sentry_sdk._types import Event, Hint
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +42,7 @@ def init_sentry() -> bool:
     environment = os.getenv("SENTRY_ENVIRONMENT") or os.getenv("ENV", "development")
     release = os.getenv("SENTRY_RELEASE") or None
 
-    def _before_send(event: dict, hint: dict) -> dict | None:
+    def _before_send(event: Event, hint: Hint) -> Event | None:
         """Filtra ruido: 4xx client errors, health checks."""
         request = event.get("request") or {}
         url = str(request.get("url") or "")
