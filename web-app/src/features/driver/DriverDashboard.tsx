@@ -87,6 +87,7 @@ import {
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import { forwardGeocodeSearch } from '../../services/geocoding'
 import {
   getDriverNavApp,
   setDriverNavApp,
@@ -650,7 +651,40 @@ export function DriverDashboard() {
   )
 
   const bottomChrome =
-    activeTripId != null ? (
+    driverBottomNav && showDriverHomeStep1 && activeTripId == null ? (
+      <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
+        <div className="border-b border-border">
+          {offline ? (
+            <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
+          ) : (
+            <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+          )}
+        </div>
+        <div className="px-4 py-2">
+          <button
+            type="button"
+            data-testid="driver-home-step1-continue-fixed"
+            disabled={offline}
+            onClick={() => setDriverHomeStep(2)}
+            className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
+          >
+            <span className="flex items-center justify-center gap-2 px-1">
+              <span>Ver pedidos e mapa completo</span>
+              {hasAvailableTrips && !offline ? (
+                <span
+                  data-testid="driver-home-step1-pending-count"
+                  className="min-h-[1.5rem] min-w-[1.5rem] shrink-0 rounded-full bg-primary-foreground/25 px-1.5 text-xs font-bold tabular-nums leading-none inline-flex items-center justify-center"
+                  aria-label={`${filteredAvailable.length} pedido(s) em espera`}
+                >
+                  {filteredAvailable.length > 99 ? '99+' : filteredAvailable.length}
+                </span>
+              ) : null}
+            </span>
+          </button>
+        </div>
+        <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
+      </div>
+    ) : activeTripId != null ? (
       <ActiveTripActions
         tripId={activeTripId}
         token={token!}
@@ -848,7 +882,7 @@ export function DriverDashboard() {
                 mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                 compactHeight={false}
               />
-              {driverBottomNav ? (
+              {driverBottomNav && !showDriverHomeStep1 ? (
                 <div className="border-t border-border bg-muted/35">
                   {offline ? (
                     <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
@@ -865,26 +899,28 @@ export function DriverDashboard() {
               <p className="text-foreground/75 mt-2 text-sm">Activa a disponibilidade para veres o mapa.</p>
             </div>
           )}
-          <button
-            type="button"
-            data-testid="driver-home-step1-continue"
-            disabled={offline}
-            onClick={() => setDriverHomeStep(2)}
-            className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
-          >
-            <span className="flex items-center justify-center gap-2 px-1">
-              <span>Ver pedidos e mapa completo</span>
-              {hasAvailableTrips && !offline ? (
-                <span
-                  data-testid="driver-home-step1-pending-count"
-                  className="min-h-[1.5rem] min-w-[1.5rem] shrink-0 rounded-full bg-primary-foreground/25 px-1.5 text-xs font-bold tabular-nums leading-none inline-flex items-center justify-center"
-                  aria-label={`${filteredAvailable.length} pedido(s) em espera`}
-                >
-                  {filteredAvailable.length > 99 ? '99+' : filteredAvailable.length}
-                </span>
-              ) : null}
-            </span>
-          </button>
+          {!driverBottomNav ? (
+            <button
+              type="button"
+              data-testid="driver-home-step1-continue"
+              disabled={offline}
+              onClick={() => setDriverHomeStep(2)}
+              className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
+            >
+              <span className="flex items-center justify-center gap-2 px-1">
+                <span>Ver pedidos e mapa completo</span>
+                {hasAvailableTrips && !offline ? (
+                  <span
+                    data-testid="driver-home-step1-pending-count"
+                    className="min-h-[1.5rem] min-w-[1.5rem] shrink-0 rounded-full bg-primary-foreground/25 px-1.5 text-xs font-bold tabular-nums leading-none inline-flex items-center justify-center"
+                    aria-label={`${filteredAvailable.length} pedido(s) em espera`}
+                  >
+                    {filteredAvailable.length > 99 ? '99+' : filteredAvailable.length}
+                  </span>
+                ) : null}
+              </span>
+            </button>
+          ) : null}
         </div>
       ) : (
         <>
@@ -1535,6 +1571,7 @@ function DriverOperationsMenu({
   const [zoneBusy, setZoneBusy] = useState(false)
   const [zoneRefreshing, setZoneRefreshing] = useState(false)
   const [zoneNewZoneId, setZoneNewZoneId] = useState('portimao')
+  const [zoneNewZoneFocused, setZoneNewZoneFocused] = useState(false)
   const [zoneCustomIds, setZoneCustomIds] = useState<string[]>([])
   const [zoneEtaAutoBusy, setZoneEtaAutoBusy] = useState(false)
   const [zoneEtaManuallyEdited, setZoneEtaManuallyEdited] = useState(false)
@@ -1595,9 +1632,10 @@ function DriverOperationsMenu({
 
   useEffect(() => {
     if (!zoneCatalog?.length) return
+    if (zoneNewZoneFocused) return
     if (zoneNewZoneId.trim().length > 0) return
     setZoneNewZoneId(zoneCatalog[0].zone_id)
-  }, [zoneCatalog, zoneNewZoneId])
+  }, [zoneCatalog, zoneNewZoneFocused, zoneNewZoneId])
 
   const zoneCatalogIds = useMemo(() => {
     return new Set((zoneCatalog ?? []).map((z) => z.zone_id.trim().toLowerCase()))
@@ -1716,15 +1754,35 @@ function DriverOperationsMenu({
           if (showToast) sonnerToast.error('Sem posição actual para estimar ETA.')
           return
         }
-        const target =
+        let target:
+          | {
+            lat: number
+            lng: number
+          }
+          | null =
           selectedZoneCatalogItem?.arrived_anchor_lat != null && selectedZoneCatalogItem?.arrived_anchor_lng != null
             ? {
               lat: selectedZoneCatalogItem.arrived_anchor_lat,
               lng: selectedZoneCatalogItem.arrived_anchor_lng,
             }
             : null
+
+        let geocodeHint: string | null = null
         if (!target) {
-          if (showToast) sonnerToast.error('Sem âncora desta zona no catálogo para calcular ETA.')
+          const q = zid
+            .trim()
+            .replace(/[-_]+/g, ' ')
+            .replace(/\s+/g, ' ')
+          const suggestions = await forwardGeocodeSearch(`${q}, Portugal`, 3)
+          const best = suggestions[0]
+          if (best) {
+            target = { lat: best.lat, lng: best.lng }
+            geocodeHint = `Geocode: ${best.primary}${best.secondary ? `, ${best.secondary}` : ''}`
+          }
+        }
+
+        if (!target) {
+          if (showToast) sonnerToast.error('Não consegui localizar esta zona para calcular ETA.')
           return
         }
         const meta = await getOsrmRouteMeta(driverLocationForZones, target)
@@ -1733,12 +1791,16 @@ function DriverOperationsMenu({
         if (meta && Number.isFinite(meta.durationSec) && meta.durationSec > 0) {
           etaMin = Math.round(meta.durationSec / 60)
           source = 'route'
-          setZoneEtaHint(`Rota: ~${etaMin} min (OSRM).`)
+          setZoneEtaHint(geocodeHint ? `${geocodeHint} · Rota: ~${etaMin} min (OSRM).` : `Rota: ~${etaMin} min (OSRM).`)
         } else {
           const km = haversineKm(driverLocationForZones, target)
           etaMin = Math.round((km / 45) * 60 * 1.25)
           source = 'fallback'
-          setZoneEtaHint(`Fallback: ~${etaMin} min (${km.toFixed(1)} km em linha reta).`)
+          setZoneEtaHint(
+            geocodeHint
+              ? `${geocodeHint} · Fallback: ~${etaMin} min (${km.toFixed(1)} km em linha reta).`
+              : `Fallback: ~${etaMin} min (${km.toFixed(1)} km em linha reta).`
+          )
         }
         etaMin = Math.max(1, Math.min(2880, etaMin))
         setZoneEtaMinutes(etaMin)
@@ -2236,6 +2298,14 @@ function DriverOperationsMenu({
               <input
                 value={zoneNewZoneId}
                 onChange={(ev) => setZoneNewZoneId(normalizeZoneIdInput(ev.target.value))}
+                onFocus={() => setZoneNewZoneFocused(true)}
+                onBlur={() => setZoneNewZoneFocused(false)}
+                onKeyDown={(ev) => {
+                  if (ev.key !== 'Enter') return
+                  ev.preventDefault()
+                  ev.stopPropagation()
+                  void estimateZoneEtaFromCurrentLocation(true)
+                }}
                 data-testid="driver-zones-zone-input"
                 className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
                 autoCapitalize="none"
