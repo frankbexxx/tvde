@@ -271,7 +271,8 @@ def maybe_consume_zone_session_on_trip_complete(
         return
 
     arrived = sess.arrived_at
-    assert arrived is not None
+    if arrived is None:
+        return
     if arrived.tzinfo is None:
         arrived = arrived.replace(tzinfo=timezone.utc)
     if trip_completed_at < arrived:
