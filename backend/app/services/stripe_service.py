@@ -4,7 +4,14 @@ import stripe
 
 from app.core.config import settings
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+def _ensure_stripe_ready() -> None:
+    # In STRIPE_MOCK mode we must not require any Stripe credentials.
+    if getattr(settings, "STRIPE_MOCK", False):
+        return
+    sk = (getattr(settings, "STRIPE_SECRET_KEY", None) or "").strip()
+    if not sk:
+        raise RuntimeError("STRIPE_SECRET_KEY is required when STRIPE_MOCK=false")
+    stripe.api_key = sk
 
 
 def create_authorization_payment_intent(
@@ -28,6 +35,7 @@ def create_authorization_payment_intent(
     }
     if idempotency_key:
         params["idempotency_key"] = idempotency_key
+    _ensure_stripe_ready()
     return stripe.PaymentIntent.create(**params)
 
 
@@ -44,7 +52,9 @@ def confirm_payment_intent(
     if idempotency_key:
         kwargs["idempotency_key"] = idempotency_key
     if kwargs:
+        _ensure_stripe_ready()
         return stripe.PaymentIntent.confirm(payment_intent_id, **kwargs)
+    _ensure_stripe_ready()
     return stripe.PaymentIntent.confirm(payment_intent_id)
 
 
@@ -62,6 +72,7 @@ def update_payment_intent_amount(
     kwargs: dict = {"amount": amount_cents}
     if idempotency_key:
         kwargs["idempotency_key"] = idempotency_key
+    _ensure_stripe_ready()
     return stripe.PaymentIntent.modify(payment_intent_id, **kwargs)
 
 
@@ -72,18 +83,22 @@ def capture_payment_intent(
 ) -> stripe.PaymentIntent:
     """Capture previously authorized PaymentIntent."""
     if idempotency_key:
+        _ensure_stripe_ready()
         return stripe.PaymentIntent.capture(
             payment_intent_id,
             idempotency_key=idempotency_key,
         )
+    _ensure_stripe_ready()
     return stripe.PaymentIntent.capture(payment_intent_id)
 
 
 def retrieve_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
     """Retrieve PaymentIntent to check status (e.g. for retry logic)."""
+    _ensure_stripe_ready()
     return stripe.PaymentIntent.retrieve(payment_intent_id)
 
 
 def cancel_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
     """Cancel PaymentIntent (e.g. when admin cancels trip before capture)."""
+    _ensure_stripe_ready()
     return stripe.PaymentIntent.cancel(payment_intent_id)

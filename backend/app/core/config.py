@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     OTP_SECRET: str
     OTP_EXPIRATION_MINUTES: int = 5
 
-    STRIPE_SECRET_KEY: str
+    # Stripe key is required only when STRIPE_MOCK=false. In mock mode we skip Stripe API calls.
+    STRIPE_SECRET_KEY: str | None = None
     STRIPE_WEBHOOK_SECRET: str | None = None
     STRIPE_MOCK: bool = (
         False  # When True, skip Stripe API calls (simulator/testing only)
