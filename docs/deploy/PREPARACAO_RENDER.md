@@ -66,17 +66,18 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 | `JWT_SECRET_KEY` | Gera um segredo forte (ex: `openssl rand -hex 32`) |
 | `JWT_ALGORITHM` | `HS256` |
 | `OTP_SECRET` | Gera outro segredo (ex: `openssl rand -hex 16`) |
-| `STRIPE_SECRET_KEY` | `sk_test_...` (do Stripe Dashboard) |
-| `STRIPE_WEBHOOK_SECRET` | `whsec_placeholder` (temporário — atualizas no Passo 3) |
+| `STRIPE_MOCK` | `true` (regra por defeito — sem dependência do Stripe) |
 | `ENABLE_DEV_TOOLS` | `true` (permite Seed e Tokens em produção — para validação em campo) |
 
 5. Clica **Create Web Service**.
-6. Espera o deploy terminar. O backend exige `STRIPE_WEBHOOK_SECRET` em produção — usamos placeholder para o primeiro deploy. No Passo 3 substituímos pelo valor real do Stripe.
+6. Espera o deploy terminar. Em `STRIPE_MOCK=true` o backend **não exige** `STRIPE_SECRET_KEY` nem `STRIPE_WEBHOOK_SECRET` no startup.
 7. Copia o **URL** do serviço (ex: `https://tvde-api.onrender.com`). Vais precisar para o Stripe e para o frontend.
 
 ---
 
 ## Passo 3 — Stripe Webhook
+
+> Só faz este passo quando quiseres testar Stripe real (`STRIPE_MOCK=false`).
 
 1. Abre o [Stripe Dashboard](https://dashboard.stripe.com) → **Developers** → **Webhooks**.
 2. Clica **Add endpoint**.
@@ -85,7 +86,10 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 5. Clica **Add endpoint**.
 6. Abre o novo webhook e clica **Reveal** no **Signing secret** (começa por `whsec_...`).
 7. Copia o valor.
-8. No Render, volta ao serviço **tvde-api** → **Environment** → edita `STRIPE_WEBHOOK_SECRET` e cola o valor. Se usaste placeholder, atualiza agora.
+8. No Render, volta ao serviço **tvde-api** → **Environment** e define:
+   - `STRIPE_MOCK=false`
+   - `STRIPE_SECRET_KEY=sk_test_...`
+   - `STRIPE_WEBHOOK_SECRET=whsec_...`
 9. **Save Changes** — o Render faz redeploy automaticamente.
 
 ---
