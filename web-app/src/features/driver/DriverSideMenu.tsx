@@ -6,9 +6,21 @@ import type { TripHistoryItem } from '../../api/trips'
 import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus } from '../../services/driverDocuments'
 import type { DriverVehicleCategory } from '../../services/driverVehicleCategories'
 import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT, DRIVER_OPEN_SETTINGS_EVENT } from './driverShellEvents'
-import { CreditCard, HelpCircle, History, Inbox, LogOut, Settings, User } from 'lucide-react'
+import { Compass, CreditCard, FileText, History, Inbox, LogOut, Settings, SlidersHorizontal, User } from 'lucide-react'
 
-export type DriverMenuScreen = 'root' | 'inbox' | 'earnings' | 'trips' | 'all'
+export type DriverMenuScreen =
+  | 'root'
+  | 'inbox'
+  | 'earnings'
+  | 'trips'
+  | 'nav'
+  | 'categories'
+  | 'zones'
+  | 'docs'
+  | 'pricing'
+  // Legacy / internal: permite renderizar blocos existentes sem refactor total.
+  | 'account'
+  | 'all'
 
 function MenuHeader({
   title,
@@ -107,6 +119,11 @@ export function DriverSideMenu(props: {
     if (screen === 'inbox') return 'Caixa de entrada'
     if (screen === 'earnings') return 'Rendimentos'
     if (screen === 'trips') return 'Viagens'
+    if (screen === 'nav') return 'Navegação'
+    if (screen === 'categories') return 'Categorias'
+    if (screen === 'zones') return 'Zonas'
+    if (screen === 'docs') return 'Documentos'
+    if (screen === 'pricing') return 'Preços'
     return 'Menu do motorista'
   }, [screen])
 
@@ -122,6 +139,7 @@ export function DriverSideMenu(props: {
       <SheetContent
         side="left"
         className="p-0 w-[85vw] max-w-[26rem] bg-background"
+        hideCloseButton
         aria-label="Menu lateral do motorista"
         data-testid="driver-side-menu"
       >
@@ -154,7 +172,10 @@ export function DriverSideMenu(props: {
                 <RootItem
                   label="Perfil"
                   icon={<User className="h-4 w-4" />}
-                  onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
+                    close()
+                  }}
                 />
                 <RootItem
                   label="Caixa de entrada"
@@ -173,19 +194,45 @@ export function DriverSideMenu(props: {
                   onClick={() => setScreen('trips')}
                 />
                 <RootItem
+                  label="Navegação"
+                  icon={<Compass className="h-4 w-4" />}
+                  onClick={() => setScreen('nav')}
+                />
+                <RootItem
+                  label="Categorias"
+                  icon={<SlidersHorizontal className="h-4 w-4" />}
+                  onClick={() => setScreen('categories')}
+                />
+                <RootItem
+                  label="Zonas"
+                  icon={<SlidersHorizontal className="h-4 w-4" />}
+                  onClick={() => setScreen('zones')}
+                />
+                <RootItem
+                  label="Documentos"
+                  icon={<FileText className="h-4 w-4" />}
+                  onClick={() => setScreen('docs')}
+                />
+                <RootItem
+                  label="Preços (estimativa)"
+                  icon={<CreditCard className="h-4 w-4" />}
+                  onClick={() => setScreen('pricing')}
+                />
+                <RootItem
                   label="Registo de atividade"
                   icon={<History className="h-4 w-4" />}
-                  onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
+                    close()
+                  }}
                 />
                 <RootItem
                   label="Definições"
                   icon={<Settings className="h-4 w-4" />}
-                  onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))}
-                />
-                <RootItem
-                  label="Ajuda"
-                  icon={<HelpCircle className="h-4 w-4" />}
-                  onClick={() => setScreen('all')}
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))
+                    close()
+                  }}
                 />
               </div>
 

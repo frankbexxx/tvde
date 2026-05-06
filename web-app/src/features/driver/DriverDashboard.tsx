@@ -2046,6 +2046,12 @@ function DriverOperationsMenu({
   const showEarnings = showAll || section === 'earnings'
   const showTrips = showAll || section === 'trips'
   const showInbox = showAll || section === 'inbox'
+  const showAccountShortcuts = showAll || section === 'account'
+  const showPricing = showAll || section === 'pricing'
+  const showZones = showAll || section === 'zones'
+  const showNavPref = showAll || section === 'nav'
+  const showCategories = showAll || section === 'categories'
+  const showDocs = showAll || section === 'docs'
 
   return (
     <section className="space-y-4" data-testid="driver-ops-menu" aria-label="Menu do motorista">
@@ -2211,6 +2217,7 @@ function DriverOperationsMenu({
         </div>
       ) : null}
 
+      {showAccountShortcuts ? (
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
@@ -2229,7 +2236,9 @@ function DriverOperationsMenu({
           Definições
         </button>
       </div>
+      ) : null}
 
+      {showPricing ? (
       <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm">
         <summary className="cursor-pointer font-medium text-foreground select-none">
           Preços nos pedidos (estimativa)
@@ -2239,7 +2248,9 @@ function DriverOperationsMenu({
           fim da viagem.
         </p>
       </details>
+      ) : null}
 
+      {showZones ? (
       <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
@@ -2490,161 +2501,168 @@ function DriverOperationsMenu({
           </div>
         ) : null}
       </div>
+      ) : null}
 
-      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <p className="text-sm font-medium text-foreground">Navegação (preferência)</p>
-        <p className="text-xs text-muted-foreground">
-          Os botões «Recolha / Destino» usam primeiro esta app; o segundo botão abre a alternativa.
-        </p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            data-testid="driver-nav-pref-waze"
-            onClick={() => onSelectNavPref('waze')}
-            className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'waze'
-                ? 'border-info bg-info/15 text-foreground'
-                : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
-              }`}
-          >
-            Waze
-          </button>
-          <button
-            type="button"
-            data-testid="driver-nav-pref-google"
-            onClick={() => onSelectNavPref('google_maps')}
-            className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'google_maps'
-                ? 'border-info bg-info/15 text-foreground'
-                : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
-              }`}
-          >
-            Google Maps
-          </button>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <p className="text-sm font-medium text-foreground">Categorias de veículo</p>
-        <p className="text-xs text-muted-foreground leading-snug">
-          Sincroniza com o servidor e filtra os pedidos que vês na lista. Mantém pelo menos uma categoria
-          activa.
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {(
-            [
-              ['x', 'X'],
-              ['xl', 'XL'],
-              ['pet', 'Pet'],
-              ['comfort', 'Comfort'],
-              ['black', 'Black'],
-              ['electric', 'Elétrico'],
-              ['van', 'Van'],
-            ] as Array<[DriverVehicleCategory, string]>
-          ).map(([key, label]) => {
-            const active = vehicleCategories.includes(key)
-            return (
-              <button
-                key={key}
-                type="button"
-                data-testid={`driver-category-${key}`}
-                aria-pressed={active}
-                onClick={() => onToggleVehicleCategory(key)}
-                className={`min-h-[40px] rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
-                    ? 'border-info bg-info/15 text-foreground'
-                    : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
-                  }`}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
-        <p className="text-xs text-muted-foreground leading-snug">
-          Primeira entrada: completa os documentos obrigatórios aqui no painel. Depois podes corrigir/atualizar mais
-          tarde nas definições do motorista.
-        </p>
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card px-3 py-2">
-          <p className="text-xs text-foreground/85">
-            Aprovados: {driverDocumentsApprovedCount(driverDocuments)} / {REQUIRED_DRIVER_DOCUMENTS.length}
+      {showNavPref ? (
+        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+          <p className="text-sm font-medium text-foreground">Navegação (preferência)</p>
+          <p className="text-xs text-muted-foreground">
+            Os botões «Recolha / Destino» usam primeiro esta app; o segundo botão abre a alternativa.
           </p>
-          <span
-            className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${isDriverDocumentsReady(driverDocuments)
-                ? 'border-success/45 bg-success/15 text-foreground'
-                : 'border-warning/45 bg-warning/15 text-foreground'
-              }`}
-          >
-            {isDriverDocumentsReady(driverDocuments) ? 'Pronto para disponibilidade' : 'Documentos em falta'}
-          </span>
-        </div>
-        <div className="space-y-2">
-          {REQUIRED_DRIVER_DOCUMENTS.map((doc) => {
-            const status = driverDocuments.docs[doc]
-            const badgeClass =
-              status === 'approved'
-                ? 'border-success/45 bg-success/15 text-foreground'
-                : status === 'pending_review'
-                  ? 'border-warning/45 bg-warning/15 text-foreground'
-                  : status === 'rejected' || status === 'expired'
-                    ? 'border-destructive/45 bg-destructive/10 text-foreground'
-                    : 'border-border bg-card text-foreground/85'
-            return (
-              <div key={doc} className="rounded-lg border border-border/70 bg-card px-3 py-2">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-medium text-foreground truncate">{driverDocumentLabel(doc)}</p>
-                  <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
-                    {driverDocumentStatusLabel(status)}
-                  </span>
-                </div>
-                <div className="mt-2 flex gap-2">
-                  <button
-                    type="button"
-                    className="min-h-[32px] flex-1 rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"
-                    onClick={() => onPatchDriverDocument(doc, 'pending_review')}
-                  >
-                    Marcar entregue
-                  </button>
-                  <button
-                    type="button"
-                    className="min-h-[32px] flex-1 rounded-md border border-success/50 bg-success/10 px-2 text-xs font-medium text-foreground hover:bg-success/20"
-                    onClick={() => onPatchDriverDocument(doc, 'approved')}
-                  >
-                    Marcar aprovado
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-        <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-foreground/85">Bloquear disponibilidade até 4/4 aprovados</p>
+          <div className="flex gap-2">
             <button
               type="button"
-              aria-pressed={driverDocsGateEnabled}
-              onClick={() => onToggleDriverDocsGate(!driverDocsGateEnabled)}
-              className={`min-h-[30px] rounded-md border px-2 text-[11px] font-medium transition-colors ${driverDocsGateEnabled
-                  ? 'border-success/50 bg-success/15 text-foreground'
+              data-testid="driver-nav-pref-waze"
+              onClick={() => onSelectNavPref('waze')}
+              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'waze'
+                  ? 'border-info bg-info/15 text-foreground'
                   : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                 }`}
             >
-              {driverDocsGateEnabled ? 'Ligado' : 'Desligado'}
+              Waze
+            </button>
+            <button
+              type="button"
+              data-testid="driver-nav-pref-google"
+              onClick={() => onSelectNavPref('google_maps')}
+              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'google_maps'
+                  ? 'border-info bg-info/15 text-foreground'
+                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                }`}
+            >
+              Google Maps
             </button>
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            Em teste fica normalmente desligado. Ativa só para validar o bloqueio antes de aceitares viagens.
-          </p>
         </div>
-        {isAdmin ? (
-          <Button type="button" variant="outline" className="w-full min-h-[40px] text-sm font-medium" asChild>
-            <Link to="/admin" onClick={() => onCloseMenu()}>
-              Abrir painel admin
-            </Link>
-          </Button>
-        ) : null}
-      </div>
+      ) : null}
+
+      {showCategories ? (
+        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+          <p className="text-sm font-medium text-foreground">Categorias de veículo</p>
+          <p className="text-xs text-muted-foreground leading-snug">
+            Sincroniza com o servidor e filtra os pedidos que vês na lista. Mantém pelo menos uma categoria
+            activa.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ['x', 'X'],
+                ['xl', 'XL'],
+                ['pet', 'Pet'],
+                ['comfort', 'Comfort'],
+                ['black', 'Black'],
+                ['electric', 'Elétrico'],
+                ['van', 'Van'],
+              ] as Array<[DriverVehicleCategory, string]>
+            ).map(([key, label]) => {
+              const active = vehicleCategories.includes(key)
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  data-testid={`driver-category-${key}`}
+                  aria-pressed={active}
+                  onClick={() => onToggleVehicleCategory(key)}
+                  className={`min-h-[40px] rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
+                      ? 'border-info bg-info/15 text-foreground'
+                      : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                    }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {showDocs ? (
+        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+          <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
+          <p className="text-xs text-muted-foreground leading-snug">
+            Primeira entrada: completa os documentos obrigatórios aqui no painel. Depois podes corrigir/atualizar mais
+            tarde nas definições do motorista.
+          </p>
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card px-3 py-2">
+            <p className="text-xs text-foreground/85">
+              Aprovados: {driverDocumentsApprovedCount(driverDocuments)} / {REQUIRED_DRIVER_DOCUMENTS.length}
+            </p>
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${isDriverDocumentsReady(driverDocuments)
+                  ? 'border-success/45 bg-success/15 text-foreground'
+                  : 'border-warning/45 bg-warning/15 text-foreground'
+                }`}
+            >
+              {isDriverDocumentsReady(driverDocuments) ? 'Pronto para disponibilidade' : 'Documentos em falta'}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {REQUIRED_DRIVER_DOCUMENTS.map((doc) => {
+              const status = driverDocuments.docs[doc]
+              const badgeClass =
+                status === 'approved'
+                  ? 'border-success/45 bg-success/15 text-foreground'
+                  : status === 'pending_review'
+                    ? 'border-warning/45 bg-warning/15 text-foreground'
+                    : status === 'rejected' || status === 'expired'
+                      ? 'border-destructive/45 bg-destructive/10 text-foreground'
+                      : 'border-border bg-card text-foreground/85'
+              return (
+                <div key={doc} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-medium text-foreground truncate">{driverDocumentLabel(doc)}</p>
+                    <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
+                      {driverDocumentStatusLabel(status)}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      className="min-h-[32px] flex-1 rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"
+                      onClick={() => onPatchDriverDocument(doc, 'pending_review')}
+                    >
+                      Marcar entregue
+                    </button>
+                    <button
+                      type="button"
+                      className="min-h-[32px] flex-1 rounded-md border border-success/50 bg-success/10 px-2 text-xs font-medium text-foreground hover:bg-success/20"
+                      onClick={() => onPatchDriverDocument(doc, 'approved')}
+                    >
+                      Marcar aprovado
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-foreground/85">Bloquear disponibilidade até 4/4 aprovados</p>
+              <button
+                type="button"
+                aria-pressed={driverDocsGateEnabled}
+                onClick={() => onToggleDriverDocsGate(!driverDocsGateEnabled)}
+                className={`min-h-[30px] rounded-md border px-2 text-[11px] font-medium transition-colors ${driverDocsGateEnabled
+                    ? 'border-success/50 bg-success/15 text-foreground'
+                    : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                  }`}
+              >
+                {driverDocsGateEnabled ? 'Ligado' : 'Desligado'}
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Em teste fica normalmente desligado. Ativa só para validar o bloqueio antes de aceitares viagens.
+            </p>
+          </div>
+          {isAdmin ? (
+            <Button type="button" variant="outline" className="w-full min-h-[40px] text-sm font-medium" asChild>
+              <Link to="/admin" onClick={() => onCloseMenu()}>
+                Abrir painel admin
+              </Link>
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       <Dialog
         open={Boolean(historyDetailTrip)}
