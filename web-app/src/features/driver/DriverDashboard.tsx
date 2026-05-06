@@ -78,6 +78,7 @@ import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { ActiveTripActions } from './ActiveTripActions'
+import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
 import { formatPickup, formatDestination } from '../../utils/format'
 import {
   DRIVER_START_TRIP_MAX_DISTANCE_M,
@@ -761,78 +762,147 @@ export function DriverDashboard() {
       bottomBarVariant={activeTripId ? 'inset' : driverBottomNav ? 'flush' : 'inset'}
       mainScrollId="driver-main-scroll"
     >
-      {menuOpen ? (
-        <DriverOperationsMenu
-          sessionDisplayName={sessionDisplayName}
-          history={history}
-          driverLocationForZones={mapDotLatLng ?? null}
-          navPref={driverNavPref}
-          vehicleCategories={vehicleCategories}
-          driverDocuments={driverDocuments}
-          driverDocsGateEnabled={driverDocsGateEnabled}
-          onCloseMenu={closeDriverMenu}
-          onSelectNavPref={(app) => {
-            setDriverNavApp(app)
-            setDriverNavPref(app)
-            addLog(
-              app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps',
-              'info'
-            )
-          }}
-          onToggleVehicleCategory={(category) => {
-            setVehicleCategories((prev) => {
-              const exists = prev.includes(category)
-              const next = exists
-                ? prev.filter((c) => c !== category)
-                : [...prev, category]
-              const safe = next.length > 0 ? next : prev
-              setDriverVehicleCategories(safe)
-              if (token) {
-                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
-                  /* keep local preference even if backend fails */
+      <DriverSideMenu
+        open={menuOpen}
+        onOpenChange={(v) => setMenuOpen(v)}
+        sessionDisplayName={sessionDisplayName}
+        history={history}
+        driverLocationForZones={mapDotLatLng ?? null}
+        navPref={driverNavPref}
+        vehicleCategories={vehicleCategories}
+        driverDocuments={driverDocuments}
+        driverDocsGateEnabled={driverDocsGateEnabled}
+        onSelectNavPref={(app) => {
+          setDriverNavApp(app)
+          setDriverNavPref(app)
+          addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
+        }}
+        onToggleVehicleCategory={(category) => {
+          setVehicleCategories((prev) => {
+            const exists = prev.includes(category)
+            const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
+            const safe = next.length > 0 ? next : prev
+            setDriverVehicleCategories(safe)
+            if (token) {
+              void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
+                /* keep local preference even if backend fails */
+              })
+            }
+            return safe
+          })
+        }}
+        onPatchDriverDocument={(doc, status) => {
+          setDriverDocuments((prev) => {
+            const docs = { ...prev.docs, [doc]: status }
+            const next: DriverDocumentsState = {
+              docs,
+              onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
+            }
+            setDriverDocumentsState(next)
+            return next
+          })
+        }}
+        onToggleDriverDocsGate={(enabled) => {
+          setDriverDocsGateEnabled(enabled)
+          setDriverDocumentsGateEnabled(enabled)
+          addLog(
+            enabled
+              ? 'Gate documentos: bloqueio de disponibilidade ativo'
+              : 'Gate documentos: bloqueio de disponibilidade desativado',
+            'info'
+          )
+        }}
+        onReportIncident={(tripId) => {
+          const typeInput = window.prompt(
+            `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
+          )
+          if (!typeInput || !typeInput.trim()) return
+          const parsed = Number.parseInt(typeInput.trim(), 10)
+          const type =
+            Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
+              ? DRIVER_INCIDENT_TYPES[parsed - 1]
+              : typeInput.trim()
+          const note = window.prompt('Descrição curta da ocorrência:')
+          if (!note || !note.trim()) return
+          sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
+          addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
+        }}
+        renderLegacyMenu={(section) => (
+          <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card">
+            <DriverOperationsMenu
+              section={section}
+              hideHeader
+              hideCloseButton
+              sessionDisplayName={sessionDisplayName}
+              history={history}
+              driverLocationForZones={mapDotLatLng ?? null}
+              navPref={driverNavPref}
+              vehicleCategories={vehicleCategories}
+              driverDocuments={driverDocuments}
+              driverDocsGateEnabled={driverDocsGateEnabled}
+              onCloseMenu={closeDriverMenu}
+              onSelectNavPref={(app) => {
+                setDriverNavApp(app)
+                setDriverNavPref(app)
+                addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
+              }}
+              onToggleVehicleCategory={(category) => {
+                setVehicleCategories((prev) => {
+                  const exists = prev.includes(category)
+                  const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
+                  const safe = next.length > 0 ? next : prev
+                  setDriverVehicleCategories(safe)
+                  if (token) {
+                    void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
+                      /* keep local preference even if backend fails */
+                    })
+                  }
+                  return safe
                 })
-              }
-              return safe
-            })
-          }}
-          onPatchDriverDocument={(doc, status) => {
-            setDriverDocuments((prev) => {
-              const docs = { ...prev.docs, [doc]: status }
-              const next: DriverDocumentsState = {
-                docs,
-                onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
-              }
-              setDriverDocumentsState(next)
-              return next
-            })
-          }}
-          onToggleDriverDocsGate={(enabled) => {
-            setDriverDocsGateEnabled(enabled)
-            setDriverDocumentsGateEnabled(enabled)
-            addLog(
-              enabled
-                ? 'Gate documentos: bloqueio de disponibilidade ativo'
-                : 'Gate documentos: bloqueio de disponibilidade desativado',
-              'info'
-            )
-          }}
-          onReportIncident={(tripId) => {
-            const typeInput = window.prompt(
-              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
-            )
-            if (!typeInput || !typeInput.trim()) return
-            const parsed = Number.parseInt(typeInput.trim(), 10)
-            const type =
-              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
-                ? DRIVER_INCIDENT_TYPES[parsed - 1]
-                : typeInput.trim()
-            const note = window.prompt('Descrição curta da ocorrência:')
-            if (!note || !note.trim()) return
-            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
-            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
-          }}
-        />
-      ) : showDriverHomeStep1 ? (
+              }}
+              onPatchDriverDocument={(doc, status) => {
+                setDriverDocuments((prev) => {
+                  const docs = { ...prev.docs, [doc]: status }
+                  const next: DriverDocumentsState = {
+                    docs,
+                    onboardingCompleted:
+                      prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
+                  }
+                  setDriverDocumentsState(next)
+                  return next
+                })
+              }}
+              onToggleDriverDocsGate={(enabled) => {
+                setDriverDocsGateEnabled(enabled)
+                setDriverDocumentsGateEnabled(enabled)
+                addLog(
+                  enabled
+                    ? 'Gate documentos: bloqueio de disponibilidade ativo'
+                    : 'Gate documentos: bloqueio de disponibilidade desativado',
+                  'info'
+                )
+              }}
+              onReportIncident={(tid) => {
+                const typeInput = window.prompt(
+                  `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
+                )
+                if (!typeInput || !typeInput.trim()) return
+                const parsed = Number.parseInt(typeInput.trim(), 10)
+                const type =
+                  Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
+                    ? DRIVER_INCIDENT_TYPES[parsed - 1]
+                    : typeInput.trim()
+                const note = window.prompt('Descrição curta da ocorrência:')
+                if (!note || !note.trim()) return
+                sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tid.slice(0, 8)}…`)
+                addLog(`Ocorrência registada para ${tid} [${type}]: ${note.trim()}`, 'info')
+              }}
+            />
+          </div>
+        )}
+      />
+
+      {showDriverHomeStep1 ? (
         <div
           className="space-y-4 transition-opacity duration-150"
           data-testid="driver-home-step1"
@@ -1506,6 +1576,9 @@ function DriverOperationsMenu({
   vehicleCategories,
   driverDocuments,
   driverDocsGateEnabled,
+  section = 'all',
+  hideHeader = false,
+  hideCloseButton = false,
   onCloseMenu,
   onSelectNavPref,
   onToggleVehicleCategory,
@@ -1520,6 +1593,9 @@ function DriverOperationsMenu({
   vehicleCategories: DriverVehicleCategory[]
   driverDocuments: DriverDocumentsState
   driverDocsGateEnabled: boolean
+  section?: DriverMenuScreen
+  hideHeader?: boolean
+  hideCloseButton?: boolean
   onCloseMenu: () => void
   onSelectNavPref: (app: DriverNavApp) => void
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
@@ -1966,38 +2042,44 @@ function DriverOperationsMenu({
     }
   }
 
-  return (
-    <section
-      className="mb-2 rounded-2xl border border-border/80 bg-card p-4 space-y-4 shadow-card"
-      data-testid="driver-ops-menu"
-      aria-label="Menu do motorista"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold text-foreground">Menu do motorista</h2>
-          <p className="text-sm text-foreground/75">
-            {sessionDisplayName ?? 'Motorista'} · canceladas após aceitar: {cancelRate}%
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <button
-            type="button"
-            data-testid="driver-close-menu"
-            onClick={() => onCloseMenu()}
-            className="min-h-[40px] rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-          >
-            Fechar
-          </button>
-          <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/75">
-            Rating: em breve
-          </span>
-        </div>
-      </div>
+  const showAll = section === 'all'
+  const showEarnings = showAll || section === 'earnings'
+  const showTrips = showAll || section === 'trips'
+  const showInbox = showAll || section === 'inbox'
 
-      <div
-        id="driver-menu-earnings"
-        className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
-      >
+  return (
+    <section className="space-y-4" data-testid="driver-ops-menu" aria-label="Menu do motorista">
+      {!hideHeader ? (
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-foreground">Menu do motorista</h2>
+            <p className="text-sm text-foreground/75">
+              {sessionDisplayName ?? 'Motorista'} · canceladas após aceitar: {cancelRate}%
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            {!hideCloseButton ? (
+              <button
+                type="button"
+                data-testid="driver-close-menu"
+                onClick={() => onCloseMenu()}
+                className="min-h-[40px] rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+              >
+                Fechar
+              </button>
+            ) : null}
+            <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/75">
+              Rating: em breve
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      {showEarnings ? (
+        <div
+          id="driver-menu-earnings"
+          className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+        >
         <p className="text-sm font-medium text-foreground">Rendimentos</p>
         <p className="text-xs text-muted-foreground leading-snug">
           Soma do <span className="font-medium text-foreground/85">preço final</span> das viagens concluídas na
@@ -2031,9 +2113,11 @@ function DriverOperationsMenu({
             de fim.
           </p>
         ) : null}
-      </div>
+        </div>
+      ) : null}
 
-      <div id="driver-menu-trips" className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+      {showTrips ? (
+        <div id="driver-menu-trips" className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-sm font-medium text-foreground">Viagens</p>
           {history && history.length > 0 ? (
@@ -2100,13 +2184,15 @@ function DriverOperationsMenu({
         ) : (
           <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
         )}
-      </div>
+        </div>
+      ) : null}
 
-      <div
-        id="driver-menu-inbox"
-        className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
-        data-testid="driver-menu-inbox"
-      >
+      {showInbox ? (
+        <div
+          id="driver-menu-inbox"
+          className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+          data-testid="driver-menu-inbox"
+        >
         <p className="text-sm font-medium text-foreground">Caixa de entrada</p>
         <p className="text-xs text-muted-foreground leading-snug">
           Ainda sem avisos do partner nesta versão. Quando a operação enviar avisos, aparecem aqui.
@@ -2122,7 +2208,8 @@ function DriverOperationsMenu({
         >
           Ver registo de atividade
         </button>
-      </div>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-2">
         <button
