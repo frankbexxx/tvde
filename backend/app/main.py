@@ -88,18 +88,20 @@ async def lifespan(app: FastAPI):
         logger.info("[startup] alembic em head")
 
     _env_low = settings.ENV.strip().lower()
-    if _env_low not in ("dev", "development"):
-        if not settings.STRIPE_WEBHOOK_SECRET:
-            raise RuntimeError(
-                "STRIPE_WEBHOOK_SECRET is required when ENV is not dev. "
-                "Set it in .env or environment variables."
+    stripe_mock = bool(getattr(settings, "STRIPE_MOCK", False))
+    if not stripe_mock:
+        if _env_low not in ("dev", "development"):
+            if not settings.STRIPE_WEBHOOK_SECRET:
+                raise RuntimeError(
+                    "STRIPE_WEBHOOK_SECRET is required when ENV is not dev (and STRIPE_MOCK=false). "
+                    "Set it in .env or environment variables."
+                )
+        elif not settings.STRIPE_WEBHOOK_SECRET:
+            print(
+                "[WARN] STRIPE_WEBHOOK_SECRET not set. "
+                "Webhook validation will fail. "
+                "Run 'stripe listen' to get the webhook secret."
             )
-    elif not settings.STRIPE_WEBHOOK_SECRET:
-        print(
-            "[WARN] STRIPE_WEBHOOK_SECRET not set. "
-            "Webhook validation will fail. "
-            "Run 'stripe listen' to get the webhook secret."
-        )
     logger.info("[startup] complete")
     yield
     # Shutdown (nothing to do for now)
