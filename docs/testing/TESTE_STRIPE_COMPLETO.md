@@ -1,5 +1,7 @@
 # 🧪 Guia Completo de Testes Stripe - Ride Sharing Backend
 
+> **Pré-requisito (regra do projeto):** por defeito o backend corre com `STRIPE_MOCK=true` (sem dependência do Stripe). Este guia só se aplica quando queres testar Stripe a sério em **test mode** (`STRIPE_MOCK=false`).
+
 ## 📋 Pré-requisitos
 
 ### 1. Verificar Instalações
@@ -11,6 +13,8 @@
 
 ### 2. Verificar `.env`
 
+Para este teste só, comutar para Stripe real (test mode):
+
 ```env
 DATABASE_URL=postgresql+psycopg2://ride:ride@localhost:5432/ride_db
 JWT_SECRET_KEY=dev-secret-super-inseguro-muito-maior-123
@@ -19,9 +23,12 @@ JWT_ACCESS_TOKEN_MINUTES=60
 ENV=dev
 OTP_SECRET=dev-otp-secret
 OTP_EXPIRATION_MINUTES=5
-STRIPE_SECRET_KEY=sk_test_51Szgpi8jcCqT4zToVowvVLwZ8VxZo66bsTpyIVgOLJmgZhRpeVIIYaxcSN2dhsOt8UEJMN7D98tC3WvMI4EUeBqi00EM98T9eW
+STRIPE_MOCK=false
+STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_xxxxx  # ← Obter do Stripe CLI
 ```
+
+> Quando terminares os testes Stripe, repõe `STRIPE_MOCK=true` (e podes deixar `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` no ficheiro — só não são necessárias). Ver `docs/env/ENV_SINGLE_REALITY.md`.
 
 ---
 

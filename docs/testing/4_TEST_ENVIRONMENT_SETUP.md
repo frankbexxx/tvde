@@ -49,14 +49,22 @@ O backend usa ficheiro `backend/.env`. Para criar ou adicionar chaves em falta (
 .\scripts\merge_env_keys.ps1
 ```
 
-O script nunca sobrescreve valores existentes. O backend espera:
+O script nunca sobrescreve valores existentes. O backend espera (regra do projeto: **Stripe mock por defeito**):
 
 - `DATABASE_URL` — conexão PostgreSQL
 - `JWT_SECRET_KEY`
 - `OTP_SECRET`
-- `STRIPE_SECRET_KEY` (modo teste: `sk_test_...`)
+- `STRIPE_MOCK=true` — sem dependência do Stripe
 - `ENV=dev` — para endpoints /dev/reset e /dev/seed-simulator
 - `ENABLE_DEV_TOOLS=true` — para seed e simulador
+
+Só quando fores testar Stripe real (test mode):
+
+- `STRIPE_MOCK=false`
+- `STRIPE_SECRET_KEY=sk_test_...`
+- `STRIPE_WEBHOOK_SECRET=whsec_...`
+
+Ver `docs/env/ENV_SINGLE_REALITY.md` (fonte de verdade) e `docs/env/templates/`.
 
 Para BETA (login com telemóvel):
 

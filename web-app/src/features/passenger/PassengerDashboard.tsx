@@ -1217,31 +1217,33 @@ export function PassengerDashboard() {
               </p>
             ) : null}
 
-            <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
-              <MapView
-                showMap={showMapOnScreen}
-                mapPlaceholder={mapPlaceholder}
-                pickupSelection={isPickupPlanningMode ? pickupPreviewLocation : null}
-                dropoffSelection={isPickupPlanningMode ? dropoffPreviewLocation : null}
-                onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
-                passengerLocation={
-                  passengerLocation ?? (activeTrip
-                    ? {
-                        lat: activeTrip.origin_lat,
-                        lng: activeTrip.origin_lng,
-                      }
-                    : undefined)
-                }
-                driverLocation={driverLocation ?? undefined}
-                route={routeForMap}
-                tripPickup={tripMapLegs.pickup}
-                tripDropoff={tripMapLegs.dropoff}
-                planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
-                mapVisualWeight={a021Layout.map}
-                planningRecenter={dropoffPreviewLocation}
-                planningRecenterKey={mapRecenterKey}
-              />
-            </div>
+            {passengerUiState !== 'searching' ? (
+              <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
+                <MapView
+                  showMap={showMapOnScreen}
+                  mapPlaceholder={mapPlaceholder}
+                  pickupSelection={isPickupPlanningMode ? pickupPreviewLocation : null}
+                  dropoffSelection={isPickupPlanningMode ? dropoffPreviewLocation : null}
+                  onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
+                  passengerLocation={
+                    passengerLocation ?? (activeTrip
+                      ? {
+                          lat: activeTrip.origin_lat,
+                          lng: activeTrip.origin_lng,
+                        }
+                      : undefined)
+                  }
+                  driverLocation={driverLocation ?? undefined}
+                  route={routeForMap}
+                  tripPickup={tripMapLegs.pickup}
+                  tripDropoff={tripMapLegs.dropoff}
+                  planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
+                  mapVisualWeight={a021Layout.map}
+                  planningRecenter={dropoffPreviewLocation}
+                  planningRecenterKey={mapRecenterKey}
+                />
+              </div>
+            ) : null}
 
             {showTripPlannerPanel && (
               <TripPlannerPanel

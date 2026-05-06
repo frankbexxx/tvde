@@ -1213,7 +1213,9 @@ export function DriverDashboard() {
                 <StatusHeader
                   label={
                     hasAvailableTrips
-                      ? `${filteredAvailable.length} viagem(ns) disponível(eis)`
+                      ? filteredAvailable.length === 1
+                        ? '1 viagem disponível'
+                        : `${filteredAvailable.length} viagens disponíveis`
                       : 'À espera de viagens'
                   }
                   variant="idle"

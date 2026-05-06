@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Sheet, SheetContent } from '../../components/ui/sheet'
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
 import { useAuth } from '../../context/AuthContext'
 import type { DriverNavApp } from '../../services/driverNavPreference'
 import type { TripHistoryItem } from '../../api/trips'
@@ -143,6 +143,12 @@ export function DriverSideMenu(props: {
         aria-label="Menu lateral do motorista"
         data-testid="driver-side-menu"
       >
+        <SheetTitle className="sr-only">
+          {screen === 'root' ? 'Menu do motorista' : title}
+        </SheetTitle>
+        <SheetDescription className="sr-only">
+          Navegação do motorista: rendimentos, viagens, definições e mais.
+        </SheetDescription>
         <div className="h-dvh flex flex-col">
           <MenuHeader
             title={screen === 'root' ? `${sessionDisplayName ?? 'Motorista'}` : title}
