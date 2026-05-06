@@ -384,7 +384,9 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await openDriverMenu(driverPage)
     // Menu agora é drawer por camadas; preferências de navegação estão no menu operacional (ex.: Ajuda/Operação).
     await driverPage.getByRole('button', { name: /ajuda/i }).click()
-    await driverPage.getByTestId('driver-nav-pref-google').click()
+    const prefGoogle = driverPage.getByTestId('driver-nav-pref-google')
+    await prefGoogle.scrollIntoViewIfNeeded()
+    await prefGoogle.click()
     await driverPage.reload({ waitUntil: 'domcontentloaded' })
     await openDriverMenu(driverPage)
     await driverPage.getByRole('button', { name: /ajuda/i }).click()

@@ -125,9 +125,14 @@ export function DriverSideMenu(props: {
         aria-label="Menu lateral do motorista"
         data-testid="driver-side-menu"
       >
-        <MenuHeader title={screen === 'root' ? `${sessionDisplayName ?? 'Motorista'}` : title} onBack={back} onClose={close} />
+        <div className="h-dvh flex flex-col">
+          <MenuHeader
+            title={screen === 'root' ? `${sessionDisplayName ?? 'Motorista'}` : title}
+            onBack={back}
+            onClose={close}
+          />
 
-        <div className="p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
           {screen === 'root' ? (
             <>
               <div className="rounded-2xl border border-border bg-gradient-to-b from-foreground/[0.06] to-transparent px-4 py-4">
@@ -201,6 +206,7 @@ export function DriverSideMenu(props: {
           ) : (
             <div className="pt-1">{renderLegacyMenu(screen)}</div>
           )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
