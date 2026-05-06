@@ -15,6 +15,7 @@ import {
   type PartnerTripRow,
 } from '../../api/partner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import { PartnerSideMenu } from './PartnerSideMenu'
 
 function locationLabel(d: PartnerDriverRow): string {
   const loc = d.last_location
@@ -63,6 +64,7 @@ function normalizeSearch(q: string): string {
 
 export function PartnerHome() {
   const { token } = useAuth()
+  const [menuOpen, setMenuOpen] = useState(false)
   const [metrics, setMetrics] = useState<PartnerMetrics | null>(null)
   const [drivers, setDrivers] = useState<PartnerDriverRow[]>([])
   const [trips, setTrips] = useState<PartnerTripRow[]>([])
@@ -246,7 +248,29 @@ export function PartnerHome() {
 
   return (
     <div className="p-4 space-y-6 max-w-lg mx-auto w-full">
-      <h2 className="text-lg font-semibold text-foreground">Frota (partner)</h2>
+      <PartnerSideMenu
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        renderScreen={(screen) => (
+          <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card text-sm text-muted-foreground">
+            {screen === 'fleet' ? 'Frota: em breve menu dedicado (lista já existe no ecrã principal).' : null}
+            {screen === 'trips' ? 'Viagens: em breve filtros/atalhos (lista já existe no ecrã principal).' : null}
+            {screen === 'reports' ? 'Relatórios: export e KPIs (placeholder).' : null}
+            {screen === 'settings' ? 'Definições partner (placeholder).' : null}
+          </div>
+        )}
+      />
+
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-foreground">Frota (partner)</h2>
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          className="min-h-[44px] rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+        >
+          Menu
+        </button>
+      </div>
 
       {loading && <p className="text-sm text-muted-foreground">A carregar…</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
