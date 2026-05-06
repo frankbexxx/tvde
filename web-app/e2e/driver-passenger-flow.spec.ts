@@ -382,9 +382,12 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
 
     await openDriverMenu(driverPage)
+    // Menu agora é drawer por camadas; preferências de navegação estão no menu operacional (ex.: Ajuda/Operação).
+    await driverPage.getByRole('button', { name: /ajuda/i }).click()
     await driverPage.getByTestId('driver-nav-pref-google').click()
     await driverPage.reload({ waitUntil: 'domcontentloaded' })
     await openDriverMenu(driverPage)
+    await driverPage.getByRole('button', { name: /ajuda/i }).click()
     await expect(driverPage.getByTestId('driver-nav-pref-google')).toBeVisible()
 
     // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
