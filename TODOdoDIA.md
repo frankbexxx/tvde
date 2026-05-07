@@ -6,6 +6,32 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Painel — 2026-05-06 · pós-merge **#258** (`main` @ `79d9ff6`)
+
+_Ritmo acordado: **código primeiro** ao longo do dia; **smokes em sequência no fim do dia** (ou mini-smoke pontual se inevitável)._
+
+### Entregue (já em `main`)
+
+- [x] [CÓDIGO] **Partner — menu lateral:** Frota / Viagens / Relatórios / Definições com **dados reais** (métricas, contagens, CSV, últimas viagens, sessão BETA), em vez de placeholders.
+- [x] [CÓDIGO] **Motorista:** `StatusHeader` **compacto** quando há pedidos (menos altura em viewport curta); menu: **BETA**, **Zonas** com `MapPin`, **Histórico (viagens)**; viagem concluída: copy pagamento **a processar**, **rating** acima do cartão + scroll suave.
+- [x] [CÓDIGO] **Login:** linha **versão + SHA** de build; **AppHeaderBar:** pastilha de **papel** + ref curto de conta.
+
+### Próxima sessão — tu (quando testares)
+
+- [ ] [OPS] **Smoke fim do dia (sequencial):** partner (4 entradas do menu), motorista (pedidos/disponível + fluxo concluir se possível), login (versão), cabeçalho após login (papéis).
+- [ ] [OPS] Registar **bugs / follow-ups** → alimentam a fila «pós-smoke» (equiv. item 3 da lista quinta+sexta).
+
+### Sessões seguintes — fila até fechar (ordem sugerida)
+
+1. [ ] [DOCS] **Item 8:** varrimento `grep` docs antigas → alinhar a [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) (e templates).
+2. [ ] [OPS] **Item 6:** Render — rodar segredos expostos, validar `DATABASE_URL`, `GET /health`.
+3. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
+4. [ ] [CÓDIGO+TESTES] **Opcional item 9:** E2E/PW se couber (ex.: drawer partner); **ou** `UI_VISIBILITY` Passo 1 — admin `min-h-11` em botões pequenos.
+
+_Detalhe do plano por sessão: [`docs/todo-em-curso.md`](docs/todo-em-curso.md) § «Plano por sessões»._
+
+---
+
 ## Painel rápido da sessão (2026-05-02 noite) — fechado
 
 _Fecho após merge do **shell motorista** (barra inferior, mapa offline §9.2, pills §9.4, strip §9.5, dois passos + passo 1 alinhados). **App Render** com `VITE_DRIVER_BOTTOM_NAV` + `VITE_DRIVER_HOME_TWO_STEP` = `true` (rebuild); experimentação manual **muito boa** — **smokes formais + prints** ficam para **2026-05-03 manhã** (lista guardada; Firefox + Vivaldi incógnito, **um trilho** na app deployada)._

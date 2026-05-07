@@ -4,6 +4,15 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-05-06 — merge web **#258** (`main` @ `79d9ff6`)
+
+- **Partner (`PartnerHome` + `PartnerSideMenu`):** menu lateral deixa de ser placeholder — painéis **Frota**, **Viagens**, **Relatórios**, **Definições** com métricas/contagens reais, atalho **CSV**, últimas viagens, texto de apoio e **Atualizar**.
+- **Motorista:** `StatusHeader` **compacto** quando há pedidos; `ActiveTripSummary` com copy de pagamento **a processar**, **rating** antes do `TripCard` + `scrollIntoView`; `DriverSideMenu` — badge **BETA**, **Zonas** com ícone **MapPin**, rótulo **Histórico (viagens)**; botão frota **min-h-11** onde aplicável.
+- **Login:** `vite` injecta **versão** (`package.json`) + **SHA** Git — rodapé «Versão da aplicação»; **`AppHeaderBar`** — pastilha **MOTORISTA/PASSAGEIRO/FROTA/STAFF** + linha **Conta ·** (últimos 8 chars do `sub`).
+- **Continuidade:** `TODOdoDIA.md` painel **2026-05-06**; `docs/todo-em-curso.md` § **Plano por sessões** (S1 smoke → S2 docs → S3 segurança → S4 Stripe → S5 opcional).
+
+---
+
 ## Fecho 2026-05-02 (noite) — shell motorista + Render
 
 - **`main`:** merge do shell Top 3 / §9 (barra inferior, mapa offline, strip §9.5, dois passos, menu §10, CTAs). Detalhe: `TODOdoDIA.md` painel **2026-05-02 noite**.
