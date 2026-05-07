@@ -49,7 +49,10 @@ const DRIVER_NEAR_PICKUP_0 = { lat: 0.0004, lng: 0 }
 
 function renderActions(
   driverLocation: { lat: number; lng: number } | null = DRIVER_NEAR_PICKUP_0,
-  opts?: { tripDetailFallback?: TripDetailResponse | null }
+  opts?: {
+    tripDetailFallback?: TripDetailResponse | null
+    onTripCompleted?: () => void
+  }
 ) {
   const addLog = vi.fn()
   const setStatus = vi.fn()
@@ -69,6 +72,7 @@ function renderActions(
       onClearStatusOverride={onClear}
       onTripActionSuccess={onSuccess}
       onComplete={onComplete}
+      onTripCompleted={opts?.onTripCompleted}
       onError={onError}
     />
   )
@@ -137,14 +141,16 @@ describe('ActiveTripActions (RTL)', () => {
     expect(screen.queryByRole('button', { name: /iniciar viagem/i })).not.toBeInTheDocument()
   })
 
-  it('estado ongoing: botão Terminar viagem chama driverPerformComplete', async () => {
+  it('estado ongoing: Terminar viagem chama driverPerformComplete e onTripCompleted (não onComplete)', async () => {
+    const onTripCompleted = vi.fn()
     pollingCtx.trip = minimalTrip('ongoing')
-    renderActions()
+    const { onComplete } = renderActions(undefined, { onTripCompleted })
     fireEvent.click(screen.getByRole('button', { name: /terminar viagem/i }))
     await waitFor(() => {
       expect(driverTripActions.driverPerformComplete).toHaveBeenCalledWith('tid', 'tok')
+      expect(onTripCompleted).toHaveBeenCalled()
+      expect(onComplete).not.toHaveBeenCalled()
     })
-    expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
   })
 
   it('painel cancelamento: envia motivo escolhido a driverPerformCancel', async () => {

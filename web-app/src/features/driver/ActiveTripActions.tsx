@@ -111,6 +111,8 @@ export interface ActiveTripActionsProps {
   onClearStatusOverride: () => void
   onTripActionSuccess: (status: string) => void
   onComplete: () => void
+  /** Chamado quando a viagem passa a `completed` (sem libertar o ecrã no pai — p.ex. para avaliar). */
+  onTripCompleted?: () => void
   onError: (s: string) => void
 }
 
@@ -125,6 +127,7 @@ export function ActiveTripActions({
   onClearStatusOverride,
   onTripActionSuccess,
   onComplete,
+  onTripCompleted,
   onError,
 }: ActiveTripActionsProps) {
   const fetchTrip = useCallback(() => getDriverTripDetail(tripId, token), [tripId, token])
@@ -257,8 +260,11 @@ export function ActiveTripActions({
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (res.status === 'ongoing') sonnerToast.success('Viagem iniciada')
-      if (res.status === 'completed') sonnerToast.success('Viagem concluída')
-      if (res.status === 'completed' || res.status === 'cancelled') onComplete()
+      if (res.status === 'completed') {
+        sonnerToast.success('Viagem concluída')
+        onTripCompleted?.()
+      }
+      if (res.status === 'cancelled') onComplete()
       return true
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string }

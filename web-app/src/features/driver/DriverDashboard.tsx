@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth, type Role } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
 import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
@@ -79,6 +79,7 @@ import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { ActiveTripActions } from './ActiveTripActions'
+import { DriverTripRatingPanel } from './DriverTripRatingPanel'
 import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
 import { formatPickup, formatDestination } from '../../utils/format'
 import {
@@ -202,7 +203,7 @@ function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatu
 }
 
 export function DriverDashboard() {
-  const { token } = useAuth()
+  const { token, sessionRole } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
@@ -675,6 +676,18 @@ export function DriverDashboard() {
     sonnerToast.info('Esta viagem já não está disponível na tua sessão.')
   }, [clearDriverActiveTripUi])
 
+  const driverTripPartialAfterComplete = useCallback(() => {
+    tripSimStopRef.current?.()
+    tripSimStopRef.current = null
+    setMockSimulatedPosition(null)
+    setMockStableRouteEndpoints(null)
+    acceptedTripGeoRef.current = null
+    setDriverStatusOverride(null)
+    setStatus('Pronto')
+    refetchHistory()
+    refetchAvailable()
+  }, [refetchAvailable, refetchHistory, setStatus])
+
   const bottomChrome =
     driverBottomNav && showDriverHomeStep1 && activeTripId == null ? (
       <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
@@ -761,19 +774,8 @@ export function DriverDashboard() {
             }
           }
         }}
-        onComplete={() => {
-          tripSimStopRef.current?.()
-          tripSimStopRef.current = null
-          setMockSimulatedPosition(null)
-          setMockStableRouteEndpoints(null)
-          acceptedTripGeoRef.current = null
-          setDriverStatusOverride(null)
-          setAcceptedDetailFallback(null)
-          setDriverActiveTripId(null)
-          setStatus('Pronto')
-          refetchHistory()
-          refetchAvailable()
-        }}
+        onComplete={clearDriverActiveTripUi}
+        onTripCompleted={driverTripPartialAfterComplete}
         onError={setError}
       />
     ) : driverBottomNav ? (
@@ -1318,9 +1320,11 @@ export function DriverDashboard() {
                 token={token!}
                 statusOverride={driverStatusOverride}
                 detailFallback={acceptedDetailFallback}
+                sessionRole={sessionRole}
                 onClearStatusOverride={() => setDriverStatusOverride(null)}
                 onTripCancelled={onActiveTripCancelled}
                 onTripNotFound={onActiveTripNotFound}
+                onDismissCompletedTrip={clearDriverActiveTripUi}
               />
             )}
 
@@ -1379,17 +1383,22 @@ function ActiveTripSummary({
   token,
   statusOverride,
   detailFallback,
+  sessionRole,
   onClearStatusOverride,
   onTripCancelled,
   onTripNotFound,
+  onDismissCompletedTrip,
 }: {
   tripId: string
   token: string
   statusOverride: string | null
   detailFallback: TripDetailResponse | null
+  sessionRole: Role
   onClearStatusOverride: () => void
   onTripCancelled: () => void
   onTripNotFound: () => void
+  /** Libertar viagem concluída após avaliar / saltar / já avaliado. */
+  onDismissCompletedTrip: () => void
 }) {
   const fetchTrip = useCallback((): Promise<DriverTripPollResult> => {
     if (!tripId || !token) return Promise.resolve({ trip: null, notFound: false })
@@ -1403,6 +1412,7 @@ function ActiveTripSummary({
   }, [tripId, token])
   const {
     data: poll,
+    refetch: refetchTripDetail,
     isRefreshing: tripRefreshing,
     lastSuccessAt: tripLastSuccessAt,
     pollFault: tripPollFault,
@@ -1456,6 +1466,25 @@ function ActiveTripSummary({
     onTripNotFound()
   }, [pollNotFound, onTripNotFound])
 
+  const passengerRating = trip?.passenger_rating ?? effectiveTrip?.passenger_rating ?? null
+  const showDriverRatingPanel =
+    sessionRole === 'driver' &&
+    displayStatus === 'completed' &&
+    (passengerRating === null || passengerRating === undefined)
+
+  useEffect(() => {
+    if (pollNotFound || sessionRole !== 'driver') return
+    if (displayStatus !== 'completed') return
+    if (passengerRating == null) return
+    onDismissCompletedTrip()
+  }, [
+    pollNotFound,
+    sessionRole,
+    displayStatus,
+    passengerRating,
+    onDismissCompletedTrip,
+  ])
+
   const config = driverActiveTripUi(displayStatus)
 
   if (!effectiveTrip && tripId && token && !pollNotFound) {
@@ -1506,6 +1535,17 @@ function ActiveTripSummary({
           }
         />
       )}
+      {showDriverRatingPanel ? (
+        <DriverTripRatingPanel
+          tripId={tripId}
+          token={token}
+          onSubmitted={async () => {
+            await refetchTripDetail()
+            onDismissCompletedTrip()
+          }}
+          onSkip={onDismissCompletedTrip}
+        />
+      ) : null}
     </div>
   )
 }
