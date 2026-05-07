@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { rateTripPassenger } from '../../api/trips'
+import { rateTripDriver } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { toast } from 'sonner'
 
 const STARS = [1, 2, 3, 4, 5] as const
 
-export function PassengerTripRatingPanel({
+export function DriverTripRatingPanel({
   tripId,
   token,
   onSubmitted,
@@ -13,7 +13,7 @@ export function PassengerTripRatingPanel({
 }: {
   tripId: string
   token: string
-  onSubmitted: () => void
+  onSubmitted: () => void | Promise<void>
   onSkip: () => void
 }) {
   const [rating, setRating] = useState<number | null>(null)
@@ -23,19 +23,19 @@ export function PassengerTripRatingPanel({
     if (rating == null) return
     setBusy(true)
     try {
-      await rateTripPassenger(tripId, token, rating)
+      await rateTripDriver(tripId, token, rating)
       toast.success('Obrigado pela avaliação')
-      onSubmitted()
+      await Promise.resolve(onSubmitted())
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string }
       const msg = isTimeoutLikeError(err) || e?.status === 0
         ? 'Sem ligação ou o pedido demorou demasiado. Tenta de novo.'
         : e?.status === 403
-          ? 'Sem permissão para avaliar — em modo BETA, a conta tem de ser de passageiro (não motorista) para esta viagem.'
+          ? 'Sem permissão para avaliar — confirma que estás com a sessão de motorista correcta.'
           : e?.status === 404
-            ? 'Viagem não encontrada para avaliação. Pede nova viagem e tenta novamente no fim.'
+            ? 'Viagem não encontrada para avaliação.'
             : e?.detail === 'trip_not_completed'
-              ? 'A viagem ainda não está concluída. Aguarda alguns segundos e tenta de novo.'
+              ? 'A viagem ainda não está concluída no servidor. Aguarda uns segundos e tenta outra vez.'
               : String(e?.detail ?? 'Não foi possível enviar a avaliação.')
       toast.error(msg)
     } finally {
@@ -46,11 +46,11 @@ export function PassengerTripRatingPanel({
   return (
     <div
       className="rounded-2xl border border-border/80 bg-card p-4 space-y-3 shadow-card"
-      data-testid="passenger-trip-rating"
+      data-testid="driver-trip-rating"
     >
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Como correu a viagem?</h2>
-        <p className="text-sm text-foreground/75 mt-1">Avalia o motorista (opcional).</p>
+        <h2 className="text-lg font-semibold text-foreground">Como correu com o passageiro?</h2>
+        <p className="text-sm text-foreground/75 mt-1">Avalia o passageiro (opcional).</p>
       </div>
       <div className="flex flex-wrap gap-2 justify-center sm:justify-start" role="group" aria-label="Estrelas de 1 a 5">
         {STARS.map((n) => (
@@ -58,7 +58,7 @@ export function PassengerTripRatingPanel({
             key={n}
             type="button"
             disabled={busy}
-            data-testid={`passenger-rating-star-${n}`}
+            data-testid={`driver-rating-star-${n}`}
             onClick={() => setRating(n)}
             className={`min-h-[44px] min-w-[44px] rounded-xl border text-lg font-semibold transition-colors touch-manipulation ${
               rating === n

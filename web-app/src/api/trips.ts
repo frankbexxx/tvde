@@ -148,6 +148,18 @@ export async function rateTripPassenger(
   })
 }
 
+export async function rateTripDriver(
+  tripId: string,
+  token: string,
+  rating: number
+): Promise<TripStatusResponse> {
+  return apiFetch<TripStatusResponse>(`/driver/trips/${tripId}/rate`, {
+    method: 'POST',
+    body: JSON.stringify({ rating }),
+    token,
+  })
+}
+
 export async function getTripHistory(token: string): Promise<TripHistoryItem[]> {
   return apiFetch<TripHistoryItem[]>('/trips/history', { token })
 }

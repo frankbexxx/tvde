@@ -344,6 +344,26 @@ test.describe('Driver + passenger (proximity gate)', () => {
       timeout: sec(90),
     })
     await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
+
+    await expect(driverPage.getByTestId('driver-trip-rating')).toBeVisible({
+      timeout: sec(90),
+    })
+    await driverPage.getByTestId('driver-rating-star-4').click()
+    await driverPage.getByTestId('driver-trip-rating').getByRole('button', { name: /enviar avaliação/i }).click()
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/${tripId}`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return null
+          const detail = (await r.json()) as { passenger_rating?: number | null }
+          return detail.passenger_rating ?? null
+        },
+        { timeout: sec(60), intervals: pollLook }
+      )
+      .toBe(4)
+
     await driverCtx.close()
 
     const passengerCtx = await createAuthenticatedContext(browser, tokens, 'passenger', tripId)
