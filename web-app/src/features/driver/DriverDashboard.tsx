@@ -41,6 +41,7 @@ import {
 import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
+import { driverTripPollEquals, type DriverTripPollResult } from './driverTripPollEquals'
 import {
   mergeDriverPolledWithOverride,
   tripStateRank,
@@ -651,6 +652,29 @@ export function DriverDashboard() {
     [activeTripId, driverHomeTwoStep, pollEnabled, refetchAvailable, token]
   )
 
+  const clearDriverActiveTripUi = useCallback(() => {
+    tripSimStopRef.current?.()
+    tripSimStopRef.current = null
+    setMockSimulatedPosition(null)
+    setMockStableRouteEndpoints(null)
+    acceptedTripGeoRef.current = null
+    setDriverStatusOverride(null)
+    setAcceptedDetailFallback(null)
+    setDriverActiveTripId(null)
+    setStatus('Pronto')
+    refetchAvailable()
+    refetchHistory()
+  }, [refetchAvailable, refetchHistory, setDriverActiveTripId, setStatus])
+
+  const onActiveTripCancelled = useCallback(() => {
+    clearDriverActiveTripUi()
+  }, [clearDriverActiveTripUi])
+
+  const onActiveTripNotFound = useCallback(() => {
+    clearDriverActiveTripUi()
+    sonnerToast.info('Esta viagem já não está disponível na tua sessão.')
+  }, [clearDriverActiveTripUi])
+
   const bottomChrome =
     driverBottomNav && showDriverHomeStep1 && activeTripId == null ? (
       <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
@@ -1189,6 +1213,18 @@ export function DriverDashboard() {
                   }
                   compactHeight={compactDriverSurface}
                 />
+                {!activeTripId && hasAvailableTrips ? (
+                  <div className="border-t border-border bg-primary/10 px-3 py-2 text-center">
+                    <p className="text-sm font-semibold text-foreground">
+                      {filteredAvailable.length === 1
+                        ? '1 pedido no mapa'
+                        : `${filteredAvailable.length} pedidos no mapa`}
+                    </p>
+                    <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
+                      Os pinos seguem a primeira oferta; desliza para a lista e aceita em baixo.
+                    </p>
+                  </div>
+                ) : null}
                 {driverBottomNav && !activeTripId ? (
                   <div className="border-t border-border bg-muted/35">
                     {offline ? (
@@ -1283,19 +1319,8 @@ export function DriverDashboard() {
                 statusOverride={driverStatusOverride}
                 detailFallback={acceptedDetailFallback}
                 onClearStatusOverride={() => setDriverStatusOverride(null)}
-                onTripCancelled={() => {
-                  tripSimStopRef.current?.()
-                  tripSimStopRef.current = null
-                  setMockSimulatedPosition(null)
-                  setMockStableRouteEndpoints(null)
-                  acceptedTripGeoRef.current = null
-                  setDriverStatusOverride(null)
-                  setAcceptedDetailFallback(null)
-                  setDriverActiveTripId(null)
-                  setStatus('Pronto')
-                  refetchAvailable()
-                  refetchHistory()
-                }}
+                onTripCancelled={onActiveTripCancelled}
+                onTripNotFound={onActiveTripNotFound}
               />
             )}
 
@@ -1356,6 +1381,7 @@ function ActiveTripSummary({
   detailFallback,
   onClearStatusOverride,
   onTripCancelled,
+  onTripNotFound,
 }: {
   tripId: string
   token: string
@@ -1363,20 +1389,29 @@ function ActiveTripSummary({
   detailFallback: TripDetailResponse | null
   onClearStatusOverride: () => void
   onTripCancelled: () => void
+  onTripNotFound: () => void
 }) {
-  const fetchTrip = useCallback(() => getDriverTripDetail(tripId, token), [tripId, token])
+  const fetchTrip = useCallback((): Promise<DriverTripPollResult> => {
+    if (!tripId || !token) return Promise.resolve({ trip: null, notFound: false })
+    return getDriverTripDetail(tripId, token)
+      .then((t) => ({ trip: t, notFound: false }))
+      .catch((e: unknown) => {
+        const st = (e as { status?: number })?.status
+        if (st === 404) return { trip: null, notFound: true }
+        throw e
+      })
+  }, [tripId, token])
   const {
-    data: trip,
+    data: poll,
     isRefreshing: tripRefreshing,
     lastSuccessAt: tripLastSuccessAt,
     pollFault: tripPollFault,
-  } = usePolling(
-    fetchTrip,
-    [tripId, token],
-    !!tripId && !!token,
-    2000
-  )
-  const effectiveTrip = trip ?? detailFallback
+  } = usePolling<DriverTripPollResult>(fetchTrip, [fetchTrip], !!tripId && !!token, 2000, {
+    equals: driverTripPollEquals,
+  })
+  const trip = poll?.trip ?? null
+  const pollNotFound = poll?.notFound ?? false
+  const effectiveTrip = pollNotFound ? null : (trip ?? detailFallback)
   const displayStatus = mergeDriverPolledWithOverride(
     effectiveTrip?.status,
     statusOverride,
@@ -1416,9 +1451,14 @@ function ActiveTripSummary({
     }
   }, [trip?.status, onTripCancelled])
 
+  useEffect(() => {
+    if (!pollNotFound) return
+    onTripNotFound()
+  }, [pollNotFound, onTripNotFound])
+
   const config = driverActiveTripUi(displayStatus)
 
-  if (!effectiveTrip && tripId && token) {
+  if (!effectiveTrip && tripId && token && !pollNotFound) {
     return (
       <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card">
         <StatusHeader label="A carregar viagem…" variant="idle" emphasis="primary" />

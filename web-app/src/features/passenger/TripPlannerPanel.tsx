@@ -46,6 +46,10 @@ export interface TripPlannerPanelProps {
   slowRequestHint?: string | null
   /** Bloqueia confirmar / repor durante o POST do pedido. */
   confirmTripPending?: boolean
+  /**
+   * Em confirmação: bloqueia o botão «Confirmar viagem» e mostra aviso (ex.: recolha ≈ destino).
+   */
+  confirmBlockedReason?: string | null
   onChooseMap: () => void
   onSetDestinationHint: () => void
   onReset: () => void
@@ -82,6 +86,7 @@ function TripPlannerPanelInner({
   driverTrackingHint = null,
   slowRequestHint = null,
   confirmTripPending = false,
+  confirmBlockedReason = null,
   onChooseMap,
   onSetDestinationHint,
   onReset,
@@ -210,6 +215,15 @@ function TripPlannerPanelInner({
             <p className="font-semibold text-foreground text-[13px] mb-0.5">Pagamento</p>
             <p>{PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING}</p>
           </div>
+          {confirmBlockedReason ? (
+            <div
+              className="rounded-xl border border-warning/50 bg-warning/15 px-3 py-2.5 text-sm text-foreground leading-snug"
+              role="status"
+              data-testid="passenger-confirm-blocked-hint"
+            >
+              {confirmBlockedReason}
+            </div>
+          ) : null}
           <div className="flex flex-col gap-2 pt-1">
             {onEditDestination ? (
               <button
@@ -224,7 +238,7 @@ function TripPlannerPanelInner({
             <button
               type="button"
               onClick={onConfirmTrip}
-              disabled={confirmTripPending || routeMetaLoading}
+              disabled={confirmTripPending || routeMetaLoading || Boolean(confirmBlockedReason)}
               className="w-full rounded-2xl bg-success text-success-foreground py-3 text-base font-semibold shadow-floating hover:bg-success/90 transition-opacity duration-200 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
             >
               {confirmTripPending ? (
