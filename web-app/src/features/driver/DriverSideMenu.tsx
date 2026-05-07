@@ -6,7 +6,18 @@ import type { TripHistoryItem } from '../../api/trips'
 import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus } from '../../services/driverDocuments'
 import type { DriverVehicleCategory } from '../../services/driverVehicleCategories'
 import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT, DRIVER_OPEN_SETTINGS_EVENT } from './driverShellEvents'
-import { Compass, CreditCard, FileText, History, Inbox, LogOut, Settings, SlidersHorizontal, User } from 'lucide-react'
+import {
+  Compass,
+  CreditCard,
+  FileText,
+  History,
+  Inbox,
+  LogOut,
+  MapPin,
+  Settings,
+  SlidersHorizontal,
+  User,
+} from 'lucide-react'
 
 export type DriverMenuScreen =
   | 'root'
@@ -168,8 +179,8 @@ export function DriverSideMenu(props: {
                     <p className="truncate text-base font-semibold text-foreground">{sessionDisplayName ?? 'Motorista'}</p>
                     <p className="truncate text-xs text-muted-foreground">{sessionPhone ?? 'Sessão de teste'}</p>
                   </div>
-                  <span className="shrink-0 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/75">
-                    5 ★
+                  <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                    BETA
                   </span>
                 </div>
               </div>
@@ -195,7 +206,7 @@ export function DriverSideMenu(props: {
                   onClick={() => setScreen('earnings')}
                 />
                 <RootItem
-                  label="Histórico / Viagens"
+                  label="Histórico (viagens)"
                   icon={<History className="h-4 w-4" />}
                   onClick={() => setScreen('trips')}
                 />
@@ -211,7 +222,7 @@ export function DriverSideMenu(props: {
                 />
                 <RootItem
                   label="Zonas"
-                  icon={<SlidersHorizontal className="h-4 w-4" />}
+                  icon={<MapPin className="h-4 w-4" />}
                   onClick={() => setScreen('zones')}
                 />
                 <RootItem

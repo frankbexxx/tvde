@@ -1258,6 +1258,7 @@ export function DriverDashboard() {
                   }
                   variant="idle"
                   emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
+                  compact={hasAvailableTrips}
                 />
                 {pollEnabled && availableLoading && available == null ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-12 text-foreground/80">
@@ -1472,6 +1473,15 @@ function ActiveTripSummary({
     displayStatus === 'completed' &&
     (passengerRating === null || passengerRating === undefined)
 
+  const ratingScrollRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!showDriverRatingPanel) return
+    const t = window.setTimeout(() => {
+      ratingScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 120)
+    return () => window.clearTimeout(t)
+  }, [showDriverRatingPanel])
+
   useEffect(() => {
     if (pollNotFound || sessionRole !== 'driver') return
     if (displayStatus !== 'completed') return
@@ -1519,6 +1529,24 @@ function ActiveTripSummary({
           Pagamento do passageiro: {paymentStatusLabel(trip.payment_status)}
         </p>
       ) : null}
+      {displayStatus === 'completed' && trip?.payment_status === 'processing' ? (
+        <p className="text-xs text-foreground/70 text-center px-2 leading-snug">
+          O pagamento pode ficar «a processar» uns instantes — podes avaliar enquanto sincroniza.
+        </p>
+      ) : null}
+      {showDriverRatingPanel ? (
+        <div ref={ratingScrollRef} className="scroll-mt-24">
+          <DriverTripRatingPanel
+            tripId={tripId}
+            token={token}
+            onSubmitted={async () => {
+              await refetchTripDetail()
+              onDismissCompletedTrip()
+            }}
+            onSkip={onDismissCompletedTrip}
+          />
+        </div>
+      ) : null}
       {effectiveTrip && (
         <TripCard
           pickup={formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)}
@@ -1535,17 +1563,6 @@ function ActiveTripSummary({
           }
         />
       )}
-      {showDriverRatingPanel ? (
-        <DriverTripRatingPanel
-          tripId={tripId}
-          token={token}
-          onSubmitted={async () => {
-            await refetchTripDetail()
-            onDismissCompletedTrip()
-          }}
-          onSkip={onDismissCompletedTrip}
-        />
-      ) : null}
     </div>
   )
 }
@@ -2168,110 +2185,110 @@ function DriverOperationsMenu({
           id="driver-menu-earnings"
           className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
         >
-        <p className="text-sm font-medium text-foreground">Rendimentos</p>
-        <p className="text-xs text-muted-foreground leading-snug">
-          Soma do <span className="font-medium text-foreground/85">preço final</span> das viagens concluídas na
-          semana. A linha «Parte motorista» aparece quando a API envia payout por viagem.
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
-            <p className="text-[11px] text-foreground/70">Semana atual</p>
-            <p className="text-base font-semibold text-foreground">{thisWeekRevenue.toFixed(2)} €</p>
-            {showThisWeekPayout ? (
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Parte motorista:{' '}
-                <span className="font-medium text-foreground/85">{thisWeekPayoutSum.toFixed(2)} €</span>
-              </p>
-            ) : null}
-          </div>
-          <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
-            <p className="text-[11px] text-foreground/70">Semana anterior</p>
-            <p className="text-base font-semibold text-foreground">{lastWeekRevenue.toFixed(2)} €</p>
-            {showLastWeekPayout ? (
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Parte motorista:{' '}
-                <span className="font-medium text-foreground/85">{lastWeekPayoutSum.toFixed(2)} €</span>
-              </p>
-            ) : null}
-          </div>
-        </div>
-        {completedTrips.length === 0 ? (
+          <p className="text-sm font-medium text-foreground">Rendimentos</p>
           <p className="text-xs text-muted-foreground leading-snug">
-            Sem viagens concluídas a contar para já — os totais actualizam quando concluíres viagens com data
-            de fim.
+            Soma do <span className="font-medium text-foreground/85">preço final</span> das viagens concluídas na
+            semana. A linha «Parte motorista» aparece quando a API envia payout por viagem.
           </p>
-        ) : null}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+              <p className="text-[11px] text-foreground/70">Semana atual</p>
+              <p className="text-base font-semibold text-foreground">{thisWeekRevenue.toFixed(2)} €</p>
+              {showThisWeekPayout ? (
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Parte motorista:{' '}
+                  <span className="font-medium text-foreground/85">{thisWeekPayoutSum.toFixed(2)} €</span>
+                </p>
+              ) : null}
+            </div>
+            <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+              <p className="text-[11px] text-foreground/70">Semana anterior</p>
+              <p className="text-base font-semibold text-foreground">{lastWeekRevenue.toFixed(2)} €</p>
+              {showLastWeekPayout ? (
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Parte motorista:{' '}
+                  <span className="font-medium text-foreground/85">{lastWeekPayoutSum.toFixed(2)} €</span>
+                </p>
+              ) : null}
+            </div>
+          </div>
+          {completedTrips.length === 0 ? (
+            <p className="text-xs text-muted-foreground leading-snug">
+              Sem viagens concluídas a contar para já — os totais actualizam quando concluíres viagens com data
+              de fim.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
       {showTrips ? (
         <div id="driver-menu-trips" className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm font-medium text-foreground">Viagens</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-sm font-medium text-foreground">Viagens</p>
+            {history && history.length > 0 ? (
+              <p className="text-[11px] text-muted-foreground shrink-0">
+                {Math.min(historyVisible, history.length)} de {history.length}
+              </p>
+            ) : null}
+          </div>
           {history && history.length > 0 ? (
-            <p className="text-[11px] text-muted-foreground shrink-0">
-              {Math.min(historyVisible, history.length)} de {history.length}
-            </p>
-          ) : null}
-        </div>
-        {history && history.length > 0 ? (
-          <>
-            <ul className="space-y-2 max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain pr-0.5">
-              {history.slice(0, historyVisible).map((t) => (
-                <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1 space-y-0.5">
-                      <p className="text-xs font-medium text-foreground truncate">
-                        #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
-                      </p>
-                      <p
-                        className="text-[11px] text-foreground/75 truncate"
-                        title={`${formatPickup(t.origin_lat, t.origin_lng)} → ${formatDestination(t.destination_lat, t.destination_lng)}`}
+            <>
+              <ul className="space-y-2 max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain pr-0.5">
+                {history.slice(0, historyVisible).map((t) => (
+                  <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="text-xs font-medium text-foreground truncate">
+                          #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
+                        </p>
+                        <p
+                          className="text-[11px] text-foreground/75 truncate"
+                          title={`${formatPickup(t.origin_lat, t.origin_lng)} → ${formatDestination(t.destination_lat, t.destination_lng)}`}
+                        >
+                          {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                          {formatDestination(t.destination_lat, t.destination_lng)}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {t.completed_at
+                            ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
+                            : t.status === 'completed'
+                              ? 'Data de conclusão indisponível'
+                              : 'Viagem ainda não concluída neste resumo'}
+                        </p>
+                        <DriverHistoryTripMoney t={t} />
+                        <CancellationReasonMuted reason={t.cancellation_reason} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onReportIncident(t.trip_id)}
+                        className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
                       >
-                        {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                        {formatDestination(t.destination_lat, t.destination_lng)}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {t.completed_at
-                          ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
-                          : t.status === 'completed'
-                            ? 'Data de conclusão indisponível'
-                            : 'Viagem ainda não concluída neste resumo'}
-                      </p>
-                      <DriverHistoryTripMoney t={t} />
-                      <CancellationReasonMuted reason={t.cancellation_reason} />
+                        Reportar
+                      </button>
                     </div>
                     <button
                       type="button"
-                      onClick={() => onReportIncident(t.trip_id)}
-                      className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                      onClick={() => setHistoryDetailTripId(t.trip_id)}
+                      className="mt-2 min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
                     >
-                      Reportar
+                      Ver detalhe
                     </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setHistoryDetailTripId(t.trip_id)}
-                    className="mt-2 min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-                  >
-                    Ver detalhe
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {history.length > historyVisible ? (
-              <button
-                type="button"
-                className="w-full min-h-[40px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-                onClick={() => setHistoryVisible((n) => Math.min(n + 5, history.length))}
-              >
-                Mostrar mais
-              </button>
-            ) : null}
-          </>
-        ) : (
-          <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
-        )}
+                  </li>
+                ))}
+              </ul>
+              {history.length > historyVisible ? (
+                <button
+                  type="button"
+                  className="w-full min-h-[40px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                  onClick={() => setHistoryVisible((n) => Math.min(n + 5, history.length))}
+                >
+                  Mostrar mais
+                </button>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
+          )}
         </div>
       ) : null}
 
@@ -2281,308 +2298,308 @@ function DriverOperationsMenu({
           className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
           data-testid="driver-menu-inbox"
         >
-        <p className="text-sm font-medium text-foreground">Caixa de entrada</p>
-        <p className="text-xs text-muted-foreground leading-snug">
-          Ainda sem avisos do partner nesta versão. Quando a operação enviar avisos, aparecem aqui.
-        </p>
-        <button
-          type="button"
-          data-testid="driver-menu-open-activity-log"
-          onClick={() => {
-            onCloseMenu()
-            window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
-          }}
-          className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-        >
-          Ver registo de atividade
-        </button>
+          <p className="text-sm font-medium text-foreground">Caixa de entrada</p>
+          <p className="text-xs text-muted-foreground leading-snug">
+            Ainda sem avisos do partner nesta versão. Quando a operação enviar avisos, aparecem aqui.
+          </p>
+          <button
+            type="button"
+            data-testid="driver-menu-open-activity-log"
+            onClick={() => {
+              onCloseMenu()
+              window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
+            }}
+            className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Ver registo de atividade
+          </button>
         </div>
       ) : null}
 
       {showAccountShortcuts ? (
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          data-testid="driver-menu-open-account"
-          onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))}
-          className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-        >
-          Conta (perfil)
-        </button>
-        <button
-          type="button"
-          data-testid="driver-menu-open-settings"
-          onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))}
-          className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-        >
-          Definições
-        </button>
-      </div>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            data-testid="driver-menu-open-account"
+            onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))}
+            className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Conta (perfil)
+          </button>
+          <button
+            type="button"
+            data-testid="driver-menu-open-settings"
+            onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))}
+            className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+          >
+            Definições
+          </button>
+        </div>
       ) : null}
 
       {showPricing ? (
-      <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm">
-        <summary className="cursor-pointer font-medium text-foreground select-none">
-          Preços nos pedidos (estimativa)
-        </summary>
-        <p className="mt-2 text-xs text-foreground/85 leading-snug">
-          O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no
-          fim da viagem.
-        </p>
-      </details>
+        <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm">
+          <summary className="cursor-pointer font-medium text-foreground select-none">
+            Preços nos pedidos (estimativa)
+          </summary>
+          <p className="mt-2 text-xs text-foreground/85 leading-snug">
+            O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no
+            fim da viagem.
+          </p>
+        </details>
       ) : null}
 
       {showZones ? (
-      <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
-        <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
-          <button
-            type="button"
-            data-testid="driver-zones-refresh"
-            onClick={() => void reloadZones(true)}
-            disabled={!token || zoneBusy || zoneRefreshing}
-            aria-busy={zoneRefreshing}
-            className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
-          >
-            {zoneRefreshing ? 'A actualizar…' : 'Atualizar'}
-          </button>
-        </div>
-        <p className="text-xs text-muted-foreground leading-snug">
-          Contador diário (meia-noite Lisboa). O uso só desce quando concluíres a primeira viagem na zona-alvo
-          depois de confirmares «Cheguei».
-        </p>
-        {zoneLoadErr ? (
-          <p className="text-xs text-destructive">{zoneLoadErr}</p>
-        ) : zoneBudget ? (
-          <p className="text-sm text-foreground/90">
-            Mudanças hoje:{' '}
-            <span className="font-semibold">
-              {zoneBudget.used_changes}/{zoneBudget.max_changes}
-            </span>{' '}
-            · restantes {zoneBudget.remaining}
+        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
+            <button
+              type="button"
+              data-testid="driver-zones-refresh"
+              onClick={() => void reloadZones(true)}
+              disabled={!token || zoneBusy || zoneRefreshing}
+              aria-busy={zoneRefreshing}
+              className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+            >
+              {zoneRefreshing ? 'A actualizar…' : 'Atualizar'}
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground leading-snug">
+            Contador diário (meia-noite Lisboa). O uso só desce quando concluíres a primeira viagem na zona-alvo
+            depois de confirmares «Cheguei».
           </p>
-        ) : (
-          <p className="text-xs text-muted-foreground">A carregar orçamento…</p>
-        )}
-        {zoneSession && zoneStateLabel ? (
-          <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
-            <p className="text-xs font-medium text-foreground">
-              Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
-              {activeZoneLabelPt ? (
-                <span className="text-muted-foreground font-normal"> — {activeZoneLabelPt}</span>
-              ) : null}
+          {zoneLoadErr ? (
+            <p className="text-xs text-destructive">{zoneLoadErr}</p>
+          ) : zoneBudget ? (
+            <p className="text-sm text-foreground/90">
+              Mudanças hoje:{' '}
+              <span className="font-semibold">
+                {zoneBudget.used_changes}/{zoneBudget.max_changes}
+              </span>{' '}
+              · restantes {zoneBudget.remaining}
             </p>
-            <p className="text-xs text-foreground/85">{zoneStateLabel}</p>
-            <p className="text-[11px] text-muted-foreground">
-              Prazo (local): {formatZoneDeadlineLocal(zoneSession.deadline_at, zoneTz)}
-            </p>
-            {activeZoneOpsNotePt ? (
-              <p
-                className="text-[11px] text-foreground/80 leading-snug rounded-md border border-border/80 bg-muted/30 px-2 py-1.5"
-                data-testid="driver-zones-ops-note"
-              >
-                {activeZoneOpsNotePt}
+          ) : (
+            <p className="text-xs text-muted-foreground">A carregar orçamento…</p>
+          )}
+          {zoneSession && zoneStateLabel ? (
+            <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
+              <p className="text-xs font-medium text-foreground">
+                Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
+                {activeZoneLabelPt ? (
+                  <span className="text-muted-foreground font-normal"> — {activeZoneLabelPt}</span>
+                ) : null}
               </p>
-            ) : null}
-            {activeZoneArrivedGateHint ? (
-              <p className="text-[11px] text-muted-foreground leading-snug" data-testid="driver-zones-arrived-gate-hint">
-                {activeZoneArrivedGateHint}
+              <p className="text-xs text-foreground/85">{zoneStateLabel}</p>
+              <p className="text-[11px] text-muted-foreground">
+                Prazo (local): {formatZoneDeadlineLocal(zoneSession.deadline_at, zoneTz)}
               </p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              {!zoneSession.arrived_at ? (
-                <button
-                  type="button"
-                  data-testid="driver-zones-arrived"
-                  onClick={() => void handleZoneArrived()}
-                  disabled={zoneBusy}
-                  className="min-h-[40px] rounded-lg border border-info bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/20 disabled:opacity-50 touch-manipulation"
+              {activeZoneOpsNotePt ? (
+                <p
+                  className="text-[11px] text-foreground/80 leading-snug rounded-md border border-border/80 bg-muted/30 px-2 py-1.5"
+                  data-testid="driver-zones-ops-note"
                 >
-                  Cheguei à zona
-                </button>
-              ) : null}
-              <button
-                type="button"
-                data-testid="driver-zones-cancel"
-                onClick={() => void handleZoneCancel()}
-                disabled={zoneBusy}
-                className="min-h-[40px] rounded-lg border border-border px-3 text-sm font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
-              >
-                Cancelar intenção
-              </button>
-            </div>
-            {zoneSession.status === 'open' && zoneSession.extension_seconds_approved == null ? (
-              zoneSession.extension_requested ? (
-                <p className="text-[11px] text-muted-foreground leading-snug">
-                  Pedido de mais tempo enviado ao partner. Quando for aceite, o prazo (acima) actualiza
-                  automaticamente.
+                  {activeZoneOpsNotePt}
                 </p>
-              ) : (
-                <div className="space-y-1.5 pt-1 border-t border-border/60">
-                  <label className="block text-[11px] text-muted-foreground" htmlFor="driver-zone-ext-reason">
-                    Pedir mais tempo (bloqueio, fila, etc.)
-                  </label>
-                  <textarea
-                    id="driver-zone-ext-reason"
-                    value={zoneExtensionReason}
-                    onChange={(ev) => setZoneExtensionReason(ev.target.value)}
-                    rows={2}
-                    maxLength={2000}
-                    placeholder="Ex.: Acidente na A5; preciso de mais 15 min para chegar."
-                    className="w-full min-h-[44px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground"
-                  />
+              ) : null}
+              {activeZoneArrivedGateHint ? (
+                <p className="text-[11px] text-muted-foreground leading-snug" data-testid="driver-zones-arrived-gate-hint">
+                  {activeZoneArrivedGateHint}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                {!zoneSession.arrived_at ? (
                   <button
                     type="button"
-                    data-testid="driver-zones-request-extension"
-                    onClick={() => void handleZoneRequestExtension()}
+                    data-testid="driver-zones-arrived"
+                    onClick={() => void handleZoneArrived()}
                     disabled={zoneBusy}
-                    className="min-h-[40px] rounded-lg border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                    className="min-h-[40px] rounded-lg border border-info bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/20 disabled:opacity-50 touch-manipulation"
                   >
-                    Pedir mais tempo ao partner
+                    Cheguei à zona
                   </button>
-                </div>
-              )
-            ) : null}
-            {zoneSession.extension_seconds_approved != null && zoneSession.extension_seconds_approved > 0 ? (
-              <p className="text-[11px] text-foreground/90">
-                Partner concedeu +{Math.max(1, Math.round(zoneSession.extension_seconds_approved / 60))} min ao
-                prazo de entrada.
-              </p>
-            ) : null}
-          </div>
-        ) : zoneBudget && zoneBudget.remaining > 0 ? (
-          <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
-            <label className="block space-y-1">
-              <span className="text-[11px] text-muted-foreground">
-                Zona-alvo · catálogo v1 (também podes escrever à mão se o catálogo falhar)
-              </span>
-              {zoneSelectableItems.length > 0 ? (
-                <select
-                  value={zoneNewZoneId}
-                  onChange={(ev) => setZoneNewZoneId(ev.target.value)}
-                  data-testid="driver-zones-zone-select"
-                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
-                >
-                  {zoneSelectableItems.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.label}
-                    </option>
-                  ))}
-                </select>
-              ) : null}
-              {zoneCatalogErr ? (
-                <p className="text-[11px] text-warning" data-testid="driver-zones-catalog-fallback-hint">
-                  {zoneCatalogErr}
-                </p>
-              ) : null}
-              <input
-                value={zoneNewZoneId}
-                onChange={(ev) => setZoneNewZoneId(normalizeZoneIdInput(ev.target.value))}
-                onFocus={() => setZoneNewZoneFocused(true)}
-                onBlur={() => setZoneNewZoneFocused(false)}
-                onKeyDown={(ev) => {
-                  if (ev.key !== 'Enter') return
-                  ev.preventDefault()
-                  ev.stopPropagation()
-                  void estimateZoneEtaFromCurrentLocation(true)
-                }}
-                data-testid="driver-zones-zone-input"
-                className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                placeholder="Escreve ID manual (ex.: lisboa-norte)"
-              />
-              <div className="flex flex-wrap gap-2">
+                ) : null}
                 <button
                   type="button"
-                  onClick={() => handleAddCustomZone()}
+                  data-testid="driver-zones-cancel"
+                  onClick={() => void handleZoneCancel()}
                   disabled={zoneBusy}
-                  className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                  className="min-h-[40px] rounded-lg border border-border px-3 text-sm font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
                 >
-                  Guardar zona custom
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveCustomZone()}
-                  disabled={zoneBusy}
-                  className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
-                >
-                  Remover custom
+                  Cancelar intenção
                 </button>
               </div>
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="block space-y-1">
-                <span className="text-[11px] text-muted-foreground">ETA (min)</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={2880}
-                  value={zoneEtaMinutes}
-                  onChange={(ev) => {
-                    setZoneEtaManuallyEdited(true)
-                    setZoneEtaMinutes(Number(ev.target.value) || 1)
-                  }}
-                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
-                />
-              </label>
-              <label className="block space-y-1">
-                <span className="text-[11px] text-muted-foreground">Margem (%)</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={200}
-                  value={zoneMarginPct}
-                  onChange={(ev) => setZoneMarginPct(Number(ev.target.value) || 0)}
-                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
-                />
-              </label>
+              {zoneSession.status === 'open' && zoneSession.extension_seconds_approved == null ? (
+                zoneSession.extension_requested ? (
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    Pedido de mais tempo enviado ao partner. Quando for aceite, o prazo (acima) actualiza
+                    automaticamente.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5 pt-1 border-t border-border/60">
+                    <label className="block text-[11px] text-muted-foreground" htmlFor="driver-zone-ext-reason">
+                      Pedir mais tempo (bloqueio, fila, etc.)
+                    </label>
+                    <textarea
+                      id="driver-zone-ext-reason"
+                      value={zoneExtensionReason}
+                      onChange={(ev) => setZoneExtensionReason(ev.target.value)}
+                      rows={2}
+                      maxLength={2000}
+                      placeholder="Ex.: Acidente na A5; preciso de mais 15 min para chegar."
+                      className="w-full min-h-[44px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                    />
+                    <button
+                      type="button"
+                      data-testid="driver-zones-request-extension"
+                      onClick={() => void handleZoneRequestExtension()}
+                      disabled={zoneBusy}
+                      className="min-h-[40px] rounded-lg border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                    >
+                      Pedir mais tempo ao partner
+                    </button>
+                  </div>
+                )
+              ) : null}
+              {zoneSession.extension_seconds_approved != null && zoneSession.extension_seconds_approved > 0 ? (
+                <p className="text-[11px] text-foreground/90">
+                  Partner concedeu +{Math.max(1, Math.round(zoneSession.extension_seconds_approved / 60))} min ao
+                  prazo de entrada.
+                </p>
+              ) : null}
             </div>
-            <button
-              type="button"
-              onClick={() => void estimateZoneEtaFromCurrentLocation(true)}
-              disabled={zoneBusy || zoneEtaAutoBusy}
-              className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+          ) : zoneBudget && zoneBudget.remaining > 0 ? (
+            <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
+              <label className="block space-y-1">
+                <span className="text-[11px] text-muted-foreground">
+                  Zona-alvo · catálogo v1 (também podes escrever à mão se o catálogo falhar)
+                </span>
+                {zoneSelectableItems.length > 0 ? (
+                  <select
+                    value={zoneNewZoneId}
+                    onChange={(ev) => setZoneNewZoneId(ev.target.value)}
+                    data-testid="driver-zones-zone-select"
+                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                  >
+                    {zoneSelectableItems.map((z) => (
+                      <option key={z.id} value={z.id}>
+                        {z.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+                {zoneCatalogErr ? (
+                  <p className="text-[11px] text-warning" data-testid="driver-zones-catalog-fallback-hint">
+                    {zoneCatalogErr}
+                  </p>
+                ) : null}
+                <input
+                  value={zoneNewZoneId}
+                  onChange={(ev) => setZoneNewZoneId(normalizeZoneIdInput(ev.target.value))}
+                  onFocus={() => setZoneNewZoneFocused(true)}
+                  onBlur={() => setZoneNewZoneFocused(false)}
+                  onKeyDown={(ev) => {
+                    if (ev.key !== 'Enter') return
+                    ev.preventDefault()
+                    ev.stopPropagation()
+                    void estimateZoneEtaFromCurrentLocation(true)
+                  }}
+                  data-testid="driver-zones-zone-input"
+                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  placeholder="Escreve ID manual (ex.: lisboa-norte)"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleAddCustomZone()}
+                    disabled={zoneBusy}
+                    className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                  >
+                    Guardar zona custom
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCustomZone()}
+                    disabled={zoneBusy}
+                    className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                  >
+                    Remover custom
+                  </button>
+                </div>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block space-y-1">
+                  <span className="text-[11px] text-muted-foreground">ETA (min)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={2880}
+                    value={zoneEtaMinutes}
+                    onChange={(ev) => {
+                      setZoneEtaManuallyEdited(true)
+                      setZoneEtaMinutes(Number(ev.target.value) || 1)
+                    }}
+                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-[11px] text-muted-foreground">Margem (%)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={200}
+                    value={zoneMarginPct}
+                    onChange={(ev) => setZoneMarginPct(Number(ev.target.value) || 0)}
+                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                  />
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={() => void estimateZoneEtaFromCurrentLocation(true)}
+                disabled={zoneBusy || zoneEtaAutoBusy}
+                className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+              >
+                {zoneEtaAutoBusy ? 'A calcular ETA…' : 'Calcular ETA automático'}
+              </button>
+              {zoneEtaHint ? <p className="text-[11px] text-muted-foreground">{zoneEtaHint}</p> : null}
+              <button
+                type="button"
+                data-testid="driver-zones-create"
+                onClick={() => void handleCreateZoneSession()}
+                disabled={zoneBusy || !token}
+                className="w-full min-h-[44px] rounded-lg border border-info bg-info/15 text-sm font-semibold text-foreground hover:bg-info/25 disabled:opacity-50 touch-manipulation"
+              >
+                Pedir mudança de zona
+              </button>
+            </div>
+          ) : zoneBudget && zoneBudget.remaining <= 0 ? (
+            <div
+              className="rounded-lg border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2"
+              data-testid="driver-zones-budget-exhausted"
             >
-              {zoneEtaAutoBusy ? 'A calcular ETA…' : 'Calcular ETA automático'}
-            </button>
-            {zoneEtaHint ? <p className="text-[11px] text-muted-foreground">{zoneEtaHint}</p> : null}
-            <button
-              type="button"
-              data-testid="driver-zones-create"
-              onClick={() => void handleCreateZoneSession()}
-              disabled={zoneBusy || !token}
-              className="w-full min-h-[44px] rounded-lg border border-info bg-info/15 text-sm font-semibold text-foreground hover:bg-info/25 disabled:opacity-50 touch-manipulation"
-            >
-              Pedir mudança de zona
-            </button>
-          </div>
-        ) : zoneBudget && zoneBudget.remaining <= 0 ? (
-          <div
-            className="rounded-lg border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2"
-            data-testid="driver-zones-budget-exhausted"
-          >
-            <p className="text-sm font-semibold text-foreground">Orçamento de mudanças esgotado hoje</p>
-            <p className="text-xs text-foreground/85 leading-snug">
-              Não é possível abrir um novo pedido automático até ao reset (meia-noite Lisboa) ou até o partner
-              autorizar uma excepção. Usa o <strong>canal habitual da operação</strong> se precisares de entrar
-              numa zona extra hoje — em breve poderás enviar esse pedido também aqui.
-            </p>
-            <button
-              type="button"
-              data-testid="driver-zones-budget-exhausted-activity"
-              onClick={() => {
-                onCloseMenu()
-                window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
-              }}
-              className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-            >
-              Abrir registo de atividade
-            </button>
-          </div>
-        ) : null}
-      </div>
+              <p className="text-sm font-semibold text-foreground">Orçamento de mudanças esgotado hoje</p>
+              <p className="text-xs text-foreground/85 leading-snug">
+                Não é possível abrir um novo pedido automático até ao reset (meia-noite Lisboa) ou até o partner
+                autorizar uma excepção. Usa o <strong>canal habitual da operação</strong> se precisares de entrar
+                numa zona extra hoje — em breve poderás enviar esse pedido também aqui.
+              </p>
+              <button
+                type="button"
+                data-testid="driver-zones-budget-exhausted-activity"
+                onClick={() => {
+                  onCloseMenu()
+                  window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
+                }}
+                className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+              >
+                Abrir registo de atividade
+              </button>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       {showNavPref ? (
@@ -2597,8 +2614,8 @@ function DriverOperationsMenu({
               data-testid="driver-nav-pref-waze"
               onClick={() => onSelectNavPref('waze')}
               className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'waze'
-                  ? 'border-info bg-info/15 text-foreground'
-                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                ? 'border-info bg-info/15 text-foreground'
+                : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                 }`}
             >
               Waze
@@ -2608,8 +2625,8 @@ function DriverOperationsMenu({
               data-testid="driver-nav-pref-google"
               onClick={() => onSelectNavPref('google_maps')}
               className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'google_maps'
-                  ? 'border-info bg-info/15 text-foreground'
-                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                ? 'border-info bg-info/15 text-foreground'
+                : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                 }`}
             >
               Google Maps
@@ -2646,8 +2663,8 @@ function DriverOperationsMenu({
                   aria-pressed={active}
                   onClick={() => onToggleVehicleCategory(key)}
                   className={`min-h-[40px] rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
-                      ? 'border-info bg-info/15 text-foreground'
-                      : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                    ? 'border-info bg-info/15 text-foreground'
+                    : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                     }`}
                 >
                   {label}
@@ -2671,8 +2688,8 @@ function DriverOperationsMenu({
             </p>
             <span
               className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${isDriverDocumentsReady(driverDocuments)
-                  ? 'border-success/45 bg-success/15 text-foreground'
-                  : 'border-warning/45 bg-warning/15 text-foreground'
+                ? 'border-success/45 bg-success/15 text-foreground'
+                : 'border-warning/45 bg-warning/15 text-foreground'
                 }`}
             >
               {isDriverDocumentsReady(driverDocuments) ? 'Pronto para disponibilidade' : 'Documentos em falta'}
@@ -2725,8 +2742,8 @@ function DriverOperationsMenu({
                 aria-pressed={driverDocsGateEnabled}
                 onClick={() => onToggleDriverDocsGate(!driverDocsGateEnabled)}
                 className={`min-h-[30px] rounded-md border px-2 text-[11px] font-medium transition-colors ${driverDocsGateEnabled
-                    ? 'border-success/50 bg-success/15 text-foreground'
-                    : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                  ? 'border-success/50 bg-success/15 text-foreground'
+                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                   }`}
               >
                 {driverDocsGateEnabled ? 'Ligado' : 'Desligado'}
