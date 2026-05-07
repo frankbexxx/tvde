@@ -45,7 +45,7 @@
 
 | ID | Capacidade / superfície | Estado (UI) | Role | Mobile OK | Playwright | Notas |
 |----|-------------------------|-------------|------|-----------|------------|-------|
-| D1 | Ofertas / fila antes de accept | visível | driver | parcial | existente E2E | `DriverDashboard.tsx` L556-580 — `StatusHeader` («N viagem(ns) disponível(eis)» vs «À espera de viagens»), `RequestCard` por oferta, botão ACEITAR exercido em `driver-passenger-flow.spec.ts`. Poll (não WS); `DRIVER_NEW_TRIP_LIST_HINT` explicita contexto. Confirmar touch targets do `RequestCard` no device. |
+| D1 | Ofertas / fila antes de accept | visível | driver | parcial | existente E2E | `DriverDashboard.tsx` — `StatusHeader` com **pluralização** («1 viagem disponível» / «N viagens disponíveis») e, com pedidos, **`compact`** para reduzir altura em viewport curta (merge **2026-05-06** / #258). `RequestCard` + ACEITAR em `driver-passenger-flow.spec.ts`. Confirmar no **device** após smokes. |
 | D2 | Estados da viagem activa (accept → complete) | visível | driver | melhorado | existente E2E | Waze/Maps usam `trip` **ou** `acceptedDetailFallback` no footer (alinhado ao `ActiveTripSummary`) para não sumir antes do poll. |
 
 ---
@@ -72,4 +72,4 @@
 
 ---
 
-_Última revisão: 2026-04-20 (manhã — Passo 0 do inventário fechado com evidência)_
+_Última revisão: 2026-05-06 (nota D1 pós #258 — header compacto + plural)_
