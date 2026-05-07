@@ -20,11 +20,11 @@ function optSameNum(
 }
 
 /**
- * Comparação para evitar re-renders quando o poll devolve payload equivalente.
- * Omite `driver_location` (posição vem do poll dedicado em usePassengerDriverLocation)
+ * Comparação de dois `TripDetailResponse` para polls (motorista e passageiro).
+ * Omite `driver_location` (posição vem de polls dedicados)
  * e `updated_at` / `created_at` (mudam sem efeito visual útil no painel).
  */
-function tripDetailPassengerPollSemanticallyEqual(
+export function tripDetailPollSemanticallyEqual(
   a: TripDetailResponse,
   b: TripDetailResponse
 ): boolean {
@@ -59,5 +59,5 @@ export function passengerTripPollEquals(
   if (prev.notFound !== next.notFound) return false
   if (prev.trip == null && next.trip == null) return true
   if (prev.trip == null || next.trip == null) return false
-  return tripDetailPassengerPollSemanticallyEqual(prev.trip, next.trip)
+  return tripDetailPollSemanticallyEqual(prev.trip, next.trip)
 }

@@ -704,8 +704,8 @@ def test_zone_session_open_not_found() -> None:
     client = TestClient(app)
     try:
         r = client.get("/driver/zones/sessions/open")
-        assert r.status_code == 404
-        assert r.json()["detail"] == "no_open_zone_session"
+        assert r.status_code == 200
+        assert r.json()["session"] is None
     finally:
         _reset_overrides()
         db.close()
@@ -851,8 +851,10 @@ def test_zone_session_open_ok() -> None:
         sid = r0.json()["id"]
         r = client.get("/driver/zones/sessions/open")
         assert r.status_code == 200
-        assert r.json()["id"] == sid
-        assert r.json()["status"] == "open"
+        body = r.json()["session"]
+        assert body is not None
+        assert body["id"] == sid
+        assert body["status"] == "open"
     finally:
         _reset_overrides()
         db.close()

@@ -1,7 +1,7 @@
 /**
  * Driver «mudança de zona» (v1) — alinhado com ``/driver/zones/*`` no backend.
  */
-import { apiFetch, type ApiError } from './client'
+import { apiFetch } from './client'
 
 export type DriverZoneKind = 'generic' | 'airport'
 
@@ -60,6 +60,10 @@ export interface DriverZoneCustomItem {
   created_at: string
 }
 
+export interface DriverZoneOpenSessionPayload {
+  session: DriverZoneSession | null
+}
+
 export async function getDriverZoneBudgetToday(token: string): Promise<DriverZoneBudgetToday> {
   return apiFetch<DriverZoneBudgetToday>('/driver/zones/budget/today', { token })
 }
@@ -68,15 +72,10 @@ export async function getDriverZoneCatalog(token: string): Promise<DriverZoneCat
   return apiFetch<DriverZoneCatalogResponse>('/driver/zones/catalog', { token })
 }
 
-/** ``null`` quando não há sessão aberta (404). */
+/** Resposta 200: `session` é `null` quando não há sessão aberta (sem 404 em poll). */
 export async function fetchOpenDriverZoneSession(token: string): Promise<DriverZoneSession | null> {
-  try {
-    return await apiFetch<DriverZoneSession>('/driver/zones/sessions/open', { token })
-  } catch (e) {
-    const st = (e as ApiError)?.status
-    if (st === 404) return null
-    throw e
-  }
+  const res = await apiFetch<DriverZoneOpenSessionPayload>('/driver/zones/sessions/open', { token })
+  return res.session ?? null
 }
 
 export async function createDriverZoneSession(

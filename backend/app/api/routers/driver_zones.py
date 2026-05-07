@@ -22,6 +22,7 @@ from app.schemas.driver_zones import (
     DriverZoneCustomListResponse,
     DriverZoneEtaEstimateRequest,
     DriverZoneEtaEstimateResponse,
+    DriverZoneOpenSessionResponse,
     DriverZoneSessionCancelRequest,
     DriverZoneSessionCreateRequest,
     DriverZoneSessionExtensionRequest,
@@ -147,19 +148,18 @@ async def post_zone_eta_estimate(
     )
 
 
-@router.get("/sessions/open", response_model=DriverZoneSessionResponse)
+@router.get("/sessions/open", response_model=DriverZoneOpenSessionResponse)
 async def get_zone_session_open(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
-) -> DriverZoneSessionResponse:
+) -> DriverZoneOpenSessionResponse:
     driver_id = uuid.UUID(user.user_id)
     sess = get_open_zone_session(db, driver_id=driver_id)
     if sess is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="no_open_zone_session",
-        )
-    return DriverZoneSessionResponse.model_validate(sess)
+        return DriverZoneOpenSessionResponse(session=None)
+    return DriverZoneOpenSessionResponse(
+        session=DriverZoneSessionResponse.model_validate(sess)
+    )
 
 
 @router.post("/sessions", response_model=DriverZoneSessionResponse, status_code=status.HTTP_201_CREATED)

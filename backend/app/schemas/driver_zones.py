@@ -57,6 +57,12 @@ class DriverZoneSessionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class DriverZoneOpenSessionResponse(BaseModel):
+    """Sessão aberta ou ausência explícita — evita 404 em clients que fazem poll frequente."""
+
+    session: DriverZoneSessionResponse | None = None
+
+
 class DriverZoneSessionCancelRequest(BaseModel):
     cancel_reason: str | None = Field(default=None, max_length=2000)
 

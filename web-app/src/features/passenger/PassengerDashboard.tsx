@@ -441,6 +441,11 @@ export function PassengerDashboard() {
     setDropoffLocation(coords)
   }, [])
 
+  const pickupDestinationTooClose = useMemo(() => {
+    if (!pickupLocation || !dropoffLocation) return false
+    return haversineKm(pickupLocation, dropoffLocation) < 0.025
+  }, [pickupLocation, dropoffLocation])
+
   const handlePickupQueryChange = useCallback((value: string) => {
     setPickupQuery(value)
     if (pickupCandidate) setPickupCandidate(null)
@@ -455,6 +460,13 @@ export function PassengerDashboard() {
     if (!token) return
     if (!pickupLocation || !dropoffLocation) return
     if (creating) return
+
+    if (pickupDestinationTooClose) {
+      toast.warning(
+        'Recolha e destino demasiado próximos — escolhe dois pontos diferentes antes de pedir a viagem.'
+      )
+      return
+    }
 
     devLog('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation })
 
@@ -495,6 +507,7 @@ export function PassengerDashboard() {
     pickupLocation,
     dropoffLocation,
     creating,
+    pickupDestinationTooClose,
     addLog,
     setStatus,
     refetchHistory,
@@ -1195,6 +1208,11 @@ export function PassengerDashboard() {
                 onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
+                confirmBlockedReason={
+                  pickupDestinationTooClose
+                    ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
+                    : null
+                }
                 visualWeight={a021Layout.panel}
                 inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
               />
@@ -1271,6 +1289,11 @@ export function PassengerDashboard() {
                 onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
                 onConfirmTrip={handleRequestTrip}
                 confirmTripPending={creating}
+                confirmBlockedReason={
+                  pickupDestinationTooClose
+                    ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
+                    : null
+                }
                 visualWeight={a021Layout.panel}
                 inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
               />
