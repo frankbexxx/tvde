@@ -63,7 +63,7 @@ function normalizeSearch(q: string): string {
 }
 
 export function PartnerHome() {
-  const { token } = useAuth()
+  const { token, sessionPhone, sessionDisplayName } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [metrics, setMetrics] = useState<PartnerMetrics | null>(null)
   const [drivers, setDrivers] = useState<PartnerDriverRow[]>([])
@@ -239,6 +239,26 @@ export function PartnerHome() {
     }
   }
 
+  const tripStats = useMemo(() => {
+    let ongoing = 0
+    let completed = 0
+    let cancelled = 0
+    let failed = 0
+    for (const t of trips) {
+      if (ONGOING.has(t.status)) ongoing += 1
+      else if (t.status === 'completed') completed += 1
+      else if (t.status === 'cancelled') cancelled += 1
+      else if (t.status === 'failed') failed += 1
+    }
+    return { total: trips.length, ongoing, completed, cancelled, failed }
+  }, [trips])
+
+  const recentTrips = useMemo(() => {
+    return [...trips]
+      .sort((a, b) => (parseIsoMs(b.updated_at) ?? 0) - (parseIsoMs(a.updated_at) ?? 0))
+      .slice(0, 8)
+  }, [trips])
+
   const chip = (active: boolean) =>
     `px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${
       active
@@ -251,14 +271,152 @@ export function PartnerHome() {
       <PartnerSideMenu
         open={menuOpen}
         onOpenChange={setMenuOpen}
-        renderScreen={(screen) => (
-          <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card text-sm text-muted-foreground">
-            {screen === 'fleet' ? 'Frota: em breve menu dedicado (lista já existe no ecrã principal).' : null}
-            {screen === 'trips' ? 'Viagens: em breve filtros/atalhos (lista já existe no ecrã principal).' : null}
-            {screen === 'reports' ? 'Relatórios: export e KPIs (placeholder).' : null}
-            {screen === 'settings' ? 'Definições partner (placeholder).' : null}
-          </div>
-        )}
+        renderScreen={(screen) =>
+          screen === 'fleet' ? (
+            <div className="space-y-4 text-sm text-foreground">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Resumo rápido da frota. A pesquisa, filtros e listas completas continuam no ecrã principal — fecha o
+                menu para aceder.
+              </p>
+              {metrics ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-border bg-background px-3 py-2">
+                    <p className="text-[11px] text-muted-foreground">Motoristas (total)</p>
+                    <p className="text-lg font-semibold tabular-nums">{metrics.total_drivers}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background px-3 py-2">
+                    <p className="text-[11px] text-muted-foreground">Com GPS recente</p>
+                    <p className="text-lg font-semibold tabular-nums">{metrics.active_drivers}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background px-3 py-2">
+                    <p className="text-[11px] text-muted-foreground">Viagens hoje</p>
+                    <p className="text-lg font-semibold tabular-nums">{metrics.trips_today}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background px-3 py-2">
+                    <p className="text-[11px] text-muted-foreground">Total viagens</p>
+                    <p className="text-lg font-semibold tabular-nums">{metrics.trips_total}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">A carregar métricas…</p>
+              )}
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="w-full min-h-11 rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
+              >
+                Atualizar dados
+              </button>
+            </div>
+          ) : screen === 'trips' ? (
+            <div className="space-y-4 text-sm text-foreground">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Contagens e atalhos. Lista filtrável completa no ecrã principal.
+              </p>
+              <div className="rounded-xl border border-border bg-background px-3 py-2 space-y-1 text-xs">
+                <p>
+                  <span className="text-muted-foreground">Total:</span>{' '}
+                  <span className="font-semibold tabular-nums">{tripStats.total}</span>
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Em curso:</span>{' '}
+                  <span className="font-semibold tabular-nums">{tripStats.ongoing}</span>
+                </p>
+                <p>
+                  <span className="text-muted-foreground">Concluídas / Canceladas / Falhadas:</span>{' '}
+                  <span className="font-semibold tabular-nums">
+                    {tripStats.completed} · {tripStats.cancelled} · {tripStats.failed}
+                  </span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void downloadCsv()}
+                className="w-full min-h-11 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 touch-manipulation"
+              >
+                Exportar viagens (CSV)
+              </button>
+              {recentTrips.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-foreground/80">Últimas actualizações</p>
+                  <ul className="space-y-2">
+                    {recentTrips.map((t) => (
+                      <li key={t.trip_id}>
+                        <Link
+                          to={`/partner/trips/${encodeURIComponent(t.trip_id)}`}
+                          className="block rounded-lg border border-border/80 bg-card px-3 py-2 text-xs font-medium text-primary hover:underline"
+                        >
+                          {t.trip_id.slice(0, 8)}… · {t.status}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Sem viagens carregadas.</p>
+              )}
+            </div>
+          ) : screen === 'reports' ? (
+            <div className="space-y-4 text-sm text-foreground">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Indicadores de alto nível e exportação. Relatórios avançados ficam para fases seguintes.
+              </p>
+              {metrics ? (
+                <ul className="rounded-xl border border-border bg-background px-3 py-3 space-y-2 text-xs">
+                  <li>
+                    Taxa de conclusão (aprox.):{' '}
+                    <span className="font-semibold">
+                      {metrics.trips_total > 0
+                        ? `${Math.round((metrics.trips_completed / metrics.trips_total) * 100)}%`
+                        : '—'}
+                    </span>{' '}
+                    <span className="text-muted-foreground">(concluídas / total)</span>
+                  </li>
+                  <li>
+                    Viagens canceladas (registadas):{' '}
+                    <span className="font-semibold tabular-nums">{metrics.trips_cancelled}</span>
+                  </li>
+                  <li>
+                    Motoristas activos (GPS):{' '}
+                    <span className="font-semibold tabular-nums">{metrics.active_drivers}</span>
+                  </li>
+                </ul>
+              ) : null}
+              <p className="text-xs text-muted-foreground">
+                Colunas do CSV: {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}.
+              </p>
+              <button
+                type="button"
+                onClick={() => void downloadCsv()}
+                className="w-full min-h-11 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 touch-manipulation"
+              >
+                Descarregar CSV
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4 text-sm text-foreground">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Conta e preferências do gestor de frota (modo BETA). Palavras-passe e alterações sensíveis podem exigir
+                ajuda do administrador.
+              </p>
+              <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-1 text-xs">
+                <p className="font-medium text-foreground">{sessionDisplayName ?? 'Gestor frota'}</p>
+                <p className="text-muted-foreground">{sessionPhone ?? 'Telefone não disponível'}</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O painel <span className="font-medium text-foreground/90">Conta (BETA)</span> no fundo do ecrã principal
+                reúne dados de perfil e sessão.
+              </p>
+              <button
+                type="button"
+                onClick={() => void load()}
+                className="w-full min-h-11 rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
+              >
+                Actualizar vista
+              </button>
+            </div>
+          )
+        }
       />
 
       <div className="flex items-center justify-between gap-3">
@@ -382,7 +540,7 @@ export function PartnerHome() {
                 <button
                   type="button"
                   onClick={() => void addToFleet(r.user_id)}
-                  className="px-3 py-1.5 rounded-lg bg-card border border-border text-foreground/90 text-xs font-medium hover:bg-muted/40"
+                  className="shrink-0 min-h-11 px-3 rounded-lg bg-card border border-border text-foreground/90 text-xs font-semibold hover:bg-muted/40 touch-manipulation"
                 >
                   Adicionar à frota
                 </button>

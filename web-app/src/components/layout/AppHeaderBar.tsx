@@ -2,15 +2,23 @@ import { useEffect, useState } from 'react'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 import { BrandStripe } from '@/design-system/components/brand/BrandStripe'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth, isBackofficeStaffRole } from '@/context/AuthContext'
+import { parseJwtPayload } from '@/utils/jwt'
 import { HEADER_ROTATING_HINTS } from '@/components/layout/headerRotatingHints'
+
+function headerRoleLabel(role: string): string {
+  if (role === 'driver') return 'Motorista'
+  if (isBackofficeStaffRole(role)) return 'Staff'
+  if (role === 'partner') return 'Frota'
+  return 'Passageiro'
+}
 
 /**
  * Cabeçalho global: marca + data e hora (pt-PT) + identificador (nome BETA ou telemóvel)
  * + linha rotacional de dicas (v1 sem APIs externas).
  */
 export function AppHeaderBar() {
-  const { sessionDisplayName, sessionPhone } = useAuth()
+  const { sessionDisplayName, sessionPhone, sessionRole, token } = useAuth()
   const [now, setNow] = useState(() => new Date())
   const [hintIndex, setHintIndex] = useState(0)
 
@@ -38,6 +46,11 @@ export function AppHeaderBar() {
   })
   const dateTimeLine = `${dateStr} · ${timeStr}`
   const who = sessionDisplayName?.trim() || sessionPhone?.trim() || null
+  const jwtSub = token ? parseJwtPayload(token)?.sub : undefined
+  const accountRef =
+    jwtSub && jwtSub.length > 0
+      ? jwtSub.replace(/-/g, '').slice(-8)
+      : null
   const rotatingHint = HEADER_ROTATING_HINTS[hintIndex] ?? HEADER_ROTATING_HINTS[0]
   const shouldMarqueeHint = rotatingHint.length > 54
 
@@ -58,6 +71,24 @@ export function AppHeaderBar() {
             {who ? (
               <span className="min-w-0 truncate text-sm italic font-medium text-foreground/85 tracking-tight">
                 {who}
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span
+              className="inline-flex items-center rounded-full border border-border bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-foreground"
+              title="Papel desta sessão na API"
+              data-testid="app-header-role-pill"
+            >
+              {headerRoleLabel(sessionRole)}
+            </span>
+            {accountRef ? (
+              <span
+                className="text-[11px] text-muted-foreground tabular-nums"
+                title={jwtSub ? `ID conta: ${jwtSub}` : undefined}
+                data-testid="app-header-account-ref"
+              >
+                Conta · {accountRef}
               </span>
             ) : null}
           </div>
