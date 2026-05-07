@@ -498,15 +498,16 @@ export function DriverDashboard() {
     }
   }, [token])
 
-  // Sync backend status when token becomes available (ensures backend is_available matches frontend)
+  // Sync backend when token/offline changes; não forçar /online com viagem activa (repor is_available).
   useEffect(() => {
     if (!token) return
     if (offline) {
       void setDriverOffline(token).catch(() => { })
-    } else {
-      void setDriverOnline(token).catch(() => { })
+      return
     }
-  }, [token, offline])
+    if (activeTripId) return
+    void setDriverOnline(token).catch(() => { })
+  }, [token, offline, activeTripId])
 
   useEffect(() => {
     if (toast) {
@@ -523,16 +524,7 @@ export function DriverDashboard() {
     availableForFallback?: TripAvailableItem
   ) => {
     if (actionLoading != null) return
-    const optimisticAccept = actionName === 'ACEITAR'
-    if (optimisticAccept) {
-      setDriverActiveTripId(tripId)
-      if (availableForFallback) {
-        setAcceptedDetailFallback(
-          tripDetailFallbackFromAccept(availableForFallback, 'accepted')
-        )
-      }
-      setDriverStatusOverride('accepted')
-    }
+    // Não definir activeTripId antes do POST: o poll GET pode 404 até o accept persistir driver_id.
     setError(null)
     setActionLoading(tripId)
     setStatus(`A executar: ${actionName}...`)
@@ -578,11 +570,6 @@ export function DriverDashboard() {
       refetchAvailable()
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string }
-      if (optimisticAccept) {
-        setDriverActiveTripId(null)
-        setAcceptedDetailFallback(null)
-        setDriverStatusOverride(null)
-      }
       if (e?.status === 409) {
         setToast('Viagem já foi aceite por outro motorista.')
         addLog('409: Viagem já aceite por outro motorista', 'error')
@@ -1292,7 +1279,7 @@ export function DriverDashboard() {
                               () => acceptTrip(t.trip_id, token!),
                               t.trip_id,
                               'ACEITAR',
-                              () => setDriverActiveTripId(t.trip_id),
+                              undefined,
                               t
                             )
                           }

@@ -42,6 +42,11 @@ from app.services.stripe_service import (
 logger = logging.getLogger(__name__)
 
 
+ACTIVE_TRIP_BLOCKS_DRIVER_AVAILABILITY: frozenset[TripStatus] = frozenset(
+    (TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing)
+)
+
+
 ACTIVE_PASSENGER_CANCEL = {
     TripStatus.requested,
     TripStatus.assigned,
@@ -1597,6 +1602,20 @@ def get_trip_for_passenger(
     if not trip or str(trip.passenger_id) != str(passenger_id):
         _raise_not_found()
     return trip
+
+
+def driver_has_active_assigned_trip(*, db: Session, driver_user_id: str) -> bool:
+    """True if this driver has a trip that must keep dispatch eligibility off (post-accept)."""
+    did = uuid.UUID(str(driver_user_id))
+    found = db.execute(
+        select(Trip.id)
+        .where(
+            Trip.driver_id == did,
+            Trip.status.in_(ACTIVE_TRIP_BLOCKS_DRIVER_AVAILABILITY),
+        )
+        .limit(1)
+    ).scalar_one_or_none()
+    return found is not None
 
 
 def get_trip_for_driver(
