@@ -65,7 +65,7 @@ Editar `config.py` ou variáveis de ambiente:
 ## Exemplo para Render
 
 ```bash
-export TVDE_SIM_API_BASE_URL=https://tvde-api.onrender.com
+export TVDE_SIM_API_BASE_URL=https://tvde-api-fd2z.onrender.com
 export TVDE_SIM_TOKEN_PASSENGER="eyJ..."
 export TVDE_SIM_TOKEN_DRIVER="eyJ..."
 python -m tools.simulator.simulator

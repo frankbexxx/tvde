@@ -6,6 +6,23 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Painel — 2026-05-08
+
+**Ordem do dia:** smoke em **1.º lugar**; só depois a fila ops/código.
+
+1. [ ] [OPS] **Smoke manhã (sequencial):** partner (4 entradas + CSV relatórios), motorista (pedidos/disponível + aceite se couber), login (versão), cabeçalho (papéis). **Anotar só o que falhar** (sem bugs inventariados antes da corrida).
+2. [ ] [OPS] **Follow-ups** — uma linha por falha real observada no ponto 1.
+
+### Depois dos smokes (fila já acordada)
+
+1. [ ] [OPS] **Item 6:** Render — segredos expostos, `DATABASE_URL`, `GET /health`.
+2. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
+3. [ ] [CÓDIGO+TESTES] **Opcional item 9:** E2E/PW se couber (ex.: drawer partner); **ou** `UI_VISIBILITY` Passo 1 — admin `min-h-11`.
+
+_Item **8** (docs ENV) **fechado** 2026-05-07 noite — PR docs._
+
+---
+
 ## Painel — 2026-05-06 · pós-merge **#258** (`main` @ `79d9ff6`)
 
 _Ritmo acordado: **código primeiro** ao longo do dia; **smokes em sequência no fim do dia** (ou mini-smoke pontual se inevitável)._
@@ -15,15 +32,19 @@ _Ritmo acordado: **código primeiro** ao longo do dia; **smokes em sequência no
 - [x] [CÓDIGO] **Partner — menu lateral:** Frota / Viagens / Relatórios / Definições com **dados reais** (métricas, contagens, CSV, últimas viagens, sessão BETA), em vez de placeholders.
 - [x] [CÓDIGO] **Motorista:** `StatusHeader` **compacto** quando há pedidos (menos altura em viewport curta); menu: **BETA**, **Zonas** com `MapPin`, **Histórico (viagens)**; viagem concluída: copy pagamento **a processar**, **rating** acima do cartão + scroll suave.
 - [x] [CÓDIGO] **Login:** linha **versão + SHA** de build; **AppHeaderBar:** pastilha de **papel** + ref curto de conta.
+- [x] [CÓDIGO] **Motorista — sync pós-aceite** — merge **`#260`**: `POST /driver/status/online` não repõe `is_available` com viagem activa; não poll de detalhe antes do accept; interaction logs com `previous_state` correcto.
 
-### Próxima sessão — tu (quando testares)
+- [x] [DOCS] **Item 8 (ENV single reality):** `docs/env/ENV_SINGLE_REALITY.md` (hosts tvde-app / tvde-api, nota `STRIPE_MOCK`); `PREPARACAO_RENDER.md` (URLs passos 2–3); `backend/tools/simulator/README.md`.
 
-- [ ] [OPS] **Smoke fim do dia (sequencial):** partner (4 entradas do menu), motorista (pedidos/disponível + fluxo concluir se possível), login (versão), cabeçalho após login (papéis).
-- [ ] [OPS] Registar **bugs / follow-ups** → alimentam a fila «pós-smoke» (equiv. item 3 da lista quinta+sexta).
+### Noite 2026-05-07 — item 8 fechado
+
+- [x] [DOCS] **Item 8:** varrimento env/hosts nos docs citados → **PR só docs**.
+
+**Smokes:** **não** são hoje à noite — **2026-05-08 manhã**, **1.º lugar** no painel **2026-05-08** no topo deste ficheiro. Sem bugs a reportar até lá.
 
 ### Sessões seguintes — fila até fechar (ordem sugerida)
 
-1. [ ] [DOCS] **Item 8:** varrimento `grep` docs antigas → alinhar a [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) (e templates).
+1. [x] [DOCS] **Item 8:** varrimento docs ENV → [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) + deploy/simulator. **Fechado** 2026-05-07.
 2. [ ] [OPS] **Item 6:** Render — rodar segredos expostos, validar `DATABASE_URL`, `GET /health`.
 3. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
 4. [ ] [CÓDIGO+TESTES] **Opcional item 9:** E2E/PW se couber (ex.: drawer partner); **ou** `UI_VISIBILITY` Passo 1 — admin `min-h-11` em botões pequenos.

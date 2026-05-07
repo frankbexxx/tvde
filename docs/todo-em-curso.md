@@ -7,8 +7,9 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 ## Agora (2026-05-06 · após merge #258)
 
 - [x] **Onda web #258** em `main` (`79d9ff6`): partner drawer com conteúdo mínimo real; motorista header compacto + polish menu + rating/pagamento concluído; login build label; AppHeaderBar papel + ref conta.
-- [ ] **Smoke de validação (fim do dia ou quando testares):** confirmar os quatro painéis partner, fluxo motorista relevante, linha de versão no login, pastilhas no header — anotar só o que falhar.
-- [ ] **Fila «até ao fim» (ver secção abaixo):** docs ENV → segurança Render → Stripe test → opcional E2E / admin touch targets.
+- [ ] **Smoke de validação:** **2026-05-08 manhã** (1.º no painel datado em `TODOdoDIA.md`); sem bugs listados até lá.
+- [x] **Merge `#260`** (`main`): sync motorista pós-aceite.
+- [ ] **Fila «até ao fim» (ver secção abaixo):** ~~docs ENV (item 8)~~ **fechado** → segurança Render → Stripe test → opcional E2E / admin touch targets.
 
 ### Rasto vivaço (não bloqueia a fila acima)
 
@@ -27,8 +28,8 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 | Sessão | Foco | Estado |
 |--------|------|--------|
 | **S0** (feita) | Código **#258**: itens **2**, **4**, **5** (mínimo) + extras login/header/rating | **Merge `main`** |
-| **S1** | **Tu:** smoke fim do dia (sequencial); lista curta de bugs → **item 3** | **Pendente** |
-| **S2** | **Docs item 8:** `grep` repo por env/Stripe desalinhados; PR só docs → `ENV_SINGLE_REALITY` | Pendente |
+| **S1** | Smoke manhã **2026-05-08** (sequencial); follow-ups só se falhar | **Pendente** |
+| **S2** | **Docs item 8:** `grep` env/Stripe → `ENV_SINGLE_REALITY` (+ templates) | **Feito** (2026-05-07) |
 | **S3** | **Ops item 6:** segredos Render, `DATABASE_URL`, `/health` | Pendente (humano) |
 | **S4** | **Ops item 7:** Stripe test mode; revert mock | Pendente (humano) |
 | **S5** | **Opcional item 9:** E2E (ex. partner drawer) **ou** `UI_VISIBILITY` Passo 1 (admin `min-h-11`) | Pendente |
