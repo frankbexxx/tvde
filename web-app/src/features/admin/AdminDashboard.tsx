@@ -421,11 +421,10 @@ function HealthAnomalyBlock(props: {
         <div className="flex flex-wrap gap-1">
           <button
             type="button"
-            className={`min-h-9 px-2 py-1.5 text-xs rounded-lg border ${
-              sortRecent
+            className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-2 py-1.5 text-xs rounded-lg border ${sortRecent
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
-            }`}
+              }`}
             onClick={() => {
               setSortRecent(true)
               setShown(pageSize)
@@ -435,11 +434,10 @@ function HealthAnomalyBlock(props: {
           </button>
           <button
             type="button"
-            className={`min-h-9 px-2 py-1.5 text-xs rounded-lg border ${
-              !sortRecent
+            className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-2 py-1.5 text-xs rounded-lg border ${!sortRecent
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
-            }`}
+              }`}
             onClick={() => {
               setSortRecent(false)
               setShown(pageSize)
@@ -1706,8 +1704,8 @@ export function AdminDashboard() {
   /** Viagem seleccionada que não está na lista activa; no modo Histórico deixa de ser «órfã» se já aparece na lista. */
   const tripOrphanFromDeepLink = Boolean(
     selectedTripId &&
-      !selectedTripInActiveList &&
-      !(tripsListMode === 'history' && selectedTripInHistoryList)
+    !selectedTripInActiveList &&
+    !(tripsListMode === 'history' && selectedTripInHistoryList)
   )
 
   /** SP-D: indicador na tab Saúde quando há linhas ou avisos. */
@@ -1715,7 +1713,7 @@ export function AdminDashboard() {
     () =>
       Boolean(
         health &&
-          (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
+        (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
       ),
     [health]
   )
@@ -1762,11 +1760,10 @@ export function AdminDashboard() {
                   ? syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: tripsListMode })
                   : syncAdminUrl({ tab: id, tripId: null })
               }
-              className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${
-                tab === id
+              className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${tab === id
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
-              }`}
+                }`}
               title={healthDot ? 'Há anomalias ou avisos na Saúde' : undefined}
             >
               <span className="inline-flex items-center gap-1.5">
@@ -1787,9 +1784,8 @@ export function AdminDashboard() {
         <p className="text-xs text-muted-foreground mb-3 -mt-2" role="status" aria-live="polite">
           Sessão (JWT):{' '}
           <span
-            className={`font-mono font-medium ${
-              isSuperAdminSession ? 'text-foreground' : 'text-warning'
-            }`}
+            className={`font-mono font-medium ${isSuperAdminSession ? 'text-foreground' : 'text-warning'
+              }`}
           >
             {parseJwtPayload(token)?.role ?? '—'}
           </span>
@@ -1827,11 +1823,10 @@ export function AdminDashboard() {
             return (
               <>
                 <div
-                  className={`rounded-2xl border px-4 py-3 shadow-card ${
-                    degraded
+                  className={`rounded-2xl border px-4 py-3 shadow-card ${degraded
                       ? 'border-warning/60 bg-warning/10'
                       : 'border-border bg-card'
-                  }`}
+                    }`}
                 >
                   <p className="text-sm font-medium text-foreground">
                     Saúde API: <span className="text-foreground">{hStatus}</span>
@@ -1997,11 +1992,10 @@ export function AdminDashboard() {
                       key={st}
                       type="button"
                       onClick={() => setDocsStatusFilter((prev) => (prev === st ? 'all' : st))}
-                      className={`rounded-full border px-2 py-0.5 text-[11px] ${
-                        docsStatusFilter === st
+                      className={`rounded-full border px-2 py-0.5 text-[11px] ${docsStatusFilter === st
                           ? 'border-info/60 bg-info/15 text-foreground'
                           : 'border-border bg-card text-foreground/85'
-                      }`}
+                        }`}
                     >
                       {driverDocumentStatusLabel(st)}: {docsRowsData.totals[st]}
                     </button>
@@ -2009,11 +2003,10 @@ export function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => setDocsStatusFilter('all')}
-                    className={`rounded-full border px-2 py-0.5 text-[11px] ${
-                      docsStatusFilter === 'all'
+                    className={`rounded-full border px-2 py-0.5 text-[11px] ${docsStatusFilter === 'all'
                         ? 'border-info/60 bg-info/15 text-foreground'
                         : 'border-border bg-card text-foreground/85'
-                    }`}
+                      }`}
                   >
                     Todos
                   </button>
@@ -2063,11 +2056,10 @@ export function AdminDashboard() {
                                         },
                                       }))
                                     }
-                                    className={`rounded border px-1.5 py-0.5 text-[10px] ${
-                                      docs[doc] === st
+                                    className={`rounded border px-1.5 py-0.5 text-[10px] ${docs[doc] === st
                                         ? 'border-info/60 bg-info/15 text-foreground'
                                         : 'border-border bg-background text-foreground/75 hover:bg-muted/40'
-                                    }`}
+                                      }`}
                                   >
                                     {driverDocumentStatusLabel(st)}
                                   </button>
@@ -2172,7 +2164,7 @@ export function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => handleApprove(u.phone)}
-                    className="px-3 py-1.5 bg-success text-success-foreground text-sm font-medium rounded-lg hover:opacity-90"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-success text-success-foreground text-sm font-medium rounded-lg hover:opacity-90"
                   >
                     Aprovar
                   </button>
@@ -2431,7 +2423,7 @@ export function AdminDashboard() {
               type="button"
               onClick={() => void fetchDataVisibility()}
               disabled={dataLoading}
-              className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 disabled:opacity-50"
+              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 disabled:opacity-50"
             >
               {dataLoading ? 'A carregar…' : 'Atualizar'}
             </button>
@@ -2578,22 +2570,20 @@ export function AdminDashboard() {
             <button
               type="button"
               onClick={() => selectTripsListMode('active')}
-              className={`px-3 py-1.5 rounded-xl text-sm font-medium border ${
-                tripsListMode === 'active'
+              className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 rounded-xl text-sm font-medium border ${tripsListMode === 'active'
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
-              }`}
+                }`}
             >
               Activas
             </button>
             <button
               type="button"
               onClick={() => selectTripsListMode('history')}
-              className={`px-3 py-1.5 rounded-xl text-sm font-medium border ${
-                tripsListMode === 'history'
+              className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 rounded-xl text-sm font-medium border ${tripsListMode === 'history'
                   ? 'bg-primary text-primary-foreground border-primary'
                   : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
-              }`}
+                }`}
             >
               Histórico
             </button>
@@ -2604,7 +2594,7 @@ export function AdminDashboard() {
               onClick={() =>
                 tripsListMode === 'active' ? void fetchActiveTrips() : void fetchHistoryTrips()
               }
-              className="px-3 py-1.5 bg-card border border-border text-foreground/85 text-sm font-medium rounded-xl hover:bg-muted/40"
+              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/85 text-sm font-medium rounded-xl hover:bg-muted/40"
               title="Força refresh imediato; polling automático continua a cada poucos segundos"
             >
               ↻ Atualizar lista
@@ -2625,7 +2615,7 @@ export function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => syncAdminUrl({ tab: 'trips', tripId: null, tripsList: tripsListMode })}
-                  className="shrink-0 px-3 py-1.5 bg-card border border-border text-foreground text-xs rounded-lg hover:bg-muted/40"
+                  className="shrink-0 inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground text-xs rounded-lg hover:bg-muted/40"
                 >
                   Fechar viagem
                 </button>
@@ -2674,7 +2664,7 @@ export function AdminDashboard() {
                     <button
                       type="button"
                       onClick={() => void fetchTripDebug(selectedTripId)}
-                      className="px-3 py-1.5 bg-warning text-warning-foreground text-xs font-medium rounded-lg"
+                      className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-warning text-warning-foreground text-xs font-medium rounded-lg"
                     >
                       Debug
                     </button>
@@ -2683,7 +2673,7 @@ export function AdminDashboard() {
                         type="button"
                         onClick={() => void handleReconcileSingleTripPayment(selectedTripId)}
                         disabled={tripActionLoading === `${selectedTripId}-reconcile-pay`}
-                        className="px-3 py-1.5 bg-info/25 text-info text-xs font-medium rounded-lg border border-info/30 disabled:opacity-50"
+                        className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-info/25 text-info text-xs font-medium rounded-lg border border-info/30 disabled:opacity-50"
                         title="Consulta Stripe e actualiza o pagamento processing (viagens completed, cancelled ou failed)."
                       >
                         {tripActionLoading === `${selectedTripId}-reconcile-pay`
@@ -2696,7 +2686,7 @@ export function AdminDashboard() {
                         type="button"
                         onClick={() => void handleAssignTrip(selectedTripId)}
                         disabled={tripActionLoading === selectedTripId}
-                        className="px-3 py-1.5 bg-success text-success-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                        className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-success text-success-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                       >
                         Atribuir
                       </button>
@@ -2708,7 +2698,7 @@ export function AdminDashboard() {
                           void handleAdminTripTransition(selectedTripId, 'arriving', tripDetail.status)
                         }
                         disabled={tripActionLoading === selectedTripId}
-                        className="px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                        className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                       >
                         Forçar arriving
                       </button>
@@ -2720,7 +2710,7 @@ export function AdminDashboard() {
                           void handleAdminTripTransition(selectedTripId, 'ongoing', tripDetail.status)
                         }
                         disabled={tripActionLoading === selectedTripId}
-                        className="px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                        className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-secondary text-secondary-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                       >
                         Forçar ongoing
                       </button>
@@ -2728,15 +2718,15 @@ export function AdminDashboard() {
                     {ADMIN_TRIP_CANCEL_STATUSES.includes(
                       tripDetail.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
                     ) && (
-                      <button
-                        type="button"
-                        onClick={() => void handleCancelTrip(selectedTripId)}
-                        disabled={tripActionLoading === selectedTripId}
-                        className="px-3 py-1.5 bg-destructive text-destructive-foreground text-xs font-medium rounded-lg disabled:opacity-50"
-                      >
-                        Cancelar viagem
-                      </button>
-                    )}
+                        <button
+                          type="button"
+                          onClick={() => void handleCancelTrip(selectedTripId)}
+                          disabled={tripActionLoading === selectedTripId}
+                          className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-destructive text-destructive-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                        >
+                          Cancelar viagem
+                        </button>
+                      )}
                   </div>
                   {selectedTripId ? (
                     <AdminTripPaymentOpsNotePanel
@@ -2773,186 +2763,185 @@ export function AdminDashboard() {
                     const ageMin = minutesSince(t.updated_at)
                     const stuckAccepted = t.status === 'accepted' && ageMin != null && ageMin >= 5
                     return (
-                    <li
-                      key={t.trip_id}
-                      className={`bg-card border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors ${
-                        stuckAccepted ? 'border-warning/60' : 'border-border'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start gap-2">
-                        <div>
-                          <p className="font-medium text-foreground flex flex-wrap items-center gap-2">
-                            <span>{t.trip_id.slice(0, 8)}… · {t.status}</span>
-                            {stuckAccepted && (
-                              <span
-                                className="inline-flex items-center rounded-full bg-warning/20 border border-warning/50 px-2 py-0.5 text-[11px] font-semibold text-warning"
-                                title="Potencial stuck: accepted há mais de 5 min sem progredir"
-                              >
-                                stuck {Math.round(ageMin!)}′
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-sm text-foreground/75">
-                            {t.origin_lat.toFixed(4)}, {t.origin_lng.toFixed(4)} →{' '}
-                            {t.destination_lat.toFixed(4)}, {t.destination_lng.toFixed(4)}
-                          </p>
-                          <p className="text-xs text-foreground/70">
-                            P: {t.passenger_id.slice(0, 8)}…
-                            {t.driver_id ? <> · D: {t.driver_id.slice(0, 8)}…</> : <> · D: —</>}
-                            {' · '}
-                            <span title={t.updated_at ?? ''}>atualizado {formatRelativeAgo(t.updated_at)}</span>
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const nextId = selectedTripId === t.trip_id ? null : t.trip_id
-                              syncAdminUrl({ tab: 'trips', tripId: nextId, tripsList: tripsListMode })
-                            }}
-                            className="px-2 py-1 bg-info text-info-foreground text-xs rounded"
-                          >
-                            {selectedTripId === t.trip_id ? 'Fechar' : 'Detalhe'}
-                          </button>
-                          {t.status === 'requested' && (
-                            <button
-                              type="button"
-                              onClick={() => handleAssignTrip(t.trip_id)}
-                              disabled={tripActionLoading === t.trip_id}
-                              className="px-2 py-1 bg-success text-success-foreground text-xs rounded disabled:opacity-50"
-                            >
-                              Atribuir
-                            </button>
-                          )}
-                          {t.status === 'accepted' && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handleAdminTripTransition(t.trip_id, 'arriving', t.status)
-                              }
-                              disabled={tripActionLoading === t.trip_id}
-                              className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
-                              title="Quando o motorista já está a caminho mas o estado API ficou em accepted"
-                            >
-                              → arriving
-                            </button>
-                          )}
-                          {t.status === 'arriving' && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handleAdminTripTransition(t.trip_id, 'ongoing', t.status)
-                              }
-                              disabled={tripActionLoading === t.trip_id}
-                              className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
-                              title="Quando o pickup GPS bloqueia «Iniciar viagem» mas o motorista já está no local"
-                            >
-                              → ongoing
-                            </button>
-                          )}
-                          {ADMIN_TRIP_CANCEL_STATUSES.includes(
-                            t.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
-                          ) && (
-                            <button
-                              type="button"
-                              onClick={() => handleCancelTrip(t.trip_id)}
-                              disabled={tripActionLoading === t.trip_id}
-                              className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded disabled:opacity-50"
-                            >
-                              Cancelar
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      {selectedTripId === t.trip_id && (
-                        <div className="mt-3 pt-3 border-t border-border space-y-2">
-                          <p className="text-xs text-foreground/85">
-                            Estado (lista): <span className="font-medium text-foreground">{t.status}</span>
-                          </p>
-                          {tripDetailLoading ? (
-                            <p className="text-xs text-foreground/70">A carregar detalhe…</p>
-                          ) : tripDetail && tripDetail.trip_id === t.trip_id ? (
-                            <>
-                              <p className="text-xs text-foreground/75">
-                                Estimativa: {tripDetail.estimated_price} € · Status (API): {tripDetail.status}
-                                {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
-                              </p>
-                              <CancellationReasonMuted reason={tripDetail.cancellation_reason} className="text-xs" />
-                              {(() => {
-                                const pi = tripDetail.stripe_payment_intent_id
-                                if (typeof pi !== 'string' || !pi) return null
-                                const urls = stripePaymentIntentDashboardUrls(pi)
-                                return urls ? (
-                                  <div className="flex flex-wrap gap-2 text-xs">
-                                    <a
-                                      href={urls.test}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-info underline"
-                                    >
-                                      Stripe (test)
-                                    </a>
-                                    <a
-                                      href={urls.live}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-info underline"
-                                    >
-                                      Stripe (live)
-                                    </a>
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-muted-foreground">
-                                    PI mock/teste — sem link Stripe.
-                                  </p>
-                                )
-                              })()}
-                            </>
-                          ) : (
-                            <p className="text-xs text-warning">
-                              Não foi possível carregar o detalhe (rede, timeout ou viagem inexistente). Tenta
-                              &quot;Atualizar&quot; na lista ou &quot;Debug&quot; abaixo.
+                      <li
+                        key={t.trip_id}
+                        className={`bg-card border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors ${stuckAccepted ? 'border-warning/60' : 'border-border'
+                          }`}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <p className="font-medium text-foreground flex flex-wrap items-center gap-2">
+                              <span>{t.trip_id.slice(0, 8)}… · {t.status}</span>
+                              {stuckAccepted && (
+                                <span
+                                  className="inline-flex items-center rounded-full bg-warning/20 border border-warning/50 px-2 py-0.5 text-[11px] font-semibold text-warning"
+                                  title="Potencial stuck: accepted há mais de 5 min sem progredir"
+                                >
+                                  stuck {Math.round(ageMin!)}′
+                                </span>
+                              )}
                             </p>
-                          )}
-                          <div className="flex flex-wrap gap-2">
+                            <p className="text-sm text-foreground/75">
+                              {t.origin_lat.toFixed(4)}, {t.origin_lng.toFixed(4)} →{' '}
+                              {t.destination_lat.toFixed(4)}, {t.destination_lng.toFixed(4)}
+                            </p>
+                            <p className="text-xs text-foreground/70">
+                              P: {t.passenger_id.slice(0, 8)}…
+                              {t.driver_id ? <> · D: {t.driver_id.slice(0, 8)}…</> : <> · D: —</>}
+                              {' · '}
+                              <span title={t.updated_at ?? ''}>atualizado {formatRelativeAgo(t.updated_at)}</span>
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
                             <button
                               type="button"
-                              onClick={() => fetchTripDebug(t.trip_id)}
-                              className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded"
+                              onClick={() => {
+                                const nextId = selectedTripId === t.trip_id ? null : t.trip_id
+                                syncAdminUrl({ tab: 'trips', tripId: nextId, tripsList: tripsListMode })
+                              }}
+                              className="px-2 py-1 bg-info text-info-foreground text-xs rounded"
                             >
-                              Debug
+                              {selectedTripId === t.trip_id ? 'Fechar' : 'Detalhe'}
                             </button>
-                            {isSuperAdminSession && tripDetailEligibleSinglePaymentReconcile(tripDetail) ? (
+                            {t.status === 'requested' && (
                               <button
                                 type="button"
-                                onClick={() => void handleReconcileSingleTripPayment(t.trip_id)}
-                                disabled={tripActionLoading === `${t.trip_id}-reconcile-pay`}
-                                className="px-2 py-1 bg-info/25 text-info text-xs font-medium rounded border border-info/30 disabled:opacity-50"
-                                title="Consulta Stripe e actualiza o pagamento processing (viagens completed, cancelled ou failed)."
+                                onClick={() => handleAssignTrip(t.trip_id)}
+                                disabled={tripActionLoading === t.trip_id}
+                                className="px-2 py-1 bg-success text-success-foreground text-xs rounded disabled:opacity-50"
                               >
-                                {tripActionLoading === `${t.trip_id}-reconcile-pay`
-                                  ? 'A alinhar…'
-                                  : 'Alinhar pagamento (Stripe)'}
+                                Atribuir
                               </button>
-                            ) : null}
+                            )}
+                            {t.status === 'accepted' && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handleAdminTripTransition(t.trip_id, 'arriving', t.status)
+                                }
+                                disabled={tripActionLoading === t.trip_id}
+                                className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
+                                title="Quando o motorista já está a caminho mas o estado API ficou em accepted"
+                              >
+                                → arriving
+                              </button>
+                            )}
+                            {t.status === 'arriving' && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handleAdminTripTransition(t.trip_id, 'ongoing', t.status)
+                                }
+                                disabled={tripActionLoading === t.trip_id}
+                                className="px-2 py-1 bg-secondary text-secondary-foreground text-xs rounded disabled:opacity-50"
+                                title="Quando o pickup GPS bloqueia «Iniciar viagem» mas o motorista já está no local"
+                              >
+                                → ongoing
+                              </button>
+                            )}
+                            {ADMIN_TRIP_CANCEL_STATUSES.includes(
+                              t.status as (typeof ADMIN_TRIP_CANCEL_STATUSES)[number]
+                            ) && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelTrip(t.trip_id)}
+                                  disabled={tripActionLoading === t.trip_id}
+                                  className="px-2 py-1 bg-destructive text-destructive-foreground text-xs rounded disabled:opacity-50"
+                                >
+                                  Cancelar
+                                </button>
+                              )}
                           </div>
-                          <AdminTripPaymentOpsNotePanel
-                            tripId={t.trip_id}
-                            tripDetail={tripDetail}
-                            enabled={canPostPaymentOpsNote}
-                            draft={paymentOpsNoteText}
-                            onDraftChange={setPaymentOpsNoteText}
-                            onSubmit={() => void handlePaymentOpsNote(t.trip_id)}
-                            submitting={tripActionLoading === `${t.trip_id}-payment-ops-note`}
-                          />
-                          {tripDebug && tripDebugId === t.trip_id && (
-                            <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
-                              {JSON.stringify(tripDebug, null, 2)}
-                            </pre>
-                          )}
                         </div>
-                      )}
-                    </li>
+                        {selectedTripId === t.trip_id && (
+                          <div className="mt-3 pt-3 border-t border-border space-y-2">
+                            <p className="text-xs text-foreground/85">
+                              Estado (lista): <span className="font-medium text-foreground">{t.status}</span>
+                            </p>
+                            {tripDetailLoading ? (
+                              <p className="text-xs text-foreground/70">A carregar detalhe…</p>
+                            ) : tripDetail && tripDetail.trip_id === t.trip_id ? (
+                              <>
+                                <p className="text-xs text-foreground/75">
+                                  Estimativa: {tripDetail.estimated_price} € · Status (API): {tripDetail.status}
+                                  {tripDetail.final_price != null ? ` · Final: ${tripDetail.final_price} €` : null}
+                                </p>
+                                <CancellationReasonMuted reason={tripDetail.cancellation_reason} className="text-xs" />
+                                {(() => {
+                                  const pi = tripDetail.stripe_payment_intent_id
+                                  if (typeof pi !== 'string' || !pi) return null
+                                  const urls = stripePaymentIntentDashboardUrls(pi)
+                                  return urls ? (
+                                    <div className="flex flex-wrap gap-2 text-xs">
+                                      <a
+                                        href={urls.test}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-info underline"
+                                      >
+                                        Stripe (test)
+                                      </a>
+                                      <a
+                                        href={urls.live}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-info underline"
+                                      >
+                                        Stripe (live)
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground">
+                                      PI mock/teste — sem link Stripe.
+                                    </p>
+                                  )
+                                })()}
+                              </>
+                            ) : (
+                              <p className="text-xs text-warning">
+                                Não foi possível carregar o detalhe (rede, timeout ou viagem inexistente). Tenta
+                                &quot;Atualizar&quot; na lista ou &quot;Debug&quot; abaixo.
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => fetchTripDebug(t.trip_id)}
+                                className="px-2 py-1 bg-warning text-warning-foreground text-xs rounded"
+                              >
+                                Debug
+                              </button>
+                              {isSuperAdminSession && tripDetailEligibleSinglePaymentReconcile(tripDetail) ? (
+                                <button
+                                  type="button"
+                                  onClick={() => void handleReconcileSingleTripPayment(t.trip_id)}
+                                  disabled={tripActionLoading === `${t.trip_id}-reconcile-pay`}
+                                  className="px-2 py-1 bg-info/25 text-info text-xs font-medium rounded border border-info/30 disabled:opacity-50"
+                                  title="Consulta Stripe e actualiza o pagamento processing (viagens completed, cancelled ou failed)."
+                                >
+                                  {tripActionLoading === `${t.trip_id}-reconcile-pay`
+                                    ? 'A alinhar…'
+                                    : 'Alinhar pagamento (Stripe)'}
+                                </button>
+                              ) : null}
+                            </div>
+                            <AdminTripPaymentOpsNotePanel
+                              tripId={t.trip_id}
+                              tripDetail={tripDetail}
+                              enabled={canPostPaymentOpsNote}
+                              draft={paymentOpsNoteText}
+                              onDraftChange={setPaymentOpsNoteText}
+                              onSubmit={() => void handlePaymentOpsNote(t.trip_id)}
+                              submitting={tripActionLoading === `${t.trip_id}-payment-ops-note`}
+                            />
+                            {tripDebug && tripDebugId === t.trip_id && (
+                              <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto max-h-40 overflow-y-auto">
+                                {JSON.stringify(tripDebug, null, 2)}
+                              </pre>
+                            )}
+                          </div>
+                        )}
+                      </li>
                     )
                   })}
                 </ul>
@@ -3113,7 +3102,7 @@ export function AdminDashboard() {
           <button
             type="button"
             onClick={() => fetchMetrics()}
-            className="mb-3 px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
+            className="mb-3 inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
           >
             Atualizar
           </button>
@@ -3176,7 +3165,7 @@ export function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => void fetchUsage()}
-                className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
+                className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40"
               >
                 Atualizar
               </button>
@@ -3237,7 +3226,7 @@ export function AdminDashboard() {
                 type="button"
                 onClick={handleFetchPhase0}
                 disabled={!!opsLoading}
-                className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 disabled:opacity-50"
               >
                 {opsLoading === 'phase0' ? 'A verificar…' : 'Verificar'}
               </button>
@@ -3271,7 +3260,7 @@ export function AdminDashboard() {
                     ? 'Requer sessão super_admin (mesma regra que na API).'
                     : undefined
                 }
-                className="px-3 py-1.5 bg-warning/20 text-warning rounded-xl font-medium disabled:opacity-50"
+                className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-warning/20 text-warning rounded-xl font-medium disabled:opacity-50"
               >
                 {opsLoading === 'cron' ? 'A correr…' : 'Correr cron agora'}
               </button>
@@ -3301,7 +3290,7 @@ export function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => setEnvReveal((v) => !v)}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:bg-muted/40"
+                className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:bg-muted/40"
               >
                 {envReveal ? 'Ocultar valores sensíveis' : 'Mostrar para editar'}
               </button>
@@ -3336,7 +3325,7 @@ export function AdminDashboard() {
                     ? 'Validar .env na API exige super_admin (dados sensíveis).'
                     : undefined
                 }
-                className="px-3 py-1.5 bg-info/20 text-info rounded-xl font-medium disabled:opacity-50"
+                className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-info/20 text-info rounded-xl font-medium disabled:opacity-50"
               >
                 {opsLoading === 'env-validate' ? 'A validar…' : 'Validar'}
               </button>
@@ -3419,7 +3408,7 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => void handleReconcilePreview()}
                     disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
                   >
                     {opsLoading === 'reconcile-preview' ? 'A carregar…' : 'Pré-visualizar'}
                   </button>
@@ -3427,7 +3416,7 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => void handleReconcileStripeSync(true)}
                     disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-info/20 text-info text-xs font-medium rounded-xl disabled:opacity-50"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-info/20 text-info text-xs font-medium rounded-xl disabled:opacity-50"
                   >
                     {opsLoading === 'reconcile-stripe-dry' ? '…' : 'Stripe sync (dry-run)'}
                   </button>
@@ -3435,7 +3424,7 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => void handleReconcileStripeSync(false)}
                     disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-warning/25 text-warning text-xs font-medium rounded-xl disabled:opacity-50"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-warning/25 text-warning text-xs font-medium rounded-xl disabled:opacity-50"
                   >
                     {opsLoading === 'reconcile-stripe-run' ? '…' : 'Stripe sync (aplicar)'}
                   </button>
@@ -3443,7 +3432,7 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => void handleReconcileCloseNoPi(true)}
                     disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/90 text-xs font-medium rounded-xl hover:bg-muted/40 disabled:opacity-50"
                   >
                     {opsLoading === 'reconcile-close-dry' ? '…' : 'Fechar sem PI (dry-run)'}
                   </button>
@@ -3451,7 +3440,7 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => void handleReconcileCloseNoPi(false)}
                     disabled={!!opsLoading}
-                    className="px-3 py-1.5 bg-destructive/20 text-destructive text-xs font-medium rounded-xl disabled:opacity-50"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-destructive/20 text-destructive text-xs font-medium rounded-xl disabled:opacity-50"
                   >
                     {opsLoading === 'reconcile-close-run' ? '…' : 'Fechar sem PI (aplicar)'}
                   </button>
@@ -3511,7 +3500,7 @@ export function AdminDashboard() {
                   type="button"
                   onClick={() => void fetchHealth()}
                   disabled={!!opsLoading}
-                  className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                  className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
                 >
                   Actualizar saúde
                 </button>
@@ -3577,7 +3566,7 @@ export function AdminDashboard() {
                           {tid ? (
                             <button
                               type="button"
-                              className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
+                              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-primary text-primary-foreground text-xs font-medium rounded-lg hover:opacity-90"
                               onClick={() => syncAdminUrl({ tab: 'trips', tripId: tid })}
                             >
                               Abrir em Viagens
@@ -3623,7 +3612,7 @@ export function AdminDashboard() {
                   type="button"
                   onClick={() => void fetchHealth()}
                   disabled={!!opsLoading}
-                  className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
+                  className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-xl hover:bg-muted/40 disabled:opacity-50"
                 >
                   Actualizar saúde
                 </button>
@@ -3656,7 +3645,7 @@ export function AdminDashboard() {
                           type="button"
                           onClick={() => void runRecoverDriver(did)}
                           disabled={opsLoading === 'recover'}
-                          className="px-3 py-1.5 bg-success text-success-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                          className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-success text-success-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                         >
                           Recuperar
                         </button>
@@ -3716,16 +3705,15 @@ export function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => syncAdminUrl({ tab: 'ops', tripId: null })}
-                    className="shrink-0 px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-medium hover:bg-muted/40"
+                    className="shrink-0 inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-medium hover:bg-muted/40"
                   >
                     Ir para Operações (cron / recuperar)
                   </button>
                 </div>
               ) : null}
               <p
-                className={`font-medium ${
-                  health.status === 'ok' ? 'text-success' : 'text-warning'
-                }`}
+                className={`font-medium ${health.status === 'ok' ? 'text-success' : 'text-warning'
+                  }`}
               >
                 Status: {health.status}
               </p>
@@ -3845,7 +3833,7 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => void fetchUsersMore()}
                     disabled={!usersHasMore || usersLoadingMore}
-                    className="px-3 py-1.5 bg-card border border-border text-foreground text-xs rounded-lg hover:bg-muted/40 disabled:opacity-50"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground text-xs rounded-lg hover:bg-muted/40 disabled:opacity-50"
                   >
                     {usersLoadingMore ? 'A carregar…' : 'Carregar mais 50'}
                   </button>
@@ -3857,14 +3845,14 @@ export function AdminDashboard() {
                       for (const u of selectable) next[u.id] = true
                       setBulkSelectedIds(next)
                     }}
-                    className="px-3 py-1.5 bg-muted text-foreground text-xs rounded-lg hover:opacity-90"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-muted text-foreground text-xs rounded-lg hover:opacity-90"
                   >
                     Seleccionar filtrados (sem admin)
                   </button>
                   <button
                     type="button"
                     onClick={() => setBulkSelectedIds({})}
-                    className="px-3 py-1.5 bg-muted text-foreground text-xs rounded-lg hover:opacity-90"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-muted text-foreground text-xs rounded-lg hover:opacity-90"
                   >
                     Limpar selecção
                   </button>
@@ -3872,7 +3860,7 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => void handleBulkBlock()}
                     disabled={Object.keys(bulkSelectedIds).filter((id) => bulkSelectedIds[id]).length === 0}
-                    className="px-3 py-1.5 bg-warning text-warning-foreground text-xs font-medium rounded-lg disabled:opacity-50"
+                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-warning text-warning-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                   >
                     Bloquear seleccionados (reversível)
                   </button>
@@ -3904,7 +3892,7 @@ export function AdminDashboard() {
                           <button
                             type="button"
                             onClick={() => void handleSaveUserName()}
-                            className="px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-lg hover:opacity-90"
+                            className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-primary text-primary-foreground text-sm rounded-lg hover:opacity-90"
                           >
                             Guardar só o nome
                           </button>
@@ -3928,7 +3916,7 @@ export function AdminDashboard() {
                           <button
                             type="button"
                             onClick={() => void handleSaveUserPhone()}
-                            className="px-3 py-1.5 bg-warning text-warning-foreground text-sm font-medium rounded-lg hover:opacity-90"
+                            className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-warning text-warning-foreground text-sm font-medium rounded-lg hover:opacity-90"
                           >
                             Guardar só o telefone
                           </button>
@@ -3948,7 +3936,7 @@ export function AdminDashboard() {
                               <button
                                 type="button"
                                 onClick={() => void handleClearUserPassword(editingId)}
-                                className="px-3 py-1.5 bg-muted text-foreground text-sm rounded-lg border border-border hover:bg-muted/80"
+                                className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-muted text-foreground text-sm rounded-lg border border-border hover:bg-muted/80"
                               >
                                 Repor palavra-passe a pedido…
                               </button>
@@ -3963,7 +3951,7 @@ export function AdminDashboard() {
                         <button
                           type="button"
                           onClick={cancelEdit}
-                          className="px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
+                          className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-muted text-muted-foreground text-sm rounded-lg"
                         >
                           Fechar edição
                         </button>

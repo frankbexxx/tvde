@@ -79,7 +79,7 @@ function passengerLiveTripMapActive(trip: TripDetailResponse): boolean {
 
 const ESTIMATE_MOCK = '4–6'
 
-function passengerDashboardNoop() {}
+function passengerDashboardNoop() { }
 
 export function PassengerDashboard() {
   const { token, sessionRole } = useAuth()
@@ -947,7 +947,7 @@ export function PassengerDashboard() {
               <select
                 id="passenger-cancel-preset"
                 data-testid="passenger-cancel-preset"
-                className="w-full min-h-[44px] rounded-lg border border-border bg-card px-2 text-sm text-foreground"
+                className="w-full min-h-11 rounded-lg border border-border bg-card px-2 text-sm text-foreground touch-manipulation"
                 value={passengerCancelPreset}
                 onChange={(e) => setPassengerCancelPreset(e.target.value)}
                 disabled={cancelling}
@@ -983,7 +983,7 @@ export function PassengerDashboard() {
                 <button
                   type="button"
                   data-testid="passenger-cancel-back"
-                  className="min-h-[44px] flex-1 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                  className="min-h-11 flex-1 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
                   disabled={cancelling}
                   onClick={() => {
                     setPassengerCancelOpen(false)
@@ -1024,7 +1024,7 @@ export function PassengerDashboard() {
             <button
               type="button"
               onClick={retryGeolocation}
-              className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
+              className="inline-flex items-center min-h-11 px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
             >
               Tentar outra vez
             </button>
@@ -1165,9 +1165,9 @@ export function PassengerDashboard() {
                 passengerLocation={
                   passengerLocation ?? (activeTrip
                     ? {
-                        lat: activeTrip.origin_lat,
-                        lng: activeTrip.origin_lng,
-                      }
+                      lat: activeTrip.origin_lat,
+                      lng: activeTrip.origin_lng,
+                    }
                     : undefined)
                 }
                 driverLocation={driverLocation ?? undefined}
@@ -1246,9 +1246,9 @@ export function PassengerDashboard() {
                   passengerLocation={
                     passengerLocation ?? (activeTrip
                       ? {
-                          lat: activeTrip.origin_lat,
-                          lng: activeTrip.origin_lng,
-                        }
+                        lat: activeTrip.origin_lat,
+                        lng: activeTrip.origin_lng,
+                      }
                       : undefined)
                   }
                   driverLocation={driverLocation ?? undefined}
@@ -1305,7 +1305,7 @@ export function PassengerDashboard() {
           <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
             <button
               type="button"
-              className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+              className="absolute right-2 top-2 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
               aria-label="Fechar mensagem de erro"
               onClick={() => setError(null)}
             >
@@ -1326,8 +1326,8 @@ export function PassengerDashboard() {
                 retrySearchPending={retrySearchPending}
               />
               {activeTrip.payment_status === 'processing' &&
-              typeof activeTrip.payment_intent_client_secret === 'string' &&
-              activeTrip.payment_intent_client_secret.length > 0 ? (
+                typeof activeTrip.payment_intent_client_secret === 'string' &&
+                activeTrip.payment_intent_client_secret.length > 0 ? (
                 <div className="mt-4">
                   <PassengerPaymentConfirmCard
                     clientSecret={activeTrip.payment_intent_client_secret}

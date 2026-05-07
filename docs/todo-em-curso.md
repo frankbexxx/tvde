@@ -9,7 +9,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] **Onda web #258** em `main` (`79d9ff6`): partner drawer com conteúdo mínimo real; motorista header compacto + polish menu + rating/pagamento concluído; login build label; AppHeaderBar papel + ref conta.
 - [ ] **Smoke de validação:** **2026-05-08 manhã** (1.º no painel datado em `TODOdoDIA.md`); sem bugs listados até lá.
 - [x] **Merge `#260`** (`main`): sync motorista pós-aceite.
-- [ ] **Fila «até ao fim» (ver secção abaixo):** ~~docs ENV (item 8)~~ **fechado** → segurança Render → Stripe test → opcional E2E / admin touch targets.
+- [ ] **Fila «até ao fim» (ver secção abaixo):** ~~docs ENV (item 8)~~ **fechado** → ~~segurança Render (item 6)~~ **fechado** → Stripe test → opcional E2E / admin touch targets.
 
 ### Rasto vivaço (não bloqueia a fila acima)
 
@@ -30,9 +30,9 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 | **S0** (feita) | Código **#258**: itens **2**, **4**, **5** (mínimo) + extras login/header/rating | **Merge `main`** |
 | **S1** | Smoke manhã **2026-05-08** (sequencial); follow-ups só se falhar | **Pendente** |
 | **S2** | **Docs item 8:** `grep` env/Stripe → `ENV_SINGLE_REALITY` (+ templates) | **Feito** (2026-05-07) |
-| **S3** | **Ops item 6:** segredos Render, `DATABASE_URL`, `/health` | Pendente (humano) |
+| **S3** | **Ops item 6:** segredos Render, `DATABASE_URL`, `/health` | **Feito** (2026-05-07) |
 | **S4** | **Ops item 7:** Stripe test mode; revert mock | Pendente (humano) |
-| **S5** | **Opcional item 9:** E2E (ex. partner drawer) **ou** `UI_VISIBILITY` Passo 1 (admin `min-h-11`) | Pendente |
+| **S5** | **Opcional item 9:** **1º** `UI_VISIBILITY` Passo 1 (admin `min-h-11`) · **2º** E2E (ex. partner drawer) | Pendente |
 
 **Regra:** não reabrir **S0** salvo regressão; **S1** alimenta prioridade do **S2+** se aparecer bug de produto.
 

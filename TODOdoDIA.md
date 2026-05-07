@@ -15,9 +15,9 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ### Depois dos smokes (fila já acordada)
 
-1. [ ] [OPS] **Item 6:** Render — segredos expostos, `DATABASE_URL`, `GET /health`.
+1. [x] [OPS] **Item 6:** Render — segredos expostos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
 2. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
-3. [ ] [CÓDIGO+TESTES] **Opcional item 9:** E2E/PW se couber (ex.: drawer partner); **ou** `UI_VISIBILITY` Passo 1 — admin `min-h-11`.
+3. [ ] [CÓDIGO+TESTES] **Opcional item 9 (ordem):** **1º** `UI_VISIBILITY` Passo 1 — admin `min-h-11`; **2º** E2E/PW se couber (ex.: drawer partner).
 
 _Item **8** (docs ENV) **fechado** 2026-05-07 noite — PR docs._
 
@@ -45,9 +45,9 @@ _Ritmo acordado: **código primeiro** ao longo do dia; **smokes em sequência no
 ### Sessões seguintes — fila até fechar (ordem sugerida)
 
 1. [x] [DOCS] **Item 8:** varrimento docs ENV → [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) + deploy/simulator. **Fechado** 2026-05-07.
-2. [ ] [OPS] **Item 6:** Render — rodar segredos expostos, validar `DATABASE_URL`, `GET /health`.
+2. [x] [OPS] **Item 6:** Render — rodar segredos expostos, validar `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
 3. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
-4. [ ] [CÓDIGO+TESTES] **Opcional item 9:** E2E/PW se couber (ex.: drawer partner); **ou** `UI_VISIBILITY` Passo 1 — admin `min-h-11` em botões pequenos.
+4. [ ] [CÓDIGO+TESTES] **Opcional item 9 (ordem):** **1º** `UI_VISIBILITY` Passo 1 — admin `min-h-11`; **2º** E2E/PW se couber (ex.: drawer partner).
 
 _Detalhe do plano por sessão: [`docs/todo-em-curso.md`](docs/todo-em-curso.md) § «Plano por sessões»._
 
