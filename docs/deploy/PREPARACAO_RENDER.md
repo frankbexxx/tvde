@@ -2,6 +2,8 @@
 
 Guia passo a passo para colocar a TVDE no Render e preparar a validação humana em campo.
 
+**Variáveis e hosts canónicos (actual):** [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md).
+
 ---
 
 ## Visão geral
@@ -71,7 +73,7 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 
 5. Clica **Create Web Service**.
 6. Espera o deploy terminar. Em `STRIPE_MOCK=true` o backend **não exige** `STRIPE_SECRET_KEY` nem `STRIPE_WEBHOOK_SECRET` no startup.
-7. Copia o **URL** do serviço (ex: `https://tvde-api.onrender.com`). Vais precisar para o Stripe e para o frontend.
+7. Copia o **URL** público do serviço (no ambiente deste repo: `https://tvde-api-fd2z.onrender.com`; se o teu slug for outro, substitui). Vais precisar para o Stripe e para o frontend — ver também [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md).
 
 ---
 
@@ -81,7 +83,7 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 
 1. Abre o [Stripe Dashboard](https://dashboard.stripe.com) → **Developers** → **Webhooks**.
 2. Clica **Add endpoint**.
-3. **Endpoint URL:** `https://tvde-api.onrender.com/webhooks/stripe` (substitui pelo teu URL do backend).
+3. **Endpoint URL:** `https://tvde-api-fd2z.onrender.com/webhooks/stripe` (substitui pelo URL **real** do teu backend; no nosso deploy actual é este host).
 4. **Events to send:** seleciona `payment_intent.succeeded` e `payment_intent.payment_failed` (e `charge.payment_failed` se existir).
 5. Clica **Add endpoint**.
 6. Abre o novo webhook e clica **Reveal** no **Signing secret** (começa por `whsec_...`).

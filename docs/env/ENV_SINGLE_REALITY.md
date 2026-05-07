@@ -2,6 +2,21 @@
 
 Fonte de verdade **humana** para variáveis de ambiente. Objetivo: evitar deploys a falhar por inconsistências (ex: exigir secrets em modo mock).
 
+## Hosts canónicos no repo (Render — exemplos)
+
+Estes URLs aparecem como **ambiente de trabalho actual** na documentação operacional e no default de `CORS_ALLOWED_ORIGINS` em código; **não** são segredos. Confirmados no dashboard Render (serviços **tvde-app** / **tvde-api**, branch **main**, repo `frankbexxx/tvde`). Se renomeares ou recriares o serviço, actualiza **este bloco** e um `grep` pelos hosts antigos.
+
+| Papel | Serviço Render | Tipo | URL |
+|--------|----------------|------|-----|
+| App | `tvde-app` | Static site | `https://tvde-app-j51f.onrender.com` |
+| API | `tvde-api` | Web service (Python 3) | `https://tvde-api-fd2z.onrender.com` |
+
+Em docs genéricos, preferir o padrão `https://tvde-api-XXXX.onrender.com` quando não for preciso um host concreto.
+
+## Nota `STRIPE_MOCK` (código vs template)
+
+Em `backend/app/core/config.py` o campo `STRIPE_MOCK` tem default de **implementação** que pode diferir do que usas em `.env` / Render. **Regra operacional:** em piloto e templates, manter **`STRIPE_MOCK=true`** salvo janela explicitamente a testar Stripe real (alinhar com secção «Stripe por defeito é mock» acima).
+
 ## Regras base
 
 - **Stripe por defeito é mock**: `STRIPE_MOCK=true`.
