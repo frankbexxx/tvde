@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import UserContext, get_db, require_role
 from app.db.models.driver import Driver
 from app.models.enums import Role
+from app.services.trips import driver_has_active_assigned_trip
 
 
 router = APIRouter(prefix="/driver/status", tags=["driver"])
@@ -23,8 +24,12 @@ async def go_online(
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=404, detail="driver_not_found")
+    if driver_has_active_assigned_trip(db=db, driver_user_id=str(user.user_id)):
+        db.refresh(driver)
+        return {"status": "online", "is_available": driver.is_available}
     driver.is_available = True
     db.commit()
+    db.refresh(driver)
     return {"status": "online", "is_available": True}
 
 

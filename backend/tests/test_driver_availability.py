@@ -117,6 +117,43 @@ def test_da_002_driver_goes_offline() -> None:
     db.close()
 
 
+def test_da_004_online_does_not_override_availability_during_active_trip() -> None:
+    """POST /driver/status/online must not force is_available=True with an active assigned trip."""
+    db = _make_db()
+    driver_id = _create_driver(db, is_available=False)
+    passenger_id = _create_passenger(db)
+    trip = Trip(
+        passenger_id=uuid.UUID(passenger_id),
+        driver_id=uuid.UUID(driver_id),
+        status=TripStatus.accepted,
+        origin_lat=38.7,
+        origin_lng=-9.1,
+        destination_lat=38.8,
+        destination_lng=-9.2,
+        estimated_price=10.0,
+        vehicle_category="x",
+    )
+    db.add(trip)
+    db.commit()
+
+    user_ctx = UserContext(user_id=driver_id, role=Role.driver)
+    _override_dependencies(db, user_ctx)
+
+    client = TestClient(app)
+    r = client.post("/driver/status/online")
+
+    assert r.status_code == 200
+    assert r.json()["is_available"] is False
+
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(driver_id))
+    ).scalar_one()
+    assert driver.is_available is False
+
+    _reset_overrides()
+    db.close()
+
+
 def test_da_003_offline_driver_not_eligible_for_dispatch() -> None:
     """TEST-DA-003: offline driver not included in dispatch candidates."""
     db = _make_db()

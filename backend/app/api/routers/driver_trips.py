@@ -100,6 +100,7 @@ async def accept_trip(
 ) -> TripStatusResponse:
     tid = trip_id.strip()
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    previous_state = prev.status.value if prev else None
     t0 = time.perf_counter()
     # If driver has pending offer for this trip, use accept_offer (multi-offer flow)
     offer = db.execute(
@@ -131,7 +132,7 @@ async def accept_trip(
         role="driver",
         action="accept_trip",
         trip_id=str(trip.id),
-        previous_state=prev.status.value if prev else None,
+        previous_state=previous_state,
         new_state=trip.status.value,
         latency_ms=latency_ms,
         payment_status=payment.status.value if payment else None,
@@ -151,6 +152,7 @@ async def mark_arriving(
 ) -> TripStatusResponse:
     tid = trip_id.strip()
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    previous_state = prev.status.value if prev else None
     t0 = time.perf_counter()
     trip = mark_trip_arriving_service(
         db=db,
@@ -165,7 +167,7 @@ async def mark_arriving(
         role="driver",
         action="arriving",
         trip_id=str(trip.id),
-        previous_state=prev.status.value if prev else None,
+        previous_state=previous_state,
         new_state=trip.status.value,
         latency_ms=latency_ms,
         payment_status=payment.status.value if payment else None,
@@ -181,6 +183,7 @@ async def start_trip(
 ) -> TripStatusResponse:
     tid = trip_id.strip()
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    previous_state = prev.status.value if prev else None
     t0 = time.perf_counter()
     trip = start_trip_service(
         db=db,
@@ -195,7 +198,7 @@ async def start_trip(
         role="driver",
         action="start_trip",
         trip_id=str(trip.id),
-        previous_state=prev.status.value if prev else None,
+        previous_state=previous_state,
         new_state=trip.status.value,
         latency_ms=latency_ms,
         payment_status=payment.status.value if payment else None,
@@ -213,6 +216,7 @@ async def complete_trip(
     _ = payload  # final_price sera tratado na fase de pagamentos
     tid = trip_id.strip()
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    previous_state = prev.status.value if prev else None
     t0 = time.perf_counter()
     trip = complete_trip_service(
         db=db,
@@ -227,7 +231,7 @@ async def complete_trip(
         role="driver",
         action="complete_trip",
         trip_id=str(trip.id),
-        previous_state=prev.status.value if prev else None,
+        previous_state=previous_state,
         new_state=trip.status.value,
         latency_ms=latency_ms,
         payment_status=payment.status.value if payment else None,
@@ -262,6 +266,7 @@ async def cancel_trip(
     tid = trip_id.strip()
     reason = (payload.reason if payload else None) or None
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    previous_state = prev.status.value if prev else None
     t0 = time.perf_counter()
     trip = cancel_trip_by_driver(
         db=db,
@@ -277,7 +282,7 @@ async def cancel_trip(
         role="driver",
         action="cancel_trip",
         trip_id=str(trip.id),
-        previous_state=prev.status.value if prev else None,
+        previous_state=previous_state,
         new_state=trip.status.value,
         latency_ms=latency_ms,
         payment_status=payment.status.value if payment else None,
