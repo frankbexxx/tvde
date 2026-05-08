@@ -4,22 +4,68 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 **Dia vs sessão** — «Dia» no título alinha ao **dia civil** (um ficheiro por data). **Sessão** é cada bloco de trabalho com o assistente: **várias sessões no mesmo dia**, ou uma sessão longa; o **fecho** e o **ritual** aplicam-se ao fim de uma **sessão que entrega** (código/docs) ou ao fim do dia, conforme o hábito.
 
+**Fecho de etapas:** mal uma entrega estiver em `main` (ou um smoke/checklist estiver feito), **actualizar estes painéis sem pedir confirmação** — a lista deve reflectir a verdade operacional e evitar retrabalho.
+
 ---
 
 ## Painel — 2026-05-08
 
+**Onde correr:** **smokes e prints** = **produção** (telemóvel, Firefox DevTools, Vivaldi). **Local** (Postgres + uvicorn + Vite) = desenvolvimento e **Playwright** (com stack local parado, o PW costuma falhar).
+
 **Ordem do dia:** smoke em **1.º lugar**; só depois a fila ops/código.
 
-1. [ ] [OPS] **Smoke manhã (sequencial):** partner (4 entradas + CSV relatórios), motorista (pedidos/disponível + aceite se couber), login (versão), cabeçalho (papéis). **Anotar só o que falhar** (sem bugs inventariados antes da corrida).
-2. [ ] [OPS] **Follow-ups** — uma linha por falha real observada no ponto 1.
+1. [x] [OPS] **Smoke partner (produção, 2026-05-08):** menu/drawer (**Frota · Viagens · Relatórios · Definições**), métricas, CSV em relatórios, fluxo **adicionar motorista** validado face ao modelo de dados — **discover** lista motoristas na **Default fleet** (`partner_id` por defeito); lista vazia / «sem resultados» quando não há motoristas nessa pool (comportamento esperado, não bug de rede). **Fechado.**
+2. [ ] [OPS] **Smoke restante (sequencial, produção):** motorista (pedidos/disponível + aceite se couber), login (versão), cabeçalho (papéis). **Anotar só o que falhar.**
+3. [x] [OPS] **Follow-ups (partner):** sem falha bloqueadora; melhorias de UX/copy (ex.: «Sem resultados» antes de pesquisa útil) ficam para **PR ou onda dedicada** — não bloqueiam a fila Stripe/E2E.
+4. [ ] [OPS] **Follow-ups (smoke restante):** uma linha por falha real observada no ponto **2** (motorista, login, cabeçalho).
+
+### Vite local — nota operacional (alinhado à fila)
+
+_Não compete com smokes em produção; evita horas perdidas com API errada._
+
+- **`web-app/.env.local`:** com **`VITE_API_URL`** apontado ao Render, o Vite deixa de usar o proxy **`/api` →** API local — comentar ou alinhar ao host local quando desenvolveres contra **uvicorn** em `127.0.0.1:8000`.
+- **`backend/.env` (local):** **`BETA_MODE=true`** se precisares de **`GET /admin/users`** e fluxos BETA no backoffice (com `false`, a lista pode aparecer vazia por política, não por BD).
+- **BD local vazia** após wipe: **`POST /dev/seed`** na API local para contas mínimas de desenvolvimento; manter **`+351900000000`** (admin criado pelo seed) — **útil para promover admin / repor passwords em dev** sem remover contas humanas do teu fluxo.
 
 ### Depois dos smokes (fila já acordada)
 
 1. [x] [OPS] **Item 6:** Render — segredos expostos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
 2. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
-3. [ ] [CÓDIGO+TESTES] **Opcional item 9 (ordem):** **1º** `UI_VISIBILITY` Passo 1 — admin `min-h-11`; **2º** E2E/PW se couber (ex.: drawer partner).
+3. [x] [CÓDIGO] **Item 9 — 1º:** `UI_VISIBILITY` Passo 1 — alvos tácteis `min-h-11` (admin + passageiro). **Fechado** em `main` — PR **#262** (2026-05-06).
+4. [ ] [CÓDIGO+TESTES] **Item 9 — 2º (opcional):** E2E/PW se couber (ex.: drawer partner).
 
 _Item **8** (docs ENV) **fechado** 2026-05-07 noite — PR docs._
+
+### Refactor `AdminDashboard.tsx` — lista viva (planeamento → execução)
+
+**Fonte:** [`docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) — plano, **modelo de prompt** e **prompts P0–P12** completas (só texto; execução agendada).
+
+| Estado | Item |
+|--------|------|
+| [x] | Plano por etapas + princípios + mapa de risco |
+| [x] | Modelo de prompt reutilizável por PR |
+| [x] | Prompts **P0**–**P12** redigidas (inventário → orquestrador final) |
+| [ ] | **Execução P0** (inventário no doc / código, quando fizer sentido) |
+| [ ] | **Execução P1** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
+
+_Actualização **semi-dinâmica**: ao fechar o dia ou merge, marcar linhas aqui + nota curta no doc se o alcance mudar._
+
+### Fecho do dia — auditoria de código (só leitura, 2026-05-08)
+
+_Registado para fecho de sessão; **nenhuma alteração de código** feita na auditoria._
+
+1. **Motorista:** `DriverDashboard.tsx` — `setDriverOnline` / `setDriverOffline` com `.catch(() => {})`; falhas de API podem desalinhar estado local vs servidor sem feedback ao utilizador.
+2. **Backend:** hubs WebSocket (`DriverOffersHub`, `RealtimeHub`) só em memória por processo — com vários workers Uvicorn, push pode não chegar a todos os clientes (dívida de escala).
+3. **Frontend:** `eslint-disable` de `exhaustive-deps` em `MapView.tsx`, `AdminDashboard.tsx`, `usePolling.ts`, `useSmoothedLatLng.ts` — risco de regressão se o pai passar novas referências com o mesmo valor.
+4. **Rotas:** `/debug/map` em `routes/index.tsx` sem gate `DEV` — superfície extra em produção (página de debug do mapa).
+5. **API saúde:** `system_health` com `stuck_trips` / `orphan_payments` vazios (deprecated) — compatibilidade de contrato, não “bugs” isolados.
+6. **Backend:** `trips.py` — fluxo de viagens disponíveis combina ofertas + *legacy assigned*; dois caminhos, possível fonte de edge cases.
+7. **Frontend:** `web-app/src/api/client.ts` — alias de timeout `@deprecated` (limpeza menor).
+8. **Frontend:** `authStorage.ts` — migração `LS_TOKEN_LEGACY` → token actual (legado temporário).
+9. **Backend:** `auth.py` imprime OTP em consola só com `ENV=dev` ou `ENABLE_DEV_TOOLS` — seguro se produção não ligar ferramentas dev por engano.
+10. **Config:** `VITE_E2E` + tokens em `localStorage` — build de produção não deve definir `VITE_E2E=true`.
+
+**Ponto 11 — `AdminDashboard.tsx` (monólito):** refactor **agora** implica PR grande, revisão penosa e risco real de **regressão** no backoffice + conflitos com qualquer trabalho paralelo; o tamanho do ficheiro **por si** não corrige um incidente activo. **Quando mexer:** preferir **extracções pequenas** (tab, hooks, API helpers) coladas a uma feature que já obrigue a tocar ali, ou após uma janela em que smokes/piloto estejam estáveis e possas testar admin com calma.
 
 ---
 
@@ -47,7 +93,8 @@ _Ritmo acordado: **código primeiro** ao longo do dia; **smokes em sequência no
 1. [x] [DOCS] **Item 8:** varrimento docs ENV → [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) + deploy/simulator. **Fechado** 2026-05-07.
 2. [x] [OPS] **Item 6:** Render — rodar segredos expostos, validar `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
 3. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
-4. [ ] [CÓDIGO+TESTES] **Opcional item 9 (ordem):** **1º** `UI_VISIBILITY` Passo 1 — admin `min-h-11`; **2º** E2E/PW se couber (ex.: drawer partner).
+4. [x] [CÓDIGO] **Item 9 — 1º:** `UI_VISIBILITY` Passo 1 (**#262**). **Fechado** 2026-05-06.
+5. [ ] [CÓDIGO+TESTES] **Item 9 — 2º (opcional):** E2E/PW se couber (ex.: drawer partner).
 
 _Detalhe do plano por sessão: [`docs/todo-em-curso.md`](docs/todo-em-curso.md) § «Plano por sessões»._
 
