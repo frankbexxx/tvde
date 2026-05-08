@@ -4,14 +4,16 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-08)
+## Agora (2026-05-09)
 
-- [x] **Onda web #258** em `main` (`79d9ff6`): partner drawer com conteúdo mínimo real; motorista header compacto + polish menu + rating/pagamento concluído; login build label; AppHeaderBar papel + ref conta.
-- [x] **Smoke partner** (produção): **fechado** 2026-05-08 — ver `TODOdoDIA.md` painel **2026-05-08** (discover Default fleet; sem bloqueador).
-- [ ] **Smoke restante** (produção, prints): motorista + login (versão) + cabeçalho (papéis) — sequência no mesmo painel; local = só PW/dev.
-- [x] **Merge `#260`** (`main`): sync motorista pós-aceite.
-- [x] **UI touch targets (Passo 1):** merge **`#262`** (`main`).
-- [ ] **Fila «até ao fim»:** ~~docs ENV (item 8)~~ **fechado** → ~~segurança Render (item 6)~~ **fechado** → ~~Passo 1 UI~~ **fechado (#262)** → Stripe test (item 7) → **opcional** E2E/PW (item 9.2).
+**1.º na abertura:** **smoke restante** (produção): motorista + login (versão) + cabeçalho (papéis) — ver [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-09**.
+
+- [x] **Baseline BD (local + Render)** + **Gestão utilizadores** 10 contas — **fechado** 2026-05-08.
+- [x] **Smoke partner** (ponto 1) + **follow-ups partner** (ponto 3) — **fechado** 2026-05-08.
+- [ ] **Smoke restante** (prints produção): motorista, login, cabeçalho — **1.º** no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**.
+- [x] **Onda web #258** em `main`; **Merge `#260`**; **UI touch `#262`**.
+
+- [ ] **Fila até fechar:** Stripe item **7** → E2E/PW opcional item **9.2** → refactor **AdminDashboard** P0–P12 (tabela no `TODOdoDIA` **2026-05-09**).
 
 **Regra — fecho de etapas:** actualizar estes ficheiros mal algo esteja feito em `main` ou após smoke; **não** exigir confirmação explícita para marcar concluído (evitar retrabalho na leitura retroactiva).
 
@@ -32,7 +34,7 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 | Sessão | Foco | Estado |
 |--------|------|--------|
 | **S0** (feita) | Código **#258**: itens **2**, **4**, **5** (mínimo) + extras login/header/rating | **Merge `main`** |
-| **S1** | Smoke **2026-05-08**: partner **fechado**; resto sequencial (motorista, login, cabeçalho) + follow-ups só se falhar | **Parcial** |
+| **S1** | Smoke: partner **fechado** 2026-05-08; baseline BD **fechado**; **continuação** smoke restante **2026-05-09** | **Parcial** → **abertura 2026-05-09** |
 | **S2** | **Docs item 8:** `grep` env/Stripe → `ENV_SINGLE_REALITY` (+ templates) | **Feito** (2026-05-07) |
 | **S3** | **Ops item 6:** segredos Render, `DATABASE_URL`, `/health` | **Feito** (2026-05-07) |
 | **S4** | **Ops item 7:** Stripe test mode; revert mock | Pendente (humano) |
@@ -71,6 +73,6 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 ---
 
-_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-08** · plano refactor admin em [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · [`meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md`](meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) · PRs **#258**, **#262**._
+_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-09** (e fecho **2026-05-08**) · plano refactor [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · baseline [`testing/DEV_BASELINE_ROSTER.md`](testing/DEV_BASELINE_ROSTER.md) · PRs **#258**, **#262**._
 
-_Última revisão: **2026-05-08** (smoke partner fechado; prod vs local; fecho automático; #262; nota vite/BETA/seed no `TODOdoDIA`)._
+_Última revisão: **2026-05-09** (abertura: smoke restante; fecho 2026-05-08: partner, follow-ups, baseline)._
