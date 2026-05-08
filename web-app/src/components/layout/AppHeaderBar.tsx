@@ -54,73 +54,82 @@ export function AppHeaderBar() {
   const rotatingHint = HEADER_ROTATING_HINTS[hintIndex] ?? HEADER_ROTATING_HINTS[0]
   const shouldMarqueeHint = rotatingHint.length > 54
 
+  const hintBlock = shouldMarqueeHint ? (
+    <div
+      className="app-header-marquee min-h-[1.125rem] w-full"
+      title={rotatingHint}
+      aria-live="polite"
+    >
+      <div className="app-header-marquee-track">
+        <span className="app-header-marquee-item">{rotatingHint}</span>
+        <span className="app-header-marquee-item" aria-hidden="true">
+          {rotatingHint}
+        </span>
+      </div>
+    </div>
+  ) : (
+    <p
+      className="text-xs text-foreground/70 min-h-[1.125rem] whitespace-nowrap overflow-hidden text-ellipsis w-full"
+      title={rotatingHint}
+      aria-live="polite"
+    >
+      {rotatingHint}
+    </p>
+  )
+
   return (
     <header
       className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0"
       data-testid="app-header"
     >
       <BrandStripe />
-      <div className="flex justify-between items-start px-4 py-3 gap-2">
-        <div className="min-w-0 flex-1 pr-2">
-          <div className="mb-0.5 flex items-end gap-3 min-w-0" data-testid="app-header-brand">
-            <img
-              src="/brand/vamula-wordmark.png"
-              alt="V@mulá"
-              className="h-7 w-auto rounded-sm object-contain shrink-0"
-            />
-            {who ? (
-              <span className="min-w-0 truncate text-sm italic font-medium text-foreground/85 tracking-tight">
-                {who}
-              </span>
-            ) : null}
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span
-              className="inline-flex items-center rounded-full border border-border bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-foreground"
-              title="Papel desta sessão na API"
-              data-testid="app-header-role-pill"
-            >
-              {headerRoleLabel(sessionRole)}
-            </span>
-            {accountRef ? (
-              <span
-                className="text-[11px] text-muted-foreground tabular-nums"
-                title={jwtSub ? `ID conta: ${jwtSub}` : undefined}
-                data-testid="app-header-account-ref"
-              >
-                Conta · {accountRef}
-              </span>
-            ) : null}
-          </div>
-          <p className="text-xs text-muted-foreground truncate" title={dateTimeLine}>
-            {dateTimeLine}
-          </p>
-          {shouldMarqueeHint ? (
-            <div
-              className="app-header-marquee mt-0.5 min-h-[1.125rem]"
-              title={rotatingHint}
-              aria-live="polite"
-            >
-              <div className="app-header-marquee-track">
-                <span className="app-header-marquee-item">{rotatingHint}</span>
-                <span className="app-header-marquee-item" aria-hidden="true">
-                  {rotatingHint}
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex justify-between items-start gap-2">
+          <div className="min-w-0 flex-1 pr-2">
+            <div className="mb-0.5 flex items-end gap-3 min-w-0" data-testid="app-header-brand">
+              <img
+                src="/brand/vamula-wordmark.png"
+                alt="V@mulá"
+                className="h-7 w-auto rounded-sm object-contain shrink-0"
+              />
+              {who ? (
+                <span className="min-w-0 truncate text-sm italic font-medium text-foreground/85 tracking-tight">
+                  {who}
                 </span>
-              </div>
+              ) : null}
             </div>
-          ) : (
-            <p
-              className="text-xs text-foreground/70 mt-0.5 min-h-[1.125rem] whitespace-nowrap overflow-hidden text-ellipsis"
-              title={rotatingHint}
-              aria-live="polite"
-            >
-              {rotatingHint}
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span
+                className="inline-flex items-center rounded-full border border-border bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-foreground"
+                title="Papel desta sessão na API"
+                data-testid="app-header-role-pill"
+              >
+                {headerRoleLabel(sessionRole)}
+              </span>
+              {accountRef ? (
+                <span
+                  className="text-[11px] text-muted-foreground tabular-nums"
+                  title={jwtSub ? `ID conta: ${jwtSub}` : undefined}
+                  data-testid="app-header-account-ref"
+                >
+                  Conta · {accountRef}
+                </span>
+              ) : null}
+            </div>
+            <p className="text-xs text-muted-foreground truncate" title={dateTimeLine}>
+              {dateTimeLine}
             </p>
-          )}
+          </div>
+          <div className="flex items-center gap-1 shrink-0 pt-0.5">
+            <ProfileButton />
+            <SettingsButton />
+          </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0 pt-0.5">
-          <ProfileButton />
-          <SettingsButton />
+        <div
+          className="-mx-4 mt-2 border-t border-border/70 bg-muted/35 px-4 py-1.5"
+          data-testid="app-header-hint-strip"
+        >
+          {hintBlock}
         </div>
       </div>
     </header>
