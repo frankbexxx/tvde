@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:api": "playwright test --project=e2e-api --no-deps",
     "test:e2e:ui": "playwright test --ui",
     "preview": "vite preview",
     "verify-tokens": "node scripts/verify-tokens.js"

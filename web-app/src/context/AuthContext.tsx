@@ -212,8 +212,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('A iniciar serviço...')
     try {
       const config = await withColdStartRetries((timeoutMs) => getConfig(timeoutMs))
-      setBetaMode(config.beta_mode)
-      if (config.beta_mode) {
+
+      let e2eInjectValid = false
+      if (import.meta.env.VITE_E2E === 'true') {
+        try {
+          const raw = localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)
+          if (raw) {
+            const parsed = JSON.parse(raw) as AuthTokens
+            if (
+              typeof parsed?.passenger === 'string' &&
+              typeof parsed?.driver === 'string' &&
+              typeof parsed?.admin === 'string'
+            ) {
+              e2eInjectValid = true
+            }
+          }
+        } catch {
+          /* ignorar JSON inválido */
+        }
+      }
+
+      /** Servidor pode ter `beta_mode` mas Playwright injecta `tvde_e2e_dev_tokens_json` — usar ramo multi-token. */
+      const useBetaLoginFlow = config.beta_mode && !e2eInjectValid
+      setBetaMode(useBetaLoginFlow)
+      if (useBetaLoginFlow) {
         setTokens(null)
         setBetaToken(null)
         setBetaUserId(null)
@@ -306,7 +328,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAppRouteRoleState(getStoredAppRouteRole())
         if (import.meta.env.VITE_E2E === 'true' && localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)) {
           const shell = getStoredAppRouteRole()
-          setStoredAccessToken(shell === 'driver' ? t.driver : t.passenger)
+          const access =
+            shell === 'driver'
+              ? t.driver
+              : shell === 'partner' && typeof t.partner === 'string'
+                ? t.partner
+                : t.passenger
+          setStoredAccessToken(access)
         }
         setSessionPhone(getStoredLastPhone())
         setSessionDisplayName(getStoredSessionDisplayName())

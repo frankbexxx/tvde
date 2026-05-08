@@ -47,7 +47,7 @@ export default defineConfig({
   projects: [
     {
       name: 'e2e-ui',
-      testMatch: /(driver-passenger-flow|admin-health-tab)\.spec\.ts$/,
+      testMatch: /(driver-passenger-flow|admin-health-tab|partner-shell)\.spec\.ts$/,
     },
     {
       name: 'e2e-api',

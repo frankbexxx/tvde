@@ -14,8 +14,9 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.auth.security import create_access_token
 from app.core.config import settings
-from app.core.partner_constants import DEFAULT_PARTNER_UUID
+from app.core.partner_constants import BASELINE_PARTNER_FLEET_UUID, DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
+from app.db.models.partner import Partner
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.user import User
@@ -118,6 +119,32 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
     admin = get_or_create_user("+351900000000", Role.admin)
     driver_user = get_or_create_user("+351911111111", Role.driver)
 
+    baseline_partner_org = db.execute(
+        select(Partner).where(Partner.id == BASELINE_PARTNER_FLEET_UUID)
+    ).scalar_one_or_none()
+    if not baseline_partner_org:
+        db.add(Partner(id=BASELINE_PARTNER_FLEET_UUID, name="test_partner"))
+        db.flush()
+
+    partner_user = db.execute(
+        select(User).where(User.phone == "+351955555502")
+    ).scalar_one_or_none()
+    if not partner_user:
+        partner_user = User(
+            role=Role.partner,
+            name="test_partner",
+            phone="+351955555502",
+            status=UserStatus.active,
+            partner_org_id=BASELINE_PARTNER_FLEET_UUID,
+        )
+        db.add(partner_user)
+    else:
+        partner_user.role = Role.partner
+        partner_user.status = UserStatus.active
+        partner_user.partner_org_id = BASELINE_PARTNER_FLEET_UUID
+        if partner_user.name == partner_user.phone or not (partner_user.name or "").strip():
+            partner_user.name = "test_partner"
+
     driver_profile = db.execute(
         select(Driver).where(Driver.user_id == driver_user.id)
     ).scalar_one_or_none()
@@ -136,11 +163,13 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
     db.refresh(passenger)
     db.refresh(admin)
     db.refresh(driver_user)
+    db.refresh(partner_user)
 
     return {
         "passenger_id": str(passenger.id),
         "admin_id": str(admin.id),
         "driver_id": str(driver_user.id),
+        "partner_id": str(partner_user.id),
     }
 
 
@@ -220,6 +249,7 @@ async def dev_tokens(db: Session = Depends(get_db)) -> dict:
     passenger = get_user_by_phone("+351912345678")
     admin = get_user_by_phone("+351900000000")
     driver = get_user_by_phone("+351911111111")
+    partner = get_user_by_phone("+351955555502")
 
     def make_token(user: User) -> str:
         data = create_access_token(subject=str(user.id), role=user.role.value)
@@ -229,6 +259,7 @@ async def dev_tokens(db: Session = Depends(get_db)) -> dict:
         "passenger": make_token(passenger),
         "admin": make_token(admin),
         "driver": make_token(driver),
+        "partner": make_token(partner),
     }
 
 
