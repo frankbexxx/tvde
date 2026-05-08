@@ -22,9 +22,15 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 1. [x] [OPS] **Item 6:** Render — segredos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
 2. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
 3. [x] [CÓDIGO] **Item 9 — 1º:** `UI_VISIBILITY` Passo 1 — **#262**. **Fechado** 2026-05-06.
-4. [ ] [CÓDIGO+TESTES] **Item 9 — 2º (opcional):** E2E/PW se couber (ex.: drawer partner).
+4. [ ] [CÓDIGO+TESTES] **Item 9 — 2º:** E2E Playwright **drawer partner** — **PR noite 2026-05-08** (`feat/e2e-partner-playwright-seed`): seed `+351955555502` + `/dev/tokens` → `partner`, inject com `BETA_MODE` activo, spec `partner-shell`, script `npm run test:e2e:api`. **Após merge em `main`:** marcar **[x]** aqui e tratar follow-ups em **Notas E2E** (abaixo).
 
 _Item **8** (docs ENV) **fechado** 2026-05-07._
+
+### Notas E2E (local — actualizar após merge do PR partner)
+
+- **`POST /dev/seed`** inclui utilizador partner canónico (`+351955555502`, org `test_partner`); **`POST /dev/tokens`** devolve também **`partner`**.
+- **`npm run test:e2e:api`** — projecto só HTTP (`--no-deps`); **`CI=true`** recomendado na suíte completa para o Playwright gerir o Vite.
+- **Pendente (não bloqueia o merge do drawer):** (1) `api-flows.spec.ts` — assert `display_name` do admin seed vs baseline (`dev_admin` vs telefone); (2) quatro testes `driver-passenger-flow` — UI fica em `driver-home-step1` sem botões Aceitar/Rejeitar (alinhamento fluxo motorista + PW).
 
 ### Notas
 

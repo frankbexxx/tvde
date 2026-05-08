@@ -260,10 +260,9 @@ export function PartnerHome() {
   }, [trips])
 
   const chip = (active: boolean) =>
-    `px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${
-      active
-        ? 'bg-primary text-primary-foreground border-primary'
-        : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+    `px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${active
+      ? 'bg-primary text-primary-foreground border-primary'
+      : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
     }`
 
   return (
@@ -423,6 +422,7 @@ export function PartnerHome() {
         <h2 className="text-lg font-semibold text-foreground">Frota (partner)</h2>
         <button
           type="button"
+          data-testid="partner-open-menu"
           onClick={() => setMenuOpen(true)}
           className="min-h-[44px] rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
         >

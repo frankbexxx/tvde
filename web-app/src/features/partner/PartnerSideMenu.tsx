@@ -88,7 +88,12 @@ export function PartnerSideMenu(props: {
 
   return (
     <Sheet open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <SheetContent side="left" className="p-0 w-[85vw] max-w-[26rem] bg-background" hideCloseButton>
+      <SheetContent
+        data-testid="partner-side-menu"
+        side="left"
+        className="p-0 w-[85vw] max-w-[26rem] bg-background"
+        hideCloseButton
+      >
         <SheetTitle className="sr-only">{title}</SheetTitle>
         <SheetDescription className="sr-only">
           Navegação do parceiro: frota, viagens, relatórios e definições.

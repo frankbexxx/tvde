@@ -52,5 +52,5 @@ Todos os dados das tabelas de negócio listadas em `app/services/baseline_reset.
 
 ## Relação com `/dev/seed`
 
-- **`POST /dev/seed`** continua a ser o seed **mínimo** (3 utilizadores + driver default) útil para testes rápidos.
+- **`POST /dev/seed`** é o seed **mínimo** para desenvolvimento rápido: **passageiro + admin + motorista** (pool default) **+ partner** **`+351955555502`** (org `test_partner` quando o registo `Partner` for criado pelo seed). **`POST /dev/tokens`** devolve JWTs `passenger`, `admin`, `driver` e **`partner`**.
 - **`POST /dev/baseline-reset`** substitui **tudo** pelo quadro acima — usar quando quiseres **alinhamento total** entre máquinas.
