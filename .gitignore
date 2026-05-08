@@ -52,6 +52,7 @@ backend/list_partners.txt
 *.sql
 # Migrações SQL versionadas em backend/sql/
 !backend/sql/*.sql
+*.dump
 
 # Saídas de teste
 test-results/
