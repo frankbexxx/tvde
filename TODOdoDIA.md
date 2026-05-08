@@ -8,37 +8,31 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel — 2026-05-08
+## Painel — 2026-05-09
 
-**Onde correr:** **smokes e prints** = **produção** (telemóvel, Firefox DevTools, Vivaldi). **Local** (Postgres + uvicorn + Vite) = desenvolvimento e **Playwright** (com stack local parado, o PW costuma falhar).
+**Abertura:** **1.º** — **resto do smoke** (antigo ponto **2**): produção — **motorista** (pedidos/disponível + aceite se couber), **login** (linha versão), **cabeçalho** (papéis). Só anotar falhas.
 
-**Ordem do dia:** smoke em **1.º lugar**; só depois a fila ops/código.
+**Onde correr:** smokes = **produção**; local = PW/dev.
 
-1. [x] [OPS] **Smoke partner (produção, 2026-05-08):** menu/drawer (**Frota · Viagens · Relatórios · Definições**), métricas, CSV em relatórios, fluxo **adicionar motorista** validado face ao modelo de dados — **discover** lista motoristas na **Default fleet** (`partner_id` por defeito); lista vazia / «sem resultados» quando não há motoristas nessa pool (comportamento esperado, não bug de rede). **Fechado.**
-2. [ ] [OPS] **Smoke restante (sequencial, produção):** motorista (pedidos/disponível + aceite se couber), login (versão), cabeçalho (papéis). **Anotar só o que falhar.**
-3. [x] [OPS] **Follow-ups (partner):** sem falha bloqueadora; melhorias de UX/copy (ex.: «Sem resultados» antes de pesquisa útil) ficam para **PR ou onda dedicada** — não bloqueiam a fila Stripe/E2E.
-4. [ ] [OPS] **Follow-ups (smoke restante):** uma linha por falha real observada no ponto **2** (motorista, login, cabeçalho).
+1. [ ] [OPS] **Smoke restante (sequencial, produção):** motorista, login (versão), cabeçalho (papéis).
+2. [ ] [OPS] **Follow-ups:** uma linha por falha real no ponto **1**.
 
-### Vite local — nota operacional (alinhado à fila)
+### Depois do smoke (fila)
 
-_Não compete com smokes em produção; evita horas perdidas com API errada._
-
-- **`web-app/.env.local`:** com **`VITE_API_URL`** apontado ao Render, o Vite deixa de usar o proxy **`/api` →** API local — comentar ou alinhar ao host local quando desenvolveres contra **uvicorn** em `127.0.0.1:8000`.
-- **`backend/.env` (local):** **`BETA_MODE=true`** se precisares de **`GET /admin/users`** e fluxos BETA no backoffice (com `false`, a lista pode aparecer vazia por política, não por BD).
-- **BD local vazia** após wipe: **`POST /dev/seed`** na API local para contas mínimas de desenvolvimento; manter **`+351900000000`** (admin criado pelo seed) — **útil para promover admin / repor passwords em dev** sem remover contas humanas do teu fluxo.
-
-### Depois dos smokes (fila já acordada)
-
-1. [x] [OPS] **Item 6:** Render — segredos expostos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
+1. [x] [OPS] **Item 6:** Render — segredos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
 2. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
-3. [x] [CÓDIGO] **Item 9 — 1º:** `UI_VISIBILITY` Passo 1 — alvos tácteis `min-h-11` (admin + passageiro). **Fechado** em `main` — PR **#262** (2026-05-06).
+3. [x] [CÓDIGO] **Item 9 — 1º:** `UI_VISIBILITY` Passo 1 — **#262**. **Fechado** 2026-05-06.
 4. [ ] [CÓDIGO+TESTES] **Item 9 — 2º (opcional):** E2E/PW se couber (ex.: drawer partner).
 
-_Item **8** (docs ENV) **fechado** 2026-05-07 noite — PR docs._
+_Item **8** (docs ENV) **fechado** 2026-05-07._
+
+### Notas
+
+- Baseline BD: [`docs/testing/DEV_BASELINE_ROSTER.md`](docs/testing/DEV_BASELINE_ROSTER.md) — local + Render alinhados **2026-05-08**.
 
 ### Refactor `AdminDashboard.tsx` — lista viva (planeamento → execução)
 
-**Fonte:** [`docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) — plano, **modelo de prompt** e **prompts P0–P12** completas (só texto; execução agendada).
+**Fonte:** [`docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md)
 
 | Estado | Item |
 |--------|------|
@@ -49,6 +43,26 @@ _Item **8** (docs ENV) **fechado** 2026-05-07 noite — PR docs._
 | [ ] | **Execução P1** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
 
 _Actualização **semi-dinâmica**: ao fechar o dia ou merge, marcar linhas aqui + nota curta no doc se o alcance mudar._
+
+### Auditoria (registo **2026-05-08**, só leitura)
+
+_Ver secção **painel 2026-05-08 · fechado** abaixo (pontos 1–11)._
+
+---
+
+## Painel — 2026-05-08 · **fechado**
+
+1. [x] [OPS] **Smoke partner (ponto 1):** produção; discover Default fleet — **fechado** 2026-05-08.
+2. [x] [OPS] **Follow-ups partner (ponto 3):** sem bloqueador — **fechado** 2026-05-08.
+3. [x] [OPS] **Baseline BD:** wipe + seed **local** + **Render**; Gestão utilizadores **10** contas em produção — **fechado** 2026-05-08.
+
+**Continua em 2026-05-09:** smoke restante (motorista, login, cabeçalho); follow-ups desse smoke; itens **7** / **9.2**; lista viva refactor (tabela no **painel 2026-05-09**).
+
+### Vite local — nota operacional (referência)
+
+- **`web-app/.env.local`:** `VITE_API_URL` para Render desvia o proxy **`/api`** local (~ `127.0.0.1:8000`).
+- **`backend/.env` (local):** `BETA_MODE=true` se precisares de `GET /admin/users` no backoffice local.
+- Baseline / dev_admin: [`DEV_BASELINE_ROSTER.md`](docs/testing/DEV_BASELINE_ROSTER.md); manter **`+351900000000`** em dev.
 
 ### Fecho do dia — auditoria de código (só leitura, 2026-05-08)
 
