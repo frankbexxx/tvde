@@ -59,6 +59,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | Ficheiro                                                        | Propósito                                       |
 | --------------------------------------------------------------- | ----------------------------------------------- |
 | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                     | Manual de testes passo a passo (local e Render) |
+| [DEV_BASELINE_ROSTER.md](../testing/DEV_BASELINE_ROSTER.md)     | Baseline canónico de users + wipe/seed (dev/Render) |
 | [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe end-to-end, troubleshooting        |
 
 ---

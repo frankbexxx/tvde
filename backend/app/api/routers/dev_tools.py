@@ -21,6 +21,7 @@ from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.schemas.trip import TripCreateRequest
+from app.services.baseline_reset import run_full_baseline_reset
 from app.services.trips import (
     accept_trip as accept_trip_service,
     assign_trip as assign_trip_service,
@@ -86,6 +87,14 @@ async def dev_reset(db: Session = Depends(get_db)) -> dict:
     db.execute(text("TRUNCATE payments, trips CASCADE"))
     db.commit()
     return {"status": "reset_ok"}
+
+
+@router.post("/baseline-reset")
+async def dev_baseline_reset(db: Session = Depends(get_db)) -> dict:
+    """Wipe all app tables (except Alembic) and seed canonical dev users — vê ``docs/testing/DEV_BASELINE_ROSTER.md``."""
+    _require_dev()
+    payload = run_full_baseline_reset(db)
+    return {"status": "baseline_ok", **payload}
 
 
 @router.post("/seed")
