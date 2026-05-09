@@ -1,6 +1,6 @@
 # Plano de refactor — `AdminDashboard.tsx` (só planeamento e prompts)
 
-**Estado:** P0–**P4** em código: **P2** `useAdminDashboardNavigation`; **P3** `useAdminTripLists`; **P4** `useAdminTripDetailActions`. **P5+** por PR.  
+**Estado:** P0–**P7** em código (hooks): **P2** `useAdminDashboardNavigation`; **P3** `useAdminTripLists`; **P4** `useAdminTripDetailActions`; **P5** `useAdminSystemPanels`; **P6** `useAdminAlertsAndAudit`; **P7** `useAdminUsersDirectory`. **P8+** (JSX por tab) por PR.  
 **Última actualização:** 2026-05-11.
 
 **Tabs canónicas** (URL `?tab=`): `agora` · `docs` · `pending` · `users` · `frota` · `dados` · `trips` · `metrics` · `ops` · `health` (ver `adminDashboardQuery.ts`).
@@ -182,6 +182,8 @@ Cola isto no início de cada pedido ao assistente e preenche os campos `[ … ]`
 
 ## Prompt P5 — Hooks saúde, métricas, phase0, usage
 
+**Entrega (2026-05-11)** — `web-app/src/features/admin/useAdminSystemPanels.ts`: `metrics`, `usage`, `health`, `phase0`, `fetchMetrics`, `fetchUsage`, `fetchHealth`, `handleFetchPhase0`, `handleRunTimeouts`, `handleRunOfferExpiry`; dependências `setError`, `setOpsLoading`, `fetchActiveTrips`.
+
 **Objectivo** — Extrair `fetchHealth`, `fetchMetrics`, `fetchUsage`, `phase0`, `runTimeouts`, `runOfferExpiry`, estados relacionados para um ou dois hooks (`useAdminSystemPanels.ts`).
 
 **Ficheiros** — `AdminDashboard.tsx`.
@@ -196,6 +198,8 @@ Cola isto no início de cada pedido ao assistente e preenche os campos `[ … ]`
 
 ## Prompt P6 — Alertas e audit trail admin
 
+**Entrega (2026-05-11)** — `web-app/src/features/admin/useAdminAlertsAndAudit.ts`: `adminAlerts`, `fetchAdminAlerts`, cache `userAuditRows` / loading / erro, `invalidateUserAudit`, `loadUserAuditTrailIfNeeded(userId)`. Limpa estado quando `token` fica `null`.
+
 **Objectivo** — Se `fetchAdminAlerts`, `fetchAdminAuditTrail`, estados e UI de alertas estiverem misturados, extrair hook `useAdminAlertsAndAudit.ts` e limitar props ao painel que os consome.
 
 **Ficheiros** — `AdminDashboard.tsx`.
@@ -209,6 +213,8 @@ Cola isto no início de cada pedido ao assistente e preenche os campos `[ … ]`
 ---
 
 ## Prompt P7 — Utilizadores (filtros, paginação, bulk)
+
+**Entrega (2026-05-11)** — `web-app/src/features/admin/useAdminUsersDirectory.ts`: `USERS_PAGE_SIZE`, tipo `AdminUser`; lista, filtro, ordenação, paginação, bulk, edição, bloqueio, handlers SP-F; `filteredSortedUsers` / `driverUsers`; dependências `tab`, `setError`, `setLoading`, `invalidateUserAudit`.
 
 **Objectivo** — Extrair lógica de lista de utilizadores, filtro, ordenação, `USERS_PAGE_SIZE`, selecção em massa, PATCH/block/password para `useAdminUsersDirectory.ts`.
 

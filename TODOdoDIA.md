@@ -67,7 +67,10 @@ _Item **8** (docs ENV) **fechado** 2026-05-07._
 | [x] | **Execução P2** — hook [`useAdminDashboardNavigation.ts`](web-app/src/features/admin/useAdminDashboardNavigation.ts) (smoke: `?tab=health`, `?tab=trips&tripId=`, `?tab=trips&tripsList=history`, recarregar) |
 | [x] | **Execução P3** — hook [`useAdminTripLists.ts`](web-app/src/features/admin/useAdminTripLists.ts) (smoke: tab **Viagens** activas/histórico, refresh 8s) |
 | [x] | **Execução P4** — hook [`useAdminTripDetailActions.ts`](web-app/src/features/admin/useAdminTripDetailActions.ts) (smoke: detalhe, acções, nota, reconcile super_admin) |
-| [ ] | **Execução P5** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
+| [x] | **Execução P5** — hook [`useAdminSystemPanels.ts`](web-app/src/features/admin/useAdminSystemPanels.ts) (smoke: tabs **Métricas**, **Saúde**, **Operações** — fetches, timeouts, offer-expiry, phase0) |
+| [x] | **Execução P6** — hook [`useAdminAlertsAndAudit.ts`](web-app/src/features/admin/useAdminAlertsAndAudit.ts) (smoke: **Agora** alertas; tab **Utilizadores** trilho audit) |
+| [x] | **Execução P7** — hook [`useAdminUsersDirectory.ts`](web-app/src/features/admin/useAdminUsersDirectory.ts) (smoke: **Utilizadores**) |
+| [ ] | **Execução P8** … **P12** — JSX por tab + orquestrador fino; marcar **[x]** no merge de cada PR |
 
 _Actualização **semi-dinâmica**: ao fechar o dia ou merge, marcar linhas aqui + nota curta no doc se o alcance mudar._
 
