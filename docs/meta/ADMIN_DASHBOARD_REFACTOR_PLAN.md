@@ -1,7 +1,7 @@
 # Plano de refactor — `AdminDashboard.tsx` (só planeamento e prompts)
 
-**Estado:** P0 (inventário por tab) congelado abaixo; **P1** iniciado — helpers + `AdminTripPaymentOpsNotePanel` em módulos adjacentes (`adminDashboardHelpers.ts`, `AdminTripPaymentOpsNotePanel.tsx`). Demais fases por PR.  
-**Última actualização:** 2026-05-10.
+**Estado:** P0–**P2** em execução no código: **P1** (helpers + painel nota); **P2** — `useAdminDashboardNavigation.ts` integrado em `AdminDashboard.tsx`. **P3+** por PR sucessivos.  
+**Última actualização:** 2026-05-11.
 
 **Tabs canónicas** (URL `?tab=`): `agora` · `docs` · `pending` · `users` · `frota` · `dados` · `trips` · `metrics` · `ops` · `health` (ver `adminDashboardQuery.ts`).
 
@@ -134,7 +134,9 @@ Cola isto no início de cada pedido ao assistente e preenche os campos `[ … ]`
 
 ## Prompt P2 — Hook sincronização URL e tab
 
-**Objectivo** — Extrair lógica de `useSearchParams`, `parseAdminDashboardQuery`, `syncAdminUrl`, `setTab`, e refs ligadas ao trip seleccionado **para** `useAdminDashboardNavigation.ts` (ou nome equivalente) que devolve `{ tab, setTab, tripsListMode, setTripsListMode, selectedTripId, syncAdminUrl, … }` com a **mesma API interna** que o dashboard consome hoje.
+**Entrega (2026-05-11)** — `web-app/src/features/admin/useAdminDashboardNavigation.ts`: `tab`, `tripsListMode`, `selectedTripId`, `syncAdminUrl`, `selectTripsListMode`; `setTab` não exposto (actualização só via `parseAdminDashboardQuery` + `adminQs`). Efecto `paymentOpsNoteText` por `selectedTripId` mantém-se no dashboard.
+
+**Objectivo (original)** — Extrair `useSearchParams`, `parseAdminDashboardQuery`, `syncAdminUrl` e estado derivado da URL para um hook reutilizável com a **mesma semântica** que o dashboard tinha inline.
 
 **Ficheiros** — `AdminDashboard.tsx`, novo hook em `features/admin/`.
 

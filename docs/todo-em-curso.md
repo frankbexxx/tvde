@@ -13,7 +13,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] **Smoke restante** (prints produção): motorista · login (versão **c29dd31**) · cabeçalho (**Frota** validada) — **fechado** 2026-05-09 no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**.
 - [x] **Onda web #258** em `main`; **Merge `#260`**; **UI touch `#262`**.
 
-- [x] **Fila até fechar:** Stripe item **7** — **fechado** fila OPS (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**); follow-ups PW no [`TODOdoDIA.md`](../TODOdoDIA.md) **Notas E2E** → refactor **AdminDashboard** P0–P12 (P0+P1 fatia 1 documentados / entregues 2026-05-10).
+- [x] **Fila até fechar:** Stripe item **7** — **fechado** fila OPS (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**); follow-ups PW no [`TODOdoDIA.md`](../TODOdoDIA.md) **Notas E2E** → refactor **AdminDashboard** P0–P12 (P0+P1 **merge**; **P2** hook URL `useAdminDashboardNavigation` em PR separado 2026-05-11).
 
 **Nota:** smoke restante (produção) continua **1.º**; stack local (Postgres, `uvicorn`, Vite, `stripe listen`) serve **dev** e **item 7**, não substitui o smoke em prod.
 

@@ -64,7 +64,8 @@ _Item **8** (docs ENV) **fechado** 2026-05-07._
 | [x] | Prompts **P0**–**P12** redigidas (inventário → orquestrador final) |
 | [x] | **Execução P0** (inventário + critérios por tab em [`ADMIN_DASHBOARD_REFACTOR_PLAN.md`](docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) § P0) |
 | [x] | **Execução P1** — fatia 1: `adminDashboardHelpers.ts` + `AdminTripPaymentOpsNotePanel.tsx` (smoke: tab **Viagens**, painel nota operacional pagamento) |
-| [ ] | **Execução P2** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
+| [x] | **Execução P2** — hook [`useAdminDashboardNavigation.ts`](web-app/src/features/admin/useAdminDashboardNavigation.ts) (smoke: `?tab=health`, `?tab=trips&tripId=`, `?tab=trips&tripsList=history`, recarregar) |
+| [ ] | **Execução P3** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
 
 _Actualização **semi-dinâmica**: ao fechar o dia ou merge, marcar linhas aqui + nota curta no doc se o alcance mudar._
 
