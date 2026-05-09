@@ -1,4 +1,13 @@
-type AdminTabMetricsProps = Record<string, any>
+import type { AdminMetricsResponse, AdminUsageSummaryResponse, WeeklyReportRow } from '../../../api/admin'
+import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
+
+export type AdminTabMetricsProps = {
+  fetchMetrics: () => void | Promise<void>
+  fetchUsage: () => void | Promise<void>
+  metrics: AdminMetricsResponse | null
+  syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
+  usage: AdminUsageSummaryResponse | null
+}
 
 export function AdminTabMetrics(props: AdminTabMetricsProps) {
   const {
@@ -110,7 +119,7 @@ export function AdminTabMetrics(props: AdminTabMetricsProps) {
                           </tr>
                         </thead>
                         <tbody>
-                          {usage.weekly.map((r: any) => (
+                          {usage.weekly.map((r: WeeklyReportRow) => (
                             <tr key={r.week_start} className="border-t border-border/60">
                               <td className="py-1 pr-2 font-mono text-xs">{r.week_start.slice(0, 10)}</td>
                               <td className="py-1 pr-2">{r.trips_created}</td>

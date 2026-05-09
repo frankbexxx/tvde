@@ -1,10 +1,57 @@
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
 import { OPS_STUCK_PAYMENTS_PAGE_SIZE } from '../adminConstants'
-import { copyAdminClipboard } from '../adminDashboardHelpers'
+import { copyAdminClipboard, maskSensitiveEnvDisplay } from '../adminDashboardHelpers'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from '../healthTripLinks'
-import { maskSensitiveEnvDisplay } from '../adminDashboardHelpers'
 import { stripePaymentIntentDashboardUrls } from '../../../utils/stripeDashboard'
+import type {
+  AdminCronRunResponse,
+  AdminEnvValidateResponse,
+  AdminPhase0Response,
+  ReconcilePaymentsPreviewResponse,
+  SystemHealthResponse,
+} from '../../../api/admin'
+import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
 
-type AdminTabOpsProps = Record<string, any>
+type OpsStuckPaymentsPageData = {
+  slice: Array<Record<string, unknown>>
+  total: number
+  maxPage: number
+  from: number
+  to: number
+}
+
+export type AdminTabOpsProps = {
+  cronRun: AdminCronRunResponse | null
+  envReveal: boolean
+  envText: string
+  envValidate: AdminEnvValidateResponse | null
+  fetchHealth: () => void | Promise<void>
+  handleExportLogs: () => void | Promise<void>
+  handleFetchPhase0: () => void | Promise<void>
+  handleReconcileCloseNoPi: (dryRun: boolean) => void | Promise<void>
+  handleReconcilePreview: () => void | Promise<void>
+  handleReconcileStripeSync: (dryRun: boolean) => void | Promise<void>
+  handleRecoverDriver: () => void | Promise<void>
+  handleRunCronNow: () => void | Promise<void>
+  handleRunOfferExpiry: () => void | Promise<void>
+  handleRunTimeouts: () => void | Promise<void>
+  handleValidateEnv: () => void | Promise<void>
+  health: SystemHealthResponse | null
+  isSuperAdminSession: boolean
+  opsLoading: string | null
+  opsStuckPaymentsPage: number
+  opsStuckPaymentsPageData: OpsStuckPaymentsPageData
+  phase0: AdminPhase0Response | null
+  reconcilePreview: ReconcilePaymentsPreviewResponse | null
+  reconcileRun: Record<string, unknown> | null
+  recoverDriverId: string
+  runRecoverDriver: (driverId: string) => void | Promise<void>
+  setEnvReveal: Dispatch<SetStateAction<boolean>>
+  setEnvText: Dispatch<SetStateAction<string>>
+  setOpsStuckPaymentsPage: Dispatch<SetStateAction<number>>
+  setRecoverDriverId: Dispatch<SetStateAction<string>>
+  syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
+}
 
 export function AdminTabOps(props: AdminTabOpsProps) {
   const {
@@ -114,7 +161,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
               <p className="text-sm font-medium text-foreground">Validar .env (não guarda segredos)</p>
               <button
                 type="button"
-                onClick={() => setEnvReveal((v: any) => !v)}
+                onClick={() => setEnvReveal((v) => !v)}
                 className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:bg-muted/40"
               >
                 {envReveal ? 'Ocultar valores sensíveis' : 'Mostrar para editar'}
@@ -130,7 +177,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
             ) : (
               <textarea
                 value={envText}
-                onChange={(e: any) => setEnvText(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setEnvText(e.target.value)}
                 placeholder="Cola aqui o .env (key=value). Isto só valida; não guarda."
                 className="w-full min-h-28 px-3 py-2 border rounded-lg text-sm font-mono"
               />
@@ -166,7 +213,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
                 <div className="text-sm text-warning bg-warning/10 border border-warning/20 px-3 py-2 rounded-lg">
                   <p className="font-medium">Faltam chaves obrigatórias</p>
                   <ul className="list-disc pl-5">
-                    {envValidate.missing_required_keys.map((k: any) => (
+                    {envValidate.missing_required_keys.map((k) => (
                       <li key={k} className="font-mono text-xs">
                         {k}
                       </li>
@@ -350,7 +397,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
                     <button
                       type="button"
                       disabled={opsStuckPaymentsPage <= 0}
-                      onClick={() => setOpsStuckPaymentsPage((p: any) => Math.max(0, p - 1))}
+                      onClick={() => setOpsStuckPaymentsPage((p) => Math.max(0, p - 1))}
                       className="px-2 py-1 rounded-lg border border-border bg-card hover:bg-muted/50 disabled:opacity-40 disabled:pointer-events-none"
                     >
                       Anterior
@@ -359,7 +406,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
                       type="button"
                       disabled={opsStuckPaymentsPage >= opsStuckPaymentsPageData.maxPage}
                       onClick={() =>
-                        setOpsStuckPaymentsPage((p: any) =>
+                        setOpsStuckPaymentsPage((p) =>
                           Math.min(opsStuckPaymentsPageData.maxPage, p + 1)
                         )
                       }
@@ -376,7 +423,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
                 <p className="text-xs text-muted-foreground">Nenhum pagamento stuck nesta leitura.</p>
               ) : (
                 <ul className="space-y-2">
-                  {opsStuckPaymentsPageData.slice.map((row: any, i: any) => {
+                  {opsStuckPaymentsPageData.slice.map((row, i) => {
                     const tid = tripIdFromHealthRow(row)
                     const piRaw = row.stripe_payment_intent_id
                     const pi = typeof piRaw === 'string' && piRaw.startsWith('pi_') ? piRaw.trim() : null
@@ -455,12 +502,12 @@ export function AdminTabOps(props: AdminTabOpsProps) {
               ) : (
                 <ul className="space-y-2">
                   {health.drivers_unavailable_too_long
-                    .map((row: any, i: any) => {
+                    .map((row, i) => {
                       const did = driverIdFromHealthUnavailableRow(row)
                       return did ? { did, i } : null
                     })
-                    .filter((x: any): x is { did: string; i: number } => x !== null)
-                    .map(({ did, i }: any) => (
+                    .filter((x): x is { did: string; i: number } => x !== null)
+                    .map(({ did, i }) => (
                       <li
                         key={`recover-suggest-${did}-${i}`}
                         className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/80 bg-background px-3 py-2"
@@ -489,7 +536,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
                   <input
                     type="text"
                     value={recoverDriverId}
-                    onChange={(e: any) => setRecoverDriverId(e.target.value)}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setRecoverDriverId(e.target.value)}
                     placeholder="driver_id (UUID)"
                     className="flex-1 px-3 py-2 border rounded-lg text-sm"
                   />

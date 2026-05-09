@@ -1,11 +1,46 @@
+import type { Dispatch, SetStateAction } from 'react'
 import { ADMIN_TRIP_CANCEL_STATUSES } from '../adminConstants'
 import { AdminTripPaymentOpsNotePanel } from '../AdminTripPaymentOpsNotePanel'
 import { CancellationReasonMuted } from '../../../components/trips/CancellationReasonMuted'
 import { formatRelativeAgo, minutesSince } from '../../../utils/relativeTime'
 import { stripePaymentIntentDashboardUrls } from '../../../utils/stripeDashboard'
 import { tripDetailEligibleSinglePaymentReconcile } from '../adminDashboardHelpers'
+import type { TripActiveItem, TripDetailAdmin } from '../../../api/admin'
+import type { TripHistoryItem } from '../../../api/trips'
+import type { AdminTripsListMode } from '../adminDashboardQuery'
+import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
 
-type AdminTabTripsProps = Record<string, any>
+export type AdminTabTripsProps = {
+  activeTrips: TripActiveItem[]
+  canPostPaymentOpsNote: boolean
+  fetchActiveTrips: () => void | Promise<void>
+  fetchHistoryTrips: () => void | Promise<void>
+  fetchTripDebug: (tripId: string) => void | Promise<void>
+  handleAdminTripTransition: (
+    tripId: string,
+    toStatus: 'arriving' | 'ongoing',
+    fromStatus?: string
+  ) => void | Promise<void>
+  handleAssignTrip: (tripId: string) => void | Promise<void>
+  handleCancelTrip: (tripId: string) => void | Promise<void>
+  handlePaymentOpsNote: (tripId: string) => void | Promise<void>
+  handleReconcileSingleTripPayment: (tripId: string) => void | Promise<void>
+  historyTrips: TripHistoryItem[]
+  historyTripsError: string | null
+  isSuperAdminSession: boolean
+  paymentOpsNoteText: string
+  selectTripsListMode: (mode: AdminTripsListMode) => void
+  selectedTripId: string | null
+  setPaymentOpsNoteText: Dispatch<SetStateAction<string>>
+  syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
+  tripActionLoading: string | null
+  tripDebug: Record<string, unknown> | null
+  tripDebugId: string | null
+  tripDetail: TripDetailAdmin | null
+  tripDetailLoading: boolean
+  tripOrphanFromDeepLink: boolean
+  tripsListMode: AdminTripsListMode
+}
 
 export function AdminTabTrips(props: AdminTabTripsProps) {
   const {
@@ -237,7 +272,7 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
                 <p className="text-foreground/75">Nenhuma viagem ativa.</p>
               ) : activeTrips.length > 0 ? (
                 <ul className="space-y-3">
-                  {activeTrips.map((t: any) => {
+                  {activeTrips.map((t) => {
                     const ageMin = minutesSince(t.updated_at)
                     const stuckAccepted = t.status === 'accepted' && ageMin != null && ageMin >= 5
                     return (
@@ -444,7 +479,7 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
                 </p>
               ) : historyTrips.length > 0 ? (
                 <ul className="space-y-3">
-                  {historyTrips.map((h: any) => (
+                  {historyTrips.map((h) => (
                     <li
                       key={h.trip_id}
                       className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"

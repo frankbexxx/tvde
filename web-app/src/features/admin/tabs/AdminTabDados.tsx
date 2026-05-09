@@ -1,4 +1,19 @@
-type AdminTabDadosProps = Record<string, any>
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
+import type { AdminUser } from '../useAdminUsersDirectory'
+
+type AdminPartnerRow = { id: string; name: string; created_at: string }
+type AdminDriverRow = { user_id: string; partner_id: string; status: string }
+
+export type AdminTabDadosProps = {
+  copy: (value: string) => Promise<void>
+  dataLoading: boolean
+  dataSearch: string
+  driversList: AdminDriverRow[]
+  fetchDataVisibility: () => Promise<void>
+  partners: AdminPartnerRow[]
+  setDataSearch: Dispatch<SetStateAction<string>>
+  users: AdminUser[]
+}
 
 export function AdminTabDados(props: AdminTabDadosProps) {
   const {
@@ -27,7 +42,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
               id="admin-data-search"
               type="search"
               value={dataSearch}
-              onChange={(e: any) => setDataSearch(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDataSearch(e.target.value)}
               placeholder="Filtrar…"
               className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
             />
@@ -48,7 +63,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
             ) : (
               <ul className="space-y-2">
                 {users
-                  .filter((u: any) => {
+                  .filter((u) => {
                     const q = dataSearch.trim().toLowerCase()
                     if (!q) return true
                     return (
@@ -59,7 +74,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                     )
                   })
                   .slice(0, 200)
-                  .map((u: any) => (
+                  .map((u) => (
                     <li key={u.id} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -91,13 +106,13 @@ export function AdminTabDados(props: AdminTabDadosProps) {
             ) : (
               <ul className="space-y-2">
                 {partners
-                  .filter((p: any) => {
+                  .filter((p) => {
                     const q = dataSearch.trim().toLowerCase()
                     if (!q) return true
                     return p.id.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
                   })
                   .slice(0, 200)
-                  .map((p: any) => (
+                  .map((p) => (
                     <li key={p.id} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -126,7 +141,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
             ) : (
               <ul className="space-y-2">
                 {driversList
-                  .filter((d: any) => {
+                  .filter((d) => {
                     const q = dataSearch.trim().toLowerCase()
                     if (!q) return true
                     return (
@@ -136,7 +151,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                     )
                   })
                   .slice(0, 200)
-                  .map((d: any) => (
+                  .map((d) => (
                     <li key={d.user_id} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">

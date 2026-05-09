@@ -1,7 +1,23 @@
-import { HealthAnomalyBlock, healthBlockKey, PB_DRIVERS_UNAVAILABLE, PB_INCONSISTENT_FINANCIAL, PB_MISSING_PAYMENT, PB_STUCK_PAYMENTS, PB_TRIPS_ACCEPTED_LONG, PB_TRIPS_ONGOING_LONG } from '../AdminHealthAnomalyBlocks'
+import { HealthAnomalyBlock } from '../AdminHealthAnomalyBlocks'
+import {
+  healthBlockKey,
+  PB_DRIVERS_UNAVAILABLE,
+  PB_INCONSISTENT_FINANCIAL,
+  PB_MISSING_PAYMENT,
+  PB_STUCK_PAYMENTS,
+  PB_TRIPS_ACCEPTED_LONG,
+  PB_TRIPS_ONGOING_LONG,
+} from '../adminHealthAnomalyPlaybooks'
 import { countHealthSignalRows } from '../adminDashboardHelpers'
 
-type AdminTabHealthProps = Record<string, any>
+import type { SystemHealthResponse } from '../../../api/admin'
+import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
+
+export type AdminTabHealthProps = {
+  fetchHealth: () => void | Promise<void>
+  health: SystemHealthResponse | null
+  syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
+}
 
 export function AdminTabHealth(props: AdminTabHealthProps) {
   const {
@@ -47,7 +63,7 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
               </p>
               {health.warnings.length > 0 && (
                 <ul className="text-sm text-warning space-y-1">
-                  {health.warnings.map((w: any, i: any) => (
+                  {health.warnings.map((w, i) => (
                     <li key={i}>{w}</li>
                   ))}
                 </ul>
@@ -56,28 +72,28 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
                 key={healthBlockKey('accepted', health.trips_accepted_too_long)}
                 title="Viagens accepted há muito"
                 rows={health.trips_accepted_too_long}
-                onOpenTrip={(tripId: any) => syncAdminUrl({ tab: 'trips', tripId })}
+                onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 playbook={PB_TRIPS_ACCEPTED_LONG}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('ongoing', health.trips_ongoing_too_long)}
                 title="Viagens ongoing há muito"
                 rows={health.trips_ongoing_too_long}
-                onOpenTrip={(tripId: any) => syncAdminUrl({ tab: 'trips', tripId })}
+                onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 playbook={PB_TRIPS_ONGOING_LONG}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('offline', health.drivers_unavailable_too_long)}
                 title="Motoristas offline há muito (sem viagem ativa)"
                 rows={health.drivers_unavailable_too_long}
-                onOpenTrip={(tripId: any) => syncAdminUrl({ tab: 'trips', tripId })}
+                onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 playbook={PB_DRIVERS_UNAVAILABLE}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('stuck_pi', health.stuck_payments)}
                 title="Pagamentos bloqueados (processing)"
                 rows={health.stuck_payments}
-                onOpenTrip={(tripId: any) => syncAdminUrl({ tab: 'trips', tripId })}
+                onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 pageSize={25}
                 playbook={PB_STUCK_PAYMENTS}
               />
@@ -85,14 +101,14 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
                 key={healthBlockKey('missing_pay', health.missing_payment_records ?? [])}
                 title="Viagens sem registo de pagamento"
                 rows={health.missing_payment_records ?? []}
-                onOpenTrip={(tripId: any) => syncAdminUrl({ tab: 'trips', tripId })}
+                onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 playbook={PB_MISSING_PAYMENT}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('inconsistent', health.inconsistent_financial_state ?? [])}
                 title="Estado financeiro inconsistente"
                 rows={health.inconsistent_financial_state ?? []}
-                onOpenTrip={(tripId: any) => syncAdminUrl({ tab: 'trips', tripId })}
+                onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 pageSize={25}
                 playbook={PB_INCONSISTENT_FINANCIAL}
               />

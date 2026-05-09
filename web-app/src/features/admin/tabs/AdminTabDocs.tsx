@@ -1,4 +1,31 @@
-type AdminTabDocsProps = Record<string, any>
+import type { Dispatch, SetStateAction } from 'react'
+import type { DriverDocumentStatus, DriverDocumentsState, DriverRequiredDocument } from '../../../services/driverDocuments'
+import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
+import type { AdminUser } from '../useAdminUsersDirectory'
+
+type DocsRegistry = Record<string, DriverDocumentsState['docs']>
+
+type AdminDocsRow = {
+  user: AdminUser
+  docs: DriverDocumentsState['docs']
+  approved: number
+  missing: DriverRequiredDocument[]
+}
+
+export type AdminTabDocsProps = {
+  DRIVER_DOC_STATUSES: readonly DriverDocumentStatus[]
+  REQUIRED_DRIVER_DOCUMENTS: readonly DriverRequiredDocument[]
+  approvedDriverDocs: () => DriverDocumentsState['docs']
+  docsRowsData: { rows: AdminDocsRow[]; totals: Record<DriverDocumentStatus, number> }
+  docsStatusFilter: 'all' | DriverDocumentStatus
+  driverDocumentLabel: (doc: DriverRequiredDocument) => string
+  driverDocumentStatusLabel: (st: DriverDocumentStatus) => string
+  driverUsers: AdminUser[]
+  emptyDriverDocs: () => DriverDocumentsState['docs']
+  setDocsStatusFilter: Dispatch<SetStateAction<'all' | DriverDocumentStatus>>
+  setDriverDocsRegistry: Dispatch<SetStateAction<DocsRegistry>>
+  syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
+}
 
 export function AdminTabDocs(props: AdminTabDocsProps) {
   const {
@@ -32,7 +59,7 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
             <div className="rounded-xl border border-border/70 bg-card px-3 py-3 space-y-2">
               <p className="text-sm font-medium text-foreground">Documentos obrigatórios (v1)</p>
               <ul className="list-disc pl-5 space-y-1 text-sm text-foreground/80">
-                {REQUIRED_DRIVER_DOCUMENTS.map((doc: any) => (
+                {REQUIRED_DRIVER_DOCUMENTS.map((doc) => (
                   <li key={doc}>{driverDocumentLabel(doc)}</li>
                 ))}
               </ul>
@@ -40,7 +67,7 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
             <div className="rounded-xl border border-border/70 bg-card px-3 py-3 space-y-2">
               <p className="text-sm font-medium text-foreground">Estados esperados</p>
               <div className="flex flex-wrap gap-2">
-                {DRIVER_DOC_STATUSES.map((st: any) => (
+                {DRIVER_DOC_STATUSES.map((st) => (
                   <span
                     key={st}
                     className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-foreground/85"
@@ -58,11 +85,13 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
               <div className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
                 <p className="text-xs text-foreground/85">Totais por estado (20 motoristas visíveis)</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {DRIVER_DOC_STATUSES.map((st: any) => (
+                  {DRIVER_DOC_STATUSES.map((st) => (
                     <button
                       key={st}
                       type="button"
-                      onClick={() => setDocsStatusFilter((prev: any) => (prev === st ? 'all' : st))}
+                      onClick={() =>
+                        setDocsStatusFilter((prev) => (prev === st ? 'all' : st))
+                      }
                       className={`rounded-full border px-2 py-0.5 text-[11px] ${docsStatusFilter === st
                         ? 'border-info/60 bg-info/15 text-foreground'
                         : 'border-border bg-card text-foreground/85'
@@ -87,7 +116,7 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
                 <p className="text-xs text-muted-foreground">Sem motoristas carregados nesta página.</p>
               ) : (
                 <ul className="space-y-2 max-h-[min(46vh,20rem)] overflow-y-auto pr-0.5">
-                  {docsRowsData.rows.map(({ user: u, docs, approved, missing }: any) => {
+                  {docsRowsData.rows.map(({ user: u, docs, approved, missing }) => {
                     return (
                       <li key={u.id} className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
                         <div className="flex items-center justify-between gap-2">
@@ -102,24 +131,24 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
                         <p className="text-[11px] text-foreground/80">
                           {missing.length === 0
                             ? 'Checklist completo.'
-                            : `Em falta: ${missing.map((k: any) => driverDocumentLabel(k)).join(', ')}`}
+                            : `Em falta: ${missing.map((k) => driverDocumentLabel(k)).join(', ')}`}
                         </p>
                         <div className="grid grid-cols-1 gap-1.5">
-                          {REQUIRED_DRIVER_DOCUMENTS.filter((doc: any) =>
+                          {REQUIRED_DRIVER_DOCUMENTS.filter((doc) =>
                             docsStatusFilter === 'all' ? true : docs[doc] === docsStatusFilter
-                          ).map((doc: any) => (
+                          ).map((doc) => (
                             <div
                               key={doc}
                               className="rounded-md border border-border/70 bg-card px-2 py-1.5 flex flex-wrap items-center justify-between gap-1"
                             >
                               <p className="text-[11px] text-foreground/85">{driverDocumentLabel(doc)}</p>
                               <div className="flex flex-wrap gap-1">
-                                {DRIVER_DOC_STATUSES.map((st: any) => (
+                                {DRIVER_DOC_STATUSES.map((st) => (
                                   <button
                                     key={`${u.id}-${doc}-${st}`}
                                     type="button"
                                     onClick={() =>
-                                      setDriverDocsRegistry((prev: any) => ({
+                                      setDriverDocsRegistry((prev) => ({
                                         ...prev,
                                         [u.id]: {
                                           ...(prev[u.id] ?? emptyDriverDocs()),
@@ -138,7 +167,7 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
                               </div>
                             </div>
                           ))}
-                          {REQUIRED_DRIVER_DOCUMENTS.every((doc: any) =>
+                          {REQUIRED_DRIVER_DOCUMENTS.every((doc) =>
                             docsStatusFilter === 'all' ? false : docs[doc] !== docsStatusFilter
                           ) ? (
                             <p className="text-[11px] text-muted-foreground">
@@ -150,7 +179,7 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
                           <button
                             type="button"
                             onClick={() =>
-                              setDriverDocsRegistry((prev: any) => ({
+                              setDriverDocsRegistry((prev) => ({
                                 ...prev,
                                 [u.id]: approvedDriverDocs(),
                               }))
@@ -162,7 +191,7 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
                           <button
                             type="button"
                             onClick={() =>
-                              setDriverDocsRegistry((prev: any) => ({
+                              setDriverDocsRegistry((prev) => ({
                                 ...prev,
                                 [u.id]: emptyDriverDocs(),
                               }))

@@ -1,6 +1,51 @@
+import type { ChangeEvent, Dispatch, SetStateAction, SyntheticEvent } from 'react'
 import { isBackofficeStaffRole } from '../../../context/AuthContext'
+import type { AdminAuditTrailItem } from '../../../api/admin'
+import type { AdminUser } from '../useAdminUsersDirectory'
 
-type AdminTabUsersProps = Record<string, any>
+export type AdminTabUsersProps = {
+  blockConfirmId: string | null
+  bulkSelectedIds: Record<string, boolean>
+  cancelEdit: () => void
+  deleteConfirmId: string | null
+  editName: string
+  editOriginalName: string
+  editOriginalPhone: string
+  editPhone: string
+  editingId: string | null
+  fetchUsersMore: () => void | Promise<void>
+  filteredSortedUsers: AdminUser[]
+  handleBlockUser: (userId: string) => void | Promise<void>
+  handleBulkBlock: () => void | Promise<void>
+  handleClearUserPassword: (userId: string) => void | Promise<void>
+  handleDelete: (userId: string) => void
+  handleDemote: (userId: string) => void | Promise<void>
+  handlePromote: (userId: string) => void | Promise<void>
+  handleSaveUserName: () => void | Promise<void>
+  handleSaveUserPhone: () => void | Promise<void>
+  handleUnblockUser: (userId: string) => void | Promise<void>
+  isSuperAdminSession: boolean
+  loadUserAuditTrailIfNeeded: (userId: string) => void | Promise<void>
+  setBlockConfirmId: Dispatch<SetStateAction<string | null>>
+  setBulkSelectedIds: Dispatch<SetStateAction<Record<string, boolean>>>
+  setDeleteConfirmId: Dispatch<SetStateAction<string | null>>
+  setEditName: Dispatch<SetStateAction<string>>
+  setEditPhone: Dispatch<SetStateAction<string>>
+  setUnblockConfirmId: Dispatch<SetStateAction<string | null>>
+  setUsersFilter: Dispatch<SetStateAction<string>>
+  setUsersSort: Dispatch<SetStateAction<'name' | 'role' | 'status'>>
+  startEdit: (u: AdminUser) => void
+  token: string | null
+  unblockConfirmId: string | null
+  userAuditError: Record<string, string>
+  userAuditLoading: string | null
+  userAuditRows: Record<string, AdminAuditTrailItem[]>
+  users: AdminUser[]
+  usersFilter: string
+  usersHasMore: boolean
+  usersLoadingMore: boolean
+  usersSort: 'name' | 'role' | 'status'
+}
 
 export function AdminTabUsers(props: AdminTabUsersProps) {
   const {
@@ -67,7 +112,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                     <input
                       type="search"
                       value={usersFilter}
-                      onChange={(e: any) => setUsersFilter(e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => setUsersFilter(e.target.value)}
                       placeholder="Nome, telefone, papel…"
                       className="w-full mt-1 px-3 py-2 border rounded-lg text-sm"
                     />
@@ -76,7 +121,9 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                     <label className="text-xs text-muted-foreground">Ordenar</label>
                     <select
                       value={usersSort}
-                      onChange={(e: any) => setUsersSort(e.target.value as 'name' | 'role' | 'status')}
+                      onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                        setUsersSort(e.target.value as 'name' | 'role' | 'status')
+                      }
                       className="block mt-1 px-3 py-2 border rounded-lg text-sm bg-background"
                     >
                       <option value="name">Nome</option>
@@ -103,7 +150,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      const selectable = filteredSortedUsers.filter((u: any) => !isBackofficeStaffRole(u.role))
+                      const selectable = filteredSortedUsers.filter((u) => !isBackofficeStaffRole(u.role))
                       const next: Record<string, boolean> = { ...bulkSelectedIds }
                       for (const u of selectable) next[u.id] = true
                       setBulkSelectedIds(next)
@@ -122,7 +169,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                   <button
                     type="button"
                     onClick={() => void handleBulkBlock()}
-                    disabled={Object.keys(bulkSelectedIds).filter((id: any) => bulkSelectedIds[id]).length === 0}
+                    disabled={Object.keys(bulkSelectedIds).filter((id) => bulkSelectedIds[id]).length === 0}
                     className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-warning text-warning-foreground text-xs font-medium rounded-lg disabled:opacity-50"
                   >
                     Bloquear seleccionados (reversível)
@@ -130,7 +177,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                 </div>
               </div>
               <ul className="space-y-3">
-                {filteredSortedUsers.map((u: any) => (
+                {filteredSortedUsers.map((u) => (
                   <li
                     key={u.id}
                     className="bg-card border border-border rounded-2xl px-4 py-3 shadow-card hover:bg-muted/30 transition-colors"
@@ -148,7 +195,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                           <input
                             type="text"
                             value={editName}
-                            onChange={(e: any) => setEditName(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setEditName(e.target.value)}
                             placeholder="Nome ou alcunha"
                             className="w-full px-3 py-2 border rounded-lg text-base bg-background"
                           />
@@ -172,7 +219,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                           <input
                             type="tel"
                             value={editPhone}
-                            onChange={(e: any) => setEditPhone(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setEditPhone(e.target.value)}
                             placeholder="+351912345678"
                             className="w-full px-3 py-2 border rounded-lg text-base bg-background"
                           />
@@ -228,8 +275,8 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                                 type="checkbox"
                                 className="mt-1 h-4 w-4 shrink-0"
                                 checked={!!bulkSelectedIds[u.id]}
-                                onChange={(e: any) =>
-                                  setBulkSelectedIds((m: any) => ({
+                                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                                  setBulkSelectedIds((m) => ({
                                     ...m,
                                     [u.id]: e.target.checked,
                                   }))
@@ -376,7 +423,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                     {!isBackofficeStaffRole(u.role) && (
                       <details
                         className="mt-3 rounded-xl border border-border/80 bg-background/40 px-3 py-2"
-                        onToggle={async (e: any) => {
+                        onToggle={async (e: SyntheticEvent<HTMLDetailsElement>) => {
                           const el = e.currentTarget
                           if (!el.open || !token) return
                           await loadUserAuditTrailIfNeeded(u.id)
@@ -400,7 +447,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
                             <p className="mt-2 text-xs text-muted-foreground">Sem eventos registados.</p>
                           ) : (
                             <ul className="mt-2 space-y-2 max-h-64 overflow-y-auto">
-                              {userAuditRows[u.id].map((row: any) => (
+                              {userAuditRows[u.id].map((row) => (
                                 <li
                                   key={row.id}
                                   className="rounded-lg border border-border/70 bg-card/50 p-2 text-xs space-y-1"

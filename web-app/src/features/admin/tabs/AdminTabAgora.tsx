@@ -1,4 +1,20 @@
-type AdminTabAgoraProps = Record<string, any>
+import type { AdminAlertsResponse, AdminMetricsResponse, SystemHealthResponse, TripActiveItem } from '../../../api/admin'
+import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
+
+interface PendingUser {
+  phone: string
+  requested_role: string
+}
+
+export type AdminTabAgoraProps = {
+  activeTrips: TripActiveItem[]
+  adminAlerts: AdminAlertsResponse | null
+  countHealthSignalRows: (h: SystemHealthResponse | null) => number
+  health: SystemHealthResponse | null
+  metrics: AdminMetricsResponse | null
+  pending: PendingUser[]
+  syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
+}
 
 export function AdminTabAgora(props: AdminTabAgoraProps) {
   const {

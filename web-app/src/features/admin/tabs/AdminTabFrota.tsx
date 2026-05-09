@@ -1,4 +1,36 @@
-type AdminTabFrotaProps = Record<string, any>
+import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
+import type { AdminUser } from '../useAdminUsersDirectory'
+
+type AdminPartnerRow = { id: string; name: string; created_at: string }
+
+export type AdminTabFrotaProps = {
+  dataLoading: boolean
+  frotaAssignDriverId: string
+  frotaAssignMode: 'select' | 'manual'
+  frotaAssignOk: string | null
+  frotaAssignPartnerId: string
+  frotaLoading: string | null
+  frotaManagerName: string
+  frotaManagerPhone: string
+  frotaOk: string | null
+  frotaOrgName: string
+  frotaPartnerId: string
+  handleAssignDriverToFrota: () => void | Promise<void>
+  handleCreateFrotaManager: () => void | Promise<void>
+  handleCreateFrotaOrg: () => void | Promise<void>
+  handleUnassignDriverFromFrota: () => void | Promise<void>
+  partners: AdminPartnerRow[]
+  setFrotaAssignDriverId: Dispatch<SetStateAction<string>>
+  setFrotaAssignMode: Dispatch<SetStateAction<'select' | 'manual'>>
+  setFrotaAssignOk: Dispatch<SetStateAction<string | null>>
+  setFrotaAssignPartnerId: Dispatch<SetStateAction<string>>
+  setFrotaManagerName: Dispatch<SetStateAction<string>>
+  setFrotaManagerPhone: Dispatch<SetStateAction<string>>
+  setFrotaOk: Dispatch<SetStateAction<string | null>>
+  setFrotaOrgName: Dispatch<SetStateAction<string>>
+  setFrotaPartnerId: Dispatch<SetStateAction<string>>
+  users: AdminUser[]
+}
 
 export function AdminTabFrota(props: AdminTabFrotaProps) {
   const {
@@ -54,7 +86,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
               id="frota-org-name"
               type="text"
               value={frotaOrgName}
-              onChange={(e: any) => {
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 setFrotaOrgName(e.target.value)
                 setFrotaOk(null)
                 setFrotaAssignOk(null)
@@ -84,7 +116,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
               id="frota-partner-id"
               type="text"
               value={frotaPartnerId}
-              onChange={(e: any) => {
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 setFrotaPartnerId(e.target.value)
                 setFrotaOk(null)
                 setFrotaAssignOk(null)
@@ -99,7 +131,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
               id="frota-mgr-name"
               type="text"
               value={frotaManagerName}
-              onChange={(e: any) => {
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 setFrotaManagerName(e.target.value)
                 setFrotaOk(null)
                 setFrotaAssignOk(null)
@@ -114,7 +146,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
               id="frota-mgr-phone"
               type="tel"
               value={frotaManagerPhone}
-              onChange={(e: any) => {
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
                 setFrotaManagerPhone(e.target.value)
                 setFrotaOk(null)
                 setFrotaAssignOk(null)
@@ -149,7 +181,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
               </p>
               <button
                 type="button"
-                onClick={() => setFrotaAssignMode((m: any) => (m === 'select' ? 'manual' : 'select'))}
+                onClick={() => setFrotaAssignMode((m) => (m === 'select' ? 'manual' : 'select'))}
                 className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
               >
                 {frotaAssignMode === 'select' ? 'Modo manual' : 'Modo select'}
@@ -164,7 +196,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                 <select
                   id="frota-assign-driver-select"
                   value={frotaAssignDriverId}
-                  onChange={(e: any) => {
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) => {
                     setFrotaAssignDriverId(e.target.value)
                     setFrotaAssignOk(null)
                     setFrotaOk(null)
@@ -173,9 +205,9 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                 >
                   <option value="">— escolher —</option>
                   {users
-                    .filter((u: any) => u.role === 'driver' || u.has_driver_profile)
+                    .filter((u) => u.role === 'driver' || u.has_driver_profile)
                     .slice(0, 400)
-                    .map((u: any) => (
+                    .map((u) => (
                       <option key={u.id} value={u.id}>
                         {(u.name || u.phone) + ' · ' + u.phone}
                       </option>
@@ -188,7 +220,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                 <select
                   id="frota-assign-partner-select"
                   value={frotaAssignPartnerId || frotaPartnerId}
-                  onChange={(e: any) => {
+                  onChange={(e: ChangeEvent<HTMLSelectElement>) => {
                     setFrotaAssignPartnerId(e.target.value)
                     setFrotaAssignOk(null)
                     setFrotaOk(null)
@@ -196,7 +228,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                   className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
                 >
                   <option value="">— escolher —</option>
-                  {partners.slice(0, 400).map((p: any) => (
+                  {partners.slice(0, 400).map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                     </option>
@@ -212,7 +244,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                   id="frota-assign-driver-id"
                   type="text"
                   value={frotaAssignDriverId}
-                  onChange={(e: any) => {
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     setFrotaAssignDriverId(e.target.value)
                     setFrotaAssignOk(null)
                     setFrotaOk(null)
@@ -227,7 +259,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                   id="frota-assign-partner-id"
                   type="text"
                   value={frotaAssignPartnerId || frotaPartnerId}
-                  onChange={(e: any) => {
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     setFrotaAssignPartnerId(e.target.value)
                     setFrotaAssignOk(null)
                     setFrotaOk(null)

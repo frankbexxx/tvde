@@ -1,4 +1,12 @@
-type AdminTabPendingProps = Record<string, any>
+interface PendingUserRow {
+  phone: string
+  requested_role: string
+}
+
+export type AdminTabPendingProps = {
+  handleApprove: (phone: string) => void | Promise<void>
+  pending: PendingUserRow[]
+}
 
 export function AdminTabPending(props: AdminTabPendingProps) {
   const {
@@ -14,7 +22,7 @@ export function AdminTabPending(props: AdminTabPendingProps) {
             <p className="text-muted-foreground">Nenhum utilizador pendente.</p>
           ) : (
             <ul className="space-y-3">
-              {pending.map((u: any) => (
+              {pending.map((u) => (
                 <li
                   key={u.phone}
                   className="flex items-center justify-between bg-card border border-border rounded-2xl px-4 py-3 shadow-card"
