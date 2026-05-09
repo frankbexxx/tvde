@@ -13,7 +13,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] **Smoke restante** (prints produção): motorista · login (versão **c29dd31**) · cabeçalho (**Frota** validada) — **fechado** 2026-05-09 no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**.
 - [x] **Onda web #258** em `main`; **Merge `#260`**; **UI touch `#262`**.
 
-- [x] **Fila até fechar:** Stripe item **7** — **fechado** fila OPS (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**); follow-ups PW no [`TODOdoDIA.md`](../TODOdoDIA.md) **Notas E2E** → refactor **AdminDashboard** P0–P12 (P0+P1 **merge**; **P2** hook URL `useAdminDashboardNavigation` em PR separado 2026-05-11).
+- [x] **Fila até fechar:** Stripe item **7** — **fechado** fila OPS (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**); follow-ups PW nas **Notas E2E** do mesmo ficheiro → refactor **AdminDashboard** P0–P12 (**P0–P3** entregues em `main` / PR; **P3** = `useAdminTripLists`).
 
 **Nota:** smoke restante (produção) continua **1.º**; stack local (Postgres, `uvicorn`, Vite, `stripe listen`) serve **dev** e **item 7**, não substitui o smoke em prod.
 
@@ -77,4 +77,4 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 _Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painéis **2026-05-10** / **2026-05-09** · **#267** (E2E partner) · plano refactor [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · baseline [`testing/DEV_BASELINE_ROSTER.md`](testing/DEV_BASELINE_ROSTER.md) · PRs **#258**, **#262**._
 
-_Última revisão: **2026-05-10** (P0 admin + P1 fatia helpers; triagem DEBUG A/B/C no `TODOdoDIA`; `/debug/map` gated dev; Stripe item **7** fila OPS fechado)._
+_Última revisão: **2026-05-11** (admin **P3** `useAdminTripLists`; P2 URL hook em `main`; fila refactor P4+)._

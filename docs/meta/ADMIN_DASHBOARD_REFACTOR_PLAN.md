@@ -1,6 +1,6 @@
 # Plano de refactor — `AdminDashboard.tsx` (só planeamento e prompts)
 
-**Estado:** P0–**P2** em execução no código: **P1** (helpers + painel nota); **P2** — `useAdminDashboardNavigation.ts` integrado em `AdminDashboard.tsx`. **P3+** por PR sucessivos.  
+**Estado:** P0–**P3** em código: **P2** `useAdminDashboardNavigation`; **P3** `useAdminTripLists` (activas + histórico). **P4+** por PR.  
 **Última actualização:** 2026-05-11.
 
 **Tabs canónicas** (URL `?tab=`): `agora` · `docs` · `pending` · `users` · `frota` · `dados` · `trips` · `metrics` · `ops` · `health` (ver `adminDashboardQuery.ts`).
@@ -149,6 +149,8 @@ Cola isto no início de cada pedido ao assistente e preenche os campos `[ … ]`
 ---
 
 ## Prompt P3 — Hook listagens de viagens (activas + histórico)
+
+**Entrega (2026-05-11)** — `web-app/src/features/admin/useAdminTripLists(token)`: `activeTrips`, `historyTrips`, `historyTripsError`, `fetchActiveTrips`, `fetchHistoryTrips`.
 
 **Objectivo** — Extrair estado e funções `fetchActiveTrips`, `fetchHistoryTrips`, listas `activeTrips`, `historyTrips`, loading/erro associados para `useAdminTripLists.ts`.
 
