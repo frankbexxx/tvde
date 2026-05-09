@@ -1,7 +1,7 @@
 # Plano de refactor — `AdminDashboard.tsx` (só planeamento e prompts)
 
-**Estado:** planeamento e prompts prontos para execução futura — **nenhum código alterado** por este documento.  
-**Última actualização:** 2026-05-08.
+**Estado:** P0 (inventário por tab) congelado abaixo; **P1** iniciado — helpers + `AdminTripPaymentOpsNotePanel` em módulos adjacentes (`adminDashboardHelpers.ts`, `AdminTripPaymentOpsNotePanel.tsx`). Demais fases por PR.  
+**Última actualização:** 2026-05-10.
 
 **Tabs canónicas** (URL `?tab=`): `agora` · `docs` · `pending` · `users` · `frota` · `dados` · `trips` · `metrics` · `ops` · `health` (ver `adminDashboardQuery.ts`).
 
@@ -36,6 +36,25 @@
 | **P10** | Painéis JSX **Users** + **Pending** + **Frota** + **Dados** | Alto | P7 |
 | **P11** | Painéis JSX **Agora** + **Docs** | Médio | P2 |
 | **P12** | `AdminDashboard.tsx` fino (orquestração); revisão final | Médio | P8–P11 |
+
+---
+
+## P0 — Inventário + critérios de aceitação por tab (**executado**)
+
+Referência URL: `parseAdminDashboardQuery` em `adminDashboardQuery.ts`. **Invariantes:** `tripId` na query força `tab=trips`; `tripsList` só aplica em `trips` (`history` vs activas); tab inválida ou ausente → `agora`. **Aceitação geral por PR:** `npm run build`; smoke manual da tab tocada; sem mudança de query API nem semântica de query string.
+
+| Tab | Fetches ao entrar / mudar foco (resumo) | Conteúdo / risco | Smoke mínimo |
+|-----|-------------------------------------------|------------------|--------------|
+| **agora** | `fetchActiveTrips`, `fetchMetrics`, `fetchHealth`, `fetchAdminAlerts` | Resumo operacional, sinais de saúde | Abrir `?tab=agora`; cards carregam ou erro legível; refresh não parte layout |
+| **docs** | Dados de utilizadores + registo local de estados de documentos | Matriz docs por motorista | Alternar estados; contagens «aprovados»; persistência registry local |
+| **pending** | `fetchPending` (também no intervalo global) | Fila de papéis pedidos | Lista consistente após aprovar/rejeitar |
+| **users** | `fetchUsers` + paginação; acções PATCH/DELETE | Bulk block, edição nome/telefone, BETA | Filtro, página seguinte, mensagens `formatAdminApiDetail` em erro |
+| **frota** | `ensureDataLoaded` (partners/drivers) | Atribuir/remover motorista, criar org | Listagens; atribuição com motivo SP-F |
+| **dados** | `fetchDataVisibility` | Visibilidade / phase0 admin | Toggle ou dados carregam conforme API |
+| **trips** | Activas: `fetchActiveTrips`; histórico: `fetchHistoryTrips`; detalhe por `tripId` | Lista + painel detalhe, reconcile, nota operacional pagamento | `?tab=trips&tripId=…` abre detalhe; `tripsList=history`; painel nota (super_admin + elegível) inalterado |
+| **metrics** | `fetchMetrics`, `fetchUsage` | Gráficos / contagens | Dados ou estado vazio estável |
+| **ops** | `fetchHealth` + acções cron/validação CSV | Operações pesadas (muitas gated super_admin) | Health base carrega; acções críticas só com papel certo |
+| **health** | `fetchHealth` | Tabelas de anomalias + playbooks | Paginação por bloco; links para viagens |
 
 ---
 
@@ -100,8 +119,8 @@ Cola isto no início de cada pedido ao assistente e preenche os campos `[ … ]`
 
 **Objectivo** — Mover para módulos adjacentes **sem alterar UI**:
 
-1. Componente `AdminTripPaymentOpsNotePanel` → `web-app/src/features/admin/AdminTripPaymentOpsNotePanel.tsx` (export nomeado).
-2. Funções puras que já estão no topo do ficheiro e **não** fecham sobre estado do componente principal: por exemplo `emptyDriverDocs`, `docsApprovedCount`, `approvedDriverDocs`, `tripDetailEligibleSinglePaymentReconcile`, `formatAdminApiDetail` (se só recebe argumentos), `promptGovernanceReason` (considerar `adminDashboardGovernance.ts` por causa side-effect `window` — documentar no ficheiro).
+1. Componente `AdminTripPaymentOpsNotePanel` → `web-app/src/features/admin/AdminTripPaymentOpsNotePanel.tsx` (export nomeado). **Feito 2026-05-10.**
+2. Funções puras / helpers no topo → `web-app/src/features/admin/adminDashboardHelpers.ts` (`emptyDriverDocs`, `docsApprovedCount`, `approvedDriverDocs`, `tripDetailEligibleSinglePaymentReconcile`, `formatAdminApiDetail`, `adminErrDetail`, `sessionJwtIsSuperAdmin`, `maskSensitiveEnvDisplay`, `readInitialAdminQuery`, `countHealthSignalRows`, `healthRowTimestamp`, `promptGovernanceReason` com side-effects `window`). **`isBackofficeStaffRole` passou a import de `AuthContext` (sem duplicar).** **Feito 2026-05-10.**
 
 **Ficheiros** — `AdminDashboard.tsx`, novos sob `features/admin/`.
 

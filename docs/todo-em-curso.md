@@ -10,12 +10,12 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 - [x] **Baseline BD (local + Render)** + **Gestão utilizadores** 10 contas — **fechado** 2026-05-08.
 - [x] **Smoke partner** (ponto 1) + **follow-ups partner** (ponto 3) — **fechado** 2026-05-08.
-- [ ] **Smoke restante** (prints produção): motorista, login, cabeçalho — **1.º** no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**.
+- [x] **Smoke restante** (prints produção): motorista · login (versão **c29dd31**) · cabeçalho (**Frota** validada) — **fechado** 2026-05-09 no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**.
 - [x] **Onda web #258** em `main`; **Merge `#260`**; **UI touch `#262`**.
 
-- [ ] **Fila até fechar:** Stripe item **7** → **Item 9.2** (PR noite **2026-05-08**: E2E partner + dev seed; merge → marcar no [`TODOdoDIA.md`](../TODOdoDIA.md) + follow-ups PW) → refactor **AdminDashboard** P0–P12.
+- [x] **Fila até fechar:** Stripe item **7** — **fechado** fila OPS (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**); follow-ups PW no [`TODOdoDIA.md`](../TODOdoDIA.md) **Notas E2E** → refactor **AdminDashboard** P0–P12 (P0+P1 fatia 1 documentados / entregues 2026-05-10).
 
-**Fecho sessão 2026-05-08 (noite):** código E2E partner em branch `feat/e2e-partner-playwright-seed`; **amanhã:** smoke restante (produção) como **1.º**; depois alinhar testes PW (`driver-passenger-flow`, `api-flows` `display_name`) conforme caixa **Notas E2E** no `TODOdoDIA` **2026-05-09**.
+**Nota:** smoke restante (produção) continua **1.º**; stack local (Postgres, `uvicorn`, Vite, `stripe listen`) serve **dev** e **item 7**, não substitui o smoke em prod.
 
 **Regra — fecho de etapas:** actualizar estes ficheiros mal algo esteja feito em `main` ou após smoke; **não** exigir confirmação explícita para marcar concluído (evitar retrabalho na leitura retroactiva).
 
@@ -36,11 +36,11 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 | Sessão | Foco | Estado |
 |--------|------|--------|
 | **S0** (feita) | Código **#258**: itens **2**, **4**, **5** (mínimo) + extras login/header/rating | **Merge `main`** |
-| **S1** | Smoke: partner **fechado** 2026-05-08; baseline BD **fechado**; **continuação** smoke restante **2026-05-09** | **Parcial** → **abertura 2026-05-09** |
+| **S1** | Smoke: partner **fechado** 2026-05-08; baseline BD **fechado**; smoke restante (motorista/login/Frota) **fechado** 2026-05-09 | **Fechado** |
 | **S2** | **Docs item 8:** `grep` env/Stripe → `ENV_SINGLE_REALITY` (+ templates) | **Feito** (2026-05-07) |
 | **S3** | **Ops item 6:** segredos Render, `DATABASE_URL`, `/health` | **Feito** (2026-05-07) |
-| **S4** | **Ops item 7:** Stripe test mode; revert mock | Pendente (humano) |
-| **S5** | **Item 9:** **1º** Passo 1 UI (**feito** `#262`) · **2º** E2E partner drawer (PR **2026-05-08**) | **2º** em PR → pós-merge + follow-ups PW |
+| **S4** | **Ops item 7:** Stripe test no Render; **`STRIPE_MOCK=false`** para continuar a testar; lembrete **voltar mock** no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-10** | **Fechado** fila OPS (**webhook OK** 2026-05-09); produção app: `/debug/map` só **dev** (2026-05-10) |
+| **S5** | **Item 9:** **1º** Passo 1 UI (**feito** `#262`) · **2º** E2E partner drawer (**#267** em `main`) | **2º** fechado; follow-ups PW em curso |
 
 **Regra:** não reabrir **S0** salvo regressão; **S1** alimenta prioridade do **S2+** se aparecer bug de produto.
 
@@ -75,6 +75,6 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 ---
 
-_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-09** (e fecho **2026-05-08**) · plano refactor [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · baseline [`testing/DEV_BASELINE_ROSTER.md`](testing/DEV_BASELINE_ROSTER.md) · PRs **#258**, **#262**._
+_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painéis **2026-05-10** / **2026-05-09** · **#267** (E2E partner) · plano refactor [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · baseline [`testing/DEV_BASELINE_ROSTER.md`](testing/DEV_BASELINE_ROSTER.md) · PRs **#258**, **#262**._
 
-_Última revisão: **2026-05-09** (abertura: smoke restante; fecho noite 2026-05-08: PR E2E partner + docs listas; follow-ups PW documentados no `TODOdoDIA`)._
+_Última revisão: **2026-05-10** (P0 admin + P1 fatia helpers; triagem DEBUG A/B/C no `TODOdoDIA`; `/debug/map` gated dev; Stripe item **7** fila OPS fechado)._

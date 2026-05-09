@@ -8,25 +8,42 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Painel — 2026-05-10
+
+**REVISÃO (digest [`docs/audit/PROJECT_AUDIT_2026-05-02.md`](docs/audit/PROJECT_AUDIT_2026-05-02.md) — sumário + stack/realtime):**
+
+- **Escala / realtime:** WebSockets e hubs **in-process** não escalam com vários workers; alinha com dívida DEBUG ponto 2 — planear por fase (workers, Redis, etc.), não como remendo num sprint só de UI.
+- **Produto vs infra:** MVP web válido em piloto, mas **gap vs Uber** inclui payouts (Stripe Connect), SMS OTP real, observabilidade (APM) e apps nativas — refactor admin profundo não compensa se o trimestre for só motorista/zonas.
+- **Risco operacional:** sem segundo ambiente (staging) e deploy manual Render — smokes em prod continuam canónicos para regressões cruzadas.
+
+**Lembrete — Stripe (decisão 2026-05-09):** Em **Render** (`tvde-api`) fica **`STRIPE_MOCK=false`** para ires testando em **test mode**; **webhook** validado (**200**, `{"status":"ok"}`). **Quando quiseres fechar esta janela:** repor **`STRIPE_MOCK=true`** (e política de chaves em [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md)).
+
+---
+
 ## Painel — 2026-05-09
 
 **Abertura:** **1.º** — **resto do smoke** (antigo ponto **2**): produção — **motorista** (pedidos/disponível + aceite se couber), **login** (linha versão), **cabeçalho** (papéis). Só anotar falhas.
 
 **Onde correr:** smokes = **produção**; local = PW/dev.
 
-1. [ ] [OPS] **Smoke restante (sequencial, produção):** motorista, login (versão), cabeçalho (papéis).
-2. [ ] [OPS] **Follow-ups:** uma linha por falha real no ponto **1**.
+**Progresso smoke (produção — 2026-05-09):** [x] **Motorista** — disponível, GPS ok. [x] **Login** — linha versão **v1.0.0 · c29dd31** visível. [x] **Cabeçalho** — sessão **Frota**: pastilha **FROTA**, **test_partner**, ref conta coerente; primeiro ecrã **Frota (partner)** ok.
+
+1. [x] [OPS] **Smoke restante (sequencial, produção):** motorista, login (versão), cabeçalho (papéis) — **fechado** 2026-05-09 (sessão manhã).
+
+_Nota:_ verificação **local** (`localhost:5173`) no commit **c29dd31**; **confirmado também em Render** (mesma versão, telemóvel — sem print) 2026-05-09.
+
+2. [x] [OPS] **Follow-ups:** **sem falhas** reportadas após smoke **2026-05-09** (motorista, login, cabeçalho/Frota).
 
 ### Depois do smoke (fila)
 
 1. [x] [OPS] **Item 6:** Render — segredos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
-2. [ ] [OPS] **Item 7:** Stripe **test mode** pontual; voltar a **mock** no fim.
+2. [x] [OPS] **Item 7 · Stripe (Render):** **fechado** na fila OPS — webhook **200**, chaves/test mode ok; **`STRIPE_MOCK=false`** mantido **por decisão** para testes contínuos até repores mock (lembrete no **painel 2026-05-10** acima). *Isto não desliga o destino de webhook no Stripe Dashboard.*
 3. [x] [CÓDIGO] **Item 9 — 1º:** `UI_VISIBILITY` Passo 1 — **#262**. **Fechado** 2026-05-06.
-4. [ ] [CÓDIGO+TESTES] **Item 9 — 2º:** E2E Playwright **drawer partner** — **PR noite 2026-05-08** (`feat/e2e-partner-playwright-seed`): seed `+351955555502` + `/dev/tokens` → `partner`, inject com `BETA_MODE` activo, spec `partner-shell`, script `npm run test:e2e:api`. **Após merge em `main`:** marcar **[x]** aqui e tratar follow-ups em **Notas E2E** (abaixo).
+4. [x] [CÓDIGO+TESTES] **Item 9 — 2º:** E2E Playwright **drawer partner** — **merge `main`** 2026-05-09 (**#267**): seed `+351955555502` + `/dev/tokens` → `partner`, inject com `BETA_MODE` activo, spec `partner-shell`, script `npm run test:e2e:api`. **Follow-ups:** ver **Notas E2E** (abaixo).
 
 _Item **8** (docs ENV) **fechado** 2026-05-07._
 
-### Notas E2E (local — actualizar após merge do PR partner)
+### Notas E2E (local)
 
 - **`POST /dev/seed`** inclui utilizador partner canónico (`+351955555502`, org `test_partner`); **`POST /dev/tokens`** devolve também **`partner`**.
 - **`npm run test:e2e:api`** — projecto só HTTP (`--no-deps`); **`CI=true`** recomendado na suíte completa para o Playwright gerir o Vite.
@@ -45,8 +62,9 @@ _Item **8** (docs ENV) **fechado** 2026-05-07._
 | [x] | Plano por etapas + princípios + mapa de risco |
 | [x] | Modelo de prompt reutilizável por PR |
 | [x] | Prompts **P0**–**P12** redigidas (inventário → orquestrador final) |
-| [ ] | **Execução P0** (inventário no doc / código, quando fizer sentido) |
-| [ ] | **Execução P1** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
+| [x] | **Execução P0** (inventário + critérios por tab em [`ADMIN_DASHBOARD_REFACTOR_PLAN.md`](docs/meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) § P0) |
+| [x] | **Execução P1** — fatia 1: `adminDashboardHelpers.ts` + `AdminTripPaymentOpsNotePanel.tsx` (smoke: tab **Viagens**, painel nota operacional pagamento) |
+| [ ] | **Execução P2** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
 
 _Actualização **semi-dinâmica**: ao fechar o dia ou merge, marcar linhas aqui + nota curta no doc se o alcance mudar._
 
@@ -86,6 +104,12 @@ _Registado para fecho de sessão; **nenhuma alteração de código** feita na au
 10. **Config:** `VITE_E2E` + tokens em `localStorage` — build de produção não deve definir `VITE_E2E=true`.
 
 **Ponto 11 — `AdminDashboard.tsx` (monólito):** refactor **agora** implica PR grande, revisão penosa e risco real de **regressão** no backoffice + conflitos com qualquer trabalho paralelo; o tamanho do ficheiro **por si** não corrige um incidente activo. **Quando mexer:** preferir **extracções pequenas** (tab, hooks, API helpers) coladas a uma feature que já obrigue a tocar ali, ou após uma janela em que smokes/piloto estejam estáveis e possas testar admin com calma.
+
+**Triagem DEBUG (painel 2026-05-08) — modo de ataque:**
+
+- **A — Quick win, baixo risco** (quando o path do PR cruza): ponto **4** (`/debug/map` — em **produção** redirecciona para `/`; dev mantém página), **7** `client.ts` deprecado, **8** legado `LS_TOKEN_LEGACY`.
+- **B — Design / produto / contrato:** pontos **1**, **5** `system_health`, **6** dois caminhos em `trips.py` — ticket + repro smoke antes de remendar.
+- **C — Escala / infra:** ponto **2** WS in-process — alinhar ao PROJECT_AUDIT (realtime); tratamento faseado, não PR único de UI.
 
 ---
 
