@@ -34,6 +34,12 @@ _Nota:_ verificação **local** (`localhost:5173`) no commit **c29dd31**; **conf
 
 2. [x] [OPS] **Follow-ups:** **sem falhas** reportadas após smoke **2026-05-09** (motorista, login, cabeçalho/Frota).
 
+### Fecho sessão — 2026-05-09 (noite, smoke com Manel)
+
+- [x] **Smokes produção (fechados por agora):** fluxo real — passageiro, frota **test_partner**, admin, motorista no **telemóvel**; viagem activa visível nos três papéis (detalhe frota ok, ex. `bcc70db8…` / ManelPerez).
+- **Campo:** discrepância inicial «Frota sem viagem / Admin com viagem» esclarecida (conta do motorista vs perfil na frota; filtro **«Só atribuídas»** só mostra estado técnico *assigned*, não *aceite/em curso*).
+- **Amanhã (2026-05-10):** retomar **Rasto vivaço** em [`docs/todo-em-curso.md`](docs/todo-em-curso.md); opcional UX — clarificar rótulo **«Só atribuídas»** na Frota; E2E local — se falhar, reiniciar `uvicorn` + Vite (hábito da equipa).
+
 ### Depois do smoke (fila)
 
 1. [x] [OPS] **Item 6:** Render — segredos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.

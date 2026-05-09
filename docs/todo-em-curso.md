@@ -4,10 +4,11 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-09)
+## Agora (2026-05-10)
 
-**1.º na abertura:** **smoke restante** (produção): motorista + login (versão) + cabeçalho (papéis) — ver [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-09**.
+**Abertura:** smokes em produção **fechados por agora** — sessão **2026-05-09 (noite)** com Manel (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **Fecho sessão** nesse painel). **1.º** amanhã: fila de produto / **Rasto vivaço** abaixo, conforme prioridade do dia.
 
+- [x] **Smoke produção (sessão Manel)** — passageiro, frota, admin, motorista telefone; viagem visível na frota — **fechado** 2026-05-09 noite.
 - [x] **Baseline BD (local + Render)** + **Gestão utilizadores** 10 contas — **fechado** 2026-05-08.
 - [x] **Smoke partner** (ponto 1) + **follow-ups partner** (ponto 3) — **fechado** 2026-05-08.
 - [x] **Smoke restante** (prints produção): motorista · login (versão **c29dd31**) · cabeçalho (**Frota** validada) — **fechado** 2026-05-09 no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**.
@@ -15,7 +16,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 - [x] **Fila até fechar:** Stripe item **7** — **fechado** fila OPS (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**); follow-ups PW nas **Notas E2E** do mesmo ficheiro → refactor **AdminDashboard** P0–P12 (**P0–P12** entregues: hooks + JSX por tab + orquestrador).
 
-**Nota:** smoke restante (produção) continua **1.º**; stack local (Postgres, `uvicorn`, Vite, `stripe listen`) serve **dev** e **item 7**, não substitui o smoke em prod.
+**Nota:** smokes em prod **fechados por agora** (2026-05-09 noite). Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
 **Regra — fecho de etapas:** actualizar estes ficheiros mal algo esteja feito em `main` ou após smoke; **não** exigir confirmação explícita para marcar concluído (evitar retrabalho na leitura retroactiva).
 
