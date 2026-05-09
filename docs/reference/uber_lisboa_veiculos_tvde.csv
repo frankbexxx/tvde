@@ -1,0 +1,895 @@
+make,model,year,categories
+3EV,Vega4,2019,Electric
+3EV,e30c,2019,Electric
+Adam,Revo,2019,Electric
+Aion,V,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Aiways,U5,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Alfa Romeo,Stelvio,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Alfa Romeo,Giulia,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Alfa Romeo,Giulietta,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Alfa Romeo,Tonale,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A6 Avant e-tron,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,E-Tron GT,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q4 Sportback e-tron,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q4 e-tron,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q6 e-tron,2019,Black; Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q8 e-tron,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,e-tron,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,e-tron Sportback,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,A4,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A4 Allroad,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A4 Avant,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A4 Avant G-tron,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A4 Limousine,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A5 Avant,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A5 Sportback,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A6,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A6 All Road Quattro,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A6 Avant,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A6 Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A8,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A8 L,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Allroad,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q3 Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q5 Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q6,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q8,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q9,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,RS 6,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,RS 7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,S5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,S5 Sportback,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,S6,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,S8,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A1,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A3 Limousine,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A3 Sportback,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,A3 e-tron,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q2,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,Q3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,S4,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Audi,RS E-Tron GT,2019,Electric
+BAIC,ARCFOX,2019,Electric
+BAIC,EC3,2019,Electric
+BAIC,ES210,2019,Electric
+BAIC,EU220,2019,Electric
+BAIC,EU260,2019,Electric
+BAIC,EU5,2019,Electric
+BAIC,EV200,2019,Electric
+BAIC,EX3,2019,Electric
+BAIC,EX360,2019,Electric
+BAIC,EX5,2019,Electric
+BMW,i4,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,i4 eDrive40,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,i5,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,i7,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,i8,2019,Black; Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,iX,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,iX3,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,2-series Active Tourer,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,2-series Gran Tourer,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+BMW,3-Series 330e,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 3,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,3-series Gran Turismo,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 4,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 4 Gran Coupe,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,5-Series 530e,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,5-series Gran Turismo,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,5-series Touring,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,520d,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 6,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 6 Gran Coupe,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,7-Series 745e,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,740e,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,740i,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 8,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 8 Gran Coupé,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,ActiveHybrid 3,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,ActiveHybrid 5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,ActiveHybrid 7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Alpina B5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Alpina B6,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Alpina B7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Alpina B8,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,X1,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,X2,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,X3,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,X4,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,X5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,X6,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,X7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,iX1,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,ix2,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 1,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 2,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Série 2 Gran Coupé,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,Alpina V8,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M2,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M4,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M6,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M6 Gran Coupe,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M8,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,M8 Gran Coupé,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BMW,i3,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Han EV,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,SEALION 7,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Seal,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Seal U,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Atto 3,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Tang,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+BYD,Atto 2,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,BYD SEAL 6 DM-i,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+BYD,D1,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,DOLPHIN SURF,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Dolphin,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Dolphin Mini,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,E2,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,E3,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Qin PLUS EV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,S2,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Seagull,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Yuan Plus,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,Yuan Pro,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,e5,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+BYD,e6,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Bentley,Bentayga,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Bentley,Flying Spur,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Bentley,Mulsanne,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Bestune,E05,2019,Electric
+Bestune,NAT,2019,Electric
+Bestune,Nat Deluxe,2019,Electric
+Buick,Velite 6,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Buick,Velite 7,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Cadillac,LYRIQ,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Chang'an,Eulove,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Changan,Deepal S05 BEV RWD MAX,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Changan,Deepal S05 BEV RWD PRO,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Changan,Deepal S07,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Changan,Deepal S07 BEV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Changan,E Star,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 2,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 3X,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 4,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 4 Pro,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 5,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 5X,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 7,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 7 Pro,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 8,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,Tiggo 8 Pro,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Chery,S18,2019,Electric
+Chery,eQ5,2019,Electric
+Chevrolet,Blazer EV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Chevrolet,Bolt,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Chevrolet,Bolt EUV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Chevrolet,Bolt EV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Chevrolet,Epica,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,Berlingo XL,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,C4,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C4 Grand Picasso,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,C4 Picasso,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,C4 SpaceTourer,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,C4X,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C5,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C5 Aircross,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C5 X,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS7 Crossback E-Tense,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,E-C4,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Citroën,E-C4X,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Citroën,E-SpaceTourer,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,Lounge de negócios E-SpaceTourer,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,Grand C4 SpaceTourer,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,Grand Picasso,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,Berlingo,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,C8,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,E-Berlingo,2019,Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,E-Jumpy,2019,Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,Jumpy,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Citroën,SpaceTourer,2019,Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Citroën,C-Elysee,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C3 Aircross,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C3 Picasso,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C3-XR,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C4 Aircross,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C4 Cactus,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C4 Lounge,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,C4L,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS3 Crossback E-Tense,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS4,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS4 E-Tense,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS5,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,DS9,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,E-C3,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Citroën,Elysee,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Citroën,ë-C3 Aircross,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Citroën,Jumper,2019,UberXXL
+Coda,All-Electric,2019,Electric
+Cupra,Ateca,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Cupra,Born,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Cupra,Leon,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Cupra,Tavascan,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Cupra,Formentor,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Cupra,Formentor e-Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+DENZA,DENZA,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+DFSK,E5,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+DFSK,Seres 3 Electric,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+DS,3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+DS,4,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+DS,DS7,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+DS,DS7 Crossback,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+DS,DS9,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+DS,3 Crossback,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+DS,DS3 Cross electric,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Jogger,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Dacia,Lodgy,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Dacia,Bigster,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Dokker,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Duster,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Lodgy Stepway,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Logan,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Sandero,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Sandero Stepway,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Dacia,Spring,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Dongfeng,Box,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Dongfeng,Seres 3,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Dongfeng,D60 EV,2019,Electric
+Dongfeng,E 70 pro,2019,Electric
+Dongfeng,E70,2019,Electric
+Dongfeng,E70 EV,2019,Electric
+Dongfeng,EX1,2019,Electric
+Dongfeng,Junfeng ER30,2019,Electric
+Dongfeng,Mage EV,2019,Electric
+Dongfeng,Nano box,2019,Electric
+Dongfeng,S50 EV,2019,Electric
+Dongfeng,S60 EV,2019,Electric
+Dongfeng,T60 EV,2019,Electric
+E-Motors,Zum,2019,Electric
+Fiat,600e,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Fiat,E-Ulysse,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Fiat,Ulysse,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Fiat,Scudo,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Fiat,Talento,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Fiat,500L,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,500X,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Bravo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Doblo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Grande Panda,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Grande Punto,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Panda,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Punto,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Tipo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Tipo Station Wagon,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Fiat,Ducato,2019,UberXXL
+Fisker,Ocean,2019,Electric
+Ford,Electric Explorer,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Ford,Explorer,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Ford,Focus,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Galaxy,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Ford,Mondeo,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Mustang Mach-E,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Ford,Tourneo Custom,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Ford,Transit Connect,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Ford,Transit Custom,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Ford,Transit Passenger Van,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Ford,Transit Van,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Ford,Transit Wagon,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Ford,Grand C-Max,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Ford,S-Max,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Ford,Tourneo,2019,Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Ford,Tourneo Connect,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Ford,Mondeo Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,B-Max,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,C-Max,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,EcoSport,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Edge,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Escape,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Fiesta,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Fiesta Sedan,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Kuga,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Puma,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Puma Gen‑E,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Ford,Tourneo Courier,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ford,Capri,2019,Electric
+Ford,Explorer St-Line,2019,Electric
+Ford,F-150 Lightning,2019,Electric
+Forthing,Friday EV,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Forthing,Friday HEV,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Forthing,S7 EV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Forthing,U-Tour,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+GAC,Aion S,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+GAC,Aion Y,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+GWM,Ora,2019,Electric
+GWM,Ora 03,2019,Electric
+Geely,EX3,2019,Electric
+Geely,Geometria C,2019,Electric
+Geely,Geometry E,2019,Electric
+Genesis,G80 Electrified,2019,Electric
+Genesis,GV60,2019,Electric
+Go Electric,Go 01,2019,Electric
+Great Wall,Ora,2019,Electric
+Green Tour,HS-EV2,2019,Electric
+Honda,Civic,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Honda,CR-V,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Honda,CR-V Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Honda,HR-V,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Honda,Jazz,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Honda,WR-V,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Honda,ZR-V,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Honda,e:Ny1,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Honda,Ballade,2019,Electric
+Honda,Clarity Electric,2019,Electric
+Honda,Crider,2019,Electric
+Honda,Elysion,2019,Electric
+Honda,FCX Clarity,2019,Electric
+Honda,Fit Shuttle,2019,Electric
+Honda,Freed,2019,Electric
+Honda,Greiz,2019,Electric
+Honda,Inspire,2019,Electric
+Honda,Jade,2019,Electric
+Honda,M-NV,2019,Electric
+Honda,Shuttle,2019,Electric
+Honda,Vezel,2019,Electric
+Hongqi,E-HS9,2019,Electric
+Hongqi,H7,2019,Electric
+Hyundai,IONIQ 5,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,IONIQ 6,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,IONIQ Electric,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Kauai,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Kauai Electric,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Tucson,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i30 Kombi,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i30 Wagon,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i40,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Azera,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Bayon,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Creta,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Creta Grand,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Elantra,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Elantra Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Grand Santa Fe,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,H-1,2019,Courier; Priority; Store Pickup; UberX; UberXXL; Women Drivers
+Hyundai,HB20,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,HB20S,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,HB20x,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Inster,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Ioniq,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Ioniq Plug-in Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Kona Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Nexo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Santa Fe,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Tucson Fuel Cell,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Tucson Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Tucson TL,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i10,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i20,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i20 Active,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i30,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,i30 Fastback,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Hyundai,Staria,2019,UberXXL
+Hyundai,Lafesta EV,2019,Electric
+IncaPower,Supervan,2019,Electric
+Infiniti,Q70,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Infiniti,Q50,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+JAC,E10X,2019,Electric
+JAC,E30X,2019,Electric
+JAC,E40X,2019,Electric
+JAC Motors,E J4,2019,Electric
+JAC Motors,E SEI 2,2019,Electric
+JAC Motors,E SEI 4,2019,Electric
+JAC Motors,E SEI1,2019,Electric
+JAC Motors,E-JS4,2019,Electric
+JAC Motors,E-S4,2019,Electric
+JAC Motors,EJ7,2019,Electric
+JAC Motors,IEV7S,2019,Electric
+JAC Motors,iEV 40,2019,Electric
+JAC Motors,iEV20,2019,Electric
+JAC Motors,iEV4,2019,Electric
+JAC Motors,iEV5,2019,Electric
+JAC Motors,iEV6S,2019,Electric
+JAECOO,5 EV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Jaguar,I-PACE,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Jaguar,F-PACE,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Jaguar,XE,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Jaguar,XF,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Jaguar,XJ,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Jeep,Grand Cherokee,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Jeep,Avenger,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Jeep,Cherokee,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Jeep,Commander,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Jeep,Compass,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Jeep,Grand Cherokee L,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Jeep,Renegade,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+KG Mobility,Torres EVX,2019,Electric
+KGM,Torres EVX,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,EV6,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,EV9,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Kia,Carens,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Kia,E-Niro,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,EV3,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,Niro,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Niro EV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,Optima,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Sorento,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Soul,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Soul EV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,Sportage,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Sportage Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Sportage R,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Cee'd,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Cee'd Sportswagon,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Ceed Combi,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,EV4,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,EV5,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,Niro Plug-In Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Niro Plus,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Optima PHEV,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,PV5,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Kia,Picanto,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,ProCeed,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Rio,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Rio 4,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Rio 5 portas,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Rio5,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Stonic,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,XCeed,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Kia,Carnival Hi-Limousine,2019,UberXXL
+Kia,K3 EV,2019,Electric
+LDV,G10,2019,UberXXL
+LDV,Mifa 9,2019,Electric
+LEVC,TX,2019,Electric
+LEVC,TX VISTA,2019,Electric
+Lancia,Voyager,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Defender,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Discovery Sport,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,LR4,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Range Rover,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Range Rover Evoque,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Range Rover Sport,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Range Rover Velar,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Range Rover Vogue,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Land Rover,Discovery,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Leapmotor,c10,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Leapmotor,B10,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Leapmotor,C10 REEV,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Leapmotor,T03,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Leapmotor,c11,2019,Electric
+Lexus,ES,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,ES híbrido,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,GS,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,GX,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,IS,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,LS,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,LX,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,RX,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,RZ 450e,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Lexus,UX 300e,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Lexus,CT,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,LBX,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,NX,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,UX,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Lexus,RZ 300E,2019,Electric
+Lotus,Eletre,2019,Electric
+Lotus,Emeya,2019,Electric
+Lucid,Air,2019,Electric
+Luxgen,S3 EV+,2019,Electric
+Lynk & Co,01,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+MG,4 EV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,EHS,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+MG,MG 5,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,MG 5 Electric,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,MG4,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,MG4 Electric,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,MGS5 EV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,Marvel R,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,ZS,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+MG,ZS EV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,5 EV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,HS,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+MG,MG 3,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+MG,S6,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+MLR Motors,Teja Handy,2019,Electric
+MLR Motors,ePRO,2019,Electric
+Mahindra,E Verito (elétrico),2019,Electric
+Mahindra,XUV 400,2019,Electric
+Maruti Suzuki,Swift,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Maserati,Levante,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Maserati,Quattroporte,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Maxus,EUNIQ5,2019,Electric
+Maxus,Euniq 6,2019,Electric
+Maxus,MIFA 7,2019,Electric
+Maxus,Mifa 9,2019,Electric
+Maxus,Mifa T,2019,Electric
+Maxus,T90,2019,Electric
+Mazda,CX-80,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,MAZDA6,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,Mazda6e,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mazda,CX-3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,CX-30,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,CX-5,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,MAZDA2,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,MAZDA2 Sport,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,MAZDA3,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,MAZDA5,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mazda,MX-30,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mazda,MX-30 elétrico,2019,Electric
+Mercedes,GLB elétrico,2019,Black; Comfort
+Mercedes-Benz,220,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,EQA,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,EQB,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Mercedes-Benz,EQC,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,EQE,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,EQE SUV,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,EQS,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,EQS SUV,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,EQV,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Mercedes-Benz,Classe GLE,2019,Black; Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,eVito Tourer,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Mercedes-Benz,Classe C,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe CLA,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe CLS,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Citan,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Mercedes-Benz,Classe E,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe E Carrinha,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe G,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe GL,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,GLB,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Mercedes-Benz,GLC Coupé,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe GLC,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,GLE Coupé,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe GLK,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe GLS,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe R,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe S,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe V,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Mercedes-Benz,Viano,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Mercedes-Benz,Vito,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Mercedes-Benz,Vito Tourer,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Mercedes-Benz,Classe A,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe A Berline,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,AMG GT,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe B,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,B180,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,B200,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,B250e,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe CL,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe CLK,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe GLA,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,L,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Metris,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Metris Passenger Van,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,SLR McLaren,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,SLS AMG,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Stretch Limo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Classe T,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Valente,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,Vaneo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mercedes-Benz,X-Class,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mini,Clubman,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mini,Countryman,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mini,Countryman Plug-in Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mitsubishi,Eclipse,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mitsubishi,Eclipse Cross,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mitsubishi,Outlander,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mitsubishi,Outlander PHEV,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Mitsubishi,ASX,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mitsubishi,Colt,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mitsubishi,Space Star,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Mobilize,Limo,2019,Electric
+NETA,X,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Nio,ET7,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Nio,EL7,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Nio,ET5,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Nio,EL6,2019,Electric
+Nio,ES6,2019,Electric
+Nio,ES8,2019,Electric
+Nissan,Ariya,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Nissan,Qashqai,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Nissan,X-Trail,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Nissan,NV200,2019,Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Nissan,e-NV200,2019,Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Nissan,Juke,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Nissan,LEAF,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Nissan,LEAF EV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Nissan,Micra,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Nissan,Note,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Nissan,Pulsar,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Nissan,Dynamo Taxi,2019,Electric
+Nissan,Note E-Power,2019,Electric
+Omoda,5 EV,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Omoda,5 SHS,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Omoda,C5,2019,Electric
+Omoda,E5,2019,Electric
+Omoda,O5,2019,Electric
+Opel,Grandland X,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Insignia,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Insignia Sports Tourer,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Mokka,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Mokka-E,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Opel,Vivaro,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Opel,Zafira,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Opel,Zafira Life,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Opel,Zafira Tourer,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Opel,Zafira-e Life,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Opel,Vivaro Electric Combi,2019,Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Opel,Ampera,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Opel,Astra,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Astra Electric,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Opel,Astra Sports Tourer,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Combo Life,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Corsa,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Corsa-E,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Opel,Crossland,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Crossland X,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Frontera,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Frontera Electric,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Opel,Grandland,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Opel,Karl,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ora,03,2019,Electric
+Ora,Funky Cat 300,2019,Electric
+Ora,Funky Cat 400,2019,Electric
+Peugeot,208,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,308,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,407,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,408,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,508,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,607,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,2008,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,3008,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,4008,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,5007,2019,UberXL
+Peugeot,5008,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Peugeot,508 SW,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,E-3008,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,E-408,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,E-5008,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Peugeot,Expert,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Peugeot,Expert Tepee,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Peugeot,Expert Traveller,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Peugeot,Traveller,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Peugeot,E-Expert,2019,Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Peugeot,Rifter,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Peugeot,e-Rifter,2019,Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Peugeot,e-Traveller,2019,Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Peugeot,308 SW,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,E-2008,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,E-208,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,E-308,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,Partner,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Peugeot,Boxer,2019,UberXXL
+Peugeot,New 2008,2019,Electric
+Peugeot,New 3008,2019,Electric
+Peugeot,Partner Tepee Electric,2019,Electric
+Polestar,2,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Polestar,3,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Polestar,4,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Porsche,Tayano,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Porsche,Cayenne,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Porsche,Macan,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Porsche,Panamera,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,5,2019,Electric
+Renault,Arkana E-Tech Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Austral E-Tech Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Espace,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Renault,Espace E-tech,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Renault,Grand Scenic,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Renault,Megane E-Tech,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Renault,Rafale,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,SYMBIOZ,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Scenic E-Tech,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Renault,Talisman,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Trafic Spaceclass,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Trafic,2019,Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Renault,4 E-Tech,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Renault,5 E-Tech,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Renault,Arkana,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Captur,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Clio,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Clio Break,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Clio E-Tech Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Fluence,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Fluence Z.E.,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Renault,Kadjar,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Kangoo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Kangoo Z.E.,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Renault,Koleos,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Laguna,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Latitude,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Megane,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Megane Estate,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Megane Grandtour,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Megane Sport Tourer,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Scenic,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Scenic Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Twingo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Renault,Zoe,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Renault,City K-ZE,2019,Electric
+Renault,Kwid E-Tech,2019,Electric
+Rising,ER6,2019,Electric
+Rivian,R1S,2019,Electric
+Rivian,R1T,2019,Electric
+Seat,Alhambra,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Seat,Ateca,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,Tarraco,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Seat,Altea XL,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,Arona,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,Exeo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,Ibiza,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,Leon,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,Leon ST,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,MII,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Seat,Toledo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Sev,E-WAN Cross,2019,Electric
+Skoda,Enyaq,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Enyaq iV,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Kodiaq,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Skoda,Octavia,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Scala,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Superb,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Elroq,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Fabia,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Kamiq,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Karoq,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Octavia Combi,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Rapid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Rapid Spaceback,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Superb Derivative,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Skoda,Enyaq Coupe,2019,Electric
+Skywell,ET5,2019,Electric
+Smart,#1,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Smart,#3,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Smart,Forfour,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ssangyong,Rodius,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Ssangyong,Korando e-Motion,2019,Electric
+Subaru,Levorg,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Subaru,Solterra,2019,Electric
+Suzuki,Swace Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Suzuki,Swift,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Suzuki,Vitara,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Tata,Nexon EV,2019,Electric
+Tata,Tigor EV (elétrico),2019,Electric
+Tesla,Model 3,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Tesla,Model S,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Tesla,Model X,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Tesla,Model Y,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Camry,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Camry Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Touring Sports,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Touring Sports Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Proace,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Toyota,Proace City Verso,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Toyota,RAV4,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,bZ4X,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Prius+,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Toyota,Verso,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Toyota,Auris,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Auris Hybrid Touring Sports,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Auris Touring Sports,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Avensis,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Aygo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,C-HR,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Altis,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Altis híbrido,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Cross,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Cross Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla EX,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Fielder,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Hatchback,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Hybrid LE,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Sedan,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Sports,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Corolla Wagon,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Land Cruiser,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Mirai,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Prius,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Prius Alpha,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Prius C,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Prius Plug-in,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Prius Prime,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Prius V,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Yaris,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Yaris Cross,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,Yaris Cross Hybrid,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Toyota,HiAce,2019,UberXXL
+Toyota,KDH,2019,UberXXL
+Toyota,LiteAce,2019,UberXXL
+Toyota,TownAce,2019,UberXXL
+Toyota,BZ3,2019,Electric
+Toyota,Proace Verso EV,2019,Electric
+VOYAH,Dream,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+VOYAH,Free,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Vauxhall,Mokka-e,2019,Electric
+Venucia,D60 EV,2019,Electric
+VinFast,VF9,2019,Electric
+Volkswagen,Arteon,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Caravelle,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Volkswagen,Golf Alltrack,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Golf Variant,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.4,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.5,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.7,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.Buzz,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Multivan,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Passat,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Passat GTE,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Passat Wagon,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Sharan,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Tayron,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Tayron eHybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Tiguan,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Tiguan Allspace,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Touareg,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Touran,2019,Comfort; Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Caddy,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Caddy Maxi,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Kombi,2019,Courier; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volkswagen,Transporter,2019,Courier; Priority; Store Pickup; UberX; UberXL; UberXXL; Women Drivers
+Volkswagen,Crafter,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,GOLF GTE,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Golf,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Golf Estate,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Golf GTI,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Golf SportWagen,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Golf Sportsvan,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.3,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.6,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.7 Tourer,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Jetta,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Jetta GLI,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Nivus,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Polo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Polo Sedan,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,T-Cross,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,T-Roc,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Taigo,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Taos,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Transporter GT,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Transporter R,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,Virtus,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,e-Golf,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volkswagen,ID.Buzz Long,2019,Electric
+Volkswagen,e-Bora,2019,Electric
+Voltera,Maple 60S,2019,Electric
+Volvo,C40 Recharge,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volvo,EX90,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; UberXL; Women Drivers
+Volvo,EC40,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volvo,S60,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,S80,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,S90,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,S90 Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,V60,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,V60 Plug-in Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,V90,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,XC40 Electric,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volvo,XC60,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,XC60 Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,XC90,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,XC90 Hybrid,2019,Comfort; Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,EX30,2019,Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+Volvo,V40,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Volvo,XC40,2019,Courier; Priority; Store Pickup; UberX; Women Drivers
+Wajer,Wajer 38,2018,UberEATS Marketplace
+WeRide,Aion LX Plus,2019,Electric
+Weltmeister,EX5,2019,Electric
+XPENG,G9,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+XPENG,P7,2019,Black; Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+XPENG,G6,2019,Comfort; Courier; Electric; Priority; Store Pickup; UberX; Women Drivers
+XPENG,G3,2019,Electric
+Zeekr,001,2019,Electric
+Zeekr,X,2019,Electric
+smart#1,BRABUS,2019,Electric
