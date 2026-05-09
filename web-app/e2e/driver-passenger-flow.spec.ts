@@ -36,6 +36,16 @@ async function openDriverMenu(page: Page) {
   await page.getByTestId('driver-open-menu').click()
 }
 
+/** Espera POST feito pelo browser após "Iniciar viagem" (markArriving → startTrip). */
+function waitForDriverTripPost(page: Page, tripId: string, suffix: 'arriving' | 'start') {
+  return page.waitForResponse(
+    (res) =>
+      res.request().method() === 'POST' &&
+      res.url().includes(`/driver/trips/${tripId}/${suffix}`),
+    { timeout: sec(60) }
+  )
+}
+
 /** Refresca última posição no servidor (o start valida contra isto; gates no backend podem exigir timestamp recente). */
 async function refreshDriverLocationNearPickup(request: APIRequestContext, driverToken: string) {
   const locRes = await request.post(`${API}/drivers/location`, {
@@ -169,7 +179,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     resetFailureArtifactState()
   })
 
-  test.afterEach(async ({}, testInfo) => {
+  test.afterEach(async ({ }, testInfo) => {
     await attachFailureArtifactsIfNeeded(testInfo)
   })
 
@@ -219,7 +229,19 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
     await refreshDriverLocationNearPickup(request, tokens.driver)
+    const arrivingResP = waitForDriverTripPost(driverPage, tripId, 'arriving')
+    const startResP = waitForDriverTripPost(driverPage, tripId, 'start')
     await startBtn.click()
+    const arrivingRes = await arrivingResP
+    expect(
+      arrivingRes.ok(),
+      `driver markArriving: ${arrivingRes.status()} ${await arrivingRes.text()}`
+    ).toBeTruthy()
+    const startRes = await startResP
+    expect(
+      startRes.ok(),
+      `driver startTrip: ${startRes.status()} ${await startRes.text()}`
+    ).toBeTruthy()
     await expect
       .poll(
         async () => {
@@ -230,7 +252,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
           const d = (await r.json()) as { status?: string }
           return d.status ?? null
         },
-        { timeout: sec(90), intervals: pollLook }
+        { timeout: sec(120), intervals: pollLook }
       )
       .toBe('ongoing')
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
@@ -326,7 +348,19 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
     await refreshDriverLocationNearPickup(request, tokens.driver)
+    const arrivingResP = waitForDriverTripPost(driverPage, tripId, 'arriving')
+    const startResP = waitForDriverTripPost(driverPage, tripId, 'start')
     await startBtn.click()
+    const arrivingRes = await arrivingResP
+    expect(
+      arrivingRes.ok(),
+      `driver markArriving: ${arrivingRes.status()} ${await arrivingRes.text()}`
+    ).toBeTruthy()
+    const startRes = await startResP
+    expect(
+      startRes.ok(),
+      `driver startTrip: ${startRes.status()} ${await startRes.text()}`
+    ).toBeTruthy()
     await expect
       .poll(
         async () => {
@@ -337,7 +371,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
           const d = (await r.json()) as { status?: string }
           return d.status ?? null
         },
-        { timeout: sec(90), intervals: pollLook }
+        { timeout: sec(120), intervals: pollLook }
       )
       .toBe('ongoing')
     await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({

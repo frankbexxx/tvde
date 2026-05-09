@@ -58,7 +58,8 @@ jobs:
           cd backend
           alembic upgrade head
 
-      - uses: actions/setup-node@v4
+      # setup-node/cache/upload-artifact ≥v5/v6 evitam runtimes GitHub Actions em Node 16 (EOL).
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: npm
@@ -70,7 +71,7 @@ jobs:
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
@@ -101,7 +102,7 @@ jobs:
 
       - name: Upload Playwright artifacts (on failure)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-e2e-${{ github.run_id }}
           path: |
