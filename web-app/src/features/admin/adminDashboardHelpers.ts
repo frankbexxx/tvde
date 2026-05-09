@@ -151,3 +151,12 @@ export function healthRowTimestamp(row: Record<string, unknown>): string {
     row.updated_at ?? row.created_at ?? row.payment_updated_at ?? row.trip_completed_at ?? ''
   return typeof v === 'string' ? v : ''
 }
+
+export async function copyAdminClipboard(label: string, text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text)
+    window.alert(`${label} copiado para a área de transferência.`)
+  } catch {
+    window.prompt(`Copiar ${label} (Ctrl+C):`, text)
+  }
+}
