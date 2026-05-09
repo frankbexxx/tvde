@@ -16,14 +16,13 @@ import {
 } from './adminDashboardHelpers'
 import { type AdminDashboardTab } from './adminDashboardQuery'
 import { useAdminDashboardNavigation } from './useAdminDashboardNavigation'
+import { useAdminTripLists } from './useAdminTripLists'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
 import { formatRelativeAgo, minutesSince } from '../../utils/relativeTime'
 import { apiFetch, type ApiError } from '../../api/client'
 import { parseJwtPayload } from '../../utils/jwt'
 import {
-  getActiveTrips,
-  getAdminTripHistory,
   getTripDetailAdmin,
   getTripDebug,
   assignTripAdmin,
@@ -55,12 +54,10 @@ import {
   type AdminUsageSummaryResponse,
   type AdminAlertsResponse,
   type AdminAuditTrailItem,
-  type TripActiveItem,
   type TripDetailAdmin,
   type SystemHealthResponse,
   type AdminMetricsResponse,
 } from '../../api/admin'
-import type { TripHistoryItem } from '../../api/trips'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import {
   driverDocumentLabel,
@@ -300,6 +297,8 @@ export function AdminDashboard() {
   const isSuperAdminSession = sessionJwtIsSuperAdmin(token)
   const { tab, tripsListMode, selectedTripId, syncAdminUrl, selectTripsListMode } =
     useAdminDashboardNavigation()
+  const { activeTrips, historyTrips, historyTripsError, fetchActiveTrips, fetchHistoryTrips } =
+    useAdminTripLists(token)
   const [pending, setPending] = useState<PendingUser[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -338,10 +337,6 @@ export function AdminDashboard() {
     })
   }, [])
 
-  // Viagens (lista activa + histórico terminal)
-  const [activeTrips, setActiveTrips] = useState<TripActiveItem[]>([])
-  const [historyTrips, setHistoryTrips] = useState<TripHistoryItem[]>([])
-  const [historyTripsError, setHistoryTripsError] = useState<string | null>(null)
   /** Evita aplicar resposta de GET /admin/trips/:id se o utilizador já mudou de viagem. */
   const selectedTripForDetailRef = useRef<string | null>(selectedTripId)
   selectedTripForDetailRef.current = selectedTripId
@@ -459,39 +454,6 @@ export function AdminDashboard() {
       setUsersLoadingMore(false)
     }
   }, [token, users.length, usersHasMore, usersLoadingMore])
-
-  const fetchActiveTrips = useCallback(async () => {
-    if (!token) return
-    try {
-      const data = await getActiveTrips(token)
-      setActiveTrips(data)
-    } catch {
-      setActiveTrips([])
-    }
-  }, [token])
-
-  const fetchHistoryTrips = useCallback(async () => {
-    if (!token) return
-    setHistoryTripsError(null)
-    try {
-      const data = await getAdminTripHistory(token, { limit: 50 })
-      setHistoryTrips(data)
-    } catch (e) {
-      setHistoryTrips([])
-      const err = e as ApiError
-      const raw = err.detail
-      const detail = typeof raw === 'string' ? raw : ''
-      if (err.status === 404) {
-        setHistoryTripsError(
-          'O backend não expõe o histórico (404). Faz deploy do backend com GET /admin/trip-history, ou confirma o URL da API (VITE_API_URL).'
-        )
-      } else {
-        setHistoryTripsError(
-          detail || (err.status ? `Erro ao carregar histórico (${err.status}).` : 'Erro ao carregar histórico.')
-        )
-      }
-    }
-  }, [token])
 
   const fetchTripDetail = useCallback(
     async (tripId: string) => {
