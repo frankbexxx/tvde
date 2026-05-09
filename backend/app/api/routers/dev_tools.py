@@ -117,6 +117,8 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
 
     passenger = get_or_create_user("+351912345678", Role.passenger)
     admin = get_or_create_user("+351900000000", Role.admin)
+    if not (admin.name or "").strip() or admin.name == admin.phone:
+        admin.name = "dev_admin"
     driver_user = get_or_create_user("+351911111111", Role.driver)
 
     baseline_partner_org = db.execute(
