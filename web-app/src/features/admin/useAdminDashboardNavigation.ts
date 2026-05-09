@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { readInitialAdminQuery } from './adminDashboardHelpers'
 import {
   parseAdminDashboardQuery,
   type AdminDashboardTab,
@@ -15,7 +14,7 @@ export type AdminDashboardUrlUpdate = {
 
 /**
  * Sincroniza tab, viagem seleccionada e modo de lista (activa/histórico) com `?tab=&tripId=&tripsList=`.
- * Comportamento espelha o bloco original em `AdminDashboard.tsx` (P2 — sem mudança de semântica).
+ * Estado derivado da URL (sem useEffect+setState — alinhado a react-hooks/set-state-in-effect).
  */
 export function useAdminDashboardNavigation(): {
   tab: AdminDashboardTab
@@ -25,11 +24,11 @@ export function useAdminDashboardNavigation(): {
   selectTripsListMode: (mode: AdminTripsListMode) => void
 } {
   const [searchParams, setSearchParams] = useSearchParams()
-  const initial = readInitialAdminQuery()
+  const adminQs = searchParams.toString()
 
-  const [tab, setTab] = useState<AdminDashboardTab>(() => initial.tab)
-  const [tripsListMode, setTripsListMode] = useState<AdminTripsListMode>(() => initial.tripsList)
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(() => initial.tripId)
+  const { tab, tripId: selectedTripId, tripsList: tripsListMode } = useMemo(() => {
+    return parseAdminDashboardQuery(new URLSearchParams(adminQs))
+  }, [adminQs])
 
   const syncAdminUrl = useCallback(
     (next: AdminDashboardUrlUpdate) => {
@@ -62,20 +61,10 @@ export function useAdminDashboardNavigation(): {
 
   const selectTripsListMode = useCallback(
     (mode: AdminTripsListMode) => {
-      setTripsListMode(mode)
       syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: mode })
     },
     [syncAdminUrl, selectedTripId]
   )
-
-  const adminQs = searchParams.toString()
-  useEffect(() => {
-    const sp = new URLSearchParams(adminQs)
-    const { tab: t, tripId, tripsList } = parseAdminDashboardQuery(sp)
-    setTab(t)
-    setSelectedTripId(tripId)
-    setTripsListMode(t === 'trips' ? tripsList : 'active')
-  }, [adminQs])
 
   return { tab, tripsListMode, selectedTripId, syncAdminUrl, selectTripsListMode }
 }
