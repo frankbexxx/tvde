@@ -1,6 +1,6 @@
 # Plano de refactor — `AdminDashboard.tsx` (só planeamento e prompts)
 
-**Estado:** P0–**P3** em código: **P2** `useAdminDashboardNavigation`; **P3** `useAdminTripLists` (activas + histórico). **P4+** por PR.  
+**Estado:** P0–**P4** em código: **P2** `useAdminDashboardNavigation`; **P3** `useAdminTripLists`; **P4** `useAdminTripDetailActions`. **P5+** por PR.  
 **Última actualização:** 2026-05-11.
 
 **Tabs canónicas** (URL `?tab=`): `agora` · `docs` · `pending` · `users` · `frota` · `dados` · `trips` · `metrics` · `ops` · `health` (ver `adminDashboardQuery.ts`).
@@ -165,6 +165,8 @@ Cola isto no início de cada pedido ao assistente e preenche os campos `[ … ]`
 ---
 
 ## Prompt P4 — Hook detalhe de viagem e acções administrativas
+
+**Entrega (2026-05-11)** — `web-app/src/features/admin/useAdminTripDetailActions.ts`: detalhe, debug, handlers e `paymentOpsNoteText`; dependências injectadas: `fetchHealth`, `fetchActiveTrips`, `syncAdminUrl`, `setError`.
 
 **Objectivo** — Agrupar `fetchTripDetail`, `fetchTripDebug`, `tripDetail`, `tripDebug`, `handleAssignTrip`, `handleAdminTripTransition`, `handleCancelTrip`, `handleReconcileSingleTripPayment`, `handlePaymentOpsNote`, estados `tripActionLoading`, reconcile, etc. em `useAdminTripDetailActions.ts` (ou dividir em dois hooks se >400 linhas — documentar no PR).
 

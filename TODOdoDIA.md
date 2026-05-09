@@ -66,7 +66,8 @@ _Item **8** (docs ENV) **fechado** 2026-05-07._
 | [x] | **Execução P1** — fatia 1: `adminDashboardHelpers.ts` + `AdminTripPaymentOpsNotePanel.tsx` (smoke: tab **Viagens**, painel nota operacional pagamento) |
 | [x] | **Execução P2** — hook [`useAdminDashboardNavigation.ts`](web-app/src/features/admin/useAdminDashboardNavigation.ts) (smoke: `?tab=health`, `?tab=trips&tripId=`, `?tab=trips&tripsList=history`, recarregar) |
 | [x] | **Execução P3** — hook [`useAdminTripLists.ts`](web-app/src/features/admin/useAdminTripLists.ts) (smoke: tab **Viagens** activas/histórico, refresh 8s) |
-| [ ] | **Execução P4** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
+| [x] | **Execução P4** — hook [`useAdminTripDetailActions.ts`](web-app/src/features/admin/useAdminTripDetailActions.ts) (smoke: detalhe, acções, nota, reconcile super_admin) |
+| [ ] | **Execução P5** … **P12** — marcar cada um **[x]** no merge do PR respectivo |
 
 _Actualização **semi-dinâmica**: ao fechar o dia ou merge, marcar linhas aqui + nota curta no doc se o alcance mudar._
 
