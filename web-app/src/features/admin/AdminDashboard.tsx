@@ -1,6 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { isBackofficeStaffRole, useAuth } from '../../context/AuthContext'
+import { AdminTripPaymentOpsNotePanel } from './AdminTripPaymentOpsNotePanel'
+import {
+  adminErrDetail,
+  approvedDriverDocs,
+  countHealthSignalRows,
+  docsApprovedCount,
+  emptyDriverDocs,
+  formatAdminApiDetail,
+  healthRowTimestamp,
+  maskSensitiveEnvDisplay,
+  promptGovernanceReason,
+  readInitialAdminQuery,
+  sessionJwtIsSuperAdmin,
+  tripDetailEligibleSinglePaymentReconcile,
+} from './adminDashboardHelpers'
 import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
@@ -76,175 +91,12 @@ type Tab = AdminDashboardTab
 const USERS_PAGE_SIZE = 50
 const ADMIN_DRIVER_DOCS_REGISTRY_KEY = 'tvde_admin_driver_docs_registry_v1'
 
-function emptyDriverDocs(): DriverDocumentsState['docs'] {
-  return {
-    carta_tvde: 'missing',
-    certificado_motorista_tvde: 'missing',
-    seguro_responsabilidade_civil: 'missing',
-    inspecao_viatura: 'missing',
-  }
-}
-
-function docsApprovedCount(docs: DriverDocumentsState['docs']): number {
-  return REQUIRED_DRIVER_DOCUMENTS.filter((k) => docs[k] === 'approved').length
-}
-
-function approvedDriverDocs(): DriverDocumentsState['docs'] {
-  return {
-    carta_tvde: 'approved',
-    certificado_motorista_tvde: 'approved',
-    seguro_responsabilidade_civil: 'approved',
-    inspecao_viatura: 'approved',
-  }
-}
-
 const DRIVER_DOC_STATUSES = ['missing', 'pending_review', 'approved', 'rejected', 'expired'] as const
 
 /** Operações — lista «Pagamentos em processing» da saúde (evita lista infinita). */
 const OPS_STUCK_PAYMENTS_PAGE_SIZE = 10
 
 const ADMIN_TRIP_CANCEL_STATUSES = ['requested', 'assigned', 'accepted'] as const
-
-const SINGLE_TRIP_PAYMENT_RECONCILE_STATUSES = ['completed', 'cancelled', 'failed'] as const
-
-function tripDetailEligibleSinglePaymentReconcile(d: TripDetailAdmin | null): boolean {
-  if (!d) return false
-  if (d.payment_status !== 'processing') return false
-  const pi = d.stripe_payment_intent_id
-  if (typeof pi !== 'string' || !pi.trim()) return false
-  return (SINGLE_TRIP_PAYMENT_RECONCILE_STATUSES as readonly string[]).includes(d.status)
-}
-
-function isBackofficeStaffRole(role: string): boolean {
-  return role === 'admin' || role === 'super_admin'
-}
-
-function AdminTripPaymentOpsNotePanel({
-  tripId,
-  tripDetail,
-  enabled,
-  draft,
-  onDraftChange,
-  onSubmit,
-  submitting,
-}: {
-  tripId: string
-  tripDetail: TripDetailAdmin | null
-  enabled: boolean
-  draft: string
-  onDraftChange: (v: string) => void
-  onSubmit: () => void
-  submitting: boolean
-}) {
-  if (!enabled || !tripDetail || tripDetail.trip_id !== tripId) return null
-  const psRaw = tripDetail.payment_status
-  const psStr =
-    psRaw != null && String(psRaw).trim() ? String(psRaw).trim() : null
-  const canSubmit = draft.trim().length >= 3 && draft.trim().length <= 2000
-  return (
-    <div className="mt-2 rounded-xl border border-border bg-muted/15 px-3 py-2 space-y-2">
-      <p className="text-xs font-medium text-foreground">Nota operacional (pagamento)</p>
-      <p className="text-[11px] text-muted-foreground leading-snug">
-        Regista texto no audit trail — <span className="font-medium">não altera Stripe</span> nem estados de
-        pagamento.
-        {psStr ? (
-          <>
-            {' '}
-            Estado (API): <span className="font-mono text-foreground/90">{psStr}</span>.
-          </>
-        ) : null}
-      </p>
-      <textarea
-        id={`admin-payment-ops-note-${tripId}`}
-        name={`admin-payment-ops-note-${tripId}`}
-        value={draft}
-        onChange={(e) => onDraftChange(e.target.value)}
-        rows={3}
-        maxLength={2000}
-        placeholder="Ex.: cliente contactado; referência interna… (mín. 3 caracteres)"
-        className="w-full min-h-[4.5rem] resize-y rounded-lg border border-input bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground/70"
-      />
-      <button
-        type="button"
-        onClick={() => onSubmit()}
-        disabled={submitting || !canSubmit}
-        className="w-full sm:w-auto px-3 py-2 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium disabled:opacity-50"
-      >
-        {submitting ? 'A registar…' : 'Registar nota (audit)'}
-      </button>
-    </div>
-  )
-}
-
-/** SP-F: motivo ≥10 caracteres; cancela com `null`. */
-function promptGovernanceReason(prompt: string): string | null {
-  const raw = window.prompt(prompt)
-  if (raw === null) return null
-  const t = raw.trim()
-  if (t.length < 10) {
-    window.alert('O motivo precisa de pelo menos 10 caracteres.')
-    return null
-  }
-  return t
-}
-
-/** Erros das rotas admin (PATCH utilizador, bloqueio, password, etc.) em texto legível. */
-function formatAdminApiDetail(detail: unknown): string {
-  if (detail && typeof detail === 'object' && 'detail' in detail) {
-    return formatAdminApiDetail((detail as { detail: unknown }).detail)
-  }
-  if (detail === 'timeout') {
-    return 'Pedido expirou (rede lenta ou servidor a aquecer). Tenta de novo.'
-  }
-  if (typeof detail === 'string') {
-    const key = detail.trim()
-    const map: Record<string, string> = {
-      invalid_phone_format: 'Telefone inválido. Usa +351 seguido de 9 dígitos (ex.: +351912345678).',
-      phone_already_used: 'Esse telefone já está a ser usado por outra conta.',
-      cannot_modify_admin: 'Não podes alterar a conta de administrador.',
-      cannot_modify_staff_role: 'Esta conta é de backoffice (admin / super_admin) — não podes alterá-la por aqui.',
-      governance_reason_required_for_phone_change:
-        'Para mudar o telefone, usa «Guardar só o telefone»: confirma com ALTERAR_TELEFONE e indica um motivo de auditoria com pelo menos 10 caracteres.',
-      cannot_delete_staff_role: 'Não é permitido eliminar contas admin / super_admin.',
-      cannot_delete_admin: 'Não é permitido eliminar esta conta de administrador.',
-      cannot_block_staff_role: 'Não é permitido bloquear contas admin / super_admin.',
-      cannot_unblock_staff_role: 'Estado de conta de backoffice não pode ser alterado por aqui.',
-      super_admin_required:
-        'Esta acção exige sessão de super_admin (exportar logs CSV, cron, validar .env, eliminar conta, bloqueio em massa ou repor palavra-passe).',
-      user_not_found: 'Utilizador não encontrado.',
-      invalid_user_id: 'Identificador de utilizador inválido.',
-      user_not_blocked: 'Esta conta não está bloqueada.',
-      invalid_confirmation: 'Confirmação incorrecta — escreve exactamente o texto pedido no aviso ou cancela.',
-      cannot_delete_user_with_trips: 'Não é possível eliminar: o utilizador tem viagens como passageiro.',
-      driver_has_active_trip: 'O motorista tem viagem activa — fecha ou cancela antes de repor passageiro.',
-      empty_user_ids: 'Nenhum utilizador seleccionado para bloqueio em massa.',
-      too_many_user_ids: 'Demasiados IDs num único pedido (máximo 200).',
-      'Not available': 'Esta acção só está disponível em modo BETA.',
-    }
-    return map[key] ?? key
-  }
-  if (Array.isArray(detail)) {
-    const parts = detail.map((d) => {
-      if (typeof d === 'object' && d !== null && 'msg' in d) return String((d as { msg?: unknown }).msg)
-      return JSON.stringify(d)
-    })
-    return parts.join(' · ') || 'Pedido inválido.'
-  }
-  return 'Não foi possível concluir o pedido. Tenta outra vez.'
-}
-
-function adminErrDetail(err: unknown, fallback: string): string {
-  if (typeof err === 'object' && err !== null && 'detail' in err) {
-    return formatAdminApiDetail((err as ApiError).detail)
-  }
-  if (err instanceof Error && err.message) return err.message
-  return fallback
-}
-
-function sessionJwtIsSuperAdmin(token: string | null): boolean {
-  if (!token) return false
-  return parseJwtPayload(token)?.role === 'super_admin'
-}
 
 async function copyAdminClipboard(label: string, text: string): Promise<void> {
   try {
@@ -253,18 +105,6 @@ async function copyAdminClipboard(label: string, text: string): Promise<void> {
   } catch {
     window.prompt(`Copiar ${label} (Ctrl+C):`, text)
   }
-}
-
-function maskSensitiveEnvDisplay(text: string): string {
-  return text.split('\n').map((line) => {
-    const eq = line.indexOf('=')
-    if (eq <= 0) return line
-    const keyPart = line.slice(0, eq).replace(/^\s*#\s*/, '').trim()
-    if (!/SECRET|PASSWORD|TOKEN|PRIVATE|WEBHOOK|API_KEY|DATABASE|BEARER|AUTH|DSN|CREDENTIAL/i.test(keyPart)) {
-      return line
-    }
-    return `${line.slice(0, eq + 1)}••••••••`
-  }).join('\n')
 }
 
 const TABS: { id: Tab; label: string }[] = [
@@ -279,38 +119,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'ops', label: 'Operações' },
   { id: 'health', label: 'Saúde' },
 ]
-
-function readInitialAdminQuery(): ReturnType<typeof parseAdminDashboardQuery> {
-  if (typeof window === 'undefined') {
-    return { tab: 'agora', tripId: null, tripsList: 'active' }
-  }
-  return parseAdminDashboardQuery(new URLSearchParams(window.location.search))
-}
-
-/** SP-G: contagens de linhas de anomalia + avisos (alinhado a system-health). */
-function countHealthSignalRows(h: SystemHealthResponse | null): number {
-  if (!h) return 0
-  const n = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0)
-  return (
-    n(h.trips_accepted_too_long) +
-    n(h.trips_ongoing_too_long) +
-    n(h.stuck_payments) +
-    n(h.drivers_unavailable_too_long) +
-    n(h.missing_payment_records) +
-    n(h.inconsistent_financial_state) +
-    (h.warnings?.length ?? 0)
-  )
-}
-
-function healthRowTimestamp(row: Record<string, unknown>): string {
-  const v =
-    row.updated_at ??
-    row.created_at ??
-    row.payment_updated_at ??
-    row.trip_completed_at ??
-    ''
-  return typeof v === 'string' ? v : ''
-}
 
 /** Repõe paginação interna quando os dados de saúde mudam (via remount). */
 function healthBlockKey(title: string, rows: Array<Record<string, unknown>>): string {
@@ -422,8 +230,8 @@ function HealthAnomalyBlock(props: {
           <button
             type="button"
             className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-2 py-1.5 text-xs rounded-lg border ${sortRecent
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
               }`}
             onClick={() => {
               setSortRecent(true)
@@ -435,8 +243,8 @@ function HealthAnomalyBlock(props: {
           <button
             type="button"
             className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-2 py-1.5 text-xs rounded-lg border ${!sortRecent
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
               }`}
             onClick={() => {
               setSortRecent(false)
@@ -1761,8 +1569,8 @@ export function AdminDashboard() {
                   : syncAdminUrl({ tab: id, tripId: null })
               }
               className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${tab === id
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
                 }`}
               title={healthDot ? 'Há anomalias ou avisos na Saúde' : undefined}
             >
@@ -1824,8 +1632,8 @@ export function AdminDashboard() {
               <>
                 <div
                   className={`rounded-2xl border px-4 py-3 shadow-card ${degraded
-                      ? 'border-warning/60 bg-warning/10'
-                      : 'border-border bg-card'
+                    ? 'border-warning/60 bg-warning/10'
+                    : 'border-border bg-card'
                     }`}
                 >
                   <p className="text-sm font-medium text-foreground">
@@ -1993,8 +1801,8 @@ export function AdminDashboard() {
                       type="button"
                       onClick={() => setDocsStatusFilter((prev) => (prev === st ? 'all' : st))}
                       className={`rounded-full border px-2 py-0.5 text-[11px] ${docsStatusFilter === st
-                          ? 'border-info/60 bg-info/15 text-foreground'
-                          : 'border-border bg-card text-foreground/85'
+                        ? 'border-info/60 bg-info/15 text-foreground'
+                        : 'border-border bg-card text-foreground/85'
                         }`}
                     >
                       {driverDocumentStatusLabel(st)}: {docsRowsData.totals[st]}
@@ -2004,8 +1812,8 @@ export function AdminDashboard() {
                     type="button"
                     onClick={() => setDocsStatusFilter('all')}
                     className={`rounded-full border px-2 py-0.5 text-[11px] ${docsStatusFilter === 'all'
-                        ? 'border-info/60 bg-info/15 text-foreground'
-                        : 'border-border bg-card text-foreground/85'
+                      ? 'border-info/60 bg-info/15 text-foreground'
+                      : 'border-border bg-card text-foreground/85'
                       }`}
                   >
                     Todos
@@ -2057,8 +1865,8 @@ export function AdminDashboard() {
                                       }))
                                     }
                                     className={`rounded border px-1.5 py-0.5 text-[10px] ${docs[doc] === st
-                                        ? 'border-info/60 bg-info/15 text-foreground'
-                                        : 'border-border bg-background text-foreground/75 hover:bg-muted/40'
+                                      ? 'border-info/60 bg-info/15 text-foreground'
+                                      : 'border-border bg-background text-foreground/75 hover:bg-muted/40'
                                       }`}
                                   >
                                     {driverDocumentStatusLabel(st)}
@@ -2571,8 +2379,8 @@ export function AdminDashboard() {
               type="button"
               onClick={() => selectTripsListMode('active')}
               className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 rounded-xl text-sm font-medium border ${tripsListMode === 'active'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
                 }`}
             >
               Activas
@@ -2581,8 +2389,8 @@ export function AdminDashboard() {
               type="button"
               onClick={() => selectTripsListMode('history')}
               className={`inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 rounded-xl text-sm font-medium border ${tripsListMode === 'history'
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
                 }`}
             >
               Histórico

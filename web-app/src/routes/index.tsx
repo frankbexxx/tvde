@@ -158,7 +158,10 @@ export function AppRoutes() {
               <Route path="drivers/:userId" element={<PartnerDriverDetail />} />
               <Route path="trips/:tripId" element={<PartnerTripDetail />} />
             </Route>
-            <Route path="/debug/map" element={<DebugMapPage />} />
+            <Route
+              path="/debug/map"
+              element={import.meta.env.DEV ? <DebugMapPage /> : <Navigate to="/" replace />}
+            />
           </Routes>
         </main>
       </div>
