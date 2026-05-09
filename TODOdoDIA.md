@@ -47,7 +47,7 @@ _Item **8** (docs ENV) **fechado** 2026-05-07._
 
 - **`POST /dev/seed`** inclui utilizador partner canónico (`+351955555502`, org `test_partner`); **`POST /dev/tokens`** devolve também **`partner`**.
 - **`npm run test:e2e:api`** — projecto só HTTP (`--no-deps`); **`CI=true`** recomendado na suíte completa para o Playwright gerir o Vite.
-- **Pendente (não bloqueia o merge do drawer):** (1) `api-flows.spec.ts` — assert `display_name` do admin seed vs baseline (`dev_admin` vs telefone); (2) quatro testes `driver-passenger-flow` — UI fica em `driver-home-step1` sem botões Aceitar/Rejeitar (alinhamento fluxo motorista + PW).
+- **Pendente (não bloqueia o merge do drawer):** **(1) Fechado** — `/dev/seed` alinha nome do admin a `dev_admin` (roster); `api-flows` valida login BETA. **(2)** Quatro testes `driver-passenger-flow` — UI em `driver-home-step1` sem Aceitar/Rejeitar (alinhamento fluxo + PW).
 
 ### Notas
 

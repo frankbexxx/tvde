@@ -215,6 +215,6 @@ test.describe('API flows (sem browser)', () => {
     expect(login.ok(), await login.text()).toBeTruthy()
     const body = (await login.json()) as { display_name?: string; role?: string }
     expect(body.role).toBe('admin')
-    expect(body.display_name).toBe('+351900000000')
+    expect(body.display_name).toBe('dev_admin')
   })
 })
