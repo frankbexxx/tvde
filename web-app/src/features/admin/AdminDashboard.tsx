@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { isBackofficeStaffRole, useAuth } from '../../context/AuthContext'
 import { AdminTripPaymentOpsNotePanel } from './AdminTripPaymentOpsNotePanel'
 import {
@@ -12,11 +11,11 @@ import {
   healthRowTimestamp,
   maskSensitiveEnvDisplay,
   promptGovernanceReason,
-  readInitialAdminQuery,
   sessionJwtIsSuperAdmin,
   tripDetailEligibleSinglePaymentReconcile,
 } from './adminDashboardHelpers'
-import { parseAdminDashboardQuery, type AdminDashboardTab } from './adminDashboardQuery'
+import { type AdminDashboardTab } from './adminDashboardQuery'
+import { useAdminDashboardNavigation } from './useAdminDashboardNavigation'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
 import { formatRelativeAgo, minutesSince } from '../../utils/relativeTime'
@@ -299,9 +298,8 @@ function HealthAnomalyBlock(props: {
 export function AdminDashboard() {
   const { token } = useAuth()
   const isSuperAdminSession = sessionJwtIsSuperAdmin(token)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const initial = readInitialAdminQuery()
-  const [tab, setTab] = useState<Tab>(() => initial.tab)
+  const { tab, tripsListMode, selectedTripId, syncAdminUrl, selectTripsListMode } =
+    useAdminDashboardNavigation()
   const [pending, setPending] = useState<PendingUser[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -342,10 +340,8 @@ export function AdminDashboard() {
 
   // Viagens (lista activa + histórico terminal)
   const [activeTrips, setActiveTrips] = useState<TripActiveItem[]>([])
-  const [tripsListMode, setTripsListMode] = useState<'active' | 'history'>(() => initial.tripsList)
   const [historyTrips, setHistoryTrips] = useState<TripHistoryItem[]>([])
   const [historyTripsError, setHistoryTripsError] = useState<string | null>(null)
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(() => initial.tripId)
   /** Evita aplicar resposta de GET /admin/trips/:id se o utilizador já mudou de viagem. */
   const selectedTripForDetailRef = useRef<string | null>(selectedTripId)
   selectedTripForDetailRef.current = selectedTripId
@@ -394,52 +390,6 @@ export function AdminDashboard() {
   const [driversList, setDriversList] = useState<Array<{ user_id: string; partner_id: string; status: string }>>([])
   const [dataLoading, setDataLoading] = useState(false)
   const [dataSearch, setDataSearch] = useState('')
-
-  const syncAdminUrl = useCallback(
-    (next: { tab: Tab; tripId: string | null; tripsList?: 'active' | 'history' }) => {
-      setSearchParams(
-        () => {
-          const p = new URLSearchParams()
-          if (next.tripId) {
-            p.set('tab', 'trips')
-            p.set('tripId', next.tripId)
-            if (next.tripsList === 'history') {
-              p.set('tripsList', 'history')
-            }
-            return p
-          }
-          if (next.tab === 'pending') {
-            p.set('tab', 'pending')
-            return p
-          }
-          p.set('tab', next.tab)
-          if (next.tab === 'trips' && next.tripsList === 'history') {
-            p.set('tripsList', 'history')
-          }
-          return p
-        },
-        { replace: true }
-      )
-    },
-    [setSearchParams]
-  )
-
-  const selectTripsListMode = useCallback(
-    (mode: 'active' | 'history') => {
-      setTripsListMode(mode)
-      syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: mode })
-    },
-    [syncAdminUrl, selectedTripId]
-  )
-
-  const adminQs = searchParams.toString()
-  useEffect(() => {
-    const sp = new URLSearchParams(adminQs)
-    const { tab: t, tripId, tripsList } = parseAdminDashboardQuery(sp)
-    setTab(t)
-    setSelectedTripId(tripId)
-    setTripsListMode(t === 'trips' ? tripsList : 'active')
-  }, [adminQs])
 
   useEffect(() => {
     setPaymentOpsNoteText('')
