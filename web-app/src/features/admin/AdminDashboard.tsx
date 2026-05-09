@@ -7,7 +7,6 @@ import {
   countHealthSignalRows,
   docsApprovedCount,
   emptyDriverDocs,
-  formatAdminApiDetail,
   healthRowTimestamp,
   maskSensitiveEnvDisplay,
   promptGovernanceReason,
@@ -18,19 +17,17 @@ import { type AdminDashboardTab } from './adminDashboardQuery'
 import { useAdminDashboardNavigation } from './useAdminDashboardNavigation'
 import { useAdminTripLists } from './useAdminTripLists'
 import { useAdminTripDetailActions } from './useAdminTripDetailActions'
+import { useAdminSystemPanels } from './useAdminSystemPanels'
+import { useAdminAlertsAndAudit } from './useAdminAlertsAndAudit'
+import { useAdminUsersDirectory } from './useAdminUsersDirectory'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from './healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../utils/stripeDashboard'
 import { formatRelativeAgo, minutesSince } from '../../utils/relativeTime'
-import { apiFetch, type ApiError } from '../../api/client'
+import { apiFetch } from '../../api/client'
 import { parseJwtPayload } from '../../utils/jwt'
 import {
-  getSystemHealth,
-  getMetrics,
-  runTimeouts,
-  runOfferExpiry,
   recoverDriver,
   exportLogsCsv,
-  getAdminPhase0,
   runAdminCron,
   validateEnvText,
   createPartner,
@@ -39,17 +36,9 @@ import {
   unassignDriverFromPartner,
   listPartners,
   listDrivers,
-  getUsageSummary,
-  getAdminAlerts,
-  getAdminAuditTrail,
   getReconcilePaymentsPreview,
   postReconcilePaymentsStripeSync,
   postReconcilePaymentsCloseNoPi,
-  type AdminUsageSummaryResponse,
-  type AdminAlertsResponse,
-  type AdminAuditTrailItem,
-  type SystemHealthResponse,
-  type AdminMetricsResponse,
 } from '../../api/admin'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import {
@@ -65,19 +54,7 @@ interface PendingUser {
   requested_role: string
 }
 
-interface AdminUser {
-  id: string
-  phone: string
-  name: string
-  role: string
-  status: string
-  requested_role: string | null
-  has_driver_profile: boolean
-}
-
 type Tab = AdminDashboardTab
-
-const USERS_PAGE_SIZE = 50
 const ADMIN_DRIVER_DOCS_REGISTRY_KEY = 'tvde_admin_driver_docs_registry_v1'
 
 const DRIVER_DOC_STATUSES = ['missing', 'pending_review', 'approved', 'rejected', 'expired'] as const
@@ -293,56 +270,78 @@ export function AdminDashboard() {
   const { activeTrips, historyTrips, historyTripsError, fetchActiveTrips, fetchHistoryTrips } =
     useAdminTripLists(token)
   const [pending, setPending] = useState<PendingUser[]>([])
-  const [users, setUsers] = useState<AdminUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editPhone, setEditPhone] = useState('')
-  /** Valores no momento em que se abriu «Editar» — para comparar e confirmar mudanças. */
-  const [editOriginalName, setEditOriginalName] = useState('')
-  const [editOriginalPhone, setEditOriginalPhone] = useState('')
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-  const [usersHasMore, setUsersHasMore] = useState(false)
-  const [usersLoadingMore, setUsersLoadingMore] = useState(false)
-  const [usersSort, setUsersSort] = useState<'name' | 'role' | 'status'>('name')
-  const [usersFilter, setUsersFilter] = useState('')
+  const [opsLoading, setOpsLoading] = useState<string | null>(null)
+  const {
+    metrics,
+    usage,
+    health,
+    phase0,
+    fetchMetrics,
+    fetchUsage,
+    fetchHealth,
+    handleFetchPhase0,
+    handleRunTimeouts,
+    handleRunOfferExpiry,
+  } = useAdminSystemPanels({ token, setError, setOpsLoading, fetchActiveTrips })
+  const {
+    adminAlerts,
+    fetchAdminAlerts,
+    userAuditRows,
+    userAuditLoading,
+    userAuditError,
+    invalidateUserAudit,
+    loadUserAuditTrailIfNeeded,
+  } = useAdminAlertsAndAudit(token)
+  const {
+    users,
+    editingId,
+    editName,
+    editPhone,
+    editOriginalName,
+    editOriginalPhone,
+    deleteConfirmId,
+    usersHasMore,
+    usersLoadingMore,
+    usersSort,
+    usersFilter,
+    bulkSelectedIds,
+    blockConfirmId,
+    unblockConfirmId,
+    setEditName,
+    setEditPhone,
+    setUsersSort,
+    setUsersFilter,
+    setBulkSelectedIds,
+    setDeleteConfirmId,
+    setBlockConfirmId,
+    setUnblockConfirmId,
+    fetchUsers,
+    fetchUsersMore,
+    filteredSortedUsers,
+    driverUsers,
+    startEdit,
+    cancelEdit,
+    handleSaveUserName,
+    handleSaveUserPhone,
+    handleDelete,
+    handleBlockUser,
+    handleUnblockUser,
+    handleClearUserPassword,
+    handleBulkBlock,
+    handlePromote,
+    handleDemote,
+  } = useAdminUsersDirectory({ token, tab, setError, setLoading, invalidateUserAudit })
   const [driverDocsRegistry, setDriverDocsRegistry] = useState<Record<string, DriverDocumentsState['docs']>>({})
   const [docsStatusFilter, setDocsStatusFilter] = useState<'all' | DriverDocumentStatus>('all')
-  const [bulkSelectedIds, setBulkSelectedIds] = useState<Record<string, boolean>>({})
-  const [blockConfirmId, setBlockConfirmId] = useState<string | null>(null)
-  const [unblockConfirmId, setUnblockConfirmId] = useState<string | null>(null)
-  /** SP-E: cache de `GET /admin/audit-trail` por utilizador (ausência de chave = ainda não carregado). */
-  const [userAuditRows, setUserAuditRows] = useState<Record<string, AdminAuditTrailItem[]>>({})
-  const [userAuditLoading, setUserAuditLoading] = useState<string | null>(null)
-  const [userAuditError, setUserAuditError] = useState<Record<string, string>>({})
-
-  const invalidateUserAudit = useCallback((userId: string) => {
-    setUserAuditRows((m) => {
-      const next = { ...m }
-      delete next[userId]
-      return next
-    })
-    setUserAuditError((m) => {
-      const next = { ...m }
-      delete next[userId]
-      return next
-    })
-  }, [])
 
   const canPostPaymentOpsNote = useMemo(
     () => isBackofficeStaffRole(parseJwtPayload(token ?? '')?.role ?? ''),
     [token]
   )
 
-  // Métricas e Saúde
-  const [metrics, setMetrics] = useState<AdminMetricsResponse | null>(null)
-  const [usage, setUsage] = useState<AdminUsageSummaryResponse | null>(null)
-  const [health, setHealth] = useState<SystemHealthResponse | null>(null)
-  const [adminAlerts, setAdminAlerts] = useState<AdminAlertsResponse | null>(null)
-  const [opsLoading, setOpsLoading] = useState<string | null>(null)
   const [recoverDriverId, setRecoverDriverId] = useState('')
-  const [phase0, setPhase0] = useState<Awaited<ReturnType<typeof getAdminPhase0>> | null>(null)
   const [cronRun, setCronRun] = useState<Awaited<ReturnType<typeof runAdminCron>> | null>(null)
   const [envText, setEnvText] = useState('')
   const [envReveal, setEnvReveal] = useState(false)
@@ -384,93 +383,6 @@ export function AdminDashboard() {
       setPending(data)
     } catch {
       setPending([])
-    }
-  }, [token])
-
-  const fetchUsers = useCallback(async () => {
-    if (!token) return
-    try {
-      const data = await apiFetch<AdminUser[]>(
-        `/admin/users?limit=${USERS_PAGE_SIZE}&offset=0`,
-        { token }
-      )
-      setUsers(data)
-      setUsersHasMore(data.length === USERS_PAGE_SIZE)
-      // Preservar selecção em massa no refresh (intervalo / tab); só podar IDs que já não vêm na 1.ª página.
-      const allowedIds = new Set(data.map((u) => u.id))
-      setBulkSelectedIds((prev) => {
-        const next: Record<string, boolean> = {}
-        for (const [id, on] of Object.entries(prev)) {
-          if (on && allowedIds.has(id)) next[id] = true
-        }
-        return next
-      })
-      setError(null)
-    } catch (err) {
-      setError(adminErrDetail(err, 'Erro ao carregar'))
-    } finally {
-      setLoading(false)
-    }
-  }, [token])
-
-  const fetchUsersMore = useCallback(async () => {
-    if (!token || !usersHasMore || usersLoadingMore) return
-    setUsersLoadingMore(true)
-    try {
-      const offset = users.length
-      const data = await apiFetch<AdminUser[]>(
-        `/admin/users?limit=${USERS_PAGE_SIZE}&offset=${offset}`,
-        { token }
-      )
-      setUsers((prev) => {
-        const seen = new Set(prev.map((u) => u.id))
-        return [...prev, ...data.filter((u) => !seen.has(u.id))]
-      })
-      setUsersHasMore(data.length === USERS_PAGE_SIZE)
-    } catch (err) {
-      setError(adminErrDetail(err, 'Erro ao carregar mais'))
-    } finally {
-      setUsersLoadingMore(false)
-    }
-  }, [token, users.length, usersHasMore, usersLoadingMore])
-
-  const fetchMetrics = useCallback(async () => {
-    if (!token) return
-    try {
-      const m = await getMetrics(token)
-      setMetrics(m)
-    } catch {
-      setMetrics(null)
-    }
-  }, [token])
-
-  const fetchUsage = useCallback(async () => {
-    if (!token) return
-    try {
-      const u = await getUsageSummary(token)
-      setUsage(u)
-    } catch {
-      setUsage(null)
-    }
-  }, [token])
-
-  const fetchHealth = useCallback(async () => {
-    if (!token) return
-    try {
-      const h = await getSystemHealth(token)
-      setHealth(h)
-    } catch {
-      setHealth(null)
-    }
-  }, [token])
-
-  const fetchAdminAlerts = useCallback(async () => {
-    if (!token) return
-    try {
-      const a = await getAdminAlerts(token)
-      setAdminAlerts(a)
-    } catch {
-      setAdminAlerts(null)
     }
   }, [token])
 
@@ -529,58 +441,6 @@ export function AdminDashboard() {
     fetchHealth,
     fetchAdminAlerts,
   ])
-
-  const handleRunTimeouts = async () => {
-    if (!token) return
-    const gr = promptGovernanceReason(
-      'Motivo para correr timeouts (SP-F). Requer sessão super_admin; mín. 10 caracteres.'
-    )
-    if (!gr) return
-    setOpsLoading('timeouts')
-    try {
-      await runTimeouts(token, gr)
-      setError(null)
-      fetchActiveTrips()
-      fetchMetrics()
-    } catch (err) {
-      setError(adminErrDetail(err, 'Erro timeouts'))
-    } finally {
-      setOpsLoading(null)
-    }
-  }
-
-  const handleRunOfferExpiry = async () => {
-    if (!token) return
-    const gr = promptGovernanceReason(
-      'Motivo para expirar ofertas / redispatch (SP-F). Requer super_admin; mín. 10 caracteres.'
-    )
-    if (!gr) return
-    setOpsLoading('offer-expiry')
-    try {
-      await runOfferExpiry(token, gr)
-      setError(null)
-      fetchActiveTrips()
-      fetchMetrics()
-    } catch (err) {
-      setError(adminErrDetail(err, 'Erro offer-expiry'))
-    } finally {
-      setOpsLoading(null)
-    }
-  }
-
-  const handleFetchPhase0 = async () => {
-    if (!token) return
-    setOpsLoading('phase0')
-    try {
-      const d = await getAdminPhase0(token)
-      setPhase0(d)
-      setError(null)
-    } catch (err) {
-      setError(adminErrDetail(err, 'Erro fase0'))
-    } finally {
-      setOpsLoading(null)
-    }
-  }
 
   const handleRunCronNow = async () => {
     if (!token) return
@@ -892,76 +752,6 @@ export function AdminDashboard() {
     }
   }
 
-  const handlePromote = async (userId: string) => {
-    if (!token) return
-    const gr = promptGovernanceReason('Motivo para promover a motorista (super_admin; SP-F):')
-    if (!gr) return
-    try {
-      await apiFetch(`/admin/users/${userId}/promote-driver`, {
-        method: 'POST',
-        token,
-        body: JSON.stringify({ governance_reason: gr }),
-      })
-      invalidateUserAudit(userId)
-      fetchUsers()
-      setError(null)
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const handleDemote = async (userId: string) => {
-    if (!token) return
-    const gr = promptGovernanceReason('Motivo para repor passageiro (super_admin; SP-F):')
-    if (!gr) return
-    try {
-      await apiFetch(`/admin/users/${userId}/demote-driver`, {
-        method: 'POST',
-        token,
-        body: JSON.stringify({ governance_reason: gr }),
-      })
-      invalidateUserAudit(userId)
-      fetchUsers()
-      setError(null)
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const startEdit = (u: AdminUser) => {
-    setError(null)
-    setEditingId(u.id)
-    const n = u.name || ''
-    const p = u.phone
-    setEditName(n)
-    setEditPhone(p)
-    setEditOriginalName(n.trim())
-    setEditOriginalPhone(p.trim())
-  }
-
-  const cancelEdit = () => {
-    setEditingId(null)
-    setEditName('')
-    setEditPhone('')
-    setEditOriginalName('')
-    setEditOriginalPhone('')
-  }
-
-  /** Ao sair da tab Utilizadores, limpar selecção em massa e edição — evita estado «pendurado» nas outras tabs. */
-  useEffect(() => {
-    if (tab !== 'users') {
-      setBulkSelectedIds({})
-      setDeleteConfirmId(null)
-      setBlockConfirmId(null)
-      setUnblockConfirmId(null)
-      setEditingId(null)
-      setEditName('')
-      setEditPhone('')
-      setEditOriginalName('')
-      setEditOriginalPhone('')
-    }
-  }, [tab])
-
   useEffect(() => {
     try {
       const raw = localStorage.getItem(ADMIN_DRIVER_DOCS_REGISTRY_KEY)
@@ -990,222 +780,6 @@ export function AdminDashboard() {
     }
   }, [driverDocsRegistry])
 
-  const handleSaveUserName = async () => {
-    if (!token || !editingId) return
-    const next = editName.trim()
-    if (next === editOriginalName.trim()) {
-      setError('O nome não mudou em relação ao valor actual.')
-      return
-    }
-    const prevLabel = editOriginalName.trim() || '(sem nome, mostra telefone)'
-    if (!window.confirm(`Alterar o nome?\n\nDe: ${prevLabel}\nPara: ${next || '(vazio — o servidor pode repor o telefone como nome)'}`)) {
-      return
-    }
-    try {
-      await apiFetch(`/admin/users/${editingId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ name: next || undefined }),
-        token,
-      })
-      setEditOriginalName(next)
-      setError(null)
-      invalidateUserAudit(editingId)
-      fetchUsers()
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const handleSaveUserPhone = async () => {
-    if (!token || !editingId) return
-    const next = editPhone.trim()
-    if (next === editOriginalPhone.trim()) {
-      setError('O telefone não mudou em relação ao valor actual.')
-      return
-    }
-    const typed = window.prompt(
-      `Alterar telefone de ${editOriginalPhone} para ${next}.\n\nPara confirmar, escreve exactamente: ALTERAR_TELEFONE`
-    )
-    if (typed?.trim() !== 'ALTERAR_TELEFONE') return
-    const gr = promptGovernanceReason('Motivo de auditoria para mudança de telefone (SP-F, mín. 10 caracteres):')
-    if (!gr) return
-    try {
-      await apiFetch(`/admin/users/${editingId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ phone: next, governance_reason: gr }),
-        token,
-      })
-      setEditOriginalPhone(next)
-      setEditPhone(next)
-      setError(null)
-      invalidateUserAudit(editingId)
-      fetchUsers()
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const handleDelete = async (userId: string) => {
-    if (!token) return
-    const reason = window.prompt(
-      'Motivo da eliminação (mínimo 10 caracteres; fica em auditoria — SP-F). Só super_admin pode eliminar contas.'
-    )
-    if (!reason || reason.trim().length < 10) {
-      setError('Eliminação cancelada: motivo com pelo menos 10 caracteres é obrigatório.')
-      setDeleteConfirmId(null)
-      return
-    }
-    try {
-      await apiFetch(`/admin/users/${userId}`, {
-        method: 'DELETE',
-        token,
-        body: JSON.stringify({ governance_reason: reason.trim() }),
-      })
-      setDeleteConfirmId(null)
-      invalidateUserAudit(userId)
-      fetchUsers()
-      setError(null)
-    } catch (err) {
-      const ae = err as ApiError
-      const d = ae?.detail
-      const msg =
-        typeof d === 'string'
-          ? formatAdminApiDetail(d)
-          : Array.isArray(d)
-            ? formatAdminApiDetail(d)
-            : 'Erro ao eliminar'
-      setError(msg)
-    }
-  }
-
-  const handleBlockUser = async (userId: string) => {
-    if (!token) return
-    const gr = promptGovernanceReason('Motivo para bloquear conta (SP-F, mín. 10 caracteres):')
-    if (!gr) return
-    try {
-      await apiFetch(`/admin/users/${userId}/block`, {
-        method: 'POST',
-        token,
-        body: JSON.stringify({ governance_reason: gr }),
-      })
-      setBlockConfirmId(null)
-      invalidateUserAudit(userId)
-      setBulkSelectedIds((m) => {
-        const next = { ...m }
-        delete next[userId]
-        return next
-      })
-      fetchUsers()
-      setError(null)
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const handleUnblockUser = async (userId: string) => {
-    if (!token) return
-    const gr = promptGovernanceReason('Motivo para desbloquear conta (SP-F, mín. 10 caracteres):')
-    if (!gr) return
-    try {
-      await apiFetch(`/admin/users/${userId}/unblock`, {
-        method: 'POST',
-        token,
-        body: JSON.stringify({ governance_reason: gr }),
-      })
-      setUnblockConfirmId(null)
-      invalidateUserAudit(userId)
-      fetchUsers()
-      setError(null)
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const handleClearUserPassword = async (userId: string) => {
-    if (!token) return
-    const typed = window.prompt(
-      'Repor login BETA (password por defeito). Escreve exactamente: LIMPAR_SENHA'
-    )
-    if (typed?.trim() !== 'LIMPAR_SENHA') return
-    const gr = promptGovernanceReason('Motivo para repor palavra-passe BETA (super_admin; SP-F):')
-    if (!gr) return
-    try {
-      await apiFetch(`/admin/users/${userId}/password/clear`, {
-        method: 'POST',
-        token,
-        body: JSON.stringify({ confirmation: 'LIMPAR_SENHA', governance_reason: gr }),
-      })
-      setError(null)
-      invalidateUserAudit(userId)
-      fetchUsers()
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const handleBulkBlock = async () => {
-    if (!token) return
-    const ids = Object.keys(bulkSelectedIds).filter((id) => bulkSelectedIds[id])
-    if (ids.length === 0) return
-    const expected = `BLOQUEAR_${ids.length}`
-    const typed = window.prompt(
-      `Para bloquear ${ids.length} conta(s) (reversível), escreve exactamente:\n${expected}`
-    )
-    if (typed?.trim() !== expected) return
-    const reason = window.prompt(
-      'Motivo do bloqueio em massa (mínimo 10 caracteres; fica em auditoria — SP-F). Só super_admin pode executar.'
-    )
-    if (!reason || reason.trim().length < 10) {
-      setError('Bloqueio em massa cancelado: motivo com pelo menos 10 caracteres é obrigatório.')
-      return
-    }
-    try {
-      await apiFetch('/admin/users/bulk-block', {
-        method: 'POST',
-        token,
-        body: JSON.stringify({
-          user_ids: ids,
-          confirmation: expected,
-          governance_reason: reason.trim(),
-        }),
-      })
-      for (const id of ids) invalidateUserAudit(id)
-      setBulkSelectedIds({})
-      fetchUsers()
-      setError(null)
-    } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
-    }
-  }
-
-  const filteredSortedUsers = useMemo(() => {
-    const q = usersFilter.trim().toLowerCase()
-    let list = users
-    if (q) {
-      list = users.filter(
-        (u) =>
-          (u.name || '').toLowerCase().includes(q) ||
-          u.phone.toLowerCase().includes(q) ||
-          u.role.toLowerCase().includes(q) ||
-          u.status.toLowerCase().includes(q)
-      )
-    }
-    const sorted = [...list]
-    const byPhone = (a: AdminUser, b: AdminUser) => a.phone.localeCompare(b.phone)
-    if (usersSort === 'name') {
-      sorted.sort((a, b) => (a.name || a.phone).localeCompare(b.name || b.phone) || byPhone(a, b))
-    } else if (usersSort === 'role') {
-      sorted.sort((a, b) => a.role.localeCompare(b.role) || byPhone(a, b))
-    } else {
-      sorted.sort((a, b) => a.status.localeCompare(b.status) || byPhone(a, b))
-    }
-    return sorted
-  }, [users, usersFilter, usersSort])
-
-  const driverUsers = useMemo(
-    () => users.filter((u) => u.has_driver_profile || u.role === 'driver'),
-    [users]
-  )
   const docsRowsData = useMemo(() => {
     const totals = DRIVER_DOC_STATUSES.reduce(
       (acc, st) => {
@@ -3654,28 +3228,7 @@ export function AdminDashboard() {
                         onToggle={async (e) => {
                           const el = e.currentTarget
                           if (!el.open || !token) return
-                          if (userAuditRows[u.id] !== undefined) return
-                          setUserAuditLoading(u.id)
-                          setUserAuditError((m) => {
-                            const next = { ...m }
-                            delete next[u.id]
-                            return next
-                          })
-                          try {
-                            const rows = await getAdminAuditTrail(token, {
-                              entity_type: 'user',
-                              entity_id: u.id,
-                              limit: 50,
-                            })
-                            setUserAuditRows((m) => ({ ...m, [u.id]: rows }))
-                          } catch {
-                            setUserAuditError((m) => ({
-                              ...m,
-                              [u.id]: 'Não foi possível carregar o trilho.',
-                            }))
-                          } finally {
-                            setUserAuditLoading(null)
-                          }
+                          await loadUserAuditTrailIfNeeded(u.id)
                         }}
                       >
                         <summary className="cursor-pointer text-xs font-medium text-foreground select-none">
