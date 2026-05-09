@@ -36,6 +36,22 @@ async function openDriverMenu(page: Page) {
   await page.getByTestId('driver-open-menu').click()
 }
 
+/**
+ * Com `VITE_DRIVER_HOME_TWO_STEP=true`, o passo 1 só mostra mapa/disponibilidade —
+ * os botões ACEITAR/REJEITAR estão no passo 2. Este helper é no-op se o two-step estiver desligado.
+ */
+async function leaveDriverHomeStep1IfPresent(page: Page) {
+  const step1 = page.getByTestId('driver-home-step1')
+  if (!(await step1.isVisible().catch(() => false))) return
+  const fixed = page.getByTestId('driver-home-step1-continue-fixed')
+  const inline = page.getByTestId('driver-home-step1-continue')
+  if (await fixed.isVisible().catch(() => false)) {
+    await fixed.click()
+  } else if (await inline.isVisible().catch(() => false)) {
+    await inline.click()
+  }
+}
+
 /** Espera POST feito pelo browser após "Iniciar viagem" (markArriving → startTrip). */
 function waitForDriverTripPost(page: Page, tripId: string, suffix: 'arriving' | 'start') {
   return page.waitForResponse(
@@ -44,6 +60,12 @@ function waitForDriverTripPost(page: Page, tripId: string, suffix: 'arriving' | 
       res.url().includes(`/driver/trips/${tripId}/${suffix}`),
     { timeout: sec(60) }
   )
+}
+
+/** Garante coordenadas no browser (Playwright) + última posição no servidor antes de «Iniciar viagem» (gate de proximidade). */
+async function syncDriverNearPickupForStart(page: Page, request: APIRequestContext, driverToken: string) {
+  await page.context().setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
+  await refreshDriverLocationNearPickup(request, driverToken)
 }
 
 /** Refresca última posição no servidor (o start valida contra isto; gates no backend podem exigir timestamp recente). */
@@ -201,6 +223,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({
       timeout: sec(120),
     })
+    await leaveDriverHomeStep1IfPresent(driverPage)
 
     // Servidor ainda lista a viagem para o motorista do seed.
     await expect
@@ -231,6 +254,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await refreshDriverLocationNearPickup(request, tokens.driver)
     const arrivingResP = waitForDriverTripPost(driverPage, tripId, 'arriving')
     const startResP = waitForDriverTripPost(driverPage, tripId, 'start')
+    await syncDriverNearPickupForStart(driverPage, request, tokens.driver)
     await startBtn.click()
     const arrivingRes = await arrivingResP
     expect(
@@ -300,6 +324,8 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const driverPage = await driverCtx.newPage()
     trackDriverPageForArtifacts(driverPage)
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+    await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({ timeout: sec(120) })
+    await leaveDriverHomeStep1IfPresent(driverPage)
 
     const rejectBtn = driverPage.getByTestId(`driver-reject-${tripId}`)
     await expect.poll(async () => rejectBtn.isVisible(), { timeout: sec(90), intervals: pollLook }).toBe(true)
@@ -334,6 +360,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({
       timeout: sec(120),
     })
+    await leaveDriverHomeStep1IfPresent(driverPage)
 
     const aceitarBtn = driverPage.getByTestId(`driver-accept-${tripId}`)
     await expect
@@ -350,6 +377,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await refreshDriverLocationNearPickup(request, tokens.driver)
     const arrivingResP = waitForDriverTripPost(driverPage, tripId, 'arriving')
     const startResP = waitForDriverTripPost(driverPage, tripId, 'start')
+    await syncDriverNearPickupForStart(driverPage, request, tokens.driver)
     await startBtn.click()
     const arrivingRes = await arrivingResP
     expect(
@@ -448,6 +476,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
 
     // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
     await driverPage.getByTestId('driver-close-menu').click()
+    await leaveDriverHomeStep1IfPresent(driverPage)
     await expect(driverPage.getByTestId(`driver-accept-${tripId}`)).toBeVisible({ timeout: sec(60) })
 
     await driverPage.getByTestId(`driver-accept-${tripId}`).click()
