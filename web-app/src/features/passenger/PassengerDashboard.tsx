@@ -318,7 +318,7 @@ export function PassengerDashboard() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [destinationQuery])
+  }, [destinationQuery, pickupLocation])
 
   useEffect(() => {
     if (!dropoffLocation) {

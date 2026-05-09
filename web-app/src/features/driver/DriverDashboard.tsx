@@ -1998,13 +1998,7 @@ function DriverOperationsMenu({
       void estimateZoneEtaFromCurrentLocation(false)
     }, 1800)
     return () => window.clearTimeout(id)
-  }, [
-    driverLocationForZones?.lat,
-    driverLocationForZones?.lng,
-    zoneEtaManuallyEdited,
-    zoneSession,
-    estimateZoneEtaFromCurrentLocation,
-  ])
+  }, [driverLocationForZones, zoneEtaManuallyEdited, zoneSession, estimateZoneEtaFromCurrentLocation])
 
   const zoneTz = zoneBudget?.timezone ?? 'Europe/Lisbon'
   const activeZoneLabelPt = useMemo(() => {
