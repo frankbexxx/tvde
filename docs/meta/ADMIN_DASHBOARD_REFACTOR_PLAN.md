@@ -1,6 +1,6 @@
 # Plano de refactor — `AdminDashboard.tsx` (só planeamento e prompts)
 
-**Estado:** P0–**P7** em código (hooks): **P2** `useAdminDashboardNavigation`; **P3** `useAdminTripLists`; **P4** `useAdminTripDetailActions`; **P5** `useAdminSystemPanels`; **P6** `useAdminAlertsAndAudit`; **P7** `useAdminUsersDirectory`. **P8+** (JSX por tab) por PR.  
+**Estado:** P0–**P12** completos: hooks P2–P7, JSX por tab P8–P11 e orquestrador P12 fino.  
 **Última actualização:** 2026-05-11.
 
 **Tabs canónicas** (URL `?tab=`): `agora` · `docs` · `pending` · `users` · `frota` · `dados` · `trips` · `metrics` · `ops` · `health` (ver `adminDashboardQuery.ts`).
