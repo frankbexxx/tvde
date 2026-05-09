@@ -46,6 +46,7 @@ temp/
 # Ficheiros temporários para commit/PR (usados em heredocs no PowerShell)
 .commit_msg_tmp.txt
 .pr_body_tmp.md
+.pr-body-*.md
 
 # Dumps (BD / exports locais)
 backend/list_partners.txt
