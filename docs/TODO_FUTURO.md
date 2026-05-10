@@ -113,3 +113,11 @@ Documento vivo: ideias **sem implementação obrigatória** até decisão conjun
 5. O restante (runner, UI, E2E, OpenAPI) encaixa em **melhoria contínua** já alinhada com `IMPLEMENTATION_REPORT_C009_K007.md`.
 
 Quando quiseres **endereçar**, escolhemos 1–2 linhas de trabalho por iteração para não espalhar.
+
+---
+
+## F. Backlog EXTRA — Manel, legal e crescimento (2026-05)
+
+Inventário **canónico** (itens **1–10**): [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) — som quando chega pedido, modo nocturno, ecrã sempre activo, **remover classificação passageiro no motorista** (validar juridicamente), documentos partner/driver com caducidades, QR download app, promo codes / Família, menu passageiro tipo driver.
+
+**Síntese para esta lista:** não duplicar aqui — usar o doc de produto para priorização **P0–P2**; quando uma linha entrar em implementação, acrescentar bullet específico em **D** ou abrir prompt em `docs/prompts/`.

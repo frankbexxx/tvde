@@ -12,16 +12,16 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ## Painel — 2026-05-06 (hoje)
 
-**Feito:** `git pull` — `main` com **#281** (fecho docs onda Top 3, atrás de **#280**). Ver nota **PR só com documentação** no cabeçalho deste ficheiro. **Sessão 2026-05-06 (tarde):** Zonas v1 — partner **grant-extra** + GET orçamento; catálogo **porto**; UI `PartnerDriverDetail` (ver PR em curso).
+**Feito:** `main` **#282** (zonas: partner **grant-extra** + catálogo **porto**). Anteriormente **#281** / **#280** (Top 3). **Novo:** backlog **EXTRA** Manel + legal — [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).
 
 **Falta hoje (prioridade):**
 
-1. [x] **[CÓDIGO] Zonas v1** — geo **catálogo** + **extra** partner (**neste PR**; spec §7.3). *Seguinte:* políticas por org / geofencing fino, se precisares.
+1. [x] **[CÓDIGO] Zonas v1** — merge **`main`** (#282).
 2. [ ] **[TESTES] E2E / PW** — follow-ups **Notas E2E** (painel **2026-05-09** abaixo): `api-flows`, `driver-passenger-flow` / two-step quando tocares nesses ficheiros.
 3. [ ] [UX] **Opcional** — Frota: copy/rótulo **«Só atribuídas»** (*assigned* vs aceite/em curso — ver fecho sessão 2026-05-09).
 4. [ ] [OPS] **Stripe** — quando quiseres fechar janela de testes no Render: **`STRIPE_MOCK=true`** (lembrete também no painel **2026-05-10**).
 
-_Backlog sem urgência:_ linha rotacional v2; login social (onda); ler `PROJECT_AUDIT` quando for foco do dia — ver [`docs/todo-em-curso.md`](docs/todo-em-curso.md) rasto vivaço.
+_Backlog EXTRA (som, dark mode, rating passageiro, documentos, QR, família, etc.):_ [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) · quadro [`docs/todo-em-curso.md`](docs/todo-em-curso.md)._
 
 ---
 
