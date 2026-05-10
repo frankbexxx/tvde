@@ -15,7 +15,7 @@ Contexto: alinhar expectativas antes de implementar na app motorista. Cada pergu
 | 3 | Navegação | Problema principal ao voltar do Waze: a) desbloquear b) achar que app morreu c) outro | a) |
 | 4 | Navegação | “Manter ecrã ligado” durante viagem ativa: Sim / Não / Só com carregador | Sim, sempre (com aviso bateria) |
 | 5 | Navegação | No nosso mapa: só posição+rota primeiro, ou já quer voz/turn-by-turn? | Posição+rota primeiro; voz/turn depois |
-| 6 | Menu MVP | Top 3 itens indispensáveis no menu motorista (por ordem) | Falta |
+| 6 | Menu MVP | Top 3 itens indispensáveis no menu motorista (por ordem) | Ver spec §10 em `DRIVER_HOME_TOP3_MANEL.md` + `main` **#280** (ordem canónica até permuta §10.4 com Manel) |
 | 7 | Rendimentos | MVP: totais semanais chegam, ou precisa lista por viagem já? | Totais semanais |
 | 8 | Ocorrências | Reportar com texto livre apenas, ou texto + tipo (esquecimento/tarifa/etc.)? | Texto + tipo |
 | 9 | Categorias | Lista de categorias está fechada? Se não, quais faltam? | Fechada |

@@ -3,7 +3,7 @@
 Documento **canónico** para o fluxo acordado com **Manel**: substituir / preceder o layout actual do `DriverDashboard` por um **fluxo em dois ecrãs** — mapa largo + disponibilidade, depois ecrã de trabalho com **acções em baixo**.  
 Complementa [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) (menu **Menu** continua a existir para preferências, histórico, zonas v1, etc.).
 
-**Estado:** desenho alinhado em sessão (Frank + Manel); existe **implementação parcial** do fluxo em dois passos (`VITE_DRIVER_HOME_TWO_STEP`); **§9** (shell mapa + barra inferior) e **§10** em código: ordem do **menu raiz** §10.2 (Rendimentos → Viagens → Caixa → …); barra com label **Rendimentos**; tocar **Rendimentos** / **Caixa** abre o painel nessa secção — ecrã activo **controlado no `DriverDashboard`** (sem `setState` em `useEffect`, regra ESLint `react-hooks/set-state-in-effect`). A **ordem** no §10 é **proposta canónica** até o Manel afinar; depois só se troca a ordem, não a lista de destinos.
+**Estado:** desenho alinhado em sessão (Frank + Manel); fluxo em dois passos continua por **`VITE_DRIVER_HOME_TWO_STEP`**. **Onda Top 3 «menu + barra» fechada** (2026-05-06, **#280**): **§9** shell (barra inferior) + **§10.2** ordem do menu raiz (Rendimentos → Viagens → Caixa → …), label **Rendimentos** na barra, tocar **Rendimentos** / **Caixa** abre o painel na secção respectiva; ecrã activo do menu **controlado no `DriverDashboard`** (compatível ESLint `react-hooks/set-state-in-effect`). A **ordem** no §10 mantém-se **proposta canónica** até feedback Manel (§10.4); não há entrega pendente até esse feedback.
 
 ---
 
@@ -92,9 +92,9 @@ Entregável: lista de ficheiros tocados + screenshots ou notas de smoke + risco 
 
 ## 7. Próximo passo recomendado (código)
 
-1. **Spike UI** (1 PR): layout shell — Ecrã 1 + navegação para Ecrã 2 mock ou vazio, feature-flag `VITE_DRIVER_HOME_TWO_STEP` (ou equivalente).
-2. **Integração**: encaixar lista actual e `ActiveTripActions` no Ecrã 2.
-3. **Remover flag** quando smoke em produção estiver verde.
+1. ~~**Spike UI** (1 PR): layout shell — Ecrã 1 + navegação para Ecrã 2 mock ou vazio, feature-flag `VITE_DRIVER_HOME_TWO_STEP` (ou equivalente).~~ **Feito** (shell + flag em `main`; ver `TODOdoDIA` 2026-05-02 noite).
+2. **Integração contínua**: manter lista actual e `ActiveTripActions` no Ecrã 2 alinhados a §3; regressões → smoke `DRIVER_MENU_SPEC.md` §7.8.
+3. **Remover flag** `VITE_DRIVER_HOME_TWO_STEP` quando smoke em produção estiver verde de forma estável (política de deploy separada da onda §10.2).
 
 ---
 
@@ -193,4 +193,8 @@ Ordem de **scroll** sugerida (blocos / secções). **Conta** e **Definições** 
 
 ### 10.4 Ajuste com o Manel
 
-Quando houver ranking final: permutar linhas **2–4** (ex.: Inbox acima de Viagens) **sem** retirar Conta, Definições, Zonas, Navegação, Categorias ou Documentos da lista.
+**Sem tarefa aberta no repo até novo input:** quando o Manel enviar ranking final, permutar linhas **2–4** (ex.: Inbox acima de Viagens) **sem** retirar Conta, Definições, Zonas, Navegação, Categorias ou Documentos da lista. Até lá a ordem §10.2 em código espelha este spec.
+
+---
+
+_Última revisão: **2026-05-06** — fecho onda menu/bar (**#280**) nos docs._
