@@ -19,6 +19,8 @@ function stateWith(
       certificado_motorista_tvde: 'missing',
       seguro_responsabilidade_civil: 'missing',
       inspecao_viatura: 'missing',
+      cartao_cidadao: 'missing',
+      registo_criminal: 'missing',
       ...overrides,
     },
     onboardingCompleted,
@@ -44,12 +46,14 @@ describe('driverDocuments service', () => {
       certificado_motorista_tvde: 'approved',
       seguro_responsabilidade_civil: 'approved',
       inspecao_viatura: 'approved',
+      cartao_cidadao: 'approved',
+      registo_criminal: 'approved',
     })
     setDriverDocumentsState(ready)
     const stored = getDriverDocumentsState()
     expect(isDriverDocumentsReady(stored)).toBe(true)
     expect(stored.onboardingCompleted).toBe(true)
-    expect(driverDocumentsApprovedCount(stored)).toBe(4)
+    expect(driverDocumentsApprovedCount(stored)).toBe(6)
   })
 
   it('preserves manual completion flag once set', () => {

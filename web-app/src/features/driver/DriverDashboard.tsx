@@ -79,8 +79,14 @@ import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { ActiveTripActions } from './ActiveTripActions'
-import { DriverTripRatingPanel } from './DriverTripRatingPanel'
 import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
+import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
+import { useDriverOfferSounds } from '../../hooks/useDriverOfferSounds'
+import {
+  fetchDriverDocuments,
+  mergeServerDriverDocuments,
+  patchDriverDocuments,
+} from '../../api/driverDocuments'
 import { formatPickup, formatDestination } from '../../utils/format'
 import {
   DRIVER_START_TRIP_MAX_DISTANCE_M,
@@ -204,6 +210,7 @@ function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatu
 
 export function DriverDashboard() {
   const { token, sessionRole } = useAuth()
+  useScreenWakeLock(sessionRole === 'driver' && Boolean(token))
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
@@ -250,6 +257,8 @@ export function DriverDashboard() {
   const [driverDocsGateEnabled, setDriverDocsGateEnabled] = useState<boolean>(() =>
     isDriverDocumentsGateEnabled()
   )
+  const [driverAcceptSoundTick, setDriverAcceptSoundTick] = useState(0)
+  const [driverCompleteSoundTick, setDriverCompleteSoundTick] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
   /** Ecrã activo no menu lateral (controlado — deep link Rendimentos/Caixa; sem setState em useEffect). */
   const [driverMenuScreen, setDriverMenuScreen] = useState<DriverMenuScreen>('root')
@@ -354,6 +363,17 @@ export function DriverDashboard() {
       dropoff: { lat: t.destination_lat, lng: t.destination_lng },
     }
   }, [activeTripId, filteredAvailable])
+
+  const offerIdsFingerprint = useMemo(
+    () => [...filteredAvailable].map((t) => t.trip_id).sort().join('|'),
+    [filteredAvailable]
+  )
+  useDriverOfferSounds({
+    enabled: sessionRole === 'driver' && Boolean(token) && !offline,
+    offerIdsFingerprint,
+    acceptSignal: driverAcceptSoundTick,
+    completeSignal: driverCompleteSoundTick,
+  })
 
   const { setDriverOnAssigned } = useDevToolsCallbacks()
   useEffect(() => {
@@ -500,6 +520,26 @@ export function DriverDashboard() {
     }
   }, [token])
 
+  useEffect(() => {
+    if (!token || sessionRole !== 'driver') return
+    let cancelled = false
+    void fetchDriverDocuments(token)
+      .then((server) => {
+        if (cancelled) return
+        setDriverDocuments((prev) => {
+          const merged = mergeServerDriverDocuments(prev, server)
+          setDriverDocumentsState(merged)
+          return merged
+        })
+      })
+      .catch(() => {
+        /* API antiga ou offline */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token, sessionRole])
+
   // Sync backend when token/offline changes; não forçar /online com viagem activa (repor is_available).
   useEffect(() => {
     if (!token) return
@@ -542,7 +582,10 @@ export function DriverDashboard() {
       setDriverStatusOverride(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
-      if (actionName === 'ACEITAR') sonnerToast.success('Viagem aceite')
+      if (actionName === 'ACEITAR') {
+        sonnerToast.success('Viagem aceite')
+        setDriverAcceptSoundTick((n) => n + 1)
+      }
       if (actionName === 'ACEITAR' && availableForFallback) {
         acceptedTripGeoRef.current = {
           pickup: {
@@ -670,6 +713,7 @@ export function DriverDashboard() {
   }, [clearDriverActiveTripUi])
 
   const driverTripPartialAfterComplete = useCallback(() => {
+    setDriverCompleteSoundTick((n) => n + 1)
     tripSimStopRef.current?.()
     tripSimStopRef.current = null
     setMockSimulatedPosition(null)
@@ -820,9 +864,15 @@ export function DriverDashboard() {
             const docs = { ...prev.docs, [doc]: status }
             const next: DriverDocumentsState = {
               docs,
-              onboardingCompleted: prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
+              onboardingCompleted:
+                prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
             }
             setDriverDocumentsState(next)
+            if (token) {
+              void patchDriverDocuments(token, { [doc]: { status } }).catch(() => {
+                /* falha silenciosa: estado local mantém-se */
+              })
+            }
             return next
           })
         }}
@@ -893,6 +943,9 @@ export function DriverDashboard() {
                       prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
                   }
                   setDriverDocumentsState(next)
+                  if (token) {
+                    void patchDriverDocuments(token, { [doc]: { status } }).catch(() => {})
+                  }
                   return next
                 })
               }}
@@ -1418,7 +1471,6 @@ function ActiveTripSummary({
   }, [tripId, token])
   const {
     data: poll,
-    refetch: refetchTripDetail,
     isRefreshing: tripRefreshing,
     lastSuccessAt: tripLastSuccessAt,
     pollFault: tripPollFault,
@@ -1472,34 +1524,6 @@ function ActiveTripSummary({
     onTripNotFound()
   }, [pollNotFound, onTripNotFound])
 
-  const passengerRating = trip?.passenger_rating ?? effectiveTrip?.passenger_rating ?? null
-  const showDriverRatingPanel =
-    sessionRole === 'driver' &&
-    displayStatus === 'completed' &&
-    (passengerRating === null || passengerRating === undefined)
-
-  const ratingScrollRef = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    if (!showDriverRatingPanel) return
-    const t = window.setTimeout(() => {
-      ratingScrollRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }, 120)
-    return () => window.clearTimeout(t)
-  }, [showDriverRatingPanel])
-
-  useEffect(() => {
-    if (pollNotFound || sessionRole !== 'driver') return
-    if (displayStatus !== 'completed') return
-    if (passengerRating == null) return
-    onDismissCompletedTrip()
-  }, [
-    pollNotFound,
-    sessionRole,
-    displayStatus,
-    passengerRating,
-    onDismissCompletedTrip,
-  ])
-
   const config = driverActiveTripUi(displayStatus)
 
   if (!effectiveTrip && tripId && token && !pollNotFound) {
@@ -1536,20 +1560,18 @@ function ActiveTripSummary({
       ) : null}
       {displayStatus === 'completed' && trip?.payment_status === 'processing' ? (
         <p className="text-xs text-foreground/70 text-center px-2 leading-snug">
-          O pagamento pode ficar «a processar» uns instantes — podes avaliar enquanto sincroniza.
+          O pagamento pode ficar «a processar» uns instantes — aguarda a sincronização.
         </p>
       ) : null}
-      {showDriverRatingPanel ? (
-        <div ref={ratingScrollRef} className="scroll-mt-24">
-          <DriverTripRatingPanel
-            tripId={tripId}
-            token={token}
-            onSubmitted={async () => {
-              await refetchTripDetail()
-              onDismissCompletedTrip()
-            }}
-            onSkip={onDismissCompletedTrip}
-          />
+      {displayStatus === 'completed' && sessionRole === 'driver' ? (
+        <div className="flex justify-center pt-2">
+          <Button
+            type="button"
+            className="min-h-11 px-6"
+            onClick={() => onDismissCompletedTrip()}
+          >
+            Continuar
+          </Button>
         </div>
       ) : null}
       {effectiveTrip && (
@@ -2678,8 +2700,8 @@ function DriverOperationsMenu({
         <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
           <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
           <p className="text-xs text-muted-foreground leading-snug">
-            Primeira entrada: completa os documentos obrigatórios aqui no painel. Depois podes corrigir/atualizar mais
-            tarde nas definições do motorista.
+            Envia os documentos para revisão da tua frota (partner). A <span className="font-medium">aprovação</span> é
+            feita no painel da frota.
           </p>
           <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card px-3 py-2">
             <p className="text-xs text-foreground/85">
@@ -2716,17 +2738,10 @@ function DriverOperationsMenu({
                   <div className="mt-2 flex gap-2">
                     <button
                       type="button"
-                      className="min-h-[32px] flex-1 rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"
+                      className="min-h-[32px] w-full rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"
                       onClick={() => onPatchDriverDocument(doc, 'pending_review')}
                     >
-                      Marcar entregue
-                    </button>
-                    <button
-                      type="button"
-                      className="min-h-[32px] flex-1 rounded-md border border-success/50 bg-success/10 px-2 text-xs font-medium text-foreground hover:bg-success/20"
-                      onClick={() => onPatchDriverDocument(doc, 'approved')}
-                    >
-                      Marcar aprovado
+                      Enviar para revisão da frota
                     </button>
                   </div>
                 </div>
@@ -2735,7 +2750,7 @@ function DriverOperationsMenu({
           </div>
           <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs text-foreground/85">Bloquear disponibilidade até 4/4 aprovados</p>
+              <p className="text-xs text-foreground/85">Bloquear disponibilidade até todos estarem aprovados</p>
               <button
                 type="button"
                 aria-pressed={driverDocsGateEnabled}

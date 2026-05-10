@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -21,6 +22,7 @@ class PartnerDriverItem(BaseModel):
     is_available: bool
     user: PartnerDriverUserBrief
     last_location: PartnerDriverLastLocation | None = None
+    documents: dict[str, dict[str, Any]] | None = None
 
 
 class PartnerTripItem(BaseModel):

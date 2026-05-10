@@ -5,7 +5,7 @@ import { useActiveTrip } from '../../context/ActiveTripContext'
 import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
 import { createTrip, getTripHistory, getTripDetail, cancelTrip } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
-import type { TripDetailResponse, TripHistoryItem } from '../../api/trips'
+import type { TripDetailResponse } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
@@ -13,7 +13,6 @@ import {
   tripDetailFromCreateResponse,
   tripStateRank,
   passengerTripStatusLabel,
-  historyStatusDotColor,
 } from '../../constants/tripStatus'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { isMockLocationModeEnabled } from '../../dev/mockLocation'
@@ -23,7 +22,6 @@ import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { Spinner } from '../../components/ui/Spinner'
-import { formatPickup, formatDestination } from '../../utils/format'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
 import { getRouteGeoJSON } from '../../maps/routing'
@@ -52,8 +50,7 @@ import {
 import { toast } from 'sonner'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
-import { BetaAccountPanel } from '../account/BetaAccountPanel'
-import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
+import { PassengerSideMenu } from './PassengerSideMenu'
 import {
   PASSENGER_TRIP_CANCEL_PRESETS,
   TRIP_CANCEL_SELECT_OTHER,
@@ -1008,6 +1005,11 @@ export function PassengerDashboard() {
         ) : undefined
       }
     >
+      <PassengerSideMenu
+        history={history}
+        historyLoading={historyLoading}
+        historyPollFault={historyPollFault}
+      />
       {import.meta.env.DEV && isMockLocationModeEnabled() ? (
         <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
           <span aria-hidden>🧪</span> Simulação — passageiro fixo; motorista aproxima-se em tempo real após aceitar (rota OSRM).
@@ -1349,50 +1351,9 @@ export function PassengerDashboard() {
 
         {historyPollFault && (
           <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-            Não foi possível atualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
+            Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
           </div>
         )}
-
-        {!!token && !historyLoading && history && history.length > 0 ? (
-          <section className="pt-8 mt-8 border-t border-border">
-            <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
-            <ul className="space-y-2">
-              {history.slice(0, 5).map((t: TripHistoryItem) => (
-                <li
-                  key={t.trip_id}
-                  className="flex flex-col gap-1 py-2 border-b border-border last:border-0 transition-opacity duration-150"
-                >
-                  <div className="flex justify-between items-center gap-3">
-                    <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
-                      <span
-                        aria-hidden="true"
-                        className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
-                      />
-                      <span className="truncate">
-                        {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                        {formatDestination(t.destination_lat, t.destination_lng)}
-                      </span>
-                    </span>
-                    <span className="font-medium text-foreground shrink-0">
-                      {t.final_price != null ? `${t.final_price} €` : '—'}
-                    </span>
-                  </div>
-                  <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-        {!!token && !historyLoading && history !== null && history.length === 0 ? (
-          <section className="pt-8 mt-8 border-t border-border">
-            <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed rounded-xl border border-dashed border-border/80 bg-muted/30 px-4 py-6 text-center">
-              Ainda não tens viagens concluídas nesta conta.
-            </p>
-          </section>
-        ) : null}
-
-        {token ? <BetaAccountPanel /> : null}
       </div>
     </ScreenContainer>
   )

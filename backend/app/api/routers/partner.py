@@ -33,6 +33,7 @@ from app.schemas.driver_zones import (
     PartnerGrantZoneBudgetExtraRequest,
     PartnerZoneSessionApproveExtensionRequest,
 )
+from app.schemas.driver_documents import PartnerDriverDocumentsPatchRequest
 from app.schemas.partner import (
     PartnerDriverDiscoveryItem,
     PartnerDriverAvailabilityPatchRequest,
@@ -44,6 +45,7 @@ from app.schemas.partner import (
     PartnerTripItem,
     PartnerTripReassignRequest,
 )
+from app.services.driver_documents import apply_partner_documents_patch, parse_documents_column
 from app.services.partner_driver_discovery import (
     discover_drivers_for_partner,
     partner_add_driver_to_fleet,
@@ -92,7 +94,7 @@ def _require_partner_id(ctx: UserContext) -> str:
     return pid
 
 
-def _driver_item(d) -> PartnerDriverItem:
+def _driver_item(d, *, include_documents: bool = False) -> PartnerDriverItem:
     loc = None
     if d.last_location is not None:
         loc = PartnerDriverLastLocation(
@@ -101,6 +103,9 @@ def _driver_item(d) -> PartnerDriverItem:
             timestamp=d.last_location.timestamp.isoformat(),
         )
     u = d.user
+    documents = None
+    if include_documents:
+        documents = parse_documents_column(d.documents)["docs"]
     return PartnerDriverItem(
         user_id=str(d.user_id),
         partner_id=str(d.partner_id),
@@ -111,6 +116,7 @@ def _driver_item(d) -> PartnerDriverItem:
             phone=u.phone if u else None,
         ),
         last_location=loc,
+        documents=documents,
     )
 
 
@@ -168,7 +174,7 @@ async def partner_get_driver(
     d = get_driver_for_partner(db, partner_id, did)
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
-    return _driver_item(d)
+    return _driver_item(d, include_documents=True)
 
 
 @router.get("/drivers/discover", response_model=list[PartnerDriverDiscoveryItem])
@@ -297,6 +303,43 @@ async def partner_patch_driver_availability(
     if d is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _driver_item(d)
+
+
+@router.patch(
+    "/drivers/{driver_user_id}/documents",
+    response_model=PartnerDriverItem,
+)
+async def partner_patch_driver_documents(
+    driver_user_id: str,
+    body: PartnerDriverDocumentsPatchRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerDriverItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    apply_partner_documents_patch(
+        db,
+        partner_id=partner_id,
+        driver_user_id=did,
+        patch=body.docs,
+    )
+    d = get_driver_for_partner(db, partner_id, did)
+    if d is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+    return _driver_item(d, include_documents=True)
 
 
 @router.get("/trips", response_model=list[PartnerTripItem])

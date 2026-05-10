@@ -7,6 +7,7 @@ import { PartnerDriverDetail } from '../features/partner/PartnerDriverDetail'
 import { PartnerHome } from '../features/partner/PartnerHome'
 import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
 import { LoginScreen } from '../features/auth/LoginScreen'
+import { AppDownloadRedirect } from '../features/public/AppDownloadRedirect'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { AppHeaderBar } from '../components/layout/AppHeaderBar'
 import { isBackofficeStaffRole, useAuth } from '../context/AuthContext'
@@ -102,6 +103,9 @@ export function AppRoutes() {
   }
 
   if (betaMode && !isAuthenticated) {
+    if (pathname === '/dl' || pathname === '/app') {
+      return <AppDownloadRedirect />
+    }
     const requestedRole = pathname.startsWith('/partner')
       ? 'partner'
       : pathname.startsWith('/driver')
@@ -118,6 +122,8 @@ export function AppRoutes() {
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
         <main className="flex-1 overflow-y-auto min-h-0 min-w-0">
           <Routes>
+            <Route path="/dl" element={<AppDownloadRedirect />} />
+            <Route path="/app" element={<AppDownloadRedirect />} />
             <Route path="/" element={<RootRedirect />} />
             <Route
               path="/passenger"

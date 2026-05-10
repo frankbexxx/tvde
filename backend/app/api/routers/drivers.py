@@ -6,9 +6,18 @@ from sqlalchemy import select
 
 from app.api.deps import UserContext, get_db, require_role
 from app.models.enums import Role
-from app.schemas.driver import DriverLocationPayload
-from app.schemas.driver import DriverLocationResponse
-from app.schemas.driver import DriverVehicleCategoriesPayload, DriverVehicleCategoriesResponse
+from app.schemas.driver import (
+    DriverLocationPayload,
+    DriverLocationResponse,
+    DriverVehicleCategoriesPayload,
+    DriverVehicleCategoriesResponse,
+)
+from app.schemas.driver_documents import (
+    DriverDocumentsPatchRequest,
+    DriverDocumentsStateResponse,
+    DriverDocumentsSuggestExpiryRequest,
+    DriverDocumentsSuggestExpiryResponse,
+)
 from app.db.models.driver import DriverLocation
 from app.db.models.driver import Driver
 from app.services.driver_location import upsert_driver_location
@@ -16,6 +25,11 @@ from app.services.driver_preferences import (
     decode_driver_categories_csv,
     encode_driver_categories_csv,
 )
+from app.services.driver_documents import (
+    apply_driver_documents_patch,
+    get_documents_for_driver,
+)
+from app.services.driver_document_expiry_suggest import suggest_expiry_iso_from_text
 
 
 router = APIRouter(prefix="/drivers", tags=["driver"])
@@ -142,4 +156,48 @@ async def patch_vehicle_categories(
     db.refresh(driver)
     return DriverVehicleCategoriesResponse(
         categories=decode_driver_categories_csv(driver.vehicle_categories)
+    )
+
+
+@driver_router.get(
+    "/documents",
+    response_model=DriverDocumentsStateResponse,
+    summary="Driver document vault (JSON)",
+)
+async def get_my_documents(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverDocumentsStateResponse:
+    uid = uuid.UUID(str(user.user_id))
+    data = get_documents_for_driver(db, uid)
+    return DriverDocumentsStateResponse(version=int(data["version"]), docs=data["docs"])
+
+
+@driver_router.patch(
+    "/documents",
+    response_model=DriverDocumentsStateResponse,
+    summary="Submit documents for partner review (no self-approval)",
+)
+async def patch_my_documents(
+    payload: DriverDocumentsPatchRequest,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverDocumentsStateResponse:
+    uid = uuid.UUID(str(user.user_id))
+    state = apply_driver_documents_patch(db, user_id=uid, patch=payload.docs)
+    return DriverDocumentsStateResponse(version=int(state["version"]), docs=state["docs"])
+
+
+@driver_router.post(
+    "/documents/suggest-expiry",
+    response_model=DriverDocumentsSuggestExpiryResponse,
+    summary="Suggest expiry date (ISO) from pasted PT document text",
+)
+async def suggest_document_expiry(
+    payload: DriverDocumentsSuggestExpiryRequest,
+    user: UserContext = Depends(require_role(Role.driver)),
+) -> DriverDocumentsSuggestExpiryResponse:
+    _ = user
+    return DriverDocumentsSuggestExpiryResponse(
+        suggested_expires_at=suggest_expiry_iso_from_text(payload.text)
     )

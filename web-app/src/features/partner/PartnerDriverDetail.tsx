@@ -4,11 +4,18 @@ import {
   fetchPartnerDriver,
   fetchPartnerDriverZoneBudgetToday,
   patchPartnerDriverAvailability,
+  patchPartnerDriverDocuments,
   patchPartnerDriverStatus,
   postPartnerGrantDriverZoneBudgetExtra,
   type PartnerDriverRow,
   type PartnerDriverZoneBudgetToday,
 } from '../../api/partner'
+import {
+  driverDocumentLabel,
+  driverDocumentStatusLabel,
+  REQUIRED_DRIVER_DOCUMENTS,
+  type DriverDocumentStatus,
+} from '../../services/driverDocuments'
 
 function locationBlock(d: PartnerDriverRow) {
   const loc = d.last_location
@@ -90,6 +97,21 @@ export function PartnerDriverDetail() {
     }
   }
 
+  const runDoc = async (docKey: string, status: string) => {
+    if (!userId) return
+    setBusy('doc')
+    setError(null)
+    try {
+      const row = await patchPartnerDriverDocuments(userId, { [docKey]: { status } })
+      setD(row)
+    } catch (e: unknown) {
+      const err = e as { detail?: string }
+      setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao actualizar documentos.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
   if (loading) {
     return <p className="p-4 text-sm text-muted-foreground">A carregar…</p>
   }
@@ -131,6 +153,56 @@ export function PartnerDriverDetail() {
       </div>
 
       {locationBlock(d)}
+
+      <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-3">
+        <p className="font-medium text-foreground">Documentos do motorista</p>
+        <p className="text-xs text-muted-foreground">
+          Estados partilhados com a app do motorista. Ajusta validade e notas quando necessário.
+        </p>
+        <div className="space-y-2">
+          {REQUIRED_DRIVER_DOCUMENTS.map((key) => {
+            const row = d.documents?.[key]
+            const st = row?.status ?? 'missing'
+            return (
+              <div key={key} className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium text-foreground">{driverDocumentLabel(key)}</span>
+                  <span className="text-[11px] rounded-full border border-border px-2 py-0.5">
+                    {driverDocumentStatusLabel(st as DriverDocumentStatus)}
+                  </span>
+                </div>
+                {row?.expires_at ? (
+                  <p className="text-[11px] text-muted-foreground">Validade: {row.expires_at}</p>
+                ) : null}
+                {row?.partner_note ? (
+                  <p className="text-[11px] text-muted-foreground">Nota: {row.partner_note}</p>
+                ) : null}
+                <div className="flex flex-wrap gap-1">
+                  {(
+                    [
+                      ['approved', 'Aprovar'],
+                      ['pending_review', 'Revisão'],
+                      ['rejected', 'Rejeitar'],
+                      ['expired', 'Expirado'],
+                      ['missing', 'Em falta'],
+                    ] as const
+                  ).map(([s, label]) => (
+                    <button
+                      key={s}
+                      type="button"
+                      disabled={busy !== null}
+                      onClick={() => void runDoc(key, s)}
+                      className="min-h-8 rounded-md border border-border px-2 text-[11px] font-medium disabled:opacity-50"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
 
       {approved && (
         <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-2">

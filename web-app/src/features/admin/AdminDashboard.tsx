@@ -577,6 +577,8 @@ export function AdminDashboard() {
           certificado_motorista_tvde: docs.certificado_motorista_tvde ?? 'missing',
           seguro_responsabilidade_civil: docs.seguro_responsabilidade_civil ?? 'missing',
           inspecao_viatura: docs.inspecao_viatura ?? 'missing',
+          cartao_cidadao: docs.cartao_cidadao ?? 'missing',
+          registo_criminal: docs.registo_criminal ?? 'missing',
         }
       }
       setDriverDocsRegistry(next)

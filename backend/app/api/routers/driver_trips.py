@@ -246,7 +246,7 @@ async def rate_trip(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> TripStatusResponse:
-    """Driver rates passenger after trip completion."""
+    """Disabled: driver-initiated passenger rating returns 410 (see product/legal backlog)."""
     trip = rate_trip_as_driver(
         db=db,
         driver_id=user.user_id,

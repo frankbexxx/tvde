@@ -17,7 +17,6 @@ import {
 import { canDriverStartTripNearPickup } from './driverPickupGate'
 import { googleMapsDirectionsUrl, wazeNavigateUrl } from '../../utils/externalNavigation'
 import { getDriverNavApp, type DriverNavApp } from '../../services/driverNavPreference'
-import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
 import {
   DRIVER_TRIP_CANCEL_PRESETS,
   TRIP_CANCEL_SELECT_OTHER,
@@ -111,7 +110,7 @@ export interface ActiveTripActionsProps {
   onClearStatusOverride: () => void
   onTripActionSuccess: (status: string) => void
   onComplete: () => void
-  /** Chamado quando a viagem passa a `completed` (sem libertar o ecrã no pai — p.ex. para avaliar). */
+  /** Chamado quando a viagem passa a `completed` (pai pode libertar o ecrã após resumo). */
   onTripCompleted?: () => void
   onError: (s: string) => void
 }
@@ -192,12 +191,6 @@ export function ActiveTripActions({
     tripRefreshing,
     Boolean(tripId && token && trip)
   )
-  const wakeLockEnabled =
-    displayStatus === 'assigned' ||
-    displayStatus === 'accepted' ||
-    displayStatus === 'arriving' ||
-    displayStatus === 'ongoing'
-  useScreenWakeLock(wakeLockEnabled)
 
   const tripPollHint = tripPollFault
     ? 'Não foi possível atualizar agora. Mantemos a última informação e tentamos de novo.'
