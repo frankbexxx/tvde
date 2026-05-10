@@ -251,8 +251,8 @@ export function DriverDashboard() {
     isDriverDocumentsGateEnabled()
   )
   const [menuOpen, setMenuOpen] = useState(false)
-  /** Secção inicial ao abrir o menu lateral (Top 3 / barra inferior). */
-  const [menuBootScreen, setMenuBootScreen] = useState<DriverMenuScreen>('root')
+  /** Ecrã activo no menu lateral (controlado — deep link Rendimentos/Caixa; sem setState em useEffect). */
+  const [driverMenuScreen, setDriverMenuScreen] = useState<DriverMenuScreen>('root')
   /** Leitura síncrona no bottom nav (evita setDriverShellTab dentro do updater de setMenuOpen). */
   const menuOpenRef = useRef(menuOpen)
   menuOpenRef.current = menuOpen
@@ -617,7 +617,7 @@ export function DriverDashboard() {
 
   const closeDriverMenu = useCallback(() => {
     setMenuOpen(false)
-    setMenuBootScreen('root')
+    setDriverMenuScreen('root')
     setDriverShellTab('home')
   }, [])
 
@@ -626,7 +626,7 @@ export function DriverDashboard() {
       if (tab === 'home') {
         setDriverShellTab('home')
         setMenuOpen(false)
-        setMenuBootScreen('root')
+        setDriverMenuScreen('root')
         if (driverHomeTwoStep && !activeTripId) setDriverHomeStep(2)
         document.getElementById('driver-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
         if (token && pollEnabled) void refetchAvailable()
@@ -634,12 +634,12 @@ export function DriverDashboard() {
       }
       if (tab === 'menu') {
         const nextOpen = !menuOpenRef.current
-        if (nextOpen) setMenuBootScreen('root')
+        if (nextOpen) setDriverMenuScreen('root')
         setMenuOpen(nextOpen)
         setDriverShellTab(nextOpen ? 'menu' : 'home')
         return
       }
-      setMenuBootScreen(tab === 'earnings' ? 'earnings' : 'inbox')
+      setDriverMenuScreen(tab === 'earnings' ? 'earnings' : 'inbox')
       setDriverShellTab(tab)
       setMenuOpen(true)
     },
@@ -783,11 +783,12 @@ export function DriverDashboard() {
     >
       <DriverSideMenu
         open={menuOpen}
-        bootScreenWhenOpen={menuBootScreen}
         onOpenChange={(v) => {
           setMenuOpen(v)
-          if (!v) setMenuBootScreen('root')
+          if (!v) setDriverMenuScreen('root')
         }}
+        screen={driverMenuScreen}
+        onScreenChange={setDriverMenuScreen}
         sessionDisplayName={sessionDisplayName}
         history={history}
         driverLocationForZones={mapDotLatLng ?? null}
@@ -941,7 +942,7 @@ export function DriverDashboard() {
                 onClick={() => {
                   setMenuOpen((v) => {
                     const next = !v
-                    if (next) setMenuBootScreen('root')
+                    if (next) setDriverMenuScreen('root')
                     return next
                   })
                 }}
@@ -1047,7 +1048,7 @@ export function DriverDashboard() {
                   onClick={() => {
                     setMenuOpen((v) => {
                       const next = !v
-                      if (next) setMenuBootScreen('root')
+                      if (next) setDriverMenuScreen('root')
                       return next
                     })
                   }}

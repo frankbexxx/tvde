@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
 import { useAuth } from '../../context/AuthContext'
 import type { DriverNavApp } from '../../services/driverNavPreference'
@@ -102,8 +102,9 @@ function RootItem({
 export function DriverSideMenu(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** Ao abrir o painel (transição fechado→aberto), mostrar este ecrã (§10.2 Top 3 Manel). */
-  bootScreenWhenOpen?: DriverMenuScreen
+  /** Controlado no pai — evita setState em effects (ESLint react-hooks/set-state-in-effect). */
+  screen: DriverMenuScreen
+  onScreenChange: (screen: DriverMenuScreen) => void
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
@@ -121,21 +122,12 @@ export function DriverSideMenu(props: {
   const {
     open,
     onOpenChange,
-    bootScreenWhenOpen = 'root',
+    screen,
+    onScreenChange,
     sessionDisplayName,
     renderLegacyMenu,
   } = props
   const { sessionPhone, logout } = useAuth()
-
-  const [screen, setScreen] = useState<DriverMenuScreen>('root')
-  const prevOpenRef = useRef(false)
-
-  useEffect(() => {
-    if (open && !prevOpenRef.current) {
-      setScreen(bootScreenWhenOpen === 'all' ? 'root' : bootScreenWhenOpen)
-    }
-    prevOpenRef.current = open
-  }, [open, bootScreenWhenOpen])
 
   const title = useMemo(() => {
     if (screen === 'root') return 'Menu'
@@ -151,11 +143,11 @@ export function DriverSideMenu(props: {
   }, [screen])
 
   const close = () => {
-    setScreen('root')
+    onScreenChange('root')
     onOpenChange(false)
   }
 
-  const back = screen !== 'root' ? () => setScreen('root') : undefined
+  const back = screen !== 'root' ? () => onScreenChange('root') : undefined
 
   return (
     <Sheet open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
@@ -201,18 +193,18 @@ export function DriverSideMenu(props: {
                   <RootItem
                     label="Rendimentos"
                     icon={<CreditCard className="h-4 w-4" />}
-                    onClick={() => setScreen('earnings')}
+                    onClick={() => onScreenChange('earnings')}
                   />
                   <RootItem
                     label="Viagens"
                     icon={<History className="h-4 w-4" />}
-                    onClick={() => setScreen('trips')}
+                    onClick={() => onScreenChange('trips')}
                   />
                   <RootItem
                     label="Caixa de entrada"
                     icon={<Inbox className="h-4 w-4" />}
                     badge={null}
-                    onClick={() => setScreen('inbox')}
+                    onClick={() => onScreenChange('inbox')}
                   />
                   <RootItem
                     label="Registo de atividade"
@@ -241,27 +233,27 @@ export function DriverSideMenu(props: {
                   <RootItem
                     label="Preços (estimativa)"
                     icon={<CreditCard className="h-4 w-4" />}
-                    onClick={() => setScreen('pricing')}
+                    onClick={() => onScreenChange('pricing')}
                   />
                   <RootItem
                     label="Zonas"
                     icon={<MapPin className="h-4 w-4" />}
-                    onClick={() => setScreen('zones')}
+                    onClick={() => onScreenChange('zones')}
                   />
                   <RootItem
                     label="Navegação"
                     icon={<Compass className="h-4 w-4" />}
-                    onClick={() => setScreen('nav')}
+                    onClick={() => onScreenChange('nav')}
                   />
                   <RootItem
                     label="Categorias"
                     icon={<SlidersHorizontal className="h-4 w-4" />}
-                    onClick={() => setScreen('categories')}
+                    onClick={() => onScreenChange('categories')}
                   />
                   <RootItem
                     label="Documentos"
                     icon={<FileText className="h-4 w-4" />}
-                    onClick={() => setScreen('docs')}
+                    onClick={() => onScreenChange('docs')}
                   />
                 </div>
 
@@ -288,4 +280,3 @@ export function DriverSideMenu(props: {
     </Sheet>
   )
 }
-
