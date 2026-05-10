@@ -10,6 +10,7 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 - **Motorista:** `StatusHeader` **compacto** quando há pedidos; `ActiveTripSummary` com copy de pagamento **a processar**, **rating** antes do `TripCard` + `scrollIntoView`; `DriverSideMenu` — badge **BETA**, **Zonas** com ícone **MapPin**, rótulo **Histórico (viagens)**; botão frota **min-h-11** onde aplicável.
 - **Login:** `vite` injecta **versão** (`package.json`) + **SHA** Git — rodapé «Versão da aplicação»; **`AppHeaderBar`** — pastilha **MOTORISTA/PASSAGEIRO/FROTA/STAFF** + linha **Conta ·** (últimos 8 chars do `sub`).
 - **Continuidade:** `TODOdoDIA.md` painel **2026-05-06**; `docs/todo-em-curso.md` § **Plano por sessões** (S1 smoke → S2 docs → S3 segurança → S4 Stripe → S5 opcional).
+- **Top 3 Manel (fecho docs 2026-05-06):** `main` **#280** — menu §10.2, barra **Rendimentos**, estado no `DriverDashboard`; `DRIVER_MENU_SPEC` §6 item 8 marcado feito; rastos Top 3 no `TODOdoDIA` arquivados (§10.4 = permuta futura só com input Manel).
 
 ---
 

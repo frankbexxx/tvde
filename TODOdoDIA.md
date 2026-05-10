@@ -172,7 +172,7 @@ _Fecho após merge do **shell motorista** (barra inferior, mapa offline §9.2, p
 
 ### Rasto (não esquecer)
 
-- [ ] [DOCS] **Top 3 menu** — ranking final Manel quando chegar resposta.
+- [x] [DOCS] **Top 3 menu** — onda **fechada** (**#280** 2026-05-06: §10.2 + barra). Permuta §10.4 só **com** ranking/feedback Manel; até lá **sem** item aberto.
 - [ ] [OPS] **Auditoria projecto** — `docs/audit/PROJECT_AUDIT_2026-05-02.md` na primeira abertura do dia em que for o foco.
 
 ---
@@ -192,7 +192,7 @@ _Série de smokes curtos concluída; `npm run build` no `web-app` OK._
 
 - [x] [DOCS] **Portagens** — spec mínima: `docs/product/PORTAGENS_SPEC.md` (2026-05-03).
 - [x] [CÓDIGO] **Zonas v1 — extensão prazo** — `POST …/request-extension` + `POST /partner/.../approve-extension` + UI menu; **fica pendente:** geo por `zone_id`, outras extensões partner além do prazo.
-- [ ] [DOCS] **Top 3 menu** — quando Manel enviar ranking final.
+- [x] [DOCS] **Top 3 menu** — igual ao rasto 2026-05-02 noite: fechado **#280**; §10.4 documentado como «só após input Manel».
 - [ ] [PENSAR] Login social (onda dedicada).
 
 ### Opcional
@@ -220,7 +220,7 @@ _Documentação Manel/benchmarks + **entregas código** em `main` (#211 esquelet
 
 ### Rasto (não esquecer)
 
-- Pendência humana: **Top 3 menu** (Manuel/Manel) quando chegar resposta final.
+- [x] **Top 3 menu** — onda código+docs fechada **#280**; ajuste de ordem §10.4 = só quando houver resposta Manel (spec), não checklist pendente.
 
 ---
 

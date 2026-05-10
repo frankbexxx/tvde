@@ -22,7 +22,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ### Rasto vivaço (não bloqueia a fila acima)
 
-- [ ] **Top 3 Manel** — ranking final quando houver; spec em [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md); polish `DRIVER_MENU_SPEC.md` §7.4 / §7.8. *(Código: §10.2, barra **Rendimentos**, deep link; estado do menu no `DriverDashboard` — compatível ESLint `react-hooks/set-state-in-effect`.)*
+- [x] **Top 3 Manel (onda fechada)** — **§10.2 + barra Rendimentos + deep link** em `main` (**#280**, 2026-05-06). Spec: [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md). **Sem tarefa aberta:** permuta de ordem entre secções (§10.4) só quando o Manel enviar feedback; até lá a ordem canónica do spec mantém-se. Regressão UI motorista: smoke `DRIVER_MENU_SPEC.md` §7.8 quando se tocar no `DriverDashboard` / menu.
 - [ ] **Zonas v1:** geo por `zone_id`, orçamento extra >2/dia via partner (se aplicável).
 - [ ] Linha rotacional v2 (mais mensagens / dados internos sem APIs externas).
 - [ ] Planeamento **login social** (onda própria).
@@ -78,4 +78,4 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 _Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painéis **2026-05-10** / **2026-05-09** · **#267** (E2E partner) · plano refactor [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · baseline [`testing/DEV_BASELINE_ROSTER.md`](testing/DEV_BASELINE_ROSTER.md) · PRs **#258**, **#262**._
 
-_Última revisão: **2026-05-11** (admin **P0–P12** completo: hooks + JSX por tab + orquestrador)._
+_Última revisão: **2026-05-06** (Top 3 Manel onda fechada **#280** nos docs; admin **P0–P12** já referenciado acima)._
