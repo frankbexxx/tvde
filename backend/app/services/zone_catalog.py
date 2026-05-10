@@ -34,6 +34,11 @@ _ZONE_CATALOG: tuple[ZoneCatalogEntry, ...] = (
         ),
     ),
     ZoneCatalogEntry(zone_id="lisboa", label_pt="Lisboa (área metropolitana)", kind="generic"),
+    ZoneCatalogEntry(
+        zone_id="porto",
+        label_pt="Porto (área metropolitana)",
+        kind="generic",
+    ),
     ZoneCatalogEntry(zone_id="portimao", label_pt="Portimão", kind="generic"),
 )
 
@@ -43,6 +48,7 @@ _ZONE_ARRIVED_GATES: dict[str, tuple[float, float, float]] = {
     "faro": (37.0193, -7.9323, 40.0),
     "lis": (38.7813, -9.1357, 30.0),
     "lisboa": (38.7223, -9.1393, 55.0),
+    "porto": (41.1579, -8.6291, 45.0),
     "portimao": (37.1370, -8.5360, 40.0),
 }
 

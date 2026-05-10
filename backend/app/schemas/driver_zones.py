@@ -75,6 +75,16 @@ class PartnerZoneSessionApproveExtensionRequest(BaseModel):
     extra_seconds: int = Field(..., gt=0, le=86400 * 2)
 
 
+class PartnerGrantZoneBudgetExtraRequest(BaseModel):
+    """Partner autoriza aumento do limite diário de mudanças de zona (DRIVER_MENU_SPEC §7)."""
+
+    extra_max_changes: int = Field(default=1, ge=1, le=5)
+    service_date: date | None = Field(
+        default=None,
+        description="Dia civil (timezone da linha de orçamento); omisso = hoje em Europe/Lisbon.",
+    )
+
+
 class DriverZoneCatalogItem(BaseModel):
     zone_id: str
     label_pt: str

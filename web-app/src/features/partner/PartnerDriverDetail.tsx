@@ -2,9 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   fetchPartnerDriver,
+  fetchPartnerDriverZoneBudgetToday,
   patchPartnerDriverAvailability,
   patchPartnerDriverStatus,
+  postPartnerGrantDriverZoneBudgetExtra,
   type PartnerDriverRow,
+  type PartnerDriverZoneBudgetToday,
 } from '../../api/partner'
 
 function locationBlock(d: PartnerDriverRow) {
@@ -27,6 +30,8 @@ export function PartnerDriverDetail() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
+  const [zoneBudget, setZoneBudget] = useState<PartnerDriverZoneBudgetToday | null>(null)
+  const [zoneBudgetLoading, setZoneBudgetLoading] = useState(false)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -43,6 +48,29 @@ export function PartnerDriverDetail() {
       setLoading(false)
     }
   }, [userId])
+
+  useEffect(() => {
+    if (!userId || !d || d.status !== 'approved') {
+      setZoneBudget(null)
+      setZoneBudgetLoading(false)
+      return
+    }
+    let cancelled = false
+    setZoneBudgetLoading(true)
+    void fetchPartnerDriverZoneBudgetToday(userId)
+      .then((b) => {
+        if (!cancelled) setZoneBudget(b)
+      })
+      .catch(() => {
+        if (!cancelled) setZoneBudget(null)
+      })
+      .finally(() => {
+        if (!cancelled) setZoneBudgetLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId, d])
 
   useEffect(() => {
     void load()
@@ -103,6 +131,56 @@ export function PartnerDriverDetail() {
       </div>
 
       {locationBlock(d)}
+
+      {approved && (
+        <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-2">
+          <p className="font-medium text-foreground">Mudanças de zona (hoje)</p>
+          {zoneBudgetLoading && (
+            <p className="text-muted-foreground text-xs">A carregar orçamento…</p>
+          )}
+          {!zoneBudgetLoading && zoneBudget && (
+            <>
+              <p>
+                <span className="text-muted-foreground">Usadas / máx.:</span>{' '}
+                <span className="text-foreground font-medium">
+                  {zoneBudget.used_changes} / {zoneBudget.max_changes}
+                </span>
+                {' — '}
+                <span className="text-muted-foreground">restam {zoneBudget.remaining}</span>
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Dia {zoneBudget.service_date} ({zoneBudget.timezone})
+              </p>
+            </>
+          )}
+          {!zoneBudgetLoading && !zoneBudget && (
+            <p className="text-xs text-muted-foreground">Orçamento não disponível.</p>
+          )}
+          <button
+            type="button"
+            disabled={busy !== null || zoneBudgetLoading}
+            onClick={() => {
+              if (!window.confirm('Autorizar +1 mudança de zona para o dia civil actual (Lisboa)?')) return
+              void (async () => {
+                setBusy('grantZone')
+                setError(null)
+                try {
+                  const b = await postPartnerGrantDriverZoneBudgetExtra(userId, { extra_max_changes: 1 })
+                  setZoneBudget(b)
+                } catch (e: unknown) {
+                  const err = e as { detail?: string }
+                  setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao autorizar.')
+                } finally {
+                  setBusy(null)
+                }
+              })()
+            }}
+            className="w-full rounded-xl border border-border bg-secondary/50 py-2 text-sm font-medium text-foreground disabled:opacity-50"
+          >
+            {busy === 'grantZone' ? '…' : '+1 mudança autorizada (hoje)'}
+          </button>
+        </div>
+      )}
 
       {canToggleFleet && (
         <div className="space-y-2">
