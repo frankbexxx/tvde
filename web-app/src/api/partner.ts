@@ -92,6 +92,39 @@ export async function patchPartnerDriverAvailability(
   )
 }
 
+export interface PartnerDriverZoneBudgetToday {
+  service_date: string
+  used_changes: number
+  max_changes: number
+  remaining: number
+  timezone: string
+  resets_at_next_midnight_local?: boolean
+}
+
+export async function fetchPartnerDriverZoneBudgetToday(
+  userId: string
+): Promise<PartnerDriverZoneBudgetToday> {
+  return apiFetch<PartnerDriverZoneBudgetToday>(
+    `/partner/drivers/${encodeURIComponent(userId)}/zones/budget/today`
+  )
+}
+
+export async function postPartnerGrantDriverZoneBudgetExtra(
+  userId: string,
+  body: { extra_max_changes?: number; service_date?: string | null } = {}
+): Promise<PartnerDriverZoneBudgetToday> {
+  return apiFetch<PartnerDriverZoneBudgetToday>(
+    `/partner/drivers/${encodeURIComponent(userId)}/zones/budget/grant-extra`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        extra_max_changes: body.extra_max_changes ?? 1,
+        service_date: body.service_date ?? null,
+      }),
+    }
+  )
+}
+
 export async function postPartnerTripReassign(
   tripId: string,
   driverUserId: string

@@ -26,6 +26,9 @@ from app.utils.logging import log_event
 
 ZONE_TZ = ZoneInfo("Europe/Lisbon")
 MAX_DRIVER_CUSTOM_ZONES = 30
+# Partner «mudança extra» — por pedido e tecto diário (defesa em profundidade).
+PARTNER_ZONE_GRANT_EXTRA_MAX_DELTA = 5
+PARTNER_ZONE_MAX_CHANGES_CEILING = 20
 
 
 def _normalize_zone_id(raw: str) -> str:
@@ -63,6 +66,60 @@ def count_open_sessions(db: Session, *, driver_id: uuid.UUID) -> int:
         )
     )
     return len(db.scalars(q).all())
+
+
+def grant_partner_zone_budget_extra(
+    db: Session,
+    *,
+    partner_id: str,
+    driver_user_id: uuid.UUID,
+    service_date: date | None,
+    extra_max_changes: int,
+    partner_actor_user_id: uuid.UUID,
+) -> DriverZoneDayBudget:
+    """Increase ``max_changes_count`` for the driver's zone-change day budget (partner-only).
+
+    Implements DRIVER_MENU_SPEC §7 «mudança extra» (> limite base) com autorização explícita.
+    """
+    if extra_max_changes < 1 or extra_max_changes > PARTNER_ZONE_GRANT_EXTRA_MAX_DELTA:
+        raise ValueError("grant_extra_max_changes_invalid")
+
+    drv = get_driver_for_partner(db, partner_id, driver_user_id)
+    if drv is None:
+        raise ValueError("driver_not_found_for_partner")
+
+    sd = service_date or service_date_local_now()
+    row = db.get(DriverZoneDayBudget, (driver_user_id, sd))
+    if row is None:
+        row = DriverZoneDayBudget(
+            driver_id=driver_user_id,
+            service_date=sd,
+            used_changes_count=0,
+            max_changes_count=2,
+            timezone="Europe/Lisbon",
+        )
+        db.add(row)
+        db.flush()
+
+    prev_max = int(row.max_changes_count)
+    new_max = prev_max + int(extra_max_changes)
+    if new_max > PARTNER_ZONE_MAX_CHANGES_CEILING:
+        raise ValueError("grant_extra_max_ceiling_exceeded")
+
+    row.max_changes_count = new_max
+    db.flush()
+    log_event(
+        "partner_driver_zone_budget_grant_extra",
+        partner_id=str(partner_id),
+        driver_id=str(driver_user_id),
+        partner_actor_user_id=str(partner_actor_user_id),
+        service_date=str(sd),
+        extra_max_changes=extra_max_changes,
+        max_changes_before=prev_max,
+        max_changes_after=new_max,
+        used_changes=int(row.used_changes_count),
+    )
+    return row
 
 
 def budget_values(db: Session, *, driver_id: uuid.UUID, service_date: date) -> tuple[int, int, str]:

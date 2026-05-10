@@ -82,7 +82,7 @@ Documento para fechar o menu embutido no `DriverDashboard` (botão **Menu**) por
 4. [x] Documentos (admin): tab `docs` com controlo rápido local por motorista/documento.
 5. [x] Ocorrências: fluxo local com tipo + texto.
 6. [ ] Admin/backend: endpoints e workflow real de documentos antes de refletir estado oficial no motorista.
-7. [ ] Regra de zonas «2 por dia»: fechar modelo de zona/reset/exceções e implementar política.
+7. [x] Regra de zonas «2 por dia»: modelo v1 em produção + **partner** `grant-extra` (aumentar `max_changes`) + catálogo geo por `zone_id` (§7; **2026-05-06**). *Evoluções:* política por org, geofencing fino.
 8. [x] Menu MVP: «top 3» Manel — **especificado** em [`DRIVER_HOME_TOP3_MANEL.md`](DRIVER_HOME_TOP3_MANEL.md); **fatia fechada** em `main`: ordem §10.2 no painel Menu, barra inferior **Rendimentos** / deep link, estado do sub-ecrã no `DriverDashboard` (**#280**, 2026-05-06). Evoluções (ecrã dedicado Rendimentos, permuta §10.4 com input Manel): seguir o spec Top 3, sem checklist pendente aqui.
 
 **Pós-reunião Manel (2026-05-01) — fora do menu imediato, documentado em** [`docs/research/driver-app-benchmarks.md`](../research/driver-app-benchmarks.md)**:** QR Driver/Passenger; **portagens** — spec técnica mínima em [`PORTAGENS_SPEC.md`](PORTAGENS_SPEC.md); tiers tipo Pro (Diamond/Silver/Gold); lista de viagens rica + retenção 2 anos; registo criminal 3/3 meses; fila aeroporto Lisboa como referência operacional.
@@ -146,6 +146,10 @@ driver_zone_session
   - pede extensão com motivo (`reason` 3–2000 chars); uma extensão **pendente** ou **já aprovada** por sessão → `409`.
 - `POST /partner/drivers/{driver_id}/zones/sessions/{id}/approve-extension` ✅ *(2026-05-03)*
   - partner aprova `extra_seconds` (1…172800) e **adianta** `deadline_at`; requer `extension_requested` sem aprovação prévia.
+- `GET /partner/drivers/{driver_user_id}/zones/budget/today` ✅ *(2026-05-06)*
+  - orçamento do motorista no dia civil local (mesma forma que `GET /driver/zones/budget/today`); só se o motorista pertencer à frota do partner.
+- `POST /partner/drivers/{driver_user_id}/zones/budget/grant-extra` ✅ *(2026-05-06)*
+  - corpo `{ "extra_max_changes": 1…5, "service_date": "YYYY-MM-DD" | null }`; aumenta `max_changes_count` para esse dia (autorização de **mudança extra** §7.1); tecto defensivo no servidor (ex. 20/dia).
 - **Cron / expiração:** `expire_open_zone_sessions_past_deadline` em job agregado — ver `GET /cron/jobs` / resposta `driver_zones.expired_sessions`.
 - `GET /driver/zones/budget/today`
   - devolve `used`, `max`, `remaining`, `resets_at`.
@@ -213,4 +217,4 @@ _Opcional:_ captura do terminal ou CI com `npm run build` concluído (passo 4 do
 
 ---
 
-_Última revisão: 2026-05-06 (fecho onda Top 3 menu / #280)_
+_Última revisão: 2026-05-06 (partner **grant-extra** + **GET** orçamento zona; catálogo **porto** + geo «Cheguei»; fecho onda Top 3 menu / #280)._

@@ -27,6 +27,7 @@ from app.services.driver_zones import (
     maybe_consume_zone_session_on_trip_complete,
     mark_session_arrived,
     request_zone_session_extension,
+    service_date_local_now,
 )
 
 
@@ -94,6 +95,7 @@ def test_zone_catalog_lists_known_zones() -> None:
         data = r.json()
         ids = {z["zone_id"] for z in data["zones"]}
         assert "portimao" in ids
+        assert "porto" in ids
         assert "faro" in ids
         assert "lisboa" in ids
         assert "lis" in ids
@@ -835,6 +837,139 @@ def test_partner_approve_extension_wrong_fleet() -> None:
     )
     assert r.status_code == 404
     assert r.json()["detail"] == "driver_not_found_for_partner"
+
+
+def test_partner_grant_zone_budget_extra_unlocks_driver_session() -> None:
+    db = _make_db()
+    _ensure_default_partner_row(db)
+    driver_id_str = _create_driver(db)
+    driver_uuid = uuid.UUID(driver_id_str)
+    sd = service_date_local_now()
+    db.add(
+        DriverZoneDayBudget(
+            driver_id=driver_uuid,
+            service_date=sd,
+            used_changes_count=2,
+            max_changes_count=2,
+            timezone="Europe/Lisbon",
+        )
+    )
+    u_p = User(
+        role=Role.partner,
+        name="Zone budget mgr",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+        partner_org_id=DEFAULT_PARTNER_UUID,
+    )
+    db.add(u_p)
+    db.commit()
+    partner_tok = create_access_token(subject=str(u_p.id), role=Role.partner.value)["token"]
+
+    _override_deps(db, UserContext(user_id=driver_id_str, role=Role.driver))
+    client = TestClient(app)
+    try:
+        r_block = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": "faro", "eta_seconds_baseline": 400, "eta_margin_percent": 10},
+        )
+        assert r_block.status_code == 403
+        assert r_block.json()["detail"] == "zone_change_budget_exhausted"
+    finally:
+        _reset_overrides()
+
+    c_p = TestClient(app)
+    r_grant = c_p.post(
+        f"/partner/drivers/{driver_id_str}/zones/budget/grant-extra",
+        json={"extra_max_changes": 1},
+        headers={"Authorization": f"Bearer {partner_tok}"},
+    )
+    assert r_grant.status_code == 200
+    g = r_grant.json()
+    assert g["used_changes"] == 2
+    assert g["max_changes"] == 3
+    assert g["remaining"] == 1
+
+    r_get = c_p.get(
+        f"/partner/drivers/{driver_id_str}/zones/budget/today",
+        headers={"Authorization": f"Bearer {partner_tok}"},
+    )
+    assert r_get.status_code == 200
+    assert r_get.json()["remaining"] == 1
+
+    _override_deps(db, UserContext(user_id=driver_id_str, role=Role.driver))
+    try:
+        r_ok = client.post(
+            "/driver/zones/sessions",
+            json={"zone_id": "faro", "eta_seconds_baseline": 400, "eta_margin_percent": 10},
+        )
+        assert r_ok.status_code == 201
+    finally:
+        _reset_overrides()
+        db.close()
+
+
+def test_partner_grant_zone_budget_extra_wrong_fleet() -> None:
+    db = _make_db()
+    pid_other = uuid.uuid4()
+    db.add(Partner(id=pid_other, name="Other fleet 2"))
+    driver_id_str = _create_driver(db)
+    u_p = User(
+        role=Role.partner,
+        name="Other mgr 2",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+        partner_org_id=pid_other,
+    )
+    db.add(u_p)
+    db.commit()
+    partner_tok = create_access_token(subject=str(u_p.id), role=Role.partner.value)["token"]
+    db.close()
+
+    c = TestClient(app)
+    r = c.post(
+        f"/partner/drivers/{driver_id_str}/zones/budget/grant-extra",
+        json={"extra_max_changes": 1},
+        headers={"Authorization": f"Bearer {partner_tok}"},
+    )
+    assert r.status_code == 404
+    assert r.json()["detail"] == "driver_not_found_for_partner"
+
+
+def test_partner_grant_zone_budget_extra_ceiling() -> None:
+    db = _make_db()
+    _ensure_default_partner_row(db)
+    driver_id_str = _create_driver(db)
+    driver_uuid = uuid.UUID(driver_id_str)
+    sd = service_date_local_now()
+    db.add(
+        DriverZoneDayBudget(
+            driver_id=driver_uuid,
+            service_date=sd,
+            used_changes_count=0,
+            max_changes_count=19,
+            timezone="Europe/Lisbon",
+        )
+    )
+    u_p = User(
+        role=Role.partner,
+        name="Ceiling mgr",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+        partner_org_id=DEFAULT_PARTNER_UUID,
+    )
+    db.add(u_p)
+    db.commit()
+    partner_tok = create_access_token(subject=str(u_p.id), role=Role.partner.value)["token"]
+    db.close()
+
+    c = TestClient(app)
+    r = c.post(
+        f"/partner/drivers/{driver_id_str}/zones/budget/grant-extra",
+        json={"extra_max_changes": 5},
+        headers={"Authorization": f"Bearer {partner_tok}"},
+    )
+    assert r.status_code == 400
+    assert r.json()["detail"] == "grant_extra_max_ceiling_exceeded"
 
 
 def test_zone_session_open_ok() -> None:

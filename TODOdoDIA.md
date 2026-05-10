@@ -12,11 +12,11 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ## Painel — 2026-05-06 (hoje)
 
-**Feito:** `git pull` — `main` com **#281** (fecho docs onda Top 3, atrás de **#280**). Ver nota **PR só com documentação** no cabeçalho deste ficheiro.
+**Feito:** `git pull` — `main` com **#281** (fecho docs onda Top 3, atrás de **#280**). Ver nota **PR só com documentação** no cabeçalho deste ficheiro. **Sessão 2026-05-06 (tarde):** Zonas v1 — partner **grant-extra** + GET orçamento; catálogo **porto**; UI `PartnerDriverDetail` (ver PR em curso).
 
 **Falta hoje (prioridade):**
 
-1. [ ] **[CÓDIGO] Zonas v1** — geo por **`zone_id`** + política **extra** >2 mudanças/dia (partner), alinhado a `DRIVER_MENU_SPEC.md` §7.
+1. [x] **[CÓDIGO] Zonas v1** — geo **catálogo** + **extra** partner (**neste PR**; spec §7.3). *Seguinte:* políticas por org / geofencing fino, se precisares.
 2. [ ] **[TESTES] E2E / PW** — follow-ups **Notas E2E** (painel **2026-05-09** abaixo): `api-flows`, `driver-passenger-flow` / two-step quando tocares nesses ficheiros.
 3. [ ] [UX] **Opcional** — Frota: copy/rótulo **«Só atribuídas»** (*assigned* vs aceite/em curso — ver fecho sessão 2026-05-09).
 4. [ ] [OPS] **Stripe** — quando quiseres fechar janela de testes no Render: **`STRIPE_MOCK=true`** (lembrete também no painel **2026-05-10**).

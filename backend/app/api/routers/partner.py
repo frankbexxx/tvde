@@ -11,6 +11,8 @@ Endpoint audit (tenant scope = ctx.partner_id from get_current_partner only):
 - GET /partner/trips/export  (CSV)
 - GET /partner/metrics
 - POST /partner/drivers/{driver_user_id}/zones/sessions/{session_id}/approve-extension
+- GET /partner/drivers/{driver_user_id}/zones/budget/today
+- POST /partner/drivers/{driver_user_id}/zones/budget/grant-extra
 
 No global aggregates; partner role cannot call admin-only dependencies (require_role(admin)).
 """
@@ -26,7 +28,9 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_partner, get_db
 from app.schemas.driver_zones import (
+    DriverZoneBudgetResponse,
     DriverZoneSessionResponse,
+    PartnerGrantZoneBudgetExtraRequest,
     PartnerZoneSessionApproveExtensionRequest,
 )
 from app.schemas.partner import (
@@ -54,7 +58,12 @@ from app.services.partner_queries import (
     list_drivers_for_partner_enriched,
     list_trips_for_partner,
 )
-from app.services.driver_zones import approve_zone_session_extension
+from app.services.driver_zones import (
+    approve_zone_session_extension,
+    budget_values,
+    grant_partner_zone_budget_extra,
+    service_date_local_now,
+)
 from app.services.partner_trip_ops import partner_reassign_trip_driver
 from app.services.partners_admin import partner_metrics
 from app.utils.logging import log_event
@@ -477,6 +486,110 @@ async def partner_approve_zone_session_extension(
             ) from exc
         raise
     return DriverZoneSessionResponse.model_validate(sess)
+
+
+@router.get(
+    "/drivers/{driver_user_id}/zones/budget/today",
+    response_model=DriverZoneBudgetResponse,
+)
+async def partner_get_driver_zone_budget_today(
+    driver_user_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> DriverZoneBudgetResponse:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    drv = get_driver_for_partner(db, partner_id, did)
+    if drv is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="driver_not_found_for_partner",
+        )
+    sd = service_date_local_now()
+    used, max_c, tz = budget_values(db, driver_id=did, service_date=sd)
+    remaining = max(0, max_c - used)
+    return DriverZoneBudgetResponse(
+        service_date=sd,
+        used_changes=used,
+        max_changes=max_c,
+        remaining=remaining,
+        timezone=tz,
+    )
+
+
+@router.post(
+    "/drivers/{driver_user_id}/zones/budget/grant-extra",
+    response_model=DriverZoneBudgetResponse,
+)
+async def partner_post_driver_zone_budget_grant_extra(
+    driver_user_id: str,
+    body: PartnerGrantZoneBudgetExtraRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> DriverZoneBudgetResponse:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    try:
+        row = grant_partner_zone_budget_extra(
+            db,
+            partner_id=partner_id,
+            driver_user_id=did,
+            service_date=body.service_date,
+            extra_max_changes=body.extra_max_changes,
+            partner_actor_user_id=uuid.UUID(ctx.user_id),
+        )
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        code = str(exc)
+        if code == "driver_not_found_for_partner":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=code,
+            ) from exc
+        if code in ("grant_extra_max_changes_invalid", "grant_extra_max_ceiling_exceeded"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=code,
+            ) from exc
+        raise
+    used = int(row.used_changes_count)
+    max_c = int(row.max_changes_count)
+    tz = row.timezone
+    remaining = max(0, max_c - used)
+    return DriverZoneBudgetResponse(
+        service_date=row.service_date,
+        used_changes=used,
+        max_changes=max_c,
+        remaining=remaining,
+        timezone=tz,
+    )
 
 
 @router.get("/metrics", response_model=PartnerMetricsResponse)
