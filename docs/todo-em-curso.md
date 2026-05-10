@@ -4,9 +4,9 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-10)
+## Agora (2026-05-06)
 
-**Abertura:** smokes em produção **fechados por agora** — sessão **2026-05-09 (noite)** com Manel (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **Fecho sessão** nesse painel). **1.º** amanhã: fila de produto / **Rasto vivaço** abaixo, conforme prioridade do dia.
+**Contexto:** `main` inclui **#280** (Top 3 motorista) e **#281** (fecho da onda Top 3 nos docs). Smokes em produção **fechados por agora** (última ronda **2026-05-09** noite, Manel — ver [`TODOdoDIA.md`](../TODOdoDIA.md)).
 
 - [x] **Smoke produção (sessão Manel)** — passageiro, frota, admin, motorista telefone; viagem visível na frota — **fechado** 2026-05-09 noite.
 - [x] **Baseline BD (local + Render)** + **Gestão utilizadores** 10 contas — **fechado** 2026-05-08.
@@ -16,7 +16,15 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 - [x] **Fila até fechar:** Stripe item **7** — **fechado** fila OPS (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-09**); follow-ups PW nas **Notas E2E** do mesmo ficheiro → refactor **AdminDashboard** P0–P12 (**P0–P12** entregues: hooks + JSX por tab + orquestrador).
 
-**Nota:** smokes em prod **fechados por agora** (2026-05-09 noite). Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
+### O que falta (prioridade de produto / próxima sessão útil)
+
+1. **Zonas v1 — fecho técnico** — geo por **`zone_id`**; política de **orçamento extra** (>2 mudanças/dia via partner, se aplicável). *Já mergeado o núcleo + extensão de prazo; falta esta linha (ver `DRIVER_MENU_SPEC.md` §7).*
+2. **E2E / PW** — follow-ups nas **Notas E2E** do [`TODOdoDIA.md`](../TODOdoDIA.md) (painel **2026-05-09**): seed/tokens, `api-flows`, `driver-passenger-flow` / two-step quando mexeres nesses fluxos.
+3. **Opcional curto** — UX Frota: clarificar rótulo **«Só atribuídas»** (filtro *assigned* vs viagem aceite/em curso; anotado no fecho **2026-05-09**).
+4. **Lembrete operacional** — Stripe em Render: **`STRIPE_MOCK=false`** por decisão; quando fechar a janela de testes, repor mock (painel **2026-05-10** no `TODOdoDIA.md`).
+5. **Backlog** (sem data) — linha rotacional v2; planeamento **login social**; **auditoria** [`PROJECT_AUDIT_2026-05-02.md`](../audit/PROJECT_AUDIT_2026-05-02.md) quando for o foco do dia.
+
+**Nota:** smokes em prod **fechados por agora**. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
 **Regra — fecho de etapas:** actualizar estes ficheiros mal algo esteja feito em `main` ou após smoke; **não** exigir confirmação explícita para marcar concluído (evitar retrabalho na leitura retroactiva).
 
@@ -76,6 +84,6 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 ---
 
-_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painéis **2026-05-10** / **2026-05-09** · **#267** (E2E partner) · plano refactor [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · baseline [`testing/DEV_BASELINE_ROSTER.md`](testing/DEV_BASELINE_ROSTER.md) · PRs **#258**, **#262**._
+_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painéis **2026-05-06** (hoje) · **2026-05-10** / **2026-05-09** · **#267** (E2E partner) · plano refactor [`meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md`](meta/ADMIN_DASHBOARD_REFACTOR_PLAN.md) · baseline [`testing/DEV_BASELINE_ROSTER.md`](testing/DEV_BASELINE_ROSTER.md) · PRs **#258**, **#262**, **#280**, **#281**._
 
-_Última revisão: **2026-05-06** (Top 3 Manel onda fechada **#280** nos docs; admin **P0–P12** já referenciado acima)._
+_Última revisão: **2026-05-06** (`main` pós-**#281**; lista «o que falta» no § **Agora**)._
