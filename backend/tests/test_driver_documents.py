@@ -3,7 +3,6 @@
 from app.services.driver_document_expiry_suggest import suggest_expiry_iso_from_text
 from app.services.driver_documents import (
     DOC_KEYS,
-    apply_driver_documents_patch,
     default_docs_dict,
     parse_documents_column,
     serialize_state,
