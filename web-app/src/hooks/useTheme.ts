@@ -34,7 +34,11 @@ export function getTheme(): ThemeId {
     return migrated
   }
   if (stored && (THEMES as string[]).includes(stored)) return stored as ThemeId
-  return "portugal"
+  if (typeof window !== 'undefined') {
+    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    return dark ? 'dev' : 'portugal'
+  }
+  return 'portugal'
 }
 
 function applyTheme(theme: ThemeId): void {
@@ -47,8 +51,17 @@ export function setTheme(theme: ThemeId): void {
 }
 
 export function initTheme(): void {
+  if (typeof window === "undefined") return
   const theme = getTheme()
   document.documentElement.setAttribute("data-theme", theme)
+
+  const mq = window.matchMedia("(prefers-color-scheme: dark)")
+  mq.addEventListener("change", () => {
+    const s = localStorage.getItem(THEME_KEY)
+    if (s && (THEMES as string[]).includes(s)) return
+    const next: ThemeId = mq.matches ? "dev" : "portugal"
+    document.documentElement.setAttribute("data-theme", next)
+  })
 }
 
 /** Hook para componentes que precisam re-renderizar ao mudar o tema */

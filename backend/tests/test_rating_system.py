@@ -71,21 +71,6 @@ def test_passenger_rates_driver(db: Session) -> None:
     assert result.driver_rating == 5
 
 
-def test_driver_rates_passenger(db: Session) -> None:
-    """TEST-RAT-002: Driver rates passenger — rating stored."""
-    passenger_id, driver_id, trip_id = _create_passenger_driver_and_completed_trip(db)
-
-    result = rate_trip_as_driver(
-        db=db,
-        driver_id=driver_id,
-        trip_id=trip_id,
-        rating=4,
-    )
-    db.refresh(result)
-
-    assert result.passenger_rating == 4
-
-
 def test_rating_average_updated(db: Session) -> None:
     """TEST-RAT-003: Driver avg_rating updated when passenger rates."""
     passenger_id, driver_id, trip_id = _create_passenger_driver_and_completed_trip(db)
@@ -104,19 +89,20 @@ def test_rating_average_updated(db: Session) -> None:
     assert driver.avg_rating == 5.0
 
 
-def test_passenger_avg_rating_updated(db: Session) -> None:
-    """C001: Passenger avg_rating_as_passenger updated when driver rates."""
-    passenger_id, driver_id, trip_id = _create_passenger_driver_and_completed_trip(db)
+def test_driver_cannot_rate_passenger(db: Session) -> None:
+    """Driver-initiated passenger rating returns 410 (no persistence)."""
+    from fastapi import HTTPException
 
-    rate_trip_as_driver(
-        db=db,
-        driver_id=driver_id,
-        trip_id=trip_id,
-        rating=4,
-    )
-
-    user = db.execute(
-        select(User).where(User.id == uuid.UUID(passenger_id))
-    ).scalar_one_or_none()
-    assert user is not None
-    assert user.avg_rating_as_passenger == 4.0
+    _, driver_id, trip_id = _create_passenger_driver_and_completed_trip(db)
+    try:
+        rate_trip_as_driver(
+            db=db,
+            driver_id=driver_id,
+            trip_id=trip_id,
+            rating=4,
+        )
+    except HTTPException as exc:
+        assert exc.status_code == 410
+        assert exc.detail == "driver_passenger_rating_disabled"
+    else:
+        raise AssertionError("expected HTTPException")

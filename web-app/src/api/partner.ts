@@ -7,6 +7,16 @@ export interface PartnerDriverRow {
   is_available: boolean
   user: { name: string | null; phone: string | null }
   last_location: { lat: number; lng: number; timestamp: string } | null
+  documents?: Record<
+    string,
+    {
+      status?: string
+      expires_at?: string | null
+      partner_note?: string | null
+      submitted_at?: string | null
+      ocr_suggested_expires_at?: string | null
+    }
+  > | null
 }
 
 export interface PartnerDriverDiscoveryItem {
@@ -123,6 +133,19 @@ export async function postPartnerGrantDriverZoneBudgetExtra(
       }),
     }
   )
+}
+
+export async function patchPartnerDriverDocuments(
+  userId: string,
+  docs: Record<
+    string,
+    { status?: string; expires_at?: string | null; partner_note?: string | null }
+  >
+): Promise<PartnerDriverRow> {
+  return apiFetch<PartnerDriverRow>(`/partner/drivers/${encodeURIComponent(userId)}/documents`, {
+    method: 'PATCH',
+    body: JSON.stringify({ docs }),
+  })
 }
 
 export async function postPartnerTripReassign(

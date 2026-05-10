@@ -3,6 +3,8 @@ export const REQUIRED_DRIVER_DOCUMENTS = [
   'certificado_motorista_tvde',
   'seguro_responsabilidade_civil',
   'inspecao_viatura',
+  'cartao_cidadao',
+  'registo_criminal',
 ] as const
 
 export type DriverRequiredDocument = (typeof REQUIRED_DRIVER_DOCUMENTS)[number]
@@ -23,6 +25,8 @@ function defaultDocsState(): DriverDocumentsState {
       certificado_motorista_tvde: 'missing',
       seguro_responsabilidade_civil: 'missing',
       inspecao_viatura: 'missing',
+      cartao_cidadao: 'missing',
+      registo_criminal: 'missing',
     },
     onboardingCompleted: false,
   }
@@ -51,6 +55,8 @@ export function getDriverDocumentsState(): DriverDocumentsState {
         seguro_responsabilidade_civil:
           parsed.docs?.seguro_responsabilidade_civil ?? base.docs.seguro_responsabilidade_civil,
         inspecao_viatura: parsed.docs?.inspecao_viatura ?? base.docs.inspecao_viatura,
+        cartao_cidadao: parsed.docs?.cartao_cidadao ?? base.docs.cartao_cidadao,
+        registo_criminal: parsed.docs?.registo_criminal ?? base.docs.registo_criminal,
       },
     })
   } catch {
@@ -100,6 +106,10 @@ export function driverDocumentLabel(key: DriverRequiredDocument): string {
       return 'Seguro responsabilidade civil'
     case 'inspecao_viatura':
       return 'Inspeção da viatura'
+    case 'cartao_cidadao':
+      return 'Cartão de cidadão'
+    case 'registo_criminal':
+      return 'Registo criminal'
   }
 }
 

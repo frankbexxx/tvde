@@ -601,45 +601,12 @@ def rate_trip_as_driver(
     trip_id: str,
     rating: int,
 ) -> Trip:
-    """Driver rates passenger (1-5). Trip must be completed."""
-    trip = db.execute(
-        select(Trip).where(Trip.id == trip_id).with_for_update(of=Trip)
-    ).scalar_one_or_none()
-    if not trip or str(trip.driver_id) != str(driver_id):
-        _raise_not_found()
-    if trip.status != TripStatus.completed:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="trip_not_completed",
-        )
-    if not (1 <= rating <= 5):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="rating_must_be_1_to_5",
-        )
-    trip.passenger_rating = rating
-    passenger_id = trip.passenger_id
-    db.commit()
-
-    # Update passenger avg_rating_as_passenger
-    if passenger_id:
-        from app.db.models.user import User
-
-        avg_row = db.execute(
-            select(func.avg(Trip.passenger_rating).label("avg"))
-            .where(Trip.passenger_id == passenger_id)
-            .where(Trip.passenger_rating.isnot(None))
-        ).one_or_none()
-        if avg_row and avg_row.avg is not None:
-            user = db.execute(
-                select(User).where(User.id == passenger_id)
-            ).scalar_one_or_none()
-            if user:
-                user.avg_rating_as_passenger = round(float(avg_row.avg), 2)
-        db.commit()
-
-    db.refresh(trip)
-    return trip
+    """Product/legal: driver-initiated passenger ratings are disabled (no persistence)."""
+    _ = db, driver_id, trip_id, rating
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="driver_passenger_rating_disabled",
+    )
 
 
 def accept_trip(

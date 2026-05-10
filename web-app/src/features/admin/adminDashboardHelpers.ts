@@ -15,6 +15,8 @@ export function emptyDriverDocs(): DriverDocumentsState['docs'] {
     certificado_motorista_tvde: 'missing',
     seguro_responsabilidade_civil: 'missing',
     inspecao_viatura: 'missing',
+    cartao_cidadao: 'missing',
+    registo_criminal: 'missing',
   }
 }
 
@@ -28,6 +30,8 @@ export function approvedDriverDocs(): DriverDocumentsState['docs'] {
     certificado_motorista_tvde: 'approved',
     seguro_responsabilidade_civil: 'approved',
     inspecao_viatura: 'approved',
+    cartao_cidadao: 'approved',
+    registo_criminal: 'approved',
   }
 }
 
