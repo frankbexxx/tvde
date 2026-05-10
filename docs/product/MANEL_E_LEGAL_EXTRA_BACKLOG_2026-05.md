@@ -26,37 +26,44 @@ Este ficheiro **organiza** um conjunto **EXTRA** de ideias e obrigações **aind
 
 ## Lista EXTRA (1–10)
 
-1. **Som de chamada quando uma viagem “cai”.** *[UX motorista]* — Notificar audio (ou canal configurável) quando um novo pedido entra no fluxo de ofertas; respeitar **modo silencioso** do SO e preferências em Definições.
+1. **Som em cada solicitação relevante (motorista).** *[UX motorista]* — **Três momentos com sinal sonoro distinto (ou configurável):** (a) quando o pedido **aparece no ecrã**; (b) quando o motorista **aceita**; (c) quando a viagem **conclui**. Respeitar **modo silencioso** do SO e preferências em Definições; em segundo plano, alinhar com **notificação nativa** quando fizer sentido técnico.
 2. **Ecrã: modo nocturno automático.** *[UX motorista / passageiro]* — Seguir `prefers-color-scheme` ou horário; alinhar theming global quando existir superfície única.
-3. **Ecrã: sempre activo quando em uso.** *[UX motorista]* — Política de **wake lock** durante viagem activa ou ecrã de disponível (com aviso bateria, já mencionado no spec de menu); evitar manter ligado sem consentimento explícito.
-4. **Tirar classificação do passageiro da app do motorista.** *[Legal] [UX motorista]* — Legislação / interpretação deixou de permitir expor rating do passageiro ao motorista (ou restringe o uso). **Acção:** inventário de UI/API onde rating passageiro aparece; remoção ou substituição por sinal neutro; validação jurídica e data de vigência.
-5. **Partner: gerir sempre documentos de veículos e motoristas.** *[Partner] [Legal]* — **Fonte de verdade** no painel partner/admin (já alinhado em [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) §3); reforçar fluxos, estados, auditoria e relatórios operacionais.
-6. **Driver: entregar documentos ao partner; avisos de caducidade.** *[Partner] [UX motorista] [Legal]* — Upload ou envio para a **central** (partner); avisos na app (ex. registo criminal, carta de condução, seguro, inspecção); prazos e textos a validar juridicamente. **Centralização = sempre partner** (cada motorista tem org, mesmo quando “é o próprio”).
-7. **QR Code para download rápido da app.** *[Crescimento] [Partner]* — Landing ou deep link por loja; QR em materiais operacionais / frota (liga ao roadmap já mencionado nas sessões Manel).
-8. **Promoções: PROMO CODES ou menu Família.** *[Crescimento]* — Modelo comercial a definir (subsídios, contas agrupadas, limites legais de desconto).
-9. **Passageiro pertencer a uma Família.** *[Crescimento] [Passageiro]* — Modelo de conta / billing familiar; regras de privacidade (menores, consentimento).
-10. **Passageiro: menu lateral tipo driver + histórico fora do ecrã principal.** *[UX passageiro]* — Drawer/side menu coerente com shell motorista; **histórico só dentro do menu** para ecrã principal mais limpo.
+3. **Ecrã: sempre activo durante o uso da app (motorista).** *[UX motorista]* — **Decisão de produto:** os motoristas usam o telefone **a carregar** (ou quase sempre); **não** há receio operacional de bateria para este segmento. Pretende-se **ecrã sempre activo** sempre que a app está **em uso** (disponível, em viagem, etc.), com **wake lock** / política equivalente na plataforma. *Texto legal de consentimento / definição “em uso” a cruzar com jurídico se necessário.*
+4. **Deixar de pedir classificação do passageiro na app do motorista.** *[Legal] [UX motorista]* — **Decisão:** a app **deixa de solicitar** rating do passageiro no fluxo do motorista (não basta esconder a nota: remove-se o **pedido** / recolha nesse papel). **Acção técnica:** inventário de UI/API/`Trip`/`rating` onde isso ocorre; remoção coerente. **Acção jurídica:** manter registo da norma/fonte e copy final.
+5. **Partner: gerir sempre documentos de veículos e motoristas.** *[Partner] [Legal]* — **Fonte de verdade** no painel partner (regras podem **variar por tipo de documento** — parâmetros por partner onde fizer sentido). Reforçar fluxos, estados, auditoria e relatórios operacionais (ver [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) §3).
+6. **Driver: enviar documentos ao partner; caducidade com leitura automática + manual.** *[Partner] [UX motorista] [Legal]* — **Centralização = partner.** **Digitalização:** em princípio **todos** os documentos admitidos via **captura / PDF** (OCR ou leitura estruturada). **Carta de condução** e **cartão de cidadão:** leitura por **digitalização** do documento. **Registo criminal** (obtido **online**): o **PDF** pode ser tratado para **extrair automaticamente** texto de **validade**; fluxo **automático** com **fallback manual** se a leitura automática falhar. Avisos na app sobre caducidade; textos finais com jurídico.
+7. **QR Code para download rápido da app.** *[Crescimento] [Partner]* — **Destino técnico ainda em aberto** (landing, loja, tenant, etc.). **Uso previsto genérico:** materiais físicos (**flyer**, **t-shirt**, merchandising) — o QR deve apontar para um alvo **único e estável** a definir quando houver decisão de URL/universal link.
+8. **Promoções: PROMO CODES ou menu Família.** *[Crescimento]* — **Não prioritário agora** — manter só em **TODO futuro** / modelação comercial quando fizer sentido.
+9. **Passageiro pertencente a uma “Família”.** *[Crescimento] [Passageiro]* — **Não essencial agora** — apenas **TODO futuro** (modelo de conta, billing, privacidade).
+10. **Passageiro: menu lateral tipo driver + histórico fora do ecrã principal.** *[UX passageiro]* — Drawer/side menu coerente com shell motorista; **histórico só dentro do menu** para ecrã principal mais limpo. *(Descobribilidade: requisito de “um toque” para o histórico — confirmar em spec de implementação.)*
 
 ---
 
-## Questões para fechar com produto / jurídico
+## Decisões de produto (registo 2026-05-06)
 
-- **Item 4 (rating passageiro):** Qual **diploma / orientação** exacta e **data de vigência**? Proíbe só **exibir** nota ao motorista, ou também **recolha** pós-viagem no fluxo motorista? Há alternativa legítima (ex. feedback interno só para a plataforma)?
-- **Itens 5–6 (documentos):** Os prazos de **registo criminal** (ex. 3/3 meses na conversa com Manel) ficam **parametrizáveis por partner** ou fixos nacionais na app?
-- **Item 3 (wake lock):** Confirmação de que **só em viagem activa** e não só “disponível”, para não ser visto como consumo abusivo de bateria/dados?
-- **Item 1 (som):** O som deve disparar em **novo pedido na lista**, em **oferta atribuída**, ou em ambos? Política quando a app está em segundo plano (notificação nativa vs só in-app)?
-- **Itens 8–9 (Família / promo):** **MARCA** alvo (uma org vs multi-tenant) e se “Família” implica **pagamento agregado**, **sub-contas**, ou apenas etiqueta CRM?
-- **Item 7 (QR):** Destino único (**PWA**, **Play/App Store**, ou **página por tenant**)?
-- **Item 10:** Histórico “fora do ecrã principal” — mantém-se acesso em **um toque** no drawer (requisito de descobribilidade)?
+| Item | Decisão |
+|------|---------|
+| **1** | Som nos três momentos: pedido **no ecrã**, **aceite**, **concluído**. |
+| **3** | **Ecrã sempre activo** enquanto a app está em uso; sem preocupação principal de bateria para este perfil. |
+| **4** | **Deixar de pedir** rating do passageiro no fluxo motorista (remover pedido, não só UI). |
+| **5–6** | **Partner** como dono das regras por tipo de doc; **todos** os docs via digitalização/PDF; **validade** automática do PDF do registo criminal com **fallback manual**; carta + CC por scan. |
+| **7** | Forma genérica para **flyer / t-shirt**; técnica do destino **TBD**. |
+| **8–9** | **Família / promo:** pensar mais tarde; **não essencial** nesta fase — backlog futuro. |
+
+### Questões ainda em aberto
+
+- **Item 4:** Citar **fonte normativa** e data em documentação jurídica quando existir parecer escrito.
+- **Item 7:** URL final, deep links por loja, e se há **QR por tenant** (frota).
+- **Item 10:** Confirmar **acesso ao histórico** em um toque a partir do drawer (propagação para spec UX).
 
 ---
 
 ## Próximos passos recomendados (triagem)
 
-1. **P0 conformidade:** confirmar **item 4** (norma + âmbito + prazo) com assessoria; planear remoção técnica.
-2. **P0 operação documental:** **itens 5–6** — um único **fluxo documentos** (partner + notificações motorista) em spec curta.
-3. **P1 UX motorista:** **1–3** (som, dark mode, wake lock) — podem agrupar-se numa onda “preferências de sessão” se reduzirem fricção sem choque legal.
-4. **P2 crescimento:** **7–9** — dependem de modelo de negócio.
-5. **P2 passageiro shell:** **10** — alinha com refactors de navegação já discutidos noutros specs.
+1. **P0 conformidade:** **item 4** — remoção do **pedido** de classificação no papel motorista + revisão jurídica de copy/resíduos.
+2. **P0 operação documental:** **itens 5–6** — spec única: ingestão partner, pipeline OCR/validade, fallback manual, notificações motorista.
+3. **P1 UX motorista:** **itens 1–3** — onda “sessão motorista” (sons, dark mode, wake lock sempre activo em uso).
+4. **P2 crescimento:** **item 7** — quando existir destino de download estável; **itens 8–9** empurradas para **futuro**.
+5. **P2 passageiro shell:** **item 10** — após prioridade motorista/partner.
 
-_Última revisão: **2026-05-06** (introdução + lista EXTRA; `main` pós-merge zonas **#282**)._
+_Última revisão: **2026-05-06** — decisões 1, 3–4, 5–6, 7–9 registadas._
