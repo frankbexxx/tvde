@@ -6,7 +6,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ## Agora (2026-05-06)
 
-**Contexto:** `main` inclui **#280** (Top 3 motorista) e **#281** (fecho da onda Top 3 nos docs). Smokes em produção **fechados por agora** (última ronda **2026-05-09** noite, Manel — ver [`TODOdoDIA.md`](../TODOdoDIA.md)).
+**Contexto:** `main` inclui **#280**–**#281** (Top 3 + docs), **#282** (Zonas v1 — partner `grant-extra`, catálogo **porto**, ver prompt em `docs/prompts/`). Smokes em produção **fechados por agora** (última ronda **2026-05-09** noite, Manel — ver [`TODOdoDIA.md`](../TODOdoDIA.md)).
 
 - [x] **Smoke produção (sessão Manel)** — passageiro, frota, admin, motorista telefone; viagem visível na frota — **fechado** 2026-05-09 noite.
 - [x] **Baseline BD (local + Render)** + **Gestão utilizadores** 10 contas — **fechado** 2026-05-08.
@@ -22,7 +22,8 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 2. **E2E / PW** — follow-ups nas **Notas E2E** do [`TODOdoDIA.md`](../TODOdoDIA.md) (painel **2026-05-09**): seed/tokens, `api-flows`, `driver-passenger-flow` / two-step quando mexeres nesses fluxos.
 3. **Opcional curto** — UX Frota: clarificar rótulo **«Só atribuídas»** (filtro *assigned* vs viagem aceite/em curso; anotado no fecho **2026-05-09**).
 4. **Lembrete operacional** — Stripe em Render: **`STRIPE_MOCK=false`** por decisão; quando fechar a janela de testes, repor mock (painel **2026-05-10** no `TODOdoDIA.md`).
-5. **Backlog** (sem data) — linha rotacional v2; planeamento **login social**; **auditoria** [`PROJECT_AUDIT_2026-05-02.md`](../audit/PROJECT_AUDIT_2026-05-02.md) quando for o foco do dia.
+5. **Backlog EXTRA (Manel + legal + crescimento)** — lista **1–10** em [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) (som, dark mode, wake lock, rating passageiro, documentos partner/driver, QR, promo/família, menu passageiro). *Triagem P0–P2 no próprio doc.*
+6. **Backlog** (sem data) — linha rotacional v2; planeamento **login social**; **auditoria** [`PROJECT_AUDIT_2026-05-02.md`](../audit/PROJECT_AUDIT_2026-05-02.md) quando for o foco do dia.
 
 **Nota:** smokes em prod **fechados por agora**. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
@@ -81,9 +82,10 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 - Theming/polish amplo de superfície e iconografia final.
 - Refactors estruturais sem impacto directo em operação.
+- **EXTRA Manel + legal + crescimento (2026-05):** ver [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) — itens **1–10** (som, nocturno, ecrã activo, rating passageiro, documentos partner/motorista, QR, promo/família, menu passageiro).
 
 ---
 
-_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painéis **2026-05-06** (hoje) · **2026-05-10** / **2026-05-09** · **#267** · zonas v1 **grant-extra** · PRs **#258**, **#262**, **#280**, **#281**._
+_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painéis **2026-05-06** · **EXTRA Manel/legal** [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) · **#282** (zonas grant-extra) · PRs **#258**, **#262**, **#280**, **#281**._
 
-_Última revisão: **2026-05-06** (`main` + ramo zonas; § **Agora** actualizado)._
+_Última revisão: **2026-05-06** — backlog EXTRA Manel + legal documentado._
