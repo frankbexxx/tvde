@@ -17,9 +17,8 @@ export function DriverBottomNav({ active, onSelect }: DriverBottomNavProps) {
         data-testid={testId}
         aria-current={isOn ? 'true' : undefined}
         onClick={() => onSelect(tab)}
-        className={`flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-semibold touch-manipulation transition-colors ${
-          isOn ? 'text-primary border-t-2 border-primary bg-primary/5' : 'text-foreground/70 border-t-2 border-transparent hover:bg-muted/40'
-        }`}
+        className={`flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-semibold touch-manipulation transition-colors ${isOn ? 'text-primary border-t-2 border-primary bg-primary/5' : 'text-foreground/70 border-t-2 border-transparent hover:bg-muted/40'
+          }`}
       >
         <Icon className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden />
         <span className="leading-tight text-center">{label}</span>
@@ -33,7 +32,7 @@ export function DriverBottomNav({ active, onSelect }: DriverBottomNavProps) {
       aria-label="Navegação principal do motorista"
     >
       {item('home', 'driver-bottom-nav-home', 'Início', Home)}
-      {item('earnings', 'driver-bottom-nav-earnings', 'Ganhos', Euro)}
+      {item('earnings', 'driver-bottom-nav-earnings', 'Rendimentos', Euro)}
       {item('inbox', 'driver-bottom-nav-inbox', 'Caixa', Inbox)}
       {item('menu', 'driver-bottom-nav-menu', 'Menu', Menu)}
     </nav>
