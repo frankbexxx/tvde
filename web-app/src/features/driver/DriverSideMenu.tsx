@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
 import { useAuth } from '../../context/AuthContext'
 import type { DriverNavApp } from '../../services/driverNavPreference'
@@ -7,6 +7,7 @@ import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus
 import type { DriverVehicleCategory } from '../../services/driverVehicleCategories'
 import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT, DRIVER_OPEN_SETTINGS_EVENT } from './driverShellEvents'
 import {
+  ClipboardList,
   Compass,
   CreditCard,
   FileText,
@@ -101,6 +102,8 @@ function RootItem({
 export function DriverSideMenu(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Ao abrir o painel (transição fechado→aberto), mostrar este ecrã (§10.2 Top 3 Manel). */
+  bootScreenWhenOpen?: DriverMenuScreen
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
@@ -118,12 +121,21 @@ export function DriverSideMenu(props: {
   const {
     open,
     onOpenChange,
+    bootScreenWhenOpen = 'root',
     sessionDisplayName,
     renderLegacyMenu,
   } = props
   const { sessionPhone, logout } = useAuth()
 
   const [screen, setScreen] = useState<DriverMenuScreen>('root')
+  const prevOpenRef = useRef(false)
+
+  useEffect(() => {
+    if (open && !prevOpenRef.current) {
+      setScreen(bootScreenWhenOpen === 'all' ? 'root' : bootScreenWhenOpen)
+    }
+    prevOpenRef.current = open
+  }, [open, bootScreenWhenOpen])
 
   const title = useMemo(() => {
     if (screen === 'root') return 'Menu'
@@ -168,108 +180,108 @@ export function DriverSideMenu(props: {
           />
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
-          {screen === 'root' ? (
-            <>
-              <div className="rounded-2xl border border-border bg-gradient-to-b from-foreground/[0.06] to-transparent px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-foreground/10 border border-border flex items-center justify-center text-foreground/70 font-semibold">
-                    {(sessionDisplayName ?? 'M').slice(0, 1).toUpperCase()}
+            {screen === 'root' ? (
+              <>
+                <div className="rounded-2xl border border-border bg-gradient-to-b from-foreground/[0.06] to-transparent px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-foreground/10 border border-border flex items-center justify-center text-foreground/70 font-semibold">
+                      {(sessionDisplayName ?? 'M').slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-base font-semibold text-foreground">{sessionDisplayName ?? 'Motorista'}</p>
+                      <p className="truncate text-xs text-muted-foreground">{sessionPhone ?? 'Sessão de teste'}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      BETA
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-base font-semibold text-foreground">{sessionDisplayName ?? 'Motorista'}</p>
-                    <p className="truncate text-xs text-muted-foreground">{sessionPhone ?? 'Sessão de teste'}</p>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                    BETA
-                  </span>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <RootItem
-                  label="Perfil"
-                  icon={<User className="h-4 w-4" />}
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
-                    close()
-                  }}
-                />
-                <RootItem
-                  label="Caixa de entrada"
-                  icon={<Inbox className="h-4 w-4" />}
-                  badge={null}
-                  onClick={() => setScreen('inbox')}
-                />
-                <RootItem
-                  label="Rendimentos"
-                  icon={<CreditCard className="h-4 w-4" />}
-                  onClick={() => setScreen('earnings')}
-                />
-                <RootItem
-                  label="Histórico (viagens)"
-                  icon={<History className="h-4 w-4" />}
-                  onClick={() => setScreen('trips')}
-                />
-                <RootItem
-                  label="Navegação"
-                  icon={<Compass className="h-4 w-4" />}
-                  onClick={() => setScreen('nav')}
-                />
-                <RootItem
-                  label="Categorias"
-                  icon={<SlidersHorizontal className="h-4 w-4" />}
-                  onClick={() => setScreen('categories')}
-                />
-                <RootItem
-                  label="Zonas"
-                  icon={<MapPin className="h-4 w-4" />}
-                  onClick={() => setScreen('zones')}
-                />
-                <RootItem
-                  label="Documentos"
-                  icon={<FileText className="h-4 w-4" />}
-                  onClick={() => setScreen('docs')}
-                />
-                <RootItem
-                  label="Preços (estimativa)"
-                  icon={<CreditCard className="h-4 w-4" />}
-                  onClick={() => setScreen('pricing')}
-                />
-                <RootItem
-                  label="Registo de atividade"
-                  icon={<History className="h-4 w-4" />}
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
-                    close()
-                  }}
-                />
-                <RootItem
-                  label="Definições"
-                  icon={<Settings className="h-4 w-4" />}
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))
-                    close()
-                  }}
-                />
-              </div>
+                <div className="space-y-2">
+                  <RootItem
+                    label="Rendimentos"
+                    icon={<CreditCard className="h-4 w-4" />}
+                    onClick={() => setScreen('earnings')}
+                  />
+                  <RootItem
+                    label="Viagens"
+                    icon={<History className="h-4 w-4" />}
+                    onClick={() => setScreen('trips')}
+                  />
+                  <RootItem
+                    label="Caixa de entrada"
+                    icon={<Inbox className="h-4 w-4" />}
+                    badge={null}
+                    onClick={() => setScreen('inbox')}
+                  />
+                  <RootItem
+                    label="Registo de atividade"
+                    icon={<ClipboardList className="h-4 w-4" />}
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
+                      close()
+                    }}
+                  />
+                  <RootItem
+                    label="Perfil"
+                    icon={<User className="h-4 w-4" />}
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
+                      close()
+                    }}
+                  />
+                  <RootItem
+                    label="Definições"
+                    icon={<Settings className="h-4 w-4" />}
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))
+                      close()
+                    }}
+                  />
+                  <RootItem
+                    label="Preços (estimativa)"
+                    icon={<CreditCard className="h-4 w-4" />}
+                    onClick={() => setScreen('pricing')}
+                  />
+                  <RootItem
+                    label="Zonas"
+                    icon={<MapPin className="h-4 w-4" />}
+                    onClick={() => setScreen('zones')}
+                  />
+                  <RootItem
+                    label="Navegação"
+                    icon={<Compass className="h-4 w-4" />}
+                    onClick={() => setScreen('nav')}
+                  />
+                  <RootItem
+                    label="Categorias"
+                    icon={<SlidersHorizontal className="h-4 w-4" />}
+                    onClick={() => setScreen('categories')}
+                  />
+                  <RootItem
+                    label="Documentos"
+                    icon={<FileText className="h-4 w-4" />}
+                    onClick={() => setScreen('docs')}
+                  />
+                </div>
 
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    logout()
-                    close()
-                  }}
-                  className="w-full min-h-[48px] rounded-xl border border-border bg-background px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
-                >
-                  <LogOut className="h-4 w-4 text-foreground/80" />
-                  <span>Sair</span>
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="pt-1">{renderLegacyMenu(screen)}</div>
-          )}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logout()
+                      close()
+                    }}
+                    className="w-full min-h-[48px] rounded-xl border border-border bg-background px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
+                  >
+                    <LogOut className="h-4 w-4 text-foreground/80" />
+                    <span>Sair</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="pt-1">{renderLegacyMenu(screen)}</div>
+            )}
           </div>
         </div>
       </SheetContent>

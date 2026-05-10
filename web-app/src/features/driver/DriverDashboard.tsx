@@ -251,6 +251,8 @@ export function DriverDashboard() {
     isDriverDocumentsGateEnabled()
   )
   const [menuOpen, setMenuOpen] = useState(false)
+  /** Secção inicial ao abrir o menu lateral (Top 3 / barra inferior). */
+  const [menuBootScreen, setMenuBootScreen] = useState<DriverMenuScreen>('root')
   /** Leitura síncrona no bottom nav (evita setDriverShellTab dentro do updater de setMenuOpen). */
   const menuOpenRef = useRef(menuOpen)
   menuOpenRef.current = menuOpen
@@ -615,6 +617,7 @@ export function DriverDashboard() {
 
   const closeDriverMenu = useCallback(() => {
     setMenuOpen(false)
+    setMenuBootScreen('root')
     setDriverShellTab('home')
   }, [])
 
@@ -623,6 +626,7 @@ export function DriverDashboard() {
       if (tab === 'home') {
         setDriverShellTab('home')
         setMenuOpen(false)
+        setMenuBootScreen('root')
         if (driverHomeTwoStep && !activeTripId) setDriverHomeStep(2)
         document.getElementById('driver-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
         if (token && pollEnabled) void refetchAvailable()
@@ -630,10 +634,12 @@ export function DriverDashboard() {
       }
       if (tab === 'menu') {
         const nextOpen = !menuOpenRef.current
+        if (nextOpen) setMenuBootScreen('root')
         setMenuOpen(nextOpen)
         setDriverShellTab(nextOpen ? 'menu' : 'home')
         return
       }
+      setMenuBootScreen(tab === 'earnings' ? 'earnings' : 'inbox')
       setDriverShellTab(tab)
       setMenuOpen(true)
     },
@@ -777,7 +783,11 @@ export function DriverDashboard() {
     >
       <DriverSideMenu
         open={menuOpen}
-        onOpenChange={(v) => setMenuOpen(v)}
+        bootScreenWhenOpen={menuBootScreen}
+        onOpenChange={(v) => {
+          setMenuOpen(v)
+          if (!v) setMenuBootScreen('root')
+        }}
         sessionDisplayName={sessionDisplayName}
         history={history}
         driverLocationForZones={mapDotLatLng ?? null}
@@ -928,7 +938,13 @@ export function DriverDashboard() {
               <button
                 type="button"
                 data-testid="driver-open-menu"
-                onClick={() => setMenuOpen((v) => !v)}
+                onClick={() => {
+                  setMenuOpen((v) => {
+                    const next = !v
+                    if (next) setMenuBootScreen('root')
+                    return next
+                  })
+                }}
                 className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
               >
                 {menuOpen ? 'Fechar menu' : 'Menu'}
@@ -1031,6 +1047,7 @@ export function DriverDashboard() {
                   onClick={() => {
                     setMenuOpen((v) => {
                       const next = !v
+                      if (next) setMenuBootScreen('root')
                       return next
                     })
                   }}

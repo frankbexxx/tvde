@@ -22,7 +22,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ### Rasto vivaço (não bloqueia a fila acima)
 
-- [ ] **Top 3 Manel** — ranking final quando houver; spec em [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md); polish `DRIVER_MENU_SPEC.md` §7.4 / §7.8.
+- [ ] **Top 3 Manel** — ranking final quando houver; spec em [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md); polish `DRIVER_MENU_SPEC.md` §7.4 / §7.8. *(Feito em código: ordem §10.2 no menu raiz, label barra **Rendimentos**, deep link barra → secção Rendimentos/Caixa.)*
 - [ ] **Zonas v1:** geo por `zone_id`, orçamento extra >2/dia via partner (se aplicável).
 - [ ] Linha rotacional v2 (mais mensagens / dados internos sem APIs externas).
 - [ ] Planeamento **login social** (onda própria).

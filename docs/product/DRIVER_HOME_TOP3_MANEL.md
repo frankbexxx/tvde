@@ -3,7 +3,7 @@
 Documento **canónico** para o fluxo acordado com **Manel**: substituir / preceder o layout actual do `DriverDashboard` por um **fluxo em dois ecrãs** — mapa largo + disponibilidade, depois ecrã de trabalho com **acções em baixo**.  
 Complementa [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) (menu **Menu** continua a existir para preferências, histórico, zonas v1, etc.).
 
-**Estado:** desenho alinhado em sessão (Frank + Manel); existe **implementação parcial** do fluxo em dois passos (`VITE_DRIVER_HOME_TWO_STEP`); o **§9** (shell mapa + barra inferior) e o **§10** (Top 3 + ordem do menu) são a **próxima camada** de produto a fechar em UX e código. A **ordem** no §10 é **proposta canónica** até o Manel afinar; depois só se troca a ordem, não a lista de destinos.
+**Estado:** desenho alinhado em sessão (Frank + Manel); existe **implementação parcial** do fluxo em dois passos (`VITE_DRIVER_HOME_TWO_STEP`); **§9** (shell mapa + barra inferior) e **§10** em curso no código: **ordem do menu raiz** alinhada ao §10.2 (Rendimentos → Viagens → Caixa → …); barra inferior com label **Rendimentos**; tocar **Rendimentos** / **Caixa** na barra abre o painel directamente nessa secção. A **ordem** no §10 é **proposta canónica** até o Manel afinar; depois só se troca a ordem, não a lista de destinos.
 
 ---
 
