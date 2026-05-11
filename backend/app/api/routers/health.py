@@ -54,4 +54,14 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
 @router.get("/config")
 async def config() -> dict[str, str | bool]:
     """Public config for frontend (e.g. BETA mode)."""
-    return {"beta_mode": bool(getattr(settings, "BETA_MODE", False))}
+    beta = bool(getattr(settings, "BETA_MODE", False))
+    g_id = (getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", None) or "").strip()
+    g_sec = (getattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", None) or "").strip()
+    google_ready = bool(g_id and g_sec)
+    out: dict[str, str | bool] = {"beta_mode": beta}
+    if beta and google_ready:
+        out["google_oauth_enabled"] = True
+        out["google_oauth_client_id"] = g_id
+    else:
+        out["google_oauth_enabled"] = False
+    return out

@@ -3,7 +3,7 @@
 **Fonte:** [`PROJECT_AUDIT_2026-05-02.md`](./PROJECT_AUDIT_2026-05-02.md)  
 **Sequência acordada:** **A1 → A2 → L1 → A3 → L2 → L3 → A4** (A = auditoria / OPS-produto, L = login social).
 
-**Estado (documental):** **A1** e **A2** feitos neste ficheiro — **próximo: L1** (spec em [`docs/product/SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md)).
+**Estado (documental + código):** **A1**, **A2**, **L1** feitos. **A3** parcialmente fechado em código (**A2-01** rate-limit; **A2-03** URIs canónicas abaixo; **A2-02** staging = decisão OPS em aberto). **L2/L3** implementados (troca `code` + UI passageiro).
 
 ---
 
@@ -48,14 +48,26 @@ Legenda: **P0** = antes ou junto da integração OAuth em aberto público; **P1*
 
 ---
 
+## A2-03 — Redirect URIs (canónico)
+
+| Ambiente | `redirect_uri` (SPA) | Registo Google Cloud Console |
+|----------|----------------------|--------------------------------|
+| Local | `http://localhost:5173/auth/google/callback` | Authorized redirect URIs |
+| Staging | *a definir* (mesmo host que o *build* Vite) | Idem |
+| Produção | `https://<domínio-app>/auth/google/callback` | Idem |
+
+**Backend:** não expõe client secret; `POST /auth/google/exchange` recebe `code` + `redirect_uri` idêntico ao usado no redirect inicial.
+
+---
+
 ## A3 — *Gate* antes de fechar L2 (integração técnica)
 
-Checklist a cumprir quando **L1** estiver fechado e **antes** de merge grande de OAuth:
+Checklist quando **L1** estiver fechado e **antes** de abrir Google a testers externos:
 
 - [ ] **A2-02** decidido (staging existe ou data + responsável).
-- [ ] **A2-03** preenchido (lista de URLs e variáveis).
-- [ ] **A2-01** implementado ou plano datado *antes* de subir L2 a utilizadores externos.
-- [ ] Revisão: tokens OAuth **só no backend**; segredos client em env; sem `DEFAULT_PASSWORD` exposto a tráfego público além do aceitável para BETA.
+- [x] **A2-03** preenchido — tabela §A2-03 (produção/staging final = completar quando houver host).
+- [x] **A2-01** implementado — `app/api/auth_rate_limit.py` + uso em `/auth/otp/request`, `/auth/login`, `/auth/google/exchange`.
+- [x] Revisão: troca de `code` **só no backend**; `GOOGLE_OAUTH_CLIENT_SECRET` em env; fluxo v1 **só passageiro**.
 
 ---
 
@@ -66,4 +78,4 @@ Checklist a cumprir quando **L1** estiver fechado e **antes** de merge grande de
 
 ---
 
-_Última actualização: **2026-05-12** — A1+A2 materializados; L1 em [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md)._
+_Última actualização: **2026-05-12** — L2/L3 (Google BETA passageiro) + A2-01/A2-03; A2-02 staging em aberto._

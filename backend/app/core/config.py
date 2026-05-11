@@ -100,6 +100,10 @@ class Settings(BaseSettings):
     # Exemplo: [{"text":"IPMA: aviso amarelo — aguaceiros.","source":"meteo"}]
     ROTACIONAL_FEED_JSON: str = ""
 
+    # Login Google (OAuth2 authorization code). Ambos obrigatórios para activar POST /auth/google/exchange.
+    GOOGLE_OAUTH_CLIENT_ID: str = ""
+    GOOGLE_OAUTH_CLIENT_SECRET: str = ""
+
     def _raw_environment_label(self) -> str:
         if self.ENVIRONMENT is not None and str(self.ENVIRONMENT).strip():
             return str(self.ENVIRONMENT).strip().lower()

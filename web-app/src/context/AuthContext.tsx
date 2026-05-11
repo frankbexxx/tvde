@@ -17,6 +17,7 @@ import {
 import { warn as logWarn } from '../utils/logger'
 import { validateAccessToken } from '../api/session'
 import {
+  exchangeGoogleCode,
   getConfig,
   getDevTokens,
   getMeProfile,
@@ -76,6 +77,8 @@ interface AuthContextValue extends AuthState {
   setAppRouteRole: (role: AppRouteRole) => void
   loadTokens: () => Promise<void>
   login: (phone: string, password: string, requestedRole?: string) => Promise<TokenResponse>
+  /** BETA + Google OAuth: troca `code` do redirect e preenche sessão (passageiro). */
+  loginGoogle: (code: string, redirectUri: string) => Promise<TokenResponse>
   logout: () => void
   /** Telemóvel da sessão BETA (ou último gravado); sem API extra. */
   sessionPhone: string | null
@@ -441,6 +444,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [addLog, setStatus, syncAppRouteRole]
   )
 
+  const loginGoogle = useCallback(
+    async (code: string, redirectUri: string) => {
+      setStatus('A entrar com Google...')
+      const res = await exchangeGoogleCode(code, redirectUri, 'passenger')
+      const token = res.access_token
+      setStoredAccessToken(token)
+      setBetaToken(token)
+      const serverRole = res.role as Role
+      setBetaRole(serverRole)
+      setBetaUserId(res.user_id)
+      syncAppRouteRole('passenger')
+      setTokens({
+        passenger: token,
+        driver: token,
+        admin: token,
+        partner: res.role === 'partner' ? token : undefined,
+      })
+      setStatus('Pronto')
+      const p = (res.phone ?? '').trim()
+      if (p) {
+        setSessionPhone(p)
+        setStoredLastPhone(p)
+      } else {
+        setSessionPhone(null)
+      }
+      const dn = (res.display_name ?? '').trim()
+      setSessionDisplayName(dn || null)
+      setStoredSessionDisplayName(dn)
+      addLog('Sessão iniciada (Google)', 'success')
+      return res
+    },
+    [addLog, setStatus, syncAppRouteRole]
+  )
+
   const setRole = useCallback(
     (r: Role) => {
       if (r === 'passenger' || r === 'driver' || r === 'partner') syncAppRouteRole(r)
@@ -515,6 +552,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAppRouteRole,
       loadTokens,
       login,
+      loginGoogle,
       logout,
       sessionPhone,
       sessionDisplayName,
@@ -538,6 +576,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAppRouteRole,
       loadTokens,
       login,
+      loginGoogle,
       logout,
       sessionPhone,
       sessionDisplayName,

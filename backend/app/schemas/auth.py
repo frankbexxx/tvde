@@ -35,6 +35,17 @@ class LoginRequest(BaseModel):
     )
 
 
+class GoogleExchangeRequest(BaseModel):
+    """Troca authorization code (redirect SPA) por sessão JWT."""
+
+    code: str = Field(..., min_length=1, max_length=4096)
+    redirect_uri: str = Field(..., min_length=8, max_length=768)
+    requested_role: str | None = Field(
+        default="passenger",
+        description="v1: apenas passenger.",
+    )
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
@@ -44,6 +55,10 @@ class TokenResponse(BaseModel):
     display_name: str = Field(
         default="",
         description="Snapshot de User.name na emissão do token (BETA / OTP).",
+    )
+    phone: str = Field(
+        default="",
+        description="Telefone ou identificador sintético (ex.: login Google).",
     )
 
 

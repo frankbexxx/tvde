@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
 import type { ApiError } from '../../api/client'
+import { getConfig } from '../../api/auth'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 import { appBuildDisplayLine } from '../../lib/appBuildMeta'
@@ -59,6 +60,17 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const [password, setPassword] = useState('123456')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null)
+
+  useEffect(() => {
+    void getConfig()
+      .then((c) => {
+        if (c.google_oauth_enabled && c.google_oauth_client_id?.trim()) {
+          setGoogleClientId(c.google_oauth_client_id.trim())
+        }
+      })
+      .catch(() => setGoogleClientId(null))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,6 +101,19 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     }
   }
 
+  const startGoogleLogin = () => {
+    if (!googleClientId) return
+    const redirectUri = `${window.location.origin}/auth/google/callback`
+    const u = new URL('https://accounts.google.com/o/oauth2/v2/auth')
+    u.searchParams.set('client_id', googleClientId)
+    u.searchParams.set('redirect_uri', redirectUri)
+    u.searchParams.set('response_type', 'code')
+    u.searchParams.set('scope', 'openid email profile')
+    u.searchParams.set('access_type', 'online')
+    u.searchParams.set('prompt', 'select_account')
+    window.location.assign(u.toString())
+  }
+
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-background">
       <div className="w-full max-w-sm bg-card rounded-2xl shadow-card overflow-hidden">
@@ -108,8 +133,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               role="tab"
               aria-selected={requestedRole === 'passenger'}
               className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'passenger'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
                 }`}
             >
               Passageiro
@@ -119,8 +144,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               role="tab"
               aria-selected={requestedRole === 'driver'}
               className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'driver'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
                 }`}
             >
               Motorista
@@ -130,8 +155,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               role="tab"
               aria-selected={requestedRole === 'partner'}
               className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'partner'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
                 }`}
             >
               Frota
@@ -141,8 +166,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               role="tab"
               aria-selected={requestedRole === 'admin'}
               className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'admin'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
                 }`}
             >
               Administrador
@@ -151,6 +176,18 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
           <p className="text-sm text-muted-foreground mb-4">
             Entra com o teu telemóvel (+351...)
           </p>
+          {requestedRole === 'passenger' && googleClientId && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={startGoogleLogin}
+                className="w-full min-h-[44px] py-2.5 rounded-xl border border-input bg-background text-foreground font-medium hover:bg-muted/80 transition-colors"
+              >
+                Continuar com Google
+              </button>
+              <p className="text-xs text-muted-foreground mt-2 text-center">Só para passageiro (v1).</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1">

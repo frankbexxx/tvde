@@ -6,6 +6,7 @@ import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { PartnerDriverDetail } from '../features/partner/PartnerDriverDetail'
 import { PartnerHome } from '../features/partner/PartnerHome'
 import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
+import { GoogleOAuthCallback } from '../features/auth/GoogleOAuthCallback'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { AppDownloadLanding } from '../features/public/AppDownloadLanding'
 import { AppDownloadRedirect } from '../features/public/AppDownloadRedirect'
@@ -109,6 +110,9 @@ export function AppRoutes() {
     }
     if (pathname === '/download') {
       return <AppDownloadLanding />
+    }
+    if (pathname.startsWith('/auth/google/callback')) {
+      return <GoogleOAuthCallback />
     }
     const requestedRole = pathname.startsWith('/partner')
       ? 'partner'
