@@ -12,14 +12,14 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ## Painel — 2026-05-06 (hoje)
 
-**Feito:** `main` **#285** — onda **Manel EXTRA P0–P2** (rating motorista desactivado, cofre documentos driver/partner MVP, sons + dark automático + wake lock sessão, `/dl`·`/app`, menu passageiro com histórico no drawer). Prompts: [`docs/prompts/manel-legal-extra-2026-05/`](docs/prompts/manel-legal-extra-2026-05/). Anteriormente **#282** (zonas: partner **grant-extra** + catálogo **porto**), **#281** / **#280** (Top 3). Backlog EXTRA canónico: [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).
+**Feito:** `main` **#287** — barra inferior passageiro (**Início** · **Histórico** · **Conta** · **Menu**) + copy Frota **«Por aceitar»** (`assigned` + tooltip). Prompts: [`docs/prompts/passenger-frota-2026-05-06/`](docs/prompts/passenger-frota-2026-05-06/). Anteriormente **#285** (Manel EXTRA P0–P2), **#282**, **#280**/**#281**. Backlog EXTRA: [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).
 
-**Prioridade hoje:**
+**Prioridade agora:**
 
-1. [ ] **[VALIDAÇÃO]** Smoke curto (local ou prod) nos fluxos alterados: motorista **Continuar** pós-viagem, **Menu** passageiro + histórico, partner **Documentos** no detalhe do motorista.
+1. [x] **[VALIDAÇÃO]** Smoke nos fluxos **#285** / **#287** — fechado com merge (passageiro inclui barra + drawer).
 2. [ ] **[CONFIG]** Definir **`VITE_APP_DOWNLOAD_URL`** no deploy / `.env` quando houver URL estável (senão fallback `/passenger`).
-3. [ ] **[TESTES] E2E / PW** — follow-ups nas **Notas E2E** (painel **2026-05-09**): após mudanças no `driver-passenger-flow`, correr suíte relevante.
-4. [ ] [UX] **Opcional** — Frota: copy **«Só atribuídas»** (ainda pendente).
+3. [x] **[TESTES] E2E** — `driver-passenger-flow` corrido após barra inferior (**#287**); manter **Notas E2E** (painel **2026-05-09**) para `api-flows` / resto da suíte quando tocares nesses ficheiros.
+4. [x] [UX] Frota — rótulo **«Por aceitar»** em **#287** (substitui «Só atribuídas»).
 5. [ ] [OPS] **Stripe** — lembrete painel **2026-05-10** (`STRIPE_MOCK` quando fechar janela de testes).
 
 **Pós-implementação (não bloqueia hoje):** revisão jurídica de copy/resíduos rating; pipeline documental com **upload binário + OCR** além do MVP actual.
