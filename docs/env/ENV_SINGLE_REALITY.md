@@ -13,6 +13,10 @@ Estes URLs aparecem como **ambiente de trabalho actual** na documentação opera
 
 Em docs genéricos, preferir o padrão `https://tvde-api-XXXX.onrender.com` quando não for preciso um host concreto.
 
+### Staging (A2-02)
+
+Stack **separada** da tabela acima (`tvde-staging-db` / `tvde-staging-api` / `tvde-staging-app` ou nomes equivalentes). **Não** reutilizar `DATABASE_URL` de produção. Guia passo-a-passo: [`docs/ops/STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md). Depois de criares os serviços, **atualiza** [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A2-03 com o host real da app staging (redirect Google).
+
 ## Nota `STRIPE_MOCK` (código vs template)
 
 Em `backend/app/core/config.py` o campo `STRIPE_MOCK` tem default de **implementação** que pode diferir do que usas em `.env` / Render. **Regra operacional:** em piloto e templates, manter **`STRIPE_MOCK=true`** salvo janela explicitamente a testar Stripe real (alinhar com secção «Stripe por defeito é mock» acima).
