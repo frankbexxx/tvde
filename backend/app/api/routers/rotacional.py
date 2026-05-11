@@ -6,7 +6,7 @@ import json
 import logging
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from app.core.config import settings
 
@@ -28,6 +28,24 @@ class RotacionalMessagesResponse(BaseModel):
     items: list[RotacionalItem]
 
 
+def _coerce_rotacional_item(entry: object) -> RotacionalItem | None:
+    if isinstance(entry, str):
+        try:
+            return RotacionalItem(text=entry[:_MAX_TEXT], source="interno")
+        except ValidationError:
+            return None
+    if isinstance(entry, dict) and entry.get("text") is not None:
+        try:
+            text = str(entry["text"]).strip()[:_MAX_TEXT]
+            if not text:
+                return None
+            src = str(entry.get("source", "interno")).strip()[:_MAX_SOURCE] or "interno"
+            return RotacionalItem(text=text, source=src)
+        except ValidationError:
+            return None
+    return None
+
+
 def _parse_rotacional_feed() -> list[RotacionalItem]:
     raw = (getattr(settings, "ROTACIONAL_FEED_JSON", None) or "").strip()
     if not raw:
@@ -41,17 +59,9 @@ def _parse_rotacional_feed() -> list[RotacionalItem]:
         return []
     out: list[RotacionalItem] = []
     for x in data[:_MAX_ITEMS]:
-        try:
-            if isinstance(x, str):
-                out.append(RotacionalItem(text=x[:_MAX_TEXT], source="interno"))
-            elif isinstance(x, dict) and x.get("text") is not None:
-                text = str(x["text"]).strip()[:_MAX_TEXT]
-                if not text:
-                    continue
-                src = str(x.get("source", "interno")).strip()[:_MAX_SOURCE] or "interno"
-                out.append(RotacionalItem(text=text, source=src))
-        except Exception:
-            continue
+        item = _coerce_rotacional_item(x)
+        if item is not None:
+            out.append(item)
     return out
 
 
