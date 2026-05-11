@@ -60,10 +60,12 @@ Este ficheiro **organiza** um conjunto **EXTRA** de ideias e obrigações **aind
 
 ## Próximos passos recomendados (triagem)
 
-1. **P0 conformidade:** **item 4** — remoção do **pedido** de classificação no papel motorista + revisão jurídica de copy/resíduos.
-2. **P0 operação documental:** **itens 5–6** — spec única: ingestão partner, pipeline OCR/validade, fallback manual, notificações motorista.
-3. **P1 UX motorista:** **itens 1–3** — onda “sessão motorista” (sons, dark mode, wake lock sempre activo em uso).
-4. **P2 crescimento:** **item 7** — quando existir destino de download estável; **itens 8–9** empurradas para **futuro**.
-5. **P2 passageiro shell:** **item 10** — após prioridade motorista/partner.
+*Actualização 2026-05-06:* a **onda técnica** alinhada aos pontos **4**, **5–6** (MVP), **1–3**, **7** e **10** foi **mergeada** em `main` (**#285**). Seguem trabalhos **jurídicos/copy**, **OCR/upload binário**, **URL QR em produção**, e itens **8–9** (futuro).
 
-_Última revisão: **2026-05-06** — decisões 1, 3–4, 5–6, 7–9 registadas._
+1. ~~**P0 conformidade:** **item 4**~~ — *pedido de rating pelo motorista removido (API + UI); copy/fonte normativa com jurídico.*
+2. ~~**P0 operação documental:** **itens 5–6**~~ — *MVP JSON + partner/driver + sugestão validade por texto; evolução: ingestão ficheiros, OCR, notificações.*
+3. ~~**P1 UX motorista:** **itens 1–3**~~ — *sons, dark sem tema gravado, wake lock sessão.*
+4. **P2 crescimento:** **item 7** — *definir **URL estável** (`VITE_APP_DOWNLOAD_URL`) para materiais impressos;* **itens 8–9** empurradas para **futuro**.
+5. ~~**P2 passageiro shell:** **item 10**~~ — *menu lateral + histórico no drawer.*
+
+_Última revisão: **2026-05-06** — estado pós-merge #285._

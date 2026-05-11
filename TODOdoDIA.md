@@ -12,16 +12,19 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ## Painel — 2026-05-06 (hoje)
 
-**Feito:** `main` **#282** (zonas: partner **grant-extra** + catálogo **porto**). Anteriormente **#281** / **#280** (Top 3). **Novo:** backlog **EXTRA** Manel + legal — [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).
+**Feito:** `main` **#285** — onda **Manel EXTRA P0–P2** (rating motorista desactivado, cofre documentos driver/partner MVP, sons + dark automático + wake lock sessão, `/dl`·`/app`, menu passageiro com histórico no drawer). Prompts: [`docs/prompts/manel-legal-extra-2026-05/`](docs/prompts/manel-legal-extra-2026-05/). Anteriormente **#282** (zonas: partner **grant-extra** + catálogo **porto**), **#281** / **#280** (Top 3). Backlog EXTRA canónico: [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).
 
-**Falta hoje (prioridade):**
+**Prioridade hoje:**
 
-1. [x] **[CÓDIGO] Zonas v1** — merge **`main`** (#282).
-2. [ ] **[TESTES] E2E / PW** — follow-ups **Notas E2E** (painel **2026-05-09** abaixo): `api-flows`, `driver-passenger-flow` / two-step quando tocares nesses ficheiros.
-3. [ ] [UX] **Opcional** — Frota: copy/rótulo **«Só atribuídas»** (*assigned* vs aceite/em curso — ver fecho sessão 2026-05-09).
-4. [ ] [OPS] **Stripe** — quando quiseres fechar janela de testes no Render: **`STRIPE_MOCK=true`** (lembrete também no painel **2026-05-10**).
+1. [ ] **[VALIDAÇÃO]** Smoke curto (local ou prod) nos fluxos alterados: motorista **Continuar** pós-viagem, **Menu** passageiro + histórico, partner **Documentos** no detalhe do motorista.
+2. [ ] **[CONFIG]** Definir **`VITE_APP_DOWNLOAD_URL`** no deploy / `.env` quando houver URL estável (senão fallback `/passenger`).
+3. [ ] **[TESTES] E2E / PW** — follow-ups nas **Notas E2E** (painel **2026-05-09**): após mudanças no `driver-passenger-flow`, correr suíte relevante.
+4. [ ] [UX] **Opcional** — Frota: copy **«Só atribuídas»** (ainda pendente).
+5. [ ] [OPS] **Stripe** — lembrete painel **2026-05-10** (`STRIPE_MOCK` quando fechar janela de testes).
 
-_Backlog EXTRA (som, dark mode, rating passageiro, documentos, QR, família, etc.):_ [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) · quadro [`docs/todo-em-curso.md`](docs/todo-em-curso.md)._
+**Pós-implementação (não bloqueia hoje):** revisão jurídica de copy/resíduos rating; pipeline documental com **upload binário + OCR** além do MVP actual.
+
+_Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 
 ---
 
