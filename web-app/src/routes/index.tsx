@@ -7,6 +7,7 @@ import { PartnerDriverDetail } from '../features/partner/PartnerDriverDetail'
 import { PartnerHome } from '../features/partner/PartnerHome'
 import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
 import { LoginScreen } from '../features/auth/LoginScreen'
+import { AppDownloadLanding } from '../features/public/AppDownloadLanding'
 import { AppDownloadRedirect } from '../features/public/AppDownloadRedirect'
 import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { AppHeaderBar } from '../components/layout/AppHeaderBar'
@@ -106,6 +107,9 @@ export function AppRoutes() {
     if (pathname === '/dl' || pathname === '/app') {
       return <AppDownloadRedirect />
     }
+    if (pathname === '/download') {
+      return <AppDownloadLanding />
+    }
     const requestedRole = pathname.startsWith('/partner')
       ? 'partner'
       : pathname.startsWith('/driver')
@@ -124,6 +128,7 @@ export function AppRoutes() {
           <Routes>
             <Route path="/dl" element={<AppDownloadRedirect />} />
             <Route path="/app" element={<AppDownloadRedirect />} />
+            <Route path="/download" element={<AppDownloadLanding />} />
             <Route path="/" element={<RootRedirect />} />
             <Route
               path="/passenger"
