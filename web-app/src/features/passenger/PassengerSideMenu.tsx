@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { History, LogOut, Menu as MenuIcon, User } from 'lucide-react'
+import { History, LogOut, User } from 'lucide-react'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
 import { useAuth } from '../../context/AuthContext'
 import type { TripHistoryItem } from '../../api/trips'
@@ -8,7 +7,7 @@ import { CancellationReasonMuted } from '../../components/trips/CancellationReas
 import { historyStatusDotColor } from '../../constants/tripStatus'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
 
-type Screen = 'root' | 'history' | 'account'
+export type PassengerMenuScreen = 'root' | 'history' | 'account'
 
 function MenuHeader({
   title,
@@ -46,47 +45,40 @@ function MenuHeader({
 }
 
 export function PassengerSideMenu({
+  open,
+  onOpenChange,
+  screen,
+  onScreenChange,
   history,
   historyLoading,
   historyPollFault,
 }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  screen: PassengerMenuScreen
+  onScreenChange: (screen: PassengerMenuScreen) => void
   history: TripHistoryItem[] | null
   historyLoading: boolean
   historyPollFault: boolean
 }) {
   const { sessionDisplayName, sessionPhone, logout } = useAuth()
-  const [screen, setScreen] = useState<Screen>('root')
-  const [open, setOpen] = useState(false)
 
   const close = () => {
-    setScreen('root')
-    setOpen(false)
+    onScreenChange('root')
+    onOpenChange(false)
   }
 
   const title = screen === 'history' ? 'Histórico' : screen === 'account' ? 'Conta' : 'Menu'
 
   return (
-    <>
-      <div className="flex justify-end px-4 pt-2 pb-1">
-        <button
-          type="button"
-          data-testid="passenger-open-menu"
-          onClick={() => setOpen(true)}
-          className="min-h-11 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-        >
-          <MenuIcon className="h-4 w-4" aria-hidden />
-          Menu
-        </button>
-      </div>
-
-      <Sheet
+    <Sheet
         open={open}
         onOpenChange={(v) => {
           if (v) {
-            setOpen(true)
+            onOpenChange(true)
           } else {
-            setScreen('root')
-            setOpen(false)
+            onScreenChange('root')
+            onOpenChange(false)
           }
         }}
       >
@@ -102,7 +94,7 @@ export function PassengerSideMenu({
           <div className="h-dvh flex flex-col">
             <MenuHeader
               title={screen === 'root' ? (sessionDisplayName ?? 'Passageiro') : title}
-              onBack={screen !== 'root' ? () => setScreen('root') : undefined}
+              onBack={screen !== 'root' ? () => onScreenChange('root') : undefined}
               onClose={close}
             />
             <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
@@ -121,7 +113,7 @@ export function PassengerSideMenu({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setScreen('history')}
+                    onClick={() => onScreenChange('history')}
                     className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
                   >
                     <History className="h-4 w-4 text-foreground/80" />
@@ -129,7 +121,7 @@ export function PassengerSideMenu({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setScreen('account')}
+                    onClick={() => onScreenChange('account')}
                     className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
                   >
                     <User className="h-4 w-4 text-foreground/80" />
@@ -197,6 +189,5 @@ export function PassengerSideMenu({
           </div>
         </SheetContent>
       </Sheet>
-    </>
   )
 }

@@ -50,7 +50,8 @@ import {
 import { toast } from 'sonner'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
-import { PassengerSideMenu } from './PassengerSideMenu'
+import { PassengerSideMenu, type PassengerMenuScreen } from './PassengerSideMenu'
+import { PassengerBottomNav, type PassengerShellTab } from './PassengerBottomNav'
 import {
   PASSENGER_TRIP_CANCEL_PRESETS,
   TRIP_CANCEL_SELECT_OTHER,
@@ -88,6 +89,36 @@ export function PassengerDashboard() {
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [passengerCancelOpen, setPassengerCancelOpen] = useState(false)
+  const [passengerMenuOpen, setPassengerMenuOpen] = useState(false)
+  const [passengerMenuScreen, setPassengerMenuScreen] = useState<PassengerMenuScreen>('root')
+  const passengerMenuOpenRef = useRef(false)
+
+  useEffect(() => {
+    passengerMenuOpenRef.current = passengerMenuOpen
+  }, [passengerMenuOpen])
+
+  const passengerNavActive = useMemo((): PassengerShellTab => {
+    if (!passengerMenuOpen) return 'home'
+    if (passengerMenuScreen === 'root') return 'menu'
+    return passengerMenuScreen === 'history' ? 'history' : 'account'
+  }, [passengerMenuOpen, passengerMenuScreen])
+
+  const handlePassengerBottomNav = useCallback((tab: PassengerShellTab) => {
+    if (tab === 'home') {
+      setPassengerMenuOpen(false)
+      setPassengerMenuScreen('root')
+      document.getElementById('passenger-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (tab === 'menu') {
+      const nextOpen = !passengerMenuOpenRef.current
+      if (nextOpen) setPassengerMenuScreen('root')
+      setPassengerMenuOpen(nextOpen)
+      return
+    }
+    setPassengerMenuScreen(tab === 'history' ? 'history' : 'account')
+    setPassengerMenuOpen(true)
+  }, [])
   const [passengerCancelPreset, setPassengerCancelPreset] = useState('')
   const [passengerCancelOther, setPassengerCancelOther] = useState('')
   const [retrySearchPending, setRetrySearchPending] = useState(false)
@@ -928,11 +959,13 @@ export function PassengerDashboard() {
     ? { lat: destinationCandidate.lat, lng: destinationCandidate.lng }
     : null)
 
-  return (
-    <ScreenContainer
-      bottomButton={
-        showBottomPrimary && primaryLabel ? (
-          primaryLabel === 'Cancelar' && passengerCancelOpen ? (
+  const showPassengerBottomNav = !passengerCancelOpen
+  const passengerBottomNavEl = showPassengerBottomNav ? (
+    <PassengerBottomNav active={passengerNavActive} onSelect={handlePassengerBottomNav} />
+  ) : null
+
+  const passengerBottomChrome =
+    passengerCancelOpen && primaryLabel === 'Cancelar' ? (
             <div
               className="w-full space-y-3 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
               data-testid="passenger-cancel-panel"
@@ -992,20 +1025,41 @@ export function PassengerDashboard() {
                 </button>
               </div>
             </div>
-          ) : (
-            <PrimaryActionButton
-              onClick={primaryOnClick}
-              disabled={primaryLabel === 'Cancelar' ? cancelling : false}
-              loading={primaryLabel === 'Cancelar' && cancelling}
-              variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
-            >
-              {primaryLabel}
-            </PrimaryActionButton>
-          )
-        ) : undefined
+    ) : showBottomPrimary && primaryLabel ? (
+      <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
+        <div className="px-4 py-2">
+          <PrimaryActionButton
+            onClick={primaryOnClick}
+            disabled={primaryLabel === 'Cancelar' ? cancelling : false}
+            loading={primaryLabel === 'Cancelar' && cancelling}
+            variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
+          >
+            {primaryLabel}
+          </PrimaryActionButton>
+        </div>
+        {passengerBottomNavEl}
+      </div>
+    ) : (
+      passengerBottomNavEl ?? undefined
+    )
+
+  return (
+    <ScreenContainer
+      bottomButton={passengerBottomChrome}
+      bottomBarVariant={
+        passengerCancelOpen && primaryLabel === 'Cancelar'
+          ? 'inset'
+          : passengerBottomChrome
+            ? 'flush'
+            : 'inset'
       }
+      mainScrollId="passenger-main-scroll"
     >
       <PassengerSideMenu
+        open={passengerMenuOpen}
+        onOpenChange={setPassengerMenuOpen}
+        screen={passengerMenuScreen}
+        onScreenChange={setPassengerMenuScreen}
         history={history}
         historyLoading={historyLoading}
         historyPollFault={historyPollFault}
