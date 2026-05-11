@@ -10,13 +10,23 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
+## Painel — 2026-05-12 (rumo **A+L**)
+
+**Foco:** auditoria executável + login social — sequência **A1→A2→L1→A3→L2→L3→A4** (ver quadro [`docs/todo-em-curso.md`](docs/todo-em-curso.md) **Agora**).
+
+**Entregue hoje (documental):** **A1** inventário + **A2** backlog priorizado + gates — [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md). **L1** spec (fluxos passageiro + Google v1 + RGPD mínimo) — [`docs/product/SOCIAL_LOGIN_L1_SPEC.md`](docs/product/SOCIAL_LOGIN_L1_SPEC.md).
+
+**Próximo:** **A3** (staging, redirect URIs OAuth, rate-limit `/auth/*`) checklist no mesmo ficheiro §A3; depois **L2** código.
+
+---
+
 ## Painel — 2026-05-11 (fecho dia)
 
 **Entregue em `main` (até esta sessão):** **#288** — quadro operacional + ENV; **#289** — **`/download`** para QR; **2026-05-11** — **rotacional v2** (`GET /rotacional/messages`, `ROTACIONAL_FEED_JSON`, `AppHeaderBar`), spec [`docs/product/ROTACIONAL_V2_SPEC.md`](docs/product/ROTACIONAL_V2_SPEC.md); docs **Stripe** — reposto mock (checklist [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md)).
 
 **Testado (sessão):** **E2E** `npm run test:e2e:api` — **6/6** (`api-flows`, API local). *Smoke produção (QR, passageiro, barra): checklist humano após cada deploy.*
 
-**Pendências operacionais (não bloqueiam):** **`VITE_APP_DOWNLOAD_URL`** só para destino **externo**. **Render:** confirmar `STRIPE_MOCK` / `VITE_STRIPE_MOCK` alinhados ao mock se ainda não aplicaste no dashboard.
+**Pendências operacionais (não bloqueiam):** **`VITE_APP_DOWNLOAD_URL`** só para destino **externo**. **Render:** confirmar `STRIPE_MOCK` / `VITE_STRIPE_MOCK` alinhados ao mock se ainda não aplicaste no dashboard. *Rotacional v3* (fontes externas, ex. [Meteopt](https://www.meteopt.com)) — ver [`docs/todo-em-curso.md`](docs/todo-em-curso.md) rasto.
 
 _Quadro:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 
@@ -32,7 +42,7 @@ _Quadro:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 2. [x] **[CONFIG]** **`VITE_APP_DOWNLOAD_URL`** — opcional; **#289** cobre QR no mesmo domínio sem variável.
 3. [x] **[TESTES] E2E** — `driver-passenger-flow` + **`api-flows`** validados na sessão **2026-05-11** (local).
 4. [x] [UX] Frota — **«Por aceitar»** (**#287**).
-5. [x] [OPS] **Stripe** — **2026-05-11:** mock reposto em piloto (ver **`ENV_SINGLE_REALITY`** + painel **2026-05-10**).
+5. [x] [OPS] **Stripe** — **2026-05-11:** mock reposto em piloto (ver [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) + painel **2026-05-10**).
 
 **Pós-implementação:** revisão jurídica de copy/resíduos rating; pipeline documental **upload + OCR**.
 
@@ -49,6 +59,8 @@ _Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 - **Risco operacional:** sem segundo ambiente (staging) e deploy manual Render — smokes em prod continuam canónicos para regressões cruzadas.
 
 **Lembrete — Stripe:** **2026-05-11** — reposto **modo mock** em piloto (`STRIPE_MOCK=true` no `tvde-api`, `VITE_STRIPE_MOCK=true` no *build* `tvde-app`). Janela **test mode** anterior: ver histórico no item 7 abaixo (2026-05-09). Checklist operacional: [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) § *Repor modo mock Stripe*.
+
+_*Fecho:* janela de piloto **encerrada** + mock reposto — ver painel **2026-05-11**._
 
 ---
 
