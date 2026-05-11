@@ -26,6 +26,11 @@ function locationLabel(d: PartnerDriverRow): string {
 type DriverFilter = 'all' | 'active' | 'online' | 'offline'
 type TripFilter = 'all' | 'ongoing' | 'completed' | 'cancelled' | 'failed' | 'assigned'
 
+const TRIP_FILTER_HINT: Partial<Record<TripFilter, string>> = {
+  assigned:
+    'Viagens com motorista já atribuído; o motorista ainda não aceitou a viagem.',
+}
+
 const ONGOING = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
 const PIPELINE = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
 
@@ -618,12 +623,13 @@ export function PartnerHome() {
               ['completed', 'Concluídas'],
               ['cancelled', 'Canceladas'],
               ['failed', 'Falhadas'],
-              ['assigned', 'Só atribuídas'],
+              ['assigned', 'Por aceitar'],
             ] as const
           ).map(([id, label]) => (
             <button
               key={id}
               type="button"
+              title={TRIP_FILTER_HINT[id]}
               className={chip(tripFilter === id)}
               onClick={() => setTripFilter(id)}
             >
