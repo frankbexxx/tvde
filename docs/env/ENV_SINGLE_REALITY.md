@@ -55,7 +55,7 @@ Em `backend/app/core/config.py` o campo `STRIPE_MOCK` tem default de **implement
   - só necessário se `VITE_STRIPE_MOCK=false`
 
 - **`VITE_APP_DOWNLOAD_URL`**
-  - opcional; destino canónico para rotas **`/dl`** e **`/app`** (página de download / loja). Se vazio ou ausente, `AppDownloadRedirect` faz fallback para **`/passenger`**.
+  - opcional; destino canónico para rotas **`/dl`** e **`/app`** (página externa de download / loja). Se vazio ou ausente, o browser é enviado para a landing **`/download`** no mesmo deploy, com botão para **`/passenger`**.
 
 ## Backend (FastAPI) — `backend/app/core/config.py`
 
@@ -106,7 +106,7 @@ Checklist mínima:
 - `CORS_ALLOWED_ORIGINS=<frontend_render_url>,http://localhost:5173`
 - `STRIPE_MOCK=true`
 
-No **Static Site** (`tvde-app`), quando houver URL de download estável para materiais impressos, definir **`VITE_APP_DOWNLOAD_URL`** no *Build Environment*; caso contrário os caminhos **`/dl`** e **`/app`** redireccionam para **`/passenger`**.
+No **Static Site** (`tvde-app`), quando houver URL de download **externa** estável para materiais impressos, definir **`VITE_APP_DOWNLOAD_URL`** no *Build Environment*. Sem essa variável, **`/dl`** e **`/app`** abrem a rota interna **`/download`** (mesmo domínio), que liga a **`/passenger`**.
 
 - `STRIPE_MOCK=false`
 - `STRIPE_SECRET_KEY=sk_test_...`

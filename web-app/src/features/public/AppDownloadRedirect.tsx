@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom'
 
 /**
  * Stable URL for printed QR codes. Set `VITE_APP_DOWNLOAD_URL` to your store / landing page.
+ * Sem env, envia para a landing interna `/download` (mesmo domínio / mesmo deploy).
  */
 export function AppDownloadRedirect() {
   const url = import.meta.env.VITE_APP_DOWNLOAD_URL
@@ -13,5 +14,5 @@ export function AppDownloadRedirect() {
       </div>
     )
   }
-  return <Navigate to="/passenger" replace />
+  return <Navigate to="/download" replace />
 }
