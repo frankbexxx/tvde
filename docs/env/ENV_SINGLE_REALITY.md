@@ -54,6 +54,9 @@ Em `backend/app/core/config.py` o campo `STRIPE_MOCK` tem default de **implement
 - **`VITE_STRIPE_PUBLISHABLE_KEY`**
   - só necessário se `VITE_STRIPE_MOCK=false`
 
+- **`VITE_APP_DOWNLOAD_URL`**
+  - opcional; destino canónico para rotas **`/dl`** e **`/app`** (página de download / loja). Se vazio ou ausente, `AppDownloadRedirect` faz fallback para **`/passenger`**.
+
 ## Backend (FastAPI) — `backend/app/core/config.py`
 
 Obrigatórias sempre:
@@ -103,7 +106,7 @@ Checklist mínima:
 - `CORS_ALLOWED_ORIGINS=<frontend_render_url>,http://localhost:5173`
 - `STRIPE_MOCK=true`
 
-Quando for testar Stripe real:
+No **Static Site** (`tvde-app`), quando houver URL de download estável para materiais impressos, definir **`VITE_APP_DOWNLOAD_URL`** no *Build Environment*; caso contrário os caminhos **`/dl`** e **`/app`** redireccionam para **`/passenger`**.
 
 - `STRIPE_MOCK=false`
 - `STRIPE_SECRET_KEY=sk_test_...`
