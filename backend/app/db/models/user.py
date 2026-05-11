@@ -85,6 +85,20 @@ class User(Base):
         nullable=True,
         comment="Optional bcrypt hash; if null, BETA login uses DEFAULT_PASSWORD.",
     )
+    email: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="Email verificado (ex.: OAuth Google); opcional para contas só OTP.",
+    )
+    oauth_google_sub: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="Google OpenID subject (sub) quando a conta tem login Google.",
+    )
 
     partner_org: Mapped[Optional["Partner"]] = relationship(
         back_populates="users",

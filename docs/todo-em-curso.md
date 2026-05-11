@@ -19,12 +19,12 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 | **A1** | Inventário de temas (lista bruta) | [x] — [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A1 |
 | **A2** | Priorização + backlog executável + gates | [x] — mesmo ficheiro §A2 |
 | **L1** | Produto, fluxos, RGPD mínimo (sem código) | [x] — [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md) |
-| **A3** | Gate antes de L2: staging, redirect URIs, rate-limit auth | [ ] — checklist §A3 no audit backlog |
-| **L2** | Backend + Google + sessão alinhada ao actual | [ ] |
-| **L3** | Web (UX passageiro) + testes + rollout | [ ] |
+| **A3** | Gate: rate-limit, URIs, secret só no backend | [x] parcial — falta **A2-02** staging (OPS); ver [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A3 |
+| **L2** | Backend + Google (`POST /auth/google/exchange`) + colunas `email` / `oauth_google_sub` | [x] |
+| **L3** | Web passageiro: callback `/auth/google/callback` + botão Google | [x] |
 | **A4** | Fecho onda auditoria (P1/P2 → trimestre) | [ ] |
 
-**Próximo passo executável:** fechar **A3** (OPS + segurança mínima), depois **L2**.
+**Próximo passo executável:** **A2-02** (staging) + smoke Google em ambiente com env configurado; depois **A4**.
 
 - [x] **Landing QR interna (`/download`) + redirects `/dl`·`/app`** — **merge `main`** **#289**.
 - [x] **Docs pós-#287** — **merge `main`** **#288** (`TODOdoDIA`, `todo-em-curso`, `VITE_APP_DOWNLOAD_URL` / templates).
@@ -48,7 +48,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 3. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
 4. ~~**Lembrete operacional — Stripe**~~ — **2026-05-11:** mock reposto em piloto; ver [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) § *Repor modo mock*.
 5. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*
-6. **Backlog** (sem data) — **rotacional v3** (fontes automáticas; spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md)); **rumo A+L** — *próximo: **A3*** (tabela acima) + **L2**; [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
+6. **Backlog** (sem data) — **rotacional v3** (fontes automáticas; spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md)); **rumo A+L** — *próximo: **A2-02** + **A4***; docs [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
 
 **Nota:** smokes em prod **fechados por agora** (última ronda documentada **2026-05-09**); após **#289**, ver checklist opcional no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-11**. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
@@ -60,7 +60,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] **Zonas v1 (fatia técnica)** — geo **catálogo** por `zone_id` (âncoras + **porto**); **orçamento extra** >2/dia via partner (`grant-extra` + UI frota). Prompt: [`docs/prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md`](prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md).
 - [x] **Rotacional v2** — feed público opcional (`ROTACIONAL_FEED_JSON` + `GET /rotacional/messages`) + cabeçalho; **em `main`** + spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md).
 - [ ] **Rotacional v3** — job/cron + cache (~1 h) a puxar fontes externas (ex.: IPMA, Prociv onde aplicável; [Meteopt](https://www.meteopt.com) só após validar termos); substituir ou complementar o JSON curado quando fizer sentido.
-- [ ] **Rumo A+L** — **A3** (gate) → **L2** → **L3** → **A4**; estado na tabela **Agora**; docs em [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) + [`docs/product/SOCIAL_LOGIN_L1_SPEC.md`](product/SOCIAL_LOGIN_L1_SPEC.md). O relatório fonte continua em [`PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md).
+- [ ] **Rumo A+L** — **A2-02** (staging) + **A4**; **L2/L3** Google passageiro em código; docs em [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) + [`docs/product/SOCIAL_LOGIN_L1_SPEC.md`](product/SOCIAL_LOGIN_L1_SPEC.md). Fonte: [`PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md).
 
 ---
 

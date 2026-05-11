@@ -8,6 +8,8 @@ export interface TokenResponse {
   expires_at: string
   /** Snapshot de `User.name` na emissão do token (BETA / OTP). */
   display_name?: string
+  /** Telefone ou identificador sintético (login Google). */
+  phone?: string
 }
 
 export interface AuthTokens {
@@ -20,6 +22,8 @@ export interface AuthTokens {
 
 export interface ConfigResponse {
   beta_mode: boolean
+  google_oauth_enabled?: boolean
+  google_oauth_client_id?: string
 }
 
 export async function getConfig(timeoutMs: number = COLD_START_FIRST_TIMEOUT_MS): Promise<ConfigResponse> {
@@ -66,6 +70,17 @@ export async function login(
       password,
       requested_role: requestedRole ?? undefined,
     }),
+  })
+}
+
+export async function exchangeGoogleCode(
+  code: string,
+  redirect_uri: string,
+  requested_role: string = 'passenger'
+): Promise<TokenResponse> {
+  return apiFetch<TokenResponse>('/auth/google/exchange', {
+    method: 'POST',
+    body: JSON.stringify({ code, redirect_uri, requested_role }),
   })
 }
 

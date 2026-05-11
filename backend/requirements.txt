@@ -27,6 +27,9 @@ sentry-sdk[fastapi]>=2.20.0
 # Pygments (transitive, ex. pytest): CVE-2026-4539 — quando existir 2.19.3+ no PyPI,
 # adicionar pin explícito pygments>=2.19.3 e voltar a correr pip-audit.
 
+# Google OAuth (login social — troca code server-side)
+google-auth>=2.40.0
+
 # Testing
 pytest
 httpx
