@@ -13,7 +13,8 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+# Well-known Google OAuth2 token endpoint (not a credential).
+_GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"  # nosec B105
 
 
 async def exchange_code_for_id_token(*, code: str, redirect_uri: str) -> dict[str, Any]:
