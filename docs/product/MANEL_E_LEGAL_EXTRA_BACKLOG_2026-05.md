@@ -53,19 +53,19 @@ Este ficheiro **organiza** um conjunto **EXTRA** de ideias e obrigações **aind
 ### Questões ainda em aberto
 
 - **Item 4:** Citar **fonte normativa** e data em documentação jurídica quando existir parecer escrito.
-- **Item 7:** URL final, deep links por loja, e se há **QR por tenant** (frota).
+- **Item 7:** Destino QR **`/dl`·`/app`**: landing **`/download`** no deploy (**#289**); **`VITE_APP_DOWNLOAD_URL`** opcional para URL externa; *deep links por loja / QR por tenant* ainda por decidir.
 - **Item 10:** Confirmar **acesso ao histórico** em um toque a partir do drawer (propagação para spec UX).
 
 ---
 
 ## Próximos passos recomendados (triagem)
 
-*Actualização 2026-05-06:* a **onda técnica** alinhada aos pontos **4**, **5–6** (MVP), **1–3**, **7** e **10** foi **mergeada** em `main` (**#285**). Seguem trabalhos **jurídicos/copy**, **OCR/upload binário**, **URL QR em produção**, e itens **8–9** (futuro).
+*Actualização 2026-05-11:* ponto **7** (QR): **`/dl`** · **`/app`** com landing interna **`/download`** em `main` (**#289**); **`VITE_APP_DOWNLOAD_URL`** permanece opcional para destino **externo** (lojas). A **onda técnica** **#285** cobriu pontos **4**, **5–6** (MVP), **1–3** e **10**. Seguem **jurídicos/copy**, **OCR/upload**, itens **8–9** (futuro).
 
 1. ~~**P0 conformidade:** **item 4**~~ — *pedido de rating pelo motorista removido (API + UI); copy/fonte normativa com jurídico.*
 2. ~~**P0 operação documental:** **itens 5–6**~~ — *MVP JSON + partner/driver + sugestão validade por texto; evolução: ingestão ficheiros, OCR, notificações.*
 3. ~~**P1 UX motorista:** **itens 1–3**~~ — *sons, dark sem tema gravado, wake lock sessão.*
-4. **P2 crescimento:** **item 7** — *definir **URL estável** (`VITE_APP_DOWNLOAD_URL`) para materiais impressos;* **itens 8–9** empurradas para **futuro**.
-5. ~~**P2 passageiro shell:** **item 10**~~ — *menu lateral + histórico no drawer.*
+4. **P2 crescimento:** **item 7** — *✅ destino canónico no mesmo deploy (**`/download`**); opcional **URL externa** via `VITE_APP_DOWNLOAD_URL` quando existir loja/landing;* **itens 8–9** empurradas para **futuro**.
+5. ~~**P2 passageiro shell:** **item 10**~~ — *menu lateral + histórico no drawer; barra inferior **#287**.*
 
-_Última revisão: **2026-05-06** — estado pós-merge #285._
+_Última revisão: **2026-05-11** — #289 (QR interno); estado pós-#285 mantido para itens normativos._
