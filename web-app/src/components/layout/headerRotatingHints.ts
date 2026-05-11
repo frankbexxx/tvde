@@ -1,6 +1,8 @@
 /**
- * Mensagens rotativas no cabeçalho (v1: copy estática, sem APIs externas).
- * Manter frases curtas; evitar dados em tempo real aqui.
+ * Mensagens rotativas no cabeçalho:
+ * - v1: copy estática abaixo (sem APIs externas no cliente);
+ * - v2: `AppHeaderBar` junta isto com GET `/rotacional/messages` (curadoria em `ROTACIONAL_FEED_JSON` no backend).
+ * Manter frases curtas; dados meteorológicos / Prociv em tempo real vêm agregados no servidor (ver spec rotacional v2).
  */
 export const HEADER_ROTATING_HINTS: readonly string[] = [
   'Estimativa ao pedir; o preço final aparece no fim da viagem.',

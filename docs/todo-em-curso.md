@@ -8,6 +8,8 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 **Contexto:** `main` inclui **#280**–**#282**, **#285**, **#287**, **#288** (docs/ENV pós-287) e **#289** (landing **`/download`** para QR). Smokes em produção: última ronda documentada **2026-05-09**; *checklist pós-**#289** opcional no painel [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-11**.*
 
+- [x] **Linha rotacional v2 (infra)** — `GET /rotacional/messages` + `ROTACIONAL_FEED_JSON` + `AppHeaderBar`; spec [`docs/product/ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) (**2026-05-11**).
+
 - [x] **Landing QR interna (`/download`) + redirects `/dl`·`/app`** — **merge `main`** **#289**.
 - [x] **Docs pós-#287** — **merge `main`** **#288** (`TODOdoDIA`, `todo-em-curso`, `VITE_APP_DOWNLOAD_URL` / templates).
 - [x] **Barra inferior passageiro + Frota «Por aceitar»** — **#287**; prompts em [`docs/prompts/passenger-frota-2026-05-06/`](../prompts/passenger-frota-2026-05-06/).
@@ -27,9 +29,9 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 1. ~~**Zonas v1 — fecho técnico**~~ — **entregue neste PR:** catálogo **`zone_id`** com âncoras geo (incl. **porto**); **orçamento extra** via partner `POST …/zones/budget/grant-extra` + `GET …/budget/today`; UI frota em `PartnerDriverDetail`. *Seguinte evolução:* geofencing fino / políticas por org (se necessário).
 2. **E2E / PW** — **`api-flows`** (`npm run test:e2e:api`): ✅ **2026-05-11** (6/6, local). **`driver-passenger-flow`**: revalidar quando mexeres em fluxos motorista+passageiro; ver **Notas E2E** no [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-09**.
 3. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
-4. **Lembrete operacional** — Stripe em Render: **`STRIPE_MOCK=false`** por decisão; quando fechar a janela de testes, repor mock (painel **2026-05-10** no `TODOdoDIA.md`).
+4. ~~**Lembrete operacional — Stripe**~~ — **2026-05-11:** mock reposto em piloto; ver [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) § *Repor modo mock*.
 5. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*
-6. **Backlog** (sem data) — linha rotacional v2; planeamento **login social**; **auditoria** [`PROJECT_AUDIT_2026-05-02.md`](../audit/PROJECT_AUDIT_2026-05-02.md) quando for o foco do dia.
+6. **Backlog** (sem data) — **linha rotacional v2** — fase **infra** em `main` (`/rotacional/messages` + spec); integrações IPMA/Prociv em roadmap; planeamento **login social**; **auditoria** [`PROJECT_AUDIT_2026-05-02.md`](../audit/PROJECT_AUDIT_2026-05-02.md) quando for o foco do dia.
 
 **Nota:** smokes em prod **fechados por agora** (última ronda documentada **2026-05-09**); após **#289**, ver checklist opcional no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-11**. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
@@ -39,7 +41,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 - [x] **Top 3 Manel (onda fechada)** — **§10.2 + barra Rendimentos + deep link** em `main` (**#280**, 2026-05-06). Spec: [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md). **Sem tarefa aberta:** permuta de ordem entre secções (§10.4) só quando o Manel enviar feedback; até lá a ordem canónica do spec mantém-se. Regressão UI motorista: smoke `DRIVER_MENU_SPEC.md` §7.8 quando se tocar no `DriverDashboard` / menu.
 - [x] **Zonas v1 (fatia técnica)** — geo **catálogo** por `zone_id` (âncoras + **porto**); **orçamento extra** >2/dia via partner (`grant-extra` + UI frota). Prompt: [`docs/prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md`](prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md).
-- [ ] Linha rotacional v2 (mais mensagens / dados internos sem APIs externas).
+- [ ] Linha rotacional v2 — **infra** ✅ (`GET /rotacional/messages`, `ROTACIONAL_FEED_JSON`, `AppHeaderBar`); **dados** IPMA / Prociv / trânsito — roadmap em [`docs/product/ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md).
 - [ ] Planeamento **login social** (onda própria).
 - [ ] [OPS] **Auditoria projecto** — [`docs/audit/PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md) quando for o foco do dia.
 
@@ -79,7 +81,7 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 - [x] [CÓDIGO] **Zonas v1 — extensão de prazo (partner)** — merge `main` 2026-05-03; **pendente** na mesma linha: geo `zone_id`, políticas extra-orçamento.
 - [x] Menu motorista — detalhe de viagem em modal com ação de ocorrência (histórico com percurso + «Mostrar mais»).
 - [x] Categorias + «dois destinos por dia» — contrato + implementação v1 núcleo em `main`.
-- [ ] Linha rotacional v2 (mais mensagens ou dados internos da app, ainda sem APIs externas).
+- [ ] Linha rotacional v2 — fase infra em código; integrações externas — ver [`docs/product/ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md).
 - [ ] Planeamento de login social (Google e afins) como onda própria.
 
 ---
@@ -94,4 +96,4 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 _Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-11** · **EXTRA Manel/legal** [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) · **#285** · **#287** · **#288** · **#289**._
 
-_Última revisão: **2026-05-11** — fecho sessão: #289 (QR interno), #288 (docs), E2E api-flows; `VITE_APP_DOWNLOAD_URL` só para destino externo._
+_Última revisão: **2026-05-11** — Stripe mock (docs + checklist Render); rotacional v2 infra + spec._

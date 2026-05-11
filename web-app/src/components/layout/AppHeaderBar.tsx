@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 import { BrandStripe } from '@/design-system/components/brand/BrandStripe'
 import { useAuth, isBackofficeStaffRole } from '@/context/AuthContext'
 import { parseJwtPayload } from '@/utils/jwt'
 import { HEADER_ROTATING_HINTS } from '@/components/layout/headerRotatingHints'
+import { fetchRotacionalMessages } from '@/api/rotacional'
 
 function headerRoleLabel(role: string): string {
   if (role === 'driver') return 'Motorista'
@@ -15,12 +16,33 @@ function headerRoleLabel(role: string): string {
 
 /**
  * Cabeçalho global: marca + data e hora (pt-PT) + identificador (nome BETA ou telemóvel)
- * + linha rotacional de dicas (v1 sem APIs externas).
+ * + linha rotacional de dicas (v1 estática + v2 feed opcional via API).
  */
 export function AppHeaderBar() {
   const { sessionDisplayName, sessionPhone, sessionRole, token } = useAuth()
   const [now, setNow] = useState(() => new Date())
   const [hintIndex, setHintIndex] = useState(0)
+  const [serverHints, setServerHints] = useState<readonly string[]>([])
+
+  const allHints = useMemo(
+    () => [...HEADER_ROTATING_HINTS, ...serverHints],
+    [serverHints],
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    const load = () => {
+      void fetchRotacionalMessages().then((list) => {
+        if (!cancelled) setServerHints(list)
+      })
+    }
+    load()
+    const refreshId = window.setInterval(load, 600_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(refreshId)
+    }
+  }, [])
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 30_000)
@@ -28,12 +50,12 @@ export function AppHeaderBar() {
   }, [])
 
   useEffect(() => {
-    if (HEADER_ROTATING_HINTS.length <= 1) return
+    if (allHints.length <= 1) return
     const id = window.setInterval(() => {
-      setHintIndex((i) => (i + 1) % HEADER_ROTATING_HINTS.length)
+      setHintIndex((i) => (i + 1) % allHints.length)
     }, 14_000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [allHints.length])
 
   const dateStr = now.toLocaleDateString('pt-PT', {
     weekday: 'short',
@@ -51,7 +73,9 @@ export function AppHeaderBar() {
     jwtSub && jwtSub.length > 0
       ? jwtSub.replace(/-/g, '').slice(-8)
       : null
-  const rotatingHint = HEADER_ROTATING_HINTS[hintIndex] ?? HEADER_ROTATING_HINTS[0]
+  const effectiveHintIndex =
+    allHints.length === 0 ? 0 : ((hintIndex % allHints.length) + allHints.length) % allHints.length
+  const rotatingHint = allHints[effectiveHintIndex] ?? ''
   const shouldMarqueeHint = rotatingHint.length > 54
 
   const hintBlock = shouldMarqueeHint ? (

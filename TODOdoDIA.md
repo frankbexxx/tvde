@@ -12,11 +12,11 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ## Painel — 2026-05-11 (fecho dia)
 
-**Entregue em `main` (sessão):** **#288** — quadro operacional pós-**#287** + ENV `VITE_APP_DOWNLOAD_URL` documentado; **#289** — landing interna **`/download`** (`/dl`·`/app` sem URL externa → `/download` → **Entrar** → `/passenger`).
+**Entregue em `main` (até esta sessão):** **#288** — quadro operacional + ENV; **#289** — **`/download`** para QR; **2026-05-11** — **rotacional v2** (`GET /rotacional/messages`, `ROTACIONAL_FEED_JSON`, `AppHeaderBar`), spec [`docs/product/ROTACIONAL_V2_SPEC.md`](docs/product/ROTACIONAL_V2_SPEC.md); docs **Stripe** — reposto mock (checklist [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md)).
 
-**Testado (sessão):** **E2E** `npm run test:e2e:api` — **6/6** (`api-flows`, API local). *Smoke produção (QR `/dl` ou `/download`, passageiro, barra inferior): checklist humano se ainda não correr após deploy Render.*
+**Testado (sessão):** **E2E** `npm run test:e2e:api` — **6/6** (`api-flows`, API local). *Smoke produção (QR, passageiro, barra): checklist humano após cada deploy.*
 
-**Pendências operacionais (não bloqueiam):** **`VITE_APP_DOWNLOAD_URL`** só quando houver destino **externo** (loja/landing fora da app); Stripe — painel **2026-05-10**.
+**Pendências operacionais (não bloqueiam):** **`VITE_APP_DOWNLOAD_URL`** só para destino **externo**. **Render:** confirmar `STRIPE_MOCK` / `VITE_STRIPE_MOCK` alinhados ao mock se ainda não aplicaste no dashboard.
 
 _Quadro:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 
@@ -32,7 +32,7 @@ _Quadro:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 2. [x] **[CONFIG]** **`VITE_APP_DOWNLOAD_URL`** — opcional; **#289** cobre QR no mesmo domínio sem variável.
 3. [x] **[TESTES] E2E** — `driver-passenger-flow` + **`api-flows`** validados na sessão **2026-05-11** (local).
 4. [x] [UX] Frota — **«Por aceitar»** (**#287**).
-5. [ ] [OPS] **Stripe** — lembrete painel **2026-05-10** (`STRIPE_MOCK` quando fechar janela de testes).
+5. [x] [OPS] **Stripe** — **2026-05-11:** mock reposto em piloto (ver **`ENV_SINGLE_REALITY`** + painel **2026-05-10**).
 
 **Pós-implementação:** revisão jurídica de copy/resíduos rating; pipeline documental **upload + OCR**.
 
@@ -48,7 +48,7 @@ _Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 - **Produto vs infra:** MVP web válido em piloto, mas **gap vs Uber** inclui payouts (Stripe Connect), SMS OTP real, observabilidade (APM) e apps nativas — refactor admin profundo não compensa se o trimestre for só motorista/zonas.
 - **Risco operacional:** sem segundo ambiente (staging) e deploy manual Render — smokes em prod continuam canónicos para regressões cruzadas.
 
-**Lembrete — Stripe (decisão 2026-05-09):** Em **Render** (`tvde-api`) fica **`STRIPE_MOCK=false`** para ires testando em **test mode**; **webhook** validado (**200**, `{"status":"ok"}`). **Quando quiseres fechar esta janela:** repor **`STRIPE_MOCK=true`** (e política de chaves em [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md)).
+**Lembrete — Stripe:** **2026-05-11** — reposto **modo mock** em piloto (`STRIPE_MOCK=true` no `tvde-api`, `VITE_STRIPE_MOCK=true` no *build* `tvde-app`). Janela **test mode** anterior: ver histórico no item 7 abaixo (2026-05-09). Checklist operacional: [`docs/env/ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) § *Repor modo mock Stripe*.
 
 ---
 
@@ -75,7 +75,7 @@ _Nota:_ verificação **local** (`localhost:5173`) no commit **c29dd31**; **conf
 ### Depois do smoke (fila)
 
 1. [x] [OPS] **Item 6:** Render — segredos, `DATABASE_URL`, `GET /health`. **Fechado** 2026-05-07.
-2. [x] [OPS] **Item 7 · Stripe (Render):** **fechado** na fila OPS — webhook **200**, chaves/test mode ok; **`STRIPE_MOCK=false`** mantido **por decisão** para testes contínuos até repores mock (lembrete no **painel 2026-05-10** acima). *Isto não desliga o destino de webhook no Stripe Dashboard.*
+2. [x] [OPS] **Item 7 · Stripe (Render):** **fechado** na fila OPS — webhook **200** validado em janela **test mode**; **2026-05-11:** reposto **`STRIPE_MOCK=true`** (mock por defeito no piloto). *Isto não desliga o destino de webhook no Stripe Dashboard.*
 3. [x] [CÓDIGO] **Item 9 — 1º:** `UI_VISIBILITY` Passo 1 — **#262**. **Fechado** 2026-05-06.
 4. [x] [CÓDIGO+TESTES] **Item 9 — 2º:** E2E Playwright **drawer partner** — **merge `main`** 2026-05-09 (**#267**): seed `+351955555502` + `/dev/tokens` → `partner`, inject com `BETA_MODE` activo, spec `partner-shell`, script `npm run test:e2e:api`. **Follow-ups:** ver **Notas E2E** (abaixo).
 
