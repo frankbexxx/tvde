@@ -49,11 +49,13 @@ main.tsx
 | Condição                       | Renderiza                                          |
 | ------------------------------ | -------------------------------------------------- |
 | `isLoading`                    | `"A carregar..."` (centrado, min-h-screen)         |
-| `betaMode && !isAuthenticated` | `LoginScreen`                                      |
+| `betaMode && !isAuthenticated` | `LoginScreen`, **excepto** **`/dl`**, **`/app`**, **`/download`** (QR / landing sem sessão) |
 | Autenticado                    | Layout principal com header + main + ActivityPanel |
 
 **Rotas** (guards em `src/routes/index.tsx`: `RootRedirect`, `PassengerOnly`, `DriverOnly`, `AdminDeniedRedirect`):
 
+- `/dl` · `/app` → `AppDownloadRedirect` (opcional `VITE_APP_DOWNLOAD_URL` externo; senão → **`/download`**)
+- `/download` → `AppDownloadLanding` (CTA para **`/passenger`**)
 - `/` → `RootRedirect` para `/passenger` ou `/driver` conforme `appRouteRole`
 - `/passenger` → `PassengerOnly` → `PassengerDashboard`; se papel na sessão for motorista, redirect para `/driver`
 - `/driver` → `DriverOnly` → `DriverDashboard`; se papel for passageiro, redirect para `/passenger`

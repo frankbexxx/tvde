@@ -4,7 +4,7 @@
 
 ## Objectivo
 
-- **QR / download:** rota pública estável na SPA que redirecciona para URL configurável (`VITE_APP_DOWNLOAD_URL` ou fallback razoável para materiais impressos).
+- **QR / download:** rotas **`/dl`** e **`/app`** na SPA (`AppDownloadRedirect`): com **`VITE_APP_DOWNLOAD_URL`** → redireccionamento externo; sem env → **`/download`** (landing no mesmo deploy, CTA para **`/passenger`**) — **#289**.
 - **Passageiro:** menu lateral tipo driver; **histórico** só dentro do menu — ecrã principal mais limpo (lista completa no drawer, um toque para abrir histórico no menu).
 
 ## Critérios de aceitação

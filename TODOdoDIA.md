@@ -10,19 +10,31 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel — 2026-05-06 (hoje)
+## Painel — 2026-05-11 (fecho dia)
 
-**Feito:** `main` **#287** — barra inferior passageiro (**Início** · **Histórico** · **Conta** · **Menu**) + copy Frota **«Por aceitar»** (`assigned` + tooltip). Prompts: [`docs/prompts/passenger-frota-2026-05-06/`](docs/prompts/passenger-frota-2026-05-06/). Anteriormente **#285** (Manel EXTRA P0–P2), **#282**, **#280**/**#281**. Backlog EXTRA: [`docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).
+**Entregue em `main` (sessão):** **#288** — quadro operacional pós-**#287** + ENV `VITE_APP_DOWNLOAD_URL` documentado; **#289** — landing interna **`/download`** (`/dl`·`/app` sem URL externa → `/download` → **Entrar** → `/passenger`).
 
-**Prioridade agora:**
+**Testado (sessão):** **E2E** `npm run test:e2e:api` — **6/6** (`api-flows`, API local). *Smoke produção (QR `/dl` ou `/download`, passageiro, barra inferior): checklist humano se ainda não correr após deploy Render.*
 
-1. [x] **[VALIDAÇÃO]** Smoke nos fluxos **#285** / **#287** — fechado com merge (passageiro inclui barra + drawer).
-2. [ ] **[CONFIG]** Definir **`VITE_APP_DOWNLOAD_URL`** no deploy / `.env` quando houver URL estável (senão fallback `/passenger`).
-3. [x] **[TESTES] E2E** — `driver-passenger-flow` corrido após barra inferior (**#287**); manter **Notas E2E** (painel **2026-05-09**) para `api-flows` / resto da suíte quando tocares nesses ficheiros.
-4. [x] [UX] Frota — rótulo **«Por aceitar»** em **#287** (substitui «Só atribuídas»).
+**Pendências operacionais (não bloqueiam):** **`VITE_APP_DOWNLOAD_URL`** só quando houver destino **externo** (loja/landing fora da app); Stripe — painel **2026-05-10**.
+
+_Quadro:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
+
+---
+
+## Painel — 2026-05-06 (arquivo)
+
+**Feito:** `main` **#287** — barra inferior passageiro + Frota **«Por aceitar»**; prompts [`docs/prompts/passenger-frota-2026-05-06/`](docs/prompts/passenger-frota-2026-05-06/). Contexto anterior: **#285**, **#282**, **#280**/**#281**.
+
+**Prioridade da altura (fechado ou absorvido no painel 2026-05-11):**
+
+1. [x] **[VALIDAÇÃO]** Smoke **#285** / **#287** — coberto na rolda de produto / sessão seguinte.
+2. [x] **[CONFIG]** **`VITE_APP_DOWNLOAD_URL`** — opcional; **#289** cobre QR no mesmo domínio sem variável.
+3. [x] **[TESTES] E2E** — `driver-passenger-flow` + **`api-flows`** validados na sessão **2026-05-11** (local).
+4. [x] [UX] Frota — **«Por aceitar»** (**#287**).
 5. [ ] [OPS] **Stripe** — lembrete painel **2026-05-10** (`STRIPE_MOCK` quando fechar janela de testes).
 
-**Pós-implementação (não bloqueia hoje):** revisão jurídica de copy/resíduos rating; pipeline documental com **upload binário + OCR** além do MVP actual.
+**Pós-implementação:** revisão jurídica de copy/resíduos rating; pipeline documental **upload + OCR**.
 
 _Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 
@@ -57,7 +69,7 @@ _Nota:_ verificação **local** (`localhost:5173`) no commit **c29dd31**; **conf
 ### Fecho sessão — 2026-05-09 (noite, smoke com Manel)
 
 - [x] **Smokes produção (fechados por agora):** fluxo real — passageiro, frota **test_partner**, admin, motorista no **telemóvel**; viagem activa visível nos três papéis (detalhe frota ok, ex. `bcc70db8…` / ManelPerez).
-- **Campo:** discrepância inicial «Frota sem viagem / Admin com viagem» esclarecida (conta do motorista vs perfil na frota; filtro **«Só atribuídas»** só mostra estado técnico *assigned*, não *aceite/em curso*).
+- **Campo:** discrepância inicial «Frota sem viagem / Admin com viagem» esclarecida (conta do motorista vs perfil na frota; filtro *assigned* — rótulo **«Por aceitar»** desde **#287** — só mostra estado técnico *assigned*, não *aceite/em curso*).
 - **Amanhã (2026-05-10):** retomar **Rasto vivaço** em [`docs/todo-em-curso.md`](docs/todo-em-curso.md); opcional UX — clarificar rótulo **«Só atribuídas»** na Frota; E2E local — se falhar, reiniciar `uvicorn` + Vite (hábito da equipa).
 
 ### Depois do smoke (fila)
@@ -73,7 +85,7 @@ _Item **8** (docs ENV) **fechado** 2026-05-07._
 
 - **`POST /dev/seed`** inclui utilizador partner canónico (`+351955555502`, org `test_partner`); **`POST /dev/tokens`** devolve também **`partner`**.
 - **`npm run test:e2e:api`** — projecto só HTTP (`--no-deps`); **`CI=true`** recomendado na suíte completa para o Playwright gerir o Vite.
-- **E2E (drawer / backlog Notas):** **(1)** `/dev/seed` + login BETA `dev_admin` (`api-flows`). **(2)** `driver-passenger-flow`: passo 1 home two-step + sync pickup antes de iniciar viagem (ver spec).
+- **E2E (drawer / backlog Notas):** **(1)** `/dev/seed` + login BETA `dev_admin` (`api-flows`) — suíte **`npm run test:e2e:api`** verde na sessão **2026-05-11**. **(2)** `driver-passenger-flow`: passo 1 home two-step + sync pickup antes de iniciar viagem (ver spec); revalidar após mudanças em shell passageiro (**#287**+) ou motorista.
 
 ### Notas
 

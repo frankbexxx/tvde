@@ -4,11 +4,13 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-06)
+## Agora (2026-05-11)
 
-**Contexto:** `main` inclui **#280**–**#282**, **#285** e **#287** (barra inferior passageiro + copy Frota «Por aceitar»). Smokes em produção **fechados por agora** (última ronda **2026-05-09** noite — ver [`TODOdoDIA.md`](../TODOdoDIA.md)).
+**Contexto:** `main` inclui **#280**–**#282**, **#285**, **#287**, **#288** (docs/ENV pós-287) e **#289** (landing **`/download`** para QR). Smokes em produção: última ronda documentada **2026-05-09**; *checklist pós-**#289** opcional no painel [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-11**.*
 
-- [x] **Barra inferior passageiro + Frota copy** — **merge `main`** **#287**; prompts em [`docs/prompts/passenger-frota-2026-05-06/`](../prompts/passenger-frota-2026-05-06/).
+- [x] **Landing QR interna (`/download`) + redirects `/dl`·`/app`** — **merge `main`** **#289**.
+- [x] **Docs pós-#287** — **merge `main`** **#288** (`TODOdoDIA`, `todo-em-curso`, `VITE_APP_DOWNLOAD_URL` / templates).
+- [x] **Barra inferior passageiro + Frota «Por aceitar»** — **#287**; prompts em [`docs/prompts/passenger-frota-2026-05-06/`](../prompts/passenger-frota-2026-05-06/).
 
 - [x] **Onda Manel EXTRA P0–P2** — **merge `main`** **#285** (2026-05-10 noite); prompts em [`docs/prompts/manel-legal-extra-2026-05/`](../prompts/manel-legal-extra-2026-05/).
 
@@ -23,13 +25,13 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 ### O que falta (prioridade de produto / próxima sessão útil)
 
 1. ~~**Zonas v1 — fecho técnico**~~ — **entregue neste PR:** catálogo **`zone_id`** com âncoras geo (incl. **porto**); **orçamento extra** via partner `POST …/zones/budget/grant-extra` + `GET …/budget/today`; UI frota em `PartnerDriverDetail`. *Seguinte evolução:* geofencing fino / políticas por org (se necessário).
-2. **E2E / PW** — follow-ups nas **Notas E2E** do [`TODOdoDIA.md`](../TODOdoDIA.md) (painel **2026-05-09**): seed/tokens, **`api-flows`** quando mexeres nesse fluxo; `driver-passenger-flow` **validado** pós-**#287**.
+2. **E2E / PW** — **`api-flows`** (`npm run test:e2e:api`): ✅ **2026-05-11** (6/6, local). **`driver-passenger-flow`**: revalidar quando mexeres em fluxos motorista+passageiro; ver **Notas E2E** no [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-09**.
 3. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
 4. **Lembrete operacional** — Stripe em Render: **`STRIPE_MOCK=false`** por decisão; quando fechar a janela de testes, repor mock (painel **2026-05-10** no `TODOdoDIA.md`).
 5. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*
 6. **Backlog** (sem data) — linha rotacional v2; planeamento **login social**; **auditoria** [`PROJECT_AUDIT_2026-05-02.md`](../audit/PROJECT_AUDIT_2026-05-02.md) quando for o foco do dia.
 
-**Nota:** smokes em prod **fechados por agora**. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
+**Nota:** smokes em prod **fechados por agora** (última ronda documentada **2026-05-09**); após **#289**, ver checklist opcional no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-11**. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
 **Regra — fecho de etapas:** actualizar estes ficheiros mal algo esteja feito em `main` ou após smoke; **não** exigir confirmação explícita para marcar concluído (evitar retrabalho na leitura retroactiva).
 
@@ -54,7 +56,7 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 | **S2** | **Docs item 8:** `grep` env/Stripe → `ENV_SINGLE_REALITY` (+ templates) | **Feito** (2026-05-07) |
 | **S3** | **Ops item 6:** segredos Render, `DATABASE_URL`, `/health` | **Feito** (2026-05-07) |
 | **S4** | **Ops item 7:** Stripe test no Render; **`STRIPE_MOCK=false`** para continuar a testar; lembrete **voltar mock** no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-10** | **Fechado** fila OPS (**webhook OK** 2026-05-09); produção app: `/debug/map` só **dev** (2026-05-10) |
-| **S5** | **Item 9:** **1º** Passo 1 UI (**feito** `#262`) · **2º** E2E partner drawer (**#267** em `main`) | **2º** fechado; follow-ups PW em curso |
+| **S5** | **Item 9:** **1º** Passo 1 UI (**feito** `#262`) · **2º** E2E partner drawer (**#267** em `main`) | **2º** fechado; E2E **api-flows** revalidado **2026-05-11** |
 
 **Regra:** não reabrir **S0** salvo regressão; **S1** alimenta prioridade do **S2+** se aparecer bug de produto.
 
@@ -86,10 +88,10 @@ _Lista original: smoke → header motorista → follow-ups smoke → partner dra
 
 - Theming/polish amplo de superfície e iconografia final.
 - Refactors estruturais sem impacto directo em operação.
-- **EXTRA Manel + legal + crescimento (2026-05):** ver [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) — itens **1–10** (som, nocturno, ecrã activo, rating passageiro, documentos partner/motorista, QR, promo/família, menu passageiro).
+- **EXTRA Manel + legal + crescimento (2026-05):** ver [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) — itens **1–10**; **shell passageiro** evoluído com barra inferior (**#287**) + QR **`/download`** (**#289**).
 
 ---
 
-_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-06** · **EXTRA Manel/legal** [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) · **#282** · **#285** · **#287**._
+_Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-11** · **EXTRA Manel/legal** [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) · **#285** · **#287** · **#288** · **#289**._
 
-_Última revisão: **2026-05-11** — merge #287 (shell passageiro + Frota); fila seguinte: `VITE_APP_DOWNLOAD_URL`, E2E `api-flows`, Stripe._
+_Última revisão: **2026-05-11** — fecho sessão: #289 (QR interno), #288 (docs), E2E api-flows; `VITE_APP_DOWNLOAD_URL` só para destino externo._
