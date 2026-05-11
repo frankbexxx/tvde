@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     # A007: When True, detailed runtime logs for real-user testing (trip flow, timestamps).
     DEBUG_RUNTIME_LOGS: bool = False
 
+    # Rotacional v2: mensagens extra para o cabeçalho (JSON em env). Ver GET /rotacional/messages.
+    # Exemplo: [{"text":"IPMA: aviso amarelo — aguaceiros.","source":"meteo"}]
+    ROTACIONAL_FEED_JSON: str = ""
+
     def _raw_environment_label(self) -> str:
         if self.ENVIRONMENT is not None and str(self.ENVIRONMENT).strip():
             return str(self.ENVIRONMENT).strip().lower()

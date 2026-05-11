@@ -108,7 +108,24 @@ Checklist mínima:
 
 No **Static Site** (`tvde-app`), quando houver URL de download **externa** estável para materiais impressos, definir **`VITE_APP_DOWNLOAD_URL`** no *Build Environment*. Sem essa variável, **`/dl`** e **`/app`** abrem a rota interna **`/download`** (mesmo domínio), que liga a **`/passenger`**.
 
+Rotacional (cabeçalho):
+
+- **`ROTACIONAL_FEED_JSON`** (opcional, só **Web service** `tvde-api`): JSON com até ~24 entradas `{"text":"…","source":"meteo|prociv|transito|interno"}` — ver [`docs/product/ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) e `GET /rotacional/messages`.
+
+### Repor modo mock Stripe (pós-janela de testes)
+
+Quando quiseres **desligar** Stripe test mode em produção e voltar à regra «mock por defeito»:
+
+1. **Render → `tvde-api` → Environment:** `STRIPE_MOCK=true` → *Save* → redeploy.
+2. **Render → `tvde-app` → Build / Environment:** `VITE_STRIPE_MOCK=true` (e **remover** ou deixar vazio `VITE_STRIPE_PUBLISHABLE_KEY` se não for necessário em mock) → novo *build* do static site.
+3. Confirmar no admin **Operações** / fase0 que `STRIPE_MOCK` aparece como activo, e smoke rápido passageiro (copy de pagamento em mock).
+
+**Decisão 2026-05-11:** reposto **mock** em piloto após validação webhook/PI em test mode.
+
+Quando for **voltar** a testar Stripe real:
+
 - `STRIPE_MOCK=false`
 - `STRIPE_SECRET_KEY=sk_test_...`
 - `STRIPE_WEBHOOK_SECRET=whsec_...` (do endpoint de produção no Stripe)
+- `tvde-app`: `VITE_STRIPE_MOCK=false` + `VITE_STRIPE_PUBLISHABLE_KEY` (test)
 

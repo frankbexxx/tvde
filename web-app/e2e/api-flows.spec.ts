@@ -64,6 +64,13 @@ test.describe('API flows (sem browser)', () => {
     expect(body.status).toBe('ok')
   })
 
+  test('GET /rotacional/messages — público', async ({ request }) => {
+    const r = await request.get(`${API}/rotacional/messages`)
+    expect(r.ok(), await r.text()).toBeTruthy()
+    const body = (await r.json()) as { items?: unknown[] }
+    expect(Array.isArray(body.items)).toBeTruthy()
+  })
+
   test('passageiro cria viagem e cancela (requested)', async ({ request }) => {
     const seed = await request.post(`${API}/dev/seed`)
     expect(seed.ok(), await seed.text()).toBeTruthy()

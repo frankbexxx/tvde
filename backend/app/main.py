@@ -33,6 +33,7 @@ from app.api.routers import (
     matching,
     partner,
     passenger_trips,
+    rotacional,
     ws,
 )
 from app.api.routers.webhooks import stripe as stripe_webhook
@@ -145,6 +146,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(rotacional.router)
 app.include_router(cron.router)
 app.include_router(logs.router)
 if settings.debug_router_enabled():
