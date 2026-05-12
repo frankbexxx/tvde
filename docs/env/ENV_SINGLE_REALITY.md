@@ -32,6 +32,7 @@ Em `backend/app/core/config.py` o campo `STRIPE_MOCK` tem default de **implement
 
 - Backend: `docs/env/templates/backend.env.example` → copiar para `backend/.env`
 - Web app: `docs/env/templates/web-app.env.local.example` → copiar para `web-app/.env.local`
+- **Verificação local vs Render (tabelas):** [`docs/env/ENV_VARS_VERIFICATION.md`](ENV_VARS_VERIFICATION.md)
 
 ## Web App (Vite) — `VITE_*`
 
