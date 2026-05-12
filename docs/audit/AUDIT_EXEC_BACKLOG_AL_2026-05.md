@@ -3,7 +3,7 @@
 **Fonte:** [`PROJECT_AUDIT_2026-05-02.md`](./PROJECT_AUDIT_2026-05-02.md)  
 **Sequência acordada:** **A1 → A2 → L1 → A3 → L2 → L3 → A4** (A = auditoria / OPS-produto, L = login social).
 
-**Estado (documental + código):** **A1**, **A2**, **L1** feitos. **A3** parcialmente fechado em código (**A2-01** rate-limit; **A2-03** URIs canónicas abaixo; **A2-02** = runbook OPS [`docs/ops/STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md); *provisionamento Render + preenchimento da linha «Staging» na tabela §A2-03 = passo humano*). **L2/L3** implementados (troca `code` + UI passageiro).
+**Estado (documental + código):** **A1**, **A2**, **L1** feitos. **A3** parcialmente fechado em código (**A2-01** rate-limit; **A2-03** com hosts **staging** em §A2-03; **A2-02** stack staging **no ar** em Render — falta OAuth env na API staging + smokes para gate §A3 fechar). **L2/L3** implementados.
 
 ---
 
@@ -53,8 +53,8 @@ Legenda: **P0** = antes ou junto da integração OAuth em aberto público; **P1*
 | Ambiente | `redirect_uri` (SPA) | Registo Google Cloud Console |
 |----------|----------------------|--------------------------------|
 | Local | `http://localhost:5173/auth/google/callback` | Authorized redirect URIs |
-| Staging | `https://<tvde-staging-app…>/auth/google/callback` (*preencher após criar static staging* — ver runbook **A2-02**) | Idem |
-| Produção | `https://<domínio-app>/auth/google/callback` | Idem |
+| Staging | `https://tvde-staging-app.onrender.com/auth/google/callback` | Idem (+ origem JS `https://tvde-staging-app.onrender.com`) |
+| Produção | `https://tvde-app-j51f.onrender.com/auth/google/callback` | Idem (+ origem JS `https://tvde-app-j51f.onrender.com`) |
 
 **Backend:** não expõe client secret; `POST /auth/google/exchange` recebe `code` + `redirect_uri` idêntico ao usado no redirect inicial.
 
@@ -64,8 +64,8 @@ Legenda: **P0** = antes ou junto da integração OAuth em aberto público; **P1*
 
 Checklist quando **L1** estiver fechado e **antes** de abrir Google a testers externos:
 
-- [ ] **A2-02** **operacional:** staging Render (DB+API+app) criada **e** URLs na tabela §A2-03 preenchidas (runbook [`STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md)).
-- [x] **A2-03** preenchido — tabela §A2-03 (produção/staging final = completar quando houver host).
+- [ ] **A2-02** **operacional (gate):** infra (**Postgres + API + static**) no ar; §A2-03 com URL staging **preenchida**; **falta** `GOOGLE_OAUTH_*` na API staging, utilizadores teste Google, **smokes assertivos** — [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-13**.
+- [x] **A2-03** preenchido — tabela §A2-03 (local + **staging** com host; produção = host canónico [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md)).
 - [x] **A2-01** implementado — `app/api/auth_rate_limit.py` + uso em `/auth/otp/request`, `/auth/login`, `/auth/google/exchange`.
 - [x] Revisão: troca de `code` **só no backend**; `GOOGLE_OAUTH_CLIENT_SECRET` em env; fluxo v1 **só passageiro**.
 
@@ -78,4 +78,4 @@ Checklist quando **L1** estiver fechado e **antes** de abrir Google a testers ex
 
 ---
 
-_Última actualização: **2026-05-12** — L2/L3 (Google BETA passageiro) + A2-01/A2-03; **A2-02** runbook OPS (`docs/ops/STAGING_A2-02_RUNBOOK.md`); *criação de serviços + smokes = em curso*._
+_Última actualização: **2026-05-13** — stack staging `tvde-staging-*` no Render; §A2-03 com callback staging; gate §A3 — OAuth/smokes staging pela manhã (painel [`TODOdoDIA.md`](../TODOdoDIA.md) 2026-05-13)._

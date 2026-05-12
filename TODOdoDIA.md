@@ -10,13 +10,33 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 ---
 
-## Painel — 2026-05-12 (rumo **A+L**)
+## Painel — 2026-05-13 (staging **A2-02** + smokes + EXTRA produto)
 
-**Foco:** auditoria executável + login social — sequência **A1→A2→L1→A3→L2→L3→A4** (ver quadro [`docs/todo-em-curso.md`](docs/todo-em-curso.md) **Agora**).
+**Foco A+L / OPS:** fechar **staging** no Render — `GOOGLE_OAUTH_*` no **`tvde-staging-api`**, URIs **Google** (`https://tvde-staging-app.onrender.com` + callback), utilizadores de teste; **smokes assertivos** staging (e prod se couber). Actualizar checklist §A3 em [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) se o gate ficar verde.
 
-**Entregue hoje (documental):** **A1** inventário + **A2** backlog priorizado + gates — [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md). **L1** spec (fluxos passageiro + Google v1 + RGPD mínimo) — [`docs/product/SOCIAL_LOGIN_L1_SPEC.md`](docs/product/SOCIAL_LOGIN_L1_SPEC.md).
+**URLs staging (fixos):** app `https://tvde-staging-app.onrender.com` · API `https://tvde-staging-api.onrender.com`
 
-**Próximo:** **A3** (staging, redirect URIs OAuth, rate-limit `/auth/*`) checklist no mesmo ficheiro §A3; depois **L2** código.
+### Lista **EXTRA** (verificar princípio / estado no código / conversa)
+
+1. [ ] **Som** quando uma viagem «cai» no motorista (ex. wav ~2 s).
+2. [ ] **Modo nocturno** automático no ecrã — já está? (testar.)
+3. [ ] **Wake lock / ecrã sempre activo** em uso — já está? (testar.)
+4. [x] *(Reservado na lista original — marcado feito pelo autor.)*
+5. [ ] **Partner:** geração/gestão de documentos de **veículos** e **motoristas** — já está? (testar.)
+6. [ ] **Driver → partner:** entrega de documentos (ex. registo criminal, carta); **avisos de caducidade**; **centralização no partner** (driver tem sempre partner). — já está? (testar.)
+7. [ ] **QR estático** para download rápido da app (gerar **fora** da app, material partilhável) — **a conversar** (já existe landing `/download` em prod; alinhar peça gráfica).
+8. [ ] **Driver:** botão **deslizar para aceitar** oferta.
+9. [ ] **Driver:** repensar **ecrã principal** — máxima simplicidade — **a falar**.
+
+_Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
+
+---
+
+## Painel — 2026-05-12 (rumo **A+L** — fecho sessão noite)
+
+**Foco:** mesmo quadro A+L; sessão incluiu env (`C:\dev\APP\docs\env\ENV_VARS_VERIFICATION.md` + templates, PR **#295** em `main`), OAuth Google **prod** (projecto **tvde-oauth**, cliente **TVDE SPA**), e **stack staging Render**: Postgres **`tvde-staging-db`**, **`tvde-staging-api`** (migrações no Shell), **`tvde-staging-app`** (rewrite SPA, `VITE_API_URL` staging, CORS na API).
+
+**Pendente 2026-05-13:** Google OAuth **na** API staging; smokes; doc §A2-03 com host real (actualizado no audit com o fecho de sessão).
 
 ---
 
