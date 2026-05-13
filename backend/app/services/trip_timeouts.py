@@ -13,7 +13,7 @@ from app.db.models.trip import Trip
 from app.events.dispatcher import emit
 from app.models.enums import TripStatus
 from app.schemas.realtime import TripStatusChangedEvent
-from app.services.trips import _set_driver_available
+from app.services.trips import _set_driver_available, on_trip_status_change_for_driving_compliance
 from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,9 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
     )
     for trip in ongoing_stuck:
         driver_id = trip.driver_id
+        old_status = trip.status
         trip.status = TripStatus.failed
+        on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
         _set_driver_available(db, str(driver_id) if driver_id else None)
         counts["ongoing_to_failed"] += 1
         logger.info(

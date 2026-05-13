@@ -172,6 +172,24 @@ export async function setDriverOffline(token: string): Promise<void> {
   })
 }
 
+export interface DriverDrivingHoursCompliance {
+  enabled: boolean
+  active_seconds_today: number
+  max_seconds: number
+  warning_threshold_seconds: number
+  warning: boolean
+  blocked: boolean
+  rest_until: string | null
+}
+
+export async function getDriverDrivingHoursCompliance(
+  token: string
+): Promise<DriverDrivingHoursCompliance> {
+  return apiFetch<DriverDrivingHoursCompliance>('/driver/status/compliance/driving-hours', {
+    token,
+  })
+}
+
 export async function getAvailableTrips(token: string): Promise<TripAvailableItem[]> {
   return apiFetch<TripAvailableItem[]>('/driver/trips/available', {
     token,

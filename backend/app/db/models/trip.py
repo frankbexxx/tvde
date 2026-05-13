@@ -14,6 +14,7 @@ from app.models.enums import TripStatus
 
 if TYPE_CHECKING:
     from app.db.models.driver import Driver
+    from app.db.models.driver_active_driving_segment import DriverActiveDrivingSegment
     from app.db.models.payment import Payment
     from app.db.models.trip_offer import TripOffer
     from app.db.models.user import User
@@ -157,6 +158,9 @@ class Trip(Base):
         uselist=False,
     )
     offers: Mapped[List["TripOffer"]] = relationship(
+        back_populates="trip",
+    )
+    active_driving_segments: Mapped[List["DriverActiveDrivingSegment"]] = relationship(
         back_populates="trip",
     )
 
