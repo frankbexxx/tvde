@@ -65,8 +65,11 @@ jobs:
           cache: npm
           cache-dependency-path: web-app/package-lock.json
 
+      # Não descarregar browsers no postinstall — um único `playwright install` abaixo (melhor com cache).
       - name: Install web-app dependencies
         working-directory: web-app
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
         run: npm ci
 
       - name: Cache Playwright browsers
@@ -75,10 +78,19 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
-      - name: Install Playwright (Chromium only)
+      # --with-deps faz apt no Ubuntu (lento). Só em cache miss; com hit, sincroniza revisão do Chromium.
+      - name: Install Playwright (Chromium + deps sistema)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: web-app
         run: npx playwright install --with-deps chromium
+
+      - name: Install Playwright (Chromium, cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: web-app
+        run: npx playwright install chromium
 
       - name: Start API (background)
         run: |
