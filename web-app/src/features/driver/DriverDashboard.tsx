@@ -1299,7 +1299,7 @@ export function DriverDashboard() {
                         : `${filteredAvailable.length} pedidos no mapa`}
                     </p>
                     <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
-                      Primeira oferta no mapa. Aceita em baixo (deslizar ou toque).
+                      Primeira oferta na carta abaixo — deslizar ou «Aceitar com um toque».
                     </p>
                   </div>
                 ) : null}
