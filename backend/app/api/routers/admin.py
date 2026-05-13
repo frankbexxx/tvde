@@ -49,6 +49,7 @@ from app.schemas.trip import (
 from app.services.admin_metrics import get_admin_metrics
 from app.services.system_health import get_system_health
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
+from app.services.rotacional_external import refresh_rotacional_external_cache
 from app.services.trip_timeouts import run_trip_timeouts
 from app.services.trips import (
     admin_apply_trip_transition,
@@ -112,6 +113,7 @@ class AdminCronRunResponse(BaseModel):
     cleanup: dict[str, Any]
     system_health_status: str
     driver_zone_sessions_expired: int = 0
+    rotacional_external_items_stored: int = 0
     request_id: str
 
 
@@ -228,6 +230,7 @@ async def admin_run_cron(
     log_event("cron_started", invoked_by="super_admin")
     errors: dict[str, str] = {}
     zone_sessions_expired = 0
+    rotacional_refreshed = 0
 
     try:
         timeouts = run_trip_timeouts(db)
@@ -297,6 +300,21 @@ async def admin_run_cron(
         errors["expire_driver_zone_sessions"] = str(e)
         log_event("cron_job_error", job="expire_driver_zone_sessions", error=str(e))
 
+    try:
+        rotacional_refreshed = refresh_rotacional_external_cache(
+            db,
+            url=str(getattr(settings, "ROTACIONAL_V3_FETCH_URL", "") or ""),
+            timeout_sec=float(getattr(settings, "ROTACIONAL_V3_FETCH_TIMEOUT_SECONDS", 8.0)),
+        )
+        log_event(
+            "cron_job_ok",
+            job="rotacional_external_refresh",
+            items_stored=rotacional_refreshed,
+        )
+    except Exception as e:
+        errors["rotacional_external_refresh"] = str(e)
+        log_event("cron_job_error", job="rotacional_external_refresh", error=str(e))
+
     elapsed_ms = int(round((time.monotonic() - started) * 1000))
     log_event(
         "cron_finished",
@@ -315,6 +333,7 @@ async def admin_run_cron(
         audit_events_deleted=cleanup.get("audit_events_deleted", 0),
         system_health_status=sh_status,
         zone_sessions_expired=zone_sessions_expired,
+        rotacional_items_stored=rotacional_refreshed,
         duration_ms=elapsed_ms,
         ok=(len(errors) == 0),
         error_count=len(errors),
@@ -337,6 +356,7 @@ async def admin_run_cron(
             "audit_events_deleted": cleanup.get("audit_events_deleted", 0),
             "system_health_status": sh_status,
             "driver_zone_sessions_expired": zone_sessions_expired,
+            "rotacional_external_items_stored": rotacional_refreshed,
         },
     )
     db.commit()
@@ -355,6 +375,7 @@ async def admin_run_cron(
         cleanup=cleanup,
         system_health_status=sh_status,
         driver_zone_sessions_expired=zone_sessions_expired,
+        rotacional_external_items_stored=rotacional_refreshed,
         request_id=rid,
     )
 
