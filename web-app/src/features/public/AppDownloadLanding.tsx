@@ -2,7 +2,9 @@ import { Link } from 'react-router-dom'
 
 /**
  * Ponto de entrada para QR / materiais impressos: mesmo domínio que a app,
- * sem necessidade de `VITE_APP_DOWNLOAD_URL`. `/dl` e `/app` redireccionam para aqui.
+ * sem necessidade de `VITE_APP_DOWNLOAD_URL`. Rotas curtas partilháveis:
+ * `/dl`, `/app` redireccionam via `AppDownloadRedirect` (env opcional, senão cai aqui).
+ * Peça gráfica do QR: gerada fora da app apontando para a URL canónica do deploy.
  */
 export function AppDownloadLanding() {
   return (

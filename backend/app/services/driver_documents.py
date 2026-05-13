@@ -1,4 +1,8 @@
-"""Persisted driver documents JSON (`drivers.documents` text column)."""
+"""Persisted driver documents JSON (`drivers.documents` text column).
+
+Documentação «por veículo» no produto MVP: inspecção e seguros ligados ao motorista
+via chave ``inspecao_viatura`` (sem entidade viatura separada até haver modelo dedicado).
+"""
 
 from __future__ import annotations
 

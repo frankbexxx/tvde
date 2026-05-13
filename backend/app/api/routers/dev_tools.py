@@ -100,6 +100,8 @@ async def dev_baseline_reset(db: Session = Depends(get_db)) -> dict:
 
 @router.post("/seed")
 async def dev_seed(db: Session = Depends(get_db)) -> dict:
+    """Baseline dev: partner +351955555502 e motorista +351911111111 na mesma org (BSLN fleet)
+    para E2E e painel partner verem a frota sem add-to-fleet manual."""
     _require_dev()
 
     def get_or_create_user(phone: str, role: Role) -> User:
@@ -153,13 +155,14 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
     if not driver_profile:
         driver_profile = Driver(
             user_id=driver_user.id,
-            partner_id=DEFAULT_PARTNER_UUID,
+            partner_id=BASELINE_PARTNER_FLEET_UUID,
             status=DriverStatus.approved,
             commission_percent=15,
         )
         db.add(driver_profile)
     else:
         driver_profile.is_available = True
+        driver_profile.partner_id = BASELINE_PARTNER_FLEET_UUID
 
     db.commit()
     db.refresh(passenger)

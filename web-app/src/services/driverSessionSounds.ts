@@ -1,10 +1,12 @@
 /**
- * Short Web Audio cues for driver session (request visible, accept, trip complete).
- * Skips when tab not visible; failures are silent.
+ * Driver session audio: prefer short WAV for new offers (~2s); accept/complete use Web Audio beeps.
+ * Skips when tab not visible; failures fall back silently (offer WAV → oscillator).
  */
 export type DriverSessionSoundKind = 'offer' | 'accept' | 'complete'
 
 let sharedAudioContext: AudioContext | null = null
+
+const OFFER_WAV = '/sounds/offer.wav'
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -16,8 +18,7 @@ function getAudioContext(): AudioContext | null {
   }
 }
 
-export function playDriverSessionSound(kind: DriverSessionSoundKind): void {
-  if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+function playOscillatorCue(kind: DriverSessionSoundKind): void {
   const c = getAudioContext()
   if (!c) return
 
@@ -43,4 +44,25 @@ export function playDriverSessionSound(kind: DriverSessionSoundKind): void {
 
   osc.start(t0)
   osc.stop(t0 + duration + 0.02)
+}
+
+function playOfferWavOrOscillator(): void {
+  try {
+    const a = new Audio(OFFER_WAV)
+    a.volume = 0.88
+    const fallback = () => playOscillatorCue('offer')
+    a.addEventListener('error', fallback, { once: true })
+    void a.play().catch(fallback)
+  } catch {
+    playOscillatorCue('offer')
+  }
+}
+
+export function playDriverSessionSound(kind: DriverSessionSoundKind): void {
+  if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+  if (kind === 'offer') {
+    playOfferWavOrOscillator()
+    return
+  }
+  playOscillatorCue(kind)
 }

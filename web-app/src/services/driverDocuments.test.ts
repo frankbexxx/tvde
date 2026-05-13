@@ -8,6 +8,7 @@ import {
   setDriverDocumentsState,
   type DriverDocumentsState,
 } from './driverDocuments'
+import { mergeServerDriverDocuments } from '../api/driverDocuments'
 
 function stateWith(
   overrides: Partial<DriverDocumentsState['docs']>,
@@ -24,6 +25,7 @@ function stateWith(
       ...overrides,
     },
     onboardingCompleted,
+    docDetails: {},
   }
 }
 
@@ -70,5 +72,17 @@ describe('driverDocuments service', () => {
     expect(isDriverDocumentsGateEnabled()).toBe(true)
     setDriverDocumentsGateEnabled(false)
     expect(isDriverDocumentsGateEnabled()).toBe(false)
+  })
+
+  it('mergeServerDriverDocuments copies expires_at e partner_note', () => {
+    const prev = stateWith({ carta_tvde: 'approved' })
+    const merged = mergeServerDriverDocuments(prev, {
+      version: 2,
+      docs: {
+        carta_tvde: { status: 'approved', expires_at: '2030-06-01T00:00:00Z', partner_note: 'OK' },
+      },
+    })
+    expect(merged.docDetails.carta_tvde?.expiresAt).toBe('2030-06-01T00:00:00Z')
+    expect(merged.docDetails.carta_tvde?.partnerNote).toBe('OK')
   })
 })
