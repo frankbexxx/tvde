@@ -3,7 +3,7 @@
 **Fonte:** [`PROJECT_AUDIT_2026-05-02.md`](./PROJECT_AUDIT_2026-05-02.md)  
 **Sequência acordada:** **A1 → A2 → L1 → A3 → L2 → L3 → A4** (A = auditoria / OPS-produto, L = login social).
 
-**Estado (documental + código):** **A1**, **A2**, **L1** feitos. **A3** parcialmente fechado em código (**A2-01** rate-limit; **A2-03** com hosts **staging** em §A2-03; **A2-02** stack staging **no ar** em Render — falta OAuth env na API staging + smokes para gate §A3 fechar). **L2/L3** implementados.
+**Estado (documental + código):** **A1**, **A2**, **L1** feitos. **A3** parcialmente fechado em código (**A2-01** rate-limit; **A2-03** com hosts **staging** em §A2-03; checklist §A3 sincronizado em 2026-05-06 **com** nota de follow-up OAuth staging). **A2-02** stack staging **no ar** em Render — falta `GOOGLE_OAUTH_*` na API staging + smokes humanos para fecho operacional total do gate. **L2/L3** implementados. **R-1** (rotacional v3) entregue em código (fetch opcional + cache + cron).
 
 ---
 
@@ -64,7 +64,8 @@ Legenda: **P0** = antes ou junto da integração OAuth em aberto público; **P1*
 
 Checklist quando **L1** estiver fechado e **antes** de abrir Google a testers externos:
 
-- [ ] **A2-02** **operacional (gate):** infra (**Postgres + API + static**) no ar; §A2-03 com URL staging **preenchida**; **falta** `GOOGLE_OAUTH_*` na API staging, utilizadores teste Google, **smokes assertivos** — [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-13**.
+- [ ] **A2-02** **operacional (gate):** infra (**Postgres + API + static**) no ar; §A2-03 com URL staging **preenchida**; **falta** `GOOGLE_OAUTH_*` na API **staging**, utilizadores teste Google, **smokes assertivos** — ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14** (A2-02-1, A2-02-2).
+  - **Código repo (2026-05-06):** rotacional v3 — `GET /cron/jobs` inclui `rotacional_external_refresh` (no-op se `ROTACIONAL_V3_FETCH_URL` vazio); ver [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md).
 - [x] **A2-03** preenchido — tabela §A2-03 (local + **staging** com host; produção = host canónico [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md)).
 - [x] **A2-01** implementado — `app/api/auth_rate_limit.py` + uso em `/auth/otp/request`, `/auth/login`, `/auth/google/exchange`.
 - [x] Revisão: troca de `code` **só no backend**; `GOOGLE_OAUTH_CLIENT_SECRET` em env; fluxo v1 **só passageiro**.
@@ -78,4 +79,4 @@ Checklist quando **L1** estiver fechado e **antes** de abrir Google a testers ex
 
 ---
 
-_Última actualização: **2026-05-13** — stack staging `tvde-staging-*` no Render; §A2-03 com callback staging; gate §A3 — OAuth/smokes staging pela manhã (painel [`TODOdoDIA.md`](../TODOdoDIA.md) 2026-05-13)._
+_Última actualização: **2026-05-06** — §A2-03 + notas §A3; rotacional v3 (`ROTACIONAL_V3_*`, migração `rotacional_external_cache`). **Gate** OAuth + smokes staging = operação humana (A2-02-1 / A2-02-2)._

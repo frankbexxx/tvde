@@ -43,27 +43,27 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 |----|------|--------|-------|
 | **A2-02-1** | `GOOGLE_OAUTH_*` na API **staging** + URIs Google alinhadas | Em curso | Ver [`docs/todo-em-curso.md`](docs/todo-em-curso.md); host fixo acima |
 | **A2-02-2** | Smokes assertivos **staging** (e prod se couber) | Por iniciar | Depende de A2-02-1 onde aplicável |
-| **A2-02-3** | Checklist §A2-03 / §A3 no audit exec backlog | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+| **A2-02-3** | Checklist §A2-03 / §A3 no audit exec backlog | Concluído | Tabela §A2-03 e notas §A3 actualizadas nesta PR; **gate** OAuth+smokes staging = A2-02-1 / A2-02-2 (humanos). |
 
 ### Lista **EXTRA** produto (**X-**)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **X-1** | Som (~2 s) quando uma viagem «cai» no motorista | Por iniciar | Verificar no código / conversa |
-| **X-2** | Modo nocturno automático no ecrã | Por iniciar | Testar |
-| **X-3** | Wake lock / ecrã sempre activo em uso | Por iniciar | Testar |
+| **X-1** | Som (~2 s) quando uma viagem «cai» no motorista | Concluído | [`useDriverOfferSounds`](web-app/src/hooks/useDriverOfferSounds.ts) + [`driverSessionSounds.ts`](web-app/src/services/driverSessionSounds.ts) + `public/sounds/offer.wav` em [`DriverDashboard`](web-app/src/features/driver/DriverDashboard.tsx) |
+| **X-2** | Modo nocturno automático no ecrã | Concluído | [`ThemeSelector`](web-app/src/design-system/components/app/ThemeSelector.tsx) **Automático (sistema)** + [`useTheme.ts`](web-app/src/hooks/useTheme.ts) (`auto` + `prefers-color-scheme`) |
+| **X-3** | Wake lock / ecrã sempre activo em uso | Concluído | [`useScreenWakeLock`](web-app/src/hooks/useScreenWakeLock.ts) com condição **disponível ou viagem** (`!offline \|\| activeTripId`) em [`DriverDashboard`](web-app/src/features/driver/DriverDashboard.tsx) |
 | **X-4** | Reservado (lista original) | N/A | Marcado feito pelo autor no painel 2026-05-13 |
-| **X-5** | Partner: documentos de veículos e motoristas | Por iniciar | Testar |
-| **X-6** | Driver → partner: documentos, caducidade, centralização | Por iniciar | Testar |
-| **X-7** | QR partilhável: **visível na app** (menu passageiro → botão → imagem) | Smoke pendente | **F-2**; [`/download`](https://tvde-app-j51f.onrender.com/download) é URL pública auxiliar; não substitui o critério «vês com os olhos» |
-| **X-8** | Driver: deslizar para aceitar oferta | Smoke pendente | **F-1** — ronda **2026-05-13**: CTA abaixo da dobra em **360×800** (prints) |
-| **X-9** | Driver: repensar ecrã principal (simplicidade) | Por iniciar | A falar |
+| **X-5** | Partner: documentos de veículos e motoristas | Concluído | [`PartnerDriverDetail`](web-app/src/features/partner/PartnerDriverDetail.tsx): bloco **Viatura** (`inspecao_viatura`) + motorista |
+| **X-6** | Driver → partner: documentos, caducidade, centralização | Concluído | Parceiro edita **validade** + **nota** + estado; API existente `PATCH …/documents` |
+| **X-7** | QR partilhável: **visível na app** (menu passageiro → botão → imagem) | Concluído | Menu [`PassengerSideMenu`](web-app/src/features/passenger/PassengerSideMenu.tsx): «Partilhar app (QR)» + `react-qr-code`; `/download` continua URL auxiliar |
+| **X-8** | Driver: deslizar para aceitar oferta | Concluído | **F-1** entregue em código: folha inferior com `max-h` por número de ofertas; REJEITAR compacto slide; `main` sem scroll em `/driver`; gradiente no palco do mapa |
+| **X-9** | Driver: repensar ecrã principal (simplicidade) | Concluído | **B5** + mapa-fundo/interacção no mapa ([`DECISOES`](docs/prompts/EXTRA-2026-05-13-DECISOES.md)); copy horas sem `[PLACEHOLDER]` longo; botão **Vista compacta** |
 
 ### Rasto / backlog (**R-**)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **R-1** | Rotacional v3 (fontes externas + job/cache) | Por iniciar | [`ROTACIONAL_V2_SPEC.md`](docs/product/ROTACIONAL_V2_SPEC.md) |
+| **R-1** | Rotacional v3 (fontes externas + job/cache) | Concluído | `ROTACIONAL_V3_FETCH_URL` + tabela `rotacional_external_cache` + job em [`cron.py`](backend/app/api/routers/cron.py); merge em [`rotacional.py`](backend/app/api/routers/rotacional.py); [`ROTACIONAL_V2_SPEC.md`](docs/product/ROTACIONAL_V2_SPEC.md) |
 
 ### Smokes **produção** (**S-**) — PC + Render **tvde-app**, várias janelas, **sem staging**
 
@@ -83,7 +83,7 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **S-03** | Pedido de viagem — estado **antes** de motorista | Concluído | **D** |
 | **S-04** | Login **motorista** | Concluído | **B** MOTORISTA |
 | **S-05** | Motorista disponível / recebe oferta | Concluído | **E** |
-| **S-06** | Aceitar oferta (toque ou swipe, o que houver em prod) | Concluído | **F**; defeito UX **aceitar** abaixo da dobra **360×800** documentado — fluxo não bloqueado (**F-1**) |
+| **S-06** | Aceitar oferta (toque ou swipe, o que houver em prod) | Concluído | **F**; follow-up **F-1** aplicado no código (folha compacta 1 oferta, etc.) |
 | **S-07** | Sincronização: passageiro e motorista com estado coerente | Concluído | **G** |
 | **S-08** | Conclusão da viagem + pós-viagem (rating/copy conforme UI) | Concluído | Rating fechado na mesma ronda |
 | **S-09** | Login **partner** (Frota) | Concluído | **B** FROTA + **H** |
@@ -100,12 +100,12 @@ Prioridade: **alargar Playwright / pytest** onde já há cobertura (ex. `npm run
 
 | ID | Fix / tema | Issue (GitHub) | Estado | Notas |
 |----|------------|----------------|--------|-------|
-| **F-1** | Motorista: «Deslizar para aceitar» / CTA principal **visível sem scroll** (viewport **360×800**) | — | Por iniciar | Evidência: prints ronda 2026-05-13 |
-| **F-2** | Passageiro: menu → botão → **imagem QR** no ecrã (asset na build, ex. `public/`) | — | Por iniciar | Critério aceitação: **visível com olhos** |
-| **F-3** | *(placeholder — lista Frank 5–6 issues)* | — | Por iniciar | Preencher nº |
-| **F-4** | *(placeholder)* | — | Por iniciar | Preencher nº |
-| **F-5** | *(placeholder)* | — | Por iniciar | Preencher nº |
-| **F-6** | *(placeholder)* | — | Por iniciar | Preencher nº |
+| **F-1** | Motorista: «Deslizar para aceitar» / CTA principal **visível sem scroll** (viewport **360×800**) | — | Concluído | Código: caps da folha (`max-h` 1 vs várias ofertas), REJEITAR compacto em slide, `overflow-hidden` em `main` só `/driver`, gradiente palco mapa; `npm run build` |
+| **F-2** | Passageiro: menu → botão → **imagem QR** no ecrã (asset na build, ex. `public/`) | — | Concluído | QR dinâmico no menu passageiro (`react-qr-code`); não exige PNG estático em `public/` |
+| **F-3** | *(placeholder — lista Frank 5–6 issues)* | — | N/A | Ver [`MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) |
+| **F-4** | *(placeholder)* | — | N/A | Idem |
+| **F-5** | *(placeholder)* | — | N/A | Idem |
+| **F-6** | *(placeholder)* | — | N/A | Idem |
 
 _Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 

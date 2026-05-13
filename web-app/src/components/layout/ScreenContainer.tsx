@@ -13,6 +13,11 @@ interface ScreenContainerProps {
    * O `mainScrollId` deve ser aplicado num descendente com `overflow-y-auto`.
    */
   mainScrollable?: boolean
+  /**
+   * `driverImmersive` — mapa a encher o eixo vertical; sem padding lateral no contentor principal
+   * (`h-full`/`min-h-0` em cadeia flex em vez de `min-h-dvh`).
+   */
+  contentVariant?: 'default' | 'driverImmersive'
 }
 
 /**
@@ -26,6 +31,7 @@ export function ScreenContainer({
   bottomBarVariant = 'inset',
   mainScrollId,
   mainScrollable = true,
+  contentVariant = 'default',
 }: ScreenContainerProps) {
   const scrollBottomPad =
     bottomButton && bottomBarVariant === 'flush'
@@ -33,13 +39,24 @@ export function ScreenContainer({
       : bottomButton
         ? 'pb-20'
         : 'pb-8'
+  const immersive = contentVariant === 'driverImmersive'
   const mainColumn =
     mainScrollable === false
-      ? `flex flex-col flex-1 min-h-0 overflow-hidden px-5 pt-6 pb-4 ${scrollBottomPad}`
-      : `flex-1 flex flex-col px-5 pt-6 pb-4 overflow-y-auto ${scrollBottomPad}`
+      ? immersive
+        ? `flex flex-col flex-1 min-h-0 overflow-hidden px-0 pt-2 pb-0 ${scrollBottomPad}`
+        : `flex flex-col flex-1 min-h-0 overflow-hidden px-5 pt-6 pb-4 ${scrollBottomPad}`
+      : immersive
+        ? `flex-1 flex flex-col px-0 pt-2 pb-0 min-h-0 overflow-y-auto ${scrollBottomPad}`
+        : `flex-1 flex flex-col px-5 pt-6 pb-4 overflow-y-auto ${scrollBottomPad}`
 
   return (
-    <div className="min-h-dvh flex flex-col max-w-md mx-auto w-full bg-background">
+    <div
+      className={
+        immersive
+          ? 'flex min-h-0 h-full flex-1 flex-col max-w-md mx-auto w-full bg-background'
+          : 'min-h-dvh flex flex-col max-w-md mx-auto w-full bg-background'
+      }
+    >
       <div id={mainScrollable !== false ? mainScrollId : undefined} className={mainColumn}>
         {children}
       </div>

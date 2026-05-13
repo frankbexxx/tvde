@@ -12,6 +12,7 @@ Ligação: plano “lista EXTRA (1–9)” e [`EXTRA-2026-05-13-DECISOES.md`](EX
 | **B4** | [`EXTRA-2026-05-13-driver-hours-legal.md`](EXTRA-2026-05-13-driver-hours-legal.md) (**1**) | **Feito (v1)** | Segmentos, Lisboa, endpoint motorista, bloqueio; **override** `driving_rest_until`: `POST /admin/drivers/{id}/driving-rest-override` + separador Ops (só admin); ver [`EXTRA-2026-05-13-DECISOES.md`](EXTRA-2026-05-13-DECISOES.md) secção execução consolidada |
 | **B5** | [`EXTRA-2026-05-13-driver-passenger-copy-audit.md`](EXTRA-2026-05-13-driver-passenger-copy-audit.md) (**7+8**) | **Feito (v1)** | [`EXTRA-2026-05-13-B5-antes-depois.md`](EXTRA-2026-05-13-B5-antes-depois.md); `PassengerDashboard`, `TripPlannerPanel`, microcopy `DriverDashboard` |
 | **Nav coerente (§9 ext.)** | Mesma filosofia passageiro → partner | **Prioridade fixada** | **Passageiro primeiro**, **partner depois** ([`DECISOES`](EXTRA-2026-05-13-DECISOES.md) execução consolidada) |
+| **R-1** | Rotacional v3 (cache HTTP + cron) | **Feito** | `ROTACIONAL_V3_FETCH_URL`, migração `rotacional_external_cache`, merge em `GET /rotacional/messages` |
 
 **Testes:** Playwright / smokes — **recomendação** (não gate de merge); **pytest** para **B4** + override admin.
 

@@ -8,6 +8,7 @@ from app.db.models.partner import Partner
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.otp import OtpCode
 from app.db.models.payment import Payment
+from app.db.models.rotacional_external_cache import RotacionalExternalCache
 from app.db.models.stripe_webhook_event import StripeWebhookEvent
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
@@ -28,4 +29,5 @@ __all__ = [
     "AuditEvent",
     "InteractionLog",
     "StripeWebhookEvent",
+    "RotacionalExternalCache",
 ]

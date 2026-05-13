@@ -8,6 +8,7 @@ Documento de produto para evoluir o *marquee* do `AppHeaderBar` sem inventar fon
 |--------|----------------|
 | **v1** | Copy estática em `web-app/src/components/layout/headerRotatingHints.ts`. |
 | **v2 — infra** | `GET /rotacional/messages` (público): lista vinda de **`ROTACIONAL_FEED_JSON`** no backend (curadoria manual ou geração futura server-side). A app junta estas frases às estáticas e renova o feed ~10 min. |
+| **v3 — cache HTTP** | Opcional: `ROTACIONAL_V3_FETCH_URL` — o batch `GET /cron/jobs` faz fetch de um JSON array compatível, valida e persiste em **`rotacional_external_cache`**; o endpoint público faz merge (**env primeiro**, depois linhas externas sem duplicar texto). |
 
 ## Tipos de conteúdo desejados (roadmap)
 
