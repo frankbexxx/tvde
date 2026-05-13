@@ -1,12 +1,16 @@
 import { useCallback, useState } from "react"
 
 const THEME_KEY = "tvde_theme"
+const PREFERENCE_AUTO = "auto"
 
 export type ThemeId =
   | "portugal"
   | "dev"
   | "minimal"
   | "neon"
+
+/** Preferência persistida; `auto` segue o sistema operativo (claro = portugal, escuro = dev). */
+export type ThemePreference = ThemeId | typeof PREFERENCE_AUTO
 
 const THEMES: ThemeId[] = [
   "portugal",
@@ -15,65 +19,73 @@ const THEMES: ThemeId[] = [
   "neon",
 ]
 
-/**
- * Migração transparente: utilizadores com "portugal-dark" em localStorage
- * (antes do rename 2026-04-20) recebem "dev" no próximo load, sem flicker nem
- * erro. Não tentar migrar para "portugal" — perderia a escolha deliberada
- * de dark mode. "dev" agora é o slot onde o dark vive.
- */
 const LEGACY_THEME_MAP: Record<string, ThemeId> = {
   "portugal-dark": "dev",
 }
 
-export function getTheme(): ThemeId {
+function resolveEffectiveThemeId(pref: ThemePreference): ThemeId {
+  if (pref !== PREFERENCE_AUTO) return pref
   if (typeof window === "undefined") return "portugal"
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dev" : "portugal"
+}
+
+function readStoredPreference(): ThemePreference {
+  if (typeof window === "undefined") return PREFERENCE_AUTO
   const stored = localStorage.getItem(THEME_KEY)
+  if (stored === PREFERENCE_AUTO) return PREFERENCE_AUTO
   if (stored && stored in LEGACY_THEME_MAP) {
     const migrated = LEGACY_THEME_MAP[stored]!
     localStorage.setItem(THEME_KEY, migrated)
     return migrated
   }
   if (stored && (THEMES as string[]).includes(stored)) return stored as ThemeId
-  if (typeof window !== 'undefined') {
-    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    return dark ? 'dev' : 'portugal'
+  return PREFERENCE_AUTO
+}
+
+/** Tema aplicado em `data-theme` (resolve `auto`). */
+export function getTheme(): ThemeId {
+  return resolveEffectiveThemeId(readStoredPreference())
+}
+
+export function getThemePreference(): ThemePreference {
+  return readStoredPreference()
+}
+
+function applyPreference(pref: ThemePreference): void {
+  if (pref === PREFERENCE_AUTO) {
+    localStorage.setItem(THEME_KEY, PREFERENCE_AUTO)
+  } else {
+    localStorage.setItem(THEME_KEY, pref)
   }
-  return 'portugal'
+  document.documentElement.setAttribute("data-theme", resolveEffectiveThemeId(pref))
 }
 
-function applyTheme(theme: ThemeId): void {
-  document.documentElement.setAttribute("data-theme", theme)
-  localStorage.setItem(THEME_KEY, theme)
-}
-
-export function setTheme(theme: ThemeId): void {
-  applyTheme(theme)
+export function setTheme(theme: ThemePreference): void {
+  applyPreference(theme)
 }
 
 export function initTheme(): void {
   if (typeof window === "undefined") return
-  const theme = getTheme()
-  document.documentElement.setAttribute("data-theme", theme)
+  const pref = readStoredPreference()
+  document.documentElement.setAttribute("data-theme", resolveEffectiveThemeId(pref))
 
   const mq = window.matchMedia("(prefers-color-scheme: dark)")
   mq.addEventListener("change", () => {
-    const s = localStorage.getItem(THEME_KEY)
-    if (s && (THEMES as string[]).includes(s)) return
-    const next: ThemeId = mq.matches ? "dev" : "portugal"
-    document.documentElement.setAttribute("data-theme", next)
+    const p = readStoredPreference()
+    if (p !== PREFERENCE_AUTO) return
+    document.documentElement.setAttribute("data-theme", resolveEffectiveThemeId(PREFERENCE_AUTO))
   })
 }
 
-/** Hook para componentes que precisam re-renderizar ao mudar o tema */
-export function useTheme(): [ThemeId, (theme: ThemeId) => void] {
-  const [theme, setThemeState] = useState<ThemeId>(() => getTheme())
+export function useTheme(): [ThemePreference, (theme: ThemePreference) => void] {
+  const [pref, setPrefState] = useState<ThemePreference>(() => readStoredPreference())
 
-  const setThemeAndNotify = useCallback((t: ThemeId) => {
-    setThemeState(t)
-    applyTheme(t)
+  const setPrefAndNotify = useCallback((p: ThemePreference) => {
+    setPrefState(p)
+    applyPreference(p)
   }, [])
 
-  return [theme, setThemeAndNotify]
+  return [pref, setPrefAndNotify]
 }
 
-export { THEMES }
+export { THEMES, PREFERENCE_AUTO as THEME_PREFERENCE_AUTO }

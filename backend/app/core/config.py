@@ -100,6 +100,10 @@ class Settings(BaseSettings):
     # Exemplo: [{"text":"IPMA: aviso amarelo — aguaceiros.","source":"meteo"}]
     ROTACIONAL_FEED_JSON: str = ""
 
+    # Rotacional v3: URL opcional (JSON array de {text, source?}); cron preenche cache em BD.
+    ROTACIONAL_V3_FETCH_URL: str = ""
+    ROTACIONAL_V3_FETCH_TIMEOUT_SECONDS: float = 8.0
+
     # B4: limite diário condução activa + repouso (Europe/Lisbon). Desligar só em diagnóstico.
     ENABLE_DRIVING_HOURS_COMPLIANCE: bool = True
 

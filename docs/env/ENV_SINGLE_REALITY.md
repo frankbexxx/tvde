@@ -116,6 +116,7 @@ No **Static Site** (`tvde-app`), quando houver URL de download **externa** está
 Rotacional (cabeçalho):
 
 - **`ROTACIONAL_FEED_JSON`** (opcional, só **Web service** `tvde-api`): JSON com até ~24 entradas `{"text":"…","source":"meteo|prociv|transito|interno"}` — ver [`docs/product/ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) e `GET /rotacional/messages`.
+- **`ROTACIONAL_V3_FETCH_URL`** (opcional): URL que devolve **JSON array** no mesmo formato; o batch **`GET /cron/jobs`** (secret) refresca a tabela `rotacional_external_cache`. Se vazio, o passo é no-op. **`ROTACIONAL_V3_FETCH_TIMEOUT_SECONDS`** (opcional, default ~8).
 
 ### Repor modo mock Stripe (pós-janela de testes)
 

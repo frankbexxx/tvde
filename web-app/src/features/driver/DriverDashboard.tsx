@@ -254,7 +254,6 @@ function formatDrivingDurationShort(sec: number): string {
 
 export function DriverDashboard() {
   const { token, sessionRole } = useAuth()
-  useScreenWakeLock(sessionRole === 'driver' && Boolean(token))
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
@@ -262,6 +261,11 @@ export function DriverDashboard() {
   const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
   const driverBottomNav = isDriverBottomNavEnabled()
   const [offline, setOffline] = useState(getStoredOffline)
+  useScreenWakeLock(
+    sessionRole === 'driver' &&
+      Boolean(token) &&
+      (!offline || Boolean(activeTripId)),
+  )
 
   /** GPS activo em disponível ou com viagem; offline poupa bateria e prompts. */
   const geoWatchEnabled =
@@ -1230,7 +1234,7 @@ export function DriverDashboard() {
                     onClick={() => setDriverHomeStep(1)}
                     className="min-h-[40px] w-full rounded-xl border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
                   >
-                    Mapa inicial
+                    Vista compacta
                   </button>
                 ) : null}
                 {!driverBottomNav ? (
@@ -1321,10 +1325,8 @@ export function DriverDashboard() {
                             <>
                               <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
                               <p className="mt-1 text-foreground/90 leading-snug">
-                                [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o
-                                período de repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto
-                                genérico — substituir após validação do diploma e articulados aplicáveis
-                                (acompanhamento jurídico).
+                                Não podes ficar disponível nem aceitar novas viagens até terminar o período de
+                                repouso ou o limite do dia (referência Lisboa) deixar de bloquear.
                               </p>
                               {drivingCompliance.rest_until ? (
                                 <p className="mt-1 text-xs opacity-90">
@@ -1339,12 +1341,10 @@ export function DriverDashboard() {
                             <>
                               <p className="font-medium leading-snug">Aviso de tempo de condução</p>
                               <p className="mt-1 text-foreground/85 leading-snug">
-                                [PLACEHOLDER] Hoje levaste cerca de{' '}
-                                <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong>{' '}
-                                em viagem activa (máx. referência{' '}
-                                {formatDrivingDurationShort(drivingCompliance.max_seconds)} / dia civil, Lisboa). Evita
-                                aceitar serviços se estiveres perto do limite — quadro legal a substituir após
-                                validação normativa.
+                                Hoje: <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong>{' '}
+                                em viagem activa (tecto referência{' '}
+                                {formatDrivingDurationShort(drivingCompliance.max_seconds)} / dia, Lisboa). Se estiveres
+                                perto do limite, evita novas aceitações.
                               </p>
                             </>
                           )}
