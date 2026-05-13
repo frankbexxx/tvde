@@ -1073,7 +1073,7 @@ export function DriverDashboard() {
         >
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 flex-1 text-xs font-medium text-muted-foreground leading-snug">
-              Mapa e disponibilidade primeiro; depois vês pedidos e o ecrã completo.
+              Mapa e estado em primeiro plano; pedidos e detalhes quando precisares.
             </p>
             {!driverBottomNav ? (
               <button
@@ -1244,11 +1244,10 @@ export function DriverDashboard() {
 
           {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
             <div
-              className={`rounded-xl border px-3 py-2 text-sm ${
-                drivingCompliance.blocked
+              className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
                   ? 'bg-destructive/10 border-destructive/35 text-destructive'
                   : 'bg-warning/15 border-warning/40 text-foreground'
-              }`}
+                }`}
               data-testid="driver-driving-hours-banner"
             >
               {drivingCompliance.blocked ? (
