@@ -26,14 +26,14 @@ const sec = (s: number) => s * 1000
 /** Intervalos de poll (ms). */
 const pollLook = [300, 600, 1200, 2000]
 
-/** Menu do motorista: cabeçalho ou barra inferior (`VITE_DRIVER_BOTTOM_NAV`). */
+/** Menu do motorista: barra inferior Manel ou botão legacy (sem bottom nav). */
 async function openDriverMenu(page: Page) {
-  const bottom = page.locator('[data-testid="driver-bottom-nav-menu"]')
-  if ((await bottom.count()) > 0 && (await bottom.first().isVisible())) {
-    await bottom.first().click()
-    return
-  }
-  await page.getByTestId('driver-open-menu').click()
+  const shellMenu = page.getByTestId('driver-bottom-nav-menu')
+  const legacyMenu = page.getByTestId('driver-open-menu')
+  const trigger = shellMenu.or(legacyMenu)
+  await trigger.waitFor({ state: 'visible', timeout: sec(120) })
+  await trigger.scrollIntoViewIfNeeded()
+  await trigger.click()
 }
 
 /**
@@ -448,6 +448,8 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
     const driverPage = await driverCtx.newPage()
     await driverPage.goto('/driver', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+    await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({ timeout: sec(120) })
+    await leaveDriverHomeStep1IfPresent(driverPage)
 
     await openDriverMenu(driverPage)
     // Menu agora é drawer por camadas; preferências estão num screen dedicado.
@@ -456,6 +458,8 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await prefGoogle.scrollIntoViewIfNeeded()
     await prefGoogle.click()
     await driverPage.reload({ waitUntil: 'domcontentloaded' })
+    await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({ timeout: sec(120) })
+    await leaveDriverHomeStep1IfPresent(driverPage)
     await openDriverMenu(driverPage)
     await driverPage.getByRole('button', { name: /navegação/i }).click()
     await expect(driverPage.getByTestId('driver-nav-pref-google')).toBeVisible()
