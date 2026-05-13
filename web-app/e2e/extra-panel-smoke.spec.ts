@@ -10,6 +10,17 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 
 const sec = (s: number) => s * 1000
 
+/** JWT subject (user id) — apenas para E2E com tokens dev. */
+function jwtSubject(token: string): string {
+  const part = token.split('.')[1]
+  if (!part) throw new Error('jwt missing payload')
+  const b64 = part.replace(/-/g, '+').replace(/_/g, '/')
+  const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4))
+  const json = JSON.parse(Buffer.from(b64 + pad, 'base64').toString('utf8')) as { sub?: string }
+  if (!json.sub) throw new Error('jwt missing sub')
+  return json.sub
+}
+
 async function openDriverMenu(page: Page) {
   const bottom = page.locator('[data-testid="driver-bottom-nav-menu"]')
   if ((await bottom.count()) > 0 && (await bottom.first().isVisible())) {
@@ -88,9 +99,18 @@ test.describe('EXTRA panel — smoke', () => {
   test('partner: detalhe motorista — bloco documentos', async ({ browser, request }) => {
     const seed = await request.post(`${API}/dev/seed`)
     expect(seed.ok(), await seed.text()).toBeTruthy()
+    const reset = await request.post(`${API}/dev/reset`)
+    expect(reset.ok(), await reset.text()).toBeTruthy()
     const tokRes = await request.post(`${API}/dev/tokens`)
     expect(tokRes.ok(), await tokRes.text()).toBeTruthy()
-    const tokens = (await tokRes.json()) as { partner: string }
+    const tokens = (await tokRes.json()) as { partner: string; driver: string }
+    /** O motorista de seed está em `DEFAULT_PARTNER_UUID`; o utilizador partner está em `BASELINE_PARTNER_FLEET_UUID` — a lista na UI fica vazia até add-to-fleet. */
+    const driverUserId = jwtSubject(tokens.driver)
+    const add = await request.post(
+      `${API}/partner/drivers/${encodeURIComponent(driverUserId)}/add-to-fleet`,
+      { headers: { Authorization: `Bearer ${tokens.partner}` } }
+    )
+    expect(add.ok(), await add.text()).toBeTruthy()
 
     const ctx = await browser.newContext()
     await ctx.addInitScript(
@@ -113,13 +133,10 @@ test.describe('EXTRA panel — smoke', () => {
       { partner: tokens.partner }
     )
     const page = await ctx.newPage()
-    await page.goto(`${BASE_URL}/partner`, { waitUntil: 'domcontentloaded', timeout: sec(120) })
-    await expect(page.getByRole('heading', { name: 'Frota (partner)' })).toBeVisible({
-      timeout: sec(120),
-    })
-    const firstDriver = page.locator('a[href^="/partner/drivers/"]').first()
-    await expect(firstDriver).toBeVisible({ timeout: sec(60) })
-    await firstDriver.click()
+    await page.goto(
+      `${BASE_URL}/partner/drivers/${encodeURIComponent(driverUserId)}`,
+      { waitUntil: 'domcontentloaded', timeout: sec(120) }
+    )
     await expect(page.getByText('Documentos do motorista')).toBeVisible({ timeout: sec(60) })
     await ctx.close()
   })
