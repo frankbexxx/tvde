@@ -25,6 +25,7 @@ import { apiFetch } from '../../api/client'
 import { parseJwtPayload } from '../../utils/jwt'
 import {
   recoverDriver,
+  postAdminDrivingRestOverride,
   exportLogsCsv,
   runAdminCron,
   validateEnvText,
@@ -155,6 +156,8 @@ export function AdminDashboard() {
   )
 
   const [recoverDriverId, setRecoverDriverId] = useState('')
+  const [drivingRestDriverId, setDrivingRestDriverId] = useState('')
+  const [drivingRestUntilLocal, setDrivingRestUntilLocal] = useState('')
   const [cronRun, setCronRun] = useState<Awaited<ReturnType<typeof runAdminCron>> | null>(null)
   const [envText, setEnvText] = useState('')
   const [envReveal, setEnvReveal] = useState(false)
@@ -384,6 +387,48 @@ export function AdminDashboard() {
   }
 
   const handleRecoverDriver = () => void runRecoverDriver(recoverDriverId)
+
+  const runDrivingRestOverride = async (clear: boolean) => {
+    if (!token) return
+    const id = drivingRestDriverId.trim()
+    if (!id) return
+    if (!clear && !drivingRestUntilLocal.trim()) {
+      setError('Indica data e hora de fim do repouso (campo local).')
+      return
+    }
+    const gr = promptGovernanceReason(
+      clear
+        ? 'Motivo para limpar repouso administrativo (driving_rest_until; SP-F, mín. 10 caracteres):'
+        : 'Motivo para definir repouso administrativo até à data indicada (SP-F, mín. 10 caracteres):'
+    )
+    if (!gr) return
+    let restUntilIso: string | null = null
+    if (!clear) {
+      const d = new Date(drivingRestUntilLocal.trim())
+      if (Number.isNaN(d.getTime())) {
+        setError('Data/hora inválida.')
+        return
+      }
+      restUntilIso = d.toISOString()
+    }
+    setOpsLoading('driving-rest')
+    try {
+      await postAdminDrivingRestOverride(id, token, {
+        governance_reason: gr,
+        rest_until: restUntilIso,
+      })
+      setError(null)
+      await fetchHealth()
+      fetchMetrics()
+    } catch (err) {
+      setError(adminErrDetail(err, 'Erro override repouso TVDE'))
+    } finally {
+      setOpsLoading(null)
+    }
+  }
+
+  const handleDrivingRestSet = () => void runDrivingRestOverride(false)
+  const handleDrivingRestClear = () => void runDrivingRestOverride(true)
 
   const handleCreateFrotaOrg = async () => {
     if (!token || !frotaOrgName.trim()) return
@@ -881,6 +926,12 @@ export function AdminDashboard() {
           setEnvText={setEnvText}
           setOpsStuckPaymentsPage={setOpsStuckPaymentsPage}
           setRecoverDriverId={setRecoverDriverId}
+          drivingRestDriverId={drivingRestDriverId}
+          drivingRestUntilLocal={drivingRestUntilLocal}
+          handleDrivingRestSet={handleDrivingRestSet}
+          handleDrivingRestClear={handleDrivingRestClear}
+          setDrivingRestDriverId={setDrivingRestDriverId}
+          setDrivingRestUntilLocal={setDrivingRestUntilLocal}
           syncAdminUrl={syncAdminUrl}
         />
       )}

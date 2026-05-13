@@ -62,6 +62,17 @@ def test_partner_forbidden_admin_create_partner() -> None:
     assert r.status_code == 403
 
 
+def test_partner_forbidden_driving_rest_override() -> None:
+    tok = _partner_token()
+    rid = str(uuid.uuid4())
+    r = TestClient(app).post(
+        f"/admin/drivers/{rid}/driving-rest-override",
+        json={"governance_reason": "x" * 12, "rest_until": None},
+        headers={"Authorization": f"Bearer {tok}"},
+    )
+    assert r.status_code == 403
+
+
 def test_partner_forbidden_driver_location() -> None:
     tok = _partner_token()
     r = TestClient(app).post(

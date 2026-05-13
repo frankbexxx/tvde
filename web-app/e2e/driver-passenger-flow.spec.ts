@@ -37,8 +37,10 @@ async function openDriverMenu(page: Page) {
 }
 
 /**
- * Com `VITE_DRIVER_HOME_TWO_STEP=true`, o passo 1 só mostra mapa/disponibilidade —
- * os botões ACEITAR/REJEITAR estão no passo 2. Este helper é no-op se o two-step estiver desligado.
+ * Com dois passos activos (só quando `VITE_DRIVER_BOTTOM_NAV` está desligado e
+ * `VITE_DRIVER_HOME_TWO_STEP=true`), o passo 1 só mostra mapa/disponibilidade.
+ * Com barra inferior Manel (ambos true em `.env`), o fluxo em 2 passos fica desactivado no código.
+ * Este helper é no-op se não houver passo 1.
  */
 async function leaveDriverHomeStep1IfPresent(page: Page) {
   const step1 = page.getByTestId('driver-home-step1')

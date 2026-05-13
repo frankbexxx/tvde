@@ -47,6 +47,14 @@ def test_recover_driver_requires_auth_401(client: TestClient) -> None:
     assert r.status_code == 401
 
 
+def test_driving_rest_override_requires_auth_401(client: TestClient) -> None:
+    r = client.post(
+        "/admin/drivers/00000000-0000-0000-0000-000000000000/driving-rest-override",
+        json={"governance_reason": "needs auth ten", "rest_until": None},
+    )
+    assert r.status_code == 401
+
+
 def test_cancel_trip_requires_auth_401(client: TestClient) -> None:
     r = client.post("/admin/cancel-trip/00000000-0000-0000-0000-000000000000")
     assert r.status_code == 401
@@ -87,6 +95,15 @@ def test_trip_debug_forbidden_for_plain_admin(client: TestClient) -> None:
 @pytest.mark.usefixtures("admin_auth_override")
 def test_recover_driver_requires_governance_body(client: TestClient) -> None:
     r = client.post("/admin/recover-driver/00000000-0000-0000-0000-000000000000")
+    assert r.status_code == 422
+
+
+@pytest.mark.usefixtures("admin_auth_override")
+def test_driving_rest_override_requires_governance_body(client: TestClient) -> None:
+    r = client.post(
+        "/admin/drivers/00000000-0000-0000-0000-000000000000/driving-rest-override",
+        json={},
+    )
     assert r.status_code == 422
 
 
