@@ -1741,7 +1741,7 @@ export function DriverDashboard() {
                 </div>
               )}
 
-              {!offline && !activeTripId && (
+              {!offline && !activeTripId && !driverMapStageLayout && (
                 <>
                   <StatusHeader
                     label={
