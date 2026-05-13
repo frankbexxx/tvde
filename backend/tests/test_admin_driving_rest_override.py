@@ -14,7 +14,6 @@ from app.api.deps import UserContext, get_current_user
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.user import User
-from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
 
