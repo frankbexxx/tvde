@@ -1322,8 +1322,8 @@ export function DriverDashboard() {
           {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
             <div
               className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
-                ? 'bg-destructive/10 border-destructive/35 text-destructive'
-                : 'bg-warning/15 border-warning/40 text-foreground'
+                  ? 'bg-destructive/10 border-destructive/35 text-destructive'
+                  : 'bg-warning/15 border-warning/40 text-foreground'
                 }`}
               data-testid="driver-driving-hours-banner"
             >
