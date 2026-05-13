@@ -4,13 +4,14 @@ Ligação: plano “lista EXTRA (1–9)” e [`EXTRA-2026-05-13-DECISOES.md`](EX
 
 | Fase | Prompt / trabalho | Estado | PR / notas |
 |------|-------------------|--------|------------|
-| **A** | Decisões 1–10 preenchidas | PENDENTE | Folha DECISOES |
-| **B1** | [`EXTRA-2026-05-13-driver-accept-compact.md`](EXTRA-2026-05-13-driver-accept-compact.md) (**F-1**) | **PR sugerido** | Primeira fatia: `SlideToAccept` `density=compact`, `RequestCard` mais apertado em modo slide, copy mapa; overlay completo fica para B2 |
-| **B2** | [`EXTRA-2026-05-13-driver-map-fullscreen-chrome.md`](EXTRA-2026-05-13-driver-map-fullscreen-chrome.md) (**3+6**) | PENDENTE | Depende B1 ou paralelo com spike |
-| **B3** | [`EXTRA-2026-05-13-driver-home-map-onboarding.md`](EXTRA-2026-05-13-driver-home-map-onboarding.md) (**2**) | PENDENTE | Depois B2 recomendado |
-| **B4** | [`EXTRA-2026-05-13-driver-hours-legal.md`](EXTRA-2026-05-13-driver-hours-legal.md) (**1**) | PENDENTE | Depende decisões legais |
-| **B5** | [`EXTRA-2026-05-13-driver-passenger-copy-audit.md`](EXTRA-2026-05-13-driver-passenger-copy-audit.md) (**7+8**) | PENDENTE | Pode paralelizar com B1 |
+| **A** | Decisões 1–10 preenchidas | **FECHADO** | Folha DECISOES (2026-05-06) |
+| **B1** | [`EXTRA-2026-05-13-driver-accept-compact.md`](EXTRA-2026-05-13-driver-accept-compact.md) (**F-1**) | **Feito** (`main`) | Slider compacto + cartão slide |
+| **F-2** | Partilha app no menu passageiro (QR ou asset) | **Feito** | `PassengerSideMenu` + `react-qr-code`; opcional `VITE_APP_SHARE_URL` |
+| **B2** | [`EXTRA-2026-05-13-driver-map-fullscreen-chrome.md`](EXTRA-2026-05-13-driver-map-fullscreen-chrome.md) (**3+6**) | **Parcial** | `MapView` `tallStage`; overlay menu Radix `bg-black/80` |
+| **B3** | [`EXTRA-2026-05-13-driver-home-map-onboarding.md`](EXTRA-2026-05-13-driver-home-map-onboarding.md) (**2**) | **Parcial** | `VITE_DRIVER_GEO_ON_FIRST_MAP_TAP` + primeiro toque → GPS |
+| **B4** | [`EXTRA-2026-05-13-driver-hours-legal.md`](EXTRA-2026-05-13-driver-hours-legal.md) (**1**) | **PENDENTE** | Backend (janela Lisboa, `ongoing`+`arriving`, bloqueio accept/online, UI) |
+| **B5** | [`EXTRA-2026-05-13-driver-passenger-copy-audit.md`](EXTRA-2026-05-13-driver-passenger-copy-audit.md) (**7+8**) | **PENDENTE** | Inventário antes/depois; 3 pilares por role |
 
-**Testes:** Playwright em fluxos tocados; pytest para backend do item **1**.
+**Testes:** Playwright em fluxos tocados; **pytest** para **B4** quando existir lógica de horas.
 
 Actualizar este ficheiro quando cada **Fase** mudar de estado.

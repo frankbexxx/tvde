@@ -1,5 +1,7 @@
 # Prompt: «Deslizar para aceitar» compacto sobre o mapa + alinhamento UX (F-1)
 
+**Decisões fechadas (2026-05-06):** **8** — slider mais estreito permitido com **altura ≥ 44px** e viewport **360×800**.
+
 **Lista EXTRA:** itens **4** e **5**. **Ligação:** [`TODOdoDIA.md`](../../TODOdoDIA.md) **F-1** — evidência smoke **2026-05-13** (slider **abaixo da dobra** em **360×800**).
 
 ## Objectivo

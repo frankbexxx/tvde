@@ -56,7 +56,7 @@ import { buildMockDriverApproachPath } from '../../dev/buildMockApproachPath'
 import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { startTripSimulation } from '../../dev/tripSimulation'
-import { useGeolocation } from '../../hooks/useGeolocation'
+import { isDemoLocationEnabled, useGeolocation } from '../../hooks/useGeolocation'
 import { useDriverLocationReporter } from '../../hooks/useDriverLocationReporter'
 import {
   fetchDriverLastServerLocation,
@@ -126,7 +126,11 @@ import {
   type DriverRequiredDocument,
 } from '../../services/driverDocuments'
 import { getStoredSessionDisplayName } from '../../utils/authStorage'
-import { isDriverBottomNavEnabled, isDriverHomeTwoStepEnabled } from '../../config/driverHomeFeatures'
+import {
+  isDriverBottomNavEnabled,
+  isDriverGeoOnFirstMapTapEnabled,
+  isDriverHomeTwoStepEnabled,
+} from '../../config/driverHomeFeatures'
 import {
   DRIVER_OPEN_ACCOUNT_EVENT,
   DRIVER_OPEN_ACTIVITY_LOG_EVENT,
@@ -216,13 +220,34 @@ export function DriverDashboard() {
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
+
+  const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
+  const driverBottomNav = isDriverBottomNavEnabled()
+  const driverGeoFirstTap = isDriverGeoOnFirstMapTapEnabled()
+  const [driverGeoUnlocked, setDriverGeoUnlocked] = useState(
+    () => !driverGeoFirstTap || !driverBottomNav
+  )
+
+  const geoWatchEnabled =
+    isMockLocationModeEnabled() ||
+    isDemoLocationEnabled() ||
+    !driverGeoFirstTap ||
+    !driverBottomNav ||
+    Boolean(activeTripId) ||
+    driverGeoUnlocked
+
   const {
     position: geoDriverPosition,
     usedFallback: geolocationUsedFallback,
     retry: retryGeolocation,
   } = useGeolocation({
     mockRole: 'driver',
+    watchEnabled: geoWatchEnabled,
   })
+
+  useEffect(() => {
+    if (activeTripId) setDriverGeoUnlocked(true)
+  }, [activeTripId])
   const [mockSimulatedPosition, setMockSimulatedPosition] = useState<{
     lat: number
     lng: number
@@ -268,12 +293,21 @@ export function DriverDashboard() {
   const menuOpenRef = useRef(menuOpen)
   menuOpenRef.current = menuOpen
   const [driverShellTab, setDriverShellTab] = useState<DriverShellTab>('home')
-  const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
-  const driverBottomNav = isDriverBottomNavEnabled()
   const [driverHomeStep, setDriverHomeStep] = useState<1 | 2>(() =>
     isDriverHomeTwoStepEnabled() ? 1 : 2
   )
   const showDriverHomeStep1 = driverHomeTwoStep && !activeTripId && driverHomeStep === 1
+  const driverMapGeoHint =
+    driverGeoFirstTap &&
+    driverBottomNav &&
+    !driverGeoUnlocked &&
+    !activeTripId &&
+    !isMockLocationModeEnabled() &&
+    !isDemoLocationEnabled()
+
+  const onDriverMapFirstTap = useCallback(() => {
+    setDriverGeoUnlocked(true)
+  }, [])
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
@@ -1036,7 +1070,7 @@ export function DriverDashboard() {
             />
           ) : null}
           {(!offline || driverBottomNav) && (
-            <div className="min-h-[min(52vh,24rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <div className="relative min-h-[min(52vh,24rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
               <MapView
                 className="!rounded-none border-0 !shadow-none"
                 driverLocation={mapDotLatLng}
@@ -1052,7 +1086,19 @@ export function DriverDashboard() {
                 }
                 mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                 compactHeight={false}
+                tallStage={driverBottomNav && !activeTripId}
+                onUserMapInteraction={driverMapGeoHint ? onDriverMapFirstTap : undefined}
               />
+              {driverMapGeoHint ? (
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
+                  aria-hidden
+                >
+                  <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
+                    Toca no mapa para activar a localização precisa
+                  </span>
+                </div>
+              ) : null}
               {driverBottomNav && !showDriverHomeStep1 ? (
                 <div className="border-t border-border bg-muted/35">
                   {offline ? (
@@ -1268,7 +1314,7 @@ export function DriverDashboard() {
             )}
 
             {(!offline || (driverBottomNav && !activeTripId)) && (
-              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                 <MapView
                   className="!rounded-none border-0 !shadow-none"
                   driverLocation={mapDotLatLng}
@@ -1290,7 +1336,19 @@ export function DriverDashboard() {
                         : 'emphasized'
                   }
                   compactHeight={compactDriverSurface}
+                  tallStage={driverBottomNav && !activeTripId}
+                  onUserMapInteraction={driverMapGeoHint ? onDriverMapFirstTap : undefined}
                 />
+                {driverMapGeoHint ? (
+                  <div
+                    className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
+                    aria-hidden
+                  >
+                    <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
+                      Toca no mapa para activar a localização precisa
+                    </span>
+                  </div>
+                ) : null}
                 {!activeTripId && hasAvailableTrips ? (
                   <div className="border-t border-border bg-primary/10 px-3 py-2 text-center">
                     <p className="text-sm font-semibold text-foreground">
