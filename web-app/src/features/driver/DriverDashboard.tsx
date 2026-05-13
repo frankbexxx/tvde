@@ -1171,7 +1171,7 @@ export function DriverDashboard() {
           className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col' : 'contents'}
         >
           <header
-            className={`mb-4 flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
+            className={`${driverMapStageLayout ? 'mb-1' : 'mb-4'} flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
           >
             {driverBottomNav ? (
               <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
@@ -1234,8 +1234,8 @@ export function DriverDashboard() {
                   tallStage={false}
                   onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                 />
-                <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col justify-between gap-2 p-2">
-                  <div className="pointer-events-auto min-h-0 max-h-[min(40dvh,300px)] space-y-2 overflow-y-auto overscroll-contain pr-1">
+                <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col gap-2 p-2">
+                  <div className="pointer-events-auto min-h-0 max-h-[min(28dvh,200px)] shrink-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
                     {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
                       <div className="rounded-xl border border-violet-300 bg-violet-100 px-3 py-2 text-sm text-violet-800 dark:border-violet-400/40 dark:bg-violet-500/15 dark:text-violet-200">
                         <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»:
@@ -1300,7 +1300,10 @@ export function DriverDashboard() {
                         )}
                       </div>
                     ) : null}
-                    {!offline && !!token && !!driverLocation && (
+                    {(import.meta.env.DEV || gpsReport.lastError) &&
+                    !offline &&
+                    !!token &&
+                    !!driverLocation ? (
                       <details
                         className="rounded-lg border border-foreground/10 bg-background/90 px-2 py-1.5 text-[11px] text-foreground/75 shadow-sm backdrop-blur-sm"
                         data-testid="driver-gps-upload-details"
@@ -1344,12 +1347,12 @@ export function DriverDashboard() {
                           )}
                         </div>
                       </details>
-                    )}
+                    ) : null}
                     {!isOnline && (
                       <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
                         <p className="font-medium text-foreground">Sem ligação à internet</p>
                         <p className="text-foreground/80 mt-1">
-                          Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se
+                          Quando voltares a ficar online, a app volta a actualizar. Podes recarregar a página se
                           precisares.
                         </p>
                       </div>
@@ -1398,31 +1401,29 @@ export function DriverDashboard() {
                       </p>
                     ) : null}
                   </div>
-                  <div
-                    id="driver-main-scroll"
-                    className="pointer-events-auto min-h-0 max-h-[min(46dvh,400px)] overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)]"
-                  >
+                  <div className="pointer-events-none mt-auto min-h-0 w-full max-w-full shrink-0">
                     {!offline && !activeTripId ? (
-                      <>
-                        <StatusHeader
-                          label={
-                            hasAvailableTrips
-                              ? filteredAvailable.length === 1
+                      pollEnabled && availableLoading && available == null ? (
+                        <div className="pointer-events-auto flex flex-col items-center justify-center gap-2 rounded-t-2xl border border-border bg-background/92 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.1)] backdrop-blur-md dark:shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
+                          <Spinner size="md" />
+                          <p className="text-sm text-foreground/80">A carregar viagens…</p>
+                        </div>
+                      ) : hasAvailableTrips ? (
+                        <div
+                          id="driver-main-scroll"
+                          className="pointer-events-auto max-h-[min(40dvh,340px)] overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)]"
+                        >
+                          <StatusHeader
+                            label={
+                              filteredAvailable.length === 1
                                 ? '1 viagem disponível'
                                 : `${filteredAvailable.length} viagens disponíveis`
-                              : 'À espera de viagens'
-                          }
-                          variant="idle"
-                          emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
-                          compact={hasAvailableTrips}
-                        />
-                        {pollEnabled && availableLoading && available == null ? (
-                          <div className="flex flex-col items-center justify-center gap-3 py-8 text-foreground/80">
-                            <Spinner size="md" />
-                            <p className="text-sm">A carregar viagens…</p>
-                          </div>
-                        ) : hasAvailableTrips ? (
-                          <ul className="space-y-3 pb-1">
+                            }
+                            variant="idle"
+                            emphasis="subdued"
+                            compact
+                          />
+                          <ul className="mt-2 space-y-3 pb-1">
                             {filteredAvailable.map((t: TripAvailableItem) => (
                               <li key={t.trip_id}>
                                 <RequestCard
@@ -1457,17 +1458,20 @@ export function DriverDashboard() {
                               </li>
                             ))}
                           </ul>
-                        ) : (
-                          <div className="py-6 text-center text-foreground/80">
-                            <p className="text-base">Sem viagens disponíveis.</p>
-                            <p className="text-sm mt-1">
-                              {hasAnyCategoryAwareOffer && filteredOutCount > 0
-                                ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
-                                : 'Histórico em Menu → Viagens.'}
-                            </p>
-                          </div>
-                        )}
-                      </>
+                        </div>
+                      ) : (
+                        <div
+                          id="driver-main-scroll"
+                          className="pointer-events-auto mx-auto max-w-[min(100%,24rem)] rounded-2xl border border-border/55 bg-background/78 px-4 py-2.5 text-center shadow-lg backdrop-blur-md"
+                        >
+                          <p className="text-sm font-semibold text-foreground">À espera de viagens</p>
+                          <p className="mt-1 text-xs leading-snug text-foreground/75">
+                            {hasAnyCategoryAwareOffer && filteredOutCount > 0
+                              ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
+                              : 'Sem pedidos. Histórico em Menu → Viagens.'}
+                          </p>
+                        </div>
+                      )
                     ) : null}
                   </div>
                 </div>
