@@ -128,7 +128,7 @@ export function AppRoutes() {
     <div className="min-h-dvh bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto">
       <AppHeaderBar />
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
-        <main className="flex-1 overflow-y-auto min-h-0 min-w-0">
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
           <Routes>
             <Route path="/dl" element={<AppDownloadRedirect />} />
             <Route path="/app" element={<AppDownloadRedirect />} />

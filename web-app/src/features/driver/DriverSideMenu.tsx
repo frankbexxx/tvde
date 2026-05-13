@@ -118,6 +118,10 @@ export function DriverSideMenu(props: {
   onToggleDriverDocsGate: (enabled: boolean) => void
   onReportIncident: (tripId: string) => void
   renderLegacyMenu: (section: DriverMenuScreen) => React.ReactNode
+  /** Offline com shell: alternativa acessível ao toque no mapa. */
+  shellOffline?: boolean
+  activeTripId?: string | null
+  onRequestGoAvailable?: () => void
 }) {
   const {
     open,
@@ -126,6 +130,9 @@ export function DriverSideMenu(props: {
     onScreenChange,
     sessionDisplayName,
     renderLegacyMenu,
+    shellOffline,
+    activeTripId,
+    onRequestGoAvailable,
   } = props
   const { sessionPhone, logout } = useAuth()
 
@@ -188,6 +195,20 @@ export function DriverSideMenu(props: {
                     </span>
                   </div>
                 </div>
+
+                {onRequestGoAvailable && shellOffline && !activeTripId ? (
+                  <button
+                    type="button"
+                    data-testid="driver-menu-go-available"
+                    onClick={() => {
+                      onRequestGoAvailable()
+                      close()
+                    }}
+                    className="w-full min-h-[48px] rounded-xl border border-primary/35 bg-primary/10 px-4 text-left text-sm font-semibold text-primary hover:bg-primary/15 touch-manipulation"
+                  >
+                    Ficar disponível
+                  </button>
+                ) : null}
 
                 <div className="space-y-2">
                   <RootItem

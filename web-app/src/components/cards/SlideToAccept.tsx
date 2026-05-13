@@ -1,7 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 
 const THUMB_SIZE_DEFAULT = 48
-const THUMB_SIZE_COMPACT = 44
+/** Alinhado ao thumb `h-9 w-9` (36px) em `compact`. */
+const THUMB_SIZE_COMPACT = 36
 const THRESHOLD_RATIO = 0.86
 
 export function SlideToAccept({
@@ -11,7 +12,7 @@ export function SlideToAccept({
   label = 'Deslizar para aceitar',
   testId,
   tapTestId,
-  /** `compact`: menos altura para caber acima da dobra em 360×800 (F-1 smoke 2026-05-13). */
+  /** `compact`: faixa mais baixa — lista motorista / folha inferior no mapa. */
   density = 'default',
 }: {
   onConfirm: () => void
@@ -25,8 +26,8 @@ export function SlideToAccept({
   density?: 'default' | 'compact'
 }) {
   const thumbSize = density === 'compact' ? THUMB_SIZE_COMPACT : THUMB_SIZE_DEFAULT
-  const trackHeightClass = density === 'compact' ? 'h-12' : 'h-[52px]'
-  const thumbShift = density === 'compact' ? 'top-0.5 left-0.5 h-11 w-11 text-sm' : 'top-1 left-1 h-11 w-11'
+  const trackHeightClass = density === 'compact' ? 'h-10' : 'h-[52px]'
+  const thumbShift = density === 'compact' ? 'top-0.5 left-0.5 h-9 w-9 text-xs' : 'top-1 left-1 h-11 w-11'
   const trackRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef(false)
   const startPointerRef = useRef(0)
@@ -64,10 +65,10 @@ export function SlideToAccept({
     [disabled, loading, maxOffset, onConfirm]
   )
 
-  const labelPadClass = density === 'compact' ? 'px-11' : 'px-14'
+  const labelPadClass = density === 'compact' ? 'px-10' : 'px-14'
 
   return (
-    <div className="flex flex-col gap-1.5 w-full" data-testid={testId}>
+    <div className={`flex flex-col w-full ${density === 'compact' ? 'gap-1' : 'gap-1.5'}`} data-testid={testId}>
       <div
         ref={trackRef}
         data-testid={testId ? `${testId}-track` : 'driver-slide-accept-track'}
@@ -98,7 +99,7 @@ export function SlideToAccept({
       >
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span
-            className={`text-xs font-semibold text-foreground/75 ${labelPadClass} text-center leading-tight`}
+            className={`${density === 'compact' ? 'text-[11px]' : 'text-xs'} font-semibold text-foreground/75 ${labelPadClass} text-center leading-tight`}
           >
             {label}
           </span>
@@ -117,7 +118,11 @@ export function SlideToAccept({
       <button
         type="button"
         data-testid={tapTestId}
-        className="min-h-[44px] w-full rounded-full border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50"
+        className={
+          density === 'compact'
+            ? 'min-h-[40px] w-full rounded-full border border-border bg-card px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50'
+            : 'min-h-[44px] w-full rounded-full border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50'
+        }
         disabled={Boolean(disabled || loading)}
         onClick={() => {
           if (!disabled && !loading) onConfirm()
