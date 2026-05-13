@@ -20,12 +20,12 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 |----|------|--------|-------|
 | **A2-02-1** | OAuth `GOOGLE_OAUTH_*` na API **staging** + URIs Google | Em curso | Ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14** |
 | **A2-02-2** | Smokes assertivos **staging** | Por iniciar | Depende de A2-02-1 onde aplicável |
-| **A2-02-3** | Fecho checklist §A2-03 / §A3 no audit | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
-| **X-1** … **X-9** | Lista **EXTRA** produto (som, nocturno, wake lock, docs partner, QR, swipe, UX…) | Por iniciar / N/A (X-4) | Detalhe nas tabelas do painel **2026-05-14** |
-| **R-1** | Rotacional v3 | Por iniciar | [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) |
-| **F-1** | Motorista: CTA aceitar visível sem scroll (360×800) | Por iniciar | [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-14** |
-| **F-2** | Passageiro: menu → QR no ecrã | Por iniciar | Idem |
-| **F-3** … **F-6** | Placeholders issues (Lista Frank) | Por iniciar | Preencher nº GitHub no painel |
+| **A2-02-3** | Fecho checklist §A2-03 / §A3 no audit | Concluído | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) — actualizado na mesma PR; OAuth/smokes = A2-02-1/2 |
+| **X-1** … **X-9** | Lista **EXTRA** produto | Concluído / N/A (X-4) | Ver tabelas **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md) |
+| **R-1** | Rotacional v3 | Concluído | Cache HTTP + cron; ver [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) |
+| **F-1** | Motorista: CTA aceitar visível sem scroll (360×800) | Concluído | [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-14** |
+| **F-2** | Passageiro: menu → QR no ecrã | Concluído | Idem |
+| **F-3** … **F-6** | Placeholders issues (Lista Frank) | N/A | [`MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](../product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) |
 
 - [x] **Linha rotacional v2 (infra)** — `GET /rotacional/messages` + `ROTACIONAL_FEED_JSON` + `AppHeaderBar`; spec [`docs/product/ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) (**2026-05-11**).
 
@@ -67,7 +67,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 3. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
 4. ~~**Lembrete operacional — Stripe**~~ — **2026-05-11:** mock reposto em piloto; ver [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) § *Repor modo mock*.
 5. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*
-6. **Backlog** (sem data) — **rotacional v3** (spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md)); **A+L** — fecho **A2-02** (OAuth/smokes **staging**) + **A4**; **EXTRA** produto (som oferta, nocturno, wake lock, partner/docs, QR partilhável, swipe aceitar, UX driver) em [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**; docs [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
+6. **Backlog** (sem data) — ~~**rotacional v3**~~ **feito** (cache + `ROTACIONAL_V3_FETCH_URL` + cron); **A+L** — fecho **A2-02** (OAuth/smokes **staging**) + **A4**; **EXTRA** produto — ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**; docs [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
 
 **Nota:** **Ronda smokes prod 2026-05-13** fechada (grelha **S-** no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**). **S-13** concluído **sem** reexecutar W1 (sem delta Stripe/cron). Daqui em diante: **E2E/pytest** no que for repetível; **smoke humano em prod** só **assertivo** quando houver **delta** no fluxo ou após deploy relevante — ver bloco *Testes automáticos vs smokes* no mesmo painel. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
@@ -78,7 +78,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] **Top 3 Manel (onda fechada)** — **§10.2 + barra Rendimentos + deep link** em `main` (**#280**, 2026-05-06). Spec: [`docs/product/DRIVER_HOME_TOP3_MANEL.md`](product/DRIVER_HOME_TOP3_MANEL.md). **Sem tarefa aberta:** permuta de ordem entre secções (§10.4) só quando o Manel enviar feedback; até lá a ordem canónica do spec mantém-se. Regressão UI motorista: smoke `DRIVER_MENU_SPEC.md` §7.8 quando se tocar no `DriverDashboard` / menu.
 - [x] **Zonas v1 (fatia técnica)** — geo **catálogo** por `zone_id` (âncoras + **porto**); **orçamento extra** >2/dia via partner (`grant-extra` + UI frota). Prompt: [`docs/prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md`](prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md).
 - [x] **Rotacional v2** — feed público opcional (`ROTACIONAL_FEED_JSON` + `GET /rotacional/messages`) + cabeçalho; **em `main`** + spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md).
-- [ ] **Rotacional v3** — job/cron + cache (~1 h) a puxar fontes externas (ex.: IPMA, Prociv onde aplicável; [Meteopt](https://www.meteopt.com) só após validar termos); substituir ou complementar o JSON curado quando fizer sentido.
+- [ ] **Rotacional v3** — ~~job/cron + cache~~ entregue (`ROTACIONAL_V3_FETCH_URL`); evolução: fontes IPMA/Prociv com ToS próprias.
 - [ ] **Rumo A+L** — **A2-02** fecho (OAuth staging + smokes + §A2-03) + **A4**; **EXTRA** motorista/partner/QR/som (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**); docs [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md), [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md). Fonte: [`PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md).
 
 ---

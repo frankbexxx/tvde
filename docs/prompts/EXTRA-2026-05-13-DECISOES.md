@@ -23,9 +23,9 @@ As linhas da tabela **1–10** permanecem como histórico; abaixo ficam **fechos
 
 | Tema | Decisão |
 |------|---------|
-| **Home motorista (era decisão 7 “adiada”)** | **Ecrã único** com barra Manel: **um toque** para ficar disponível (pills no mapa). Com `VITE_DRIVER_BOTTOM_NAV=true`, o fluxo em **dois passos** fica **desactivado no código** (`isDriverHomeTwoStepEnabled`); `VITE_DRIVER_HOME_TWO_STEP` aplica-se só **sem** bottom nav (legacy). |
+| **Home motorista (era decisão 7 “adiada”)** | **Ecrã único** com barra Manel: **mapa por detrás** como palco; **interacção no mapa** (toque para disponível / GPS). **Uma superfície** — não narrar “dois ecrãs” ao utilizador. Com `VITE_DRIVER_BOTTOM_NAV=true`, fluxo em **dois passos** fica **desactivado** no código (`isDriverHomeTwoStepEnabled`); `VITE_DRIVER_HOME_TWO_STEP` só **sem** bottom nav (legacy). |
 | **Override repouso / horas (decisão 4)** | **Só backoffice `admin`** para actos legalmente sensíveis; **partner** sem este fluxo até existir âmbito não-legal explícito. **API + UI** Ops: `POST /admin/drivers/{id}/driving-rest-override` com auditoria SP-F. |
-| **Texto legal horas (decisão 1)** | **PLACEHOLDER** na app até validação do diploma e articulados; pré-visualização marcada como `[PLACEHOLDER]` no banner motorista. |
+| **Texto legal horas (decisão 1)** | Copy **operacional curta** no banner (sem alegar diploma); detalhe normativo fora da app até counsel. |
 | **Overlay menu / mapa (rodapé DECISOES)** | **Manter** `bg-black/80` — **suficiente**; sem novo requisito. |
 | **Nav inferior “mesma filosofia” (extensão §9)** | **Ordem:** **passageiro primeiro**, **partner a seguir**; admin alvejar quando relevante. |
 | **Playwright / smokes** | **Recomendação**, não gate obrigatório de merge. |
