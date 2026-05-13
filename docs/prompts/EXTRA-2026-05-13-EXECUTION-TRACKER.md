@@ -10,7 +10,7 @@ Ligação: plano “lista EXTRA (1–9)” e [`EXTRA-2026-05-13-DECISOES.md`](EX
 | **B2** | [`EXTRA-2026-05-13-driver-map-fullscreen-chrome.md`](EXTRA-2026-05-13-driver-map-fullscreen-chrome.md) (**3+6**) | **Parcial** | `MapView` `tallStage`; overlay menu Radix `bg-black/80` |
 | **B3** | [`EXTRA-2026-05-13-driver-home-map-onboarding.md`](EXTRA-2026-05-13-driver-home-map-onboarding.md) (**2**) | **Parcial** | `VITE_DRIVER_GEO_ON_FIRST_MAP_TAP` + primeiro toque → GPS |
 | **B4** | [`EXTRA-2026-05-13-driver-hours-legal.md`](EXTRA-2026-05-13-driver-hours-legal.md) (**1**) | **Feito (v1)** | Segmentos `arriving`/`ongoing`, dia civil `Europe/Lisbon`, `GET /driver/status/compliance/driving-hours`, bloqueio accept/online, UI motorista; **admin override** de `driving_rest_until` pode vir num PR pequeno |
-| **B5** | [`EXTRA-2026-05-13-driver-passenger-copy-audit.md`](EXTRA-2026-05-13-driver-passenger-copy-audit.md) (**7+8**) | **PENDENTE** | Inventário antes/depois; 3 pilares por role |
+| **B5** | [`EXTRA-2026-05-13-driver-passenger-copy-audit.md`](EXTRA-2026-05-13-driver-passenger-copy-audit.md) (**7+8**) | **Feito (v1)** | [`EXTRA-2026-05-13-B5-antes-depois.md`](EXTRA-2026-05-13-B5-antes-depois.md); `PassengerDashboard`, `TripPlannerPanel`, microcopy `DriverDashboard` |
 
 **Testes:** Playwright em fluxos tocados; **pytest** para **B4** quando existir lógica de horas.
 

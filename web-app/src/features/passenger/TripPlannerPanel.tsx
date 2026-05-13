@@ -64,6 +64,10 @@ export interface TripPlannerPanelProps {
    * em `in_trip`, mantendo pagamento / distância ao motorista / polling.
    */
   inTripSuppressEstadoEcho?: boolean
+  /**
+   * Quando o cartão de estado já mostra a mesma linha de pagamento (ex. `TRIP_ONGOING` pendente/a processar/falhado).
+   */
+  inTripSuppressPaymentEcho?: boolean
 }
 
 /**
@@ -95,20 +99,21 @@ function TripPlannerPanelInner({
   visualWeight = 'default',
   embedded = false,
   inTripSuppressEstadoEcho = false,
+  inTripSuppressPaymentEcho = false,
 }: TripPlannerPanelProps) {
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
 
   const panelSurface = embedded
     ? 'border-0 bg-transparent shadow-none opacity-100'
     : (() => {
-        if (isSubdued) {
-          return 'border-border/70 bg-card/95 shadow-sm opacity-90'
-        }
-        if (uiState === 'planning' || uiState === 'confirming') {
-          return 'border-border bg-card shadow-inner'
-        }
-        return 'bg-card border-border shadow-card'
-      })()
+      if (isSubdued) {
+        return 'border-border/70 bg-card/95 shadow-sm opacity-90'
+      }
+      if (uiState === 'planning' || uiState === 'confirming') {
+        return 'border-border bg-card shadow-inner'
+      }
+      return 'bg-card border-border shadow-card'
+    })()
 
   const emphasisWrap =
     embedded ? '' : isSubdued
@@ -166,7 +171,7 @@ function TripPlannerPanelInner({
             <span className="text-foreground">{dropLine}</span>
           </p>
           <div className="flex flex-col gap-2 pt-1">
-            {hasPickup && !hasDropoff && (
+            {hasPickup && !hasDropoff && !embedded && (
               <button
                 type="button"
                 onClick={onSetDestinationHint}
@@ -296,7 +301,7 @@ function TripPlannerPanelInner({
               </span>
             </p>
           ) : null}
-          {inTripPaymentLine ? (
+          {inTripPaymentLine && !inTripSuppressPaymentEcho ? (
             <p className="text-sm text-foreground/80">Pagamento: {inTripPaymentLine}</p>
           ) : null}
           {driverTrackingHint ? (

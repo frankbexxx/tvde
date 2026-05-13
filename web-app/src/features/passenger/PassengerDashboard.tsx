@@ -736,6 +736,13 @@ export function PassengerDashboard() {
     [passengerUiState, uxState, activeTrip]
   )
 
+  /** B5: mesmo texto de pagamento já aparece em `PassengerStatusCard` em `TRIP_ONGOING` (subconjunto de estados). */
+  const inTripSuppressPlannerPaymentEcho = useMemo(() => {
+    if (passengerUiState !== 'in_trip' || uxState !== 'TRIP_ONGOING' || !activeTrip) return false
+    const ps = activeTrip.payment_status
+    return ps === 'pending' || ps === 'processing' || ps === 'failed'
+  }, [passengerUiState, uxState, activeTrip])
+
   /** Painel inferior: omitir "searching" duplicado quando já há PassengerStatusCard em requested */
   const showTripPlannerPanel = useMemo(() => {
     if (tripCompletedFromLocation) return false
@@ -1272,6 +1279,7 @@ export function PassengerDashboard() {
                 }
                 visualWeight={a021Layout.panel}
                 inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
+                inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
               />
             </div>
           </section>
@@ -1283,7 +1291,7 @@ export function PassengerDashboard() {
               variant={banner.variant}
               emphasis={statusHeaderEmphasis}
             />
-            {tripPollFootnote ? (
+            {tripPollFootnote && !showTripPlannerPanel ? (
               <p
                 className="text-center text-sm text-foreground/75 -mt-3 mb-5 min-h-[1.25rem]"
                 aria-live="polite"
@@ -1353,6 +1361,7 @@ export function PassengerDashboard() {
                 }
                 visualWeight={a021Layout.panel}
                 inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
+                inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
               />
             )}
           </>
