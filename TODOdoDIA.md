@@ -55,8 +55,8 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **X-4** | Reservado (lista original) | N/A | Marcado feito pelo autor no painel 2026-05-13 |
 | **X-5** | Partner: documentos de veículos e motoristas | Por iniciar | Testar |
 | **X-6** | Driver → partner: documentos, caducidade, centralização | Por iniciar | Testar |
-| **X-7** | QR partilhável: **visível na app** (menu passageiro → botão → imagem) | Smoke pendente | **F-2**; [`/download`](https://tvde-app-j51f.onrender.com/download) é URL pública auxiliar; não substitui o critério «vês com os olhos» |
-| **X-8** | Driver: deslizar para aceitar oferta | Smoke pendente | **F-1** — ronda **2026-05-13**: CTA abaixo da dobra em **360×800** (prints) |
+| **X-7** | QR partilhável: **visível na app** (menu passageiro → botão → imagem) | Concluído | Menu [`PassengerSideMenu`](web-app/src/features/passenger/PassengerSideMenu.tsx): «Partilhar app (QR)» + `react-qr-code`; `/download` continua URL auxiliar |
+| **X-8** | Driver: deslizar para aceitar oferta | Concluído | **F-1** entregue em código: folha inferior com `max-h` por número de ofertas; REJEITAR compacto slide; `main` sem scroll em `/driver`; gradiente no palco do mapa |
 | **X-9** | Driver: repensar ecrã principal (simplicidade) | Por iniciar | A falar |
 
 ### Rasto / backlog (**R-**)
@@ -83,7 +83,7 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **S-03** | Pedido de viagem — estado **antes** de motorista | Concluído | **D** |
 | **S-04** | Login **motorista** | Concluído | **B** MOTORISTA |
 | **S-05** | Motorista disponível / recebe oferta | Concluído | **E** |
-| **S-06** | Aceitar oferta (toque ou swipe, o que houver em prod) | Concluído | **F**; defeito UX **aceitar** abaixo da dobra **360×800** documentado — fluxo não bloqueado (**F-1**) |
+| **S-06** | Aceitar oferta (toque ou swipe, o que houver em prod) | Concluído | **F**; follow-up **F-1** aplicado no código (folha compacta 1 oferta, etc.) |
 | **S-07** | Sincronização: passageiro e motorista com estado coerente | Concluído | **G** |
 | **S-08** | Conclusão da viagem + pós-viagem (rating/copy conforme UI) | Concluído | Rating fechado na mesma ronda |
 | **S-09** | Login **partner** (Frota) | Concluído | **B** FROTA + **H** |
@@ -100,8 +100,8 @@ Prioridade: **alargar Playwright / pytest** onde já há cobertura (ex. `npm run
 
 | ID | Fix / tema | Issue (GitHub) | Estado | Notas |
 |----|------------|----------------|--------|-------|
-| **F-1** | Motorista: «Deslizar para aceitar» / CTA principal **visível sem scroll** (viewport **360×800**) | — | Por iniciar | Evidência: prints ronda 2026-05-13 |
-| **F-2** | Passageiro: menu → botão → **imagem QR** no ecrã (asset na build, ex. `public/`) | — | Por iniciar | Critério aceitação: **visível com olhos** |
+| **F-1** | Motorista: «Deslizar para aceitar» / CTA principal **visível sem scroll** (viewport **360×800**) | — | Concluído | Código: caps da folha (`max-h` 1 vs várias ofertas), REJEITAR compacto em slide, `overflow-hidden` em `main` só `/driver`, gradiente palco mapa; `npm run build` |
+| **F-2** | Passageiro: menu → botão → **imagem QR** no ecrã (asset na build, ex. `public/`) | — | Concluído | QR dinâmico no menu passageiro (`react-qr-code`); não exige PNG estático em `public/` |
 | **F-3** | *(placeholder — lista Frank 5–6 issues)* | — | Por iniciar | Preencher nº |
 | **F-4** | *(placeholder)* | — | Por iniciar | Preencher nº |
 | **F-5** | *(placeholder)* | — | Por iniciar | Preencher nº |

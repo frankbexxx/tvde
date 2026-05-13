@@ -1280,6 +1280,10 @@ export function DriverDashboard() {
                     tallStage={false}
                     onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                   />
+                  <div
+                    className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-14 bg-gradient-to-t from-background/80 to-transparent dark:from-background/85"
+                    aria-hidden
+                  />
                   <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col gap-2 p-2">
                     <div className="pointer-events-auto min-h-0 max-h-[min(28dvh,220px)] shrink-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
                       {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
@@ -1447,7 +1451,12 @@ export function DriverDashboard() {
                     {!offline && !activeTripId ? (
                       <div
                         id="driver-main-scroll"
-                        className="pointer-events-auto mt-auto min-h-0 max-h-[min(46dvh,400px)] overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)]"
+                        className={`pointer-events-auto mt-auto min-h-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)] ${filteredAvailable.length === 1
+                          ? 'max-h-[min(34dvh,300px)]'
+                          : filteredAvailable.length > 1
+                            ? 'max-h-[min(42dvh,380px)]'
+                            : 'max-h-[min(46dvh,400px)]'
+                          }`}
                       >
                         <>
                           <StatusHeader
@@ -1765,7 +1774,7 @@ export function DriverDashboard() {
                             : `${filteredAvailable.length} pedidos no mapa`}
                         </p>
                         <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
-                          Primeira oferta na carta abaixo — deslizar ou «Aceitar com um toque».
+                          Oferta na folha por baixo do mapa — desliza ou «Aceitar com um toque».
                         </p>
                       </div>
                     ) : null}
