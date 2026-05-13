@@ -104,7 +104,11 @@ export function RequestCard({
               onClick={onReject}
               disabled={Boolean(loading || rejectLoading)}
               data-testid={rejectButtonTestId}
-              className="min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-destructive/70 bg-transparent px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+              className={
+                slideCompact
+                  ? 'min-h-[44px] w-full rounded-full border-2 border-destructive/70 bg-transparent px-3 text-xs font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+                  : 'min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-destructive/70 bg-transparent px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+              }
             >
               {rejectLoading ? (
                 <span className="inline-flex items-center justify-center gap-2">
