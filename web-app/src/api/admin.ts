@@ -220,6 +220,30 @@ export async function recoverDriver(
   })
 }
 
+export interface AdminDrivingRestOverrideResponse {
+  driver_id: string
+  driving_rest_until: string | null
+}
+
+/** Override de `driving_rest_until` — só `Role.admin`; auditoria em `audit_events`. */
+export async function postAdminDrivingRestOverride(
+  driverId: string,
+  token: string,
+  body: { governance_reason: string; rest_until: string | null }
+): Promise<AdminDrivingRestOverrideResponse> {
+  return apiFetch<AdminDrivingRestOverrideResponse>(
+    `/admin/drivers/${driverId}/driving-rest-override`,
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify({
+        governance_reason: body.governance_reason.trim(),
+        rest_until: body.rest_until,
+      }),
+    }
+  )
+}
+
 export async function exportLogsCsv(token: string): Promise<Blob> {
   const res = await fetch(`${API_BASE}/admin/export-logs?format=csv`, {
     headers: { Authorization: `Bearer ${token}` },

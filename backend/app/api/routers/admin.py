@@ -2,6 +2,7 @@ import csv
 import io
 import time
 import uuid
+from datetime import datetime, timezone
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -141,6 +142,17 @@ class AdminGovernanceReasonBody(BaseModel):
     """SP-F: justificação mínima para acções sensíveis (fica em `audit_events` quando aplicável)."""
 
     governance_reason: str = Field(..., min_length=10, max_length=500)
+
+
+class AdminDrivingRestOverrideBody(AdminGovernanceReasonBody):
+    """Override de repouso TVDE (`Driver.driving_rest_until`); `rest_until` null limpa."""
+
+    rest_until: datetime | None = None
+
+
+class AdminDrivingRestOverrideResponse(BaseModel):
+    driver_id: str
+    driving_rest_until: datetime | None = None
 
 
 class AdminReconcilePaymentsRunBody(AdminGovernanceReasonBody):
@@ -1437,6 +1449,53 @@ async def recover_driver(
     db.commit()
     db.refresh(driver)
     return RecoverDriverResponse(driver_id=str(driver.user_id), is_available=True)
+
+
+@router.post(
+    "/drivers/{driver_id}/driving-rest-override",
+    response_model=AdminDrivingRestOverrideResponse,
+)
+async def admin_driving_rest_override(
+    driver_id: str,
+    body: AdminDrivingRestOverrideBody,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> AdminDrivingRestOverrideResponse:
+    """Define ou limpa `driving_rest_until` (override após decisão 4 — só backoffice, auditável)."""
+    try:
+        driver_uuid = uuid.UUID(driver_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid_driver_id")
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_uuid)
+    ).scalar_one_or_none()
+    if not driver:
+        raise HTTPException(status_code=404, detail="driver_not_found")
+
+    prev = driver.driving_rest_until
+    if body.rest_until is not None:
+        driver.driving_rest_until = body.rest_until.astimezone(timezone.utc)
+    else:
+        driver.driving_rest_until = None
+
+    record_admin_action(
+        db,
+        actor_user_id=user.user_id,
+        action="driver_driving_rest_override",
+        entity_type="driver",
+        entity_id=str(driver.user_id),
+        payload={
+            "governance_reason": body.governance_reason.strip()[:500],
+            "before": prev.isoformat() if prev else None,
+            "after": driver.driving_rest_until.isoformat() if driver.driving_rest_until else None,
+        },
+    )
+    db.commit()
+    db.refresh(driver)
+    return AdminDrivingRestOverrideResponse(
+        driver_id=str(driver.user_id),
+        driving_rest_until=driver.driving_rest_until,
+    )
 
 
 @router.post("/cancel-trip/{trip_id}", response_model=TripStatusResponse)

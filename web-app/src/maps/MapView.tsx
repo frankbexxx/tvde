@@ -54,6 +54,8 @@ export interface MapViewProps {
   compactHeight?: boolean
   /** Mapa mais alto no ecrã principal motorista (shell com bottom nav). */
   tallStage?: boolean
+  /** Preenche o pai com `position:relative` + altura definida (B2 — palco mapa). */
+  fillContainer?: boolean
   /** Chamado em qualquer clique no mapa (antes do planeamento, se definido). */
   onUserMapInteraction?: () => void
 }
@@ -87,6 +89,7 @@ export function MapView({
   tripDropoff = null,
   compactHeight = false,
   tallStage = false,
+  fillContainer = false,
   onUserMapInteraction,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
@@ -245,8 +248,11 @@ export function MapView({
   const mapClickHandler = onPlanningMapClick || onUserMapInteraction ? handleMapClick : undefined
 
   const isSubdued = mapVisualWeight === 'subdued'
-  const frameClass = `relative w-full rounded-2xl overflow-hidden bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${isSubdued ? 'shadow-sm opacity-95' : 'shadow-card'
-    } ${className ?? ''}`
+  const frameClass = fillContainer
+    ? `relative h-full w-full min-h-[200px] overflow-hidden rounded-none bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${isSubdued ? 'shadow-sm opacity-95' : ''
+      } ${className ?? ''}`
+    : `relative w-full rounded-2xl overflow-hidden bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${isSubdued ? 'shadow-sm opacity-95' : 'shadow-card'
+      } ${className ?? ''}`
 
   if (!showMap) {
     return (
@@ -285,12 +291,16 @@ export function MapView({
       aria-label={onPlanningMapClick ? 'Mapa interactivo — selecciona recolha e destino' : 'Mapa da viagem'}
     >
       <div
-        className={`relative ${compactHeight
-            ? 'h-[33vh] min-h-[170px] max-h-[280px]'
-            : tallStage
-              ? 'h-[min(56dvh,32rem)] min-h-[240px] max-h-[560px]'
-              : 'h-[45vh] min-h-[220px] max-h-[420px]'
-          }`}
+        className={
+          fillContainer
+            ? 'absolute inset-0 min-h-[200px]'
+            : `relative ${compactHeight
+                ? 'h-[33vh] min-h-[170px] max-h-[280px]'
+                : tallStage
+                  ? 'h-[min(62dvh,36rem)] min-h-[240px] max-h-[560px]'
+                  : 'h-[45vh] min-h-[220px] max-h-[420px]'
+              }`
+        }
       >
         <Map
           ref={mapRef}

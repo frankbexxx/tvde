@@ -306,6 +306,8 @@ export function DriverDashboard() {
     isDriverHomeTwoStepEnabled() ? 1 : 2
   )
   const showDriverHomeStep1 = driverHomeTwoStep && !activeTripId && driverHomeStep === 1
+  /** B2: mapa em palco fixo; lista/avisos em scroll separado (sem roubar pan ao mapa). */
+  const driverMapStageLayout = Boolean(driverBottomNav && !activeTripId && !showDriverHomeStep1)
   const driverMapGeoHint =
     driverGeoFirstTap &&
     driverBottomNav &&
@@ -340,6 +342,13 @@ export function DriverDashboard() {
     },
     [addLog, driverDocsGateEnabled, driverDocuments, setStatus]
   )
+
+  /** B3: primeiro toque no mapa (modo geo-on-tap) desbloqueia GPS e fica disponível num único gesto. */
+  const onDriverHomeMapInteraction = useCallback(() => {
+    if (!driverMapGeoHint) return
+    onDriverMapFirstTap()
+    handleDriverAvailabilityChange(true)
+  }, [driverMapGeoHint, onDriverMapFirstTap, handleDriverAvailabilityChange])
 
   const pollEnabled = !!token && !offline
 
@@ -895,6 +904,7 @@ export function DriverDashboard() {
       bottomButton={bottomChrome}
       bottomBarVariant={activeTripId ? 'inset' : driverBottomNav ? 'flush' : 'inset'}
       mainScrollId="driver-main-scroll"
+      mainScrollable={!driverMapStageLayout}
     >
       <DriverSideMenu
         open={menuOpen}
@@ -1122,7 +1132,7 @@ export function DriverDashboard() {
                 mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                 compactHeight={false}
                 tallStage={driverBottomNav && !activeTripId}
-                onUserMapInteraction={driverMapGeoHint ? onDriverMapFirstTap : undefined}
+                onUserMapInteraction={driverMapGeoHint ? onDriverHomeMapInteraction : undefined}
               />
               {driverMapGeoHint ? (
                 <div
@@ -1130,17 +1140,17 @@ export function DriverDashboard() {
                   aria-hidden
                 >
                   <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                    Toca no mapa para activar a localização precisa
+                    Toca no mapa para ficares disponível e activar o GPS
                   </span>
                 </div>
               ) : null}
               {driverBottomNav && !showDriverHomeStep1 ? (
                 <div className="border-t border-border bg-muted/35">
-                  {offline ? (
+                  {offline && !driverMapGeoHint ? (
                     <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
-                  ) : (
+                  ) : !offline ? (
                     <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
-                  )}
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -1175,7 +1185,9 @@ export function DriverDashboard() {
           ) : null}
         </div>
       ) : (
-        <>
+        <div
+          className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col' : 'contents'}
+        >
           <header
             className={`mb-4 flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
           >
@@ -1212,6 +1224,71 @@ export function DriverDashboard() {
             </div>
           </header>
 
+          {driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
+            <div className="relative h-[min(58dvh,calc(100dvh-12rem))] min-h-[240px] w-[calc(100%+2.5rem)] shrink-0 -mx-5 overflow-hidden border-y border-border bg-card shadow-sm">
+              <MapView
+                fillContainer
+                className="!rounded-none border-0 !shadow-none"
+                driverLocation={mapDotLatLng}
+                tripPickup={availableOfferMapPreview?.pickup ?? null}
+                tripDropoff={availableOfferMapPreview?.dropoff ?? null}
+                route={
+                  import.meta.env.DEV &&
+                    isMockLocationModeEnabled() &&
+                    mockStableRouteEndpoints &&
+                    activeTripId
+                    ? mockStableRouteEndpoints
+                    : undefined
+                }
+                mapVisualWeight={
+                  offline && driverBottomNav && !activeTripId
+                    ? 'subdued'
+                    : activeTripId || (available && available.length > 0)
+                      ? 'subdued'
+                      : 'emphasized'
+                }
+                compactHeight={false}
+                tallStage={false}
+                onUserMapInteraction={driverMapGeoHint ? onDriverHomeMapInteraction : undefined}
+              />
+              {driverMapGeoHint ? (
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
+                  aria-hidden
+                >
+                  <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
+                    Toca no mapa para ficares disponível e activar o GPS
+                  </span>
+                </div>
+              ) : null}
+              {!activeTripId && hasAvailableTrips ? (
+                <div className="border-t border-border bg-primary/10 px-3 py-2 text-center">
+                  <p className="text-sm font-semibold text-foreground">
+                    {filteredAvailable.length === 1
+                      ? '1 pedido no mapa'
+                      : `${filteredAvailable.length} pedidos no mapa`}
+                  </p>
+                  <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
+                    Primeira oferta na carta abaixo — deslizar ou «Aceitar com um toque».
+                  </p>
+                </div>
+              ) : null}
+              {driverBottomNav && !activeTripId ? (
+                <div className="border-t border-border bg-muted/35">
+                  {offline && !driverMapGeoHint ? (
+                    <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
+                  ) : !offline ? (
+                    <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          <div
+            className={driverMapStageLayout ? 'flex min-h-0 flex-1 flex-col overflow-y-auto' : 'contents'}
+            id={driverMapStageLayout ? 'driver-main-scroll' : undefined}
+          >
           {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
             <div className="rounded-xl bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
               <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»: até ao destino (OSRM, 1&nbsp;s por ponto).
@@ -1254,8 +1331,9 @@ export function DriverDashboard() {
                 <>
                   <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
                   <p className="mt-1 text-foreground/90 leading-snug">
-                    Não podes ficar disponível nem aceitar novas viagens até cumprires o período de repouso ou o
-                    limite diário deixar de aplicar (dia civil, Lisboa). Texto genérico — quadro legal a validar.
+                    [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
+                    repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto genérico — substituir
+                    após validação do diploma e articulados aplicáveis (acompanhamento jurídico).
                   </p>
                   {drivingCompliance.rest_until ? (
                     <p className="mt-1 text-xs opacity-90">
@@ -1270,10 +1348,11 @@ export function DriverDashboard() {
                 <>
                   <p className="font-medium leading-snug">Aviso de tempo de condução</p>
                   <p className="mt-1 text-foreground/85 leading-snug">
-                    Hoje levaste cerca de{' '}
+                    [PLACEHOLDER] Hoje levaste cerca de{' '}
                     <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong> em
                     viagem activa (máx. referência {formatDrivingDurationShort(drivingCompliance.max_seconds)} /
-                    dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite.
+                    dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite — quadro legal a
+                    substituir após validação normativa.
                   </p>
                 </>
               )}
@@ -1386,7 +1465,7 @@ export function DriverDashboard() {
               </p>
             )}
 
-            {(!offline || (driverBottomNav && !activeTripId)) && (
+            {!driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
               <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                 <MapView
                   className="!rounded-none border-0 !shadow-none"
@@ -1410,7 +1489,7 @@ export function DriverDashboard() {
                   }
                   compactHeight={compactDriverSurface}
                   tallStage={driverBottomNav && !activeTripId}
-                  onUserMapInteraction={driverMapGeoHint ? onDriverMapFirstTap : undefined}
+                  onUserMapInteraction={driverMapGeoHint ? onDriverHomeMapInteraction : undefined}
                 />
                 {driverMapGeoHint ? (
                   <div
@@ -1418,7 +1497,7 @@ export function DriverDashboard() {
                     aria-hidden
                   >
                     <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                      Toca no mapa para activar a localização precisa
+                      Toca no mapa para ficares disponível e activar o GPS
                     </span>
                   </div>
                 ) : null}
@@ -1436,11 +1515,11 @@ export function DriverDashboard() {
                 ) : null}
                 {driverBottomNav && !activeTripId ? (
                   <div className="border-t border-border bg-muted/35">
-                    {offline ? (
+                    {offline && !driverMapGeoHint ? (
                       <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
-                    ) : (
+                    ) : !offline ? (
                       <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
-                    )}
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -1581,7 +1660,8 @@ export function DriverDashboard() {
 
             {token && !driverBottomNav ? <BetaAccountPanel /> : null}
           </div>
-        </>
+          </div>
+        </div>
       )}
     </ScreenContainer>
   )

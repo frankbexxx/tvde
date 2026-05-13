@@ -8,6 +8,11 @@ interface ScreenContainerProps {
   bottomBarVariant?: 'inset' | 'flush'
   /** Quando definido, o contentor scrollável recebe este `id` (ex.: scroll ao tocar «Início» na barra inferior). */
   mainScrollId?: string
+  /**
+   * Quando false, o registo principal não é scrollável — o filho define sub-áreas (ex.: mapa + lista; B2 motorista).
+   * O `mainScrollId` deve ser aplicado num descendente com `overflow-y-auto`.
+   */
+  mainScrollable?: boolean
 }
 
 /**
@@ -20,6 +25,7 @@ export function ScreenContainer({
   bottomButton,
   bottomBarVariant = 'inset',
   mainScrollId,
+  mainScrollable = true,
 }: ScreenContainerProps) {
   const scrollBottomPad =
     bottomButton && bottomBarVariant === 'flush'
@@ -27,12 +33,14 @@ export function ScreenContainer({
       : bottomButton
         ? 'pb-20'
         : 'pb-8'
+  const mainColumn =
+    mainScrollable === false
+      ? `flex flex-col flex-1 min-h-0 overflow-hidden px-5 pt-6 pb-4 ${scrollBottomPad}`
+      : `flex-1 flex flex-col px-5 pt-6 pb-4 overflow-y-auto ${scrollBottomPad}`
+
   return (
     <div className="min-h-dvh flex flex-col max-w-md mx-auto w-full bg-background">
-      <div
-        id={mainScrollId}
-        className={`flex-1 flex flex-col px-5 pt-6 pb-4 overflow-y-auto ${scrollBottomPad}`}
-      >
+      <div id={mainScrollable !== false ? mainScrollId : undefined} className={mainColumn}>
         {children}
       </div>
       {bottomButton ? (
