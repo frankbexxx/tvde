@@ -8,6 +8,107 @@ Ficheiro **vivo**: **criar ou actualizar na noite anterior** (5–10 min). Na ra
 
 **PR só com documentação:** preferir **não** abrir micro-PRs só de texto; juntar ao próximo PR com **código** quando `main` estiver protegida, salvo ser **essencial** (revisão obrigatória, política explícita no dia).
 
+### Formato dos painéis (desde **2026-05-14**)
+
+A partir desta data, cada **painel novo** apresenta o trabalho operacional em **tabelas** com colunas canónicas:
+
+`| ID | Item | Estado | Notas |`
+
+**Vocabulário de Estado (fixo — usar só estes valores):**
+
+| Estado | Significado |
+|--------|-------------|
+| **Por iniciar** | Ainda não há trabalho ou arranque. |
+| **Em curso** | Em andamento. |
+| **Smoke pendente** | Código em `main` / entrega pronta — falta validação humana ou staging/prod. |
+| **Concluído** | Fechado (inclui doc/checklist actualizado, se aplicável). |
+| **Bloqueado** | Espera externa ou dependência; explicar **por quê** em Notas. |
+| **N/A** | Reservado / não aplicável. |
+
+**Prefixos de ID:** **A-…** — auditoria / gates (ex. `A2-02-1`, `A3-R`); **X-…** — lista EXTRA produto; **R-…** — rasto / backlog técnico não bloqueante; **O-…** — opcional / operacional; **S-…** — smokes **produção** (PC + Render, sem staging); **F-…** — fixes / issues de código após smokes ou decisão de produto.
+
+Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram escritos (histórico).
+
+---
+
+## Painel — 2026-05-14 (staging **A2-02** + smokes + EXTRA produto — formato tabela)
+
+**Foco A+L / OPS:** mesmo rumo que o painel **2026-05-13**: fechar **staging** no Render — `GOOGLE_OAUTH_*` em **`tvde-staging-api`**, URIs **Google** (`https://tvde-staging-app.onrender.com` + callback), utilizadores de teste; **smokes assertivos** staging. Actualizar checklist §A3 em [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) quando o gate ficar verde.
+
+**URLs staging (fixos):** app `https://tvde-staging-app.onrender.com` · API `https://tvde-staging-api.onrender.com`
+
+### Auditoria / gates (**A-**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A2-02-1** | `GOOGLE_OAUTH_*` na API **staging** + URIs Google alinhadas | Em curso | Ver [`docs/todo-em-curso.md`](docs/todo-em-curso.md); host fixo acima |
+| **A2-02-2** | Smokes assertivos **staging** (e prod se couber) | Por iniciar | Depende de A2-02-1 onde aplicável |
+| **A2-02-3** | Checklist §A2-03 / §A3 no audit exec backlog | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+
+### Lista **EXTRA** produto (**X-**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **X-1** | Som (~2 s) quando uma viagem «cai» no motorista | Por iniciar | Verificar no código / conversa |
+| **X-2** | Modo nocturno automático no ecrã | Por iniciar | Testar |
+| **X-3** | Wake lock / ecrã sempre activo em uso | Por iniciar | Testar |
+| **X-4** | Reservado (lista original) | N/A | Marcado feito pelo autor no painel 2026-05-13 |
+| **X-5** | Partner: documentos de veículos e motoristas | Por iniciar | Testar |
+| **X-6** | Driver → partner: documentos, caducidade, centralização | Por iniciar | Testar |
+| **X-7** | QR partilhável: **visível na app** (menu passageiro → botão → imagem) | Smoke pendente | **F-2**; [`/download`](https://tvde-app-j51f.onrender.com/download) é URL pública auxiliar; não substitui o critério «vês com os olhos» |
+| **X-8** | Driver: deslizar para aceitar oferta | Smoke pendente | **F-1** — ronda **2026-05-13**: CTA abaixo da dobra em **360×800** (prints) |
+| **X-9** | Driver: repensar ecrã principal (simplicidade) | Por iniciar | A falar |
+
+### Rasto / backlog (**R-**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **R-1** | Rotacional v3 (fontes externas + job/cache) | Por iniciar | [`ROTACIONAL_V2_SPEC.md`](docs/product/ROTACIONAL_V2_SPEC.md) |
+
+### Smokes **produção** (**S-**) — PC + Render **tvde-app**, várias janelas, **sem staging**
+
+**Onde correr:** produção — app estática Render (referência [`GUIA_TESTES.md`](docs/testing/GUIA_TESTES.md): `https://tvde-app-j51f.onrender.com`). Confirmar **sempre** o host na barra de endereço.
+
+**Regra de evidência:** sem print legível, a etapa **não** conta como fechada.
+
+**Janelas sugeridas:** esquerda **passageiro** · centro **motorista** · direita **partner (Frota)** · quarta **admin (staff)** só se fores fechar backoffice.
+
+**Legenda de prints (coluna Notas):** **A** — URL completa visível · **B** — `AppHeaderBar`: pastilha MOTORISTA/PASSAGEIRO/FROTA/STAFF + linha Conta · **C** — rodapé versão + SHA · **D** — pedido passageiro (origem/destino ou equivalente + estado) · **E** — motorista disponível / ofertas · **F** — cartão oferta antes **e** depois de aceitar (dois prints se crítico) · **G** — viagem activa: **dois lados** no mesmo passo quando possível · **H** — ecrã Frota/partner legível · **I** — página `/download` ou `/dl` / `/app` · **J** — ops API: resposta cron `200` + JSON ou traço webhook Stripe; **nunca** segredos na imagem ([`W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md)).
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-00** | Âncora: raiz da app prod carrega (sem ecrã branco) | Concluído | Ronda **2026-05-13** prod; trio de janelas |
+| **S-01** | Rodapé «Versão da aplicação» (versão + SHA) | Concluído | Mesma ronda; prints **A**+**C** |
+| **S-02** | Login **passageiro** (fluxo real em prod) | Concluído | **B** PASSAGEIRO |
+| **S-03** | Pedido de viagem — estado **antes** de motorista | Concluído | **D** |
+| **S-04** | Login **motorista** | Concluído | **B** MOTORISTA |
+| **S-05** | Motorista disponível / recebe oferta | Concluído | **E** |
+| **S-06** | Aceitar oferta (toque ou swipe, o que houver em prod) | Concluído | **F**; defeito UX **aceitar** abaixo da dobra **360×800** documentado — fluxo não bloqueado (**F-1**) |
+| **S-07** | Sincronização: passageiro e motorista com estado coerente | Concluído | **G** |
+| **S-08** | Conclusão da viagem + pós-viagem (rating/copy conforme UI) | Concluído | Rating fechado na mesma ronda |
+| **S-09** | Login **partner** (Frota) | Concluído | **B** FROTA + **H** |
+| **S-10** | Superfície Frota (ex. «Por aceitar», lista coerente, sem 500) | Concluído | **H** |
+| **S-11** | Landing **download** (`/download`, redirects se forem checklist teu) | Concluído | Ronda fechada; entrega user-facing correcta do QR = **F-2** (re-smoke da landing isolada dispensável até ao fix) |
+| **S-12** | **Admin** (staff): Saúde + Viagens carregam; só acções seguras em prod | Concluído | Verificado em prod **sem print** (critério Frank) |
+| **S-13** | Ops: cron prod `200` + JSON; webhook Stripe activo (evidência fora do Git) | Concluído | **Sem delta** em cron / webhook / Stripe / env na API prod desde última verificação — não obriga reexecutar [`W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md); repetir quando houver mudança nessa cadeia |
+
+### Testes automáticos vs smokes (prod)
+
+Prioridade: **alargar Playwright / pytest** onde já há cobertura (ex. `npm run test:e2e:api`, fluxos tocados por PR). **Smoke humano em prod** só **dedicado** quando há **delta** em caminho crítico (viagem, pagamentos, auth, admin sensível) ou deploy que o toca — **não** repetir a grelha **S-** semanalmente se **nada mudou**. Ver também **Notas E2E** em painéis antigos deste ficheiro.
+
+### Fixes e issues (pós-smoke **2026-05-13**)
+
+| ID | Fix / tema | Issue (GitHub) | Estado | Notas |
+|----|------------|----------------|--------|-------|
+| **F-1** | Motorista: «Deslizar para aceitar» / CTA principal **visível sem scroll** (viewport **360×800**) | — | Por iniciar | Evidência: prints ronda 2026-05-13 |
+| **F-2** | Passageiro: menu → botão → **imagem QR** no ecrã (asset na build, ex. `public/`) | — | Por iniciar | Critério aceitação: **visível com olhos** |
+| **F-3** | *(placeholder — lista Frank 5–6 issues)* | — | Por iniciar | Preencher nº |
+| **F-4** | *(placeholder)* | — | Por iniciar | Preencher nº |
+| **F-5** | *(placeholder)* | — | Por iniciar | Preencher nº |
+| **F-6** | *(placeholder)* | — | Por iniciar | Preencher nº |
+
+_Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
+
 ---
 
 ## Painel — 2026-05-13 (staging **A2-02** + smokes + EXTRA produto)
