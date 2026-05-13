@@ -112,7 +112,9 @@ import {
 import {
   driverDocumentLabel,
   driverDocumentsApprovedCount,
+  driverDocumentsExpiryAttention,
   driverDocumentStatusLabel,
+  formatDriverDocExpiresLine,
   getDriverDocumentsState,
   isDriverDocumentsGateEnabled,
   isDriverDocumentsReady,
@@ -864,14 +866,21 @@ export function DriverDashboard() {
             const docs = { ...prev.docs, [doc]: status }
             const next: DriverDocumentsState = {
               docs,
+              docDetails: prev.docDetails,
               onboardingCompleted:
                 prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
             }
             setDriverDocumentsState(next)
             if (token) {
-              void patchDriverDocuments(token, { [doc]: { status } }).catch(() => {
-                /* falha silenciosa: estado local mantém-se */
-              })
+              void patchDriverDocuments(token, { [doc]: { status } })
+                .then((server) => {
+                  setDriverDocuments((p) => {
+                    const merged = mergeServerDriverDocuments(p, server)
+                    setDriverDocumentsState(merged)
+                    return merged
+                  })
+                })
+                .catch(() => { })
             }
             return next
           })
@@ -939,12 +948,21 @@ export function DriverDashboard() {
                   const docs = { ...prev.docs, [doc]: status }
                   const next: DriverDocumentsState = {
                     docs,
+                    docDetails: prev.docDetails,
                     onboardingCompleted:
                       prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
                   }
                   setDriverDocumentsState(next)
                   if (token) {
-                    void patchDriverDocuments(token, { [doc]: { status } }).catch(() => {})
+                    void patchDriverDocuments(token, { [doc]: { status } })
+                      .then((server) => {
+                        setDriverDocuments((p) => {
+                          const merged = mergeServerDriverDocuments(p, server)
+                          setDriverDocumentsState(merged)
+                          return merged
+                        })
+                      })
+                      .catch(() => { })
                   }
                   return next
                 })
@@ -1281,7 +1299,7 @@ export function DriverDashboard() {
                         : `${filteredAvailable.length} pedidos no mapa`}
                     </p>
                     <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
-                      Os pinos seguem a primeira oferta; desliza para a lista e aceita em baixo.
+                      Primeira oferta no mapa. Aceita em baixo (deslizar ou toque).
                     </p>
                   </div>
                 ) : null}
@@ -1345,6 +1363,7 @@ export function DriverDashboard() {
                           }
                           acceptButtonTestId={`driver-accept-${t.trip_id}`}
                           rejectButtonTestId={`driver-reject-${t.trip_id}`}
+                          acceptVariant="slide"
                           onAccept={() =>
                             runAction(
                               () => acceptTrip(t.trip_id, token!),
@@ -2697,12 +2716,33 @@ function DriverOperationsMenu({
       ) : null}
 
       {showDocs ? (
-        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <div
+          className="rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+          data-testid="driver-menu-documents-panel"
+        >
           <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
           <p className="text-xs text-muted-foreground leading-snug">
             Envia os documentos para revisão da tua frota (partner). A <span className="font-medium">aprovação</span> é
             feita no painel da frota.
           </p>
+          {(() => {
+            const { hasExpired, hasSoon } = driverDocumentsExpiryAttention(driverDocuments)
+            if (!hasExpired && !hasSoon) return null
+            return (
+              <div
+                className={`rounded-lg border px-3 py-2 text-xs ${hasExpired
+                  ? 'border-destructive/50 bg-destructive/10 text-foreground'
+                  : 'border-warning/50 bg-warning/10 text-foreground'
+                  }`}
+              >
+                {hasExpired ? (
+                  <p className="font-semibold">Tens documentos expirados ou datas em atraso — contacta a tua frota.</p>
+                ) : (
+                  <p className="font-semibold">Há validades a expirar em breve (30 dias). Confirma com a tua frota.</p>
+                )}
+              </div>
+            )
+          })()}
           <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card px-3 py-2">
             <p className="text-xs text-foreground/85">
               Aprovados: {driverDocumentsApprovedCount(driverDocuments)} / {REQUIRED_DRIVER_DOCUMENTS.length}
@@ -2727,6 +2767,9 @@ function DriverOperationsMenu({
                     : status === 'rejected' || status === 'expired'
                       ? 'border-destructive/45 bg-destructive/10 text-foreground'
                       : 'border-border bg-card text-foreground/85'
+              const meta = driverDocuments.docDetails[doc]
+              const expLine = formatDriverDocExpiresLine(meta?.expiresAt ?? undefined)
+              const noteLine = meta?.partnerNote?.trim()
               return (
                 <div key={doc} className="rounded-lg border border-border/70 bg-card px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
@@ -2735,6 +2778,14 @@ function DriverOperationsMenu({
                       {driverDocumentStatusLabel(status)}
                     </span>
                   </div>
+                  {expLine ? (
+                    <p className="mt-1 text-[11px] text-muted-foreground leading-snug">{expLine}</p>
+                  ) : null}
+                  {noteLine ? (
+                    <p className="mt-1 text-[11px] text-foreground/80 leading-snug">
+                      <span className="font-medium text-foreground/90">Frota:</span> {noteLine}
+                    </p>
+                  ) : null}
                   <div className="mt-2 flex gap-2">
                     <button
                       type="button"

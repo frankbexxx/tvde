@@ -10,9 +10,17 @@ export const REQUIRED_DRIVER_DOCUMENTS = [
 export type DriverRequiredDocument = (typeof REQUIRED_DRIVER_DOCUMENTS)[number]
 export type DriverDocumentStatus = 'missing' | 'pending_review' | 'approved' | 'rejected' | 'expired'
 
+/** Metadados partilhados com o partner (validade, notas). */
+export interface DriverDocumentDetails {
+  expiresAt: string | null
+  partnerNote: string | null
+}
+
 export interface DriverDocumentsState {
   docs: Record<DriverRequiredDocument, DriverDocumentStatus>
   onboardingCompleted: boolean
+  /** Preenchido a partir do servidor (`GET /driver/documents`). */
+  docDetails: Partial<Record<DriverRequiredDocument, DriverDocumentDetails>>
 }
 
 const DOCS_STATE_KEY = 'tvde_driver_documents_state_v1'
@@ -29,13 +37,31 @@ function defaultDocsState(): DriverDocumentsState {
       registo_criminal: 'missing',
     },
     onboardingCompleted: false,
+    docDetails: {},
   }
+}
+
+function sanitizeDocDetails(
+  raw: Partial<Record<DriverRequiredDocument, Partial<DriverDocumentDetails>>> | undefined
+): Partial<Record<DriverRequiredDocument, DriverDocumentDetails>> {
+  if (!raw || typeof raw !== 'object') return {}
+  const out: Partial<Record<DriverRequiredDocument, DriverDocumentDetails>> = {}
+  for (const k of REQUIRED_DRIVER_DOCUMENTS) {
+    const row = raw[k]
+    if (!row || typeof row !== 'object') continue
+    out[k] = {
+      expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
+      partnerNote: typeof row.partnerNote === 'string' ? row.partnerNote : null,
+    }
+  }
+  return out
 }
 
 function sanitizeState(next: DriverDocumentsState): DriverDocumentsState {
   const ready = isDriverDocumentsReady(next)
   return {
     ...next,
+    docDetails: sanitizeDocDetails(next.docDetails),
     onboardingCompleted: Boolean(next.onboardingCompleted || ready),
   }
 }
@@ -58,6 +84,9 @@ export function getDriverDocumentsState(): DriverDocumentsState {
         cartao_cidadao: parsed.docs?.cartao_cidadao ?? base.docs.cartao_cidadao,
         registo_criminal: parsed.docs?.registo_criminal ?? base.docs.registo_criminal,
       },
+      docDetails: sanitizeDocDetails(
+        parsed.docDetails as Partial<Record<DriverRequiredDocument, Partial<DriverDocumentDetails>>>
+      ),
     })
   } catch {
     return defaultDocsState()
@@ -131,4 +160,53 @@ export function driverDocumentStatusLabel(status: DriverDocumentStatus): string 
 
 export function driverDocumentsApprovedCount(state: DriverDocumentsState): number {
   return REQUIRED_DRIVER_DOCUMENTS.filter((k) => state.docs[k] === 'approved').length
+}
+
+function daysUntilIso(iso: string): number | null {
+  const t = Date.parse(iso)
+  if (Number.isNaN(t)) return null
+  return Math.ceil((t - Date.now()) / 86_400_000)
+}
+
+/** Texto curto para a linha de validade na UI do motorista. */
+export function formatDriverDocExpiresLine(iso: string | null | undefined): string | null {
+  if (iso == null || !String(String(iso).trim())) return null
+  const s = String(iso).trim()
+  try {
+    const d = new Date(s)
+    if (Number.isNaN(d.getTime())) return `Validade: ${s}`
+    const dayStr = d.toLocaleDateString('pt-PT')
+    const days = daysUntilIso(s)
+    if (days == null) return `Validade: ${dayStr}`
+    if (days < 0) return `Validade: ${dayStr} (expirada — contacta a tua frota)`
+    if (days <= 14) return `Validade: ${dayStr} (faltam ${days} dias)`
+    return `Validade: ${dayStr}`
+  } catch {
+    return `Validade: ${s}`
+  }
+}
+
+/** Indicadores para alertas no painel de documentos. */
+export function driverDocumentsExpiryAttention(state: DriverDocumentsState): {
+  hasExpired: boolean
+  hasSoon: boolean
+} {
+  let hasExpired = false
+  let hasSoon = false
+  for (const k of REQUIRED_DRIVER_DOCUMENTS) {
+    if (state.docs[k] === 'expired') hasExpired = true
+    const exp = state.docDetails[k]?.expiresAt
+    if (exp) {
+      const days = daysUntilIso(exp)
+      if (days != null && days < 0) hasExpired = true
+      else if (
+        days != null &&
+        days <= 30 &&
+        (state.docs[k] === 'approved' || state.docs[k] === 'pending_review')
+      ) {
+        hasSoon = true
+      }
+    }
+  }
+  return { hasExpired, hasSoon }
 }

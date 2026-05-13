@@ -6,7 +6,11 @@ import type {
 } from '../services/driverDocuments'
 import { REQUIRED_DRIVER_DOCUMENTS } from '../services/driverDocuments'
 
-export type ServerDocRow = { status?: string }
+export type ServerDocRow = {
+  status?: string
+  expires_at?: string | null
+  partner_note?: string | null
+}
 
 export interface DriverDocumentsApiState {
   version: number
@@ -31,13 +35,32 @@ export function mergeServerDriverDocuments(
 ): DriverDocumentsState {
   if (!server?.docs) return prev
   const docs = { ...prev.docs }
+  const docDetails = { ...prev.docDetails }
   for (const k of REQUIRED_DRIVER_DOCUMENTS) {
-    const st = server.docs[k]?.status
+    const row = server.docs[k]
+    if (!row || typeof row !== 'object') continue
+    const st = row.status
     if (st && isStatus(st)) docs[k] = st
+    const prevD = docDetails[k]
+    docDetails[k] = {
+      expiresAt:
+        'expires_at' in row
+          ? typeof row.expires_at === 'string'
+            ? row.expires_at
+            : null
+          : (prevD?.expiresAt ?? null),
+      partnerNote:
+        'partner_note' in row
+          ? typeof row.partner_note === 'string'
+            ? row.partner_note
+            : null
+          : (prevD?.partnerNote ?? null),
+    }
   }
   const ready = REQUIRED_DRIVER_DOCUMENTS.every((key) => docs[key] === 'approved')
   return {
     docs,
+    docDetails,
     onboardingCompleted: Boolean(prev.onboardingCompleted || ready),
   }
 }

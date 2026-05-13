@@ -1,8 +1,10 @@
 /**
  * Request card for driver - available trip to accept.
- * Pickup, estimate €, big ACEITAR button.
+ * Pickup, estimate €, ACEITAR (botão ou deslizar).
  * No IDs, no coords.
  */
+import { SlideToAccept } from './SlideToAccept'
+
 interface RequestCardProps {
   pickup: string
   destination?: string
@@ -22,6 +24,8 @@ interface RequestCardProps {
   rejectLoading?: boolean
   acceptButtonTestId?: string
   rejectButtonTestId?: string
+  /** `slide`: deslizar para aceitar (fluxo motorista); `button`: só botão (testes / fallback). */
+  acceptVariant?: 'button' | 'slide'
 }
 
 export function RequestCard({
@@ -39,6 +43,7 @@ export function RequestCard({
   rejectLoading,
   acceptButtonTestId,
   rejectButtonTestId,
+  acceptVariant = 'button',
 }: RequestCardProps) {
   const priceDisplay =
     estimatedPrice != null && estimatedPrice > 0
@@ -77,7 +82,13 @@ export function RequestCard({
           <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
           <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:min-w-[200px]">
+        <div
+          className={
+            acceptVariant === 'slide'
+              ? 'flex flex-col gap-2 w-full'
+              : 'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:min-w-[200px]'
+          }
+        >
           {offerId && onReject ? (
             <button
               type="button"
@@ -96,22 +107,32 @@ export function RequestCard({
               )}
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={onAccept}
-            disabled={Boolean(loading || rejectLoading)}
-            data-testid={acceptButtonTestId}
-            className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-info text-info-foreground font-bold text-lg shadow-floating hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
-          >
-            {loading ? (
-              <span className="inline-flex items-center gap-2">
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                A processar...
-              </span>
-            ) : (
-              'ACEITAR'
-            )}
-          </button>
+          {acceptVariant === 'slide' ? (
+            <SlideToAccept
+              onConfirm={onAccept}
+              disabled={Boolean(rejectLoading)}
+              loading={Boolean(loading)}
+              tapTestId={acceptButtonTestId}
+              testId={acceptButtonTestId ? `${acceptButtonTestId}-slide` : undefined}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={onAccept}
+              disabled={Boolean(loading || rejectLoading)}
+              data-testid={acceptButtonTestId}
+              className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-info text-info-foreground font-bold text-lg shadow-floating hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
+            >
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  A processar...
+                </span>
+              ) : (
+                'ACEITAR'
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
