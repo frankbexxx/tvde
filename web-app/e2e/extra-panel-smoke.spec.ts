@@ -10,17 +10,6 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 
 const sec = (s: number) => s * 1000
 
-/** JWT subject (user id) — apenas para E2E com tokens dev. */
-function jwtSubject(token: string): string {
-  const part = token.split('.')[1]
-  if (!part) throw new Error('jwt missing payload')
-  const b64 = part.replace(/-/g, '+').replace(/_/g, '/')
-  const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4))
-  const json = JSON.parse(Buffer.from(b64 + pad, 'base64').toString('utf8')) as { sub?: string }
-  if (!json.sub) throw new Error('jwt missing sub')
-  return json.sub
-}
-
 async function openDriverMenu(page: Page) {
   const bottom = page.locator('[data-testid="driver-bottom-nav-menu"]')
   if ((await bottom.count()) > 0 && (await bottom.first().isVisible())) {
@@ -103,14 +92,15 @@ test.describe('EXTRA panel — smoke', () => {
     expect(reset.ok(), await reset.text()).toBeTruthy()
     const tokRes = await request.post(`${API}/dev/tokens`)
     expect(tokRes.ok(), await tokRes.text()).toBeTruthy()
-    const tokens = (await tokRes.json()) as { partner: string; driver: string }
-    /** O motorista de seed está em `DEFAULT_PARTNER_UUID`; o utilizador partner está em `BASELINE_PARTNER_FLEET_UUID` — a lista na UI fica vazia até add-to-fleet. */
-    const driverUserId = jwtSubject(tokens.driver)
-    const add = await request.post(
-      `${API}/partner/drivers/${encodeURIComponent(driverUserId)}/add-to-fleet`,
-      { headers: { Authorization: `Bearer ${tokens.partner}` } }
-    )
-    expect(add.ok(), await add.text()).toBeTruthy()
+    const tokens = (await tokRes.json()) as { partner: string }
+
+    const driversRes = await request.get(`${API}/partner/drivers`, {
+      headers: { Authorization: `Bearer ${tokens.partner}` },
+    })
+    expect(driversRes.ok(), await driversRes.text()).toBeTruthy()
+    const drivers = (await driversRes.json()) as Array<{ user_id: string }>
+    expect(drivers.length, 'GET /partner/drivers deve listar o motorista de /dev/seed').toBeGreaterThan(0)
+    const driverUserId = drivers[0].user_id
 
     const ctx = await browser.newContext()
     await ctx.addInitScript(

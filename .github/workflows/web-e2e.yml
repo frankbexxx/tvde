@@ -96,6 +96,12 @@ jobs:
           cat /tmp/tvde-api.log || true
           exit 1
 
+      - name: E2E revision fingerprint
+        run: |
+          echo "GITHUB_SHA=${GITHUB_SHA}"
+          git rev-parse HEAD
+          grep -nE 'partner/drivers|add-to-fleet|jwtSubject' web-app/e2e/extra-panel-smoke.spec.ts | head -30 || true
+
       - name: Run Playwright E2E
         working-directory: web-app
         run: npm run test:e2e
