@@ -194,6 +194,39 @@ function DriverMapOfflinePill({ onGoOnline }: { onGoOnline: () => void }) {
   )
 }
 
+/** Com `mapTapGoesOnline`, o único CTA táctil no mapa fica o toque no mapa; pill só em mock/demo. */
+function DriverShellAvailabilityInner({
+  mapTapGoesOnline,
+  offline,
+  onGoOnline,
+  onGoOffline,
+}: {
+  mapTapGoesOnline: boolean
+  offline: boolean
+  onGoOnline: () => void
+  onGoOffline: () => void
+}) {
+  if (!offline) {
+    return <DriverMapAvailabilityPill onGoOffline={onGoOffline} />
+  }
+  if (mapTapGoesOnline) {
+    return (
+      <div
+        className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-muted-foreground shadow-none backdrop-blur-sm sm:text-sm"
+        role="status"
+        aria-live="polite"
+      >
+        <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
+        <span className="leading-snug">
+          Offline — toca no mapa para ficares disponível.
+          <span className="sr-only"> Alternativa: Menu → «Ficar disponível».</span>
+        </span>
+      </div>
+    )
+  }
+  return <DriverMapOfflinePill onGoOnline={onGoOnline} />
+}
+
 /** P25: detalhe mínimo até o GET /driver/trips/:id alinhar após aceitar. */
 function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatus): TripDetailResponse {
   const now = new Date().toISOString()
@@ -790,12 +823,13 @@ export function DriverDashboard() {
   const bottomChrome =
     driverBottomNav && showDriverHomeStep1 && activeTripId == null ? (
       <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="border-b border-border">
-          {offline ? (
-            <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
-          ) : (
-            <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
-          )}
+        <div className="border-b border-border bg-muted/35">
+          <DriverShellAvailabilityInner
+            mapTapGoesOnline={mapTapGoesOnline}
+            offline={offline}
+            onGoOnline={() => handleDriverAvailabilityChange(true)}
+            onGoOffline={() => handleDriverAvailabilityChange(false)}
+          />
         </div>
         <div className="px-4 py-2">
           <button
@@ -882,311 +916,202 @@ export function DriverDashboard() {
     ) : undefined
 
   return (
-    <ScreenContainer
-      bottomButton={bottomChrome}
-      bottomBarVariant={activeTripId ? 'inset' : driverBottomNav ? 'flush' : 'inset'}
-      mainScrollId="driver-main-scroll"
-      mainScrollable={!driverMapStageLayout}
+    <div
+      className={
+        driverMapStageLayout
+          ? 'flex h-full min-h-0 min-w-0 flex-1 flex-col'
+          : 'contents'
+      }
     >
-      <DriverSideMenu
-        open={menuOpen}
-        onOpenChange={(v) => {
-          setMenuOpen(v)
-          if (!v) setDriverMenuScreen('root')
-        }}
-        screen={driverMenuScreen}
-        onScreenChange={setDriverMenuScreen}
-        sessionDisplayName={sessionDisplayName}
-        history={history}
-        driverLocationForZones={mapDotLatLng ?? null}
-        navPref={driverNavPref}
-        vehicleCategories={vehicleCategories}
-        driverDocuments={driverDocuments}
-        driverDocsGateEnabled={driverDocsGateEnabled}
-        onSelectNavPref={(app) => {
-          setDriverNavApp(app)
-          setDriverNavPref(app)
-          addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
-        }}
-        onToggleVehicleCategory={(category) => {
-          setVehicleCategories((prev) => {
-            const exists = prev.includes(category)
-            const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
-            const safe = next.length > 0 ? next : prev
-            setDriverVehicleCategories(safe)
-            if (token) {
-              void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
-                /* keep local preference even if backend fails */
-              })
-            }
-            return safe
-          })
-        }}
-        onPatchDriverDocument={(doc, status) => {
-          setDriverDocuments((prev) => {
-            const docs = { ...prev.docs, [doc]: status }
-            const next: DriverDocumentsState = {
-              docs,
-              docDetails: prev.docDetails,
-              onboardingCompleted:
-                prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
-            }
-            setDriverDocumentsState(next)
-            if (token) {
-              void patchDriverDocuments(token, { [doc]: { status } })
-                .then((server) => {
-                  setDriverDocuments((p) => {
-                    const merged = mergeServerDriverDocuments(p, server)
-                    setDriverDocumentsState(merged)
-                    return merged
-                  })
+      <ScreenContainer
+        contentVariant={driverMapStageLayout ? 'driverImmersive' : 'default'}
+        bottomButton={bottomChrome}
+        bottomBarVariant={activeTripId ? 'inset' : driverBottomNav ? 'flush' : 'inset'}
+        mainScrollId="driver-main-scroll"
+        mainScrollable={!driverMapStageLayout}
+      >
+        <DriverSideMenu
+          open={menuOpen}
+          onOpenChange={(v) => {
+            setMenuOpen(v)
+            if (!v) setDriverMenuScreen('root')
+          }}
+          screen={driverMenuScreen}
+          onScreenChange={setDriverMenuScreen}
+          sessionDisplayName={sessionDisplayName}
+          history={history}
+          driverLocationForZones={mapDotLatLng ?? null}
+          navPref={driverNavPref}
+          vehicleCategories={vehicleCategories}
+          driverDocuments={driverDocuments}
+          driverDocsGateEnabled={driverDocsGateEnabled}
+          onSelectNavPref={(app) => {
+            setDriverNavApp(app)
+            setDriverNavPref(app)
+            addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
+          }}
+          onToggleVehicleCategory={(category) => {
+            setVehicleCategories((prev) => {
+              const exists = prev.includes(category)
+              const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
+              const safe = next.length > 0 ? next : prev
+              setDriverVehicleCategories(safe)
+              if (token) {
+                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
+                  /* keep local preference even if backend fails */
                 })
-                .catch(() => { })
-            }
-            return next
-          })
-        }}
-        onToggleDriverDocsGate={(enabled) => {
-          setDriverDocsGateEnabled(enabled)
-          setDriverDocumentsGateEnabled(enabled)
-          addLog(
-            enabled
-              ? 'Gate documentos: bloqueio de disponibilidade ativo'
-              : 'Gate documentos: bloqueio de disponibilidade desativado',
-            'info'
-          )
-        }}
-        onReportIncident={(tripId) => {
-          const typeInput = window.prompt(
-            `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
-          )
-          if (!typeInput || !typeInput.trim()) return
-          const parsed = Number.parseInt(typeInput.trim(), 10)
-          const type =
-            Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
-              ? DRIVER_INCIDENT_TYPES[parsed - 1]
-              : typeInput.trim()
-          const note = window.prompt('Descrição curta da ocorrência:')
-          if (!note || !note.trim()) return
-          sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
-          addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
-        }}
-        renderLegacyMenu={(section) => (
-          <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card">
-            <DriverOperationsMenu
-              section={section}
-              hideHeader
-              hideCloseButton
-              sessionDisplayName={sessionDisplayName}
-              history={history}
-              driverLocationForZones={mapDotLatLng ?? null}
-              navPref={driverNavPref}
-              vehicleCategories={vehicleCategories}
-              driverDocuments={driverDocuments}
-              driverDocsGateEnabled={driverDocsGateEnabled}
-              onCloseMenu={closeDriverMenu}
-              onSelectNavPref={(app) => {
-                setDriverNavApp(app)
-                setDriverNavPref(app)
-                addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
-              }}
-              onToggleVehicleCategory={(category) => {
-                setVehicleCategories((prev) => {
-                  const exists = prev.includes(category)
-                  const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
-                  const safe = next.length > 0 ? next : prev
-                  setDriverVehicleCategories(safe)
-                  if (token) {
-                    void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
-                      /* keep local preference even if backend fails */
+              }
+              return safe
+            })
+          }}
+          onPatchDriverDocument={(doc, status) => {
+            setDriverDocuments((prev) => {
+              const docs = { ...prev.docs, [doc]: status }
+              const next: DriverDocumentsState = {
+                docs,
+                docDetails: prev.docDetails,
+                onboardingCompleted:
+                  prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
+              }
+              setDriverDocumentsState(next)
+              if (token) {
+                void patchDriverDocuments(token, { [doc]: { status } })
+                  .then((server) => {
+                    setDriverDocuments((p) => {
+                      const merged = mergeServerDriverDocuments(p, server)
+                      setDriverDocumentsState(merged)
+                      return merged
                     })
-                  }
-                  return safe
-                })
-              }}
-              onPatchDriverDocument={(doc, status) => {
-                setDriverDocuments((prev) => {
-                  const docs = { ...prev.docs, [doc]: status }
-                  const next: DriverDocumentsState = {
-                    docs,
-                    docDetails: prev.docDetails,
-                    onboardingCompleted:
-                      prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
-                  }
-                  setDriverDocumentsState(next)
-                  if (token) {
-                    void patchDriverDocuments(token, { [doc]: { status } })
-                      .then((server) => {
-                        setDriverDocuments((p) => {
-                          const merged = mergeServerDriverDocuments(p, server)
-                          setDriverDocumentsState(merged)
-                          return merged
-                        })
+                  })
+                  .catch(() => { })
+              }
+              return next
+            })
+          }}
+          onToggleDriverDocsGate={(enabled) => {
+            setDriverDocsGateEnabled(enabled)
+            setDriverDocumentsGateEnabled(enabled)
+            addLog(
+              enabled
+                ? 'Gate documentos: bloqueio de disponibilidade ativo'
+                : 'Gate documentos: bloqueio de disponibilidade desativado',
+              'info'
+            )
+          }}
+          onReportIncident={(tripId) => {
+            const typeInput = window.prompt(
+              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
+            )
+            if (!typeInput || !typeInput.trim()) return
+            const parsed = Number.parseInt(typeInput.trim(), 10)
+            const type =
+              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
+                ? DRIVER_INCIDENT_TYPES[parsed - 1]
+                : typeInput.trim()
+            const note = window.prompt('Descrição curta da ocorrência:')
+            if (!note || !note.trim()) return
+            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
+            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
+          }}
+          renderLegacyMenu={(section) => (
+            <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card">
+              <DriverOperationsMenu
+                section={section}
+                hideHeader
+                hideCloseButton
+                sessionDisplayName={sessionDisplayName}
+                history={history}
+                driverLocationForZones={mapDotLatLng ?? null}
+                navPref={driverNavPref}
+                vehicleCategories={vehicleCategories}
+                driverDocuments={driverDocuments}
+                driverDocsGateEnabled={driverDocsGateEnabled}
+                onCloseMenu={closeDriverMenu}
+                onSelectNavPref={(app) => {
+                  setDriverNavApp(app)
+                  setDriverNavPref(app)
+                  addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
+                }}
+                onToggleVehicleCategory={(category) => {
+                  setVehicleCategories((prev) => {
+                    const exists = prev.includes(category)
+                    const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
+                    const safe = next.length > 0 ? next : prev
+                    setDriverVehicleCategories(safe)
+                    if (token) {
+                      void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
+                        /* keep local preference even if backend fails */
                       })
-                      .catch(() => { })
-                  }
-                  return next
-                })
-              }}
-              onToggleDriverDocsGate={(enabled) => {
-                setDriverDocsGateEnabled(enabled)
-                setDriverDocumentsGateEnabled(enabled)
-                addLog(
-                  enabled
-                    ? 'Gate documentos: bloqueio de disponibilidade ativo'
-                    : 'Gate documentos: bloqueio de disponibilidade desativado',
-                  'info'
-                )
-              }}
-              onReportIncident={(tid) => {
-                const typeInput = window.prompt(
-                  `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
-                )
-                if (!typeInput || !typeInput.trim()) return
-                const parsed = Number.parseInt(typeInput.trim(), 10)
-                const type =
-                  Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
-                    ? DRIVER_INCIDENT_TYPES[parsed - 1]
-                    : typeInput.trim()
-                const note = window.prompt('Descrição curta da ocorrência:')
-                if (!note || !note.trim()) return
-                sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tid.slice(0, 8)}…`)
-                addLog(`Ocorrência registada para ${tid} [${type}]: ${note.trim()}`, 'info')
-              }}
-            />
-          </div>
-        )}
-      />
-
-      {showDriverHomeStep1 ? (
-        <div
-          className="space-y-4 transition-opacity duration-150"
-          data-testid="driver-home-step1"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <p className="min-w-0 flex-1 text-xs font-medium text-muted-foreground leading-snug">
-              Mapa e estado em primeiro plano; pedidos e detalhes quando precisares.
-            </p>
-            {!driverBottomNav ? (
-              <button
-                type="button"
-                data-testid="driver-open-menu"
-                onClick={() => {
-                  setMenuOpen((v) => {
-                    const next = !v
-                    if (next) setDriverMenuScreen('root')
+                    }
+                    return safe
+                  })
+                }}
+                onPatchDriverDocument={(doc, status) => {
+                  setDriverDocuments((prev) => {
+                    const docs = { ...prev.docs, [doc]: status }
+                    const next: DriverDocumentsState = {
+                      docs,
+                      docDetails: prev.docDetails,
+                      onboardingCompleted:
+                        prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
+                    }
+                    setDriverDocumentsState(next)
+                    if (token) {
+                      void patchDriverDocuments(token, { [doc]: { status } })
+                        .then((server) => {
+                          setDriverDocuments((p) => {
+                            const merged = mergeServerDriverDocuments(p, server)
+                            setDriverDocumentsState(merged)
+                            return merged
+                          })
+                        })
+                        .catch(() => { })
+                    }
                     return next
                   })
                 }}
-                className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-              >
-                {menuOpen ? 'Fechar menu' : 'Menu'}
-              </button>
-            ) : null}
-          </div>
-          {driverBottomNav ? (
-            <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
-          ) : null}
-          {!driverBottomNav ? (
-            <Toggle
-              label="Estado"
-              checked={!offline}
-              onChange={handleDriverAvailabilityChange}
-              onLabel="Disponível"
-              offLabel="Offline"
-            />
-          ) : null}
-          {(!offline || driverBottomNav) && (
-            <div className="relative min-h-[min(52vh,24rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-              <MapView
-                className="!rounded-none border-0 !shadow-none"
-                driverLocation={mapDotLatLng}
-                tripPickup={availableOfferMapPreview?.pickup ?? null}
-                tripDropoff={availableOfferMapPreview?.dropoff ?? null}
-                route={
-                  import.meta.env.DEV &&
-                    isMockLocationModeEnabled() &&
-                    mockStableRouteEndpoints &&
-                    activeTripId
-                    ? mockStableRouteEndpoints
-                    : undefined
-                }
-                mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
-                compactHeight={false}
-                tallStage={driverBottomNav && !activeTripId}
-                onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
+                onToggleDriverDocsGate={(enabled) => {
+                  setDriverDocsGateEnabled(enabled)
+                  setDriverDocumentsGateEnabled(enabled)
+                  addLog(
+                    enabled
+                      ? 'Gate documentos: bloqueio de disponibilidade ativo'
+                      : 'Gate documentos: bloqueio de disponibilidade desativado',
+                    'info'
+                  )
+                }}
+                onReportIncident={(tid) => {
+                  const typeInput = window.prompt(
+                    `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
+                  )
+                  if (!typeInput || !typeInput.trim()) return
+                  const parsed = Number.parseInt(typeInput.trim(), 10)
+                  const type =
+                    Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
+                      ? DRIVER_INCIDENT_TYPES[parsed - 1]
+                      : typeInput.trim()
+                  const note = window.prompt('Descrição curta da ocorrência:')
+                  if (!note || !note.trim()) return
+                  sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tid.slice(0, 8)}…`)
+                  addLog(`Ocorrência registada para ${tid} [${type}]: ${note.trim()}`, 'info')
+                }}
               />
-              {driverMapTapOnlineHint ? (
-                <div
-                  className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
-                  aria-hidden
-                >
-                  <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                    Toca no mapa para ficares disponível e activar o GPS
-                  </span>
-                </div>
-              ) : null}
-              {driverBottomNav && !showDriverHomeStep1 ? (
-                <div className="border-t border-border bg-muted/35">
-                  {offline ? (
-                    <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
-                  ) : (
-                    <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
-                  )}
-                </div>
-              ) : null}
             </div>
           )}
-          {offline && !driverBottomNav && (
-            <div className="py-8 text-center rounded-xl border border-border">
-              <p className="text-foreground/85 text-base">Estás offline.</p>
-              <p className="text-foreground/75 mt-2 text-sm">Activa a disponibilidade para veres o mapa.</p>
-            </div>
-          )}
-          {!driverBottomNav ? (
-            <button
-              type="button"
-              data-testid="driver-home-step1-continue"
-              disabled={offline}
-              onClick={() => setDriverHomeStep(2)}
-              className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
-            >
-              <span className="flex items-center justify-center gap-2 px-1">
-                <span>Ver pedidos e mapa completo</span>
-                {hasAvailableTrips && !offline ? (
-                  <span
-                    data-testid="driver-home-step1-pending-count"
-                    className="min-h-[1.5rem] min-w-[1.5rem] shrink-0 rounded-full bg-primary-foreground/25 px-1.5 text-xs font-bold tabular-nums leading-none inline-flex items-center justify-center"
-                    aria-label={`${filteredAvailable.length} pedido(s) em espera`}
-                  >
-                    {filteredAvailable.length > 99 ? '99+' : filteredAvailable.length}
-                  </span>
-                ) : null}
-              </span>
-            </button>
-          ) : null}
-        </div>
-      ) : (
-        <div
-          className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col' : 'contents'}
-        >
-          <header
-            className={`mb-4 flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
+          shellOffline={offline}
+          activeTripId={activeTripId}
+          onRequestGoAvailable={() => handleDriverAvailabilityChange(true)}
+        />
+
+        {showDriverHomeStep1 ? (
+          <div
+            className="space-y-4 transition-opacity duration-150"
+            data-testid="driver-home-step1"
           >
-            {driverBottomNav ? (
-              <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
-            ) : null}
-            <div className={`flex flex-col items-end gap-1.5 shrink-0 ${driverBottomNav ? '' : 'ml-auto'}`}>
-              {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
-                <button
-                  type="button"
-                  data-testid="driver-home-map-initial"
-                  onClick={() => setDriverHomeStep(1)}
-                  className="min-h-[40px] w-full rounded-xl border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-                >
-                  Mapa inicial
-                </button>
-              ) : null}
+            <div className="flex items-center justify-between gap-2">
+              <p className="min-w-0 flex-1 text-xs font-medium text-muted-foreground leading-snug">
+                Mapa e estado em primeiro plano; pedidos e detalhes quando precisares.
+              </p>
               {!driverBottomNav ? (
                 <button
                   type="button"
@@ -1204,13 +1129,21 @@ export function DriverDashboard() {
                 </button>
               ) : null}
             </div>
-          </header>
-
-          {driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
-            <div className="flex min-h-0 min-w-0 flex-1 w-[calc(100%+2.5rem)] -mx-5 flex-col overflow-hidden bg-background">
-              <div className="relative min-h-0 flex-1">
+            {driverBottomNav ? (
+              <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
+            ) : null}
+            {!driverBottomNav ? (
+              <Toggle
+                label="Estado"
+                checked={!offline}
+                onChange={handleDriverAvailabilityChange}
+                onLabel="Disponível"
+                offLabel="Offline"
+              />
+            ) : null}
+            {(!offline || driverBottomNav) && (
+              <div className="relative min-h-[min(52vh,24rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                 <MapView
-                  fillContainer
                   className="!rounded-none border-0 !shadow-none"
                   driverLocation={mapDotLatLng}
                   tripPickup={availableOfferMapPreview?.pickup ?? null}
@@ -1223,460 +1156,107 @@ export function DriverDashboard() {
                       ? mockStableRouteEndpoints
                       : undefined
                   }
-                  mapVisualWeight={
-                    offline && driverBottomNav && !activeTripId
-                      ? 'subdued'
-                      : activeTripId || (available && available.length > 0)
-                        ? 'subdued'
-                        : 'emphasized'
-                  }
+                  mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                   compactHeight={false}
-                  tallStage={false}
+                  tallStage={driverBottomNav && !activeTripId}
                   onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                 />
-                <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col justify-between gap-2 p-2">
-                  <div className="pointer-events-auto min-h-0 max-h-[min(40dvh,300px)] space-y-2 overflow-y-auto overscroll-contain pr-1">
-                    {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
-                      <div className="rounded-xl border border-violet-300 bg-violet-100 px-3 py-2 text-sm text-violet-800 dark:border-violet-400/40 dark:bg-violet-500/15 dark:text-violet-200">
-                        <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»:
-                        até ao destino (OSRM, 1&nbsp;s por ponto).
-                      </div>
-                    ) : null}
-                    {geolocationUsedFallback && (
-                      <div
-                        className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
-                        style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
-                      >
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span>Localização indisponível — a usar posição aproximada.</span>
-                          <button
-                            type="button"
-                            onClick={retryGeolocation}
-                            className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
-                          >
-                            Tentar outra vez
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
-                      <div
-                        className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
-                          ? 'bg-destructive/10 border-destructive/35 text-destructive'
-                          : 'bg-warning/15 border-warning/40 text-foreground'
-                          }`}
-                        data-testid="driver-driving-hours-banner"
-                      >
-                        {drivingCompliance.blocked ? (
-                          <>
-                            <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
-                            <p className="mt-1 text-foreground/90 leading-snug">
-                              [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o
-                              período de repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto
-                              genérico — substituir após validação do diploma e articulados aplicáveis
-                              (acompanhamento jurídico).
-                            </p>
-                            {drivingCompliance.rest_until ? (
-                              <p className="mt-1 text-xs opacity-90">
-                                Repouso até:{' '}
-                                {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
-                                  timeZone: 'Europe/Lisbon',
-                                })}
-                              </p>
-                            ) : null}
-                          </>
-                        ) : (
-                          <>
-                            <p className="font-medium leading-snug">Aviso de tempo de condução</p>
-                            <p className="mt-1 text-foreground/85 leading-snug">
-                              [PLACEHOLDER] Hoje levaste cerca de{' '}
-                              <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong>{' '}
-                              em viagem activa (máx. referência{' '}
-                              {formatDrivingDurationShort(drivingCompliance.max_seconds)} / dia civil, Lisboa). Evita
-                              aceitar serviços se estiveres perto do limite — quadro legal a substituir após
-                              validação normativa.
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    ) : null}
-                    {!offline && !!token && !!driverLocation && (
-                      <details
-                        className="rounded-lg border border-foreground/10 bg-background/90 px-2 py-1.5 text-[11px] text-foreground/75 shadow-sm backdrop-blur-sm"
-                        data-testid="driver-gps-upload-details"
-                      >
-                        <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
-                          <span>
-                            GPS envio:{' '}
-                            {gpsReport.lastError ? (
-                              <span className="text-destructive font-medium">
-                                erro {gpsReport.lastError.status ?? ''}
-                              </span>
-                            ) : (
-                              <span className="text-foreground/85">{gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}</span>
-                            )}
-                          </span>
-                          <span className="text-foreground/55 shrink-0">Diagnóstico</span>
-                        </summary>
-                        <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[11px] text-foreground/70">
-                          {gpsReport.lastError ? (
-                            <>
-                              <p>{String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}</p>
-                              {gpsReport.lastError.request_id ? (
-                                <p className="font-mono text-[10px] text-foreground/55">
-                                  request_id {gpsReport.lastError.request_id}
-                                </p>
-                              ) : null}
-                            </>
-                          ) : null}
-                          {serverLoc ? (
-                            <p>
-                              Servidor: {serverLoc.lat.toFixed(5)},{' '}
-                              {serverLoc.lng.toFixed(5)} (age ~
-                              {Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
-                            </p>
-                          ) : serverLocErr ? (
-                            <p>
-                              Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
-                            </p>
-                          ) : (
-                            <p>Servidor: a obter…</p>
-                          )}
-                        </div>
-                      </details>
-                    )}
-                    {!isOnline && (
-                      <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-                        <p className="font-medium text-foreground">Sem ligação à internet</p>
-                        <p className="text-foreground/80 mt-1">
-                          Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se
-                          precisares.
-                        </p>
-                      </div>
-                    )}
-                    {pollEnabled && availablePollFault && (
-                      <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-                        Não foi possível actualizar a lista de viagens. A última informação mantém-se; voltamos a
-                        tentar automaticamente — verifica a ligação se persistir.
-                      </div>
-                    )}
-                    {historyPollFault && (
-                      <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-                        Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso
-                        persistir.
-                      </div>
-                    )}
-                    {toast && (
-                      <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
-                        <button
-                          type="button"
-                          className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
-                          aria-label="Fechar aviso"
-                          onClick={() => setToast(null)}
-                        >
-                          ×
-                        </button>
-                        <p className="leading-snug">{toast}</p>
-                      </div>
-                    )}
-                    {error && (
-                      <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
-                        <button
-                          type="button"
-                          className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
-                          aria-label="Fechar mensagem de erro"
-                          onClick={() => setError(null)}
-                        >
-                          ×
-                        </button>
-                        <p className="leading-snug">{error}</p>
-                      </div>
-                    )}
-                    {actionLoading && actionTakingLong ? (
-                      <p className="text-center text-sm text-foreground/70" aria-live="polite">
-                        Ainda a processar… Se demorar muito, verifica a ligação.
-                      </p>
-                    ) : null}
-                  </div>
-                  <div
-                    id="driver-main-scroll"
-                    className="pointer-events-auto min-h-0 max-h-[min(46dvh,400px)] overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)]"
-                  >
-                    {!offline && !activeTripId ? (
-                      <>
-                        <StatusHeader
-                          label={
-                            hasAvailableTrips
-                              ? filteredAvailable.length === 1
-                                ? '1 viagem disponível'
-                                : `${filteredAvailable.length} viagens disponíveis`
-                              : 'À espera de viagens'
-                          }
-                          variant="idle"
-                          emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
-                          compact={hasAvailableTrips}
-                        />
-                        {pollEnabled && availableLoading && available == null ? (
-                          <div className="flex flex-col items-center justify-center gap-3 py-8 text-foreground/80">
-                            <Spinner size="md" />
-                            <p className="text-sm">A carregar viagens…</p>
-                          </div>
-                        ) : hasAvailableTrips ? (
-                          <ul className="space-y-3 pb-1">
-                            {filteredAvailable.map((t: TripAvailableItem) => (
-                              <li key={t.trip_id}>
-                                <RequestCard
-                                  contextHint={DRIVER_NEW_TRIP_LIST_HINT}
-                                  pickup={formatPickup(t.origin_lat, t.origin_lng)}
-                                  destination={formatDestination(t.destination_lat, t.destination_lng)}
-                                  statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
-                                  vehicleCategoryLabel={(() => {
-                                    const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
-                                    return one ? driverVehicleCategoryLabel(one) : null
-                                  })()}
-                                  estimatedPrice={t.estimated_price}
-                                  offerId={t.offer_id ?? null}
-                                  onReject={
-                                    t.offer_id ? () => void runRejectOffer(t.offer_id!, t.trip_id) : undefined
-                                  }
-                                  acceptButtonTestId={`driver-accept-${t.trip_id}`}
-                                  rejectButtonTestId={`driver-reject-${t.trip_id}`}
-                                  acceptVariant="slide"
-                                  onAccept={() =>
-                                    runAction(
-                                      () => acceptTrip(t.trip_id, token!),
-                                      t.trip_id,
-                                      'ACEITAR',
-                                      undefined,
-                                      t
-                                    )
-                                  }
-                                  loading={actionLoading === t.trip_id}
-                                  rejectLoading={actionLoading === `reject:${t.trip_id}`}
-                                />
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <div className="py-6 text-center text-foreground/80">
-                            <p className="text-base">Sem viagens disponíveis.</p>
-                            <p className="text-sm mt-1">
-                              {hasAnyCategoryAwareOffer && filteredOutCount > 0
-                                ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
-                                : 'Histórico em Menu → Viagens.'}
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    ) : null}
-                  </div>
-                </div>
                 {driverMapTapOnlineHint ? (
                   <div
-                    className="pointer-events-none absolute inset-x-0 bottom-[4.75rem] z-[6] flex justify-center px-3"
+                    className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
                     aria-hidden
                   >
                     <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                      Toca no mapa para ficares disponível
+                      Toca no mapa para ficares disponível e activar o GPS
                     </span>
                   </div>
                 ) : null}
-              </div>
-              {driverBottomNav && !activeTripId ? (
-                <div className="shrink-0 border-t border-border bg-muted/35">
-                  {offline ? (
-                    <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
-                  ) : (
-                    <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
-                  )}
-                </div>
-              ) : null}
-            </div>
-          )}
-
-          <div
-            className={driverMapStageLayout ? 'hidden' : 'flex min-h-0 flex-1 flex-col overflow-y-auto'}
-            id={driverMapStageLayout ? undefined : 'driver-main-scroll'}
-          >
-            {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
-              <div className="rounded-xl bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
-                <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»: até ao destino (OSRM, 1&nbsp;s por ponto).
-              </div>
-            ) : null}
-
-            {geolocationUsedFallback && (
-              <div
-                className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
-                style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
-              >
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span>Localização indisponível — a usar posição aproximada.</span>
-                  <button
-                    type="button"
-                    onClick={retryGeolocation}
-                    className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
-                  >
-                    Tentar outra vez
-                  </button>
-                </div>
-                {import.meta.env.DEV ? (
-                  <div className="mt-1">
-                    Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
-                    <strong>Configuração</strong> (ícone de engrenagem).
+                {driverBottomNav && !showDriverHomeStep1 ? (
+                  <div className="border-t border-border bg-muted/35">
+                    <DriverShellAvailabilityInner
+                      mapTapGoesOnline={mapTapGoesOnline}
+                      offline={offline}
+                      onGoOnline={() => handleDriverAvailabilityChange(true)}
+                      onGoOffline={() => handleDriverAvailabilityChange(false)}
+                    />
                   </div>
                 ) : null}
               </div>
             )}
-
-            {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
-              <div
-                className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
-                  ? 'bg-destructive/10 border-destructive/35 text-destructive'
-                  : 'bg-warning/15 border-warning/40 text-foreground'
-                  }`}
-                data-testid="driver-driving-hours-banner"
-              >
-                {drivingCompliance.blocked ? (
-                  <>
-                    <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
-                    <p className="mt-1 text-foreground/90 leading-snug">
-                      [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
-                      repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto genérico — substituir
-                      após validação do diploma e articulados aplicáveis (acompanhamento jurídico).
-                    </p>
-                    {drivingCompliance.rest_until ? (
-                      <p className="mt-1 text-xs opacity-90">
-                        Repouso até:{' '}
-                        {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
-                          timeZone: 'Europe/Lisbon',
-                        })}
-                      </p>
-                    ) : null}
-                  </>
-                ) : (
-                  <>
-                    <p className="font-medium leading-snug">Aviso de tempo de condução</p>
-                    <p className="mt-1 text-foreground/85 leading-snug">
-                      [PLACEHOLDER] Hoje levaste cerca de{' '}
-                      <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong> em
-                      viagem activa (máx. referência {formatDrivingDurationShort(drivingCompliance.max_seconds)} /
-                      dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite — quadro legal a
-                      substituir após validação normativa.
-                    </p>
-                  </>
-                )}
+            {offline && !driverBottomNav && (
+              <div className="py-8 text-center rounded-xl border border-border">
+                <p className="text-foreground/85 text-base">Estás offline.</p>
+                <p className="text-foreground/75 mt-2 text-sm">Activa a disponibilidade para veres o mapa.</p>
               </div>
-            ) : null}
-
-            {!offline && !!token && !!driverLocation && (
-              <details
-                className="rounded-lg border border-foreground/10 bg-foreground/[0.03] px-2 py-1.5 text-[11px] text-foreground/75"
-                data-testid="driver-gps-upload-details"
+            )}
+            {!driverBottomNav ? (
+              <button
+                type="button"
+                data-testid="driver-home-step1-continue"
+                disabled={offline}
+                onClick={() => setDriverHomeStep(2)}
+                className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
               >
-                <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
-                  <span>
-                    GPS envio:{' '}
-                    {gpsReport.lastError ? (
-                      <span className="text-destructive font-medium">erro {gpsReport.lastError.status ?? ''}</span>
-                    ) : (
-                      <span className="text-foreground/85">{gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}</span>
-                    )}
-                  </span>
-                  <span className="text-foreground/55 shrink-0">Diagnóstico</span>
-                </summary>
-                <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[11px] text-foreground/70">
-                  {gpsReport.lastError ? (
-                    <>
-                      <p>{String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}</p>
-                      {gpsReport.lastError.request_id ? (
-                        <p className="font-mono text-[10px] text-foreground/55">
-                          request_id {gpsReport.lastError.request_id}
-                        </p>
-                      ) : null}
-                    </>
+                <span className="flex items-center justify-center gap-2 px-1">
+                  <span>Ver pedidos e mapa completo</span>
+                  {hasAvailableTrips && !offline ? (
+                    <span
+                      data-testid="driver-home-step1-pending-count"
+                      className="min-h-[1.5rem] min-w-[1.5rem] shrink-0 rounded-full bg-primary-foreground/25 px-1.5 text-xs font-bold tabular-nums leading-none inline-flex items-center justify-center"
+                      aria-label={`${filteredAvailable.length} pedido(s) em espera`}
+                    >
+                      {filteredAvailable.length > 99 ? '99+' : filteredAvailable.length}
+                    </span>
                   ) : null}
-                  {serverLoc ? (
-                    <p>
-                      Servidor: {serverLoc.lat.toFixed(5)},{' '}
-                      {serverLoc.lng.toFixed(5)} (age ~{Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
-                    </p>
-                  ) : serverLocErr ? (
-                    <p>
-                      Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
-                    </p>
-                  ) : (
-                    <p>Servidor: a obter…</p>
-                  )}
-                </div>
-              </details>
-            )}
-
-            {!isOnline && (
-              <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-                <p className="font-medium text-foreground">Sem ligação à internet</p>
-                <p className="text-foreground/80 mt-1">
-                  Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se precisares.
-                </p>
-              </div>
-            )}
-
-            {pollEnabled && availablePollFault && (
-              <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-                Não foi possível atualizar a lista de viagens. A última informação mantém-se; voltamos a tentar
-                automaticamente — verifica a ligação se persistir.
-              </div>
-            )}
-
-            <div className="space-y-4 transition-opacity duration-150">
-              {!activeTripId ? (
-                driverBottomNav ? null : (
-                  <Toggle
-                    label="Estado"
-                    checked={!offline}
-                    onChange={handleDriverAvailabilityChange}
-                    onLabel="Disponível"
-                    offLabel="Offline"
-                  />
-                )
+                </span>
+              </button>
+            ) : null}
+          </div>
+        ) : (
+          <div
+            className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col' : 'contents'}
+          >
+            <header
+              className={`${driverMapStageLayout ? 'px-4 mb-2' : 'mb-4'} flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
+            >
+              {driverBottomNav ? (
+                <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
               ) : null}
-
-              {toast && (
-                <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
+              <div className={`flex flex-col items-end gap-1.5 shrink-0 ${driverBottomNav ? '' : 'ml-auto'}`}>
+                {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
                   <button
                     type="button"
-                    className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
-                    aria-label="Fechar aviso"
-                    onClick={() => setToast(null)}
+                    data-testid="driver-home-map-initial"
+                    onClick={() => setDriverHomeStep(1)}
+                    className="min-h-[40px] w-full rounded-xl border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
                   >
-                    ×
+                    Mapa inicial
                   </button>
-                  <p className="leading-snug">{toast}</p>
-                </div>
-              )}
-
-              {error && (
-                <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+                ) : null}
+                {!driverBottomNav ? (
                   <button
                     type="button"
-                    className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
-                    aria-label="Fechar mensagem de erro"
-                    onClick={() => setError(null)}
+                    data-testid="driver-open-menu"
+                    onClick={() => {
+                      setMenuOpen((v) => {
+                        const next = !v
+                        if (next) setDriverMenuScreen('root')
+                        return next
+                      })
+                    }}
+                    className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
                   >
-                    ×
+                    {menuOpen ? 'Fechar menu' : 'Menu'}
                   </button>
-                  <p className="leading-snug">{error}</p>
-                </div>
-              )}
+                ) : null}
+              </div>
+            </header>
 
-              {actionLoading && actionTakingLong && (
-                <p className="text-center text-sm text-foreground/70" aria-live="polite">
-                  Ainda a processar… Se demorar muito, verifica a ligação.
-                </p>
-              )}
-
-              {!driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
-                <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            {driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
+              <div className="flex min-h-0 min-w-0 flex-1 w-full flex-col overflow-hidden bg-background">
+                <div className="relative min-h-0 flex-1">
                   <MapView
+                    fillContainer
                     className="!rounded-none border-0 !shadow-none"
                     driverLocation={mapDotLatLng}
                     tripPickup={availableOfferMapPreview?.pickup ?? null}
@@ -1696,183 +1276,652 @@ export function DriverDashboard() {
                           ? 'subdued'
                           : 'emphasized'
                     }
-                    compactHeight={compactDriverSurface}
-                    tallStage={driverBottomNav && !activeTripId}
+                    compactHeight={false}
+                    tallStage={false}
                     onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                   />
+                  <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col gap-2 p-2">
+                    <div className="pointer-events-auto min-h-0 max-h-[min(28dvh,220px)] shrink-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
+                      {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
+                        <div className="rounded-xl border border-violet-300 bg-violet-100 px-3 py-2 text-sm text-violet-800 dark:border-violet-400/40 dark:bg-violet-500/15 dark:text-violet-200">
+                          <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»:
+                          até ao destino (OSRM, 1&nbsp;s por ponto).
+                        </div>
+                      ) : null}
+                      {geolocationUsedFallback && (
+                        <div
+                          className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+                          style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
+                        >
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span>Localização indisponível — a usar posição aproximada.</span>
+                            <button
+                              type="button"
+                              onClick={retryGeolocation}
+                              className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
+                            >
+                              Tentar outra vez
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+                        <div
+                          className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
+                            ? 'bg-destructive/10 border-destructive/35 text-destructive'
+                            : 'bg-warning/15 border-warning/40 text-foreground'
+                            }`}
+                          data-testid="driver-driving-hours-banner"
+                        >
+                          {drivingCompliance.blocked ? (
+                            <>
+                              <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
+                              <p className="mt-1 text-foreground/90 leading-snug">
+                                [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o
+                                período de repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto
+                                genérico — substituir após validação do diploma e articulados aplicáveis
+                                (acompanhamento jurídico).
+                              </p>
+                              {drivingCompliance.rest_until ? (
+                                <p className="mt-1 text-xs opacity-90">
+                                  Repouso até:{' '}
+                                  {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
+                                    timeZone: 'Europe/Lisbon',
+                                  })}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : (
+                            <>
+                              <p className="font-medium leading-snug">Aviso de tempo de condução</p>
+                              <p className="mt-1 text-foreground/85 leading-snug">
+                                [PLACEHOLDER] Hoje levaste cerca de{' '}
+                                <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong>{' '}
+                                em viagem activa (máx. referência{' '}
+                                {formatDrivingDurationShort(drivingCompliance.max_seconds)} / dia civil, Lisboa). Evita
+                                aceitar serviços se estiveres perto do limite — quadro legal a substituir após
+                                validação normativa.
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      ) : null}
+                      {!offline && !!token && !!driverLocation && (import.meta.env.DEV || gpsReport.lastError) ? (
+                        <details
+                          className="rounded-lg border border-foreground/10 bg-background/90 px-2 py-1.5 text-[11px] text-foreground/75 shadow-sm backdrop-blur-sm"
+                          data-testid="driver-gps-upload-details"
+                        >
+                          <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+                            <span>
+                              GPS envio:{' '}
+                              {gpsReport.lastError ? (
+                                <span className="text-destructive font-medium">
+                                  erro {gpsReport.lastError.status ?? ''}
+                                </span>
+                              ) : (
+                                <span className="text-foreground/85">{gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}</span>
+                              )}
+                            </span>
+                            <span className="text-foreground/55 shrink-0">Diagnóstico</span>
+                          </summary>
+                          <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[11px] text-foreground/70">
+                            {gpsReport.lastError ? (
+                              <>
+                                <p>{String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}</p>
+                                {gpsReport.lastError.request_id ? (
+                                  <p className="font-mono text-[10px] text-foreground/55">
+                                    request_id {gpsReport.lastError.request_id}
+                                  </p>
+                                ) : null}
+                              </>
+                            ) : null}
+                            {serverLoc ? (
+                              <p>
+                                Servidor: {serverLoc.lat.toFixed(5)},{' '}
+                                {serverLoc.lng.toFixed(5)} (age ~
+                                {Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
+                              </p>
+                            ) : serverLocErr ? (
+                              <p>
+                                Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
+                              </p>
+                            ) : (
+                              <p>Servidor: a obter…</p>
+                            )}
+                          </div>
+                        </details>
+                      ) : null}
+                      {!isOnline && (
+                        <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                          <p className="font-medium text-foreground">Sem ligação à internet</p>
+                          <p className="text-foreground/80 mt-1">
+                            Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se
+                            precisares.
+                          </p>
+                        </div>
+                      )}
+                      {pollEnabled && availablePollFault && (
+                        <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                          Não foi possível actualizar a lista de viagens. A última informação mantém-se; voltamos a
+                          tentar automaticamente — verifica a ligação se persistir.
+                        </div>
+                      )}
+                      {historyPollFault && (
+                        <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                          Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso
+                          persistir.
+                        </div>
+                      )}
+                      {toast && (
+                        <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
+                          <button
+                            type="button"
+                            className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                            aria-label="Fechar aviso"
+                            onClick={() => setToast(null)}
+                          >
+                            ×
+                          </button>
+                          <p className="leading-snug">{toast}</p>
+                        </div>
+                      )}
+                      {error && (
+                        <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+                          <button
+                            type="button"
+                            className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                            aria-label="Fechar mensagem de erro"
+                            onClick={() => setError(null)}
+                          >
+                            ×
+                          </button>
+                          <p className="leading-snug">{error}</p>
+                        </div>
+                      )}
+                      {actionLoading && actionTakingLong ? (
+                        <p className="text-center text-sm text-foreground/70" aria-live="polite">
+                          Ainda a processar… Se demorar muito, verifica a ligação.
+                        </p>
+                      ) : null}
+                    </div>
+                    {!offline && !activeTripId ? (
+                      <div
+                        id="driver-main-scroll"
+                        className="pointer-events-auto mt-auto min-h-0 max-h-[min(46dvh,400px)] overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)]"
+                      >
+                        <>
+                          <StatusHeader
+                            label={
+                              hasAvailableTrips
+                                ? filteredAvailable.length === 1
+                                  ? '1 viagem disponível'
+                                  : `${filteredAvailable.length} viagens disponíveis`
+                                : 'À espera de viagens'
+                            }
+                            variant="idle"
+                            emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
+                            compact={hasAvailableTrips}
+                          />
+                          {pollEnabled && availableLoading && available == null ? (
+                            <div className="flex flex-col items-center justify-center gap-3 py-8 text-foreground/80">
+                              <Spinner size="md" />
+                              <p className="text-sm">A carregar viagens…</p>
+                            </div>
+                          ) : hasAvailableTrips ? (
+                            <ul className="space-y-3 pb-1">
+                              {filteredAvailable.map((t: TripAvailableItem) => (
+                                <li key={t.trip_id}>
+                                  <RequestCard
+                                    contextHint={DRIVER_NEW_TRIP_LIST_HINT}
+                                    pickup={formatPickup(t.origin_lat, t.origin_lng)}
+                                    destination={formatDestination(t.destination_lat, t.destination_lng)}
+                                    statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                                    vehicleCategoryLabel={(() => {
+                                      const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
+                                      return one ? driverVehicleCategoryLabel(one) : null
+                                    })()}
+                                    estimatedPrice={t.estimated_price}
+                                    offerId={t.offer_id ?? null}
+                                    onReject={
+                                      t.offer_id ? () => void runRejectOffer(t.offer_id!, t.trip_id) : undefined
+                                    }
+                                    acceptButtonTestId={`driver-accept-${t.trip_id}`}
+                                    rejectButtonTestId={`driver-reject-${t.trip_id}`}
+                                    acceptVariant="slide"
+                                    onAccept={() =>
+                                      runAction(
+                                        () => acceptTrip(t.trip_id, token!),
+                                        t.trip_id,
+                                        'ACEITAR',
+                                        undefined,
+                                        t
+                                      )
+                                    }
+                                    loading={actionLoading === t.trip_id}
+                                    rejectLoading={actionLoading === `reject:${t.trip_id}`}
+                                  />
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="py-6 text-center text-foreground/80">
+                              <p className="text-base">Sem viagens disponíveis.</p>
+                              <p className="text-sm mt-1">
+                                {hasAnyCategoryAwareOffer && filteredOutCount > 0
+                                  ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
+                                  : 'Histórico em Menu → Viagens.'}
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      </div>
+                    ) : null}
+                  </div>
                   {driverMapTapOnlineHint ? (
                     <div
-                      className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
+                      className="pointer-events-none absolute inset-x-0 bottom-[4.75rem] z-[6] flex justify-center px-3"
                       aria-hidden
                     >
                       <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                        Toca no mapa para ficares disponível e activar o GPS
+                        Toca no mapa para ficares disponível
                       </span>
                     </div>
                   ) : null}
-                  {!activeTripId && hasAvailableTrips ? (
-                    <div className="border-t border-border bg-primary/10 px-3 py-2 text-center">
-                      <p className="text-sm font-semibold text-foreground">
-                        {filteredAvailable.length === 1
-                          ? '1 pedido no mapa'
-                          : `${filteredAvailable.length} pedidos no mapa`}
-                      </p>
-                      <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
-                        Primeira oferta na carta abaixo — deslizar ou «Aceitar com um toque».
-                      </p>
+                </div>
+                {driverBottomNav && !activeTripId ? (
+                  <div className="shrink-0 border-t border-border bg-muted/35">
+                    <DriverShellAvailabilityInner
+                      mapTapGoesOnline={mapTapGoesOnline}
+                      offline={offline}
+                      onGoOnline={() => handleDriverAvailabilityChange(true)}
+                      onGoOffline={() => handleDriverAvailabilityChange(false)}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            <div
+              className={driverMapStageLayout ? 'hidden' : 'flex min-h-0 flex-1 flex-col overflow-y-auto'}
+              id={driverMapStageLayout ? undefined : 'driver-main-scroll'}
+            >
+              {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
+                <div className="rounded-xl bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
+                  <span aria-hidden>🧪</span> Simulação — após aceitar: até à recolha; após «Iniciar viagem»: até ao destino (OSRM, 1&nbsp;s por ponto).
+                </div>
+              ) : null}
+
+              {geolocationUsedFallback && (
+                <div
+                  className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+                  style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
+                >
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span>Localização indisponível — a usar posição aproximada.</span>
+                    <button
+                      type="button"
+                      onClick={retryGeolocation}
+                      className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
+                    >
+                      Tentar outra vez
+                    </button>
+                  </div>
+                  {import.meta.env.DEV ? (
+                    <div className="mt-1">
+                      Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
+                      <strong>Configuração</strong> (ícone de engrenagem).
                     </div>
                   ) : null}
-                  {driverBottomNav && !activeTripId ? (
-                    <div className="border-t border-border bg-muted/35">
-                      {offline ? (
-                        <DriverMapOfflinePill onGoOnline={() => handleDriverAvailabilityChange(true)} />
+                </div>
+              )}
+
+              {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+                <div
+                  className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
+                    ? 'bg-destructive/10 border-destructive/35 text-destructive'
+                    : 'bg-warning/15 border-warning/40 text-foreground'
+                    }`}
+                  data-testid="driver-driving-hours-banner"
+                >
+                  {drivingCompliance.blocked ? (
+                    <>
+                      <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
+                      <p className="mt-1 text-foreground/90 leading-snug">
+                        [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
+                        repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto genérico — substituir
+                        após validação do diploma e articulados aplicáveis (acompanhamento jurídico).
+                      </p>
+                      {drivingCompliance.rest_until ? (
+                        <p className="mt-1 text-xs opacity-90">
+                          Repouso até:{' '}
+                          {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
+                            timeZone: 'Europe/Lisbon',
+                          })}
+                        </p>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium leading-snug">Aviso de tempo de condução</p>
+                      <p className="mt-1 text-foreground/85 leading-snug">
+                        [PLACEHOLDER] Hoje levaste cerca de{' '}
+                        <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong> em
+                        viagem activa (máx. referência {formatDrivingDurationShort(drivingCompliance.max_seconds)} /
+                        dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite — quadro legal a
+                        substituir após validação normativa.
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : null}
+
+              {!offline && !!token && !!driverLocation && (
+                <details
+                  className="rounded-lg border border-foreground/10 bg-foreground/[0.03] px-2 py-1.5 text-[11px] text-foreground/75"
+                  data-testid="driver-gps-upload-details"
+                >
+                  <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+                    <span>
+                      GPS envio:{' '}
+                      {gpsReport.lastError ? (
+                        <span className="text-destructive font-medium">erro {gpsReport.lastError.status ?? ''}</span>
                       ) : (
-                        <DriverMapAvailabilityPill onGoOffline={() => handleDriverAvailabilityChange(false)} />
+                        <span className="text-foreground/85">{gpsReport.lastOkAt ? 'ok' : 'a iniciar…'}</span>
                       )}
-                    </div>
-                  ) : null}
+                    </span>
+                    <span className="text-foreground/55 shrink-0">Diagnóstico</span>
+                  </summary>
+                  <div className="mt-2 space-y-1.5 border-t border-border/50 pt-2 text-[11px] text-foreground/70">
+                    {gpsReport.lastError ? (
+                      <>
+                        <p>{String(gpsReport.lastError.detail ?? 'Pedido de localização foi recusado.')}</p>
+                        {gpsReport.lastError.request_id ? (
+                          <p className="font-mono text-[10px] text-foreground/55">
+                            request_id {gpsReport.lastError.request_id}
+                          </p>
+                        ) : null}
+                      </>
+                    ) : null}
+                    {serverLoc ? (
+                      <p>
+                        Servidor: {serverLoc.lat.toFixed(5)},{' '}
+                        {serverLoc.lng.toFixed(5)} (age ~{Math.max(0, Math.round((Date.now() - serverLoc.timestamp) / 1000))}s)
+                      </p>
+                    ) : serverLocErr ? (
+                      <p>
+                        Servidor: erro {serverLocErr.status ?? ''} {serverLocErr.detail ?? ''}
+                      </p>
+                    ) : (
+                      <p>Servidor: a obter…</p>
+                    )}
+                  </div>
+                </details>
+              )}
+
+              {!isOnline && (
+                <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                  <p className="font-medium text-foreground">Sem ligação à internet</p>
+                  <p className="text-foreground/80 mt-1">
+                    Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se precisares.
+                  </p>
                 </div>
               )}
 
-              {offline && !(driverBottomNav && !activeTripId) && (
-                <div className="py-12 text-center">
-                  <p className="text-foreground/85 text-lg">Estás offline.</p>
-                  <p className="text-foreground/75 mt-2">Ativa a disponibilidade para receber viagens.</p>
+              {pollEnabled && availablePollFault && (
+                <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                  Não foi possível atualizar a lista de viagens. A última informação mantém-se; voltamos a tentar
+                  automaticamente — verifica a ligação se persistir.
                 </div>
               )}
 
-              {!offline && !activeTripId && !driverMapStageLayout && (
-                <>
-                  <StatusHeader
-                    label={
-                      hasAvailableTrips
-                        ? filteredAvailable.length === 1
-                          ? '1 viagem disponível'
-                          : `${filteredAvailable.length} viagens disponíveis`
-                        : 'À espera de viagens'
-                    }
-                    variant="idle"
-                    emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
-                    compact={hasAvailableTrips}
+              <div className="space-y-4 transition-opacity duration-150">
+                {!activeTripId ? (
+                  driverBottomNav ? null : (
+                    <Toggle
+                      label="Estado"
+                      checked={!offline}
+                      onChange={handleDriverAvailabilityChange}
+                      onLabel="Disponível"
+                      offLabel="Offline"
+                    />
+                  )
+                ) : null}
+
+                {toast && (
+                  <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
+                    <button
+                      type="button"
+                      className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                      aria-label="Fechar aviso"
+                      onClick={() => setToast(null)}
+                    >
+                      ×
+                    </button>
+                    <p className="leading-snug">{toast}</p>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+                    <button
+                      type="button"
+                      className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                      aria-label="Fechar mensagem de erro"
+                      onClick={() => setError(null)}
+                    >
+                      ×
+                    </button>
+                    <p className="leading-snug">{error}</p>
+                  </div>
+                )}
+
+                {actionLoading && actionTakingLong && (
+                  <p className="text-center text-sm text-foreground/70" aria-live="polite">
+                    Ainda a processar… Se demorar muito, verifica a ligação.
+                  </p>
+                )}
+
+                {!driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
+                  <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                    <MapView
+                      className="!rounded-none border-0 !shadow-none"
+                      driverLocation={mapDotLatLng}
+                      tripPickup={availableOfferMapPreview?.pickup ?? null}
+                      tripDropoff={availableOfferMapPreview?.dropoff ?? null}
+                      route={
+                        import.meta.env.DEV &&
+                          isMockLocationModeEnabled() &&
+                          mockStableRouteEndpoints &&
+                          activeTripId
+                          ? mockStableRouteEndpoints
+                          : undefined
+                      }
+                      mapVisualWeight={
+                        offline && driverBottomNav && !activeTripId
+                          ? 'subdued'
+                          : activeTripId || (available && available.length > 0)
+                            ? 'subdued'
+                            : 'emphasized'
+                      }
+                      compactHeight={compactDriverSurface}
+                      tallStage={driverBottomNav && !activeTripId}
+                      onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
+                    />
+                    {driverMapTapOnlineHint ? (
+                      <div
+                        className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
+                        aria-hidden
+                      >
+                        <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
+                          Toca no mapa para ficares disponível e activar o GPS
+                        </span>
+                      </div>
+                    ) : null}
+                    {!activeTripId && hasAvailableTrips ? (
+                      <div className="border-t border-border bg-primary/10 px-3 py-2 text-center">
+                        <p className="text-sm font-semibold text-foreground">
+                          {filteredAvailable.length === 1
+                            ? '1 pedido no mapa'
+                            : `${filteredAvailable.length} pedidos no mapa`}
+                        </p>
+                        <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
+                          Primeira oferta na carta abaixo — deslizar ou «Aceitar com um toque».
+                        </p>
+                      </div>
+                    ) : null}
+                    {driverBottomNav && !activeTripId ? (
+                      <div className="border-t border-border bg-muted/35">
+                        <DriverShellAvailabilityInner
+                          mapTapGoesOnline={mapTapGoesOnline}
+                          offline={offline}
+                          onGoOnline={() => handleDriverAvailabilityChange(true)}
+                          onGoOffline={() => handleDriverAvailabilityChange(false)}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
+                {offline && !(driverBottomNav && !activeTripId) && (
+                  <div className="py-12 text-center">
+                    <p className="text-foreground/85 text-lg">Estás offline.</p>
+                    <p className="text-foreground/75 mt-2">Ativa a disponibilidade para receber viagens.</p>
+                  </div>
+                )}
+
+                {!offline && !activeTripId && !driverMapStageLayout && (
+                  <>
+                    <StatusHeader
+                      label={
+                        hasAvailableTrips
+                          ? filteredAvailable.length === 1
+                            ? '1 viagem disponível'
+                            : `${filteredAvailable.length} viagens disponíveis`
+                          : 'À espera de viagens'
+                      }
+                      variant="idle"
+                      emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
+                      compact={hasAvailableTrips}
+                    />
+                    {pollEnabled && availableLoading && available == null ? (
+                      <div className="flex flex-col items-center justify-center gap-3 py-12 text-foreground/80">
+                        <Spinner size="md" />
+                        <p className="text-sm">A carregar viagens…</p>
+                      </div>
+                    ) : hasAvailableTrips ? (
+                      <ul className="space-y-4">
+                        {filteredAvailable.map((t: TripAvailableItem) => (
+                          <li key={t.trip_id}>
+                            <RequestCard
+                              contextHint={DRIVER_NEW_TRIP_LIST_HINT}
+                              pickup={formatPickup(t.origin_lat, t.origin_lng)}
+                              destination={formatDestination(t.destination_lat, t.destination_lng)}
+                              statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                              vehicleCategoryLabel={(() => {
+                                const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
+                                return one ? driverVehicleCategoryLabel(one) : null
+                              })()}
+                              estimatedPrice={t.estimated_price}
+                              offerId={t.offer_id ?? null}
+                              onReject={
+                                t.offer_id
+                                  ? () => void runRejectOffer(t.offer_id!, t.trip_id)
+                                  : undefined
+                              }
+                              acceptButtonTestId={`driver-accept-${t.trip_id}`}
+                              rejectButtonTestId={`driver-reject-${t.trip_id}`}
+                              acceptVariant="slide"
+                              onAccept={() =>
+                                runAction(
+                                  () => acceptTrip(t.trip_id, token!),
+                                  t.trip_id,
+                                  'ACEITAR',
+                                  undefined,
+                                  t
+                                )
+                              }
+                              loading={actionLoading === t.trip_id}
+                              rejectLoading={actionLoading === `reject:${t.trip_id}`}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="py-8 text-center text-foreground/80">
+                        <p className="text-base">Sem viagens disponíveis.</p>
+                        <p className="text-sm mt-1">
+                          {hasAnyCategoryAwareOffer && filteredOutCount > 0
+                            ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias ativas.`
+                            : 'Fica disponível para receberes novos pedidos.'}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {activeTripId && (
+                  <ActiveTripSummary
+                    tripId={activeTripId}
+                    token={token!}
+                    statusOverride={driverStatusOverride}
+                    detailFallback={acceptedDetailFallback}
+                    sessionRole={sessionRole}
+                    onClearStatusOverride={() => setDriverStatusOverride(null)}
+                    onTripCancelled={onActiveTripCancelled}
+                    onTripNotFound={onActiveTripNotFound}
+                    onDismissCompletedTrip={clearDriverActiveTripUi}
                   />
-                  {pollEnabled && availableLoading && available == null ? (
-                    <div className="flex flex-col items-center justify-center gap-3 py-12 text-foreground/80">
-                      <Spinner size="md" />
-                      <p className="text-sm">A carregar viagens…</p>
-                    </div>
-                  ) : hasAvailableTrips ? (
-                    <ul className="space-y-4">
-                      {filteredAvailable.map((t: TripAvailableItem) => (
-                        <li key={t.trip_id}>
-                          <RequestCard
-                            contextHint={DRIVER_NEW_TRIP_LIST_HINT}
-                            pickup={formatPickup(t.origin_lat, t.origin_lng)}
-                            destination={formatDestination(t.destination_lat, t.destination_lng)}
-                            statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
-                            vehicleCategoryLabel={(() => {
-                              const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
-                              return one ? driverVehicleCategoryLabel(one) : null
-                            })()}
-                            estimatedPrice={t.estimated_price}
-                            offerId={t.offer_id ?? null}
-                            onReject={
-                              t.offer_id
-                                ? () => void runRejectOffer(t.offer_id!, t.trip_id)
-                                : undefined
-                            }
-                            acceptButtonTestId={`driver-accept-${t.trip_id}`}
-                            rejectButtonTestId={`driver-reject-${t.trip_id}`}
-                            acceptVariant="slide"
-                            onAccept={() =>
-                              runAction(
-                                () => acceptTrip(t.trip_id, token!),
-                                t.trip_id,
-                                'ACEITAR',
-                                undefined,
-                                t
-                              )
-                            }
-                            loading={actionLoading === t.trip_id}
-                            rejectLoading={actionLoading === `reject:${t.trip_id}`}
-                          />
+                )}
+
+                {historyPollFault && (
+                  <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                    Não foi possível atualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
+                  </div>
+                )}
+
+                {!hasAvailableTrips && history && history.length > 0 && !driverMapStageLayout && (
+                  <section className="pt-6 mt-6 border-t border-border">
+                    <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
+                    <ul className="space-y-2">
+                      {history.slice(0, 5).map((t: TripHistoryItem) => (
+                        <li
+                          key={t.trip_id}
+                          className="flex flex-col gap-1 py-2 border-b border-border last:border-0 transition-opacity duration-150"
+                        >
+                          <div className="flex justify-between items-center gap-3">
+                            <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
+                              <span
+                                aria-hidden="true"
+                                className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
+                              />
+                              <span className="truncate">
+                                {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                                {formatDestination(t.destination_lat, t.destination_lng)}
+                              </span>
+                            </span>
+                            <div className="shrink-0 text-right">
+                              <p className="font-medium text-foreground">{driverHistoryPriceLabel(t)}</p>
+                              {formatMoneyEur(t.driver_payout) ? (
+                                <p className="text-[11px] text-muted-foreground">
+                                  Parte motorista: {formatMoneyEur(t.driver_payout)}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                          <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
                         </li>
                       ))}
                     </ul>
-                  ) : (
-                    <div className="py-8 text-center text-foreground/80">
-                      <p className="text-base">Sem viagens disponíveis.</p>
-                      <p className="text-sm mt-1">
-                        {hasAnyCategoryAwareOffer && filteredOutCount > 0
-                          ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias ativas.`
-                          : 'Fica disponível para receberes novos pedidos.'}
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
+                  </section>
+                )}
 
-              {activeTripId && (
-                <ActiveTripSummary
-                  tripId={activeTripId}
-                  token={token!}
-                  statusOverride={driverStatusOverride}
-                  detailFallback={acceptedDetailFallback}
-                  sessionRole={sessionRole}
-                  onClearStatusOverride={() => setDriverStatusOverride(null)}
-                  onTripCancelled={onActiveTripCancelled}
-                  onTripNotFound={onActiveTripNotFound}
-                  onDismissCompletedTrip={clearDriverActiveTripUi}
-                />
-              )}
-
-              {historyPollFault && (
-                <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-                  Não foi possível atualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
-                </div>
-              )}
-
-              {!hasAvailableTrips && history && history.length > 0 && !driverMapStageLayout && (
-                <section className="pt-6 mt-6 border-t border-border">
-                  <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
-                  <ul className="space-y-2">
-                    {history.slice(0, 5).map((t: TripHistoryItem) => (
-                      <li
-                        key={t.trip_id}
-                        className="flex flex-col gap-1 py-2 border-b border-border last:border-0 transition-opacity duration-150"
-                      >
-                        <div className="flex justify-between items-center gap-3">
-                          <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
-                            <span
-                              aria-hidden="true"
-                              className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
-                            />
-                            <span className="truncate">
-                              {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                              {formatDestination(t.destination_lat, t.destination_lng)}
-                            </span>
-                          </span>
-                          <div className="shrink-0 text-right">
-                            <p className="font-medium text-foreground">{driverHistoryPriceLabel(t)}</p>
-                            {formatMoneyEur(t.driver_payout) ? (
-                              <p className="text-[11px] text-muted-foreground">
-                                Parte motorista: {formatMoneyEur(t.driver_payout)}
-                              </p>
-                            ) : null}
-                          </div>
-                        </div>
-                        <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {token && !driverBottomNav ? <BetaAccountPanel /> : null}
+                {token && !driverBottomNav ? <BetaAccountPanel /> : null}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </ScreenContainer>
+        )}
+      </ScreenContainer>
+    </div>
   )
 }
 
