@@ -99,8 +99,9 @@ export function PassengerDashboard() {
 
   const passengerNavActive = useMemo((): PassengerShellTab => {
     if (!passengerMenuOpen) return 'home'
-    if (passengerMenuScreen === 'root') return 'menu'
-    return passengerMenuScreen === 'history' ? 'history' : 'account'
+    if (passengerMenuScreen === 'history') return 'history'
+    if (passengerMenuScreen === 'account') return 'account'
+    return 'menu'
   }, [passengerMenuOpen, passengerMenuScreen])
 
   const handlePassengerBottomNav = useCallback((tab: PassengerShellTab) => {
@@ -966,65 +967,65 @@ export function PassengerDashboard() {
 
   const passengerBottomChrome =
     passengerCancelOpen && primaryLabel === 'Cancelar' ? (
-            <div
-              className="w-full space-y-3 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-              data-testid="passenger-cancel-panel"
-            >
-              <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
-              <label className="block text-xs text-muted-foreground" htmlFor="passenger-cancel-preset">
-                Escolha rápida
-              </label>
-              <select
-                id="passenger-cancel-preset"
-                data-testid="passenger-cancel-preset"
-                className="w-full min-h-11 rounded-lg border border-border bg-card px-2 text-sm text-foreground touch-manipulation"
-                value={passengerCancelPreset}
-                onChange={(e) => setPassengerCancelPreset(e.target.value)}
-                disabled={cancelling}
-              >
-                {PASSENGER_TRIP_CANCEL_PRESETS.map((o) => (
-                  <option key={o.value || 'none'} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              {passengerCancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
-                <textarea
-                  data-testid="passenger-cancel-other"
-                  className="w-full min-h-[72px] rounded-lg border border-border bg-card px-2 py-2 text-sm text-foreground"
-                  placeholder="Descreve em poucas palavras (opcional)."
-                  maxLength={280}
-                  value={passengerCancelOther}
-                  onChange={(e) => setPassengerCancelOther(e.target.value)}
-                  disabled={cancelling}
-                />
-              ) : null}
-              <div className="flex flex-col gap-2 sm:flex-row-reverse">
-                <PrimaryActionButton
-                  variant="danger"
-                  loading={cancelling}
-                  disabled={cancelling}
-                  onClick={() =>
-                    void handleCancel(tripCancelReasonForApi(passengerCancelPreset, passengerCancelOther))
-                  }
-                >
-                  Confirmar cancelamento
-                </PrimaryActionButton>
-                <button
-                  type="button"
-                  data-testid="passenger-cancel-back"
-                  className="min-h-11 flex-1 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
-                  disabled={cancelling}
-                  onClick={() => {
-                    setPassengerCancelOpen(false)
-                    setPassengerCancelPreset('')
-                    setPassengerCancelOther('')
-                  }}
-                >
-                  Voltar
-                </button>
-              </div>
-            </div>
+      <div
+        className="w-full space-y-3 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+        data-testid="passenger-cancel-panel"
+      >
+        <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
+        <label className="block text-xs text-muted-foreground" htmlFor="passenger-cancel-preset">
+          Escolha rápida
+        </label>
+        <select
+          id="passenger-cancel-preset"
+          data-testid="passenger-cancel-preset"
+          className="w-full min-h-11 rounded-lg border border-border bg-card px-2 text-sm text-foreground touch-manipulation"
+          value={passengerCancelPreset}
+          onChange={(e) => setPassengerCancelPreset(e.target.value)}
+          disabled={cancelling}
+        >
+          {PASSENGER_TRIP_CANCEL_PRESETS.map((o) => (
+            <option key={o.value || 'none'} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        {passengerCancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
+          <textarea
+            data-testid="passenger-cancel-other"
+            className="w-full min-h-[72px] rounded-lg border border-border bg-card px-2 py-2 text-sm text-foreground"
+            placeholder="Descreve em poucas palavras (opcional)."
+            maxLength={280}
+            value={passengerCancelOther}
+            onChange={(e) => setPassengerCancelOther(e.target.value)}
+            disabled={cancelling}
+          />
+        ) : null}
+        <div className="flex flex-col gap-2 sm:flex-row-reverse">
+          <PrimaryActionButton
+            variant="danger"
+            loading={cancelling}
+            disabled={cancelling}
+            onClick={() =>
+              void handleCancel(tripCancelReasonForApi(passengerCancelPreset, passengerCancelOther))
+            }
+          >
+            Confirmar cancelamento
+          </PrimaryActionButton>
+          <button
+            type="button"
+            data-testid="passenger-cancel-back"
+            className="min-h-11 flex-1 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+            disabled={cancelling}
+            onClick={() => {
+              setPassengerCancelOpen(false)
+              setPassengerCancelPreset('')
+              setPassengerCancelOther('')
+            }}
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
     ) : showBottomPrimary && primaryLabel ? (
       <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
         <div className="px-4 py-2">

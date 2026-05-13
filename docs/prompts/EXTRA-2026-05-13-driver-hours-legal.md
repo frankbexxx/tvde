@@ -1,6 +1,8 @@
 # Prompt: horas de condução TVDE + bloqueio + aviso (+8 h / +10 h)
 
-**Lista EXTRA:** item **1**. **Dependências:** respostas **1–5** em [`EXTRA-2026-05-13-DECISOES.md`](EXTRA-2026-05-13-DECISOES.md).
+**Decisões fechadas (2026-05-06):** **1–5** na folha de decisões (janela **dia civil** / **Europe/Lisbon**; condução activa = **`ongoing` + `arriving`**; bloqueio = **offline forçado** + **override admin**; aviso +8 h = **texto simples**). **Validação legal** obrigatória antes de copy final em produção.
+
+**Lista EXTRA:** item **1**. **Dependências:** [`EXTRA-2026-05-13-DECISOES.md`](EXTRA-2026-05-13-DECISOES.md) (linhas 1–5).
 
 ## Objectivo
 

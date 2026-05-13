@@ -89,6 +89,11 @@ export type GeolocationMockRole = 'passenger' | 'driver'
 export type UseGeolocationOptions = {
   /** Em modo mock (dev): posição fixa — passageiro na recolha, motorista afastado (até simulação pós-aceitar). */
   mockRole?: GeolocationMockRole
+  /**
+   * Quando `false`, não subscreve `watchPosition` (evita pedido de permissão até o pai activar).
+   * Mock / demo ignoram isto e mantêm posição fixa.
+   */
+  watchEnabled?: boolean
 }
 
 function mockFixedPosition(role: GeolocationMockRole) {
@@ -126,6 +131,7 @@ const WATCH_POSITION_TIMEOUT_MS = 15_000
  */
 export function useGeolocation(options?: UseGeolocationOptions): GeolocationResult {
   const mockRole = options?.mockRole ?? 'passenger'
+  const watchEnabled = options?.watchEnabled ?? true
 
   const [position, setPosition] = useState<LatLng>(() => {
     if (isMockLocationModeEnabled()) {
@@ -166,6 +172,20 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
         setUsedFallback(false)
       })
       return
+    }
+
+    if (!watchEnabled) {
+      lastPositionRef.current = null
+      queueMicrotask(() => {
+        setPosition(null)
+        setUsedFallback(false)
+      })
+      return () => {
+        if (fallbackTimeoutRef.current) {
+          clearTimeout(fallbackTimeoutRef.current)
+          fallbackTimeoutRef.current = null
+        }
+      }
     }
 
     // After a previous geolocation failure in this session:
@@ -256,7 +276,7 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
         fallbackTimeoutRef.current = null
       }
     }
-  }, [mockRole, retryCounter])
+  }, [mockRole, retryCounter, watchEnabled])
 
   const retry = () => {
     // Em mock/demo não há o que retentar — posição vem de uma constante.

@@ -10,3 +10,11 @@ export function isDriverHomeTwoStepEnabled(): boolean {
 export function isDriverBottomNavEnabled(): boolean {
   return import.meta.env.VITE_DRIVER_BOTTOM_NAV === 'true'
 }
+
+/**
+ * Só inicia `watchPosition` após o utilizador tocar no mapa (menos prompts à entrada).
+ * Ver `docs/prompts/EXTRA-2026-05-13-DECISOES.md` #6.
+ */
+export function isDriverGeoOnFirstMapTapEnabled(): boolean {
+  return import.meta.env.VITE_DRIVER_GEO_ON_FIRST_MAP_TAP === 'true'
+}

@@ -1,5 +1,7 @@
 # Prompt: auditoria de ruído — ecrã principal motorista (7) e passageiro (8)
 
+**Decisões fechadas (2026-05-06):** **10** — referência Manel (offline/online, nav fixa); **3 pilares** por role: mapa/estado, CTA principal, navegação inferior; progressive disclosure OK.
+
 **Lista EXTRA:** itens **7**, **8** e meta **9** (cada entrega inclui secção **Decisões + riscos**).
 
 ## Objectivo

@@ -1,6 +1,8 @@
 # Prompt: mapa motorista full-bleed (fundo activo) + chrome fixo inferior
 
-**Lista EXTRA:** itens **3** e **6**. **Dependências:** **7** e **9** em [`EXTRA-2026-05-13-DECISOES.md`](EXTRA-2026-05-13-DECISOES.md).
+**Decisões fechadas (2026-05-06):** ver colunas **9** (nav inferior + strip; mapa de fundo excepto em menus; híbrido menu com overlay forte) e **7** (**adiado** — não bloqueia este prompt). **Item 6:** primeiro toque no mapa para GPS tratado em [`EXTRA-2026-05-13-driver-home-map-onboarding.md`](EXTRA-2026-05-13-driver-home-map-onboarding.md).
+
+**Lista EXTRA:** itens **3** e **6**. **Dependências:** folha [`EXTRA-2026-05-13-DECISOES.md`](EXTRA-2026-05-13-DECISOES.md) actualizada.
 
 ## Objectivo
 
@@ -32,5 +34,5 @@
 
 ## Decisões + riscos
 
-- **Item 7:** dois passos Top 3 vs um ecrã — **decisão única** antes de fundir com este layout.
+- **Item 7:** **adiado** — implementar layout sem esperar unificação Top3/mapa-first.
 - **Risco:** iOS Safari barra dinâmica — testar em device real ou Simulator.

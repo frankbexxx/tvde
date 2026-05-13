@@ -52,6 +52,10 @@ export interface MapViewProps {
   tripDropoff?: LatLng | null
   /** Usa altura mais compacta para manter CTAs visíveis em ecrãs curtos. */
   compactHeight?: boolean
+  /** Mapa mais alto no ecrã principal motorista (shell com bottom nav). */
+  tallStage?: boolean
+  /** Chamado em qualquer clique no mapa (antes do planeamento, se definido). */
+  onUserMapInteraction?: () => void
 }
 
 /** Câmara Municipal de Oeiras — centro inicial do mapa */
@@ -82,6 +86,8 @@ export function MapView({
   tripPickup = null,
   tripDropoff = null,
   compactHeight = false,
+  tallStage = false,
+  onUserMapInteraction,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
   const prevDriverRef = useRef<LatLng | null>(null)
@@ -228,17 +234,19 @@ export function MapView({
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {
+      onUserMapInteraction?.()
       if (!onPlanningMapClick) return
       const { lng, lat } = e.lngLat
       onPlanningMapClick({ lat, lng })
     },
-    [onPlanningMapClick]
+    [onPlanningMapClick, onUserMapInteraction]
   )
 
+  const mapClickHandler = onPlanningMapClick || onUserMapInteraction ? handleMapClick : undefined
+
   const isSubdued = mapVisualWeight === 'subdued'
-  const frameClass = `relative w-full rounded-2xl overflow-hidden bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${
-    isSubdued ? 'shadow-sm opacity-95' : 'shadow-card'
-  } ${className ?? ''}`
+  const frameClass = `relative w-full rounded-2xl overflow-hidden bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${isSubdued ? 'shadow-sm opacity-95' : 'shadow-card'
+    } ${className ?? ''}`
 
   if (!showMap) {
     return (
@@ -277,11 +285,12 @@ export function MapView({
       aria-label={onPlanningMapClick ? 'Mapa interactivo — selecciona recolha e destino' : 'Mapa da viagem'}
     >
       <div
-        className={`relative ${
-          compactHeight
+        className={`relative ${compactHeight
             ? 'h-[33vh] min-h-[170px] max-h-[280px]'
-            : 'h-[45vh] min-h-[220px] max-h-[420px]'
-        }`}
+            : tallStage
+              ? 'h-[min(56dvh,32rem)] min-h-[240px] max-h-[560px]'
+              : 'h-[45vh] min-h-[220px] max-h-[420px]'
+          }`}
       >
         <Map
           ref={mapRef}
@@ -291,10 +300,10 @@ export function MapView({
           style={{
             width: '100%',
             height: '100%',
-            cursor: onPlanningMapClick ? 'crosshair' : undefined,
+            cursor: onPlanningMapClick ? 'crosshair' : onUserMapInteraction ? 'pointer' : undefined,
           }}
           mapStyle={MAPTILER_STYLE}
-          onClick={onPlanningMapClick ? handleMapClick : undefined}
+          onClick={mapClickHandler}
         >
           {/* Viagem ativa: recolha + destino (P30) */}
           {tripPickup && tripDropoff ? (
@@ -315,25 +324,25 @@ export function MapView({
           {/* A015/A016: só em planeamento — sem marcadores de viagem ativa (evita sobrepor com um só leg definido). */}
           {!tripPickup && !tripDropoff
             ? pickupSelection ? (
-                <PassengerMarker
-                  longitude={pickupSelection.lng}
-                  latitude={pickupSelection.lat}
-                  colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
-                />
-              ) : (
-                passengerLocation && (
-                  <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
-                )
+              <PassengerMarker
+                longitude={pickupSelection.lng}
+                latitude={pickupSelection.lat}
+                colorClassName="bg-amber-500 ring-amber-400/60 shadow-md"
+              />
+            ) : (
+              passengerLocation && (
+                <PassengerMarker longitude={passengerLocation.lng} latitude={passengerLocation.lat} />
               )
+            )
             : null}
           {!tripPickup && !tripDropoff
             ? dropoffSelection ? (
-                <PassengerMarker
-                  longitude={dropoffSelection.lng}
-                  latitude={dropoffSelection.lat}
-                  colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
-                />
-              ) : null
+              <PassengerMarker
+                longitude={dropoffSelection.lng}
+                latitude={dropoffSelection.lat}
+                colorClassName="bg-emerald-600 ring-emerald-400/60 shadow-md"
+              />
+            ) : null
             : null}
 
           {/* Driver marker (posição suavizada — o enquadramento usa GPS cru) */}
