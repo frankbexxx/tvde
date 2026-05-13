@@ -15,7 +15,10 @@ import {
   driverDocumentStatusLabel,
   REQUIRED_DRIVER_DOCUMENTS,
   type DriverDocumentStatus,
+  type DriverRequiredDocument,
 } from '../../services/driverDocuments'
+
+const VEHICLE_DOCUMENT_KEYS: DriverRequiredDocument[] = ['inspecao_viatura']
 
 function locationBlock(d: PartnerDriverRow) {
   const loc = d.last_location
@@ -39,6 +42,8 @@ export function PartnerDriverDetail() {
   const [busy, setBusy] = useState<string | null>(null)
   const [zoneBudget, setZoneBudget] = useState<PartnerDriverZoneBudgetToday | null>(null)
   const [zoneBudgetLoading, setZoneBudgetLoading] = useState(false)
+  const [draftExpires, setDraftExpires] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
+  const [draftNotes, setDraftNotes] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -83,6 +88,20 @@ export function PartnerDriverDetail() {
     void load()
   }, [load])
 
+  useEffect(() => {
+    if (!d?.documents) return
+    const e: Partial<Record<DriverRequiredDocument, string>> = {}
+    const n: Partial<Record<DriverRequiredDocument, string>> = {}
+    for (const key of REQUIRED_DRIVER_DOCUMENTS) {
+      const row = d.documents![key]
+      const exp = row?.expires_at
+      e[key] = exp && exp.length >= 10 ? exp.slice(0, 10) : ''
+      n[key] = row?.partner_note ?? ''
+    }
+    setDraftExpires(e)
+    setDraftNotes(n)
+  }, [d?.documents, d?.user_id])
+
   const run = async (label: string, fn: () => Promise<PartnerDriverRow>) => {
     setBusy(label)
     setError(null)
@@ -97,7 +116,7 @@ export function PartnerDriverDetail() {
     }
   }
 
-  const runDoc = async (docKey: string, status: string) => {
+  const runDoc = async (docKey: DriverRequiredDocument, status: string) => {
     if (!userId) return
     setBusy('doc')
     setError(null)
@@ -111,6 +130,112 @@ export function PartnerDriverDetail() {
       setBusy(null)
     }
   }
+
+  const saveDocMeta = async (docKey: DriverRequiredDocument) => {
+    if (!userId) return
+    setBusy('docMeta')
+    setError(null)
+    const expRaw = (draftExpires[docKey] ?? '').trim()
+    const expires_at = expRaw ? `${expRaw}T12:00:00.000Z` : null
+    const note = (draftNotes[docKey] ?? '').trim().slice(0, 2000) || null
+    try {
+      const row = await patchPartnerDriverDocuments(userId, {
+        [docKey]: { expires_at, partner_note: note },
+      })
+      setD(row)
+    } catch (e: unknown) {
+      const err = e as { detail?: string }
+      setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao guardar validade/nota.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const driverOnlyDocKeys = REQUIRED_DRIVER_DOCUMENTS.filter((k) => !VEHICLE_DOCUMENT_KEYS.includes(k))
+
+  const renderDocSection = (
+    driver: PartnerDriverRow,
+    title: string,
+    hint: string,
+    keys: DriverRequiredDocument[],
+  ) => (
+    <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-3">
+      <p className="font-medium text-foreground">{title}</p>
+      <p className="text-xs text-muted-foreground">{hint}</p>
+      <div className="space-y-2">
+        {keys.map((key) => {
+          const row = driver.documents?.[key]
+          const st = row?.status ?? 'missing'
+          return (
+            <div key={key} className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-foreground">{driverDocumentLabel(key)}</span>
+                <span className="text-[11px] rounded-full border border-border px-2 py-0.5">
+                  {driverDocumentStatusLabel(st as DriverDocumentStatus)}
+                </span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="block space-y-1 text-[11px] text-muted-foreground">
+                  <span>Validade (data)</span>
+                  <input
+                    type="date"
+                    value={draftExpires[key] ?? ''}
+                    disabled={busy !== null}
+                    onChange={(ev) =>
+                      setDraftExpires((prev) => ({ ...prev, [key]: ev.target.value }))
+                    }
+                    className="w-full min-h-9 rounded-md border border-border bg-background px-2 text-xs text-foreground"
+                  />
+                </label>
+              </div>
+              <label className="block space-y-1 text-[11px] text-muted-foreground">
+                <span>Nota interna (frota)</span>
+                <textarea
+                  value={draftNotes[key] ?? ''}
+                  disabled={busy !== null}
+                  maxLength={2000}
+                  rows={2}
+                  onChange={(ev) =>
+                    setDraftNotes((prev) => ({ ...prev, [key]: ev.target.value }))
+                  }
+                  className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={busy !== null}
+                onClick={() => void saveDocMeta(key)}
+                className="w-full min-h-9 rounded-md border border-primary/40 bg-primary/10 text-xs font-semibold text-foreground disabled:opacity-50"
+              >
+                {busy === 'docMeta' ? '…' : 'Guardar validade e nota'}
+              </button>
+              <div className="flex flex-wrap gap-1">
+                {(
+                  [
+                    ['approved', 'Aprovar'],
+                    ['pending_review', 'Revisão'],
+                    ['rejected', 'Rejeitar'],
+                    ['expired', 'Expirado'],
+                    ['missing', 'Em falta'],
+                  ] as const
+                ).map(([s, label]) => (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={busy !== null}
+                    onClick={() => void runDoc(key, s)}
+                    className="min-h-8 rounded-md border border-border px-2 text-[11px] font-medium disabled:opacity-50"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   if (loading) {
     return <p className="p-4 text-sm text-muted-foreground">A carregar…</p>
@@ -154,55 +279,18 @@ export function PartnerDriverDetail() {
 
       {locationBlock(d)}
 
-      <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-3">
-        <p className="font-medium text-foreground">Documentos do motorista</p>
-        <p className="text-xs text-muted-foreground">
-          Estados partilhados com a app do motorista. Ajusta validade e notas quando necessário.
-        </p>
-        <div className="space-y-2">
-          {REQUIRED_DRIVER_DOCUMENTS.map((key) => {
-            const row = d.documents?.[key]
-            const st = row?.status ?? 'missing'
-            return (
-              <div key={key} className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-foreground">{driverDocumentLabel(key)}</span>
-                  <span className="text-[11px] rounded-full border border-border px-2 py-0.5">
-                    {driverDocumentStatusLabel(st as DriverDocumentStatus)}
-                  </span>
-                </div>
-                {row?.expires_at ? (
-                  <p className="text-[11px] text-muted-foreground">Validade: {row.expires_at}</p>
-                ) : null}
-                {row?.partner_note ? (
-                  <p className="text-[11px] text-muted-foreground">Nota: {row.partner_note}</p>
-                ) : null}
-                <div className="flex flex-wrap gap-1">
-                  {(
-                    [
-                      ['approved', 'Aprovar'],
-                      ['pending_review', 'Revisão'],
-                      ['rejected', 'Rejeitar'],
-                      ['expired', 'Expirado'],
-                      ['missing', 'Em falta'],
-                    ] as const
-                  ).map(([s, label]) => (
-                    <button
-                      key={s}
-                      type="button"
-                      disabled={busy !== null}
-                      onClick={() => void runDoc(key, s)}
-                      className="min-h-8 rounded-md border border-border px-2 text-[11px] font-medium disabled:opacity-50"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      {renderDocSection(
+        d,
+        'Viatura (documentos)',
+        'Inspeção e elementos ligados ao veículo associado ao motorista.',
+        VEHICLE_DOCUMENT_KEYS,
+      )}
+      {renderDocSection(
+        d,
+        'Motorista (documentos)',
+        'Estados partilhados com a app do motorista; validade e notas centralizadas na frota.',
+        driverOnlyDocKeys,
+      )}
 
       {approved && (
         <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-2">
