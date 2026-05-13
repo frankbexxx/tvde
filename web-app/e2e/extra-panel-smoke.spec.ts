@@ -127,7 +127,9 @@ test.describe('EXTRA panel — smoke', () => {
       `${BASE_URL}/partner/drivers/${encodeURIComponent(driverUserId)}`,
       { waitUntil: 'domcontentloaded', timeout: sec(120) }
     )
-    await expect(page.getByText('Documentos do motorista')).toBeVisible({ timeout: sec(60) })
+    // PartnerDriverDetail: secções «Viatura (documentos)» + «Motorista (documentos)» (antes: «Documentos do motorista»)
+    await expect(page.getByText('Motorista (documentos)')).toBeVisible({ timeout: sec(60) })
+    await expect(page.getByText('Viatura (documentos)')).toBeVisible({ timeout: sec(30) })
     await ctx.close()
   })
 })
