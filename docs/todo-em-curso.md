@@ -4,15 +4,28 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-13)
+## Agora (2026-05-14)
 
 **Contexto:** `main` inclui **#280**–**#289**, **#293** (Google passageiro + rate-limit), **#295** (matriz env `C:\dev\APP\docs\env\ENV_VARS_VERIFICATION.md` + templates). **Stack staging Render** operacional: **`tvde-staging-db`**, **`tvde-staging-api`**, **`tvde-staging-app`** (`https://tvde-staging-app.onrender.com`); OAuth Google **prod** activo; staging API sem `GOOGLE_OAUTH_*` até próxima sessão.
 
-**Hoje:** fechar **A2-02** no papel (§A2-03 + smokes staging + OAuth staging + utilizadores teste Google) conforme [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-13**; lista **EXTRA** produto no mesmo painel.
+**Legenda Estado** (fixa — mesmo vocabulário que o bloco *Formato dos painéis* em [`TODOdoDIA.md`](../TODOdoDIA.md)): Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A.
 
-**Sessão 2026-05-12 (fecho):** env + OAuth consola + provisioning staging + `alembic` no Shell Render + static + CORS; **EXTRA** movido para painel **2026-05-13**.
+**Sessão 2026-05-12 (fecho):** env + OAuth consola + provisioning staging + `alembic` no Shell Render + static + CORS; **EXTRA** herdado nos painéis **2026-05-13** e **2026-05-14**.
 
-**Próximo carril:** após staging/Google/smokes — **A4**; backlog **EXTRA** (som, nocturno, wake lock, partner/docs, QR partilhável, swipe aceitar, UX driver) em [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-13**.
+**Próximo carril:** após staging/Google/smokes — **A4**; backlog **EXTRA** em [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-14** (tabelas **X-**).
+
+### Trabalho vivo (painel **2026-05-14**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A2-02-1** | OAuth `GOOGLE_OAUTH_*` na API **staging** + URIs Google | Em curso | Ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14** |
+| **A2-02-2** | Smokes assertivos **staging** | Por iniciar | Depende de A2-02-1 onde aplicável |
+| **A2-02-3** | Fecho checklist §A2-03 / §A3 no audit | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+| **X-1** … **X-9** | Lista **EXTRA** produto (som, nocturno, wake lock, docs partner, QR, swipe, UX…) | Por iniciar / N/A (X-4) | Detalhe nas tabelas do painel **2026-05-14** |
+| **R-1** | Rotacional v3 | Por iniciar | [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) |
+| **F-1** | Motorista: CTA aceitar visível sem scroll (360×800) | Por iniciar | [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-14** |
+| **F-2** | Passageiro: menu → QR no ecrã | Por iniciar | Idem |
+| **F-3** … **F-6** | Placeholders issues (Lista Frank) | Por iniciar | Preencher nº GitHub no painel |
 
 - [x] **Linha rotacional v2 (infra)** — `GET /rotacional/messages` + `ROTACIONAL_FEED_JSON` + `AppHeaderBar`; spec [`docs/product/ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md) (**2026-05-11**).
 
@@ -22,15 +35,15 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 | ID | O quê | Estado |
 |----|--------|--------|
-| **A1** | Inventário de temas (lista bruta) | [x] — [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A1 |
-| **A2** | Priorização + backlog executável + gates | [x] — mesmo ficheiro §A2 |
-| **L1** | Produto, fluxos, RGPD mínimo (sem código) | [x] — [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md) |
-| **A3** | Gate: rate-limit, URIs, secret só no backend | [x] parcial — staging **criado** (DB+API+app); falta **OAuth na API staging**, **smokes assertivos**, fecho checklist §A3 / §A2-03 (ver painel [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-13**) |
-| **L2** | Backend + Google (`POST /auth/google/exchange`) + colunas `email` / `oauth_google_sub` | [x] |
-| **L3** | Web passageiro: callback `/auth/google/callback` + botão Google | [x] |
-| **A4** | Fecho onda auditoria (P1/P2 → trimestre) | [ ] |
+| **A1** | Inventário de temas (lista bruta) | Concluído — [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A1 |
+| **A2** | Priorização + backlog executável + gates | Concluído — mesmo ficheiro §A2 |
+| **L1** | Produto, fluxos, RGPD mínimo (sem código) | Concluído — [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md) |
+| **A3** | Gate: rate-limit, URIs, secret só no backend | Em curso — staging **criado** (DB+API+app); falta **OAuth na API staging**, **smokes assertivos**, fecho checklist §A3 / §A2-03 (ver painel [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**) |
+| **L2** | Backend + Google (`POST /auth/google/exchange`) + colunas `email` / `oauth_google_sub` | Concluído |
+| **L3** | Web passageiro: callback `/auth/google/callback` + botão Google | Concluído |
+| **A4** | Fecho onda auditoria (P1/P2 → trimestre) | Por iniciar |
 
-**Próximo passo executável:** **A2-02 (fecho)** — OAuth + test users na **staging**; smokes; marcar §A3 quando checklist verde; depois **A4**. Lista produto **EXTRA** — [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-13**.
+**Próximo passo executável:** **A2-02 (fecho)** — OAuth + test users na **staging**; smokes; marcar §A3 quando checklist verde; depois **A4**. Lista produto **EXTRA** — [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**.
 
 - [x] **Landing QR interna (`/download`) + redirects `/dl`·`/app`** — **merge `main`** **#289**.
 - [x] **Docs pós-#287** — **merge `main`** **#288** (`TODOdoDIA`, `todo-em-curso`, `VITE_APP_DOWNLOAD_URL` / templates).
@@ -54,9 +67,9 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 3. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
 4. ~~**Lembrete operacional — Stripe**~~ — **2026-05-11:** mock reposto em piloto; ver [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) § *Repor modo mock*.
 5. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*
-6. **Backlog** (sem data) — **rotacional v3** (spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md)); **A+L** — fecho **A2-02** (OAuth/smokes **staging**) + **A4**; **EXTRA** produto (som oferta, nocturno, wake lock, partner/docs, QR partilhável, swipe aceitar, UX driver) em [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-13**; docs [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
+6. **Backlog** (sem data) — **rotacional v3** (spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md)); **A+L** — fecho **A2-02** (OAuth/smokes **staging**) + **A4**; **EXTRA** produto (som oferta, nocturno, wake lock, partner/docs, QR partilhável, swipe aceitar, UX driver) em [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**; docs [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
 
-**Nota:** smokes em prod **fechados por agora** (última ronda documentada **2026-05-09**); após **#289**, ver checklist opcional no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-11**. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
+**Nota:** **Ronda smokes prod 2026-05-13** fechada (grelha **S-** no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**). **S-13** concluído **sem** reexecutar W1 (sem delta Stripe/cron). Daqui em diante: **E2E/pytest** no que for repetível; **smoke humano em prod** só **assertivo** quando houver **delta** no fluxo ou após deploy relevante — ver bloco *Testes automáticos vs smokes* no mesmo painel. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
 **Regra — fecho de etapas:** actualizar estes ficheiros mal algo esteja feito em `main` ou após smoke; **não** exigir confirmação explícita para marcar concluído (evitar retrabalho na leitura retroactiva).
 
@@ -66,7 +79,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 - [x] **Zonas v1 (fatia técnica)** — geo **catálogo** por `zone_id` (âncoras + **porto**); **orçamento extra** >2/dia via partner (`grant-extra` + UI frota). Prompt: [`docs/prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md`](prompts/PROMPT_ZONES_V1_BUDGET_EXTRA_AND_GEO.md).
 - [x] **Rotacional v2** — feed público opcional (`ROTACIONAL_FEED_JSON` + `GET /rotacional/messages`) + cabeçalho; **em `main`** + spec [`ROTACIONAL_V2_SPEC.md`](../product/ROTACIONAL_V2_SPEC.md).
 - [ ] **Rotacional v3** — job/cron + cache (~1 h) a puxar fontes externas (ex.: IPMA, Prociv onde aplicável; [Meteopt](https://www.meteopt.com) só após validar termos); substituir ou complementar o JSON curado quando fizer sentido.
-- [ ] **Rumo A+L** — **A2-02** fecho (OAuth staging + smokes + §A2-03) + **A4**; **EXTRA** motorista/partner/QR/som (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-13**); docs [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md), [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md). Fonte: [`PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md).
+- [ ] **Rumo A+L** — **A2-02** fecho (OAuth staging + smokes + §A2-03) + **A4**; **EXTRA** motorista/partner/QR/som (ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**); docs [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md), [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md). Fonte: [`PROJECT_AUDIT_2026-05-02.md`](audit/PROJECT_AUDIT_2026-05-02.md).
 
 ---
 
