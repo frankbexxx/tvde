@@ -45,6 +45,7 @@ export function RequestCard({
   rejectButtonTestId,
   acceptVariant = 'button',
 }: RequestCardProps) {
+  const slideCompact = acceptVariant === 'slide'
   const priceDisplay =
     estimatedPrice != null && estimatedPrice > 0
       ? `${estimatedPrice.toFixed(2)} €`
@@ -52,7 +53,11 @@ export function RequestCard({
 
   return (
     <div
-      className="rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-4 space-y-2 shadow-card transition-all duration-200"
+      className={
+        slideCompact
+          ? 'rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-3 space-y-1.5 shadow-card transition-all duration-200'
+          : 'rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-4 space-y-2 shadow-card transition-all duration-200'
+      }
     >
       {contextHint ? (
         <p className="text-xs font-semibold text-info">{contextHint}</p>
@@ -69,7 +74,9 @@ export function RequestCard({
       ) : null}
       <div className="space-y-0.5">
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
-        <p className="text-lg font-semibold text-foreground">{pickup}</p>
+        <p className={slideCompact ? 'text-base font-semibold text-foreground' : 'text-lg font-semibold text-foreground'}>
+          {pickup}
+        </p>
       </div>
       {destination ? (
         <div className="space-y-0.5 pt-1">
@@ -77,10 +84,12 @@ export function RequestCard({
           <p className="text-base font-semibold text-foreground/95">{destination}</p>
         </div>
       ) : null}
-      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className={`flex flex-col gap-3 ${slideCompact ? 'pt-1' : 'pt-2'} sm:flex-row sm:items-end sm:justify-between`}>
         <div>
           <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
-          <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
+          <span className={slideCompact ? 'text-xl font-bold text-foreground' : 'text-2xl font-bold text-foreground'}>
+            {priceDisplay}
+          </span>
         </div>
         <div
           className={
@@ -109,6 +118,7 @@ export function RequestCard({
           ) : null}
           {acceptVariant === 'slide' ? (
             <SlideToAccept
+              density="compact"
               onConfirm={onAccept}
               disabled={Boolean(rejectLoading)}
               loading={Boolean(loading)}
