@@ -14,6 +14,7 @@ import {
   patchDriverVehicleCategories as patchDriverVehicleCategoriesApi,
   setDriverOnline,
   setDriverOffline,
+  getDriverDrivingHoursCompliance,
 } from '../../api/trips'
 import type {
   TripAvailableItem,
@@ -214,6 +215,14 @@ function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatu
   }
 }
 
+function formatDrivingDurationShort(sec: number): string {
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  if (h <= 0) return `${m} min`
+  if (m <= 0) return `${h} h`
+  return `${h} h ${m} min`
+}
+
 export function DriverDashboard() {
   const { token, sessionRole } = useAuth()
   useScreenWakeLock(sessionRole === 'driver' && Boolean(token))
@@ -333,6 +342,14 @@ export function DriverDashboard() {
   )
 
   const pollEnabled = !!token && !offline
+
+  const compliancePollEnabled = Boolean(token && sessionRole === 'driver')
+  const { data: drivingCompliance } = usePolling(
+    () => getDriverDrivingHoursCompliance(token!),
+    [token],
+    compliancePollEnabled,
+    30_000
+  )
 
   useEffect(() => {
     if (!menuOpen || driverShellTab === 'home' || driverShellTab === 'menu') return
@@ -584,8 +601,17 @@ export function DriverDashboard() {
       return
     }
     if (activeTripId) return
-    void setDriverOnline(token).catch(() => { })
-  }, [token, offline, activeTripId])
+    void setDriverOnline(token).catch((err: unknown) => {
+      const e = err as { status?: number; detail?: unknown }
+      if (e?.status === 409 && e?.detail === 'driving_hours_blocked') {
+        setOffline(true)
+        setToast(
+          'Limite de tempo de condução ou repouso legal: não foi possível ficar disponível. Ver o aviso de horas no ecrã.'
+        )
+        addLog('Bloqueio: horas de condução / repouso', 'error')
+      }
+    })
+  }, [token, offline, activeTripId, addLog])
 
   useEffect(() => {
     if (toast) {
@@ -652,9 +678,18 @@ export function DriverDashboard() {
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string }
       if (e?.status === 409) {
-        setToast('Viagem já foi aceite por outro motorista.')
-        addLog('409: Viagem já aceite por outro motorista', 'error')
-        refetchAvailable()
+        if (e?.detail === 'driving_hours_blocked') {
+          setOffline(true)
+          setError(
+            'Não podes aceitar novas viagens: limite de tempo de condução neste dia civil ou período de repouso obrigatório (informação genérica — validar quadro legal com apoio jurídico).'
+          )
+          addLog('409: Bloqueio horas de condução ao aceitar', 'error')
+          refetchAvailable()
+        } else {
+          setToast('Viagem já foi aceite por outro motorista.')
+          addLog('409: Viagem já aceite por outro motorista', 'error')
+          refetchAvailable()
+        }
       } else {
         const msg = isTimeoutLikeError(err) || e?.status === 0
           ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
@@ -1206,6 +1241,45 @@ export function DriverDashboard() {
               ) : null}
             </div>
           )}
+
+          {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+            <div
+              className={`rounded-xl border px-3 py-2 text-sm ${
+                drivingCompliance.blocked
+                  ? 'bg-destructive/10 border-destructive/35 text-destructive'
+                  : 'bg-warning/15 border-warning/40 text-foreground'
+              }`}
+              data-testid="driver-driving-hours-banner"
+            >
+              {drivingCompliance.blocked ? (
+                <>
+                  <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
+                  <p className="mt-1 text-foreground/90 leading-snug">
+                    Não podes ficar disponível nem aceitar novas viagens até cumprires o período de repouso ou o
+                    limite diário deixar de aplicar (dia civil, Lisboa). Texto genérico — quadro legal a validar.
+                  </p>
+                  {drivingCompliance.rest_until ? (
+                    <p className="mt-1 text-xs opacity-90">
+                      Repouso até:{' '}
+                      {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
+                        timeZone: 'Europe/Lisbon',
+                      })}
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <p className="font-medium leading-snug">Aviso de tempo de condução</p>
+                  <p className="mt-1 text-foreground/85 leading-snug">
+                    Hoje levaste cerca de{' '}
+                    <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong> em
+                    viagem activa (máx. referência {formatDrivingDurationShort(drivingCompliance.max_seconds)} /
+                    dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite.
+                  </p>
+                </>
+              )}
+            </div>
+          ) : null}
 
           {!offline && !!token && !!driverLocation && (
             <details

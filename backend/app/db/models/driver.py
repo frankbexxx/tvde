@@ -25,6 +25,7 @@ from app.models.enums import DriverStatus
 
 if TYPE_CHECKING:
     from app.db.models.partner import Partner
+    from app.db.models.driver_active_driving_segment import DriverActiveDrivingSegment
     from app.db.models.trip import Trip
     from app.db.models.trip_offer import TripOffer
     from app.db.models.user import User
@@ -73,6 +74,11 @@ class Driver(Base):
         server_default="true",
         comment="True when driver can accept new trips.",
     )
+    driving_rest_until: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="UTC: block new accepts until this time (rest after daily driving limit).",
+    )
     cancellation_count: Mapped[int] = mapped_column(
         Integer,
         default=0,
@@ -103,6 +109,9 @@ class Driver(Base):
     partner: Mapped["Partner"] = relationship(back_populates="drivers")
     trips: Mapped[List["Trip"]] = relationship(back_populates="driver")
     offers: Mapped[List["TripOffer"]] = relationship(
+        back_populates="driver",
+    )
+    active_driving_segments: Mapped[List["DriverActiveDrivingSegment"]] = relationship(
         back_populates="driver",
     )
     last_location: Mapped[Optional["DriverLocation"]] = relationship(

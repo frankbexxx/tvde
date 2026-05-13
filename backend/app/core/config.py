@@ -100,6 +100,9 @@ class Settings(BaseSettings):
     # Exemplo: [{"text":"IPMA: aviso amarelo — aguaceiros.","source":"meteo"}]
     ROTACIONAL_FEED_JSON: str = ""
 
+    # B4: limite diário condução activa + repouso (Europe/Lisbon). Desligar só em diagnóstico.
+    ENABLE_DRIVING_HOURS_COMPLIANCE: bool = True
+
     # Login Google (OAuth2 authorization code). Ambos obrigatórios para activar POST /auth/google/exchange.
     GOOGLE_OAUTH_CLIENT_ID: str = ""
     GOOGLE_OAUTH_CLIENT_SECRET: str = ""

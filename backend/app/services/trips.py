@@ -30,6 +30,11 @@ from app.services.driver_preferences import (
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.driver_zones import maybe_consume_zone_session_on_trip_complete
+from app.services.driving_compliance import (
+    assert_driver_can_accept_by_driving_hours,
+    on_trip_status_change_for_driving_compliance,
+    apply_availability_after_trip_ends_with_compliance,
+)
 from app.services.stripe_service import (
     cancel_payment_intent,
     capture_payment_intent,
@@ -292,6 +297,7 @@ def cancel_trip_by_passenger(
             logger.warning(f"cancel_trip_by_passenger: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
+    on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
@@ -318,14 +324,8 @@ def cancel_trip_by_passenger(
 
 
 def _set_driver_available(db: Session, driver_id: str | None) -> None:
-    """Set driver is_available=True when trip ends."""
-    if not driver_id:
-        return
-    driver = db.execute(
-        select(Driver).where(Driver.user_id == driver_id)
-    ).scalar_one_or_none()
-    if driver and hasattr(driver, "is_available"):
-        driver.is_available = True
+    """Set driver is_available=True when trip ends (respeitando horas de condução)."""
+    apply_availability_after_trip_ends_with_compliance(db, driver_id)
 
 
 def cancel_trip_by_driver(
@@ -384,6 +384,7 @@ def cancel_trip_by_driver(
             logger.warning(f"cancel_trip_by_driver: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
+    on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
@@ -467,6 +468,7 @@ def cancel_trip_by_admin(
         cr = cancellation_reason.strip()
         if cr:
             trip.cancellation_reason = cr[:280]
+    on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
     db.refresh(trip)
@@ -524,6 +526,7 @@ def admin_apply_trip_transition(
     trip.status = to_status
     if to_status == TripStatus.ongoing and trip.started_at is None:
         trip.started_at = datetime.now(timezone.utc)
+    on_trip_status_change_for_driving_compliance(db, trip, old, trip.status)
     db.commit()
     db.refresh(trip)
     log_event(
@@ -677,6 +680,7 @@ def accept_trip(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
+    assert_driver_can_accept_by_driving_hours(db, driver_id)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -828,6 +832,7 @@ def accept_offer(
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+    assert_driver_can_accept_by_driving_hours(db, driver_id)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -1106,6 +1111,7 @@ def mark_trip_arriving(
     validate_trip_transition(trip.status, TripStatus.arriving, trip_id=str(trip.id))
     old_status = trip.status
     trip.status = TripStatus.arriving
+    on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     db.commit()
     db.refresh(trip)
     log_event(
@@ -1178,6 +1184,7 @@ def start_trip(
     old_status = trip.status
     trip.status = TripStatus.ongoing
     trip.started_at = datetime.now(timezone.utc)
+    on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     db.commit()
     db.refresh(trip)
     log_event(
@@ -1464,6 +1471,7 @@ def complete_trip(
     trip.final_price = amount_store
     trip.status = TripStatus.completed
     trip.completed_at = datetime.now(timezone.utc)
+    on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     payment.total_amount = amount_store
     payment.commission_amount = float(commission_amount)
