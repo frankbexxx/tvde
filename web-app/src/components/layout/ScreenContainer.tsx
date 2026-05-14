@@ -18,6 +18,8 @@ interface ScreenContainerProps {
    * (`h-full`/`min-h-0` em cadeia flex em vez de `min-h-dvh`).
    */
   contentVariant?: 'default' | 'driverImmersive'
+  /** Ecrã motorista: largura total do browser (sem coluna `max-w-md` centrada). */
+  fullBleed?: boolean
 }
 
 /**
@@ -32,6 +34,7 @@ export function ScreenContainer({
   mainScrollId,
   mainScrollable = true,
   contentVariant = 'default',
+  fullBleed = false,
 }: ScreenContainerProps) {
   const scrollBottomPad =
     bottomButton && bottomBarVariant === 'flush'
@@ -40,6 +43,7 @@ export function ScreenContainer({
         ? 'pb-20'
         : 'pb-8'
   const immersive = contentVariant === 'driverImmersive'
+  const widthShell = fullBleed ? 'w-full max-w-none' : 'max-w-md mx-auto w-full'
   const mainColumn =
     mainScrollable === false
       ? immersive
@@ -53,8 +57,8 @@ export function ScreenContainer({
     <div
       className={
         immersive
-          ? 'flex min-h-0 h-full flex-1 flex-col max-w-md mx-auto w-full bg-background'
-          : 'min-h-dvh flex flex-col max-w-md mx-auto w-full bg-background'
+          ? `flex min-h-0 h-full flex-1 flex-col ${widthShell} bg-background`
+          : `min-h-dvh flex flex-col ${widthShell} bg-background`
       }
     >
       <div id={mainScrollable !== false ? mainScrollId : undefined} className={mainColumn}>
@@ -65,8 +69,12 @@ export function ScreenContainer({
           <div
             className={
               bottomBarVariant === 'flush'
-                ? 'max-w-md mx-auto w-full'
-                : 'max-w-md mx-auto px-5 py-4 safe-area-pb'
+                ? fullBleed
+                  ? 'w-full'
+                  : 'max-w-md mx-auto w-full'
+                : fullBleed
+                  ? 'w-full px-4 py-4 safe-area-pb'
+                  : 'max-w-md mx-auto px-5 py-4 safe-area-pb'
             }
           >
             {bottomButton}

@@ -124,12 +124,17 @@ export function AppRoutes() {
     return <LoginScreen requestedRole={requestedRole} />
   }
 
+  const driverShellFullWidth = pathname.startsWith('/driver')
+  const appShellClass = driverShellFullWidth
+    ? 'min-h-dvh bg-background flex flex-col w-full max-w-none'
+    : 'min-h-dvh bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto'
+
   return (
-    <div className="min-h-dvh bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto">
+    <div className={appShellClass}>
       <AppHeaderBar />
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
         <main
-          className={`flex min-h-0 min-w-0 flex-1 flex-col ${pathname.startsWith('/driver') ? 'overflow-hidden' : 'overflow-y-auto'}`}
+          className={`flex min-h-0 min-w-0 flex-1 flex-col ${driverShellFullWidth ? 'overflow-hidden' : 'overflow-y-auto'}`}
         >
           <Routes>
             <Route path="/dl" element={<AppDownloadRedirect />} />

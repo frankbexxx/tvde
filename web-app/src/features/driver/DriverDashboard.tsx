@@ -826,7 +826,7 @@ export function DriverDashboard() {
 
   const bottomChrome =
     driverBottomNav && showDriverHomeStep1 && activeTripId == null ? (
-      <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
+      <div className="w-full border-t border-border bg-background/95 backdrop-blur-sm">
         <div className="border-b border-border bg-muted/35">
           <DriverShellAvailabilityInner
             mapTapGoesOnline={mapTapGoesOnline}
@@ -928,6 +928,7 @@ export function DriverDashboard() {
       }
     >
       <ScreenContainer
+        fullBleed
         contentVariant={driverMapStageLayout ? 'driverImmersive' : 'default'}
         bottomButton={bottomChrome}
         bottomBarVariant={activeTripId ? 'inset' : driverBottomNav ? 'flush' : 'inset'}
