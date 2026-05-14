@@ -2,11 +2,22 @@
 
 **Nota:** no `/driver`, o cabeçalho global usa a variante **compacta** (FIX-002): wordmark + data na mesma linha, dicas compactas; identidade e Conta/Definições no **Menu → Perfil**.
 
+**Estado do inventário (alinhação):**
+
+| Tabela | Estado | Nota |
+|--------|--------|------|
+| **A** — Shell global (D-G-01 … D-G-09) | **Fechada** | Validada em uso após merge; coluna «LOCALIZAÇÃO» descreve ainda o layout de referência — a implementação actual segue FIX-002 no `/driver`. |
+| **B** — Barra inferior (D-NAV-01 … 04) | **Fechada** | Sem alterações planeadas. |
+| **C** — Ecrã 1 passo inicial (D-S1-01 … D-S1-26) | **Parcialmente implementada** | FIX-004 (remoções D-S1-01/02/06/08) e FIX-005 (D-S1-21) entregues no código; inventário detalhado pode ainda descrever labels antigos — alinhar na próxima revisão doc. |
+| **D** — Ecrã 2 palco mapa | — | Inalterada nesta fase. |
+
 **Nota de produto:** o ecrã 1 só existe se `isDriverHomeTwoStepEnabled()` for verdadeiro; caso contrário o utilizador cai directamente no ecrã 2. Com `isDriverBottomNavEnabled()` falso, o layout muda (sem barra inferior Manel; toggle «Estado» no passo 1, etc.) — as linhas assinaladas com *(cond.)* aplicam-se só nesse modo.
 
 ---
 
 ## Tabela A — Shell global (visível em ambos enquanto estás em `/driver`)
+
+**Estado: fechada** (sem novos itens; implementação driver = variante compacta + Perfil no menu.)
 
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|
@@ -24,6 +35,8 @@
 
 ## Tabela B — Barra de navegação inferior (ícones)
 
+**Estado: fechada** (sem mudanças planeadas.)
+
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|
 | D-NAV-01 | Início | Tab «home» do shell; recolhe menu para início | Barra fixa inferior, 1.º botão |
@@ -35,7 +48,52 @@
 
 ## Tabela C — Ecrã 1 (passo inicial / `driver-home-step1`)
 
+**Estado:** decisões registadas; **remoções D-S1-01/02/06/08 e mudança D-S1-21** reflectidas no código (ver backlog FIX-004 / FIX-005).
+
 *Fluxo: mapa em cartão com altura limitada; com bottom nav, a disponibilidade + CTA + nav estão na barra fixa composta (`bottomChrome`).*
+
+### Decisões por ID (produto)
+
+| ID | Decisão |
+|----|---------|
+| D-S1-01 | **REMOVER** |
+| D-S1-02 | **REMOVER** |
+| D-S1-03 | **MANTER** |
+| D-S1-04 | **MANTER** |
+| D-S1-05 | **MANTER** |
+| D-S1-06 | **REMOVER** |
+| D-S1-07 | **MANTER** |
+| D-S1-08 | **REMOVER** |
+| D-S1-09 | **MANTER** |
+| D-S1-10 | **MANTER** |
+| D-S1-11 | **MANTER** |
+| D-S1-12 | **MANTER** |
+| D-S1-13 | **MANTER** |
+| D-S1-14 | **MANTER** |
+| D-S1-15 | **MANTER** |
+| D-S1-16 | **MANTER** |
+| D-S1-17 | **MANTER** |
+| D-S1-18 | **MANTER** |
+| D-S1-19 | **MANTER** |
+| D-S1-20 | **MANTER** |
+| D-S1-21 | **MUDAR** — sem pedidos: box **mínima**; com pedidos: lista **por baixo do mapa** + **marcadores / ícones de viagens no mapa**. |
+| D-S1-22 | **MANTER** |
+| D-S1-23 | **MANTER** |
+| D-S1-24 | **MANTER** |
+| D-S1-25 | **MANTER** |
+| D-S1-26 | **MANTER** |
+
+### Notas de alinhamento (discussão)
+
+**1. Dois dashboards** — Opinião: um **caminho alvo** (Manel) reduz custo; variantes `!driverBottomNav` são **legado** até haver decisão de as cortar. **REMOVER** D-S1-02 e D-S1-06 só é seguro quando não houver utilizadores nesse modo **ou** houver outro acesso claro a Menu / disponibilidade nesse fluxo.
+
+**2. Avisos DEV / mocks** — Opinião: em **produção** o motorista não precisa de mocks/versions; **DEV** pode usar painel discreto, **admin** ou **DevTools**. Manter no motorista só o que for **operacional** (GPS, rede, documentos, horas, erros de acção). **D-S1-08 REMOVER** encaixa aqui.
+
+**3. D-S1-21 (vazio vs com pedidos)** — Opinião: faz sentido e alinha com map-first; reutilizar lógica de preview no mapa onde já existir no palco 2.
+
+**4. D-S1-08** — Confirmado **REMOVER**.
+
+### Inventário detalhado Tabela C (referência; colunas descrevem o estado actual do código)
 
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|

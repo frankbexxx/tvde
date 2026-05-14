@@ -180,8 +180,8 @@ export function DevTools({
         addLog(`Diagnóstico: ${rc}`, rc.startsWith('OK') ? 'success' : 'error')
         addLog(
           `  → drivers com localização: ${d.step_1_drivers_with_location?.count ?? 0}, ` +
-            `no raio: ${d.step_2_drivers_in_radius?.count ?? 0}, ` +
-            `ofertas: ${d.step_3_offers?.count ?? 0}`,
+          `no raio: ${d.step_2_drivers_in_radius?.count ?? 0}, ` +
+          `ofertas: ${d.step_3_offers?.count ?? 0}`,
           'info'
         )
         devLog('Diagnóstico viagem:', d)
@@ -205,8 +205,8 @@ export function DevTools({
         addLog(`Diagnóstico: ${rc}`, rc.startsWith('OK') ? 'success' : 'error')
         addLog(
           `  → localização: ${d.has_location ? 'sim' : 'não'}, ` +
-            `disponível: ${d.is_available ? 'sim' : 'não'}, ` +
-            `ofertas pendentes: ${d.pending_offers_count ?? 0}`,
+          `disponível: ${d.is_available ? 'sim' : 'não'}, ` +
+          `ofertas pendentes: ${d.pending_offers_count ?? 0}`,
           'info'
         )
         devLog('Diagnóstico motorista:', d)
@@ -229,13 +229,18 @@ export function DevTools({
       </button>
       {open && (
         <div className="px-4 pb-4 flex flex-wrap gap-2 border-t border-border pt-3">
+          {import.meta.env.DEV && mode === 'driver' && isMockLocationModeEnabled() ? (
+            <p className="w-full text-xs text-muted-foreground">
+              Simulação OSRM: após aceitar, até à recolha; após «Iniciar viagem», até ao destino (1&nbsp;s por
+              ponto).
+            </p>
+          ) : null}
           <button
             onClick={handleToggleDemoLocation}
-            className={`px-3 py-1.5 text-sm rounded-lg ${
-              isDemoLocationEnabled()
+            className={`px-3 py-1.5 text-sm rounded-lg ${isDemoLocationEnabled()
                 ? 'bg-success/30 text-success'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
+              }`}
             title="Usar Oeiras (Câmara Municipal) sem pedir permissão de localização (útil no PC)"
           >
             {isDemoLocationEnabled() ? '✓ Demo Oeiras' : 'Demo Oeiras'}
@@ -243,11 +248,10 @@ export function DevTools({
           <button
             type="button"
             onClick={handleToggleMockLocation}
-            className={`px-3 py-1.5 text-sm rounded-lg ${
-              isMockLocationModeEnabled()
+            className={`px-3 py-1.5 text-sm rounded-lg ${isMockLocationModeEnabled()
                 ? 'bg-violet-500/25 text-violet-200 border border-violet-400/40'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
+              }`}
             title="Simular movimento ao longo de uma rota de teste (só npm run dev). Console: localStorage.setItem('mockLocation','true')"
           >
             {isMockLocationModeEnabled() ? '✓ Simular rota' : 'Simular rota'}

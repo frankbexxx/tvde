@@ -1,6 +1,20 @@
 # Backlog de fixes UX — motorista
 
-Lista incremental: **não executar até acordar ordem / sprint**. Cada entrada descreve o fix; implementação fica para depois.
+Lista incremental: cada entrada descreve o fix; estado em **Estado** quando aplicável.
+
+**Próximo na fila:** revisões de UX após uso real do passo 1 (Tabela C); ver também **TODO-LEGADO** (não bloqueante).
+
+---
+
+## FIX-003 — Micro disponibilidade: estado OFF em vermelho (não cinza)
+
+**Contexto:** o micro on/off (`DriverMapAvailabilityMicroToggle`) está funcional; em **disponível (on)** o indicador **verde** está correcto. Em **offline (off)** o indicador usa **cinza**, o que é **ambíguo** (parece neutro / desactivado).
+
+**Comportamento desejado:** quando **offline**, o indicador deve ser claramente **vermelho** (ou equivalente semântico «não disponível»), mantendo o verde para **disponível**. Sem mudar a lógica de toque (map-touch online mantém-se onde aplicável).
+
+**Referência:** `web-app/src/features/driver/DriverMapAvailabilityMicroToggle.tsx`.
+
+**Estado:** entregue (indicador OFF com `destructive` / vermelho semântico).
 
 ---
 
@@ -15,6 +29,8 @@ Lista incremental: **não executar até acordar ordem / sprint**. Cada entrada d
 - **UI:** um só controlo pequeno no perímetro (ex.: canto), legível e clicável acima dos tiles; reflecte disponível vs offline (e eventualmente “em viagem” se aplicável); o toque quando **disponível** passa a **offline**; quando **offline**, o online continua a ser preferencialmente pelo **map-touch** (comportamento já acordado), salvo refinamento futuro do mesmo controlo.
 
 **Notas para implementação futura:** definir canto, acessibilidade (`aria-label`, estado anunciado), e não bloquear gestos do mapa excepto na hit-area do micro-controlo.
+
+**Estado:** comportamento entregue; ajuste visual do estado OFF em **FIX-003**.
 
 ---
 
@@ -40,6 +56,32 @@ Lista incremental: **não executar até acordar ordem / sprint**. Cada entrada d
 **(b)** = **em frente do wordmark** (mesma faixa visual que a marca).
 
 **Aviso de produto (não é bloqueio, só atenção):** concentrar D-G-02…04 e D-G-06…07 na aba Perfil pode exigir **hierarquia clara** nessa aba (identidade vs acções); definições deixam de ser **um toque** no cabeçalho global.
+
+---
+
+## FIX-004 — Tabela C: remoções no passo 1 (D-S1-01, D-S1-02, D-S1-06, D-S1-08)
+
+**Inventário:** [`driver-home-inventory.md`](driver-home-inventory.md) (Tabela C).
+
+**Entregue:** texto intro (D-S1-01); botão Menu e toggle Estado no passo 1 só com `!driverBottomNav` (D-S1-02, D-S1-06); faixas violeta de simulação OSRM no ecrã motorista (D-S1-08). Contexto da simulação em DEV: uma linha em **DevTools** (modo motorista, `mockLocation` activo) — `web-app/src/features/shared/DevTools.tsx`.
+
+---
+
+## FIX-005 — Tabela C: D-S1-21 (vazio mínimo + lista abaixo do mapa + marcadores)
+
+**Entregue:** no `driver-home-step1`, lista / loading / vazio passam a **irmãos** por baixo do cartão do mapa; estado vazio compacto; com **2+** ofertas filtradas, marcadores numerados no mapa (`MapView.pendingOfferPickups`, até 8 recolhas); com **1** oferta, mantêm-se recolha + destino como antes.
+
+---
+
+## TODO-LEGADO — `!driverBottomNav` (DriverDashboard)
+
+**Não bloqueia** entregas Manel; hoje `isDriverBottomNavEnabled()` em `web-app/src/config/driverHomeFeatures.ts` está fixo a `true`, pelo que os ramos `!driverBottomNav` estão **inactivos** até alguém alterar o config.
+
+**Para uma sessão futura:**
+
+1. **Auditoria:** confirmar se algum build, env ou teste usa `false`; se ninguém depende, candidatar a **remover ramos** e simplificar testes.
+2. **Se o flag voltar a ser real:** antes de produção sem bottom nav, garantir **Menu** e **disponibilidade** acessíveis sem D-S1-02 / D-S1-06 (ver nota 1 na Tabela C do inventário).
+3. **Critério de fecho:** um único caminho Manel **ou** documentação + testes explícitos para o modo sem bottom nav.
 
 ---
 

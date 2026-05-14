@@ -18,12 +18,12 @@ export function DriverMapAvailabilityMicroToggle({
   if (offline && mapTapGoesOnline) {
     return (
       <div
-        className="pointer-events-none absolute right-3 top-3 z-[30] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background/90 shadow-md backdrop-blur-sm"
+        className="pointer-events-none absolute right-3 top-3 z-[30] flex h-11 w-11 items-center justify-center rounded-full border border-destructive/35 bg-background/90 shadow-md backdrop-blur-sm"
         role="status"
         aria-label="Offline. Toca no mapa para ficares disponível."
         data-testid="driver-map-availability-micro-offline"
       >
-        <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
+        <span className="h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-destructive/45" aria-hidden />
       </div>
     )
   }
@@ -35,9 +35,9 @@ export function DriverMapAvailabilityMicroToggle({
         data-testid="driver-map-availability-micro-offline-pill"
         onClick={onGoOnline}
         aria-label="Offline — tocar para ficares disponível"
-        className="absolute right-3 top-3 z-[30] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background/90 shadow-md backdrop-blur-sm touch-manipulation hover:bg-background"
+        className="absolute right-3 top-3 z-[30] flex h-11 w-11 items-center justify-center rounded-full border border-destructive/35 bg-background/90 shadow-md backdrop-blur-sm touch-manipulation hover:bg-background"
       >
-        <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
+        <span className="h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-destructive/45" aria-hidden />
       </button>
     )
   }
