@@ -14,11 +14,18 @@ function headerRoleLabel(role: string): string {
   return 'Passageiro'
 }
 
+export type AppHeaderBarVariant = 'default' | 'driverCompact'
+
+interface AppHeaderBarProps {
+  /** Motorista: header compacto; identidade em Menu → Perfil (FIX-002 backlog UX). */
+  variant?: AppHeaderBarVariant
+}
+
 /**
  * Cabeçalho global: marca + data e hora (pt-PT) + identificador (nome BETA ou telemóvel)
  * + linha rotacional de dicas (v1 estática + v2 feed opcional via API).
  */
-export function AppHeaderBar() {
+export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
   const { sessionDisplayName, sessionPhone, sessionRole, token } = useAuth()
   const [now, setNow] = useState(() => new Date())
   const [hintIndex, setHintIndex] = useState(0)
@@ -100,6 +107,38 @@ export function AppHeaderBar() {
       {rotatingHint}
     </p>
   )
+
+  if (variant === 'driverCompact') {
+    return (
+      <header
+        className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0"
+        data-testid="app-header"
+      >
+        <BrandStripe />
+        <div className="px-3 pt-2 pb-1.5" data-testid="app-header-driver-compact">
+          <div className="flex min-w-0 items-center gap-2" data-testid="app-header-brand">
+            <img
+              src="/brand/vamula-wordmark.png"
+              alt="V@mulá"
+              className="h-7 w-auto shrink-0 rounded-sm object-contain"
+            />
+            <p
+              className="min-w-0 flex-1 truncate text-right text-[11px] tabular-nums text-muted-foreground"
+              title={dateTimeLine}
+            >
+              {dateTimeLine}
+            </p>
+          </div>
+          <div
+            className="mt-1.5 rounded-md border border-border/60 bg-muted/35 px-2 py-1"
+            data-testid="app-header-hint-strip"
+          >
+            {hintBlock}
+          </div>
+        </div>
+      </header>
+    )
+  }
 
   return (
     <header
