@@ -248,10 +248,10 @@ export function MapView({
   const mapClickHandler = onPlanningMapClick || onUserMapInteraction ? handleMapClick : undefined
 
   const isSubdued = mapVisualWeight === 'subdued'
+  const subduedChrome = isSubdued && !fillContainer
   const frameClass = fillContainer
-    ? `relative h-full w-full min-h-0 overflow-hidden rounded-none bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${isSubdued ? 'shadow-sm opacity-95' : ''
-    } ${className ?? ''}`
-    : `relative w-full rounded-2xl overflow-hidden bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${isSubdued ? 'shadow-sm opacity-95' : 'shadow-card'
+    ? `relative h-full w-full min-h-0 overflow-hidden rounded-none bg-transparent transition-all duration-300 ease-out motion-reduce:transition-none ${className ?? ''}`
+    : `relative w-full rounded-2xl overflow-hidden bg-card transition-all duration-300 ease-out motion-reduce:transition-none ${subduedChrome ? 'shadow-sm opacity-95' : 'shadow-card'
     } ${className ?? ''}`
 
   if (!showMap) {
@@ -267,7 +267,7 @@ export function MapView({
             O mapa aparece quando o motorista tiver posição ativa.
           </p>
         </div>
-        {isSubdued && (
+        {subduedChrome && (
           <div
             className="pointer-events-none absolute inset-0 rounded-2xl bg-background/25 transition-opacity duration-300"
             aria-hidden
@@ -277,7 +277,7 @@ export function MapView({
     )
   }
 
-  const supportOverlay = isSubdued ? (
+  const supportOverlay = subduedChrome ? (
     <div
       className="pointer-events-none absolute inset-0 z-[1] rounded-2xl bg-background/20 dark:bg-black/25 transition-opacity duration-500 ease-out"
       aria-hidden
