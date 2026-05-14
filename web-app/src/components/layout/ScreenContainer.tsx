@@ -59,7 +59,7 @@ export function ScreenContainer({
     <div
       className={
         immersive
-          ? `flex min-h-0 h-full flex-1 flex-col ${widthShell} bg-background`
+          ? `flex min-h-0 flex-1 flex-col ${widthShell} bg-background`
           : `min-h-dvh flex flex-col ${widthShell} bg-background`
       }
     >
