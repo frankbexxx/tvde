@@ -36,21 +36,23 @@ export function ScreenContainer({
   contentVariant = 'default',
   fullBleed = false,
 }: ScreenContainerProps) {
+  const immersive = contentVariant === 'driverImmersive'
   const scrollBottomPad =
     bottomButton && bottomBarVariant === 'flush'
-      ? 'pb-[calc(10rem+env(safe-area-inset-bottom,0px))]'
+      ? immersive && mainScrollable === false
+        ? 'pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]'
+        : 'pb-[calc(10rem+env(safe-area-inset-bottom,0px))]'
       : bottomButton
         ? 'pb-20'
         : 'pb-8'
-  const immersive = contentVariant === 'driverImmersive'
   const widthShell = fullBleed ? 'w-full max-w-none' : 'max-w-md mx-auto w-full'
   const mainColumn =
     mainScrollable === false
       ? immersive
-        ? `flex flex-col flex-1 min-h-0 overflow-hidden px-0 pt-2 pb-0 ${scrollBottomPad}`
+        ? `flex flex-col flex-1 min-h-0 overflow-hidden px-0 pt-0 pb-0 ${scrollBottomPad}`
         : `flex flex-col flex-1 min-h-0 overflow-hidden px-5 pt-6 pb-4 ${scrollBottomPad}`
       : immersive
-        ? `flex-1 flex flex-col px-0 pt-2 pb-0 min-h-0 overflow-y-auto ${scrollBottomPad}`
+        ? `flex-1 flex flex-col px-0 pt-0 pb-0 min-h-0 overflow-y-auto ${scrollBottomPad}`
         : `flex-1 flex flex-col px-5 pt-6 pb-4 overflow-y-auto ${scrollBottomPad}`
 
   return (
