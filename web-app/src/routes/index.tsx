@@ -136,7 +136,9 @@ export function AppRoutes() {
         <main
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${driverShellFullWidth ? 'overflow-hidden' : 'overflow-y-auto'}`}
         >
-          <Routes>
+          {/* Repassa altura ao ecrã motorista (mapa fillContainer precisa de pai com altura definida). */}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <Routes>
             <Route path="/dl" element={<AppDownloadRedirect />} />
             <Route path="/app" element={<AppDownloadRedirect />} />
             <Route path="/download" element={<AppDownloadLanding />} />
@@ -185,6 +187,7 @@ export function AppRoutes() {
               element={import.meta.env.DEV ? <DebugMapPage /> : <Navigate to="/" replace />}
             />
           </Routes>
+          </div>
         </main>
       </div>
     </div>

@@ -1499,8 +1499,8 @@ export function DriverDashboard() {
             </header>
 
             {driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
-              <div className="flex min-h-0 min-w-0 flex-1 w-full flex-col overflow-hidden bg-background">
-                <div className="relative min-h-0 flex-1">
+              <div className="flex min-h-0 min-w-0 flex-1 basis-0 w-full flex-col overflow-hidden bg-background">
+                <div className="relative flex-1 basis-0 min-h-[42dvh]">
                   <MapView
                     fillContainer
                     className="!rounded-none border-0 !shadow-none"
