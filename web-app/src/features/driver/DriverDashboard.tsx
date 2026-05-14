@@ -135,6 +135,9 @@ import {
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 import { DriverShellTopChips } from './DriverShellTopChips'
+import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
+import { ProfileButton } from '@/design-system/components/app/ProfileButton'
+import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
 const DRIVER_INCIDENT_TYPES = [
@@ -927,6 +930,10 @@ export function DriverDashboard() {
           : 'contents'
       }
     >
+      <div className="fixed bottom-0 right-0 z-[60] h-0 w-0 overflow-hidden opacity-0" aria-hidden>
+        <ProfileButton />
+        <SettingsButton />
+      </div>
       <ScreenContainer
         fullBleed
         contentVariant={driverMapStageLayout ? 'driverImmersive' : 'default'}
@@ -1521,6 +1528,14 @@ export function DriverDashboard() {
                     onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                   />
                 </div>
+                {driverBottomNav && !activeTripId ? (
+                  <DriverMapAvailabilityMicroToggle
+                    offline={offline}
+                    mapTapGoesOnline={mapTapGoesOnline}
+                    onGoOnline={() => handleDriverAvailabilityChange(true)}
+                    onGoOffline={() => handleDriverAvailabilityChange(false)}
+                  />
+                ) : null}
                 <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pb-20 pointer-events-none">
                   <div className="pointer-events-auto min-h-0 max-h-[min(28dvh,220px)] shrink-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
                     {import.meta.env.DEV && isMockLocationModeEnabled() && !(hasAvailableTrips && !activeTripId) ? (
@@ -1769,7 +1784,7 @@ export function DriverDashboard() {
                     </span>
                   </div>
                 ) : null}
-                {driverBottomNav && !activeTripId ? (
+                {driverBottomNav && !activeTripId && !driverMapStageLayout ? (
                   <div className="relative z-10 shrink-0 border-t border-border bg-muted/35">
                     <DriverShellAvailabilityInner
                       mapTapGoesOnline={mapTapGoesOnline}

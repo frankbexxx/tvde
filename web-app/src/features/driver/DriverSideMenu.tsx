@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth, isBackofficeStaffRole } from '../../context/AuthContext'
+import { parseJwtPayload } from '../../utils/jwt'
 import type { DriverNavApp } from '../../services/driverNavPreference'
 import type { TripHistoryItem } from '../../api/trips'
 import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus } from '../../services/driverDocuments'
@@ -22,6 +23,7 @@ import {
 
 export type DriverMenuScreen =
   | 'root'
+  | 'profile'
   | 'inbox'
   | 'earnings'
   | 'trips'
@@ -33,6 +35,13 @@ export type DriverMenuScreen =
   // Legacy / internal: permite renderizar blocos existentes sem refactor total.
   | 'account'
   | 'all'
+
+function menuRoleLabel(role: string): string {
+  if (role === 'driver') return 'Motorista'
+  if (isBackofficeStaffRole(role)) return 'Staff'
+  if (role === 'partner') return 'Frota'
+  return 'Passageiro'
+}
 
 function MenuHeader({
   title,
@@ -134,10 +143,17 @@ export function DriverSideMenu(props: {
     activeTripId,
     onRequestGoAvailable,
   } = props
-  const { sessionPhone, logout } = useAuth()
+  const { sessionPhone, sessionRole, token, logout } = useAuth()
+
+  const accountRef = useMemo(() => {
+    const jwtSub = token ? parseJwtPayload(token)?.sub : undefined
+    if (!jwtSub || jwtSub.length === 0) return null
+    return jwtSub.replace(/-/g, '').slice(-8)
+  }, [token])
 
   const title = useMemo(() => {
     if (screen === 'root') return 'Menu'
+    if (screen === 'profile') return 'Perfil'
     if (screen === 'inbox') return 'Caixa de entrada'
     if (screen === 'earnings') return 'Rendimentos'
     if (screen === 'trips') return 'Viagens'
@@ -238,18 +254,7 @@ export function DriverSideMenu(props: {
                   <RootItem
                     label="Perfil"
                     icon={<User className="h-4 w-4" />}
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
-                      close()
-                    }}
-                  />
-                  <RootItem
-                    label="Definições"
-                    icon={<Settings className="h-4 w-4" />}
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))
-                      close()
-                    }}
+                    onClick={() => onScreenChange('profile')}
                   />
                   <RootItem
                     label="Preços (estimativa)"
@@ -292,6 +297,57 @@ export function DriverSideMenu(props: {
                   </button>
                 </div>
               </>
+            ) : screen === 'profile' ? (
+              <div className="space-y-4" data-testid="driver-menu-profile-screen">
+                <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-3">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Nome</p>
+                    <p className="text-sm font-medium text-foreground break-words">
+                      {sessionDisplayName?.trim() || '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Telemóvel</p>
+                    <p className="text-sm font-medium text-foreground break-all">{sessionPhone ?? '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Papel</p>
+                    <p className="text-sm font-medium text-foreground">{menuRoleLabel(sessionRole)}</p>
+                  </div>
+                  {accountRef ? (
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Conta</p>
+                      <p className="text-sm font-medium text-foreground tabular-nums">Conta · {accountRef}</p>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    type="button"
+                    data-testid="driver-menu-open-account"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
+                      close()
+                    }}
+                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
+                  >
+                    <User className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+                    Conta (detalhe)
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="driver-menu-open-settings"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))
+                      close()
+                    }}
+                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
+                  >
+                    <Settings className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+                    Definições
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="pt-1">{renderLegacyMenu(screen)}</div>
             )}

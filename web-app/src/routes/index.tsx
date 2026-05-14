@@ -131,7 +131,7 @@ export function AppRoutes() {
 
   return (
     <div className={appShellClass}>
-      <AppHeaderBar />
+      <AppHeaderBar variant={pathname.startsWith('/driver') ? 'driverCompact' : 'default'} />
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
         <main
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${driverShellFullWidth ? 'overflow-hidden' : 'overflow-y-auto'}`}
@@ -139,54 +139,54 @@ export function AppRoutes() {
           {/* Repassa altura ao ecrã motorista (mapa fillContainer precisa de pai com altura definida). */}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <Routes>
-            <Route path="/dl" element={<AppDownloadRedirect />} />
-            <Route path="/app" element={<AppDownloadRedirect />} />
-            <Route path="/download" element={<AppDownloadLanding />} />
-            <Route path="/" element={<RootRedirect />} />
-            <Route
-              path="/passenger"
-              element={
-                <PassengerOnly>
-                  <PassengerDashboard />
-                </PassengerOnly>
-              }
-            />
-            <Route
-              path="/driver"
-              element={
-                <DriverOnly>
-                  <DriverDashboard />
-                </DriverOnly>
-              }
-            />
-            <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
-            <Route
-              path="/admin"
-              element={
-                isAdmin ? (
-                  <AdminDashboard />
-                ) : (
-                  <AdminDeniedRedirect />
-                )
-              }
-            />
-            <Route
-              path="/partner"
-              element={
-                <PartnerGate>
-                  <Outlet />
-                </PartnerGate>
-              }
-            >
-              <Route index element={<PartnerHome />} />
-              <Route path="drivers/:userId" element={<PartnerDriverDetail />} />
-              <Route path="trips/:tripId" element={<PartnerTripDetail />} />
-            </Route>
-            <Route
-              path="/debug/map"
-              element={import.meta.env.DEV ? <DebugMapPage /> : <Navigate to="/" replace />}
-            />
-          </Routes>
+              <Route path="/dl" element={<AppDownloadRedirect />} />
+              <Route path="/app" element={<AppDownloadRedirect />} />
+              <Route path="/download" element={<AppDownloadLanding />} />
+              <Route path="/" element={<RootRedirect />} />
+              <Route
+                path="/passenger"
+                element={
+                  <PassengerOnly>
+                    <PassengerDashboard />
+                  </PassengerOnly>
+                }
+              />
+              <Route
+                path="/driver"
+                element={
+                  <DriverOnly>
+                    <DriverDashboard />
+                  </DriverOnly>
+                }
+              />
+              <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
+              <Route
+                path="/admin"
+                element={
+                  isAdmin ? (
+                    <AdminDashboard />
+                  ) : (
+                    <AdminDeniedRedirect />
+                  )
+                }
+              />
+              <Route
+                path="/partner"
+                element={
+                  <PartnerGate>
+                    <Outlet />
+                  </PartnerGate>
+                }
+              >
+                <Route index element={<PartnerHome />} />
+                <Route path="drivers/:userId" element={<PartnerDriverDetail />} />
+                <Route path="trips/:tripId" element={<PartnerTripDetail />} />
+              </Route>
+              <Route
+                path="/debug/map"
+                element={import.meta.env.DEV ? <DebugMapPage /> : <Navigate to="/" replace />}
+              />
+            </Routes>
           </div>
         </main>
       </div>
