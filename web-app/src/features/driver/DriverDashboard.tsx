@@ -1460,10 +1460,10 @@ export function DriverDashboard() {
           </div>
         ) : (
           <div
-            className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col' : 'contents'}
+            className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col overflow-hidden' : 'contents'}
           >
             <header
-              className={`${driverMapStageLayout ? 'px-4 mb-2' : 'mb-4'} flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
+              className={`${driverMapStageLayout ? 'shrink-0 px-4 mb-1' : 'mb-4'} flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
             >
               {driverBottomNav ? (
                 <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
@@ -1499,8 +1499,8 @@ export function DriverDashboard() {
             </header>
 
             {driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
-              <div className="flex min-h-0 min-w-0 flex-1 basis-0 w-full flex-col overflow-hidden bg-background">
-                <div className="relative flex-1 basis-0 min-h-[42dvh]">
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
+                <div className="relative min-h-0 min-w-0 flex-1">
                   <MapView
                     fillContainer
                     className="!rounded-none border-0 !shadow-none"
