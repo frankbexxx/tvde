@@ -1659,32 +1659,28 @@ export function DriverDashboard() {
                   {!offline && !activeTripId ? (
                     <div
                       id="driver-main-scroll"
-                      className={`pointer-events-auto mt-auto min-h-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)] ${filteredAvailable.length === 1
-                        ? 'max-h-[min(34dvh,300px)]'
-                        : filteredAvailable.length > 1
-                          ? 'max-h-[min(42dvh,380px)]'
-                          : 'max-h-[min(46dvh,400px)]'
-                        }`}
+                      className={`pointer-events-auto mt-auto min-h-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)] ${
+                        hasAvailableTrips
+                          ? filteredAvailable.length === 1
+                            ? 'max-h-[min(34dvh,300px)]'
+                            : 'max-h-[min(42dvh,380px)]'
+                          : pollEnabled && availableLoading && available == null
+                            ? 'max-h-[min(36dvh,300px)]'
+                            : 'max-h-[min(28dvh,220px)] shrink-0'
+                      }`}
                     >
-                      <>
-                        <StatusHeader
-                          label={
-                            hasAvailableTrips
-                              ? filteredAvailable.length === 1
+                      {hasAvailableTrips ? (
+                        <>
+                          <StatusHeader
+                            label={
+                              filteredAvailable.length === 1
                                 ? '1 viagem disponível'
                                 : `${filteredAvailable.length} viagens disponíveis`
-                              : 'À espera de viagens'
-                          }
-                          variant="idle"
-                          emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
-                          compact={hasAvailableTrips}
-                        />
-                        {pollEnabled && availableLoading && available == null ? (
-                          <div className="flex flex-col items-center justify-center gap-3 py-8 text-foreground/80">
-                            <Spinner size="md" />
-                            <p className="text-sm">A carregar viagens…</p>
-                          </div>
-                        ) : hasAvailableTrips ? (
+                            }
+                            variant="idle"
+                            emphasis="subdued"
+                            compact
+                          />
                           <ul className="space-y-3 pb-1">
                             {filteredAvailable.map((t: TripAvailableItem) => (
                               <li key={t.trip_id}>
@@ -1720,17 +1716,34 @@ export function DriverDashboard() {
                               </li>
                             ))}
                           </ul>
-                        ) : (
-                          <div className="py-6 text-center text-foreground/80">
-                            <p className="text-base">Sem viagens disponíveis.</p>
-                            <p className="text-sm mt-1">
-                              {hasAnyCategoryAwareOffer && filteredOutCount > 0
-                                ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
-                                : 'Histórico em Menu → Viagens.'}
-                            </p>
+                        </>
+                      ) : pollEnabled && availableLoading && available == null ? (
+                        <>
+                          <StatusHeader
+                            label="À espera de viagens"
+                            variant="idle"
+                            emphasis="subdued"
+                            compact
+                          />
+                          <div className="flex flex-col items-center justify-center gap-2 py-4 text-foreground/80">
+                            <Spinner size="md" />
+                            <p className="text-xs">A carregar viagens…</p>
                           </div>
-                        )}
-                      </>
+                        </>
+                      ) : (
+                        <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-1.5 text-center">
+                          <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
+                            {hasAnyCategoryAwareOffer && filteredOutCount > 0
+                              ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
+                              : (
+                                  <>
+                                    Sem viagens disponíveis. Histórico em Menu → Viagens.
+                                  </>
+                                )}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ) : null}
                 </div>
@@ -2002,68 +2015,76 @@ export function DriverDashboard() {
 
                 {!offline && !activeTripId && !driverMapStageLayout && (
                   <>
-                    <StatusHeader
-                      label={
-                        hasAvailableTrips
-                          ? filteredAvailable.length === 1
-                            ? '1 viagem disponível'
-                            : `${filteredAvailable.length} viagens disponíveis`
-                          : 'À espera de viagens'
-                      }
-                      variant="idle"
-                      emphasis={hasAvailableTrips ? 'subdued' : 'primary'}
-                      compact={hasAvailableTrips}
-                    />
-                    {pollEnabled && availableLoading && available == null ? (
-                      <div className="flex flex-col items-center justify-center gap-3 py-12 text-foreground/80">
-                        <Spinner size="md" />
-                        <p className="text-sm">A carregar viagens…</p>
-                      </div>
-                    ) : hasAvailableTrips ? (
-                      <ul className="space-y-4">
-                        {filteredAvailable.map((t: TripAvailableItem) => (
-                          <li key={t.trip_id}>
-                            <RequestCard
-                              contextHint={DRIVER_NEW_TRIP_LIST_HINT}
-                              pickup={formatPickup(t.origin_lat, t.origin_lng)}
-                              destination={formatDestination(t.destination_lat, t.destination_lng)}
-                              statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
-                              vehicleCategoryLabel={(() => {
-                                const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
-                                return one ? driverVehicleCategoryLabel(one) : null
-                              })()}
-                              estimatedPrice={t.estimated_price}
-                              offerId={t.offer_id ?? null}
-                              onReject={
-                                t.offer_id
-                                  ? () => void runRejectOffer(t.offer_id!, t.trip_id)
-                                  : undefined
-                              }
-                              acceptButtonTestId={`driver-accept-${t.trip_id}`}
-                              rejectButtonTestId={`driver-reject-${t.trip_id}`}
-                              acceptVariant="slide"
-                              onAccept={() =>
-                                runAction(
-                                  () => acceptTrip(t.trip_id, token!),
-                                  t.trip_id,
-                                  'ACEITAR',
-                                  undefined,
-                                  t
-                                )
-                              }
-                              loading={actionLoading === t.trip_id}
-                              rejectLoading={actionLoading === `reject:${t.trip_id}`}
-                            />
-                          </li>
-                        ))}
-                      </ul>
+                    {hasAvailableTrips ? (
+                      <>
+                        <StatusHeader
+                          label={
+                            filteredAvailable.length === 1
+                              ? '1 viagem disponível'
+                              : `${filteredAvailable.length} viagens disponíveis`
+                          }
+                          variant="idle"
+                          emphasis="subdued"
+                          compact
+                        />
+                        <ul className="space-y-4">
+                          {filteredAvailable.map((t: TripAvailableItem) => (
+                            <li key={t.trip_id}>
+                              <RequestCard
+                                contextHint={DRIVER_NEW_TRIP_LIST_HINT}
+                                pickup={formatPickup(t.origin_lat, t.origin_lng)}
+                                destination={formatDestination(t.destination_lat, t.destination_lng)}
+                                statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                                vehicleCategoryLabel={(() => {
+                                  const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
+                                  return one ? driverVehicleCategoryLabel(one) : null
+                                })()}
+                                estimatedPrice={t.estimated_price}
+                                offerId={t.offer_id ?? null}
+                                onReject={
+                                  t.offer_id
+                                    ? () => void runRejectOffer(t.offer_id!, t.trip_id)
+                                    : undefined
+                                }
+                                acceptButtonTestId={`driver-accept-${t.trip_id}`}
+                                rejectButtonTestId={`driver-reject-${t.trip_id}`}
+                                acceptVariant="slide"
+                                onAccept={() =>
+                                  runAction(
+                                    () => acceptTrip(t.trip_id, token!),
+                                    t.trip_id,
+                                    'ACEITAR',
+                                    undefined,
+                                    t
+                                  )
+                                }
+                                loading={actionLoading === t.trip_id}
+                                rejectLoading={actionLoading === `reject:${t.trip_id}`}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : pollEnabled && availableLoading && available == null ? (
+                      <>
+                        <StatusHeader
+                          label="À espera de viagens"
+                          variant="idle"
+                          emphasis="subdued"
+                          compact
+                        />
+                        <div className="flex flex-col items-center justify-center gap-2 py-6 text-foreground/80">
+                          <Spinner size="md" />
+                          <p className="text-xs">A carregar viagens…</p>
+                        </div>
+                      </>
                     ) : (
-                      <div className="py-8 text-center text-foreground/80">
-                        <p className="text-base">Sem viagens disponíveis.</p>
-                        <p className="text-sm mt-1">
+                      <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-1.5 text-center">
+                        <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
+                        <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
                           {hasAnyCategoryAwareOffer && filteredOutCount > 0
                             ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias ativas.`
-                            : 'Fica disponível para receberes novos pedidos.'}
+                            : 'Sem viagens disponíveis. Fica disponível para receberes novos pedidos.'}
                         </p>
                       </div>
                     )}
