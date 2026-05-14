@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import Map from 'react-map-gl/maplibre'
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
+import { Marker } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { FeatureCollection, LineString } from 'geojson'
 import { PassengerMarker } from './PassengerMarker'
@@ -50,6 +51,8 @@ export interface MapViewProps {
   /** Recolha / destino da viagem ativa (marcadores distintos do planeamento). */
   tripPickup?: LatLng | null
   tripDropoff?: LatLng | null
+  /** Sem viagem activa: várias recolhas de ofertas (rótulo curto, ex. índice na lista). */
+  pendingOfferPickups?: Array<{ lat: number; lng: number; label: string }> | null
   /** Usa altura mais compacta para manter CTAs visíveis em ecrãs curtos. */
   compactHeight?: boolean
   /** Mapa mais alto no ecrã principal motorista (shell com bottom nav). */
@@ -87,6 +90,7 @@ export function MapView({
   planningRecenterKey = 0,
   tripPickup = null,
   tripDropoff = null,
+  pendingOfferPickups = null,
   compactHeight = false,
   tallStage = false,
   fillContainer = false,
@@ -107,6 +111,10 @@ export function MapView({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mesma razão que mapAnchor: identidade dos objetos instável no passageiro
     [tripPickup?.lat, tripPickup?.lng, tripDropoff?.lat, tripDropoff?.lng]
   )
+  const pendingOfferPickupsKey = useMemo(() => {
+    if (!pendingOfferPickups?.length) return ''
+    return pendingOfferPickups.map((p) => `${p.lat},${p.lng},${p.label}`).join('|')
+  }, [pendingOfferPickups])
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
@@ -204,6 +212,10 @@ export function MapView({
       return
     }
 
+    if (!hasActiveTripMarkers && pendingOfferPickups?.length) {
+      return
+    }
+
     if (mapAnchor) {
       const bounds = new maplibregl.LngLatBounds()
       bounds.extend([mapAnchor.lng, mapAnchor.lat])
@@ -221,7 +233,25 @@ export function MapView({
       duration: 700,
       zoom: 15,
     })
-  }, [showMap, driverLocation, mapAnchor, onPlanningMapClick, hasActiveTripMarkers])
+  }, [showMap, driverLocation, mapAnchor, onPlanningMapClick, hasActiveTripMarkers, pendingOfferPickupsKey])
+
+  useEffect(() => {
+    if (!showMap || !driverLocation) return
+    if (hasActiveTripMarkers) return
+    if (!pendingOfferPickups?.length) return
+    const map = mapRef.current?.getMap()
+    if (!map) return
+    const bounds = new maplibregl.LngLatBounds()
+    bounds.extend([driverLocation.lng, driverLocation.lat])
+    for (const p of pendingOfferPickups) {
+      bounds.extend([p.lng, p.lat])
+    }
+    map.fitBounds(bounds, {
+      padding: { top: 64, bottom: 64, left: 48, right: 48 },
+      maxZoom: 14,
+      duration: 650,
+    })
+  }, [showMap, driverLocation, hasActiveTripMarkers, pendingOfferPickupsKey, pendingOfferPickups])
 
   useEffect(() => {
     if (!planningRecenter) return
@@ -330,6 +360,24 @@ export function MapView({
               />
             </>
           ) : null}
+
+          {!hasActiveTripMarkers && pendingOfferPickups?.length
+            ? pendingOfferPickups.map((p, i) => (
+              <Marker
+                key={`pending-offer-${p.label}-${p.lat}-${p.lng}-${i}`}
+                longitude={p.lng}
+                latitude={p.lat}
+                anchor="center"
+              >
+                <div
+                  className="flex h-7 min-w-[1.75rem] items-center justify-center rounded-full border-2 border-amber-300 bg-amber-500 px-1 text-[11px] font-bold tabular-nums text-white shadow-md"
+                  aria-hidden
+                >
+                  {p.label}
+                </div>
+              </Marker>
+            ))
+            : null}
 
           {/* A015/A016: só em planeamento — sem marcadores de viagem ativa (evita sobrepor com um só leg definido). */}
           {!tripPickup && !tripDropoff
