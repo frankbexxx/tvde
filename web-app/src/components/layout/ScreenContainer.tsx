@@ -40,7 +40,7 @@ export function ScreenContainer({
   const scrollBottomPad =
     bottomButton && bottomBarVariant === 'flush'
       ? immersive && mainScrollable === false
-        ? 'pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]'
+        ? 'pb-0'
         : 'pb-[calc(10rem+env(safe-area-inset-bottom,0px))]'
       : bottomButton
         ? 'pb-20'
