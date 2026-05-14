@@ -2,7 +2,29 @@
 
 Lista incremental: cada entrada descreve o fix; estado em **Estado** quando aplicável.
 
-**Próximo na fila:** revisões de UX após uso real do passo 1 (Tabela C); ver também **TODO-LEGADO** (não bloqueante).
+**Próximo na fila (próxima sessão):** validação em dispositivo real (passo 1 + mapa cheio); sincronizar **inventário detalhado** Tabela C com o código; **TODO-LEGADO** `!driverBottomNav` quando couber. Ver **Registo de sessão** abaixo.
+
+---
+
+## Registo de sessão — wrap-up
+
+**O que ficou feito (merge em `main`):**
+
+- Plano motorista **FIX-003 → FIX-005**: micro OFF vermelho, remoções Tabela C (D-S1-01/02/06/08), D-S1-21 no passo 1 (lista abaixo do mapa, vazio mínimo, marcadores multi-oferta em `MapView`), nota OSRM em DevTools, secção **TODO-LEGADO** neste backlog.
+- **Folha «À espera de viagens» no mapa cheio** (`driverMapStageLayout`) e na vista com scroll: mesmo padrão compacto do passo 1 (sem `StatusHeader` XL em vazio; `max-h` da folha sem pedidos já não usa 46dvh/400px).
+
+**Parar aqui** — próxima sessão: lista em **Amanhã (TODOs alinhados)**.
+
+---
+
+## Amanhã (TODOs alinhados)
+
+| # | TODO | Notas |
+|---|------|--------|
+| 1 | **Smoke /driver em telemóvel** | Passo 1 (se activo), mapa cheio: vazio, loading, 1 pedido, vários pedidos; micro on/off; barra inferior. |
+| 2 | **Inventário `driver-home-inventory.md`** | Tabela C — coluna inventário detalhado vs código (intro removida, D-S1-08, D-S1-21 layout). Tabela D — mencionar folha inferior compacta no palco mapa quando sem pedidos. |
+| 3 | **TODO-LEGADO `!driverBottomNav`** | Auditoria `driverHomeFeatures.ts` + decisão remover ramos vs manter testes (não urgente). |
+| 4 | **Copy opcional** | Alinhar frases «Sem viagens disponíveis» vs «Sem pedidos» / «Fica disponível…» entre ecrãs se quiseres uma só voz de produto. |
 
 ---
 
@@ -70,6 +92,14 @@ Lista incremental: cada entrada descreve o fix; estado em **Estado** quando apli
 ## FIX-005 — Tabela C: D-S1-21 (vazio mínimo + lista abaixo do mapa + marcadores)
 
 **Entregue:** no `driver-home-step1`, lista / loading / vazio passam a **irmãos** por baixo do cartão do mapa; estado vazio compacto; com **2+** ofertas filtradas, marcadores numerados no mapa (`MapView.pendingOfferPickups`, até 8 recolhas); com **1** oferta, mantêm-se recolha + destino como antes.
+
+---
+
+## FIX-006 — Palco mapa cheio + vista scroll: vazio «À espera de viagens» compacto
+
+**Contexto:** no `driverMapStageLayout` (e na coluna scroll sem palco), o vazio ainda usava `StatusHeader` em destaque (`primary`, não compacto) + folha com `max-h` muito alto, diferente do passo 1.
+
+**Entregue:** bloco mínimo alinhado ao passo 1; loading com `StatusHeader` compacto; `max-h` da folha sem lista mais baixo. Código: `DriverDashboard.tsx` (folha `#driver-main-scroll` no palco + bloco paralelo sem `driverMapStageLayout`).
 
 ---
 
