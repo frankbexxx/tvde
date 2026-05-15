@@ -10,7 +10,7 @@
 | **B** — Barra inferior (D-NAV-01 … 04) | **Fechada** | Sem alterações planeadas. |
 | **C** — Ecrã 1 passo inicial (D-S1-01 … D-S1-26) | **Fechada** | Decisões + FIX-004/005; em prod. `isDriverHomeTwoStepEnabled()` = false (passo 1 inactivo). |
 | **D** — Ecrã 2 palco mapa (D-S2-01 … 08) | **Fechada** | FIX-006; folha compacta; smokes OK. |
-| **E** — Aceitar e viagem activa (D-E-01 … 32) | **Decisões em bloco registadas** | Refinamento fino pendente; implementação FIX-007/008 em curso. |
+| **E** — Aceitar e viagem activa (D-E-01 … 32) | **Fechada (funcional)** | FIX-007/008 em `main` (**#319**); refinamento pixel → **TWEAKS_UX** ([`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-05-15**, prefixo **TW-**). |
 
 **Nota de produto:** o ecrã 1 só existe se `isDriverHomeTwoStepEnabled()` for verdadeiro; caso contrário o utilizador cai directamente no ecrã 2 (palco mapa). Com `isDriverBottomNavEnabled()` falso, o layout muda — linhas *(cond.)* aplicam-se só nesse modo legado.
 
@@ -140,7 +140,7 @@
 
 ## Tabela E — Aceitar e viagem activa
 
-**Estado: decisões em bloco registadas** — refinamento fino (textos, alturas) pendente antes de fechar a tabela.
+**Estado: fechada (funcional)** — decisões bulk + FIX-007/008 entregues; smoke manual driver↔passageiro OK (**2026-05-15**). Ajustes de densidade/copy/cores → **TWEAKS_UX** (não reabre arquitectura do fluxo).
 
 *Âmbito:* à espera com **mapa grande** → toque no **marcador** abre painel aceitar → viagem com **mapa a ecrã cheio** + rota → barra de **4 ícones sempre** (excepto Menu aberto).
 
@@ -223,38 +223,43 @@
 | D-E-31 | **MANTER** |
 | D-E-32 | **MANTER** |
 
-### Refinamento fino (próxima passagem contigo)
+### Refinamento fino → TWEAKS_UX
 
-- Textos do painel ao toque no marcador.
-- Altura do resumo compacto em viagem.
-- Opcional futuro: ícone «lista» sob o mapa com várias viagens em scroll (secundário).
+Itens visuais (não bloqueantes) estão no painel **2026-05-15** do [`TODOdoDIA.md`](../../TODOdoDIA.md) (**TW-01** … **TW-06**). Resumo:
+
+- Textos do painel ao toque no marcador (**TW-02**).
+- Altura / densidade do **SlideToAccept** no painel (**TW-01**).
+- Resumo compacto em viagem (**TW-03**).
+- Stack inferior acções + barra 4 ícones (**TW-04**).
+- Revisão pós-screenshots (**TW-05**).
+- Opcional futuro: ícone «lista» multi-ofertas (**TW-06**, N/A).
 
 ### Inventário detalhado Tabela E
 
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|
-| D-E-01 | Cabeçalho lista (`StatusHeader` compacto) | «1 / N viagens disponíveis» | Topo da folha `#driver-main-scroll` (palco mapa ou scroll) |
-| D-E-02 | `RequestCard` — hint contexto | Linha «nova viagem» (constante lista) | Topo do cartão na folha |
-| D-E-03 | `RequestCard` — estado / categoria | Labels legíveis do pedido | Corpo do cartão |
-| D-E-04 | `RequestCard` — recolha / destino / preço | Informação para decidir | Corpo do cartão |
-| D-E-05 | `RequestCard` — REJEITAR | Recusa oferta (`offer_id`) | Cartão, acima do slider |
-| D-E-06 | `SlideToAccept` (compact) | Deslizar para aceitar (`acceptVariant="slide"`) | Cartão, faixa inferior do cartão |
-| D-E-07 | Loading no cartão | Spinner «A processar…» no accept/reject | Durante `runAction` / reject |
-| D-E-08 | Faixa «N pedidos no mapa» *(cond.)* | Liga mapa à folha («desliza…») | Só mapa **cartão** vista scroll (`!driverMapStageLayout`), sob `MapView` |
+| D-E-01 | Cabeçalho lista (`StatusHeader` compacto) | «N viagens no mapa» (hint) | Folha `#driver-main-scroll`: hint compacto; cabeçalho lista **não** é modo principal (FIX-008) |
+| D-E-02 | `RequestCard` — hint contexto | Linha «nova viagem» | Painel ao toque no marcador (`selectedOfferTripId`) |
+| D-E-03 | `RequestCard` — estado / categoria | Labels legíveis do pedido | Painel aceitar |
+| D-E-04 | `RequestCard` — recolha / destino / preço | Informação para decidir | Painel aceitar |
+| D-E-05 | `RequestCard` — REJEITAR | Recusa oferta (`offer_id`) | Painel aceitar, acima do slider |
+| D-E-06 | `SlideToAccept` (compact) | Deslizar para aceitar (`acceptVariant="slide"`) | Painel aceitar; tweak densidade → **TW-01** |
+| D-E-07 | Loading no cartão | Spinner «A processar…» no accept/reject | Durante `runAction` / reject no painel |
+| D-E-08 | Faixa «N pedidos no mapa» | Liga mapa à folha antiga | **REMOVIDO** em prod (FIX-008); vista scroll legado sem faixa |
 | D-E-09 | Erro / toast global pós-acção | Falha ACEITAR / rede | Overlays `DriverDashboard` (família D-S1-15/16) |
-| D-E-10 | Mudança de layout | Sai palco full-bleed; entra scroll + mapa cartão | Ao definir `activeTripId` |
+| D-E-10 | Transição de layout | Mantém palco mapa cheio com viagem | `driverMapStageLayout` **com** `activeTripId` (FIX-007); sem scroll + mapa cartão |
 | D-E-11 | Chips «Em viagem» | `DriverShellTopChips` | Sub-header |
-| D-E-12 | Mapa em viagem | `MapView` subdued; rota mock *(DEV)*; sem marcadores trip no mapa hoje | Coluna scroll (`!driverMapStageLayout`) |
+| D-E-12 | Mapa em viagem | Mapa full-bleed + rota OSRM + marcadores recolha/destino | Palco mapa (`driverMapStageLayout`); não coluna scroll subdued |
 | D-E-13 | Micro disponibilidade | Oculto com viagem activa | Palco mapa: só sem `activeTripId` |
-| D-E-14 | Cartão resumo viagem | Container `ActiveTripSummary` | Coluna scroll, acima do histórico |
-| D-E-15 | `StatusHeader` (primary) | Título de estado («A caminho», etc.) | Topo do cartão resumo |
-| D-E-16 | Badge curto de estado | `driverTripBadgeShort` | Cartão resumo, sob o header |
-| D-E-17 | Notas de poll / sincronização | Poll, fallback pós-aceitar | Cartão resumo |
-| D-E-18 | Aviso pagamento falhado | `payment_status === failed` | Cartão resumo |
-| D-E-19 | `TripCard` | Recolha, destino, preço | Corpo do cartão resumo |
-| D-E-20 | Loading resumo | «A carregar viagem…» | Cartão resumo (sem `effectiveTrip`) |
-| D-E-21 | «Continuar» pós-conclusão | Liberta UI após `completed` | Cartão resumo |
-| D-E-22 | Barra de acções inferior | `bottomButton` = `ActiveTripActions` | Fixa no fundo; **substitui** bottom nav |
+| D-E-14 | Cartão resumo viagem | Container `ActiveTripSummary` | Overlay compacto no palco mapa (`compact`, FIX-007) |
+| D-E-15 | `StatusHeader` (primary) | Título de estado («A caminho», etc.) | Resumo compacto: `emphasis` subdued (FIX-007) |
+| D-E-16 | Badge curto de estado | `driverTripBadgeShort` | Resumo compacto, sob o header |
+| D-E-17 | Notas de poll / sincronização | Poll, fallback pós-aceitar | Resumo compacto |
+| D-E-18 | Aviso pagamento falhado | `payment_status === failed` | Resumo compacto |
+| D-E-19 | `TripCard` | Recolha, destino, preço | Resumo compacto: linha única (sem `TripCard` alto) |
+| D-E-20 | Loading resumo | «A carregar viagem…» | Resumo compacto (sem `effectiveTrip`) |
+| D-E-21 | «Continuar» pós-conclusão | Liberta UI após `completed` | Resumo compacto; obrigatório antes de voltar ao mapa à espera |
+| D-E-22 | Barra inferior | `ActiveTripActions` + `DriverBottomNav` | `bottomChrome`: acções **por cima** dos 4 ícones; nav escondida só com Menu aberto (FIX-007) |
 | D-E-23 | Hint próximo passo | Texto contextual por estado | `ActiveTripActions`, acima do botão |
 | D-E-24 | Gate distância pickup | Bloqueio «Iniciar viagem» longe da recolha | `ActiveTripActions`; accepted/arriving |
 | D-E-25 | Links Waze / Google Maps | Navegação externa | `ActiveTripActions`; confirm ao sair |
