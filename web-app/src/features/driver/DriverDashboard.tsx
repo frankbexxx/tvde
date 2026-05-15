@@ -335,7 +335,8 @@ export function DriverDashboard() {
   )
   const showDriverHomeStep1 = driverHomeTwoStep && !activeTripId && driverHomeStep === 1
   /** Shell Manel: mapa em fundo (flex-1); sem scroll longo no início. */
-  const driverMapStageLayout = Boolean(driverBottomNav && !activeTripId && !showDriverHomeStep1)
+  const driverMapStageLayout = Boolean(driverBottomNav && !showDriverHomeStep1)
+  const [selectedOfferTripId, setSelectedOfferTripId] = useState<string | null>(null)
   const mapTapGoesOnline =
     driverBottomNav &&
     !activeTripId &&
@@ -437,31 +438,79 @@ export function DriverDashboard() {
   const filteredOutCount = Math.max(0, (available?.length ?? 0) - filteredAvailable.length)
   const hasAvailableTrips = filteredAvailable.length > 0
   const compactDriverSurface = !activeTripId && !offline && hasAvailableTrips
-  /** Uma só oferta: recolha + destino no mapa. Várias ofertas: `pendingOfferPickupsForMap` + lista. */
-  const availableOfferMapPreview = useMemo(() => {
-    if (activeTripId) return null
-    if (filteredAvailable.length !== 1) return null
-    const t = filteredAvailable[0]!
-    return {
-      pickup: { lat: t.origin_lat, lng: t.origin_lng },
-      dropoff: { lat: t.destination_lat, lng: t.destination_lng },
-    }
-  }, [activeTripId, filteredAvailable])
-
   const pendingOfferPickupsForMap = useMemo(() => {
-    if (activeTripId) return null
-    if (filteredAvailable.length < 2) return null
+    if (activeTripId || filteredAvailable.length === 0) return null
     return filteredAvailable.slice(0, 8).map((t, i) => ({
       lat: t.origin_lat,
       lng: t.origin_lng,
       label: String(i + 1),
+      tripId: t.trip_id,
     }))
   }, [activeTripId, filteredAvailable])
+
+  const selectedAvailableTrip = useMemo(
+    () =>
+      selectedOfferTripId
+        ? (filteredAvailable.find((t) => t.trip_id === selectedOfferTripId) ?? null)
+        : null,
+    [filteredAvailable, selectedOfferTripId]
+  )
+
+  const selectedOfferMapPreview = useMemo(() => {
+    if (!selectedAvailableTrip) return null
+    const t = selectedAvailableTrip
+    return {
+      pickup: { lat: t.origin_lat, lng: t.origin_lng },
+      dropoff: { lat: t.destination_lat, lng: t.destination_lng },
+    }
+  }, [selectedAvailableTrip])
+
+  const activeTripMapGeo = useMemo(() => {
+    if (!activeTripId || !acceptedDetailFallback) return null
+    const d = acceptedDetailFallback
+    return {
+      pickup: { lat: d.origin_lat, lng: d.origin_lng },
+      dropoff: { lat: d.destination_lat, lng: d.destination_lng },
+    }
+  }, [activeTripId, acceptedDetailFallback])
+
+  const driverMapStageRoute = useMemo(() => {
+    if (
+      import.meta.env.DEV &&
+      isMockLocationModeEnabled() &&
+      mockStableRouteEndpoints &&
+      activeTripId
+    ) {
+      return mockStableRouteEndpoints
+    }
+    const geo = activeTripId ? activeTripMapGeo : selectedOfferMapPreview
+    if (!geo) return undefined
+    return { from: geo.pickup, to: geo.dropoff }
+  }, [activeTripId, activeTripMapGeo, selectedOfferMapPreview, mockStableRouteEndpoints])
+
+  const mapStageTripPickup = activeTripId
+    ? (activeTripMapGeo?.pickup ?? null)
+    : (selectedOfferMapPreview?.pickup ?? null)
+  const mapStageTripDropoff = activeTripId
+    ? (activeTripMapGeo?.dropoff ?? null)
+    : (selectedOfferMapPreview?.dropoff ?? null)
+  const mapStagePendingOffers = activeTripId ? null : pendingOfferPickupsForMap
+
+  const onPendingOfferPickupClick = useCallback((tripId: string) => {
+    setSelectedOfferTripId(tripId)
+  }, [])
 
   const offerIdsFingerprint = useMemo(
     () => [...filteredAvailable].map((t) => t.trip_id).sort().join('|'),
     [filteredAvailable]
   )
+
+  useEffect(() => {
+    setSelectedOfferTripId((prev) => {
+      if (!prev) return null
+      return filteredAvailable.some((t) => t.trip_id === prev) ? prev : null
+    })
+  }, [offerIdsFingerprint, filteredAvailable])
   useDriverOfferSounds({
     enabled: sessionRole === 'driver' && Boolean(token) && !offline,
     offerIdsFingerprint,
@@ -686,6 +735,7 @@ export function DriverDashboard() {
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
       if (actionName === 'ACEITAR') {
+        setSelectedOfferTripId(null)
         sonnerToast.success('Viagem aceite')
         setDriverAcceptSoundTick((n) => n + 1)
       }
@@ -873,61 +923,66 @@ export function DriverDashboard() {
         <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
       </div>
     ) : activeTripId != null ? (
-      <ActiveTripActions
-        tripId={activeTripId}
-        token={token!}
-        tripDetailFallback={acceptedDetailFallback}
-        driverLocation={mapDotLatLng ?? null}
-        addLog={addLog}
-        setStatus={setStatus}
-        statusOverride={driverStatusOverride}
-        onClearStatusOverride={() => setDriverStatusOverride(null)}
-        onTripActionSuccess={(s) => {
-          setDriverStatusOverride(s)
-          // Fase 2 mock: pickup → destino (após «Iniciar viagem» → ongoing). Mesmo motor que fase 1.
-          if (s === 'ongoing' && isMockLocationModeEnabled()) {
-            const beginPickupToDest = (
-              pickup: { lat: number; lng: number },
-              destination: { lat: number; lng: number }
-            ) => {
-              tripSimStopRef.current?.()
-              tripSimStopRef.current = null
-              const pos = driverLocationRef.current
-              const nearPickup =
-                pos != null && isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
-              if (!nearPickup) {
-                setMockSimulatedPosition(pickup)
-                void sendDriverLocation(pickup.lat, pickup.lng, token!)
-              }
-              const routeFrom = nearPickup && pos ? pos : pickup
-              window.setTimeout(() => {
-                startMockOsrmLeg(routeFrom, destination)
-              }, 200)
-            }
-            const legs = acceptedTripGeoRef.current
-            if (legs) {
-              beginPickupToDest(legs.pickup, legs.destination)
-            } else if (token && activeTripId) {
-              const genSnapshot = mockApproachGenRef.current
-              void (async () => {
-                try {
-                  const d = await getDriverTripDetail(activeTripId, token)
-                  if (genSnapshot !== mockApproachGenRef.current) return
-                  beginPickupToDest(
-                    { lat: d.origin_lat, lng: d.origin_lng },
-                    { lat: d.destination_lat, lng: d.destination_lng }
-                  )
-                } catch {
-                  /* sem detalhe não há fase 2 */
+      <div className="w-full border-t border-border bg-background/95 backdrop-blur-sm">
+        <div className="px-4 pt-2">
+          <ActiveTripActions
+            tripId={activeTripId}
+            token={token!}
+            tripDetailFallback={acceptedDetailFallback}
+            driverLocation={mapDotLatLng ?? null}
+            addLog={addLog}
+            setStatus={setStatus}
+            statusOverride={driverStatusOverride}
+            onClearStatusOverride={() => setDriverStatusOverride(null)}
+            onTripActionSuccess={(s) => {
+              setDriverStatusOverride(s)
+              // Fase 2 mock: pickup → destino (após «Iniciar viagem» → ongoing). Mesmo motor que fase 1.
+              if (s === 'ongoing' && isMockLocationModeEnabled()) {
+                const beginPickupToDest = (
+                  pickup: { lat: number; lng: number },
+                  destination: { lat: number; lng: number }
+                ) => {
+                  tripSimStopRef.current?.()
+                  tripSimStopRef.current = null
+                  const pos = driverLocationRef.current
+                  const nearPickup =
+                    pos != null && isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
+                  if (!nearPickup) {
+                    setMockSimulatedPosition(pickup)
+                    void sendDriverLocation(pickup.lat, pickup.lng, token!)
+                  }
+                  const routeFrom = nearPickup && pos ? pos : pickup
+                  window.setTimeout(() => {
+                    startMockOsrmLeg(routeFrom, destination)
+                  }, 200)
                 }
-              })()
-            }
-          }
-        }}
-        onComplete={clearDriverActiveTripUi}
-        onTripCompleted={driverTripPartialAfterComplete}
-        onError={setError}
-      />
+                const legs = acceptedTripGeoRef.current
+                if (legs) {
+                  beginPickupToDest(legs.pickup, legs.destination)
+                } else if (token && activeTripId) {
+                  const genSnapshot = mockApproachGenRef.current
+                  void (async () => {
+                    try {
+                      const d = await getDriverTripDetail(activeTripId, token)
+                      if (genSnapshot !== mockApproachGenRef.current) return
+                      beginPickupToDest(
+                        { lat: d.origin_lat, lng: d.origin_lng },
+                        { lat: d.destination_lat, lng: d.destination_lng }
+                      )
+                    } catch {
+                      /* sem detalhe não há fase 2 */
+                    }
+                  })()
+                }
+              }
+            }}
+            onComplete={clearDriverActiveTripUi}
+            onTripCompleted={driverTripPartialAfterComplete}
+            onError={setError}
+          />
+        </div>
+        {!menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} /> : null}
+      </div>
     ) : driverBottomNav ? (
       <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
     ) : undefined
@@ -1139,17 +1194,11 @@ export function DriverDashboard() {
                   <MapView
                     className="!rounded-none border-0 !shadow-none"
                     driverLocation={mapDotLatLng}
-                    tripPickup={availableOfferMapPreview?.pickup ?? null}
-                    tripDropoff={availableOfferMapPreview?.dropoff ?? null}
-                    pendingOfferPickups={pendingOfferPickupsForMap}
-                    route={
-                      import.meta.env.DEV &&
-                        isMockLocationModeEnabled() &&
-                        mockStableRouteEndpoints &&
-                        activeTripId
-                        ? mockStableRouteEndpoints
-                        : undefined
-                    }
+                    tripPickup={mapStageTripPickup}
+                    tripDropoff={mapStageTripDropoff}
+                    pendingOfferPickups={mapStagePendingOffers}
+                    onPendingOfferPickupClick={onPendingOfferPickupClick}
+                    route={driverMapStageRoute}
                     mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                     compactHeight={false}
                     tallStage={driverBottomNav && !activeTripId}
@@ -1470,24 +1519,18 @@ export function DriverDashboard() {
               </div>
             </header>
 
-            {driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
+            {driverMapStageLayout && (!offline || driverBottomNav) && (
               <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
                 <div className="absolute inset-0 z-0 min-h-0 min-w-0">
                   <MapView
                     fillContainer
                     className="!rounded-none border-0 !shadow-none"
                     driverLocation={mapDotLatLng}
-                    tripPickup={availableOfferMapPreview?.pickup ?? null}
-                    tripDropoff={availableOfferMapPreview?.dropoff ?? null}
-                    pendingOfferPickups={pendingOfferPickupsForMap}
-                    route={
-                      import.meta.env.DEV &&
-                        isMockLocationModeEnabled() &&
-                        mockStableRouteEndpoints &&
-                        activeTripId
-                        ? mockStableRouteEndpoints
-                        : undefined
-                    }
+                    tripPickup={mapStageTripPickup}
+                    tripDropoff={mapStageTripDropoff}
+                    pendingOfferPickups={mapStagePendingOffers}
+                    onPendingOfferPickupClick={activeTripId ? undefined : onPendingOfferPickupClick}
+                    route={driverMapStageRoute}
                     mapVisualWeight="emphasized"
                     compactHeight={false}
                     tallStage={false}
@@ -1659,64 +1702,85 @@ export function DriverDashboard() {
                   {!offline && !activeTripId ? (
                     <div
                       id="driver-main-scroll"
-                      className={`pointer-events-auto mt-auto min-h-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)] ${
-                        hasAvailableTrips
-                          ? filteredAvailable.length === 1
-                            ? 'max-h-[min(34dvh,300px)]'
-                            : 'max-h-[min(42dvh,380px)]'
-                          : pollEnabled && availableLoading && available == null
-                            ? 'max-h-[min(36dvh,300px)]'
-                            : 'max-h-[min(28dvh,220px)] shrink-0'
-                      }`}
+                      className={`pointer-events-auto mt-auto min-h-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)] ${selectedAvailableTrip
+                          ? 'max-h-[min(42dvh,380px)]'
+                          : hasAvailableTrips
+                            ? 'max-h-[min(20dvh,160px)] shrink-0'
+                            : pollEnabled && availableLoading && available == null
+                              ? 'max-h-[min(36dvh,300px)]'
+                              : 'max-h-[min(28dvh,220px)] shrink-0'
+                        }`}
                     >
-                      {hasAvailableTrips ? (
+                      {selectedAvailableTrip ? (
                         <>
-                          <StatusHeader
-                            label={
-                              filteredAvailable.length === 1
-                                ? '1 viagem disponível'
-                                : `${filteredAvailable.length} viagens disponíveis`
+                          <div className="mb-2 flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-foreground">Pedido no mapa</p>
+                            <button
+                              type="button"
+                              data-testid="driver-offer-panel-close"
+                              onClick={() => setSelectedOfferTripId(null)}
+                              className="min-h-[36px] shrink-0 rounded-lg border border-border px-2.5 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+                            >
+                              Fechar
+                            </button>
+                          </div>
+                          <RequestCard
+                            contextHint={DRIVER_NEW_TRIP_LIST_HINT}
+                            pickup={formatPickup(
+                              selectedAvailableTrip.origin_lat,
+                              selectedAvailableTrip.origin_lng
+                            )}
+                            destination={formatDestination(
+                              selectedAvailableTrip.destination_lat,
+                              selectedAvailableTrip.destination_lng
+                            )}
+                            statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                            vehicleCategoryLabel={(() => {
+                              const one = normalizeDriverVehicleCategory(
+                                selectedAvailableTrip.vehicle_category ?? undefined
+                              )
+                              return one ? driverVehicleCategoryLabel(one) : null
+                            })()}
+                            estimatedPrice={selectedAvailableTrip.estimated_price}
+                            offerId={selectedAvailableTrip.offer_id ?? null}
+                            onReject={
+                              selectedAvailableTrip.offer_id
+                                ? () =>
+                                  void runRejectOffer(
+                                    selectedAvailableTrip.offer_id!,
+                                    selectedAvailableTrip.trip_id
+                                  )
+                                : undefined
                             }
-                            variant="idle"
-                            emphasis="subdued"
-                            compact
+                            acceptButtonTestId={`driver-accept-${selectedAvailableTrip.trip_id}`}
+                            rejectButtonTestId={`driver-reject-${selectedAvailableTrip.trip_id}`}
+                            acceptVariant="slide"
+                            onAccept={() =>
+                              runAction(
+                                () => acceptTrip(selectedAvailableTrip.trip_id, token!),
+                                selectedAvailableTrip.trip_id,
+                                'ACEITAR',
+                                undefined,
+                                selectedAvailableTrip
+                              )
+                            }
+                            loading={actionLoading === selectedAvailableTrip.trip_id}
+                            rejectLoading={
+                              actionLoading === `reject:${selectedAvailableTrip.trip_id}`
+                            }
                           />
-                          <ul className="space-y-3 pb-1">
-                            {filteredAvailable.map((t: TripAvailableItem) => (
-                              <li key={t.trip_id}>
-                                <RequestCard
-                                  contextHint={DRIVER_NEW_TRIP_LIST_HINT}
-                                  pickup={formatPickup(t.origin_lat, t.origin_lng)}
-                                  destination={formatDestination(t.destination_lat, t.destination_lng)}
-                                  statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
-                                  vehicleCategoryLabel={(() => {
-                                    const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
-                                    return one ? driverVehicleCategoryLabel(one) : null
-                                  })()}
-                                  estimatedPrice={t.estimated_price}
-                                  offerId={t.offer_id ?? null}
-                                  onReject={
-                                    t.offer_id ? () => void runRejectOffer(t.offer_id!, t.trip_id) : undefined
-                                  }
-                                  acceptButtonTestId={`driver-accept-${t.trip_id}`}
-                                  rejectButtonTestId={`driver-reject-${t.trip_id}`}
-                                  acceptVariant="slide"
-                                  onAccept={() =>
-                                    runAction(
-                                      () => acceptTrip(t.trip_id, token!),
-                                      t.trip_id,
-                                      'ACEITAR',
-                                      undefined,
-                                      t
-                                    )
-                                  }
-                                  loading={actionLoading === t.trip_id}
-                                  rejectLoading={actionLoading === `reject:${t.trip_id}`}
-                                />
-                              </li>
-                            ))}
-                          </ul>
                         </>
+                      ) : hasAvailableTrips ? (
+                        <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-2 text-center">
+                          <p className="text-xs font-medium text-foreground/90">
+                            {filteredAvailable.length === 1
+                              ? '1 viagem no mapa'
+                              : `${filteredAvailable.length} viagens no mapa`}
+                          </p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
+                            Toca no marcador no mapa para ver o pedido e aceitar.
+                          </p>
+                        </div>
                       ) : pollEnabled && availableLoading && available == null ? (
                         <>
                           <StatusHeader
@@ -1737,13 +1801,31 @@ export function DriverDashboard() {
                             {hasAnyCategoryAwareOffer && filteredOutCount > 0
                               ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
                               : (
-                                  <>
-                                    Sem viagens disponíveis. Histórico em Menu → Viagens.
-                                  </>
-                                )}
+                                <>
+                                  Sem viagens disponíveis. Histórico em Menu → Viagens.
+                                </>
+                              )}
                           </p>
                         </div>
                       )}
+                    </div>
+                  ) : activeTripId && token ? (
+                    <div
+                      className="pointer-events-auto mt-auto max-h-[min(24dvh,220px)] min-h-0 shrink-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-1 py-1 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md"
+                      data-testid="driver-active-trip-map-summary"
+                    >
+                      <ActiveTripSummary
+                        compact
+                        tripId={activeTripId}
+                        token={token}
+                        statusOverride={driverStatusOverride}
+                        detailFallback={acceptedDetailFallback}
+                        sessionRole={sessionRole}
+                        onClearStatusOverride={() => setDriverStatusOverride(null)}
+                        onTripCancelled={onActiveTripCancelled}
+                        onTripNotFound={onActiveTripNotFound}
+                        onDismissCompletedTrip={clearDriverActiveTripUi}
+                      />
                     </div>
                   ) : null}
                 </div>
@@ -1949,17 +2031,11 @@ export function DriverDashboard() {
                     <MapView
                       className="!rounded-none border-0 !shadow-none"
                       driverLocation={mapDotLatLng}
-                      tripPickup={availableOfferMapPreview?.pickup ?? null}
-                      tripDropoff={availableOfferMapPreview?.dropoff ?? null}
-                      pendingOfferPickups={pendingOfferPickupsForMap}
-                      route={
-                        import.meta.env.DEV &&
-                          isMockLocationModeEnabled() &&
-                          mockStableRouteEndpoints &&
-                          activeTripId
-                          ? mockStableRouteEndpoints
-                          : undefined
-                      }
+                      tripPickup={mapStageTripPickup}
+                      tripDropoff={mapStageTripDropoff}
+                      pendingOfferPickups={mapStagePendingOffers}
+                      onPendingOfferPickupClick={activeTripId ? undefined : onPendingOfferPickupClick}
+                      route={driverMapStageRoute}
                       mapVisualWeight={
                         offline && driverBottomNav && !activeTripId
                           ? 'subdued'
@@ -1979,18 +2055,6 @@ export function DriverDashboard() {
                         <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
                           Toca no mapa para ficares disponível e activar o GPS
                         </span>
-                      </div>
-                    ) : null}
-                    {!activeTripId && hasAvailableTrips ? (
-                      <div className="border-t border-border bg-primary/10 px-3 py-2 text-center">
-                        <p className="text-sm font-semibold text-foreground">
-                          {filteredAvailable.length === 1
-                            ? '1 pedido no mapa'
-                            : `${filteredAvailable.length} pedidos no mapa`}
-                        </p>
-                        <p className="text-xs text-foreground/80 mt-0.5 leading-snug">
-                          Oferta na folha por baixo do mapa — desliza ou «Aceitar com um toque».
-                        </p>
                       </div>
                     ) : null}
                     {driverBottomNav && !activeTripId ? (
@@ -2167,6 +2231,7 @@ function ActiveTripSummary({
   onTripCancelled,
   onTripNotFound,
   onDismissCompletedTrip,
+  compact = false,
 }: {
   tripId: string
   token: string
@@ -2178,6 +2243,8 @@ function ActiveTripSummary({
   onTripNotFound: () => void
   /** Libertar viagem concluída após avaliar / saltar / já avaliado. */
   onDismissCompletedTrip: () => void
+  /** Resumo fino por cima do mapa cheio (FIX-007). */
+  compact?: boolean
 }) {
   const fetchTrip = useCallback((): Promise<DriverTripPollResult> => {
     if (!tripId || !token) return Promise.resolve({ trip: null, notFound: false })
@@ -2248,17 +2315,39 @@ function ActiveTripSummary({
 
   if (!effectiveTrip && tripId && token && !pollNotFound) {
     return (
-      <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card">
-        <StatusHeader label="A carregar viagem…" variant="idle" emphasis="primary" />
+      <div
+        className={
+          compact
+            ? 'space-y-2 px-3 py-2 rounded-xl border border-border bg-card/95 shadow-sm'
+            : 'space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card'
+        }
+      >
+        <StatusHeader
+          label="A carregar viagem…"
+          variant="idle"
+          emphasis={compact ? 'subdued' : 'primary'}
+          compact={compact}
+        />
         <p className="text-center text-sm text-foreground/70">A obter detalhes atualizados.</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out">
-      <StatusHeader label={config.label} variant={config.variant} emphasis="primary" />
-      <p className="text-center -mt-2 mb-1">
+    <div
+      className={
+        compact
+          ? 'space-y-2 px-3 py-2 rounded-xl border border-border bg-card/95 shadow-sm transition-all duration-200 ease-out'
+          : 'space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out'
+      }
+    >
+      <StatusHeader
+        label={config.label}
+        variant={config.variant}
+        emphasis={compact ? 'subdued' : 'primary'}
+        compact={compact}
+      />
+      <p className={`text-center ${compact ? '-mt-1 mb-0' : '-mt-2 mb-1'}`}>
         <span className="inline-block rounded-full bg-primary text-primary-foreground text-xs font-semibold px-3 py-1">
           {driverTripBadgeShort(displayStatus)}
         </span>
@@ -2294,7 +2383,7 @@ function ActiveTripSummary({
           </Button>
         </div>
       ) : null}
-      {effectiveTrip && (
+      {effectiveTrip && !compact ? (
         <TripCard
           pickup={formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)}
           destination={formatDestination(
@@ -2309,7 +2398,14 @@ function ActiveTripSummary({
               : 'Estimativa (indicativa)'
           }
         />
-      )}
+      ) : effectiveTrip && compact ? (
+        <p className="text-center text-xs text-foreground/80 leading-snug">
+          {formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)} →{' '}
+          {formatDestination(effectiveTrip.destination_lat, effectiveTrip.destination_lng)}
+          {' · '}
+          {(effectiveTrip.final_price ?? effectiveTrip.estimated_price ?? 0).toFixed(2)} €
+        </p>
+      ) : null}
     </div>
   )
 }

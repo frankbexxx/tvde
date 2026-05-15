@@ -2,7 +2,7 @@
 
 Lista incremental: cada entrada descreve o fix; estado em **Estado** quando aplicável.
 
-**Próximo na fila (próxima sessão):** validação em dispositivo real (passo 1 + mapa cheio); sincronizar **inventário detalhado** Tabela C com o código; **TODO-LEGADO** `!driverBottomNav` quando couber. Ver **Registo de sessão** abaixo.
+**Próximo na fila:** **FIX-007 / FIX-008** (motorista) — implementação após decisões em bloco na Tabela E. Inventário: [`driver-home-inventory.md`](driver-home-inventory.md).
 
 ---
 
@@ -13,18 +13,26 @@ Lista incremental: cada entrada descreve o fix; estado em **Estado** quando apli
 - Plano motorista **FIX-003 → FIX-005**: micro OFF vermelho, remoções Tabela C (D-S1-01/02/06/08), D-S1-21 no passo 1 (lista abaixo do mapa, vazio mínimo, marcadores multi-oferta em `MapView`), nota OSRM em DevTools, secção **TODO-LEGADO** neste backlog.
 - **Folha «À espera de viagens» no mapa cheio** (`driverMapStageLayout`) e na vista com scroll: mesmo padrão compacto do passo 1 (sem `StatusHeader` XL em vazio; `max-h` da folha sem pedidos já não usa 46dvh/400px).
 
-**Parar aqui** — próxima sessão: lista em **Amanhã (TODOs alinhados)**.
+**Parar aqui** — Tabelas **A–D fechadas**; **Tabela E** aberta para decisões.
 
 ---
 
-## Amanhã (TODOs alinhados)
+## Sessão A–D (fechada)
 
-| # | TODO | Notas |
+| # | Item | Estado |
 |---|------|--------|
-| 1 | **Smoke /driver em telemóvel** | Passo 1 (se activo), mapa cheio: vazio, loading, 1 pedido, vários pedidos; micro on/off; barra inferior. |
-| 2 | **Inventário `driver-home-inventory.md`** | Tabela C — coluna inventário detalhado vs código (intro removida, D-S1-08, D-S1-21 layout). Tabela D — mencionar folha inferior compacta no palco mapa quando sem pedidos. |
-| 3 | **TODO-LEGADO `!driverBottomNav`** | Auditoria `driverHomeFeatures.ts` + decisão remover ramos vs manter testes (não urgente). |
-| 4 | **Copy opcional** | Alinhar frases «Sem viagens disponíveis» vs «Sem pedidos» / «Fica disponível…» entre ecrãs se quiseres uma só voz de produto. |
+| 1 | Smoke /driver em telemóvel | **Feito** — viagem driver↔passageiro OK; sem re-smoke obrigatório. |
+| 2 | Inventário A–D alinhado ao código | **Feito** — [`driver-home-inventory.md`](driver-home-inventory.md). |
+| 3 | TODO-LEGADO `!driverBottomNav` | Pendente (opcional, não bloqueia E). |
+| 4 | Copy «Sem viagens» vs «Sem pedidos» | Pendente (opcional). |
+
+---
+
+## Tabela E — decisões e implementação
+
+1. **Decisões em bloco** — registadas no inventário (três pilares + matriz bulk).
+2. **FIX-007 / FIX-008** — código motorista (ver abaixo).
+3. **Refinamento fino** — textos do painel aceitar, altura do resumo compacto (sessão curta contigo).
 
 ---
 
@@ -100,6 +108,52 @@ Lista incremental: cada entrada descreve o fix; estado em **Estado** quando apli
 **Contexto:** no `driverMapStageLayout` (e na coluna scroll sem palco), o vazio ainda usava `StatusHeader` em destaque (`primary`, não compacto) + folha com `max-h` muito alto, diferente do passo 1.
 
 **Entregue:** bloco mínimo alinhado ao passo 1; loading com `StatusHeader` compacto; `max-h` da folha sem lista mais baixo. Código: `DriverDashboard.tsx` (folha `#driver-main-scroll` no palco + bloco paralelo sem `driverMapStageLayout`).
+
+---
+
+## FIX-007 — Barra de 4 ícones sempre + mapa cheio em viagem
+
+**Decisão (D-E-22, D-E-10–12):** os quatro ícones (Início, Rendimentos, Caixa, Menu) permanecem visíveis **durante** a viagem; botões da viagem (Iniciar, Cancelar, …) ficam **por cima** da barra, não a substituem. Excepção: **Menu** aberto (gaveta) — barra pode esconder-se.
+
+**Comportamento desejado:**
+
+- Com `activeTripId`: manter `driverMapStageLayout` (mapa a ecrã cheio) em vez de layout scroll com mapa pequeno.
+- `bottomChrome`: `ActiveTripActions` + `DriverBottomNav` (quando `!menuOpen`).
+- Resumo da viagem: variante **compacta** em overlay sobre o mapa (não cartão alto a meio do scroll).
+- Rota recolha→destino no mapa quando há detalhe da viagem (`acceptedDetailFallback` ou mock DEV).
+
+**Código:** `DriverDashboard.tsx` (`driverMapStageLayout`, `bottomChrome`, overlay `ActiveTripSummary`).
+
+**Estado:** entregue.
+
+---
+
+## FIX-008 — Aceitar ao toque no marcador (mapa fixo à espera)
+
+**Decisão (D-E-01–08):** à espera, o mapa **não muda** de layout quando chegam pedidos; marcadores no mapa; **toque no marcador** abre painel com detalhes + aceitar/recusar/fechar. Lista na folha deixa de ser modo principal.
+
+**Comportamento desejado:**
+
+- Uma ou várias ofertas: marcadores numerados (`pendingOfferPickups` com `tripId`).
+- Toque no marcador → painel inferior com `RequestCard` + fechar.
+- Sem selecção: folha mínima («Toca num marcador no mapa») ou vazio compacto.
+- Remover faixa D-E-08 («N pedidos no mapa») como entrada principal.
+
+**Código:** `MapView.tsx` (marcadores clicáveis), `DriverDashboard.tsx` (`selectedOfferTripId`, folha `#driver-main-scroll`).
+
+**Estado:** entregue.
+
+**Referência histórica (slider após painel):** [`EXTRA-2026-05-13-driver-accept-compact.md`](../prompts/EXTRA-2026-05-13-driver-accept-compact.md).
+
+---
+
+## TODO — Barra inferior passageiro e parceiro
+
+**Regra:** mesma que motorista — 4 ícones **sempre** no ecrã principal; excepção Menu aberto.
+
+**Âmbito:** passageiro e parceiro numa sessão separada (não bloqueia FIX-007/008 motorista).
+
+**Estado:** Por iniciar.
 
 ---
 

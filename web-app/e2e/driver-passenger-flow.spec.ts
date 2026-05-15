@@ -42,6 +42,42 @@ async function openDriverMenu(page: Page) {
  * Com barra inferior Manel (ambos true em `.env`), o fluxo em 2 passos fica desactivado no código.
  * Este helper é no-op se não houver passo 1.
  */
+/** FIX-008: painel de oferta só abre após toque no marcador do mapa. */
+async function openDriverOfferPanel(page: Page, tripId: string) {
+  const marker = page.getByTestId(`driver-map-offer-${tripId}`)
+  const accept = page.getByTestId(`driver-accept-${tripId}`)
+  const reject = page.getByTestId(`driver-reject-${tripId}`)
+  await expect
+    .poll(
+      async () => {
+        if ((await accept.isVisible().catch(() => false)) || (await reject.isVisible().catch(() => false))) {
+          return true
+        }
+        if (await marker.isVisible().catch(() => false)) {
+          await marker.click()
+          return (
+            (await accept.isVisible().catch(() => false)) || (await reject.isVisible().catch(() => false))
+          )
+        }
+        return false
+      },
+      { timeout: sec(90), intervals: pollLook }
+    )
+    .toBe(true)
+}
+
+async function acceptDriverTripFromMap(page: Page, tripId: string) {
+  await openDriverOfferPanel(page, tripId)
+  await page.getByTestId(`driver-accept-${tripId}`).click()
+}
+
+async function rejectDriverTripFromMap(page: Page, tripId: string) {
+  await openDriverOfferPanel(page, tripId)
+  const rejectBtn = page.getByTestId(`driver-reject-${tripId}`)
+  page.once('dialog', (d: Dialog) => d.accept())
+  await rejectBtn.click()
+}
+
 async function leaveDriverHomeStep1IfPresent(page: Page) {
   const step1 = page.getByTestId('driver-home-step1')
   if (!(await step1.isVisible().catch(() => false))) return
@@ -241,12 +277,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
       )
       .toBeGreaterThan(0)
 
-    const aceitarBtn = driverPage.getByTestId(`driver-accept-${tripId}`)
-    await expect
-      .poll(async () => aceitarBtn.isVisible(), { timeout: sec(90), intervals: pollLook })
-      .toBe(true)
-
-    await aceitarBtn.click()
+    await acceptDriverTripFromMap(driverPage, tripId)
     await refreshDriverLocationNearPickup(request, tokens.driver)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
@@ -285,15 +316,22 @@ test.describe('Driver + passenger (proximity gate)', () => {
       timeout: sec(90),
     })
     await driverPage.getByRole('button', { name: /terminar viagem/i }).click()
+    const continuarBtn = driverPage.getByRole('button', { name: /^continuar$/i })
+    await expect(continuarBtn).toBeVisible({ timeout: sec(60) })
+    await continuarBtn.click()
     await expect
       .poll(
         async () => {
           const hasIdleOrHistory = await driverPage
-            .getByText(/à espera de viagens|histórico/i)
+            .getByText(/à espera de viagens|toca num marcador|histórico/i)
             .first()
             .isVisible()
             .catch(() => false)
-          const hasNewOffer = await driverPage.getByRole('button', { name: /^ACEITAR$/i }).isVisible().catch(() => false)
+          const hasNewOffer = await driverPage
+            .getByTestId(/driver-map-offer-/)
+            .first()
+            .isVisible()
+            .catch(() => false)
           return hasIdleOrHistory || hasNewOffer
         },
         { timeout: sec(45), intervals: pollLook }
@@ -329,10 +367,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({ timeout: sec(120) })
     await leaveDriverHomeStep1IfPresent(driverPage)
 
-    const rejectBtn = driverPage.getByTestId(`driver-reject-${tripId}`)
-    await expect.poll(async () => rejectBtn.isVisible(), { timeout: sec(90), intervals: pollLook }).toBe(true)
-    driverPage.once('dialog', (d: Dialog) => d.accept())
-    await rejectBtn.click()
+    await rejectDriverTripFromMap(driverPage, tripId)
 
     await expect
       .poll(
@@ -364,12 +399,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     })
     await leaveDriverHomeStep1IfPresent(driverPage)
 
-    const aceitarBtn = driverPage.getByTestId(`driver-accept-${tripId}`)
-    await expect
-      .poll(async () => aceitarBtn.isVisible(), { timeout: sec(90), intervals: pollLook })
-      .toBe(true)
-
-    await aceitarBtn.click()
+    await acceptDriverTripFromMap(driverPage, tripId)
     await refreshDriverLocationNearPickup(request, tokens.driver)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
@@ -467,9 +497,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
     await driverPage.getByTestId('driver-close-menu').click()
     await leaveDriverHomeStep1IfPresent(driverPage)
-    await expect(driverPage.getByTestId(`driver-accept-${tripId}`)).toBeVisible({ timeout: sec(60) })
-
-    await driverPage.getByTestId(`driver-accept-${tripId}`).click()
+    await acceptDriverTripFromMap(driverPage, tripId)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })

@@ -51,8 +51,10 @@ export interface MapViewProps {
   /** Recolha / destino da viagem ativa (marcadores distintos do planeamento). */
   tripPickup?: LatLng | null
   tripDropoff?: LatLng | null
-  /** Sem viagem activa: várias recolhas de ofertas (rótulo curto, ex. índice na lista). */
-  pendingOfferPickups?: Array<{ lat: number; lng: number; label: string }> | null
+  /** Sem viagem activa: recolhas de ofertas (rótulo curto + tripId para painel ao toque). */
+  pendingOfferPickups?: Array<{ lat: number; lng: number; label: string; tripId: string }> | null
+  /** Toque num marcador de oferta pendente. */
+  onPendingOfferPickupClick?: (tripId: string) => void
   /** Usa altura mais compacta para manter CTAs visíveis em ecrãs curtos. */
   compactHeight?: boolean
   /** Mapa mais alto no ecrã principal motorista (shell com bottom nav). */
@@ -91,6 +93,7 @@ export function MapView({
   tripPickup = null,
   tripDropoff = null,
   pendingOfferPickups = null,
+  onPendingOfferPickupClick,
   compactHeight = false,
   tallStage = false,
   fillContainer = false,
@@ -113,7 +116,7 @@ export function MapView({
   )
   const pendingOfferPickupsKey = useMemo(() => {
     if (!pendingOfferPickups?.length) return ''
-    return pendingOfferPickups.map((p) => `${p.lat},${p.lng},${p.label}`).join('|')
+    return pendingOfferPickups.map((p) => `${p.lat},${p.lng},${p.label},${p.tripId}`).join('|')
   }, [pendingOfferPickups])
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
@@ -364,17 +367,24 @@ export function MapView({
           {!hasActiveTripMarkers && pendingOfferPickups?.length
             ? pendingOfferPickups.map((p, i) => (
               <Marker
-                key={`pending-offer-${p.label}-${p.lat}-${p.lng}-${i}`}
+                key={`pending-offer-${p.tripId}-${p.lat}-${p.lng}-${i}`}
                 longitude={p.lng}
                 latitude={p.lat}
                 anchor="center"
               >
-                <div
-                  className="flex h-7 min-w-[1.75rem] items-center justify-center rounded-full border-2 border-amber-300 bg-amber-500 px-1 text-[11px] font-bold tabular-nums text-white shadow-md"
-                  aria-hidden
+                <button
+                  type="button"
+                  data-testid={`driver-map-offer-${p.tripId}`}
+                  aria-label={`Ver viagem ${p.label} no mapa`}
+                  disabled={!onPendingOfferPickupClick}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onPendingOfferPickupClick?.(p.tripId)
+                  }}
+                  className="flex h-9 min-w-[2.25rem] cursor-pointer items-center justify-center rounded-full border-2 border-amber-300 bg-amber-500 px-1.5 text-xs font-bold tabular-nums text-white shadow-md touch-manipulation disabled:cursor-default"
                 >
                   {p.label}
-                </div>
+                </button>
               </Marker>
             ))
             : null}
