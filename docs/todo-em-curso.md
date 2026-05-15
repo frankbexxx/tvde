@@ -4,15 +4,26 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-14)
+## Agora (2026-05-15)
 
-**Contexto:** `main` inclui **#280**–**#289**, **#293** (Google passageiro + rate-limit), **#295** (matriz env `C:\dev\APP\docs\env\ENV_VARS_VERIFICATION.md` + templates). **Stack staging Render** operacional: **`tvde-staging-db`**, **`tvde-staging-api`**, **`tvde-staging-app`** (`https://tvde-staging-app.onrender.com`); OAuth Google **prod** activo; staging API sem `GOOGLE_OAUTH_*` até próxima sessão.
+**Contexto:** `main` inclui **#319** (**FIX-007/008**, Tabela E motorista — mapa cheio em viagem, marcador → painel aceitar, barra 4 ícones sempre). Marco UX **driver↔passageiro funcional**; smoke manual Frank **2026-05-15** OK com tweaks visuais na fila **TW-**. Staging / A+L inalterado: ver painel **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md).
+
+**Próximo carril produto (motorista):** **TWEAKS_UX** (**TW-01** … **TW-05**) → depois **O-UX20-1** (spec [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md)) → **O-NAV-PP-1** (barra passageiro/parceiro).
 
 **Legenda Estado** (fixa — mesmo vocabulário que o bloco *Formato dos painéis* em [`TODOdoDIA.md`](../TODOdoDIA.md)): Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A.
 
 **Sessão 2026-05-12 (fecho):** env + OAuth consola + provisioning staging + `alembic` no Shell Render + static + CORS; **EXTRA** herdado nos painéis **2026-05-13** e **2026-05-14**.
 
-**Próximo carril:** após staging/Google/smokes — **A4**; backlog **EXTRA** em [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-14** (tabelas **X-**).
+**Próximo carril infra:** após staging/Google/smokes — **A4** (painel **2026-05-14**, **A2-02-***). **Próximo carril UX motorista:** painel **2026-05-15** (**TW-**).
+
+### Trabalho vivo (painel **2026-05-15** — motorista)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **E-MARCO-1** | FIX-007/008 + inventário A–E | Concluído | Merge **#319** |
+| **TW-01** … **TW-05** | TWEAKS_UX (densidade, copy, screenshots) | Por iniciar | Ver [`TODOdoDIA.md`](../TODOdoDIA.md) |
+| **O-UX20-1** | Spec UX 2.0 | Por iniciar | [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md) |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Por iniciar | Backlog motorista |
 
 ### Trabalho vivo (painel **2026-05-14**)
 
@@ -62,8 +73,10 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ### O que falta (prioridade de produto / próxima sessão útil)
 
-1. ~~**Zonas v1 — fecho técnico**~~ — **entregue neste PR:** catálogo **`zone_id`** com âncoras geo (incl. **porto**); **orçamento extra** via partner `POST …/zones/budget/grant-extra` + `GET …/budget/today`; UI frota em `PartnerDriverDetail`. *Seguinte evolução:* geofencing fino / políticas por org (se necessário).
-2. **E2E / PW** — **`api-flows`** (`npm run test:e2e:api`): ✅ **2026-05-11** (6/6, local). **`driver-passenger-flow`**: revalidar quando mexeres em fluxos motorista+passageiro; ver **Notas E2E** no [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-05-09**.
+1. **TWEAKS_UX motorista** (**TW-01** … **TW-05**) — após análise dos screenshots Frank; **sem** mudar fluxo (só visual). Painel **2026-05-15**.
+2. **UX 2.0** — sessão de desenho (**O-UX20-1**); stub [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md).
+3. ~~**Zonas v1 — fecho técnico**~~ — entregue; geofencing fino = evolução futura.
+4. **E2E / PW** — **`driver-passenger-flow`**: ✅ **2026-05-15** (4/4, pós-#319). Revalidar só com delta em motorista/passageiro.
 3. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
 4. ~~**Lembrete operacional — Stripe**~~ — **2026-05-11:** mock reposto em piloto; ver [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) § *Repor modo mock*.
 5. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*

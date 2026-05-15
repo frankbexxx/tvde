@@ -2,18 +2,22 @@
 
 Lista incremental: cada entrada descreve o fix; estado em **Estado** quando aplicável.
 
-**Próximo na fila:** **FIX-007 / FIX-008** (motorista) — implementação após decisões em bloco na Tabela E. Inventário: [`driver-home-inventory.md`](driver-home-inventory.md).
+**Próximo na fila:** **TWEAKS_UX** (prefixo **TW-** no [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-05-15**) — densidade/copy/cores sem mudar o fluxo. Depois: barra 4 ícones **passageiro/parceiro**; **UX 2.0** (spec). Inventário: [`driver-home-inventory.md`](driver-home-inventory.md).
 
 ---
 
 ## Registo de sessão — wrap-up
 
-**O que ficou feito (merge em `main`):**
+**Sessão 2026-05-15 (merge #319, `7d31dbe`):**
 
-- Plano motorista **FIX-003 → FIX-005**: micro OFF vermelho, remoções Tabela C (D-S1-01/02/06/08), D-S1-21 no passo 1 (lista abaixo do mapa, vazio mínimo, marcadores multi-oferta em `MapView`), nota OSRM em DevTools, secção **TODO-LEGADO** neste backlog.
-- **Folha «À espera de viagens» no mapa cheio** (`driverMapStageLayout`) e na vista com scroll: mesmo padrão compacto do passo 1 (sem `StatusHeader` XL em vazio; `max-h` da folha sem pedidos já não usa 46dvh/400px).
+- **Tabela E** — decisões bulk + **FIX-007** (mapa cheio em viagem, barra 4 ícones sempre, resumo compacto) + **FIX-008** (marcador → painel aceitar).
+- Smoke manual Frank: fluxo driver↔passageiro **funcional**; tweaks visuais adiados a **TW-**.
+- E2E `driver-passenger-flow` (4/4) alinhado ao painel no marcador + «Continuar» pós-conclusão.
 
-**Parar aqui** — Tabelas **A–D fechadas**; **Tabela E** aberta para decisões.
+**Sessão anterior (merge em `main`):**
+
+- **FIX-003 → FIX-006**: micro OFF vermelho, Tabela C, folha compacta no mapa cheio.
+- Tabelas **A–D fechadas** em inventário.
 
 ---
 
@@ -28,11 +32,21 @@ Lista incremental: cada entrada descreve o fix; estado em **Estado** quando apli
 
 ---
 
-## Tabela E — decisões e implementação
+## Tabela E — fechada (funcional)
 
 1. **Decisões em bloco** — registadas no inventário (três pilares + matriz bulk).
-2. **FIX-007 / FIX-008** — código motorista (ver abaixo).
-3. **Refinamento fino** — textos do painel aceitar, altura do resumo compacto (sessão curta contigo).
+2. **FIX-007 / FIX-008** — entregues (**#319**).
+3. **Refinamento pixel** — fila **TWEAKS_UX** (**TW-**), não reabre decisões bulk.
+
+---
+
+## TWEAKS_UX
+
+Ajustes **só** de composição visual (texto, cores, densidade, espaçamento). **Não** alterar: marcador → painel → aceitar; mapa cheio em viagem; barra 4 ícones sempre.
+
+**Lista canónica:** painel **2026-05-15** em [`TODOdoDIA.md`](../../TODOdoDIA.md) — **TW-01** (SlideToAccept / painel aceitar ocupa demais), **TW-02** (copy painel), **TW-03** (resumo compacto), **TW-04** (stack inferior), **TW-05** (pós-screenshots), **TW-06** (lista multi-ofertas, N/A).
+
+**Entrada:** screenshots Frank (**próxima sessão**).
 
 ---
 

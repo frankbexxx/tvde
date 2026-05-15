@@ -25,9 +25,45 @@ A partir desta data, cada **painel novo** apresenta o trabalho operacional em **
 | **Bloqueado** | Espera externa ou dependência; explicar **por quê** em Notas. |
 | **N/A** | Reservado / não aplicável. |
 
-**Prefixos de ID:** **A-…** — auditoria / gates (ex. `A2-02-1`, `A3-R`); **X-…** — lista EXTRA produto; **R-…** — rasto / backlog técnico não bloqueante; **O-…** — opcional / operacional; **S-…** — smokes **produção** (PC + Render, sem staging); **F-…** — fixes / issues de código após smokes ou decisão de produto.
+**Prefixos de ID:** **A-…** — auditoria / gates (ex. `A2-02-1`, `A3-R`); **X-…** — lista EXTRA produto; **TW-…** — tweaks UX motorista (densidade, copy, cores; sem mudar fluxo); **R-…** — rasto / backlog técnico não bloqueante; **O-…** — opcional / operacional; **S-…** — smokes **produção** (PC + Render, sem staging); **F-…** — fixes / issues de código após smokes ou decisão de produto.
 
 Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram escritos (histórico).
+
+---
+
+## Painel — 2026-05-15 (marco motorista **FIX-007/008** + **TWEAKS_UX**)
+
+**Marco:** fluxo **driver↔passageiro** funcional a 100% em UX (mapa cheio, marcador → painel aceitar, barra 4 ícones em viagem). Merge **`#319`** em `main`. Smoke manual **2026-05-15**: quase perfeito; tweaks visuais na fila **TW-**.
+
+**Não repetir:** re-smoke grelha **S-** nem inventário **A–D** sem delta de deploy.
+
+### Entrega fechada (motorista)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **E-MARCO-1** | Tabelas A–E inventário + FIX-001…008 | Concluído | [`driver-home-inventory.md`](docs/ux/driver-home-inventory.md); PR **#319** |
+| **E-MARCO-2** | Smoke manual viagem (telemóvel / local) | Concluído | Frank **2026-05-15**; screenshots para **TW-05** na próxima sessão |
+| **E-MARCO-3** | E2E `driver-passenger-flow` | Concluído | 4/4 após FIX-008 (marcador + Continuar) |
+
+### **TWEAKS_UX** (**TW-**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **TW-01** | Painel aceitar: **SlideToAccept** / CTA — menos altura/largura (gesto OK, ocupa demais) | Por iniciar | [`SlideToAccept.tsx`](web-app/src/components/cards/SlideToAccept.tsx); painel [`DriverDashboard.tsx`](web-app/src/features/driver/DriverDashboard.tsx) |
+| **TW-02** | Copy e hierarquia «Pedido no mapa» (título, Fechar, hints) | Por iniciar | D-E-01–07 refinamento |
+| **TW-03** | Resumo compacto em viagem (altura, tipo, contraste) | Por iniciar | `ActiveTripSummary` `compact` |
+| **TW-04** | Espaçamento acções viagem + barra 4 ícones | Por iniciar | `bottomChrome` FIX-007 |
+| **TW-05** | Revisão geral pós-screenshots (~10 prints) | Por iniciar | Frank analisa offline; próxima sessão |
+| **TW-06** | Ícone «lista» multi-ofertas sob mapa | N/A | Secundário; inventário Tabela E |
+
+### Operacional / fases seguintes (**O-**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **O-UX20-1** | Sessão desenho **UX 2.0** (motorista primeiro) | Por iniciar | Stub [`DRIVER_UX_2_0.md`](docs/product/DRIVER_UX_2_0.md); **depois** de TW- prioritários |
+| **O-NAV-PP-1** | Barra 4 ícones **passageiro** e **parceiro** (mesma regra que motorista) | Por iniciar | [`driver-ux-fixes-backlog.md`](docs/ux/driver-ux-fixes-backlog.md) TODO |
+
+_Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 
 ---
 
@@ -83,7 +119,7 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **S-03** | Pedido de viagem — estado **antes** de motorista | Concluído | **D** |
 | **S-04** | Login **motorista** | Concluído | **B** MOTORISTA |
 | **S-05** | Motorista disponível / recebe oferta | Concluído | **E** |
-| **S-06** | Aceitar oferta (toque ou swipe, o que houver em prod) | Concluído | **F**; follow-up **F-1** aplicado no código (folha compacta 1 oferta, etc.) |
+| **S-06** | Aceitar oferta | Concluído | **F**; em `main` (**#319**): **marcador no mapa → painel** + slide/toque no painel (FIX-008); não lista principal |
 | **S-07** | Sincronização: passageiro e motorista com estado coerente | Concluído | **G** |
 | **S-08** | Conclusão da viagem + pós-viagem (rating/copy conforme UI) | Concluído | Rating fechado na mesma ronda |
 | **S-09** | Login **partner** (Frota) | Concluído | **B** FROTA + **H** |
