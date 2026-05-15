@@ -9,7 +9,7 @@
 | **A** — Shell global (D-G-01 … D-G-09) | **Fechada** | Validada em uso após merge; coluna «LOCALIZAÇÃO» descreve ainda o layout de referência — a implementação actual segue FIX-002 no `/driver`. |
 | **B** — Barra inferior (D-NAV-01 … 04) | **Fechada** | Sem alterações planeadas. |
 | **C** — Ecrã 1 passo inicial (D-S1-01 … D-S1-26) | **Parcialmente implementada** | FIX-004 (remoções D-S1-01/02/06/08) e FIX-005 (D-S1-21) entregues no código; inventário detalhado pode ainda descrever labels antigos — alinhar na próxima revisão doc. |
-| **D** — Ecrã 2 palco mapa | — | Inalterada nesta fase. |
+| **D** — Ecrã 2 palco mapa | **Actualizada em código** | Folha inferior sem pedidos alinhada ao vazio compacto (FIX-006); inventário detalhado D-S2-xx pode precisar de uma passagem de texto. |
 
 **Nota de produto:** o ecrã 1 só existe se `isDriverHomeTwoStepEnabled()` for verdadeiro; caso contrário o utilizador cai directamente no ecrã 2. Com `isDriverBottomNavEnabled()` falso, o layout muda (sem barra inferior Manel; toggle «Estado» no passo 1, etc.) — as linhas assinaladas com *(cond.)* aplicam-se só nesse modo.
 
