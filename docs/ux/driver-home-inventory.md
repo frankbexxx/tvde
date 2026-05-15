@@ -1,4 +1,4 @@
-# Inventário UX — motorista (Ecrã 1 vs Ecrã 2)
+# Inventário UX — motorista
 
 **Nota:** no `/driver`, o cabeçalho global usa a variante **compacta** (FIX-002): wordmark + data na mesma linha, dicas compactas; identidade e Conta/Definições no **Menu → Perfil**.
 
@@ -6,36 +6,37 @@
 
 | Tabela | Estado | Nota |
 |--------|--------|------|
-| **A** — Shell global (D-G-01 … D-G-09) | **Fechada** | Validada em uso após merge; coluna «LOCALIZAÇÃO» descreve ainda o layout de referência — a implementação actual segue FIX-002 no `/driver`. |
+| **A** — Shell global (D-G-01 … D-G-09) | **Fechada** | FIX-002; smoke telemóvel OK (disponível + viagem). |
 | **B** — Barra inferior (D-NAV-01 … 04) | **Fechada** | Sem alterações planeadas. |
-| **C** — Ecrã 1 passo inicial (D-S1-01 … D-S1-26) | **Parcialmente implementada** | FIX-004 (remoções D-S1-01/02/06/08) e FIX-005 (D-S1-21) entregues no código; inventário detalhado pode ainda descrever labels antigos — alinhar na próxima revisão doc. |
-| **D** — Ecrã 2 palco mapa | **Actualizada em código** | Folha inferior sem pedidos alinhada ao vazio compacto (FIX-006); inventário detalhado D-S2-xx pode precisar de uma passagem de texto. |
+| **C** — Ecrã 1 passo inicial (D-S1-01 … D-S1-26) | **Fechada** | Decisões + FIX-004/005; em prod. `isDriverHomeTwoStepEnabled()` = false (passo 1 inactivo). |
+| **D** — Ecrã 2 palco mapa (D-S2-01 … 08) | **Fechada** | FIX-006; folha compacta; smokes OK. |
+| **E** — Aceitar e viagem activa (D-E-01 … 32) | **Decisões em bloco registadas** | Refinamento fino pendente; implementação FIX-007/008 em curso. |
 
-**Nota de produto:** o ecrã 1 só existe se `isDriverHomeTwoStepEnabled()` for verdadeiro; caso contrário o utilizador cai directamente no ecrã 2. Com `isDriverBottomNavEnabled()` falso, o layout muda (sem barra inferior Manel; toggle «Estado» no passo 1, etc.) — as linhas assinaladas com *(cond.)* aplicam-se só nesse modo.
+**Nota de produto:** o ecrã 1 só existe se `isDriverHomeTwoStepEnabled()` for verdadeiro; caso contrário o utilizador cai directamente no ecrã 2 (palco mapa). Com `isDriverBottomNavEnabled()` falso, o layout muda — linhas *(cond.)* aplicam-se só nesse modo legado.
 
 ---
 
 ## Tabela A — Shell global (visível em ambos enquanto estás em `/driver`)
 
-**Estado: fechada** (sem novos itens; implementação driver = variante compacta + Perfil no menu.)
+**Estado: fechada**
 
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|
 | D-G-01 | Wordmark / marca | Identidade visual | Topo esquerdo do cabeçalho global |
-| D-G-02 | Nome / telefone sessão | Quem está autenticado | Ao lado da marca, linha 1 |
-| D-G-03 | Papel «MOTORISTA» | Indica o papel API/sessão | Pastilha sob o nome |
-| D-G-04 | Ref. conta (Conta · …) | Identificador curto da conta | Junto ao papel |
-| D-G-05 | Data e hora | Relógio / calendário pt-PT | Linha abaixo do bloco identidade |
-| D-G-06 | Perfil | Abre perfil / conta | Canto superior direito |
-| D-G-07 | Definições | Abre configuração | Ao lado do perfil |
-| D-G-08 | Faixa de dicas rotativas | Mensagens / feed rotacional | Faixa escura sob o bloco principal do header |
+| D-G-02 | Nome / telefone sessão | Quem está autenticado | **Menu → Perfil** (fora do topo; FIX-002) |
+| D-G-03 | Papel «MOTORISTA» | Indica o papel API/sessão | **Menu → Perfil** |
+| D-G-04 | Ref. conta (Conta · …) | Identificador curto da conta | **Menu → Perfil** |
+| D-G-05 | Data e hora | Relógio / calendário pt-PT | **Na linha do wordmark** (FIX-002) |
+| D-G-06 | Perfil | Abre perfil / conta | **Menu → Perfil** |
+| D-G-07 | Definições | Abre configuração | **Menu → Perfil** |
+| D-G-08 | Faixa de dicas rotativas | Mensagens / feed rotacional | Junto ao wordmark (FIX-002) |
 | D-G-09 | Menu lateral (gaveta) | Navegação secundária (viagens, docs, zonas, etc.) | Sobrepõe o ecrã quando `menuOpen` (`DriverSideMenu`) |
 
 ---
 
 ## Tabela B — Barra de navegação inferior (ícones)
 
-**Estado: fechada** (sem mudanças planeadas.)
+**Estado: fechada**
 
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|
@@ -48,9 +49,9 @@
 
 ## Tabela C — Ecrã 1 (passo inicial / `driver-home-step1`)
 
-**Estado:** decisões registadas; **remoções D-S1-01/02/06/08 e mudança D-S1-21** reflectidas no código (ver backlog FIX-004 / FIX-005).
+**Estado: fechada** — decisões registadas; código em `main` (FIX-004, FIX-005). Em produção o passo 1 **não** é mostrado (`isDriverHomeTwoStepEnabled()` = false).
 
-*Fluxo: mapa em cartão com altura limitada; com bottom nav, a disponibilidade + CTA + nav estão na barra fixa composta (`bottomChrome`).*
+*Fluxo quando activo: mapa em cartão; com bottom nav, disponibilidade + CTA + nav em `bottomChrome`.*
 
 ### Decisões por ID (produto)
 
@@ -76,77 +77,202 @@
 | D-S1-18 | **MANTER** |
 | D-S1-19 | **MANTER** |
 | D-S1-20 | **MANTER** |
-| D-S1-21 | **MUDAR** — sem pedidos: box **mínima**; com pedidos: lista **por baixo do mapa** + **marcadores / ícones de viagens no mapa**. |
+| D-S1-21 | **MUDAR** — vazio mínimo; com pedidos: lista **abaixo do mapa** + marcadores no mapa |
 | D-S1-22 | **MANTER** |
 | D-S1-23 | **MANTER** |
 | D-S1-24 | **MANTER** |
 | D-S1-25 | **MANTER** |
 | D-S1-26 | **MANTER** |
 
-### Notas de alinhamento (discussão)
-
-**1. Dois dashboards** — Opinião: um **caminho alvo** (Manel) reduz custo; variantes `!driverBottomNav` são **legado** até haver decisão de as cortar. **REMOVER** D-S1-02 e D-S1-06 só é seguro quando não houver utilizadores nesse modo **ou** houver outro acesso claro a Menu / disponibilidade nesse fluxo.
-
-**2. Avisos DEV / mocks** — Opinião: em **produção** o motorista não precisa de mocks/versions; **DEV** pode usar painel discreto, **admin** ou **DevTools**. Manter no motorista só o que for **operacional** (GPS, rede, documentos, horas, erros de acção). **D-S1-08 REMOVER** encaixa aqui.
-
-**3. D-S1-21 (vazio vs com pedidos)** — Opinião: faz sentido e alinha com map-first; reutilizar lógica de preview no mapa onde já existir no palco 2.
-
-**4. D-S1-08** — Confirmado **REMOVER**.
-
-### Inventário detalhado Tabela C (referência; colunas descrevem o estado actual do código)
+### Inventário detalhado Tabela C (estado actual do código)
 
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|
-| D-S1-01 | Texto introdutório | Explica o modo compacto («mapa e estado em primeiro plano…») | Topo da área de conteúdo, abaixo do header global |
-| D-S1-02 | Botão Menu *(cond.)* | Abre `DriverSideMenu` quando não há bottom nav Manel | Canto direito da linha do intro |
-| D-S1-03 | Pastilha Estatuto | Mostra Offline / Disponível / Em viagem | Esquerda, fila de chips (`DriverShellTopChips`) — *(cond.)* com bottom nav |
+| D-S1-01 | Texto introdutório | *(removido)* | — |
+| D-S1-02 | Botão Menu *(cond.)* | *(removido do passo 1)* | — |
+| D-S1-03 | Pastilha Estatuto | Offline / Disponível / Em viagem | `DriverShellTopChips` — *(cond.)* com bottom nav no passo 1 |
 | D-S1-04 | Pastilha «Breve» (tier) | Placeholder programa/tier | Ao lado do estatuto |
-| D-S1-05 | Botão Lupa (modo destino) | Toast «em breve» (wireframe §9.5) | À direita dos chips |
-| D-S1-06 | Toggle Estado *(cond.)* | Disponível / offline sem barra Manel | Entre intro e mapa |
-| D-S1-07 | Mapa (cartão) | Mapa interactivo; toque pode passar a disponível se configurado | Bloco central com bordas arredondadas |
-| D-S1-08 | Faixa aviso simulação *(DEV)* | Lembrete mock OSRM | Sobre o mapa, topo da coluna de overlays |
-| D-S1-09 | Aviso GPS aproximado | Fallback de localização + «Tentar outra vez» | Sobre o mapa |
-| D-S1-10 | Banner horas condução | Aviso/bloqueio legal tempo de condução | Sobre o mapa |
-| D-S1-11 | Diagnóstico GPS (details) | Estado envio GPS / servidor | Sobre o mapa *(DEV ou erro)* |
-| D-S1-12 | Aviso sem internet | Estado de rede | Sobre o mapa |
-| D-S1-13 | Aviso falha poll viagens | Erro suave listagem | Sobre o mapa |
-| D-S1-14 | Aviso falha histórico | Erro suave histórico | Sobre o mapa |
-| D-S1-15 | Toast documentos / bloqueios | Mensagem temporária + fechar | Sobre o mapa |
-| D-S1-16 | Erro geral | Mensagem de erro + fechar | Sobre o mapa |
-| D-S1-17 | «Ainda a processar…» | Longo tempo em acção | Sobre o mapa |
-| D-S1-18 | Lista de pedidos (`RequestCard`) | Ver / aceitar / rejeitar ofertas | Folha inferior sobre o mapa (scroll) |
-| D-S1-19 | Cabeçalho lista pedidos (`StatusHeader`) | Título «N viagens disponíveis» | Topo da folha de lista |
-| D-S1-20 | Loading viagens | Spinner a carregar | Folha inferior |
-| D-S1-21 | Cartão «À espera de viagens» | Estado vazio / categorias | Folha inferior centrada |
-| D-S1-22 | Contador no CTA | Badge número de pedidos no botão continuar | Sobre o botão primário fixo |
-| D-S1-23 | Chip «Toca no mapa…» *(cond.)* | Lembra toque no mapa para GPS/disponível | Flutuante baixo sobre o mapa |
-| D-S1-24 | Barra disponibilidade (fixa) | Offline→online (pill ou texto map-tap) / disponível→offline | **Zona fixa inferior**, acima do CTA e da nav (com bottom nav no passo 1) |
-| D-S1-25 | Botão «Ver pedidos e mapa completo» | Avança para passo 2 (mapa cheio) | **Zona fixa inferior**, acima da nav |
-| D-S1-26 | Botão continuar *(cond.)* | Igual D-S1-25 quando não há bottom nav | Dentro do scroll (variante legacy) |
+| D-S1-05 | Botão Lupa (modo destino) | Toast «em breve» | À direita dos chips |
+| D-S1-06 | Toggle Estado *(cond.)* | *(removido do passo 1)* | — |
+| D-S1-07 | Mapa (cartão) | Mapa interactivo; map-touch online se configurado | Bloco central |
+| D-S1-08 | Faixa aviso simulação *(DEV)* | *(removida do ecrã motorista)* | DEV: nota em DevTools |
+| D-S1-09 | Aviso GPS aproximado | Fallback + «Tentar outra vez» | Overlay no mapa |
+| D-S1-10 | Banner horas condução | Aviso/bloqueio legal | Overlay no mapa |
+| D-S1-11 | Diagnóstico GPS (details) | Estado envio GPS / servidor | Overlay *(DEV ou erro)* |
+| D-S1-12 | Aviso sem internet | Estado de rede | Overlay no mapa |
+| D-S1-13 | Aviso falha poll viagens | Erro suave listagem | Overlay no mapa |
+| D-S1-14 | Aviso falha histórico | Erro suave histórico | Overlay no mapa |
+| D-S1-15 | Toast documentos / bloqueios | Mensagem temporária | Overlay no mapa |
+| D-S1-16 | Erro geral | Mensagem de erro | Overlay no mapa |
+| D-S1-17 | «Ainda a processar…» | Longo tempo em acção | Overlay no mapa |
+| D-S1-18 | Lista de pedidos (`RequestCard`) | Aceitar / rejeitar (`acceptVariant="slide"`) | **Irmão abaixo do mapa** (não overlay na folha) |
+| D-S1-19 | Cabeçalho lista (`StatusHeader` compacto) | «N viagens disponíveis» | Topo da lista abaixo do mapa |
+| D-S1-20 | Loading viagens | Spinner | Bloco abaixo do mapa |
+| D-S1-21 | Estado vazio | Cartão mínimo «À espera de viagens» | Bloco abaixo do mapa |
+| D-S1-22 | Contador no CTA | Badge no botão continuar | `bottomChrome` fixo |
+| D-S1-23 | Chip «Toca no mapa…» *(cond.)* | Lembra map-touch | Flutuante sobre o mapa |
+| D-S1-24 | Barra disponibilidade (fixa) | Disponível / offline | `bottomChrome` (passo 1 + bottom nav) |
+| D-S1-25 | Botão «Ver pedidos e mapa completo» | Avança para passo 2 | `bottomChrome` |
+| D-S1-26 | Botão continuar *(cond.)* | Igual D-S1-25 sem bottom nav | Variante legacy |
 
 ---
 
-## Tabela D — Ecrã 2 (mapa completo / palco `driverMapStageLayout`, início sem viagem activa)
+## Tabela D — Ecrã 2 (mapa completo / palco `driverMapStageLayout`, sem viagem activa)
 
-*Após D-S1-25 (ou entrada directa se um só passo). Inclui estado **disponível** à espera de viagens; muitos overlays são os mesmos tipos que D-S1-08–17 com posição na camada z-10.*
+**Estado: fechada** — FIX-006; smokes OK. Entrada directa em prod. quando não há passo 1.
+
+*Estado disponível à espera de viagens. Overlays operacionais (GPS, rede, horas, etc.) — **sem** faixa simulação OSRM no ecrã (D-S1-08 / D-S2-04).*
 
 | ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
 |----|------|--------|-------------------|
-| D-S2-01 | Fila chips (estatuto / breve / lupa) | Igual D-S1-03–05 | **Sub-header global**, primeira linha do conteúdo motorista |
-| D-S2-02 | Botão «Vista compacta» *(cond.)* | Volta ao passo 1 (dois passos activos) | Canto superior direito da mesma linha |
-| D-S2-03 | Mapa (fundo) | Mapa full-bleed por baixo da UI | Toda a área útil do `main` sob overlays |
-| D-S2-04 | Overlays informativos | Mesma família que D-S1-08–17 (simulação, GPS, horas, rede, polls, toast, erro, processamento) | Camada por cima do mapa, zona superior/média |
-| D-S2-05 | Folha pedidos / vazio (`#driver-main-scroll`) | Lista `RequestCard` ou vazio + `StatusHeader` | **Parte inferior do ecrã**, cartão com scroll |
-| D-S2-06 | Chip «Toca no mapa…» *(cond.)* | Offline + map-tap activo | Flutuante acima da zona da folha |
-| D-S2-07 | Barra disponibilidade (inline) | Pill disponível/offline ou texto «toca no mapa» | **Acima da nav fixa**, dentro do fluxo do palco |
-| D-S2-08 | Barra inferior só nav | Quatro tabs (sem CTA passo 1) | Fixa no fundo (`ScreenContainer` + `DriverBottomNav`) |
+| D-S2-01 | Fila chips (estatuto / breve / lupa) | Igual D-S1-03–05 | Primeira linha do conteúdo motorista |
+| D-S2-02 | Botão «Vista compacta» *(cond.)* | Volta ao passo 1 | Canto superior direito *(só two-step)* |
+| D-S2-03 | Mapa (fundo) | Mapa full-bleed | Área útil do `main` |
+| D-S2-04 | Overlays informativos | GPS, horas, rede, polls, toast, erro *(sem simulação DEV no ecrã)* | Camada z-10 sobre o mapa |
+| D-S2-05 | Folha pedidos / vazio (`#driver-main-scroll`) | `RequestCard` + slide; vazio **compacto**; loading compacto | Parte inferior; `mt-auto`; `max-h` baixo em vazio |
+| D-S2-06 | Chip «Toca no mapa…» *(cond.)* | Offline + map-tap | Flutuante acima da folha |
+| D-S2-07 | Micro disponibilidade | OFF vermelho / ON verde; map-touch online | Canto do mapa (`DriverMapAvailabilityMicroToggle`) |
+| D-S2-08 | Barra inferior nav | Quatro tabs | Fixa (`DriverBottomNav`) |
+
+*Nota:* D-S2-07 no código actual é o **micro** no mapa (FIX-001/003), não a faixa `DriverShellAvailabilityInner` — essa aparece noutras variantes de layout.
+
+---
+
+## Tabela E — Aceitar e viagem activa
+
+**Estado: decisões em bloco registadas** — refinamento fino (textos, alturas) pendente antes de fechar a tabela.
+
+*Âmbito:* à espera com **mapa grande** → toque no **marcador** abre painel aceitar → viagem com **mapa a ecrã cheio** + rota → barra de **4 ícones sempre** (excepto Menu aberto).
+
+**Caminho real em prod.:** palco mapa (Tabela D) + itens D-E abaixo.
+
+### Três pilares (linguagem simples)
+
+**1. Barra de 4 ícones (D-E-22)** — **MUDAR**
+
+- Os ícones Início / Rendimentos / Caixa / Menu devem **sempre** aparecer no motorista, também **durante** uma viagem.
+- Os botões da viagem (Iniciar, Cancelar, etc.) ficam **por cima** dos 4 ícones, não os substituem.
+- **Excepção:** com o **Menu** aberto (gaveta), a barra pode esconder-se — é outro ecrã lógico.
+- Passageiro e parceiro: **mesma regra**, entrega separada (ver backlog TODO).
+
+**2. Aceitar sem mudar o mapa (D-E-01–08, D-E-09 MANTER)** — **MUDAR** (bloco aceitar)
+
+- O mapa **mantém-se** grande enquanto à espera.
+- Quando cai um pedido: aparecem **marcadores** no mapa (um ou vários).
+- **Só ao tocar num marcador** abre um **painel** com detalhes + aceitar + fechar/recusar.
+- A lista grande em baixo deixa de ser o modo principal (D-E-01–07, D-E-08 **REMOVER** como faixa principal).
+- Erros de rede ao aceitar: **MANTER** (D-E-09).
+
+**3. Mapa na viagem (D-E-10–21, D-E-23–30 MANTER, D-E-31–32 MANTER)** — **MUDAR** (mapa + resumo)
+
+- Durante a viagem: **mapa a ecrã cheio** com **rota** recolha→destino (a app não depende do Waze/Google).
+- O cartão alto «A caminho» no meio do ecrã passa a **resumo compacto** por cima do mapa (D-E-14–16, D-E-19 **MUDAR**).
+- **Não** mudar o ecrã inteiro ao aceitar — só o estado do mapa e painéis (D-E-10 **MUDAR**).
+- Chips «Em viagem», cancelar, Waze/Google, hints: **MANTER** (D-E-11, D-E-17–18, D-E-20–21, D-E-23–30).
+- Histórico: **MANTER**, escondido ou só sem viagem activa (D-E-31).
+- Menu: **MANTER** — ao abrir Menu, sai do mapa cheio (D-E-32).
+
+### Matriz bulk (decisão por bloco)
+
+| Bloco | IDs | Decisão |
+|-------|-----|---------|
+| Aceitar (lista/painel) | D-E-01–08 | **MUDAR** |
+| Erros aceitar | D-E-09 | **MANTER** |
+| Transição de ecrã | D-E-10 | **MUDAR** |
+| Chips estado | D-E-11 | **MANTER** |
+| Mapa em viagem | D-E-12–13 | **MUDAR** / **MANTER** (micro só à espera) |
+| Resumo viagem | D-E-14–16, D-E-19 | **MUDAR** · D-E-17–18, D-E-20–21 **MANTER** |
+| Barra 4 ícones | D-E-22 | **MUDAR** |
+| Acções viagem | D-E-23–30 | **MANTER** |
+| Histórico / Menu | D-E-31–32 | **MANTER** |
+
+### Decisões por ID (herança do bulk)
+
+| ID | Decisão |
+|----|---------|
+| D-E-01 | **MUDAR** |
+| D-E-02 | **MUDAR** |
+| D-E-03 | **MUDAR** |
+| D-E-04 | **MUDAR** |
+| D-E-05 | **MUDAR** |
+| D-E-06 | **MUDAR** |
+| D-E-07 | **MUDAR** |
+| D-E-08 | **REMOVER** |
+| D-E-09 | **MANTER** |
+| D-E-10 | **MUDAR** |
+| D-E-11 | **MANTER** |
+| D-E-12 | **MUDAR** |
+| D-E-13 | **MANTER** |
+| D-E-14 | **MUDAR** |
+| D-E-15 | **MUDAR** |
+| D-E-16 | **MUDAR** |
+| D-E-17 | **MANTER** |
+| D-E-18 | **MANTER** |
+| D-E-19 | **MUDAR** |
+| D-E-20 | **MANTER** |
+| D-E-21 | **MANTER** |
+| D-E-22 | **MUDAR** |
+| D-E-23 | **MANTER** |
+| D-E-24 | **MANTER** |
+| D-E-25 | **MANTER** |
+| D-E-26 | **MANTER** |
+| D-E-27 | **MANTER** |
+| D-E-28 | **MANTER** |
+| D-E-29 | **MANTER** |
+| D-E-30 | **MANTER** |
+| D-E-31 | **MANTER** |
+| D-E-32 | **MANTER** |
+
+### Refinamento fino (próxima passagem contigo)
+
+- Textos do painel ao toque no marcador.
+- Altura do resumo compacto em viagem.
+- Opcional futuro: ícone «lista» sob o mapa com várias viagens em scroll (secundário).
+
+### Inventário detalhado Tabela E
+
+| ID | NOME | FUNÇÃO | LOCALIZAÇÃO NA UX |
+|----|------|--------|-------------------|
+| D-E-01 | Cabeçalho lista (`StatusHeader` compacto) | «1 / N viagens disponíveis» | Topo da folha `#driver-main-scroll` (palco mapa ou scroll) |
+| D-E-02 | `RequestCard` — hint contexto | Linha «nova viagem» (constante lista) | Topo do cartão na folha |
+| D-E-03 | `RequestCard` — estado / categoria | Labels legíveis do pedido | Corpo do cartão |
+| D-E-04 | `RequestCard` — recolha / destino / preço | Informação para decidir | Corpo do cartão |
+| D-E-05 | `RequestCard` — REJEITAR | Recusa oferta (`offer_id`) | Cartão, acima do slider |
+| D-E-06 | `SlideToAccept` (compact) | Deslizar para aceitar (`acceptVariant="slide"`) | Cartão, faixa inferior do cartão |
+| D-E-07 | Loading no cartão | Spinner «A processar…» no accept/reject | Durante `runAction` / reject |
+| D-E-08 | Faixa «N pedidos no mapa» *(cond.)* | Liga mapa à folha («desliza…») | Só mapa **cartão** vista scroll (`!driverMapStageLayout`), sob `MapView` |
+| D-E-09 | Erro / toast global pós-acção | Falha ACEITAR / rede | Overlays `DriverDashboard` (família D-S1-15/16) |
+| D-E-10 | Mudança de layout | Sai palco full-bleed; entra scroll + mapa cartão | Ao definir `activeTripId` |
+| D-E-11 | Chips «Em viagem» | `DriverShellTopChips` | Sub-header |
+| D-E-12 | Mapa em viagem | `MapView` subdued; rota mock *(DEV)*; sem marcadores trip no mapa hoje | Coluna scroll (`!driverMapStageLayout`) |
+| D-E-13 | Micro disponibilidade | Oculto com viagem activa | Palco mapa: só sem `activeTripId` |
+| D-E-14 | Cartão resumo viagem | Container `ActiveTripSummary` | Coluna scroll, acima do histórico |
+| D-E-15 | `StatusHeader` (primary) | Título de estado («A caminho», etc.) | Topo do cartão resumo |
+| D-E-16 | Badge curto de estado | `driverTripBadgeShort` | Cartão resumo, sob o header |
+| D-E-17 | Notas de poll / sincronização | Poll, fallback pós-aceitar | Cartão resumo |
+| D-E-18 | Aviso pagamento falhado | `payment_status === failed` | Cartão resumo |
+| D-E-19 | `TripCard` | Recolha, destino, preço | Corpo do cartão resumo |
+| D-E-20 | Loading resumo | «A carregar viagem…» | Cartão resumo (sem `effectiveTrip`) |
+| D-E-21 | «Continuar» pós-conclusão | Liberta UI após `completed` | Cartão resumo |
+| D-E-22 | Barra de acções inferior | `bottomButton` = `ActiveTripActions` | Fixa no fundo; **substitui** bottom nav |
+| D-E-23 | Hint próximo passo | Texto contextual por estado | `ActiveTripActions`, acima do botão |
+| D-E-24 | Gate distância pickup | Bloqueio «Iniciar viagem» longe da recolha | `ActiveTripActions`; accepted/arriving |
+| D-E-25 | Links Waze / Google Maps | Navegação externa | `ActiveTripActions`; confirm ao sair |
+| D-E-26 | Botão principal | Aceitar *(assigned)* / Iniciar / Terminar | `PrimaryActionButton` no `bottomChrome` |
+| D-E-27 | Cancelar viagem | Abre painel motivos | `ActiveTripActions` |
+| D-E-28 | Painel cancelamento | Select preset + confirmar | Expandido no `bottomChrome` |
+| D-E-29 | «A sincronizar estado…» | Sem contexto de viagem | `ActiveTripActions` ou resumo |
+| D-E-30 | «Ainda a processar…» | Acção longa (>12s) | `ActiveTripActions` |
+| D-E-31 | Secção histórico | Últimas viagens | Scroll, abaixo do resumo |
+| D-E-32 | Menu lateral | Rendimentos, docs, etc. | `DriverSideMenu` (gaveta) |
 
 ---
 
 ## Referência no código
 
-- Passo 1: `showDriverHomeStep1` em `web-app/src/features/driver/DriverDashboard.tsx` (`data-testid="driver-home-step1"`), `bottomChrome` composto (~827–861).
-- Palco 2: `driverMapStageLayout` e bloco mapa + overlay (~1501+), header interno (~1465+).
-- Chips: `web-app/src/features/driver/DriverShellTopChips.tsx`.
-- Nav: `web-app/src/features/driver/DriverBottomNav.tsx`.
-- Header global: `web-app/src/components/layout/AppHeaderBar.tsx`.
+- Passo 1 *(cond.)*: `showDriverHomeStep1` — `DriverDashboard.tsx` (`data-testid="driver-home-step1"`).
+- Palco disponível: `driverMapStageLayout`, folha `#driver-main-scroll` (~1473+).
+- Aceitar: `RequestCard` + `SlideToAccept` — `web-app/src/components/cards/`.
+- Viagem activa: `ActiveTripSummary` (inline no `DriverDashboard.tsx` ~2160+), `ActiveTripActions.tsx`, `bottomChrome` quando `activeTripId` (~875+).
+- Chips: `DriverShellTopChips.tsx`. Nav: `DriverBottomNav.tsx`. Header: `AppHeaderBar.tsx`.
+- Flags: `web-app/src/config/driverHomeFeatures.ts`.
