@@ -14,11 +14,11 @@ function headerRoleLabel(role: string): string {
   return 'Passageiro'
 }
 
-export type AppHeaderBarVariant = 'default' | 'driverCompact'
+export type AppHeaderBarVariant = 'default' | 'userCompact'
 
 interface AppHeaderBarProps {
-  /** Motorista: header compacto; identidade em Menu → Perfil (FIX-002 backlog UX). */
-  variant?: AppHeaderBarVariant
+  /** Motorista/passageiro: header compacto; identidade em Menu (USER-SHELL-A / FIX-002). */
+  variant?: AppHeaderBarVariant | 'driverCompact'
 }
 
 /**
@@ -26,6 +26,7 @@ interface AppHeaderBarProps {
  * + linha rotacional de dicas (v1 estática + v2 feed opcional via API).
  */
 export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
+  const compact = variant === 'userCompact' || variant === 'driverCompact'
   const { sessionDisplayName, sessionPhone, sessionRole, token } = useAuth()
   const [now, setNow] = useState(() => new Date())
   const [hintIndex, setHintIndex] = useState(0)
@@ -108,14 +109,14 @@ export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
     </p>
   )
 
-  if (variant === 'driverCompact') {
+  if (compact) {
     return (
       <header
         className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border/80 shrink-0"
         data-testid="app-header"
       >
         <BrandStripe />
-        <div className="px-3 pt-2 pb-1.5" data-testid="app-header-driver-compact">
+        <div className="px-3 pt-2 pb-1.5" data-testid="app-header-user-compact">
           <div className="flex min-w-0 items-center gap-2" data-testid="app-header-brand">
             <img
               src="/brand/vamula-wordmark.png"

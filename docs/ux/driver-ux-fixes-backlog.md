@@ -2,7 +2,7 @@
 
 Lista incremental: cada entrada descreve o fix; estado em **Estado** quando aplicável.
 
-**Próximo na fila:** **TWEAKS_UX** (prefixo **TW-** no [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **2026-05-15**) — densidade/copy/cores sem mudar o fluxo. Depois: barra 4 ícones **passageiro/parceiro**; **UX 2.0** (spec). Inventário: [`driver-home-inventory.md`](driver-home-inventory.md).
+**Próximo na fila:** **USER_SHELL** Cluster A em código (**USER-SHELL-A**, painel **2026-05-19**) → VAM clusters **B–F** ([`screenshot-tweaks-g-matrix.md`](screenshot-tweaks-g-matrix.md)) → **TWEAKS_UX** (**TW-**, painel **2026-05-15**, alinhados aos clusters G). Inventário motorista: [`driver-home-inventory.md`](driver-home-inventory.md).
 
 ---
 
@@ -37,6 +37,29 @@ Lista incremental: cada entrada descreve o fix; estado em **Estado** quando apli
 1. **Decisões em bloco** — registadas no inventário (três pilares + matriz bulk).
 2. **FIX-007 / FIX-008** — entregues (**#319**).
 3. **Refinamento pixel** — fila **TWEAKS_UX** (**TW-**), não reabre decisões bulk.
+
+---
+
+## USER_SHELL — shell User unificado (G01–G27)
+
+**Premissas (Frank, 2026-05-19):** (1) Driver/Passenger no mesmo shell User; (2) caixas modulares (`InfoPanel`, `ActionPanel`, …); (3) pontos como **G03** = mesma métrica que motorista, não tweak isolado.
+
+**Grelha e VAM:** [`screenshot-tweaks-g-matrix.md`](screenshot-tweaks-g-matrix.md). **Painel operacional:** [`TODOdoDIA.md`](../../TODOdoDIA.md) **2026-05-19**.
+
+### Cluster A — cabeçalho (VAM fechado)
+
+| ID | Decisão | Implementação |
+|----|---------|---------------|
+| **G03** | **ACERTAR** — Perfil/Definições fora do topo no passageiro | `userCompact` em `/passenger` |
+| **G04** | **ACERTAR** — header compacto; **sem** pastilha «PASSAGEIRO» | Mesma variante que motorista FIX-002 |
+| Shell menu 4 ícones | **Manter** | Sem alteração neste PR |
+| Shell faixa dicas | **Manter** | Já no layout compact |
+
+**Entrega código:** **USER-SHELL-A** (ver painel TODO). Smokes prod **S-02** legenda **B** pode deixar de exigir pastilha PASSAGEIRO no header — validar role no menu ou fluxo.
+
+### Clusters B–F
+
+VAM pendente com Frank (conversa por cluster). **TW-01…06** mapeiam para B–E (tabela na grelha G).
 
 ---
 

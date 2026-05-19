@@ -14,9 +14,10 @@ Evolução de **composição e experiência visual** do ecrã motorista **depois
 
 ## Entrada (quando abrir O-UX20-1)
 
-1. Fila **TWEAKS_UX** (**TW-01** … **TW-05**) tratada ou priorizada com Frank.
-2. Feedback Manel / campo (se aplicável).
-3. Screenshots e notas da sessão **2026-05-15** consolidados em **TW-05**.
+1. **USER_SHELL** — Cluster A em código; clusters **B–F** com VAM fechado ou priorizado ([`screenshot-tweaks-g-matrix.md`](../ux/screenshot-tweaks-g-matrix.md)).
+2. Fila **TWEAKS_UX** (**TW-01** … **TW-05**) tratada ou priorizada com Frank (mapeados aos clusters G).
+3. Feedback Manel / campo (se aplicável).
+4. Screenshots sessão **2026-05-15** consolidados em **TW-05** / grelha G.
 
 ## Saída esperada (sessão de desenho)
 
