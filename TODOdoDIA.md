@@ -82,8 +82,8 @@ _TW-01…06 permanecem no painel **2026-05-15**; mapeiam para clusters B–E (ve
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TW-01** | Painel aceitar: **SlideToAccept** / CTA — menos altura/largura (gesto OK, ocupa demais) | Por iniciar | [`SlideToAccept.tsx`](web-app/src/components/cards/SlideToAccept.tsx); painel [`DriverDashboard.tsx`](web-app/src/features/driver/DriverDashboard.tsx) |
-| **TW-02** | Copy e hierarquia «Pedido no mapa» (título, Fechar, hints) | Por iniciar | D-E-01–07 refinamento |
+| **TW-01** | Painel aceitar: slide no topo da card (não tapado pela barra) | Concluído | PR **fix/ux-g08-offer-panel-compact** |
+| **TW-02** | Sem «Pedido no mapa»; Fechar → ícone X no canto | Concluído | Idem TW-01 / G08 |
 | **TW-03** | Resumo compacto em viagem (altura, tipo, contraste) | Por iniciar | `ActiveTripSummary` `compact` |
 | **TW-04** | Espaçamento acções viagem + barra 4 ícones | Por iniciar | `bottomChrome` FIX-007 |
 | **TW-05** | Revisão geral pós-screenshots (~10 prints) | Por iniciar | Frank analisa offline; próxima sessão |

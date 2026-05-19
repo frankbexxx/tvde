@@ -51,14 +51,19 @@ export function RequestCard({
       ? `${estimatedPrice.toFixed(2)} €`
       : `${estimateFallback} €`
 
-  return (
-    <div
-      className={
-        slideCompact
-          ? 'rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-3 space-y-1.5 shadow-card transition-all duration-200'
-          : 'rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-4 space-y-2 shadow-card transition-all duration-200'
-      }
-    >
+  const slideAccept = (
+    <SlideToAccept
+      density="compact"
+      onConfirm={onAccept}
+      disabled={Boolean(rejectLoading)}
+      loading={Boolean(loading)}
+      trackTestId={acceptButtonTestId ? `${acceptButtonTestId}-track` : undefined}
+      testId={acceptButtonTestId ? `${acceptButtonTestId}-slide` : undefined}
+    />
+  )
+
+  const tripDetails = (
+    <>
       {contextHint ? (
         <p className="text-xs font-semibold text-info">{contextHint}</p>
       ) : null}
@@ -74,41 +79,52 @@ export function RequestCard({
       ) : null}
       <div className="space-y-0.5">
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
-        <p className={slideCompact ? 'text-base font-semibold text-foreground' : 'text-lg font-semibold text-foreground'}>
+        <p
+          className={
+            slideCompact ? 'text-base font-semibold text-foreground' : 'text-lg font-semibold text-foreground'
+          }
+        >
           {pickup}
         </p>
       </div>
       {destination ? (
-        <div className="space-y-0.5 pt-1">
+        <div className="space-y-0.5">
           <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Destino</p>
           <p className="text-base font-semibold text-foreground/95">{destination}</p>
         </div>
       ) : null}
-      <div className={`flex flex-col gap-3 ${slideCompact ? 'pt-1' : 'pt-2'} sm:flex-row sm:items-end sm:justify-between`}>
+    </>
+  )
+
+  if (slideCompact) {
+    return (
+      <div className="rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-3 pr-10 space-y-1 shadow-card transition-all duration-200">
+        {slideAccept}
+        {tripDetails}
         <div>
           <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
-          <span className={slideCompact ? 'text-xl font-bold text-foreground' : 'text-2xl font-bold text-foreground'}>
-            {priceDisplay}
-          </span>
+          <span className="text-xl font-bold text-foreground">{priceDisplay}</span>
         </div>
-        <div
-          className={
-            acceptVariant === 'slide'
-              ? 'flex flex-col gap-2 w-full'
-              : 'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:min-w-[200px]'
-          }
-        >
-          {offerId && onReject && acceptVariant !== 'slide' ? (
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-4 space-y-2 shadow-card transition-all duration-200">
+      {tripDetails}
+      <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
+          <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:min-w-[200px]">
+          {offerId && onReject ? (
             <button
               type="button"
               onClick={onReject}
               disabled={Boolean(loading || rejectLoading)}
               data-testid={rejectButtonTestId}
-              className={
-                slideCompact
-                  ? 'min-h-[44px] w-full rounded-full border-2 border-destructive/70 bg-transparent px-3 text-xs font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
-                  : 'min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-destructive/70 bg-transparent px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
-              }
+              className="min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-destructive/70 bg-transparent px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
             >
               {rejectLoading ? (
                 <span className="inline-flex items-center justify-center gap-2">
@@ -120,35 +136,22 @@ export function RequestCard({
               )}
             </button>
           ) : null}
-          {acceptVariant === 'slide' ? (
-            <SlideToAccept
-              density="compact"
-              onConfirm={onAccept}
-              disabled={Boolean(rejectLoading)}
-              loading={Boolean(loading)}
-              trackTestId={
-                acceptButtonTestId ? `${acceptButtonTestId}-track` : undefined
-              }
-              testId={acceptButtonTestId ? `${acceptButtonTestId}-slide` : undefined}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={onAccept}
-              disabled={Boolean(loading || rejectLoading)}
-              data-testid={acceptButtonTestId}
-              className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-info text-info-foreground font-bold text-lg shadow-floating hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
-            >
-              {loading ? (
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  A processar...
-                </span>
-              ) : (
-                'ACEITAR'
-              )}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onAccept}
+            disabled={Boolean(loading || rejectLoading)}
+            data-testid={acceptButtonTestId}
+            className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-info text-info-foreground font-bold text-lg shadow-floating hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
+          >
+            {loading ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                A processar...
+              </span>
+            ) : (
+              'ACEITAR'
+            )}
+          </button>
         </div>
       </div>
     </div>
