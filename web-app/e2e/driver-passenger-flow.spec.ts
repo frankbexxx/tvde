@@ -347,9 +347,13 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const passengerPage = await passengerCtx.newPage()
     trackPassengerPageForArtifacts(passengerPage)
     await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+    await expect(passengerPage.getByTestId('app-header-user-compact')).toBeVisible({
+      timeout: sec(60),
+    })
     await expect(passengerPage.getByTestId('app-header-brand')).toBeVisible({
       timeout: sec(60),
     })
+    await expect(passengerPage.getByTestId('app-header-role-pill')).toHaveCount(0)
     await expect(passengerPage.getByTestId('passenger-main')).toBeVisible({
       timeout: sec(45),
     })

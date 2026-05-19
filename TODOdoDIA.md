@@ -25,9 +25,39 @@ A partir desta data, cada **painel novo** apresenta o trabalho operacional em **
 | **Bloqueado** | Espera externa ou dependência; explicar **por quê** em Notas. |
 | **N/A** | Reservado / não aplicável. |
 
-**Prefixos de ID:** **A-…** — auditoria / gates (ex. `A2-02-1`, `A3-R`); **X-…** — lista EXTRA produto; **TW-…** — tweaks UX motorista (densidade, copy, cores; sem mudar fluxo); **R-…** — rasto / backlog técnico não bloqueante; **O-…** — opcional / operacional; **S-…** — smokes **produção** (PC + Render, sem staging); **F-…** — fixes / issues de código após smokes ou decisão de produto.
+**Prefixos de ID:** **A-…** — auditoria / gates (ex. `A2-02-1`, `A3-R`); **X-…** — lista EXTRA produto; **TW-…** — tweaks UX motorista (densidade, copy, cores; sem mudar fluxo); **G-…** — pontos screenshot **G01–G27** ([`screenshot-tweaks-g-matrix.md`](docs/ux/screenshot-tweaks-g-matrix.md), fase VAM por cluster); **R-…** — rasto / backlog técnico não bloqueante; **O-…** — opcional / operacional; **S-…** — smokes **produção** (PC + Render, sem staging); **F-…** — fixes / issues de código após smokes ou decisão de produto.
 
 Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram escritos (histórico).
+
+---
+
+## Painel — 2026-05-19 (**USER_SHELL** — grelha **G01–G27**, Cluster A fechado)
+
+**Marco:** premissas User shell + módulos UI; VAM por cluster com Frank. **Cluster A (cabeçalho)** fechado — build + PR na sessão de código seguinte.
+
+**Grelha completa:** [`docs/ux/screenshot-tweaks-g-matrix.md`](docs/ux/screenshot-tweaks-g-matrix.md).
+
+### VAM Cluster A — decisões (fechado)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **G03** | Header passageiro: sem Perfil/Definições no topo | Concluído (VAM) | **ACERTAR** — igual motorista FIX-002; Menu → Perfil |
+| **G04** | Header passageiro: compacto; **sem** texto «PASSAGEIRO» | Concluído (VAM) | **ACERTAR** + **MUDAR** copy; wordmark + data/hora |
+| **G-SHELL-1** | Menu inferior 4 ícones (M/P) | Concluído (VAM) | Manter métrica actual |
+| **G-SHELL-2** | Faixa de dicas rotativas | Concluído (VAM) | Manter estilo; copy por role |
+
+### Implementação (**USER-SHELL-A**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **USER-SHELL-A** | `userCompact` em `/passenger` (+ rename `driverCompact`) | Smoke pendente | PR **feat/user-shell-cluster-a**; E2E `driver-passenger-flow` |
+| **G-CLUSTER-B** | VAM Cluster B (InfoPanel) | Por iniciar | G05, G07, G09, G11, G15, G16, G20, G23 |
+| **G-CLUSTER-C** | VAM Cluster C (ActionPanel) | Por iniciar | G08, G13, G17, G18 |
+| **G-CLUSTER-D** | VAM Cluster D (MapStage) | Por iniciar | G10, G14, G21, G22, G25 |
+| **G-CLUSTER-E** | VAM Cluster E (TripSummary) | Por iniciar | G24, G26, G27 |
+| **G-CLUSTER-F** | VAM Cluster F (específicos) | Por iniciar | G01, G02, G06, G12, G19 |
+
+_TW-01…06 permanecem no painel **2026-05-15**; mapeiam para clusters B–E (ver grelha G)._
 
 ---
 

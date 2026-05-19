@@ -131,7 +131,13 @@ export function AppRoutes() {
 
   return (
     <div className={appShellClass}>
-      <AppHeaderBar variant={pathname.startsWith('/driver') ? 'driverCompact' : 'default'} />
+      <AppHeaderBar
+        variant={
+          pathname.startsWith('/driver') || pathname.startsWith('/passenger')
+            ? 'userCompact'
+            : 'default'
+        }
+      />
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
         <main
           className={`flex min-h-0 min-w-0 flex-1 flex-col ${driverShellFullWidth ? 'overflow-hidden' : 'overflow-y-auto'}`}

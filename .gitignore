@@ -42,6 +42,7 @@ desktop.ini
 logs/
 tmp/
 temp/
+_temp/
 
 # Ficheiros temporários para commit/PR (usados em heredocs no PowerShell)
 .commit_msg_tmp.txt

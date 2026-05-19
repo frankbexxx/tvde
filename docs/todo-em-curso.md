@@ -4,26 +4,34 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-15)
+## Agora (2026-05-19)
 
-**Contexto:** `main` inclui **#319** (**FIX-007/008**, Tabela E motorista — mapa cheio em viagem, marcador → painel aceitar, barra 4 ícones sempre). Marco UX **driver↔passageiro funcional**; smoke manual Frank **2026-05-15** OK com tweaks visuais na fila **TW-**. Staging / A+L inalterado: ver painel **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md).
+**Contexto:** `main` inclui **#319** / **#320** (motorista funcional + docs TW). Screenshots `_temp/` analisados → grelha **G01–G27**; premissas **User shell** + módulos UI. **Cluster A (header)** — VAM fechado com Frank (G03, G04, menu 4 ícones, faixa dicas). Staging / A+L: painel **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md).
 
-**Próximo carril produto (motorista):** **TWEAKS_UX** (**TW-01** … **TW-05**) → depois **O-UX20-1** (spec [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md)) → **O-NAV-PP-1** (barra passageiro/parceiro).
+**Próximo carril produto:** **USER-SHELL-A** (código header passageiro = `userCompact`) → **PR** → VAM **Cluster B** (InfoPanel) → clusters C–F → **TW-01…05** alinhados à grelha G → **O-UX20-1** → **O-NAV-PP-1**.
 
 **Legenda Estado** (fixa — mesmo vocabulário que o bloco *Formato dos painéis* em [`TODOdoDIA.md`](../TODOdoDIA.md)): Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A.
 
 **Sessão 2026-05-12 (fecho):** env + OAuth consola + provisioning staging + `alembic` no Shell Render + static + CORS; **EXTRA** herdado nos painéis **2026-05-13** e **2026-05-14**.
 
-**Próximo carril infra:** após staging/Google/smokes — **A4** (painel **2026-05-14**, **A2-02-***). **Próximo carril UX motorista:** painel **2026-05-15** (**TW-**).
+**Próximo carril infra:** após staging/Google/smokes — **A4** (painel **2026-05-14**, **A2-02-***). **Próximo carril UX:** painel **2026-05-19** (**USER_SHELL** / **G-**), depois **2026-05-15** (**TW-**).
 
-### Trabalho vivo (painel **2026-05-15** — motorista)
+### Trabalho vivo (painel **2026-05-19** — USER_SHELL)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **G03**, **G04** | VAM Cluster A (header passageiro) | Concluído (VAM) | [`screenshot-tweaks-g-matrix.md`](../ux/screenshot-tweaks-g-matrix.md) |
+| **USER-SHELL-A** | Código: `userCompact` em `/passenger` | Smoke pendente | PR **feat/user-shell-cluster-a** |
+| **G-CLUSTER-B** … **F** | VAM clusters restantes | Por iniciar | Após USER-SHELL-A ou em paralelo (só VAM) |
+
+### Trabalho vivo (painel **2026-05-15** — motorista / TW)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **E-MARCO-1** | FIX-007/008 + inventário A–E | Concluído | Merge **#319** |
-| **TW-01** … **TW-05** | TWEAKS_UX (densidade, copy, screenshots) | Por iniciar | Ver [`TODOdoDIA.md`](../TODOdoDIA.md) |
+| **TW-01** … **TW-05** | TWEAKS_UX (densidade, copy, screenshots) | Por iniciar | Mapeados a clusters G (grelha) |
 | **O-UX20-1** | Spec UX 2.0 | Por iniciar | [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md) |
-| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Por iniciar | Backlog motorista |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Por iniciar | Shell menu já alinhado em VAM Cluster A |
 
 ### Trabalho vivo (painel **2026-05-14**)
 
@@ -73,14 +81,16 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ### O que falta (prioridade de produto / próxima sessão útil)
 
-1. **TWEAKS_UX motorista** (**TW-01** … **TW-05**) — após análise dos screenshots Frank; **sem** mudar fluxo (só visual). Painel **2026-05-15**.
-2. **UX 2.0** — sessão de desenho (**O-UX20-1**); stub [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md).
-3. ~~**Zonas v1 — fecho técnico**~~ — entregue; geofencing fino = evolução futura.
-4. **E2E / PW** — **`driver-passenger-flow`**: ✅ **2026-05-15** (4/4, pós-#319). Revalidar só com delta em motorista/passageiro.
-3. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
-4. ~~**Lembrete operacional — Stripe**~~ — **2026-05-11:** mock reposto em piloto; ver [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) § *Repor modo mock*.
-5. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*
-6. **Backlog** (sem data) — ~~**rotacional v3**~~ **feito** (cache + `ROTACIONAL_V3_FETCH_URL` + cron); **A+L** — fecho **A2-02** (OAuth/smokes **staging**) + **A4**; **EXTRA** produto — ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**; docs [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
+1. **USER-SHELL-A** — header passageiro compacto (G03+G04); commit + PR. Painel **2026-05-19**.
+2. **VAM Cluster B** (InfoPanel) — conversa Frank; depois código por cluster.
+3. **TWEAKS_UX** (**TW-01** … **TW-05**) — alinhados à grelha G; painel **2026-05-15**.
+4. **UX 2.0** — sessão de desenho (**O-UX20-1**); stub [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md).
+5. ~~**Zonas v1 — fecho técnico**~~ — entregue; geofencing fino = evolução futura.
+6. **E2E / PW** — **`driver-passenger-flow`**: ✅ **2026-05-15** (4/4, pós-#319). Revalidar só com delta em motorista/passageiro.
+7. ~~**Opcional curto — UX Frota «Só atribuídas»**~~ — **entregue em #287** («Por aceitar» + tooltip).
+8. ~~**Lembrete operacional — Stripe**~~ — **2026-05-11:** mock reposto em piloto; ver [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) § *Repor modo mock*.
+9. ~~**Backlog EXTRA (Manel + legal + crescimento)**~~ — *onda técnica P0–P2 **entregue** em **#285**; lista canónica e próximas fases normativas/OCR em [`product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md).*
+10. **Backlog** (sem data) — ~~**rotacional v3**~~ **feito** (cache + `ROTACIONAL_V3_FETCH_URL` + cron); **A+L** — fecho **A2-02** (OAuth/smokes **staging**) + **A4**; **EXTRA** produto — ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**; docs [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md), [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md).
 
 **Nota:** **Ronda smokes prod 2026-05-13** fechada (grelha **S-** no [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-14**). **S-13** concluído **sem** reexecutar W1 (sem delta Stripe/cron). Daqui em diante: **E2E/pytest** no que for repetível; **smoke humano em prod** só **assertivo** quando houver **delta** no fluxo ou após deploy relevante — ver bloco *Testes automáticos vs smokes* no mesmo painel. Dev local: Postgres, `uvicorn`, Vite — **reiniciar** se E2E / browser falhar por serviços parados.
 
