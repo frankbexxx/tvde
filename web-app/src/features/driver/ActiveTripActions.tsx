@@ -4,6 +4,7 @@ import { isTimeoutLikeError } from '../../api/client'
 import { usePolling } from '../../hooks/usePolling'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
+import { HintLine } from '../../components/layout/HintLine'
 import { toast as sonnerToast } from 'sonner'
 import { DRIVER_START_TRIP_MAX_DISTANCE_M, haversineKm } from '../../utils/geo'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
@@ -326,19 +327,17 @@ export function ActiveTripActions({
   return (
     <div className="space-y-2">
       {loadingLong ? (
-        <p className="text-center text-sm text-foreground/70 px-1" aria-live="polite">
-          Ainda a processar… Se demorar muito, verifica a ligação.
-        </p>
+        <HintLine>Ainda a processar… Se demorar muito, verifica a ligação.</HintLine>
       ) : null}
       {tripPollHint ? (
-        <p className="text-center text-sm text-foreground/70 px-1 -mt-1" aria-live="polite">
+        <HintLine className="-mt-1" testId="driver-trip-poll-hint">
           {tripPollHint}
-        </p>
+        </HintLine>
       ) : null}
       {nextStepHint ? (
-        <p className="text-center text-sm text-foreground/75 px-1 -mt-1" aria-live="polite">
+        <HintLine className="-mt-1 text-foreground/75" testId="driver-next-step-hint">
           {nextStepHint}
-        </p>
+        </HintLine>
       ) : null}
       {startTripGateActive && !startTripAllowed ? (
         <div className="text-center text-sm text-foreground/75 px-1 leading-snug" aria-live="polite">

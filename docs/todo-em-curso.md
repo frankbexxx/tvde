@@ -8,7 +8,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 **Contexto:** `main` inclui **#319** / **#320** (motorista funcional + docs TW). Screenshots `_temp/` analisados → grelha **G01–G27**; premissas **User shell** + módulos UI. **Cluster A (header)** — VAM fechado com Frank (G03, G04, menu 4 ícones, faixa dicas). Staging / A+L: painel **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md).
 
-**Próximo carril produto:** **USER-SHELL-A** (código header passageiro = `userCompact`) → **PR** → VAM **Cluster B** (InfoPanel) → clusters C–F → **TW-01…05** alinhados à grelha G → **O-UX20-1** → **O-NAV-PP-1**.
+**Próximo carril produto:** **USER-SHELL-B** (InfoPanel, Cluster B) → smoke → **Cluster C** (VAM) → clusters D–F → **TW-01…05** → **O-UX20-1** → **O-NAV-PP-1**.
 
 **Legenda Estado** (fixa — mesmo vocabulário que o bloco *Formato dos painéis* em [`TODOdoDIA.md`](../TODOdoDIA.md)): Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A.
 
@@ -21,8 +21,10 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **G03**, **G04** | VAM Cluster A (header passageiro) | Concluído (VAM) | [`screenshot-tweaks-g-matrix.md`](../ux/screenshot-tweaks-g-matrix.md) |
-| **USER-SHELL-A** | Código: `userCompact` em `/passenger` | Smoke pendente | PR **feat/user-shell-cluster-a** |
-| **G-CLUSTER-B** … **F** | VAM clusters restantes | Por iniciar | Após USER-SHELL-A ou em paralelo (só VAM) |
+| **USER-SHELL-A** | Header `userCompact` | Concluído | **#321** |
+| **USER-SHELL-B** | InfoPanel + HintLine | Smoke pendente | PR **feat/user-shell-cluster-b** |
+| **G-CLUSTER-B** | VAM Cluster B | Concluído (VAM) | USER-SHELL-B |
+| **G-CLUSTER-C** … **F** | VAM clusters restantes | Por iniciar | Após smoke B |
 
 ### Trabalho vivo (painel **2026-05-15** — motorista / TW)
 
@@ -81,8 +83,8 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ### O que falta (prioridade de produto / próxima sessão útil)
 
-1. **USER-SHELL-A** — header passageiro compacto (G03+G04); commit + PR. Painel **2026-05-19**.
-2. **VAM Cluster B** (InfoPanel) — conversa Frank; depois código por cluster.
+1. **USER-SHELL-B** — smoke Cluster B (InfoPanel); merge PR. Painel **2026-05-19**.
+2. **VAM Cluster C** (ActionPanel / G08) — conversa Frank.
 3. **TWEAKS_UX** (**TW-01** … **TW-05**) — alinhados à grelha G; painel **2026-05-15**.
 4. **UX 2.0** — sessão de desenho (**O-UX20-1**); stub [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md).
 5. ~~**Zonas v1 — fecho técnico**~~ — entregue; geofencing fino = evolução futura.
