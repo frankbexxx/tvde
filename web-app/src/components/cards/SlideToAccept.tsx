@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from 'react'
 
 const THUMB_SIZE_DEFAULT = 48
-/** Alinhado ao thumb `h-9 w-9` (36px) em `compact`. */
 const THUMB_SIZE_COMPACT = 36
-const THRESHOLD_RATIO = 0.86
+/** ~metade da faixa (G08 / USER-SHELL-C). */
+const THRESHOLD_RATIO = 0.5
 
 export function SlideToAccept({
   onConfirm,
@@ -11,18 +11,16 @@ export function SlideToAccept({
   loading,
   label = 'Deslizar para aceitar',
   testId,
-  tapTestId,
-  /** `compact`: faixa mais baixa — lista motorista / folha inferior no mapa. */
+  trackTestId,
   density = 'default',
 }: {
   onConfirm: () => void
   disabled?: boolean
   loading?: boolean
   label?: string
-  /** Raiz do controlo (opcional). */
   testId?: string
-  /** Botão «Aceitar com um toque» — mantém compatível com E2E que usam `driver-accept-…`. */
-  tapTestId?: string
+  /** E2E: `driver-accept-{tripId}-track` */
+  trackTestId?: string
   density?: 'default' | 'compact'
 }) {
   const thumbSize = density === 'compact' ? THUMB_SIZE_COMPACT : THUMB_SIZE_DEFAULT
@@ -35,6 +33,9 @@ export function SlideToAccept({
   const offsetRef = useRef(0)
   const [offset, setOffset] = useState(0)
   const [dragging, setDragging] = useState(false)
+
+  const resolvedTrackTestId =
+    trackTestId ?? (testId ? `${testId}-track` : 'driver-slide-accept-track')
 
   const maxOffset = useCallback(() => {
     const el = trackRef.current
@@ -68,10 +69,10 @@ export function SlideToAccept({
   const labelPadClass = density === 'compact' ? 'px-10' : 'px-14'
 
   return (
-    <div className={`flex flex-col w-full ${density === 'compact' ? 'gap-1' : 'gap-1.5'}`} data-testid={testId}>
+    <div className="w-full" data-testid={testId}>
       <div
         ref={trackRef}
-        data-testid={testId ? `${testId}-track` : 'driver-slide-accept-track'}
+        data-testid={resolvedTrackTestId}
         className={`relative ${trackHeightClass} w-full select-none rounded-full border-2 border-info/70 bg-info/10 overflow-hidden touch-manipulation`}
         style={{ touchAction: 'none' }}
         onPointerDown={(e) => {
@@ -101,7 +102,7 @@ export function SlideToAccept({
           <span
             className={`${density === 'compact' ? 'text-[11px]' : 'text-xs'} font-semibold text-foreground/75 ${labelPadClass} text-center leading-tight`}
           >
-            {label}
+            {loading ? 'A processar…' : label}
           </span>
         </div>
         <div
@@ -115,21 +116,6 @@ export function SlideToAccept({
           →
         </div>
       </div>
-      <button
-        type="button"
-        data-testid={tapTestId}
-        className={
-          density === 'compact'
-            ? 'min-h-[40px] w-full rounded-full border border-border bg-card px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50'
-            : 'min-h-[44px] w-full rounded-full border border-border bg-card px-3 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50'
-        }
-        disabled={Boolean(disabled || loading)}
-        onClick={() => {
-          if (!disabled && !loading) onConfirm()
-        }}
-      >
-        Aceitar com um toque
-      </button>
     </div>
   )
 }

@@ -67,6 +67,7 @@ import { getOsrmRouteMeta, getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { HintLine } from '../../components/layout/HintLine'
+import { ActionPanel } from '../../components/layout/ActionPanel'
 import { Button } from '../../components/ui/button'
 import {
   Dialog,
@@ -795,9 +796,18 @@ export function DriverDashboard() {
     }
   }
 
-  const runRejectOffer = async (offerId: string, tripId: string) => {
+  const runRejectOffer = async (
+    offerId: string,
+    tripId: string,
+    options?: { confirm?: boolean },
+  ) => {
     if (actionLoading != null || !token) return
-    if (!window.confirm('Recusar esta oferta? A viagem pode ser atribuída a outro motorista.')) return
+    if (
+      options?.confirm !== false &&
+      !window.confirm('Recusar esta oferta? A viagem pode ser atribuída a outro motorista.')
+    ) {
+      return
+    }
     setError(null)
     setActionLoading(`reject:${tripId}`)
     setStatus('A recusar oferta…')
@@ -1413,11 +1423,7 @@ export function DriverDashboard() {
                               })()}
                               estimatedPrice={t.estimated_price}
                               offerId={t.offer_id ?? null}
-                              onReject={
-                                t.offer_id ? () => void runRejectOffer(t.offer_id!, t.trip_id) : undefined
-                              }
                               acceptButtonTestId={`driver-accept-${t.trip_id}`}
-                              rejectButtonTestId={`driver-reject-${t.trip_id}`}
                               acceptVariant="slide"
                               onAccept={() =>
                                 runAction(
@@ -1429,7 +1435,6 @@ export function DriverDashboard() {
                                 )
                               }
                               loading={actionLoading === t.trip_id}
-                              rejectLoading={actionLoading === `reject:${t.trip_id}`}
                             />
                           </li>
                         ))}
@@ -1713,18 +1718,17 @@ export function DriverDashboard() {
                         }`}
                     >
                       {selectedAvailableTrip ? (
-                        <>
-                          <div className="mb-2 flex items-center justify-between gap-2">
-                            <p className="text-sm font-semibold text-foreground">Pedido no mapa</p>
-                            <button
-                              type="button"
-                              data-testid="driver-offer-panel-close"
-                              onClick={() => setSelectedOfferTripId(null)}
-                              className="min-h-[36px] shrink-0 rounded-lg border border-border px-2.5 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-                            >
-                              Fechar
-                            </button>
-                          </div>
+                        <ActionPanel
+                          title="Pedido no mapa"
+                          closeTestId="driver-offer-panel-close"
+                          onClose={() => {
+                            const trip = selectedAvailableTrip
+                            setSelectedOfferTripId(null)
+                            if (trip.offer_id) {
+                              void runRejectOffer(trip.offer_id, trip.trip_id, { confirm: false })
+                            }
+                          }}
+                        >
                           <RequestCard
                             contextHint={DRIVER_NEW_TRIP_LIST_HINT}
                             pickup={formatPickup(
@@ -1744,17 +1748,7 @@ export function DriverDashboard() {
                             })()}
                             estimatedPrice={selectedAvailableTrip.estimated_price}
                             offerId={selectedAvailableTrip.offer_id ?? null}
-                            onReject={
-                              selectedAvailableTrip.offer_id
-                                ? () =>
-                                  void runRejectOffer(
-                                    selectedAvailableTrip.offer_id!,
-                                    selectedAvailableTrip.trip_id
-                                  )
-                                : undefined
-                            }
                             acceptButtonTestId={`driver-accept-${selectedAvailableTrip.trip_id}`}
-                            rejectButtonTestId={`driver-reject-${selectedAvailableTrip.trip_id}`}
                             acceptVariant="slide"
                             onAccept={() =>
                               runAction(
@@ -1766,11 +1760,8 @@ export function DriverDashboard() {
                               )
                             }
                             loading={actionLoading === selectedAvailableTrip.trip_id}
-                            rejectLoading={
-                              actionLoading === `reject:${selectedAvailableTrip.trip_id}`
-                            }
                           />
-                        </>
+                          </ActionPanel>
                       ) : hasAvailableTrips ? (
                         <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-2 text-center space-y-1">
                           <p className="text-xs font-medium text-foreground/90">
@@ -2109,13 +2100,7 @@ export function DriverDashboard() {
                                 })()}
                                 estimatedPrice={t.estimated_price}
                                 offerId={t.offer_id ?? null}
-                                onReject={
-                                  t.offer_id
-                                    ? () => void runRejectOffer(t.offer_id!, t.trip_id)
-                                    : undefined
-                                }
                                 acceptButtonTestId={`driver-accept-${t.trip_id}`}
-                                rejectButtonTestId={`driver-reject-${t.trip_id}`}
                                 acceptVariant="slide"
                                 onAccept={() =>
                                   runAction(
@@ -2127,7 +2112,6 @@ export function DriverDashboard() {
                                   )
                                 }
                                 loading={actionLoading === t.trip_id}
-                                rejectLoading={actionLoading === `reject:${t.trip_id}`}
                               />
                             </li>
                           ))}

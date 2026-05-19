@@ -8,7 +8,7 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 **Contexto:** `main` inclui **#319** / **#320** (motorista funcional + docs TW). Screenshots `_temp/` analisados → grelha **G01–G27**; premissas **User shell** + módulos UI. **Cluster A (header)** — VAM fechado com Frank (G03, G04, menu 4 ícones, faixa dicas). Staging / A+L: painel **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md).
 
-**Próximo carril produto:** **USER-SHELL-B** (InfoPanel, Cluster B) → smoke → **Cluster C** (VAM) → clusters D–F → **TW-01…05** → **O-UX20-1** → **O-NAV-PP-1**.
+**Próximo carril produto:** **USER-SHELL-C** (ActionPanel, Cluster C) → smoke → **Cluster D** (VAM) → clusters E–F → **TW-01…05** → **O-UX20-1** → **O-NAV-PP-1**.
 
 **Legenda Estado** (fixa — mesmo vocabulário que o bloco *Formato dos painéis* em [`TODOdoDIA.md`](../TODOdoDIA.md)): Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A.
 
@@ -22,9 +22,11 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 |----|------|--------|-------|
 | **G03**, **G04** | VAM Cluster A (header passageiro) | Concluído (VAM) | [`screenshot-tweaks-g-matrix.md`](../ux/screenshot-tweaks-g-matrix.md) |
 | **USER-SHELL-A** | Header `userCompact` | Concluído | **#321** |
-| **USER-SHELL-B** | InfoPanel + HintLine | Smoke pendente | PR **feat/user-shell-cluster-b** |
+| **USER-SHELL-B** | InfoPanel + HintLine | Concluído | **#322** |
+| **USER-SHELL-C** | ActionPanel + slide + stack | Smoke pendente | PR **feat/user-shell-cluster-c** |
 | **G-CLUSTER-B** | VAM Cluster B | Concluído (VAM) | USER-SHELL-B |
-| **G-CLUSTER-C** … **F** | VAM clusters restantes | Por iniciar | Após smoke B |
+| **G-CLUSTER-C** | VAM Cluster C | Concluído (VAM) | USER-SHELL-C |
+| **G-CLUSTER-D** … **F** | VAM clusters restantes | Por iniciar | Após smoke C |
 
 ### Trabalho vivo (painel **2026-05-15** — motorista / TW)
 
