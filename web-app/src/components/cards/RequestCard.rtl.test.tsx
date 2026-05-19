@@ -54,6 +54,11 @@ describe('RequestCard (RTL)', () => {
     )
     expect(screen.queryByRole('button', { name: /rejeitar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /aceitar com um toque/i })).not.toBeInTheDocument()
-    expect(screen.getByTestId('driver-accept-test-track')).toBeInTheDocument()
+    const track = screen.getByTestId('driver-accept-test-track')
+    expect(track).toBeInTheDocument()
+    const pickup = screen.getByText('Rua A')
+    expect(
+      track.compareDocumentPosition(pickup) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
   })
 })

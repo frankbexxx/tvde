@@ -1683,7 +1683,7 @@ export function DriverDashboard() {
                     >
                       {selectedAvailableTrip ? (
                         <ActionPanel
-                          title="Pedido no mapa"
+                          closeVariant="icon"
                           closeTestId="driver-offer-panel-close"
                           onClose={() => setSelectedOfferTripId(null)}
                         >
