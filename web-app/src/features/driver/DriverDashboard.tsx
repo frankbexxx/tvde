@@ -9,7 +9,6 @@ import {
   getDriverTripHistory,
   getDriverTripDetail,
   acceptTrip,
-  rejectDriverOffer,
   getDriverVehicleCategories as getDriverVehicleCategoriesApi,
   patchDriverVehicleCategories as patchDriverVehicleCategoriesApi,
   setDriverOnline,
@@ -791,41 +790,6 @@ export function DriverDashboard() {
         setStatus('Erro')
         addLog(`Erro ${actionName}: ${msg}`, 'error')
       }
-    } finally {
-      setActionLoading(null)
-    }
-  }
-
-  const runRejectOffer = async (
-    offerId: string,
-    tripId: string,
-    options?: { confirm?: boolean },
-  ) => {
-    if (actionLoading != null || !token) return
-    if (
-      options?.confirm !== false &&
-      !window.confirm('Recusar esta oferta? A viagem pode ser atribuída a outro motorista.')
-    ) {
-      return
-    }
-    setError(null)
-    setActionLoading(`reject:${tripId}`)
-    setStatus('A recusar oferta…')
-    addLog('Clique: REJEITAR', 'action')
-    try {
-      await rejectDriverOffer(offerId, token)
-      sonnerToast.success('Oferta recusada')
-      addLog('REJEITAR concluído', 'success')
-      refetchAvailable()
-      setStatus('Pronto')
-    } catch (err: unknown) {
-      const e = err as { status?: number; detail?: string }
-      const msg = isTimeoutLikeError(err) || e?.status === 0
-        ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
-        : String(e?.detail ?? 'Erro')
-      setError(msg)
-      setStatus('Erro')
-      addLog(`Erro REJEITAR: ${msg}`, 'error')
     } finally {
       setActionLoading(null)
     }
@@ -1721,13 +1685,7 @@ export function DriverDashboard() {
                         <ActionPanel
                           title="Pedido no mapa"
                           closeTestId="driver-offer-panel-close"
-                          onClose={() => {
-                            const trip = selectedAvailableTrip
-                            setSelectedOfferTripId(null)
-                            if (trip.offer_id) {
-                              void runRejectOffer(trip.offer_id, trip.trip_id, { confirm: false })
-                            }
-                          }}
+                          onClose={() => setSelectedOfferTripId(null)}
                         >
                           <RequestCard
                             contextHint={DRIVER_NEW_TRIP_LIST_HINT}
