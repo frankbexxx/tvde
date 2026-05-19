@@ -22,7 +22,7 @@ describe('RequestCard (RTL)', () => {
     expect(onAccept).toHaveBeenCalledTimes(1)
   })
 
-  it('com offer_id mostra REJEITAR e chama onReject', () => {
+  it('com offer_id em modo botão mostra REJEITAR e chama onReject', () => {
     const onAccept = vi.fn()
     const onReject = vi.fn()
     render(
@@ -32,10 +32,28 @@ describe('RequestCard (RTL)', () => {
         offerId="off-1"
         onAccept={onAccept}
         onReject={onReject}
+        acceptVariant="button"
       />
     )
     fireEvent.click(screen.getByRole('button', { name: /rejeitar/i }))
     expect(onReject).toHaveBeenCalledTimes(1)
     expect(onAccept).not.toHaveBeenCalled()
+  })
+
+  it('modo slide não mostra REJEITAR (recusar = fechar painel)', () => {
+    render(
+      <RequestCard
+        pickup="Rua A"
+        estimatedPrice={10}
+        offerId="off-1"
+        onAccept={() => {}}
+        onReject={() => {}}
+        acceptVariant="slide"
+        acceptButtonTestId="driver-accept-test"
+      />
+    )
+    expect(screen.queryByRole('button', { name: /rejeitar/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /aceitar com um toque/i })).not.toBeInTheDocument()
+    expect(screen.getByTestId('driver-accept-test-track')).toBeInTheDocument()
   })
 })

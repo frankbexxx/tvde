@@ -3,7 +3,6 @@ import {
   expect,
   type APIRequestContext,
   type Browser,
-  type Dialog,
   type Page,
 } from '@playwright/test'
 import {
@@ -45,19 +44,16 @@ async function openDriverMenu(page: Page) {
 /** FIX-008: painel de oferta só abre após toque no marcador do mapa. */
 async function openDriverOfferPanel(page: Page, tripId: string) {
   const marker = page.getByTestId(`driver-map-offer-${tripId}`)
-  const accept = page.getByTestId(`driver-accept-${tripId}`)
-  const reject = page.getByTestId(`driver-reject-${tripId}`)
+  const slideTrack = page.getByTestId(`driver-accept-${tripId}-track`)
   await expect
     .poll(
       async () => {
-        if ((await accept.isVisible().catch(() => false)) || (await reject.isVisible().catch(() => false))) {
+        if (await slideTrack.isVisible().catch(() => false)) {
           return true
         }
         if (await marker.isVisible().catch(() => false)) {
           await marker.click()
-          return (
-            (await accept.isVisible().catch(() => false)) || (await reject.isVisible().catch(() => false))
-          )
+          return await slideTrack.isVisible().catch(() => false)
         }
         return false
       },
@@ -66,16 +62,27 @@ async function openDriverOfferPanel(page: Page, tripId: string) {
     .toBe(true)
 }
 
+/** G08: deslizar ~metade da faixa para aceitar (sem botão «um toque»). */
+async function slideDriverAccept(page: Page, tripId: string) {
+  const track = page.getByTestId(`driver-accept-${tripId}-track`)
+  await expect(track).toBeVisible({ timeout: sec(30) })
+  const box = await track.boundingBox()
+  if (!box) throw new Error(`slide track missing: driver-accept-${tripId}-track`)
+  const y = box.y + box.height / 2
+  await page.mouse.move(box.x + 10, y)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width * 0.55, y, { steps: 10 })
+  await page.mouse.up()
+}
+
 async function acceptDriverTripFromMap(page: Page, tripId: string) {
   await openDriverOfferPanel(page, tripId)
-  await page.getByTestId(`driver-accept-${tripId}`).click()
+  await slideDriverAccept(page, tripId)
 }
 
 async function rejectDriverTripFromMap(page: Page, tripId: string) {
   await openDriverOfferPanel(page, tripId)
-  const rejectBtn = page.getByTestId(`driver-reject-${tripId}`)
-  page.once('dialog', (d: Dialog) => d.accept())
-  await rejectBtn.click()
+  await page.getByTestId('driver-offer-panel-close').click()
 }
 
 async function leaveDriverHomeStep1IfPresent(page: Page) {

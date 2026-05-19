@@ -15,7 +15,7 @@
 |---------|--------|-----|
 | **A** | Cabeçalho + shell topo | G03, G04 (+ menu 4 ícones, faixa dicas) |
 | **B** | Caixas de estado / mensagens | G05, G07, G09, G11, G15, G16, G20, G23 — **VAM fechado** |
-| **C** | Oferta e acções de viagem | G08, G13, G17, G18 |
+| **C** | Oferta e acções de viagem | G08, G13, G17, G18 — **VAM fechado** |
 | **D** | Mapa (palco + pins) | G10, G14, G21, G22, G25 |
 | **E** | Resumo / conclusão viagem | G24, G26, G27 |
 | **F** | Específicos | G01, G02, G06, G12, G19 |
@@ -52,7 +52,18 @@
 
 ---
 
-## G01–G27 — mapa completo (VAM pendente salvo clusters A e B)
+## Cluster C — VAM fechado (USER-SHELL-C)
+
+| ID | Decisão Frank | Implementação |
+|----|---------------|---------------|
+| **G08** | Só slide **Aceitar** (~50% faixa); **Fechar** = recusar (sem REJEITAR nem «um toque») | [`SlideToAccept.tsx`](../../web-app/src/components/cards/SlideToAccept.tsx), [`ActionPanel.tsx`](../../web-app/src/components/layout/ActionPanel.tsx), [`RequestCard.tsx`](../../web-app/src/components/cards/RequestCard.tsx) |
+| **G13** | Stack Iniciar + Cancelar motorista | [`BottomActionStack`](../../web-app/src/components/layout/BottomActionStack.tsx) + [`ActiveTripActions.tsx`](../../web-app/src/features/driver/ActiveTripActions.tsx) |
+| **G17** | Cancelar passageiro mesma métrica | `BottomActionStack` em [`PassengerDashboard.tsx`](../../web-app/src/features/passenger/PassengerDashboard.tsx) |
+| **G18** | Terminar viagem na mesma stack | Idem motorista (`PrimaryActionButton` confirm) |
+
+---
+
+## G01–G27 — mapa completo (VAM pendente salvo clusters A–C)
 
 | ID | Ref. | Papel | Resumo | Cluster | VAM |
 |----|------|-------|--------|---------|-----|
@@ -63,17 +74,17 @@
 | G05 | IMG02-P-01 | P | A procurar motorista… | B | **Fechado** |
 | G06 | IMG02-P-02 | P | Espaço vazio antes Cancelar | F | Pendente |
 | G07 | IMG02-H-01 | M | Hint «Toca no marcador» | B | **Fechado** |
-| G08 | IMG03-M-01 | M | Painel aceitar completo | C | Pendente |
+| G08 | IMG03-M-01 | M | Painel aceitar completo | C | **Fechado** |
 | G09 | IMG03-P-02 | P | Sem motoristas + retry | B | **Fechado** |
 | G10 | IMG04-M-05 | M | Mapa palco cheio | D | Pendente |
 | G11 | IMG04-M-06 | M | Confirma chegada… | B | **Fechado** |
 | G12 | IMG04-M-07 | M | Recolha Waze/Google | F | Pendente |
-| G13 | IMG04-M-08 | M | Iniciar + Cancelar | C | Pendente |
+| G13 | IMG04-M-08 | M | Iniciar + Cancelar | C | **Fechado** |
 | G14 | IMG04-P-01 | P | Mapa + pins | D | Pendente |
 | G15 | IMG04-P-02 | P | Pagamento + ~0 m | B | **Fechado** |
 | G16 | IMG04-P-03 | P | Motorista a caminho | B | **Fechado** |
-| G17 | IMG04-P-04 | P | Cancelar | C | Pendente |
-| G18 | IMG05-M-04 | M | Terminar viagem | C | Pendente |
+| G17 | IMG04-P-04 | P | Cancelar | C | **Fechado** |
+| G18 | IMG05-M-04 | M | Terminar viagem | C | **Fechado** |
 | G19 | IMG05-M-05 | M | Destino Waze/Google | F | Pendente |
 | G20 | IMG05-M-06 | M | A actualizar estado… | B | **Fechado** |
 | G21 | IMG05-M-07 | M | Pins mapa | D | Pendente |

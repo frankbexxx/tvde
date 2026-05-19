@@ -22,6 +22,7 @@ import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { HintLine } from '../../components/layout/HintLine'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
+import { BottomActionStack } from '../../components/layout/BottomActionStack'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
@@ -1054,14 +1055,16 @@ export function PassengerDashboard() {
     ) : showBottomPrimary && primaryLabel ? (
       <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
         <div className="px-4 py-2">
-          <PrimaryActionButton
-            onClick={primaryOnClick}
-            disabled={primaryLabel === 'Cancelar' ? cancelling : false}
-            loading={primaryLabel === 'Cancelar' && cancelling}
-            variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
-          >
-            {primaryLabel}
-          </PrimaryActionButton>
+          <BottomActionStack testId="passenger-trip-action-stack">
+            <PrimaryActionButton
+              onClick={primaryOnClick}
+              disabled={primaryLabel === 'Cancelar' ? cancelling : false}
+              loading={primaryLabel === 'Cancelar' && cancelling}
+              variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
+            >
+              {primaryLabel}
+            </PrimaryActionButton>
+          </BottomActionStack>
         </div>
         {passengerBottomNavEl}
       </div>

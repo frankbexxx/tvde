@@ -5,6 +5,7 @@ import { usePolling } from '../../hooks/usePolling'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { HintLine } from '../../components/layout/HintLine'
+import { BottomActionStack } from '../../components/layout/BottomActionStack'
 import { toast as sonnerToast } from 'sonner'
 import { DRIVER_START_TRIP_MAX_DISTANCE_M, haversineKm } from '../../utils/geo'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
@@ -368,27 +369,29 @@ export function ActiveTripActions({
           confirmExternalNav={confirmExternalNav}
         />
       ) : null}
-      <PrimaryActionButton
-        variant="confirm"
-        onClick={() => {
-          void run(buttonConfig.action, buttonConfig.label)
-        }}
-        disabled={loading || (startTripGateActive && !startTripAllowed)}
-        loading={loading}
-      >
-        {buttonConfig.label}
-      </PrimaryActionButton>
-      {showCancel && !cancelPanelOpen ? (
-        <button
-          type="button"
-          data-testid="driver-trip-cancel-open"
-          onClick={() => setCancelPanelOpen(true)}
-          disabled={loading}
-          className="w-full min-h-[44px] rounded-lg border border-destructive/40 bg-transparent text-destructive text-base font-medium py-3 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 disabled:border-border disabled:bg-muted/50 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors touch-manipulation"
+      <BottomActionStack testId="driver-trip-action-stack">
+        <PrimaryActionButton
+          variant="confirm"
+          onClick={() => {
+            void run(buttonConfig.action, buttonConfig.label)
+          }}
+          disabled={loading || (startTripGateActive && !startTripAllowed)}
+          loading={loading}
         >
-          Cancelar viagem
-        </button>
-      ) : null}
+          {buttonConfig.label}
+        </PrimaryActionButton>
+        {showCancel && !cancelPanelOpen ? (
+          <button
+            type="button"
+            data-testid="driver-trip-cancel-open"
+            onClick={() => setCancelPanelOpen(true)}
+            disabled={loading}
+            className="w-full min-h-[44px] rounded-full border-2 border-destructive/70 bg-transparent text-destructive text-base font-semibold py-3 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 disabled:border-border disabled:bg-muted/50 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors touch-manipulation"
+          >
+            Cancelar viagem
+          </button>
+        ) : null}
+      </BottomActionStack>
       {showCancel && cancelPanelOpen ? (
         <div
           className="rounded-xl border border-destructive/35 bg-destructive/5 px-3 py-3 space-y-3"

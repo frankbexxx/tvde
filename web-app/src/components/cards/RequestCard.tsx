@@ -98,7 +98,7 @@ export function RequestCard({
               : 'flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:min-w-[200px]'
           }
         >
-          {offerId && onReject ? (
+          {offerId && onReject && acceptVariant !== 'slide' ? (
             <button
               type="button"
               onClick={onReject}
@@ -126,7 +126,9 @@ export function RequestCard({
               onConfirm={onAccept}
               disabled={Boolean(rejectLoading)}
               loading={Boolean(loading)}
-              tapTestId={acceptButtonTestId}
+              trackTestId={
+                acceptButtonTestId ? `${acceptButtonTestId}-track` : undefined
+              }
               testId={acceptButtonTestId ? `${acceptButtonTestId}-slide` : undefined}
             />
           ) : (
