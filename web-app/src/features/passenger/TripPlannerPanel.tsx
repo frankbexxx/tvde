@@ -68,6 +68,8 @@ export interface TripPlannerPanelProps {
    * Quando o cartão de estado já mostra a mesma linha de pagamento (ex. `TRIP_ONGOING` pendente/a processar/falhado).
    */
   inTripSuppressPaymentEcho?: boolean
+  /** Pagamento, distância e poll já no InfoPanel (PassengerStatusCard). */
+  inTripSuppressMetaEcho?: boolean
 }
 
 /**
@@ -100,6 +102,7 @@ function TripPlannerPanelInner({
   embedded = false,
   inTripSuppressEstadoEcho = false,
   inTripSuppressPaymentEcho = false,
+  inTripSuppressMetaEcho = false,
 }: TripPlannerPanelProps) {
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
 
@@ -301,15 +304,15 @@ function TripPlannerPanelInner({
               </span>
             </p>
           ) : null}
-          {inTripPaymentLine && !inTripSuppressPaymentEcho ? (
+          {inTripPaymentLine && !inTripSuppressPaymentEcho && !inTripSuppressMetaEcho ? (
             <p className="text-sm text-foreground/80">Pagamento: {inTripPaymentLine}</p>
           ) : null}
-          {driverTrackingHint ? (
+          {driverTrackingHint && !inTripSuppressMetaEcho ? (
             <p className="text-sm text-foreground font-medium pt-0.5" aria-live="polite">
               {driverTrackingHint}
             </p>
           ) : null}
-          {tripPollHint ? (
+          {tripPollHint && !inTripSuppressMetaEcho ? (
             <p className="text-xs text-foreground/60 pt-0.5" aria-live="polite">
               {tripPollHint}
             </p>

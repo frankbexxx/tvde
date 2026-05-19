@@ -2,7 +2,7 @@
 
 Lista incremental: cada entrada descreve o fix; estado em **Estado** quando aplicável.
 
-**Próximo na fila:** **USER_SHELL** Cluster A em código (**USER-SHELL-A**, painel **2026-05-19**) → VAM clusters **B–F** ([`screenshot-tweaks-g-matrix.md`](screenshot-tweaks-g-matrix.md)) → **TWEAKS_UX** (**TW-**, painel **2026-05-15**, alinhados aos clusters G). Inventário motorista: [`driver-home-inventory.md`](driver-home-inventory.md).
+**Próximo na fila:** **USER-SHELL-B** (Cluster B / InfoPanel) → VAM clusters **C–F** → **TWEAKS_UX** (**TW-**). Inventário motorista: [`driver-home-inventory.md`](driver-home-inventory.md).
 
 ---
 
@@ -57,9 +57,13 @@ Lista incremental: cada entrada descreve o fix; estado em **Estado** quando apli
 
 **Entrega código:** **USER-SHELL-A** (ver painel TODO). Smokes prod **S-02** legenda **B** pode deixar de exigir pastilha PASSAGEIRO no header — validar role no menu ou fluxo.
 
-### Clusters B–F
+### Cluster B — InfoPanel (VAM fechado + código USER-SHELL-B)
 
-VAM pendente com Frank (conversa por cluster). **TW-01…06** mapeiam para B–E (tabela na grelha G).
+Módulos: [`InfoPanel.tsx`](../../web-app/src/components/layout/InfoPanel.tsx), [`HintLine.tsx`](../../web-app/src/components/layout/HintLine.tsx). Passageiro: [`PassengerStatusCard.tsx`](../../web-app/src/features/passenger/PassengerStatusCard.tsx) sem duplicar `StatusHeader` em procura/viagem. Motorista: hints G07/G11/G20 via `HintLine`.
+
+### Clusters C–F
+
+VAM pendente com Frank. **TW-01…06** mapeiam para B–E (tabela na grelha G).
 
 ---
 

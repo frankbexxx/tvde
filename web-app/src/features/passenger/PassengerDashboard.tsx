@@ -20,6 +20,7 @@ import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
+import { HintLine } from '../../components/layout/HintLine'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
@@ -743,6 +744,23 @@ export function PassengerDashboard() {
     return ps === 'pending' || ps === 'processing' || ps === 'failed'
   }, [passengerUiState, uxState, activeTrip])
 
+  /** USER-SHELL-B: InfoPanel substitui StatusHeader + meta solta no planner. */
+  const passengerInfoPanelCoversBanner = useMemo(
+    () =>
+      Boolean(
+        uxState &&
+          activeTrip &&
+          (uxState === 'SEARCHING_DRIVER' ||
+            uxState === 'DRIVER_ASSIGNED' ||
+            uxState === 'DRIVER_ARRIVING' ||
+            uxState === 'TRIP_ONGOING' ||
+            uxState === 'TRIP_COMPLETED'),
+      ),
+    [uxState, activeTrip],
+  )
+
+  const inTripSuppressPlannerMetaEcho = passengerInfoPanelCoversBanner
+
   /** Painel inferior: omitir "searching" duplicado quando já há PassengerStatusCard em requested */
   const showTripPlannerPanel = useMemo(() => {
     if (tripCompletedFromLocation) return false
@@ -1280,24 +1298,24 @@ export function PassengerDashboard() {
                 visualWeight={a021Layout.panel}
                 inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
                 inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
+                inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
               />
             </div>
           </section>
         ) : (
           <>
-            <StatusHeader
-              label={banner.label}
-              subLabel={banner.subLabel}
-              variant={banner.variant}
-              emphasis={statusHeaderEmphasis}
-            />
-            {tripPollFootnote && !showTripPlannerPanel ? (
-              <p
-                className="text-center text-sm text-foreground/75 -mt-3 mb-5 min-h-[1.25rem]"
-                aria-live="polite"
-              >
+            {!passengerInfoPanelCoversBanner ? (
+              <StatusHeader
+                label={banner.label}
+                subLabel={banner.subLabel}
+                variant={banner.variant}
+                emphasis={statusHeaderEmphasis}
+              />
+            ) : null}
+            {tripPollFootnote && !showTripPlannerPanel && !passengerInfoPanelCoversBanner ? (
+              <HintLine className="-mt-3 mb-5 min-h-[1.25rem] text-foreground/75">
                 {tripPollFootnote}
-              </p>
+              </HintLine>
             ) : null}
 
             {passengerUiState !== 'searching' ? (
@@ -1362,6 +1380,7 @@ export function PassengerDashboard() {
                 visualWeight={a021Layout.panel}
                 inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
                 inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
+                inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
               />
             )}
           </>
@@ -1390,6 +1409,8 @@ export function PassengerDashboard() {
                 activeTrip={activeTrip}
                 onRetrySearch={activeTrip?.status === 'requested' ? handleRetrySearch : undefined}
                 retrySearchPending={retrySearchPending}
+                trackingHint={driverTrackingHint}
+                pollHint={passengerInfoPanelCoversBanner ? tripPollFootnote : null}
               />
               {activeTrip.payment_status === 'processing' &&
                 typeof activeTrip.payment_intent_client_secret === 'string' &&

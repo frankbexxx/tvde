@@ -1,9 +1,11 @@
 /**
  * B002 / A014: Conteúdo visual por estado da viagem — clareza, sem depender só de logs.
+ * USER-SHELL-B: moldura unificada via InfoPanel.
  */
 import { memo, useEffect, useState } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import { TripCard } from '../../components/cards/TripCard'
+import { InfoPanel } from '../../components/layout/InfoPanel'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
@@ -14,11 +16,40 @@ const ESTIMATE_FALLBACK = '4–6'
 
 /**
  * Segundos em `requested` antes de mostrar aviso de indisponibilidade (P24) e botão de retry (P36).
- *
- * B2 (alpha 2026-04-25): subido de 10→25 para ficar alinhado com OFFER_TIMEOUT_SECONDS=60 do backend.
- * Antes, o passageiro via "Sem motoristas disponíveis" enquanto a oferta ainda estava viva no driver.
  */
 export const PASSENGER_SEARCH_FALLBACK_AFTER_SEC = 25
+
+function tripCardFooter(activeTrip: TripDetailResponse, priceCaption: string) {
+  return (
+    <TripCard
+      pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
+      destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
+      price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
+      estimateFallback={ESTIMATE_FALLBACK}
+      priceCaption={priceCaption}
+      driverName={
+        activeTrip.status === 'assigned' ? undefined : 'Motorista TVDE'
+      }
+      vehicleLabel={activeTrip.status === 'assigned' ? undefined : 'Veículo TVDE'}
+    />
+  )
+}
+
+function buildTripMetaLines(
+  activeTrip: TripDetailResponse,
+  trackingHint: string | null | undefined,
+  pollHint: string | null | undefined,
+): string[] {
+  const lines: string[] = []
+  const ps = activeTrip.payment_status
+  if (ps === 'pending' || ps === 'processing' || ps === 'failed') {
+    const pay = paymentStatusLabel(ps)
+    if (pay) lines.push(`Pagamento: ${pay}`)
+  }
+  if (trackingHint?.trim()) lines.push(trackingHint.trim())
+  if (pollHint?.trim()) lines.push(pollHint.trim())
+  return lines
+}
 
 function SearchingDriverPhase({
   tripCreatedAtIso,
@@ -29,7 +60,6 @@ function SearchingDriverPhase({
   onRetrySearch?: () => void
   retrySearchPending?: boolean
 }) {
-  /** Relógio em efeito — evita `Date.now()` no render (react-hooks/purity). */
   const [nowMs, setNowMs] = useState<number | null>(null)
   useEffect(() => {
     const tick = () => setNowMs(Date.now())
@@ -43,49 +73,48 @@ function SearchingDriverPhase({
       : Math.max(0, (nowMs - new Date(tripCreatedAtIso).getTime()) / 1000)
   const showFallback = elapsedSec >= PASSENGER_SEARCH_FALLBACK_AFTER_SEC
 
+  const meta = !showFallback ? [PASSENGER_PAYMENT_DISCLOSURE_SEARCHING] : undefined
+
   return (
-    <div
-      key="SEARCHING_DRIVER"
-      className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 ease-out animate-in fade-in duration-300"
-    >
-      <p className="text-foreground text-lg font-semibold text-center px-2">
-        {showFallback ? 'Sem motoristas disponíveis de momento' : 'A procurar motorista…'}
-      </p>
-      <p className="text-foreground/80 text-sm text-center max-w-sm px-4">
-        {showFallback
+    <InfoPanel
+      tone={showFallback ? 'empty' : 'waiting'}
+      centered
+      title={
+        showFallback ? 'Sem motoristas disponíveis de momento' : 'A procurar motorista…'
+      }
+      subtitle={
+        showFallback
           ? 'Não encontrámos um motorista na zona. Podes cancelar e voltar a pedir — ou esperar mais um pouco.'
-          : 'Estamos a contactar motoristas na zona. Pode demorar um instante.'}
-      </p>
-      {!showFallback ? (
-        <p
-          className="text-xs text-foreground/65 text-center max-w-sm px-4 leading-snug"
-          data-testid="passenger-search-payment-hint"
-        >
-          {PASSENGER_PAYMENT_DISCLOSURE_SEARCHING}
-        </p>
-      ) : null}
-      {showFallback && onRetrySearch ? (
-        <button
-          type="button"
-          className="mt-1 rounded-xl border border-primary/45 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 disabled:opacity-60 disabled:pointer-events-none transition-colors"
-          disabled={retrySearchPending}
-          onClick={onRetrySearch}
-        >
-          {retrySearchPending ? 'A processar…' : 'Tentar novamente'}
-        </button>
-      ) : null}
-    </div>
+          : 'Estamos a contactar motoristas na zona. Pode demorar um instante.'
+      }
+      meta={meta}
+      testId={showFallback ? 'passenger-info-panel-empty' : 'passenger-info-panel-searching'}
+      actions={
+        showFallback && onRetrySearch ? (
+          <button
+            type="button"
+            className="mt-1 rounded-xl border border-primary/45 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 disabled:opacity-60 disabled:pointer-events-none transition-colors"
+            disabled={retrySearchPending}
+            onClick={onRetrySearch}
+          >
+            {retrySearchPending ? 'A processar…' : 'Tentar novamente'}
+          </button>
+        ) : undefined
+      }
+    />
   )
 }
 
-interface PassengerStatusCardProps {
+export interface PassengerStatusCardProps {
   uxState: PassengerUxState | null
   activeTrip: TripDetailResponse | null | undefined
-  /** A014: só no pedido inicial — spinner curto, separado do estado "à procura" */
   isSubmittingTrip?: boolean
-  /** P36: cancelar pedido actual e criar novo com os mesmos pontos (após timeout de procura). */
   onRetrySearch?: () => void
   retrySearchPending?: boolean
+  /** G15/G23: distância estimada ao motorista. */
+  trackingHint?: string | null
+  /** Poll / sincronização (só falhas ou stall — não «A actualizar…» em cada poll). */
+  pollHint?: string | null
 }
 
 function PassengerStatusCardInner({
@@ -94,12 +123,14 @@ function PassengerStatusCardInner({
   isSubmittingTrip = false,
   onRetrySearch,
   retrySearchPending = false,
+  trackingHint = null,
+  pollHint = null,
 }: PassengerStatusCardProps) {
   if (isSubmittingTrip) {
     return (
       <div
-        key="SUBMITTING"
-        className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 ease-out animate-in fade-in duration-300"
+        className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card"
+        data-testid="passenger-info-panel-submitting"
       >
         <Spinner size="lg" />
         <p className="text-foreground text-base font-semibold">A enviar pedido…</p>
@@ -109,6 +140,8 @@ function PassengerStatusCardInner({
   }
 
   if (!uxState || !activeTrip) return null
+
+  const metaForTrip = buildTripMetaLines(activeTrip, trackingHint, pollHint)
 
   switch (uxState) {
     case 'SEARCHING_DRIVER':
@@ -124,118 +157,60 @@ function PassengerStatusCardInner({
       const isAssignedOnly = activeTrip.status === 'assigned'
       if (isAssignedOnly) {
         return (
-          <div
-            key="DRIVER_ASSIGNED_ASSIGNED"
-            className="space-y-4 rounded-2xl border border-primary/35 border-l-4 border-l-primary bg-primary/10 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
-          >
-            <div>
-              <p className="text-primary font-semibold text-lg">Motorista encontrado</p>
-              <p className="text-foreground/80 text-sm mt-1">
-                A obter localização — o mapa aparece em breve.
-              </p>
-            </div>
-            <TripCard
-              pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-              destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
-              price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-              estimateFallback={ESTIMATE_FALLBACK}
-              priceCaption="Estimativa (indicativa)"
-            />
-          </div>
+          <InfoPanel
+            tone="primary"
+            title="Motorista encontrado"
+            subtitle="A obter localização — o mapa aparece em breve."
+            meta={metaForTrip.length > 0 ? metaForTrip : undefined}
+            testId="passenger-info-panel-assigned"
+            footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+          />
         )
       }
       return (
-        <div
-          key="DRIVER_ASSIGNED_ACCEPTED"
-          className="space-y-4 rounded-2xl border border-success/30 border-l-4 border-l-success bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
-        >
-          <p className="text-success font-semibold text-lg">Motorista a caminho</p>
-          <TripCard
-            pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-            destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
-            price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-            estimateFallback={ESTIMATE_FALLBACK}
-            priceCaption="Estimativa (indicativa)"
-            driverName="Motorista TVDE"
-            vehicleLabel="Veículo TVDE"
-          />
-        </div>
+        <InfoPanel
+          tone="success"
+          title="Motorista a caminho"
+          meta={metaForTrip.length > 0 ? metaForTrip : undefined}
+          testId="passenger-info-panel-en-route"
+          footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+        />
       )
     }
 
     case 'DRIVER_ARRIVING':
       return (
-        <div
-          key="DRIVER_ARRIVING"
-          className="space-y-4 rounded-2xl border border-success/30 border-l-4 border-l-success bg-success/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
-        >
-          <div>
-            <p className="text-success font-semibold text-lg">{passengerTripStatusLabel('arriving')}</p>
-            <p className="text-foreground/80 text-sm mt-1">O motorista está próximo do ponto de recolha.</p>
-          </div>
-          <TripCard
-            pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-            destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
-            price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-            estimateFallback={ESTIMATE_FALLBACK}
-            priceCaption="Estimativa (indicativa)"
-            driverName="Motorista TVDE"
-            vehicleLabel="Veículo TVDE"
-          />
-        </div>
+        <InfoPanel
+          tone="success"
+          title={passengerTripStatusLabel('arriving')}
+          subtitle="O motorista está próximo do ponto de recolha."
+          meta={metaForTrip.length > 0 ? metaForTrip : undefined}
+          testId="passenger-info-panel-arriving"
+          footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+        />
       )
 
-    case 'TRIP_ONGOING': {
-      const ps = activeTrip.payment_status
-      const payOngoing =
-        ps === 'pending' || ps === 'processing' || ps === 'failed'
-          ? paymentStatusLabel(ps)
-          : null
+    case 'TRIP_ONGOING':
       return (
-        <div
-          key="TRIP_ONGOING"
-          className="space-y-4 rounded-2xl border border-secondary/40 border-l-4 bg-secondary/15 px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
-          style={{ borderLeftColor: 'hsl(var(--color-flag-blue, 218 100% 23%))' }}
-        >
-          <div>
-            <p className="text-secondary-foreground font-semibold text-lg">Viagem em curso</p>
-            {payOngoing ? (
-              <p className="text-sm text-foreground/75 mt-1">{payOngoing}</p>
-            ) : null}
-          </div>
-          <TripCard
-            pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-            destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
-            price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-            estimateFallback={ESTIMATE_FALLBACK}
-            priceCaption="Estimativa (indicativa)"
-            driverName="Motorista TVDE"
-            vehicleLabel="Veículo TVDE"
-          />
-        </div>
+        <InfoPanel
+          tone="secondary"
+          title="Viagem em curso"
+          meta={metaForTrip.length > 0 ? metaForTrip : undefined}
+          testId="passenger-info-panel-ongoing"
+          footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+        />
       )
-    }
 
     case 'TRIP_COMPLETED': {
       const payDone = paymentStatusLabel(activeTrip.payment_status)
       return (
-        <div
-          key="TRIP_COMPLETED"
-          className="space-y-4 rounded-2xl border border-border bg-card px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300"
-        >
-          <div>
-            <p className="text-foreground/85 font-semibold text-lg">Viagem concluída</p>
-            {payDone ? (
-              <p className="text-sm text-foreground/80 mt-1">{payDone}</p>
-            ) : null}
-          </div>
-          <TripCard
-            pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-            destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
-            price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-            priceCaption="Preço final"
-          />
-        </div>
+        <InfoPanel
+          tone="neutral"
+          title="Viagem concluída"
+          meta={payDone ? [`Pagamento: ${payDone}`] : undefined}
+          testId="passenger-info-panel-completed"
+          footer={tripCardFooter(activeTrip, 'Preço final')}
+        />
       )
     }
 

@@ -50,8 +50,9 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **USER-SHELL-A** | `userCompact` em `/passenger` (+ rename `driverCompact`) | Smoke pendente | PR **feat/user-shell-cluster-a**; E2E `driver-passenger-flow` |
-| **G-CLUSTER-B** | VAM Cluster B (InfoPanel) | Por iniciar | G05, G07, G09, G11, G15, G16, G20, G23 |
+| **USER-SHELL-A** | `userCompact` em `/passenger` | Concluído | Merge **#321**; smoke OK |
+| **USER-SHELL-B** | InfoPanel + HintLine (Cluster B) | Smoke pendente | PR **feat/user-shell-cluster-b** |
+| **G-CLUSTER-B** | VAM Cluster B (InfoPanel) | Concluído (VAM) | G05, G07, G09, G11, G15, G16, G20, G23 |
 | **G-CLUSTER-C** | VAM Cluster C (ActionPanel) | Por iniciar | G08, G13, G17, G18 |
 | **G-CLUSTER-D** | VAM Cluster D (MapStage) | Por iniciar | G10, G14, G21, G22, G25 |
 | **G-CLUSTER-E** | VAM Cluster E (TripSummary) | Por iniciar | G24, G26, G27 |

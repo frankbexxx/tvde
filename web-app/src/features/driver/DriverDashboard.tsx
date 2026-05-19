@@ -66,6 +66,7 @@ import {
 import { getOsrmRouteMeta, getRoute } from '../../services/routingService'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
+import { HintLine } from '../../components/layout/HintLine'
 import { Button } from '../../components/ui/button'
 import {
   Dialog,
@@ -1771,15 +1772,18 @@ export function DriverDashboard() {
                           />
                         </>
                       ) : hasAvailableTrips ? (
-                        <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-2 text-center">
+                        <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-2 text-center space-y-1">
                           <p className="text-xs font-medium text-foreground/90">
                             {filteredAvailable.length === 1
                               ? '1 viagem no mapa'
                               : `${filteredAvailable.length} viagens no mapa`}
                           </p>
-                          <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
+                          <HintLine
+                            className="text-[11px] text-foreground/65"
+                            testId="driver-map-offer-hint"
+                          >
                             Toca no marcador no mapa para ver o pedido e aceitar.
-                          </p>
+                          </HintLine>
                         </div>
                       ) : pollEnabled && availableLoading && available == null ? (
                         <>
