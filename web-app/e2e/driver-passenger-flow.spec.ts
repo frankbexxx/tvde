@@ -80,9 +80,12 @@ async function acceptDriverTripFromMap(page: Page, tripId: string) {
   await slideDriverAccept(page, tripId)
 }
 
-async function rejectDriverTripFromMap(page: Page, tripId: string) {
+async function closeDriverOfferPanelFromMap(page: Page, tripId: string) {
   await openDriverOfferPanel(page, tripId)
   await page.getByTestId('driver-offer-panel-close').click()
+  await expect(page.getByTestId(`driver-accept-${tripId}-track`)).toHaveCount(0, {
+    timeout: sec(15),
+  })
 }
 
 async function leaveDriverHomeStep1IfPresent(page: Page) {
@@ -369,7 +372,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await driverCtx.close()
   })
 
-  test('driver rejeita oferta e ela desaparece da lista', async ({ browser, request }) => {
+  test('driver fecha painel e oferta permanece no mapa', async ({ browser, request }) => {
     const { tripId, tokens } = await seedAndCreateTrip(request)
     const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
     const driverPage = await driverCtx.newPage()
@@ -378,21 +381,23 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await expect(driverPage.getByTestId('app-header-brand')).toBeVisible({ timeout: sec(120) })
     await leaveDriverHomeStep1IfPresent(driverPage)
 
-    await rejectDriverTripFromMap(driverPage, tripId)
+    const marker = driverPage.getByTestId(`driver-map-offer-${tripId}`)
+    const tripStillAvailable = async () => {
+      const r = await request.get(`${API}/driver/trips/available`, {
+        headers: { Authorization: `Bearer ${tokens.driver}` },
+      })
+      if (!r.ok()) return false
+      const list = (await r.json()) as Array<{ trip_id?: string }>
+      return list.some((item) => item.trip_id === tripId)
+    }
 
-    await expect
-      .poll(
-        async () => {
-          const r = await request.get(`${API}/driver/trips/available`, {
-            headers: { Authorization: `Bearer ${tokens.driver}` },
-          })
-          if (!r.ok()) return true
-          const list = (await r.json()) as Array<{ trip_id?: string }>
-          return !list.some((item) => item.trip_id === tripId)
-        },
-        { timeout: sec(60), intervals: pollLook }
-      )
-      .toBe(true)
+    await closeDriverOfferPanelFromMap(driverPage, tripId)
+    await expect(marker).toBeVisible({ timeout: sec(30) })
+    await expect.poll(tripStillAvailable, { timeout: sec(30), intervals: pollLook }).toBe(true)
+
+    await closeDriverOfferPanelFromMap(driverPage, tripId)
+    await expect(marker).toBeVisible({ timeout: sec(30) })
+    await expect.poll(tripStillAvailable, { timeout: sec(30), intervals: pollLook }).toBe(true)
 
     await driverCtx.close()
   })

@@ -56,7 +56,7 @@
 
 | ID | Decisão Frank | Implementação |
 |----|---------------|---------------|
-| **G08** | Só slide **Aceitar** (~50% faixa); **Fechar** = recusar (sem REJEITAR nem «um toque») | [`SlideToAccept.tsx`](../../web-app/src/components/cards/SlideToAccept.tsx), [`ActionPanel.tsx`](../../web-app/src/components/layout/ActionPanel.tsx), [`RequestCard.tsx`](../../web-app/src/components/cards/RequestCard.tsx) |
+| **G08** | Só slide **Aceitar** (~50% faixa); **Fechar** = só UI (oferta mantém-se no mapa; sem REJEITAR nem «um toque») | [`SlideToAccept.tsx`](../../web-app/src/components/cards/SlideToAccept.tsx), [`ActionPanel.tsx`](../../web-app/src/components/layout/ActionPanel.tsx), [`RequestCard.tsx`](../../web-app/src/components/cards/RequestCard.tsx), [`DriverDashboard.tsx`](../../web-app/src/features/driver/DriverDashboard.tsx) |
 | **G13** | Stack Iniciar + Cancelar motorista | [`BottomActionStack`](../../web-app/src/components/layout/BottomActionStack.tsx) + [`ActiveTripActions.tsx`](../../web-app/src/features/driver/ActiveTripActions.tsx) |
 | **G17** | Cancelar passageiro mesma métrica | `BottomActionStack` em [`PassengerDashboard.tsx`](../../web-app/src/features/passenger/PassengerDashboard.tsx) |
 | **G18** | Terminar viagem na mesma stack | Idem motorista (`PrimaryActionButton` confirm) |
