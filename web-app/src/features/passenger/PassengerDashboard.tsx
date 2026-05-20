@@ -26,6 +26,7 @@ import { BottomActionStack } from '../../components/layout/BottomActionStack'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
+import { MapStage } from '../../components/layout/MapStage'
 import { getRouteGeoJSON } from '../../maps/routing'
 import { getOsrmRouteMeta } from '../../services/routingService'
 import {
@@ -874,6 +875,13 @@ export function PassengerDashboard() {
 
   const showSubmittingCard = creating && !activeTripId
 
+  /** USER-SHELL-D: mapa palco em viagem / procura (G14, G22, G25). */
+  const passengerMapStageLayout =
+    passengerUiState === 'in_trip' || passengerUiState === 'searching'
+
+  const passengerMapStageShowMap =
+    activeTrip?.status === 'completed' ? false : showMapOnScreen
+
   /** A021: um foco por ecrã — header, mapa e painel coordenam peso visual */
   const a021Layout = useMemo(() => {
     switch (passengerUiState) {
@@ -886,7 +894,7 @@ export function PassengerDashboard() {
       case 'searching':
         return { statusHeader: 'default' as const, map: 'subdued' as const, panel: 'subdued' as const }
       case 'in_trip':
-        return { statusHeader: 'default' as const, map: 'subdued' as const, panel: 'subdued' as const }
+        return { statusHeader: 'default' as const, map: 'emphasized' as const, panel: 'subdued' as const }
       default:
         return { statusHeader: 'default' as const, map: 'emphasized' as const, panel: 'default' as const }
     }
@@ -1054,7 +1062,7 @@ export function PassengerDashboard() {
       </div>
     ) : showBottomPrimary && primaryLabel ? (
       <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="px-4 py-2">
+        <div className="px-4 py-1">
           <BottomActionStack testId="passenger-trip-action-stack">
             <PrimaryActionButton
               onClick={primaryOnClick}
@@ -1321,7 +1329,35 @@ export function PassengerDashboard() {
               </HintLine>
             ) : null}
 
-            {passengerUiState !== 'searching' ? (
+            {passengerMapStageLayout ? (
+              <div
+                ref={mapAnchorRef}
+                id="passenger-map-anchor"
+                className="flex min-h-0 flex-col scroll-mt-4"
+              >
+                <MapStage
+                  testId="passenger-map-stage"
+                  className="min-h-[min(48vh,360px)] shrink-0 flex-none"
+                  overlayClassName="hidden"
+                  map={{
+                    showMap: passengerMapStageShowMap,
+                    mapPlaceholder,
+                    passengerLocation:
+                      passengerLocation ??
+                      (activeTrip
+                        ? { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng }
+                        : undefined),
+                    driverLocation: driverLocation ?? undefined,
+                    route: routeForMap,
+                    tripPickup: tripMapLegs.pickup,
+                    tripDropoff: tripMapLegs.dropoff,
+                    mapVisualWeight: a021Layout.map,
+                    planningRecenter: dropoffPreviewLocation,
+                    planningRecenterKey: mapRecenterKey,
+                  }}
+                />
+              </div>
+            ) : (
               <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
                 <MapView
                   showMap={showMapOnScreen}
@@ -1330,11 +1366,9 @@ export function PassengerDashboard() {
                   dropoffSelection={isPickupPlanningMode ? dropoffPreviewLocation : null}
                   onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
                   passengerLocation={
-                    passengerLocation ?? (activeTrip
-                      ? {
-                        lat: activeTrip.origin_lat,
-                        lng: activeTrip.origin_lng,
-                      }
+                    passengerLocation ??
+                    (activeTrip
+                      ? { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng }
                       : undefined)
                   }
                   driverLocation={driverLocation ?? undefined}
@@ -1347,7 +1381,7 @@ export function PassengerDashboard() {
                   planningRecenterKey={mapRecenterKey}
                 />
               </div>
-            ) : null}
+            )}
 
             {showTripPlannerPanel && (
               <TripPlannerPanel

@@ -4,36 +4,48 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-19)
+## Agora (2026-05-20)
 
-**Contexto:** `main` inclui **#319** / **#320** (motorista funcional + docs TW). Screenshots `_temp/` analisados → grelha **G01–G27**; premissas **User shell** + módulos UI. **Cluster A (header)** — VAM fechado com Frank (G03, G04, menu 4 ícones, faixa dicas). Staging / A+L: painel **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md).
+**Contexto:** `main` inclui **USER-SHELL A–C** (**#321–#325**): headers compactos, InfoPanel, ActionPanel, G08 (Fechar só UI + painel compacto TW-01/02). Smoke telemóvel painel oferta OK (**2026-05-19**). Staging / A+L: painel **2026-05-14** em [`TODOdoDIA.md`](../TODOdoDIA.md).
 
-**Próximo carril produto:** **USER-SHELL-C** (ActionPanel, Cluster C) → smoke → **Cluster D** (VAM) → clusters E–F → **TW-01…05** → **O-UX20-1** → **O-NAV-PP-1**.
+**Próximo carril produto:** **TW-04…05** · **O-UX20-1** / **O-NAV-PP-1** · infra **A2-02**. Clusters **D–F** fechados (USER-SHELL-D/E/F).
 
 **Legenda Estado** (fixa — mesmo vocabulário que o bloco *Formato dos painéis* em [`TODOdoDIA.md`](../TODOdoDIA.md)): Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A.
 
 **Sessão 2026-05-12 (fecho):** env + OAuth consola + provisioning staging + `alembic` no Shell Render + static + CORS; **EXTRA** herdado nos painéis **2026-05-13** e **2026-05-14**.
 
-**Próximo carril infra:** após staging/Google/smokes — **A4** (painel **2026-05-14**, **A2-02-***). **Próximo carril UX:** painel **2026-05-19** (**USER_SHELL** / **G-**), depois **2026-05-15** (**TW-**).
+**Próximo carril infra:** após staging/Google/smokes — **A4** (painel **2026-05-14**, **A2-02-***). **Próximo carril UX:** painel **2026-05-20** — **Cluster D** + **TW-03…05**.
 
-### Trabalho vivo (painel **2026-05-19** — USER_SHELL)
+### Trabalho vivo (painel **2026-05-20** — USER_SHELL)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **G03**, **G04** | VAM Cluster A (header passageiro) | Concluído (VAM) | [`screenshot-tweaks-g-matrix.md`](../ux/screenshot-tweaks-g-matrix.md) |
-| **USER-SHELL-A** | Header `userCompact` | Concluído | **#321** |
-| **USER-SHELL-B** | InfoPanel + HintLine | Concluído | **#322** |
-| **USER-SHELL-C** | ActionPanel + slide + stack | Smoke pendente | PR **feat/user-shell-cluster-c** |
-| **G-CLUSTER-B** | VAM Cluster B | Concluído (VAM) | USER-SHELL-B |
-| **G-CLUSTER-C** | VAM Cluster C | Concluído (VAM) | USER-SHELL-C |
-| **G-CLUSTER-D** … **F** | VAM clusters restantes | Por iniciar | Após smoke C |
+| **TW-04** | Espaçamento barra 4 ícones | Por iniciar | Opcional pós-D |
+| **TW-05** | Revisão screenshots | Por iniciar | Frank offline |
+
+### Fechado (clusters D–F)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **G-CLUSTER-D** … **F** | MapStage + TripSummary + F | Concluído | PR **feat/user-shell-clusters-def** |
+| **USER-SHELL-D** … **F** | Código clusters D–F | Concluído | Ver grelha G |
+| **TW-03** | Resumo compacto | Concluído | TripCompletedOverlay |
+
+### Fechado (painel **2026-05-19** — USER_SHELL)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **USER-SHELL-A** … **C** | Shell A–C | Concluído | **#321–#325**; smoke painel oferta OK |
+| **G08-FIX-1**, **G08-TW** | Oferta mapa | Concluído | **#324**, **#325** |
+| **G-CLUSTER-A** … **C** | VAM + impl | Concluído | Ver [`TODOdoDIA.md`](../TODOdoDIA.md) **2026-05-19** |
 
 ### Trabalho vivo (painel **2026-05-15** — motorista / TW)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **E-MARCO-1** | FIX-007/008 + inventário A–E | Concluído | Merge **#319** |
-| **TW-01** … **TW-05** | TWEAKS_UX (densidade, copy, screenshots) | Por iniciar | Mapeados a clusters G (grelha) |
+| **TW-01**, **TW-02** | Painel aceitar compacto | Concluído | **#325** |
+| **TW-03** … **TW-05** | TWEAKS_UX restantes | Por iniciar | Painel **2026-05-20** |
 | **O-UX20-1** | Spec UX 2.0 | Por iniciar | [`DRIVER_UX_2_0.md`](product/DRIVER_UX_2_0.md) |
 | **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Por iniciar | Shell menu já alinhado em VAM Cluster A |
 

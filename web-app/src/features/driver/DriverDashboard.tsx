@@ -51,7 +51,7 @@ import {
   driverTripBadgeShort,
   historyStatusDotColor,
 } from '../../constants/tripStatus'
-import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
+import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 import { buildMockDriverApproachPath } from '../../dev/buildMockApproachPath'
 import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { MOCK_DRIVER_START } from '../../dev/mockPositions'
@@ -67,6 +67,8 @@ import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { StatusHeader } from '../../components/layout/StatusHeader'
 import { HintLine } from '../../components/layout/HintLine'
 import { ActionPanel } from '../../components/layout/ActionPanel'
+import { MapStage } from '../../components/layout/MapStage'
+import { TripCompletedOverlay } from '../../components/layout/TripSummary'
 import { Button } from '../../components/ui/button'
 import {
   Dialog,
@@ -1490,31 +1492,43 @@ export function DriverDashboard() {
             </header>
 
             {driverMapStageLayout && (!offline || driverBottomNav) && (
-              <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
-                <div className="absolute inset-0 z-0 min-h-0 min-w-0">
-                  <MapView
-                    fillContainer
-                    className="!rounded-none border-0 !shadow-none"
-                    driverLocation={mapDotLatLng}
-                    tripPickup={mapStageTripPickup}
-                    tripDropoff={mapStageTripDropoff}
-                    pendingOfferPickups={mapStagePendingOffers}
-                    onPendingOfferPickupClick={activeTripId ? undefined : onPendingOfferPickupClick}
-                    route={driverMapStageRoute}
-                    mapVisualWeight="emphasized"
-                    compactHeight={false}
-                    tallStage={false}
-                    onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
-                  />
-                </div>
-                {driverBottomNav && !activeTripId ? (
-                  <DriverMapAvailabilityMicroToggle
-                    offline={offline}
-                    mapTapGoesOnline={mapTapGoesOnline}
-                    onGoOnline={() => handleDriverAvailabilityChange(true)}
-                    onGoOffline={() => handleDriverAvailabilityChange(false)}
-                  />
-                ) : null}
+              <MapStage
+                testId="driver-map-stage"
+                map={{
+                  driverLocation: mapDotLatLng,
+                  tripPickup: mapStageTripPickup,
+                  tripDropoff: mapStageTripDropoff,
+                  pendingOfferPickups: mapStagePendingOffers,
+                  onPendingOfferPickupClick: activeTripId ? undefined : onPendingOfferPickupClick,
+                  route: driverMapStageRoute,
+                  mapVisualWeight: 'emphasized',
+                  compactHeight: false,
+                  tallStage: false,
+                  onUserMapInteraction: mapTapGoesOnline ? onDriverHomeMapInteraction : undefined,
+                }}
+                floating={
+                  <>
+                    {driverBottomNav && !activeTripId ? (
+                      <DriverMapAvailabilityMicroToggle
+                        offline={offline}
+                        mapTapGoesOnline={mapTapGoesOnline}
+                        onGoOnline={() => handleDriverAvailabilityChange(true)}
+                        onGoOffline={() => handleDriverAvailabilityChange(false)}
+                      />
+                    ) : null}
+                    {driverBottomNav && !activeTripId ? (
+                      <div className="pointer-events-none absolute left-2 top-2 z-[6]">
+                        <span
+                          className="inline-flex items-center rounded-full border border-dashed border-border/80 bg-background/90 px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm"
+                          data-testid="driver-map-destino-chip"
+                        >
+                          Modo Destino – em breve
+                        </span>
+                      </div>
+                    ) : null}
+                  </>
+                }
+              >
                 <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pb-20 pointer-events-none">
                   <div className="pointer-events-auto min-h-0 max-h-[min(28dvh,220px)] shrink-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
                     {geolocationUsedFallback && (
@@ -1802,7 +1816,7 @@ export function DriverDashboard() {
                     />
                   </div>
                 ) : null}
-              </div>
+              </MapStage>
             )}
 
             <div
@@ -2303,31 +2317,16 @@ function ActiveTripSummary({
           {tripPollFootnote ?? fallbackFootnote}
         </p>
       ) : null}
-      {trip?.payment_status === 'failed' ? (
+      {displayStatus === 'completed' && sessionRole === 'driver' ? (
+        <TripCompletedOverlay
+          paymentStatus={trip?.payment_status}
+          onContinue={onDismissCompletedTrip}
+          continueTestId="driver-trip-completed-continue"
+        />
+      ) : trip?.payment_status === 'failed' ? (
         <p className="text-sm text-destructive text-center px-2">
           Pagamento do passageiro recusado. Segue as instruções da plataforma ou do suporte.
         </p>
-      ) : null}
-      {displayStatus === 'completed' && trip?.payment_status && trip.payment_status !== 'failed' ? (
-        <p className="text-sm text-foreground/80 text-center px-2">
-          Pagamento do passageiro: {paymentStatusLabel(trip.payment_status)}
-        </p>
-      ) : null}
-      {displayStatus === 'completed' && trip?.payment_status === 'processing' ? (
-        <p className="text-xs text-foreground/70 text-center px-2 leading-snug">
-          O pagamento pode ficar «a processar» uns instantes — aguarda a sincronização.
-        </p>
-      ) : null}
-      {displayStatus === 'completed' && sessionRole === 'driver' ? (
-        <div className="flex justify-center pt-2">
-          <Button
-            type="button"
-            className="min-h-11 px-6"
-            onClick={() => onDismissCompletedTrip()}
-          >
-            Continuar
-          </Button>
-        </div>
       ) : null}
       {effectiveTrip && !compact ? (
         <TripCard

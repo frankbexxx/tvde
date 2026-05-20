@@ -31,9 +31,9 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 ---
 
-## Painel — 2026-05-19 (**USER_SHELL** — grelha **G01–G27**, Cluster A fechado)
+## Painel — 2026-05-19 (**USER_SHELL** — grelha **G01–G27**, Clusters A–C fechados)
 
-**Marco:** premissas User shell + módulos UI; VAM por cluster com Frank. **Cluster A (cabeçalho)** fechado — build + PR na sessão de código seguinte.
+**Marco:** premissas User shell + módulos UI; VAM por cluster com Frank. **Clusters A, B e C** implementados, smoke telemóvel OK (**2026-05-19**). **G08** completo (hotfix Fechar + painel compacto TW-01/02).
 
 **Grelha completa:** [`docs/ux/screenshot-tweaks-g-matrix.md`](docs/ux/screenshot-tweaks-g-matrix.md).
 
@@ -52,15 +52,57 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 |----|------|--------|-------|
 | **USER-SHELL-A** | `userCompact` em `/passenger` | Concluído | Merge **#321**; smoke OK |
 | **USER-SHELL-B** | InfoPanel + HintLine (Cluster B) | Concluído | Merge **#322** |
-| **USER-SHELL-C** | ActionPanel + slide 50% + BottomActionStack | Smoke pendente | Merge **#323**; hotfix **G08-FIX-1** |
-| **G08-FIX-1** | Fechar painel ≠ recusar oferta | Em curso | `fix/ux-g08-close-dismiss-only` — marcador reaperturável |
+| **USER-SHELL-C** | ActionPanel + slide 50% + BottomActionStack | Concluído | **#323** + smoke OK; **#324** G08-FIX-1; **#325** painel compacto |
+| **G08-FIX-1** | Fechar painel ≠ recusar oferta | Concluído | Merge **#324**; marcador reaperturável |
+| **G08-TW** | Slide no topo + X fechar + sem «Pedido no mapa» | Concluído | Merge **#325**; TW-01, TW-02 |
 | **G-CLUSTER-B** | VAM Cluster B (InfoPanel) | Concluído (VAM) | G05, G07, G09, G11, G15, G16, G20, G23 |
-| **G-CLUSTER-C** | VAM Cluster C (ActionPanel) | Concluído (VAM) | G08 slide + Fechar só UI; G13, G17, G18 stack |
-| **G-CLUSTER-D** | VAM Cluster D (MapStage) | Por iniciar | G10, G14, G21, G22, G25 |
-| **G-CLUSTER-E** | VAM Cluster E (TripSummary) | Por iniciar | G24, G26, G27 |
-| **G-CLUSTER-F** | VAM Cluster F (específicos) | Por iniciar | G01, G02, G06, G12, G19 |
+| **G-CLUSTER-C** | VAM Cluster C (ActionPanel) | Concluído (VAM+impl) | G08, G13, G17, G18 — smoke **2026-05-19** |
+| **G-CLUSTER-D** | VAM Cluster D (MapStage) | Concluído | USER-SHELL-D |
+| **G-CLUSTER-E** | VAM Cluster E (TripSummary) | Concluído | G24–G27 |
+| **G-CLUSTER-F** | VAM Cluster F (específicos) | Concluído | G01 chip; G02 chips; G06; G12/G19 |
+| **USER-SHELL-D** | MapStage | Concluído | Idem G-CLUSTER-D |
+| **USER-SHELL-E** | TripCompletedOverlay | Concluído | Idem G-CLUSTER-E |
+| **USER-SHELL-F** | Ajustes F | Concluído | Idem G-CLUSTER-F |
 
-_TW-01…06 permanecem no painel **2026-05-15**; mapeiam para clusters B–E (ver grelha G)._
+_TW-01 e TW-02 fechados nesta sessão; TW-03…06 → painel **2026-05-20**._
+
+### Fecho sessão — 2026-05-19 (noite)
+
+**Entregue em `main`:** **#321** (USER-SHELL-A) · **#322** (B) · **#323** (C) · **#324** (G08-FIX-1: Fechar só UI) · **#325** (G08 compacto: slide topo, X, sem título).
+
+**Smoke:** Frank telemóvel — painel oferta OK após **#325**.
+
+**Amanhã (2026-05-20):** ver painel abaixo — **Cluster D** (mapa) primeiro; depois **TW-03…05** e clusters E–F. Infra **A2-02-*** se houver janela.
+
+---
+
+## Painel — 2026-05-20 (**USER_SHELL** — Cluster D mapa + TW restantes)
+
+**Marco:** continuar grelha **G01–G27**; carril produto = **MapStage** (Cluster D) após fecho A–C.
+
+**Grelha:** [`docs/ux/screenshot-tweaks-g-matrix.md`](docs/ux/screenshot-tweaks-g-matrix.md).
+
+### Prioridade produto (**G-** / **TW-**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **G-CLUSTER-D** | VAM + MapStage | Concluído | G10, G14, G21, G22, G25 |
+| **USER-SHELL-D** | MapStage driver + passenger | Concluído | `feat/user-shell-clusters-def` |
+| **G-CLUSTER-E** | TripSummary + cartões P/M | Concluído | G24, G26, G27; TW-03 (compact já em FIX-007) |
+| **G-CLUSTER-F** | Chips + padding + nav | Concluído | G01 chip mapa; G06 py-1; G12/G19 já em ActiveTripActions |
+| **TW-03** | Resumo compacto em viagem | Concluído | `ActiveTripSummary` compact + `TripCompletedOverlay` |
+| **TW-04** | Espaçamento acções + barra 4 ícones | Por iniciar | `bottomChrome` |
+| **TW-05** | Revisão geral pós-screenshots (~10 prints) | Por iniciar | Frank offline se possível |
+| **TW-06** | Ícone lista multi-ofertas | N/A | Secundário |
+
+### Infra / ops (se janela)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A2-02-1** | OAuth staging + URIs Google | Em curso | Painel **2026-05-14** |
+| **A2-02-2** | Smokes assertivos staging | Por iniciar | Depende A2-02-1 |
+| **O-UX20-1** | Sessão desenho UX 2.0 | Por iniciar | Após TW prioritários |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Por iniciar | Backlog shell |
 
 ---
 
@@ -82,8 +124,8 @@ _TW-01…06 permanecem no painel **2026-05-15**; mapeiam para clusters B–E (ve
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TW-01** | Painel aceitar: slide no topo da card (não tapado pela barra) | Concluído | PR **fix/ux-g08-offer-panel-compact** |
-| **TW-02** | Sem «Pedido no mapa»; Fechar → ícone X no canto | Concluído | Idem TW-01 / G08 |
+| **TW-01** | Painel aceitar: slide no topo da card (não tapado pela barra) | Concluído | Merge **#325**; smoke **2026-05-19** |
+| **TW-02** | Sem «Pedido no mapa»; Fechar → ícone X no canto | Concluído | Idem **#325** |
 | **TW-03** | Resumo compacto em viagem (altura, tipo, contraste) | Por iniciar | `ActiveTripSummary` `compact` |
 | **TW-04** | Espaçamento acções viagem + barra 4 ícones | Por iniciar | `bottomChrome` FIX-007 |
 | **TW-05** | Revisão geral pós-screenshots (~10 prints) | Por iniciar | Frank analisa offline; próxima sessão |

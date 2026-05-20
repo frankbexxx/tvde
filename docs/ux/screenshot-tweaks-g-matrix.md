@@ -16,9 +16,9 @@
 | **A** | Cabeçalho + shell topo | G03, G04 (+ menu 4 ícones, faixa dicas) |
 | **B** | Caixas de estado / mensagens | G05, G07, G09, G11, G15, G16, G20, G23 — **VAM fechado** |
 | **C** | Oferta e acções de viagem | G08, G13, G17, G18 — **VAM fechado** |
-| **D** | Mapa (palco + pins) | G10, G14, G21, G22, G25 |
-| **E** | Resumo / conclusão viagem | G24, G26, G27 |
-| **F** | Específicos | G01, G02, G06, G12, G19 |
+| **D** | Mapa (palco + pins) | G10, G14, G21, G22, G25 — **VAM fechado** |
+| **E** | Resumo / conclusão viagem | G24, G26, G27 — **VAM fechado** |
+| **F** | Específicos | G01, G02, G06, G12, G19 — **VAM fechado** |
 
 ---
 
@@ -63,37 +63,71 @@
 
 ---
 
-## G01–G27 — mapa completo (VAM pendente salvo clusters A–C)
+## Cluster D — VAM fechado (USER-SHELL-D)
+
+| ID | Decisão Frank | Implementação |
+|----|---------------|---------------|
+| **G10** | **ACERTAR** — palco cheio motorista; overlay compacto | [`MapStage.tsx`](../../web-app/src/components/layout/MapStage.tsx), [`DriverDashboard.tsx`](../../web-app/src/features/driver/DriverDashboard.tsx) |
+| **G21** | **ACERTAR** — pins oferta + recolha/destino | `MapView` `pendingOfferPickups` / `tripPickup` / `tripDropoff` |
+| **G14** | **MUDAR** — passageiro em viagem/procura: mapa palco | `MapStage` + `min-h` em `in_trip` / `searching` |
+| **G22** | **MUDAR** — mesma métrica full-bleed | `MapStage` `fillContainer` |
+| **G25** | **MUDAR** — concluída: mapa subdued/placeholder + cartão | `showMap` false + `mapPlaceholder` quando `completed` |
+
+---
+
+## Cluster E — VAM fechado (USER-SHELL-E)
+
+| ID | Decisão | Implementação |
+|----|---------|---------------|
+| **G24** | **ACERTAR** — cartão viagem em curso unificado | [`PassengerStatusCard.tsx`](../../web-app/src/features/passenger/PassengerStatusCard.tsx) `InfoPanel` |
+| **G26** | **ACERTAR** — concluída + pagamento | `TRIP_COMPLETED` + meta pagamento |
+| **G27** | **ACERTAR** — overlay Concluída + Continuar | [`TripSummary.tsx`](../../web-app/src/components/layout/TripSummary.tsx) + `ActiveTripSummary` |
+| **TW-03** | Resumo compacto motorista | `ActiveTripSummary` `compact` (FIX-007) |
+
+---
+
+## Cluster F — VAM fechado (USER-SHELL-F)
+
+| ID | Decisão | Implementação |
+|----|---------|---------------|
+| **G01** | **MUDAR** — chip «Modo Destino – em breve» visível no palco | `driver-map-destino-chip` em overlay mapa |
+| **G02** | **ACERTAR** — Estatuto · Disponível + Breve | [`DriverShellTopChips.tsx`](../../web-app/src/features/driver/DriverShellTopChips.tsx) |
+| **G06** | **MUDAR** — menos espaço antes Cancelar (P) | `BottomActionStack` padding reduzido |
+| **G12**, **G19** | **ACERTAR** — Waze/Google recolha e destino | [`ActiveTripActions.tsx`](../../web-app/src/features/driver/ActiveTripActions.tsx) |
+
+---
+
+## G01–G27 — mapa completo
 
 | ID | Ref. | Papel | Resumo | Cluster | VAM |
 |----|------|-------|--------|---------|-----|
-| G01 | IMG01-M-01 | M | Topo mapa «Modo Destino – em breve» | F | Pendente |
-| G02 | IMG01-M-02 | M | Estatuto · Disponível + Breve | F | Pendente |
+| G01 | IMG01-M-01 | M | Topo mapa «Modo Destino – em breve» | F | **Fechado** |
+| G02 | IMG01-M-02 | M | Estatuto · Disponível + Breve | F | **Fechado** |
 | G03 | IMG01-P-03 | P | Header Perfil/Definições | A | **Fechado** |
 | G04 | IMG01-P-04 | P | PASSAGEIRO + Conta + hora | A | **Fechado** |
 | G05 | IMG02-P-01 | P | A procurar motorista… | B | **Fechado** |
-| G06 | IMG02-P-02 | P | Espaço vazio antes Cancelar | F | Pendente |
+| G06 | IMG02-P-02 | P | Espaço vazio antes Cancelar | F | **Fechado** |
 | G07 | IMG02-H-01 | M | Hint «Toca no marcador» | B | **Fechado** |
 | G08 | IMG03-M-01 | M | Painel aceitar completo | C | **Fechado** |
 | G09 | IMG03-P-02 | P | Sem motoristas + retry | B | **Fechado** |
-| G10 | IMG04-M-05 | M | Mapa palco cheio | D | Pendente |
+| G10 | IMG04-M-05 | M | Mapa palco cheio | D | **Fechado** |
 | G11 | IMG04-M-06 | M | Confirma chegada… | B | **Fechado** |
-| G12 | IMG04-M-07 | M | Recolha Waze/Google | F | Pendente |
+| G12 | IMG04-M-07 | M | Recolha Waze/Google | F | **Fechado** |
 | G13 | IMG04-M-08 | M | Iniciar + Cancelar | C | **Fechado** |
-| G14 | IMG04-P-01 | P | Mapa + pins | D | Pendente |
+| G14 | IMG04-P-01 | P | Mapa + pins | D | **Fechado** |
 | G15 | IMG04-P-02 | P | Pagamento + ~0 m | B | **Fechado** |
 | G16 | IMG04-P-03 | P | Motorista a caminho | B | **Fechado** |
 | G17 | IMG04-P-04 | P | Cancelar | C | **Fechado** |
 | G18 | IMG05-M-04 | M | Terminar viagem | C | **Fechado** |
-| G19 | IMG05-M-05 | M | Destino Waze/Google | F | Pendente |
+| G19 | IMG05-M-05 | M | Destino Waze/Google | F | **Fechado** |
 | G20 | IMG05-M-06 | M | A actualizar estado… | B | **Fechado** |
-| G21 | IMG05-M-07 | M | Pins mapa | D | Pendente |
-| G22 | IMG05-P-01 | P | Mapa | D | Pendente |
+| G21 | IMG05-M-07 | M | Pins mapa | D | **Fechado** |
+| G22 | IMG05-P-01 | P | Mapa | D | **Fechado** |
 | G23 | IMG05-P-02 | P | ~0 m | B | **Fechado** |
-| G24 | IMG05-P-03 | P | Cartão viagem em curso | E | Pendente |
-| G25 | IMG06-P-01 | P | Placeholder mapa concluída | D | Pendente |
-| G26 | IMG06-P-02 | P | Cartão concluída + pagamento | E | Pendente |
-| G27 | IMG06-M-03 | M | Overlay Concluída + Continuar | E | Pendente |
+| G24 | IMG05-P-03 | P | Cartão viagem em curso | E | **Fechado** |
+| G25 | IMG06-P-01 | P | Placeholder mapa concluída | D | **Fechado** |
+| G26 | IMG06-P-02 | P | Cartão concluída + pagamento | E | **Fechado** |
+| G27 | IMG06-M-03 | M | Overlay Concluída + Continuar | E | **Fechado** |
 
 **Meta doc:** IMG06 — completar secção img 6 em notas Frank (commit com trabalho UX).
 
