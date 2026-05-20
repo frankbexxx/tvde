@@ -97,6 +97,7 @@ import {
   haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
+import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
@@ -753,6 +754,12 @@ export function DriverDashboard() {
             lng: availableForFallback.destination_lng,
           },
         }
+        openDriverExternalNav(
+          availableForFallback.origin_lat,
+          availableForFallback.origin_lng,
+          'pickup'
+        )
+        sonnerToast.message(`A abrir ${driverNavAppLabel()} (recolha)`, { duration: 3000 })
       }
       // Fase 1 mock: MOCK_DRIVER_START → pickup (só DEV + mock, após ACEITAR).
       if (
@@ -900,8 +907,8 @@ export function DriverDashboard() {
         <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
       </div>
     ) : activeTripId != null ? (
-      <div className="w-full border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="px-4 pt-2">
+      <div className="w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
+        <div className="px-4 pt-2 pb-1">
           <ActiveTripActions
             tripId={activeTripId}
             token={token!}

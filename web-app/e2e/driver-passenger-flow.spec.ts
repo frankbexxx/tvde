@@ -488,7 +488,10 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await passengerCtx.close()
   })
 
-  test('preferência Google Maps persiste e vira link primário', async ({ browser, request }) => {
+  test('preferência Google Maps persiste e abre ao aceitar (sem links no ecrã)', async ({
+    browser,
+    request,
+  }) => {
     const { tripId, tokens } = await seedAndCreateTrip(request)
 
     const driverCtx = await createAuthenticatedContext(browser, tokens, 'driver')
@@ -513,15 +516,15 @@ test.describe('Driver + passenger (proximity gate)', () => {
     // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
     await driverPage.getByTestId('driver-close-menu').click()
     await leaveDriverHomeStep1IfPresent(driverPage)
+    const popupPromise = driverPage.waitForEvent('popup')
     await acceptDriverTripFromMap(driverPage, tripId)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
-
-    const primaryPickupNav = driverPage.getByTestId('driver-nav-pickup-primary')
-    await expect(primaryPickupNav).toBeVisible({ timeout: sec(30) })
-    const href = await primaryPickupNav.getAttribute('href')
-    expect(href ?? '').toContain('google.com/maps')
+    await expect(driverPage.getByTestId('driver-nav-pickup-primary')).toHaveCount(0)
+    const popup = await popupPromise
+    expect(popup.url()).toContain('google.com/maps')
+    await popup.close().catch(() => undefined)
 
     await driverCtx.close()
   })

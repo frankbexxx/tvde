@@ -93,7 +93,7 @@
 | **G01** | **MUDAR** — chip «Modo Destino – em breve» visível no palco | `driver-map-destino-chip` em overlay mapa |
 | **G02** | **ACERTAR** — Estatuto · Disponível + Breve | [`DriverShellTopChips.tsx`](../../web-app/src/features/driver/DriverShellTopChips.tsx) |
 | **G06** | **MUDAR** — menos espaço antes Cancelar (P) | `BottomActionStack` padding reduzido |
-| **G12**, **G19** | **ACERTAR** — Waze/Google recolha e destino | [`ActiveTripActions.tsx`](../../web-app/src/features/driver/ActiveTripActions.tsx) |
+| **G12**, **G19** | **MUDAR** — sem botões no ecrã; abre app preferida (aceitar→recolha, iniciar→destino); pref em Definições | [`openDriverExternalNav.ts`](../../web-app/src/utils/openDriverExternalNav.ts), [`DriverDashboard.tsx`](../../web-app/src/features/driver/DriverDashboard.tsx) |
 
 ---
 
@@ -112,14 +112,14 @@
 | G09 | IMG03-P-02 | P | Sem motoristas + retry | B | **Fechado** |
 | G10 | IMG04-M-05 | M | Mapa palco cheio | D | **Fechado** |
 | G11 | IMG04-M-06 | M | Confirma chegada… | B | **Fechado** |
-| G12 | IMG04-M-07 | M | Recolha Waze/Google | F | **Fechado** |
+| G12 | IMG04-M-07 | M | Navegação recolha (app externa, sem UI) | F | **MUDAR** TW-04 |
 | G13 | IMG04-M-08 | M | Iniciar + Cancelar | C | **Fechado** |
 | G14 | IMG04-P-01 | P | Mapa + pins | D | **Fechado** |
 | G15 | IMG04-P-02 | P | Pagamento + ~0 m | B | **Fechado** |
 | G16 | IMG04-P-03 | P | Motorista a caminho | B | **Fechado** |
 | G17 | IMG04-P-04 | P | Cancelar | C | **Fechado** |
 | G18 | IMG05-M-04 | M | Terminar viagem | C | **Fechado** |
-| G19 | IMG05-M-05 | M | Destino Waze/Google | F | **Fechado** |
+| G19 | IMG05-M-05 | M | Navegação destino (app externa) | F | **MUDAR** TW-04 |
 | G20 | IMG05-M-06 | M | A actualizar estado… | B | **Fechado** |
 | G21 | IMG05-M-07 | M | Pins mapa | D | **Fechado** |
 | G22 | IMG05-P-01 | P | Mapa | D | **Fechado** |
@@ -139,6 +139,6 @@
 |----|-------------|
 | TW-01, TW-02 | G08 — cluster C |
 | TW-03 | G24, G27 — cluster E |
-| TW-04 | G13 + shell — cluster C |
+| TW-04 | G12/G19 (nav externa) + G13 (Iniciar\|Cancelar row) + `bottomChrome` opaco |
 | TW-05 | Revisão global pós-screenshots |
 | TW-06 | G07 — cluster B |

@@ -17,91 +17,19 @@ import {
   driverPerformStartFromArriving,
 } from './driverTripActions'
 import { canDriverStartTripNearPickup } from './driverPickupGate'
-import { googleMapsDirectionsUrl, wazeNavigateUrl } from '../../utils/externalNavigation'
-import { getDriverNavApp, type DriverNavApp } from '../../services/driverNavPreference'
+import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import {
   DRIVER_TRIP_CANCEL_PRESETS,
   TRIP_CANCEL_SELECT_OTHER,
   tripCancelReasonForApi,
 } from '../../constants/tripCancelReasons'
 
-function DriverExternalNavLinks({
-  phase,
-  lat,
-  lng,
-  navApp,
-  confirmExternalNav,
-}: {
-  phase: 'pickup' | 'destination'
-  lat: number
-  lng: number
-  navApp: DriverNavApp
-  confirmExternalNav: (mapName: string) => (e: React.MouseEvent<HTMLAnchorElement>) => void
-}) {
-  const wazeHref = wazeNavigateUrl(lat, lng)
-  const googleHref = googleMapsDirectionsUrl(lat, lng)
-  const preferWaze = navApp === 'waze'
-  const primaryHref = preferWaze ? wazeHref : googleHref
-  const secondaryHref = preferWaze ? googleHref : wazeHref
-  const primaryMapName = preferWaze ? 'Waze' : 'Google Maps'
-  const secondaryMapName = preferWaze ? 'Google Maps' : 'Waze'
-  const primaryLabel =
-    phase === 'pickup'
-      ? preferWaze
-        ? 'Recolha — Waze'
-        : 'Recolha — Google Maps'
-      : preferWaze
-        ? 'Destino — Waze'
-        : 'Destino — Google Maps'
-  const secondaryLabel =
-    phase === 'pickup'
-      ? preferWaze
-        ? 'Recolha — Google Maps'
-        : 'Recolha — Waze'
-      : preferWaze
-        ? 'Destino — Google Maps'
-        : 'Destino — Waze'
-  const primaryTestId =
-    phase === 'pickup' ? 'driver-nav-pickup-primary' : 'driver-nav-destination-primary'
-  const secondaryTestId =
-    phase === 'pickup' ? 'driver-nav-pickup-secondary' : 'driver-nav-destination-secondary'
-  const linkClassPrimary =
-    'min-h-11 flex flex-1 items-center justify-center rounded-xl border-2 border-info/80 bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/15 touch-manipulation'
-  const linkClassSecondary =
-    'min-h-11 flex flex-1 items-center justify-center rounded-xl border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation'
-
-  return (
-    <div className="flex flex-col gap-2 sm:flex-row">
-      <a
-        href={primaryHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        data-testid={primaryTestId}
-        onClick={confirmExternalNav(primaryMapName)}
-        className={linkClassPrimary}
-      >
-        {primaryLabel}
-      </a>
-      <a
-        href={secondaryHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        data-testid={secondaryTestId}
-        onClick={confirmExternalNav(secondaryMapName)}
-        className={linkClassSecondary}
-      >
-        {secondaryLabel}
-      </a>
-    </div>
-  )
-}
-
 export interface ActiveTripActionsProps {
   tripId: string
   token: string
   /**
    * Último detalhe conhecido (ex.: logo após aceitar) enquanto o poll deste bloco ainda não devolveu `trip`.
-   * O `ActiveTripSummary` já usa o mesmo fallback; sem isto, links Waze/Maps e o gate de distância ficam invisíveis.
+   * O `ActiveTripSummary` já usa o mesmo fallback; sem isto o gate de distância fica invisível entre polls.
    */
   tripDetailFallback?: TripDetailResponse | null
   /** Posição actual do motorista (real ou simulada); necessária para o gate de «Iniciar viagem». */
@@ -161,20 +89,12 @@ export function ActiveTripActions({
     driverLocation,
     pickupCoords
   )
-  const navApp = getDriverNavApp()
-
   useEffect(() => {
     if (!statusOverride || !trip?.status) return
     if (tripStateRank(trip.status) >= tripStateRank(statusOverride)) {
       onClearStatusOverride()
     }
   }, [trip?.status, statusOverride, onClearStatusOverride])
-
-  const navPickup = pickupCoords
-  const navDestination =
-    coordsSource != null
-      ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
-      : null
 
   const [loading, setLoading] = useState(false)
   const [loadingLong, setLoadingLong] = useState(false)
@@ -203,23 +123,6 @@ export function ActiveTripActions({
           ? 'Sem novidades há instantes — a última informação mantém-se válida.'
           : null
       : null
-
-  /**
-   * Guarda simples: quando o motorista toca num link para Waze ou Google Maps,
-   * pergunta antes de sair da app. Evita saídas acidentais durante demo/viagem
-   * activa. Se o motorista cancelar, intercepta `preventDefault` para impedir
-   * a abertura do separador.
-   *
-   * Nota: este é um `window.confirm` nativo. Propositadamente não adicionamos
-   * "don't ask again" — é baixo-frequência (1-2x por viagem) e a segurança
-   * vale o click extra.
-   */
-  const confirmExternalNav = (mapName: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
-    const ok = window.confirm(
-      `Abrir ${mapName} num separador novo?\n\nA app TVDE fica aberta — volta ao separador quando estiveres pronto.`
-    )
-    if (!ok) e.preventDefault()
-  }
 
   useEffect(() => {
     if (!loading) {
@@ -254,7 +157,17 @@ export function ActiveTripActions({
       onTripActionSuccess(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
-      if (res.status === 'ongoing') sonnerToast.success('Viagem iniciada')
+      if (res.status === 'ongoing') {
+        sonnerToast.success('Viagem iniciada')
+        const dest =
+          coordsSource != null
+            ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
+            : null
+        if (dest) {
+          openDriverExternalNav(dest.lat, dest.lng, 'destination')
+          sonnerToast.message(`A abrir ${driverNavAppLabel()} (destino)`, { duration: 3000 })
+        }
+      }
       if (res.status === 'completed') {
         sonnerToast.success('Viagem concluída')
         onTripCompleted?.()
@@ -348,30 +261,11 @@ export function ActiveTripActions({
           ) : null}
         </div>
       ) : null}
-      {navPickup &&
-      (displayStatus === 'assigned' ||
-        displayStatus === 'accepted' ||
-        displayStatus === 'arriving') ? (
-        <DriverExternalNavLinks
-          phase="pickup"
-          lat={navPickup.lat}
-          lng={navPickup.lng}
-          navApp={navApp}
-          confirmExternalNav={confirmExternalNav}
-        />
-      ) : null}
-      {navDestination && displayStatus === 'ongoing' ? (
-        <DriverExternalNavLinks
-          phase="destination"
-          lat={navDestination.lat}
-          lng={navDestination.lng}
-          navApp={navApp}
-          confirmExternalNav={confirmExternalNav}
-        />
-      ) : null}
-      <BottomActionStack testId="driver-trip-action-stack">
+      <BottomActionStack testId="driver-trip-action-stack" direction="row">
         <PrimaryActionButton
           variant="confirm"
+          size="compact"
+          className="flex-1 min-w-0"
           onClick={() => {
             void run(buttonConfig.action, buttonConfig.label)
           }}
@@ -386,9 +280,9 @@ export function ActiveTripActions({
             data-testid="driver-trip-cancel-open"
             onClick={() => setCancelPanelOpen(true)}
             disabled={loading}
-            className="w-full min-h-[44px] rounded-full border-2 border-destructive/70 bg-transparent text-destructive text-base font-semibold py-3 hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 disabled:border-border disabled:bg-muted/50 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors touch-manipulation"
+            className="flex-1 min-w-0 min-h-10 h-10 rounded-full border-2 border-destructive/70 bg-transparent text-destructive text-sm font-semibold hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 disabled:border-border disabled:bg-muted/50 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors touch-manipulation"
           >
-            Cancelar viagem
+            Cancelar
           </button>
         ) : null}
       </BottomActionStack>
