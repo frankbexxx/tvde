@@ -215,7 +215,7 @@ export function MapView({
       return
     }
 
-    if (!hasActiveTripMarkers && pendingOfferPickups?.length) {
+    if (!hasActiveTripMarkers && pendingOfferPickupsKey) {
       return
     }
 

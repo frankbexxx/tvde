@@ -12,6 +12,9 @@ interface PrimaryActionButtonProps {
    * `primary` — CTA de marca (gradiente primário → accent).
    */
   variant?: 'primary' | 'danger' | 'confirm' | 'available'
+  /** `compact` — altura alinhada ao slide aceitar (~40px, TW-04). */
+  size?: 'default' | 'compact'
+  className?: string
 }
 
 /**
@@ -24,9 +27,14 @@ export function PrimaryActionButton({
   disabled = false,
   loading = false,
   variant = 'primary',
+  size = 'default',
+  className = '',
 }: PrimaryActionButtonProps) {
-  const base =
-    'w-full min-h-[52px] min-w-[44px] rounded-full font-bold text-lg shadow-floating hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100 touch-manipulation'
+  const sizeClass =
+    size === 'compact'
+      ? 'min-h-10 h-10 min-w-[44px] text-base font-semibold shadow-md'
+      : 'min-h-[52px] min-w-[44px] text-lg font-bold shadow-floating'
+  const base = `w-full rounded-full hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100 touch-manipulation ${sizeClass}`
   const styles =
     variant === 'danger'
       ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
@@ -50,12 +58,12 @@ export function PrimaryActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled || loading}
-      className={`${base} ${styles} ${loading ? 'opacity-80' : ''}`}
+      className={`${base} ${styles} ${loading ? 'opacity-80' : ''} ${className}`.trim()}
     >
       {loading ? (
         <span className="inline-flex items-center justify-center gap-2">
           <span
-            className={`h-5 w-5 animate-spin rounded-full border-2 border-t-transparent ${spinnerRing}`}
+            className={`${size === 'compact' ? 'h-4 w-4' : 'h-5 w-5'} animate-spin rounded-full border-2 border-t-transparent ${spinnerRing}`}
             aria-hidden
           />
           A processar...

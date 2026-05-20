@@ -97,6 +97,7 @@ import {
   haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
+import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
@@ -753,6 +754,8 @@ export function DriverDashboard() {
             lng: availableForFallback.destination_lng,
           },
         }
+        openDriverExternalNav(availableForFallback.origin_lat, availableForFallback.origin_lng)
+        sonnerToast.message(`A abrir ${driverNavAppLabel()} (recolha)`, { duration: 3000 })
       }
       // Fase 1 mock: MOCK_DRIVER_START → pickup (só DEV + mock, após ACEITAR).
       if (
@@ -900,8 +903,8 @@ export function DriverDashboard() {
         <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
       </div>
     ) : activeTripId != null ? (
-      <div className="w-full border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="px-4 pt-2">
+      <div className="w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
+        <div className="px-4 pt-2 pb-1">
           <ActiveTripActions
             tripId={activeTripId}
             token={token!}
@@ -1687,12 +1690,12 @@ export function DriverDashboard() {
                     <div
                       id="driver-main-scroll"
                       className={`pointer-events-auto mt-auto min-h-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)] ${selectedAvailableTrip
-                          ? 'max-h-[min(42dvh,380px)]'
-                          : hasAvailableTrips
-                            ? 'max-h-[min(20dvh,160px)] shrink-0'
-                            : pollEnabled && availableLoading && available == null
-                              ? 'max-h-[min(36dvh,300px)]'
-                              : 'max-h-[min(28dvh,220px)] shrink-0'
+                        ? 'max-h-[min(42dvh,380px)]'
+                        : hasAvailableTrips
+                          ? 'max-h-[min(20dvh,160px)] shrink-0'
+                          : pollEnabled && availableLoading && available == null
+                            ? 'max-h-[min(36dvh,300px)]'
+                            : 'max-h-[min(28dvh,220px)] shrink-0'
                         }`}
                     >
                       {selectedAvailableTrip ? (
@@ -1733,7 +1736,7 @@ export function DriverDashboard() {
                             }
                             loading={actionLoading === selectedAvailableTrip.trip_id}
                           />
-                          </ActionPanel>
+                        </ActionPanel>
                       ) : hasAvailableTrips ? (
                         <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-2 text-center space-y-1">
                           <p className="text-xs font-medium text-foreground/90">

@@ -3,9 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import type { TripDetailResponse } from '../../api/trips'
 import { ActiveTripActions } from './ActiveTripActions'
 import * as driverTripActions from './driverTripActions'
+import * as openDriverNav from '../../utils/openDriverExternalNav'
 
 vi.mock('sonner', () => ({
-  toast: { success: vi.fn() },
+  toast: { success: vi.fn(), message: vi.fn() },
 }))
 
 const pollingCtx = vi.hoisted(() => ({ trip: null as TripDetailResponse | null }))
@@ -19,6 +20,11 @@ vi.mock('../../hooks/usePolling', () => ({
     lastSuccessAt: null,
     pollFault: false,
   }),
+}))
+
+vi.mock('../../utils/openDriverExternalNav', () => ({
+  openDriverExternalNav: vi.fn(() => true),
+  driverNavAppLabel: vi.fn(() => 'Waze'),
 }))
 
 vi.mock('./driverTripActions', () => ({
@@ -121,17 +127,22 @@ describe('ActiveTripActions (RTL)', () => {
     expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
   })
 
-  it('poll sem trip ainda: com tripDetailFallback mostra links de navegação (preferência Waze por omissão)', () => {
+  it('TW-04: sem links Waze/Google no ecrã (fallback accepted)', () => {
     pollingCtx.trip = null
     const fb = minimalTrip('accepted')
     renderActions(DRIVER_NEAR_PICKUP_0, { tripDetailFallback: fb })
-    const primary = screen.getByTestId('driver-nav-pickup-primary')
-    expect(primary).toHaveAttribute('href', expect.stringContaining('waze.com'))
-    expect(primary.getAttribute('href')).toContain(encodeURIComponent(`${fb.origin_lat},${fb.origin_lng}`))
-    expect(screen.getByTestId('driver-nav-pickup-secondary')).toHaveAttribute(
-      'href',
-      expect.stringContaining('google.com/maps')
-    )
+    expect(screen.queryByTestId('driver-nav-pickup-primary')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('driver-nav-destination-primary')).not.toBeInTheDocument()
+    expect(screen.getByTestId('driver-trip-action-stack')).toBeInTheDocument()
+  })
+
+  it('TW-04: ao iniciar viagem abre navegação para destino', async () => {
+    pollingCtx.trip = minimalTrip('accepted')
+    renderActions(DRIVER_NEAR_PICKUP_0)
+    fireEvent.click(screen.getByRole('button', { name: /iniciar viagem/i }))
+    await waitFor(() => {
+      expect(openDriverNav.openDriverExternalNav).toHaveBeenCalledWith(1, 1)
+    })
   })
 
   it('poll sem trip e sem fallback: mostra estado de sincronização e não expõe CTA de iniciar', () => {
