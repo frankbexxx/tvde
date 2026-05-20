@@ -12,7 +12,7 @@ export function driverNavAppLabel(): string {
  * Abre a app de navegação preferida (Definições) num separador novo.
  * TW-04 / G12–G19: sem botões Waze/Maps no ecrã de viagem.
  */
-export function openDriverExternalNav(lat: number, lng: number, _phase?: DriverNavPhase): boolean {
+export function openDriverExternalNav(lat: number, lng: number): boolean {
   const app = getDriverNavApp()
   const url = app === 'waze' ? wazeNavigateUrl(lat, lng) : googleMapsDirectionsUrl(lat, lng)
   const opened = window.open(url, '_blank', 'noopener,noreferrer')

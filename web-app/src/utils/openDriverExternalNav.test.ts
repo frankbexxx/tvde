@@ -12,7 +12,7 @@ describe('openDriverExternalNav', () => {
 
   it('abre URL Waze com coordenadas', () => {
     const open = vi.mocked(window.open)
-    expect(openDriverExternalNav(38.7, -9.1, 'pickup')).toBe(true)
+    expect(openDriverExternalNav(38.7, -9.1)).toBe(true)
     expect(open).toHaveBeenCalledWith(
       expect.stringContaining('waze.com'),
       '_blank',

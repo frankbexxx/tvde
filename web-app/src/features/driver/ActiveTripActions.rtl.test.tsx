@@ -141,7 +141,7 @@ describe('ActiveTripActions (RTL)', () => {
     renderActions(DRIVER_NEAR_PICKUP_0)
     fireEvent.click(screen.getByRole('button', { name: /iniciar viagem/i }))
     await waitFor(() => {
-      expect(openDriverNav.openDriverExternalNav).toHaveBeenCalledWith(1, 1, 'destination')
+      expect(openDriverNav.openDriverExternalNav).toHaveBeenCalledWith(1, 1)
     })
   })
 

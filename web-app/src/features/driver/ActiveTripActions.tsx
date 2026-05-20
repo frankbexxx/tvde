@@ -164,7 +164,7 @@ export function ActiveTripActions({
             ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
             : null
         if (dest) {
-          openDriverExternalNav(dest.lat, dest.lng, 'destination')
+          openDriverExternalNav(dest.lat, dest.lng)
           sonnerToast.message(`A abrir ${driverNavAppLabel()} (destino)`, { duration: 3000 })
         }
       }
