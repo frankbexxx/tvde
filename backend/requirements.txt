@@ -12,7 +12,9 @@ python-dotenv
 # IANA time zones for zoneinfo (Windows / minimal Python images).
 tzdata
 
-PyJWT
+# PyJWT — PYSEC-2025-183 / CVE-2025-45768: aviso disputado (comprimento da chave HS256 é da app).
+# pip-audit ignora em CI até existir fix no PyPI; JWT_SECRET_KEY >= 32 chars em prod/CI.
+PyJWT>=2.12.0
 
 bcrypt>=4.0.0
 
