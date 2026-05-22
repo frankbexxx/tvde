@@ -55,10 +55,12 @@ function SearchingDriverPhase({
   tripCreatedAtIso,
   onRetrySearch,
   retrySearchPending,
+  compact = false,
 }: {
   tripCreatedAtIso: string
   onRetrySearch?: () => void
   retrySearchPending?: boolean
+  compact?: boolean
 }) {
   const [nowMs, setNowMs] = useState<number | null>(null)
   useEffect(() => {
@@ -77,6 +79,7 @@ function SearchingDriverPhase({
 
   return (
     <InfoPanel
+      compact={compact}
       tone={showFallback ? 'empty' : 'waiting'}
       centered
       title={
@@ -115,6 +118,8 @@ export interface PassengerStatusCardProps {
   trackingHint?: string | null
   /** Poll / sincronização (só falhas ou stall — não «A actualizar…» em cada poll). */
   pollHint?: string | null
+  /** Caixa sobre mapa — texto e cartão mais compactos. */
+  compact?: boolean
 }
 
 function PassengerStatusCardInner({
@@ -125,6 +130,7 @@ function PassengerStatusCardInner({
   retrySearchPending = false,
   trackingHint = null,
   pollHint = null,
+  compact = false,
 }: PassengerStatusCardProps) {
   if (isSubmittingTrip) {
     return (
@@ -150,6 +156,7 @@ function PassengerStatusCardInner({
           tripCreatedAtIso={activeTrip.created_at}
           onRetrySearch={onRetrySearch}
           retrySearchPending={retrySearchPending}
+          compact={compact}
         />
       )
 
@@ -158,22 +165,24 @@ function PassengerStatusCardInner({
       if (isAssignedOnly) {
         return (
           <InfoPanel
+            compact={compact}
             tone="primary"
             title="Motorista encontrado"
             subtitle="A obter localização — o mapa aparece em breve."
             meta={metaForTrip.length > 0 ? metaForTrip : undefined}
             testId="passenger-info-panel-assigned"
-            footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+            footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
           />
         )
       }
       return (
         <InfoPanel
+          compact={compact}
           tone="success"
           title="Motorista a caminho"
           meta={metaForTrip.length > 0 ? metaForTrip : undefined}
           testId="passenger-info-panel-en-route"
-          footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
         />
       )
     }
@@ -181,23 +190,25 @@ function PassengerStatusCardInner({
     case 'DRIVER_ARRIVING':
       return (
         <InfoPanel
+          compact={compact}
           tone="success"
           title={passengerTripStatusLabel('arriving')}
-          subtitle="O motorista está próximo do ponto de recolha."
+          subtitle={compact ? undefined : 'O motorista está próximo do ponto de recolha.'}
           meta={metaForTrip.length > 0 ? metaForTrip : undefined}
           testId="passenger-info-panel-arriving"
-          footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
         />
       )
 
     case 'TRIP_ONGOING':
       return (
         <InfoPanel
+          compact={compact}
           tone="secondary"
           title="Viagem em curso"
           meta={metaForTrip.length > 0 ? metaForTrip : undefined}
           testId="passenger-info-panel-ongoing"
-          footer={tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
         />
       )
 
@@ -205,11 +216,12 @@ function PassengerStatusCardInner({
       const payDone = paymentStatusLabel(activeTrip.payment_status)
       return (
         <InfoPanel
+          compact={compact}
           tone="neutral"
           title="Viagem concluída"
           meta={payDone ? [`Pagamento: ${payDone}`] : undefined}
           testId="passenger-info-panel-completed"
-          footer={tripCardFooter(activeTrip, 'Preço final')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, 'Preço final')}
         />
       )
     }

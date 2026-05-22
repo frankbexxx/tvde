@@ -91,8 +91,8 @@ _TW-01 e TW-02 fechados nesta sessão; TW-03…06 → painel **2026-05-20**._
 | **G-CLUSTER-E** | TripSummary + cartões P/M | Concluído | G24, G26, G27; TW-03 (compact já em FIX-007) |
 | **G-CLUSTER-F** | Chips + padding + nav | Concluído | G01 chip mapa; G06 py-1; G12/G19 já em ActiveTripActions |
 | **TW-03** | Resumo compacto em viagem | Concluído | `ActiveTripSummary` compact + `TripCompletedOverlay` |
-| **TW-04** | Acções viagem: nav externa + CTAs row + chrome opaco | Smoke pendente | PR **#327**; smoke pós-merge |
-| **TW-05** | Revisão geral pós-screenshots (~10 prints) | Por iniciar | Frank offline se possível |
+| **TW-04** | Acções viagem: nav externa + CTAs row + chrome opaco | Concluído | Smoke dia 22 OK; merge **#327** |
+| **TW-05** | InfoBox + mapa sempre (smoke dia 22) | Em curso | [`info-box-template.md`](docs/ux/info-box-template.md) |
 | **TW-06** | Ícone lista multi-ofertas | N/A | Secundário |
 
 ### Infra / ops (se janela)
@@ -127,7 +127,7 @@ _TW-01 e TW-02 fechados nesta sessão; TW-03…06 → painel **2026-05-20**._
 | **TW-01** | Painel aceitar: slide no topo da card (não tapado pela barra) | Concluído | Merge **#325**; smoke **2026-05-19** |
 | **TW-02** | Sem «Pedido no mapa»; Fechar → ícone X no canto | Concluído | Idem **#325** |
 | **TW-03** | Resumo compacto em viagem (altura, tipo, contraste) | Por iniciar | `ActiveTripSummary` `compact` |
-| **TW-04** | Acções viagem: nav externa + CTAs row + chrome opaco | Smoke pendente | PR **#327** |
+| **TW-04** | Acções viagem: nav externa + CTAs row + chrome opaco | Concluído | Smoke dia 22 OK |
 | **TW-05** | Revisão geral pós-screenshots (~10 prints) | Por iniciar | Frank analisa offline; próxima sessão |
 | **TW-06** | Ícone «lista» multi-ofertas sob mapa | N/A | Secundário; inventário Tabela E |
 

@@ -248,8 +248,8 @@ export function ActiveTripActions({
           {tripPollHint}
         </HintLine>
       ) : null}
-      {nextStepHint ? (
-        <HintLine className="-mt-1 text-foreground/75" testId="driver-next-step-hint">
+      {nextStepHint && displayStatus !== 'ongoing' ? (
+        <HintLine className="-mt-1 text-foreground/75 text-xs" testId="driver-next-step-hint">
           {nextStepHint}
         </HintLine>
       ) : null}
@@ -262,18 +262,31 @@ export function ActiveTripActions({
         </div>
       ) : null}
       <BottomActionStack testId="driver-trip-action-stack" direction="row">
-        <PrimaryActionButton
-          variant="confirm"
-          size="compact"
-          className="flex-1 min-w-0"
-          onClick={() => {
-            void run(buttonConfig.action, buttonConfig.label)
-          }}
-          disabled={loading || (startTripGateActive && !startTripAllowed)}
-          loading={loading}
-        >
-          {buttonConfig.label}
-        </PrimaryActionButton>
+        {displayStatus === 'ongoing' ? (
+          <button
+            type="button"
+            className="flex-1 min-w-0 min-h-10 h-10 rounded-full border-2 border-success/55 bg-success/10 text-success text-sm font-semibold hover:bg-success/15 disabled:opacity-50 touch-manipulation"
+            onClick={() => {
+              void run(buttonConfig.action, buttonConfig.label)
+            }}
+            disabled={loading}
+          >
+            {loading ? 'A processar…' : buttonConfig.label}
+          </button>
+        ) : (
+          <PrimaryActionButton
+            variant="confirm"
+            size="compact"
+            className="flex-1 min-w-0"
+            onClick={() => {
+              void run(buttonConfig.action, buttonConfig.label)
+            }}
+            disabled={loading || (startTripGateActive && !startTripAllowed)}
+            loading={loading}
+          >
+            {buttonConfig.label}
+          </PrimaryActionButton>
+        )}
         {showCancel && !cancelPanelOpen ? (
           <button
             type="button"

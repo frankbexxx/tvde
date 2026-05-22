@@ -97,7 +97,8 @@ import {
   haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
-import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
+import { openDriverExternalNav, driverNavAppLabel, warmDriverNavSessionIfNeeded } from '../../utils/openDriverExternalNav'
+import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
@@ -367,6 +368,7 @@ export function DriverDashboard() {
       setOffline(!checked)
       addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
       setStatus(checked ? 'Disponível' : 'Offline')
+      if (checked) warmDriverNavSessionIfNeeded()
     },
     [addLog, driverDocsGateEnabled, driverDocuments, setStatus]
   )
@@ -854,6 +856,15 @@ export function DriverDashboard() {
     sonnerToast.info('Esta viagem já não está disponível na tua sessão.')
   }, [clearDriverActiveTripUi])
 
+  const driverTripCompletedUi = useMemo(() => {
+    const s = mergeDriverPolledWithOverride(
+      acceptedDetailFallback?.status,
+      driverStatusOverride,
+      'accepted'
+    )
+    return s === 'completed'
+  }, [acceptedDetailFallback?.status, driverStatusOverride])
+
   const driverTripPartialAfterComplete = useCallback(() => {
     setDriverCompleteSoundTick((n) => n + 1)
     tripSimStopRef.current?.()
@@ -904,7 +915,21 @@ export function DriverDashboard() {
       </div>
     ) : activeTripId != null ? (
       <div className="w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
-        <div className="px-4 pt-2 pb-1">
+        <div className="px-4 pt-2 pb-1 space-y-2">
+          {token ? (
+            <ActiveTripSummary
+              compact
+              tripId={activeTripId}
+              token={token}
+              statusOverride={driverStatusOverride}
+              detailFallback={acceptedDetailFallback}
+              sessionRole={sessionRole}
+              onClearStatusOverride={() => setDriverStatusOverride(null)}
+              onTripCancelled={onActiveTripCancelled}
+              onTripNotFound={onActiveTripNotFound}
+              onDismissCompletedTrip={clearDriverActiveTripUi}
+            />
+          ) : null}
           <ActiveTripActions
             tripId={activeTripId}
             token={token!}
@@ -1462,7 +1487,11 @@ export function DriverDashboard() {
               className={`${driverMapStageLayout ? 'shrink-0 px-4 mb-1' : 'mb-4'} flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
             >
               {driverBottomNav ? (
-                <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
+                <DriverShellTopChips
+                  offline={offline}
+                  activeTripId={activeTripId}
+                  tripCompleted={driverTripCompletedUi}
+                />
               ) : null}
               <div className={`flex flex-col items-end gap-1.5 shrink-0 ${driverBottomNav ? '' : 'ml-auto'}`}>
                 {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
@@ -1687,15 +1716,15 @@ export function DriverDashboard() {
                     ) : null}
                   </div>
                   {!offline && !activeTripId ? (
-                    <div
+                    <MapBottomSheet
                       id="driver-main-scroll"
-                      className={`pointer-events-auto mt-auto min-h-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-2 py-2 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md dark:shadow-[0_-8px_30px_rgba(0,0,0,0.45)] ${selectedAvailableTrip
+                      className={`px-2 py-2 ${selectedAvailableTrip
                         ? 'max-h-[min(42dvh,380px)]'
                         : hasAvailableTrips
-                          ? 'max-h-[min(20dvh,160px)] shrink-0'
+                          ? 'max-h-[min(18dvh,140px)]'
                           : pollEnabled && availableLoading && available == null
-                            ? 'max-h-[min(36dvh,300px)]'
-                            : 'max-h-[min(28dvh,220px)] shrink-0'
+                            ? 'max-h-[min(28dvh,200px)]'
+                            : 'max-h-[min(16dvh,120px)]'
                         }`}
                     >
                       {selectedAvailableTrip ? (
@@ -1778,25 +1807,7 @@ export function DriverDashboard() {
                           </p>
                         </div>
                       )}
-                    </div>
-                  ) : activeTripId && token ? (
-                    <div
-                      className="pointer-events-auto mt-auto max-h-[min(24dvh,220px)] min-h-0 shrink-0 overflow-y-auto overscroll-contain rounded-t-2xl border border-border bg-background/95 px-1 py-1 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-md"
-                      data-testid="driver-active-trip-map-summary"
-                    >
-                      <ActiveTripSummary
-                        compact
-                        tripId={activeTripId}
-                        token={token}
-                        statusOverride={driverStatusOverride}
-                        detailFallback={acceptedDetailFallback}
-                        sessionRole={sessionRole}
-                        onClearStatusOverride={() => setDriverStatusOverride(null)}
-                        onTripCancelled={onActiveTripCancelled}
-                        onTripNotFound={onActiveTripNotFound}
-                        onDismissCompletedTrip={clearDriverActiveTripUi}
-                      />
-                    </div>
+                    </MapBottomSheet>
                   ) : null}
                 </div>
                 {driverMapTapOnlineHint ? (
@@ -2300,22 +2311,28 @@ function ActiveTripSummary({
     <div
       className={
         compact
-          ? 'space-y-2 px-3 py-2 rounded-xl border border-border bg-card/95 shadow-sm transition-all duration-200 ease-out'
+          ? 'space-y-1.5 px-3 py-2 rounded-2xl border border-border/80 border-l-4 border-l-info bg-card/95 shadow-sm'
           : 'space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out'
       }
     >
-      <StatusHeader
-        label={config.label}
-        variant={config.variant}
-        emphasis={compact ? 'subdued' : 'primary'}
-        compact={compact}
-      />
-      <p className={`text-center ${compact ? '-mt-1 mb-0' : '-mt-2 mb-1'}`}>
-        <span className="inline-block rounded-full bg-primary text-primary-foreground text-xs font-semibold px-3 py-1">
-          {driverTripBadgeShort(displayStatus)}
-        </span>
-      </p>
-      {(tripPollFootnote || fallbackFootnote) ? (
+      {!compact ? (
+        <StatusHeader
+          label={config.label}
+          variant={config.variant}
+          emphasis="primary"
+          compact={false}
+        />
+      ) : (
+        <p className="text-sm font-semibold text-foreground leading-snug">{config.label}</p>
+      )}
+      {!compact ? (
+        <p className="text-center -mt-2 mb-1">
+          <span className="inline-block rounded-full bg-primary text-primary-foreground text-xs font-semibold px-3 py-1">
+            {driverTripBadgeShort(displayStatus)}
+          </span>
+        </p>
+      ) : null}
+      {!compact && (tripPollFootnote || fallbackFootnote) ? (
         <p className="text-center text-sm text-foreground/75 -mt-3 mb-1 min-h-[1.25rem]" aria-live="polite">
           {tripPollFootnote ?? fallbackFootnote}
         </p>

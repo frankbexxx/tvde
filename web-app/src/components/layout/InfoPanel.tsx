@@ -1,4 +1,10 @@
 import type { ReactNode } from 'react'
+import {
+  INFO_BOX_BODY_SM,
+  INFO_BOX_PASSENGER,
+  INFO_BOX_TITLE_LG,
+  INFO_BOX_TITLE_SM,
+} from './infoBoxTemplate'
 
 /** Tom visual do painel de estado (alinhado a StatusHeader / viagem). */
 export type InfoPanelTone =
@@ -41,6 +47,8 @@ export interface InfoPanelProps {
   footer?: ReactNode
   /** Centrar título e texto (ex.: à procura de motorista). */
   centered?: boolean
+  /** Passageiro em mapa — caixa mais baixa e compacta (dia 22). */
+  compact?: boolean
   testId?: string
 }
 
@@ -52,24 +60,27 @@ export function InfoPanel({
   actions,
   footer,
   centered = false,
+  compact = false,
   testId,
 }: InfoPanelProps) {
   const align = centered ? 'items-center text-center' : 'items-start text-left'
   const titleClass = TITLE_STYLES[tone] ?? TITLE_STYLES.neutral
+  const pad = compact ? 'px-3 py-2.5 space-y-2' : 'px-4 py-4 space-y-4'
+  const titleSize = compact ? INFO_BOX_TITLE_SM : INFO_BOX_TITLE_LG
 
   return (
     <div
-      className={`space-y-4 rounded-2xl border px-4 py-4 transition-all duration-500 ease-out animate-in fade-in duration-300 ${TONE_STYLES[tone] ?? TONE_STYLES.neutral}`}
+      className={`${INFO_BOX_PASSENGER} ${pad} transition-all duration-300 ease-out animate-in fade-in ${TONE_STYLES[tone] ?? TONE_STYLES.neutral}`}
       role="status"
       aria-label={title}
       aria-live="polite"
       data-testid={testId}
     >
       <div className={`flex flex-col gap-1 ${align}`}>
-        <p className={`text-lg font-semibold ${titleClass} ${centered ? 'px-2' : ''}`}>{title}</p>
+        <p className={`${titleSize} ${titleClass} ${centered ? 'px-2' : ''}`}>{title}</p>
         {subtitle ? (
           <p
-            className={`text-sm text-foreground/80 leading-snug ${centered ? 'max-w-sm px-4' : 'mt-1'}`}
+            className={`${INFO_BOX_BODY_SM} ${centered ? 'max-w-sm px-4' : 'mt-0.5'}`}
           >
             {subtitle}
           </p>
@@ -77,7 +88,7 @@ export function InfoPanel({
         {meta?.map((line) => (
           <p
             key={line}
-            className={`text-sm text-foreground/75 leading-snug ${centered ? 'max-w-sm px-4' : ''}`}
+            className={`${INFO_BOX_BODY_SM} text-foreground/75 ${centered ? 'max-w-sm px-4' : ''}`}
           >
             {line}
           </p>
