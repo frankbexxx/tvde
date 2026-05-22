@@ -19,8 +19,6 @@ import { isMockLocationModeEnabled } from '../../dev/mockLocation'
 import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
-import { StatusHeader } from '../../components/layout/StatusHeader'
-import { HintLine } from '../../components/layout/HintLine'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { BottomActionStack } from '../../components/layout/BottomActionStack'
 import { Spinner } from '../../components/ui/Spinner'
@@ -726,11 +724,6 @@ export function PassengerDashboard() {
     dropoffLocation,
   ])
 
-  const statusHeaderEmphasis = useMemo(() => {
-    if (passengerUiState === 'searching' || passengerUiState === 'in_trip') return 'primary' as const
-    return 'subdued' as const
-  }, [passengerUiState])
-
   const plannerEmphasis = useMemo(() => {
     if (passengerUiState === 'idle' || passengerUiState === 'confirming') return 'primary' as const
     return 'subdued' as const
@@ -765,20 +758,6 @@ export function PassengerDashboard() {
   )
 
   const inTripSuppressPlannerMetaEcho = passengerInfoPanelCoversBanner
-
-  /** Painel inferior: omitir "searching" duplicado quando já há PassengerStatusCard em requested */
-  const showTripPlannerPanel = useMemo(() => {
-    if (tripCompletedFromLocation) return false
-    if (creating && !activeTripId) return true
-    if (activeTripId && !activeTrip) return false
-    if (activeTripId && activeTrip?.status === 'requested') return false
-    if (activeTripId && activeTrip) {
-      if (['assigned', 'accepted', 'arriving', 'ongoing'].includes(activeTrip.status)) return true
-      return false
-    }
-    if (isTripIdle) return true
-    return false
-  }, [tripCompletedFromLocation, creating, activeTripId, activeTrip, isTripIdle])
 
   const showMapOnScreen = showPassengerMap || isTripIdle
 
@@ -877,14 +856,6 @@ export function PassengerDashboard() {
   }, [activeTrip, activeTripId, driverLocation, tripCompletedFromLocation])
 
   const showSubmittingCard = creating && !activeTripId
-
-  /** Mapa sempre fundo — em todos os estados com viagem ou planeamento. */
-  const passengerMapStageLayout =
-    passengerUiState === 'in_trip' ||
-    passengerUiState === 'searching' ||
-    passengerUiState === 'confirming' ||
-    passengerUiState === 'planning' ||
-    passengerUiState === 'idle'
 
   const passengerMapStageShowMap = showMapOnScreen || Boolean(activeTrip)
 
@@ -1073,6 +1044,9 @@ export function PassengerDashboard() {
 
   return (
     <ScreenContainer
+      fullBleed
+      contentVariant="driverImmersive"
+      mainScrollable={false}
       bottomButton={passengerBottomChrome}
       bottomBarVariant={
         passengerCancelOpen && primaryLabel === 'Cancelar'
@@ -1122,41 +1096,28 @@ export function PassengerDashboard() {
         </div>
       )}
 
+      {showPassengerRatingPanel ? (
+        <PassengerTripRatingPanel
+          tripId={activeTripId}
+          token={token}
+          onSubmitted={handleRatingSubmitted}
+          onSkip={handleStartNewTripAfterComplete}
+        />
+      ) : null}
+
       <div
-        className="space-y-5 mt-3 transition-opacity duration-300 ease-out"
+        className="flex min-h-0 flex-1 flex-col"
         data-testid="passenger-main"
       >
-        {showPassengerRatingPanel ? (
-          <PassengerTripRatingPanel
-            tripId={activeTripId}
-            token={token}
-            onSubmitted={handleRatingSubmitted}
-            onSkip={handleStartNewTripAfterComplete}
-          />
-        ) : null}
-
-        {!passengerInfoPanelCoversBanner && !isTripIdle ? (
-          <StatusHeader
-            label={banner.label}
-            subLabel={banner.subLabel}
-            variant={banner.variant}
-            emphasis={statusHeaderEmphasis}
-          />
-        ) : null}
-        {tripPollFootnote && !showTripPlannerPanel && !passengerInfoPanelCoversBanner ? (
-          <HintLine className="-mt-3 mb-5 min-h-[1.25rem] text-foreground/75">
-            {tripPollFootnote}
-          </HintLine>
-        ) : null}
 
         <div
           ref={mapAnchorRef}
           id="passenger-map-anchor"
-          className="flex min-h-[min(52vh,400px)] flex-col scroll-mt-4"
+          className="flex min-h-0 w-full flex-1 flex-col"
         >
           <MapStage
             testId="passenger-map-stage"
-            className="min-h-[min(52vh,400px)] flex-1"
+            className="min-h-0 flex-1"
             overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pointer-events-none"
             map={{
               showMap: passengerMapStageShowMap,
@@ -1322,100 +1283,27 @@ export function PassengerDashboard() {
           />
         </div>
 
-        {showTripPlannerPanel && !isTripIdle && (
-          <TripPlannerPanel
-            uiState={passengerUiState}
-            emphasis={plannerEmphasis}
-            hasPickup={!!pickupLocation}
-            hasDropoff={!!dropoffLocation}
-            pickupAddress={pickupAddress}
-            dropoffAddress={dropoffAddress}
-            pickupAddressLoading={pickupAddressLoading}
-            dropoffAddressLoading={dropoffAddressLoading}
-            routeMeta={confirmRouteMeta}
-            routeMetaLoading={confirmRouteMetaLoading}
-            activeTrip={activeTrip ?? null}
-            tripPollHint={tripPollFootnote}
-            driverTrackingHint={driverTrackingHint}
-            slowRequestHint={
-              creating && createTakingLong
-                ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
-                : null
-            }
-            onChooseMap={onChoosePlanningModeAndScrollToMap}
-            onSetDestinationHint={onScrollToMapAnchor}
-            onReset={resetPlanning}
-            onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
-            onConfirmTrip={handleRequestTrip}
-            confirmTripPending={creating}
-            confirmBlockedReason={
-              pickupDestinationTooClose
-                ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
-                : null
-            }
-            visualWeight={a021Layout.panel}
-            inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
-            inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
-            inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
-          />
-        )}
-
-        {error && (
-          <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
-            <button
-              type="button"
-              className="absolute right-2 top-2 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
-              aria-label="Fechar mensagem de erro"
-              onClick={() => setError(null)}
-            >
-              ×
-            </button>
-            <p className="leading-snug">{error}</p>
-          </div>
-        )}
-
-        {/* A014: estado da viagem; A019: envio inicial usa TripPlannerPanel (searching) */}
-        {(activeTripId || creating) &&
-          !showSubmittingCard &&
-          !showPassengerRatingPanel &&
-          !passengerMapStageLayout &&
-          (uxState && activeTrip ? (
-            <>
-              <PassengerStatusCard
-                uxState={uxState}
-                activeTrip={activeTrip}
-                onRetrySearch={activeTrip?.status === 'requested' ? handleRetrySearch : undefined}
-                retrySearchPending={retrySearchPending}
-                trackingHint={driverTrackingHint}
-                pollHint={passengerInfoPanelCoversBanner ? tripPollFootnote : null}
-              />
-              {activeTrip.payment_status === 'processing' &&
-                typeof activeTrip.payment_intent_client_secret === 'string' &&
-                activeTrip.payment_intent_client_secret.length > 0 ? (
-                <div className="mt-4">
-                  <PassengerPaymentConfirmCard
-                    clientSecret={activeTrip.payment_intent_client_secret}
-                    onConfirmed={() => void refetchActiveTrip()}
-                  />
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card transition-all duration-500 animate-in fade-in duration-300">
-              <Spinner size="lg" />
-              <p className="text-foreground text-base font-medium">A sincronizar viagem…</p>
-              <p className="text-foreground/80 text-sm text-center px-4">
-                A obter o estado mais recente da viagem.
-              </p>
-            </div>
-          ))}
-
-        {historyPollFault && (
-          <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
-            Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
-          </div>
-        )}
       </div>
+
+      {error && (
+        <div className="pointer-events-auto absolute inset-x-0 top-14 z-30 mx-3 rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+          <button
+            type="button"
+            className="absolute right-2 top-2 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+            aria-label="Fechar mensagem de erro"
+            onClick={() => setError(null)}
+          >
+            ×
+          </button>
+          <p className="leading-snug">{error}</p>
+        </div>
+      )}
+
+      {historyPollFault && (
+        <div className="pointer-events-auto absolute inset-x-0 top-14 z-30 mx-3 rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+          Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
+        </div>
+      )}
     </ScreenContainer>
   )
 }
