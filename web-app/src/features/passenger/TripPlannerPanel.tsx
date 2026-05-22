@@ -2,10 +2,7 @@ import { memo } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
-import {
-  PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING,
-  PASSENGER_PAYMENT_DISCLOSURE_SEARCHING,
-} from '../../constants/passengerPaymentCopy'
+import { PASSENGER_PAYMENT_DISCLOSURE_SEARCHING } from '../../constants/passengerPaymentCopy'
 
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
 
@@ -216,13 +213,12 @@ function TripPlannerPanelInner({
               <span>Percurso estimado indisponível</span>
             )}
           </div>
-          <div
-            className="rounded-xl border border-border/80 bg-muted/30 px-3 py-2.5 text-xs text-foreground/85 leading-snug"
+          <p
+            className="text-xs text-foreground/60 leading-snug"
             data-testid="passenger-payment-disclosure-confirming"
           >
-            <p className="font-semibold text-foreground text-[13px] mb-0.5">Pagamento</p>
-            <p>{PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING}</p>
-          </div>
+            Pagamento simulado — sem cobrança
+          </p>
           {confirmBlockedReason ? (
             <div
               className="rounded-xl border border-warning/50 bg-warning/15 px-3 py-2.5 text-sm text-foreground leading-snug"
@@ -232,33 +228,25 @@ function TripPlannerPanelInner({
               {confirmBlockedReason}
             </div>
           ) : null}
-          <div className="flex flex-row flex-wrap gap-2 pt-1">
+          <div className="flex flex-row gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onConfirmTrip}
+              disabled={confirmTripPending || routeMetaLoading || Boolean(confirmBlockedReason)}
+              className="flex-1 min-h-10 rounded-full bg-success text-success-foreground px-4 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation"
+            >
+              {confirmTripPending ? 'A confirmar…' : 'Confirmar viagem'}
+            </button>
             {onEditDestination ? (
               <button
                 type="button"
                 onClick={onEditDestination}
                 disabled={confirmTripPending}
-                className="flex-1 min-w-[40%] min-h-10 rounded-full border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation"
+                className="min-h-10 rounded-full border border-border bg-muted/40 px-4 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation"
               >
-                Alterar destino
+                Alterar
               </button>
             ) : null}
-            <button
-              type="button"
-              onClick={onConfirmTrip}
-              disabled={confirmTripPending || routeMetaLoading || Boolean(confirmBlockedReason)}
-              className="flex-1 min-w-[40%] min-h-10 rounded-full bg-success text-success-foreground px-3 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation"
-            >
-              {confirmTripPending ? 'A confirmar…' : 'Confirmar viagem'}
-            </button>
-            <button
-              type="button"
-              onClick={onReset}
-              disabled={confirmTripPending}
-              className="min-h-10 rounded-full border border-border px-4 text-sm font-medium text-foreground hover:bg-muted/60 disabled:opacity-50 touch-manipulation"
-            >
-              Repor
-            </button>
           </div>
         </>
       )}

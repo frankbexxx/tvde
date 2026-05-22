@@ -97,7 +97,7 @@ import {
   haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
-import { openDriverExternalNav, driverNavAppLabel, warmDriverNavSessionIfNeeded } from '../../utils/openDriverExternalNav'
+import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
@@ -368,7 +368,6 @@ export function DriverDashboard() {
       setOffline(!checked)
       addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
       setStatus(checked ? 'Disponível' : 'Offline')
-      if (checked) warmDriverNavSessionIfNeeded()
     },
     [addLog, driverDocsGateEnabled, driverDocuments, setStatus]
   )
@@ -2127,20 +2126,6 @@ export function DriverDashboard() {
                       </div>
                     )}
                   </>
-                )}
-
-                {activeTripId && (
-                  <ActiveTripSummary
-                    tripId={activeTripId}
-                    token={token!}
-                    statusOverride={driverStatusOverride}
-                    detailFallback={acceptedDetailFallback}
-                    sessionRole={sessionRole}
-                    onClearStatusOverride={() => setDriverStatusOverride(null)}
-                    onTripCancelled={onActiveTripCancelled}
-                    onTripNotFound={onActiveTripNotFound}
-                    onDismissCompletedTrip={clearDriverActiveTripUi}
-                  />
                 )}
 
                 {historyPollFault && (
