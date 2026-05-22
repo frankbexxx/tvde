@@ -25,7 +25,6 @@ import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton
 import { BottomActionStack } from '../../components/layout/BottomActionStack'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
-import { MapView } from '../../maps/MapView'
 import { MapStage } from '../../components/layout/MapStage'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import { getRouteGeoJSON } from '../../maps/routing'
@@ -879,13 +878,15 @@ export function PassengerDashboard() {
 
   const showSubmittingCard = creating && !activeTripId
 
-  /** USER-SHELL-D: mapa palco em viagem / procura (G14, G22, G25). */
+  /** Mapa sempre fundo — em todos os estados com viagem ou planeamento. */
   const passengerMapStageLayout =
-    passengerUiState === 'in_trip' || passengerUiState === 'searching'
+    passengerUiState === 'in_trip' ||
+    passengerUiState === 'searching' ||
+    passengerUiState === 'confirming' ||
+    passengerUiState === 'planning' ||
+    passengerUiState === 'idle'
 
-  const passengerMapStageShowMap = passengerMapStageLayout
-    ? Boolean(activeTrip) || showMapOnScreen
-    : showMapOnScreen
+  const passengerMapStageShowMap = showMapOnScreen || Boolean(activeTrip)
 
   /** A021: um foco por ecrã — header, mapa e painel coordenam peso visual */
   const a021Layout = useMemo(() => {
@@ -959,27 +960,11 @@ export function PassengerDashboard() {
     setPassengerActiveTripId,
   ])
 
-  /** Bloco único: título, regra de preço, mapa, estado compacto, acções (sem cartões empilhados). */
-  const unifiedPassengerPlanning =
-    isTripIdle &&
-    (passengerUiState === 'idle' ||
-      passengerUiState === 'planning' ||
-      passengerUiState === 'confirming')
-
   const showDestinationSearch =
     passengerUiState !== 'confirming' && Boolean(pickupLocation)
 
   const showPickupSearch =
     passengerUiState !== 'confirming' && !pickupLocation
-
-  const planningTitle =
-    passengerUiState === 'planning' && pickupLocation ? 'Indica o destino' : 'Onde te vamos buscar?'
-
-  /** No cartão unificado o campo + botão do mapa já comunicam a acção; evitar repetir a mesma frase em várias linhas. */
-  const planningDescription =
-    passengerUiState === 'planning' && pickupLocation
-      ? 'Escreve o destino ou toca no mapa.'
-      : null
 
   const handleEditDestinationOnly = useCallback(() => {
     setDropoffLocation(null)
@@ -1149,328 +1134,230 @@ export function PassengerDashboard() {
             onSkip={handleStartNewTripAfterComplete}
           />
         ) : null}
-        {unifiedPassengerPlanning ? (
-          <section
-            className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-opacity duration-300 ease-out"
-            aria-label="Pedir viagem"
-          >
-            <div className="px-4 pt-3 pb-2 space-y-2 border-b border-border">
-              {passengerUiState === 'confirming' ? (
-                <>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">Confirma a viagem</h2>
-                  <p className="text-sm text-foreground/80 leading-snug">
-                    Estimativa ao pedir; o preço final aparece no fim da viagem.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">{planningTitle}</h2>
-                  {planningDescription ? (
-                    <p className="text-sm text-foreground/80 leading-snug">{planningDescription}</p>
-                  ) : null}
-                </>
-              )}
-            </div>
-            {showPickupSearch ? (
-              <div className="px-4 pt-3 pb-1 space-y-2">
-                <DestinationSearchField
-                  query={pickupQuery}
-                  onQueryChange={handlePickupQueryChange}
-                  suggestions={pickupGeoSuggestions}
-                  loading={pickupGeoLoading}
-                  onSelect={handlePickupPick}
-                  label="Recolha da viagem"
-                  placeholder="Recolha: rua, localidade, código postal…"
-                  disabled={creating}
-                  geocodingUnavailable={false}
-                  onDismissSuggestions={dismissPickupGeoSuggestions}
-                />
-                {pickupCandidate ? (
-                  <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-                    <p className="text-sm font-medium text-foreground">Recolha em pré-visualização</p>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                      {pickupCandidate.primary}
-                      {pickupCandidate.secondary ? ` · ${pickupCandidate.secondary}` : ''}
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={confirmPickupCandidate}
-                        className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity"
-                      >
-                        Confirmar recolha
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearPickupCandidate}
-                        className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors"
-                      >
-                        Limpar
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : showDestinationSearch ? (
-              <div className="px-4 pt-3 pb-1 space-y-2">
-                <DestinationSearchField
-                  query={destinationQuery}
-                  onQueryChange={handleDestinationQueryChange}
-                  suggestions={geoSuggestions}
-                  loading={geoLoading}
-                  onSelect={handleDestinationPick}
-                  label="Destino da viagem"
-                  placeholder="Destino: rua, localidade, código postal…"
-                  disabled={creating}
-                  geocodingUnavailable={false}
-                  onDismissSuggestions={dismissGeoSuggestions}
-                />
-                {destinationCandidate ? (
-                  <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-                    <p className="text-sm font-medium text-foreground">Destino em pré-visualização</p>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                      {destinationCandidate.primary}
-                      {destinationCandidate.secondary ? ` · ${destinationCandidate.secondary}` : ''}
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={confirmDestinationCandidate}
-                        className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity"
-                      >
-                        Confirmar destino
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearDestinationCandidate}
-                        className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors"
-                      >
-                        Limpar
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
 
-            <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4 border-t border-border">
-              <MapView
-                className="rounded-none shadow-none"
-                showMap={showMapOnScreen}
-                mapPlaceholder={mapPlaceholder}
-                pickupSelection={isPickupPlanningMode ? pickupPreviewLocation : null}
-                dropoffSelection={isPickupPlanningMode ? dropoffPreviewLocation : null}
-                onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
-                passengerLocation={
-                  passengerLocation ?? (activeTrip
-                    ? {
-                      lat: activeTrip.origin_lat,
-                      lng: activeTrip.origin_lng,
+        {!passengerInfoPanelCoversBanner && !isTripIdle ? (
+          <StatusHeader
+            label={banner.label}
+            subLabel={banner.subLabel}
+            variant={banner.variant}
+            emphasis={statusHeaderEmphasis}
+          />
+        ) : null}
+        {tripPollFootnote && !showTripPlannerPanel && !passengerInfoPanelCoversBanner ? (
+          <HintLine className="-mt-3 mb-5 min-h-[1.25rem] text-foreground/75">
+            {tripPollFootnote}
+          </HintLine>
+        ) : null}
+
+        <div
+          ref={mapAnchorRef}
+          id="passenger-map-anchor"
+          className="flex min-h-[min(52vh,400px)] flex-col scroll-mt-4"
+        >
+          <MapStage
+            testId="passenger-map-stage"
+            className="min-h-[min(52vh,400px)] flex-1"
+            overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pointer-events-none"
+            map={{
+              showMap: passengerMapStageShowMap,
+              mapPlaceholder: mapPlaceholder || undefined,
+              passengerLocation:
+                passengerLocation ??
+                (activeTrip
+                  ? { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng }
+                  : undefined),
+              driverLocation: driverLocation ?? undefined,
+              route: routeForMap,
+              tripPickup: tripMapLegs.pickup,
+              tripDropoff: tripMapLegs.dropoff,
+              mapVisualWeight: 'emphasized',
+              pickupSelection: isPickupPlanningMode ? pickupPreviewLocation : null,
+              dropoffSelection: isPickupPlanningMode ? dropoffPreviewLocation : null,
+              onPlanningMapClick: isPickupPlanningMode ? handlePlanningMapClick : undefined,
+              planningRouteGeometry: isPickupPlanningMode ? planningRouteGeoJSON : null,
+              planningRecenter: dropoffPreviewLocation ?? pickupPreviewLocation,
+              planningRecenterKey: mapRecenterKey,
+            }}
+            bottomOverlay={
+              isTripIdle ? (
+                <MapBottomSheet className="pointer-events-auto px-3 py-3 space-y-2 max-h-[min(55dvh,440px)] overflow-y-auto">
+                  {showPickupSearch && (
+                    <>
+                      <DestinationSearchField
+                        query={pickupQuery}
+                        onQueryChange={handlePickupQueryChange}
+                        suggestions={pickupGeoSuggestions}
+                        loading={pickupGeoLoading}
+                        onSelect={handlePickupPick}
+                        label="Recolha da viagem"
+                        placeholder="Recolha: rua, localidade, código postal…"
+                        disabled={creating}
+                        geocodingUnavailable={false}
+                        onDismissSuggestions={dismissPickupGeoSuggestions}
+                      />
+                      {pickupCandidate ? (
+                        <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                          <p className="text-sm font-medium text-foreground">Recolha em pré-visualização</p>
+                          <p className="text-xs text-muted-foreground leading-snug">
+                            {pickupCandidate.primary}
+                            {pickupCandidate.secondary ? ` · ${pickupCandidate.secondary}` : ''}
+                          </p>
+                          <div className="flex gap-2">
+                            <button type="button" onClick={confirmPickupCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar recolha</button>
+                            <button type="button" onClick={clearPickupCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                  {showDestinationSearch && (
+                    <>
+                      <DestinationSearchField
+                        query={destinationQuery}
+                        onQueryChange={handleDestinationQueryChange}
+                        suggestions={geoSuggestions}
+                        loading={geoLoading}
+                        onSelect={handleDestinationPick}
+                        label="Destino da viagem"
+                        placeholder="Destino: rua, localidade, código postal…"
+                        disabled={creating}
+                        geocodingUnavailable={false}
+                        onDismissSuggestions={dismissGeoSuggestions}
+                      />
+                      {destinationCandidate ? (
+                        <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                          <p className="text-sm font-medium text-foreground">Destino em pré-visualização</p>
+                          <p className="text-xs text-muted-foreground leading-snug">
+                            {destinationCandidate.primary}
+                            {destinationCandidate.secondary ? ` · ${destinationCandidate.secondary}` : ''}
+                          </p>
+                          <div className="flex gap-2">
+                            <button type="button" onClick={confirmDestinationCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar destino</button>
+                            <button type="button" onClick={clearDestinationCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
+                  <TripPlannerPanel
+                    embedded
+                    uiState={passengerUiState}
+                    emphasis={plannerEmphasis}
+                    hasPickup={!!pickupLocation}
+                    hasDropoff={!!dropoffLocation}
+                    pickupAddress={pickupAddress}
+                    dropoffAddress={dropoffAddress}
+                    pickupAddressLoading={pickupAddressLoading}
+                    dropoffAddressLoading={dropoffAddressLoading}
+                    routeMeta={confirmRouteMeta}
+                    routeMetaLoading={confirmRouteMetaLoading}
+                    activeTrip={activeTrip ?? null}
+                    tripPollHint={tripPollFootnote}
+                    driverTrackingHint={driverTrackingHint}
+                    slowRequestHint={
+                      creating && createTakingLong
+                        ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
+                        : null
                     }
-                    : undefined)
-                }
-                driverLocation={driverLocation ?? undefined}
-                route={routeForMap}
-                tripPickup={tripMapLegs.pickup}
-                tripDropoff={tripMapLegs.dropoff}
-                planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
-                mapVisualWeight={a021Layout.map}
-                planningRecenter={dropoffPreviewLocation ?? pickupPreviewLocation}
-                planningRecenterKey={mapRecenterKey}
-              />
-            </div>
+                    onChooseMap={onChoosePlanningModeAndScrollToMap}
+                    onSetDestinationHint={onScrollToMapAnchor}
+                    onReset={resetPlanning}
+                    onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
+                    onConfirmTrip={handleRequestTrip}
+                    confirmTripPending={creating}
+                    confirmBlockedReason={
+                      pickupDestinationTooClose
+                        ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
+                        : null
+                    }
+                    visualWeight={a021Layout.panel}
+                    inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
+                    inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
+                    inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
+                  />
+                </MapBottomSheet>
+              ) : (activeTripId || creating) && !showPassengerRatingPanel ? (
+                <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,320px)] overflow-hidden px-2 py-2">
+                  {showSubmittingCard ? (
+                    <div
+                      className="flex flex-col items-center justify-center py-4 space-y-2"
+                      data-testid="passenger-info-panel-submitting"
+                    >
+                      <Spinner size="md" />
+                      <p className="text-sm font-semibold text-foreground">A enviar pedido…</p>
+                    </div>
+                  ) : uxState && activeTrip ? (
+                    <>
+                      <PassengerStatusCard
+                        compact
+                        uxState={uxState}
+                        activeTrip={activeTrip}
+                        onRetrySearch={
+                          activeTrip?.status === 'requested' ? handleRetrySearch : undefined
+                        }
+                        retrySearchPending={retrySearchPending}
+                        trackingHint={driverTrackingHint}
+                        pollHint={tripPollFootnote}
+                      />
+                      {activeTrip.payment_status === 'processing' &&
+                        typeof activeTrip.payment_intent_client_secret === 'string' &&
+                        activeTrip.payment_intent_client_secret.length > 0 ? (
+                        <div className="mt-2">
+                          <PassengerPaymentConfirmCard
+                            clientSecret={activeTrip.payment_intent_client_secret}
+                            onConfirmed={() => void refetchActiveTrip()}
+                          />
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-4 space-y-2">
+                      <Spinner size="md" />
+                      <p className="text-sm text-foreground">A sincronizar viagem…</p>
+                    </div>
+                  )}
+                </MapBottomSheet>
+              ) : null
+            }
+          />
+        </div>
 
-            <div className="px-4 py-4 border-t border-border bg-card/40">
-              <TripPlannerPanel
-                embedded
-                uiState={passengerUiState}
-                emphasis={plannerEmphasis}
-                hasPickup={!!pickupLocation}
-                hasDropoff={!!dropoffLocation}
-                pickupAddress={pickupAddress}
-                dropoffAddress={dropoffAddress}
-                pickupAddressLoading={pickupAddressLoading}
-                dropoffAddressLoading={dropoffAddressLoading}
-                routeMeta={confirmRouteMeta}
-                routeMetaLoading={confirmRouteMetaLoading}
-                activeTrip={activeTrip ?? null}
-                tripPollHint={tripPollFootnote}
-                driverTrackingHint={driverTrackingHint}
-                slowRequestHint={
-                  creating && createTakingLong
-                    ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
-                    : null
-                }
-                onChooseMap={onChoosePlanningModeAndScrollToMap}
-                onSetDestinationHint={onScrollToMapAnchor}
-                onReset={resetPlanning}
-                onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
-                onConfirmTrip={handleRequestTrip}
-                confirmTripPending={creating}
-                confirmBlockedReason={
-                  pickupDestinationTooClose
-                    ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
-                    : null
-                }
-                visualWeight={a021Layout.panel}
-                inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
-                inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
-                inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
-              />
-            </div>
-          </section>
-        ) : (
-          <>
-            {!passengerInfoPanelCoversBanner ? (
-              <StatusHeader
-                label={banner.label}
-                subLabel={banner.subLabel}
-                variant={banner.variant}
-                emphasis={statusHeaderEmphasis}
-              />
-            ) : null}
-            {tripPollFootnote && !showTripPlannerPanel && !passengerInfoPanelCoversBanner ? (
-              <HintLine className="-mt-3 mb-5 min-h-[1.25rem] text-foreground/75">
-                {tripPollFootnote}
-              </HintLine>
-            ) : null}
-
-            {passengerMapStageLayout ? (
-              <div
-                ref={mapAnchorRef}
-                id="passenger-map-anchor"
-                className="flex min-h-[min(52vh,400px)] flex-col scroll-mt-4"
-              >
-                <MapStage
-                  testId="passenger-map-stage"
-                  className="min-h-[min(52vh,400px)] flex-1"
-                  overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pointer-events-none"
-                  map={{
-                    showMap: passengerMapStageShowMap,
-                    mapPlaceholder: mapPlaceholder || undefined,
-                    passengerLocation:
-                      passengerLocation ??
-                      (activeTrip
-                        ? { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng }
-                        : undefined),
-                    driverLocation: driverLocation ?? undefined,
-                    route: routeForMap,
-                    tripPickup: tripMapLegs.pickup,
-                    tripDropoff: tripMapLegs.dropoff,
-                    mapVisualWeight: 'emphasized',
-                    planningRecenter: dropoffPreviewLocation,
-                    planningRecenterKey: mapRecenterKey,
-                  }}
-                  bottomOverlay={
-                    (activeTripId || creating) && !showPassengerRatingPanel ? (
-                      <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,320px)] overflow-hidden px-2 py-2">
-                        {showSubmittingCard ? (
-                          <div
-                            className="flex flex-col items-center justify-center py-4 space-y-2"
-                            data-testid="passenger-info-panel-submitting"
-                          >
-                            <Spinner size="md" />
-                            <p className="text-sm font-semibold text-foreground">A enviar pedido…</p>
-                          </div>
-                        ) : uxState && activeTrip ? (
-                          <>
-                            <PassengerStatusCard
-                              compact
-                              uxState={uxState}
-                              activeTrip={activeTrip}
-                              onRetrySearch={
-                                activeTrip?.status === 'requested' ? handleRetrySearch : undefined
-                              }
-                              retrySearchPending={retrySearchPending}
-                              trackingHint={driverTrackingHint}
-                              pollHint={tripPollFootnote}
-                            />
-                            {activeTrip.payment_status === 'processing' &&
-                              typeof activeTrip.payment_intent_client_secret === 'string' &&
-                              activeTrip.payment_intent_client_secret.length > 0 ? (
-                              <div className="mt-2">
-                                <PassengerPaymentConfirmCard
-                                  clientSecret={activeTrip.payment_intent_client_secret}
-                                  onConfirmed={() => void refetchActiveTrip()}
-                                />
-                              </div>
-                            ) : null}
-                          </>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-4 space-y-2">
-                            <Spinner size="md" />
-                            <p className="text-sm text-foreground">A sincronizar viagem…</p>
-                          </div>
-                        )}
-                      </MapBottomSheet>
-                    ) : null
-                  }
-                />
-              </div>
-            ) : (
-              <div ref={mapAnchorRef} id="passenger-map-anchor" className="scroll-mt-4">
-                <MapView
-                  showMap={showMapOnScreen}
-                  mapPlaceholder={mapPlaceholder}
-                  pickupSelection={isPickupPlanningMode ? pickupPreviewLocation : null}
-                  dropoffSelection={isPickupPlanningMode ? dropoffPreviewLocation : null}
-                  onPlanningMapClick={isPickupPlanningMode ? handlePlanningMapClick : undefined}
-                  passengerLocation={
-                    passengerLocation ??
-                    (activeTrip
-                      ? { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng }
-                      : undefined)
-                  }
-                  driverLocation={driverLocation ?? undefined}
-                  route={routeForMap}
-                  tripPickup={tripMapLegs.pickup}
-                  tripDropoff={tripMapLegs.dropoff}
-                  planningRouteGeometry={isPickupPlanningMode ? planningRouteGeoJSON : null}
-                  mapVisualWeight={a021Layout.map}
-                  planningRecenter={dropoffPreviewLocation}
-                  planningRecenterKey={mapRecenterKey}
-                />
-              </div>
-            )}
-
-            {showTripPlannerPanel && (
-              <TripPlannerPanel
-                uiState={passengerUiState}
-                emphasis={plannerEmphasis}
-                hasPickup={!!pickupLocation}
-                hasDropoff={!!dropoffLocation}
-                pickupAddress={pickupAddress}
-                dropoffAddress={dropoffAddress}
-                pickupAddressLoading={pickupAddressLoading}
-                dropoffAddressLoading={dropoffAddressLoading}
-                routeMeta={confirmRouteMeta}
-                routeMetaLoading={confirmRouteMetaLoading}
-                activeTrip={activeTrip ?? null}
-                tripPollHint={tripPollFootnote}
-                driverTrackingHint={driverTrackingHint}
-                slowRequestHint={
-                  creating && createTakingLong
-                    ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
-                    : null
-                }
-                onChooseMap={onChoosePlanningModeAndScrollToMap}
-                onSetDestinationHint={onScrollToMapAnchor}
-                onReset={resetPlanning}
-                onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
-                onConfirmTrip={handleRequestTrip}
-                confirmTripPending={creating}
-                confirmBlockedReason={
-                  pickupDestinationTooClose
-                    ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
-                    : null
-                }
-                visualWeight={a021Layout.panel}
-                inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
-                inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
-                inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
-              />
-            )}
-          </>
+        {showTripPlannerPanel && !isTripIdle && (
+          <TripPlannerPanel
+            uiState={passengerUiState}
+            emphasis={plannerEmphasis}
+            hasPickup={!!pickupLocation}
+            hasDropoff={!!dropoffLocation}
+            pickupAddress={pickupAddress}
+            dropoffAddress={dropoffAddress}
+            pickupAddressLoading={pickupAddressLoading}
+            dropoffAddressLoading={dropoffAddressLoading}
+            routeMeta={confirmRouteMeta}
+            routeMetaLoading={confirmRouteMetaLoading}
+            activeTrip={activeTrip ?? null}
+            tripPollHint={tripPollFootnote}
+            driverTrackingHint={driverTrackingHint}
+            slowRequestHint={
+              creating && createTakingLong
+                ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
+                : null
+            }
+            onChooseMap={onChoosePlanningModeAndScrollToMap}
+            onSetDestinationHint={onScrollToMapAnchor}
+            onReset={resetPlanning}
+            onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
+            onConfirmTrip={handleRequestTrip}
+            confirmTripPending={creating}
+            confirmBlockedReason={
+              pickupDestinationTooClose
+                ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
+                : null
+            }
+            visualWeight={a021Layout.panel}
+            inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
+            inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
+            inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
+          />
         )}
 
         {error && (
