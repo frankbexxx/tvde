@@ -1066,36 +1066,6 @@ export function PassengerDashboard() {
         historyLoading={historyLoading}
         historyPollFault={historyPollFault}
       />
-      {import.meta.env.DEV && isMockLocationModeEnabled() ? (
-        <div className="rounded-lg bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
-          <span aria-hidden>🧪</span> Simulação — passageiro fixo; motorista aproxima-se em tempo real após aceitar (rota OSRM).
-        </div>
-      ) : null}
-
-      {geolocationUsedFallback && (
-        <div
-          className="rounded-lg bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
-          style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
-        >
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span>Localização indisponível — a usar posição aproximada.</span>
-            <button
-              type="button"
-              onClick={retryGeolocation}
-              className="inline-flex items-center min-h-11 px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
-            >
-              Tentar outra vez
-            </button>
-          </div>
-          {import.meta.env.DEV ? (
-            <div className="mt-1">
-              Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
-              <strong>Configuração</strong> (ícone de engrenagem).
-            </div>
-          ) : null}
-        </div>
-      )}
-
       {showPassengerRatingPanel ? (
         <PassengerTripRatingPanel
           tripId={activeTripId}
@@ -1106,19 +1076,53 @@ export function PassengerDashboard() {
       ) : null}
 
       <div
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
         data-testid="passenger-main"
       >
 
         <div
           ref={mapAnchorRef}
           id="passenger-map-anchor"
-          className="flex min-h-0 w-full flex-1 flex-col"
+          className="flex min-h-0 w-full flex-1 flex-col overflow-hidden"
         >
           <MapStage
             testId="passenger-map-stage"
             className="min-h-0 flex-1"
-            overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pointer-events-none"
+            overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pb-20 pointer-events-none"
+            topOverlay={
+              (import.meta.env.DEV && isMockLocationModeEnabled()) || geolocationUsedFallback ? (
+                <div className="space-y-2">
+                  {import.meta.env.DEV && isMockLocationModeEnabled() ? (
+                    <div className="rounded-xl bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
+                      <span aria-hidden>🧪</span> Simulação — passageiro fixo; motorista aproxima-se em tempo real após aceitar (rota OSRM).
+                    </div>
+                  ) : null}
+                  {geolocationUsedFallback ? (
+                    <div
+                      className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+                      style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
+                    >
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span>Localização indisponível — a usar posição aproximada.</span>
+                        <button
+                          type="button"
+                          onClick={retryGeolocation}
+                          className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
+                        >
+                          Tentar outra vez
+                        </button>
+                      </div>
+                      {import.meta.env.DEV ? (
+                        <div className="mt-1">
+                          Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
+                          <strong>Configuração</strong> (ícone de engrenagem).
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null
+            }
             map={{
               showMap: passengerMapStageShowMap,
               mapPlaceholder: mapPlaceholder || undefined,
@@ -1142,101 +1146,101 @@ export function PassengerDashboard() {
             bottomOverlay={
               isTripIdle ? (
                 <MapBottomSheet className="pointer-events-auto px-3 py-3 space-y-2 max-h-[min(55dvh,440px)] overflow-y-auto">
-                  {showPickupSearch && (
-                    <>
-                      <DestinationSearchField
-                        query={pickupQuery}
-                        onQueryChange={handlePickupQueryChange}
-                        suggestions={pickupGeoSuggestions}
-                        loading={pickupGeoLoading}
-                        onSelect={handlePickupPick}
-                        label="Recolha da viagem"
-                        placeholder="Recolha: rua, localidade, código postal…"
-                        disabled={creating}
-                        geocodingUnavailable={false}
-                        onDismissSuggestions={dismissPickupGeoSuggestions}
-                      />
-                      {pickupCandidate ? (
-                        <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-                          <p className="text-sm font-medium text-foreground">Recolha em pré-visualização</p>
-                          <p className="text-xs text-muted-foreground leading-snug">
-                            {pickupCandidate.primary}
-                            {pickupCandidate.secondary ? ` · ${pickupCandidate.secondary}` : ''}
-                          </p>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={confirmPickupCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar recolha</button>
-                            <button type="button" onClick={clearPickupCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
+                    {showPickupSearch && (
+                      <>
+                        <DestinationSearchField
+                          query={pickupQuery}
+                          onQueryChange={handlePickupQueryChange}
+                          suggestions={pickupGeoSuggestions}
+                          loading={pickupGeoLoading}
+                          onSelect={handlePickupPick}
+                          label="Recolha da viagem"
+                          placeholder="Recolha: rua, localidade, código postal…"
+                          disabled={creating}
+                          geocodingUnavailable={false}
+                          onDismissSuggestions={dismissPickupGeoSuggestions}
+                        />
+                        {pickupCandidate ? (
+                          <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                            <p className="text-sm font-medium text-foreground">Recolha em pré-visualização</p>
+                            <p className="text-xs text-muted-foreground leading-snug">
+                              {pickupCandidate.primary}
+                              {pickupCandidate.secondary ? ` · ${pickupCandidate.secondary}` : ''}
+                            </p>
+                            <div className="flex gap-2">
+                              <button type="button" onClick={confirmPickupCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar recolha</button>
+                              <button type="button" onClick={clearPickupCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
+                            </div>
                           </div>
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                  {showDestinationSearch && (
-                    <>
-                      <DestinationSearchField
-                        query={destinationQuery}
-                        onQueryChange={handleDestinationQueryChange}
-                        suggestions={geoSuggestions}
-                        loading={geoLoading}
-                        onSelect={handleDestinationPick}
-                        label="Destino da viagem"
-                        placeholder="Destino: rua, localidade, código postal…"
-                        disabled={creating}
-                        geocodingUnavailable={false}
-                        onDismissSuggestions={dismissGeoSuggestions}
-                      />
-                      {destinationCandidate ? (
-                        <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-                          <p className="text-sm font-medium text-foreground">Destino em pré-visualização</p>
-                          <p className="text-xs text-muted-foreground leading-snug">
-                            {destinationCandidate.primary}
-                            {destinationCandidate.secondary ? ` · ${destinationCandidate.secondary}` : ''}
-                          </p>
-                          <div className="flex gap-2">
-                            <button type="button" onClick={confirmDestinationCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar destino</button>
-                            <button type="button" onClick={clearDestinationCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
+                        ) : null}
+                      </>
+                    )}
+                    {showDestinationSearch && (
+                      <>
+                        <DestinationSearchField
+                          query={destinationQuery}
+                          onQueryChange={handleDestinationQueryChange}
+                          suggestions={geoSuggestions}
+                          loading={geoLoading}
+                          onSelect={handleDestinationPick}
+                          label="Destino da viagem"
+                          placeholder="Destino: rua, localidade, código postal…"
+                          disabled={creating}
+                          geocodingUnavailable={false}
+                          onDismissSuggestions={dismissGeoSuggestions}
+                        />
+                        {destinationCandidate ? (
+                          <div className="rounded-xl border border-border bg-card p-3 space-y-2">
+                            <p className="text-sm font-medium text-foreground">Destino em pré-visualização</p>
+                            <p className="text-xs text-muted-foreground leading-snug">
+                              {destinationCandidate.primary}
+                              {destinationCandidate.secondary ? ` · ${destinationCandidate.secondary}` : ''}
+                            </p>
+                            <div className="flex gap-2">
+                              <button type="button" onClick={confirmDestinationCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar destino</button>
+                              <button type="button" onClick={clearDestinationCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
+                            </div>
                           </div>
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                  <TripPlannerPanel
-                    embedded
-                    uiState={passengerUiState}
-                    emphasis={plannerEmphasis}
-                    hasPickup={!!pickupLocation}
-                    hasDropoff={!!dropoffLocation}
-                    pickupAddress={pickupAddress}
-                    dropoffAddress={dropoffAddress}
-                    pickupAddressLoading={pickupAddressLoading}
-                    dropoffAddressLoading={dropoffAddressLoading}
-                    routeMeta={confirmRouteMeta}
-                    routeMetaLoading={confirmRouteMetaLoading}
-                    activeTrip={activeTrip ?? null}
-                    tripPollHint={tripPollFootnote}
-                    driverTrackingHint={driverTrackingHint}
-                    slowRequestHint={
-                      creating && createTakingLong
-                        ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
-                        : null
-                    }
-                    onChooseMap={onChoosePlanningModeAndScrollToMap}
-                    onSetDestinationHint={onScrollToMapAnchor}
-                    onReset={resetPlanning}
-                    onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
-                    onConfirmTrip={handleRequestTrip}
-                    confirmTripPending={creating}
-                    confirmBlockedReason={
-                      pickupDestinationTooClose
-                        ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
-                        : null
-                    }
-                    visualWeight={a021Layout.panel}
-                    inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
-                    inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
-                    inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
-                  />
-                </MapBottomSheet>
+                        ) : null}
+                      </>
+                    )}
+                    <TripPlannerPanel
+                      embedded
+                      uiState={passengerUiState}
+                      emphasis={plannerEmphasis}
+                      hasPickup={!!pickupLocation}
+                      hasDropoff={!!dropoffLocation}
+                      pickupAddress={pickupAddress}
+                      dropoffAddress={dropoffAddress}
+                      pickupAddressLoading={pickupAddressLoading}
+                      dropoffAddressLoading={dropoffAddressLoading}
+                      routeMeta={confirmRouteMeta}
+                      routeMetaLoading={confirmRouteMetaLoading}
+                      activeTrip={activeTrip ?? null}
+                      tripPollHint={tripPollFootnote}
+                      driverTrackingHint={driverTrackingHint}
+                      slowRequestHint={
+                        creating && createTakingLong
+                          ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
+                          : null
+                      }
+                      onChooseMap={onChoosePlanningModeAndScrollToMap}
+                      onSetDestinationHint={onScrollToMapAnchor}
+                      onReset={resetPlanning}
+                      onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
+                      onConfirmTrip={handleRequestTrip}
+                      confirmTripPending={creating}
+                      confirmBlockedReason={
+                        pickupDestinationTooClose
+                          ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
+                          : null
+                      }
+                      visualWeight={a021Layout.panel}
+                      inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
+                      inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
+                      inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
+                    />
+                  </MapBottomSheet>
               ) : (activeTripId || creating) && !showPassengerRatingPanel ? (
                 <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,320px)] overflow-hidden px-2 py-2">
                   {showSubmittingCard ? (
