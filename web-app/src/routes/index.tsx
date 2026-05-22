@@ -124,8 +124,8 @@ export function AppRoutes() {
     return <LoginScreen requestedRole={requestedRole} />
   }
 
-  const driverShellFullWidth = pathname.startsWith('/driver')
-  const appShellClass = driverShellFullWidth
+  const immersiveMapShell = pathname.startsWith('/driver') || pathname.startsWith('/passenger')
+  const appShellClass = immersiveMapShell
     ? 'min-h-dvh bg-background flex flex-col w-full max-w-none'
     : 'min-h-dvh bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto'
 
@@ -140,9 +140,9 @@ export function AppRoutes() {
       />
       <div className="flex flex-1 min-h-0 flex-col md:flex-row">
         <main
-          className={`flex min-h-0 min-w-0 flex-1 flex-col ${driverShellFullWidth ? 'overflow-hidden' : 'overflow-y-auto'}`}
+          className={`flex min-h-0 min-w-0 flex-1 flex-col ${immersiveMapShell ? 'overflow-hidden' : 'overflow-y-auto'}`}
         >
-          {/* Repassa altura ao ecrã motorista (mapa fillContainer precisa de pai com altura definida). */}
+          {/* Repassa altura aos ecrãs com mapa fillContainer (motorista + passageiro). */}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <Routes>
               <Route path="/dl" element={<AppDownloadRedirect />} />

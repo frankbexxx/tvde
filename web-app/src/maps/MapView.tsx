@@ -100,7 +100,10 @@ export function MapView({
   onUserMapInteraction,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement>(null)
+  const mapStyleFallbackRef = useRef(false)
   const prevDriverRef = useRef<LatLng | null>(null)
+  const [mapStyleUrl, setMapStyleUrl] = useState(MAPTILER_STYLE)
   const mapAnchor = useMemo(
     () => tripPickup ?? passengerLocation ?? null,
     // Só lat/lng: o passageiro pode passar literais `{ lat, lng }` novos a cada render com as mesmas coordenadas;
@@ -133,6 +136,39 @@ export function MapView({
     }),
     []
   )
+
+  const resizeMap = useCallback(() => {
+    mapRef.current?.getMap()?.resize()
+  }, [])
+
+  useEffect(() => {
+    mapStyleFallbackRef.current = false
+    setMapStyleUrl(MAPTILER_STYLE)
+  }, [MAPTILER_KEY])
+
+  const handleMapError = useCallback(() => {
+    if (mapStyleFallbackRef.current || mapStyleUrl === DEFAULT_MAP_STYLE) return
+    mapStyleFallbackRef.current = true
+    devLog('[MapView] MapTiler/style failed — falling back to demotiles')
+    setMapStyleUrl(DEFAULT_MAP_STYLE)
+  }, [mapStyleUrl])
+
+  // fillContainer: MapLibre precisa de resize quando o pai flex muda de tamanho (senão tiles cinzentos).
+  useEffect(() => {
+    if (!showMap || !fillContainer) return
+    const el = mapContainerRef.current
+    if (!el) return
+
+    const observer = new ResizeObserver(() => {
+      resizeMap()
+    })
+    observer.observe(el)
+    resizeMap()
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [showMap, fillContainer, resizeMap])
 
   // Fetch OSRM route when endpoints change (debounced by key)
   useEffect(() => {
@@ -324,6 +360,7 @@ export function MapView({
       aria-label={onPlanningMapClick ? 'Mapa interactivo — selecciona recolha e destino' : 'Mapa da viagem'}
     >
       <div
+        ref={mapContainerRef}
         className={
           fillContainer
             ? 'absolute inset-0 min-h-0'
@@ -345,7 +382,9 @@ export function MapView({
             height: '100%',
             cursor: onPlanningMapClick ? 'crosshair' : onUserMapInteraction ? 'pointer' : undefined,
           }}
-          mapStyle={MAPTILER_STYLE}
+          mapStyle={mapStyleUrl}
+          onLoad={resizeMap}
+          onError={handleMapError}
           onClick={mapClickHandler}
         >
           {/* Viagem ativa: recolha + destino (P30) */}
