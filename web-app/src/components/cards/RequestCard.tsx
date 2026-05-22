@@ -4,6 +4,7 @@
  * No IDs, no coords.
  */
 import { SlideToAccept } from './SlideToAccept'
+import { INFO_BOX_DRIVER_LARGE } from '../layout/infoBoxTemplate'
 
 interface RequestCardProps {
   pickup: string
@@ -98,7 +99,7 @@ export function RequestCard({
 
   if (slideCompact) {
     return (
-      <div className="rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-3 pr-10 space-y-1 shadow-card transition-all duration-200">
+      <div className={`${INFO_BOX_DRIVER_LARGE} p-3 pr-10 space-y-1 transition-all duration-200`}>
         {slideAccept}
         {tripDetails}
         <div>

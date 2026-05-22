@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { openDriverExternalNav, driverNavAppLabel } from './openDriverExternalNav'
+import { openDriverExternalNav, driverNavAppLabel, warmDriverNavSessionIfNeeded } from './openDriverExternalNav'
 
 vi.mock('../services/driverNavPreference', () => ({
   getDriverNavApp: vi.fn(() => 'waze'),
@@ -23,5 +23,15 @@ describe('openDriverExternalNav', () => {
 
   it('driverNavAppLabel reflecte preferência', () => {
     expect(driverNavAppLabel()).toBe('Waze')
+  })
+
+  it('warmDriverNavSessionIfNeeded abre Waze uma vez', () => {
+    sessionStorage.clear()
+    const open = vi.mocked(window.open)
+    warmDriverNavSessionIfNeeded()
+    expect(open).toHaveBeenCalledWith('https://www.waze.com/', '_blank', 'noopener,noreferrer')
+    open.mockClear()
+    warmDriverNavSessionIfNeeded()
+    expect(open).not.toHaveBeenCalled()
   })
 })

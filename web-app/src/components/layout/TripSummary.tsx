@@ -36,8 +36,13 @@ export function TripCompletedOverlay({
           O pagamento pode ficar «a processar» uns instantes — aguarda a sincronização.
         </p>
       ) : null}
-      <div className="flex justify-center pt-2">
-        <Button type="button" className="min-h-11 px-6" data-testid={continueTestId} onClick={onContinue}>
+      <div className="flex justify-center pt-1">
+        <Button
+          type="button"
+          className="min-h-10 h-10 px-5 text-sm font-semibold"
+          data-testid={continueTestId}
+          onClick={onContinue}
+        >
           Continuar
         </Button>
       </div>

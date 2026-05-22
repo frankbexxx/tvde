@@ -139,6 +139,6 @@
 |----|-------------|
 | TW-01, TW-02 | G08 — cluster C |
 | TW-03 | G24, G27 — cluster E |
-| TW-04 | G12/G19 (nav externa) + G13 (Iniciar\|Cancelar row) + `bottomChrome` opaco |
-| TW-05 | Revisão global pós-screenshots |
+| TW-04 | G12/G19 (nav externa) + G13 (Iniciar\|Cancelar row) + `bottomChrome` opaco — **Concluído** |
+| TW-05 | Revisão smoke dia 22 → [`info-box-template.md`](info-box-template.md) + fases P/M mapa |
 | TW-06 | G07 — cluster B |

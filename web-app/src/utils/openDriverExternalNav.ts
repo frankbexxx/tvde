@@ -1,5 +1,7 @@
 import { getDriverNavApp } from '../services/driverNavPreference'
-import { googleMapsDirectionsUrl, wazeNavigateUrl } from './externalNavigation'
+import { googleMapsDirectionsUrl, wazeNavigateUrl, wazeWarmSessionUrl } from './externalNavigation'
+
+const WAZE_WARM_KEY = 'tvde_driver_nav_warmed'
 
 export type DriverNavPhase = 'pickup' | 'destination'
 
@@ -17,4 +19,19 @@ export function openDriverExternalNav(lat: number, lng: number): boolean {
   const url = app === 'waze' ? wazeNavigateUrl(lat, lng) : googleMapsDirectionsUrl(lat, lng)
   const opened = window.open(url, '_blank', 'noopener,noreferrer')
   return opened != null
+}
+
+/**
+ * Ao ficar disponível: abre Waze uma vez por sessão (se for a app preferida) para reduzir passos no 1.º aceitar.
+ * Não garante login — depende do Waze no telemóvel.
+ */
+export function warmDriverNavSessionIfNeeded(): void {
+  if (getDriverNavApp() !== 'waze') return
+  try {
+    if (sessionStorage.getItem(WAZE_WARM_KEY) === '1') return
+    sessionStorage.setItem(WAZE_WARM_KEY, '1')
+  } catch {
+    return
+  }
+  window.open(wazeWarmSessionUrl(), '_blank', 'noopener,noreferrer')
 }

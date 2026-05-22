@@ -27,6 +27,7 @@ import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapView } from '../../maps/MapView'
 import { MapStage } from '../../components/layout/MapStage'
+import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import { getRouteGeoJSON } from '../../maps/routing'
 import { getOsrmRouteMeta } from '../../services/routingService'
 import {
@@ -74,10 +75,6 @@ import {
  * MapView não desenha pin, câmara começa em OEIRAS_CENTER (só câmara, sem
  * pin), e quando a posição real chega, easeTo centra correctamente.
  */
-function passengerLiveTripMapActive(trip: TripDetailResponse): boolean {
-  return isPassengerDriverTrackingStatus(trip.status)
-}
-
 const ESTIMATE_MOCK = '4–6'
 
 function passengerDashboardNoop() { }
@@ -682,11 +679,18 @@ export function PassengerDashboard() {
     }
   }, [activeTrip?.status, addLog, setPassengerActiveTripId])
 
-  /** Mapa da viagem ativa: accepted | arriving | ongoing (P28+P33 — sem assigned/requested). */
+  /** Mapa da viagem: desde o pedido (requested) até concluída — dia 22 mapa sempre. */
   const showPassengerMap = useMemo(() => {
     if (!activeTrip || tripCompletedFromLocation) return false
-    if (['cancelled', 'failed', 'completed'].includes(activeTrip.status)) return false
-    return passengerLiveTripMapActive(activeTrip)
+    if (['cancelled', 'failed'].includes(activeTrip.status)) return false
+    return [
+      'requested',
+      'assigned',
+      'accepted',
+      'arriving',
+      'ongoing',
+      'completed',
+    ].includes(activeTrip.status)
   }, [activeTrip, tripCompletedFromLocation])
 
   /**
@@ -751,12 +755,12 @@ export function PassengerDashboard() {
     () =>
       Boolean(
         uxState &&
-          activeTrip &&
-          (uxState === 'SEARCHING_DRIVER' ||
-            uxState === 'DRIVER_ASSIGNED' ||
-            uxState === 'DRIVER_ARRIVING' ||
-            uxState === 'TRIP_ONGOING' ||
-            uxState === 'TRIP_COMPLETED'),
+        activeTrip &&
+        (uxState === 'SEARCHING_DRIVER' ||
+          uxState === 'DRIVER_ASSIGNED' ||
+          uxState === 'DRIVER_ARRIVING' ||
+          uxState === 'TRIP_ONGOING' ||
+          uxState === 'TRIP_COMPLETED'),
       ),
     [uxState, activeTrip],
   )
@@ -852,7 +856,7 @@ export function PassengerDashboard() {
   }, [showPassengerMap, activeTrip])
 
   const tripMapLegs = useMemo(() => {
-    if (!showPassengerMap || !activeTrip) return { pickup: null, dropoff: null }
+    if (!activeTrip || !showPassengerMap) return { pickup: null, dropoff: null }
     return {
       pickup: { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
       dropoff: { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng },
@@ -863,14 +867,14 @@ export function PassengerDashboard() {
     if (tripCompletedFromLocation) return 'Viagem concluída'
     if (activeTripId && !activeTrip) return 'A sincronizar viagem…'
     if (!activeTrip) return 'Mapa indisponível.'
-    if (activeTrip.status === 'requested') return 'À procura de motorista'
-    if (activeTrip.status === 'assigned') {
-      return 'Motorista atribuído — o mapa mostra o rasto quando a viagem for aceite'
+    if (activeTrip.status === 'requested') return ''
+    if (activeTrip.status === 'assigned' && !driverLocation) {
+      return 'A aguardar posição do motorista'
     }
     if (isPassengerDriverTrackingStatus(activeTrip.status) && !driverLocation) {
       return 'A aguardar posição do motorista'
     }
-    return 'Mapa indisponível.'
+    return ''
   }, [activeTrip, activeTripId, driverLocation, tripCompletedFromLocation])
 
   const showSubmittingCard = creating && !activeTripId
@@ -879,8 +883,9 @@ export function PassengerDashboard() {
   const passengerMapStageLayout =
     passengerUiState === 'in_trip' || passengerUiState === 'searching'
 
-  const passengerMapStageShowMap =
-    activeTrip?.status === 'completed' ? false : showMapOnScreen
+  const passengerMapStageShowMap = passengerMapStageLayout
+    ? Boolean(activeTrip) || showMapOnScreen
+    : showMapOnScreen
 
   /** A021: um foco por ecrã — header, mapa e painel coordenam peso visual */
   const a021Layout = useMemo(() => {
@@ -1065,6 +1070,7 @@ export function PassengerDashboard() {
         <div className="px-4 py-1">
           <BottomActionStack testId="passenger-trip-action-stack">
             <PrimaryActionButton
+              size="compact"
               onClick={primaryOnClick}
               disabled={primaryLabel === 'Cancelar' ? cancelling : false}
               loading={primaryLabel === 'Cancelar' && cancelling}
@@ -1333,15 +1339,15 @@ export function PassengerDashboard() {
               <div
                 ref={mapAnchorRef}
                 id="passenger-map-anchor"
-                className="flex min-h-0 flex-col scroll-mt-4"
+                className="flex min-h-[min(52vh,400px)] flex-col scroll-mt-4"
               >
                 <MapStage
                   testId="passenger-map-stage"
-                  className="min-h-[min(48vh,360px)] shrink-0 flex-none"
-                  overlayClassName="hidden"
+                  className="min-h-[min(52vh,400px)] flex-1"
+                  overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pointer-events-none"
                   map={{
                     showMap: passengerMapStageShowMap,
-                    mapPlaceholder,
+                    mapPlaceholder: mapPlaceholder || undefined,
                     passengerLocation:
                       passengerLocation ??
                       (activeTrip
@@ -1351,10 +1357,54 @@ export function PassengerDashboard() {
                     route: routeForMap,
                     tripPickup: tripMapLegs.pickup,
                     tripDropoff: tripMapLegs.dropoff,
-                    mapVisualWeight: a021Layout.map,
+                    mapVisualWeight: 'emphasized',
                     planningRecenter: dropoffPreviewLocation,
                     planningRecenterKey: mapRecenterKey,
                   }}
+                  bottomOverlay={
+                    (activeTripId || creating) && !showPassengerRatingPanel ? (
+                      <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,320px)] overflow-hidden px-2 py-2">
+                        {showSubmittingCard ? (
+                          <div
+                            className="flex flex-col items-center justify-center py-4 space-y-2"
+                            data-testid="passenger-info-panel-submitting"
+                          >
+                            <Spinner size="md" />
+                            <p className="text-sm font-semibold text-foreground">A enviar pedido…</p>
+                          </div>
+                        ) : uxState && activeTrip ? (
+                          <>
+                            <PassengerStatusCard
+                              compact
+                              uxState={uxState}
+                              activeTrip={activeTrip}
+                              onRetrySearch={
+                                activeTrip?.status === 'requested' ? handleRetrySearch : undefined
+                              }
+                              retrySearchPending={retrySearchPending}
+                              trackingHint={driverTrackingHint}
+                              pollHint={tripPollFootnote}
+                            />
+                            {activeTrip.payment_status === 'processing' &&
+                              typeof activeTrip.payment_intent_client_secret === 'string' &&
+                              activeTrip.payment_intent_client_secret.length > 0 ? (
+                              <div className="mt-2">
+                                <PassengerPaymentConfirmCard
+                                  clientSecret={activeTrip.payment_intent_client_secret}
+                                  onConfirmed={() => void refetchActiveTrip()}
+                                />
+                              </div>
+                            ) : null}
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-4 space-y-2">
+                            <Spinner size="md" />
+                            <p className="text-sm text-foreground">A sincronizar viagem…</p>
+                          </div>
+                        )}
+                      </MapBottomSheet>
+                    ) : null
+                  }
                 />
               </div>
             ) : (
@@ -1438,8 +1488,11 @@ export function PassengerDashboard() {
         )}
 
         {/* A014: estado da viagem; A019: envio inicial usa TripPlannerPanel (searching) */}
-        {(activeTripId || creating) && !showSubmittingCard && !showPassengerRatingPanel && (
-          uxState && activeTrip ? (
+        {(activeTripId || creating) &&
+          !showSubmittingCard &&
+          !showPassengerRatingPanel &&
+          !passengerMapStageLayout &&
+          (uxState && activeTrip ? (
             <>
               <PassengerStatusCard
                 uxState={uxState}
@@ -1468,8 +1521,7 @@ export function PassengerDashboard() {
                 A obter o estado mais recente da viagem.
               </p>
             </div>
-          )
-        )}
+          ))}
 
         {historyPollFault && (
           <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
