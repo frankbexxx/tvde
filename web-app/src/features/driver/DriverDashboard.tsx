@@ -99,6 +99,7 @@ import {
 } from '../../utils/geo'
 import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
+import { INFO_BOX_MAP_HINT } from '../../components/layout/infoBoxTemplate'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
@@ -139,7 +140,6 @@ import {
   DRIVER_OPEN_SETTINGS_EVENT,
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
-import { DriverShellTopChips } from './DriverShellTopChips'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
@@ -855,15 +855,6 @@ export function DriverDashboard() {
     sonnerToast.info('Esta viagem já não está disponível na tua sessão.')
   }, [clearDriverActiveTripUi])
 
-  const driverTripCompletedUi = useMemo(() => {
-    const s = mergeDriverPolledWithOverride(
-      acceptedDetailFallback?.status,
-      driverStatusOverride,
-      'accepted'
-    )
-    return s === 'completed'
-  }, [acceptedDetailFallback?.status, driverStatusOverride])
-
   const driverTripPartialAfterComplete = useCallback(() => {
     setDriverCompleteSoundTick((n) => n + 1)
     tripSimStopRef.current?.()
@@ -876,6 +867,78 @@ export function DriverDashboard() {
     refetchHistory()
     refetchAvailable()
   }, [refetchAvailable, refetchHistory, setStatus])
+
+  const driverActiveTripPanel =
+    activeTripId != null && token ? (
+      <div className="space-y-2">
+        <ActiveTripSummary
+          compact
+          tripId={activeTripId}
+          token={token}
+          statusOverride={driverStatusOverride}
+          detailFallback={acceptedDetailFallback}
+          sessionRole={sessionRole}
+          onClearStatusOverride={() => setDriverStatusOverride(null)}
+          onTripCancelled={onActiveTripCancelled}
+          onTripNotFound={onActiveTripNotFound}
+          onDismissCompletedTrip={clearDriverActiveTripUi}
+        />
+        <ActiveTripActions
+          tripId={activeTripId}
+          token={token}
+          tripDetailFallback={acceptedDetailFallback}
+          driverLocation={mapDotLatLng ?? null}
+          addLog={addLog}
+          setStatus={setStatus}
+          statusOverride={driverStatusOverride}
+          onClearStatusOverride={() => setDriverStatusOverride(null)}
+          onTripActionSuccess={(s) => {
+            setDriverStatusOverride(s)
+            if (s === 'ongoing' && isMockLocationModeEnabled()) {
+              const beginPickupToDest = (
+                pickup: { lat: number; lng: number },
+                destination: { lat: number; lng: number }
+              ) => {
+                tripSimStopRef.current?.()
+                tripSimStopRef.current = null
+                const pos = driverLocationRef.current
+                const nearPickup =
+                  pos != null && isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
+                if (!nearPickup) {
+                  setMockSimulatedPosition(pickup)
+                  void sendDriverLocation(pickup.lat, pickup.lng, token)
+                }
+                const routeFrom = nearPickup && pos ? pos : pickup
+                window.setTimeout(() => {
+                  startMockOsrmLeg(routeFrom, destination)
+                }, 200)
+              }
+              const legs = acceptedTripGeoRef.current
+              if (legs) {
+                beginPickupToDest(legs.pickup, legs.destination)
+              } else if (token && activeTripId) {
+                const genSnapshot = mockApproachGenRef.current
+                void (async () => {
+                  try {
+                    const d = await getDriverTripDetail(activeTripId, token)
+                    if (genSnapshot !== mockApproachGenRef.current) return
+                    beginPickupToDest(
+                      { lat: d.origin_lat, lng: d.origin_lng },
+                      { lat: d.destination_lat, lng: d.destination_lng }
+                    )
+                  } catch {
+                    /* sem detalhe não há fase 2 */
+                  }
+                })()
+              }
+            }
+          }}
+          onComplete={clearDriverActiveTripUi}
+          onTripCompleted={driverTripPartialAfterComplete}
+          onError={setError}
+        />
+      </div>
+    ) : null
 
   const bottomChrome =
     driverBottomNav && showDriverHomeStep1 && activeTripId == null ? (
@@ -913,80 +976,14 @@ export function DriverDashboard() {
         <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
       </div>
     ) : activeTripId != null ? (
-      <div className="w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
-        <div className="px-4 pt-2 pb-1 space-y-2">
-          {token ? (
-            <ActiveTripSummary
-              compact
-              tripId={activeTripId}
-              token={token}
-              statusOverride={driverStatusOverride}
-              detailFallback={acceptedDetailFallback}
-              sessionRole={sessionRole}
-              onClearStatusOverride={() => setDriverStatusOverride(null)}
-              onTripCancelled={onActiveTripCancelled}
-              onTripNotFound={onActiveTripNotFound}
-              onDismissCompletedTrip={clearDriverActiveTripUi}
-            />
-          ) : null}
-          <ActiveTripActions
-            tripId={activeTripId}
-            token={token!}
-            tripDetailFallback={acceptedDetailFallback}
-            driverLocation={mapDotLatLng ?? null}
-            addLog={addLog}
-            setStatus={setStatus}
-            statusOverride={driverStatusOverride}
-            onClearStatusOverride={() => setDriverStatusOverride(null)}
-            onTripActionSuccess={(s) => {
-              setDriverStatusOverride(s)
-              // Fase 2 mock: pickup → destino (após «Iniciar viagem» → ongoing). Mesmo motor que fase 1.
-              if (s === 'ongoing' && isMockLocationModeEnabled()) {
-                const beginPickupToDest = (
-                  pickup: { lat: number; lng: number },
-                  destination: { lat: number; lng: number }
-                ) => {
-                  tripSimStopRef.current?.()
-                  tripSimStopRef.current = null
-                  const pos = driverLocationRef.current
-                  const nearPickup =
-                    pos != null && isWithinHaversineM(pos, pickup, DRIVER_START_TRIP_MAX_DISTANCE_M)
-                  if (!nearPickup) {
-                    setMockSimulatedPosition(pickup)
-                    void sendDriverLocation(pickup.lat, pickup.lng, token!)
-                  }
-                  const routeFrom = nearPickup && pos ? pos : pickup
-                  window.setTimeout(() => {
-                    startMockOsrmLeg(routeFrom, destination)
-                  }, 200)
-                }
-                const legs = acceptedTripGeoRef.current
-                if (legs) {
-                  beginPickupToDest(legs.pickup, legs.destination)
-                } else if (token && activeTripId) {
-                  const genSnapshot = mockApproachGenRef.current
-                  void (async () => {
-                    try {
-                      const d = await getDriverTripDetail(activeTripId, token)
-                      if (genSnapshot !== mockApproachGenRef.current) return
-                      beginPickupToDest(
-                        { lat: d.origin_lat, lng: d.origin_lng },
-                        { lat: d.destination_lat, lng: d.destination_lng }
-                      )
-                    } catch {
-                      /* sem detalhe não há fase 2 */
-                    }
-                  })()
-                }
-              }
-            }}
-            onComplete={clearDriverActiveTripUi}
-            onTripCompleted={driverTripPartialAfterComplete}
-            onError={setError}
-          />
+      driverMapStageLayout ? (
+        !menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} /> : undefined
+      ) : (
+        <div className="w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
+          <div className="px-4 pt-2 pb-1">{driverActiveTripPanel}</div>
+          {!menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} /> : null}
         </div>
-        {!menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} /> : null}
-      </div>
+      )
     ) : driverBottomNav ? (
       <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
     ) : undefined
@@ -1189,9 +1186,6 @@ export function DriverDashboard() {
             className="space-y-4 transition-opacity duration-150"
             data-testid="driver-home-step1"
           >
-            {driverBottomNav ? (
-              <DriverShellTopChips offline={offline} activeTripId={activeTripId} />
-            ) : null}
             {(!offline || driverBottomNav) && (
               <>
                 <div className="relative min-h-[min(52vh,24rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
@@ -1482,17 +1476,12 @@ export function DriverDashboard() {
           <div
             className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col overflow-hidden' : 'contents'}
           >
+            {( !driverMapStageLayout ||
+              (driverHomeTwoStep && !activeTripId && driverHomeStep === 2) ) && (
             <header
-              className={`${driverMapStageLayout ? 'shrink-0 px-4 mb-1' : 'mb-4'} flex items-start gap-3 ${driverBottomNav ? 'justify-between' : 'justify-end'}`}
+              className={`${driverMapStageLayout ? 'shrink-0 px-4 mb-1' : 'mb-4'} flex items-start gap-3 justify-end`}
             >
-              {driverBottomNav ? (
-                <DriverShellTopChips
-                  offline={offline}
-                  activeTripId={activeTripId}
-                  tripCompleted={driverTripCompletedUi}
-                />
-              ) : null}
-              <div className={`flex flex-col items-end gap-1.5 shrink-0 ${driverBottomNav ? '' : 'ml-auto'}`}>
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
                 {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
                   <button
                     type="button"
@@ -1521,6 +1510,7 @@ export function DriverDashboard() {
                 ) : null}
               </div>
             </header>
+            )}
 
             {driverMapStageLayout && (!offline || driverBottomNav) && (
               <MapStage
@@ -1714,7 +1704,11 @@ export function DriverDashboard() {
                       </p>
                     ) : null}
                   </div>
-                  {!offline && !activeTripId ? (
+                  {activeTripId ? (
+                    <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,340px)] overflow-y-auto px-2 py-2">
+                      {driverActiveTripPanel}
+                    </MapBottomSheet>
+                  ) : !offline ? (
                     <MapBottomSheet
                       id="driver-main-scroll"
                       className={`px-2 py-2 ${selectedAvailableTrip
@@ -1766,7 +1760,7 @@ export function DriverDashboard() {
                           />
                         </ActionPanel>
                       ) : hasAvailableTrips ? (
-                        <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-2 text-center space-y-1">
+                        <div className={`${INFO_BOX_MAP_HINT} px-2 py-2 text-center space-y-1`}>
                           <p className="text-xs font-medium text-foreground/90">
                             {filteredAvailable.length === 1
                               ? '1 viagem no mapa'
@@ -1793,7 +1787,7 @@ export function DriverDashboard() {
                           </div>
                         </>
                       ) : (
-                        <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-1.5 text-center">
+                        <div className={`${INFO_BOX_MAP_HINT} px-2 py-1.5 text-center`}>
                           <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
                           <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
                             {hasAnyCategoryAwareOffer && filteredOutCount > 0

@@ -11,6 +11,7 @@ import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tr
 import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
 import { PASSENGER_PAYMENT_DISCLOSURE_SEARCHING } from '../../constants/passengerPaymentCopy'
+import { INFO_BOX_PASSENGER, BTN_SECONDARY_RADIUS } from '../../components/layout/infoBoxTemplate'
 
 const ESTIMATE_FALLBACK = '4–6'
 
@@ -96,7 +97,7 @@ function SearchingDriverPhase({
         showFallback && onRetrySearch ? (
           <button
             type="button"
-            className="mt-1 rounded-xl border border-primary/45 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 disabled:opacity-60 disabled:pointer-events-none transition-colors"
+            className={`mt-1 ${BTN_SECONDARY_RADIUS} border border-primary/45 bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15 disabled:opacity-60 disabled:pointer-events-none transition-colors`}
             disabled={retrySearchPending}
             onClick={onRetrySearch}
           >
@@ -135,7 +136,7 @@ function PassengerStatusCardInner({
   if (isSubmittingTrip) {
     return (
       <div
-        className="flex flex-col items-center justify-center py-8 space-y-3 rounded-2xl border border-border bg-card"
+        className={`flex flex-col items-center justify-center py-8 space-y-3 ${INFO_BOX_PASSENGER}`}
         data-testid="passenger-info-panel-submitting"
       >
         <Spinner size="lg" />

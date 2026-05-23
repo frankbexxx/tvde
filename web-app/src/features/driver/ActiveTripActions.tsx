@@ -5,7 +5,14 @@ import { usePolling } from '../../hooks/usePolling'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { HintLine } from '../../components/layout/HintLine'
-import { BottomActionStack } from '../../components/layout/BottomActionStack'
+import { MapActionRow } from '../../components/layout/MapActionRow'
+import {
+  BTN_DANGER_OUTLINE,
+  BTN_SECONDARY,
+  BTN_SECONDARY_RADIUS,
+  BTN_SUCCESS_OUTLINE,
+  INFO_BOX_MAP_HINT,
+} from '../../components/layout/infoBoxTemplate'
 import { toast as sonnerToast } from 'sonner'
 import { DRIVER_START_TRIP_MAX_DISTANCE_M, haversineKm } from '../../utils/geo'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
@@ -191,7 +198,7 @@ export function ActiveTripActions({
   if (displayStatus === 'completed' || displayStatus === 'cancelled') return null
   if (!hasTripContext && !statusOverride) {
     return (
-      <div className="rounded-xl border border-border/80 bg-muted/30 px-4 py-3 text-center text-sm text-foreground/75">
+      <div className={`${INFO_BOX_MAP_HINT} px-4 py-3 text-center text-sm text-foreground/75`}>
         A sincronizar estado da viagem… Se persistir, recarrega a página.
       </div>
     )
@@ -210,7 +217,7 @@ export function ActiveTripActions({
 
   if (!buttonConfig) {
     return (
-      <div className="rounded-xl border border-border/80 bg-muted/30 px-4 py-3 text-center text-sm text-foreground/75">
+      <div className={`${INFO_BOX_MAP_HINT} px-4 py-3 text-center text-sm text-foreground/75`}>
         A sincronizar estado da viagem… Se persistir, recarrega a página.
       </div>
     )
@@ -261,11 +268,11 @@ export function ActiveTripActions({
           ) : null}
         </div>
       ) : null}
-      <BottomActionStack testId="driver-trip-action-stack" direction="row">
+      <MapActionRow testId="driver-trip-action-stack">
         {displayStatus === 'ongoing' ? (
           <button
             type="button"
-            className="flex-1 min-w-0 min-h-10 h-10 rounded-full border-2 border-success/55 bg-success/10 text-success text-sm font-semibold hover:bg-success/15 disabled:opacity-50 touch-manipulation"
+            className={BTN_SUCCESS_OUTLINE}
             onClick={() => {
               void run(buttonConfig.action, buttonConfig.label)
             }}
@@ -293,15 +300,15 @@ export function ActiveTripActions({
             data-testid="driver-trip-cancel-open"
             onClick={() => setCancelPanelOpen(true)}
             disabled={loading}
-            className="flex-1 min-w-0 min-h-10 h-10 rounded-full border-2 border-destructive/70 bg-transparent text-destructive text-sm font-semibold hover:bg-destructive/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40 focus-visible:ring-offset-2 disabled:border-border disabled:bg-muted/50 disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors touch-manipulation"
+            className={BTN_DANGER_OUTLINE}
           >
             Cancelar
           </button>
         ) : null}
-      </BottomActionStack>
+      </MapActionRow>
       {showCancel && cancelPanelOpen ? (
         <div
-          className="rounded-xl border border-destructive/35 bg-destructive/5 px-3 py-3 space-y-3"
+          className={`${BTN_SECONDARY_RADIUS} border border-destructive/35 bg-destructive/5 px-3 py-3 space-y-3`}
           data-testid="driver-trip-cancel-panel"
         >
           <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
@@ -311,7 +318,7 @@ export function ActiveTripActions({
           <select
             id="driver-cancel-preset"
             data-testid="driver-cancel-preset"
-            className="w-full min-h-[44px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+            className={`w-full min-h-[44px] ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 text-sm text-foreground`}
             value={cancelPreset}
             onChange={(e) => setCancelPreset(e.target.value)}
             disabled={loading}
@@ -325,7 +332,7 @@ export function ActiveTripActions({
           {cancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
             <textarea
               data-testid="driver-cancel-other"
-              className="w-full min-h-[72px] rounded-lg border border-border bg-background px-2 py-2 text-sm text-foreground"
+              className={`w-full min-h-[72px] ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 py-2 text-sm text-foreground`}
               placeholder="Descreve em poucas palavras (opcional)."
               maxLength={280}
               value={cancelOtherDetail}
@@ -352,7 +359,7 @@ export function ActiveTripActions({
                 })()
               }}
               disabled={loading}
-              className="min-h-[44px] flex-1 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 disabled:opacity-50 touch-manipulation"
+              className={`min-h-[44px] flex-1 ${BTN_SECONDARY_RADIUS} bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 disabled:opacity-50 touch-manipulation`}
             >
               Confirmar cancelamento
             </button>
@@ -365,7 +372,7 @@ export function ActiveTripActions({
                 setCancelOtherDetail('')
               }}
               disabled={loading}
-              className="min-h-[44px] flex-1 rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+              className={`min-h-[44px] flex-1 ${BTN_SECONDARY}`}
             >
               Voltar
             </button>

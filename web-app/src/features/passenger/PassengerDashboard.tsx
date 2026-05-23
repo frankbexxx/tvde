@@ -20,7 +20,8 @@ import { MOCK_DRIVER_START } from '../../dev/mockPositions'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
-import { BottomActionStack } from '../../components/layout/BottomActionStack'
+import { MapActionRow } from '../../components/layout/MapActionRow'
+import { BTN_SECONDARY, BTN_SECONDARY_RADIUS } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapStage } from '../../components/layout/MapStage'
@@ -955,17 +956,13 @@ export function PassengerDashboard() {
     ? { lat: destinationCandidate.lat, lng: destinationCandidate.lng }
     : null)
 
-  const showPassengerBottomNav = !passengerCancelOpen
-  const passengerBottomNavEl = showPassengerBottomNav ? (
+  const passengerBottomNavEl = (
     <PassengerBottomNav active={passengerNavActive} onSelect={handlePassengerBottomNav} />
-  ) : null
+  )
 
-  const passengerBottomChrome =
+  const passengerCancelPanelInOverlay =
     passengerCancelOpen && primaryLabel === 'Cancelar' ? (
-      <div
-        className="w-full space-y-3 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-        data-testid="passenger-cancel-panel"
-      >
+      <div className="space-y-3 pt-1" data-testid="passenger-cancel-panel">
         <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
         <label className="block text-xs text-muted-foreground" htmlFor="passenger-cancel-preset">
           Escolha rápida
@@ -973,7 +970,7 @@ export function PassengerDashboard() {
         <select
           id="passenger-cancel-preset"
           data-testid="passenger-cancel-preset"
-          className="w-full min-h-11 rounded-lg border border-border bg-card px-2 text-sm text-foreground touch-manipulation"
+          className={`w-full min-h-11 ${BTN_SECONDARY_RADIUS} border border-border bg-card px-2 text-sm text-foreground touch-manipulation`}
           value={passengerCancelPreset}
           onChange={(e) => setPassengerCancelPreset(e.target.value)}
           disabled={cancelling}
@@ -987,7 +984,7 @@ export function PassengerDashboard() {
         {passengerCancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
           <textarea
             data-testid="passenger-cancel-other"
-            className="w-full min-h-[72px] rounded-lg border border-border bg-card px-2 py-2 text-sm text-foreground"
+            className={`w-full min-h-[72px] ${BTN_SECONDARY_RADIUS} border border-border bg-card px-2 py-2 text-sm text-foreground`}
             placeholder="Descreve em poucas palavras (opcional)."
             maxLength={280}
             value={passengerCancelOther}
@@ -995,8 +992,10 @@ export function PassengerDashboard() {
             disabled={cancelling}
           />
         ) : null}
-        <div className="flex flex-col gap-2 sm:flex-row-reverse">
+        <MapActionRow testId="passenger-cancel-actions">
           <PrimaryActionButton
+            className="flex-1 min-w-0"
+            size="compact"
             variant="danger"
             loading={cancelling}
             disabled={cancelling}
@@ -1009,7 +1008,7 @@ export function PassengerDashboard() {
           <button
             type="button"
             data-testid="passenger-cancel-back"
-            className="min-h-11 flex-1 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+            className={`flex-1 min-w-0 ${BTN_SECONDARY}`}
             disabled={cancelling}
             onClick={() => {
               setPassengerCancelOpen(false)
@@ -1019,28 +1018,27 @@ export function PassengerDashboard() {
           >
             Voltar
           </button>
-        </div>
+        </MapActionRow>
       </div>
-    ) : showBottomPrimary && primaryLabel ? (
-      <div className="max-w-md mx-auto w-full border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="px-4 py-1">
-          <BottomActionStack testId="passenger-trip-action-stack">
-            <PrimaryActionButton
-              size="compact"
-              onClick={primaryOnClick}
-              disabled={primaryLabel === 'Cancelar' ? cancelling : false}
-              loading={primaryLabel === 'Cancelar' && cancelling}
-              variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
-            >
-              {primaryLabel}
-            </PrimaryActionButton>
-          </BottomActionStack>
-        </div>
-        {passengerBottomNavEl}
-      </div>
-    ) : (
-      passengerBottomNavEl ?? undefined
-    )
+    ) : null
+
+  const passengerTripPrimaryInOverlay =
+    !passengerCancelOpen && showBottomPrimary && primaryLabel ? (
+      <MapActionRow testId="passenger-trip-action-stack">
+        <PrimaryActionButton
+          className="flex-1 min-w-0"
+          size="compact"
+          onClick={primaryOnClick}
+          disabled={primaryLabel === 'Cancelar' ? cancelling : false}
+          loading={primaryLabel === 'Cancelar' && cancelling}
+          variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
+        >
+          {primaryLabel}
+        </PrimaryActionButton>
+      </MapActionRow>
+    ) : null
+
+  const passengerBottomChrome = passengerBottomNavEl
 
   return (
     <ScreenContainer
@@ -1048,13 +1046,7 @@ export function PassengerDashboard() {
       contentVariant="driverImmersive"
       mainScrollable={false}
       bottomButton={passengerBottomChrome}
-      bottomBarVariant={
-        passengerCancelOpen && primaryLabel === 'Cancelar'
-          ? 'inset'
-          : passengerBottomChrome
-            ? 'flush'
-            : 'inset'
-      }
+      bottomBarVariant={passengerBottomChrome ? 'flush' : 'inset'}
       mainScrollId="passenger-main-scroll"
     >
       <PassengerSideMenu
@@ -1242,8 +1234,10 @@ export function PassengerDashboard() {
                     />
                   </MapBottomSheet>
               ) : (activeTripId || creating) && !showPassengerRatingPanel ? (
-                <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,320px)] overflow-hidden px-2 py-2">
-                  {showSubmittingCard ? (
+                <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,320px)] overflow-y-auto px-2 py-2">
+                  {passengerCancelPanelInOverlay ? (
+                    passengerCancelPanelInOverlay
+                  ) : showSubmittingCard ? (
                     <div
                       className="flex flex-col items-center justify-center py-4 space-y-2"
                       data-testid="passenger-info-panel-submitting"
@@ -1252,7 +1246,7 @@ export function PassengerDashboard() {
                       <p className="text-sm font-semibold text-foreground">A enviar pedido…</p>
                     </div>
                   ) : uxState && activeTrip ? (
-                    <>
+                    <div className="space-y-2">
                       <PassengerStatusCard
                         compact
                         uxState={uxState}
@@ -1267,14 +1261,13 @@ export function PassengerDashboard() {
                       {activeTrip.payment_status === 'processing' &&
                         typeof activeTrip.payment_intent_client_secret === 'string' &&
                         activeTrip.payment_intent_client_secret.length > 0 ? (
-                        <div className="mt-2">
-                          <PassengerPaymentConfirmCard
-                            clientSecret={activeTrip.payment_intent_client_secret}
-                            onConfirmed={() => void refetchActiveTrip()}
-                          />
-                        </div>
+                        <PassengerPaymentConfirmCard
+                          clientSecret={activeTrip.payment_intent_client_secret}
+                          onConfirmed={() => void refetchActiveTrip()}
+                        />
                       ) : null}
-                    </>
+                      {passengerTripPrimaryInOverlay}
+                    </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-4 space-y-2">
                       <Spinner size="md" />

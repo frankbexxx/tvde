@@ -6,6 +6,7 @@ import { getConfig } from '../../api/auth'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 import { appBuildDisplayLine } from '../../lib/appBuildMeta'
+import { BTN_PRIMARY_RADIUS, BTN_SECONDARY_RADIUS, SURFACE_RADIUS } from '../../components/layout/infoBoxTemplate'
 
 function formatLoginError(err: unknown): string {
   if (err !== null && typeof err === 'object' && 'status' in err) {
@@ -116,7 +117,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-sm bg-card rounded-2xl shadow-card overflow-hidden">
+      <div className={`w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
         <BrandStripe />
         <div className="p-6">
           <div className="flex flex-wrap items-end gap-2 mb-4" data-testid="login-brand">
@@ -132,7 +133,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               to="/passenger"
               role="tab"
               aria-selected={requestedRole === 'passenger'}
-              className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'passenger'
+              className={`min-h-[44px] py-3 text-center text-sm font-medium ${BTN_SECONDARY_RADIUS} transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'passenger'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
                 }`}
@@ -143,7 +144,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               to="/driver"
               role="tab"
               aria-selected={requestedRole === 'driver'}
-              className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'driver'
+              className={`min-h-[44px] py-3 text-center text-sm font-medium ${BTN_SECONDARY_RADIUS} transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'driver'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
                 }`}
@@ -154,7 +155,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               to="/partner"
               role="tab"
               aria-selected={requestedRole === 'partner'}
-              className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'partner'
+              className={`min-h-[44px] py-3 text-center text-sm font-medium ${BTN_SECONDARY_RADIUS} transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'partner'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
                 }`}
@@ -165,7 +166,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               to="/admin/login"
               role="tab"
               aria-selected={requestedRole === 'admin'}
-              className={`min-h-[44px] py-3 text-center text-sm font-medium rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'admin'
+              className={`min-h-[44px] py-3 text-center text-sm font-medium ${BTN_SECONDARY_RADIUS} transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card ${requestedRole === 'admin'
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground'
                 }`}
@@ -181,7 +182,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               <button
                 type="button"
                 onClick={startGoogleLogin}
-                className="w-full min-h-[44px] py-2.5 rounded-xl border border-input bg-background text-foreground font-medium hover:bg-muted/80 transition-colors"
+                className={`w-full min-h-[44px] py-2.5 ${BTN_SECONDARY_RADIUS} border border-input bg-background text-foreground font-medium hover:bg-muted/80 transition-colors`}
               >
                 Continuar com Google
               </button>
@@ -199,7 +200,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+351912345678"
-                className="w-full px-3 py-2 border border-input rounded-xl bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent"
+                className={`w-full px-3 py-2 border border-input ${BTN_SECONDARY_RADIUS} bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent`}
                 required
               />
             </div>
@@ -212,19 +213,19 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-xl bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent"
+                className={`w-full px-3 py-2 border border-input ${BTN_SECONDARY_RADIUS} bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent`}
                 required
               />
             </div>
             {error && (
-              <p className="text-sm text-destructive bg-destructive/10 border-l-4 border-destructive px-3 py-2 rounded-xl">
+              <p className={`text-sm text-destructive bg-destructive/10 border-l-4 border-destructive px-3 py-2 ${BTN_SECONDARY_RADIUS}`}>
                 {error}
               </p>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full min-h-[44px] py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
+              className={`w-full min-h-[44px] py-2.5 bg-primary text-primary-foreground font-medium ${BTN_PRIMARY_RADIUS} hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100`}
             >
               {loading ? 'A entrar...' : 'Entrar'}
             </button>
