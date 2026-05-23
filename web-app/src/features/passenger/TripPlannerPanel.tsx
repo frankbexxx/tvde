@@ -4,8 +4,14 @@ import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { PASSENGER_PAYMENT_DISCLOSURE_SEARCHING } from '../../constants/passengerPaymentCopy'
 import {
+  BTN_COMPACT_HEIGHT,
   BTN_PRIMARY_RADIUS,
+  BTN_SECONDARY,
   BTN_SECONDARY_RADIUS,
+  INFO_BOX_BODY_COMPACT,
+  INFO_BOX_TITLE_COMPACT,
+  MAP_SHEET_GAP,
+  SURFACE_RADIUS,
 } from '../../components/layout/infoBoxTemplate'
 
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
@@ -159,7 +165,7 @@ function TripPlannerPanelInner({
             type="button"
             onClick={onChooseMap}
             disabled={confirmTripPending}
-            className={`w-full min-h-[52px] ${BTN_PRIMARY_RADIUS} bg-info text-info-foreground py-3 text-base font-bold shadow-floating hover:bg-info/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none`}
+            className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-info text-info-foreground text-sm font-bold shadow-floating hover:bg-info/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none touch-manipulation`}
           >
             {embedded ? 'Marcar recolha no mapa' : 'Escolher recolha no mapa'}
           </button>
@@ -169,8 +175,8 @@ function TripPlannerPanelInner({
       {uiState === 'planning' && (
         <>
           {!embedded && <p className="text-base font-semibold text-foreground">Percurso</p>}
-          {(embedded ? hasPickup : true) ? (
-            <p className="text-base font-medium text-foreground leading-snug">
+          {(embedded ? hasPickup && hasDropoff : true) ? (
+            <p className={`${INFO_BOX_BODY_COMPACT} font-medium text-foreground leading-snug`}>
               <span className="text-foreground/75">{pickupLine}</span>
               <span className="mx-1.5 text-foreground/50">→</span>
               <span className="text-foreground">{dropLine}</span>
@@ -190,7 +196,7 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onReset}
               disabled={confirmTripPending}
-              className={`w-full ${BTN_SECONDARY_RADIUS} border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed`}
+              className={`w-full ${BTN_SECONDARY}`}
             >
               Repor
             </button>
@@ -200,13 +206,13 @@ function TripPlannerPanelInner({
 
       {uiState === 'confirming' && (
         <>
-          {!embedded && <p className="text-base font-semibold text-foreground">Confirma a viagem</p>}
-          <p className="text-base font-medium text-foreground leading-snug">
+          {!embedded && <p className={INFO_BOX_TITLE_COMPACT}>Confirma a viagem</p>}
+          <p className={`${INFO_BOX_BODY_COMPACT} font-medium text-foreground leading-snug`}>
             <span className="text-foreground/80">{pickupAddress ?? '—'}</span>
             <span className="mx-1.5 text-foreground/45">→</span>
             <span className="text-foreground">{dropoffAddress ?? '—'}</span>
           </p>
-          <div className="flex items-center gap-3 text-sm text-foreground/80 min-h-[1.25rem]">
+          <div className="flex items-center gap-2 text-xs text-foreground/80 min-h-[1rem]">
             {routeMetaLoading ? (
               <span>A calcular percurso…</span>
             ) : routeMeta ? (
@@ -227,7 +233,7 @@ function TripPlannerPanelInner({
           </p>
           {confirmBlockedReason ? (
             <div
-              className="rounded-xl border border-warning/50 bg-warning/15 px-3 py-2.5 text-sm text-foreground leading-snug"
+              className={`${BTN_SECONDARY_RADIUS} border border-warning/50 bg-warning/15 px-2 py-1.5 text-xs text-foreground leading-snug`}
               role="status"
               data-testid="passenger-confirm-blocked-hint"
             >
@@ -239,7 +245,7 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onConfirmTrip}
               disabled={confirmTripPending || routeMetaLoading || Boolean(confirmBlockedReason)}
-              className={`flex-1 min-h-10 ${BTN_PRIMARY_RADIUS} bg-success text-success-foreground px-4 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation`}
+              className={`flex-1 ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-success text-success-foreground px-3 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation`}
             >
               {confirmTripPending ? 'A confirmar…' : 'Confirmar viagem'}
             </button>
@@ -248,7 +254,7 @@ function TripPlannerPanelInner({
                 type="button"
                 onClick={onEditDestination}
                 disabled={confirmTripPending}
-                className={`min-h-10 ${BTN_PRIMARY_RADIUS} border border-border bg-muted/40 px-4 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation`}
+                className={`${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation`}
               >
                 Alterar
               </button>
@@ -311,7 +317,7 @@ function TripPlannerPanelInner({
 
   if (embedded) {
     return (
-      <div className={`space-y-3 ${emphasisWrap}`} aria-label="Planeamento da viagem">
+      <div className={MAP_SHEET_GAP} aria-label="Planeamento da viagem">
         {inner}
       </div>
     )
@@ -319,7 +325,7 @@ function TripPlannerPanelInner({
 
   return (
     <section
-      className={`rounded-2xl border px-4 py-4 space-y-3 transition-all duration-300 ease-out ${panelSurface} ${emphasisWrap}`}
+      className={`${SURFACE_RADIUS} border px-3 py-3 ${MAP_SHEET_GAP} transition-all duration-300 ease-out ${panelSurface} ${emphasisWrap}`}
       aria-label="Planeamento da viagem"
     >
       {inner}

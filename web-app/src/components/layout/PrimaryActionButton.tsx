@@ -33,7 +33,7 @@ export function PrimaryActionButton({
 }: PrimaryActionButtonProps) {
   const sizeClass =
     size === 'compact'
-      ? 'min-h-10 h-10 min-w-[44px] text-base font-semibold shadow-md'
+      ? 'min-h-9 h-9 min-w-[44px] text-sm font-semibold shadow-md'
       : 'min-h-[52px] min-w-[44px] text-lg font-bold shadow-floating'
   const base = `w-full ${BTN_PRIMARY_RADIUS} hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100 touch-manipulation ${sizeClass}`
   const styles =

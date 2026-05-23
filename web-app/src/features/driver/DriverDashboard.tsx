@@ -99,7 +99,18 @@ import {
 } from '../../utils/geo'
 import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
-import { INFO_BOX_MAP_HINT } from '../../components/layout/infoBoxTemplate'
+import {
+  INFO_BOX_MAP_HINT,
+  MAP_BANNER_STACK,
+  MAP_SHEET_CLASS,
+  MAP_SHEET_MAX_H_OFFER,
+  MAP_SHEET_MAX_H_TRIP,
+  MAP_SHEET_MAX_H_WAIT,
+  MAP_WARNING_BANNER,
+  SURFACE_RADIUS,
+  INFO_BOX_DRIVER_COMPACT,
+  INFO_BOX_BODY_COMPACT,
+} from '../../components/layout/infoBoxTemplate'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
@@ -1188,9 +1199,9 @@ export function DriverDashboard() {
           >
             {(!offline || driverBottomNav) && (
               <>
-                <div className="relative min-h-[min(52vh,24rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                <div className="relative flex min-h-[min(40vh,20rem)] flex-1 overflow-hidden">
                   <MapView
-                    className="!rounded-none border-0 !shadow-none"
+                    className="!rounded-none border-0 !shadow-none absolute inset-0"
                     driverLocation={mapDotLatLng}
                     tripPickup={mapStageTripPickup}
                     tripDropoff={mapStageTripDropoff}
@@ -1203,10 +1214,10 @@ export function DriverDashboard() {
                     onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                   />
                   <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col gap-2 p-2">
-                    <div className="pointer-events-auto min-h-0 max-h-[min(28dvh,200px)] shrink-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
+                    <div className={`${MAP_BANNER_STACK} pointer-events-auto`}>
                       {geolocationUsedFallback && (
                         <div
-                          className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+                          className={MAP_WARNING_BANNER}
                           style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
                         >
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -1551,10 +1562,10 @@ export function DriverDashboard() {
                 }
               >
                 <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-2 p-2 pb-20 pointer-events-none">
-                  <div className="pointer-events-auto min-h-0 max-h-[min(28dvh,220px)] shrink-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
+                  <div className={`${MAP_BANNER_STACK} pointer-events-auto`}>
                     {geolocationUsedFallback && (
                       <div
-                        className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+                        className={MAP_WARNING_BANNER}
                         style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
                       >
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -1705,19 +1716,19 @@ export function DriverDashboard() {
                     ) : null}
                   </div>
                   {activeTripId ? (
-                    <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,340px)] overflow-y-auto px-2 py-2">
+                    <MapBottomSheet className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_TRIP}`}>
                       {driverActiveTripPanel}
                     </MapBottomSheet>
                   ) : !offline ? (
                     <MapBottomSheet
                       id="driver-main-scroll"
-                      className={`px-2 py-2 ${selectedAvailableTrip
-                        ? 'max-h-[min(42dvh,380px)]'
+                      className={`${MAP_SHEET_CLASS} ${selectedAvailableTrip
+                        ? MAP_SHEET_MAX_H_OFFER
                         : hasAvailableTrips
-                          ? 'max-h-[min(18dvh,140px)]'
+                          ? MAP_SHEET_MAX_H_WAIT
                           : pollEnabled && availableLoading && available == null
-                            ? 'max-h-[min(28dvh,200px)]'
-                            : 'max-h-[min(16dvh,120px)]'
+                            ? 'max-h-[min(22dvh,160px)]'
+                            : MAP_SHEET_MAX_H_WAIT
                         }`}
                     >
                       {selectedAvailableTrip ? (
@@ -1774,18 +1785,12 @@ export function DriverDashboard() {
                           </HintLine>
                         </div>
                       ) : pollEnabled && availableLoading && available == null ? (
-                        <>
-                          <StatusHeader
-                            label="À espera de viagens"
-                            variant="idle"
-                            emphasis="subdued"
-                            compact
-                          />
-                          <div className="flex flex-col items-center justify-center gap-2 py-4 text-foreground/80">
+                        <div className={`${INFO_BOX_MAP_HINT} px-2 py-1.5 text-center`}>
+                          <div className="flex flex-col items-center justify-center gap-1.5 py-1 text-foreground/80">
                             <Spinner size="md" />
                             <p className="text-xs">A carregar viagens…</p>
                           </div>
-                        </>
+                        </div>
                       ) : (
                         <div className={`${INFO_BOX_MAP_HINT} px-2 py-1.5 text-center`}>
                           <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
@@ -2271,8 +2276,8 @@ function ActiveTripSummary({
       <div
         className={
           compact
-            ? 'space-y-2 px-3 py-2 rounded-xl border border-border bg-card/95 shadow-sm'
-            : 'space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card'
+            ? `${INFO_BOX_DRIVER_COMPACT} space-y-1 px-2 py-1.5`
+            : `space-y-4 px-4 py-4 ${SURFACE_RADIUS} border border-border bg-card shadow-card`
         }
       >
         <StatusHeader
@@ -2290,8 +2295,8 @@ function ActiveTripSummary({
     <div
       className={
         compact
-          ? 'space-y-1.5 px-3 py-2 rounded-2xl border border-border/80 border-l-4 border-l-info bg-card/95 shadow-sm'
-          : 'space-y-4 px-4 py-4 rounded-2xl border border-border bg-card shadow-card transition-all duration-200 ease-out'
+          ? `${INFO_BOX_DRIVER_COMPACT} space-y-1 px-2 py-1.5`
+          : `space-y-4 px-4 py-4 ${SURFACE_RADIUS} border border-border bg-card shadow-card transition-all duration-200 ease-out`
       }
     >
       {!compact ? (
@@ -2318,13 +2323,14 @@ function ActiveTripSummary({
       ) : null}
       {displayStatus === 'completed' && sessionRole === 'driver' ? (
         <TripCompletedOverlay
+          compact
           paymentStatus={trip?.payment_status}
           onContinue={onDismissCompletedTrip}
           continueTestId="driver-trip-completed-continue"
         />
       ) : trip?.payment_status === 'failed' ? (
-        <p className="text-sm text-destructive text-center px-2">
-          Pagamento do passageiro recusado. Segue as instruções da plataforma ou do suporte.
+        <p className={`${INFO_BOX_BODY_COMPACT} text-destructive text-center`}>
+          Pagamento recusado — segue instruções da plataforma.
         </p>
       ) : null}
       {effectiveTrip && !compact ? (
@@ -2343,7 +2349,7 @@ function ActiveTripSummary({
           }
         />
       ) : effectiveTrip && compact ? (
-        <p className="text-center text-xs text-foreground/80 leading-snug">
+        <p className={`${INFO_BOX_BODY_COMPACT} text-center leading-snug`}>
           {formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)} →{' '}
           {formatDestination(effectiveTrip.destination_lat, effectiveTrip.destination_lng)}
           {' · '}

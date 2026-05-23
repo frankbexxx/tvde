@@ -1,13 +1,20 @@
 import type { ReactNode } from 'react'
-import { Button } from '../ui/button'
 import type { PaymentStatus } from '../../api/trips'
 import { paymentStatusLabel } from '../../constants/tripStatusLabels'
+import {
+  BTN_COMPACT_HEIGHT,
+  BTN_PRIMARY_RADIUS,
+  INFO_BOX_BODY_COMPACT,
+  MAP_SHEET_GAP,
+} from './infoBoxTemplate'
 
 export interface TripCompletedOverlayProps {
   paymentStatus?: PaymentStatus | null
   onContinue: () => void
   continueTestId?: string
   children?: ReactNode
+  /** Pós-viagem sobre mapa — faixa baixa (TVDE 9). */
+  compact?: boolean
 }
 
 /** G27 — overlay viagem concluída (motorista): pagamento + Continuar. */
@@ -21,30 +28,30 @@ export function TripCompletedOverlay({
     paymentStatus && paymentStatus !== 'failed' ? paymentStatusLabel(paymentStatus) : null
 
   return (
-    <div className="space-y-2" data-testid="trip-completed-overlay">
+    <div className={MAP_SHEET_GAP} data-testid="trip-completed-overlay">
       {children}
       {paymentStatus === 'failed' ? (
-        <p className="text-sm text-destructive text-center px-2">
-          Pagamento do passageiro recusado. Segue as instruções da plataforma ou do suporte.
+        <p className={`${INFO_BOX_BODY_COMPACT} text-destructive text-center`}>
+          Pagamento recusado — segue instruções da plataforma.
         </p>
       ) : null}
       {payLabel ? (
-        <p className="text-sm text-foreground/80 text-center px-2">Pagamento do passageiro: {payLabel}</p>
+        <p className={`${INFO_BOX_BODY_COMPACT} text-center`}>Pagamento: {payLabel}</p>
       ) : null}
       {paymentStatus === 'processing' ? (
-        <p className="text-xs text-foreground/70 text-center px-2 leading-snug">
-          O pagamento pode ficar «a processar» uns instantes — aguarda a sincronização.
+        <p className={`${INFO_BOX_BODY_COMPACT} text-foreground/70 text-center leading-snug`}>
+          A processar — aguarda sincronização.
         </p>
       ) : null}
-      <div className="flex justify-center pt-1">
-        <Button
+      <div className="flex justify-center pt-0.5">
+        <button
           type="button"
-          className="min-h-10 h-10 px-5 text-sm font-semibold"
+          className={`${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 touch-manipulation`}
           data-testid={continueTestId}
           onClick={onContinue}
         >
           Continuar
-        </Button>
+        </button>
       </div>
     </div>
   )
