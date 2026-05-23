@@ -111,7 +111,7 @@ export function RequestCard({
   }
 
   return (
-    <div className="rounded-2xl border border-border/80 border-l-4 border-l-info bg-card p-4 space-y-2 shadow-card transition-all duration-200">
+    <div className={`${INFO_BOX_DRIVER_LARGE} p-4 space-y-2 transition-all duration-200`}>
       {tripDetails}
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-end sm:justify-between">
         <div>

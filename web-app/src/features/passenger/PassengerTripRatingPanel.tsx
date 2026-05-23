@@ -2,6 +2,11 @@ import { useState } from 'react'
 import { rateTripPassenger } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { toast } from 'sonner'
+import {
+  BTN_SECONDARY,
+  BTN_SECONDARY_RADIUS,
+  INFO_BOX_PASSENGER,
+} from '../../components/layout/infoBoxTemplate'
 
 const STARS = [1, 2, 3, 4, 5] as const
 
@@ -45,7 +50,7 @@ export function PassengerTripRatingPanel({
 
   return (
     <div
-      className="rounded-2xl border border-border/80 bg-card p-4 space-y-3 shadow-card"
+      className={`${INFO_BOX_PASSENGER} p-4 space-y-3 shadow-card`}
       data-testid="passenger-trip-rating"
     >
       <div>
@@ -60,7 +65,7 @@ export function PassengerTripRatingPanel({
             disabled={busy}
             data-testid={`passenger-rating-star-${n}`}
             onClick={() => setRating(n)}
-            className={`min-h-[44px] min-w-[44px] rounded-xl border text-lg font-semibold transition-colors touch-manipulation ${
+            className={`min-h-[44px] min-w-[44px] ${BTN_SECONDARY_RADIUS} border text-lg font-semibold transition-colors touch-manipulation ${
               rating === n
                 ? 'border-success bg-success text-success-foreground'
                 : 'border-border bg-muted/40 text-foreground hover:bg-muted/70'
@@ -76,7 +81,7 @@ export function PassengerTripRatingPanel({
           type="button"
           disabled={busy}
           onClick={onSkip}
-          className="min-h-[44px] rounded-xl border border-border px-4 text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+          className={`min-h-[44px] ${BTN_SECONDARY} px-4`}
         >
           Agora não
         </button>
@@ -84,7 +89,7 @@ export function PassengerTripRatingPanel({
           type="button"
           disabled={busy || rating == null}
           onClick={() => void submit()}
-          className="min-h-[44px] rounded-xl bg-success px-4 text-sm font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 touch-manipulation"
+          className={`min-h-[44px] ${BTN_SECONDARY_RADIUS} bg-success px-4 text-sm font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 touch-manipulation`}
         >
           {busy ? 'A enviar…' : 'Enviar avaliação'}
         </button>

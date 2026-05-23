@@ -3,6 +3,10 @@ import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { PASSENGER_PAYMENT_DISCLOSURE_SEARCHING } from '../../constants/passengerPaymentCopy'
+import {
+  BTN_PRIMARY_RADIUS,
+  BTN_SECONDARY_RADIUS,
+} from '../../components/layout/infoBoxTemplate'
 
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
 
@@ -155,7 +159,7 @@ function TripPlannerPanelInner({
             type="button"
             onClick={onChooseMap}
             disabled={confirmTripPending}
-            className="w-full min-h-[52px] rounded-full bg-info text-info-foreground py-3 text-base font-bold shadow-floating hover:bg-info/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none"
+            className={`w-full min-h-[52px] ${BTN_PRIMARY_RADIUS} bg-info text-info-foreground py-3 text-base font-bold shadow-floating hover:bg-info/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none`}
           >
             {embedded ? 'Marcar recolha no mapa' : 'Escolher recolha no mapa'}
           </button>
@@ -165,17 +169,19 @@ function TripPlannerPanelInner({
       {uiState === 'planning' && (
         <>
           {!embedded && <p className="text-base font-semibold text-foreground">Percurso</p>}
-          <p className="text-base font-medium text-foreground leading-snug">
-            <span className="text-foreground/75">{pickupLine}</span>
-            <span className="mx-1.5 text-foreground/50">→</span>
-            <span className="text-foreground">{dropLine}</span>
-          </p>
+          {(embedded ? hasPickup : true) ? (
+            <p className="text-base font-medium text-foreground leading-snug">
+              <span className="text-foreground/75">{pickupLine}</span>
+              <span className="mx-1.5 text-foreground/50">→</span>
+              <span className="text-foreground">{dropLine}</span>
+            </p>
+          ) : null}
           <div className="flex flex-col gap-2 pt-1">
             {hasPickup && !hasDropoff && !embedded && (
               <button
                 type="button"
                 onClick={onSetDestinationHint}
-                className="w-full rounded-2xl border border-border bg-muted/50 py-3 text-base font-medium text-foreground hover:bg-muted transition-colors"
+                className={`w-full ${BTN_SECONDARY_RADIUS} border border-border bg-muted/50 py-3 text-base font-medium text-foreground hover:bg-muted transition-colors`}
               >
                 Também podes tocar no mapa para marcar destino
               </button>
@@ -184,7 +190,7 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onReset}
               disabled={confirmTripPending}
-              className="w-full rounded-2xl border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed"
+              className={`w-full ${BTN_SECONDARY_RADIUS} border border-border py-3 text-base font-medium text-foreground hover:bg-muted/60 transition-colors disabled:bg-muted/40 disabled:text-muted-foreground disabled:cursor-not-allowed`}
             >
               Repor
             </button>
@@ -233,7 +239,7 @@ function TripPlannerPanelInner({
               type="button"
               onClick={onConfirmTrip}
               disabled={confirmTripPending || routeMetaLoading || Boolean(confirmBlockedReason)}
-              className="flex-1 min-h-10 rounded-full bg-success text-success-foreground px-4 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation"
+              className={`flex-1 min-h-10 ${BTN_PRIMARY_RADIUS} bg-success text-success-foreground px-4 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation`}
             >
               {confirmTripPending ? 'A confirmar…' : 'Confirmar viagem'}
             </button>
@@ -242,7 +248,7 @@ function TripPlannerPanelInner({
                 type="button"
                 onClick={onEditDestination}
                 disabled={confirmTripPending}
-                className="min-h-10 rounded-full border border-border bg-muted/40 px-4 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation"
+                className={`min-h-10 ${BTN_PRIMARY_RADIUS} border border-border bg-muted/40 px-4 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation`}
               >
                 Alterar
               </button>

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BTN_PRIMARY_RADIUS } from './infoBoxTemplate'
 
 interface PrimaryActionButtonProps {
   children: ReactNode
@@ -34,7 +35,7 @@ export function PrimaryActionButton({
     size === 'compact'
       ? 'min-h-10 h-10 min-w-[44px] text-base font-semibold shadow-md'
       : 'min-h-[52px] min-w-[44px] text-lg font-bold shadow-floating'
-  const base = `w-full rounded-full hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100 touch-manipulation ${sizeClass}`
+  const base = `w-full ${BTN_PRIMARY_RADIUS} hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 disabled:active:scale-100 touch-manipulation ${sizeClass}`
   const styles =
     variant === 'danger'
       ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
