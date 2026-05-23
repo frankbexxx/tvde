@@ -7,6 +7,15 @@ import {
   useStripe,
 } from '@stripe/react-stripe-js'
 import { toast } from 'sonner'
+import {
+  BTN_COMPACT_HEIGHT,
+  BTN_PRIMARY_RADIUS,
+  BTN_SECONDARY_RADIUS,
+  INFO_BOX_BODY_COMPACT,
+  INFO_BOX_PASSENGER,
+  INFO_BOX_TITLE_COMPACT,
+  MAP_SHEET_GAP,
+} from '../../components/layout/infoBoxTemplate'
 
 type PassengerPaymentConfirmCardProps = {
   clientSecret: string
@@ -58,15 +67,15 @@ function ConfirmInner({
   )
 
   return (
-    <form onSubmit={(ev) => void handleSubmit(ev)} className="space-y-3">
-      <div className="rounded-lg border border-border bg-background px-3 py-3">
+    <form onSubmit={(ev) => void handleSubmit(ev)} className={MAP_SHEET_GAP}>
+      <div className={`${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 py-2`}>
         <CardElement options={{ hidePostalCode: true }} />
       </div>
       <button
         type="submit"
         disabled={!stripe || busy}
         data-testid="passenger-payment-confirm-submit"
-        className="w-full min-h-[44px] rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 disabled:opacity-50"
+        className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-primary text-sm font-semibold text-primary-foreground hover:opacity-95 disabled:opacity-50 touch-manipulation`}
       >
         {busy ? 'A confirmar…' : 'Autorizar cartão'}
       </button>
@@ -97,12 +106,10 @@ export function PassengerPaymentConfirmCard({
     return (
       <section
         data-testid="passenger-payment-mock-banner"
-        className="rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground"
+        className={`${INFO_BOX_PASSENGER} px-2 py-2 ${INFO_BOX_BODY_COMPACT}`}
       >
         <p className="font-medium">Pagamento simulado</p>
-        <p className="mt-1 text-muted-foreground leading-snug">
-          Stripe está em modo mock — não é preciso introduzir cartão neste ambiente.
-        </p>
+        <p className="text-muted-foreground leading-snug">Sem cartão neste ambiente.</p>
       </section>
     )
   }
@@ -111,31 +118,23 @@ export function PassengerPaymentConfirmCard({
     return (
       <section
         data-testid="passenger-payment-missing-publishable"
-        className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-foreground"
+        className={`${INFO_BOX_PASSENGER} border-dashed px-2 py-2 ${INFO_BOX_BODY_COMPACT}`}
       >
-        <p className="font-medium">Confirmação de cartão indisponível</p>
-        <p className="mt-1 text-muted-foreground leading-snug">
-          Define <code className="rounded bg-muted px-1 py-0.5 text-xs">VITE_STRIPE_PUBLISHABLE_KEY</code>{' '}
-          no build para autorizar o pagamento aqui.
+        <p className="font-medium">Cartão indisponível</p>
+        <p className="text-muted-foreground leading-snug">
+          Define VITE_STRIPE_PUBLISHABLE_KEY no build.
         </p>
       </section>
     )
   }
 
   return (
-    <section
-      className="rounded-2xl border border-border bg-card p-4 shadow-sm"
-      data-testid="passenger-payment-confirm-card"
-    >
-      <h3 className="text-base font-semibold text-foreground">Autorizar pagamento</h3>
-      <p className="mt-1 text-sm text-muted-foreground leading-snug">
-        O motorista aceitou a viagem. Confirma o cartão para continuar.
-      </p>
-      <div className="mt-4">
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <ConfirmInner clientSecret={clientSecret} onConfirmed={onConfirmed} />
-        </Elements>
-      </div>
+    <section className={`${INFO_BOX_PASSENGER} p-2 ${MAP_SHEET_GAP}`} data-testid="passenger-payment-confirm-card">
+      <h3 className={INFO_BOX_TITLE_COMPACT}>Autorizar pagamento</h3>
+      <p className={INFO_BOX_BODY_COMPACT}>Motorista aceitou — confirma o cartão.</p>
+      <Elements stripe={stripePromise} options={{ clientSecret }}>
+        <ConfirmInner clientSecret={clientSecret} onConfirmed={onConfirmed} />
+      </Elements>
     </section>
   )
 }

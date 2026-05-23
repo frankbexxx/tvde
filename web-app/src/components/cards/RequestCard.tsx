@@ -4,7 +4,7 @@
  * No IDs, no coords.
  */
 import { SlideToAccept } from './SlideToAccept'
-import { INFO_BOX_DRIVER_LARGE } from '../layout/infoBoxTemplate'
+import { INFO_BOX_DRIVER_LARGE, BTN_COMPACT_HEIGHT, BTN_PRIMARY_RADIUS } from '../layout/infoBoxTemplate'
 
 interface RequestCardProps {
   pickup: string
@@ -99,12 +99,12 @@ export function RequestCard({
 
   if (slideCompact) {
     return (
-      <div className={`${INFO_BOX_DRIVER_LARGE} p-3 pr-10 space-y-1 transition-all duration-200`}>
+      <div className={`${INFO_BOX_DRIVER_LARGE} p-2 pr-8 space-y-1 transition-all duration-200`}>
         {slideAccept}
         {tripDetails}
         <div>
           <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
-          <span className="text-xl font-bold text-foreground">{priceDisplay}</span>
+          <span className="text-lg font-bold text-foreground">{priceDisplay}</span>
         </div>
       </div>
     )
@@ -142,7 +142,7 @@ export function RequestCard({
             onClick={onAccept}
             disabled={Boolean(loading || rejectLoading)}
             data-testid={acceptButtonTestId}
-            className="min-h-[52px] min-w-[44px] px-6 rounded-full bg-info text-info-foreground font-bold text-lg shadow-floating hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation"
+            className={`${BTN_COMPACT_HEIGHT} min-w-[44px] px-4 ${BTN_PRIMARY_RADIUS} bg-info text-info-foreground font-semibold text-sm shadow-md hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation`}
           >
             {loading ? (
               <span className="inline-flex items-center gap-2">

@@ -5,7 +5,9 @@ import { toast } from 'sonner'
 import {
   BTN_SECONDARY,
   BTN_SECONDARY_RADIUS,
+  INFO_BOX_BODY_COMPACT,
   INFO_BOX_PASSENGER,
+  INFO_BOX_TITLE_COMPACT,
 } from '../../components/layout/infoBoxTemplate'
 
 const STARS = [1, 2, 3, 4, 5] as const
@@ -50,12 +52,12 @@ export function PassengerTripRatingPanel({
 
   return (
     <div
-      className={`${INFO_BOX_PASSENGER} p-4 space-y-3 shadow-card`}
+      className={`${INFO_BOX_PASSENGER} p-3 space-y-2 shadow-card max-h-[min(38dvh,280px)] overflow-y-auto`}
       data-testid="passenger-trip-rating"
     >
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Como correu a viagem?</h2>
-        <p className="text-sm text-foreground/75 mt-1">Avalia o motorista (opcional).</p>
+        <h2 className={INFO_BOX_TITLE_COMPACT}>Como correu a viagem?</h2>
+        <p className={`${INFO_BOX_BODY_COMPACT} mt-0.5`}>Avalia o motorista (opcional).</p>
       </div>
       <div className="flex flex-wrap gap-2 justify-center sm:justify-start" role="group" aria-label="Estrelas de 1 a 5">
         {STARS.map((n) => (
@@ -65,7 +67,7 @@ export function PassengerTripRatingPanel({
             disabled={busy}
             data-testid={`passenger-rating-star-${n}`}
             onClick={() => setRating(n)}
-            className={`min-h-[44px] min-w-[44px] ${BTN_SECONDARY_RADIUS} border text-lg font-semibold transition-colors touch-manipulation ${
+            className={`min-h-9 min-w-9 ${BTN_SECONDARY_RADIUS} border text-base font-semibold transition-colors touch-manipulation ${
               rating === n
                 ? 'border-success bg-success text-success-foreground'
                 : 'border-border bg-muted/40 text-foreground hover:bg-muted/70'

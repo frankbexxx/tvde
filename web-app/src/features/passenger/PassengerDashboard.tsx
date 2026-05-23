@@ -21,7 +21,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { MapActionRow } from '../../components/layout/MapActionRow'
-import { BTN_SECONDARY, BTN_SECONDARY_RADIUS } from '../../components/layout/infoBoxTemplate'
+import { BTN_SECONDARY, BTN_SECONDARY_RADIUS, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_IDLE, MAP_SHEET_MAX_H_TRIP, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapStage } from '../../components/layout/MapStage'
@@ -1083,33 +1083,27 @@ export function PassengerDashboard() {
             overlayClassName="relative z-10 flex min-h-0 flex-1 flex-col justify-end p-2 pb-20 pointer-events-none"
             topOverlay={
               (import.meta.env.DEV && isMockLocationModeEnabled()) || geolocationUsedFallback ? (
-                <div className="space-y-2">
+                <div className={MAP_BANNER_STACK}>
                   {import.meta.env.DEV && isMockLocationModeEnabled() ? (
-                    <div className="rounded-xl bg-violet-100 dark:bg-violet-500/15 border border-violet-300 dark:border-violet-400/40 px-3 py-2 text-sm text-violet-800 dark:text-violet-200">
-                      <span aria-hidden>🧪</span> Simulação — passageiro fixo; motorista aproxima-se em tempo real após aceitar (rota OSRM).
+                    <div className={`${MAP_WARNING_BANNER} bg-violet-100 dark:bg-violet-500/15 border-violet-300 dark:border-violet-400/40 text-violet-800 dark:text-violet-200`}>
+                      <span aria-hidden>🧪</span> Simulação — passageiro fixo; motorista aproxima-se após aceitar.
                     </div>
                   ) : null}
                   {geolocationUsedFallback ? (
                     <div
-                      className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+                      className={MAP_WARNING_BANNER}
                       style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
                     >
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span>Localização indisponível — a usar posição aproximada.</span>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        <span>Localização indisponível — posição aproximada.</span>
                         <button
                           type="button"
                           onClick={retryGeolocation}
-                          className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
+                          className="inline-flex items-center min-h-7 px-2 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 text-warning font-medium text-[10px] touch-manipulation"
                         >
                           Tentar outra vez
                         </button>
                       </div>
-                      {import.meta.env.DEV ? (
-                        <div className="mt-1">
-                          Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
-                          <strong>Configuração</strong> (ícone de engrenagem).
-                        </div>
-                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -1137,7 +1131,7 @@ export function PassengerDashboard() {
             }}
             bottomOverlay={
               isTripIdle ? (
-                <MapBottomSheet className="pointer-events-auto px-3 py-3 space-y-2 max-h-[min(55dvh,440px)] overflow-y-auto">
+                <MapBottomSheet className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_IDLE}`}>
                     {showPickupSearch && (
                       <>
                         <DestinationSearchField
@@ -1153,16 +1147,16 @@ export function PassengerDashboard() {
                           onDismissSuggestions={dismissPickupGeoSuggestions}
                         />
                         {pickupCandidate ? (
-                          <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-                            <p className="text-sm font-medium text-foreground">Recolha em pré-visualização</p>
+                          <div className={INFO_BOX_PREVIEW}>
+                            <p className={INFO_BOX_TITLE_COMPACT}>Recolha em pré-visualização</p>
                             <p className="text-xs text-muted-foreground leading-snug">
                               {pickupCandidate.primary}
                               {pickupCandidate.secondary ? ` · ${pickupCandidate.secondary}` : ''}
                             </p>
-                            <div className="flex gap-2">
-                              <button type="button" onClick={confirmPickupCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar recolha</button>
-                              <button type="button" onClick={clearPickupCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
-                            </div>
+                            <MapActionRow testId="passenger-pickup-preview-actions">
+                              <button type="button" onClick={confirmPickupCandidate} className={BTN_PRIMARY_COMPACT}>Confirmar recolha</button>
+                              <button type="button" onClick={clearPickupCandidate} className={`flex-1 min-w-0 ${BTN_SECONDARY}`}>Limpar</button>
+                            </MapActionRow>
                           </div>
                         ) : null}
                       </>
@@ -1182,16 +1176,16 @@ export function PassengerDashboard() {
                           onDismissSuggestions={dismissGeoSuggestions}
                         />
                         {destinationCandidate ? (
-                          <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-                            <p className="text-sm font-medium text-foreground">Destino em pré-visualização</p>
+                          <div className={INFO_BOX_PREVIEW}>
+                            <p className={INFO_BOX_TITLE_COMPACT}>Destino em pré-visualização</p>
                             <p className="text-xs text-muted-foreground leading-snug">
                               {destinationCandidate.primary}
                               {destinationCandidate.secondary ? ` · ${destinationCandidate.secondary}` : ''}
                             </p>
-                            <div className="flex gap-2">
-                              <button type="button" onClick={confirmDestinationCandidate} className="flex-1 rounded-lg bg-primary text-primary-foreground py-2 text-sm font-semibold hover:opacity-95 transition-opacity">Confirmar destino</button>
-                              <button type="button" onClick={clearDestinationCandidate} className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/60 transition-colors">Limpar</button>
-                            </div>
+                            <MapActionRow testId="passenger-dest-preview-actions">
+                              <button type="button" onClick={confirmDestinationCandidate} className={BTN_PRIMARY_COMPACT}>Confirmar destino</button>
+                              <button type="button" onClick={clearDestinationCandidate} className={`flex-1 min-w-0 ${BTN_SECONDARY}`}>Limpar</button>
+                            </MapActionRow>
                           </div>
                         ) : null}
                       </>
@@ -1234,7 +1228,7 @@ export function PassengerDashboard() {
                     />
                   </MapBottomSheet>
               ) : (activeTripId || creating) && !showPassengerRatingPanel ? (
-                <MapBottomSheet className="pointer-events-auto max-h-[min(42dvh,320px)] overflow-y-auto px-2 py-2">
+                <MapBottomSheet className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_TRIP}`}>
                   {passengerCancelPanelInOverlay ? (
                     passengerCancelPanelInOverlay
                   ) : showSubmittingCard ? (

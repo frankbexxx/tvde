@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
 import {
+  INFO_BOX_BODY_COMPACT,
   INFO_BOX_BODY_SM,
   INFO_BOX_PASSENGER,
+  INFO_BOX_TITLE_COMPACT,
   INFO_BOX_TITLE_LG,
-  INFO_BOX_TITLE_SM,
 } from './infoBoxTemplate'
 
 /** Tom visual do painel de estado (alinhado a StatusHeader / viagem). */
@@ -65,8 +66,9 @@ export function InfoPanel({
 }: InfoPanelProps) {
   const align = centered ? 'items-center text-center' : 'items-start text-left'
   const titleClass = TITLE_STYLES[tone] ?? TITLE_STYLES.neutral
-  const pad = compact ? 'px-3 py-2.5 space-y-2' : 'px-4 py-4 space-y-4'
-  const titleSize = compact ? INFO_BOX_TITLE_SM : INFO_BOX_TITLE_LG
+  const pad = compact ? 'px-2 py-1.5 space-y-1' : 'px-4 py-4 space-y-4'
+  const titleSize = compact ? INFO_BOX_TITLE_COMPACT : INFO_BOX_TITLE_LG
+  const bodySize = compact ? INFO_BOX_BODY_COMPACT : INFO_BOX_BODY_SM
 
   return (
     <div
@@ -76,19 +78,15 @@ export function InfoPanel({
       aria-live="polite"
       data-testid={testId}
     >
-      <div className={`flex flex-col gap-1 ${align}`}>
-        <p className={`${titleSize} ${titleClass} ${centered ? 'px-2' : ''}`}>{title}</p>
+      <div className={`flex flex-col gap-0.5 ${align}`}>
+        <p className={`${titleSize} ${titleClass} ${centered ? 'px-1' : ''}`}>{title}</p>
         {subtitle ? (
-          <p
-            className={`${INFO_BOX_BODY_SM} ${centered ? 'max-w-sm px-4' : 'mt-0.5'}`}
-          >
-            {subtitle}
-          </p>
+          <p className={`${bodySize} ${centered ? 'max-w-sm px-2' : ''}`}>{subtitle}</p>
         ) : null}
         {meta?.map((line) => (
           <p
             key={line}
-            className={`${INFO_BOX_BODY_SM} text-foreground/75 ${centered ? 'max-w-sm px-4' : ''}`}
+            className={`${bodySize} text-foreground/75 ${centered ? 'max-w-sm px-2' : ''}`}
           >
             {line}
           </p>

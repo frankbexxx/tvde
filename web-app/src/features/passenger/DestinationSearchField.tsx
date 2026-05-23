@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import type { GeocodeSuggestion } from '@/services/geocoding'
+import { BTN_SECONDARY_RADIUS } from '../../components/layout/infoBoxTemplate'
 
 export interface DestinationSearchFieldProps {
   query: string
@@ -61,7 +62,7 @@ export function DestinationSearchField({
         aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
-        className="h-11 rounded-xl border-border bg-background text-base"
+        className={`h-9 ${BTN_SECONDARY_RADIUS} border-border bg-background text-sm`}
       />
       {geocodingUnavailable ? (
         <p className="text-xs text-muted-foreground leading-snug">
