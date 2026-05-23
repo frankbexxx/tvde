@@ -8,6 +8,12 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { historyStatusDotColor } from '../../constants/tripStatus'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import {
+  BTN_SECONDARY_RADIUS,
+  MENU_BTN_SM,
+  MENU_ROW_BTN,
+  MENU_SURFACE,
+} from '../../components/layout/infoBoxTemplate'
 
 export type PassengerMenuScreen = 'root' | 'history' | 'account' | 'share_app'
 
@@ -27,7 +33,7 @@ function MenuHeader({
           <button
             type="button"
             onClick={onBack}
-            className="min-h-[40px] rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+            className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
           >
             Voltar
           </button>
@@ -38,7 +44,7 @@ function MenuHeader({
         type="button"
         onClick={onClose}
         data-testid="passenger-close-menu"
-        className="min-h-[40px] rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+        className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
       >
         Fechar
       </button>
@@ -121,7 +127,7 @@ export function PassengerSideMenu({
           <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
             {screen === 'root' ? (
               <>
-                <div className="rounded-2xl border border-border bg-gradient-to-b from-foreground/[0.06] to-transparent px-4 py-4">
+                <div className={MENU_SURFACE}>
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-full bg-foreground/10 border border-border flex items-center justify-center text-foreground/70 font-semibold">
                       {(sessionDisplayName ?? 'P').slice(0, 1).toUpperCase()}
@@ -135,7 +141,7 @@ export function PassengerSideMenu({
                 <button
                   type="button"
                   onClick={() => onScreenChange('history')}
-                  className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
+                  className={MENU_ROW_BTN}
                 >
                   <History className="h-4 w-4 text-foreground/80" />
                   Histórico de viagens
@@ -143,7 +149,7 @@ export function PassengerSideMenu({
                 <button
                   type="button"
                   onClick={() => onScreenChange('share_app')}
-                  className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
+                  className={MENU_ROW_BTN}
                 >
                   <QrCode className="h-4 w-4 text-foreground/80" />
                   Partilhar app (QR)
@@ -151,7 +157,7 @@ export function PassengerSideMenu({
                 <button
                   type="button"
                   onClick={() => onScreenChange('account')}
-                  className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
+                  className={MENU_ROW_BTN}
                 >
                   <User className="h-4 w-4 text-foreground/80" />
                   Conta
@@ -162,7 +168,7 @@ export function PassengerSideMenu({
                     logout()
                     close()
                   }}
-                  className="w-full min-h-[48px] rounded-xl border border-border bg-background px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
+                  className={`${MENU_ROW_BTN} bg-background`}
                 >
                   <LogOut className="h-4 w-4 text-foreground/80" />
                   Sair
@@ -174,14 +180,14 @@ export function PassengerSideMenu({
                   Mostra este código a quem quiseres que instale ou abra a app neste ambiente. O link aponta para a mesma URL que estás a usar agora.
                 </p>
                 {shareUrl ? (
-                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-background p-4">
-                    <div className="rounded-xl bg-white p-3 shadow-sm">
+                  <div className={`flex flex-col items-center gap-3 ${MENU_SURFACE} bg-background p-4`}>
+                    <div className={`${BTN_SECONDARY_RADIUS} bg-white p-3 shadow-sm`}>
                       <QRCode value={shareUrl} size={180} />
                     </div>
                     <p className="break-all text-center text-xs font-mono text-muted-foreground">{shareUrl}</p>
                     <button
                       type="button"
-                      className="min-h-[44px] w-full rounded-xl border border-border bg-card px-3 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
+                      className={`min-h-9 w-full ${BTN_SECONDARY_RADIUS} border border-border bg-card px-3 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
                       onClick={async () => {
                         try {
                           await navigator.clipboard.writeText(shareUrl)

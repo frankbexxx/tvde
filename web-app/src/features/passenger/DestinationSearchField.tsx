@@ -78,7 +78,7 @@ export function DestinationSearchField({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-30 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto rounded-xl border border-border bg-popover text-popover-foreground shadow-lg py-1"
+          className={`absolute z-30 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto ${BTN_SECONDARY_RADIUS} border border-border bg-popover text-popover-foreground shadow-lg py-1`}
         >
           {suggestions.map((s) => (
             <li key={s.id} role="presentation">

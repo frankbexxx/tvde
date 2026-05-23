@@ -21,9 +21,10 @@ Referência: `C:\dev\_greenshots\dia 23\` · alvo caixa+botões = **TVDE 4**.
 
 ## Comandos
 
-## URLs demo
+## URLs (Render — smoke Frank)
 
-- Passageiro: http://127.0.0.1:5175/passenger?demo=1
-- Motorista: http://127.0.0.1:5175/driver?demo=1
+- Passageiro: https://tvde-app-j51f.onrender.com/passenger?demo=1
+- Motorista: https://tvde-app-j51f.onrender.com/driver?demo=1
+- Debug layout (opcional): acrescentar `&dia23debug=1` após deploy
 
 **Build/e2e OK não fecha o gate** — só Frank confirma «compact enough».

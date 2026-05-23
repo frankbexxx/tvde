@@ -8,6 +8,12 @@ import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus
 import type { DriverVehicleCategory } from '../../services/driverVehicleCategories'
 import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT, DRIVER_OPEN_SETTINGS_EVENT } from './driverShellEvents'
 import {
+  BTN_SECONDARY_RADIUS,
+  MENU_BTN_SM,
+  MENU_ROW_BTN,
+  MENU_SURFACE,
+} from '../../components/layout/infoBoxTemplate'
+import {
   ClipboardList,
   Compass,
   CreditCard,
@@ -59,7 +65,7 @@ function MenuHeader({
           <button
             type="button"
             onClick={onBack}
-            className="min-h-[40px] rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+            className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
           >
             Voltar
           </button>
@@ -70,7 +76,7 @@ function MenuHeader({
         type="button"
         onClick={onClose}
         data-testid="driver-close-menu"
-        className="min-h-[40px] rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+        className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
       >
         Fechar
       </button>
@@ -93,7 +99,7 @@ function RootItem({
     <button
       type="button"
       onClick={onClick}
-      className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center justify-between gap-3"
+      className={`${MENU_ROW_BTN} justify-between`}
     >
       <span className="min-w-0 truncate flex items-center gap-3">
         {icon ? <span className="shrink-0 text-foreground/80">{icon}</span> : null}
@@ -197,7 +203,7 @@ export function DriverSideMenu(props: {
           <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
             {screen === 'root' ? (
               <>
-                <div className="rounded-2xl border border-border bg-gradient-to-b from-foreground/[0.06] to-transparent px-4 py-4">
+                <div className={MENU_SURFACE}>
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-full bg-foreground/10 border border-border flex items-center justify-center text-foreground/70 font-semibold">
                       {(sessionDisplayName ?? 'M').slice(0, 1).toUpperCase()}
@@ -220,7 +226,7 @@ export function DriverSideMenu(props: {
                       onRequestGoAvailable()
                       close()
                     }}
-                    className="w-full min-h-[48px] rounded-xl border border-primary/35 bg-primary/10 px-4 text-left text-sm font-semibold text-primary hover:bg-primary/15 touch-manipulation"
+                    className={`w-full min-h-9 ${BTN_SECONDARY_RADIUS} border border-primary/35 bg-primary/10 px-4 text-left text-sm font-semibold text-primary hover:bg-primary/15 touch-manipulation`}
                   >
                     Ficar disponível
                   </button>
@@ -290,7 +296,7 @@ export function DriverSideMenu(props: {
                       logout()
                       close()
                     }}
-                    className="w-full min-h-[48px] rounded-xl border border-border bg-background px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3"
+                    className={`${MENU_ROW_BTN} bg-background`}
                   >
                     <LogOut className="h-4 w-4 text-foreground/80" />
                     <span>Sair</span>
@@ -299,7 +305,7 @@ export function DriverSideMenu(props: {
               </>
             ) : screen === 'profile' ? (
               <div className="space-y-4" data-testid="driver-menu-profile-screen">
-                <div className="rounded-xl border border-border bg-card px-4 py-3 space-y-3">
+                <div className={`${BTN_SECONDARY_RADIUS} border border-border bg-card px-4 py-3 space-y-3`}>
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Nome</p>
                     <p className="text-sm font-medium text-foreground break-words">
@@ -329,7 +335,7 @@ export function DriverSideMenu(props: {
                       window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
                       close()
                     }}
-                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
+                    className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
                   >
                     <User className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
                     Conta (detalhe)
@@ -341,7 +347,7 @@ export function DriverSideMenu(props: {
                       window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))
                       close()
                     }}
-                    className="flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
+                    className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
                   >
                     <Settings className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
                     Definições
