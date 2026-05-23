@@ -2,6 +2,7 @@
  * Trip card - compact display for passenger/driver.
  * No IDs, no technical data. User-friendly content only.
  */
+import { BORDER_SURFACE, SHADOW_CARD, SURFACE_RADIUS } from '../layout/infoBoxTemplate'
 interface TripCardProps {
   /** Human-readable pickup (e.g. "Rossio" or coords simplified) */
   pickup: string
@@ -33,7 +34,7 @@ export function TripCard({
   const priceDisplay =
     price != null && price > 0 ? `${price.toFixed(2)} €` : estimateFallback ? `${estimateFallback} €` : '—'
   return (
-    <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-sm p-4 space-y-2 shadow-card transition-all duration-200">
+    <div className={`${SURFACE_RADIUS} ${BORDER_SURFACE} bg-card/95 backdrop-blur-sm p-4 space-y-2 ${SHADOW_CARD} transition-all duration-200`}>
       <div className="space-y-0.5">
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Origem</p>
         <p className="text-base font-semibold text-foreground">{pickup}</p>

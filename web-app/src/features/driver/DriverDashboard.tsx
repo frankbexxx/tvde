@@ -85,6 +85,7 @@ import { CancellationReasonMuted } from '../../components/trips/CancellationReas
 import { ActiveTripActions } from './ActiveTripActions'
 import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
 import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
+import { useDia23LayoutProbe } from '../../hooks/useDia23LayoutProbe'
 import { useDriverOfferSounds } from '../../hooks/useDriverOfferSounds'
 import {
   fetchDriverDocuments,
@@ -100,16 +101,39 @@ import {
 import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import {
+  BTN_DRIVER_STEP1,
+  BTN_SECONDARY_FULL_SM,
+  BTN_SECONDARY_MD,
+  BTN_SECONDARY_RADIUS,
+  BTN_SECONDARY_SM,
+  INFO_BOX_DRIVER_COMPACT,
+  INFO_BOX_DRIVER_MENU,
+  INFO_BOX_BODY_COMPACT,
   INFO_BOX_MAP_HINT,
   MAP_BANNER_STACK,
+  MAP_CARD_FRAME,
+  MAP_CHIP_OVERLAY,
+  MAP_CHIP_OVERLAY_FLAT,
+  MAP_DISMISS_BTN_ERROR,
+  MAP_DISMISS_BTN_WARNING,
+  MAP_EMPTY_STATE,
+  MAP_HINT_WARNING,
+  MAP_HINT_WARNING_SM,
+  MAP_IDLE_PLACEHOLDER,
   MAP_SHEET_CLASS,
   MAP_SHEET_MAX_H_OFFER,
   MAP_SHEET_MAX_H_TRIP,
   MAP_SHEET_MAX_H_WAIT,
+  MAP_STEP1_LIST,
+  MAP_TOAST_ERROR,
+  MAP_TOAST_WARNING,
   MAP_WARNING_BANNER,
+  MENU_BTN,
+  MENU_BTN_SM,
+  MENU_CARD,
+  MENU_PANEL,
+  INNER_RADIUS,
   SURFACE_RADIUS,
-  INFO_BOX_DRIVER_COMPACT,
-  INFO_BOX_BODY_COMPACT,
 } from '../../components/layout/infoBoxTemplate'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
@@ -272,6 +296,7 @@ function formatDrivingDurationShort(sec: number): string {
 }
 
 export function DriverDashboard() {
+  useDia23LayoutProbe('driver')
   const { token, sessionRole } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
@@ -968,7 +993,7 @@ export function DriverDashboard() {
             data-testid="driver-home-step1-continue-fixed"
             disabled={offline}
             onClick={() => setDriverHomeStep(2)}
-            className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
+            className={BTN_DRIVER_STEP1}
           >
             <span className="flex items-center justify-center gap-2 px-1">
               <span>Ver pedidos e mapa completo</span>
@@ -1103,7 +1128,7 @@ export function DriverDashboard() {
             addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
           }}
           renderLegacyMenu={(section) => (
-            <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card">
+            <div className={INFO_BOX_DRIVER_MENU}>
               <DriverOperationsMenu
                 section={section}
                 hideHeader
@@ -1234,7 +1259,7 @@ export function DriverDashboard() {
                       )}
                       {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                         <div
-                          className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
+                          className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                             ? 'bg-destructive/10 border-destructive/35 text-destructive'
                             : 'bg-warning/15 border-warning/40 text-foreground'
                             }`}
@@ -1278,7 +1303,7 @@ export function DriverDashboard() {
                         !!token &&
                         !!driverLocation ? (
                         <details
-                          className="rounded-lg border border-foreground/10 bg-background/90 px-2 py-1.5 text-[11px] text-foreground/75 shadow-sm backdrop-blur-sm"
+                          className={MAP_CHIP_OVERLAY}
                           data-testid="driver-gps-upload-details"
                         >
                           <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
@@ -1322,7 +1347,7 @@ export function DriverDashboard() {
                         </details>
                       ) : null}
                       {!isOnline && (
-                        <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                        <div className={MAP_HINT_WARNING}>
                           <p className="font-medium text-foreground">Sem ligação à internet</p>
                           <p className="text-foreground/80 mt-1">
                             Quando voltares a ficar online, a app volta a actualizar. Podes recarregar a página se
@@ -1331,22 +1356,22 @@ export function DriverDashboard() {
                         </div>
                       )}
                       {pollEnabled && availablePollFault && (
-                        <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                        <div className={MAP_HINT_WARNING}>
                           Não foi possível actualizar a lista de viagens. A última informação mantém-se; voltamos a
                           tentar automaticamente — verifica a ligação se persistir.
                         </div>
                       )}
                       {historyPollFault && (
-                        <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                        <div className={MAP_HINT_WARNING_SM}>
                           Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso
                           persistir.
                         </div>
                       )}
                       {toast && (
-                        <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
+                        <div className={MAP_TOAST_WARNING}>
                           <button
                             type="button"
-                            className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                            className={MAP_DISMISS_BTN_WARNING}
                             aria-label="Fechar aviso"
                             onClick={() => setToast(null)}
                           >
@@ -1356,10 +1381,10 @@ export function DriverDashboard() {
                         </div>
                       )}
                       {error && (
-                        <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+                        <div className={MAP_TOAST_ERROR}>
                           <button
                             type="button"
-                            className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                            className={MAP_DISMISS_BTN_ERROR}
                             aria-label="Fechar mensagem de erro"
                             onClick={() => setError(null)}
                           >
@@ -1388,14 +1413,14 @@ export function DriverDashboard() {
                 </div>
                 {!offline && !activeTripId ? (
                   pollEnabled && availableLoading && available == null ? (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-muted/20 py-3">
+                    <div className={MAP_IDLE_PLACEHOLDER}>
                       <Spinner size="md" />
                       <p className="text-xs text-foreground/80">A carregar viagens…</p>
                     </div>
                   ) : hasAvailableTrips ? (
                     <div
                       id="driver-main-scroll"
-                      className="max-h-[min(42dvh,360px)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-background px-2 py-2 shadow-sm"
+                      className={MAP_STEP1_LIST}
                     >
                       <StatusHeader
                         label={
@@ -1455,7 +1480,7 @@ export function DriverDashboard() {
               </>
             )}
             {offline && !driverBottomNav && (
-              <div className="py-8 text-center rounded-xl border border-border">
+              <div className={MAP_EMPTY_STATE}>
                 <p className="text-foreground/85 text-base">Estás offline.</p>
                 <p className="text-foreground/75 mt-2 text-sm">Activa a disponibilidade para veres o mapa.</p>
               </div>
@@ -1466,7 +1491,7 @@ export function DriverDashboard() {
                 data-testid="driver-home-step1-continue"
                 disabled={offline}
                 onClick={() => setDriverHomeStep(2)}
-                className="relative w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold text-base disabled:opacity-50 touch-manipulation"
+                className={BTN_DRIVER_STEP1}
               >
                 <span className="flex items-center justify-center gap-2 px-1">
                   <span>Ver pedidos e mapa completo</span>
@@ -1487,41 +1512,41 @@ export function DriverDashboard() {
           <div
             className={driverMapStageLayout ? 'flex min-h-0 w-full flex-1 flex-col overflow-hidden' : 'contents'}
           >
-            {( !driverMapStageLayout ||
-              (driverHomeTwoStep && !activeTripId && driverHomeStep === 2) ) && (
-            <header
-              className={`${driverMapStageLayout ? 'shrink-0 px-4 mb-1' : 'mb-4'} flex items-start gap-3 justify-end`}
-            >
-              <div className="flex flex-col items-end gap-1.5 shrink-0">
-                {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
-                  <button
-                    type="button"
-                    data-testid="driver-home-map-initial"
-                    onClick={() => setDriverHomeStep(1)}
-                    className="min-h-[40px] w-full rounded-xl border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-                  >
-                    Vista compacta
-                  </button>
-                ) : null}
-                {!driverBottomNav ? (
-                  <button
-                    type="button"
-                    data-testid="driver-open-menu"
-                    onClick={() => {
-                      setMenuOpen((v) => {
-                        const next = !v
-                        if (next) setDriverMenuScreen('root')
-                        return next
-                      })
-                    }}
-                    className="min-h-[44px] shrink-0 rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-                  >
-                    {menuOpen ? 'Fechar menu' : 'Menu'}
-                  </button>
-                ) : null}
-              </div>
-            </header>
-            )}
+            {(!driverMapStageLayout ||
+              (driverHomeTwoStep && !activeTripId && driverHomeStep === 2)) && (
+                <header
+                  className={`${driverMapStageLayout ? 'shrink-0 px-4 mb-1' : 'mb-4'} flex items-start gap-3 justify-end`}
+                >
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    {driverHomeTwoStep && !activeTripId && driverHomeStep === 2 ? (
+                      <button
+                        type="button"
+                        data-testid="driver-home-map-initial"
+                        onClick={() => setDriverHomeStep(1)}
+                        className={BTN_SECONDARY_FULL_SM}
+                      >
+                        Vista compacta
+                      </button>
+                    ) : null}
+                    {!driverBottomNav ? (
+                      <button
+                        type="button"
+                        data-testid="driver-open-menu"
+                        onClick={() => {
+                          setMenuOpen((v) => {
+                            const next = !v
+                            if (next) setDriverMenuScreen('root')
+                            return next
+                          })
+                        }}
+                        className={BTN_SECONDARY_MD}
+                      >
+                        {menuOpen ? 'Fechar menu' : 'Menu'}
+                      </button>
+                    ) : null}
+                  </div>
+                </header>
+              )}
 
             {driverMapStageLayout && (!offline || driverBottomNav) && (
               <MapStage
@@ -1582,7 +1607,7 @@ export function DriverDashboard() {
                     )}
                     {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                       <div
-                        className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
+                        className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                           ? 'bg-destructive/10 border-destructive/35 text-destructive'
                           : 'bg-warning/15 border-warning/40 text-foreground'
                           }`}
@@ -1619,7 +1644,7 @@ export function DriverDashboard() {
                     ) : null}
                     {!offline && !!token && !!driverLocation && (import.meta.env.DEV || gpsReport.lastError) ? (
                       <details
-                        className="rounded-lg border border-foreground/10 bg-background/90 px-2 py-1.5 text-[11px] text-foreground/75 shadow-sm backdrop-blur-sm"
+                        className={MAP_CHIP_OVERLAY}
                         data-testid="driver-gps-upload-details"
                       >
                         <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
@@ -1663,7 +1688,7 @@ export function DriverDashboard() {
                       </details>
                     ) : null}
                     {!isOnline && (
-                      <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                      <div className={MAP_HINT_WARNING}>
                         <p className="font-medium text-foreground">Sem ligação à internet</p>
                         <p className="text-foreground/80 mt-1">
                           Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se
@@ -1672,22 +1697,22 @@ export function DriverDashboard() {
                       </div>
                     )}
                     {pollEnabled && availablePollFault && (
-                      <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                      <div className={MAP_HINT_WARNING}>
                         Não foi possível actualizar a lista de viagens. A última informação mantém-se; voltamos a
                         tentar automaticamente — verifica a ligação se persistir.
                       </div>
                     )}
                     {historyPollFault && (
-                      <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                      <div className={MAP_HINT_WARNING_SM}>
                         Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso
                         persistir.
                       </div>
                     )}
                     {toast && (
-                      <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
+                      <div className={MAP_TOAST_WARNING}>
                         <button
                           type="button"
-                          className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                          className={MAP_DISMISS_BTN_WARNING}
                           aria-label="Fechar aviso"
                           onClick={() => setToast(null)}
                         >
@@ -1697,10 +1722,10 @@ export function DriverDashboard() {
                       </div>
                     )}
                     {error && (
-                      <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+                      <div className={MAP_TOAST_ERROR}>
                         <button
                           type="button"
-                          className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                          className={MAP_DISMISS_BTN_ERROR}
                           aria-label="Fechar mensagem de erro"
                           onClick={() => setError(null)}
                         >
@@ -1837,7 +1862,7 @@ export function DriverDashboard() {
             >
               {geolocationUsedFallback && (
                 <div
-                  className="rounded-xl bg-warning/20 border border-warning/50 border-l-4 px-3 py-2 text-sm text-warning"
+                  className={MAP_WARNING_BANNER}
                   style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
                 >
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -1861,7 +1886,7 @@ export function DriverDashboard() {
 
               {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                 <div
-                  className={`rounded-xl border px-3 py-2 text-sm ${drivingCompliance.blocked
+                  className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                     ? 'bg-destructive/10 border-destructive/35 text-destructive'
                     : 'bg-warning/15 border-warning/40 text-foreground'
                     }`}
@@ -1901,7 +1926,7 @@ export function DriverDashboard() {
 
               {!offline && !!token && !!driverLocation && (
                 <details
-                  className="rounded-lg border border-foreground/10 bg-foreground/[0.03] px-2 py-1.5 text-[11px] text-foreground/75"
+                  className={MAP_CHIP_OVERLAY_FLAT}
                   data-testid="driver-gps-upload-details"
                 >
                   <summary className="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
@@ -1943,7 +1968,7 @@ export function DriverDashboard() {
               )}
 
               {!isOnline && (
-                <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                <div className={MAP_HINT_WARNING}>
                   <p className="font-medium text-foreground">Sem ligação à internet</p>
                   <p className="text-foreground/80 mt-1">
                     Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se precisares.
@@ -1952,7 +1977,7 @@ export function DriverDashboard() {
               )}
 
               {pollEnabled && availablePollFault && (
-                <div className="rounded-xl bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                <div className={MAP_HINT_WARNING}>
                   Não foi possível atualizar a lista de viagens. A última informação mantém-se; voltamos a tentar
                   automaticamente — verifica a ligação se persistir.
                 </div>
@@ -1972,10 +1997,10 @@ export function DriverDashboard() {
                 ) : null}
 
                 {toast && (
-                  <div className="relative rounded-xl bg-warning/30 border border-warning/50 px-4 py-3 pr-14 text-warning text-base animate-toast-enter touch-manipulation">
+                  <div className={MAP_TOAST_WARNING}>
                     <button
                       type="button"
-                      className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                      className={MAP_DISMISS_BTN_WARNING}
                       aria-label="Fechar aviso"
                       onClick={() => setToast(null)}
                     >
@@ -1986,10 +2011,10 @@ export function DriverDashboard() {
                 )}
 
                 {error && (
-                  <div className="relative rounded-xl bg-destructive/10 border border-destructive/30 border-l-4 border-l-destructive px-4 py-3 pr-14 text-destructive text-base touch-manipulation">
+                  <div className={MAP_TOAST_ERROR}>
                     <button
                       type="button"
-                      className="absolute right-2 top-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation"
+                      className={MAP_DISMISS_BTN_ERROR}
                       aria-label="Fechar mensagem de erro"
                       onClick={() => setError(null)}
                     >
@@ -2006,7 +2031,7 @@ export function DriverDashboard() {
                 )}
 
                 {!driverMapStageLayout && (!offline || (driverBottomNav && !activeTripId)) && (
-                  <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                  <div className={MAP_CARD_FRAME}>
                     <MapView
                       className="!rounded-none border-0 !shadow-none"
                       driverLocation={mapDotLatLng}
@@ -2128,7 +2153,7 @@ export function DriverDashboard() {
                 )}
 
                 {historyPollFault && (
-                  <div className="rounded-lg bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground">
+                  <div className={MAP_HINT_WARNING_SM}>
                     Não foi possível atualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
                   </div>
                 )}
@@ -2955,7 +2980,7 @@ function DriverOperationsMenu({
                 type="button"
                 data-testid="driver-close-menu"
                 onClick={() => onCloseMenu()}
-                className="min-h-[40px] rounded-xl border border-border px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+                className={BTN_SECONDARY_SM}
               >
                 Fechar
               </button>
@@ -2970,7 +2995,7 @@ function DriverOperationsMenu({
       {showEarnings ? (
         <div
           id="driver-menu-earnings"
-          className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+          className={`scroll-mt-6 ${MENU_PANEL}`}
         >
           <p className="text-sm font-medium text-foreground">Rendimentos</p>
           <p className="text-xs text-muted-foreground leading-snug">
@@ -2978,7 +3003,7 @@ function DriverOperationsMenu({
             semana. A linha «Parte motorista» aparece quando a API envia payout por viagem.
           </p>
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+            <div className={MENU_CARD}>
               <p className="text-[11px] text-foreground/70">Semana atual</p>
               <p className="text-base font-semibold text-foreground">{thisWeekRevenue.toFixed(2)} €</p>
               {showThisWeekPayout ? (
@@ -2988,7 +3013,7 @@ function DriverOperationsMenu({
                 </p>
               ) : null}
             </div>
-            <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+            <div className={MENU_CARD}>
               <p className="text-[11px] text-foreground/70">Semana anterior</p>
               <p className="text-base font-semibold text-foreground">{lastWeekRevenue.toFixed(2)} €</p>
               {showLastWeekPayout ? (
@@ -3009,7 +3034,7 @@ function DriverOperationsMenu({
       ) : null}
 
       {showTrips ? (
-        <div id="driver-menu-trips" className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <div id="driver-menu-trips" className={MENU_PANEL}>
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-sm font-medium text-foreground">Viagens</p>
             {history && history.length > 0 ? (
@@ -3022,7 +3047,7 @@ function DriverOperationsMenu({
             <>
               <ul className="space-y-2 max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain pr-0.5">
                 {history.slice(0, historyVisible).map((t) => (
-                  <li key={t.trip_id} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                  <li key={t.trip_id} className={MENU_CARD}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <p className="text-xs font-medium text-foreground truncate">
@@ -3066,7 +3091,7 @@ function DriverOperationsMenu({
               {history.length > historyVisible ? (
                 <button
                   type="button"
-                  className="w-full min-h-[40px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                  className={MENU_BTN}
                   onClick={() => setHistoryVisible((n) => Math.min(n + 5, history.length))}
                 >
                   Mostrar mais
@@ -3082,7 +3107,7 @@ function DriverOperationsMenu({
       {showInbox ? (
         <div
           id="driver-menu-inbox"
-          className="scroll-mt-6 rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+          className={`scroll-mt-6 ${MENU_PANEL}`}
           data-testid="driver-menu-inbox"
         >
           <p className="text-sm font-medium text-foreground">Caixa de entrada</p>
@@ -3096,7 +3121,7 @@ function DriverOperationsMenu({
               onCloseMenu()
               window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
             }}
-            className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+            className={`${MENU_BTN} min-h-9`}
           >
             Ver registo de atividade
           </button>
@@ -3109,7 +3134,7 @@ function DriverOperationsMenu({
             type="button"
             data-testid="driver-menu-open-account"
             onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))}
-            className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+            className={`${MENU_BTN_SM} min-h-9`}
           >
             Conta (perfil)
           </button>
@@ -3117,7 +3142,7 @@ function DriverOperationsMenu({
             type="button"
             data-testid="driver-menu-open-settings"
             onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))}
-            className="min-h-[44px] rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
+            className={`${MENU_BTN_SM} min-h-9`}
           >
             Definições
           </button>
@@ -3125,7 +3150,7 @@ function DriverOperationsMenu({
       ) : null}
 
       {showPricing ? (
-        <details className="rounded-lg border border-border/80 bg-muted/15 px-3 py-2 text-sm">
+        <details className={`${INNER_RADIUS} border border-border/80 bg-muted/15 px-3 py-2 text-sm`}>
           <summary className="cursor-pointer font-medium text-foreground select-none">
             Preços nos pedidos (estimativa)
           </summary>
@@ -3137,7 +3162,7 @@ function DriverOperationsMenu({
       ) : null}
 
       {showZones ? (
-        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <div className={MENU_PANEL}>
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
             <button
@@ -3169,7 +3194,7 @@ function DriverOperationsMenu({
             <p className="text-xs text-muted-foreground">A carregar orçamento…</p>
           )}
           {zoneSession && zoneStateLabel ? (
-            <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
+            <div className={`${MENU_CARD} space-y-2`}>
               <p className="text-xs font-medium text-foreground">
                 Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
                 {activeZoneLabelPt ? (
@@ -3200,7 +3225,7 @@ function DriverOperationsMenu({
                     data-testid="driver-zones-arrived"
                     onClick={() => void handleZoneArrived()}
                     disabled={zoneBusy}
-                    className="min-h-[40px] rounded-lg border border-info bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/20 disabled:opacity-50 touch-manipulation"
+                    className={`min-h-9 ${INNER_RADIUS} border border-info bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/20 disabled:opacity-50 touch-manipulation`}
                   >
                     Cheguei à zona
                   </button>
@@ -3210,7 +3235,7 @@ function DriverOperationsMenu({
                   data-testid="driver-zones-cancel"
                   onClick={() => void handleZoneCancel()}
                   disabled={zoneBusy}
-                  className="min-h-[40px] rounded-lg border border-border px-3 text-sm font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                  className={`${MENU_BTN} disabled:opacity-50`}
                 >
                   Cancelar intenção
                 </button>
@@ -3233,14 +3258,14 @@ function DriverOperationsMenu({
                       rows={2}
                       maxLength={2000}
                       placeholder="Ex.: Acidente na A5; preciso de mais 15 min para chegar."
-                      className="w-full min-h-[44px] rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                      className={`w-full min-h-9 ${INNER_RADIUS} border border-border bg-background px-2 py-1.5 text-xs text-foreground`}
                     />
                     <button
                       type="button"
                       data-testid="driver-zones-request-extension"
                       onClick={() => void handleZoneRequestExtension()}
                       disabled={zoneBusy}
-                      className="min-h-[40px] rounded-lg border border-border px-3 text-xs font-semibold text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
+                      className={`${MENU_BTN_SM} px-3 disabled:opacity-50`}
                     >
                       Pedir mais tempo ao partner
                     </button>
@@ -3255,7 +3280,7 @@ function DriverOperationsMenu({
               ) : null}
             </div>
           ) : zoneBudget && zoneBudget.remaining > 0 ? (
-            <div className="rounded-lg border border-border/70 bg-card px-3 py-2 space-y-2">
+            <div className={`${MENU_CARD} space-y-2`}>
               <label className="block space-y-1">
                 <span className="text-[11px] text-muted-foreground">
                   Zona-alvo · catálogo v1 (também podes escrever à mão se o catálogo falhar)
@@ -3265,7 +3290,7 @@ function DriverOperationsMenu({
                     value={zoneNewZoneId}
                     onChange={(ev) => setZoneNewZoneId(ev.target.value)}
                     data-testid="driver-zones-zone-select"
-                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                    className={`w-full min-h-9 ${INNER_RADIUS} border border-border bg-background px-2 text-sm text-foreground`}
                   >
                     {zoneSelectableItems.map((z) => (
                       <option key={z.id} value={z.id}>
@@ -3291,7 +3316,7 @@ function DriverOperationsMenu({
                     void estimateZoneEtaFromCurrentLocation(true)
                   }}
                   data-testid="driver-zones-zone-input"
-                  className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                  className={`w-full min-h-9 ${INNER_RADIUS} border border-border bg-background px-2 text-sm text-foreground`}
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
@@ -3328,7 +3353,7 @@ function DriverOperationsMenu({
                       setZoneEtaManuallyEdited(true)
                       setZoneEtaMinutes(Number(ev.target.value) || 1)
                     }}
-                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                    className={`w-full min-h-9 ${INNER_RADIUS} border border-border bg-background px-2 text-sm text-foreground`}
                   />
                 </label>
                 <label className="block space-y-1">
@@ -3339,7 +3364,7 @@ function DriverOperationsMenu({
                     max={200}
                     value={zoneMarginPct}
                     onChange={(ev) => setZoneMarginPct(Number(ev.target.value) || 0)}
-                    className="w-full min-h-[40px] rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                    className={`w-full min-h-9 ${INNER_RADIUS} border border-border bg-background px-2 text-sm text-foreground`}
                   />
                 </label>
               </div>
@@ -3357,14 +3382,14 @@ function DriverOperationsMenu({
                 data-testid="driver-zones-create"
                 onClick={() => void handleCreateZoneSession()}
                 disabled={zoneBusy || !token}
-                className="w-full min-h-[44px] rounded-lg border border-info bg-info/15 text-sm font-semibold text-foreground hover:bg-info/25 disabled:opacity-50 touch-manipulation"
+                className={`w-full min-h-9 ${INNER_RADIUS} border border-info bg-info/15 text-sm font-semibold text-foreground hover:bg-info/25 disabled:opacity-50 touch-manipulation`}
               >
                 Pedir mudança de zona
               </button>
             </div>
           ) : zoneBudget && zoneBudget.remaining <= 0 ? (
             <div
-              className="rounded-lg border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2"
+              className={`${INNER_RADIUS} border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2`}
               data-testid="driver-zones-budget-exhausted"
             >
               <p className="text-sm font-semibold text-foreground">Orçamento de mudanças esgotado hoje</p>
@@ -3380,7 +3405,7 @@ function DriverOperationsMenu({
                   onCloseMenu()
                   window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
                 }}
-                className="w-full min-h-[44px] rounded-lg border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation"
+                className={`${MENU_BTN} min-h-9`}
               >
                 Abrir registo de atividade
               </button>
@@ -3390,7 +3415,7 @@ function DriverOperationsMenu({
       ) : null}
 
       {showNavPref ? (
-        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <div className={MENU_PANEL}>
           <p className="text-sm font-medium text-foreground">Navegação (preferência)</p>
           <p className="text-xs text-muted-foreground">
             Os botões «Recolha / Destino» usam primeiro esta app; o segundo botão abre a alternativa.
@@ -3400,7 +3425,7 @@ function DriverOperationsMenu({
               type="button"
               data-testid="driver-nav-pref-waze"
               onClick={() => onSelectNavPref('waze')}
-              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'waze'
+              className={`min-h-9 flex-1 ${INNER_RADIUS} border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'waze'
                 ? 'border-info bg-info/15 text-foreground'
                 : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                 }`}
@@ -3411,7 +3436,7 @@ function DriverOperationsMenu({
               type="button"
               data-testid="driver-nav-pref-google"
               onClick={() => onSelectNavPref('google_maps')}
-              className={`min-h-[44px] flex-1 rounded-lg border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'google_maps'
+              className={`min-h-9 flex-1 ${INNER_RADIUS} border px-2 text-sm font-semibold touch-manipulation transition-colors ${navPref === 'google_maps'
                 ? 'border-info bg-info/15 text-foreground'
                 : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                 }`}
@@ -3423,7 +3448,7 @@ function DriverOperationsMenu({
       ) : null}
 
       {showCategories ? (
-        <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-2">
+        <div className={MENU_PANEL}>
           <p className="text-sm font-medium text-foreground">Categorias de veículo</p>
           <p className="text-xs text-muted-foreground leading-snug">
             Sincroniza com o servidor e filtra os pedidos que vês na lista. Mantém pelo menos uma categoria
@@ -3449,7 +3474,7 @@ function DriverOperationsMenu({
                   data-testid={`driver-category-${key}`}
                   aria-pressed={active}
                   onClick={() => onToggleVehicleCategory(key)}
-                  className={`min-h-[40px] rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
+                  className={`min-h-9 ${INNER_RADIUS} border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
                     ? 'border-info bg-info/15 text-foreground'
                     : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                     }`}
@@ -3464,7 +3489,7 @@ function DriverOperationsMenu({
 
       {showDocs ? (
         <div
-          className="rounded-xl border border-border bg-background px-3 py-3 space-y-2"
+          className={MENU_PANEL}
           data-testid="driver-menu-documents-panel"
         >
           <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
@@ -3477,7 +3502,7 @@ function DriverOperationsMenu({
             if (!hasExpired && !hasSoon) return null
             return (
               <div
-                className={`rounded-lg border px-3 py-2 text-xs ${hasExpired
+                className={`${INNER_RADIUS} border px-3 py-2 text-xs ${hasExpired
                   ? 'border-destructive/50 bg-destructive/10 text-foreground'
                   : 'border-warning/50 bg-warning/10 text-foreground'
                   }`}
@@ -3490,7 +3515,7 @@ function DriverOperationsMenu({
               </div>
             )
           })()}
-          <div className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card px-3 py-2">
+          <div className={`flex items-center justify-between gap-2 ${MENU_CARD}`}>
             <p className="text-xs text-foreground/85">
               Aprovados: {driverDocumentsApprovedCount(driverDocuments)} / {REQUIRED_DRIVER_DOCUMENTS.length}
             </p>
@@ -3518,7 +3543,7 @@ function DriverOperationsMenu({
               const expLine = formatDriverDocExpiresLine(meta?.expiresAt ?? undefined)
               const noteLine = meta?.partnerNote?.trim()
               return (
-                <div key={doc} className="rounded-lg border border-border/70 bg-card px-3 py-2">
+                <div key={doc} className={MENU_CARD}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-medium text-foreground truncate">{driverDocumentLabel(doc)}</p>
                     <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${badgeClass}`}>
@@ -3546,7 +3571,7 @@ function DriverOperationsMenu({
               )
             })}
           </div>
-          <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+          <div className={MENU_CARD}>
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-foreground/85">Bloquear disponibilidade até todos estarem aprovados</p>
               <button

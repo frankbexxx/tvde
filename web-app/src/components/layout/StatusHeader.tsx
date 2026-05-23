@@ -3,6 +3,7 @@
  * requested→amber, assigned→blue, accepted/arriving→emerald, ongoing→violet,
  * completed→slate, cancelled→gray, failed→red.
  */
+import { BTN_SECONDARY_RADIUS, SURFACE_RADIUS } from './infoBoxTemplate'
 export type StatusVariant =
   | 'requested'
   | 'assigned'
@@ -50,7 +51,7 @@ export function StatusHeader({
     return (
       <div
         key={label}
-        className={`inline-flex max-w-full flex-col items-start gap-1 rounded-xl border px-3 py-2 text-left text-sm font-medium shadow-none ${pill} transition-opacity duration-200 motion-reduce:transition-none`}
+        className={`inline-flex max-w-full flex-col items-start gap-1 ${BTN_SECONDARY_RADIUS} border px-3 py-2 text-left text-sm font-medium shadow-none ${pill} transition-opacity duration-200 motion-reduce:transition-none`}
         role="status"
         aria-label={label}
         aria-live="polite"
@@ -63,8 +64,8 @@ export function StatusHeader({
     )
   }
   const surface = isSubdued
-    ? 'rounded-2xl border border-border bg-card px-4 py-3 text-center text-base font-medium text-foreground/90 mb-4 shadow-none opacity-90'
-    : `rounded-2xl border px-4 py-4 text-center text-xl font-semibold mb-6 shadow-sm ${VARIANT_STYLES[variant]}`
+    ? `${SURFACE_RADIUS} border border-border bg-card px-4 py-3 text-center text-base font-medium text-foreground/90 mb-4 shadow-none opacity-90`
+    : `${SURFACE_RADIUS} border px-4 py-4 text-center text-xl font-semibold mb-6 shadow-sm ${VARIANT_STYLES[variant]}`
   return (
     <div
       key={label}
