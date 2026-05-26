@@ -104,6 +104,41 @@ export async function postPartnerMessage(body: {
   })
 }
 
+export interface PartnerMessageRow {
+  id: string
+  title: string
+  body: string
+  priority: string
+  created_at: string
+  driver_user_id: string | null
+  direction?: string
+  read: boolean
+}
+
+export interface PartnerInboxMessageRow {
+  id: string
+  title: string
+  body: string
+  priority: string
+  created_at: string
+  driver_user_id: string
+  read: boolean
+}
+
+export async function fetchPartnerSentMessages(): Promise<PartnerMessageRow[]> {
+  return apiFetch<PartnerMessageRow[]>('/partner/messages/sent')
+}
+
+export async function fetchPartnerInboxMessages(): Promise<PartnerInboxMessageRow[]> {
+  return apiFetch<PartnerInboxMessageRow[]>('/partner/messages/inbox')
+}
+
+export async function markPartnerMessageRead(messageId: string): Promise<void> {
+  await apiFetch<void>(`/partner/messages/${encodeURIComponent(messageId)}/read`, {
+    method: 'PATCH',
+  })
+}
+
 export function partnerDriverDocumentFileUrl(userId: string, docKey: string): string {
   return `${API_BASE.replace(/\/$/, '')}/partner/drivers/${encodeURIComponent(userId)}/documents/${encodeURIComponent(docKey)}/file`
 }
@@ -160,6 +195,39 @@ export async function postPartnerGrantDriverZoneBudgetExtra(
         extra_max_changes: body.extra_max_changes ?? 1,
         service_date: body.service_date ?? null,
       }),
+    }
+  )
+}
+
+export interface PartnerDriverZoneSession {
+  id: string
+  zone_id: string
+  deadline_at: string
+  extension_requested?: boolean
+  extension_reason?: string | null
+  extension_seconds_approved?: number | null
+  status: string
+}
+
+export async function fetchPartnerDriverZoneSessionOpen(
+  userId: string
+): Promise<PartnerDriverZoneSession | null> {
+  const res = await apiFetch<{ session: PartnerDriverZoneSession | null }>(
+    `/partner/drivers/${encodeURIComponent(userId)}/zones/sessions/open`
+  )
+  return res.session ?? null
+}
+
+export async function postPartnerApproveZoneExtension(
+  userId: string,
+  sessionId: string,
+  extraSeconds: number
+): Promise<PartnerDriverZoneSession> {
+  return apiFetch<PartnerDriverZoneSession>(
+    `/partner/drivers/${encodeURIComponent(userId)}/zones/sessions/${encodeURIComponent(sessionId)}/approve-extension`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ extra_seconds: extraSeconds }),
     }
   )
 }

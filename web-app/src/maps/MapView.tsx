@@ -55,6 +55,16 @@ export interface MapViewProps {
   pendingOfferPickups?: Array<{ lat: number; lng: number; label: string; tripId: string }> | null
   /** Toque num marcador de oferta pendente. */
   onPendingOfferPickupClick?: (tripId: string) => void
+  /** Frota partner: um marcador por motorista (cor = estado). */
+  fleetDrivers?: Array<{
+    userId: string
+    lat: number
+    lng: number
+    label: string
+    tone: 'free' | 'on_trip' | 'offline'
+  }> | null
+  /** Toque num marcador de motorista da frota. */
+  onFleetDriverClick?: (userId: string) => void
   /** Usa altura mais compacta para manter CTAs visíveis em ecrãs curtos. */
   compactHeight?: boolean
   /** Mapa mais alto no ecrã principal motorista (shell com bottom nav). */
@@ -94,6 +104,8 @@ export function MapView({
   tripDropoff = null,
   pendingOfferPickups = null,
   onPendingOfferPickupClick,
+  fleetDrivers = null,
+  onFleetDriverClick,
   compactHeight = false,
   tallStage = false,
   fillContainer = false,
@@ -121,6 +133,10 @@ export function MapView({
     if (!pendingOfferPickups?.length) return ''
     return pendingOfferPickups.map((p) => `${p.lat},${p.lng},${p.label},${p.tripId}`).join('|')
   }, [pendingOfferPickups])
+  const fleetDriversKey = useMemo(() => {
+    if (!fleetDrivers?.length) return ''
+    return fleetDrivers.map((d) => `${d.userId},${d.lat},${d.lng},${d.tone}`).join('|')
+  }, [fleetDrivers])
   const [hasInitialFit, setHasInitialFit] = useState(false)
   const [routeGeometry, setRouteGeometry] = useState<FeatureCollection<LineString> | null>(null)
   const [lastRouteKey, setLastRouteKey] = useState<string | null>(null)
@@ -275,22 +291,39 @@ export function MapView({
   }, [showMap, driverLocation, mapAnchor, onPlanningMapClick, hasActiveTripMarkers, pendingOfferPickupsKey])
 
   useEffect(() => {
-    if (!showMap || !driverLocation) return
-    if (hasActiveTripMarkers) return
-    if (!pendingOfferPickups?.length) return
+    if (!showMap || hasActiveTripMarkers) return
+    if (!fleetDrivers?.length && !pendingOfferPickups?.length) return
     const map = mapRef.current?.getMap()
     if (!map) return
     const bounds = new maplibregl.LngLatBounds()
-    bounds.extend([driverLocation.lng, driverLocation.lat])
-    for (const p of pendingOfferPickups) {
-      bounds.extend([p.lng, p.lat])
+    let extended = false
+    if (driverLocation) {
+      bounds.extend([driverLocation.lng, driverLocation.lat])
+      extended = true
     }
+    for (const d of fleetDrivers ?? []) {
+      bounds.extend([d.lng, d.lat])
+      extended = true
+    }
+    for (const p of pendingOfferPickups ?? []) {
+      bounds.extend([p.lng, p.lat])
+      extended = true
+    }
+    if (!extended) return
     map.fitBounds(bounds, {
       padding: { top: 64, bottom: 64, left: 48, right: 48 },
       maxZoom: 14,
       duration: 650,
     })
-  }, [showMap, driverLocation, hasActiveTripMarkers, pendingOfferPickupsKey, pendingOfferPickups])
+  }, [
+    showMap,
+    driverLocation,
+    hasActiveTripMarkers,
+    fleetDriversKey,
+    fleetDrivers,
+    pendingOfferPickupsKey,
+    pendingOfferPickups,
+  ])
 
   useEffect(() => {
     if (!planningRecenter) return
@@ -426,6 +459,45 @@ export function MapView({
                 </button>
               </Marker>
             ))
+            : null}
+
+          {!hasActiveTripMarkers && fleetDrivers?.length
+            ? fleetDrivers.map((d) => {
+                const toneClass =
+                  d.tone === 'on_trip'
+                    ? 'bg-sky-500 ring-sky-400/60'
+                    : d.tone === 'free'
+                      ? 'bg-emerald-500 ring-emerald-400/60'
+                      : 'bg-muted-foreground ring-muted-foreground/40'
+                return (
+                  <Marker
+                    key={`fleet-driver-${d.userId}`}
+                    longitude={d.lng}
+                    latitude={d.lat}
+                    anchor="center"
+                  >
+                    <button
+                      type="button"
+                      data-testid={`partner-fleet-driver-${d.userId}`}
+                      aria-label={`Motorista ${d.label}`}
+                      disabled={!onFleetDriverClick}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onFleetDriverClick?.(d.userId)
+                      }}
+                      className="flex cursor-pointer flex-col items-center touch-manipulation disabled:cursor-default"
+                    >
+                      <span
+                        className={`h-4 w-4 rounded-full ring-4 shadow-md ${toneClass}`}
+                        aria-hidden
+                      />
+                      <span className="mt-0.5 max-w-[4.5rem] truncate rounded bg-background/90 px-1 text-[10px] font-semibold text-foreground shadow-sm">
+                        {d.label}
+                      </span>
+                    </button>
+                  </Marker>
+                )
+              })
             : null}
 
           {/* A015/A016: só em planeamento — sem marcadores de viagem ativa (evita sobrepor com um só leg definido). */}

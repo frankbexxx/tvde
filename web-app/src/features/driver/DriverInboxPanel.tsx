@@ -2,24 +2,39 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import {
   fetchDriverMessages,
+  fetchDriverSentMessages,
   markDriverMessageRead,
+  postDriverMessage,
   type DriverMessageRow,
 } from '../../api/driverMessages'
 
+type InboxTab = 'received' | 'sent' | 'compose'
+
 export function DriverInboxPanel() {
   const { token } = useAuth()
-  const [rows, setRows] = useState<DriverMessageRow[]>([])
+  const [tab, setTab] = useState<InboxTab>('received')
+  const [received, setReceived] = useState<DriverMessageRow[]>([])
+  const [sent, setSent] = useState<DriverMessageRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [priority, setPriority] = useState<'normal' | 'high'>('normal')
+  const [sending, setSending] = useState(false)
+  const [sendOk, setSendOk] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!token) return
     setLoading(true)
     setError(null)
     try {
-      const list = await fetchDriverMessages(token)
-      setRows(list)
+      const [inbox, outbox] = await Promise.all([
+        fetchDriverMessages(token),
+        fetchDriverSentMessages(token),
+      ])
+      setReceived(inbox)
+      setSent(outbox)
     } catch {
       setError('Não foi possível carregar a caixa de entrada.')
     } finally {
@@ -33,59 +48,144 @@ export function DriverInboxPanel() {
 
   const openMessage = async (m: DriverMessageRow) => {
     setOpenId(m.id)
-    if (!m.read && token) {
+    if (!m.read && token && tab === 'received') {
       try {
         await markDriverMessageRead(token, m.id)
-        setRows((prev) => prev.map((r) => (r.id === m.id ? { ...r, read: true } : r)))
+        setReceived((prev) => prev.map((r) => (r.id === m.id ? { ...r, read: true } : r)))
       } catch {
         /* keep UI usable */
       }
     }
   }
 
+  const rows = tab === 'sent' ? sent : received
   const selected = rows.find((r) => r.id === openId) ?? null
 
-  if (loading) {
-    return <p className="text-xs text-muted-foreground">A carregar mensagens…</p>
-  }
-  if (error) {
-    return <p className="text-xs text-destructive">{error}</p>
-  }
-  if (rows.length === 0) {
-    return <p className="text-xs text-muted-foreground">Sem avisos da frota.</p>
+  const handleSend = async () => {
+    if (!token || !title.trim() || !body.trim()) return
+    setSending(true)
+    setSendOk(null)
+    setError(null)
+    try {
+      await postDriverMessage(token, { title: title.trim(), body: body.trim(), priority })
+      setTitle('')
+      setBody('')
+      setSendOk('Pedido enviado à frota.')
+      setTab('sent')
+      await load()
+    } catch {
+      setError('Não foi possível enviar. Tenta outra vez.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
-    <div className="space-y-2">
-      <ul className="space-y-2 max-h-48 overflow-y-auto">
-        {rows.map((m) => (
-          <li key={m.id}>
-            <button
-              type="button"
-              onClick={() => void openMessage(m)}
-              className={`w-full text-left rounded-lg border px-3 py-2 text-xs touch-manipulation ${m.read ? 'border-border bg-card' : 'border-info/40 bg-info/5'}`}
-            >
-              <p className="font-medium text-foreground flex items-center gap-2">
-                {!m.read ? <span className="h-2 w-2 rounded-full bg-info shrink-0" aria-hidden /> : null}
-                {m.title}
-                {m.priority === 'high' ? (
-                  <span className="text-[10px] uppercase text-destructive font-semibold">Alta</span>
-                ) : null}
-              </p>
-              <p className="text-muted-foreground mt-0.5">{new Date(m.created_at).toLocaleString('pt-PT')}</p>
-            </button>
-          </li>
+    <div className="space-y-3">
+      <div className="flex gap-1 rounded-lg border border-border p-0.5">
+        {(
+          [
+            ['received', 'Recebidas'],
+            ['sent', 'Enviadas'],
+            ['compose', 'Pedir ajuda'],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => {
+              setTab(id)
+              setOpenId(null)
+            }}
+            className={`flex-1 min-h-8 rounded-md text-xs font-medium touch-manipulation ${tab === id ? 'bg-primary/15 text-foreground' : 'text-muted-foreground'}`}
+          >
+            {label}
+          </button>
         ))}
-      </ul>
-      {selected ? (
-        <div className="rounded-lg border border-border bg-background/80 px-3 py-2 text-xs">
-          <p className="font-medium text-foreground">{selected.title}</p>
-          <p className="mt-2 text-foreground/90 whitespace-pre-wrap">{selected.body}</p>
+      </div>
+
+      {tab === 'compose' ? (
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Assunto"
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
+          />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Descreve o que precisas da frota"
+            rows={4}
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
+          />
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as 'normal' | 'high')}
+            className="w-full rounded-lg border border-border px-2 py-2 text-sm"
+          >
+            <option value="normal">Prioridade normal</option>
+            <option value="high">Prioridade alta</option>
+          </select>
+          <button
+            type="button"
+            disabled={sending || !title.trim() || !body.trim()}
+            onClick={() => void handleSend()}
+            className="w-full min-h-10 rounded-xl bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {sending ? 'A enviar…' : 'Enviar à frota'}
+          </button>
+          {sendOk ? <p className="text-xs text-success">{sendOk}</p> : null}
         </div>
+      ) : loading ? (
+        <p className="text-xs text-muted-foreground">A carregar mensagens…</p>
+      ) : error ? (
+        <p className="text-xs text-destructive">{error}</p>
+      ) : rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {tab === 'sent' ? 'Ainda não enviaste mensagens à frota.' : 'Sem avisos da frota.'}
+        </p>
+      ) : (
+        <>
+          <ul className="space-y-2 max-h-48 overflow-y-auto">
+            {rows.map((m) => (
+              <li key={m.id}>
+                <button
+                  type="button"
+                  onClick={() => void openMessage(m)}
+                  className={`w-full text-left rounded-lg border px-3 py-2 text-xs touch-manipulation ${m.read ? 'border-border bg-card' : 'border-info/40 bg-info/5'}`}
+                >
+                  <p className="font-medium text-foreground flex items-center gap-2">
+                    {!m.read && tab === 'received' ? (
+                      <span className="h-2 w-2 rounded-full bg-info shrink-0" aria-hidden />
+                    ) : null}
+                    {m.title}
+                    {m.priority === 'high' ? (
+                      <span className="text-[10px] uppercase text-destructive font-semibold">Alta</span>
+                    ) : null}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5">
+                    {new Date(m.created_at).toLocaleString('pt-PT')}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {selected ? (
+            <div className="rounded-lg border border-border bg-background/80 px-3 py-2 text-xs">
+              <p className="font-medium text-foreground">{selected.title}</p>
+              <p className="mt-2 text-foreground/90 whitespace-pre-wrap">{selected.body}</p>
+            </div>
+          ) : null}
+        </>
+      )}
+
+      {tab !== 'compose' ? (
+        <button type="button" onClick={() => void load()} className="text-xs text-primary underline">
+          Actualizar
+        </button>
       ) : null}
-      <button type="button" onClick={() => void load()} className="text-xs text-primary underline">
-        Actualizar
-      </button>
     </div>
   )
 }

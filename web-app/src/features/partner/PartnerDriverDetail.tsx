@@ -4,16 +4,19 @@ import { useAuth } from '../../context/AuthContext'
 import {
   fetchPartnerDriver,
   fetchPartnerDriverZoneBudgetToday,
+  fetchPartnerDriverZoneSessionOpen,
   fetchPartnerTrips,
   patchPartnerDriverAvailability,
   patchPartnerDriverDocuments,
   patchPartnerDriverStatus,
+  postPartnerApproveZoneExtension,
   postPartnerGrantDriverZoneBudgetExtra,
   postPartnerMessage,
   partnerDriverDocumentFileUrl,
   removeDriverFromFleet,
   type PartnerDriverRow,
   type PartnerDriverZoneBudgetToday,
+  type PartnerDriverZoneSession,
 } from '../../api/partner'
 import {
   driverDocumentLabel,
@@ -50,6 +53,9 @@ export function PartnerDriverDetail() {
   const [busy, setBusy] = useState<string | null>(null)
   const [zoneBudget, setZoneBudget] = useState<PartnerDriverZoneBudgetToday | null>(null)
   const [zoneBudgetLoading, setZoneBudgetLoading] = useState(false)
+  const [zoneSession, setZoneSession] = useState<PartnerDriverZoneSession | null>(null)
+  const [zoneSessionLoading, setZoneSessionLoading] = useState(false)
+  const [zoneExtensionMinutes, setZoneExtensionMinutes] = useState(30)
   const [draftExpires, setDraftExpires] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
   const [draftNotes, setDraftNotes] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
   const [msgTitle, setMsgTitle] = useState('')
@@ -95,6 +101,29 @@ export function PartnerDriverDetail() {
       })
       .finally(() => {
         if (!cancelled) setZoneBudgetLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId, d])
+
+  useEffect(() => {
+    if (!userId || !d || d.status !== 'approved') {
+      setZoneSession(null)
+      setZoneSessionLoading(false)
+      return
+    }
+    let cancelled = false
+    setZoneSessionLoading(true)
+    void fetchPartnerDriverZoneSessionOpen(userId)
+      .then((s) => {
+        if (!cancelled) setZoneSession(s)
+      })
+      .catch(() => {
+        if (!cancelled) setZoneSession(null)
+      })
+      .finally(() => {
+        if (!cancelled) setZoneSessionLoading(false)
       })
     return () => {
       cancelled = true
@@ -482,6 +511,67 @@ export function PartnerDriverDetail() {
           >
             {busy === 'grantZone' ? '…' : '+1 mudança autorizada (hoje)'}
           </button>
+          {zoneSessionLoading ? (
+            <p className="text-xs text-muted-foreground">A carregar sessão de zona…</p>
+          ) : zoneSession?.extension_requested &&
+            zoneSession.extension_seconds_approved == null ? (
+            <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 space-y-2 text-xs">
+              <p className="font-medium text-foreground">Pedido de extensão de prazo</p>
+              {zoneSession.extension_reason ? (
+                <p className="text-foreground/85 whitespace-pre-wrap">{zoneSession.extension_reason}</p>
+              ) : null}
+              <p className="text-muted-foreground">
+                Zona {zoneSession.zone_id} · prazo {new Date(zoneSession.deadline_at).toLocaleString('pt-PT')}
+              </p>
+              <label className="block space-y-1">
+                <span>Minutos extra a aprovar</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={240}
+                  value={zoneExtensionMinutes}
+                  onChange={(e) => setZoneExtensionMinutes(Number(e.target.value) || 30)}
+                  className="w-full rounded-md border border-border px-2 py-1.5"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={busy !== null}
+                data-testid="partner-approve-zone-extension"
+                onClick={() => {
+                  void (async () => {
+                    setBusy('zoneExt')
+                    setError(null)
+                    try {
+                      const updated = await postPartnerApproveZoneExtension(
+                        userId,
+                        zoneSession.id,
+                        Math.max(60, zoneExtensionMinutes * 60)
+                      )
+                      setZoneSession(updated)
+                    } catch (e: unknown) {
+                      const err = e as { detail?: string }
+                      setError(
+                        typeof err?.detail === 'string'
+                          ? err.detail
+                          : 'Erro ao aprovar extensão.'
+                      )
+                    } finally {
+                      setBusy(null)
+                    }
+                  })()
+                }}
+                className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+              >
+                {busy === 'zoneExt' ? '…' : 'Aprovar extensão'}
+              </button>
+            </div>
+          ) : zoneSession?.extension_seconds_approved != null &&
+            zoneSession.extension_seconds_approved > 0 ? (
+            <p className="text-xs text-success">
+              Extensão aprovada (+{Math.round(zoneSession.extension_seconds_approved / 60)} min).
+            </p>
+          ) : null}
         </div>
       )}
 

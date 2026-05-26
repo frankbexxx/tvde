@@ -19,7 +19,7 @@ from app.schemas.driver_documents import (
     DriverDocumentsSuggestExpiryRequest,
     DriverDocumentsSuggestExpiryResponse,
 )
-from app.schemas.partner_messages import DriverMessageListItem
+from app.schemas.partner_messages import DriverMessageCreateRequest, DriverMessageListItem
 from app.db.models.driver import DriverLocation
 from app.db.models.driver import Driver
 from app.services.driver_location import upsert_driver_location
@@ -37,7 +37,9 @@ from app.services.driver_document_upload import (
     save_driver_document_file,
 )
 from app.services.partner_messages import (
+    create_driver_message_to_partner,
     list_driver_messages,
+    list_driver_sent_messages,
     mark_driver_message_read,
     _utc_iso as message_utc_iso,
 )
@@ -246,6 +248,50 @@ async def mark_message_read(
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid") from None
     mark_driver_message_read(db, driver_user_id=uid, message_id=mid)
+
+
+@driver_router.get("/messages/sent", response_model=list[DriverMessageListItem])
+async def list_my_sent_messages(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> list[DriverMessageListItem]:
+    uid = uuid.UUID(str(user.user_id))
+    rows = list_driver_sent_messages(db, driver_user_id=uid)
+    return [
+        DriverMessageListItem(
+            id=str(m.id),
+            title=m.title,
+            body=m.body,
+            priority=m.priority,
+            created_at=message_utc_iso(m.created_at),
+            read=True,
+        )
+        for m in rows
+    ]
+
+
+@driver_router.post("/messages", response_model=DriverMessageListItem, status_code=status.HTTP_201_CREATED)
+async def create_message_to_partner(
+    body: DriverMessageCreateRequest,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverMessageListItem:
+    uid = uuid.UUID(str(user.user_id))
+    msg = create_driver_message_to_partner(
+        db,
+        driver_user_id=uid,
+        title=body.title,
+        body=body.body,
+        priority=body.priority,
+    )
+    return DriverMessageListItem(
+        id=str(msg.id),
+        title=msg.title,
+        body=msg.body,
+        priority=msg.priority,
+        created_at=message_utc_iso(msg.created_at),
+        read=True,
+    )
 
 
 @driver_router.post(
