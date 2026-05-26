@@ -391,6 +391,20 @@ test.describe('Driver + passenger (proximity gate)', () => {
       return list.some((item) => item.trip_id === tripId)
     }
 
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/available`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return 0
+          return ((await r.json()) as unknown[]).length
+        },
+        { timeout: sec(60), intervals: pollLook }
+      )
+      .toBeGreaterThan(0)
+    await expect(marker).toBeVisible({ timeout: sec(60) })
+
     await closeDriverOfferPanelFromMap(driverPage, tripId)
     await expect(marker).toBeVisible({ timeout: sec(30) })
     await expect.poll(tripStillAvailable, { timeout: sec(30), intervals: pollLook }).toBe(true)
