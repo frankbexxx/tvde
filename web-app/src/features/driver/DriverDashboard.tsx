@@ -89,6 +89,8 @@ import {
   isDriverOfferExpired,
   persistDismissedOfferTripIds,
   readDismissedOfferTripIds,
+  clearDismissedOfferTripId,
+  clearAllDismissedOfferTripIds,
 } from './driverOfferDismiss'
 import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
 import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
@@ -358,8 +360,9 @@ export function DriverDashboard() {
     defaultDriverDocumentsState()
   )
   const [driverDocsGateEnabled, setDriverDocsGateEnabled] = useState<boolean>(() =>
-    isDriverDocumentsGateEnabled()
+    import.meta.env.DEV ? isDriverDocumentsGateEnabled() : true
   )
+  const effectiveDocsGate = import.meta.env.DEV ? driverDocsGateEnabled : true
   const [driverAcceptSoundTick, setDriverAcceptSoundTick] = useState(0)
   const [driverCompleteSoundTick, setDriverCompleteSoundTick] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -399,12 +402,20 @@ export function DriverDashboard() {
     })
     setSelectedOfferTripId((prev) => (prev === tripId ? null : prev))
   }, [])
+  const restoreSilencedOffer = useCallback((tripId: string) => {
+    clearDismissedOfferTripId(tripId)
+    setDismissedOfferTripIds(readDismissedOfferTripIds())
+  }, [])
+  const restoreAllSilencedOffers = useCallback(() => {
+    clearAllDismissedOfferTripIds()
+    setDismissedOfferTripIds(new Set())
+  }, [])
   const isOnline = useOnlineStatus()
   const sessionDisplayName = useMemo(() => getStoredSessionDisplayName(), [])
 
   const handleDriverAvailabilityChange = useCallback(
     (checked: boolean) => {
-      if (checked && driverDocsGateEnabled && !isDriverDocumentsReady(driverDocuments)) {
+      if (checked && effectiveDocsGate && !isDriverDocumentsReady(driverDocuments)) {
         setToast(
           'Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.'
         )
@@ -416,7 +427,7 @@ export function DriverDashboard() {
       addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
       setStatus(checked ? 'Disponível' : 'Offline')
     },
-    [addLog, driverDocsGateEnabled, driverDocuments, setStatus]
+    [addLog, effectiveDocsGate, driverDocuments, setStatus]
   )
 
   /** Toque no mapa: ficar disponível (mesmas regras que a pill). */
@@ -495,6 +506,17 @@ export function DriverDashboard() {
       .filter((t) => !dismissedOfferTripIds.has(t.trip_id))
       .filter((t) => !isDriverOfferExpired(t.expires_at))
   }, [availableWithCategoryMeta, vehicleCategories, dismissedOfferTripIds])
+  const silencedOfferEntries = useMemo(
+    () =>
+      [...dismissedOfferTripIds].map((tripId) => {
+        const t = availableWithCategoryMeta.find((x) => x.trip.trip_id === tripId)?.trip
+        return {
+          tripId,
+          label: t ? formatPickup(t.origin_lat, t.origin_lng) : `#${tripId.slice(0, 8)}`,
+        }
+      }),
+    [dismissedOfferTripIds, availableWithCategoryMeta]
+  )
   const filteredOutCount = Math.max(0, (available?.length ?? 0) - filteredAvailable.length)
   const hasAvailableTrips = filteredAvailable.length > 0
   const compactDriverSurface = !activeTripId && !offline && hasAvailableTrips
@@ -1170,6 +1192,9 @@ export function DriverDashboard() {
                     'info'
                   )
                 }}
+                silencedOfferEntries={silencedOfferEntries}
+                onRestoreSilencedOffer={restoreSilencedOffer}
+                onRestoreAllSilencedOffers={restoreAllSilencedOffers}
               />
             </div>
           )}
@@ -1737,7 +1762,7 @@ export function DriverDashboard() {
                             offerId={selectedAvailableTrip.offer_id ?? null}
                             expiresAt={selectedAvailableTrip.expires_at ?? null}
                             dismissButtonTestId={`driver-dismiss-${selectedAvailableTrip.trip_id}`}
-                            dismissPlacement="top-left"
+                            dismissPlacement="bottom-right-silence"
                             onDismiss={() => dismissOffer(selectedAvailableTrip.trip_id)}
                             acceptButtonTestId={`driver-accept-${selectedAvailableTrip.trip_id}`}
                             acceptVariant="slide"
@@ -2448,6 +2473,9 @@ function DriverOperationsMenu({
   vehicleCategories,
   driverDocuments,
   driverDocsGateEnabled,
+  silencedOfferEntries = [],
+  onRestoreSilencedOffer,
+  onRestoreAllSilencedOffers,
   section = 'all',
   hideHeader = false,
   hideCloseButton = false,
@@ -2465,6 +2493,9 @@ function DriverOperationsMenu({
   vehicleCategories: DriverVehicleCategory[]
   driverDocuments: DriverDocumentsState
   driverDocsGateEnabled: boolean
+  silencedOfferEntries?: Array<{ tripId: string; label: string }>
+  onRestoreSilencedOffer?: (tripId: string) => void
+  onRestoreAllSilencedOffers?: () => void
   section?: DriverMenuScreen
   hideHeader?: boolean
   hideCloseButton?: boolean
@@ -2491,17 +2522,31 @@ function DriverOperationsMenu({
   startOfThisWeek.setHours(0, 0, 0, 0)
   const startOfLastWeek = new Date(startOfThisWeek)
   startOfLastWeek.setDate(startOfLastWeek.getDate() - 7)
+  const startOfToday = new Date(now)
+  startOfToday.setHours(0, 0, 0, 0)
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
   const completedTrips = (history ?? []).filter((t) => t.status === 'completed' && t.completed_at)
+  const tripRevenue = (t: TripHistoryItem) => t.final_price ?? t.estimated_price ?? 0
   const thisWeekRevenue = completedTrips.reduce((sum, t) => {
     const when = t.completed_at ? new Date(t.completed_at) : null
     if (!when || when < startOfThisWeek) return sum
-    return sum + (t.final_price ?? t.estimated_price ?? 0)
+    return sum + tripRevenue(t)
   }, 0)
   const lastWeekRevenue = completedTrips.reduce((sum, t) => {
     const when = t.completed_at ? new Date(t.completed_at) : null
     if (!when || when < startOfLastWeek || when >= startOfThisWeek) return sum
-    return sum + (t.final_price ?? t.estimated_price ?? 0)
+    return sum + tripRevenue(t)
+  }, 0)
+  const todayRevenue = completedTrips.reduce((sum, t) => {
+    const when = t.completed_at ? new Date(t.completed_at) : null
+    if (!when || when < startOfToday) return sum
+    return sum + tripRevenue(t)
+  }, 0)
+  const monthRevenue = completedTrips.reduce((sum, t) => {
+    const when = t.completed_at ? new Date(t.completed_at) : null
+    if (!when || when < startOfMonth) return sum
+    return sum + tripRevenue(t)
   }, 0)
   const thisWeekPayoutSum = sumDriverPayoutInRange(completedTrips, startOfThisWeek, null)
   const lastWeekPayoutSum = sumDriverPayoutInRange(completedTrips, startOfLastWeek, startOfThisWeek)
@@ -2958,6 +3003,14 @@ function DriverOperationsMenu({
             semana. A linha «Parte motorista» aparece quando a API envia payout por viagem.
           </p>
           <div className="grid grid-cols-2 gap-2">
+            <div className={MENU_CARD}>
+              <p className="text-[11px] text-foreground/70">Hoje</p>
+              <p className="text-base font-semibold text-foreground">{todayRevenue.toFixed(2)} €</p>
+            </div>
+            <div className={MENU_CARD}>
+              <p className="text-[11px] text-foreground/70">Este mês</p>
+              <p className="text-base font-semibold text-foreground">{monthRevenue.toFixed(2)} €</p>
+            </div>
             <div className={MENU_CARD}>
               <p className="text-[11px] text-foreground/70">Semana atual</p>
               <p className="text-base font-semibold text-foreground">{thisWeekRevenue.toFixed(2)} €</p>
@@ -3536,24 +3589,58 @@ function DriverOperationsMenu({
               )
             })}
           </div>
-          <div className={MENU_CARD}>
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs text-foreground/85">Bloquear disponibilidade até todos estarem aprovados</p>
+          {silencedOfferEntries.length > 0 ? (
+            <div className={MENU_CARD}>
+              <p className="text-xs font-medium text-foreground">Ofertas silenciadas</p>
+              <ul className="mt-2 space-y-2">
+                {silencedOfferEntries.map((o) => (
+                  <li key={o.tripId} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate text-foreground/85">{o.label}</span>
+                    <button
+                      type="button"
+                      className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] font-medium"
+                      onClick={() => onRestoreSilencedOffer?.(o.tripId)}
+                    >
+                      Voltar a mostrar
+                    </button>
+                  </li>
+                ))}
+              </ul>
               <button
                 type="button"
-                aria-pressed={driverDocsGateEnabled}
-                onClick={() => onToggleDriverDocsGate(!driverDocsGateEnabled)}
-                className={`min-h-[30px] rounded-md border px-2 text-[11px] font-medium transition-colors ${driverDocsGateEnabled
-                  ? 'border-success/50 bg-success/15 text-foreground'
-                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
-                  }`}
+                className={`mt-2 ${MENU_BTN_SM}`}
+                onClick={() => onRestoreAllSilencedOffers?.()}
               >
-                {driverDocsGateEnabled ? 'Ligado' : 'Desligado'}
+                Mostrar todas
               </button>
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Em teste fica normalmente desligado. Ativa só para validar o bloqueio antes de aceitares viagens.
-            </p>
+          ) : null}
+          <div className={MENU_CARD}>
+            {import.meta.env.DEV ? (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-foreground/85">Bloquear disponibilidade até todos estarem aprovados</p>
+                  <button
+                    type="button"
+                    aria-pressed={driverDocsGateEnabled}
+                    onClick={() => onToggleDriverDocsGate(!driverDocsGateEnabled)}
+                    className={`min-h-[30px] rounded-md border px-2 text-[11px] font-medium transition-colors ${driverDocsGateEnabled
+                      ? 'border-success/50 bg-success/15 text-foreground'
+                      : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                      }`}
+                  >
+                    {driverDocsGateEnabled ? 'Ligado' : 'Desligado'}
+                  </button>
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Só visível em DEV — em produção o bloqueio segue o estado dos documentos no servidor.
+                </p>
+              </>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Documentos obrigatórios são validados no servidor antes de ficares disponível.
+              </p>
+            )}
           </div>
           {isAdmin ? (
             <Button type="button" variant="outline" className="w-full min-h-[40px] text-sm font-medium" asChild>

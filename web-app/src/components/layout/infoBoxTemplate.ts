@@ -16,9 +16,9 @@ export const MAP_BOTTOM_SHEET = `pointer-events-auto mt-auto w-full shrink-0 ove
 
 /** Sheet sizing — compacto obrigatório (Frank). */
 export const MAP_SHEET_MAX_H_IDLE = 'max-h-[min(38dvh,280px)]'
-export const MAP_SHEET_MAX_H_TRIP = 'max-h-[min(32dvh,240px)]'
+export const MAP_SHEET_MAX_H_TRIP = 'max-h-[min(28dvh,220px)]'
 export const MAP_SHEET_MAX_H_WAIT = 'max-h-[min(14dvh,100px)]'
-export const MAP_SHEET_MAX_H_OFFER = 'max-h-[min(38dvh,280px)]'
+export const MAP_SHEET_MAX_H_OFFER = 'max-h-[min(32dvh,240px)]'
 export const MAP_SHEET_PADDING = 'px-2 py-1.5'
 export const MAP_SHEET_GAP = 'space-y-1.5'
 export const MAP_SHEET_CLASS = `${MAP_SHEET_PADDING} ${MAP_SHEET_GAP} overflow-y-auto`

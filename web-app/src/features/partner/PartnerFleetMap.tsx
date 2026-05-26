@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { MapView } from '../../maps/MapView'
 import type { PartnerDriverRow, PartnerTripRow } from '../../api/partner'
 
@@ -24,6 +24,17 @@ function driverOnActiveTrip(driverId: string, trips: PartnerTripRow[]): boolean 
   )
 }
 
+function driverMarkerTone(
+  d: PartnerDriverRow,
+  trips: PartnerTripRow[]
+): 'free' | 'on_trip' | 'offline' {
+  const age = locationAgeMs(d.last_location)
+  const stale = age == null || age > 15 * 60_000
+  if (stale || !d.is_available) return 'offline'
+  if (driverOnActiveTrip(d.user_id, trips)) return 'on_trip'
+  return 'free'
+}
+
 export function PartnerFleetMap({
   drivers,
   trips,
@@ -31,6 +42,8 @@ export function PartnerFleetMap({
   drivers: PartnerDriverRow[]
   trips: PartnerTripRow[]
 }) {
+  const navigate = useNavigate()
+
   const activeTrips = useMemo(
     () => trips.filter((t) => ACTIVE_TRIP_STATUSES.has(t.status)),
     [trips]
@@ -47,26 +60,38 @@ export function PartnerFleetMap({
     [activeTrips]
   )
 
-  const center = useMemo(() => {
-    const withLoc = drivers.filter((d) => d.last_location)
-    if (withLoc.length === 0 && activeTrips.length === 0) return null
-    if (withLoc.length > 0) {
-      const loc = withLoc[0].last_location!
-      return { lat: loc.lat, lng: loc.lng }
-    }
-    const t = activeTrips[0]
-    return { lat: t.origin_lat, lng: t.origin_lng }
-  }, [drivers, activeTrips])
+  const fleetDrivers = useMemo(
+    () =>
+      drivers
+        .filter((d) => d.last_location)
+        .map((d) => {
+          const loc = d.last_location!
+          const tone = driverMarkerTone(d, trips)
+          return {
+            userId: d.user_id,
+            lat: loc.lat,
+            lng: loc.lng,
+            label: (d.user.name ?? d.user_id.slice(0, 6)).split(' ')[0] ?? '—',
+            tone,
+          }
+        }),
+    [drivers, trips]
+  )
+
+  const showMap = fleetDrivers.length > 0 || tripPickups.length > 0
 
   return (
     <div className="space-y-3" data-testid="partner-fleet-map">
       <MapView
-        showMap={Boolean(center)}
+        showMap={showMap}
         mapPlaceholder="Sem posições GPS recentes nem viagens activas para mostrar no mapa."
-        driverLocation={center}
+        fleetDrivers={fleetDrivers.length ? fleetDrivers : null}
+        onFleetDriverClick={(userId) => {
+          void navigate(`/partner/drivers/${encodeURIComponent(userId)}`)
+        }}
         pendingOfferPickups={tripPickups.length ? tripPickups : null}
         onPendingOfferPickupClick={(tripId) => {
-          window.location.assign(`/partner/trips/${encodeURIComponent(tripId)}`)
+          void navigate(`/partner/trips/${encodeURIComponent(tripId)}`)
         }}
         compactHeight={false}
         tallStage
@@ -95,13 +120,11 @@ export function PartnerFleetMap({
       </div>
       <ul className="space-y-2 max-h-48 overflow-y-auto">
         {drivers.map((d) => {
-          const age = locationAgeMs(d.last_location)
-          const stale = age == null || age > 15 * 60_000
-          const onTrip = driverOnActiveTrip(d.user_id, trips)
+          const tone = driverMarkerTone(d, trips)
           const dot =
-            stale || !d.is_available
+            tone === 'offline'
               ? 'bg-muted-foreground'
-              : onTrip
+              : tone === 'on_trip'
                 ? 'bg-sky-500'
                 : 'bg-emerald-500'
           return (
@@ -110,12 +133,13 @@ export function PartnerFleetMap({
                 <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot}`} />
                 <span className="truncate text-foreground">{d.user.name ?? d.user_id.slice(0, 8)}</span>
               </span>
-              <Link
-                to={`/partner/drivers/${encodeURIComponent(d.user_id)}`}
-                className="shrink-0 text-primary text-xs underline"
+              <button
+                type="button"
+                onClick={() => void navigate(`/partner/drivers/${encodeURIComponent(d.user_id)}`)}
+                className="shrink-0 text-primary text-xs underline touch-manipulation"
               >
                 Detalhe
-              </Link>
+              </button>
             </li>
           )
         })}

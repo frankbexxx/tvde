@@ -19,6 +19,7 @@ import { BetaAccountPanel } from '../account/BetaAccountPanel'
 import { PartnerSideMenu } from './PartnerSideMenu'
 import { PartnerFleetMap } from './PartnerFleetMap'
 import { PartnerAlertsPanel } from './PartnerAlertsPanel'
+import { PartnerMessagesSection } from './PartnerMessagesSection'
 import { buildPartnerAlerts } from './partnerAlerts'
 
 type PartnerHomeView = 'list' | 'map'
@@ -38,11 +39,6 @@ const TRIP_FILTER_HINT: Partial<Record<TripFilter, string>> = {
 }
 
 const ONGOING = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
-const PIPELINE = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
-
-/** Minutos sem `updated_at` numa viagem ainda activa → aviso de possível bloqueio. */
-const STUCK_MINUTES = 25
-const LONG_ONGOING_HOURS = 4
 
 function parseIsoMs(s: string | null | undefined): number | null {
   if (!s) return null
@@ -161,6 +157,7 @@ export function PartnerHome() {
   }
 
   const q = normalizeSearch(search)
+  const driverById = useMemo(() => new Map(drivers.map((d) => [d.user_id, d])), [drivers])
   const filteredDrivers = useMemo(() => {
     let list = drivers.filter((d) => matchesDriverFilter(d, driverFilter))
     if (q) {
@@ -197,7 +194,19 @@ export function PartnerHome() {
       }
     }
     if (q) {
-      list = list.filter((t) => t.trip_id.toLowerCase().includes(q))
+      list = list.filter((t) => {
+        if (t.trip_id.toLowerCase().includes(q)) return true
+        if (t.passenger_id?.toLowerCase().includes(q)) return true
+        if (t.driver_id) {
+          const dr = driverById.get(t.driver_id)
+          if (dr) {
+            const name = (dr.user.name ?? '').toLowerCase()
+            const phone = (dr.user.phone ?? '').toLowerCase()
+            if (name.includes(q) || phone.includes(q)) return true
+          }
+        }
+        return false
+      })
     }
     list = [...list].sort((a, b) => {
       const ua = parseIsoMs(a.updated_at) ?? 0
@@ -205,65 +214,7 @@ export function PartnerHome() {
       return ub - ua
     })
     return list
-  }, [trips, tripFilter, tripDriverFilter, tripDateFrom, tripDateTo, q])
-
-  const attentionList = useMemo(() => {
-    const now = Date.now()
-    const stuckMs = STUCK_MINUTES * 60_000
-    const longOngoingMs = LONG_ONGOING_HOURS * 60 * 60_000
-    const driverById = new Map(drivers.map((d) => [d.user_id, d]))
-    const reasonsByTrip = new Map<string, string[]>()
-
-    const pushReason = (tripId: string, msg: string) => {
-      const arr = reasonsByTrip.get(tripId) ?? []
-      if (!arr.includes(msg)) arr.push(msg)
-      reasonsByTrip.set(tripId, arr)
-    }
-
-    for (const t of trips) {
-      const updMs = parseIsoMs(t.updated_at)
-      const ageMs = updMs != null ? now - updMs : null
-
-      if (PIPELINE.has(t.status) && ageMs != null && ageMs > stuckMs) {
-        const mins = Math.round(ageMs / 60_000)
-        pushReason(
-          t.trip_id,
-          `Sem alteração de estado há ~${mins} min — pode estar bloqueada ou o motorista não está a responder.`,
-        )
-      }
-
-      const startedMs = parseIsoMs(t.started_at)
-      if (t.status === 'ongoing' && startedMs != null && now - startedMs > longOngoingMs) {
-        const hours = Math.round(((now - startedMs) / 3_600_000) * 10) / 10
-        pushReason(
-          t.trip_id,
-          `Em curso há cerca de ${hours} h — confirme GPS e se a viagem decorre normalmente; escale à operação se persistir.`,
-        )
-      }
-
-      if (t.status === 'assigned' && t.driver_id) {
-        const dr = driverById.get(t.driver_id)
-        if (dr && !dr.is_available && ageMs != null && ageMs > stuckMs) {
-          pushReason(
-            t.trip_id,
-            'Viagem atribuída mas o motorista aparece indisponível — confirme se vai aceitar ou reatribua.',
-          )
-        }
-      }
-    }
-
-    return Array.from(reasonsByTrip.entries())
-      .map(([tripId, reasons]) => {
-        const trip = trips.find((x) => x.trip_id === tripId)
-        return trip ? { tripId, reasons, trip } : null
-      })
-      .filter((x): x is { tripId: string; reasons: string[]; trip: PartnerTripRow } => x != null)
-      .sort((a, b) => {
-        const ua = parseIsoMs(a.trip.updated_at) ?? 0
-        const ub = parseIsoMs(b.trip.updated_at) ?? 0
-        return ub - ua
-      })
-  }, [trips, drivers])
+  }, [trips, tripFilter, tripDriverFilter, tripDateFrom, tripDateTo, q, driverById])
 
   const downloadCsv = async () => {
     if (!token) return
@@ -314,7 +265,8 @@ export function PartnerHome() {
     }`
 
   return (
-    <div className="p-4 space-y-6 max-w-lg mx-auto w-full">
+    <div className="flex min-h-full flex-col max-w-lg mx-auto w-full">
+      <div className="flex-1 space-y-6 p-4 pb-4">
       <PartnerSideMenu
         open={menuOpen}
         onOpenChange={setMenuOpen}
@@ -483,14 +435,14 @@ export function PartnerHome() {
       {discoverOk && <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">{discoverOk}</p>}
 
       <label className="block text-sm text-foreground/80" htmlFor="partner-search">
-        Pesquisar viagens (ID) ou motoristas (nome / telefone)
+        Pesquisar viagens (ID, motorista ou passageiro)
       </label>
       <input
         id="partner-search"
         type="search"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="ID viagem ou filtrar motorista abaixo"
+        placeholder="ID viagem, nome/telefone motorista ou ID passageiro"
         className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
       />
 
@@ -545,45 +497,12 @@ export function PartnerHome() {
         <PartnerFleetMap drivers={drivers} trips={trips} />
       ) : null}
 
-      <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-4 space-y-3">
-        <h3 className="text-base font-medium text-foreground">Alertas operacionais</h3>
-        <p className="text-xs text-foreground/75">
-          Documentos, GPS, viagens bloqueadas — clique para ir ao detalhe.
-        </p>
-        <PartnerAlertsPanel alerts={operationalAlerts} />
+      <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
+        <PartnerMessagesSection />
       </div>
 
       {homeView === 'list' ? (
         <>
-          <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-4 space-y-3">
-            <h3 className="text-base font-medium text-foreground">Precisa de atenção</h3>
-            <p className="text-xs text-foreground/75">
-              Heurísticas em linguagem de negócio (não substituem o mapa nem o suporte). Se o problema continuar após contactar o
-              motorista, escale à operação com o ID da viagem.
-            </p>
-            {attentionList.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nada destacado neste momento.</p>
-            ) : (
-              <ul className="space-y-3">
-                {attentionList.map(({ tripId, reasons, trip }) => (
-                  <li key={tripId} className="rounded-xl border border-border bg-background/40 p-3 text-sm">
-                    <Link
-                      to={`/partner/trips/${encodeURIComponent(tripId)}`}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {tripId.slice(0, 8)}… · {trip.status}
-                    </Link>
-                    <ul className="mt-2 list-disc pl-4 space-y-1 text-foreground/85">
-                      {reasons.map((r) => (
-                        <li key={r}>{r}</li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
           <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
             <h3 className="font-medium text-foreground">Adicionar motorista à frota</h3>
             <p className="text-sm text-foreground/75">
@@ -779,6 +698,17 @@ export function PartnerHome() {
       >
         Atualizar
       </button>
+      </div>
+
+      <div className="sticky bottom-0 z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 safe-area-pb shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+        <h3 className="text-sm font-medium text-foreground">Alertas operacionais</h3>
+        <p className="text-[11px] text-foreground/75 mt-0.5">
+          Documentos, GPS, viagens bloqueadas — clique para ir ao detalhe.
+        </p>
+        <div className="mt-2 max-h-[min(28dvh,200px)] overflow-y-auto">
+          <PartnerAlertsPanel alerts={operationalAlerts} />
+        </div>
+      </div>
     </div>
   )
 }

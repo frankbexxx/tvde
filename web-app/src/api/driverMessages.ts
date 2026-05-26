@@ -15,6 +15,23 @@ export async function fetchDriverMessages(token: string): Promise<DriverMessageR
   })
 }
 
+export async function fetchDriverSentMessages(token: string): Promise<DriverMessageRow[]> {
+  return apiFetch<DriverMessageRow[]>('/driver/messages/sent', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export async function postDriverMessage(
+  token: string,
+  body: { title: string; body: string; priority?: 'normal' | 'high' }
+): Promise<DriverMessageRow> {
+  return apiFetch<DriverMessageRow>('/driver/messages', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
 export async function markDriverMessageRead(token: string, messageId: string): Promise<void> {
   await apiFetch<void>(`/driver/messages/${encodeURIComponent(messageId)}/read`, {
     method: 'PATCH',

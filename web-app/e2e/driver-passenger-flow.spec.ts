@@ -43,7 +43,7 @@ async function openDriverMenu(page: Page) {
  */
 /** FIX-008: painel de oferta só abre após toque no marcador do mapa. */
 async function openDriverOfferPanel(page: Page, tripId: string) {
-  const marker = page.getByTestId(`driver-map-offer-${tripId}`)
+  const marker = page.locator(`[data-testid="driver-map-offer-${tripId}"]`)
   const slideTrack = page.getByTestId(`driver-accept-${tripId}-track`)
   await expect
     .poll(
@@ -51,8 +51,14 @@ async function openDriverOfferPanel(page: Page, tripId: string) {
         if (await slideTrack.isVisible().catch(() => false)) {
           return true
         }
-        if (await marker.isVisible().catch(() => false)) {
-          await marker.click()
+        if ((await marker.count()) > 0) {
+          await marker.first().scrollIntoViewIfNeeded().catch(() => {})
+          await marker.first().click({ force: true, timeout: 5000 }).catch(() => {})
+          return await slideTrack.isVisible().catch(() => false)
+        }
+        const numbered = page.getByRole('button', { name: /^[1-9]$/ }).first()
+        if (await numbered.isVisible().catch(() => false)) {
+          await numbered.click({ force: true, timeout: 5000 }).catch(() => {})
           return await slideTrack.isVisible().catch(() => false)
         }
         return false
@@ -178,6 +184,9 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{
   tripId: string
   tokens: { passenger: string; driver: string; admin: string }
 }> {
+  const reset = await request.post(`${API}/dev/reset`)
+  expect(reset.ok(), `reset: ${reset.status()} ${await reset.text()}`).toBeTruthy()
+
   const seed = await request.post(`${API}/dev/seed`)
   expect(seed.ok(), `seed: ${seed.status()} ${await seed.text()}`).toBeTruthy()
 
@@ -208,13 +217,13 @@ async function seedAndCreateTrip(request: APIRequestContext): Promise<{
         const r = await request.get(`${API}/driver/trips/available`, {
           headers: { Authorization: `Bearer ${tokens.driver}` },
         })
-        if (!r.ok()) return 0
-        const list = (await r.json()) as unknown[]
-        return list.length
+        if (!r.ok()) return false
+        const list = (await r.json()) as Array<{ trip_id?: string }>
+        return list.some((row) => row.trip_id === trip.trip_id)
       },
       { timeout: sec(60), intervals: [200, 500, 1000] }
     )
-    .toBeGreaterThan(0)
+    .toBe(true)
 
   return { tripId: trip.trip_id, tokens }
 }
@@ -232,6 +241,7 @@ async function createAuthenticatedContext(
         localStorage.setItem('tvde_e2e_dev_tokens_json', json)
         localStorage.setItem('tvde_app_route_role', appRole)
         if (appRole === 'driver') localStorage.removeItem('tvde_driver_offline')
+        if (appRole === 'driver') sessionStorage.removeItem('tvde_dismissed_offer_trip_ids')
         if (tripId) sessionStorage.setItem('e2e_passenger_trip_id', tripId)
       } catch {
         /* ignore */
@@ -397,13 +407,16 @@ test.describe('Driver + passenger (proximity gate)', () => {
           const r = await request.get(`${API}/driver/trips/available`, {
             headers: { Authorization: `Bearer ${tokens.driver}` },
           })
-          if (!r.ok()) return 0
-          return ((await r.json()) as unknown[]).length
+          if (!r.ok()) return false
+          const list = (await r.json()) as Array<{ trip_id?: string }>
+          return list.some((item) => item.trip_id === tripId)
         },
         { timeout: sec(60), intervals: pollLook }
       )
-      .toBeGreaterThan(0)
-    await expect(marker).toBeVisible({ timeout: sec(60) })
+      .toBe(true)
+    await expect(driverPage.locator(`[data-testid="driver-map-offer-${tripId}"]`)).toBeVisible({
+      timeout: sec(60),
+    })
 
     await closeDriverOfferPanelFromMap(driverPage, tripId)
     await expect(marker).toBeVisible({ timeout: sec(30) })
@@ -428,6 +441,23 @@ test.describe('Driver + passenger (proximity gate)', () => {
       timeout: sec(120),
     })
     await leaveDriverHomeStep1IfPresent(driverPage)
+
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/available`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return false
+          const list = (await r.json()) as Array<{ trip_id?: string }>
+          return list.some((item) => item.trip_id === tripId)
+        },
+        { timeout: sec(60), intervals: pollLook }
+      )
+      .toBe(true)
+    await expect(driverPage.locator(`[data-testid="driver-map-offer-${tripId}"]`)).toBeVisible({
+      timeout: sec(60),
+    })
 
     await acceptDriverTripFromMap(driverPage, tripId)
     await refreshDriverLocationNearPickup(request, tokens.driver)

@@ -254,6 +254,14 @@ export function ActiveTripActions({
     displayStatus === 'accepted' ||
     displayStatus === 'arriving' ||
     displayStatus === 'ongoing'
+  const compactTripActions = showNavButton && showCancel && !cancelPanelOpen
+  const navBtnClass = compactTripActions ? `${BTN_SECONDARY} flex-[2] min-w-0 px-2 text-xs` : BTN_SECONDARY
+  const cancelBtnClass = compactTripActions
+    ? `${BTN_DANGER_OUTLINE} flex-1 min-w-0 px-1 text-xs`
+    : BTN_DANGER_OUTLINE
+  const successBtnClass = compactTripActions
+    ? `${BTN_SUCCESS_OUTLINE} flex-[2] min-w-0 px-2 text-xs`
+    : BTN_SUCCESS_OUTLINE
 
   const nextStepHint =
     displayStatus === 'assigned'
@@ -302,7 +310,7 @@ export function ActiveTripActions({
           <button
             type="button"
             data-testid="driver-open-nav"
-            className={BTN_SECONDARY}
+            className={navBtnClass}
             onClick={openNavForPhase}
             disabled={loading}
           >
@@ -312,7 +320,7 @@ export function ActiveTripActions({
         {displayStatus === 'ongoing' ? (
           <button
             type="button"
-            className={BTN_SUCCESS_OUTLINE}
+            className={successBtnClass}
             onClick={() => {
               void run(buttonConfig.action, buttonConfig.label)
             }}
@@ -324,7 +332,7 @@ export function ActiveTripActions({
           <PrimaryActionButton
             variant="confirm"
             size="compact"
-            className="flex-1 min-w-0"
+            className={compactTripActions ? 'flex-[2] min-w-0 text-xs' : 'flex-1 min-w-0'}
             onClick={() => {
               void run(buttonConfig.action, buttonConfig.label, {
                 skipStartGate: buttonConfig.skipStartGate,
@@ -342,7 +350,7 @@ export function ActiveTripActions({
             data-testid="driver-trip-cancel-open"
             onClick={() => setCancelPanelOpen(true)}
             disabled={loading}
-            className={BTN_DANGER_OUTLINE}
+            className={cancelBtnClass}
           >
             Cancelar
           </button>

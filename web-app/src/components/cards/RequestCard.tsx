@@ -32,8 +32,8 @@ interface RequestCardProps {
   /** Fechar box localmente (sem reject API). */
   onDismiss?: () => void
   dismissButtonTestId?: string
-  /** `top-right` listas; `top-left` painel mapa (evita overlap com ActionPanel). */
-  dismissPlacement?: 'top-right' | 'top-left'
+  /** `top-right` listas; `bottom-right-silence` painel mapa (silenciar oferta). */
+  dismissPlacement?: 'top-right' | 'top-left' | 'bottom-right-silence'
   /** ISO8601 — countdown «Expira em Xs». */
   expiresAt?: string | null
   loading?: boolean
@@ -93,9 +93,11 @@ export function RequestCard({
     ) : null
 
   const dismissPosClass =
-    dismissPlacement === 'top-left'
-      ? 'absolute left-2 top-2 z-10'
-      : 'absolute right-2 top-2 z-10'
+    dismissPlacement === 'bottom-right-silence'
+      ? 'absolute right-2 bottom-2 z-10'
+      : dismissPlacement === 'top-left'
+        ? 'absolute left-2 top-2 z-10'
+        : 'absolute right-2 top-2 z-10'
 
   const dismissButton =
     onDismiss != null ? (
@@ -104,10 +106,14 @@ export function RequestCard({
         onClick={onDismiss}
         disabled={Boolean(loading || rejectLoading)}
         data-testid={dismissButtonTestId}
-        aria-label={dismissPlacement === 'top-left' ? 'Ignorar oferta' : 'Fechar oferta'}
-        className={`${dismissPosClass} flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/70 hover:bg-muted touch-manipulation`}
+        aria-label="Silenciar oferta"
+        className={
+          dismissPlacement === 'bottom-right-silence'
+            ? `${dismissPosClass} flex min-h-8 items-center justify-center rounded-md border border-destructive/60 bg-destructive/10 px-2 text-xs font-semibold text-destructive hover:bg-destructive/20 touch-manipulation`
+            : `${dismissPosClass} flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/70 hover:bg-muted touch-manipulation`
+        }
       >
-        ×
+        {dismissPlacement === 'bottom-right-silence' ? 'Silenciar' : '×'}
       </button>
     ) : null
 
@@ -159,7 +165,11 @@ export function RequestCard({
 
   if (slideCompact) {
     const padClass =
-      dismissPlacement === 'top-left' ? 'p-2 pl-8 pr-8' : 'p-2 pr-8'
+      dismissPlacement === 'bottom-right-silence'
+        ? 'p-2 pb-10'
+        : dismissPlacement === 'top-left'
+          ? 'p-2 pl-8 pr-8'
+          : 'p-2 pr-8'
     return (
       <div className={`relative ${INFO_BOX_DRIVER_LARGE} ${padClass} space-y-1 transition-all duration-200`}>
         {dismissButton}

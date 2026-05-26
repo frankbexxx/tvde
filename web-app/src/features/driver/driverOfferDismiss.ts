@@ -20,6 +20,20 @@ export function persistDismissedOfferTripIds(ids: Set<string>): void {
   }
 }
 
+export function clearDismissedOfferTripId(tripId: string): void {
+  const next = readDismissedOfferTripIds()
+  next.delete(tripId)
+  persistDismissedOfferTripIds(next)
+}
+
+export function clearAllDismissedOfferTripIds(): void {
+  try {
+    sessionStorage.removeItem(DISMISSED_OFFERS_STORAGE_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
 export function isDriverOfferExpired(expiresAt: string | null | undefined): boolean {
   if (!expiresAt) return false
   const ms = Date.parse(expiresAt)
