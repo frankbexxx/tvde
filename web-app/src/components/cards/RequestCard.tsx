@@ -32,6 +32,8 @@ interface RequestCardProps {
   /** Fechar box localmente (sem reject API). */
   onDismiss?: () => void
   dismissButtonTestId?: string
+  /** `top-right` listas; `top-left` painel mapa (evita overlap com ActionPanel). */
+  dismissPlacement?: 'top-right' | 'top-left'
   /** ISO8601 — countdown «Expira em Xs». */
   expiresAt?: string | null
   loading?: boolean
@@ -55,6 +57,7 @@ export function RequestCard({
   onReject,
   onDismiss,
   dismissButtonTestId = 'driver-offer-dismiss',
+  dismissPlacement = 'top-right',
   expiresAt,
   loading,
   rejectLoading,
@@ -89,6 +92,11 @@ export function RequestCard({
       </p>
     ) : null
 
+  const dismissPosClass =
+    dismissPlacement === 'top-left'
+      ? 'absolute left-2 top-2 z-10'
+      : 'absolute right-2 top-2 z-10'
+
   const dismissButton =
     onDismiss != null ? (
       <button
@@ -96,8 +104,8 @@ export function RequestCard({
         onClick={onDismiss}
         disabled={Boolean(loading || rejectLoading)}
         data-testid={dismissButtonTestId}
-        aria-label="Fechar oferta"
-        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/70 hover:bg-muted touch-manipulation"
+        aria-label={dismissPlacement === 'top-left' ? 'Ignorar oferta' : 'Fechar oferta'}
+        className={`${dismissPosClass} flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/70 hover:bg-muted touch-manipulation`}
       >
         ×
       </button>
@@ -150,8 +158,10 @@ export function RequestCard({
   )
 
   if (slideCompact) {
+    const padClass =
+      dismissPlacement === 'top-left' ? 'p-2 pl-8 pr-8' : 'p-2 pr-8'
     return (
-      <div className={`relative ${INFO_BOX_DRIVER_LARGE} p-2 pr-8 space-y-1 transition-all duration-200`}>
+      <div className={`relative ${INFO_BOX_DRIVER_LARGE} ${padClass} space-y-1 transition-all duration-200`}>
         {dismissButton}
         {slideAccept}
         {tripDetails}

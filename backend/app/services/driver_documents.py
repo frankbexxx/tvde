@@ -60,6 +60,12 @@ def _coerce_entry(raw: Any) -> dict[str, Any]:
             out[key] = v[:2000]
         elif isinstance(v, str) and len(v) <= 64:
             out[key] = v
+    file_path = raw.get("file_path")
+    if isinstance(file_path, str) and file_path.strip():
+        out["file_path"] = file_path.strip()[:512]
+    file_name = raw.get("file_name")
+    if isinstance(file_name, str) and file_name.strip():
+        out["file_name"] = file_name.strip()[:256]
     return out
 
 
@@ -157,6 +163,13 @@ def apply_partner_documents_patch(
             continue
         cur = {**docs.get(key, default_entry())}
         if payload.status is not None and payload.status in VALID_STATUS:
+            if payload.status == "approved":
+                file_path = cur.get("file_path")
+                if not file_path or not str(file_path).strip():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="document_file_required",
+                    )
             cur["status"] = payload.status
         if payload.expires_at is not None:
             cur["expires_at"] = payload.expires_at[:64]

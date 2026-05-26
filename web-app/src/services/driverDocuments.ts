@@ -26,7 +26,7 @@ export interface DriverDocumentsState {
 const DOCS_STATE_KEY = 'tvde_driver_documents_state_v1'
 const DOCS_GATE_KEY = 'tvde_driver_documents_gate_enabled'
 
-function defaultDocsState(): DriverDocumentsState {
+export function defaultDriverDocumentsState(): DriverDocumentsState {
   return {
     docs: {
       carta_tvde: 'missing',
@@ -69,9 +69,9 @@ function sanitizeState(next: DriverDocumentsState): DriverDocumentsState {
 export function getDriverDocumentsState(): DriverDocumentsState {
   try {
     const raw = localStorage.getItem(DOCS_STATE_KEY)
-    if (!raw) return defaultDocsState()
+    if (!raw) return defaultDriverDocumentsState()
     const parsed = JSON.parse(raw) as Partial<DriverDocumentsState>
-    const base = defaultDocsState()
+    const base = defaultDriverDocumentsState()
     return sanitizeState({
       onboardingCompleted: Boolean(parsed.onboardingCompleted),
       docs: {
@@ -89,7 +89,7 @@ export function getDriverDocumentsState(): DriverDocumentsState {
       ),
     })
   } catch {
-    return defaultDocsState()
+    return defaultDriverDocumentsState()
   }
 }
 
