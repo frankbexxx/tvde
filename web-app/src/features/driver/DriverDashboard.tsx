@@ -96,7 +96,7 @@ import { useDia23LayoutProbe } from '../../hooks/useDia23LayoutProbe'
 import { useDriverOfferSounds } from '../../hooks/useDriverOfferSounds'
 import {
   fetchDriverDocuments,
-  mergeServerDriverDocuments,
+  driverDocumentsFromServer,
   patchDriverDocuments,
 } from '../../api/driverDocuments'
 import { formatPickup, formatDestination } from '../../utils/format'
@@ -159,17 +159,16 @@ import {
   type DriverVehicleCategory,
 } from '../../services/driverVehicleCategories'
 import {
+  defaultDriverDocumentsState,
   driverDocumentLabel,
   driverDocumentsApprovedCount,
   driverDocumentsExpiryAttention,
   driverDocumentStatusLabel,
   formatDriverDocExpiresLine,
-  getDriverDocumentsState,
   isDriverDocumentsGateEnabled,
   isDriverDocumentsReady,
   REQUIRED_DRIVER_DOCUMENTS,
   setDriverDocumentsGateEnabled,
-  setDriverDocumentsState,
   type DriverDocumentsState,
   type DriverDocumentStatus,
   type DriverRequiredDocument,
@@ -356,7 +355,7 @@ export function DriverDashboard() {
     getDriverVehicleCategories()
   )
   const [driverDocuments, setDriverDocuments] = useState<DriverDocumentsState>(() =>
-    getDriverDocumentsState()
+    defaultDriverDocumentsState()
   )
   const [driverDocsGateEnabled, setDriverDocsGateEnabled] = useState<boolean>(() =>
     isDriverDocumentsGateEnabled()
@@ -724,17 +723,32 @@ export function DriverDashboard() {
     }
   }, [token])
 
+  const refreshDriverDocumentsFromServer = useCallback(() => {
+    if (!token) return
+    void fetchDriverDocuments(token)
+      .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
+      .catch(() => {
+        /* API antiga ou offline */
+      })
+  }, [token])
+
+  const handlePatchDriverDocument = useCallback(
+    (doc: DriverRequiredDocument, status: DriverDocumentStatus) => {
+      if (!token) return
+      void patchDriverDocuments(token, { [doc]: { status } })
+        .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
+        .catch(() => {})
+    },
+    [token]
+  )
+
   useEffect(() => {
     if (!token || sessionRole !== 'driver') return
     let cancelled = false
     void fetchDriverDocuments(token)
       .then((server) => {
         if (cancelled) return
-        setDriverDocuments((prev) => {
-          const merged = mergeServerDriverDocuments(prev, server)
-          setDriverDocumentsState(merged)
-          return merged
-        })
+        setDriverDocuments(driverDocumentsFromServer(server))
       })
       .catch(() => {
         /* API antiga ou offline */
@@ -1100,30 +1114,7 @@ export function DriverDashboard() {
               return safe
             })
           }}
-          onPatchDriverDocument={(doc, status) => {
-            setDriverDocuments((prev) => {
-              const docs = { ...prev.docs, [doc]: status }
-              const next: DriverDocumentsState = {
-                docs,
-                docDetails: prev.docDetails,
-                onboardingCompleted:
-                  prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
-              }
-              setDriverDocumentsState(next)
-              if (token) {
-                void patchDriverDocuments(token, { [doc]: { status } })
-                  .then((server) => {
-                    setDriverDocuments((p) => {
-                      const merged = mergeServerDriverDocuments(p, server)
-                      setDriverDocumentsState(merged)
-                      return merged
-                    })
-                  })
-                  .catch(() => { })
-              }
-              return next
-            })
-          }}
+          onPatchDriverDocument={handlePatchDriverDocument}
           onToggleDriverDocsGate={(enabled) => {
             setDriverDocsGateEnabled(enabled)
             setDriverDocumentsGateEnabled(enabled)
@@ -1167,30 +1158,8 @@ export function DriverDashboard() {
                     return safe
                   })
                 }}
-                onPatchDriverDocument={(doc, status) => {
-                  setDriverDocuments((prev) => {
-                    const docs = { ...prev.docs, [doc]: status }
-                    const next: DriverDocumentsState = {
-                      docs,
-                      docDetails: prev.docDetails,
-                      onboardingCompleted:
-                        prev.onboardingCompleted || REQUIRED_DRIVER_DOCUMENTS.every((k) => docs[k] === 'approved'),
-                    }
-                    setDriverDocumentsState(next)
-                    if (token) {
-                      void patchDriverDocuments(token, { [doc]: { status } })
-                        .then((server) => {
-                          setDriverDocuments((p) => {
-                            const merged = mergeServerDriverDocuments(p, server)
-                            setDriverDocumentsState(merged)
-                            return merged
-                          })
-                        })
-                        .catch(() => { })
-                    }
-                    return next
-                  })
-                }}
+                onPatchDriverDocument={handlePatchDriverDocument}
+                onRefreshDriverDocuments={refreshDriverDocumentsFromServer}
                 onToggleDriverDocsGate={(enabled) => {
                   setDriverDocsGateEnabled(enabled)
                   setDriverDocumentsGateEnabled(enabled)
@@ -1767,6 +1736,9 @@ export function DriverDashboard() {
                             estimatedPrice={selectedAvailableTrip.estimated_price}
                             offerId={selectedAvailableTrip.offer_id ?? null}
                             expiresAt={selectedAvailableTrip.expires_at ?? null}
+                            dismissButtonTestId={`driver-dismiss-${selectedAvailableTrip.trip_id}`}
+                            dismissPlacement="top-left"
+                            onDismiss={() => dismissOffer(selectedAvailableTrip.trip_id)}
                             acceptButtonTestId={`driver-accept-${selectedAvailableTrip.trip_id}`}
                             acceptVariant="slide"
                             onAccept={() =>
@@ -2483,6 +2455,7 @@ function DriverOperationsMenu({
   onSelectNavPref,
   onToggleVehicleCategory,
   onPatchDriverDocument,
+  onRefreshDriverDocuments,
   onToggleDriverDocsGate,
 }: {
   sessionDisplayName: string | null
@@ -2499,6 +2472,7 @@ function DriverOperationsMenu({
   onSelectNavPref: (app: DriverNavApp) => void
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
+  onRefreshDriverDocuments?: () => void
   onToggleDriverDocsGate: (enabled: boolean) => void
 }) {
   const { isAdmin, token } = useAuth()
@@ -3541,7 +3515,10 @@ function DriverOperationsMenu({
                           const file = e.target.files?.[0]
                           if (!file || !token) return
                           void uploadDriverDocument(token, doc, file)
-                            .then(() => sonnerToast.success('Ficheiro enviado'))
+                            .then(() => {
+                              sonnerToast.success('Ficheiro enviado')
+                              onRefreshDriverDocuments?.()
+                            })
                             .catch(() => sonnerToast.error('Falha no upload'))
                           e.target.value = ''
                         }}

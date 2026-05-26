@@ -4,7 +4,10 @@ import type {
   DriverDocumentStatus,
   DriverRequiredDocument,
 } from '../services/driverDocuments'
-import { REQUIRED_DRIVER_DOCUMENTS } from '../services/driverDocuments'
+import {
+  defaultDriverDocumentsState,
+  REQUIRED_DRIVER_DOCUMENTS,
+} from '../services/driverDocuments'
 
 export type ServerDocRow = {
   status?: string
@@ -27,6 +30,43 @@ const STATUSES: DriverDocumentStatus[] = [
 
 function isStatus(s: string): s is DriverDocumentStatus {
   return STATUSES.includes(s as DriverDocumentStatus)
+}
+
+export function driverDocumentsFromServer(
+  server: DriverDocumentsApiState | null
+): DriverDocumentsState {
+  const base = defaultDriverDocumentsState()
+  if (!server?.docs) return base
+  const docs = { ...base.docs }
+  const docDetails: DriverDocumentsState['docDetails'] = {}
+  for (const k of REQUIRED_DRIVER_DOCUMENTS) {
+    const row = server.docs[k]
+    if (!row || typeof row !== 'object') continue
+    const st = row.status
+    if (st && isStatus(st)) docs[k] = st
+    if ('expires_at' in row || 'partner_note' in row) {
+      docDetails[k] = {
+        expiresAt:
+          'expires_at' in row
+            ? typeof row.expires_at === 'string'
+              ? row.expires_at
+              : null
+            : null,
+        partnerNote:
+          'partner_note' in row
+            ? typeof row.partner_note === 'string'
+              ? row.partner_note
+              : null
+            : null,
+      }
+    }
+  }
+  const ready = REQUIRED_DRIVER_DOCUMENTS.every((key) => docs[key] === 'approved')
+  return {
+    docs,
+    docDetails,
+    onboardingCompleted: ready,
+  }
 }
 
 export function mergeServerDriverDocuments(

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  defaultDriverDocumentsState,
   driverDocumentsApprovedCount,
   getDriverDocumentsState,
   isDriverDocumentsGateEnabled,
@@ -8,7 +9,7 @@ import {
   setDriverDocumentsState,
   type DriverDocumentsState,
 } from './driverDocuments'
-import { mergeServerDriverDocuments } from '../api/driverDocuments'
+import { driverDocumentsFromServer, mergeServerDriverDocuments } from '../api/driverDocuments'
 
 function stateWith(
   overrides: Partial<DriverDocumentsState['docs']>,
@@ -72,6 +73,36 @@ describe('driverDocuments service', () => {
     expect(isDriverDocumentsGateEnabled()).toBe(true)
     setDriverDocumentsGateEnabled(false)
     expect(isDriverDocumentsGateEnabled()).toBe(false)
+  })
+
+  it('driverDocumentsFromServer ignores stale localStorage statuses', () => {
+    setDriverDocumentsState(
+      stateWith({
+        carta_tvde: 'approved',
+        certificado_motorista_tvde: 'approved',
+        seguro_responsabilidade_civil: 'approved',
+        inspecao_viatura: 'approved',
+        cartao_cidadao: 'approved',
+        registo_criminal: 'approved',
+      })
+    )
+    const fromServer = driverDocumentsFromServer({
+      version: 1,
+      docs: {
+        carta_tvde: { status: 'pending_review' },
+      },
+    })
+    expect(fromServer.docs.carta_tvde).toBe('pending_review')
+    expect(fromServer.docs.certificado_motorista_tvde).toBe('missing')
+    expect(isDriverDocumentsReady(fromServer)).toBe(false)
+    expect(getDriverDocumentsState().docs.carta_tvde).toBe('approved')
+  })
+
+  it('defaultDriverDocumentsState starts with all missing', () => {
+    const s = defaultDriverDocumentsState()
+    expect(s.onboardingCompleted).toBe(false)
+    expect(isDriverDocumentsReady(s)).toBe(false)
+    expect(driverDocumentsApprovedCount(s)).toBe(0)
   })
 
   it('mergeServerDriverDocuments copies expires_at e partner_note', () => {
