@@ -1767,8 +1767,6 @@ export function DriverDashboard() {
                             estimatedPrice={selectedAvailableTrip.estimated_price}
                             offerId={selectedAvailableTrip.offer_id ?? null}
                             expiresAt={selectedAvailableTrip.expires_at ?? null}
-                            dismissButtonTestId={`driver-dismiss-${selectedAvailableTrip.trip_id}`}
-                            onDismiss={() => dismissOffer(selectedAvailableTrip.trip_id)}
                             acceptButtonTestId={`driver-accept-${selectedAvailableTrip.trip_id}`}
                             acceptVariant="slide"
                             onAccept={() =>
