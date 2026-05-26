@@ -30,6 +30,13 @@ class PartnerTripItem(BaseModel):
     status: str
     passenger_id: str
     driver_id: str | None = None
+    origin_lat: float
+    origin_lng: float
+    destination_lat: float
+    destination_lng: float
+    estimated_price: float
+    final_price: float | None = None
+    cancel_reason: str | None = None
     created_at: str
     started_at: str | None = None
     completed_at: str | None = None

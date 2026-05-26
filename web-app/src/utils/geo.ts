@@ -13,7 +13,8 @@ export function haversineKm(a: { lat: number; lng: number }, b: { lat: number; l
 }
 
 /** Raio para o motorista poder «Iniciar viagem» em relação ao ponto de recolha (contrato no mapa). */
-export const DRIVER_START_TRIP_MAX_DISTANCE_M = 50
+/** Alinhado com `DRIVER_START_TRIP_MAX_DISTANCE_M` no backend (config.py, default 70). */
+export const DRIVER_START_TRIP_MAX_DISTANCE_M = 70
 
 export function isWithinHaversineM(
   a: { lat: number; lng: number },

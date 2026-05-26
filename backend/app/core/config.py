@@ -69,6 +69,9 @@ class Settings(BaseSettings):
     E2E_KEEP_OFFERS_ALIVE: bool = False
     E2E_OFFER_TIMEOUT_FLOOR_SECONDS: int = 120
 
+    # Local driver document uploads (Onda D — no S3)
+    UPLOAD_DIR: str = "./uploads"
+
     # Minimum seconds between redispatch attempts for the same trip (zero-offer recovery).
     # B1 (alpha 2026-04-25): descido de 10→5 para reduzir o gap se a oferta expirar.
     REDISPATCH_MIN_INTERVAL_SECONDS: int = 5

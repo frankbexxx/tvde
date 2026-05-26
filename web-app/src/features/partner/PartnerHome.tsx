@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { usePolling } from '../../hooks/usePolling'
 import {
   PARTNER_TRIPS_CSV_COLUMNS,
   addDriverToFleet,
@@ -16,6 +17,11 @@ import {
 } from '../../api/partner'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
 import { PartnerSideMenu } from './PartnerSideMenu'
+import { PartnerFleetMap } from './PartnerFleetMap'
+import { PartnerAlertsPanel } from './PartnerAlertsPanel'
+import { buildPartnerAlerts } from './partnerAlerts'
+
+type PartnerHomeView = 'list' | 'map'
 
 function locationLabel(d: PartnerDriverRow): string {
   const loc = d.last_location
@@ -77,11 +83,15 @@ export function PartnerHome() {
   const [loading, setLoading] = useState(true)
   const [driverFilter, setDriverFilter] = useState<DriverFilter>('all')
   const [tripFilter, setTripFilter] = useState<TripFilter>('all')
+  const [tripDriverFilter, setTripDriverFilter] = useState('')
+  const [tripDateFrom, setTripDateFrom] = useState('')
+  const [tripDateTo, setTripDateTo] = useState('')
   const [search, setSearch] = useState('')
   const [discoverQuery, setDiscoverQuery] = useState('')
   const [discoverRows, setDiscoverRows] = useState<PartnerDriverDiscoveryItem[]>([])
   const [discoverLoading, setDiscoverLoading] = useState(false)
   const [discoverOk, setDiscoverOk] = useState<string | null>(null)
+  const [homeView, setHomeView] = useState<PartnerHomeView>('list')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -106,6 +116,18 @@ export function PartnerHome() {
   useEffect(() => {
     void load()
   }, [load])
+
+  usePolling(
+    load,
+    [load],
+    homeView === 'map',
+    12_000
+  )
+
+  const operationalAlerts = useMemo(
+    () => buildPartnerAlerts(drivers, trips),
+    [drivers, trips]
+  )
 
   const runDiscovery = async () => {
     const q = discoverQuery.trim()
@@ -153,6 +175,27 @@ export function PartnerHome() {
 
   const filteredTrips = useMemo(() => {
     let list = trips.filter((t) => matchesTripFilter(t, tripFilter))
+    if (tripDriverFilter) {
+      list = list.filter((t) => t.driver_id === tripDriverFilter)
+    }
+    if (tripDateFrom) {
+      const fromMs = Date.parse(`${tripDateFrom}T00:00:00`)
+      if (!Number.isNaN(fromMs)) {
+        list = list.filter((t) => {
+          const created = parseIsoMs(t.created_at)
+          return created != null && created >= fromMs
+        })
+      }
+    }
+    if (tripDateTo) {
+      const toMs = Date.parse(`${tripDateTo}T23:59:59.999`)
+      if (!Number.isNaN(toMs)) {
+        list = list.filter((t) => {
+          const created = parseIsoMs(t.created_at)
+          return created != null && created <= toMs
+        })
+      }
+    }
     if (q) {
       list = list.filter((t) => t.trip_id.toLowerCase().includes(q))
     }
@@ -162,7 +205,7 @@ export function PartnerHome() {
       return ub - ua
     })
     return list
-  }, [trips, tripFilter, q])
+  }, [trips, tripFilter, tripDriverFilter, tripDateFrom, tripDateTo, q])
 
   const attentionList = useMemo(() => {
     const now = Date.now()
@@ -440,14 +483,14 @@ export function PartnerHome() {
       {discoverOk && <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">{discoverOk}</p>}
 
       <label className="block text-sm text-foreground/80" htmlFor="partner-search">
-        Pesquisar (nome, telefone ou ID de viagem)
+        Pesquisar viagens (ID) ou motoristas (nome / telefone)
       </label>
       <input
         id="partner-search"
         type="search"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Filtrar listas…"
+        placeholder="ID viagem ou filtrar motorista abaixo"
         className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
       />
 
@@ -480,183 +523,252 @@ export function PartnerHome() {
         </div>
       )}
 
+      <div className="flex gap-2">
+        <button
+          type="button"
+          className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'list' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
+          onClick={() => setHomeView('list')}
+        >
+          Lista
+        </button>
+        <button
+          type="button"
+          data-testid="partner-view-map"
+          className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'map' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
+          onClick={() => setHomeView('map')}
+        >
+          Mapa live
+        </button>
+      </div>
+
+      {homeView === 'map' ? (
+        <PartnerFleetMap drivers={drivers} trips={trips} />
+      ) : null}
+
       <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-4 space-y-3">
-        <h3 className="text-base font-medium text-foreground">Precisa de atenção</h3>
+        <h3 className="text-base font-medium text-foreground">Alertas operacionais</h3>
         <p className="text-xs text-foreground/75">
-          Heurísticas em linguagem de negócio (não substituem o mapa nem o suporte). Se o problema continuar após contactar o
-          motorista, escale à operação com o ID da viagem.
+          Documentos, GPS, viagens bloqueadas — clique para ir ao detalhe.
         </p>
-        {attentionList.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nada destacado neste momento.</p>
-        ) : (
-          <ul className="space-y-3">
-            {attentionList.map(({ tripId, reasons, trip }) => (
-              <li key={tripId} className="rounded-xl border border-border bg-background/40 p-3 text-sm">
-                <Link
-                  to={`/partner/trips/${encodeURIComponent(tripId)}`}
-                  className="font-medium text-primary hover:underline"
-                >
-                  {tripId.slice(0, 8)}… · {trip.status}
-                </Link>
-                <ul className="mt-2 list-disc pl-4 space-y-1 text-foreground/85">
-                  {reasons.map((r) => (
-                    <li key={r}>{r}</li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        )}
+        <PartnerAlertsPanel alerts={operationalAlerts} />
       </div>
 
-      <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
-        <h3 className="font-medium text-foreground">Adicionar motorista à frota</h3>
-        <p className="text-sm text-foreground/75">
-          Pesquisa por nome ou telefone e adiciona com um clique (sem UUIDs manuais).
-        </p>
-        <div className="flex gap-2">
-          <input
-            type="search"
-            value={discoverQuery}
-            onChange={(e) => setDiscoverQuery(e.target.value)}
-            placeholder="Nome ou telefone…"
-            className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
-          />
-          <button
-            type="button"
-            onClick={() => void runDiscovery()}
-            disabled={discoverLoading || discoverQuery.trim().length < 2}
-            className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
-          >
-            {discoverLoading ? '…' : 'Procurar'}
-          </button>
-        </div>
-        {discoverRows.length > 0 ? (
-          <ul className="space-y-2">
-            {discoverRows.map((r) => (
-              <li
-                key={r.user_id}
-                className="rounded-xl border border-border bg-background/30 p-3 text-sm flex items-start justify-between gap-2"
+      {homeView === 'list' ? (
+        <>
+          <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-4 space-y-3">
+            <h3 className="text-base font-medium text-foreground">Precisa de atenção</h3>
+            <p className="text-xs text-foreground/75">
+              Heurísticas em linguagem de negócio (não substituem o mapa nem o suporte). Se o problema continuar após contactar o
+              motorista, escale à operação com o ID da viagem.
+            </p>
+            {attentionList.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nada destacado neste momento.</p>
+            ) : (
+              <ul className="space-y-3">
+                {attentionList.map(({ tripId, reasons, trip }) => (
+                  <li key={tripId} className="rounded-xl border border-border bg-background/40 p-3 text-sm">
+                    <Link
+                      to={`/partner/trips/${encodeURIComponent(tripId)}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {tripId.slice(0, 8)}… · {trip.status}
+                    </Link>
+                    <ul className="mt-2 list-disc pl-4 space-y-1 text-foreground/85">
+                      {reasons.map((r) => (
+                        <li key={r}>{r}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
+            <h3 className="font-medium text-foreground">Adicionar motorista à frota</h3>
+            <p className="text-sm text-foreground/75">
+              Pesquisa por nome ou telefone e adiciona com um clique (sem UUIDs manuais).
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="search"
+                value={discoverQuery}
+                onChange={(e) => setDiscoverQuery(e.target.value)}
+                placeholder="Nome ou telefone…"
+                className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => void runDiscovery()}
+                disabled={discoverLoading || discoverQuery.trim().length < 2}
+                className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
               >
-                <div className="min-w-0">
-                  <p className="font-medium text-foreground truncate">{r.name ?? '—'}</p>
-                  <p className="text-muted-foreground">{r.phone ?? '—'}</p>
-                </div>
+                {discoverLoading ? '…' : 'Procurar'}
+              </button>
+            </div>
+            {discoverRows.length > 0 ? (
+              <ul className="space-y-2">
+                {discoverRows.map((r) => (
+                  <li
+                    key={r.user_id}
+                    className="rounded-xl border border-border bg-background/30 p-3 text-sm flex items-start justify-between gap-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground truncate">{r.name ?? '—'}</p>
+                      <p className="text-muted-foreground">{r.phone ?? '—'}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void addToFleet(r.user_id)}
+                      className="shrink-0 min-h-11 px-3 rounded-lg bg-card border border-border text-foreground/90 text-xs font-semibold hover:bg-muted/40 touch-manipulation"
+                    >
+                      Adicionar à frota
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem resultados.</p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-base font-medium text-foreground mb-2">Motoristas</h3>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {(
+                [
+                  ['all', 'Todos'],
+                  ['active', 'ativos'],
+                  ['online', 'online'],
+                  ['offline', 'offline'],
+                ] as const
+              ).map(([id, label]) => (
                 <button
+                  key={id}
                   type="button"
-                  onClick={() => void addToFleet(r.user_id)}
-                  className="shrink-0 min-h-11 px-3 rounded-lg bg-card border border-border text-foreground/90 text-xs font-semibold hover:bg-muted/40 touch-manipulation"
+                  className={chip(driverFilter === id)}
+                  onClick={() => setDriverFilter(id)}
                 >
-                  Adicionar à frota
+                  {label}
                 </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">Sem resultados.</p>
-        )}
-      </div>
+              ))}
+            </div>
+            <ul className="space-y-2">
+              {filteredDrivers.map((d) => (
+                <li key={d.user_id} className="rounded-xl border border-border bg-card p-3 text-sm">
+                  <Link
+                    to={`/partner/drivers/${encodeURIComponent(d.user_id)}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {d.user.name ?? '—'}
+                  </Link>
+                  <p className="text-muted-foreground">
+                    Estado: {d.status}
+                    {d.is_available ? ' · disponível' : ' · indisponível'}
+                  </p>
+                  <p className="text-muted-foreground text-xs mt-1">{locationLabel(d)}</p>
+                </li>
+              ))}
+            </ul>
+            {!loading && filteredDrivers.length === 0 && (
+              <p className="text-sm text-muted-foreground">Sem motoristas neste filtro.</p>
+            )}
+          </div>
 
-      <div>
-        <h3 className="text-base font-medium text-foreground mb-2">Motoristas</h3>
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {(
-            [
-              ['all', 'Todos'],
-              ['active', 'ativos'],
-              ['online', 'online'],
-              ['offline', 'offline'],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              className={chip(driverFilter === id)}
-              onClick={() => setDriverFilter(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <ul className="space-y-2">
-          {filteredDrivers.map((d) => (
-            <li key={d.user_id} className="rounded-xl border border-border bg-card p-3 text-sm">
-              <Link
-                to={`/partner/drivers/${encodeURIComponent(d.user_id)}`}
-                className="font-medium text-primary hover:underline"
+          <div>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h3 className="text-base font-medium text-foreground">Viagens</h3>
+              <button
+                type="button"
+                onClick={() => void downloadCsv()}
+                className="shrink-0 text-xs font-medium text-primary underline-offset-2 hover:underline"
               >
-                {d.user.name ?? '—'}
-              </Link>
-              <p className="text-muted-foreground">
-                Estado: {d.status}
-                {d.is_available ? ' · disponível' : ' · indisponível'}
-              </p>
-              <p className="text-muted-foreground text-xs mt-1">{locationLabel(d)}</p>
-            </li>
-          ))}
-        </ul>
-        {!loading && filteredDrivers.length === 0 && (
-          <p className="text-sm text-muted-foreground">Sem motoristas neste filtro.</p>
-        )}
-      </div>
-
-      <div>
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="text-base font-medium text-foreground">Viagens</h3>
-          <button
-            type="button"
-            onClick={() => void downloadCsv()}
-            className="shrink-0 text-xs font-medium text-primary underline-offset-2 hover:underline"
-          >
-            Exportar CSV
-          </button>
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          Colunas do CSV (UTF-8): {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}. Contrato estável: em versões futuras só se acrescentam
-          colunas no fim — quem importa por posição deve usar o cabeçalho.
-        </p>
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {(
-            [
-              ['all', 'Todas'],
-              ['ongoing', 'Em curso'],
-              ['completed', 'Concluídas'],
-              ['cancelled', 'Canceladas'],
-              ['failed', 'Falhadas'],
-              ['assigned', 'Por aceitar'],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              title={TRIP_FILTER_HINT[id]}
-              className={chip(tripFilter === id)}
-              onClick={() => setTripFilter(id)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <ul className="space-y-2">
-          {filteredTrips.map((t) => (
-            <li key={t.trip_id} className="rounded-xl border border-border bg-card p-3 text-sm">
-              <Link
-                to={`/partner/trips/${encodeURIComponent(t.trip_id)}`}
-                className="font-medium text-primary hover:underline"
-              >
-                {t.trip_id.slice(0, 8)}… · {t.status}
-              </Link>
-              <p className="text-muted-foreground text-xs mt-1">
-                Criada: {t.created_at}
-                {t.updated_at ? ` · Atualizada: ${t.updated_at}` : null}
-              </p>
-            </li>
-          ))}
-        </ul>
-        {!loading && filteredTrips.length === 0 && (
-          <p className="text-sm text-muted-foreground">Sem viagens neste filtro.</p>
-        )}
-      </div>
+                Exportar CSV
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Colunas do CSV (UTF-8): {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}. Contrato estável: em versões futuras só se acrescentam
+              colunas no fim — quem importa por posição deve usar o cabeçalho.
+            </p>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {(
+                [
+                  ['all', 'Todas'],
+                  ['ongoing', 'Em curso'],
+                  ['completed', 'Concluídas'],
+                  ['cancelled', 'Canceladas'],
+                  ['failed', 'Falhadas'],
+                  ['assigned', 'Por aceitar'],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  title={TRIP_FILTER_HINT[id]}
+                  className={chip(tripFilter === id)}
+                  onClick={() => setTripFilter(id)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+              <label className="text-xs text-muted-foreground">
+                Motorista
+                <select
+                  value={tripDriverFilter}
+                  onChange={(e) => setTripDriverFilter(e.target.value)}
+                  className="mt-1 w-full px-2 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                >
+                  <option value="">Todos</option>
+                  {drivers.map((d) => (
+                    <option key={d.user_id} value={d.user_id}>
+                      {d.user.name ?? d.user_id.slice(0, 8)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs text-muted-foreground">
+                Desde
+                <input
+                  type="date"
+                  value={tripDateFrom}
+                  onChange={(e) => setTripDateFrom(e.target.value)}
+                  className="mt-1 w-full px-2 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                />
+              </label>
+              <label className="text-xs text-muted-foreground">
+                Até
+                <input
+                  type="date"
+                  value={tripDateTo}
+                  onChange={(e) => setTripDateTo(e.target.value)}
+                  className="mt-1 w-full px-2 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
+                />
+              </label>
+            </div>
+            <ul className="space-y-2">
+              {filteredTrips.map((t) => (
+                <li key={t.trip_id} className="rounded-xl border border-border bg-card p-3 text-sm">
+                  <Link
+                    to={`/partner/trips/${encodeURIComponent(t.trip_id)}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {t.trip_id.slice(0, 8)}… · {t.status}
+                  </Link>
+                  <p className="text-muted-foreground text-xs mt-1">
+                    Criada: {t.created_at}
+                    {t.updated_at ? ` · Atualizada: ${t.updated_at}` : null}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            {!loading && filteredTrips.length === 0 && (
+              <p className="text-sm text-muted-foreground">Sem viagens neste filtro.</p>
+            )}
+          </div>
+        </>
+      ) : null}
 
       <BetaAccountPanel />
 

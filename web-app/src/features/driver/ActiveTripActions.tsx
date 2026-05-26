@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { getDriverTripDetail, type TripDetailResponse } from '../../api/trips'
+import type { TripDetailResponse } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
-import { usePolling } from '../../hooks/usePolling'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { HintLine } from '../../components/layout/HintLine'
@@ -20,6 +19,7 @@ import {
   driverPerformAccept,
   driverPerformCancel,
   driverPerformComplete,
+  driverPerformMarkArriving,
   driverPerformStartFromAccepted,
   driverPerformStartFromArriving,
 } from './driverTripActions'
@@ -30,6 +30,8 @@ import {
   TRIP_CANCEL_SELECT_OTHER,
   tripCancelReasonForApi,
 } from '../../constants/tripCancelReasons'
+import type { DriverActiveTripPollState } from './useDriverActiveTripPoll'
+import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
 
 export interface ActiveTripActionsProps {
   tripId: string
@@ -39,6 +41,8 @@ export interface ActiveTripActionsProps {
    * O `ActiveTripSummary` já usa o mesmo fallback; sem isto o gate de distância fica invisível entre polls.
    */
   tripDetailFallback?: TripDetailResponse | null
+  /** Poll partilhado (D4) — quando omitido, este componente faz poll próprio. */
+  sharedPoll?: DriverActiveTripPollState
   /** Posição actual do motorista (real ou simulada); necessária para o gate de «Iniciar viagem». */
   driverLocation: { lat: number; lng: number } | null
   addLog: (msg: string, type?: 'info' | 'success' | 'error' | 'action') => void
@@ -56,6 +60,7 @@ export function ActiveTripActions({
   tripId,
   token,
   tripDetailFallback = null,
+  sharedPoll,
   driverLocation,
   addLog,
   setStatus,
@@ -66,18 +71,17 @@ export function ActiveTripActions({
   onTripCompleted,
   onError,
 }: ActiveTripActionsProps) {
-  const fetchTrip = useCallback(() => getDriverTripDetail(tripId, token), [tripId, token])
-  const {
-    data: trip,
-    isRefreshing: tripRefreshing,
-    lastSuccessAt: tripLastSuccessAt,
-    pollFault: tripPollFault,
-  } = usePolling(
-    fetchTrip,
-    [tripId, token],
-    !!tripId && !!token,
-    2000
+  const internalPoll = useDriverActiveTripPoll(
+    sharedPoll ? null : tripId,
+    sharedPoll ? null : token,
+    !sharedPoll && !!tripId && !!token
   )
+  const pollBundle = sharedPoll ?? internalPoll
+  const trip = pollBundle.poll?.trip ?? null
+  const tripRefreshing = pollBundle.isRefreshing
+  const tripLastSuccessAt = pollBundle.lastSuccessAt
+  const tripPollFault = pollBundle.pollFault
+
   /** Evita janela sem dados quando `trip` e `tripDetailFallback` estão ambos null entre polls. */
   const lastCoordsRef = useRef<TripDetailResponse | null>(null)
   useEffect(() => {
@@ -91,11 +95,14 @@ export function ActiveTripActions({
   const displayStatus = mergeDriverPolledWithOverride(coordsSource?.status, statusOverride, 'accepted')
   const pickupCoords =
     coordsSource != null ? { lat: coordsSource.origin_lat, lng: coordsSource.origin_lng } : null
-  const startTripAllowed = canDriverStartTripNearPickup(
-    displayStatus,
-    driverLocation,
-    pickupCoords
-  )
+  const destinationCoords =
+    coordsSource != null
+      ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
+      : null
+  const nearPickup = canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
+  const startTripAllowed =
+    displayStatus === 'accepted' ? nearPickup : canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
+
   useEffect(() => {
     if (!statusOverride || !trip?.status) return
     if (tripStateRank(trip.status) >= tripStateRank(statusOverride)) {
@@ -108,12 +115,15 @@ export function ActiveTripActions({
   const [cancelPanelOpen, setCancelPanelOpen] = useState(false)
   const [cancelPreset, setCancelPreset] = useState('')
   const [cancelOtherDetail, setCancelOtherDetail] = useState('')
+  const navOpenedForOngoingRef = useRef(false)
 
   useEffect(() => {
     setCancelPanelOpen(false)
     setCancelPreset('')
     setCancelOtherDetail('')
+    navOpenedForOngoingRef.current = false
   }, [tripId])
+
   const hasTripContext = Boolean(coordsSource)
   const tripPollStalled = usePollStallHint(
     tripLastSuccessAt,
@@ -140,13 +150,24 @@ export function ActiveTripActions({
     return () => window.clearTimeout(id)
   }, [loading])
 
+  const openNavForPhase = useCallback(() => {
+    const target =
+      displayStatus === 'ongoing' ? destinationCoords : pickupCoords
+    if (!target) return
+    openDriverExternalNav(target.lat, target.lng)
+    const phaseLabel = displayStatus === 'ongoing' ? 'destino' : 'recolha'
+    sonnerToast.message(`A abrir ${driverNavAppLabel()} (${phaseLabel})`, { duration: 3000 })
+  }, [destinationCoords, displayStatus, pickupCoords])
+
   const run = async (
     action: () => Promise<{ status: string }>,
-    actionName: string
+    actionName: string,
+    opts?: { skipStartGate?: boolean }
   ): Promise<boolean> => {
     if (loading) return false
     if (
       actionName === 'Iniciar viagem' &&
+      !opts?.skipStartGate &&
       !canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
     ) {
       const msg = `Aproxima-te do ponto de recolha (até ~${DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar.`
@@ -164,16 +185,16 @@ export function ActiveTripActions({
       onTripActionSuccess(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionName} concluído (${res.status})`, 'success')
-      if (res.status === 'ongoing') {
+      if (res.status === 'ongoing' && !navOpenedForOngoingRef.current) {
+        navOpenedForOngoingRef.current = true
         sonnerToast.success('Viagem iniciada')
-        const dest =
-          coordsSource != null
-            ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
-            : null
-        if (dest) {
-          openDriverExternalNav(dest.lat, dest.lng)
+        if (destinationCoords) {
+          openDriverExternalNav(destinationCoords.lat, destinationCoords.lng)
           sonnerToast.message(`A abrir ${driverNavAppLabel()} (destino)`, { duration: 3000 })
         }
+      }
+      if (res.status === 'arriving') {
+        sonnerToast.success('Chegada confirmada')
       }
       if (res.status === 'completed') {
         sonnerToast.success('Viagem concluída')
@@ -208,7 +229,9 @@ export function ActiveTripActions({
     displayStatus === 'assigned'
       ? { label: 'Aceitar', action: () => driverPerformAccept(tripId, token) }
       : displayStatus === 'accepted'
-        ? { label: 'Iniciar viagem', action: () => driverPerformStartFromAccepted(tripId, token) }
+        ? nearPickup
+          ? { label: 'Iniciar viagem', action: () => driverPerformStartFromAccepted(tripId, token) }
+          : { label: 'Cheguei', action: () => driverPerformMarkArriving(tripId, token), skipStartGate: true }
         : displayStatus === 'arriving'
           ? { label: 'Iniciar viagem', action: () => driverPerformStartFromArriving(tripId, token) }
           : displayStatus === 'ongoing'
@@ -227,18 +250,24 @@ export function ActiveTripActions({
     displayStatus === 'assigned' ||
     displayStatus === 'accepted' ||
     displayStatus === 'arriving'
+  const showNavButton =
+    displayStatus === 'accepted' ||
+    displayStatus === 'arriving' ||
+    displayStatus === 'ongoing'
+
   const nextStepHint =
     displayStatus === 'assigned'
       ? 'Aceita para começar a aproximação ao passageiro.'
-      : (displayStatus === 'accepted' || displayStatus === 'arriving')
-        ? 'Confirma a chegada ao ponto de recolha antes de iniciar viagem.'
-        : displayStatus === 'ongoing'
-          ? 'Segue para o destino e termina a viagem no fim.'
-          : null
+      : displayStatus === 'accepted' && !nearPickup
+        ? 'Confirma «Cheguei» quando estiveres no ponto de recolha.'
+        : displayStatus === 'accepted' || displayStatus === 'arriving'
+          ? 'Inicia a viagem quando o passageiro estiver contigo.'
+          : displayStatus === 'ongoing'
+            ? 'Segue para o destino e termina a viagem no fim.'
+            : null
 
   const startTripGateActive =
-    (displayStatus === 'accepted' || displayStatus === 'arriving') &&
-    buttonConfig.label === 'Iniciar viagem'
+    (displayStatus === 'accepted' && nearPickup) || displayStatus === 'arriving'
 
   const distanceToPickupM =
     startTripGateActive && driverLocation && pickupCoords
@@ -269,6 +298,17 @@ export function ActiveTripActions({
         </div>
       ) : null}
       <MapActionRow testId="driver-trip-action-stack">
+        {showNavButton ? (
+          <button
+            type="button"
+            data-testid="driver-open-nav"
+            className={BTN_SECONDARY}
+            onClick={openNavForPhase}
+            disabled={loading}
+          >
+            Abrir navegação
+          </button>
+        ) : null}
         {displayStatus === 'ongoing' ? (
           <button
             type="button"
@@ -286,7 +326,9 @@ export function ActiveTripActions({
             size="compact"
             className="flex-1 min-w-0"
             onClick={() => {
-              void run(buttonConfig.action, buttonConfig.label)
+              void run(buttonConfig.action, buttonConfig.label, {
+                skipStartGate: buttonConfig.skipStartGate,
+              })
             }}
             disabled={loading || (startTripGateActive && !startTripAllowed)}
             loading={loading}
@@ -349,7 +391,8 @@ export function ActiveTripActions({
                   const reason = tripCancelReasonForApi(cancelPreset, cancelOtherDetail)
                   const ok = await run(
                     () => driverPerformCancel(tripId, token, reason),
-                    'Cancelar viagem'
+                    'Cancelar viagem',
+                    { skipStartGate: true }
                   )
                   if (ok) {
                     setCancelPanelOpen(false)

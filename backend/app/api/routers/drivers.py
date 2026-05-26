@@ -1,6 +1,7 @@
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
@@ -18,6 +19,7 @@ from app.schemas.driver_documents import (
     DriverDocumentsSuggestExpiryRequest,
     DriverDocumentsSuggestExpiryResponse,
 )
+from app.schemas.partner_messages import DriverMessageListItem
 from app.db.models.driver import DriverLocation
 from app.db.models.driver import Driver
 from app.services.driver_location import upsert_driver_location
@@ -30,6 +32,15 @@ from app.services.driver_documents import (
     get_documents_for_driver,
 )
 from app.services.driver_document_expiry_suggest import suggest_expiry_iso_from_text
+from app.services.driver_document_upload import (
+    resolve_driver_document_path,
+    save_driver_document_file,
+)
+from app.services.partner_messages import (
+    list_driver_messages,
+    mark_driver_message_read,
+    _utc_iso as message_utc_iso,
+)
 
 
 router = APIRouter(prefix="/drivers", tags=["driver"])
@@ -201,3 +212,64 @@ async def suggest_document_expiry(
     return DriverDocumentsSuggestExpiryResponse(
         suggested_expires_at=suggest_expiry_iso_from_text(payload.text)
     )
+
+
+@driver_router.get("/messages", response_model=list[DriverMessageListItem])
+async def list_my_messages(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> list[DriverMessageListItem]:
+    uid = uuid.UUID(str(user.user_id))
+    rows = list_driver_messages(db, driver_user_id=uid)
+    return [
+        DriverMessageListItem(
+            id=str(m.id),
+            title=m.title,
+            body=m.body,
+            priority=m.priority,
+            created_at=message_utc_iso(m.created_at),
+            read=read,
+        )
+        for m, read in rows
+    ]
+
+
+@driver_router.patch("/messages/{message_id}/read", status_code=status.HTTP_204_NO_CONTENT)
+async def mark_message_read(
+    message_id: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> None:
+    uid = uuid.UUID(str(user.user_id))
+    try:
+        mid = uuid.UUID(message_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid") from None
+    mark_driver_message_read(db, driver_user_id=uid, message_id=mid)
+
+
+@driver_router.post(
+    "/documents/{doc_key}/upload",
+    response_model=DriverDocumentsStateResponse,
+    summary="Upload document file (local storage MVP)",
+)
+async def upload_my_document(
+    doc_key: str,
+    file: UploadFile = File(...),
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> DriverDocumentsStateResponse:
+    uid = uuid.UUID(str(user.user_id))
+    state = save_driver_document_file(db, driver_user_id=uid, doc_key=doc_key, upload=file)
+    return DriverDocumentsStateResponse(version=int(state["version"]), docs=state["docs"])
+
+
+@driver_router.get("/documents/{doc_key}/file")
+async def download_my_document(
+    doc_key: str,
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> FileResponse:
+    uid = uuid.UUID(str(user.user_id))
+    path = resolve_driver_document_path(db, driver_user_id=uid, doc_key=doc_key)
+    return FileResponse(path, filename=path.name)

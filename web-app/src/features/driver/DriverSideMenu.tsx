@@ -131,7 +131,6 @@ export function DriverSideMenu(props: {
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
   onToggleDriverDocsGate: (enabled: boolean) => void
-  onReportIncident: (tripId: string) => void
   renderLegacyMenu: (section: DriverMenuScreen) => React.ReactNode
   /** Offline com shell: alternativa acessível ao toque no mapa. */
   shellOffline?: boolean
