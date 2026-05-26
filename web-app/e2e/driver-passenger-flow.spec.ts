@@ -602,8 +602,25 @@ test.describe('Driver + passenger (proximity gate)', () => {
     // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
     await driverPage.getByTestId('driver-close-menu').click()
     await leaveDriverHomeStep1IfPresent(driverPage)
-    const popupPromise = driverPage.waitForEvent('popup')
+
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/available`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return false
+          const list = (await r.json()) as Array<{ trip_id?: string }>
+          return list.some((item) => item.trip_id === tripId)
+        },
+        { timeout: sec(60), intervals: pollLook }
+      )
+      .toBe(true)
+    await waitForDriverMapOfferUi(driverPage, tripId)
+
+    const popupPromise = driverPage.waitForEvent('popup', { timeout: sec(45) })
     await acceptDriverTripFromMap(driverPage, tripId)
+    await refreshDriverLocationNearPickup(request, tokens.driver)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
