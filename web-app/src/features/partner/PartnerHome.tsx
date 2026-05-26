@@ -18,7 +18,8 @@ import {
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
 import { PartnerSideMenu } from './PartnerSideMenu'
 import { PartnerFleetMap } from './PartnerFleetMap'
-import { PartnerAlertsPanel, buildPartnerAlerts } from './PartnerAlertsPanel'
+import { PartnerAlertsPanel } from './PartnerAlertsPanel'
+import { buildPartnerAlerts } from './partnerAlerts'
 
 type PartnerHomeView = 'list' | 'map'
 

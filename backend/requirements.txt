@@ -9,6 +9,7 @@ alembic>=1.13
 pydantic
 pydantic-settings
 python-dotenv
+python-multipart
 
 # IANA time zones for zoneinfo (Windows / minimal Python images).
 tzdata

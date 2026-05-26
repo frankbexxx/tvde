@@ -62,16 +62,15 @@ export function RequestCard({
   rejectButtonTestId,
   acceptVariant = 'button',
 }: RequestCardProps) {
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(() => offerSecondsRemaining(expiresAt))
+  const [, setTick] = useState(0)
 
   useEffect(() => {
-    setSecondsLeft(offerSecondsRemaining(expiresAt))
     if (!expiresAt) return
-    const id = window.setInterval(() => {
-      setSecondsLeft(offerSecondsRemaining(expiresAt))
-    }, 1000)
+    const id = window.setInterval(() => setTick((t) => t + 1), 1000)
     return () => window.clearInterval(id)
   }, [expiresAt])
+
+  const secondsLeft = offerSecondsRemaining(expiresAt)
 
   const slideCompact = acceptVariant === 'slide'
   const priceDisplay =
