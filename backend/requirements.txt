@@ -1,4 +1,5 @@
-fastapi
+# MAL-2026-4750: evitar 0.136.3 (dep opcional fastar não documentada); pin até fix PyPI.
+fastapi>=0.115,<0.136.3
 uvicorn[standard]
 
 sqlalchemy>=2.0
