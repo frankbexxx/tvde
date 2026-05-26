@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from app.auth.security import create_access_token
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.partner import Partner
 from app.db.models.trip import Trip
@@ -220,8 +221,6 @@ def test_partner_remove_driver_from_fleet() -> None:
     try:
         d = db2.get(Driver, uuid.UUID(driver_id))
         assert d is not None
-        from app.core.config import settings
-
-        assert str(d.partner_id) == str(settings.DEFAULT_PARTNER_UUID)
+        assert str(d.partner_id) == str(DEFAULT_PARTNER_UUID)
     finally:
         db2.close()
