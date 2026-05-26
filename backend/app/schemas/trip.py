@@ -69,6 +69,7 @@ class TripAvailableItem(BaseModel):
     vehicle_category: Optional[str] = None
     vehicle_categories: Optional[list[str]] = None
     offer_id: Optional[str] = None  # When from multi-offer dispatch
+    expires_at: Optional[str] = None  # ISO8601 when from multi-offer dispatch
 
 
 class TripOfferItem(BaseModel):

@@ -18,7 +18,15 @@ export async function driverPerformAccept(
   return acceptTrip(tripId, token)
 }
 
-/** accepted → arriving → ongoing (um clique na UI). */
+/** accepted → arriving (botão «Cheguei»). */
+export async function driverPerformMarkArriving(
+  tripId: string,
+  token: string
+): Promise<TripStatusResponse> {
+  return markArriving(tripId, token)
+}
+
+/** accepted → arriving → ongoing (um clique na UI, perto do pickup). */
 export async function driverPerformStartFromAccepted(
   tripId: string,
   token: string

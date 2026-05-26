@@ -1,12 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import {
   fetchPartnerDriver,
   fetchPartnerDriverZoneBudgetToday,
+  fetchPartnerTrips,
   patchPartnerDriverAvailability,
   patchPartnerDriverDocuments,
   patchPartnerDriverStatus,
   postPartnerGrantDriverZoneBudgetExtra,
+  postPartnerMessage,
+  partnerDriverDocumentFileUrl,
+  removeDriverFromFleet,
   type PartnerDriverRow,
   type PartnerDriverZoneBudgetToday,
 } from '../../api/partner'
@@ -36,7 +41,10 @@ function locationBlock(d: PartnerDriverRow) {
 
 export function PartnerDriverDetail() {
   const { userId } = useParams<{ userId: string }>()
+  const { token } = useAuth()
+  const navigate = useNavigate()
   const [d, setD] = useState<PartnerDriverRow | null>(null)
+  const [tripStats, setTripStats] = useState<{ completed: number; cancelled: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
@@ -44,14 +52,23 @@ export function PartnerDriverDetail() {
   const [zoneBudgetLoading, setZoneBudgetLoading] = useState(false)
   const [draftExpires, setDraftExpires] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
   const [draftNotes, setDraftNotes] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
+  const [msgTitle, setMsgTitle] = useState('')
+  const [msgBody, setMsgBody] = useState('')
+  const [msgPriority, setMsgPriority] = useState<'normal' | 'high'>('normal')
+  const [msgOk, setMsgOk] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!userId) return
     setLoading(true)
     setError(null)
     try {
-      const row = await fetchPartnerDriver(userId)
+      const [row, trips] = await Promise.all([fetchPartnerDriver(userId), fetchPartnerTrips()])
       setD(row)
+      const mine = trips.filter((t) => t.driver_id === userId)
+      setTripStats({
+        completed: mine.filter((t) => t.status === 'completed').length,
+        cancelled: mine.filter((t) => t.status === 'cancelled').length,
+      })
     } catch (e: unknown) {
       const err = e as { detail?: string }
       setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao carregar motorista.')
@@ -116,6 +133,46 @@ export function PartnerDriverDetail() {
     }
   }
 
+  const fleetRemoveErrorPt = (detail: string | undefined): string => {
+    if (detail === 'driver_has_active_trip') {
+      return 'Motorista com viagem activa — conclui ou cancela antes de remover da frota.'
+    }
+    if (detail === 'not_found' || detail === 'driver_not_found') {
+      return 'Motorista não encontrado nesta frota.'
+    }
+    return detail ?? 'Não foi possível remover da frota.'
+  }
+
+  const removeFromFleet = async () => {
+    if (!userId) return
+    if (!window.confirm('Remover este motorista da frota? Volta para a frota por defeito da plataforma.')) return
+    setBusy('remove')
+    setError(null)
+    try {
+      await removeDriverFromFleet(userId)
+      navigate('/partner')
+    } catch (e: unknown) {
+      const err = e as { detail?: string }
+      setError(fleetRemoveErrorPt(typeof err?.detail === 'string' ? err.detail : undefined))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const kpiLine = useMemo(() => {
+    if (!tripStats) return null
+    return (
+      <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-1">
+        <p className="font-medium text-foreground">Viagens (frota)</p>
+        <p className="text-muted-foreground">
+          Concluídas: <span className="text-foreground font-medium">{tripStats.completed}</span>
+          {' · '}
+          Canceladas: <span className="text-foreground font-medium">{tripStats.cancelled}</span>
+        </p>
+      </div>
+    )
+  }, [tripStats])
+
   const runDoc = async (docKey: DriverRequiredDocument, status: string) => {
     if (!userId) return
     setBusy('doc')
@@ -166,6 +223,8 @@ export function PartnerDriverDetail() {
         {keys.map((key) => {
           const row = driver.documents?.[key]
           const st = row?.status ?? 'missing'
+          const filePath = (row as { file_path?: string } | undefined)?.file_path
+          const hasFile = Boolean(filePath)
           return (
             <div key={key} className="rounded-lg border border-border/70 bg-background px-3 py-2 space-y-2">
               <div className="flex items-center justify-between gap-2">
@@ -201,6 +260,30 @@ export function PartnerDriverDetail() {
                   className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
                 />
               </label>
+              {hasFile && userId ? (
+                <a
+                  href={partnerDriverDocumentFileUrl(userId, key)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary underline"
+                  onClick={(e) => {
+                    if (!token) return
+                    e.preventDefault()
+                    void fetch(partnerDriverDocumentFileUrl(userId, key), {
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                      .then((r) => r.blob())
+                      .then((blob) => {
+                        const url = URL.createObjectURL(blob)
+                        window.open(url, '_blank', 'noopener,noreferrer')
+                      })
+                  }}
+                >
+                  Ver documento
+                </a>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">Sem ficheiro carregado pelo motorista.</p>
+              )}
               <button
                 type="button"
                 disabled={busy !== null}
@@ -222,7 +305,8 @@ export function PartnerDriverDetail() {
                   <button
                     key={s}
                     type="button"
-                    disabled={busy !== null}
+                    disabled={busy !== null || (s === 'approved' && !hasFile)}
+                    title={s === 'approved' && !hasFile ? 'Aguarda upload do motorista' : undefined}
                     onClick={() => void runDoc(key, s)}
                     className="min-h-8 rounded-md border border-border px-2 text-[11px] font-medium disabled:opacity-50"
                   >
@@ -278,6 +362,65 @@ export function PartnerDriverDetail() {
       </div>
 
       {locationBlock(d)}
+
+      {kpiLine}
+
+      <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-2">
+        <p className="font-medium text-foreground">Enviar aviso</p>
+        <input
+          type="text"
+          value={msgTitle}
+          onChange={(e) => setMsgTitle(e.target.value)}
+          placeholder="Título"
+          className="w-full rounded-lg border border-border px-2 py-2 text-sm"
+        />
+        <textarea
+          value={msgBody}
+          onChange={(e) => setMsgBody(e.target.value)}
+          placeholder="Mensagem"
+          rows={3}
+          className="w-full rounded-lg border border-border px-2 py-2 text-sm"
+        />
+        <select
+          value={msgPriority}
+          onChange={(e) => setMsgPriority(e.target.value as 'normal' | 'high')}
+          className="w-full rounded-lg border border-border px-2 py-2 text-sm"
+        >
+          <option value="normal">Prioridade normal</option>
+          <option value="high">Prioridade alta</option>
+        </select>
+        <button
+          type="button"
+          disabled={busy !== null || !msgTitle.trim() || !msgBody.trim()}
+          onClick={() => {
+            void (async () => {
+              setBusy('msg')
+              setMsgOk(null)
+              setError(null)
+              try {
+                await postPartnerMessage({
+                  title: msgTitle.trim(),
+                  body: msgBody.trim(),
+                  priority: msgPriority,
+                  driver_user_id: userId ?? null,
+                })
+                setMsgOk('Aviso enviado.')
+                setMsgTitle('')
+                setMsgBody('')
+              } catch (e: unknown) {
+                const err = e as { detail?: string }
+                setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao enviar aviso.')
+              } finally {
+                setBusy(null)
+              }
+            })()
+          }}
+          className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {busy === 'msg' ? '…' : 'Enviar aviso a este motorista'}
+        </button>
+        {msgOk ? <p className="text-xs text-success">{msgOk}</p> : null}
+      </div>
 
       {renderDocSection(
         d,
@@ -397,6 +540,18 @@ export function PartnerDriverDetail() {
           </div>
         </div>
       )}
+
+      <div className="space-y-2 pt-1">
+        <p className="text-sm font-medium text-foreground">Remover da frota</p>
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => void removeFromFleet()}
+          className="w-full rounded-xl border border-destructive/50 bg-destructive/5 py-2 text-sm font-medium text-destructive disabled:opacity-50"
+        >
+          {busy === 'remove' ? '…' : 'Remover da frota'}
+        </button>
+      </div>
 
       <button
         type="button"

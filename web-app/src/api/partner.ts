@@ -32,6 +32,13 @@ export interface PartnerTripRow {
   status: string
   passenger_id: string
   driver_id: string | null
+  origin_lat: number
+  origin_lng: number
+  destination_lat: number
+  destination_lng: number
+  estimated_price: number
+  final_price?: number | null
+  cancel_reason?: string | null
   created_at: string
   started_at: string | null
   completed_at: string | null
@@ -77,6 +84,28 @@ export async function addDriverToFleet(driverUserId: string): Promise<PartnerDri
   return apiFetch<PartnerDriverRow>(`/partner/drivers/${encodeURIComponent(driverUserId)}/add-to-fleet`, {
     method: 'POST',
   })
+}
+
+export async function removeDriverFromFleet(userId: string): Promise<void> {
+  await apiFetch<void>(`/partner/drivers/${encodeURIComponent(userId)}/from-fleet`, {
+    method: 'DELETE',
+  })
+}
+
+export async function postPartnerMessage(body: {
+  title: string
+  body: string
+  priority?: 'normal' | 'high'
+  driver_user_id?: string | null
+}): Promise<void> {
+  await apiFetch('/partner/messages', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export function partnerDriverDocumentFileUrl(userId: string, docKey: string): string {
+  return `${API_BASE.replace(/\/$/, '')}/partner/drivers/${encodeURIComponent(userId)}/documents/${encodeURIComponent(docKey)}/file`
 }
 
 export async function patchPartnerDriverStatus(

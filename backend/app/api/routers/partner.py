@@ -22,8 +22,8 @@ import io
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_partner, get_db
@@ -45,6 +45,7 @@ from app.schemas.partner import (
     PartnerTripItem,
     PartnerTripReassignRequest,
 )
+from app.schemas.partner_messages import PartnerMessageCreateRequest, PartnerMessageItem
 from app.services.driver_documents import apply_partner_documents_patch, parse_documents_column
 from app.services.partner_driver_discovery import (
     discover_drivers_for_partner,
@@ -67,7 +68,13 @@ from app.services.driver_zones import (
     service_date_local_now,
 )
 from app.services.partner_trip_ops import partner_reassign_trip_driver
-from app.services.partners_admin import partner_metrics
+from app.services.partner_messages import (
+    create_partner_message,
+    list_partner_sent_messages,
+    _utc_iso as message_utc_iso,
+)
+from app.services.driver_document_upload import resolve_driver_document_path
+from app.services.partners_admin import partner_metrics, partner_remove_driver_from_fleet
 from app.utils.logging import log_event
 
 
@@ -126,6 +133,13 @@ def _trip_item(t) -> PartnerTripItem:
         status=t.status.value,
         passenger_id=str(t.passenger_id),
         driver_id=str(t.driver_id) if t.driver_id else None,
+        origin_lat=float(t.origin_lat),
+        origin_lng=float(t.origin_lng),
+        destination_lat=float(t.destination_lat),
+        destination_lng=float(t.destination_lng),
+        estimated_price=float(t.estimated_price),
+        final_price=float(t.final_price) if t.final_price is not None else None,
+        cancel_reason=t.cancellation_reason,
         created_at=t.created_at.isoformat(),
         started_at=t.started_at.isoformat() if t.started_at else None,
         completed_at=t.completed_at.isoformat() if t.completed_at else None,
@@ -233,6 +247,31 @@ async def partner_add_driver(
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _driver_item(d)
+
+
+@router.delete("/drivers/{driver_user_id}/from-fleet", status_code=status.HTTP_204_NO_CONTENT)
+async def partner_remove_driver_from_fleet_endpoint(
+    driver_user_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> None:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+        pid = uuid.UUID(partner_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    partner_remove_driver_from_fleet(db, partner_id=pid, driver_user_id=did)
 
 
 @router.patch("/drivers/{driver_user_id}/status", response_model=PartnerDriverItem)
@@ -650,3 +689,99 @@ async def partner_get_metrics(
     )
     m = partner_metrics(db, uuid.UUID(partner_id))
     return PartnerMetricsResponse(**m)
+
+
+@router.get("/messages", response_model=list[PartnerMessageItem])
+async def partner_list_messages(
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> list[PartnerMessageItem]:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    rows = list_partner_sent_messages(db, partner_id=uuid.UUID(partner_id))
+    return [
+        PartnerMessageItem(
+            id=str(m.id),
+            title=m.title,
+            body=m.body,
+            priority=m.priority,
+            created_at=message_utc_iso(m.created_at),
+            driver_user_id=str(m.driver_user_id) if m.driver_user_id else None,
+            read=False,
+        )
+        for m in rows
+    ]
+
+
+@router.post("/messages", response_model=PartnerMessageItem, status_code=status.HTTP_201_CREATED)
+async def partner_create_message(
+    body: PartnerMessageCreateRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerMessageItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    did: uuid.UUID | None = None
+    if body.driver_user_id:
+        try:
+            did = uuid.UUID(body.driver_user_id.strip())
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid") from None
+    msg = create_partner_message(
+        db,
+        partner_id=uuid.UUID(partner_id),
+        created_by=uuid.UUID(ctx.user_id),
+        title=body.title,
+        body=body.body,
+        priority=body.priority,
+        driver_user_id=did,
+    )
+    return PartnerMessageItem(
+        id=str(msg.id),
+        title=msg.title,
+        body=msg.body,
+        priority=msg.priority,
+        created_at=message_utc_iso(msg.created_at),
+        driver_user_id=str(msg.driver_user_id) if msg.driver_user_id else None,
+        read=False,
+    )
+
+
+@router.get("/drivers/{driver_user_id}/documents/{doc_key}/file")
+async def partner_download_driver_document(
+    driver_user_id: str,
+    doc_key: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> FileResponse:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid") from None
+    path = resolve_driver_document_path(
+        db,
+        driver_user_id=did,
+        doc_key=doc_key,
+        partner_id=uuid.UUID(partner_id),
+    )
+    return FileResponse(path, filename=path.name)

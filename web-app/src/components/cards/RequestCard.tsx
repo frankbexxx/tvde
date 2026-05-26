@@ -3,8 +3,16 @@
  * Pickup, estimate €, ACEITAR (botão ou deslizar).
  * No IDs, no coords.
  */
+import { useEffect, useState } from 'react'
 import { SlideToAccept } from './SlideToAccept'
 import { INFO_BOX_DRIVER_LARGE, BTN_COMPACT_HEIGHT, BTN_PRIMARY_RADIUS } from '../layout/infoBoxTemplate'
+
+function offerSecondsRemaining(expiresAt: string | null | undefined): number | null {
+  if (!expiresAt) return null
+  const ms = Date.parse(expiresAt) - Date.now()
+  if (Number.isNaN(ms)) return null
+  return Math.max(0, Math.ceil(ms / 1000))
+}
 
 interface RequestCardProps {
   pickup: string
@@ -21,6 +29,11 @@ interface RequestCardProps {
   /** Quando existe `offer_id` no backend, o motorista pode recusar a oferta. */
   offerId?: string | null
   onReject?: () => void
+  /** Fechar box localmente (sem reject API). */
+  onDismiss?: () => void
+  dismissButtonTestId?: string
+  /** ISO8601 — countdown «Expira em Xs». */
+  expiresAt?: string | null
   loading?: boolean
   rejectLoading?: boolean
   acceptButtonTestId?: string
@@ -40,23 +53,62 @@ export function RequestCard({
   onAccept,
   offerId,
   onReject,
+  onDismiss,
+  dismissButtonTestId = 'driver-offer-dismiss',
+  expiresAt,
   loading,
   rejectLoading,
   acceptButtonTestId,
   rejectButtonTestId,
   acceptVariant = 'button',
 }: RequestCardProps) {
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(() => offerSecondsRemaining(expiresAt))
+
+  useEffect(() => {
+    setSecondsLeft(offerSecondsRemaining(expiresAt))
+    if (!expiresAt) return
+    const id = window.setInterval(() => {
+      setSecondsLeft(offerSecondsRemaining(expiresAt))
+    }, 1000)
+    return () => window.clearInterval(id)
+  }, [expiresAt])
+
   const slideCompact = acceptVariant === 'slide'
   const priceDisplay =
     estimatedPrice != null && estimatedPrice > 0
       ? `${estimatedPrice.toFixed(2)} €`
       : `${estimateFallback} €`
 
+  const expiryLine =
+    secondsLeft != null ? (
+      <p
+        className="text-xs font-medium text-foreground/70 tabular-nums"
+        data-testid="driver-offer-expiry"
+        aria-live="polite"
+      >
+        {secondsLeft > 0 ? `Expira em ${secondsLeft}s` : 'Oferta expirada'}
+      </p>
+    ) : null
+
+  const dismissButton =
+    onDismiss != null ? (
+      <button
+        type="button"
+        onClick={onDismiss}
+        disabled={Boolean(loading || rejectLoading)}
+        data-testid={dismissButtonTestId}
+        aria-label="Fechar oferta"
+        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/70 hover:bg-muted touch-manipulation"
+      >
+        ×
+      </button>
+    ) : null
+
   const slideAccept = (
     <SlideToAccept
       density="compact"
       onConfirm={onAccept}
-      disabled={Boolean(rejectLoading)}
+      disabled={Boolean(rejectLoading) || secondsLeft === 0}
       loading={Boolean(loading)}
       trackTestId={acceptButtonTestId ? `${acceptButtonTestId}-track` : undefined}
       testId={acceptButtonTestId ? `${acceptButtonTestId}-slide` : undefined}
@@ -78,6 +130,7 @@ export function RequestCard({
           Categoria: <span className="text-foreground">{vehicleCategoryLabel}</span>
         </p>
       ) : null}
+      {expiryLine}
       <div className="space-y-0.5">
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
         <p
@@ -99,7 +152,8 @@ export function RequestCard({
 
   if (slideCompact) {
     return (
-      <div className={`${INFO_BOX_DRIVER_LARGE} p-2 pr-8 space-y-1 transition-all duration-200`}>
+      <div className={`relative ${INFO_BOX_DRIVER_LARGE} p-2 pr-8 space-y-1 transition-all duration-200`}>
+        {dismissButton}
         {slideAccept}
         {tripDetails}
         <div>
@@ -111,7 +165,8 @@ export function RequestCard({
   }
 
   return (
-    <div className={`${INFO_BOX_DRIVER_LARGE} p-4 space-y-2 transition-all duration-200`}>
+    <div className={`relative ${INFO_BOX_DRIVER_LARGE} p-4 space-y-2 transition-all duration-200`}>
+      {dismissButton}
       {tripDetails}
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-end sm:justify-between">
         <div>

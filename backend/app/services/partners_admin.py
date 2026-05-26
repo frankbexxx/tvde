@@ -207,6 +207,24 @@ def unassign_driver_from_partner(db: Session, *, driver_user_id: uuid.UUID) -> D
     return driver
 
 
+def partner_remove_driver_from_fleet(
+    db: Session,
+    *,
+    partner_id: uuid.UUID,
+    driver_user_id: uuid.UUID,
+) -> Driver:
+    """Partner-scoped wrapper: driver must belong to fleet before unassign to default."""
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_user_id)
+    ).scalar_one_or_none()
+    if not driver or driver.partner_id != partner_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="not_found",
+        )
+    return unassign_driver_from_partner(db, driver_user_id=driver_user_id)
+
+
 def partner_metrics(db: Session, partner_id: uuid.UUID) -> dict[str, int]:
     """Counts for partner dashboard."""
     now = datetime.now(timezone.utc)

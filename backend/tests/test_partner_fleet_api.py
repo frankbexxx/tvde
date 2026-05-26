@@ -174,3 +174,54 @@ def test_partner_reassign_trip_driver() -> None:
     )
     assert r.status_code == 200
     assert r.json()["driver_id"] == id_b
+
+
+def test_partner_remove_driver_from_fleet() -> None:
+    db = SessionLocal()
+    try:
+        pid = uuid.uuid4()
+        db.add(Partner(id=pid, name="Fleet Remove"))
+        u_d = User(
+            role=Role.driver,
+            name="Remove Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        u_p = User(
+            role=Role.partner,
+            name="Remove Mgr",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+            partner_org_id=pid,
+        )
+        db.add_all([u_d, u_p])
+        db.flush()
+        db.add(
+            Driver(
+                user_id=u_d.id,
+                partner_id=pid,
+                status=DriverStatus.approved,
+                commission_percent=10.0,
+                is_available=False,
+            )
+        )
+        db.commit()
+        driver_id = str(u_d.id)
+        tok = create_access_token(subject=str(u_p.id), role=u_p.role.value)["token"]
+    finally:
+        db.close()
+
+    c = TestClient(app)
+    h = {"Authorization": f"Bearer {tok}"}
+    r = c.delete(f"/partner/drivers/{driver_id}/from-fleet", headers=h)
+    assert r.status_code == 204
+
+    db2 = SessionLocal()
+    try:
+        d = db2.get(Driver, uuid.UUID(driver_id))
+        assert d is not None
+        from app.core.config import settings
+
+        assert str(d.partner_id) == str(settings.DEFAULT_PARTNER_UUID)
+    finally:
+        db2.close()

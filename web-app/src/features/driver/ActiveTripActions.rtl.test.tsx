@@ -13,12 +13,22 @@ const pollingCtx = vi.hoisted(() => ({ trip: null as TripDetailResponse | null }
 
 vi.mock('../../hooks/usePolling', () => ({
   usePolling: () => ({
-    data: pollingCtx.trip,
+    data: { trip: pollingCtx.trip, notFound: false },
     refetch: vi.fn(),
     isLoading: false,
     isRefreshing: false,
     lastSuccessAt: null,
     pollFault: false,
+  }),
+}))
+
+vi.mock('./useDriverActiveTripPoll', () => ({
+  useDriverActiveTripPoll: () => ({
+    poll: { trip: pollingCtx.trip, notFound: false },
+    isRefreshing: false,
+    lastSuccessAt: null,
+    pollFault: false,
+    refetch: vi.fn(),
   }),
 }))
 
@@ -29,6 +39,7 @@ vi.mock('../../utils/openDriverExternalNav', () => ({
 
 vi.mock('./driverTripActions', () => ({
   driverPerformAccept: vi.fn(() => Promise.resolve({ trip_id: 'tid', status: 'accepted' as const })),
+  driverPerformMarkArriving: vi.fn(() => Promise.resolve({ trip_id: 'tid', status: 'arriving' as const })),
   driverPerformStartFromAccepted: vi.fn(() => Promise.resolve({ trip_id: 'tid', status: 'ongoing' as const })),
   driverPerformStartFromArriving: vi.fn(() => Promise.resolve({ trip_id: 'tid', status: 'ongoing' as const })),
   driverPerformComplete: vi.fn(() => Promise.resolve({ trip_id: 'tid', status: 'completed' as const })),
@@ -91,7 +102,7 @@ describe('ActiveTripActions (RTL)', () => {
     vi.clearAllMocks()
   })
 
-  it('estado accepted: botão Iniciar viagem chama sequência start (driverPerformStartFromAccepted)', async () => {
+  it('estado accepted perto: botão Iniciar viagem chama sequência start (driverPerformStartFromAccepted)', async () => {
     pollingCtx.trip = minimalTrip('accepted')
     renderActions(DRIVER_NEAR_PICKUP_0)
     fireEvent.click(screen.getByRole('button', { name: /iniciar viagem/i }))
@@ -118,12 +129,15 @@ describe('ActiveTripActions (RTL)', () => {
     expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
   })
 
-  it('estado accepted: com motorista longe do pickup, Iniciar viagem desactivado e não chama API', () => {
+  it('estado accepted longe: mostra Cheguei e chama markArriving', async () => {
     pollingCtx.trip = minimalTrip('accepted')
     renderActions({ lat: 2, lng: 2 })
-    const btn = screen.getByRole('button', { name: /iniciar viagem/i })
-    expect(btn).toBeDisabled()
+    const btn = screen.getByRole('button', { name: /cheguei/i })
+    expect(btn).toBeEnabled()
     fireEvent.click(btn)
+    await waitFor(() => {
+      expect(driverTripActions.driverPerformMarkArriving).toHaveBeenCalledWith('tid', 'tok')
+    })
     expect(driverTripActions.driverPerformStartFromAccepted).not.toHaveBeenCalled()
   })
 
@@ -134,6 +148,7 @@ describe('ActiveTripActions (RTL)', () => {
     expect(screen.queryByTestId('driver-nav-pickup-primary')).not.toBeInTheDocument()
     expect(screen.queryByTestId('driver-nav-destination-primary')).not.toBeInTheDocument()
     expect(screen.getByTestId('driver-trip-action-stack')).toBeInTheDocument()
+    expect(screen.getByTestId('driver-open-nav')).toBeInTheDocument()
   })
 
   it('TW-04: ao iniciar viagem abre navegação para destino', async () => {

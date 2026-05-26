@@ -53,6 +53,8 @@ export interface TripAvailableItem {
   /** Categorias disponíveis para o pedido (quando disponível). */
   vehicle_categories?: string[] | null
   offer_id?: string | null
+  /** ISO8601 — presente quando a viagem vem de oferta dispatch. */
+  expires_at?: string | null
 }
 
 export interface TripHistoryItem {

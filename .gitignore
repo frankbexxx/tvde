@@ -27,6 +27,10 @@ node_modules/
 web-app/node_modules/
 web-app/dist/
 
+# Driver document uploads (local MVP)
+uploads/
+backend/uploads/
+
 # IDE and OS
 .idea/
 .vscode/

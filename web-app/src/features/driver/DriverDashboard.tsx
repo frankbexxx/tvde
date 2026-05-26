@@ -41,7 +41,6 @@ import {
 import { usePolling } from '../../hooks/usePolling'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
-import { driverTripPollEquals, type DriverTripPollResult } from './driverTripPollEquals'
 import {
   mergeDriverPolledWithOverride,
   tripStateRank,
@@ -82,7 +81,15 @@ import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
+import { uploadDriverDocument } from '../../api/driverMessages'
 import { ActiveTripActions } from './ActiveTripActions'
+import { DriverInboxPanel } from './DriverInboxPanel'
+import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
+import {
+  isDriverOfferExpired,
+  persistDismissedOfferTripIds,
+  readDismissedOfferTripIds,
+} from './driverOfferDismiss'
 import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
 import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
 import { useDia23LayoutProbe } from '../../hooks/useDia23LayoutProbe'
@@ -98,7 +105,7 @@ import {
   haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
-import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
+import { openDriverExternalNav, driverNavAppLabel, warmDriverNavSessionIfNeeded } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import {
   BTN_DRIVER_STEP1,
@@ -180,14 +187,6 @@ import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
-const DRIVER_INCIDENT_TYPES = [
-  'Objeto esquecido',
-  'Tarifa',
-  'Comportamento',
-  'Limpeza',
-  'Segurança',
-  'Outro',
-] as const
 
 function getStoredOffline(): boolean {
   try {
@@ -389,6 +388,18 @@ export function DriverDashboard() {
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
   /** P25: última informação conhecida se o poll falhar logo após aceitar. */
   const [acceptedDetailFallback, setAcceptedDetailFallback] = useState<TripDetailResponse | null>(null)
+  const [dismissedOfferTripIds, setDismissedOfferTripIds] = useState<Set<string>>(() =>
+    readDismissedOfferTripIds()
+  )
+  const dismissOffer = useCallback((tripId: string) => {
+    setDismissedOfferTripIds((prev) => {
+      const next = new Set(prev)
+      next.add(tripId)
+      persistDismissedOfferTripIds(next)
+      return next
+    })
+    setSelectedOfferTripId((prev) => (prev === tripId ? null : prev))
+  }, [])
   const isOnline = useOnlineStatus()
   const sessionDisplayName = useMemo(() => getStoredSessionDisplayName(), [])
 
@@ -402,6 +413,7 @@ export function DriverDashboard() {
         return
       }
       setOffline(!checked)
+      if (checked) warmDriverNavSessionIfNeeded()
       addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
       setStatus(checked ? 'Disponível' : 'Offline')
     },
@@ -415,6 +427,12 @@ export function DriverDashboard() {
   }, [mapTapGoesOnline, offline, handleDriverAvailabilityChange])
 
   const pollEnabled = !!token && !offline
+
+  const driverActiveTripPoll = useDriverActiveTripPoll(
+    activeTripId,
+    token,
+    Boolean(activeTripId && token)
+  )
 
   const compliancePollEnabled = Boolean(token && sessionRole === 'driver')
   const { data: drivingCompliance } = usePolling(
@@ -475,7 +493,9 @@ export function DriverDashboard() {
     return availableWithCategoryMeta
       .filter(({ categories }) => categories.length === 0 || categories.some((c) => vehicleCategories.includes(c)))
       .map((x) => x.trip)
-  }, [availableWithCategoryMeta, vehicleCategories])
+      .filter((t) => !dismissedOfferTripIds.has(t.trip_id))
+      .filter((t) => !isDriverOfferExpired(t.expires_at))
+  }, [availableWithCategoryMeta, vehicleCategories, dismissedOfferTripIds])
   const filteredOutCount = Math.max(0, (available?.length ?? 0) - filteredAvailable.length)
   const hasAvailableTrips = filteredAvailable.length > 0
   const compactDriverSurface = !activeTripId && !offline && hasAvailableTrips
@@ -913,6 +933,7 @@ export function DriverDashboard() {
           token={token}
           statusOverride={driverStatusOverride}
           detailFallback={acceptedDetailFallback}
+          sharedPoll={driverActiveTripPoll}
           sessionRole={sessionRole}
           onClearStatusOverride={() => setDriverStatusOverride(null)}
           onTripCancelled={onActiveTripCancelled}
@@ -923,6 +944,7 @@ export function DriverDashboard() {
           tripId={activeTripId}
           token={token}
           tripDetailFallback={acceptedDetailFallback}
+          sharedPoll={driverActiveTripPoll}
           driverLocation={mapDotLatLng ?? null}
           addLog={addLog}
           setStatus={setStatus}
@@ -1112,21 +1134,6 @@ export function DriverDashboard() {
               'info'
             )
           }}
-          onReportIncident={(tripId) => {
-            const typeInput = window.prompt(
-              `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
-            )
-            if (!typeInput || !typeInput.trim()) return
-            const parsed = Number.parseInt(typeInput.trim(), 10)
-            const type =
-              Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
-                ? DRIVER_INCIDENT_TYPES[parsed - 1]
-                : typeInput.trim()
-            const note = window.prompt('Descrição curta da ocorrência:')
-            if (!note || !note.trim()) return
-            sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tripId.slice(0, 8)}…`)
-            addLog(`Ocorrência registada para ${tripId} [${type}]: ${note.trim()}`, 'info')
-          }}
           renderLegacyMenu={(section) => (
             <div className={INFO_BOX_DRIVER_MENU}>
               <DriverOperationsMenu
@@ -1193,21 +1200,6 @@ export function DriverDashboard() {
                       : 'Gate documentos: bloqueio de disponibilidade desativado',
                     'info'
                   )
-                }}
-                onReportIncident={(tid) => {
-                  const typeInput = window.prompt(
-                    `Tipo de ocorrência:\n\n${DRIVER_INCIDENT_TYPES.map((label, i) => `${i + 1}. ${label}`).join('\n')}\n\nEscreve número (1-${DRIVER_INCIDENT_TYPES.length}) ou texto livre.`
-                  )
-                  if (!typeInput || !typeInput.trim()) return
-                  const parsed = Number.parseInt(typeInput.trim(), 10)
-                  const type =
-                    Number.isInteger(parsed) && parsed >= 1 && parsed <= DRIVER_INCIDENT_TYPES.length
-                      ? DRIVER_INCIDENT_TYPES[parsed - 1]
-                      : typeInput.trim()
-                  const note = window.prompt('Descrição curta da ocorrência:')
-                  if (!note || !note.trim()) return
-                  sonnerToast.success(`Ocorrência guardada localmente para a viagem ${tid.slice(0, 8)}…`)
-                  addLog(`Ocorrência registada para ${tid} [${type}]: ${note.trim()}`, 'info')
                 }}
               />
             </div>
@@ -1446,6 +1438,9 @@ export function DriverDashboard() {
                               })()}
                               estimatedPrice={t.estimated_price}
                               offerId={t.offer_id ?? null}
+                              expiresAt={t.expires_at ?? null}
+                              dismissButtonTestId={`driver-dismiss-${t.trip_id}`}
+                              onDismiss={() => dismissOffer(t.trip_id)}
                               acceptButtonTestId={`driver-accept-${t.trip_id}`}
                               acceptVariant="slide"
                               onAccept={() =>
@@ -1572,16 +1567,6 @@ export function DriverDashboard() {
                         onGoOnline={() => handleDriverAvailabilityChange(true)}
                         onGoOffline={() => handleDriverAvailabilityChange(false)}
                       />
-                    ) : null}
-                    {driverBottomNav && !activeTripId ? (
-                      <div className="pointer-events-none absolute left-2 top-2 z-[6]">
-                        <span
-                          className="inline-flex items-center rounded-full border border-dashed border-border/80 bg-background/90 px-2 py-0.5 text-[10px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm"
-                          data-testid="driver-map-destino-chip"
-                        >
-                          Modo Destino – em breve
-                        </span>
-                      </div>
                     ) : null}
                   </>
                 }
@@ -1781,6 +1766,9 @@ export function DriverDashboard() {
                             })()}
                             estimatedPrice={selectedAvailableTrip.estimated_price}
                             offerId={selectedAvailableTrip.offer_id ?? null}
+                            expiresAt={selectedAvailableTrip.expires_at ?? null}
+                            dismissButtonTestId={`driver-dismiss-${selectedAvailableTrip.trip_id}`}
+                            onDismiss={() => dismissOffer(selectedAvailableTrip.trip_id)}
                             acceptButtonTestId={`driver-accept-${selectedAvailableTrip.trip_id}`}
                             acceptVariant="slide"
                             onAccept={() =>
@@ -2109,6 +2097,9 @@ export function DriverDashboard() {
                                 })()}
                                 estimatedPrice={t.estimated_price}
                                 offerId={t.offer_id ?? null}
+                                expiresAt={t.expires_at ?? null}
+                                dismissButtonTestId={`driver-dismiss-${t.trip_id}`}
+                                onDismiss={() => dismissOffer(t.trip_id)}
                                 acceptButtonTestId={`driver-accept-${t.trip_id}`}
                                 acceptVariant="slide"
                                 onAccept={() =>
@@ -2209,6 +2200,7 @@ function ActiveTripSummary({
   token,
   statusOverride,
   detailFallback,
+  sharedPoll,
   sessionRole,
   onClearStatusOverride,
   onTripCancelled,
@@ -2220,6 +2212,7 @@ function ActiveTripSummary({
   token: string
   statusOverride: string | null
   detailFallback: TripDetailResponse | null
+  sharedPoll?: ReturnType<typeof useDriverActiveTripPoll>
   sessionRole: Role
   onClearStatusOverride: () => void
   onTripCancelled: () => void
@@ -2229,26 +2222,18 @@ function ActiveTripSummary({
   /** Resumo fino por cima do mapa cheio (FIX-007). */
   compact?: boolean
 }) {
-  const fetchTrip = useCallback((): Promise<DriverTripPollResult> => {
-    if (!tripId || !token) return Promise.resolve({ trip: null, notFound: false })
-    return getDriverTripDetail(tripId, token)
-      .then((t) => ({ trip: t, notFound: false }))
-      .catch((e: unknown) => {
-        const st = (e as { status?: number })?.status
-        if (st === 404) return { trip: null, notFound: true }
-        throw e
-      })
-  }, [tripId, token])
-  const {
-    data: poll,
-    isRefreshing: tripRefreshing,
-    lastSuccessAt: tripLastSuccessAt,
-    pollFault: tripPollFault,
-  } = usePolling<DriverTripPollResult>(fetchTrip, [fetchTrip], !!tripId && !!token, 2000, {
-    equals: driverTripPollEquals,
-  })
+  const internalPoll = useDriverActiveTripPoll(
+    sharedPoll ? null : tripId,
+    sharedPoll ? null : token,
+    !sharedPoll && !!tripId && !!token
+  )
+  const pollBundle = sharedPoll ?? internalPoll
+  const poll = pollBundle.poll
   const trip = poll?.trip ?? null
   const pollNotFound = poll?.notFound ?? false
+  const tripRefreshing = pollBundle.isRefreshing
+  const tripLastSuccessAt = pollBundle.lastSuccessAt
+  const tripPollFault = pollBundle.pollFault
   const effectiveTrip = pollNotFound ? null : (trip ?? detailFallback)
   const displayStatus = mergeDriverPolledWithOverride(
     effectiveTrip?.status,
@@ -2501,7 +2486,6 @@ function DriverOperationsMenu({
   onToggleVehicleCategory,
   onPatchDriverDocument,
   onToggleDriverDocsGate,
-  onReportIncident,
 }: {
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
@@ -2518,7 +2502,6 @@ function DriverOperationsMenu({
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
   onToggleDriverDocsGate: (enabled: boolean) => void
-  onReportIncident: (tripId: string) => void
 }) {
   const { isAdmin, token } = useAuth()
   const [historyVisible, setHistoryVisible] = useState(5)
@@ -3070,13 +3053,6 @@ function DriverOperationsMenu({
                         <DriverHistoryTripMoney t={t} />
                         <CancellationReasonMuted reason={t.cancellation_reason} />
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => onReportIncident(t.trip_id)}
-                        className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
-                      >
-                        Reportar
-                      </button>
                     </div>
                     <button
                       type="button"
@@ -3111,9 +3087,7 @@ function DriverOperationsMenu({
           data-testid="driver-menu-inbox"
         >
           <p className="text-sm font-medium text-foreground">Caixa de entrada</p>
-          <p className="text-xs text-muted-foreground leading-snug">
-            Ainda sem avisos do partner nesta versão. Quando a operação enviar avisos, aparecem aqui.
-          </p>
+          <DriverInboxPanel />
           <button
             type="button"
             data-testid="driver-menu-open-activity-log"
@@ -3418,7 +3392,7 @@ function DriverOperationsMenu({
         <div className={MENU_PANEL}>
           <p className="text-sm font-medium text-foreground">Navegação (preferência)</p>
           <p className="text-xs text-muted-foreground">
-            Os botões «Recolha / Destino» usam primeiro esta app; o segundo botão abre a alternativa.
+            Ao aceitar abrimos a recolha; ao iniciar a viagem abrimos o destino. Durante a viagem podes usar «Abrir navegação».
           </p>
           <div className="flex gap-2">
             <button
@@ -3558,7 +3532,23 @@ function DriverOperationsMenu({
                       <span className="font-medium text-foreground/90">Frota:</span> {noteLine}
                     </p>
                   ) : null}
-                  <div className="mt-2 flex gap-2">
+                  <div className="mt-2 flex flex-col gap-2">
+                    <label className="text-[11px] text-muted-foreground">
+                      Carregar ficheiro (PDF/imagem)
+                      <input
+                        type="file"
+                        accept=".pdf,image/*"
+                        className="mt-1 block w-full text-xs"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (!file || !token) return
+                          void uploadDriverDocument(token, doc, file)
+                            .then(() => sonnerToast.success('Ficheiro enviado'))
+                            .catch(() => sonnerToast.error('Falha no upload'))
+                          e.target.value = ''
+                        }}
+                      />
+                    </label>
                     <button
                       type="button"
                       className="min-h-[32px] w-full rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"
@@ -3640,16 +3630,6 @@ function DriverOperationsMenu({
                 <DriverHistoryTripMoney t={historyDetailTrip} />
               </div>
               <CancellationReasonMuted reason={historyDetailTrip.cancellation_reason} className="text-sm" />
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => onReportIncident(historyDetailTrip.trip_id)}
-                >
-                  Reportar ocorrência desta viagem
-                </Button>
-              </div>
             </div>
           ) : null}
         </DialogContent>

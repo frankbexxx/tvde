@@ -5,6 +5,7 @@ from app.db.models.driver_zone_custom import DriverZoneCustom
 from app.db.models.driver_zone_day_budget import DriverZoneDayBudget
 from app.db.models.driver_zone_session import DriverZoneSession
 from app.db.models.partner import Partner
+from app.db.models.partner_message import DriverMessageRead, PartnerMessage
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.otp import OtpCode
 from app.db.models.payment import Payment
@@ -17,6 +18,8 @@ from app.db.models.user import User
 __all__ = [
     "User",
     "Partner",
+    "PartnerMessage",
+    "DriverMessageRead",
     "Driver",
     "DriverActiveDrivingSegment",
     "DriverZoneCustom",

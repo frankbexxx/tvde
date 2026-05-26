@@ -72,6 +72,7 @@ async def list_available_trips(
             vehicle_category=(trip.vehicle_category or "x"),
             vehicle_categories=[(trip.vehicle_category or "x")],
             offer_id=str(offer.id) if offer else None,
+            expires_at=offer.expires_at.isoformat() if offer and offer.expires_at else None,
         )
         for trip, offer in items
     ]
