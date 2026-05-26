@@ -25,6 +25,59 @@ const sec = (s: number) => s * 1000
 /** Intervalos de poll (ms). */
 const pollLook = [300, 600, 1200, 2000]
 
+/** FE sincronizou ofertas no mapa (evita race: click antes de filteredAvailable). */
+async function waitForDriverMapOfferUi(page: Page, tripId: string) {
+  await expect
+    .poll(
+      async () => {
+        const hint = await page
+          .getByText(/viagem no mapa|toca no marcador/i)
+          .first()
+          .isVisible()
+          .catch(() => false)
+        const marker = page.locator(`[data-testid="driver-map-offer-${tripId}"]`)
+        const markerCount = await marker.count()
+        if (markerCount > 0) {
+          const box = await marker.first().boundingBox().catch(() => null)
+          if (box && box.width > 0 && box.height > 0) return true
+        }
+        const anyMarker = await page.locator('[data-testid^="driver-map-offer-"]').count()
+        return hint && anyMarker > 0
+      },
+      { timeout: sec(90), intervals: pollLook }
+    )
+    .toBe(true)
+}
+
+async function clickDriverMapOfferMarker(page: Page, tripId: string) {
+  const clicked = await page.evaluate((tid) => {
+    const pick =
+      (document.querySelector(`[data-testid="driver-map-offer-${tid}"]`) as HTMLButtonElement | null) ??
+      (document.querySelector('[data-testid^="driver-map-offer-"]') as HTMLButtonElement | null)
+    if (!pick || pick.disabled) return false
+    pick.click()
+    return true
+  }, tripId)
+  if (clicked) return
+
+  const marker = page.locator(`[data-testid="driver-map-offer-${tripId}"]`)
+  if ((await marker.count()) > 0) {
+    await marker.first().scrollIntoViewIfNeeded().catch(() => {})
+    const box = await marker.first().boundingBox()
+    if (box) {
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+      return
+    }
+    await marker.first().click({ force: true, timeout: 5000 })
+    return
+  }
+
+  const numbered = page.locator('button[data-testid^="driver-map-offer-"]').first()
+  if ((await numbered.count()) > 0) {
+    await numbered.click({ force: true, timeout: 5000 })
+  }
+}
+
 /** Menu do motorista: barra inferior Manel ou botão legacy (sem bottom nav). */
 async function openDriverMenu(page: Page) {
   const shellMenu = page.getByTestId('driver-bottom-nav-menu')
@@ -43,25 +96,16 @@ async function openDriverMenu(page: Page) {
  */
 /** FIX-008: painel de oferta só abre após toque no marcador do mapa. */
 async function openDriverOfferPanel(page: Page, tripId: string) {
-  const marker = page.locator(`[data-testid="driver-map-offer-${tripId}"]`)
   const slideTrack = page.getByTestId(`driver-accept-${tripId}-track`)
+  await waitForDriverMapOfferUi(page, tripId)
   await expect
     .poll(
       async () => {
         if (await slideTrack.isVisible().catch(() => false)) {
           return true
         }
-        if ((await marker.count()) > 0) {
-          await marker.first().scrollIntoViewIfNeeded().catch(() => {})
-          await marker.first().click({ force: true, timeout: 5000 }).catch(() => {})
-          return await slideTrack.isVisible().catch(() => false)
-        }
-        const numbered = page.getByRole('button', { name: /^[1-9]$/ }).first()
-        if (await numbered.isVisible().catch(() => false)) {
-          await numbered.click({ force: true, timeout: 5000 }).catch(() => {})
-          return await slideTrack.isVisible().catch(() => false)
-        }
-        return false
+        await clickDriverMapOfferMarker(page, tripId)
+        return await slideTrack.isVisible().catch(() => false)
       },
       { timeout: sec(90), intervals: pollLook }
     )
@@ -283,19 +327,21 @@ test.describe('Driver + passenger (proximity gate)', () => {
     })
     await leaveDriverHomeStep1IfPresent(driverPage)
 
-    // Servidor ainda lista a viagem para o motorista do seed.
+    // Servidor e UI: viagem visível no mapa antes de aceitar.
     await expect
       .poll(
         async () => {
           const r = await request.get(`${API}/driver/trips/available`, {
             headers: { Authorization: `Bearer ${tokens.driver}` },
           })
-          if (!r.ok()) return 0
-          return ((await r.json()) as unknown[]).length
+          if (!r.ok()) return false
+          const list = (await r.json()) as Array<{ trip_id?: string }>
+          return list.some((row) => row.trip_id === tripId)
         },
         { timeout: sec(60), intervals: pollLook }
       )
-      .toBeGreaterThan(0)
+      .toBe(true)
+    await waitForDriverMapOfferUi(driverPage, tripId)
 
     await acceptDriverTripFromMap(driverPage, tripId)
     await refreshDriverLocationNearPickup(request, tokens.driver)
@@ -414,9 +460,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
         { timeout: sec(60), intervals: pollLook }
       )
       .toBe(true)
-    await expect(driverPage.locator(`[data-testid="driver-map-offer-${tripId}"]`)).toBeVisible({
-      timeout: sec(60),
-    })
+    await waitForDriverMapOfferUi(driverPage, tripId)
 
     await closeDriverOfferPanelFromMap(driverPage, tripId)
     await expect(marker).toBeVisible({ timeout: sec(30) })
@@ -455,9 +499,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
         { timeout: sec(60), intervals: pollLook }
       )
       .toBe(true)
-    await expect(driverPage.locator(`[data-testid="driver-map-offer-${tripId}"]`)).toBeVisible({
-      timeout: sec(60),
-    })
+    await waitForDriverMapOfferUi(driverPage, tripId)
 
     await acceptDriverTripFromMap(driverPage, tripId)
     await refreshDriverLocationNearPickup(request, tokens.driver)

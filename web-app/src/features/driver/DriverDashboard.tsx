@@ -588,11 +588,12 @@ export function DriverDashboard() {
   )
 
   useEffect(() => {
+    if (pollEnabled && availableLoading && available == null) return
     setSelectedOfferTripId((prev) => {
       if (!prev) return null
       return filteredAvailable.some((t) => t.trip_id === prev) ? prev : null
     })
-  }, [offerIdsFingerprint, filteredAvailable])
+  }, [offerIdsFingerprint, filteredAvailable, pollEnabled, availableLoading, available])
   useDriverOfferSounds({
     enabled: sessionRole === 'driver' && Boolean(token) && !offline,
     offerIdsFingerprint,
