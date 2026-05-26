@@ -1,6 +1,19 @@
 # PROXIMA_SESSAO.md — Handoff para Continuação
 
-Documento de contexto para a próxima sessão. Inclui estado atual, decisões arquiteturais, e informação para prosseguir sem perder continuidade.
+Documento de contexto para a próxima sessão. Inclui estado atual, decisões arquitecturais, e informação para prosseguir sem perder continuidade.
+
+---
+
+## Fecho 2026-05-23 — **DIA 23** fase encerrada
+
+- **`main`:** merge **#334** (`91aa886`) — P1-global tokens, step1 driver compacto, helpers audit/probe, conflitos **#333** resolvidos.
+- **Produto:** Frank validou no **Render** — mapa full, caixas compactas, fluxo TVDE 1–9 **aceite** («quase bom»).
+- **Fase fechada** — não reabrir gate [`docs/dia23-gate-checklist.md`](../dia23-gate-checklist.md) salvo regressão.
+- **Abertos imediatos:**
+  - **F-NAV-1** — Waze/Maps abre **duas vezes** (aceite → recolha em `DriverDashboard` ~L794; iniciar → destino em `ActiveTripActions` ~L174). Decidir política única (G12/G19).
+  - **TW-DIA23-1** — micro ajustes layout; Frank lista ecrãs na próxima sessão.
+- **Lista consolidada:** painel **PRÓXIMA SESSÃO** em [`TODOdoDIA.md`](../../TODOdoDIA.md) · quadro [`docs/todo-em-curso.md`](../todo-em-curso.md).
+- **Próxima sessão:** **restructurar direcção** — escolher 1 carril (P0 produto vs P1 staging vs P5 ops) antes de codar.
 
 ---
 
