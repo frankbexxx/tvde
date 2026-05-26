@@ -31,6 +31,101 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 ---
 
+## Painel — 2026-05-23 (**DIA 23** — fecho de fase)
+
+**Marco:** mapa full-bleed, caixas compactas, tokens `infoBoxTemplate`, TVDE 1–9. Merge **`#333`** + **`#334`** em `main` @ **`91aa886`**. Frank: **«quase bom»** — fase **fechada**; micro layout + Waze → fila **próxima sessão**.
+
+**Referência visual:** `C:\dev\_greenshots\dia 23\` · gate: [`docs/dia23-gate-checklist.md`](docs/dia23-gate-checklist.md)
+
+### Entrega dia 23 (fechada)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **D23-1** | Tokens compacto + P1-global (`infoBoxTemplate`) | Concluído | PR **#334**; auditoria `dia23-static-audit.mjs` P1 OK |
+| **D23-2** | DriverDashboard + passageiro mapa/sheets | Concluído | step1 `MAP_STEP1_LIST`; toasts/banners unificados |
+| **D23-3** | Side menus + TripCard + StatusHeader | Concluído | `MENU_*` tokens |
+| **D23-4** | Helpers debug (opcional) | Concluído | `?dia23debug=1` + probe; zero impacto sem query |
+| **D23-5** | Build + e2e `driver-passenger-flow` | Concluído | 4/4 |
+| **D23-6** | Smoke Frank Render TVDE 1–9 «100% compact» | Concluído | Frank aceita fase; micro tweaks em aberto |
+
+### Abertos (não bloqueiam fecho da fase)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **F-NAV-1** | Waze abre **duas vezes** (aceite → recolha **e** iniciar → destino) | Por iniciar | `DriverDashboard.tsx` L794 + `ActiveTripActions.tsx` L174; unificar política (G12/G19) |
+| **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Frank: «quase bom»; sem lista fechada ainda |
+
+---
+
+## Painel — **PRÓXIMA SESSÃO** (lista consolidada — 2026-05-23)
+
+**Objectivo:** restructurar prioridades e direcção. **Fontes alinhadas:** este painel · [`docs/todo-em-curso.md`](docs/todo-em-curso.md) · [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md).
+
+### P0 — produto imediato (motorista / mapa)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **F-NAV-1** | Navegação externa: **uma** abertura Waze/Maps por transição lógica | Por iniciar | Duplicado aceite+iniciar; ver grelha **G12/G19** |
+| **TW-DIA23-1** | Micro tweaks layout dia 23 | Por iniciar | Após Frank listar ecrãs (Render) |
+| **TW-05** | InfoBox + mapa (revisão screenshots) | Concluído | Fase dia 23 fechada; só **TW-DIA23-1** residual |
+
+### P1 — infra / gates
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A2-02-1** | OAuth staging + URIs Google | Em curso | [`STAGING_A2-02_RUNBOOK.md`](docs/ops/STAGING_A2-02_RUNBOOK.md) |
+| **A2-02-2** | Smokes assertivos staging | Por iniciar | Depende A2-02-1 |
+| **A4** | Fecho onda auditoria A+L | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+| **A3-R** | Gate §A3 checklist staging verde | Em curso | Humanos |
+
+### P2 — UX shell / evolução
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **O-UX20-1** | Sessão desenho UX 2.0 (motorista) | Por iniciar | [`DRIVER_UX_2_0.md`](docs/product/DRIVER_UX_2_0.md) |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro (paridade) | Por iniciar | Shell passageiro parcial (**#287**) |
+| **TW-04** | Espaçamento barra 4 ícones (opcional) | Por iniciar | Residual pós-D23 |
+| **TW-06** | Ícone lista multi-ofertas | N/A | Secundário |
+
+### P3 — rasto técnico / inventário vivo
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **R-LEGACY-1** | Layout legacy `!driverBottomNav` | Por iniciar | [`driver-ux-fixes-backlog.md`](docs/ux/driver-ux-fixes-backlog.md) |
+| **R-COPY-1** | Copy «Sem viagens» vs «Sem pedidos» | Por iniciar | Opcional |
+| **UI-V-P2** | Playwright extra (A5 bulk, P1 cancel UI) | Por iniciar | [`UI_VISIBILITY_IMPLEMENTATION_TODO.md`](docs/meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) Passo 2 |
+| **UI-V-P3** | Smoke telemóvel pós-PR (critério verdade) | Por iniciar | Passo 3 mesmo doc |
+
+### P4 — produto Manel / legal (pós-#285)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **M-L-4** | Fonte normativa item 4 (rating motorista→passageiro) | Por iniciar | [`MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](docs/product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) |
+| **M-L-6** | OCR/upload documentos + notificações caducidade | Por iniciar | MVP JSON feito; evolução |
+| **M-L-8** | Promo codes / Família | N/A | Futuro |
+
+### P5 — operação / código pré-escala
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **TVDE-PROD** | `PROD_VALIDATION` (Stripe webhook, cron, e2e real) | Por iniciar | [`TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md) §1 |
+| **TVDE-STG** | Staging smoke_validation completo | Por iniciar | Idem §2 |
+| **TVDE-BKP** | Backups + restore test | Por iniciar | Idem §3 |
+| **TVDE-MIG** | Migrações consistentes dev/stg/prod | Por iniciar | Idem §4 |
+| **TVDE-OBS** | Observabilidade mínima (request_id→logs) | Por iniciar | [`TODO_FUTURO.md`](docs/TODO_FUTURO.md) §D |
+
+### P6 — backlog histórico (não reabrir salvo decisão)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **ALPHA-*** | Checklists alpha 2026-04-25 | N/A | Histórico; ver [`BACKLOG_POST_PILOTO.md`](docs/meta/BACKLOG_POST_PILOTO.md) |
+| **S-00…S-13** | Smokes prod 2026-05-13 | Concluído | Só repetir com **delta** deploy |
+| **USER-SHELL A–F** | G01–G27 | Concluído | Ver painéis **2026-05-19/20** |
+
+**Regra próxima sessão:** Frank + agente **escolhem 1 carril** (P0 produto vs P1 staging vs P5 ops) antes de codar.
+
+---
+
 ## Painel — 2026-05-19 (**USER_SHELL** — grelha **G01–G27**, Clusters A–C fechados)
 
 **Marco:** premissas User shell + módulos UI; VAM por cluster com Frank. **Clusters A, B e C** implementados, smoke telemóvel OK (**2026-05-19**). **G08** completo (hotfix Fechar + painel compacto TW-01/02).
@@ -92,7 +187,7 @@ _TW-01 e TW-02 fechados nesta sessão; TW-03…06 → painel **2026-05-20**._
 | **G-CLUSTER-F** | Chips + padding + nav | Concluído | G01 chip mapa; G06 py-1; G12/G19 já em ActiveTripActions |
 | **TW-03** | Resumo compacto em viagem | Concluído | `ActiveTripSummary` compact + `TripCompletedOverlay` |
 | **TW-04** | Acções viagem: nav externa + CTAs row + chrome opaco | Concluído | Smoke dia 22 OK; merge **#327** |
-| **TW-05** | InfoBox + mapa sempre (smoke dia 22) | Em curso | [`info-box-template.md`](docs/ux/info-box-template.md) |
+| **TW-05** | InfoBox + mapa sempre (smoke dia 22) | Concluído | Fase dia 23 fechada **2026-05-23**; residual **TW-DIA23-1** |
 | **TW-06** | Ícone lista multi-ofertas | N/A | Secundário |
 
 ### Infra / ops (se janela)
