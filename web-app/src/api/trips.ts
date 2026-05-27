@@ -174,6 +174,14 @@ export async function setDriverOffline(token: string): Promise<void> {
   })
 }
 
+export interface DriverAvailabilityStatus {
+  is_available: boolean
+}
+
+export async function getDriverStatus(token: string): Promise<DriverAvailabilityStatus> {
+  return apiFetch<DriverAvailabilityStatus>('/driver/status', { token })
+}
+
 export interface DriverDrivingHoursCompliance {
   enabled: boolean
   active_seconds_today: number

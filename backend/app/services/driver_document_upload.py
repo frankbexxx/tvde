@@ -11,7 +11,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.driver import Driver
-from app.services.driver_documents import get_documents_for_driver, serialize_state
+from app.services.driver_documents import (
+    _utc_iso_now,
+    get_documents_for_driver,
+    serialize_state,
+)
 
 
 _DOC_KEY_RE = re.compile(r"^[a-z0-9_]{2,64}$")
@@ -54,7 +58,10 @@ def save_driver_document_file(
     entry = dict(docs.get(doc_key) or {})
     entry["file_path"] = str(rel).replace("\\", "/")
     entry["file_name"] = upload.filename or dest.name
-    entry["status"] = entry.get("status") or "pending"
+    prev_status = entry.get("status")
+    if prev_status not in ("approved", "pending_review", "rejected", "expired"):
+        entry["status"] = "pending_review"
+        entry["submitted_at"] = _utc_iso_now()
     docs[doc_key] = entry
     state["docs"] = docs
     driver.documents = serialize_state(state)

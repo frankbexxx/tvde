@@ -204,3 +204,10 @@ def test_ot_002_redispatch_triggered() -> None:
     )
 
     db.close()
+
+
+def test_offer_timeout_default_exceeds_passenger_fallback() -> None:
+    from app.core.config import settings
+
+    assert settings.OFFER_TIMEOUT_SECONDS >= 25
+    assert settings.REDISPATCH_MIN_INTERVAL_SECONDS <= settings.OFFER_TIMEOUT_SECONDS

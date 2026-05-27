@@ -21,6 +21,7 @@ import { PartnerFleetMap } from './PartnerFleetMap'
 import { PartnerAlertsPanel } from './PartnerAlertsPanel'
 import { PartnerMessagesSection } from './PartnerMessagesSection'
 import { buildPartnerAlerts } from './partnerAlerts'
+import { usePartnerShell } from './partnerShellContext'
 
 type PartnerHomeView = 'list' | 'map'
 
@@ -69,9 +70,13 @@ function normalizeSearch(q: string): string {
   return q.trim().toLowerCase()
 }
 
+function normalizePhone(q: string): string {
+  return q.replace(/\D/g, '')
+}
+
 export function PartnerHome() {
   const { token, sessionPhone, sessionDisplayName } = useAuth()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const { shellTab, menuOpen, setMenuOpen, setInboxUnreadCount } = usePartnerShell()
   const [metrics, setMetrics] = useState<PartnerMetrics | null>(null)
   const [drivers, setDrivers] = useState<PartnerDriverRow[]>([])
   const [trips, setTrips] = useState<PartnerTripRow[]>([])
@@ -87,6 +92,7 @@ export function PartnerHome() {
   const [discoverRows, setDiscoverRows] = useState<PartnerDriverDiscoveryItem[]>([])
   const [discoverLoading, setDiscoverLoading] = useState(false)
   const [discoverOk, setDiscoverOk] = useState<string | null>(null)
+  const [discoverSearched, setDiscoverSearched] = useState(false)
   const [homeView, setHomeView] = useState<PartnerHomeView>('list')
 
   const load = useCallback(async () => {
@@ -116,7 +122,7 @@ export function PartnerHome() {
   usePolling(
     load,
     [load],
-    homeView === 'map',
+    shellTab === 'fleet' && homeView === 'map',
     12_000
   )
 
@@ -124,6 +130,21 @@ export function PartnerHome() {
     () => buildPartnerAlerts(drivers, trips),
     [drivers, trips]
   )
+
+  const discoverAlreadyInFleet = useMemo(() => {
+    const q = discoverQuery.trim()
+    if (q.length < 2) return false
+    const nq = normalizePhone(q)
+    const ql = q.toLowerCase()
+    return drivers.some((d) => {
+      const name = (d.user.name ?? '').toLowerCase()
+      const phone = normalizePhone(d.user.phone ?? '')
+      return name.includes(ql) || (nq.length >= 2 && phone.includes(nq))
+    })
+  }, [discoverQuery, drivers])
+
+  const shellTitle =
+    shellTab === 'home' ? 'Início' : shellTab === 'fleet' ? 'Frota' : shellTab === 'inbox' ? 'Caixa' : 'Menu'
 
   const runDiscovery = async () => {
     const q = discoverQuery.trim()
@@ -134,6 +155,7 @@ export function PartnerHome() {
     try {
       const rows = await discoverPartnerDrivers(q)
       setDiscoverRows(rows)
+      setDiscoverSearched(true)
     } catch (e: unknown) {
       const err = e as { detail?: string }
       setError(typeof err?.detail === 'string' ? err.detail : 'Não foi possível pesquisar motoristas.')
@@ -419,89 +441,101 @@ export function PartnerHome() {
       />
 
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">Frota (partner)</h2>
-        <button
-          type="button"
-          data-testid="partner-open-menu"
-          onClick={() => setMenuOpen(true)}
-          className="min-h-[44px] rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-        >
-          Menu
-        </button>
+        <h2 className="text-lg font-semibold text-foreground">{shellTitle}</h2>
       </div>
 
       {loading && <p className="text-sm text-muted-foreground">A carregar…</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {discoverOk && <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">{discoverOk}</p>}
-
-      <label className="block text-sm text-foreground/80" htmlFor="partner-search">
-        Pesquisar viagens (ID, motorista ou passageiro)
-      </label>
-      <input
-        id="partner-search"
-        type="search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="ID viagem, nome/telefone motorista ou ID passageiro"
-        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
-      />
-
-      {metrics && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Viagens hoje</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_today}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Total viagens</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_total}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Concluídas</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_completed}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Canceladas</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_cancelled}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Motoristas ativos (GPS)</p>
-            <p className="text-xl font-bold text-foreground">{metrics.active_drivers}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Total motoristas</p>
-            <p className="text-xl font-bold text-foreground">{metrics.total_drivers}</p>
-          </div>
-        </div>
+      {discoverOk && shellTab === 'fleet' && (
+        <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">{discoverOk}</p>
       )}
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'list' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
-          onClick={() => setHomeView('list')}
-        >
-          Lista
-        </button>
-        <button
-          type="button"
-          data-testid="partner-view-map"
-          className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'map' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
-          onClick={() => setHomeView('map')}
-        >
-          Mapa live
-        </button>
-      </div>
+      {shellTab === 'home' ? (
+        <>
+          <label className="block text-sm text-foreground/80" htmlFor="partner-search">
+            Pesquisar viagens (ID, motorista ou passageiro)
+          </label>
+          <input
+            id="partner-search"
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="ID viagem, nome/telefone motorista ou ID passageiro"
+            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+          />
 
-      {homeView === 'map' ? (
-        <PartnerFleetMap drivers={drivers} trips={trips} />
+          {metrics && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Viagens hoje</p>
+                <p className="text-xl font-bold text-foreground">{metrics.trips_today}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Total viagens</p>
+                <p className="text-xl font-bold text-foreground">{metrics.trips_total}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Concluídas</p>
+                <p className="text-xl font-bold text-foreground">{metrics.trips_completed}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Canceladas</p>
+                <p className="text-xl font-bold text-foreground">{metrics.trips_cancelled}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Motoristas ativos (GPS)</p>
+                <p className="text-xl font-bold text-foreground">{metrics.active_drivers}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Total motoristas</p>
+                <p className="text-xl font-bold text-foreground">{metrics.total_drivers}</p>
+              </div>
+            </div>
+          )}
+
+          <BetaAccountPanel />
+
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="w-full rounded-xl bg-secondary py-2 text-sm font-medium text-secondary-foreground"
+          >
+            Atualizar
+          </button>
+        </>
       ) : null}
 
-      <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
-        <PartnerMessagesSection />
-      </div>
+      {shellTab === 'inbox' ? (
+        <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
+          <PartnerMessagesSection fullWidth onUnreadChange={setInboxUnreadCount} />
+        </div>
+      ) : null}
 
-      {homeView === 'list' ? (
+      {shellTab === 'fleet' ? (
+        <>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'list' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
+              onClick={() => setHomeView('list')}
+            >
+              Lista
+            </button>
+            <button
+              type="button"
+              data-testid="partner-view-map"
+              className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'map' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
+              onClick={() => setHomeView('map')}
+            >
+              Mapa live
+            </button>
+          </div>
+
+          {homeView === 'map' ? (
+            <PartnerFleetMap drivers={drivers} trips={trips} />
+          ) : null}
+
+          {homeView === 'list' ? (
         <>
           <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
             <h3 className="font-medium text-foreground">Adicionar motorista à frota</h3>
@@ -546,8 +580,16 @@ export function PartnerHome() {
                   </li>
                 ))}
               </ul>
+            ) : discoverSearched && discoverAlreadyInFleet ? (
+              <p className="text-sm text-muted-foreground">Já pertence à tua frota.</p>
+            ) : discoverSearched ? (
+              <p className="text-sm text-muted-foreground">
+                Só aparecem motoristas da frota Default aprovados, ainda não na tua frota.
+              </p>
             ) : (
-              <p className="text-sm text-muted-foreground">Sem resultados.</p>
+              <p className="text-sm text-muted-foreground">
+                Pesquisa por nome ou telefone para encontrar motoristas disponíveis na frota Default.
+              </p>
             )}
           </div>
 
@@ -688,19 +730,13 @@ export function PartnerHome() {
           </div>
         </>
       ) : null}
+        </>
+      ) : null}
 
-      <BetaAccountPanel />
-
-      <button
-        type="button"
-        onClick={() => void load()}
-        className="w-full rounded-xl bg-secondary py-2 text-sm font-medium text-secondary-foreground"
-      >
-        Atualizar
-      </button>
       </div>
 
-      <div className="sticky bottom-0 z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 safe-area-pb shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+      {shellTab === 'home' ? (
+      <div className="sticky bottom-[52px] z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
         <h3 className="text-sm font-medium text-foreground">Alertas operacionais</h3>
         <p className="text-[11px] text-foreground/75 mt-0.5">
           Documentos, GPS, viagens bloqueadas — clique para ir ao detalhe.
@@ -709,6 +745,7 @@ export function PartnerHome() {
           <PartnerAlertsPanel alerts={operationalAlerts} />
         </div>
       </div>
+      ) : null}
     </div>
   )
 }

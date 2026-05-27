@@ -13,6 +13,7 @@ import {
   patchDriverVehicleCategories as patchDriverVehicleCategoriesApi,
   setDriverOnline,
   setDriverOffline,
+  getDriverStatus,
   getDriverDrivingHoursCompliance,
 } from '../../api/trips'
 import type {
@@ -81,7 +82,7 @@ import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
-import { uploadDriverDocument } from '../../api/driverMessages'
+import { uploadDriverDocument, fetchDriverMessages } from '../../api/driverMessages'
 import { ActiveTripActions } from './ActiveTripActions'
 import { DriverInboxPanel } from './DriverInboxPanel'
 import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
@@ -91,6 +92,8 @@ import {
   readDismissedOfferTripIds,
   clearDismissedOfferTripId,
   clearAllDismissedOfferTripIds,
+  resolveSilencedOfferState,
+  type SilencedOfferEntry,
 } from './driverOfferDismiss'
 import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
 import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
@@ -254,17 +257,16 @@ function DriverShellAvailabilityInner({
   }
   if (mapTapGoesOnline) {
     return (
-      <div
-        className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-muted-foreground shadow-none backdrop-blur-sm sm:text-sm"
-        role="status"
-        aria-live="polite"
+      <button
+        type="button"
+        data-testid="driver-map-offline-pill"
+        onClick={onGoOnline}
+        aria-label="Estás offline. Toca para ficares disponível."
+        className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
       >
         <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
-        <span className="leading-snug">
-          Offline — toca no mapa para ficares disponível.
-          <span className="sr-only"> Alternativa: Menu → «Ficar disponível».</span>
-        </span>
-      </div>
+        <span className="leading-snug truncate">Offline — tocar para disponível</span>
+      </button>
     )
   }
   return <DriverMapOfflinePill onGoOnline={onGoOnline} />
@@ -293,6 +295,30 @@ function formatDrivingDurationShort(sec: number): string {
   if (h <= 0) return `${m} min`
   if (m <= 0) return `${h} h`
   return `${h} h ${m} min`
+}
+
+function buildDriverWaitingHint(opts: {
+  categoryFilteredOutCount: number
+  silencedActiveCount: number
+  expiredAvailableCount: number
+  hasAnyCategoryAwareOffer: boolean
+}): string | null {
+  const parts: string[] = []
+  if (opts.categoryFilteredOutCount > 0 && opts.hasAnyCategoryAwareOffer) {
+    parts.push(
+      `Existem ${opts.categoryFilteredOutCount} viagem(ns) fora das tuas categorias activas.`
+    )
+  }
+  if (opts.silencedActiveCount > 0) {
+    parts.push(
+      `${opts.silencedActiveCount} oferta(s) silenciada(s). Ver Menu → Ofertas silenciadas.`
+    )
+  }
+  if (opts.expiredAvailableCount > 0) {
+    parts.push(`${opts.expiredAvailableCount} oferta(s) expirada(s).`)
+  }
+  if (parts.length === 0) return null
+  return parts.join(' ')
 }
 
 export function DriverDashboard() {
@@ -363,6 +389,8 @@ export function DriverDashboard() {
     import.meta.env.DEV ? isDriverDocumentsGateEnabled() : true
   )
   const effectiveDocsGate = import.meta.env.DEV ? driverDocsGateEnabled : true
+  const docsReady = isDriverDocumentsReady(driverDocuments)
+  const docsBlockedOffline = effectiveDocsGate && !docsReady && offline
   const [driverAcceptSoundTick, setDriverAcceptSoundTick] = useState(0)
   const [driverCompleteSoundTick, setDriverCompleteSoundTick] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -452,6 +480,18 @@ export function DriverDashboard() {
     30_000
   )
 
+  const inboxPollEnabled = Boolean(token && sessionRole === 'driver')
+  const { data: inboxMessages } = usePolling(
+    () => fetchDriverMessages(token!),
+    [token],
+    inboxPollEnabled,
+    15_000
+  )
+  const inboxUnreadCount = useMemo(
+    () => (inboxMessages ?? []).filter((m) => !m.read).length,
+    [inboxMessages]
+  )
+
   useEffect(() => {
     if (!menuOpen || driverShellTab === 'home' || driverShellTab === 'menu') return
     const id = driverShellTab === 'earnings' ? 'driver-menu-earnings' : 'driver-menu-inbox'
@@ -506,18 +546,55 @@ export function DriverDashboard() {
       .filter((t) => !dismissedOfferTripIds.has(t.trip_id))
       .filter((t) => !isDriverOfferExpired(t.expires_at))
   }, [availableWithCategoryMeta, vehicleCategories, dismissedOfferTripIds])
-  const silencedOfferEntries = useMemo(
+
+  const categoryFilteredOutCount = useMemo(() => {
+    return availableWithCategoryMeta.filter(({ trip, categories }) => {
+      if (isDriverOfferExpired(trip.expires_at)) return false
+      if (dismissedOfferTripIds.has(trip.trip_id)) return false
+      return categories.length > 0 && !categories.some((c) => vehicleCategories.includes(c))
+    }).length
+  }, [availableWithCategoryMeta, vehicleCategories, dismissedOfferTripIds])
+
+  const silencedActiveCount = useMemo(() => {
+    return [...dismissedOfferTripIds].filter((tripId) => {
+      const trip = availableWithCategoryMeta.find((x) => x.trip.trip_id === tripId)?.trip
+      return trip != null && !isDriverOfferExpired(trip.expires_at)
+    }).length
+  }, [availableWithCategoryMeta, dismissedOfferTripIds])
+
+  const expiredAvailableCount = useMemo(() => {
+    return (available ?? []).filter(
+      (t) => isDriverOfferExpired(t.expires_at) && !dismissedOfferTripIds.has(t.trip_id)
+    ).length
+  }, [available, dismissedOfferTripIds])
+
+  const driverWaitingHint = useMemo(
     () =>
-      [...dismissedOfferTripIds].map((tripId) => {
-        const t = availableWithCategoryMeta.find((x) => x.trip.trip_id === tripId)?.trip
-        return {
-          tripId,
-          label: t ? formatPickup(t.origin_lat, t.origin_lng) : `#${tripId.slice(0, 8)}`,
-        }
+      buildDriverWaitingHint({
+        categoryFilteredOutCount,
+        silencedActiveCount,
+        expiredAvailableCount,
+        hasAnyCategoryAwareOffer,
       }),
-    [dismissedOfferTripIds, availableWithCategoryMeta]
+    [
+      categoryFilteredOutCount,
+      silencedActiveCount,
+      expiredAvailableCount,
+      hasAnyCategoryAwareOffer,
+    ]
   )
-  const filteredOutCount = Math.max(0, (available?.length ?? 0) - filteredAvailable.length)
+
+  const silencedOfferEntries = useMemo((): SilencedOfferEntry[] => {
+    return [...dismissedOfferTripIds].map((tripId) => {
+      const t = availableWithCategoryMeta.find((x) => x.trip.trip_id === tripId)?.trip
+      const state = resolveSilencedOfferState(tripId, t)
+      const label =
+        t != null
+          ? formatPickup(t.origin_lat, t.origin_lng)
+          : `#${tripId.slice(0, 8)}`
+      return { tripId, label, state }
+    })
+  }, [dismissedOfferTripIds, availableWithCategoryMeta])
   const hasAvailableTrips = filteredAvailable.length > 0
   const compactDriverSurface = !activeTripId && !offline && hasAvailableTrips
   const pendingOfferPickupsForMap = useMemo(() => {
@@ -781,6 +858,28 @@ export function DriverDashboard() {
     }
   }, [token, sessionRole])
 
+  // Reconcile local offline flag with server is_available (fixes localStorage desync).
+  useEffect(() => {
+    if (!token || sessionRole !== 'driver') return
+    let cancelled = false
+    void getDriverStatus(token)
+      .then(({ is_available }) => {
+        if (cancelled) return
+        const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
+        if (is_available && canGoOnline) {
+          setOffline(false)
+        } else {
+          setOffline(true)
+        }
+      })
+      .catch(() => {
+        /* keep local state if status fetch fails */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token, sessionRole, driverDocuments, effectiveDocsGate])
+
   // Sync backend when token/offline changes; não forçar /online com viagem activa (repor is_available).
   useEffect(() => {
     if (!token) return
@@ -789,6 +888,10 @@ export function DriverDashboard() {
       return
     }
     if (activeTripId) return
+    if (effectiveDocsGate && !isDriverDocumentsReady(driverDocuments)) {
+      setOffline(true)
+      return
+    }
     void setDriverOnline(token).catch((err: unknown) => {
       const e = err as { status?: number; detail?: unknown }
       if (e?.status === 409 && e?.detail === 'driving_hours_blocked') {
@@ -799,7 +902,7 @@ export function DriverDashboard() {
         addLog('Bloqueio: horas de condução / repouso', 'error')
       }
     })
-  }, [token, offline, activeTripId, addLog])
+  }, [token, offline, activeTripId, addLog, effectiveDocsGate, driverDocuments])
 
   useEffect(() => {
     if (toast) {
@@ -1068,19 +1171,19 @@ export function DriverDashboard() {
             </span>
           </button>
         </div>
-        <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
+        <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} inboxUnreadCount={inboxUnreadCount} />
       </div>
     ) : activeTripId != null ? (
       driverMapStageLayout ? (
-        !menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} /> : undefined
+        !menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} inboxUnreadCount={inboxUnreadCount} /> : undefined
       ) : (
         <div className="w-full border-t border-border bg-background shadow-[0_-4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.35)]">
           <div className="px-4 pt-2 pb-1">{driverActiveTripPanel}</div>
-          {!menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} /> : null}
+          {!menuOpen ? <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} inboxUnreadCount={inboxUnreadCount} /> : null}
         </div>
       )
     ) : driverBottomNav ? (
-      <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} />
+      <DriverBottomNav active={driverShellTab} onSelect={handleBottomNav} inboxUnreadCount={inboxUnreadCount} />
     ) : undefined
 
   return (
@@ -1244,7 +1347,15 @@ export function DriverDashboard() {
                           </div>
                         </div>
                       )}
-                      {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+                      {docsBlockedOffline ? (
+                      <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
+                        <p className="font-medium text-foreground">Documentos em falta</p>
+                        <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
+                          Completa em Menu → Documentos para ficares disponível.
+                        </p>
+                      </div>
+                    ) : null}
+                    {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                         <div
                           className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                             ? 'bg-destructive/10 border-destructive/35 text-destructive'
@@ -1460,9 +1571,7 @@ export function DriverDashboard() {
                     >
                       <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
                       <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
-                        {hasAnyCategoryAwareOffer && filteredOutCount > 0
-                          ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
-                          : 'Sem pedidos. Histórico em Menu → Viagens.'}
+                        {driverWaitingHint ?? 'Sem pedidos. Histórico em Menu → Viagens.'}
                       </p>
                     </div>
                   )
@@ -1585,6 +1694,14 @@ export function DriverDashboard() {
                         </div>
                       </div>
                     )}
+                    {docsBlockedOffline ? (
+                      <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
+                        <p className="font-medium text-foreground">Documentos em falta</p>
+                        <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
+                          Completa em Menu → Documentos para ficares disponível.
+                        </p>
+                      </div>
+                    ) : null}
                     {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                       <div
                         className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
@@ -1803,15 +1920,10 @@ export function DriverDashboard() {
                       ) : (
                         <div className={`${INFO_BOX_MAP_HINT} px-2 py-1.5 text-center`}>
                           <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
-                          <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
-                            {hasAnyCategoryAwareOffer && filteredOutCount > 0
-                              ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias activas.`
-                              : (
-                                <>
-                                  Sem viagens disponíveis. Histórico em Menu → Viagens.
-                                </>
-                              )}
-                          </p>
+                      <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
+                        {driverWaitingHint ??
+                          'Sem viagens disponíveis. Histórico em Menu → Viagens.'}
+                      </p>
                         </div>
                       )}
                     </MapBottomSheet>
@@ -2130,9 +2242,8 @@ export function DriverDashboard() {
                       <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-1.5 text-center">
                         <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
                         <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
-                          {hasAnyCategoryAwareOffer && filteredOutCount > 0
-                            ? `Existem ${filteredOutCount} viagem(ns) fora das tuas categorias ativas.`
-                            : 'Sem viagens disponíveis. Fica disponível para receberes novos pedidos.'}
+                          {driverWaitingHint ??
+                            'Sem viagens disponíveis. Fica disponível para receberes novos pedidos.'}
                         </p>
                       </div>
                     )}
@@ -2494,7 +2605,7 @@ function DriverOperationsMenu({
   vehicleCategories: DriverVehicleCategory[]
   driverDocuments: DriverDocumentsState
   driverDocsGateEnabled: boolean
-  silencedOfferEntries?: Array<{ tripId: string; label: string }>
+  silencedOfferEntries?: SilencedOfferEntry[]
   onRestoreSilencedOffer?: (tripId: string) => void
   onRestoreAllSilencedOffers?: () => void
   section?: DriverMenuScreen
@@ -3572,6 +3683,9 @@ function DriverOperationsMenu({
                             .then(() => {
                               sonnerToast.success('Ficheiro enviado')
                               onRefreshDriverDocuments?.()
+                              if (driverDocuments.docs[doc] === 'missing') {
+                                onPatchDriverDocument?.(doc, 'pending_review')
+                              }
                             })
                             .catch(() => sonnerToast.error('Falha no upload'))
                           e.target.value = ''
@@ -3596,10 +3710,18 @@ function DriverOperationsMenu({
               <ul className="mt-2 space-y-2">
                 {silencedOfferEntries.map((o) => (
                   <li key={o.tripId} className="flex items-center justify-between gap-2 text-xs">
-                    <span className="truncate text-foreground/85">{o.label}</span>
+                    <span className="min-w-0 truncate text-foreground/85">
+                      {o.label}
+                      {o.state === 'expired' ? (
+                        <span className="ml-1 text-[10px] text-muted-foreground">(expirada)</span>
+                      ) : o.state === 'gone' ? (
+                        <span className="ml-1 text-[10px] text-muted-foreground">(já não disponível)</span>
+                      ) : null}
+                    </span>
                     <button
                       type="button"
-                      className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] font-medium"
+                      disabled={o.state === 'gone'}
+                      className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] font-medium disabled:opacity-40"
                       onClick={() => onRestoreSilencedOffer?.(o.tripId)}
                     >
                       Voltar a mostrar

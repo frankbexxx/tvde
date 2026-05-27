@@ -154,6 +154,32 @@ def test_da_004_online_does_not_override_availability_during_active_trip() -> No
     db.close()
 
 
+def test_da_005_get_availability_status() -> None:
+    """GET /driver/status returns current is_available."""
+    db = _make_db()
+    driver_id = _create_driver(db, is_available=True)
+    user_ctx = UserContext(user_id=driver_id, role=Role.driver)
+    _override_dependencies(db, user_ctx)
+
+    client = TestClient(app)
+    r = client.get("/driver/status")
+    assert r.status_code == 200
+    assert r.json()["is_available"] is True
+
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(driver_id))
+    ).scalar_one()
+    driver.is_available = False
+    db.commit()
+
+    r2 = client.get("/driver/status")
+    assert r2.status_code == 200
+    assert r2.json()["is_available"] is False
+
+    _reset_overrides()
+    db.close()
+
+
 def test_da_003_offline_driver_not_eligible_for_dispatch() -> None:
     """TEST-DA-003: offline driver not included in dispatch candidates."""
     db = _make_db()

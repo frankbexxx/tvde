@@ -1,7 +1,6 @@
 /**
  * FIX-001 — Disponibilidade no palco mapa: micro on/off por cima dos tiles (acima da nav z-40).
- * Online via map-touch mantém-se; aqui sobretudo «disponível → offline».
- * Dia 23: estado no pino (+ «offline» pequeno), sem pastilha Estatuto.
+ * Online via map-touch mantém-se; offline também clicável (paridade com menu).
  */
 type DriverMapAvailabilityMicroToggleProps = {
   offline: boolean
@@ -24,22 +23,6 @@ export function DriverMapAvailabilityMicroToggle({
   onGoOnline,
   onGoOffline,
 }: DriverMapAvailabilityMicroToggleProps) {
-  if (offline && mapTapGoesOnline) {
-    return (
-      <div
-        className="pointer-events-none absolute right-3 top-3 z-[30] flex flex-col items-center gap-0.5"
-        role="status"
-        aria-label="Offline. Toca no mapa para ficares disponível."
-        data-testid="driver-map-availability-micro-offline"
-      >
-        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-destructive/35 bg-background/90 shadow-md backdrop-blur-sm">
-          <span className="h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-destructive/45" aria-hidden />
-        </div>
-        <OfflineLabel />
-      </div>
-    )
-  }
-
   if (offline) {
     return (
       <div className="pointer-events-auto absolute right-3 top-3 z-[30] flex flex-col items-center gap-0.5">
@@ -47,7 +30,11 @@ export function DriverMapAvailabilityMicroToggle({
           type="button"
           data-testid="driver-map-availability-micro-offline-pill"
           onClick={onGoOnline}
-          aria-label="Offline — tocar para ficares disponível"
+          aria-label={
+            mapTapGoesOnline
+              ? 'Offline — tocar para ficares disponível'
+              : 'Offline — tocar para ficares disponível'
+          }
           className="flex h-11 w-11 items-center justify-center rounded-full border border-destructive/35 bg-background/90 shadow-md backdrop-blur-sm touch-manipulation hover:bg-background"
         >
           <span className="h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-destructive/45" aria-hidden />

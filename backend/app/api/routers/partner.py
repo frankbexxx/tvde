@@ -172,33 +172,6 @@ async def partner_list_drivers(
     return [_driver_item(d) for d in drivers]
 
 
-@router.get("/drivers/{driver_user_id}", response_model=PartnerDriverItem)
-async def partner_get_driver(
-    driver_user_id: str,
-    request: Request,
-    ctx: UserContext = Depends(get_current_partner),
-    db: Session = Depends(get_db),
-) -> PartnerDriverItem:
-    partner_id = _require_partner_id(ctx)
-    log_event(
-        "partner_api_access",
-        path=request.url.path,
-        user_id=ctx.user_id,
-        partner_id=partner_id,
-    )
-    try:
-        did = uuid.UUID(driver_user_id.strip())
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="invalid_uuid",
-        ) from None
-    d = get_driver_for_partner(db, partner_id, did)
-    if not d:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
-    return _driver_item(d, include_documents=True)
-
-
 @router.get("/drivers/discover", response_model=list[PartnerDriverDiscoveryItem])
 async def partner_discover_drivers(
     request: Request,
@@ -228,6 +201,33 @@ async def partner_discover_drivers(
             )
         )
     return out
+
+
+@router.get("/drivers/{driver_user_id}", response_model=PartnerDriverItem)
+async def partner_get_driver(
+    driver_user_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerDriverItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        did = uuid.UUID(driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_uuid",
+        ) from None
+    d = get_driver_for_partner(db, partner_id, did)
+    if not d:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+    return _driver_item(d, include_documents=True)
 
 
 @router.post("/drivers/{driver_user_id}/add-to-fleet", response_model=PartnerDriverItem)

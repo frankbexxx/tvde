@@ -1,17 +1,16 @@
 import type { LucideIcon } from 'lucide-react'
-import { Euro, Home, Inbox, Menu } from 'lucide-react'
+import { Home, Inbox, Menu, Users } from 'lucide-react'
+import type { PartnerShellTab } from './partnerShellContext'
 
-export type DriverShellTab = 'home' | 'earnings' | 'inbox' | 'menu'
-
-type DriverBottomNavProps = {
-  active: DriverShellTab
-  onSelect: (tab: DriverShellTab) => void
+type PartnerBottomNavProps = {
+  active: PartnerShellTab
+  onSelect: (tab: PartnerShellTab) => void
   inboxUnreadCount?: number
 }
 
-export function DriverBottomNav({ active, onSelect, inboxUnreadCount = 0 }: DriverBottomNavProps) {
+export function PartnerBottomNav({ active, onSelect, inboxUnreadCount = 0 }: PartnerBottomNavProps) {
   const item = (
-    tab: DriverShellTab,
+    tab: PartnerShellTab,
     testId: string,
     label: string,
     Icon: LucideIcon,
@@ -46,12 +45,12 @@ export function DriverBottomNav({ active, onSelect, inboxUnreadCount = 0 }: Driv
   return (
     <nav
       className="flex w-full border-t border-border bg-background/95 backdrop-blur-sm safe-area-pb"
-      aria-label="Navegação principal do motorista"
+      aria-label="Navegação principal do parceiro"
     >
-      {item('home', 'driver-bottom-nav-home', 'Início', Home)}
-      {item('earnings', 'driver-bottom-nav-earnings', 'Rendimentos', Euro)}
-      {item('inbox', 'driver-bottom-nav-inbox', 'Caixa', Inbox, inboxUnreadCount)}
-      {item('menu', 'driver-bottom-nav-menu', 'Menu', Menu)}
+      {item('home', 'partner-bottom-nav-home', 'Início', Home)}
+      {item('fleet', 'partner-bottom-nav-fleet', 'Frota', Users)}
+      {item('inbox', 'partner-bottom-nav-inbox', 'Caixa', Inbox, inboxUnreadCount)}
+      {item('menu', 'partner-open-menu', 'Menu', Menu)}
     </nav>
   )
 }

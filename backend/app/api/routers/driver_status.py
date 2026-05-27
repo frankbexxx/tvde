@@ -17,6 +17,20 @@ from app.services.trips import driver_has_active_assigned_trip
 router = APIRouter(prefix="/driver/status", tags=["driver"])
 
 
+@router.get("")
+async def get_availability_status(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Current driver availability flag (for FE sync with local offline state)."""
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == user.user_id)
+    ).scalar_one_or_none()
+    if not driver:
+        raise HTTPException(status_code=404, detail="driver_not_found")
+    return {"is_available": driver.is_available}
+
+
 @router.get("/compliance/driving-hours", response_model=DrivingHoursComplianceResponse)
 async def get_driving_hours_compliance(
     user: UserContext = Depends(require_role(Role.driver)),

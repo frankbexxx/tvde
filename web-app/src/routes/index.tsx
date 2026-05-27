@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
-import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { PassengerDashboard } from '../features/passenger/PassengerDashboard'
 import { DriverDashboard } from '../features/driver/DriverDashboard'
 import { AdminDashboard } from '../features/admin/AdminDashboard'
 import { PartnerDriverDetail } from '../features/partner/PartnerDriverDetail'
 import { PartnerHome } from '../features/partner/PartnerHome'
+import { PartnerLayout } from '../features/partner/PartnerLayout'
 import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
 import { GoogleOAuthCallback } from '../features/auth/GoogleOAuthCallback'
 import { LoginScreen } from '../features/auth/LoginScreen'
@@ -180,7 +181,7 @@ export function AppRoutes() {
                 path="/partner"
                 element={
                   <PartnerGate>
-                    <Outlet />
+                    <PartnerLayout />
                   </PartnerGate>
                 }
               >

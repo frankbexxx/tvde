@@ -378,6 +378,7 @@ export function PassengerDashboard() {
       setGeoSuggestions([])
       setPickupCandidate(null)
       setDestinationCandidate(null)
+      setPlanningRouteGeoJSON(null)
     }
   }, [activeTripId])
 
@@ -395,6 +396,7 @@ export function PassengerDashboard() {
     setGeoSuggestions([])
     setPickupCandidate(null)
     setDestinationCandidate(null)
+    setPlanningRouteGeoJSON(null)
   }, [])
 
   const onChoosePlanningModeAndScrollToMap = useCallback(() => {
@@ -559,6 +561,7 @@ export function PassengerDashboard() {
         setPassengerCancelOpen(false)
         setPassengerCancelPreset('')
         setPassengerCancelOther('')
+        setPlanningRouteGeoJSON(null)
         setStatus('Pronto')
         addLog('Viagem cancelada', 'success')
         toast.success('Viagem cancelada')
@@ -898,6 +901,7 @@ export function PassengerDashboard() {
     setPassengerActiveTripId(null)
     setTripCompletedFromLocation(false)
     setIsPlanningMode(false)
+    setPlanningRouteGeoJSON(null)
   }, [setPassengerActiveTripId])
 
   const primaryOnClick = useMemo(() => {

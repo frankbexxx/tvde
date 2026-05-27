@@ -34,6 +34,23 @@ export function clearAllDismissedOfferTripIds(): void {
   }
 }
 
+export type SilencedOfferState = 'active' | 'expired' | 'gone'
+
+export interface SilencedOfferEntry {
+  tripId: string
+  label: string
+  state: SilencedOfferState
+}
+
+export function resolveSilencedOfferState(
+  _tripId: string,
+  trip: { expires_at?: string | null } | null | undefined
+): SilencedOfferState {
+  if (!trip) return 'gone'
+  if (isDriverOfferExpired(trip.expires_at)) return 'expired'
+  return 'active'
+}
+
 export function isDriverOfferExpired(expiresAt: string | null | undefined): boolean {
   if (!expiresAt) return false
   const ms = Date.parse(expiresAt)

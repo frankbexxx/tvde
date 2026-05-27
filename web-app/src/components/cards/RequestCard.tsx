@@ -109,7 +109,7 @@ export function RequestCard({
         aria-label="Silenciar oferta"
         className={
           dismissPlacement === 'bottom-right-silence'
-            ? `${dismissPosClass} flex min-h-8 items-center justify-center rounded-md border border-destructive/60 bg-destructive/10 px-2 text-xs font-semibold text-destructive hover:bg-destructive/20 touch-manipulation`
+            ? `${dismissPosClass} flex min-h-7 items-center justify-center rounded-md border border-destructive/60 bg-destructive/10 px-1.5 text-[10px] font-semibold text-destructive hover:bg-destructive/20 touch-manipulation`
             : `${dismissPosClass} flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/70 hover:bg-muted touch-manipulation`
         }
       >
@@ -148,7 +148,9 @@ export function RequestCard({
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
         <p
           className={
-            slideCompact ? 'text-base font-semibold text-foreground' : 'text-lg font-semibold text-foreground'
+            slideCompact
+              ? 'text-sm font-semibold text-foreground truncate'
+              : 'text-lg font-semibold text-foreground'
           }
         >
           {pickup}
@@ -157,7 +159,7 @@ export function RequestCard({
       {destination ? (
         <div className="space-y-0.5">
           <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Destino</p>
-          <p className="text-base font-semibold text-foreground/95">{destination}</p>
+          <p className="text-sm font-semibold text-foreground/95 truncate">{destination}</p>
         </div>
       ) : null}
     </>
@@ -166,18 +168,18 @@ export function RequestCard({
   if (slideCompact) {
     const padClass =
       dismissPlacement === 'bottom-right-silence'
-        ? 'p-2 pb-10'
+        ? 'p-2 pb-9'
         : dismissPlacement === 'top-left'
           ? 'p-2 pl-8 pr-8'
           : 'p-2 pr-8'
     return (
-      <div className={`relative ${INFO_BOX_DRIVER_LARGE} ${padClass} space-y-1 transition-all duration-200`}>
+      <div className={`relative ${INFO_BOX_DRIVER_LARGE} ${padClass} space-y-0.5 transition-all duration-200`}>
         {dismissButton}
         {slideAccept}
         {tripDetails}
         <div>
           <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
-          <span className="text-lg font-bold text-foreground">{priceDisplay}</span>
+          <span className="text-base font-bold text-foreground">{priceDisplay}</span>
         </div>
       </div>
     )
