@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { usePolling } from '../../hooks/usePolling'
 import {
   fetchPartnerInboxMessages,
   markPartnerMessageRead,
@@ -7,9 +8,12 @@ import {
   type PartnerInboxMessageRow,
 } from '../../api/partner'
 
-export function PartnerMessagesSection() {
-  const [inbox, setInbox] = useState<PartnerInboxMessageRow[]>([])
-  const [loading, setLoading] = useState(true)
+type PartnerMessagesSectionProps = {
+  fullWidth?: boolean
+  onUnreadChange?: (count: number) => void
+}
+
+export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: PartnerMessagesSectionProps) {
   const [error, setError] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [broadcastOpen, setBroadcastOpen] = useState(false)
@@ -18,22 +22,34 @@ export function PartnerMessagesSection() {
   const [bPriority, setBPriority] = useState<'normal' | 'high'>('normal')
   const [busy, setBusy] = useState(false)
   const [ok, setOk] = useState<string | null>(null)
+  const [inbox, setInbox] = useState<PartnerInboxMessageRow[]>([])
 
   const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
     try {
-      setInbox(await fetchPartnerInboxMessages())
+      const rows = await fetchPartnerInboxMessages()
+      setError(null)
+      return rows
     } catch {
       setError('Não foi possível carregar mensagens dos motoristas.')
-    } finally {
-      setLoading(false)
+      throw new Error('inbox_load_failed')
     }
   }, [])
 
+  const { data, refetch, isLoading, isRefreshing } = usePolling(load, [load], true, 15_000, {
+    equals: (prev, next) =>
+      prev.length === next.length &&
+      prev.every((row, i) => row.id === next[i]?.id && row.read === next[i]?.read),
+  })
+
   useEffect(() => {
-    void load()
-  }, [load])
+    if (data) setInbox(data)
+  }, [data])
+
+  const unread = inbox.filter((m) => !m.read).length
+
+  useEffect(() => {
+    onUnreadChange?.(unread)
+  }, [unread, onUnreadChange])
 
   const openMessage = async (m: PartnerInboxMessageRow) => {
     setOpenId(m.id)
@@ -62,6 +78,7 @@ export function PartnerMessagesSection() {
       setBBody('')
       setBroadcastOpen(false)
       setOk('Aviso enviado a toda a frota.')
+      void refetch()
     } catch {
       setError('Falha ao enviar aviso à frota.')
     } finally {
@@ -70,7 +87,7 @@ export function PartnerMessagesSection() {
   }
 
   const selected = inbox.find((m) => m.id === openId) ?? null
-  const unread = inbox.filter((m) => !m.read).length
+  const listMaxH = fullWidth ? 'max-h-[min(55dvh,420px)]' : 'max-h-40'
 
   return (
     <div className="space-y-3">
@@ -81,6 +98,9 @@ export function PartnerMessagesSection() {
             <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">
               {unread}
             </span>
+          ) : null}
+          {isRefreshing ? (
+            <span className="ml-2 text-[10px] font-normal text-muted-foreground">A actualizar…</span>
           ) : null}
         </p>
         <button
@@ -128,7 +148,7 @@ export function PartnerMessagesSection() {
       ) : null}
 
       {ok ? <p className="text-xs text-success">{ok}</p> : null}
-      {loading ? (
+      {isLoading && inbox.length === 0 ? (
         <p className="text-xs text-muted-foreground">A carregar…</p>
       ) : error ? (
         <p className="text-xs text-destructive">{error}</p>
@@ -136,7 +156,7 @@ export function PartnerMessagesSection() {
         <p className="text-xs text-muted-foreground">Sem mensagens dos motoristas.</p>
       ) : (
         <>
-          <ul className="space-y-2 max-h-40 overflow-y-auto">
+          <ul className={`space-y-2 overflow-y-auto ${listMaxH}`}>
             {inbox.map((m) => (
               <li key={m.id}>
                 <button
@@ -169,7 +189,7 @@ export function PartnerMessagesSection() {
           ) : null}
         </>
       )}
-      <button type="button" onClick={() => void load()} className="text-xs text-primary underline">
+      <button type="button" onClick={() => void refetch()} className="text-xs text-primary underline">
         Actualizar
       </button>
     </div>

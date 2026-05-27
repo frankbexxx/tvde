@@ -48,7 +48,7 @@ export function buildPartnerAlerts(
     if (d.documents) {
       for (const [key, doc] of Object.entries(d.documents)) {
         const st = doc?.status
-        if (st === 'pending' || st === 'rejected') {
+        if (st === 'pending_review' || st === 'pending' || st === 'rejected') {
           alerts.push({
             id: `doc-${d.user_id}-${key}`,
             severity: st === 'rejected' ? 'crit' : 'warn',

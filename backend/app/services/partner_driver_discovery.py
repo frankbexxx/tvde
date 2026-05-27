@@ -50,5 +50,12 @@ def partner_add_driver_to_fleet(
     driver_user_id: uuid.UUID,
 ) -> Driver:
     pid = uuid.UUID(partner_id)
-    # reuse admin service with its active-trip guard + partner existence check
+    driver = db.get(Driver, driver_user_id)
+    if not driver:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="driver_not_found")
+    if driver.partner_id != DEFAULT_PARTNER_UUID:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="driver_not_in_default_pool",
+        )
     return assign_driver_to_partner(db, driver_user_id=driver_user_id, partner_id=pid)

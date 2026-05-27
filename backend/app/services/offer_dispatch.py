@@ -25,7 +25,7 @@ LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 
 def _offer_ttl_seconds() -> int:
     """TTL efectivo das ofertas novas. Com E2E_KEEP_OFFERS_ALIVE, garante mínimo para browser/CI."""
-    base = int(getattr(settings, "OFFER_TIMEOUT_SECONDS", 15))
+    base = int(getattr(settings, "OFFER_TIMEOUT_SECONDS", 60))
     env_flag = os.environ.get("E2E_KEEP_OFFERS_ALIVE", "").strip().lower()
     keep = getattr(settings, "E2E_KEEP_OFFERS_ALIVE", False) or env_flag in (
         "1",

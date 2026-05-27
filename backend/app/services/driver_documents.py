@@ -50,8 +50,11 @@ def _coerce_entry(raw: Any) -> dict[str, Any]:
         return default_entry()
     out = default_entry()
     st = raw.get("status")
-    if isinstance(st, str) and st in VALID_STATUS:
-        out["status"] = st
+    if isinstance(st, str):
+        if st == "pending":
+            st = "pending_review"
+        if st in VALID_STATUS:
+            out["status"] = st
     for key in ("expires_at", "submitted_at", "partner_note", "ocr_suggested_expires_at"):
         v = raw.get(key)
         if v is None:

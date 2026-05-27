@@ -62,9 +62,13 @@ test.describe('Partner — menu (drawer)', () => {
       timeout: sec(120),
     })
 
-    await expect(page.getByRole('heading', { name: 'Frota (partner)' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Início' })).toBeVisible({
       timeout: sec(120),
     })
+
+    await expect(page.getByTestId('partner-bottom-nav-home')).toBeVisible()
+    await expect(page.getByTestId('partner-bottom-nav-fleet')).toBeVisible()
+    await expect(page.getByTestId('partner-bottom-nav-inbox')).toBeVisible()
 
     await page.getByTestId('partner-open-menu').click()
     const sheet = page.getByTestId('partner-side-menu')
