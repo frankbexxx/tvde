@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import type { PartnerMenuScreen } from './PartnerSideMenu'
 
 export type PartnerShellTab = 'home' | 'fleet' | 'inbox' | 'menu'
 
@@ -7,6 +8,10 @@ type PartnerShellContextValue = {
   setShellTab: (tab: PartnerShellTab) => void
   menuOpen: boolean
   setMenuOpen: (open: boolean) => void
+  menuScreen: PartnerMenuScreen
+  setMenuScreen: (screen: PartnerMenuScreen) => void
+  openMenu: (screen?: PartnerMenuScreen) => void
+  closeMenu: () => void
   inboxUnreadCount: number
   setInboxUnreadCount: (n: number) => void
 }
@@ -16,7 +21,20 @@ const PartnerShellContext = createContext<PartnerShellContextValue | null>(null)
 export function PartnerShellProvider({ children }: { children: ReactNode }) {
   const [shellTab, setShellTab] = useState<PartnerShellTab>('home')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [menuScreen, setMenuScreen] = useState<PartnerMenuScreen>('root')
   const [inboxUnreadCount, setInboxUnreadCount] = useState(0)
+
+  const openMenu = useCallback((screen: PartnerMenuScreen = 'root') => {
+    setMenuScreen(screen)
+    setMenuOpen(true)
+  }, [])
+
+  const closeMenu = useCallback(() => {
+    setMenuScreen('root')
+    setMenuOpen(false)
+    setShellTab('home')
+  }, [])
+
   return (
     <PartnerShellContext.Provider
       value={{
@@ -24,6 +42,10 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
         setShellTab,
         menuOpen,
         setMenuOpen,
+        menuScreen,
+        setMenuScreen,
+        openMenu,
+        closeMenu,
         inboxUnreadCount,
         setInboxUnreadCount,
       }}

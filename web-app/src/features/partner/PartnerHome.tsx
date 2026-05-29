@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { usePolling } from '../../hooks/usePolling'
 import {
-  PARTNER_TRIPS_CSV_COLUMNS,
   addDriverToFleet,
   discoverPartnerDrivers,
   fetchPartnerDrivers,
@@ -15,56 +13,26 @@ import {
   type PartnerMetrics,
   type PartnerTripRow,
 } from '../../api/partner'
-import { BetaAccountPanel } from '../account/BetaAccountPanel'
-import { PartnerSideMenu } from './PartnerSideMenu'
-import { PartnerFleetMap } from './PartnerFleetMap'
+import { PartnerSideMenu, type PartnerMenuScreen } from './PartnerSideMenu'
 import { PartnerAlertsPanel } from './PartnerAlertsPanel'
-import { PartnerMessagesSection } from './PartnerMessagesSection'
 import { buildPartnerAlerts } from './partnerAlerts'
 import { usePartnerShell } from './partnerShellContext'
-
-type PartnerHomeView = 'list' | 'map'
-
-function locationLabel(d: PartnerDriverRow): string {
-  const loc = d.last_location
-  if (!loc) return 'Sem localização recente'
-  return `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}`
-}
-
-type DriverFilter = 'all' | 'active' | 'online' | 'offline'
-type TripFilter = 'all' | 'ongoing' | 'completed' | 'cancelled' | 'failed' | 'assigned'
-
-const TRIP_FILTER_HINT: Partial<Record<TripFilter, string>> = {
-  assigned:
-    'Viagens com motorista já atribuído; o motorista ainda não aceitou a viagem.',
-}
-
-const ONGOING = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
-
-function parseIsoMs(s: string | null | undefined): number | null {
-  if (!s) return null
-  const t = Date.parse(s)
-  return Number.isFinite(t) ? t : null
-}
-
-function matchesDriverFilter(d: PartnerDriverRow, f: DriverFilter): boolean {
-  if (f === 'all') return true
-  const approved = d.status === 'approved'
-  if (f === 'active') return approved
-  if (f === 'online') return approved && d.is_available
-  if (f === 'offline') return approved && !d.is_available
-  return true
-}
-
-function matchesTripFilter(t: PartnerTripRow, f: TripFilter): boolean {
-  if (f === 'all') return true
-  if (f === 'ongoing') return ONGOING.has(t.status)
-  if (f === 'completed') return t.status === 'completed'
-  if (f === 'cancelled') return t.status === 'cancelled'
-  if (f === 'failed') return t.status === 'failed'
-  if (f === 'assigned') return t.status === 'assigned'
-  return true
-}
+import {
+  matchesDriverFilter,
+  matchesTripFilter,
+  ONGOING_TRIP_STATUSES,
+  parseIsoMs,
+  type DriverFilter,
+  type PartnerHomeView,
+  type TripFilter,
+} from './partnerTypes'
+import { PartnerHomeDashboard } from './screens/PartnerHomeDashboard'
+import { PartnerFleetScreen } from './screens/PartnerFleetScreen'
+import { PartnerTripsMenuScreen } from './screens/PartnerTripsMenuScreen'
+import { PartnerReportsMenuScreen } from './screens/PartnerReportsMenuScreen'
+import { PartnerSettingsMenuScreen } from './screens/PartnerSettingsMenuScreen'
+import { PartnerProfileScreen } from './screens/PartnerProfileScreen'
+import { PartnerInboxScreen } from './screens/PartnerInboxScreen'
 
 function normalizeSearch(q: string): string {
   return q.trim().toLowerCase()
@@ -75,8 +43,15 @@ function normalizePhone(q: string): string {
 }
 
 export function PartnerHome() {
-  const { token, sessionPhone, sessionDisplayName } = useAuth()
-  const { shellTab, menuOpen, setMenuOpen, setInboxUnreadCount } = usePartnerShell()
+  const { token } = useAuth()
+  const {
+    menuOpen,
+    setMenuOpen,
+    menuScreen,
+    setMenuScreen,
+    closeMenu,
+    setInboxUnreadCount,
+  } = usePartnerShell()
   const [metrics, setMetrics] = useState<PartnerMetrics | null>(null)
   const [drivers, setDrivers] = useState<PartnerDriverRow[]>([])
   const [trips, setTrips] = useState<PartnerTripRow[]>([])
@@ -93,7 +68,7 @@ export function PartnerHome() {
   const [discoverLoading, setDiscoverLoading] = useState(false)
   const [discoverOk, setDiscoverOk] = useState<string | null>(null)
   const [discoverSearched, setDiscoverSearched] = useState(false)
-  const [homeView, setHomeView] = useState<PartnerHomeView>('list')
+  const [fleetView, setFleetView] = useState<PartnerHomeView>('list')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -122,7 +97,7 @@ export function PartnerHome() {
   usePolling(
     load,
     [load],
-    (shellTab === 'fleet' && homeView === 'map') || shellTab === 'home',
+    (menuOpen && menuScreen === 'fleet' && fleetView === 'map') || !menuOpen,
     12_000
   )
 
@@ -142,9 +117,6 @@ export function PartnerHome() {
       return name.includes(ql) || (nq.length >= 2 && phone.includes(nq))
     })
   }, [discoverQuery, drivers])
-
-  const shellTitle =
-    shellTab === 'home' ? 'Início' : shellTab === 'fleet' ? 'Frota' : shellTab === 'inbox' ? 'Caixa' : 'Menu'
 
   const runDiscovery = async () => {
     const q = discoverQuery.trim()
@@ -266,7 +238,7 @@ export function PartnerHome() {
     let cancelled = 0
     let failed = 0
     for (const t of trips) {
-      if (ONGOING.has(t.status)) ongoing += 1
+      if (ONGOING_TRIP_STATUSES.has(t.status)) ongoing += 1
       else if (t.status === 'completed') completed += 1
       else if (t.status === 'cancelled') cancelled += 1
       else if (t.status === 'failed') failed += 1
@@ -280,462 +252,105 @@ export function PartnerHome() {
       .slice(0, 8)
   }, [trips])
 
-  const chip = (active: boolean) =>
-    `px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${active
-      ? 'bg-primary text-primary-foreground border-primary'
-      : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
-    }`
+  const renderMenuScreen = (screen: PartnerMenuScreen) => {
+    if (screen === 'fleet') {
+      return (
+        <PartnerFleetScreen
+          metrics={metrics}
+          drivers={drivers}
+          trips={trips}
+          filteredDrivers={filteredDrivers}
+          driverFilter={driverFilter}
+          onDriverFilterChange={setDriverFilter}
+          fleetView={fleetView}
+          onFleetViewChange={setFleetView}
+          loading={loading}
+          onRefresh={() => void load()}
+          discoverQuery={discoverQuery}
+          onDiscoverQueryChange={setDiscoverQuery}
+          discoverLoading={discoverLoading}
+          discoverRows={discoverRows}
+          discoverSearched={discoverSearched}
+          discoverAlreadyInFleet={discoverAlreadyInFleet}
+          onDiscoverSearch={() => void runDiscovery()}
+          onAddToFleet={(id) => void addToFleet(id)}
+        />
+      )
+    }
+    if (screen === 'trips') {
+      return (
+        <PartnerTripsMenuScreen
+          tripStats={tripStats}
+          recentTrips={recentTrips}
+          filteredTrips={filteredTrips}
+          drivers={drivers}
+          tripFilter={tripFilter}
+          onTripFilterChange={setTripFilter}
+          tripDriverFilter={tripDriverFilter}
+          onTripDriverFilterChange={setTripDriverFilter}
+          tripDateFrom={tripDateFrom}
+          onTripDateFromChange={setTripDateFrom}
+          tripDateTo={tripDateTo}
+          onTripDateToChange={setTripDateTo}
+          loading={loading}
+          onDownloadCsv={() => void downloadCsv()}
+        />
+      )
+    }
+    if (screen === 'reports') {
+      return (
+        <PartnerReportsMenuScreen metrics={metrics} onDownloadCsv={() => void downloadCsv()} />
+      )
+    }
+    if (screen === 'settings') {
+      return <PartnerSettingsMenuScreen onRefresh={() => void load()} />
+    }
+    if (screen === 'profile') {
+      return <PartnerProfileScreen />
+    }
+    if (screen === 'inbox') {
+      return <PartnerInboxScreen onUnreadChange={setInboxUnreadCount} />
+    }
+    return null
+  }
 
   return (
     <div className="flex min-h-full flex-col max-w-lg mx-auto w-full">
       <div className="flex-1 space-y-6 p-4 pb-4">
-      <PartnerSideMenu
-        open={menuOpen}
-        onOpenChange={setMenuOpen}
-        renderScreen={(screen) =>
-          screen === 'fleet' ? (
-            <div className="space-y-4 text-sm text-foreground">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Resumo rápido da frota. A pesquisa, filtros e listas completas continuam no ecrã principal — fecha o
-                menu para aceder.
-              </p>
-              {metrics ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-border bg-background px-3 py-2">
-                    <p className="text-[11px] text-muted-foreground">Motoristas (total)</p>
-                    <p className="text-lg font-semibold tabular-nums">{metrics.total_drivers}</p>
-                  </div>
-                  <div className="rounded-xl border border-border bg-background px-3 py-2">
-                    <p className="text-[11px] text-muted-foreground">Com GPS recente</p>
-                    <p className="text-lg font-semibold tabular-nums">{metrics.active_drivers}</p>
-                  </div>
-                  <div className="rounded-xl border border-border bg-background px-3 py-2">
-                    <p className="text-[11px] text-muted-foreground">Viagens hoje</p>
-                    <p className="text-lg font-semibold tabular-nums">{metrics.trips_today}</p>
-                  </div>
-                  <div className="rounded-xl border border-border bg-background px-3 py-2">
-                    <p className="text-[11px] text-muted-foreground">Total viagens</p>
-                    <p className="text-lg font-semibold tabular-nums">{metrics.trips_total}</p>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">A carregar métricas…</p>
-              )}
-              <button
-                type="button"
-                onClick={() => void load()}
-                className="w-full min-h-11 rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
-              >
-                Atualizar dados
-              </button>
-            </div>
-          ) : screen === 'trips' ? (
-            <div className="space-y-4 text-sm text-foreground">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Contagens e atalhos. Lista filtrável completa no ecrã principal.
-              </p>
-              <div className="rounded-xl border border-border bg-background px-3 py-2 space-y-1 text-xs">
-                <p>
-                  <span className="text-muted-foreground">Total:</span>{' '}
-                  <span className="font-semibold tabular-nums">{tripStats.total}</span>
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Em curso:</span>{' '}
-                  <span className="font-semibold tabular-nums">{tripStats.ongoing}</span>
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Concluídas / Canceladas / Falhadas:</span>{' '}
-                  <span className="font-semibold tabular-nums">
-                    {tripStats.completed} · {tripStats.cancelled} · {tripStats.failed}
-                  </span>
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void downloadCsv()}
-                className="w-full min-h-11 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 touch-manipulation"
-              >
-                Exportar viagens (CSV)
-              </button>
-              {recentTrips.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-foreground/80">Últimas actualizações</p>
-                  <ul className="space-y-2">
-                    {recentTrips.map((t) => (
-                      <li key={t.trip_id}>
-                        <Link
-                          to={`/partner/trips/${encodeURIComponent(t.trip_id)}`}
-                          className="block rounded-lg border border-border/80 bg-card px-3 py-2 text-xs font-medium text-primary hover:underline"
-                        >
-                          {t.trip_id.slice(0, 8)}… · {t.status}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">Sem viagens carregadas.</p>
-              )}
-            </div>
-          ) : screen === 'reports' ? (
-            <div className="space-y-4 text-sm text-foreground">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Indicadores de alto nível e exportação. Relatórios avançados ficam para fases seguintes.
-              </p>
-              {metrics ? (
-                <ul className="rounded-xl border border-border bg-background px-3 py-3 space-y-2 text-xs">
-                  <li>
-                    Taxa de conclusão (aprox.):{' '}
-                    <span className="font-semibold">
-                      {metrics.trips_total > 0
-                        ? `${Math.round((metrics.trips_completed / metrics.trips_total) * 100)}%`
-                        : '—'}
-                    </span>{' '}
-                    <span className="text-muted-foreground">(concluídas / total)</span>
-                  </li>
-                  <li>
-                    Viagens canceladas (registadas):{' '}
-                    <span className="font-semibold tabular-nums">{metrics.trips_cancelled}</span>
-                  </li>
-                  <li>
-                    Motoristas activos (GPS):{' '}
-                    <span className="font-semibold tabular-nums">{metrics.active_drivers}</span>
-                  </li>
-                </ul>
-              ) : null}
-              <p className="text-xs text-muted-foreground">
-                Colunas do CSV: {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}.
-              </p>
-              <button
-                type="button"
-                onClick={() => void downloadCsv()}
-                className="w-full min-h-11 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 touch-manipulation"
-              >
-                Descarregar CSV
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4 text-sm text-foreground">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Conta e preferências do gestor de frota (modo BETA). Palavras-passe e alterações sensíveis podem exigir
-                ajuda do administrador.
-              </p>
-              <div className="rounded-xl border border-border bg-background px-3 py-3 space-y-1 text-xs">
-                <p className="font-medium text-foreground">{sessionDisplayName ?? 'Gestor frota'}</p>
-                <p className="text-muted-foreground">{sessionPhone ?? 'Telefone não disponível'}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                O painel <span className="font-medium text-foreground/90">Conta (BETA)</span> no fundo do ecrã principal
-                reúne dados de perfil e sessão.
-              </p>
-              <button
-                type="button"
-                onClick={() => void load()}
-                className="w-full min-h-11 rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
-              >
-                Actualizar vista
-              </button>
-            </div>
-          )
-        }
-      />
+        <PartnerSideMenu
+          open={menuOpen}
+          onOpenChange={(open) => {
+            if (open) {
+              setMenuOpen(true)
+            } else {
+              closeMenu()
+            }
+          }}
+          screen={menuScreen}
+          onScreenChange={setMenuScreen}
+          renderScreen={renderMenuScreen}
+        />
 
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">{shellTitle}</h2>
-      </div>
-
-      {loading && <p className="text-sm text-muted-foreground">A carregar…</p>}
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {discoverOk && shellTab === 'fleet' && (
-        <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">{discoverOk}</p>
-      )}
-
-      {shellTab === 'home' ? (
-        <>
-          <label className="block text-sm text-foreground/80" htmlFor="partner-search">
-            Pesquisar viagens (ID, motorista ou passageiro)
-          </label>
-          <input
-            id="partner-search"
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="ID viagem, nome/telefone motorista ou ID passageiro"
-            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
-          />
-
-          {metrics && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Viagens hoje</p>
-                <p className="text-xl font-bold text-foreground">{metrics.trips_today}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Total viagens</p>
-                <p className="text-xl font-bold text-foreground">{metrics.trips_total}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Concluídas</p>
-                <p className="text-xl font-bold text-foreground">{metrics.trips_completed}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Canceladas</p>
-                <p className="text-xl font-bold text-foreground">{metrics.trips_cancelled}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Motoristas ativos (GPS)</p>
-                <p className="text-xl font-bold text-foreground">{metrics.active_drivers}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card p-3">
-                <p className="text-xs text-muted-foreground">Total motoristas</p>
-                <p className="text-xl font-bold text-foreground">{metrics.total_drivers}</p>
-              </div>
-            </div>
-          )}
-
-          <BetaAccountPanel />
-
-          <button
-            type="button"
-            onClick={() => void load()}
-            className="w-full rounded-xl bg-secondary py-2 text-sm font-medium text-secondary-foreground"
-          >
-            Atualizar
-          </button>
-        </>
-      ) : null}
-
-      {shellTab === 'inbox' ? (
-        <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
-          <PartnerMessagesSection fullWidth onUnreadChange={setInboxUnreadCount} />
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-foreground">Início</h2>
         </div>
-      ) : null}
 
-      {shellTab === 'fleet' ? (
-        <>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'list' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
-              onClick={() => setHomeView('list')}
-            >
-              Lista
-            </button>
-            <button
-              type="button"
-              data-testid="partner-view-map"
-              className={`flex-1 min-h-10 rounded-xl border text-sm font-semibold touch-manipulation ${homeView === 'map' ? 'border-primary bg-primary/10 text-foreground' : 'border-border bg-card text-muted-foreground'}`}
-              onClick={() => setHomeView('map')}
-            >
-              Mapa live
-            </button>
-          </div>
+        {loading && <p className="text-sm text-muted-foreground">A carregar…</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        {discoverOk && menuOpen && menuScreen === 'fleet' && (
+          <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">
+            {discoverOk}
+          </p>
+        )}
 
-          {homeView === 'map' ? (
-            <PartnerFleetMap drivers={drivers} trips={trips} />
-          ) : null}
-
-          {homeView === 'list' ? (
-        <>
-          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
-            <h3 className="font-medium text-foreground">Adicionar motorista à frota</h3>
-            <p className="text-sm text-foreground/75">
-              Pesquisa por nome ou telefone e adiciona com um clique (sem UUIDs manuais).
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="search"
-                value={discoverQuery}
-                onChange={(e) => setDiscoverQuery(e.target.value)}
-                placeholder="Nome ou telefone…"
-                className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
-              />
-              <button
-                type="button"
-                onClick={() => void runDiscovery()}
-                disabled={discoverLoading || discoverQuery.trim().length < 2}
-                className="px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
-              >
-                {discoverLoading ? '…' : 'Procurar'}
-              </button>
-            </div>
-            {discoverRows.length > 0 ? (
-              <ul className="space-y-2">
-                {discoverRows.map((r) => (
-                  <li
-                    key={r.user_id}
-                    className="rounded-xl border border-border bg-background/30 p-3 text-sm flex items-start justify-between gap-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground truncate">{r.name ?? '—'}</p>
-                      <p className="text-muted-foreground">{r.phone ?? '—'}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => void addToFleet(r.user_id)}
-                      className="shrink-0 min-h-11 px-3 rounded-lg bg-card border border-border text-foreground/90 text-xs font-semibold hover:bg-muted/40 touch-manipulation"
-                    >
-                      Adicionar à frota
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : discoverSearched && discoverAlreadyInFleet ? (
-              <p className="text-sm text-muted-foreground">Já pertence à tua frota.</p>
-            ) : discoverSearched ? (
-              <p className="text-sm text-muted-foreground">
-                Só aparecem motoristas da frota Default aprovados, ainda não na tua frota.
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Pesquisa por nome ou telefone para encontrar motoristas disponíveis na frota Default.
-              </p>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-base font-medium text-foreground mb-2">Motoristas</h3>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {(
-                [
-                  ['all', 'Todos'],
-                  ['active', 'ativos'],
-                  ['online', 'online'],
-                  ['offline', 'offline'],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={chip(driverFilter === id)}
-                  onClick={() => setDriverFilter(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <ul className="space-y-2">
-              {filteredDrivers.map((d) => (
-                <li key={d.user_id} className="rounded-xl border border-border bg-card p-3 text-sm">
-                  <Link
-                    to={`/partner/drivers/${encodeURIComponent(d.user_id)}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {d.user.name ?? '—'}
-                  </Link>
-                  <p className="text-muted-foreground">
-                    Estado: {d.status}
-                    {d.is_available ? ' · disponível' : ' · indisponível'}
-                  </p>
-                  <p className="text-muted-foreground text-xs mt-1">{locationLabel(d)}</p>
-                </li>
-              ))}
-            </ul>
-            {!loading && filteredDrivers.length === 0 && (
-              <p className="text-sm text-muted-foreground">Sem motoristas neste filtro.</p>
-            )}
-          </div>
-
-          <div>
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <h3 className="text-base font-medium text-foreground">Viagens</h3>
-              <button
-                type="button"
-                onClick={() => void downloadCsv()}
-                className="shrink-0 text-xs font-medium text-primary underline-offset-2 hover:underline"
-              >
-                Exportar CSV
-              </button>
-            </div>
-            <p className="text-xs text-muted-foreground mb-3">
-              Colunas do CSV (UTF-8): {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}. Contrato estável: em versões futuras só se acrescentam
-              colunas no fim — quem importa por posição deve usar o cabeçalho.
-            </p>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {(
-                [
-                  ['all', 'Todas'],
-                  ['ongoing', 'Em curso'],
-                  ['completed', 'Concluídas'],
-                  ['cancelled', 'Canceladas'],
-                  ['failed', 'Falhadas'],
-                  ['assigned', 'Por aceitar'],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  title={TRIP_FILTER_HINT[id]}
-                  className={chip(tripFilter === id)}
-                  onClick={() => setTripFilter(id)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-              <label className="text-xs text-muted-foreground">
-                Motorista
-                <select
-                  value={tripDriverFilter}
-                  onChange={(e) => setTripDriverFilter(e.target.value)}
-                  className="mt-1 w-full px-2 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                >
-                  <option value="">Todos</option>
-                  {drivers.map((d) => (
-                    <option key={d.user_id} value={d.user_id}>
-                      {d.user.name ?? d.user_id.slice(0, 8)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-xs text-muted-foreground">
-                Desde
-                <input
-                  type="date"
-                  value={tripDateFrom}
-                  onChange={(e) => setTripDateFrom(e.target.value)}
-                  className="mt-1 w-full px-2 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                />
-              </label>
-              <label className="text-xs text-muted-foreground">
-                Até
-                <input
-                  type="date"
-                  value={tripDateTo}
-                  onChange={(e) => setTripDateTo(e.target.value)}
-                  className="mt-1 w-full px-2 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
-                />
-              </label>
-            </div>
-            <ul className="space-y-2">
-              {filteredTrips.map((t) => (
-                <li key={t.trip_id} className="rounded-xl border border-border bg-card p-3 text-sm">
-                  <Link
-                    to={`/partner/trips/${encodeURIComponent(t.trip_id)}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    {t.trip_id.slice(0, 8)}… · {t.status}
-                  </Link>
-                  <p className="text-muted-foreground text-xs mt-1">
-                    Criada: {t.created_at}
-                    {t.updated_at ? ` · Atualizada: ${t.updated_at}` : null}
-                  </p>
-                </li>
-              ))}
-            </ul>
-            {!loading && filteredTrips.length === 0 && (
-              <p className="text-sm text-muted-foreground">Sem viagens neste filtro.</p>
-            )}
-          </div>
-        </>
-      ) : null}
-        </>
-      ) : null}
-
+        <PartnerHomeDashboard
+          metrics={metrics}
+          search={search}
+          onSearchChange={setSearch}
+          onRefresh={() => void load()}
+        />
       </div>
 
-      {shellTab === 'home' ? (
       <div className="sticky bottom-[52px] z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
         <h3 className="text-sm font-medium text-foreground">Alertas operacionais</h3>
         <p className="text-[11px] text-foreground/75 mt-0.5">
@@ -745,7 +360,6 @@ export function PartnerHome() {
           <PartnerAlertsPanel alerts={operationalAlerts} />
         </div>
       </div>
-      ) : null}
     </div>
   )
 }
