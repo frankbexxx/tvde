@@ -31,6 +31,77 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 ---
 
+## Painel — 2026-05-24 / fecho 2026-05-29 (smokes pós-merge #341 — grelha fechada)
+
+**Smokes:** **S-SMK-341-1…6** **Concluídos** (sessão matinal **2026-05-29**).
+
+**Referência:** plano smoke-fixes · PR **#341** · commit merge `a208949`
+
+### Entrega código (#341 — fechada)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **F-DOC-1** | Upload docs → `pending_review` + legacy coerce | Concluído | `driver_document_upload.py`; pytest docs API |
+| **F-BLK-1** | Sync offline servidor ↔ `localStorage` | Concluído | `GET /driver/status` + reconcile mount |
+| **F-BLK-1b** | Gate docs no arranque + banner «Documentos em falta» | Concluído | `DriverDashboard`; offline pill clicável |
+| **F-DISC-1** | Discover guard Default pool + ordem rota + copy FE | Concluído | `partner_driver_discovery.py`; `PartnerHome` empty-state |
+| **F-UX-6** | Timeout oferta fallback 60s | Concluído | `offer_dispatch.py`; sanity pytest |
+| **F-UX-7** | Contadores categorias vs silenciadas/expiradas | Concluído | `driverWaitingHint` |
+| **F-UX-8** | Ofertas silenciadas persistem na sessão | Concluído | `driverOfferDismiss.ts` + menu |
+| **F-UX-4** | Painel oferta compacto (sem scroll 360×800) | Concluído | `RequestCard` + `MAP_SHEET_MAX_H_OFFER` |
+| **F-UX-5** | Botão «Silenciar» compacto | Concluído | `text-[10px]` |
+| **F-UX-1** | Badge unread Caixa (driver) | Concluído | `DriverBottomNav` + poll inbox |
+| **F-UX-2** | Partner inbox auto-refresh | Concluído | `PartnerMessagesSection` poll 15s |
+| **F-UX-3** | Partner bottom nav (paridade driver) | Concluído | `PartnerLayout` + `PartnerBottomNav` |
+| **F-PAX-1** | Passageiro: limpar rota fantasma entre viagens | Concluído | `planningRouteGeoJSON` reset/cancel/new trip |
+| **R-E2E-341** | E2E `partner-shell.spec.ts` actualizado (bottom nav) | Concluído | Correr `npm run test:e2e` na sessão smoke se útil |
+
+### Smokes manuais prod (**S-SMK-341-***)
+
+**Onde:** prod Render · 3 janelas (passageiro \| motorista \| partner). **S-P8** (extensão zona partner) **fora** deste ciclo.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-SMK-341-1** | Driver: upload docs → «Em revisão» → partner aprova → 6/6 | Concluído | Pass; ressalvas **F-SMK-DOC-*** |
+| **S-SMK-341-2** | Driver: offline → online (mapa, pill, F5 sync) | Concluído | Marly 6/6; F-BLK-1 OK |
+| **S-SMK-341-3** | Partner: bottom nav 4 tabs + inbox auto-refresh | Concluído | Tabs OK; poll 7 aceite (net + teste Manel ontem) |
+| **S-SMK-341-4** | Partner: discover copy Default / «já na frota» | Concluído | 1–2 OK; 3 sem resultados OK; hint OK |
+| **S-SMK-341-5** | Passageiro: nova viagem **sem** rota roxa antiga | Concluído | Cancel + viagem completa + rating OK |
+| **S-SMK-341-6** | Driver: silenciar + categorias vs silenciada | Concluído | Silenciar + «Voltar a mostrar» OK; categorias testadas (X); ressalvas **TW-SMK-OFFER-*** + **F-SMK-CAT-1** |
+
+**Regra pós-smokes:** escolher **1 carril** de fixes (**F-SMK-*** / **TW-SMK-*** / **F-NAV-1**) antes de codar; sem regressão **S1** salvo delta.
+
+### Rasto smoke **S-SMK-341-1** — docs (fixes pós-smoke — fila código)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **F-SMK-DOC-1** | Driver não actualiza docs após aprovação partner (só após sair/entrar) | Por iniciar | Refresh/poll ao reabrir Documentos |
+| **F-SMK-DOC-2** | Input «Carregar ficheiro» mostra «Nenhum selecionado» com doc já enviado | Por iniciar | Mostrar «Enviado» / nome ficheiro |
+| **F-SMK-DOC-3** | Alertas Frota / lista não sinalizam `pending_review` | Por iniciar | `GET /partner/drivers` sem `documents` |
+| **TW-SMK-DOC-4** | Banner «Documentos em falta» no topo do mapa | Por iniciar | Infobox junto ao bottom nav |
+| **TW-SMK-DOC-5** | Partner detalhe sem contador «X / 6» | Por iniciar | Paridade driver |
+| **TW-SMK-DOC-6** | Ordem docs driver ≠ partner (Viatura+Motorista) | N/A | Cosmético |
+
+### Rasto smoke **S-SMK-341-6** — ofertas silenciadas + categorias (fila código)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **TW-SMK-OFFER-1** | «Ofertas silenciadas» em **Menu → Documentos** (fim scroll) | Por iniciar | Deve ir para **Menu → Viagens** (submenu) |
+| **TW-SMK-OFFER-2** | Copy «Menu → Ofertas silenciadas» enganadora | Por iniciar | Alinhar ao submenu correcto |
+| **F-SMK-CAT-1** | Reactivar categoria **X** + «tentar novamente» não basta | Por iniciar | Off/on não re-sync; **refresh** ou **viagem nova**; patch categorias vs poll ofertas |
+
+**Categorias em prod (341-6):** passageiro **sem** picker — viagens vão como **X**; filtro no servidor (`list_available_trips`); mensagem «fora das categorias» **não** aparece quando motorista sem X — teste manual X on/off **feito**; picker passageiro = **N/A**.
+
+### Abertos (não bloqueiam fecho smokes #341)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **F-NAV-1** | Waze abre duas vezes (aceite + iniciar) | Por iniciar | Próximo carril P0 pós-smokes |
+| **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Frank lista ecrãs |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Smoke pendente | Partner **feito** (#341); passageiro parcial (#287) |
+
+---
+
 ## Painel — 2026-05-23 (**DIA 23** — fecho de fase)
 
 **Marco:** mapa full-bleed, caixas compactas, tokens `infoBoxTemplate`, TVDE 1–9. Merge **`#333`** + **`#334`** em `main` @ **`91aa886`**. Frank: **«quase bom»** — fase **fechada**; micro layout + Waze → fila **próxima sessão**.
@@ -57,15 +128,20 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (lista consolidada — 2026-05-23)
+## Painel — **PRÓXIMA SESSÃO** (lista consolidada — pós-smokes **#341**, **2026-05-29**)
 
-**Objectivo:** restructurar prioridades e direcção. **Fontes alinhadas:** este painel · [`docs/todo-em-curso.md`](docs/todo-em-curso.md) · [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md).
+**Objectivo:** escolher **1 carril** (P0 fixes produto vs P1 staging vs P5 ops). Smokes **S-SMK-341-1…6** **fechados**. **Fontes:** este painel · [`docs/todo-em-curso.md`](docs/todo-em-curso.md) · [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md).
 
 ### P0 — produto imediato (motorista / mapa)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **F-NAV-1** | Navegação externa: **uma** abertura Waze/Maps por transição lógica | Por iniciar | Duplicado aceite+iniciar; ver grelha **G12/G19** |
+| **S-SMK-341-1…6** | Grelha smokes manuais prod pós-**#341** | Concluído | Fecho **2026-05-29**; painel **2026-05-24** |
+| **F-SMK-DOC-1…3** | Fixes docs (driver refresh, input, partner alertas) | Por iniciar | Rasto **341-1** |
+| **TW-SMK-DOC-4…5** | Banner docs + contador partner | Por iniciar | |
+| **TW-SMK-OFFER-1…2** | Menu/copy ofertas silenciadas | Por iniciar | Rasto **341-6** |
+| **F-SMK-CAT-1** | Sync categorias ao reactivar X (sem refresh) | Por iniciar | Rasto **341-6**; off/on não basta |
+| **F-NAV-1** | Navegação externa: **uma** abertura Waze/Maps por transição lógica | Por iniciar | G12/G19 |
 | **TW-DIA23-1** | Micro tweaks layout dia 23 | Por iniciar | Após Frank listar ecrãs (Render) |
 | **TW-05** | InfoBox + mapa (revisão screenshots) | Concluído | Fase dia 23 fechada; só **TW-DIA23-1** residual |
 
@@ -83,7 +159,7 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **O-UX20-1** | Sessão desenho UX 2.0 (motorista) | Por iniciar | [`DRIVER_UX_2_0.md`](docs/product/DRIVER_UX_2_0.md) |
-| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro (paridade) | Por iniciar | Shell passageiro parcial (**#287**) |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro (paridade) | Smoke pendente | Partner **#341**; passageiro parcial (**#287**) |
 | **TW-04** | Espaçamento barra 4 ícones (opcional) | Por iniciar | Residual pós-D23 |
 | **TW-06** | Ícone lista multi-ofertas | N/A | Secundário |
 
