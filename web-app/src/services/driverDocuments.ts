@@ -14,6 +14,7 @@ export type DriverDocumentStatus = 'missing' | 'pending_review' | 'approved' | '
 export interface DriverDocumentDetails {
   expiresAt: string | null
   partnerNote: string | null
+  fileName?: string | null
 }
 
 export interface DriverDocumentsState {
@@ -52,6 +53,7 @@ function sanitizeDocDetails(
     out[k] = {
       expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
       partnerNote: typeof row.partnerNote === 'string' ? row.partnerNote : null,
+      fileName: typeof row.fileName === 'string' ? row.fileName : null,
     }
   }
   return out

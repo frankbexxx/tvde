@@ -13,6 +13,7 @@ export type ServerDocRow = {
   status?: string
   expires_at?: string | null
   partner_note?: string | null
+  file_name?: string | null
 }
 
 export interface DriverDocumentsApiState {
@@ -44,7 +45,7 @@ export function driverDocumentsFromServer(
     if (!row || typeof row !== 'object') continue
     const st = row.status
     if (st && isStatus(st)) docs[k] = st
-    if ('expires_at' in row || 'partner_note' in row) {
+    if ('expires_at' in row || 'partner_note' in row || 'file_name' in row) {
       docDetails[k] = {
         expiresAt:
           'expires_at' in row
@@ -56,6 +57,12 @@ export function driverDocumentsFromServer(
           'partner_note' in row
             ? typeof row.partner_note === 'string'
               ? row.partner_note
+              : null
+            : null,
+        fileName:
+          'file_name' in row
+            ? typeof row.file_name === 'string'
+              ? row.file_name
               : null
             : null,
       }
@@ -95,6 +102,12 @@ export function mergeServerDriverDocuments(
             ? row.partner_note
             : null
           : (prevD?.partnerNote ?? null),
+      fileName:
+        'file_name' in row
+          ? typeof row.file_name === 'string'
+            ? row.file_name
+            : null
+          : (prevD?.fileName ?? null),
     }
   }
   const ready = REQUIRED_DRIVER_DOCUMENTS.every((key) => docs[key] === 'approved')

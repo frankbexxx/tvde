@@ -103,6 +103,7 @@ import {
   fetchDriverDocuments,
   driverDocumentsFromServer,
   patchDriverDocuments,
+  type DriverDocumentsApiState,
 } from '../../api/driverDocuments'
 import { formatPickup, formatDestination } from '../../utils/format'
 import {
@@ -110,7 +111,7 @@ import {
   haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
-import { openDriverExternalNav, driverNavAppLabel, warmDriverNavSessionIfNeeded } from '../../utils/openDriverExternalNav'
+import { warmDriverNavSessionIfNeeded } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import {
   BTN_DRIVER_STEP1,
@@ -311,7 +312,7 @@ function buildDriverWaitingHint(opts: {
   }
   if (opts.silencedActiveCount > 0) {
     parts.push(
-      `${opts.silencedActiveCount} oferta(s) silenciada(s). Ver Menu → Ofertas silenciadas.`
+      `${opts.silencedActiveCount} oferta(s) silenciada(s). Ver em Menu → Viagens.`
     )
   }
   if (opts.expiredAvailableCount > 0) {
@@ -540,12 +541,10 @@ export function DriverDashboard() {
 
   const hasAnyCategoryAwareOffer = availableWithCategoryMeta.some((x) => x.categories.length > 0)
   const filteredAvailable = useMemo(() => {
-    return availableWithCategoryMeta
-      .filter(({ categories }) => categories.length === 0 || categories.some((c) => vehicleCategories.includes(c)))
-      .map((x) => x.trip)
+    return (available ?? [])
       .filter((t) => !dismissedOfferTripIds.has(t.trip_id))
       .filter((t) => !isDriverOfferExpired(t.expires_at))
-  }, [availableWithCategoryMeta, vehicleCategories, dismissedOfferTripIds])
+  }, [available, dismissedOfferTripIds])
 
   const categoryFilteredOutCount = useMemo(() => {
     return availableWithCategoryMeta.filter(({ trip, categories }) => {
@@ -824,13 +823,47 @@ export function DriverDashboard() {
   }, [token])
 
   const refreshDriverDocumentsFromServer = useCallback(() => {
-    if (!token) return
-    void fetchDriverDocuments(token)
+    if (!token) return Promise.resolve()
+    return fetchDriverDocuments(token)
       .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
       .catch(() => {
         /* API antiga ou offline */
       })
   }, [token])
+
+  const docsPanelActive = menuOpen && driverMenuScreen === 'docs'
+
+  useEffect(() => {
+    if (!docsPanelActive) return
+    refreshDriverDocumentsFromServer()
+  }, [docsPanelActive, refreshDriverDocumentsFromServer])
+
+  usePolling(
+    refreshDriverDocumentsFromServer,
+    [refreshDriverDocumentsFromServer],
+    docsPanelActive,
+    15_000
+  )
+
+  const handleToggleVehicleCategory = useCallback(
+    (category: DriverVehicleCategory) => {
+      setVehicleCategories((prev) => {
+        const exists = prev.includes(category)
+        const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
+        const safe = next.length > 0 ? next : prev
+        setDriverVehicleCategories(safe)
+        if (token) {
+          void patchDriverVehicleCategoriesApi(token, safe)
+            .then(() => refetchAvailable())
+            .catch(() => {
+              sonnerToast.error('Não foi possível guardar categorias')
+            })
+        }
+        return safe
+      })
+    },
+    [token, refetchAvailable]
+  )
 
   const handlePatchDriverDocument = useCallback(
     (doc: DriverRequiredDocument, status: DriverDocumentStatus) => {
@@ -951,8 +984,6 @@ export function DriverDashboard() {
             lng: availableForFallback.destination_lng,
           },
         }
-        openDriverExternalNav(availableForFallback.origin_lat, availableForFallback.origin_lng)
-        sonnerToast.message(`A abrir ${driverNavAppLabel()} (recolha)`, { duration: 3000 })
       }
       // Fase 1 mock: MOCK_DRIVER_START → pickup (só DEV + mock, após ACEITAR).
       if (
@@ -1226,20 +1257,7 @@ export function DriverDashboard() {
             setDriverNavPref(app)
             addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
           }}
-          onToggleVehicleCategory={(category) => {
-            setVehicleCategories((prev) => {
-              const exists = prev.includes(category)
-              const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
-              const safe = next.length > 0 ? next : prev
-              setDriverVehicleCategories(safe)
-              if (token) {
-                void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
-                  /* keep local preference even if backend fails */
-                })
-              }
-              return safe
-            })
-          }}
+          onToggleVehicleCategory={handleToggleVehicleCategory}
           onPatchDriverDocument={handlePatchDriverDocument}
           onToggleDriverDocsGate={(enabled) => {
             setDriverDocsGateEnabled(enabled)
@@ -1270,22 +1288,12 @@ export function DriverDashboard() {
                   setDriverNavPref(app)
                   addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
                 }}
-                onToggleVehicleCategory={(category) => {
-                  setVehicleCategories((prev) => {
-                    const exists = prev.includes(category)
-                    const next = exists ? prev.filter((c) => c !== category) : [...prev, category]
-                    const safe = next.length > 0 ? next : prev
-                    setDriverVehicleCategories(safe)
-                    if (token) {
-                      void patchDriverVehicleCategoriesApi(token, safe).catch(() => {
-                        /* keep local preference even if backend fails */
-                      })
-                    }
-                    return safe
-                  })
-                }}
+                onToggleVehicleCategory={handleToggleVehicleCategory}
                 onPatchDriverDocument={handlePatchDriverDocument}
                 onRefreshDriverDocuments={refreshDriverDocumentsFromServer}
+                onMergeDriverDocuments={(server) =>
+                  setDriverDocuments(driverDocumentsFromServer(server))
+                }
                 onToggleDriverDocsGate={(enabled) => {
                   setDriverDocsGateEnabled(enabled)
                   setDriverDocumentsGateEnabled(enabled)
@@ -2596,6 +2604,7 @@ function DriverOperationsMenu({
   onToggleVehicleCategory,
   onPatchDriverDocument,
   onRefreshDriverDocuments,
+  onMergeDriverDocuments,
   onToggleDriverDocsGate,
 }: {
   sessionDisplayName: string | null
@@ -2616,6 +2625,7 @@ function DriverOperationsMenu({
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
   onRefreshDriverDocuments?: () => void
+  onMergeDriverDocuments?: (server: DriverDocumentsApiState) => void
   onToggleDriverDocsGate: (enabled: boolean) => void
 }) {
   const { isAdmin, token } = useAuth()
@@ -3214,6 +3224,40 @@ function DriverOperationsMenu({
           ) : (
             <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
           )}
+          {silencedOfferEntries.length > 0 ? (
+            <div className={MENU_CARD} data-testid="driver-menu-silenced-offers">
+              <p className="text-xs font-medium text-foreground">Ofertas silenciadas</p>
+              <ul className="mt-2 space-y-2">
+                {silencedOfferEntries.map((o) => (
+                  <li key={o.tripId} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="min-w-0 truncate text-foreground/85">
+                      {o.label}
+                      {o.state === 'expired' ? (
+                        <span className="ml-1 text-[10px] text-muted-foreground">(expirada)</span>
+                      ) : o.state === 'gone' ? (
+                        <span className="ml-1 text-[10px] text-muted-foreground">(já não disponível)</span>
+                      ) : null}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={o.state === 'gone'}
+                      className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] font-medium disabled:opacity-40"
+                      onClick={() => onRestoreSilencedOffer?.(o.tripId)}
+                    >
+                      Voltar a mostrar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                className={`mt-2 ${MENU_BTN_SM}`}
+                onClick={() => onRestoreAllSilencedOffers?.()}
+              >
+                Mostrar todas
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -3529,7 +3573,7 @@ function DriverOperationsMenu({
         <div className={MENU_PANEL}>
           <p className="text-sm font-medium text-foreground">Navegação (preferência)</p>
           <p className="text-xs text-muted-foreground">
-            Ao aceitar abrimos a recolha; ao iniciar a viagem abrimos o destino. Durante a viagem podes usar «Abrir navegação».
+            Ao iniciar a viagem abrimos o destino; para a recolha usa «Abrir navegação» durante a viagem.
           </p>
           <div className="flex gap-2">
             <button
@@ -3670,8 +3714,15 @@ function DriverOperationsMenu({
                     </p>
                   ) : null}
                   <div className="mt-2 flex flex-col gap-2">
+                    {meta?.fileName || status !== 'missing' ? (
+                      <p className="text-[11px] text-foreground/85">
+                        {meta?.fileName
+                          ? `Ficheiro enviado: ${meta.fileName}`
+                          : 'Ficheiro enviado'}
+                      </p>
+                    ) : null}
                     <label className="text-[11px] text-muted-foreground">
-                      Carregar ficheiro (PDF/imagem)
+                      {status === 'missing' ? 'Carregar ficheiro (PDF/imagem)' : 'Substituir ficheiro (PDF/imagem)'}
                       <input
                         type="file"
                         accept=".pdf,image/*"
@@ -3680,8 +3731,9 @@ function DriverOperationsMenu({
                           const file = e.target.files?.[0]
                           if (!file || !token) return
                           void uploadDriverDocument(token, doc, file)
-                            .then(() => {
+                            .then((server) => {
                               sonnerToast.success('Ficheiro enviado')
+                              onMergeDriverDocuments?.(server)
                               onRefreshDriverDocuments?.()
                               if (driverDocuments.docs[doc] === 'missing') {
                                 onPatchDriverDocument?.(doc, 'pending_review')
@@ -3704,40 +3756,6 @@ function DriverOperationsMenu({
               )
             })}
           </div>
-          {silencedOfferEntries.length > 0 ? (
-            <div className={MENU_CARD}>
-              <p className="text-xs font-medium text-foreground">Ofertas silenciadas</p>
-              <ul className="mt-2 space-y-2">
-                {silencedOfferEntries.map((o) => (
-                  <li key={o.tripId} className="flex items-center justify-between gap-2 text-xs">
-                    <span className="min-w-0 truncate text-foreground/85">
-                      {o.label}
-                      {o.state === 'expired' ? (
-                        <span className="ml-1 text-[10px] text-muted-foreground">(expirada)</span>
-                      ) : o.state === 'gone' ? (
-                        <span className="ml-1 text-[10px] text-muted-foreground">(já não disponível)</span>
-                      ) : null}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={o.state === 'gone'}
-                      className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] font-medium disabled:opacity-40"
-                      onClick={() => onRestoreSilencedOffer?.(o.tripId)}
-                    >
-                      Voltar a mostrar
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <button
-                type="button"
-                className={`mt-2 ${MENU_BTN_SM}`}
-                onClick={() => onRestoreAllSilencedOffers?.()}
-              >
-                Mostrar todas
-              </button>
-            </div>
-          ) : null}
           <div className={MENU_CARD}>
             {import.meta.env.DEV ? (
               <>

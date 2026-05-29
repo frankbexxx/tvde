@@ -1,4 +1,5 @@
 import { API_BASE, apiFetch } from './client'
+import type { DriverDocumentsApiState } from './driverDocuments'
 
 export interface DriverMessageRow {
   id: string
@@ -43,7 +44,7 @@ export async function uploadDriverDocument(
   token: string,
   docKey: string,
   file: File
-): Promise<void> {
+): Promise<DriverDocumentsApiState> {
   const form = new FormData()
   form.append('file', file)
   const res = await fetch(`${API_BASE.replace(/\/$/, '')}/driver/documents/${encodeURIComponent(docKey)}/upload`, {
@@ -55,4 +56,5 @@ export async function uploadDriverDocument(
     const data = (await res.json().catch(() => ({}))) as { detail?: string }
     throw { status: res.status, detail: data.detail ?? res.statusText }
   }
+  return (await res.json()) as DriverDocumentsApiState
 }

@@ -75,9 +75,9 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **F-SMK-DOC-1** | Driver não actualiza docs após aprovação partner (só após sair/entrar) | Por iniciar | Refresh/poll ao reabrir Documentos |
-| **F-SMK-DOC-2** | Input «Carregar ficheiro» mostra «Nenhum selecionado» com doc já enviado | Por iniciar | Mostrar «Enviado» / nome ficheiro |
-| **F-SMK-DOC-3** | Alertas Frota / lista não sinalizam `pending_review` | Por iniciar | `GET /partner/drivers` sem `documents` |
+| **F-SMK-DOC-1** | Driver não actualiza docs após aprovação partner (só após sair/entrar) | Concluído | Refresh + poll 15s em Menu → Documentos |
+| **F-SMK-DOC-2** | Input «Carregar ficheiro» mostra «Nenhum selecionado» com doc já enviado | Concluído | «Ficheiro enviado» + `file_name` |
+| **F-SMK-DOC-3** | Alertas Frota / lista não sinalizam `pending_review` | Concluído | `GET /partner/drivers` com `documents`; poll home |
 | **TW-SMK-DOC-4** | Banner «Documentos em falta» no topo do mapa | Por iniciar | Infobox junto ao bottom nav |
 | **TW-SMK-DOC-5** | Partner detalhe sem contador «X / 6» | Por iniciar | Paridade driver |
 | **TW-SMK-DOC-6** | Ordem docs driver ≠ partner (Viatura+Motorista) | N/A | Cosmético |
@@ -86,9 +86,9 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TW-SMK-OFFER-1** | «Ofertas silenciadas» em **Menu → Documentos** (fim scroll) | Por iniciar | Deve ir para **Menu → Viagens** (submenu) |
-| **TW-SMK-OFFER-2** | Copy «Menu → Ofertas silenciadas» enganadora | Por iniciar | Alinhar ao submenu correcto |
-| **F-SMK-CAT-1** | Reactivar categoria **X** + «tentar novamente» não basta | Por iniciar | Off/on não re-sync; **refresh** ou **viagem nova**; patch categorias vs poll ofertas |
+| **TW-SMK-OFFER-1** | «Ofertas silenciadas» em **Menu → Documentos** (fim scroll) | Concluído | Movido para **Menu → Viagens** |
+| **TW-SMK-OFFER-2** | Copy «Menu → Ofertas silenciadas» enganadora | Concluído | «Ver em Menu → Viagens» |
+| **F-SMK-CAT-1** | Reactivar categoria **X** + «tentar novamente» não basta | Concluído | `refetchAvailable` após PATCH categorias |
 
 **Categorias em prod (341-6):** passageiro **sem** picker — viagens vão como **X**; filtro no servidor (`list_available_trips`); mensagem «fora das categorias» **não** aparece quando motorista sem X — teste manual X on/off **feito**; picker passageiro = **N/A**.
 
@@ -96,7 +96,8 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **F-NAV-1** | Waze abre duas vezes (aceite + iniciar) | Por iniciar | Próximo carril P0 pós-smokes |
+| **F-NAV-1** | Waze abre duas vezes (aceite + iniciar) | Concluído | Política **B**: só destino ao iniciar; **O-NAV-REV-1** rever G12 |
+| **O-NAV-REV-1** | Rever auto-open recolha (G12) vs política B | Por iniciar | Decisão produto futura |
 | **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Frank lista ecrãs |
 | **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Smoke pendente | Partner **feito** (#341); passageiro parcial (#287) |
 
@@ -137,11 +138,12 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **S-SMK-341-1…6** | Grelha smokes manuais prod pós-**#341** | Concluído | Fecho **2026-05-29**; painel **2026-05-24** |
-| **F-SMK-DOC-1…3** | Fixes docs (driver refresh, input, partner alertas) | Por iniciar | Rasto **341-1** |
+| **F-SMK-DOC-1…3** | Fixes docs (driver refresh, input, partner alertas) | Concluído | PR fixes pós-#341 |
 | **TW-SMK-DOC-4…5** | Banner docs + contador partner | Por iniciar | |
-| **TW-SMK-OFFER-1…2** | Menu/copy ofertas silenciadas | Por iniciar | Rasto **341-6** |
-| **F-SMK-CAT-1** | Sync categorias ao reactivar X (sem refresh) | Por iniciar | Rasto **341-6**; off/on não basta |
-| **F-NAV-1** | Navegação externa: **uma** abertura Waze/Maps por transição lógica | Por iniciar | G12/G19 |
+| **TW-SMK-OFFER-1…2** | Menu/copy ofertas silenciadas | Concluído | |
+| **F-SMK-CAT-1** | Sync categorias ao reactivar X (sem refresh) | Concluído | |
+| **F-NAV-1** | Navegação externa (política B — destino ao iniciar) | Concluído | **O-NAV-REV-1** |
+| **O-NAV-REV-1** | Rever G12 auto-open recolha | Por iniciar | |
 | **TW-DIA23-1** | Micro tweaks layout dia 23 | Por iniciar | Após Frank listar ecrãs (Render) |
 | **TW-05** | InfoBox + mapa (revisão screenshots) | Concluído | Fase dia 23 fechada; só **TW-DIA23-1** residual |
 
