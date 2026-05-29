@@ -4,6 +4,19 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-05-29 — smokes **#341** **fechados** (sessão matinal)
+
+- **`main`:** merge **#341** (`a208949`) — código smoke-fixes; smokes manuais prod **completos**.
+- **S-SMK-341-1…6:** **Concluídos** (Marly docs/offline; partner shell/discover; passageiro rota; driver silenciar + categorias X).
+- **Rasto fixes (código por fazer):**
+  - **Docs:** **F-SMK-DOC-1…3**, **TW-SMK-DOC-4…5** (**TW-SMK-DOC-6** N/A).
+  - **Ofertas/categorias (341-6):** **TW-SMK-OFFER-1…2**, **F-SMK-CAT-1** (reactivar X sem refresh; off/on não re-sync).
+- **Próxima sessão:** escolher **1 carril** P0 (fixes acima + **F-NAV-1**) vs P1 staging vs P5 ops — **sem codar fixes** até alinhamento.
+
+---
+
+## Fecho 2026-05-24 — merge **#341** smoke-fixes (código fechado)
+
 ## Fecho 2026-05-23 — **DIA 23** fase encerrada
 
 - **`main`:** merge **#334** (`91aa886`) — P1-global tokens, step1 driver compacto, helpers audit/probe, conflitos **#333** resolvidos.
