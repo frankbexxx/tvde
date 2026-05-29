@@ -252,6 +252,7 @@ def test_c003_c004_c005_partner_lists_and_metrics() -> None:
     assert row["user"]["phone"] == expected_driver_phone
     assert row["last_location"] is not None
     assert "lat" in row["last_location"]
+    assert "documents" in row
 
     rt = client.get("/partner/trips", headers=h)
     assert rt.status_code == 200

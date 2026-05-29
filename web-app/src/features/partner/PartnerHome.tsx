@@ -122,7 +122,7 @@ export function PartnerHome() {
   usePolling(
     load,
     [load],
-    shellTab === 'fleet' && homeView === 'map',
+    (shellTab === 'fleet' && homeView === 'map') || shellTab === 'home',
     12_000
   )
 

@@ -574,7 +574,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await passengerCtx.close()
   })
 
-  test('preferência Google Maps persiste e abre ao aceitar (sem links no ecrã)', async ({
+  test('preferência Google Maps persiste; navegação abre ao iniciar viagem (sem links legacy)', async ({
     browser,
     request,
   }) => {
@@ -618,14 +618,16 @@ test.describe('Driver + passenger (proximity gate)', () => {
       .toBe(true)
     await waitForDriverMapOfferUi(driverPage, tripId)
 
-    const popupPromise = driverPage.waitForEvent('popup', { timeout: sec(45) })
     await acceptDriverTripFromMap(driverPage, tripId)
     await refreshDriverLocationNearPickup(request, tokens.driver)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
     await expect(driverPage.getByTestId('driver-nav-pickup-primary')).toHaveCount(0)
-    const popup = await popupPromise
+
+    const popupOnStart = driverPage.waitForEvent('popup', { timeout: sec(45) })
+    await driverPage.getByRole('button', { name: /iniciar viagem/i }).click()
+    const popup = await popupOnStart
     expect(popup.url()).toContain('google.com/maps')
     await popup.close().catch(() => undefined)
 

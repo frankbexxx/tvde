@@ -169,7 +169,7 @@ async def partner_list_drivers(
         partner_id=partner_id,
     )
     drivers = list_drivers_for_partner_enriched(db, partner_id)
-    return [_driver_item(d) for d in drivers]
+    return [_driver_item(d, include_documents=True) for d in drivers]
 
 
 @router.get("/drivers/discover", response_model=list[PartnerDriverDiscoveryItem])

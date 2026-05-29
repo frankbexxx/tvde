@@ -4,11 +4,11 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 ---
 
-## Agora (2026-05-29 — smokes **#341** fechados)
+## Agora (2026-05-29 — fixes pós-smokes **#341** entregues)
 
-**Contexto:** `main` @ **`a208949`** — merge **#341** (`feat/smoke-fixes`). **S-SMK-341-1…6** **Concluídos** (sessão matinal **2026-05-29**).
+**Contexto:** fixes **F-SMK-DOC-1…3**, **TW-SMK-OFFER-1…2**, **F-SMK-CAT-1**, **F-NAV-1** (política B) em branch `fix/smk-341-post-smoke`.
 
-**Próximo passo:** escolher **1 carril** de fixes (**F-SMK-*** / **TW-SMK-*** / **F-NAV-1**) — ver painel **PRÓXIMA SESSÃO** em [`TODOdoDIA.md`](../TODOdoDIA.md).
+**Próximo passo:** smoke curto prod pós-deploy · **TW-SMK-DOC-4…5** · **O-NAV-REV-1** · carril staging (**A2-02**).
 
 **Legenda Estado:** Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A — igual [`TODOdoDIA.md`](../TODOdoDIA.md).
 
@@ -27,9 +27,9 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **F-SMK-DOC-1** | Refresh docs driver após aprovação partner | Por iniciar | Só após sair/entrar |
-| **F-SMK-DOC-2** | Input ficheiro «Nenhum selecionado» pós-upload | Por iniciar | |
-| **F-SMK-DOC-3** | Lista/alertas partner sem pending_review | Por iniciar | |
+| **F-SMK-DOC-1** | Refresh docs driver após aprovação partner | Concluído | Poll Documentos |
+| **F-SMK-DOC-2** | Input ficheiro «Nenhum selecionado» pós-upload | Concluído | `file_name` na UI |
+| **F-SMK-DOC-3** | Lista/alertas partner sem pending_review | Concluído | `include_documents` na lista |
 | **TW-SMK-DOC-4** | Banner docs topo mapa → infobox bottom | Por iniciar | |
 | **TW-SMK-DOC-5** | Partner sem «X / 6» | Por iniciar | |
 | **TW-SMK-DOC-6** | Ordem docs driver vs partner | N/A | |
@@ -38,15 +38,16 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TW-SMK-OFFER-1** | Ofertas silenciadas no menu errado (Documentos) | Por iniciar | Mover para **Menu → Viagens** |
-| **TW-SMK-OFFER-2** | Copy «Menu → Ofertas silenciadas» | Por iniciar | |
-| **F-SMK-CAT-1** | Reactivar X: retry/off-on não basta; refresh ou viagem nova | Por iniciar | Sync patch categorias vs poll |
+| **TW-SMK-OFFER-1** | Ofertas silenciadas no menu errado (Documentos) | Concluído | **Menu → Viagens** |
+| **TW-SMK-OFFER-2** | Copy «Menu → Ofertas silenciadas» | Concluído | |
+| **F-SMK-CAT-1** | Reactivar X sem refresh | Concluído | `refetchAvailable` pós-PATCH |
 
 ### Trabalho aberto (pós-smokes — escolher carril)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **F-NAV-1** | Waze/Maps abre no **aceite** e de novo ao **iniciar** viagem | Por iniciar | `DriverDashboard` + `ActiveTripActions`; política G12/G19 |
+| **F-NAV-1** | Waze duplo (aceite + iniciar) | Concluído | Política **B**; **O-NAV-REV-1** |
+| **O-NAV-REV-1** | Rever G12 auto-open recolha | Por iniciar | |
 | **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Lista ecrãs Frank no Render |
 | **A2-02-1** | OAuth staging | Em curso | Painel **2026-05-14** |
 | **A2-02-2** | Smokes staging | Por iniciar | Depende A2-02-1 |
@@ -102,4 +103,4 @@ Vista única para saber sempre o que está em execução, no mesmo formato em to
 
 _Relacionado: [`TODOdoDIA.md`](../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](meta/PROXIMA_SESSAO.md) · [`UI_VISIBILITY_IMPLEMENTATION_TODO.md`](meta/UI_VISIBILITY_IMPLEMENTATION_TODO.md) · [`TODO_CODIGO_TVDE.md`](TODO_CODIGO_TVDE.md)._
 
-_Última revisão: **2026-05-29** — grelha **S-SMK-341-1…6** concluída; fila **F-SMK-*** / **TW-SMK-*** registada._
+_Última revisão: **2026-05-29** — fixes **F-SMK-DOC/OFFER/CAT** + **F-NAV-1** (B); abertos **TW-SMK-DOC-4…5**, **O-NAV-REV-1**._

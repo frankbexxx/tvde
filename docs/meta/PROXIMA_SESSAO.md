@@ -4,6 +4,14 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-05-29 — fixes pós-smokes **#341** (código)
+
+- **Entregue:** **F-SMK-DOC-1…3**, **TW-SMK-OFFER-1…2**, **F-SMK-CAT-1**, **F-NAV-1** (política **B** — nav só ao iniciar viagem).
+- **Abertos:** **TW-SMK-DOC-4…5**, **O-NAV-REV-1** (rever G12).
+- **Smokes manuais:** curtos pós-deploy Render recomendados.
+
+---
+
 ## Fecho 2026-05-29 — smokes **#341** **fechados** (sessão matinal)
 
 - **`main`:** merge **#341** (`a208949`) — código smoke-fixes; smokes manuais prod **completos**.
