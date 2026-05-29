@@ -79,7 +79,9 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **F-SMK-DOC-2** | Input «Carregar ficheiro» mostra «Nenhum selecionado» com doc já enviado | Concluído | «Ficheiro enviado» + `file_name` |
 | **F-SMK-DOC-3** | Alertas Frota / lista não sinalizam `pending_review` | Concluído | `GET /partner/drivers` com `documents`; poll home |
 | **TW-SMK-DOC-4** | Banner «Documentos em falta» no topo do mapa | Por iniciar | Infobox junto ao bottom nav |
-| **TW-SMK-DOC-5** | Partner detalhe sem contador «X / 6» | Por iniciar | Paridade driver |
+| **TW-SMK-DOC-5** | Partner detalhe sem contador «X / 6» | Concluído | `partnerDocumentsApprovedCount` + UI detalhe |
+| **TW-SMK-PARTNER-1** | Menu Frota = lista motoristas (componente partilhado) | Concluído | Bottom nav Frota abre drawer |
+| **TW-SMK-PARTNER-2** | Partner userCompact + Perfil menu + BetaAccount fora Início | Concluído | [`shell-menu-centric.md`](docs/ux/shell-menu-centric.md) |
 | **TW-SMK-DOC-6** | Ordem docs driver ≠ partner (Viatura+Motorista) | N/A | Cosmético |
 
 ### Rasto smoke **S-SMK-341-6** — ofertas silenciadas + categorias (fila código)
@@ -99,7 +101,7 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **F-NAV-1** | Waze abre duas vezes (aceite + iniciar) | Concluído | Política **B**: só destino ao iniciar; **O-NAV-REV-1** rever G12 |
 | **O-NAV-REV-1** | Rever auto-open recolha (G12) vs política B | Por iniciar | Decisão produto futura |
 | **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Frank lista ecrãs |
-| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Smoke pendente | Partner **feito** (#341); passageiro parcial (#287) |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Smoke pendente | Partner shell menu-centric **feito**; passageiro parcial (#287) |
 
 ---
 

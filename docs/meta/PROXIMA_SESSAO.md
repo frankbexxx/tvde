@@ -4,6 +4,14 @@ Documento de contexto para a próxima sessão. Inclui estado atual, decisões ar
 
 ---
 
+## Fecho 2026-05-22 — partner shell menu-centric (PR pendente merge)
+
+- **Entregue:** **TW-SMK-PARTNER-1…2**, **TW-SMK-DOC-5**; contrato [`docs/ux/shell-menu-centric.md`](../ux/shell-menu-centric.md).
+- **Aberto fase 2:** **O-NAV-PP-1** auditoria driver/passageiro vs checklist.
+- **Smoke manual partner:** Menu → Frota (lista); Início sem Conta BETA; Perfil com BetaAccount; detalhe motorista «N / 6».
+
+---
+
 ## Fecho 2026-05-29 — fixes pós-smokes **#341** (código)
 
 - **Entregue:** **F-SMK-DOC-1…3**, **TW-SMK-OFFER-1…2**, **F-SMK-CAT-1**, **F-NAV-1** (política **B** — nav só ao iniciar viagem).

@@ -21,6 +21,7 @@ import {
 import {
   driverDocumentLabel,
   driverDocumentStatusLabel,
+  partnerDocumentsApprovedCount,
   REQUIRED_DRIVER_DOCUMENTS,
   type DriverDocumentStatus,
   type DriverRequiredDocument,
@@ -450,6 +451,13 @@ export function PartnerDriverDetail() {
         </button>
         {msgOk ? <p className="text-xs text-success">{msgOk}</p> : null}
       </div>
+
+      <p
+        className="text-sm text-foreground/90"
+        data-testid="partner-driver-docs-counter"
+      >
+        Aprovados: {partnerDocumentsApprovedCount(d.documents)} / {REQUIRED_DRIVER_DOCUMENTS.length}
+      </p>
 
       {renderDocSection(
         d,

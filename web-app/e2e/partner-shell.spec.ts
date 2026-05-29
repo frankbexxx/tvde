@@ -1,5 +1,5 @@
 /**
- * Partner shell — menu lateral (Frota, Viagens, Relatórios, Definições) após E2E seed/tokens.
+ * Partner shell — menu-centric (Frota/Caixa abrem drawer; Perfil com Conta BETA).
  */
 import { test, expect } from '@playwright/test'
 import { attachFailureArtifactsIfNeeded, resetFailureArtifactState } from './helpers/failureArtifacts'
@@ -9,7 +9,7 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 
 const sec = (s: number) => s * 1000
 
-test.describe('Partner — menu (drawer)', () => {
+test.describe('Partner — menu-centric shell', () => {
   test.beforeEach(() => {
     resetFailureArtifactState()
   })
@@ -18,7 +18,7 @@ test.describe('Partner — menu (drawer)', () => {
     await attachFailureArtifactsIfNeeded(testInfo)
   })
 
-  test('abre Menu e mostra entradas Frota, Viagens, Relatórios, Definições', async ({
+  test('bottom nav Frota abre menu com lista; Perfil tem BetaAccount; Início sem Conta BETA', async ({
     browser,
     request,
   }) => {
@@ -66,18 +66,21 @@ test.describe('Partner — menu (drawer)', () => {
       timeout: sec(120),
     })
 
-    await expect(page.getByTestId('partner-bottom-nav-home')).toBeVisible()
-    await expect(page.getByTestId('partner-bottom-nav-fleet')).toBeVisible()
-    await expect(page.getByTestId('partner-bottom-nav-inbox')).toBeVisible()
+    await expect(page.getByText('Conta (BETA)')).not.toBeVisible()
 
-    await page.getByTestId('partner-open-menu').click()
+    await page.getByTestId('partner-bottom-nav-fleet').click()
     const sheet = page.getByTestId('partner-side-menu')
     await expect(sheet).toBeVisible({ timeout: sec(30) })
+    await expect(sheet.getByTestId('partner-fleet-drivers-section')).toBeVisible()
 
-    await expect(sheet.getByRole('button', { name: 'Frota' })).toBeVisible()
-    await expect(sheet.getByRole('button', { name: 'Viagens' })).toBeVisible()
-    await expect(sheet.getByRole('button', { name: 'Relatórios' })).toBeVisible()
-    await expect(sheet.getByRole('button', { name: 'Definições' })).toBeVisible()
+    await sheet.getByLabel('Fechar menu').click()
+    await expect(sheet).not.toBeVisible()
+
+    await page.getByTestId('partner-open-menu').click()
+    await expect(sheet).toBeVisible()
+    await sheet.getByTestId('partner-menu-profile').click()
+    await expect(sheet.getByTestId('partner-menu-profile-screen')).toBeVisible()
+    await expect(sheet.getByText('Conta (BETA)')).toBeVisible()
 
     await ctx.close()
   })

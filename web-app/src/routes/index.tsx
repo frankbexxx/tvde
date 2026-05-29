@@ -134,7 +134,9 @@ export function AppRoutes() {
     <div className={appShellClass}>
       <AppHeaderBar
         variant={
-          pathname.startsWith('/driver') || pathname.startsWith('/passenger')
+          pathname.startsWith('/driver') ||
+            pathname.startsWith('/passenger') ||
+            pathname.startsWith('/partner')
             ? 'userCompact'
             : 'default'
         }

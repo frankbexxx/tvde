@@ -164,6 +164,14 @@ export function driverDocumentsApprovedCount(state: DriverDocumentsState): numbe
   return REQUIRED_DRIVER_DOCUMENTS.filter((k) => state.docs[k] === 'approved').length
 }
 
+/** Contagem de documentos aprovados a partir do payload partner (`GET /partner/drivers`). */
+export function partnerDocumentsApprovedCount(
+  documents: Record<string, { status?: string } | undefined> | null | undefined
+): number {
+  if (!documents) return 0
+  return REQUIRED_DRIVER_DOCUMENTS.filter((k) => documents[k]?.status === 'approved').length
+}
+
 function daysUntilIso(iso: string): number | null {
   const t = Date.parse(iso)
   if (Number.isNaN(t)) return null

@@ -1,8 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
-import { BarChart3, Car, FileText, Settings, X } from 'lucide-react'
+import { BarChart3, Car, FileText, Inbox, Settings, User, X } from 'lucide-react'
 
-export type PartnerMenuScreen = 'root' | 'fleet' | 'trips' | 'reports' | 'settings'
+export type PartnerMenuScreen =
+  | 'root'
+  | 'fleet'
+  | 'trips'
+  | 'reports'
+  | 'settings'
+  | 'profile'
+  | 'inbox'
 
 function MenuHeader({
   title,
@@ -43,14 +50,17 @@ function RootItem({
   label,
   icon,
   onClick,
+  testId,
 }: {
   label: string
   icon: React.ReactNode
   onClick: () => void
+  testId?: string
 }) {
   return (
     <button
       type="button"
+      data-testid={testId}
       onClick={onClick}
       className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center justify-between gap-3"
     >
@@ -65,10 +75,11 @@ function RootItem({
 export function PartnerSideMenu(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  screen: PartnerMenuScreen
+  onScreenChange: (screen: PartnerMenuScreen) => void
   renderScreen: (screen: PartnerMenuScreen) => React.ReactNode
 }) {
-  const { open, onOpenChange, renderScreen } = props
-  const [screen, setScreen] = useState<PartnerMenuScreen>('root')
+  const { open, onOpenChange, screen, onScreenChange, renderScreen } = props
 
   const title = useMemo(() => {
     if (screen === 'root') return 'Partner'
@@ -76,15 +87,17 @@ export function PartnerSideMenu(props: {
     if (screen === 'trips') return 'Viagens'
     if (screen === 'reports') return 'Relatórios'
     if (screen === 'settings') return 'Definições'
+    if (screen === 'profile') return 'Perfil'
+    if (screen === 'inbox') return 'Caixa'
     return 'Partner'
   }, [screen])
 
   const close = () => {
-    setScreen('root')
+    onScreenChange('root')
     onOpenChange(false)
   }
 
-  const back = screen !== 'root' ? () => setScreen('root') : undefined
+  const back = screen !== 'root' ? () => onScreenChange('root') : undefined
 
   return (
     <Sheet open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
@@ -96,17 +109,44 @@ export function PartnerSideMenu(props: {
       >
         <SheetTitle className="sr-only">{title}</SheetTitle>
         <SheetDescription className="sr-only">
-          Navegação do parceiro: frota, viagens, relatórios e definições.
+          Navegação do parceiro: frota, viagens, relatórios, caixa, perfil e definições.
         </SheetDescription>
         <div className="h-dvh flex flex-col">
           <MenuHeader title={title} onBack={back} onClose={close} />
           <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
             {screen === 'root' ? (
               <div className="space-y-2">
-                <RootItem label="Frota" icon={<Car className="h-4 w-4" />} onClick={() => setScreen('fleet')} />
-                <RootItem label="Viagens" icon={<FileText className="h-4 w-4" />} onClick={() => setScreen('trips')} />
-                <RootItem label="Relatórios" icon={<BarChart3 className="h-4 w-4" />} onClick={() => setScreen('reports')} />
-                <RootItem label="Definições" icon={<Settings className="h-4 w-4" />} onClick={() => setScreen('settings')} />
+                <RootItem
+                  label="Frota"
+                  icon={<Car className="h-4 w-4" />}
+                  onClick={() => onScreenChange('fleet')}
+                />
+                <RootItem
+                  label="Viagens"
+                  icon={<FileText className="h-4 w-4" />}
+                  onClick={() => onScreenChange('trips')}
+                />
+                <RootItem
+                  label="Relatórios"
+                  icon={<BarChart3 className="h-4 w-4" />}
+                  onClick={() => onScreenChange('reports')}
+                />
+                <RootItem
+                  label="Caixa"
+                  icon={<Inbox className="h-4 w-4" />}
+                  onClick={() => onScreenChange('inbox')}
+                />
+                <RootItem
+                  label="Perfil"
+                  icon={<User className="h-4 w-4" />}
+                  testId="partner-menu-profile"
+                  onClick={() => onScreenChange('profile')}
+                />
+                <RootItem
+                  label="Definições"
+                  icon={<Settings className="h-4 w-4" />}
+                  onClick={() => onScreenChange('settings')}
+                />
               </div>
             ) : (
               <div className="pt-1">{renderScreen(screen)}</div>
@@ -117,4 +157,3 @@ export function PartnerSideMenu(props: {
     </Sheet>
   )
 }
-

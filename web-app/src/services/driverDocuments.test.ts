@@ -5,6 +5,7 @@ import {
   getDriverDocumentsState,
   isDriverDocumentsGateEnabled,
   isDriverDocumentsReady,
+  partnerDocumentsApprovedCount,
   setDriverDocumentsGateEnabled,
   setDriverDocumentsState,
   type DriverDocumentsState,
@@ -115,5 +116,26 @@ describe('driverDocuments service', () => {
     })
     expect(merged.docDetails.carta_tvde?.expiresAt).toBe('2030-06-01T00:00:00Z')
     expect(merged.docDetails.carta_tvde?.partnerNote).toBe('OK')
+  })
+
+  it('partnerDocumentsApprovedCount counts approved keys from partner payload', () => {
+    expect(partnerDocumentsApprovedCount(null)).toBe(0)
+    expect(partnerDocumentsApprovedCount(undefined)).toBe(0)
+    expect(
+      partnerDocumentsApprovedCount({
+        carta_tvde: { status: 'approved' },
+        inspecao_viatura: { status: 'pending_review' },
+      })
+    ).toBe(1)
+    expect(
+      partnerDocumentsApprovedCount({
+        carta_tvde: { status: 'approved' },
+        certificado_motorista_tvde: { status: 'approved' },
+        seguro_responsabilidade_civil: { status: 'approved' },
+        inspecao_viatura: { status: 'approved' },
+        cartao_cidadao: { status: 'approved' },
+        registo_criminal: { status: 'approved' },
+      })
+    ).toBe(6)
   })
 })
