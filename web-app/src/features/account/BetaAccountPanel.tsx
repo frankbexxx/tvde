@@ -15,7 +15,7 @@ function errDetail(err: unknown): string {
 
 /** M1: conta mínima no ecrã (BETA) — nome, telefone só leitura, alterar palavra-passe. */
 export function BetaAccountPanel() {
-  const { token, betaMode, refreshSessionProfile } = useAuth()
+  const { token, refreshSessionProfile } = useAuth()
   const [profile, setProfile] = useState<MeProfileResponse | null>(null)
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [nameDraft, setNameDraft] = useState('')
@@ -27,7 +27,7 @@ export function BetaAccountPanel() {
   const [pwErr, setPwErr] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    if (!token || !betaMode) return
+    if (!token) return
     setLoadErr(null)
     try {
       const me = await getMeProfile(token)
@@ -36,14 +36,14 @@ export function BetaAccountPanel() {
     } catch (e) {
       setLoadErr(errDetail(e))
     }
-  }, [token, betaMode])
+  }, [token])
 
   useEffect(() => {
     void load()
   }, [load])
 
   const saveName = async () => {
-    if (!token || !betaMode) return
+    if (!token) return
     const next = nameDraft.trim()
     if (next.length < 1) {
       toast.error('Indica um nome (1–120 caracteres).')
@@ -63,7 +63,7 @@ export function BetaAccountPanel() {
   }
 
   const savePassword = async () => {
-    if (!token || !betaMode || !profile) return
+    if (!token || !profile) return
     setPwErr(null)
     if (newPw.length < 8) {
       setPwErr('A nova palavra-passe precisa de pelo menos 8 caracteres.')
@@ -97,10 +97,10 @@ export function BetaAccountPanel() {
     }
   }
 
-  if (!betaMode || !token) return null
+  if (!token) return null
 
   return (
-    <section className="pt-8 mt-8 border-t border-border">
+    <section className="pt-8 mt-8 border-t border-border" data-testid="beta-account-panel">
       <h2 className="text-base font-medium text-foreground/75 mb-2">Conta (BETA)</h2>
       <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
         O <span className="font-medium">telemóvel</span> só pode ser alterado pelo administrador. Para repor a password

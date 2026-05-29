@@ -80,7 +80,8 @@ test.describe('Partner — menu-centric shell', () => {
     await expect(sheet).toBeVisible()
     await sheet.getByTestId('partner-menu-profile').click()
     await expect(sheet.getByTestId('partner-menu-profile-screen')).toBeVisible()
-    await expect(sheet.getByText('Conta (BETA)')).toBeVisible()
+    await expect(sheet.getByTestId('beta-account-panel')).toBeVisible()
+    await expect(sheet.getByRole('heading', { name: 'Conta (BETA)' })).toBeVisible()
 
     await ctx.close()
   })
