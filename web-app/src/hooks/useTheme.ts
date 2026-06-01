@@ -8,6 +8,7 @@ export type ThemeId =
   | "dev"
   | "minimal"
   | "neon"
+  | "atlantico"
 
 /** Preferência persistida; `auto` segue o sistema operativo (claro = portugal, escuro = dev). */
 export type ThemePreference = ThemeId | typeof PREFERENCE_AUTO
@@ -17,6 +18,7 @@ const THEMES: ThemeId[] = [
   "dev",
   "minimal",
   "neon",
+  "atlantico",
 ]
 
 const LEGACY_THEME_MAP: Record<string, ThemeId> = {

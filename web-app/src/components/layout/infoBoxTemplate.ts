@@ -94,7 +94,12 @@ export const PARTNER_KPI_CARD = `${BTN_SECONDARY_RADIUS} border border-[hsl(var(
 /** Partner — hub entry card (ícone + título + subtítulo). */
 export const PARTNER_HUB_CARD = `w-full min-h-[56px] ${BTN_SECONDARY_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-panel-bg))] px-4 py-3 text-left hover:bg-[hsl(var(--color-chrome-menu-row-hover))] touch-manipulation flex items-center gap-3 shadow-sm transition-colors`
 
-export const PARTNER_SECTION_TITLE = 'text-xs font-semibold uppercase tracking-wide text-muted-foreground'
+export const MENU_SECTION_TITLE = 'text-xs font-semibold uppercase tracking-wide text-muted-foreground'
+/** @deprecated use MENU_SECTION_TITLE */
+export const PARTNER_SECTION_TITLE = MENU_SECTION_TITLE
+
+/** Tempero bandeira — borda lateral verde subtil em KPIs partner (portugal/atlantico). */
+export const PARTNER_KPI_FLAG_ACCENT = 'border-l-2 border-l-[hsl(var(--color-flag-green,var(--color-primary)))]'
 
 /** Botão secundário (Voltar, Alterar, fechar). */
 export const BTN_SECONDARY =

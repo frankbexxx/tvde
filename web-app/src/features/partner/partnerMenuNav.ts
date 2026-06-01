@@ -25,6 +25,17 @@ export function isPartnerFleetNavScreen(screen: PartnerMenuScreen): boolean {
   )
 }
 
+export function partnerRootHighlightKey(screen: PartnerMenuScreen): string | null {
+  if (screen === 'root') return null
+  if (isPartnerFleetNavScreen(screen)) return 'fleet'
+  if (screen === 'trips' || screen.startsWith('trips_')) return 'trips'
+  if (screen === 'inbox') return 'inbox'
+  if (screen === 'reports') return 'reports'
+  if (screen === 'profile') return 'profile'
+  if (screen === 'settings') return 'settings'
+  return null
+}
+
 export function partnerMenuTitle(screen: PartnerMenuScreen): string {
   if (screen === 'root') return 'Menu'
   if (screen === 'fleet') return 'Frota'

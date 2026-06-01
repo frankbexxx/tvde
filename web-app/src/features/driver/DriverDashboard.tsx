@@ -96,6 +96,7 @@ import {
   type SilencedOfferEntry,
 } from './driverOfferDismiss'
 import { DriverSideMenu, type DriverMenuScreen } from './DriverSideMenu'
+import { driverRootHighlightKey } from './driverMenuNav'
 import { useScreenWakeLock } from '../../hooks/useScreenWakeLock'
 import { useDia23LayoutProbe } from '../../hooks/useDia23LayoutProbe'
 import { useDriverOfferSounds } from '../../hooks/useDriverOfferSounds'
@@ -396,6 +397,7 @@ export function DriverDashboard() {
   const [menuOpen, setMenuOpen] = useState(false)
   /** Ecrã activo no menu lateral (controlado — deep link Rendimentos/Caixa; sem setState em useEffect). */
   const [driverMenuScreen, setDriverMenuScreen] = useState<DriverMenuScreen>('root')
+  const [menuRootHighlight, setMenuRootHighlight] = useState<string | null>(null)
   /** Leitura síncrona no bottom nav (evita setDriverShellTab dentro do updater de setMenuOpen). */
   const menuOpenRef = useRef(menuOpen)
   menuOpenRef.current = menuOpen
@@ -492,17 +494,11 @@ export function DriverDashboard() {
     [inboxMessages]
   )
 
-  useEffect(() => {
-    if (!menuOpen || driverShellTab === 'home' || driverShellTab === 'menu') return
-    const id = driverShellTab === 'earnings' ? 'driver-menu-earnings' : 'driver-menu-inbox'
-    // Dois rAF: o painel do menu tem de montar; scroll-margin nas secções alinha com o header.
-    const t = window.setTimeout(() => {
-      requestAnimationFrame(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      })
-    }, 32)
-    return () => window.clearTimeout(t)
-  }, [menuOpen, driverShellTab])
+  const onDriverMenuScreenChange = useCallback((screen: DriverMenuScreen) => {
+    const key = driverRootHighlightKey(screen)
+    if (key) setMenuRootHighlight(key)
+    setDriverMenuScreen(screen)
+  }, [])
 
   const {
     data: available,
@@ -1031,6 +1027,7 @@ export function DriverDashboard() {
     setMenuOpen(false)
     setDriverMenuScreen('root')
     setDriverShellTab('home')
+    setMenuRootHighlight(null)
   }, [])
 
   const handleBottomNav = useCallback(
@@ -1039,6 +1036,7 @@ export function DriverDashboard() {
         setDriverShellTab('home')
         setMenuOpen(false)
         setDriverMenuScreen('root')
+        setMenuRootHighlight(null)
         if (driverHomeTwoStep && !activeTripId) setDriverHomeStep(2)
         document.getElementById('driver-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
         if (token && pollEnabled) void refetchAvailable()
@@ -1046,12 +1044,17 @@ export function DriverDashboard() {
       }
       if (tab === 'menu') {
         const nextOpen = !menuOpenRef.current
-        if (nextOpen) setDriverMenuScreen('root')
+        if (nextOpen) {
+          setDriverMenuScreen('root')
+          setMenuRootHighlight(null)
+        }
         setMenuOpen(nextOpen)
         setDriverShellTab(nextOpen ? 'menu' : 'home')
         return
       }
-      setDriverMenuScreen(tab === 'earnings' ? 'earnings' : 'inbox')
+      const screen = tab === 'earnings' ? 'earnings' : 'inbox'
+      setDriverMenuScreen(screen)
+      setMenuRootHighlight(driverRootHighlightKey(screen))
       setDriverShellTab(tab)
       setMenuOpen(true)
     },
@@ -1240,10 +1243,15 @@ export function DriverDashboard() {
           open={menuOpen}
           onOpenChange={(v) => {
             setMenuOpen(v)
-            if (!v) setDriverMenuScreen('root')
+            if (!v) {
+              setDriverMenuScreen('root')
+              setMenuRootHighlight(null)
+            }
           }}
           screen={driverMenuScreen}
-          onScreenChange={setDriverMenuScreen}
+          onScreenChange={onDriverMenuScreenChange}
+          menuRootHighlight={menuRootHighlight}
+          inboxUnreadCount={inboxUnreadCount}
           sessionDisplayName={sessionDisplayName}
           history={history}
           driverLocationForZones={mapDotLatLng ?? null}
@@ -1306,7 +1314,7 @@ export function DriverDashboard() {
                 silencedOfferEntries={silencedOfferEntries}
                 onRestoreSilencedOffer={restoreSilencedOffer}
                 onRestoreAllSilencedOffers={restoreAllSilencedOffers}
-                onNavigateSection={setDriverMenuScreen}
+                onNavigateSection={onDriverMenuScreenChange}
               />
             </div>
           )}

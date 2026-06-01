@@ -1,6 +1,10 @@
 import type { PartnerMetrics } from '../../../api/partner'
+import { getTheme } from '@/hooks/useTheme'
+import { themeUsesFlagAccent } from '@/design-system/ambianceMeta'
+import { cn } from '@/lib/utils'
 import {
   PARTNER_KPI_CARD,
+  PARTNER_KPI_FLAG_ACCENT,
   PARTNER_SECTION_TITLE,
 } from '../../../components/layout/infoBoxTemplate'
 
@@ -17,6 +21,8 @@ export function PartnerHomeDashboard({
   onSearchChange,
   onRefresh,
 }: PartnerHomeDashboardProps) {
+  const kpiAccent = themeUsesFlagAccent(getTheme()) ? PARTNER_KPI_FLAG_ACCENT : ''
+
   return (
     <div className="space-y-4" data-testid="partner-home-dashboard">
       <section className="space-y-2">
@@ -38,7 +44,7 @@ export function PartnerHomeDashboard({
         <section className="space-y-2">
           <p className={PARTNER_SECTION_TITLE}>Resumo operacional</p>
           <div className="grid grid-cols-2 gap-3">
-            <div className={PARTNER_KPI_CARD}>
+            <div className={cn(PARTNER_KPI_CARD, kpiAccent)}>
               <p className="text-xs text-muted-foreground">Viagens hoje</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_today}</p>
             </div>

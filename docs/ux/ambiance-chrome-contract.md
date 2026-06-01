@@ -10,7 +10,7 @@ Contrato técnico para tokens de **chrome** (overlays UI) na TVDE. Complementa [
 
 | Termo | Significado |
 |-------|-------------|
-| **Tema** | Preferência persistida (`tvde_theme`): `portugal`, `dev`, `minimal`, `neon`, ou `auto` |
+| **Tema** | Preferência persistida (`tvde_theme`): `portugal`, `atlantico`, `dev`, `minimal`, `neon`, ou `auto` |
 | **Ambiance** | Percepção de ambiente de trabalho derivada do tema — chrome coerente, não decoração |
 | **Chrome** | UI sobre o palco: sheets, menus, cards, headers, chips, sombras — **não** tiles do mapa |
 | **Palco** | Mapa full-bleed (driver/passenger) ou área main partner — informação operacional |
@@ -93,9 +93,10 @@ Convenção HSL: `"H S% L%"` (componentes, sem `hsl()`), excepto sombras.
 | Tema | Ambiance | Chrome (intenção) |
 |------|----------|-------------------|
 | `portugal` | Claro, operacional, marca PT | Sheet branca/prata; menu gradiente verde suave |
-| `dev` | Escuro, menos glare | Sheet/card escuros; menu gradiente primary suave |
-| `minimal` | Neutro, dados primeiro | Sheet branca; bordas discretas; sem gradiente forte |
-| `neon` | Alto contraste experimental | Sheet escura; bordas accent; uso sandbox |
+| `atlantico` | Costa PT, brisa cinza-mar | Sheet clara; azul-mar + verde suave |
+| `dev` (label **Nocturno**) | Escuro, menos glare | Sheet/card escuros; menu gradiente primary suave |
+| `minimal` | Neutro, dados primeiro | Sheet branca; bordas discretas; temperos desactivados |
+| `neon` (label **Neon (sandbox)**) | Alto contraste experimental | Sheet escura; bordas accent; uso sandbox |
 | `auto` | Sistema | Claro → portugal; escuro → dev |
 
 ---
@@ -133,4 +134,21 @@ Alinhado ao master — ver [`AMBIANCE_CHROME_BUILD.md`](../build/AMBIANCE_CHROME
 | F3 | Partner dashboard, hubs, alerts, `PARTNER_*` constants |
 | F4 | Resto `infoBoxTemplate`, chips, menus driver/passenger |
 
-**Pendente pós-F4:** F3b PartnerSideMenu identidade; AppMenuShell unificado (não planeado).
+**Pendente pós-F4:** ~~F3b PartnerSideMenu~~ (F3b concluído). O-1–O-6 concluído — ver [`AMBIANCE_O1_O6_BUILD.md`](../build/AMBIANCE_O1_O6_BUILD.md).
+
+---
+
+## Temperos bandeira (O-6)
+
+Variáveis `--color-flag-red`, `--color-flag-yellow`, `--color-flag-blue`, `--color-flag-green` definidas em `portugal.css`, `atlantico.css`, `dev.css`; fallbacks neutros em `minimal.css` e `neon.css`.
+
+| Touchpoint | Uso |
+|------------|-----|
+| `BrandStripe` | Segmentos flag (com fallbacks) |
+| `InfoPanel` | Barra lateral passageiro — flag-blue |
+| `AppMenuIdentity` | Borda inferior badge role (portugal/atlantico) |
+| `PartnerHomeDashboard` | KPI 1.º tile — border-l flag-green |
+| `PrimaryActionButton` | focus-visible ring flag-blue |
+| Warning strips driver/passenger | flag-yellow inline (canónico) |
+
+**Proibido:** alterar `--color-success/warning/destructive/info` por tema; estilizar tiles do mapa.

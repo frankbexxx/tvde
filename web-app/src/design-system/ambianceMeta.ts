@@ -5,7 +5,6 @@ export type AmbianceOption = {
   id: ThemeId
   label: string
   description: string
-  /** HSL components — espelham design-system/themes/*.css */
   swatch: {
     primary: string
     sheetBg: string
@@ -27,8 +26,19 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
     },
   },
   {
+    id: 'atlantico',
+    label: 'Atlântico',
+    description: 'Costa atlântica — brisa, cinza-mar e verde suave.',
+    swatch: {
+      primary: '158 48% 34%',
+      sheetBg: '0 0% 100%',
+      sheetBorder: '205 22% 78%',
+      menuGradient: '200 40% 88%',
+    },
+  },
+  {
     id: 'dev',
-    label: 'Dev (sandbox)',
+    label: 'Nocturno',
     description: 'Escuro, menos glare — ideal à noite.',
     swatch: {
       primary: '150 55% 42%',
@@ -50,8 +60,8 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
   },
   {
     id: 'neon',
-    label: 'Neon',
-    description: 'Experimental — alto contraste, sandbox.',
+    label: 'Neon (sandbox)',
+    description: 'Experimental — alto contraste, só testes.',
     swatch: {
       primary: '280 100% 60%',
       sheetBg: '240 10% 10%',
@@ -61,6 +71,8 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
   },
 ]
 
+export const AUTO_AMBIANCE_HINT = 'Segue claro/escuro do telemóvel → Portugal (claro) ou Nocturno (escuro).'
+
 export function ambianceSwatchStyle(swatch: AmbianceOption['swatch']): CSSProperties {
   return {
     ['--swatch-primary' as string]: swatch.primary,
@@ -68,4 +80,8 @@ export function ambianceSwatchStyle(swatch: AmbianceOption['swatch']): CSSProper
     ['--swatch-sheet-border' as string]: swatch.sheetBorder,
     ['--swatch-menu-gradient' as string]: swatch.menuGradient,
   }
+}
+
+export function themeUsesFlagAccent(themeId: ThemeId): boolean {
+  return themeId === 'portugal' || themeId === 'atlantico'
 }

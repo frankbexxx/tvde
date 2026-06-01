@@ -4,6 +4,7 @@
 @import "./design-system/themes/dev.css";
 @import "./design-system/themes/minimal.css";
 @import "./design-system/themes/neon.css";
+@import "./design-system/themes/atlantico.css";
 
 @tailwind base;
 @tailwind components;
