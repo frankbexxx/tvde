@@ -105,8 +105,9 @@ test.describe('Partner — menu tree v2', () => {
     })
     expect(driversRes.ok(), await driversRes.text()).toBeTruthy()
     const drivers = (await driversRes.json()) as Array<{ user_id: string; user: { name: string | null } }>
-    const testDriver = drivers.find((d) => d.user.name === 'test_driver') ?? drivers[0]
-    expect(testDriver, 'seed deve expor test_driver ou motorista na frota').toBeTruthy()
+    expect(drivers.length, 'GET /partner/drivers deve listar motorista de /dev/seed').toBeGreaterThan(0)
+    const fleetDriver = drivers.find((d) => d.user.name === 'test_driver') ?? drivers[0]
+    const driverLinkName = (fleetDriver.user.name ?? '').trim() || fleetDriver.user_id
 
     const ctx = await browser.newContext()
     await ctx.addInitScript(
@@ -141,16 +142,17 @@ test.describe('Partner — menu tree v2', () => {
     await sheet.getByRole('button', { name: 'Frota' }).click()
     await sheet.getByTestId('partner-fleet-hub-list').click()
     await expect(sheet.getByTestId('partner-fleet-drivers-section')).toBeVisible()
-
-    await sheet.getByRole('link', { name: 'test_driver' }).click()
+    const driverLink = sheet.getByRole('link', { name: driverLinkName })
+    await expect(driverLink).toBeVisible({ timeout: sec(30) })
+    await driverLink.click()
     await expect(sheet).not.toBeVisible({ timeout: sec(30) })
     await expect(page.getByText('Disponível (app)')).toBeVisible({ timeout: sec(30) })
-    await expect(page).toHaveURL(new RegExp(`/partner/drivers/${testDriver!.user_id.replace(/-/g, '[-]')}`))
+    await expect(page).toHaveURL(new RegExp(`/partner/drivers/${fleetDriver.user_id.replace(/-/g, '[-]')}`))
 
     await page.getByTestId('partner-bottom-nav-fleet').click()
     await expect(sheet).toBeVisible({ timeout: sec(30) })
     await expect(sheet.getByTestId('partner-fleet-hub')).toBeVisible()
-    await expect(page).toHaveURL(new RegExp(`/partner/drivers/${testDriver!.user_id.replace(/-/g, '[-]')}`))
+    await expect(page).toHaveURL(new RegExp(`/partner/drivers/${fleetDriver.user_id.replace(/-/g, '[-]')}`))
 
     await ctx.close()
   })
