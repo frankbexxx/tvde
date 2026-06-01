@@ -27,7 +27,7 @@ export const MAP_SHEET_CLASS = `${MAP_SHEET_PADDING} ${MAP_SHEET_GAP} overflow-y
 export const MAP_BANNER_STACK =
   'pointer-events-auto min-h-0 max-h-[min(12dvh,80px)] shrink-0 overflow-y-auto overscroll-contain space-y-1 pr-1'
 
-export const MAP_WARNING_BANNER = `${BTN_SECONDARY_RADIUS} bg-warning/20 border border-warning/50 border-l-4 px-2 py-1.5 text-xs text-warning`
+export const MAP_WARNING_BANNER = `${BTN_SECONDARY_RADIUS} bg-background/95 backdrop-blur-sm border border-warning/50 border-l-4 border-l-warning px-2 py-1.5 text-xs text-foreground shadow-sm`
 
 /** Motorista — aceitar oferta / viagem activa. */
 export const INFO_BOX_DRIVER_LARGE = `${SURFACE_RADIUS} ${BORDER_SURFACE} border-l-4 border-l-info bg-[hsl(var(--color-chrome-sheet-bg))] ${SHADOW_CARD}`
