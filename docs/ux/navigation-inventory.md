@@ -229,7 +229,7 @@ Tab IDs: `agora`, `docs`, `pending`, `users`, `frota`, `dados`, `trips`, `metric
 | `PartnerFleetScreen.tsx`, `PartnerTripsMenuScreen.tsx` | REMOVED / absent (W1) |
 | `ProfileButton` / full `SettingsButton` on P/D/Partner | HIDDEN — compact header; `AppRouteModeSwitch` in menu |
 | Driver home step-1 | FLAG_OFF (always false) |
-| `PartnerSideMenu` on detail URLs | IMPLEMENTED — menu fecha em deep route; Frota/Caixa no bottom nav não expulsam do detalhe |
+| `PartnerSideMenu` on detail URLs | IMPLEMENTED — menu fecha ao **entrar** no detalhe; bottom Frota/Caixa abre menu no detalhe sem mudar URL |
 
 ---
 

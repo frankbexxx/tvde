@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchPartnerInboxMessages } from '../../api/partner'
 import { usePolling } from '../../hooks/usePolling'
@@ -33,11 +33,19 @@ function PartnerLayoutInner() {
     }
   }, [menuScreen, unreadPolled, setInboxUnreadCount])
 
-  /** NAV-P-04b: detalhe full-page no Outlet — fechar sheet para não tapar o ecrã. */
+  /** NAV-P-04b: ao entrar num deep route com menu aberto, fechar sheet (lista → detalhe). */
+  const prevPathnameRef = useRef(pathname)
   useEffect(() => {
-    if (menuOpen && isPartnerDeepRoute(pathname)) {
+    const prev = prevPathnameRef.current
+    if (
+      prev !== pathname &&
+      isPartnerDeepRoute(pathname) &&
+      !isPartnerDeepRoute(prev) &&
+      menuOpen
+    ) {
       closeMenu()
     }
+    prevPathnameRef.current = pathname
   }, [pathname, menuOpen, closeMenu])
 
   const navActive = useMemo((): PartnerShellTab => {
