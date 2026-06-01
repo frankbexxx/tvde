@@ -1,4 +1,4 @@
-import { apiFetch, COLD_START_FIRST_TIMEOUT_MS } from './client'
+import { apiFetch, COLD_START_FIRST_TIMEOUT_MS, DEFAULT_TIMEOUT_MS } from './client'
 
 export interface TokenResponse {
   access_token: string
@@ -105,8 +105,11 @@ export interface MeProfileResponse {
   has_custom_password: boolean
 }
 
-export async function getMeProfile(token: string): Promise<MeProfileResponse> {
-  return apiFetch<MeProfileResponse>('/auth/me', { token })
+export async function getMeProfile(
+  token: string,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
+): Promise<MeProfileResponse> {
+  return apiFetch<MeProfileResponse>('/auth/me', { token, timeoutMs })
 }
 
 export async function patchMeProfile(token: string, name: string): Promise<MeProfileResponse> {

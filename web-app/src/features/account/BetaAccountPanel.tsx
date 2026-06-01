@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { changeMyPassword, getMeProfile, patchMeProfile, type MeProfileResponse } from '../../api/auth'
+import { withColdStartRetries } from '../../api/client'
 import type { ApiError } from '../../api/client'
 import { toast } from 'sonner'
 
@@ -30,7 +31,7 @@ export function BetaAccountPanel() {
     if (!token) return
     setLoadErr(null)
     try {
-      const me = await getMeProfile(token)
+      const me = await withColdStartRetries((timeoutMs) => getMeProfile(token, timeoutMs))
       setProfile(me)
       setNameDraft(me.name || me.phone)
     } catch (e) {

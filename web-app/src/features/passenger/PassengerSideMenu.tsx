@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { History, LogOut, QrCode, User } from 'lucide-react'
+import { History, LogOut, QrCode, Settings, User } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
 import { useAuth } from '../../context/AuthContext'
@@ -8,6 +8,7 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { historyStatusDotColor } from '../../constants/tripStatus'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import { AppAppearanceSettings } from '../settings/AppAppearanceSettings'
 import {
   BTN_SECONDARY_RADIUS,
   MENU_BTN_SM,
@@ -15,7 +16,7 @@ import {
   MENU_SURFACE,
 } from '../../components/layout/infoBoxTemplate'
 
-export type PassengerMenuScreen = 'root' | 'history' | 'account' | 'share_app'
+export type PassengerMenuScreen = 'root' | 'history' | 'account' | 'share_app' | 'settings'
 
 function MenuHeader({
   title,
@@ -95,7 +96,9 @@ export function PassengerSideMenu({
         ? 'Conta'
         : screen === 'share_app'
           ? 'Partilhar app'
-          : 'Menu'
+          : screen === 'settings'
+            ? 'Definições'
+            : 'Menu'
 
   return (
     <Sheet
@@ -164,6 +167,15 @@ export function PassengerSideMenu({
                 </button>
                 <button
                   type="button"
+                  data-testid="passenger-menu-settings"
+                  onClick={() => onScreenChange('settings')}
+                  className={MENU_ROW_BTN}
+                >
+                  <Settings className="h-4 w-4 text-foreground/80" />
+                  Definições
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     logout()
                     close()
@@ -202,6 +214,14 @@ export function PassengerSideMenu({
                 ) : (
                   <p className="text-sm text-muted-foreground">Link indisponível neste contexto.</p>
                 )}
+              </div>
+            ) : screen === 'settings' ? (
+              <div className="space-y-4" data-testid="passenger-settings-screen">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Preferências da app. Conta e sessão estão em{' '}
+                  <span className="font-medium text-foreground/90">Conta</span> no menu principal.
+                </p>
+                <AppAppearanceSettings />
               </div>
             ) : screen === 'account' ? (
               <div className="space-y-3">

@@ -184,7 +184,6 @@ import { isDriverBottomNavEnabled, isDriverHomeTwoStepEnabled } from '../../conf
 import {
   DRIVER_OPEN_ACCOUNT_EVENT,
   DRIVER_OPEN_ACTIVITY_LOG_EVENT,
-  DRIVER_OPEN_SETTINGS_EVENT,
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
@@ -3234,16 +3233,15 @@ function DriverOperationsMenu({
           ) : (
             <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
           )}
-          {silencedOfferEntries.length > 0 ? (
-            <button
-              type="button"
-              data-testid="driver-menu-trips-silenced-link"
-              className={`${MENU_BTN} min-h-9`}
-              onClick={() => onNavigateSection?.('trips_silenced')}
-            >
-              Ofertas silenciadas ({silencedOfferEntries.length})
-            </button>
-          ) : null}
+          <button
+            type="button"
+            data-testid="driver-menu-trips-silenced-link"
+            className={`${MENU_BTN} min-h-9 mt-2`}
+            onClick={() => onNavigateSection?.('trips_silenced')}
+          >
+            Ofertas silenciadas
+            {silencedOfferEntries.length > 0 ? ` (${silencedOfferEntries.length})` : ''}
+          </button>
         </div>
       ) : null}
 
@@ -3323,7 +3321,7 @@ function DriverOperationsMenu({
           <button
             type="button"
             data-testid="driver-menu-open-settings"
-            onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))}
+            onClick={() => onNavigateSection?.('settings')}
             className={`${MENU_BTN_SM} min-h-9`}
           >
             Definições

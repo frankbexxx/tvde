@@ -6,7 +6,8 @@ import type { DriverNavApp } from '../../services/driverNavPreference'
 import type { TripHistoryItem } from '../../api/trips'
 import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus } from '../../services/driverDocuments'
 import type { DriverVehicleCategory } from '../../services/driverVehicleCategories'
-import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT, DRIVER_OPEN_SETTINGS_EVENT } from './driverShellEvents'
+import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT } from './driverShellEvents'
+import { AppAppearanceSettings } from '../settings/AppAppearanceSettings'
 import {
   BTN_SECONDARY_RADIUS,
   MENU_BTN_SM,
@@ -43,6 +44,7 @@ export type DriverMenuScreen =
   | 'zones_request'
   | 'docs'
   | 'pricing'
+  | 'settings'
   // Legacy / internal: permite renderizar blocos existentes sem refactor total.
   | 'account'
   | 'all'
@@ -258,6 +260,11 @@ export function DriverSideMenu(props: {
                     onClick={() => onScreenChange('profile')}
                   />
                   <RootItem
+                    label="Definições"
+                    icon={<Settings className="h-4 w-4" />}
+                    onClick={() => onScreenChange('settings')}
+                  />
+                  <RootItem
                     label="Preços (estimativa)"
                     icon={<CreditCard className="h-4 w-4" />}
                     onClick={() => onScreenChange('pricing')}
@@ -338,16 +345,21 @@ export function DriverSideMenu(props: {
                   <button
                     type="button"
                     data-testid="driver-menu-open-settings"
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_SETTINGS_EVENT))
-                      close()
-                    }}
+                    onClick={() => onScreenChange('settings')}
                     className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
                   >
                     <Settings className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
                     Definições
                   </button>
                 </div>
+              </div>
+            ) : screen === 'settings' ? (
+              <div className="space-y-4" data-testid="driver-settings-screen">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Preferências da app. Conta e sessão estão em{' '}
+                  <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
+                </p>
+                <AppAppearanceSettings />
               </div>
             ) : (
               <div className="pt-1">{renderLegacyMenu(screen)}</div>

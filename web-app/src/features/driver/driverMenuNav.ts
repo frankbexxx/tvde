@@ -14,6 +14,7 @@ export const DRIVER_MENU_BACK: Partial<Record<DriverMenuScreen, DriverMenuScreen
   zones_request: 'zones',
   docs: 'root',
   pricing: 'root',
+  settings: 'root',
 }
 
 export function driverMenuTitle(screen: DriverMenuScreen): string {
@@ -31,5 +32,6 @@ export function driverMenuTitle(screen: DriverMenuScreen): string {
   if (screen === 'zones_request') return 'Pedir mudança'
   if (screen === 'docs') return 'Documentos'
   if (screen === 'pricing') return 'Preços'
+  if (screen === 'settings') return 'Definições'
   return 'Menu do motorista'
 }
