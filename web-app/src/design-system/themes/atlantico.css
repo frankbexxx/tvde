@@ -1,0 +1,61 @@
+/* Tema Atlântico — costa PT: prata, azul-mar, verde suave. Derivado de portugal. */
+:root[data-theme="atlantico"] {
+  --color-primary: 158 48% 34%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-primary-soft: 200 35% 92%;
+  --color-primary-soft-foreground: 200 45% 18%;
+  --color-primary-muted: 158 30% 65%;
+
+  --color-flag-red: 355 75% 48%;
+  --color-flag-red-foreground: 0 0% 100%;
+  --color-flag-yellow: 42 100% 54%;
+  --color-flag-yellow-foreground: 0 0% 12%;
+  --color-flag-blue: 205 55% 38%;
+  --color-flag-blue-foreground: 0 0% 100%;
+  --color-flag-green: 158 48% 34%;
+
+  --color-accent: 200 40% 48%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-secondary: 205 25% 90%;
+  --color-secondary-foreground: 210 30% 18%;
+
+  --color-success: 158 48% 34%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning: 42 100% 54%;
+  --color-warning-foreground: 0 0% 12%;
+  --color-info: 205 55% 42%;
+  --color-info-foreground: 0 0% 100%;
+  --color-danger: 0 65% 50%;
+  --color-destructive: 0 65% 50%;
+  --color-destructive-foreground: 0 0% 100%;
+
+  --color-background: 205 30% 97%;
+  --color-foreground: 215 35% 14%;
+  --color-surface: 0 0% 100%;
+  --color-surface-raised: 205 25% 95%;
+  --color-surface-overlay: 215 35% 8%;
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 215 35% 14%;
+  --color-text: 215 35% 14%;
+  --color-popover: 0 0% 100%;
+  --color-popover-foreground: 215 35% 14%;
+
+  --color-muted: 205 22% 93%;
+  --color-muted-foreground: 215 15% 42%;
+  --color-border: 205 20% 78%;
+  --color-input: 205 18% 88%;
+  --color-ring: 158 48% 34%;
+
+  --bg-atmo-mid: 205 28% 94%;
+  --bg-atmo-shape: 200 45% 72%;
+
+  --color-chrome-sheet-bg: 0 0% 100%;
+  --color-chrome-sheet-border: 205 22% 78%;
+  --shadow-chrome-sheet: 0 -8px 24px rgba(15, 45, 75, 0.1);
+  --color-chrome-menu-gradient-from: 200 40% 88%;
+  --color-chrome-menu-row-hover: 205 25% 93%;
+  --color-chrome-menu-row-active: 200 35% 90%;
+  --color-chrome-chip-bg: 0 0% 100%;
+  --color-chrome-chip-border: 205 22% 78%;
+  --color-chrome-panel-bg: 0 0% 100%;
+}

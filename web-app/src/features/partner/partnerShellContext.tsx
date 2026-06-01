@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react'
 import type { PartnerMenuScreen } from './PartnerSideMenu'
-import { PARTNER_MENU_DEFAULT_BACK } from './partnerMenuNav'
+import { PARTNER_MENU_DEFAULT_BACK, partnerRootHighlightKey } from './partnerMenuNav'
 
 export type PartnerShellTab = 'home' | 'fleet' | 'inbox' | 'menu'
 
@@ -17,6 +17,7 @@ type PartnerShellContextValue = {
   closeMenu: () => void
   inboxUnreadCount: number
   setInboxUnreadCount: (n: number) => void
+  menuRootHighlight: string | null
 }
 
 const PartnerShellContext = createContext<PartnerShellContextValue | null>(null)
@@ -26,14 +27,21 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuScreen, setMenuScreen] = useState<PartnerMenuScreen>('root')
   const [inboxUnreadCount, setInboxUnreadCount] = useState(0)
+  const [menuRootHighlight, setMenuRootHighlight] = useState<string | null>(null)
   const menuBackOverridesRef = useRef<Partial<Record<PartnerMenuScreen, PartnerMenuScreen>>>({})
+
+  const syncHighlight = useCallback((screen: PartnerMenuScreen) => {
+    const key = partnerRootHighlightKey(screen)
+    if (key) setMenuRootHighlight(key)
+  }, [])
 
   const navigateMenu = useCallback((screen: PartnerMenuScreen, backTo?: PartnerMenuScreen) => {
     if (backTo !== undefined) {
       menuBackOverridesRef.current = { ...menuBackOverridesRef.current, [screen]: backTo }
     }
+    syncHighlight(screen)
     setMenuScreen(screen)
-  }, [])
+  }, [syncHighlight])
 
   const goBackMenu = useCallback(() => {
     const back =
@@ -47,15 +55,18 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
     if (backTo !== undefined) {
       menuBackOverridesRef.current = { ...menuBackOverridesRef.current, [screen]: backTo }
     }
+    if (screen === 'root') setMenuRootHighlight(null)
+    else syncHighlight(screen)
     setMenuScreen(screen)
     setMenuOpen(true)
-  }, [])
+  }, [syncHighlight])
 
   const closeMenu = useCallback(() => {
     menuBackOverridesRef.current = {}
     setMenuScreen('root')
     setMenuOpen(false)
     setShellTab('home')
+    setMenuRootHighlight(null)
   }, [])
 
   return (
@@ -73,6 +84,7 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
         closeMenu,
         inboxUnreadCount,
         setInboxUnreadCount,
+        menuRootHighlight,
       }}
     >
       {children}

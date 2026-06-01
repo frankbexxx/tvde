@@ -46,4 +46,10 @@
   --color-chrome-chip-bg: 240 10% 10%;
   --color-chrome-chip-border: 280 50% 28%;
   --color-chrome-panel-bg: 240 10% 10%;
+
+  /* Flag fallbacks neutros (temperos desactivados) */
+  --color-flag-red: 280 60% 55%;
+  --color-flag-yellow: 45 80% 55%;
+  --color-flag-blue: 280 100% 60%;
+  --color-flag-green: 170 100% 45%;
 }

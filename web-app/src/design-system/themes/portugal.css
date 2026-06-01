@@ -31,6 +31,7 @@
   /* Azul heráldico (~#002776) — muito escuro, usar com moderação. */
   --color-flag-blue: 218 100% 23%;
   --color-flag-blue-foreground: 0 0% 100%;
+  --color-flag-green: 150 55% 36%;
 
   /* === Accents / secondary — neutros com hint de verde =================== */
   /* Accent usado no gradient do PrimaryActionButton (primary → accent): verde soft. */

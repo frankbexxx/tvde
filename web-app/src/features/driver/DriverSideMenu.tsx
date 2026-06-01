@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
 import { useAuth, isBackofficeStaffRole } from '../../context/AuthContext'
 import { parseJwtPayload } from '../../utils/jwt'
 import type { DriverNavApp } from '../../services/driverNavPreference'
@@ -9,10 +8,16 @@ import type { DriverVehicleCategory } from '../../services/driverVehicleCategori
 import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT } from './driverShellEvents'
 import { AppAppearanceSettings } from '../settings/AppAppearanceSettings'
 import {
+  AppMenuBody,
+  AppMenuHeader,
+  AppMenuIdentity,
+  AppMenuLogoutRow,
+  AppMenuRow,
+  AppMenuSection,
+  AppSideMenuSheet,
+} from '../../components/layout/AppMenuShell'
+import {
   BTN_SECONDARY_RADIUS,
-  MENU_BTN_SM,
-  MENU_ROW_BTN,
-  MENU_SURFACE,
 } from '../../components/layout/infoBoxTemplate'
 import {
   ClipboardList,
@@ -21,7 +26,6 @@ import {
   FileText,
   History,
   Inbox,
-  LogOut,
   MapPin,
   Settings,
   SlidersHorizontal,
@@ -45,7 +49,6 @@ export type DriverMenuScreen =
   | 'docs'
   | 'pricing'
   | 'settings'
-  // Legacy / internal: permite renderizar blocos existentes sem refactor total.
   | 'account'
   | 'all'
 
@@ -56,77 +59,13 @@ function menuRoleLabel(role: string): string {
   return 'Passageiro'
 }
 
-function MenuHeader({
-  title,
-  onBack,
-  onClose,
-}: {
-  title: string
-  onBack?: () => void
-  onClose: () => void
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
-      <div className="flex items-center gap-2 min-w-0">
-        {onBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
-          >
-            Voltar
-          </button>
-        ) : null}
-        <p className="truncate text-sm font-semibold text-foreground">{title}</p>
-      </div>
-      <button
-        type="button"
-        onClick={onClose}
-        data-testid="driver-close-menu"
-        className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
-      >
-        Fechar
-      </button>
-    </div>
-  )
-}
-
-function RootItem({
-  label,
-  icon,
-  badge,
-  onClick,
-}: {
-  label: string
-  icon?: React.ReactNode
-  badge?: string | number | null
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${MENU_ROW_BTN} justify-between`}
-    >
-      <span className="min-w-0 truncate flex items-center gap-3">
-        {icon ? <span className="shrink-0 text-foreground/80">{icon}</span> : null}
-        <span className="truncate">{label}</span>
-      </span>
-      {badge != null ? (
-        <span className="shrink-0 rounded-full bg-primary/15 text-primary px-2 py-0.5 text-xs font-bold tabular-nums">
-          {badge}
-        </span>
-      ) : null}
-    </button>
-  )
-}
-
 export function DriverSideMenu(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  /** Controlado no pai — evita setState em effects (ESLint react-hooks/set-state-in-effect). */
   screen: DriverMenuScreen
   onScreenChange: (screen: DriverMenuScreen) => void
+  menuRootHighlight?: string | null
+  inboxUnreadCount?: number
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
   navPref: DriverNavApp
@@ -139,7 +78,6 @@ export function DriverSideMenu(props: {
   onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
   onToggleDriverDocsGate: (enabled: boolean) => void
   renderLegacyMenu: (section: DriverMenuScreen) => React.ReactNode
-  /** Offline com shell: alternativa acessível ao toque no mapa. */
   shellOffline?: boolean
   activeTripId?: string | null
   onRequestGoAvailable?: () => void
@@ -149,6 +87,8 @@ export function DriverSideMenu(props: {
     onOpenChange,
     screen,
     onScreenChange,
+    menuRootHighlight,
+    inboxUnreadCount,
     sessionDisplayName,
     renderLegacyMenu,
     shellOffline,
@@ -164,6 +104,7 @@ export function DriverSideMenu(props: {
   }, [token])
 
   const title = useMemo(() => driverMenuTitle(screen), [screen])
+  const hl = menuRootHighlight
 
   const close = () => {
     onScreenChange('root')
@@ -175,198 +116,202 @@ export function DriverSideMenu(props: {
       ? () => onScreenChange(DRIVER_MENU_BACK[screen] ?? 'root')
       : undefined
 
+  const headerTitle =
+    screen === 'root' ? (sessionDisplayName ?? 'Motorista') : title
+  const initial = (sessionDisplayName ?? 'M').slice(0, 1).toUpperCase()
+
   return (
-    <Sheet open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <SheetContent
-        side="left"
-        className="p-0 w-[85vw] max-w-[26rem] bg-background"
-        hideCloseButton
-        aria-label="Menu lateral do motorista"
-        data-testid="driver-side-menu"
-      >
-        <SheetTitle className="sr-only">
-          {screen === 'root' ? 'Menu do motorista' : title}
-        </SheetTitle>
-        <SheetDescription className="sr-only">
-          Navegação do motorista: rendimentos, viagens, definições e mais.
-        </SheetDescription>
-        <div className="h-dvh flex flex-col">
-          <MenuHeader
-            title={screen === 'root' ? `${sessionDisplayName ?? 'Motorista'}` : title}
-            onBack={back}
-            onClose={close}
-          />
+    <AppSideMenuSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      testId="driver-side-menu"
+      ariaLabel="Menu lateral do motorista"
+      srTitle={screen === 'root' ? 'Menu do motorista' : title}
+      srDescription="Navegação do motorista: rendimentos, viagens, definições e mais."
+      closeOnDismiss={close}
+    >
+      <AppMenuHeader
+        title={headerTitle}
+        onBack={back}
+        onClose={close}
+        closeTestId="driver-close-menu"
+      />
+      <AppMenuBody>
+        {screen === 'root' ? (
+          <>
+            <AppMenuIdentity
+              initial={initial}
+              name={sessionDisplayName ?? 'Motorista'}
+              phone={sessionPhone ?? 'Sessão de teste'}
+              roleBadge="Motorista"
+              trailing={
+                <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                  BETA
+                </span>
+              }
+            />
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
-            {screen === 'root' ? (
-              <>
-                <div className={MENU_SURFACE}>
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-foreground/10 border border-border flex items-center justify-center text-foreground/70 font-semibold">
-                      {(sessionDisplayName ?? 'M').slice(0, 1).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-base font-semibold text-foreground">{sessionDisplayName ?? 'Motorista'}</p>
-                      <p className="truncate text-xs text-muted-foreground">{sessionPhone ?? 'Sessão de teste'}</p>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                      BETA
-                    </span>
-                  </div>
-                </div>
+            {onRequestGoAvailable && shellOffline && !activeTripId ? (
+              <button
+                type="button"
+                data-testid="driver-menu-go-available"
+                onClick={() => {
+                  onRequestGoAvailable()
+                  close()
+                }}
+                className={`w-full min-h-9 ${BTN_SECONDARY_RADIUS} border border-primary/35 bg-primary/10 px-4 text-left text-sm font-semibold text-primary hover:bg-primary/15 touch-manipulation`}
+              >
+                Ficar disponível
+              </button>
+            ) : null}
 
-                {onRequestGoAvailable && shellOffline && !activeTripId ? (
-                  <button
-                    type="button"
-                    data-testid="driver-menu-go-available"
-                    onClick={() => {
-                      onRequestGoAvailable()
-                      close()
-                    }}
-                    className={`w-full min-h-9 ${BTN_SECONDARY_RADIUS} border border-primary/35 bg-primary/10 px-4 text-left text-sm font-semibold text-primary hover:bg-primary/15 touch-manipulation`}
-                  >
-                    Ficar disponível
-                  </button>
-                ) : null}
+            <AppMenuSection title="Operação">
+              <AppMenuRow
+                label="Rendimentos"
+                icon={<CreditCard className="h-4 w-4" />}
+                rowId="driver-menu-earnings"
+                active={hl === 'earnings'}
+                onClick={() => onScreenChange('earnings')}
+              />
+              <AppMenuRow
+                label="Viagens"
+                icon={<History className="h-4 w-4" />}
+                active={hl === 'trips'}
+                onClick={() => onScreenChange('trips')}
+              />
+              <AppMenuRow
+                label="Caixa de entrada"
+                icon={<Inbox className="h-4 w-4" />}
+                rowId="driver-menu-inbox"
+                badge={inboxUnreadCount}
+                active={hl === 'inbox'}
+                onClick={() => onScreenChange('inbox')}
+              />
+              <AppMenuRow
+                label="Registo de atividade"
+                icon={<ClipboardList className="h-4 w-4" />}
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
+                  close()
+                }}
+              />
+            </AppMenuSection>
 
-                <div className="space-y-2">
-                  <RootItem
-                    label="Rendimentos"
-                    icon={<CreditCard className="h-4 w-4" />}
-                    onClick={() => onScreenChange('earnings')}
-                  />
-                  <RootItem
-                    label="Viagens"
-                    icon={<History className="h-4 w-4" />}
-                    onClick={() => onScreenChange('trips')}
-                  />
-                  <RootItem
-                    label="Caixa de entrada"
-                    icon={<Inbox className="h-4 w-4" />}
-                    badge={null}
-                    onClick={() => onScreenChange('inbox')}
-                  />
-                  <RootItem
-                    label="Registo de atividade"
-                    icon={<ClipboardList className="h-4 w-4" />}
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
-                      close()
-                    }}
-                  />
-                  <RootItem
-                    label="Perfil"
-                    icon={<User className="h-4 w-4" />}
-                    onClick={() => onScreenChange('profile')}
-                  />
-                  <RootItem
-                    label="Definições"
-                    icon={<Settings className="h-4 w-4" />}
-                    onClick={() => onScreenChange('settings')}
-                  />
-                  <RootItem
-                    label="Preços (estimativa)"
-                    icon={<CreditCard className="h-4 w-4" />}
-                    onClick={() => onScreenChange('pricing')}
-                  />
-                  <RootItem
-                    label="Zonas"
-                    icon={<MapPin className="h-4 w-4" />}
-                    onClick={() => onScreenChange('zones')}
-                  />
-                  <RootItem
-                    label="Navegação"
-                    icon={<Compass className="h-4 w-4" />}
-                    onClick={() => onScreenChange('nav')}
-                  />
-                  <RootItem
-                    label="Categorias"
-                    icon={<SlidersHorizontal className="h-4 w-4" />}
-                    onClick={() => onScreenChange('categories')}
-                  />
-                  <RootItem
-                    label="Documentos"
-                    icon={<FileText className="h-4 w-4" />}
-                    onClick={() => onScreenChange('docs')}
-                  />
-                </div>
+            <AppMenuSection title="Conta">
+              <AppMenuRow
+                label="Perfil"
+                icon={<User className="h-4 w-4" />}
+                active={hl === 'profile'}
+                onClick={() => onScreenChange('profile')}
+              />
+              <AppMenuRow
+                label="Documentos"
+                icon={<FileText className="h-4 w-4" />}
+                active={hl === 'docs'}
+                onClick={() => onScreenChange('docs')}
+              />
+            </AppMenuSection>
 
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      logout()
-                      close()
-                    }}
-                    className={`${MENU_ROW_BTN} bg-background`}
-                  >
-                    <LogOut className="h-4 w-4 text-foreground/80" />
-                    <span>Sair</span>
-                  </button>
-                </div>
-              </>
-            ) : screen === 'profile' ? (
-              <div className="space-y-4" data-testid="driver-menu-profile-screen">
-                <div className={`${BTN_SECONDARY_RADIUS} border border-border bg-card px-4 py-3 space-y-3`}>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Nome</p>
-                    <p className="text-sm font-medium text-foreground break-words">
-                      {sessionDisplayName?.trim() || '—'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Telemóvel</p>
-                    <p className="text-sm font-medium text-foreground break-all">{sessionPhone ?? '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Papel</p>
-                    <p className="text-sm font-medium text-foreground">{menuRoleLabel(sessionRole)}</p>
-                  </div>
-                  {accountRef ? (
-                    <div>
-                      <p className="text-xs text-muted-foreground uppercase tracking-wide">Conta</p>
-                      <p className="text-sm font-medium text-foreground tabular-nums">Conta · {accountRef}</p>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <button
-                    type="button"
-                    data-testid="driver-menu-open-account"
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
-                      close()
-                    }}
-                    className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
-                  >
-                    <User className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-                    Conta (detalhe)
-                  </button>
-                  <button
-                    type="button"
-                    data-testid="driver-menu-open-settings"
-                    onClick={() => onScreenChange('settings')}
-                    className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
-                  >
-                    <Settings className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-                    Definições
-                  </button>
-                </div>
-              </div>
-            ) : screen === 'settings' ? (
-              <div className="space-y-4" data-testid="driver-settings-screen">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Preferências da app. Conta e sessão estão em{' '}
-                  <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
+            <AppMenuSection title="Configuração">
+              <AppMenuRow
+                label="Zonas"
+                icon={<MapPin className="h-4 w-4" />}
+                active={hl === 'zones'}
+                onClick={() => onScreenChange('zones')}
+              />
+              <AppMenuRow
+                label="Navegação"
+                icon={<Compass className="h-4 w-4" />}
+                active={hl === 'nav'}
+                onClick={() => onScreenChange('nav')}
+              />
+              <AppMenuRow
+                label="Categorias"
+                icon={<SlidersHorizontal className="h-4 w-4" />}
+                active={hl === 'categories'}
+                onClick={() => onScreenChange('categories')}
+              />
+              <AppMenuRow
+                label="Preços (estimativa)"
+                icon={<CreditCard className="h-4 w-4" />}
+                active={hl === 'pricing'}
+                onClick={() => onScreenChange('pricing')}
+              />
+              <AppMenuRow
+                label="Definições"
+                icon={<Settings className="h-4 w-4" />}
+                active={hl === 'settings'}
+                onClick={() => onScreenChange('settings')}
+              />
+            </AppMenuSection>
+
+            <AppMenuLogoutRow
+              onClick={() => {
+                logout()
+                close()
+              }}
+            />
+          </>
+        ) : screen === 'profile' ? (
+          <div className="space-y-4" data-testid="driver-menu-profile-screen">
+            <div className={`${BTN_SECONDARY_RADIUS} border border-border bg-card px-4 py-3 space-y-3`}>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Nome</p>
+                <p className="text-sm font-medium text-foreground break-words">
+                  {sessionDisplayName?.trim() || '—'}
                 </p>
-                <AppAppearanceSettings />
               </div>
-            ) : (
-              <div className="pt-1">{renderLegacyMenu(screen)}</div>
-            )}
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Telemóvel</p>
+                <p className="text-sm font-medium text-foreground break-all">{sessionPhone ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Papel</p>
+                <p className="text-sm font-medium text-foreground">{menuRoleLabel(sessionRole)}</p>
+              </div>
+              {accountRef ? (
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Conta</p>
+                  <p className="text-sm font-medium text-foreground tabular-nums">Conta · {accountRef}</p>
+                </div>
+              ) : null}
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                data-testid="driver-menu-open-account"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))
+                  close()
+                }}
+                className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
+              >
+                <User className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+                Conta (detalhe)
+              </button>
+              <button
+                type="button"
+                data-testid="driver-menu-open-settings"
+                onClick={() => onScreenChange('settings')}
+                className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
+              >
+                <Settings className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
+                Definições
+              </button>
+            </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        ) : screen === 'settings' ? (
+          <div className="space-y-4" data-testid="driver-settings-screen">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Preferências da app. Conta e sessão estão em{' '}
+              <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
+            </p>
+            <AppAppearanceSettings />
+          </div>
+        ) : (
+          <div className="pt-1">{renderLegacyMenu(screen)}</div>
+        )}
+      </AppMenuBody>
+    </AppSideMenuSheet>
   )
 }

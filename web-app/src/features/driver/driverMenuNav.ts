@@ -17,6 +17,23 @@ export const DRIVER_MENU_BACK: Partial<Record<DriverMenuScreen, DriverMenuScreen
   settings: 'root',
 }
 
+export function driverRootHighlightKey(screen: DriverMenuScreen): string | null {
+  if (screen === 'root') return null
+  if (screen === 'earnings') return 'earnings'
+  if (screen === 'inbox') return 'inbox'
+  if (screen === 'trips' || screen === 'trips_silenced') return 'trips'
+  if (screen === 'profile') return 'profile'
+  if (screen === 'docs') return 'docs'
+  if (screen === 'zones' || screen === 'zones_budget' || screen === 'zones_session' || screen === 'zones_request') {
+    return 'zones'
+  }
+  if (screen === 'nav') return 'nav'
+  if (screen === 'categories') return 'categories'
+  if (screen === 'pricing') return 'pricing'
+  if (screen === 'settings') return 'settings'
+  return null
+}
+
 export function driverMenuTitle(screen: DriverMenuScreen): string {
   if (screen === 'root') return 'Menu'
   if (screen === 'profile') return 'Perfil'

@@ -53,6 +53,7 @@ import { toast } from 'sonner'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { PassengerSideMenu, type PassengerMenuScreen } from './PassengerSideMenu'
+import { passengerRootHighlightKey } from './passengerMenuNav'
 import { PassengerBottomNav, type PassengerShellTab } from './PassengerBottomNav'
 import {
   PASSENGER_TRIP_CANCEL_PRESETS,
@@ -91,7 +92,14 @@ export function PassengerDashboard() {
   const [passengerCancelOpen, setPassengerCancelOpen] = useState(false)
   const [passengerMenuOpen, setPassengerMenuOpen] = useState(false)
   const [passengerMenuScreen, setPassengerMenuScreen] = useState<PassengerMenuScreen>('root')
+  const [passengerMenuRootHighlight, setPassengerMenuRootHighlight] = useState<string | null>(null)
   const passengerMenuOpenRef = useRef(false)
+
+  const onPassengerMenuScreenChange = useCallback((screen: PassengerMenuScreen) => {
+    const key = passengerRootHighlightKey(screen)
+    if (key) setPassengerMenuRootHighlight(key)
+    setPassengerMenuScreen(screen)
+  }, [])
 
   useEffect(() => {
     passengerMenuOpenRef.current = passengerMenuOpen
@@ -108,16 +116,22 @@ export function PassengerDashboard() {
     if (tab === 'home') {
       setPassengerMenuOpen(false)
       setPassengerMenuScreen('root')
+      setPassengerMenuRootHighlight(null)
       document.getElementById('passenger-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
     if (tab === 'menu') {
       const nextOpen = !passengerMenuOpenRef.current
-      if (nextOpen) setPassengerMenuScreen('root')
+      if (nextOpen) {
+        setPassengerMenuScreen('root')
+        setPassengerMenuRootHighlight(null)
+      }
       setPassengerMenuOpen(nextOpen)
       return
     }
-    setPassengerMenuScreen(tab === 'history' ? 'history' : 'account')
+    const screen = tab === 'history' ? 'history' : 'account'
+    setPassengerMenuScreen(screen)
+    setPassengerMenuRootHighlight(passengerRootHighlightKey(screen))
     setPassengerMenuOpen(true)
   }, [])
   const [passengerCancelPreset, setPassengerCancelPreset] = useState('')
@@ -1057,9 +1071,16 @@ export function PassengerDashboard() {
     >
       <PassengerSideMenu
         open={passengerMenuOpen}
-        onOpenChange={setPassengerMenuOpen}
+        onOpenChange={(open) => {
+          setPassengerMenuOpen(open)
+          if (!open) {
+            setPassengerMenuScreen('root')
+            setPassengerMenuRootHighlight(null)
+          }
+        }}
         screen={passengerMenuScreen}
-        onScreenChange={setPassengerMenuScreen}
+        onScreenChange={onPassengerMenuScreenChange}
+        menuRootHighlight={passengerMenuRootHighlight}
         history={history}
         historyLoading={historyLoading}
         historyPollFault={historyPollFault}

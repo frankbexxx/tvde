@@ -1,6 +1,6 @@
 import { useTheme, THEME_PREFERENCE_AUTO, type ThemePreference } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
-import { AMBIANCE_OPTIONS, ambianceSwatchStyle } from '@/design-system/ambianceMeta'
+import { AMBIANCE_OPTIONS, AUTO_AMBIANCE_HINT, ambianceSwatchStyle } from '@/design-system/ambianceMeta'
 
 function SwatchStrip({ swatch }: { swatch: (typeof AMBIANCE_OPTIONS)[0]['swatch'] }) {
   const style = ambianceSwatchStyle(swatch)
@@ -52,17 +52,16 @@ export function ThemeSelector() {
         )}
       >
         <p className="text-sm font-semibold text-foreground">Automático (sistema)</p>
-        <p className="mt-1 text-xs text-muted-foreground leading-snug">
-          Segue claro/escuro do telemóvel → Portugal (claro) ou Dev (escuro).
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground leading-snug">{AUTO_AMBIANCE_HINT}</p>
         {isActive(current, THEME_PREFERENCE_AUTO) ? (
           <p className="mt-2 text-[11px] font-medium text-primary">Activo</p>
         ) : null}
       </button>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {AMBIANCE_OPTIONS.map(({ id, label, description, swatch }) => {
+        {AMBIANCE_OPTIONS.map(({ id, label, description, swatch }, index) => {
           const active = isActive(current, id)
+          const isLastOdd = AMBIANCE_OPTIONS.length % 2 === 1 && index === AMBIANCE_OPTIONS.length - 1
           return (
             <button
               key={id}
@@ -72,6 +71,7 @@ export function ThemeSelector() {
               className={cn(
                 'rounded-xl border px-3 py-3 text-left transition-all duration-200',
                 'hover:scale-[1.01] active:scale-[0.99]',
+                isLastOdd && 'sm:col-span-2',
                 active
                   ? 'border-primary bg-primary/10 shadow-sm ring-1 ring-primary/30'
                   : 'border-border bg-card hover:bg-muted/30',

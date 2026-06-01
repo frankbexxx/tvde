@@ -17,6 +17,9 @@ Inspiração Sueca: **mecanismos** (camadas, preview, hierarquia), não estétic
 | [`../prompts/ambiance/PROMPT_AMB_F2_ASPETO_UI.md`](../prompts/ambiance/PROMPT_AMB_F2_ASPETO_UI.md) | Prompt F2 — selector |
 | [`../prompts/ambiance/PROMPT_AMB_F3_PARTNER_CRAFT.md`](../prompts/ambiance/PROMPT_AMB_F3_PARTNER_CRAFT.md) | Prompt F3 — partner |
 | [`../prompts/ambiance/PROMPT_AMB_F4_MAP_ROLES.md`](../prompts/ambiance/PROMPT_AMB_F4_MAP_ROLES.md) | Prompt F4 — driver/passenger |
+| [`AMBIANCE_O1_O6_BUILD.md`](AMBIANCE_O1_O6_BUILD.md) | **Onda 2:** O-1…O-6 (shell, wayfinding, Atlântico) |
+| [`../prompts/ambiance/PROMPT_AMB_O1_O6_SHELL_MENUS.md`](../prompts/ambiance/PROMPT_AMB_O1_O6_SHELL_MENUS.md) | Prompt O-1–O-3 |
+| [`../prompts/ambiance/PROMPT_AMB_O4_O6_THEMES_FLAGS.md`](../prompts/ambiance/PROMPT_AMB_O4_O6_THEMES_FLAGS.md) | Prompt O-4–O-6 |
 
 ### Referências existentes
 
@@ -88,4 +91,19 @@ Ambiance coerente no chrome sem perder legibilidade operacional; Partner com ide
 | F3b | Concluído | `PartnerSideMenu` — identidade, secções, chrome rows, badge Caixa |
 | F4 | Concluído | Resto `infoBoxTemplate` mapa/chips; menus já usam `MENU_*` |
 
-**Fora de scope (mantido):** AppMenuShell unificado, novos temas, tiles mapa.
+**Fora de scope (mantido):** O-7 E2E, O-8 Admin, tiles mapa.
+
+---
+
+## Onda 2 (O-1–O-6)
+
+Ver [`AMBIANCE_O1_O6_BUILD.md`](AMBIANCE_O1_O6_BUILD.md).
+
+| ID | Estado | Notas |
+|----|--------|-------|
+| O-1 AppMenuShell | Concluído | Primitivos partilhados; partner migrado |
+| O-2 Secções driver/passenger | Concluído | Paridade F3b |
+| O-3 Wayfinding | Concluído | `menuRootHighlight` + `AppMenuRow active` |
+| O-4 Labels | Concluído | Nocturno, Neon (sandbox), Auto hint |
+| O-5 Atlântico | Concluído | 5.º tema manual |
+| O-6 Temperos | Concluído | Flag tokens + touchpoints lista fechada |
