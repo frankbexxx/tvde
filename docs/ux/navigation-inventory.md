@@ -182,8 +182,8 @@ Tab IDs: `agora`, `docs`, `pending`, `users`, `frota`, `dados`, `trips`, `metric
 | Partner | Bottom Fleet | Fleet hub | `/partner` | `PartnerFleetHubScreen` | IMPLEMENTED | Via bottom nav | — |
 | Partner | Menu → Export | CSV | `/partner` | `PartnerTripsExportScreen` | IMPLEMENTED | Filtered export API | — |
 | Partner | Menu → Reports | KPIs + CSV | `/partner` | `PartnerReportsMenuScreen` | IMPLEMENTED | tripStats + export | — |
-| Partner | List → driver | Driver detail | `/partner/drivers/:userId` | `PartnerDriverDetail` | IMPLEMENTED | Menu via Layout | — |
-| Partner | List → trip | Trip detail | `/partner/trips/:tripId` | `PartnerTripDetail` | IMPLEMENTED | Menu via Layout | — |
+| Partner | List → driver | Driver detail | `/partner/drivers/:userId` | `PartnerDriverDetail` | IMPLEMENTED | Menu fecha ao navegar; bottom Frota/Caixa não redirecciona | — |
+| Partner | List → trip | Trip detail | `/partner/trips/:tripId` | `PartnerTripDetail` | IMPLEMENTED | Idem deep route | — |
 | Admin | Login tab | Dashboard | `/admin` | `AdminDashboard` | IMPLEMENTED | beta gate | — |
 | Admin | Tab Agora | Ops summary | `/admin?tab=agora` | `AdminTabAgora` | IMPLEMENTED | Default | — |
 | Admin | Tab Trips + tripId | Trip detail | `/admin?tab=trips&tripId=` | `AdminTabTrips` | IMPLEMENTED | Query not path | Baixa |
@@ -229,7 +229,7 @@ Tab IDs: `agora`, `docs`, `pending`, `users`, `frota`, `dados`, `trips`, `metric
 | `PartnerFleetScreen.tsx`, `PartnerTripsMenuScreen.tsx` | REMOVED / absent (W1) |
 | `ProfileButton` / full `SettingsButton` on P/D/Partner | HIDDEN — compact header; `AppRouteModeSwitch` in menu |
 | Driver home step-1 | FLAG_OFF (always false) |
-| `PartnerSideMenu` on detail URLs | IMPLEMENTED — `PartnerWorkspaceProvider` in Layout |
+| `PartnerSideMenu` on detail URLs | IMPLEMENTED — menu fecha em deep route; Frota/Caixa no bottom nav não expulsam do detalhe |
 
 ---
 

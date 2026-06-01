@@ -83,4 +83,75 @@ test.describe('Partner — menu tree v2', () => {
 
     await ctx.close()
   })
+
+  test('lista motorista fecha menu e abre detalhe; deep route mantém URL no bottom Frota', async ({
+    browser,
+    request,
+  }) => {
+    const seed = await request.post(`${API}/dev/seed`)
+    expect(seed.ok(), await seed.text()).toBeTruthy()
+
+    const tokRes = await request.post(`${API}/dev/tokens`)
+    expect(tokRes.ok(), await tokRes.text()).toBeTruthy()
+    const tokens = (await tokRes.json()) as {
+      passenger: string
+      driver: string
+      admin: string
+      partner: string
+    }
+
+    const driversRes = await request.get(`${API}/partner/drivers`, {
+      headers: { Authorization: `Bearer ${tokens.partner}` },
+    })
+    expect(driversRes.ok(), await driversRes.text()).toBeTruthy()
+    const drivers = (await driversRes.json()) as Array<{ user_id: string; user: { name: string | null } }>
+    const testDriver = drivers.find((d) => d.user.name === 'test_driver') ?? drivers[0]
+    expect(testDriver, 'seed deve expor test_driver ou motorista na frota').toBeTruthy()
+
+    const ctx = await browser.newContext()
+    await ctx.addInitScript(
+      (payload: { passenger: string; driver: string; admin: string; partner: string }) => {
+        try {
+          localStorage.setItem(
+            'tvde_e2e_dev_tokens_json',
+            JSON.stringify({
+              passenger: payload.passenger,
+              driver: payload.driver,
+              admin: payload.admin,
+              partner: payload.partner,
+            })
+          )
+          localStorage.setItem('tvde_app_route_role', 'partner')
+        } catch {
+          /* ignore */
+        }
+      },
+      tokens
+    )
+
+    const page = await ctx.newPage()
+    await page.goto(`${BASE_URL}/partner`, {
+      waitUntil: 'domcontentloaded',
+      timeout: sec(120),
+    })
+
+    await page.getByTestId('partner-open-menu').click()
+    const sheet = page.getByTestId('partner-side-menu')
+    await expect(sheet).toBeVisible({ timeout: sec(30) })
+    await sheet.getByRole('button', { name: 'Frota' }).click()
+    await sheet.getByTestId('partner-fleet-hub-list').click()
+    await expect(sheet.getByTestId('partner-fleet-drivers-section')).toBeVisible()
+
+    await sheet.getByRole('link', { name: 'test_driver' }).click()
+    await expect(sheet).not.toBeVisible({ timeout: sec(30) })
+    await expect(page.getByText('Disponível (app)')).toBeVisible({ timeout: sec(30) })
+    await expect(page).toHaveURL(new RegExp(`/partner/drivers/${testDriver!.user_id.replace(/-/g, '[-]')}`))
+
+    await page.getByTestId('partner-bottom-nav-fleet').click()
+    await expect(sheet).toBeVisible({ timeout: sec(30) })
+    await expect(sheet.getByTestId('partner-fleet-hub')).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`/partner/drivers/${testDriver!.user_id.replace(/-/g, '[-]')}`))
+
+    await ctx.close()
+  })
 })
