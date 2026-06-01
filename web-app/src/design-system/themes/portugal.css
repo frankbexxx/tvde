@@ -78,4 +78,15 @@
   /* === Atmosfera (bg gradients decorativos) =============================== */
   --bg-atmo-mid: 210 15% 96%;
   --bg-atmo-shape: 150 45% 82%;
+
+  /* === Chrome (sheets, menu, chips) — ver docs/ux/ambiance-chrome-contract.md */
+  --color-chrome-sheet-bg: 0 0% 100%;
+  --color-chrome-sheet-border: 210 15% 80%;
+  --shadow-chrome-sheet: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  --color-chrome-menu-gradient-from: 150 45% 92%;
+  --color-chrome-menu-row-hover: 210 15% 95%;
+  --color-chrome-menu-row-active: 150 45% 92%;
+  --color-chrome-chip-bg: 0 0% 100%;
+  --color-chrome-chip-border: 210 15% 80%;
+  --color-chrome-panel-bg: 0 0% 100%;
 }
