@@ -1,8 +1,15 @@
 import { useAuth } from '../../context/AuthContext'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
-import { BarChart3, Car, FileText, Inbox, LogOut, Settings, User, X } from 'lucide-react'
+import { BarChart3, Car, FileText, Inbox, LogOut, Settings, User } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { partnerMenuTitle } from './partnerMenuNav'
-import { MENU_ROW_BTN } from '../../components/layout/infoBoxTemplate'
+import { usePartnerShell } from './partnerShellContext'
+import {
+  MENU_BTN_SM,
+  MENU_ROW_BTN,
+  MENU_SURFACE,
+  PARTNER_SECTION_TITLE,
+} from '../../components/layout/infoBoxTemplate'
 
 export type PartnerMenuScreen =
   | 'root'
@@ -32,11 +39,7 @@ function MenuHeader({
     <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
       <div className="flex items-center gap-2 min-w-0">
         {onBack ? (
-          <button
-            type="button"
-            onClick={onBack}
-            className="min-h-[40px] rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-          >
+          <button type="button" onClick={onBack} className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}>
             Voltar
           </button>
         ) : null}
@@ -45,38 +48,49 @@ function MenuHeader({
       <button
         type="button"
         onClick={onClose}
-        className="min-h-[40px] rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground hover:bg-muted/50 touch-manipulation"
-        aria-label="Fechar menu"
+        data-testid="partner-close-menu"
+        className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
       >
-        <X className="h-4 w-4" />
+        Fechar
       </button>
     </div>
   )
 }
 
-function RootItem({
+function MenuRow({
   label,
   icon,
   onClick,
   testId,
+  badge,
 }: {
   label: string
   icon: React.ReactNode
   onClick: () => void
   testId?: string
+  badge?: number
 }) {
   return (
-    <button
-      type="button"
-      data-testid={testId}
-      onClick={onClick}
-      className="w-full min-h-[48px] rounded-xl border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center justify-between gap-3"
-    >
-      <span className="min-w-0 truncate flex items-center gap-3">
+    <button type="button" data-testid={testId} onClick={onClick} className={cn(MENU_ROW_BTN, 'justify-between')}>
+      <span className="flex min-w-0 items-center gap-3">
         <span className="shrink-0 text-foreground/80">{icon}</span>
         <span className="truncate">{label}</span>
       </span>
+      {badge != null && badge > 0 ? (
+        <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground tabular-nums">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      ) : null}
     </button>
+  )
+}
+
+function MenuSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <p className={PARTNER_SECTION_TITLE}>{title}</p>
+      <div className="space-y-2">{children}</div>
+    </section>
   )
 }
 
@@ -89,9 +103,11 @@ export function PartnerSideMenu(props: {
   renderScreen: (screen: PartnerMenuScreen) => React.ReactNode
 }) {
   const { open, onOpenChange, screen, onNavigate, onBack, renderScreen } = props
-  const { logout } = useAuth()
+  const { logout, sessionDisplayName, sessionPhone } = useAuth()
+  const { inboxUnreadCount } = usePartnerShell()
 
-  const title = partnerMenuTitle(screen)
+  const headerTitle =
+    screen === 'root' ? (sessionDisplayName ?? 'Parceiro') : partnerMenuTitle(screen)
 
   const close = () => {
     onNavigate('root')
@@ -99,6 +115,7 @@ export function PartnerSideMenu(props: {
   }
 
   const back = screen !== 'root' ? onBack : undefined
+  const initial = (sessionDisplayName ?? 'P').slice(0, 1).toUpperCase()
 
   return (
     <Sheet open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
@@ -108,62 +125,86 @@ export function PartnerSideMenu(props: {
         className="p-0 w-[85vw] max-w-[26rem] bg-background"
         hideCloseButton
       >
-        <SheetTitle className="sr-only">{title}</SheetTitle>
+        <SheetTitle className="sr-only">{headerTitle}</SheetTitle>
         <SheetDescription className="sr-only">
           Navegação do parceiro: frota, viagens, relatórios, caixa, perfil e definições.
         </SheetDescription>
         <div className="h-dvh flex flex-col">
-          <MenuHeader title={title} onBack={back} onClose={close} />
+          <MenuHeader title={headerTitle} onBack={back} onClose={close} />
           <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
             {screen === 'root' ? (
               <>
-                <div className="space-y-2">
-                  <RootItem
+                <div className={MENU_SURFACE} data-testid="partner-menu-identity">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-foreground/10 text-base font-semibold text-foreground/70">
+                      {initial}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-base font-semibold text-foreground">
+                        {sessionDisplayName ?? 'Gestor frota'}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">{sessionPhone ?? 'Sessão'}</p>
+                      <p className="mt-1 inline-block rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                        Parceiro
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <MenuSection title="Operação">
+                  <MenuRow
                     label="Frota"
                     icon={<Car className="h-4 w-4" />}
                     onClick={() => onNavigate('fleet')}
                   />
-                  <RootItem
+                  <MenuRow
                     label="Viagens"
                     icon={<FileText className="h-4 w-4" />}
                     onClick={() => onNavigate('trips')}
                   />
-                  <RootItem
+                  <MenuRow
                     label="Relatórios"
                     icon={<BarChart3 className="h-4 w-4" />}
                     onClick={() => onNavigate('reports')}
                   />
-                  <RootItem
+                  <MenuRow
                     label="Caixa"
                     icon={<Inbox className="h-4 w-4" />}
+                    badge={inboxUnreadCount}
                     onClick={() => onNavigate('inbox')}
                   />
-                  <RootItem
+                </MenuSection>
+
+                <MenuSection title="Conta">
+                  <MenuRow
                     label="Perfil"
                     icon={<User className="h-4 w-4" />}
                     testId="partner-menu-profile"
                     onClick={() => onNavigate('profile')}
                   />
-                  <RootItem
+                </MenuSection>
+
+                <MenuSection title="App">
+                  <MenuRow
                     label="Definições"
                     icon={<Settings className="h-4 w-4" />}
+                    testId="partner-menu-settings"
                     onClick={() => onNavigate('settings')}
                   />
-                </div>
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    data-testid="partner-menu-logout"
-                    onClick={() => {
-                      logout()
-                      close()
-                    }}
-                    className={`${MENU_ROW_BTN} bg-background w-full`}
-                  >
-                    <LogOut className="h-4 w-4 text-foreground/80" />
-                    Sair
-                  </button>
-                </div>
+                </MenuSection>
+
+                <button
+                  type="button"
+                  data-testid="partner-menu-logout"
+                  onClick={() => {
+                    logout()
+                    close()
+                  }}
+                  className={cn(MENU_ROW_BTN, 'bg-background w-full')}
+                >
+                  <LogOut className="h-4 w-4 text-foreground/80" />
+                  Sair
+                </button>
               </>
             ) : (
               <div className="pt-1">{renderScreen(screen)}</div>
