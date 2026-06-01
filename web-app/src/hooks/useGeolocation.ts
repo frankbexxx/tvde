@@ -188,9 +188,8 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
       }
     }
 
-    // After a previous geolocation failure in this session:
-    // - passenger: keep fallback without prompting again (avoids repeated prompts on refresh)
-    // - driver: keep trying to obtain a real fix (driver tracking should recover when permissions are granted later)
+    // Falha anterior nesta sessão: mostrar Oeiras de imediato mas continuar watchPosition
+    // (passageiro e motorista) para recuperar quando o browser passa a granted após Allow.
     try {
       if (sessionStorage.getItem(GEOLOCATION_FAILED_KEY) === '1') {
         const fallback = { lat: OEIRAS_FALLBACK.lat, lng: OEIRAS_FALLBACK.lng }
@@ -199,7 +198,6 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
           setPosition(fallback)
           setUsedFallback(true)
         })
-        if (mockRole !== 'driver') return
       }
     } catch {
       /* ignore */
@@ -225,6 +223,12 @@ export function useGeolocation(options?: UseGeolocationOptions): GeolocationResu
     const onSuccess = (pos: GeolocationPosition) => {
       const { latitude, longitude } = pos.coords
       const next = { lat: latitude, lng: longitude }
+
+      try {
+        sessionStorage.removeItem(GEOLOCATION_FAILED_KEY)
+      } catch {
+        /* ignore */
+      }
 
       const prev = lastPositionRef.current
       if (prev) {
