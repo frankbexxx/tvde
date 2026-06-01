@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchPartnerInboxMessages } from '../../api/partner'
 import { usePolling } from '../../hooks/usePolling'
 import { PartnerBottomNav } from './PartnerBottomNav'
-import { isPartnerFleetNavScreen } from './partnerMenuNav'
+import { isPartnerFleetNavScreen, isPartnerDeepRoute } from './partnerMenuNav'
 import { PartnerShellProvider, usePartnerShell, type PartnerShellTab } from './partnerShellContext'
 import { PartnerWorkspaceProvider } from './partnerWorkspace'
 
@@ -33,6 +33,21 @@ function PartnerLayoutInner() {
     }
   }, [menuScreen, unreadPolled, setInboxUnreadCount])
 
+  /** NAV-P-04b: ao entrar num deep route com menu aberto, fechar sheet (lista → detalhe). */
+  const prevPathnameRef = useRef(pathname)
+  useEffect(() => {
+    const prev = prevPathnameRef.current
+    if (
+      prev !== pathname &&
+      isPartnerDeepRoute(pathname) &&
+      !isPartnerDeepRoute(prev) &&
+      menuOpen
+    ) {
+      closeMenu()
+    }
+    prevPathnameRef.current = pathname
+  }, [pathname, menuOpen, closeMenu])
+
   const navActive = useMemo((): PartnerShellTab => {
     if (!menuOpen) return 'home'
     if (isPartnerFleetNavScreen(menuScreen)) return 'fleet'
@@ -57,12 +72,10 @@ function PartnerLayoutInner() {
       }
       if (tab === 'fleet') {
         openMenu('fleet', 'root')
-        if (!onIndex) navigate('/partner')
         return
       }
       if (tab === 'inbox') {
         openMenu('inbox')
-        if (!onIndex) navigate('/partner')
       }
     },
     [closeMenu, menuOpen, navigate, onIndex, openMenu]

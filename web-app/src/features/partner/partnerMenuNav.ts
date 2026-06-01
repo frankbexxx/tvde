@@ -1,5 +1,10 @@
 import type { PartnerMenuScreen } from './PartnerSideMenu'
 
+/** Deep routes com ecrã full no Outlet (detalhe motorista/viagem). */
+export function isPartnerDeepRoute(pathname: string): boolean {
+  return /^\/partner\/drivers\/[^/]+/.test(pathname) || /^\/partner\/trips\/[^/]+/.test(pathname)
+}
+
 /** Voltar por defeito (folha → hub → raiz). */
 export const PARTNER_MENU_DEFAULT_BACK: Partial<Record<PartnerMenuScreen, PartnerMenuScreen>> = {
   fleet: 'root',
