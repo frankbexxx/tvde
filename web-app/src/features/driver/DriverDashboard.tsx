@@ -183,7 +183,6 @@ import {
 import { getStoredSessionDisplayName } from '../../utils/authStorage'
 import { isDriverBottomNavEnabled, isDriverHomeTwoStepEnabled } from '../../config/driverHomeFeatures'
 import {
-  DRIVER_OPEN_ACCOUNT_EVENT,
   DRIVER_OPEN_ACTIVITY_LOG_EVENT,
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
@@ -1227,7 +1226,7 @@ export function DriverDashboard() {
           : 'contents'
       }
     >
-      <div className="fixed bottom-0 right-0 z-[60] h-0 w-0 overflow-hidden opacity-0" aria-hidden>
+      <div className="sr-only" aria-hidden>
         <ProfileButton />
         <SettingsButton />
       </div>
@@ -1383,10 +1382,8 @@ export function DriverDashboard() {
                             <>
                               <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
                               <p className="mt-1 text-foreground/90 leading-snug">
-                                [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o
-                                período de repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto
-                                genérico — substituir após validação do diploma e articulados aplicáveis
-                                (acompanhamento jurídico).
+                                Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
+                                repouso ou o limite diário deixar de aplicar (dia civil, Lisboa).
                               </p>
                               {drivingCompliance.rest_until ? (
                                 <p className="mt-1 text-xs opacity-90">
@@ -1401,12 +1398,11 @@ export function DriverDashboard() {
                             <>
                               <p className="font-medium leading-snug">Aviso de tempo de condução</p>
                               <p className="mt-1 text-foreground/85 leading-snug">
-                                [PLACEHOLDER] Hoje levaste cerca de{' '}
+                                Hoje acumulaste cerca de{' '}
                                 <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong>{' '}
                                 em viagem activa (máx. referência{' '}
                                 {formatDrivingDurationShort(drivingCompliance.max_seconds)} / dia civil, Lisboa). Evita
-                                aceitar serviços se estiveres perto do limite — quadro legal a substituir após
-                                validação normativa.
+                                aceitar serviços se estiveres perto do limite.
                               </p>
                             </>
                           )}
@@ -2008,9 +2004,8 @@ export function DriverDashboard() {
                     <>
                       <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
                       <p className="mt-1 text-foreground/90 leading-snug">
-                        [PLACEHOLDER] Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
-                        repouso ou o limite diário deixar de aplicar (dia civil, Lisboa). Texto genérico — substituir
-                        após validação do diploma e articulados aplicáveis (acompanhamento jurídico).
+                        Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
+                        repouso ou o limite diário deixar de aplicar (dia civil, Lisboa).
                       </p>
                       {drivingCompliance.rest_until ? (
                         <p className="mt-1 text-xs opacity-90">
@@ -2025,11 +2020,10 @@ export function DriverDashboard() {
                     <>
                       <p className="font-medium leading-snug">Aviso de tempo de condução</p>
                       <p className="mt-1 text-foreground/85 leading-snug">
-                        [PLACEHOLDER] Hoje levaste cerca de{' '}
+                        Hoje acumulaste cerca de{' '}
                         <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong> em
                         viagem activa (máx. referência {formatDrivingDurationShort(drivingCompliance.max_seconds)} /
-                        dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite — quadro legal a
-                        substituir após validação normativa.
+                        dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite.
                       </p>
                     </>
                   )}
@@ -2604,7 +2598,7 @@ function DriverOperationsMenu({
   silencedOfferEntries = [],
   onRestoreSilencedOffer,
   onRestoreAllSilencedOffers,
-  section = 'all',
+  section = 'earnings',
   hideHeader = false,
   hideCloseButton = false,
   onCloseMenu,
@@ -3085,23 +3079,19 @@ function DriverOperationsMenu({
     }
   }
 
-  const showAll = section === 'all'
-  const showEarnings = showAll || section === 'earnings'
-  const showTrips = showAll || section === 'trips'
+  const showEarnings = section === 'earnings'
+  const showTrips = section === 'trips'
   const showTripsSilenced = section === 'trips_silenced'
-  const showInbox = showAll || section === 'inbox'
-  const showAccountShortcuts = showAll || section === 'account'
-  const showPricing = showAll || section === 'pricing'
+  const showInbox = section === 'inbox'
+  const showPricing = section === 'pricing'
   const showZonesHub = section === 'zones'
-  const showZonesLegacy = section === 'all'
   const showZonesBudget = section === 'zones_budget'
   const showZonesSession = section === 'zones_session'
   const showZonesRequest = section === 'zones_request'
-  const showZonesPanel =
-    showZonesLegacy || showZonesBudget || showZonesSession || showZonesRequest
-  const showNavPref = showAll || section === 'nav'
-  const showCategories = showAll || section === 'categories'
-  const showDocs = showAll || section === 'docs'
+  const showZonesPanel = showZonesBudget || showZonesSession || showZonesRequest
+  const showNavPref = section === 'nav'
+  const showCategories = section === 'categories'
+  const showDocs = section === 'docs'
 
   return (
     <section className="space-y-4" data-testid="driver-ops-menu" aria-label="Menu do motorista">
@@ -3124,9 +3114,6 @@ function DriverOperationsMenu({
                 Fechar
               </button>
             ) : null}
-            <span className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-foreground/75">
-              Rating: em breve
-            </span>
           </div>
         </div>
       ) : null}
@@ -3316,31 +3303,10 @@ function DriverOperationsMenu({
         </div>
       ) : null}
 
-      {showAccountShortcuts ? (
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            data-testid="driver-menu-open-account"
-            onClick={() => window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACCOUNT_EVENT))}
-            className={`${MENU_BTN_SM} min-h-9`}
-          >
-            Conta (perfil)
-          </button>
-          <button
-            type="button"
-            data-testid="driver-menu-open-settings"
-            onClick={() => onNavigateSection?.('settings')}
-            className={`${MENU_BTN_SM} min-h-9`}
-          >
-            Definições
-          </button>
-        </div>
-      ) : null}
-
       {showPricing ? (
         <details className={`${INNER_RADIUS} border border-border/80 bg-muted/15 px-3 py-2 text-sm`}>
           <summary className="cursor-pointer font-medium text-foreground select-none">
-            Preços nos pedidos (estimativa)
+            Como funciona a estimativa
           </summary>
           <p className="mt-2 text-xs text-foreground/85 leading-snug">
             O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no
@@ -3405,7 +3371,7 @@ function DriverOperationsMenu({
             Contador diário (meia-noite Lisboa). O uso só desce quando concluíres a primeira viagem na zona-alvo
             depois de confirmares «Cheguei».
           </p>
-          {(showZonesLegacy || showZonesBudget) && (
+          {(showZonesBudget) && (
             <>
               {zoneLoadErr ? (
                 <p className="text-xs text-destructive">{zoneLoadErr}</p>
@@ -3422,7 +3388,7 @@ function DriverOperationsMenu({
               )}
             </>
           )}
-          {(showZonesLegacy || showZonesSession) && zoneSession && zoneStateLabel ? (
+          {(showZonesSession) && zoneSession && zoneStateLabel ? (
             <div className={`${MENU_CARD} space-y-2`}>
               <p className="text-xs font-medium text-foreground">
                 Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
@@ -3508,7 +3474,7 @@ function DriverOperationsMenu({
                 </p>
               ) : null}
             </div>
-          ) : (showZonesLegacy || showZonesRequest) && !zoneSession && zoneBudget && zoneBudget.remaining > 0 ? (
+          ) : (showZonesRequest) && !zoneSession && zoneBudget && zoneBudget.remaining > 0 ? (
             <div className={`${MENU_CARD} space-y-2`}>
               <label className="block space-y-1">
                 <span className="text-[11px] text-muted-foreground">
@@ -3616,7 +3582,7 @@ function DriverOperationsMenu({
                 Pedir mudança de zona
               </button>
             </div>
-          ) : (showZonesLegacy || showZonesBudget) && !zoneSession && zoneBudget && zoneBudget.remaining <= 0 ? (
+          ) : (showZonesBudget) && !zoneSession && zoneBudget && zoneBudget.remaining <= 0 ? (
             <div
               className={`${INNER_RADIUS} border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2`}
               data-testid="driver-zones-budget-exhausted"
@@ -3624,8 +3590,8 @@ function DriverOperationsMenu({
               <p className="text-sm font-semibold text-foreground">Orçamento de mudanças esgotado hoje</p>
               <p className="text-xs text-foreground/85 leading-snug">
                 Não é possível abrir um novo pedido automático até ao reset (meia-noite Lisboa) ou até o partner
-                autorizar uma excepção. Usa o <strong>canal habitual da operação</strong> se precisares de entrar
-                numa zona extra hoje — em breve poderás enviar esse pedido também aqui.
+                autorizar uma excepção. Contacta a operação / frota pelo canal habitual se precisares de entrar
+                numa zona extra hoje.
               </p>
               <button
                 type="button"

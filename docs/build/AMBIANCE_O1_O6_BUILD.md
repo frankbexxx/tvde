@@ -4,7 +4,7 @@
 
 **Pré-requisito:** onda 1 (F0–F4 + F3b) merged em `main`.
 
-**Branch:** `feat/amb-o1-o6-shell-themes` — **1 PR único**.
+**Branch:** `feat/amb-o1-o6-shell-themes` — merged **PR #349** → `main` @ `4f3ace9`.
 
 **Fora de scope:** O-7 (E2E Aspeto), O-8 (Admin), mapa tiles, árvore menu v2.
 
@@ -41,13 +41,15 @@ cd web-app && npm run build
 
 ### Smoke checklist
 
-| Role | Verificar |
-|------|-----------|
-| Partner | Raiz identidade + secções; wayfinding Frota/Caixa; hubs inalterados |
-| Driver | Secções Operação/Conta/Config; highlight Rendimentos/Caixa |
-| Passageiro | Secções + badge Passageiro; highlight Histórico/Conta |
-| Aspeto | 5 temas + Auto; labels Nocturno + Atlântico |
-| Mapa | Tiles inalterados |
+| ID | Role | Verificar | Estado | Notas |
+|----|------|-----------|--------|-------|
+| **S-SMK-349-1** | Partner | Raiz identidade + secções; wayfinding Frota/Caixa; hubs inalterados | **Concluído** | Smoke Frank sessão 2026-05-22 |
+| **S-SMK-349-2** | Driver | Secções Operação/Conta/Config; highlight Rendimentos/Caixa | **Concluído** | idem |
+| **S-SMK-349-3** | Passageiro | Secções + badge Passageiro; highlight Histórico/Conta | **Concluído** | idem |
+| **S-SMK-349-4** | Aspeto | 5 temas + Auto; labels Nocturno + Atlântico | **Concluído** | idem |
+| **S-SMK-349-5** | Mapa | Tiles inalterados (driver/passenger) | **Concluído** | idem |
+
+**PR:** #349 · merge `main` @ `4f3ace9`
 
 ---
 

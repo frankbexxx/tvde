@@ -160,7 +160,7 @@ export function MapView({
   useEffect(() => {
     mapStyleFallbackRef.current = false
     setMapStyleUrl(MAPTILER_STYLE)
-  }, [MAPTILER_KEY])
+  }, [])
 
   const handleMapError = useCallback(() => {
     if (mapStyleFallbackRef.current || mapStyleUrl === DEFAULT_MAP_STYLE) return

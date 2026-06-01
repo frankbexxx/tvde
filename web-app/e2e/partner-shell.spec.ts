@@ -1,5 +1,5 @@
 /**
- * Partner shell — menu tree v2 (hubs Frota/Viagens, Sair, bottom Frota → lista).
+ * Partner shell — menu tree v2 (hubs Frota/Viagens, Sair, bottom Frota → hub).
  */
 import { test, expect } from '@playwright/test'
 import { attachFailureArtifactsIfNeeded, resetFailureArtifactState } from './helpers/failureArtifacts'
@@ -18,7 +18,7 @@ test.describe('Partner — menu tree v2', () => {
     await attachFailureArtifactsIfNeeded(testInfo)
   })
 
-  test('Sair, bottom Frota lista, hubs Frota e Viagens', async ({ browser, request }) => {
+  test('Sair, bottom Frota hub, lista, hub Viagens', async ({ browser, request }) => {
     const seed = await request.post(`${API}/dev/seed`)
     expect(seed.ok(), await seed.text()).toBeTruthy()
 
@@ -64,16 +64,17 @@ test.describe('Partner — menu tree v2', () => {
     await page.getByTestId('partner-bottom-nav-fleet').click()
     const sheet = page.getByTestId('partner-side-menu')
     await expect(sheet).toBeVisible({ timeout: sec(30) })
-    await expect(sheet.getByTestId('partner-fleet-drivers-section')).toBeVisible()
-    await expect(sheet.getByRole('button', { name: 'Voltar' })).toBeVisible()
-    await sheet.getByRole('button', { name: 'Voltar' }).click()
-    await expect(sheet.getByRole('button', { name: 'Frota' })).toBeVisible()
-
-    await sheet.getByRole('button', { name: 'Frota' }).click()
     await expect(sheet.getByTestId('partner-fleet-hub')).toBeVisible()
     await expect(sheet.getByTestId('partner-fleet-hub-list')).toBeVisible()
 
+    await sheet.getByTestId('partner-fleet-hub-list').click()
+    await expect(sheet.getByTestId('partner-fleet-drivers-section')).toBeVisible()
     await sheet.getByRole('button', { name: 'Voltar' }).click()
+    await expect(sheet.getByTestId('partner-fleet-hub')).toBeVisible()
+
+    await sheet.getByRole('button', { name: 'Voltar' }).click()
+    await expect(sheet.getByRole('button', { name: 'Viagens' })).toBeVisible()
+
     await sheet.getByRole('button', { name: 'Viagens' }).click()
     await expect(sheet.getByTestId('partner-trips-hub')).toBeVisible()
 

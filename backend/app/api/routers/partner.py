@@ -65,6 +65,7 @@ from app.services.partner_queries import (
     get_trip_for_partner,
     list_drivers_for_partner_enriched,
     list_trips_for_partner,
+    list_trips_for_partner_filtered,
 )
 from app.services.driver_zones import (
     approve_zone_session_extension,
@@ -411,6 +412,11 @@ async def partner_export_trips_csv(
     request: Request,
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
+    status: str | None = Query(None, alias="status"),
+    driver_id: str | None = Query(None),
+    from_date: str | None = Query(None, alias="from"),
+    to_date: str | None = Query(None, alias="to"),
+    q: str | None = Query(None),
 ):
     """Must be registered before /trips/{trip_id} so 'export' is not parsed as UUID."""
     partner_id = _require_partner_id(ctx)
@@ -420,7 +426,33 @@ async def partner_export_trips_csv(
         user_id=ctx.user_id,
         partner_id=partner_id,
     )
-    trips = list_trips_for_partner(db, partner_id)
+
+    date_from: datetime | None = None
+    date_to: datetime | None = None
+    if from_date:
+        try:
+            date_from = datetime.fromisoformat(f"{from_date}T00:00:00").replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_from_date")
+    if to_date:
+        try:
+            date_to = datetime.fromisoformat(f"{to_date}T23:59:59.999").replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_to_date")
+
+    has_filters = any([status, driver_id, from_date, to_date, q])
+    if has_filters:
+        trips = list_trips_for_partner_filtered(
+            db,
+            partner_id,
+            status_filter=status,
+            driver_id=driver_id,
+            date_from=date_from,
+            date_to=date_to,
+            search=q,
+        )
+    else:
+        trips = list_trips_for_partner(db, partner_id)
 
     buf = io.StringIO()
     w = csv.writer(buf)

@@ -1,5 +1,6 @@
 import type { PartnerDriverRow } from '../../../api/partner'
 import type { DriverFilter } from '../partnerTypes'
+import { PartnerListSearch } from '../components/PartnerListSearch'
 import { PartnerFleetDriversSection } from './PartnerFleetDriversSection'
 
 type PartnerFleetListScreenProps = {
@@ -8,6 +9,8 @@ type PartnerFleetListScreenProps = {
   onDriverFilterChange: (filter: DriverFilter) => void
   loading: boolean
   onRefresh: () => void
+  search: string
+  onSearchChange: (value: string) => void
 }
 
 export function PartnerFleetListScreen({
@@ -16,9 +19,17 @@ export function PartnerFleetListScreen({
   onDriverFilterChange,
   loading,
   onRefresh,
+  search,
+  onSearchChange,
 }: PartnerFleetListScreenProps) {
   return (
     <div className="space-y-4 text-sm text-foreground">
+      <PartnerListSearch
+        value={search}
+        onChange={onSearchChange}
+        placeholder="Nome ou telefone do motorista"
+        testId="partner-fleet-list-search"
+      />
       <PartnerFleetDriversSection
         filteredDrivers={filteredDrivers}
         driverFilter={driverFilter}

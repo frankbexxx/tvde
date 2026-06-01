@@ -7,6 +7,7 @@ import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus
 import type { DriverVehicleCategory } from '../../services/driverVehicleCategories'
 import { DRIVER_OPEN_ACCOUNT_EVENT, DRIVER_OPEN_ACTIVITY_LOG_EVENT } from './driverShellEvents'
 import { AppAppearanceSettings } from '../settings/AppAppearanceSettings'
+import { AppRouteModeSwitch } from '../settings/AppRouteModeSwitch'
 import {
   AppMenuBody,
   AppMenuHeader,
@@ -49,8 +50,6 @@ export type DriverMenuScreen =
   | 'docs'
   | 'pricing'
   | 'settings'
-  | 'account'
-  | 'all'
 
 function menuRoleLabel(role: string): string {
   if (role === 'driver') return 'Motorista'
@@ -232,7 +231,7 @@ export function DriverSideMenu(props: {
                 onClick={() => onScreenChange('categories')}
               />
               <AppMenuRow
-                label="Preços (estimativa)"
+                label="Como funciona a estimativa"
                 icon={<CreditCard className="h-4 w-4" />}
                 active={hl === 'pricing'}
                 onClick={() => onScreenChange('pricing')}
@@ -307,6 +306,7 @@ export function DriverSideMenu(props: {
               <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
             </p>
             <AppAppearanceSettings />
+            <AppRouteModeSwitch />
           </div>
         ) : (
           <div className="pt-1">{renderLegacyMenu(screen)}</div>

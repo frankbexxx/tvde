@@ -114,7 +114,7 @@ export function probeDia23Layout(surface: 'passenger' | 'driver'): Dia23Violatio
     if (er && er.height > 0) {
       violations.push({
         code: 'ESTATUTO_VISIBLE',
-        message: 'DriverShellTopChips visível no ecrã mapa',
+        message: 'Chip estatuto visível no ecrã mapa',
         hypothesisId: 'C',
         data: { surface, rect: er },
       })

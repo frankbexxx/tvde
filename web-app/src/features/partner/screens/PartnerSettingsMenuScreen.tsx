@@ -1,4 +1,5 @@
 import { AppAppearanceSettings } from '../../settings/AppAppearanceSettings'
+import { AppRouteModeSwitch } from '../../settings/AppRouteModeSwitch'
 
 type PartnerSettingsMenuScreenProps = {
   onRefresh: () => void
@@ -12,6 +13,7 @@ export function PartnerSettingsMenuScreen({ onRefresh }: PartnerSettingsMenuScre
         <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
       </p>
       <AppAppearanceSettings />
+      <AppRouteModeSwitch />
       <button
         type="button"
         onClick={onRefresh}

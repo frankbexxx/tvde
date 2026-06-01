@@ -31,6 +31,23 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 ---
 
+## Painel — 2026-05-22 (smokes pós-merge #349 — Ambiance O-1–O-6)
+
+**Smokes:** **S-SMK-349-1…5** **Concluídos** (sessão Frank **2026-05-22**).
+
+**Referência:** [`AMBIANCE_O1_O6_BUILD.md`](docs/build/AMBIANCE_O1_O6_BUILD.md) · PR **#349** · merge `4f3ace9`
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-SMK-349-1** | Partner — menu secções + wayfinding Frota/Caixa | Concluído | hubs inalterados |
+| **S-SMK-349-2** | Driver — secções + highlight Rendimentos/Caixa | Concluído | oferta `border-l-info` OK |
+| **S-SMK-349-3** | Passageiro — badge + highlight Histórico/Conta | Concluído | |
+| **S-SMK-349-4** | Aspeto — 5 temas + Auto (Nocturno, Atlântico) | Concluído | |
+| **S-SMK-349-5** | Mapa — tiles inalterados driver/passenger | Concluído | |
+| **R-NAV-INV-1** | Inventário navegação 4 apps (read-only) | Concluído | [`navigation-inventory.md`](docs/ux/navigation-inventory.md) |
+
+---
+
 ## Painel — 2026-05-24 / fecho 2026-05-29 (smokes pós-merge #341 — grelha fechada)
 
 **Smokes:** **S-SMK-341-1…6** **Concluídos** (sessão matinal **2026-05-29**).
