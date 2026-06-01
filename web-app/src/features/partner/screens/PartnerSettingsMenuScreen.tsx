@@ -1,18 +1,17 @@
+import { AppAppearanceSettings } from '../../settings/AppAppearanceSettings'
+
 type PartnerSettingsMenuScreenProps = {
   onRefresh: () => void
 }
 
 export function PartnerSettingsMenuScreen({ onRefresh }: PartnerSettingsMenuScreenProps) {
   return (
-    <div className="space-y-4 text-sm text-foreground">
+    <div className="space-y-4 text-sm text-foreground" data-testid="partner-settings-screen">
       <p className="text-xs text-muted-foreground leading-relaxed">
         Preferências do gestor de frota. Conta e sessão estão em{' '}
         <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
       </p>
-      <p className="text-xs text-muted-foreground">
-        Tema e modo de visualização seguem as definições globais da app (ícone no header em rotas
-        sem shell compacto).
-      </p>
+      <AppAppearanceSettings />
       <button
         type="button"
         onClick={onRefresh}

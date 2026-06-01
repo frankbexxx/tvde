@@ -16,7 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { ThemeSelector } from "./ThemeSelector"
+import { AppAppearanceSettings } from "@/features/settings/AppAppearanceSettings"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useAuth } from "@/context/AuthContext"
 import { useActiveTrip } from "@/context/ActiveTripContext"
@@ -69,10 +69,7 @@ export function SettingsButton() {
       <p className="text-xs text-muted-foreground leading-snug">
         Dados pessoais e palavra-passe: ícone <span className="font-medium text-foreground/90">Conta</span> (perfil).
       </p>
-      <div>
-        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Aspeto</p>
-        <ThemeSelector />
-      </div>
+      <AppAppearanceSettings />
       <div>
         <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Modo da app</p>
         <div className="flex gap-2">
