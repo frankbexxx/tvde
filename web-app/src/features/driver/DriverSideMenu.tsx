@@ -26,6 +26,7 @@ import {
   SlidersHorizontal,
   User,
 } from 'lucide-react'
+import { DRIVER_MENU_BACK, driverMenuTitle } from './driverMenuNav'
 
 export type DriverMenuScreen =
   | 'root'
@@ -33,9 +34,13 @@ export type DriverMenuScreen =
   | 'inbox'
   | 'earnings'
   | 'trips'
+  | 'trips_silenced'
   | 'nav'
   | 'categories'
   | 'zones'
+  | 'zones_budget'
+  | 'zones_session'
+  | 'zones_request'
   | 'docs'
   | 'pricing'
   // Legacy / internal: permite renderizar blocos existentes sem refactor total.
@@ -156,26 +161,17 @@ export function DriverSideMenu(props: {
     return jwtSub.replace(/-/g, '').slice(-8)
   }, [token])
 
-  const title = useMemo(() => {
-    if (screen === 'root') return 'Menu'
-    if (screen === 'profile') return 'Perfil'
-    if (screen === 'inbox') return 'Caixa de entrada'
-    if (screen === 'earnings') return 'Rendimentos'
-    if (screen === 'trips') return 'Viagens'
-    if (screen === 'nav') return 'Navegação'
-    if (screen === 'categories') return 'Categorias'
-    if (screen === 'zones') return 'Zonas'
-    if (screen === 'docs') return 'Documentos'
-    if (screen === 'pricing') return 'Preços'
-    return 'Menu do motorista'
-  }, [screen])
+  const title = useMemo(() => driverMenuTitle(screen), [screen])
 
   const close = () => {
     onScreenChange('root')
     onOpenChange(false)
   }
 
-  const back = screen !== 'root' ? () => onScreenChange('root') : undefined
+  const back =
+    screen !== 'root'
+      ? () => onScreenChange(DRIVER_MENU_BACK[screen] ?? 'root')
+      : undefined
 
   return (
     <Sheet open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>

@@ -82,6 +82,8 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **TW-SMK-DOC-5** | Partner detalhe sem contador «X / 6» | Concluído | `partnerDocumentsApprovedCount` + UI detalhe |
 | **TW-SMK-PARTNER-1** | Menu Frota = lista motoristas (componente partilhado) | Concluído | Bottom nav Frota abre drawer |
 | **TW-SMK-PARTNER-2** | Partner userCompact + Perfil menu + BetaAccount fora Início | Concluído | [`shell-menu-centric.md`](docs/ux/shell-menu-centric.md) |
+| **TW-SMK-PARTNER-3** | **Sair** no menu partner | Concluído | `partner-menu-logout` |
+| **TW-SMK-PARTNER-4** | Menu tree v2 — hubs Frota/Viagens + bottom Frota → lista | Concluído | [`partner-shell.spec.ts`](web-app/e2e/partner-shell.spec.ts) |
 | **TW-SMK-DOC-6** | Ordem docs driver ≠ partner (Viatura+Motorista) | N/A | Cosmético |
 
 ### Rasto smoke **S-SMK-341-6** — ofertas silenciadas + categorias (fila código)
@@ -101,7 +103,7 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 | **F-NAV-1** | Waze abre duas vezes (aceite + iniciar) | Concluído | Política **B**: só destino ao iniciar; **O-NAV-REV-1** rever G12 |
 | **O-NAV-REV-1** | Rever auto-open recolha (G12) vs política B | Por iniciar | Decisão produto futura |
 | **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Frank lista ecrãs |
-| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro | Smoke pendente | Partner shell menu-centric **feito**; passageiro parcial (#287) |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro + menu tree v2 | Smoke pendente | Partner **tree v2**; driver zones/viagens hub; passageiro OK (Sair + ecrãs) |
 
 ---
 

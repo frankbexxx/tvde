@@ -23,12 +23,17 @@ import {
   ONGOING_TRIP_STATUSES,
   parseIsoMs,
   type DriverFilter,
-  type PartnerHomeView,
   type TripFilter,
 } from './partnerTypes'
 import { PartnerHomeDashboard } from './screens/PartnerHomeDashboard'
-import { PartnerFleetScreen } from './screens/PartnerFleetScreen'
-import { PartnerTripsMenuScreen } from './screens/PartnerTripsMenuScreen'
+import { PartnerFleetHubScreen } from './screens/PartnerFleetHubScreen'
+import { PartnerFleetListScreen } from './screens/PartnerFleetListScreen'
+import { PartnerFleetMapScreen } from './screens/PartnerFleetMapScreen'
+import { PartnerFleetAddScreen } from './screens/PartnerFleetAddScreen'
+import { PartnerTripsHubScreen } from './screens/PartnerTripsHubScreen'
+import { PartnerTripsSummaryScreen } from './screens/PartnerTripsSummaryScreen'
+import { PartnerTripsListScreen } from './screens/PartnerTripsListScreen'
+import { PartnerTripsExportScreen } from './screens/PartnerTripsExportScreen'
 import { PartnerReportsMenuScreen } from './screens/PartnerReportsMenuScreen'
 import { PartnerSettingsMenuScreen } from './screens/PartnerSettingsMenuScreen'
 import { PartnerProfileScreen } from './screens/PartnerProfileScreen'
@@ -48,7 +53,8 @@ export function PartnerHome() {
     menuOpen,
     setMenuOpen,
     menuScreen,
-    setMenuScreen,
+    navigateMenu,
+    goBackMenu,
     closeMenu,
     setInboxUnreadCount,
   } = usePartnerShell()
@@ -68,7 +74,6 @@ export function PartnerHome() {
   const [discoverLoading, setDiscoverLoading] = useState(false)
   const [discoverOk, setDiscoverOk] = useState<string | null>(null)
   const [discoverSearched, setDiscoverSearched] = useState(false)
-  const [fleetView, setFleetView] = useState<PartnerHomeView>('list')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -97,7 +102,7 @@ export function PartnerHome() {
   usePolling(
     load,
     [load],
-    (menuOpen && menuScreen === 'fleet' && fleetView === 'map') || !menuOpen,
+    (menuOpen && menuScreen === 'fleet_map') || !menuOpen,
     12_000
   )
 
@@ -255,17 +260,35 @@ export function PartnerHome() {
   const renderMenuScreen = (screen: PartnerMenuScreen) => {
     if (screen === 'fleet') {
       return (
-        <PartnerFleetScreen
+        <PartnerFleetHubScreen
           metrics={metrics}
-          drivers={drivers}
-          trips={trips}
+          onNavigate={(leaf) => navigateMenu(leaf)}
+        />
+      )
+    }
+    if (screen === 'fleet_list') {
+      return (
+        <PartnerFleetListScreen
           filteredDrivers={filteredDrivers}
           driverFilter={driverFilter}
           onDriverFilterChange={setDriverFilter}
-          fleetView={fleetView}
-          onFleetViewChange={setFleetView}
           loading={loading}
           onRefresh={() => void load()}
+        />
+      )
+    }
+    if (screen === 'fleet_map') {
+      return (
+        <PartnerFleetMapScreen
+          drivers={drivers}
+          trips={trips}
+          onRefresh={() => void load()}
+        />
+      )
+    }
+    if (screen === 'fleet_add') {
+      return (
+        <PartnerFleetAddScreen
           discoverQuery={discoverQuery}
           onDiscoverQueryChange={setDiscoverQuery}
           discoverLoading={discoverLoading}
@@ -278,10 +301,14 @@ export function PartnerHome() {
       )
     }
     if (screen === 'trips') {
+      return <PartnerTripsHubScreen onNavigate={(leaf) => navigateMenu(leaf)} />
+    }
+    if (screen === 'trips_summary') {
+      return <PartnerTripsSummaryScreen tripStats={tripStats} recentTrips={recentTrips} />
+    }
+    if (screen === 'trips_list') {
       return (
-        <PartnerTripsMenuScreen
-          tripStats={tripStats}
-          recentTrips={recentTrips}
+        <PartnerTripsListScreen
           filteredTrips={filteredTrips}
           drivers={drivers}
           tripFilter={tripFilter}
@@ -296,6 +323,9 @@ export function PartnerHome() {
           onDownloadCsv={() => void downloadCsv()}
         />
       )
+    }
+    if (screen === 'trips_export') {
+      return <PartnerTripsExportScreen onDownloadCsv={() => void downloadCsv()} />
     }
     if (screen === 'reports') {
       return (
@@ -327,7 +357,8 @@ export function PartnerHome() {
             }
           }}
           screen={menuScreen}
-          onScreenChange={setMenuScreen}
+          onNavigate={navigateMenu}
+          onBack={goBackMenu}
           renderScreen={renderMenuScreen}
         />
 
@@ -337,7 +368,7 @@ export function PartnerHome() {
 
         {loading && <p className="text-sm text-muted-foreground">A carregar…</p>}
         {error && <p className="text-sm text-destructive">{error}</p>}
-        {discoverOk && menuOpen && menuScreen === 'fleet' && (
+        {discoverOk && menuOpen && menuScreen === 'fleet_add' && (
           <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg">
             {discoverOk}
           </p>

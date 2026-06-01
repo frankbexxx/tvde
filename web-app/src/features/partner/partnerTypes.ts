@@ -1,7 +1,5 @@
 import type { PartnerDriverRow, PartnerTripRow } from '../../api/partner'
 
-export type PartnerHomeView = 'list' | 'map'
-
 export type DriverFilter = 'all' | 'active' | 'online' | 'offline'
 export type TripFilter = 'all' | 'ongoing' | 'completed' | 'cancelled' | 'failed' | 'assigned'
 
@@ -45,7 +43,7 @@ export function matchesTripFilter(t: PartnerTripRow, f: TripFilter): boolean {
 
 export function filterChipClass(active: boolean): string {
   return `px-2 py-1 rounded-lg text-xs font-medium border transition-colors ${active
-      ? 'bg-primary text-primary-foreground border-primary'
-      : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
+    ? 'bg-primary text-primary-foreground border-primary'
+    : 'bg-card border-border text-foreground/80 hover:bg-muted/40'
     }`
 }
