@@ -84,7 +84,8 @@ Ambiance coerente no chrome sem perder legibilidade operacional; Partner com ide
 | F0 | Concluído | [`ambiance-chrome-contract.md`](../ux/ambiance-chrome-contract.md) |
 | F1 | Concluído | Tokens + piloto `MAP_BOTTOM_SHEET`, `MENU_SURFACE`, `MENU_ROW_BTN` |
 | F2 | Concluído | `ThemeSelector` cards + `ambianceMeta.ts` |
-| F3 | Concluído | Partner dashboard, hubs, alerts; **F3b menu drawer pendente** |
+| F3 | Concluído | Partner dashboard, hubs, alerts; **F3b menu drawer** |
+| F3b | Concluído | `PartnerSideMenu` — identidade, secções, chrome rows, badge Caixa |
 | F4 | Concluído | Resto `infoBoxTemplate` mapa/chips; menus já usam `MENU_*` |
 
-**Fora de scope (mantido):** AppMenuShell unificado, novos temas, tiles mapa, PartnerSideMenu identidade (F3b).
+**Fora de scope (mantido):** AppMenuShell unificado, novos temas, tiles mapa.

@@ -26,7 +26,7 @@ export function isPartnerFleetNavScreen(screen: PartnerMenuScreen): boolean {
 }
 
 export function partnerMenuTitle(screen: PartnerMenuScreen): string {
-  if (screen === 'root') return 'Partner'
+  if (screen === 'root') return 'Menu'
   if (screen === 'fleet') return 'Frota'
   if (screen === 'fleet_list') return 'Lista motoristas'
   if (screen === 'fleet_map') return 'Mapa live'
