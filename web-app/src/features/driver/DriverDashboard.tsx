@@ -870,7 +870,7 @@ export function DriverDashboard() {
       if (!token) return
       void patchDriverDocuments(token, { [doc]: { status } })
         .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
-        .catch(() => {})
+        .catch(() => { })
     },
     [token]
   )
@@ -1307,6 +1307,7 @@ export function DriverDashboard() {
                 silencedOfferEntries={silencedOfferEntries}
                 onRestoreSilencedOffer={restoreSilencedOffer}
                 onRestoreAllSilencedOffers={restoreAllSilencedOffers}
+                onNavigateSection={setDriverMenuScreen}
               />
             </div>
           )}
@@ -1356,14 +1357,14 @@ export function DriverDashboard() {
                         </div>
                       )}
                       {docsBlockedOffline ? (
-                      <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
-                        <p className="font-medium text-foreground">Documentos em falta</p>
-                        <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
-                          Completa em Menu → Documentos para ficares disponível.
-                        </p>
-                      </div>
-                    ) : null}
-                    {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+                        <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
+                          <p className="font-medium text-foreground">Documentos em falta</p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
+                            Completa em Menu → Documentos para ficares disponível.
+                          </p>
+                        </div>
+                      ) : null}
+                      {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                         <div
                           className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                             ? 'bg-destructive/10 border-destructive/35 text-destructive'
@@ -1928,10 +1929,10 @@ export function DriverDashboard() {
                       ) : (
                         <div className={`${INFO_BOX_MAP_HINT} px-2 py-1.5 text-center`}>
                           <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
-                      <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
-                        {driverWaitingHint ??
-                          'Sem viagens disponíveis. Histórico em Menu → Viagens.'}
-                      </p>
+                          <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
+                            {driverWaitingHint ??
+                              'Sem viagens disponíveis. Histórico em Menu → Viagens.'}
+                          </p>
                         </div>
                       )}
                     </MapBottomSheet>
@@ -2606,6 +2607,7 @@ function DriverOperationsMenu({
   onRefreshDriverDocuments,
   onMergeDriverDocuments,
   onToggleDriverDocsGate,
+  onNavigateSection,
 }: {
   sessionDisplayName: string | null
   history: TripHistoryItem[] | null
@@ -2627,6 +2629,7 @@ function DriverOperationsMenu({
   onRefreshDriverDocuments?: () => void
   onMergeDriverDocuments?: (server: DriverDocumentsApiState) => void
   onToggleDriverDocsGate: (enabled: boolean) => void
+  onNavigateSection?: (screen: DriverMenuScreen) => void
 }) {
   const { isAdmin, token } = useAuth()
   const [historyVisible, setHistoryVisible] = useState(5)
@@ -3078,10 +3081,17 @@ function DriverOperationsMenu({
   const showAll = section === 'all'
   const showEarnings = showAll || section === 'earnings'
   const showTrips = showAll || section === 'trips'
+  const showTripsSilenced = section === 'trips_silenced'
   const showInbox = showAll || section === 'inbox'
   const showAccountShortcuts = showAll || section === 'account'
   const showPricing = showAll || section === 'pricing'
-  const showZones = showAll || section === 'zones'
+  const showZonesHub = section === 'zones'
+  const showZonesLegacy = section === 'all'
+  const showZonesBudget = section === 'zones_budget'
+  const showZonesSession = section === 'zones_session'
+  const showZonesRequest = section === 'zones_request'
+  const showZonesPanel =
+    showZonesLegacy || showZonesBudget || showZonesSession || showZonesRequest
   const showNavPref = showAll || section === 'nav'
   const showCategories = showAll || section === 'categories'
   const showDocs = showAll || section === 'docs'
@@ -3225,8 +3235,23 @@ function DriverOperationsMenu({
             <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
           )}
           {silencedOfferEntries.length > 0 ? (
-            <div className={MENU_CARD} data-testid="driver-menu-silenced-offers">
-              <p className="text-xs font-medium text-foreground">Ofertas silenciadas</p>
+            <button
+              type="button"
+              data-testid="driver-menu-trips-silenced-link"
+              className={`${MENU_BTN} min-h-9`}
+              onClick={() => onNavigateSection?.('trips_silenced')}
+            >
+              Ofertas silenciadas ({silencedOfferEntries.length})
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {showTripsSilenced ? (
+        <div className={MENU_PANEL} data-testid="driver-menu-silenced-offers">
+          <p className="text-xs font-medium text-foreground">Ofertas silenciadas</p>
+          {silencedOfferEntries.length > 0 ? (
+            <>
               <ul className="mt-2 space-y-2">
                 {silencedOfferEntries.map((o) => (
                   <li key={o.tripId} className="flex items-center justify-between gap-2 text-xs">
@@ -3256,8 +3281,10 @@ function DriverOperationsMenu({
               >
                 Mostrar todas
               </button>
-            </div>
-          ) : null}
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-2">Sem ofertas silenciadas.</p>
+          )}
         </div>
       ) : null}
 
@@ -3316,7 +3343,44 @@ function DriverOperationsMenu({
         </details>
       ) : null}
 
-      {showZones ? (
+      {showZonesHub ? (
+        <div className={MENU_PANEL} data-testid="driver-zones-hub">
+          <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
+          <p className="text-xs text-muted-foreground leading-snug">
+            Escolhe o sub-ecrã: orçamento diário, sessão activa ou novo pedido.
+          </p>
+          <div className="space-y-2">
+            <button
+              type="button"
+              data-testid="driver-zones-hub-budget"
+              className={`${MENU_BTN} min-h-9`}
+              onClick={() => onNavigateSection?.('zones_budget')}
+            >
+              Orçamento hoje
+            </button>
+            <button
+              type="button"
+              data-testid="driver-zones-hub-session"
+              className={`${MENU_BTN} min-h-9`}
+              onClick={() => onNavigateSection?.('zones_session')}
+              disabled={!zoneSession}
+            >
+              Sessão activa
+            </button>
+            <button
+              type="button"
+              data-testid="driver-zones-hub-request"
+              className={`${MENU_BTN} min-h-9`}
+              onClick={() => onNavigateSection?.('zones_request')}
+              disabled={!zoneBudget || zoneBudget.remaining <= 0 || !!zoneSession}
+            >
+              Pedir mudança de zona
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {showZonesPanel ? (
         <div className={MENU_PANEL}>
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
@@ -3335,20 +3399,24 @@ function DriverOperationsMenu({
             Contador diário (meia-noite Lisboa). O uso só desce quando concluíres a primeira viagem na zona-alvo
             depois de confirmares «Cheguei».
           </p>
-          {zoneLoadErr ? (
-            <p className="text-xs text-destructive">{zoneLoadErr}</p>
-          ) : zoneBudget ? (
-            <p className="text-sm text-foreground/90">
-              Mudanças hoje:{' '}
-              <span className="font-semibold">
-                {zoneBudget.used_changes}/{zoneBudget.max_changes}
-              </span>{' '}
-              · restantes {zoneBudget.remaining}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">A carregar orçamento…</p>
+          {(showZonesLegacy || showZonesBudget) && (
+            <>
+              {zoneLoadErr ? (
+                <p className="text-xs text-destructive">{zoneLoadErr}</p>
+              ) : zoneBudget ? (
+                <p className="text-sm text-foreground/90">
+                  Mudanças hoje:{' '}
+                  <span className="font-semibold">
+                    {zoneBudget.used_changes}/{zoneBudget.max_changes}
+                  </span>{' '}
+                  · restantes {zoneBudget.remaining}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">A carregar orçamento…</p>
+              )}
+            </>
           )}
-          {zoneSession && zoneStateLabel ? (
+          {(showZonesLegacy || showZonesSession) && zoneSession && zoneStateLabel ? (
             <div className={`${MENU_CARD} space-y-2`}>
               <p className="text-xs font-medium text-foreground">
                 Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
@@ -3434,7 +3502,7 @@ function DriverOperationsMenu({
                 </p>
               ) : null}
             </div>
-          ) : zoneBudget && zoneBudget.remaining > 0 ? (
+          ) : (showZonesLegacy || showZonesRequest) && !zoneSession && zoneBudget && zoneBudget.remaining > 0 ? (
             <div className={`${MENU_CARD} space-y-2`}>
               <label className="block space-y-1">
                 <span className="text-[11px] text-muted-foreground">
@@ -3542,7 +3610,7 @@ function DriverOperationsMenu({
                 Pedir mudança de zona
               </button>
             </div>
-          ) : zoneBudget && zoneBudget.remaining <= 0 ? (
+          ) : (showZonesLegacy || showZonesBudget) && !zoneSession && zoneBudget && zoneBudget.remaining <= 0 ? (
             <div
               className={`${INNER_RADIUS} border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2`}
               data-testid="driver-zones-budget-exhausted"
@@ -3565,6 +3633,14 @@ function DriverOperationsMenu({
                 Abrir registo de atividade
               </button>
             </div>
+          ) : null}
+          {showZonesSession && !zoneSession ? (
+            <p className="text-xs text-muted-foreground">Sem sessão activa.</p>
+          ) : null}
+          {showZonesRequest && (zoneSession || !zoneBudget || zoneBudget.remaining <= 0) ? (
+            <p className="text-xs text-muted-foreground">
+              Pedido indisponível — verifica orçamento ou sessão activa no hub Zonas.
+            </p>
           ) : null}
         </div>
       ) : null}

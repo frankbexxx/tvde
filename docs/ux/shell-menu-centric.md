@@ -11,20 +11,47 @@ Princípio: **nada órfão**. Cada funcionalidade tem um sítio canónico num **
 3. **Header `userCompact`** — sem ícones soltos de perfil/definições; conta e preferências **dentro do menu** (`profile` / `settings`).
 4. **Início** — KPIs, alertas, pesquisa rápida; **sem** painéis de conta duplicados.
 5. **Rotas profundas** (`/partner/drivers/:id`, etc.) — mantêm-se; header compacto + voltar.
+6. **Tree / um tema por ecrã** — se um scroll tiver **2+ temas distintos**, usar **hub** + folhas; **Voltar** folha → hub → raiz (atalhos bottom podem voltar directo à raiz).
 
 ## Checklist órfãos (por role)
 
 | Critério | Driver | Passageiro | Partner |
 |----------|--------|------------|---------|
-| Bottom nav abre menu no sub-ecrã | Rendimentos, Caixa | Histórico, Conta | Frota, Caixa |
+| Bottom nav abre menu no sub-ecrã | Rendimentos, Caixa | Histórico, Conta | Frota→lista, Caixa |
 | Conta BETA só no menu | Perfil | Conta | Perfil |
-| Header userCompact | Sim | Sim | Sim (PR shell) |
-| Lista completa ≠ resumo no menu | Docs, viagens | Histórico | Frota (lista+mapa) |
+| Header userCompact | Sim | Sim | Sim |
+| Sair no menu raiz | Sim | Sim | Sim |
+| Hubs onde scroll longo | Zonas, Viagens† | OK | Frota, Viagens |
 | Sem UI duplicada tab vs menu | — | — | Frota/Caixa |
+
+† Viagens: ofertas silenciadas em sub-ecrã próprio.
+
+## Árvores alvo (v2)
+
+### Partner
+
+```
+Raiz → Frota (hub) → Lista | Mapa | Adicionar
+     → Viagens (hub) → Resumo | Lista | Exportar
+Bottom Frota → Lista (atalho; Voltar → raiz)
+```
+
+### Driver
+
+```
+Raiz → Viagens → [link] Ofertas silenciadas
+     → Zonas (hub) → Orçamento | Sessão | Pedir mudança
+```
+
+### Passageiro
+
+```
+Raiz → Histórico | QR | Conta | Sair  (OK — auditoria 2026-05)
+```
 
 ## Implementação por fase
 
-- **Fase 1 (partner):** este contrato; partner alinhado a driver/passageiro.
-- **Fase 2 (O-NAV-PP-1):** auditoria driver/passageiro com este checklist; fixes mínimos.
+- **Fase 1:** partner menu-centric (#344).
+- **Fase 2:** menu tree v2 — partner hubs + driver zones/viagens + passageiro audit.
 
 Referências: [`DriverDashboard.tsx`](../../web-app/src/features/driver/DriverDashboard.tsx), [`PassengerDashboard.tsx`](../../web-app/src/features/passenger/PassengerDashboard.tsx), [`PartnerHome.tsx`](../../web-app/src/features/partner/PartnerHome.tsx).

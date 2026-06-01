@@ -1,11 +1,19 @@
-import { useMemo } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../../components/ui/sheet'
-import { BarChart3, Car, FileText, Inbox, Settings, User, X } from 'lucide-react'
+import { BarChart3, Car, FileText, Inbox, LogOut, Settings, User, X } from 'lucide-react'
+import { partnerMenuTitle } from './partnerMenuNav'
+import { MENU_ROW_BTN } from '../../components/layout/infoBoxTemplate'
 
 export type PartnerMenuScreen =
   | 'root'
   | 'fleet'
+  | 'fleet_list'
+  | 'fleet_map'
+  | 'fleet_add'
   | 'trips'
+  | 'trips_summary'
+  | 'trips_list'
+  | 'trips_export'
   | 'reports'
   | 'settings'
   | 'profile'
@@ -76,28 +84,21 @@ export function PartnerSideMenu(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
   screen: PartnerMenuScreen
-  onScreenChange: (screen: PartnerMenuScreen) => void
+  onNavigate: (screen: PartnerMenuScreen, backTo?: PartnerMenuScreen) => void
+  onBack: () => void
   renderScreen: (screen: PartnerMenuScreen) => React.ReactNode
 }) {
-  const { open, onOpenChange, screen, onScreenChange, renderScreen } = props
+  const { open, onOpenChange, screen, onNavigate, onBack, renderScreen } = props
+  const { logout } = useAuth()
 
-  const title = useMemo(() => {
-    if (screen === 'root') return 'Partner'
-    if (screen === 'fleet') return 'Frota'
-    if (screen === 'trips') return 'Viagens'
-    if (screen === 'reports') return 'Relatórios'
-    if (screen === 'settings') return 'Definições'
-    if (screen === 'profile') return 'Perfil'
-    if (screen === 'inbox') return 'Caixa'
-    return 'Partner'
-  }, [screen])
+  const title = partnerMenuTitle(screen)
 
   const close = () => {
-    onScreenChange('root')
+    onNavigate('root')
     onOpenChange(false)
   }
 
-  const back = screen !== 'root' ? () => onScreenChange('root') : undefined
+  const back = screen !== 'root' ? onBack : undefined
 
   return (
     <Sheet open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
@@ -115,39 +116,55 @@ export function PartnerSideMenu(props: {
           <MenuHeader title={title} onBack={back} onClose={close} />
           <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain">
             {screen === 'root' ? (
-              <div className="space-y-2">
-                <RootItem
-                  label="Frota"
-                  icon={<Car className="h-4 w-4" />}
-                  onClick={() => onScreenChange('fleet')}
-                />
-                <RootItem
-                  label="Viagens"
-                  icon={<FileText className="h-4 w-4" />}
-                  onClick={() => onScreenChange('trips')}
-                />
-                <RootItem
-                  label="Relatórios"
-                  icon={<BarChart3 className="h-4 w-4" />}
-                  onClick={() => onScreenChange('reports')}
-                />
-                <RootItem
-                  label="Caixa"
-                  icon={<Inbox className="h-4 w-4" />}
-                  onClick={() => onScreenChange('inbox')}
-                />
-                <RootItem
-                  label="Perfil"
-                  icon={<User className="h-4 w-4" />}
-                  testId="partner-menu-profile"
-                  onClick={() => onScreenChange('profile')}
-                />
-                <RootItem
-                  label="Definições"
-                  icon={<Settings className="h-4 w-4" />}
-                  onClick={() => onScreenChange('settings')}
-                />
-              </div>
+              <>
+                <div className="space-y-2">
+                  <RootItem
+                    label="Frota"
+                    icon={<Car className="h-4 w-4" />}
+                    onClick={() => onNavigate('fleet')}
+                  />
+                  <RootItem
+                    label="Viagens"
+                    icon={<FileText className="h-4 w-4" />}
+                    onClick={() => onNavigate('trips')}
+                  />
+                  <RootItem
+                    label="Relatórios"
+                    icon={<BarChart3 className="h-4 w-4" />}
+                    onClick={() => onNavigate('reports')}
+                  />
+                  <RootItem
+                    label="Caixa"
+                    icon={<Inbox className="h-4 w-4" />}
+                    onClick={() => onNavigate('inbox')}
+                  />
+                  <RootItem
+                    label="Perfil"
+                    icon={<User className="h-4 w-4" />}
+                    testId="partner-menu-profile"
+                    onClick={() => onNavigate('profile')}
+                  />
+                  <RootItem
+                    label="Definições"
+                    icon={<Settings className="h-4 w-4" />}
+                    onClick={() => onNavigate('settings')}
+                  />
+                </div>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    data-testid="partner-menu-logout"
+                    onClick={() => {
+                      logout()
+                      close()
+                    }}
+                    className={`${MENU_ROW_BTN} bg-background w-full`}
+                  >
+                    <LogOut className="h-4 w-4 text-foreground/80" />
+                    Sair
+                  </button>
+                </div>
+              </>
             ) : (
               <div className="pt-1">{renderScreen(screen)}</div>
             )}

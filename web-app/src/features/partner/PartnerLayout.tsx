@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { fetchPartnerInboxMessages } from '../../api/partner'
 import { usePolling } from '../../hooks/usePolling'
 import { PartnerBottomNav } from './PartnerBottomNav'
+import { isPartnerFleetNavScreen } from './partnerMenuNav'
 import { PartnerShellProvider, usePartnerShell, type PartnerShellTab } from './partnerShellContext'
 
 function PartnerLayoutInner() {
@@ -33,7 +34,7 @@ function PartnerLayoutInner() {
 
   const navActive = useMemo((): PartnerShellTab => {
     if (!menuOpen) return 'home'
-    if (menuScreen === 'fleet') return 'fleet'
+    if (isPartnerFleetNavScreen(menuScreen)) return 'fleet'
     if (menuScreen === 'inbox') return 'inbox'
     return 'menu'
   }, [menuOpen, menuScreen])
@@ -54,7 +55,7 @@ function PartnerLayoutInner() {
         return
       }
       if (tab === 'fleet') {
-        openMenu('fleet')
+        openMenu('fleet_list', 'root')
         if (!onIndex) navigate('/partner')
         return
       }

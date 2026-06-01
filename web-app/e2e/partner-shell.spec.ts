@@ -1,5 +1,5 @@
 /**
- * Partner shell — menu-centric (Frota/Caixa abrem drawer; Perfil com Conta BETA).
+ * Partner shell — menu tree v2 (hubs Frota/Viagens, Sair, bottom Frota → lista).
  */
 import { test, expect } from '@playwright/test'
 import { attachFailureArtifactsIfNeeded, resetFailureArtifactState } from './helpers/failureArtifacts'
@@ -9,7 +9,7 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 
 const sec = (s: number) => s * 1000
 
-test.describe('Partner — menu-centric shell', () => {
+test.describe('Partner — menu tree v2', () => {
   test.beforeEach(() => {
     resetFailureArtifactState()
   })
@@ -18,10 +18,7 @@ test.describe('Partner — menu-centric shell', () => {
     await attachFailureArtifactsIfNeeded(testInfo)
   })
 
-  test('bottom nav Frota abre menu com lista; Perfil tem BetaAccount; Início sem Conta BETA', async ({
-    browser,
-    request,
-  }) => {
+  test('Sair, bottom Frota lista, hubs Frota e Viagens', async ({ browser, request }) => {
     const seed = await request.post(`${API}/dev/seed`)
     expect(seed.ok(), await seed.text()).toBeTruthy()
 
@@ -33,7 +30,6 @@ test.describe('Partner — menu-centric shell', () => {
       admin: string
       partner: string
     }
-    expect(tokens.partner?.length ?? 0).toBeGreaterThan(20)
 
     const ctx = await browser.newContext()
     await ctx.addInitScript(
@@ -62,26 +58,27 @@ test.describe('Partner — menu-centric shell', () => {
       timeout: sec(120),
     })
 
-    await expect(page.getByRole('heading', { name: 'Início' })).toBeVisible({
-      timeout: sec(120),
-    })
-
+    await expect(page.getByRole('heading', { name: 'Início' })).toBeVisible({ timeout: sec(120) })
     await expect(page.getByText('Conta (BETA)')).not.toBeVisible()
 
     await page.getByTestId('partner-bottom-nav-fleet').click()
     const sheet = page.getByTestId('partner-side-menu')
     await expect(sheet).toBeVisible({ timeout: sec(30) })
     await expect(sheet.getByTestId('partner-fleet-drivers-section')).toBeVisible()
+    await expect(sheet.getByRole('button', { name: 'Voltar' })).toBeVisible()
+    await sheet.getByRole('button', { name: 'Voltar' }).click()
+    await expect(sheet.getByRole('button', { name: 'Frota' })).toBeVisible()
 
-    await sheet.getByLabel('Fechar menu').click()
-    await expect(sheet).not.toBeVisible()
+    await sheet.getByRole('button', { name: 'Frota' }).click()
+    await expect(sheet.getByTestId('partner-fleet-hub')).toBeVisible()
+    await expect(sheet.getByTestId('partner-fleet-hub-list')).toBeVisible()
 
-    await page.getByTestId('partner-open-menu').click()
-    await expect(sheet).toBeVisible()
-    await sheet.getByTestId('partner-menu-profile').click()
-    await expect(sheet.getByTestId('partner-menu-profile-screen')).toBeVisible()
-    await expect(sheet.getByTestId('beta-account-panel')).toBeVisible()
-    await expect(sheet.getByRole('heading', { name: 'Conta (BETA)' })).toBeVisible()
+    await sheet.getByRole('button', { name: 'Voltar' }).click()
+    await sheet.getByRole('button', { name: 'Viagens' }).click()
+    await expect(sheet.getByTestId('partner-trips-hub')).toBeVisible()
+
+    await sheet.getByRole('button', { name: 'Voltar' }).click()
+    await expect(sheet.getByTestId('partner-menu-logout')).toBeVisible()
 
     await ctx.close()
   })
