@@ -56,6 +56,7 @@ type PartnerWorkspaceContextValue = {
 
 const PartnerWorkspaceContext = createContext<PartnerWorkspaceContextValue | null>(null)
 
+// eslint-disable-next-line react-refresh/only-export-components -- hook paired with provider
 export function usePartnerWorkspace() {
   const ctx = useContext(PartnerWorkspaceContext)
   if (!ctx) throw new Error('usePartnerWorkspace must be used within PartnerWorkspaceProvider')

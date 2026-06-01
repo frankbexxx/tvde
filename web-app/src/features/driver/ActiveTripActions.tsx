@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { TripDetailResponse } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
@@ -93,12 +93,18 @@ export function ActiveTripActions({
   }, [rawCoords])
   const coordsSource = rawCoords ?? lastCoordsRef.current
   const displayStatus = mergeDriverPolledWithOverride(coordsSource?.status, statusOverride, 'accepted')
-  const pickupCoords =
-    coordsSource != null ? { lat: coordsSource.origin_lat, lng: coordsSource.origin_lng } : null
-  const destinationCoords =
-    coordsSource != null
-      ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
-      : null
+  const pickupCoords = useMemo(
+    () =>
+      coordsSource != null ? { lat: coordsSource.origin_lat, lng: coordsSource.origin_lng } : null,
+    [coordsSource]
+  )
+  const destinationCoords = useMemo(
+    () =>
+      coordsSource != null
+        ? { lat: coordsSource.destination_lat, lng: coordsSource.destination_lng }
+        : null,
+    [coordsSource]
+  )
   const nearPickup = canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
   const startTripAllowed =
     displayStatus === 'accepted' ? nearPickup : canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
