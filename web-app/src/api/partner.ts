@@ -258,9 +258,26 @@ export async function postPartnerTripReassign(
   )
 }
 
-export function partnerTripsExportUrl(): string {
+export type PartnerTripsExportFilters = {
+  tripFilter?: 'all' | 'ongoing' | 'completed' | 'cancelled' | 'failed' | 'assigned'
+  driverId?: string
+  dateFrom?: string
+  dateTo?: string
+  search?: string
+}
+
+export function partnerTripsExportUrl(filters?: PartnerTripsExportFilters): string {
   const base = API_BASE.replace(/\/$/, '')
-  return `${base}/partner/trips/export`
+  const url = new URL(`${base}/partner/trips/export`)
+  if (!filters) return url.toString()
+  if (filters.tripFilter && filters.tripFilter !== 'all') {
+    url.searchParams.set('status', filters.tripFilter)
+  }
+  if (filters.driverId) url.searchParams.set('driver_id', filters.driverId)
+  if (filters.dateFrom) url.searchParams.set('from', filters.dateFrom)
+  if (filters.dateTo) url.searchParams.set('to', filters.dateTo)
+  if (filters.search?.trim()) url.searchParams.set('q', filters.search.trim())
+  return url.toString()
 }
 
 /** SP-C: cabeçalho CSV `GET /partner/trips/export` (UTF-8). Não reordenar colunas; só acrescentar no fim em versões futuras. */

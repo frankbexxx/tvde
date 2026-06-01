@@ -20,12 +20,14 @@ import {
 type PassengerPaymentConfirmCardProps = {
   clientSecret: string
   onConfirmed: () => void | Promise<void>
+  /** Quando cartão indisponível (mock / sem publishable key) — continuar viagem. */
+  onSkip?: () => void | Promise<void>
 }
 
 function ConfirmInner({
   clientSecret,
   onConfirmed,
-}: PassengerPaymentConfirmCardProps) {
+}: Pick<PassengerPaymentConfirmCardProps, 'clientSecret' | 'onConfirmed'>) {
   const stripe = useStripe()
   const elements = useElements()
   const [busy, setBusy] = useState(false)
@@ -87,6 +89,7 @@ function ConfirmInner({
 export function PassengerPaymentConfirmCard({
   clientSecret,
   onConfirmed,
+  onSkip,
 }: PassengerPaymentConfirmCardProps) {
   const publishable =
     typeof import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY === 'string'
@@ -106,10 +109,20 @@ export function PassengerPaymentConfirmCard({
     return (
       <section
         data-testid="passenger-payment-mock-banner"
-        className={`${INFO_BOX_PASSENGER} px-2 py-2 ${INFO_BOX_BODY_COMPACT}`}
+        className={`${INFO_BOX_PASSENGER} px-2 py-2 ${INFO_BOX_BODY_COMPACT} space-y-2`}
       >
         <p className="font-medium">Pagamento simulado</p>
-        <p className="text-muted-foreground leading-snug">Sem cartão neste ambiente.</p>
+        <p className="text-muted-foreground leading-snug">Sem cartão real neste ambiente (DEV).</p>
+        {onSkip ? (
+          <button
+            type="button"
+            data-testid="passenger-payment-mock-continue"
+            onClick={() => void onSkip()}
+            className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_SECONDARY_RADIUS} border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
+          >
+            Continuar (simulado)
+          </button>
+        ) : null}
       </section>
     )
   }
@@ -118,12 +131,23 @@ export function PassengerPaymentConfirmCard({
     return (
       <section
         data-testid="passenger-payment-missing-publishable"
-        className={`${INFO_BOX_PASSENGER} border-dashed px-2 py-2 ${INFO_BOX_BODY_COMPACT}`}
+        className={`${INFO_BOX_PASSENGER} border-dashed px-2 py-2 ${INFO_BOX_BODY_COMPACT} space-y-2`}
       >
         <p className="font-medium">Cartão indisponível</p>
         <p className="text-muted-foreground leading-snug">
-          Define VITE_STRIPE_PUBLISHABLE_KEY no build.
+          Pagamento por cartão não está configurado neste build. A viagem pode continuar se o backend
+          não exigir autorização imediata.
         </p>
+        {onSkip ? (
+          <button
+            type="button"
+            data-testid="passenger-payment-skip-unconfigured"
+            onClick={() => void onSkip()}
+            className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_SECONDARY_RADIUS} border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
+          >
+            Continuar sem cartão
+          </button>
+        ) : null}
       </section>
     )
   }

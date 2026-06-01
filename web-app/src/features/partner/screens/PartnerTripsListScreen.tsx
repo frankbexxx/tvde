@@ -15,6 +15,8 @@ type PartnerTripsListScreenProps = {
   onTripDateToChange: (value: string) => void
   loading: boolean
   onDownloadCsv: () => void
+  search: string
+  onSearchChange: (value: string) => void
 }
 
 export function PartnerTripsListScreen(props: PartnerTripsListScreenProps) {

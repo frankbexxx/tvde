@@ -93,6 +93,10 @@ export function PassengerDashboard() {
   const [passengerMenuOpen, setPassengerMenuOpen] = useState(false)
   const [passengerMenuScreen, setPassengerMenuScreen] = useState<PassengerMenuScreen>('root')
   const [passengerMenuRootHighlight, setPassengerMenuRootHighlight] = useState<string | null>(null)
+  const [historyDetailTripId, setHistoryDetailTripId] = useState<string | null>(null)
+  const [historyDetail, setHistoryDetail] = useState<TripDetailResponse | null>(null)
+  const [historyDetailLoading, setHistoryDetailLoading] = useState(false)
+  const [historyDetailError, setHistoryDetailError] = useState<string | null>(null)
   const passengerMenuOpenRef = useRef(false)
 
   const onPassengerMenuScreenChange = useCallback((screen: PassengerMenuScreen) => {
@@ -107,10 +111,43 @@ export function PassengerDashboard() {
 
   const passengerNavActive = useMemo((): PassengerShellTab => {
     if (!passengerMenuOpen) return 'home'
-    if (passengerMenuScreen === 'history') return 'history'
+    if (passengerMenuScreen === 'history' || passengerMenuScreen === 'history_detail') return 'history'
     if (passengerMenuScreen === 'account') return 'account'
     return 'menu'
   }, [passengerMenuOpen, passengerMenuScreen])
+
+  const handleHistoryTripSelect = useCallback(
+    (tripId: string) => {
+      setHistoryDetailTripId(tripId)
+      setHistoryDetail(null)
+      setHistoryDetailError(null)
+      setPassengerMenuScreen('history_detail')
+      setPassengerMenuRootHighlight('trips')
+    },
+    []
+  )
+
+  useEffect(() => {
+    if (passengerMenuScreen !== 'history_detail' || !historyDetailTripId || !token) {
+      return
+    }
+    let cancelled = false
+    setHistoryDetailLoading(true)
+    setHistoryDetailError(null)
+    void getTripDetail(historyDetailTripId, token)
+      .then((detail) => {
+        if (!cancelled) setHistoryDetail(detail)
+      })
+      .catch(() => {
+        if (!cancelled) setHistoryDetailError('Não foi possível carregar o detalhe desta viagem.')
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryDetailLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [passengerMenuScreen, historyDetailTripId, token])
 
   const handlePassengerBottomNav = useCallback((tab: PassengerShellTab) => {
     if (tab === 'home') {
@@ -1076,6 +1113,9 @@ export function PassengerDashboard() {
           if (!open) {
             setPassengerMenuScreen('root')
             setPassengerMenuRootHighlight(null)
+            setHistoryDetailTripId(null)
+            setHistoryDetail(null)
+            setHistoryDetailError(null)
           }
         }}
         screen={passengerMenuScreen}
@@ -1084,6 +1124,10 @@ export function PassengerDashboard() {
         history={history}
         historyLoading={historyLoading}
         historyPollFault={historyPollFault}
+        historyDetail={historyDetail}
+        historyDetailLoading={historyDetailLoading}
+        historyDetailError={historyDetailError}
+        onHistoryTripSelect={handleHistoryTripSelect}
       />
       {showPassengerRatingPanel ? (
         <PassengerTripRatingPanel
@@ -1285,6 +1329,7 @@ export function PassengerDashboard() {
                         <PassengerPaymentConfirmCard
                           clientSecret={activeTrip.payment_intent_client_secret}
                           onConfirmed={() => void refetchActiveTrip()}
+                          onSkip={() => void refetchActiveTrip()}
                         />
                       ) : null}
                       {passengerTripPrimaryInOverlay}

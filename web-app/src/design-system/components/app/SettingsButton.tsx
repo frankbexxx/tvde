@@ -25,7 +25,6 @@ import { ActivityPanel } from "@/components/ActivityPanel"
 import { DevTools } from "@/features/shared/DevTools"
 import {
   DRIVER_OPEN_ACTIVITY_LOG_EVENT,
-  DRIVER_OPEN_SETTINGS_EVENT,
 } from "@/features/driver/driverShellEvents"
 
 type ConfigView = "main" | "logs"
@@ -36,18 +35,12 @@ export function SettingsButton() {
   const isMobile = useMediaQuery("(max-width: 639px)")
 
   useEffect(() => {
-    const onOpen = () => {
-      setView("main")
-      setOpen(true)
-    }
     const onOpenActivity = () => {
       setView("logs")
       setOpen(true)
     }
-    window.addEventListener(DRIVER_OPEN_SETTINGS_EVENT, onOpen)
     window.addEventListener(DRIVER_OPEN_ACTIVITY_LOG_EVENT, onOpenActivity)
     return () => {
-      window.removeEventListener(DRIVER_OPEN_SETTINGS_EVENT, onOpen)
       window.removeEventListener(DRIVER_OPEN_ACTIVITY_LOG_EVENT, onOpenActivity)
     }
   }, [])

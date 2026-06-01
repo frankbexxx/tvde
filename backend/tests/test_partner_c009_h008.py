@@ -211,6 +211,86 @@ def test_c010_c011_partner_detail_and_h007_csv() -> None:
     assert any(r[0] == trip_id for r in rows[1:])
 
 
+def test_partner_trips_export_respects_status_filter() -> None:
+    db = SessionLocal()
+    try:
+        pid = uuid.uuid4()
+        db.add(Partner(id=pid, name="Export Filter Co"))
+        u_d = User(
+            role=Role.driver,
+            name="Export Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        u_p = User(
+            role=Role.passenger,
+            name="Export Pax",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        mgr = User(
+            role=Role.partner,
+            name="Export Mgr",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+            partner_org_id=pid,
+        )
+        db.add_all([u_d, u_p, mgr])
+        db.flush()
+        db.add(
+            Driver(
+                user_id=u_d.id,
+                partner_id=pid,
+                status=DriverStatus.approved,
+                commission_percent=12.0,
+                is_available=False,
+            )
+        )
+        db.flush()
+        completed = Trip(
+            passenger_id=u_p.id,
+            driver_id=u_d.id,
+            status=TripStatus.completed,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=9.0,
+        )
+        cancelled = Trip(
+            passenger_id=u_p.id,
+            driver_id=u_d.id,
+            status=TripStatus.cancelled,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=11.0,
+        )
+        db.add_all([completed, cancelled])
+        db.commit()
+        completed_id = str(completed.id)
+        cancelled_id = str(cancelled.id)
+        tok = create_access_token(subject=str(mgr.id), role=mgr.role.value)["token"]
+    finally:
+        db.close()
+
+    client = TestClient(app)
+    h = {"Authorization": f"Bearer {tok}"}
+
+    rex_all = client.get("/partner/trips/export", headers=h)
+    assert rex_all.status_code == 200
+    all_ids = {r[0] for r in list(csv.reader(io.StringIO(rex_all.text)))[1:]}
+    assert completed_id in all_ids
+    assert cancelled_id in all_ids
+
+    rex_done = client.get("/partner/trips/export?status=completed", headers=h)
+    assert rex_done.status_code == 200
+    done_ids = {r[0] for r in list(csv.reader(io.StringIO(rex_done.text)))[1:]}
+    assert completed_id in done_ids
+    assert cancelled_id not in done_ids
+
+
 def test_c012_delete_unassign_idempotent(admin_ctx_override: str) -> None:
     db = SessionLocal()
     try:

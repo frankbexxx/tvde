@@ -5,6 +5,7 @@ import { usePolling } from '../../hooks/usePolling'
 import { PartnerBottomNav } from './PartnerBottomNav'
 import { isPartnerFleetNavScreen } from './partnerMenuNav'
 import { PartnerShellProvider, usePartnerShell, type PartnerShellTab } from './partnerShellContext'
+import { PartnerWorkspaceProvider } from './partnerWorkspace'
 
 function PartnerLayoutInner() {
   const {
@@ -55,7 +56,7 @@ function PartnerLayoutInner() {
         return
       }
       if (tab === 'fleet') {
-        openMenu('fleet_list', 'root')
+        openMenu('fleet', 'root')
         if (!onIndex) navigate('/partner')
         return
       }
@@ -88,7 +89,9 @@ function PartnerLayoutInner() {
 export function PartnerLayout() {
   return (
     <PartnerShellProvider>
-      <PartnerLayoutInner />
+      <PartnerWorkspaceProvider>
+        <PartnerLayoutInner />
+      </PartnerWorkspaceProvider>
     </PartnerShellProvider>
   )
 }

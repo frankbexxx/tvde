@@ -10,36 +10,17 @@ import {
 
 type PartnerHomeDashboardProps = {
   metrics: PartnerMetrics | null
-  search: string
-  onSearchChange: (value: string) => void
   onRefresh: () => void
 }
 
 export function PartnerHomeDashboard({
   metrics,
-  search,
-  onSearchChange,
   onRefresh,
 }: PartnerHomeDashboardProps) {
   const kpiAccent = themeUsesFlagAccent(getTheme()) ? PARTNER_KPI_FLAG_ACCENT : ''
 
   return (
     <div className="space-y-4" data-testid="partner-home-dashboard">
-      <section className="space-y-2">
-        <p className={PARTNER_SECTION_TITLE}>Pesquisa</p>
-        <label className="block text-sm text-foreground/80 sr-only" htmlFor="partner-search">
-          Pesquisar viagens (ID, motorista ou passageiro)
-        </label>
-        <input
-          id="partner-search"
-          type="search"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="ID viagem, nome/telefone motorista ou ID passageiro"
-          className="w-full px-3 py-2 rounded-xl border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-panel-bg))] text-foreground text-sm"
-        />
-      </section>
-
       {metrics ? (
         <section className="space-y-2">
           <p className={PARTNER_SECTION_TITLE}>Resumo operacional</p>

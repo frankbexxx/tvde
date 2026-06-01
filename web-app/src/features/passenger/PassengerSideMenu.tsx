@@ -10,6 +10,9 @@ import { CancellationReasonMuted } from '../../components/trips/CancellationReas
 import { historyStatusDotColor } from '../../constants/tripStatus'
 import { BetaAccountPanel } from '../account/BetaAccountPanel'
 import { AppAppearanceSettings } from '../settings/AppAppearanceSettings'
+import { AppRouteModeSwitch } from '../settings/AppRouteModeSwitch'
+import { PassengerHistoryDetailPanel } from './PassengerHistoryDetailPanel'
+import type { TripDetailResponse } from '../../api/trips'
 import {
   AppMenuBody,
   AppMenuHeader,
@@ -22,7 +25,13 @@ import {
 import { BTN_SECONDARY_RADIUS, MENU_SURFACE } from '../../components/layout/infoBoxTemplate'
 import { passengerMenuTitle } from './passengerMenuNav'
 
-export type PassengerMenuScreen = 'root' | 'history' | 'account' | 'share_app' | 'settings'
+export type PassengerMenuScreen =
+  | 'root'
+  | 'history'
+  | 'history_detail'
+  | 'account'
+  | 'share_app'
+  | 'settings'
 
 export function PassengerSideMenu({
   open,
@@ -33,6 +42,10 @@ export function PassengerSideMenu({
   history,
   historyLoading,
   historyPollFault,
+  historyDetail,
+  historyDetailLoading,
+  historyDetailError,
+  onHistoryTripSelect,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -42,6 +55,10 @@ export function PassengerSideMenu({
   history: TripHistoryItem[] | null
   historyLoading: boolean
   historyPollFault: boolean
+  historyDetail: TripDetailResponse | null
+  historyDetailLoading: boolean
+  historyDetailError: string | null
+  onHistoryTripSelect: (tripId: string) => void
 }) {
   const { sessionDisplayName, sessionPhone, logout } = useAuth()
 
@@ -62,6 +79,14 @@ export function PassengerSideMenu({
     onOpenChange(false)
   }
 
+  const backFromSubscreen = () => {
+    if (screen === 'history_detail') {
+      onScreenChange('history')
+      return
+    }
+    onScreenChange('root')
+  }
+
   const title = screen === 'root' ? 'Menu' : passengerMenuTitle(screen)
   const headerTitle = screen === 'root' ? (sessionDisplayName ?? 'Passageiro') : title
   const initial = (sessionDisplayName ?? 'P').slice(0, 1).toUpperCase()
@@ -79,7 +104,7 @@ export function PassengerSideMenu({
     >
       <AppMenuHeader
         title={headerTitle}
-        onBack={screen !== 'root' ? () => onScreenChange('root') : undefined}
+        onBack={screen !== 'root' ? backFromSubscreen : undefined}
         onClose={close}
         closeTestId="passenger-close-menu"
       />
@@ -168,11 +193,18 @@ export function PassengerSideMenu({
               <span className="font-medium text-foreground/90">Conta</span> no menu principal.
             </p>
             <AppAppearanceSettings />
+            <AppRouteModeSwitch />
           </div>
         ) : screen === 'account' ? (
           <div className="space-y-3">
             <BetaAccountPanel />
           </div>
+        ) : screen === 'history_detail' ? (
+          <PassengerHistoryDetailPanel
+            detail={historyDetail}
+            loading={historyDetailLoading}
+            error={historyDetailError}
+          />
         ) : (
           <div className="space-y-3">
             {historyPollFault ? (
@@ -189,26 +221,30 @@ export function PassengerSideMenu({
             {history && history.length > 0 ? (
               <ul className="space-y-2">
                 {history.map((t) => (
-                  <li
-                    key={t.trip_id}
-                    className="flex flex-col gap-1 py-2 border-b border-border last:border-0"
-                  >
-                    <div className="flex justify-between items-center gap-3">
-                      <span className="flex items-center gap-2 text-sm text-foreground/85 min-w-0">
-                        <span
-                          aria-hidden="true"
-                          className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
-                        />
-                        <span className="truncate">
-                          {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                          {formatDestination(t.destination_lat, t.destination_lng)}
+                  <li key={t.trip_id}>
+                    <button
+                      type="button"
+                      data-testid={`passenger-history-row-${t.trip_id}`}
+                      onClick={() => onHistoryTripSelect(t.trip_id)}
+                      className="flex w-full flex-col gap-1 py-2 border-b border-border last:border-0 text-left hover:bg-muted/30 rounded-lg px-1 -mx-1 touch-manipulation"
+                    >
+                      <div className="flex justify-between items-center gap-3">
+                        <span className="flex items-center gap-2 text-sm text-foreground/85 min-w-0">
+                          <span
+                            aria-hidden="true"
+                            className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
+                          />
+                          <span className="truncate">
+                            {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
+                            {formatDestination(t.destination_lat, t.destination_lng)}
+                          </span>
                         </span>
-                      </span>
-                      <span className="font-medium text-foreground shrink-0 text-sm">
-                        {t.final_price != null ? `${t.final_price} €` : '—'}
-                      </span>
-                    </div>
-                    <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
+                        <span className="font-medium text-foreground shrink-0 text-sm">
+                          {t.final_price != null ? `${t.final_price} €` : '—'}
+                        </span>
+                      </div>
+                      <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
+                    </button>
                   </li>
                 ))}
               </ul>

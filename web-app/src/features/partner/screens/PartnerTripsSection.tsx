@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { PARTNER_TRIPS_CSV_COLUMNS, type PartnerDriverRow, type PartnerTripRow } from '../../../api/partner'
+import { PartnerListSearch } from '../components/PartnerListSearch'
 import { filterChipClass, TRIP_FILTER_HINT, type TripFilter } from '../partnerTypes'
 
 type PartnerTripsSectionProps = {
@@ -15,6 +16,8 @@ type PartnerTripsSectionProps = {
   onTripDateToChange: (value: string) => void
   loading: boolean
   onDownloadCsv: () => void
+  search: string
+  onSearchChange: (value: string) => void
 }
 
 export function PartnerTripsSection({
@@ -30,9 +33,17 @@ export function PartnerTripsSection({
   onTripDateToChange,
   loading,
   onDownloadCsv,
+  search,
+  onSearchChange,
 }: PartnerTripsSectionProps) {
   return (
     <div className="space-y-3">
+      <PartnerListSearch
+        value={search}
+        onChange={onSearchChange}
+        placeholder="ID viagem, motorista ou passageiro"
+        testId="partner-trips-list-search"
+      />
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-base font-medium text-foreground">Viagens</h3>
         <button
