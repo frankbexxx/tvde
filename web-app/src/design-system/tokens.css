@@ -8,6 +8,17 @@
 
   --transition-fast: 120ms ease;
   --transition-normal: 200ms ease;
+
+  /* Chrome ambiance — fallbacks (overridden per data-theme) */
+  --color-chrome-sheet-bg: var(--color-background);
+  --color-chrome-sheet-border: var(--color-border);
+  --shadow-chrome-sheet: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  --color-chrome-menu-gradient-from: var(--color-foreground);
+  --color-chrome-menu-row-hover: var(--color-muted);
+  --color-chrome-menu-row-active: var(--color-primary-soft, var(--color-muted));
+  --color-chrome-chip-bg: var(--color-background);
+  --color-chrome-chip-border: var(--color-border);
+  --color-chrome-panel-bg: var(--color-card);
 }
 
 html {

@@ -70,4 +70,15 @@
   /* === Atmosfera ========================================================= */
   --bg-atmo-mid: 222 47% 15%;
   --bg-atmo-shape: 150 55% 42%;
+
+  /* === Chrome ============================================================ */
+  --color-chrome-sheet-bg: 222 47% 12%;
+  --color-chrome-sheet-border: 222 47% 22%;
+  --shadow-chrome-sheet: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  --color-chrome-menu-gradient-from: 150 55% 42%;
+  --color-chrome-menu-row-hover: 222 47% 16%;
+  --color-chrome-menu-row-active: 150 45% 18%;
+  --color-chrome-chip-bg: 222 47% 12%;
+  --color-chrome-chip-border: 222 47% 22%;
+  --color-chrome-panel-bg: 222 47% 12%;
 }

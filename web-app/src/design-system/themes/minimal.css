@@ -36,4 +36,15 @@
 
   --bg-atmo-mid: 220 14% 96%;
   --bg-atmo-shape: 220 14% 30%;
+
+  /* === Chrome ============================================================ */
+  --color-chrome-sheet-bg: 0 0% 100%;
+  --color-chrome-sheet-border: 220 13% 84%;
+  --shadow-chrome-sheet: 0 -8px 24px rgba(0, 0, 0, 0.06);
+  --color-chrome-menu-gradient-from: 220 14% 96%;
+  --color-chrome-menu-row-hover: 220 14% 96%;
+  --color-chrome-menu-row-active: 220 14% 92%;
+  --color-chrome-chip-bg: 0 0% 100%;
+  --color-chrome-chip-border: 220 13% 84%;
+  --color-chrome-panel-bg: 0 0% 100%;
 }

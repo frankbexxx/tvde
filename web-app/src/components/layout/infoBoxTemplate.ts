@@ -12,7 +12,7 @@ export const SHADOW_SURFACE = 'shadow-sm'
 export const SHADOW_CARD = 'shadow-card'
 
 /** Painel inferior sobre mapa — mapa full-bleed por trás. */
-export const MAP_BOTTOM_SHEET = `pointer-events-auto mt-auto w-full shrink-0 overflow-hidden ${SURFACE_RADIUS} border border-border bg-background shadow-[0_-8px_24px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_24px_rgba(0,0,0,0.35)]`
+export const MAP_BOTTOM_SHEET = `pointer-events-auto mt-auto w-full shrink-0 overflow-hidden ${SURFACE_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-sheet-bg))] shadow-[var(--shadow-chrome-sheet)]`
 
 /** Sheet sizing — compacto obrigatório (Frank). */
 export const MAP_SHEET_MAX_H_IDLE = 'max-h-[min(38dvh,280px)]'
@@ -30,16 +30,16 @@ export const MAP_BANNER_STACK =
 export const MAP_WARNING_BANNER = `${BTN_SECONDARY_RADIUS} bg-warning/20 border border-warning/50 border-l-4 px-2 py-1.5 text-xs text-warning`
 
 /** Motorista — aceitar oferta / viagem activa. */
-export const INFO_BOX_DRIVER_LARGE = `${SURFACE_RADIUS} ${BORDER_SURFACE} border-l-4 border-l-info bg-card ${SHADOW_CARD}`
+export const INFO_BOX_DRIVER_LARGE = `${SURFACE_RADIUS} ${BORDER_SURFACE} border-l-4 border-l-info bg-[hsl(var(--color-chrome-sheet-bg))] ${SHADOW_CARD}`
 
 /** Motorista — resumo em viagem compacto. */
-export const INFO_BOX_DRIVER_COMPACT = `${SURFACE_RADIUS} ${BORDER_SURFACE} border-l-4 border-l-info bg-card/95 ${SHADOW_SURFACE}`
+export const INFO_BOX_DRIVER_COMPACT = `${SURFACE_RADIUS} ${BORDER_SURFACE} border-l-4 border-l-info bg-[hsl(var(--color-chrome-sheet-bg)/0.95)] ${SHADOW_SURFACE}`
 
 /** Passageiro — moldura (barra lateral vem do `tone` em InfoPanel). */
-export const INFO_BOX_PASSENGER = `${SURFACE_RADIUS} ${BORDER_SURFACE} bg-card ${SHADOW_SURFACE}`
+export const INFO_BOX_PASSENGER = `${SURFACE_RADIUS} ${BORDER_SURFACE} bg-[hsl(var(--color-chrome-sheet-bg))] ${SHADOW_SURFACE}`
 
 /** Pré-visualização recolha/destino dentro da sheet. */
-export const INFO_BOX_PREVIEW = `${SURFACE_RADIUS} ${BORDER_SURFACE} bg-card p-2 ${MAP_SHEET_GAP}`
+export const INFO_BOX_PREVIEW = `${SURFACE_RADIUS} ${BORDER_SURFACE} bg-[hsl(var(--color-chrome-panel-bg))] p-2 ${MAP_SHEET_GAP}`
 
 /** Aviso compacto sobre mapa (ex.: à espera de viagens). */
 export const INFO_BOX_MAP_HINT = `${BTN_SECONDARY_RADIUS} border border-border/60 bg-muted/15`
@@ -57,7 +57,7 @@ export const BTN_COMPACT_HEIGHT = 'min-h-9 h-9'
 export const INNER_RADIUS = 'rounded-lg'
 
 /** Lista step1 motorista — compacta, não comer mapa. */
-export const MAP_STEP1_LIST = `max-h-[min(28dvh,220px)] overflow-y-auto overscroll-contain ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 py-2 shadow-sm`
+export const MAP_STEP1_LIST = `max-h-[min(28dvh,220px)] overflow-y-auto overscroll-contain ${BTN_SECONDARY_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-sheet-bg))] px-2 py-2 shadow-sm`
 
 export const MAP_HINT_WARNING_SM = `${BTN_SECONDARY_RADIUS} bg-warning/15 border border-warning/40 px-2 py-1.5 text-xs text-foreground`
 export const MAP_HINT_WARNING = `${BTN_SECONDARY_RADIUS} bg-warning/15 border border-warning/40 px-3 py-2 text-sm text-foreground`
@@ -68,11 +68,11 @@ export const MAP_TOAST_ERROR = `relative ${BTN_SECONDARY_RADIUS} bg-destructive/
 export const MAP_DISMISS_BTN_WARNING = `absolute right-2 top-2 min-h-9 min-w-9 inline-flex items-center justify-center ${INNER_RADIUS} border border-warning/50 bg-background/80 text-warning text-xl font-medium leading-none hover:bg-background touch-manipulation`
 export const MAP_DISMISS_BTN_ERROR = `absolute right-2 top-2 min-h-9 min-w-9 inline-flex items-center justify-center ${INNER_RADIUS} border border-destructive/40 bg-background/80 text-destructive text-xl font-medium leading-none hover:bg-background touch-manipulation`
 
-export const MAP_CHIP_OVERLAY = `${INNER_RADIUS} border border-foreground/10 bg-background/90 px-2 py-1.5 text-[11px] text-foreground/75 shadow-sm backdrop-blur-sm`
-export const MAP_CHIP_OVERLAY_FLAT = `${INNER_RADIUS} border border-foreground/10 bg-foreground/[0.03] px-2 py-1.5 text-[11px] text-foreground/75`
+export const MAP_CHIP_OVERLAY = `${INNER_RADIUS} border border-[hsl(var(--color-chrome-chip-border))] bg-[hsl(var(--color-chrome-chip-bg)/0.92)] px-2 py-1.5 text-[11px] text-foreground/75 shadow-sm backdrop-blur-sm`
+export const MAP_CHIP_OVERLAY_FLAT = `${INNER_RADIUS} border border-[hsl(var(--color-chrome-chip-border))] bg-[hsl(var(--color-chrome-chip-bg)/0.88)] px-2 py-1.5 text-[11px] text-foreground/75`
 
-export const INFO_BOX_DRIVER_MENU = `${SURFACE_RADIUS} border border-border/80 bg-card p-4 shadow-card`
-export const MAP_CARD_FRAME = `relative overflow-hidden ${SURFACE_RADIUS} border border-border bg-card shadow-card`
+export const INFO_BOX_DRIVER_MENU = `${SURFACE_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-panel-bg))] p-4 shadow-card`
+export const MAP_CARD_FRAME = `relative overflow-hidden ${SURFACE_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-sheet-bg))] shadow-card`
 export const MAP_IDLE_PLACEHOLDER = `flex flex-col items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-muted/20 py-3`
 export const MAP_EMPTY_STATE = `py-8 text-center ${BTN_SECONDARY_RADIUS} border border-border`
 
@@ -85,8 +85,16 @@ export const MENU_PANEL = `${BTN_SECONDARY_RADIUS} border border-border bg-backg
 export const MENU_CARD = `${INNER_RADIUS} border border-border/70 bg-card px-3 py-2`
 export const MENU_BTN = `min-h-9 w-full ${INNER_RADIUS} border border-border bg-background text-sm font-medium text-foreground hover:bg-muted/50 touch-manipulation`
 export const MENU_BTN_SM = `min-h-9 ${INNER_RADIUS} border border-border bg-background px-2 text-xs font-semibold text-foreground hover:bg-muted/50 touch-manipulation`
-export const MENU_SURFACE = `${SURFACE_RADIUS} border border-border bg-gradient-to-b from-foreground/[0.06] to-transparent px-4 py-4`
-export const MENU_ROW_BTN = `w-full min-h-9 ${BTN_SECONDARY_RADIUS} border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation flex items-center gap-3`
+export const MENU_SURFACE = `${SURFACE_RADIUS} border border-border bg-gradient-to-b from-[hsl(var(--color-chrome-menu-gradient-from)/0.14)] to-transparent px-4 py-4`
+export const MENU_ROW_BTN = `w-full min-h-9 ${BTN_SECONDARY_RADIUS} border border-border bg-card px-4 text-left text-sm font-semibold text-foreground hover:bg-[hsl(var(--color-chrome-menu-row-hover))] touch-manipulation flex items-center gap-3`
+
+/** Partner — KPI tile (dashboard). */
+export const PARTNER_KPI_CARD = `${BTN_SECONDARY_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-panel-bg))] p-3 shadow-sm`
+
+/** Partner — hub entry card (ícone + título + subtítulo). */
+export const PARTNER_HUB_CARD = `w-full min-h-[56px] ${BTN_SECONDARY_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-panel-bg))] px-4 py-3 text-left hover:bg-[hsl(var(--color-chrome-menu-row-hover))] touch-manipulation flex items-center gap-3 shadow-sm transition-colors`
+
+export const PARTNER_SECTION_TITLE = 'text-xs font-semibold uppercase tracking-wide text-muted-foreground'
 
 /** Botão secundário (Voltar, Alterar, fechar). */
 export const BTN_SECONDARY =

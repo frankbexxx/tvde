@@ -1,4 +1,8 @@
 import type { PartnerMetrics } from '../../../api/partner'
+import {
+  PARTNER_KPI_CARD,
+  PARTNER_SECTION_TITLE,
+} from '../../../components/layout/infoBoxTemplate'
 
 type PartnerHomeDashboardProps = {
   metrics: PartnerMetrics | null
@@ -14,46 +18,52 @@ export function PartnerHomeDashboard({
   onRefresh,
 }: PartnerHomeDashboardProps) {
   return (
-    <>
-      <label className="block text-sm text-foreground/80" htmlFor="partner-search">
-        Pesquisar viagens (ID, motorista ou passageiro)
-      </label>
-      <input
-        id="partner-search"
-        type="search"
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="ID viagem, nome/telefone motorista ou ID passageiro"
-        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
-      />
+    <div className="space-y-4" data-testid="partner-home-dashboard">
+      <section className="space-y-2">
+        <p className={PARTNER_SECTION_TITLE}>Pesquisa</p>
+        <label className="block text-sm text-foreground/80 sr-only" htmlFor="partner-search">
+          Pesquisar viagens (ID, motorista ou passageiro)
+        </label>
+        <input
+          id="partner-search"
+          type="search"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="ID viagem, nome/telefone motorista ou ID passageiro"
+          className="w-full px-3 py-2 rounded-xl border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-panel-bg))] text-foreground text-sm"
+        />
+      </section>
 
       {metrics ? (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Viagens hoje</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_today}</p>
+        <section className="space-y-2">
+          <p className={PARTNER_SECTION_TITLE}>Resumo operacional</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className={PARTNER_KPI_CARD}>
+              <p className="text-xs text-muted-foreground">Viagens hoje</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_today}</p>
+            </div>
+            <div className={PARTNER_KPI_CARD}>
+              <p className="text-xs text-muted-foreground">Total viagens</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_total}</p>
+            </div>
+            <div className={PARTNER_KPI_CARD}>
+              <p className="text-xs text-muted-foreground">Concluídas</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_completed}</p>
+            </div>
+            <div className={PARTNER_KPI_CARD}>
+              <p className="text-xs text-muted-foreground">Canceladas</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_cancelled}</p>
+            </div>
+            <div className={PARTNER_KPI_CARD}>
+              <p className="text-xs text-muted-foreground">Motoristas ativos (GPS)</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">{metrics.active_drivers}</p>
+            </div>
+            <div className={PARTNER_KPI_CARD}>
+              <p className="text-xs text-muted-foreground">Total motoristas</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">{metrics.total_drivers}</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Total viagens</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_total}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Concluídas</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_completed}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Canceladas</p>
-            <p className="text-xl font-bold text-foreground">{metrics.trips_cancelled}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Motoristas ativos (GPS)</p>
-            <p className="text-xl font-bold text-foreground">{metrics.active_drivers}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">Total motoristas</p>
-            <p className="text-xl font-bold text-foreground">{metrics.total_drivers}</p>
-          </div>
-        </div>
+        </section>
       ) : null}
 
       <button
@@ -63,6 +73,6 @@ export function PartnerHomeDashboard({
       >
         Atualizar
       </button>
-    </>
+    </div>
   )
 }
