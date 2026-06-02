@@ -1,0 +1,12 @@
+{
+  "appearance": "Aspeto",
+  "appearanceHint": "Ambiance de trabalho — afecta menus, painéis e sheets; o mapa mantém-se legível.",
+  "language": "Idioma",
+  "languageHint": "Interface da app (passageiro, motorista e parceiro). Admin permanece em português.",
+  "languagePt": "Português",
+  "languageEn": "English",
+  "appMode": "Modo da app",
+  "adminPanel": "Painel admin",
+  "accountHint": "Dados pessoais e palavra-passe: ícone Conta (perfil).",
+  "driverRoleRequired": "A conta não tem perfil de motorista; o painel motorista exige JWT de motorista."
+}

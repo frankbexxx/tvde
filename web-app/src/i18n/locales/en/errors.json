@@ -1,0 +1,20 @@
+{
+  "pending_approval": "Waiting for administrator approval.",
+  "beta_full": "BETA is full. Try again later.",
+  "invalid_credentials": "Incorrect password.",
+  "blocked": "Account blocked.",
+  "beta_login_unavailable": "BETA login unavailable on this server (BETA mode off).",
+  "not_authenticated": "Session expired. Please sign in again.",
+  "invalid_token": "Invalid session. Please sign in again.",
+  "forbidden": "You do not have permission for this action.",
+  "trip_not_found": "Trip not found.",
+  "driver_not_found": "Driver not found.",
+  "rate_limit_login": "Too many attempts. Wait and try again.",
+  "rate_limit_otp_request": "Too many code requests. Wait and try again.",
+  "invalid_trip_state_transition": "Trip state does not allow this action.",
+  "timeout": "Server slow or unavailable. Try again in a moment.",
+  "rate_limited": "Too many requests in a row. Wait a bit and try again.",
+  "create_trip_failed": "Could not request the trip. Check your connection and try again.",
+  "cancel_failed": "Could not cancel the trip. Try again.",
+  "cancel_network": "Could not cancel now — check your connection and try again."
+}

@@ -1,5 +1,6 @@
 import type { StatusVariant } from '../components/layout/StatusHeader'
 import type { TripCreateResponse, TripDetailResponse } from '../api/trips'
+import i18n from '../i18n'
 
 /** Ordem do ciclo de vida da viagem (API ↔ UI). */
 export const TRIP_STATE_RANK: Record<string, number> = {
@@ -56,54 +57,62 @@ export function mergePassengerPolledWithPending(
   return { ...polled, status: pending.status }
 }
 
-/** Labels — passageiro (estado API → texto humano). */
-export const PASSENGER_TRIP_STATUS_LABELS: Record<string, string> = {
-  requested: 'À procura de motorista',
-  assigned: 'Motorista atribuído',
-  accepted: 'Motorista a caminho',
-  arriving: 'Motorista quase a chegar',
-  ongoing: 'Viagem em curso',
-  completed: 'Viagem concluída',
-  cancelled: 'Viagem cancelada',
-  failed: 'Viagem não concluída',
-}
+const PASSENGER_STATUS_KEYS = [
+  'requested',
+  'assigned',
+  'accepted',
+  'arriving',
+  'ongoing',
+  'completed',
+  'cancelled',
+  'failed',
+] as const
+
+/** @deprecated Use passengerTripStatusLabel — kept for tests referencing PT literals. */
+export const PASSENGER_TRIP_STATUS_LABELS: Record<string, string> = Object.fromEntries(
+  PASSENGER_STATUS_KEYS.map((k) => [k, i18n.t(`trip:status.${k}`, { lng: 'pt' })])
+)
 
 export function passengerTripStatusLabel(status: string): string {
-  return PASSENGER_TRIP_STATUS_LABELS[status] ?? status
+  const key = `trip:status.${status}`
+  if (i18n.exists(key)) return i18n.t(key)
+  return status
 }
 
-/** Viagem ativa no ecrã do motorista — label + variante do header. */
-export const DRIVER_ACTIVE_TRIP_UI: Record<string, { label: string; variant: StatusVariant }> = {
-  assigned: { label: 'Viagem atribuída — confirma para avançar', variant: 'assigned' },
-  accepted: { label: 'A caminho do passageiro', variant: 'accepted' },
-  arriving: { label: 'No local de recolha', variant: 'arriving' },
-  ongoing: { label: 'Em viagem', variant: 'ongoing' },
-  completed: { label: 'Viagem concluída', variant: 'completed' },
+const DRIVER_ACTIVE_VARIANTS: Record<string, StatusVariant> = {
+  assigned: 'assigned',
+  accepted: 'accepted',
+  arriving: 'arriving',
+  ongoing: 'ongoing',
+  completed: 'completed',
 }
 
 export function driverActiveTripUi(status: string): { label: string; variant: StatusVariant } {
-  return DRIVER_ACTIVE_TRIP_UI[status] ?? { label: status, variant: 'idle' }
+  const key = `trip:driverActive.${status}`
+  if (i18n.exists(key)) {
+    return { label: i18n.t(key), variant: DRIVER_ACTIVE_VARIANTS[status] ?? 'idle' }
+  }
+  return { label: status, variant: 'idle' }
 }
 
-/** Pedidos na lista «disponíveis» — API não envia `status` por item. */
-export const DRIVER_AVAILABLE_TRIP_STATUS_LABEL = 'Pedido disponível'
-
-export const DRIVER_NEW_TRIP_LIST_HINT = 'Nova viagem disponível'
-
-/** P6: leitura rápida no ecrã do motorista. */
-export const DRIVER_STATUS_BADGE_SHORT: Record<string, string> = {
-  requested: 'Aguardando',
-  assigned: 'Aguardando',
-  accepted: 'A caminho',
-  arriving: 'A caminho',
-  ongoing: 'Em curso',
-  completed: 'Concluída',
-  cancelled: 'Cancelada',
-  failed: 'Interrompida',
+export function driverAvailableTripStatusLabel(): string {
+  return i18n.t('trip:driverAvailable')
 }
+
+/** @deprecated */
+export const DRIVER_AVAILABLE_TRIP_STATUS_LABEL = i18n.t('trip:driverAvailable', { lng: 'pt' })
+
+export function driverNewTripListHint(): string {
+  return i18n.t('trip:driverNewTripHint')
+}
+
+/** @deprecated */
+export const DRIVER_NEW_TRIP_LIST_HINT = i18n.t('trip:driverNewTripHint', { lng: 'pt' })
 
 export function driverTripBadgeShort(status: string): string {
-  return DRIVER_STATUS_BADGE_SHORT[status] ?? status
+  const key = `trip:driverBadge.${status}`
+  if (i18n.exists(key)) return i18n.t(key)
+  return status
 }
 
 /**

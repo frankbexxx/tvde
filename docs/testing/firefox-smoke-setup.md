@@ -28,3 +28,12 @@ navigator.permissions.query({ name: 'geolocation' }).then((r) => console.log(r.s
 ```
 
 Ethernet/rede rápida **não** substitui localização do browser.
+
+## Modo inglês (EN) — smoke opcional
+
+1. Completar checklist PT acima primeiro.
+2. Menu → **Definições** → **English** (`data-testid="locale-en"`).
+3. Repetir fluxos críticos (pedir viagem, aceitar/iniciar, parceiro lista→detalhe).
+4. Para voltar a PT: **Português** (`locale-pt`) ou `localStorage.setItem('tvde_locale','pt')` + F5.
+
+Ver [`docs/architecture/I18N.md`](../architecture/I18N.md).

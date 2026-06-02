@@ -6,6 +6,9 @@
  * pesquisa de morada funciona no piloto mesmo sem chave MapTiler
  * configurada no ambiente.
  */
+import i18n from '../i18n'
+import { geocodingLanguage, type AppLocale } from '../i18n/localeStorage'
+
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY as string | undefined
 
 /**
@@ -182,13 +185,18 @@ export function mapNominatimItemToSuggestion(
   }
 }
 
+function activeGeoLang(): string {
+  const loc: AppLocale = i18n.language === 'en' ? 'en' : 'pt'
+  return geocodingLanguage(loc)
+}
+
 async function maptilerForwardSearch(q: string, limit: number): Promise<GeocodeSuggestion[]> {
   if (!MAPTILER_KEY) return []
   try {
     const params = new URLSearchParams({
       key: MAPTILER_KEY,
       limit: String(limit),
-      language: 'pt',
+      language: activeGeoLang(),
       country: 'pt',
       proximity: `${LISBON_PROXIMITY.lng},${LISBON_PROXIMITY.lat}`,
     })
@@ -215,7 +223,7 @@ async function nominatimForwardSearch(q: string, limit: number): Promise<Geocode
       q,
       limit: String(limit),
       addressdetails: '0',
-      'accept-language': 'pt',
+      'accept-language': activeGeoLang(),
       countrycodes: 'pt',
     })
     // viewbox (left,top,right,bottom) ~ Lisboa metro, sem bounded para não restringir
@@ -260,7 +268,7 @@ export async function forwardGeocodeSearch(
 async function maptilerReverseGeocode(lng: number, lat: number): Promise<string | null> {
   if (!MAPTILER_KEY) return null
   try {
-    const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${encodeURIComponent(MAPTILER_KEY)}&language=pt`
+    const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${encodeURIComponent(MAPTILER_KEY)}&language=${activeGeoLang()}`
     const res = await fetch(url)
     if (!res.ok) return null
     const data = (await res.json()) as { features?: Array<{ place_name?: string }> }
@@ -278,7 +286,7 @@ async function nominatimReverseGeocode(lng: number, lat: number): Promise<string
       format: 'json',
       lat: String(lat),
       lon: String(lng),
-      'accept-language': 'pt',
+      'accept-language': activeGeoLang(),
       zoom: '18',
       addressdetails: '0',
     })

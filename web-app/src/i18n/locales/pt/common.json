@@ -1,0 +1,22 @@
+{
+  "appName": "TVDE",
+  "menu": "Menu",
+  "back": "Voltar",
+  "refresh": "Atualizar",
+  "loading": "A carregar…",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "close": "Fechar",
+  "continue": "Continuar",
+  "confirm": "Confirmar",
+  "search": "Pesquisar",
+  "account": "Conta",
+  "settings": "Definições",
+  "profile": "Perfil",
+  "rolePassenger": "Passageiro",
+  "roleDriver": "Motorista",
+  "rolePartner": "Frota",
+  "roleStaff": "Staff",
+  "unexpectedError": "Resposta de erro inesperada.",
+  "legalEnSummary": "English summary — the legally binding text is in Portuguese."
+}

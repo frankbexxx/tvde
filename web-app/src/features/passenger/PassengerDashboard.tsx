@@ -56,11 +56,12 @@ import { PassengerSideMenu, type PassengerMenuScreen } from './PassengerSideMenu
 import { passengerRootHighlightKey } from './passengerMenuNav'
 import { PassengerBottomNav, type PassengerShellTab } from './PassengerBottomNav'
 import {
-  PASSENGER_TRIP_CANCEL_PRESETS,
+  passengerTripCancelPresets,
   TRIP_CANCEL_SELECT_OTHER,
   tripCancelReasonForApi,
 } from '../../constants/tripCancelReasons'
 import { useDia23LayoutProbe } from '../../hooks/useDia23LayoutProbe'
+import { useTranslation } from 'react-i18next'
 
 /**
  * P33: mapa da viagem com percurso/rasto só após aceite — não em requested nem assigned.
@@ -81,6 +82,8 @@ function passengerDashboardNoop() { }
 
 export function PassengerDashboard() {
   useDia23LayoutProbe('passenger')
+  const { t } = useTranslation('passenger')
+  const cancelPresets = passengerTripCancelPresets()
   const { token, sessionRole } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { passengerActiveTripId, setPassengerActiveTripId } = useActiveTrip()
@@ -473,8 +476,8 @@ export function PassengerDashboard() {
     setPickupGeoSuggestions([])
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
-    toast.success('Recolha em pré-visualização')
-  }, [])
+    toast.success(t('trip.pickupPreview'))
+  }, [t])
 
   const confirmPickupCandidate = useCallback(() => {
     if (!pickupCandidate) return
@@ -484,8 +487,8 @@ export function PassengerDashboard() {
     setPickupCandidate(null)
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
-    toast.success('Recolha confirmada')
-  }, [pickupCandidate])
+    toast.success(t('trip.pickupConfirmed'))
+  }, [pickupCandidate, t])
 
   const handleDestinationPick = useCallback((s: GeocodeSuggestion) => {
     setDestinationCandidate(s)
@@ -493,8 +496,8 @@ export function PassengerDashboard() {
     setGeoSuggestions([])
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
-    toast.success('Destino em pré-visualização')
-  }, [])
+    toast.success(t('trip.dropoffPreview'))
+  }, [t])
 
   const confirmDestinationCandidate = useCallback(() => {
     if (!destinationCandidate) return
@@ -502,8 +505,8 @@ export function PassengerDashboard() {
     setDestinationCandidate(null)
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
-    toast.success('Destino confirmado')
-  }, [destinationCandidate])
+    toast.success(t('trip.dropoffConfirmed'))
+  }, [destinationCandidate, t])
 
   const clearPickupCandidate = useCallback(() => {
     setPickupCandidate(null)
@@ -544,9 +547,7 @@ export function PassengerDashboard() {
     if (creating) return
 
     if (pickupDestinationTooClose) {
-      toast.warning(
-        'Recolha e destino demasiado próximos — escolhe dois pontos diferentes antes de pedir a viagem.'
-      )
+      toast.warning(t('pickupTooClose'))
       return
     }
 
@@ -554,7 +555,7 @@ export function PassengerDashboard() {
 
     setError(null)
     setCreating(true)
-    setStatus('A pedir viagem...')
+    setStatus(t('requestingStatus'))
     addLog('Clique: Pedir viagem', 'action')
     // Optimistic: show SEARCHING immediately (handled by creating + optimisticTrip below)
     try {
@@ -572,7 +573,7 @@ export function PassengerDashboard() {
       setStatus(passengerTripStatusLabel(res.status))
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
-      toast.success('Pedido enviado — a sincronizar…')
+      toast.success(t('trip.sent'))
       refetchHistory()
     } catch (err: unknown) {
       const msg = isTimeoutLikeError(err)
@@ -595,6 +596,7 @@ export function PassengerDashboard() {
     refetchHistory,
     setPassengerPendingTripDetail,
     setPassengerActiveTripId,
+    t,
   ])
 
   const handleCancel = useCallback(
@@ -615,7 +617,7 @@ export function PassengerDashboard() {
         setPlanningRouteGeoJSON(null)
         setStatus('Pronto')
         addLog('Viagem cancelada', 'success')
-        toast.success('Viagem cancelada')
+        toast.success(t('trip.cancelled'))
         refetchHistory()
       } catch (err: unknown) {
         const msg = isTimeoutLikeError(err)
@@ -637,6 +639,7 @@ export function PassengerDashboard() {
       refetchHistory,
       setPassengerPendingTripDetail,
       setPassengerActiveTripId,
+      t,
     ]
   )
 
@@ -669,7 +672,7 @@ export function PassengerDashboard() {
       setPassengerActiveTripId(res.trip_id)
       setStatus(passengerTripStatusLabel(res.status))
       addLog('Pedido reenviado após tentar novamente', 'success')
-      toast.success('Pedido reenviado')
+      toast.success(t('trip.resent'))
       refetchHistory()
     } catch (err: unknown) {
       const msg = isTimeoutLikeError(err)
@@ -689,6 +692,7 @@ export function PassengerDashboard() {
     setPassengerActiveTripId,
     setStatus,
     refetchHistory,
+    t,
   ])
 
   const driverTrackingHint = useMemo(() => {
@@ -1032,7 +1036,7 @@ export function PassengerDashboard() {
           onChange={(e) => setPassengerCancelPreset(e.target.value)}
           disabled={cancelling}
         >
-          {PASSENGER_TRIP_CANCEL_PRESETS.map((o) => (
+          {cancelPresets.map((o) => (
             <option key={o.value || 'none'} value={o.value}>
               {o.label}
             </option>

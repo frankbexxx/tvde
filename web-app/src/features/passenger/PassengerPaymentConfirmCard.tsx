@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import i18n from '../../i18n'
 import { loadStripe } from '@stripe/stripe-js'
 import {
   CardElement,
@@ -156,7 +157,10 @@ export function PassengerPaymentConfirmCard({
     <section className={`${INFO_BOX_PASSENGER} p-2 ${MAP_SHEET_GAP}`} data-testid="passenger-payment-confirm-card">
       <h3 className={INFO_BOX_TITLE_COMPACT}>Autorizar pagamento</h3>
       <p className={INFO_BOX_BODY_COMPACT}>Motorista aceitou — confirma o cartão.</p>
-      <Elements stripe={stripePromise} options={{ clientSecret }}>
+      <Elements
+        stripe={stripePromise}
+        options={{ clientSecret, locale: i18n.language === 'en' ? 'en' : 'pt' }}
+      >
         <ConfirmInner clientSecret={clientSecret} onConfirmed={onConfirmed} />
       </Elements>
     </section>

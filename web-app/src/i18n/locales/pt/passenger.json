@@ -1,0 +1,61 @@
+{
+  "nav": {
+    "aria": "Navegação principal do passageiro",
+    "home": "Início",
+    "history": "Histórico",
+    "account": "Conta",
+    "menu": "Menu"
+  },
+  "menuTitle": {
+    "history": "Histórico",
+    "history_detail": "Detalhe da viagem",
+    "account": "Conta",
+    "share_app": "Partilhar app",
+    "settings": "Definições",
+    "root": "Menu"
+  },
+  "banner": {
+    "creating": "A enviar pedido…",
+    "ready": "Pronto",
+    "offline": "Sem ligação — verifica a rede",
+    "offlineSub": "Quando voltares a ficar online, a app volta a atualizar sozinha. Podes tentar recarregar a página.",
+    "paymentFailed": "Pagamento recusado",
+    "paymentFailedSub": "Tenta pedir de novo ou contacta o suporte se o problema continuar.",
+    "syncing": "A sincronizar viagem…",
+    "searching": "À procura de motorista",
+    "assigned": "Motorista atribuído",
+    "enRoute": "Motorista a caminho",
+    "ongoing": "Viagem em curso",
+    "completed": "Viagem concluída",
+    "paymentConfirmed": "Pagamento confirmado.",
+    "paymentProcessing": "O pagamento pode demorar alguns segundos a aparecer como concluído — mantém esta página aberta."
+  },
+  "payment": {
+    "mockConfirming": "Pagamento simulado neste ambiente. Não há cobrança nem cartão.",
+    "cardConfirming": "Pagamento por cartão. A autorização ou confirmação no banco só ocorre quando um motorista aceitar o pedido; confirmar aqui não cobra imediatamente o valor da viagem.",
+    "mockSearching": "Pagamento simulado — não é preciso introduzir cartão neste ambiente.",
+    "cardSearching": "Tens o cartão acessível? Quando houver aceitação, o banco pode pedir confirmação extra (por exemplo 3-D Secure)."
+  },
+  "planner": {
+    "searchingTitle": "À procura de motorista…",
+    "searchingTrip": "Pedido {{id}}…",
+    "searchingSending": "A enviar o teu pedido…"
+  },
+  "pickupTooClose": "Recolha e destino demasiado próximos — escolhe dois pontos diferentes antes de pedir a viagem.",
+  "requestingStatus": "A pedir viagem…",
+  "trip": {
+    "request": "Pedir viagem",
+    "cancel": "Cancelar viagem",
+    "tryAgain": "Tentar outra vez",
+    "sendRating": "Enviar avaliação",
+    "thanksRating": "Obrigado pela avaliação",
+    "pickupPreview": "Recolha em pré-visualização",
+    "pickupConfirmed": "Recolha confirmada",
+    "dropoffPreview": "Destino em pré-visualização",
+    "dropoffConfirmed": "Destino confirmado",
+    "sent": "Pedido enviado — a sincronizar…",
+    "cancelled": "Viagem cancelada",
+    "resent": "Pedido reenviado"
+  },
+  "unreadBadge": "{{count}} mensagem(ns) por ler"
+}

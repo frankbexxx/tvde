@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Home, Inbox, Menu, Users } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { PartnerShellTab } from './partnerShellContext'
 
 type PartnerBottomNavProps = {
@@ -9,6 +10,7 @@ type PartnerBottomNavProps = {
 }
 
 export function PartnerBottomNav({ active, onSelect, inboxUnreadCount = 0 }: PartnerBottomNavProps) {
+  const { t } = useTranslation('partner')
   const item = (
     tab: PartnerShellTab,
     testId: string,
@@ -31,7 +33,7 @@ export function PartnerBottomNav({ active, onSelect, inboxUnreadCount = 0 }: Par
           {badge != null && badge > 0 ? (
             <span
               className="absolute -right-2 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-info px-1 text-[9px] font-bold text-info-foreground"
-              aria-label={`${badge} mensagem(ns) por ler`}
+              aria-label={t('unreadBadge', { count: badge })}
             >
               {badge > 9 ? '9+' : badge}
             </span>
@@ -45,12 +47,12 @@ export function PartnerBottomNav({ active, onSelect, inboxUnreadCount = 0 }: Par
   return (
     <nav
       className="flex w-full border-t border-border bg-background/95 backdrop-blur-sm safe-area-pb"
-      aria-label="Navegação principal do parceiro"
+      aria-label={t('nav.aria')}
     >
-      {item('home', 'partner-bottom-nav-home', 'Início', Home)}
-      {item('fleet', 'partner-bottom-nav-fleet', 'Frota', Users)}
-      {item('inbox', 'partner-bottom-nav-inbox', 'Caixa', Inbox, inboxUnreadCount)}
-      {item('menu', 'partner-open-menu', 'Menu', Menu)}
+      {item('home', 'partner-bottom-nav-home', t('nav.home'), Home)}
+      {item('fleet', 'partner-bottom-nav-fleet', t('nav.fleet'), Users)}
+      {item('inbox', 'partner-bottom-nav-inbox', t('nav.inbox'), Inbox, inboxUnreadCount)}
+      {item('menu', 'partner-open-menu', t('nav.menu'), Menu)}
     </nav>
   )
 }

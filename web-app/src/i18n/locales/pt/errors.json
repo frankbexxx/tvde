@@ -1,0 +1,20 @@
+{
+  "pending_approval": "Aguardar aprovação do administrador.",
+  "beta_full": "BETA cheio. Tenta mais tarde.",
+  "invalid_credentials": "Password incorrecta.",
+  "blocked": "Conta bloqueada.",
+  "beta_login_unavailable": "Login BETA indisponível neste servidor (modo BETA desligado).",
+  "not_authenticated": "Sessão expirada. Inicia sessão novamente.",
+  "invalid_token": "Sessão inválida. Inicia sessão novamente.",
+  "forbidden": "Sem permissão para esta acção.",
+  "trip_not_found": "Viagem não encontrada.",
+  "driver_not_found": "Motorista não encontrado.",
+  "rate_limit_login": "Demasiadas tentativas. Aguarda e tenta de novo.",
+  "rate_limit_otp_request": "Demasiados pedidos de código. Aguarda e tenta de novo.",
+  "invalid_trip_state_transition": "Estado da viagem não permite esta acção.",
+  "timeout": "Servidor lento ou indisponível. Tenta novamente dentro de momentos.",
+  "rate_limited": "Muitos pedidos seguidos. Aguarda um pouco e tenta de novo.",
+  "create_trip_failed": "Não foi possível pedir a viagem. Verifica a ligação e tenta de novo.",
+  "cancel_failed": "Não foi possível cancelar a viagem. Tenta de novo.",
+  "cancel_network": "Não foi possível cancelar agora — verifica a ligação e tenta de novo."
+}

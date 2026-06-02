@@ -1,0 +1,12 @@
+{
+  "appearance": "Appearance",
+  "appearanceHint": "Work ambiance — affects menus, panels and sheets; the map stays readable.",
+  "language": "Language",
+  "languageHint": "App interface (passenger, driver and partner). Admin stays in Portuguese.",
+  "languagePt": "Português",
+  "languageEn": "English",
+  "appMode": "App mode",
+  "adminPanel": "Admin panel",
+  "accountHint": "Personal data and password: Account icon (profile).",
+  "driverRoleRequired": "This account has no driver profile; the driver panel requires a driver JWT."
+}

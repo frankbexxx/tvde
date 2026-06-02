@@ -1,4 +1,5 @@
 import type { DriverMenuScreen } from './DriverSideMenu'
+import i18n from '../../i18n'
 
 export const DRIVER_MENU_BACK: Partial<Record<DriverMenuScreen, DriverMenuScreen>> = {
   profile: 'root',
@@ -35,20 +36,7 @@ export function driverRootHighlightKey(screen: DriverMenuScreen): string | null 
 }
 
 export function driverMenuTitle(screen: DriverMenuScreen): string {
-  if (screen === 'root') return 'Menu'
-  if (screen === 'profile') return 'Perfil'
-  if (screen === 'inbox') return 'Caixa de entrada'
-  if (screen === 'earnings') return 'Rendimentos'
-  if (screen === 'trips') return 'Viagens'
-  if (screen === 'trips_silenced') return 'Ofertas silenciadas'
-  if (screen === 'nav') return 'Navegação'
-  if (screen === 'categories') return 'Categorias'
-  if (screen === 'zones') return 'Zonas'
-  if (screen === 'zones_budget') return 'Orçamento zona'
-  if (screen === 'zones_session') return 'Sessão activa'
-  if (screen === 'zones_request') return 'Pedir mudança'
-  if (screen === 'docs') return 'Documentos'
-  if (screen === 'pricing') return 'Preços'
-  if (screen === 'settings') return 'Definições'
-  return 'Menu do motorista'
+  const key = `driver:menuTitle.${screen}`
+  if (i18n.exists(key)) return i18n.t(key)
+  return i18n.t('driver:menuTitle.default')
 }

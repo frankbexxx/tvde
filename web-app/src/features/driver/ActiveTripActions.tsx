@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { TripDetailResponse } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { mergeDriverPolledWithOverride, tripStateRank, driverActiveTripUi } from '../../constants/tripStatus'
@@ -26,10 +27,11 @@ import {
 import { canDriverStartTripNearPickup } from './driverPickupGate'
 import { openDriverExternalNav, driverNavAppLabel } from '../../utils/openDriverExternalNav'
 import {
-  DRIVER_TRIP_CANCEL_PRESETS,
+  driverTripCancelPresets,
   TRIP_CANCEL_SELECT_OTHER,
   tripCancelReasonForApi,
 } from '../../constants/tripCancelReasons'
+import { resolveApiErrorDetail } from '../../i18n/apiErrors'
 import type { DriverActiveTripPollState } from './useDriverActiveTripPoll'
 import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
 
@@ -71,6 +73,8 @@ export function ActiveTripActions({
   onTripCompleted,
   onError,
 }: ActiveTripActionsProps) {
+  const { t } = useTranslation('driver')
+  const cancelPresets = driverTripCancelPresets()
   const internalPoll = useDriverActiveTripPoll(
     sharedPoll ? null : tripId,
     sharedPoll ? null : token,
@@ -138,12 +142,12 @@ export function ActiveTripActions({
   )
 
   const tripPollHint = tripPollFault
-    ? 'Não foi possível atualizar agora. Mantemos a última informação e tentamos de novo.'
+    ? t('actions.pollFault')
     : trip
       ? tripRefreshing
-        ? 'A atualizar estado…'
+        ? t('actions.pollRefreshing')
         : tripPollStalled
-          ? 'Sem novidades há instantes — a última informação mantém-se válida.'
+          ? t('actions.pollStalled')
           : null
       : null
 
@@ -161,61 +165,72 @@ export function ActiveTripActions({
       displayStatus === 'ongoing' ? destinationCoords : pickupCoords
     if (!target) return
     openDriverExternalNav(target.lat, target.lng)
-    const phaseLabel = displayStatus === 'ongoing' ? 'destino' : 'recolha'
-    sonnerToast.message(`A abrir ${driverNavAppLabel()} (${phaseLabel})`, { duration: 3000 })
-  }, [destinationCoords, displayStatus, pickupCoords])
+    const phaseLabel =
+      displayStatus === 'ongoing' ? t('actions.destinationPhase') : t('actions.pickupPhase')
+    sonnerToast.message(
+      t('actions.openingNav', { app: driverNavAppLabel(), phase: phaseLabel }),
+      { duration: 3000 }
+    )
+  }, [destinationCoords, displayStatus, pickupCoords, t])
 
   const run = async (
     action: () => Promise<{ status: string }>,
-    actionName: string,
-    opts?: { skipStartGate?: boolean }
+    actionLabel: string,
+    opts?: { skipStartGate?: boolean; actionKey?: 'startTrip' | 'cancelTrip' }
   ): Promise<boolean> => {
     if (loading) return false
     if (
-      actionName === 'Iniciar viagem' &&
+      opts?.actionKey === 'startTrip' &&
       !opts?.skipStartGate &&
       !canDriverStartTripNearPickup(displayStatus, driverLocation, pickupCoords)
     ) {
-      const msg = `Aproxima-te do ponto de recolha (até ~${DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar.`
+      const msg = t('actions.blockedFar', { meters: DRIVER_START_TRIP_MAX_DISTANCE_M })
       onError(msg)
-      setStatus('Erro')
-      addLog(`Bloqueado: ${actionName} — longe do pickup`, 'error')
+      setStatus(t('actions.error'))
+      addLog(`Bloqueado: ${actionLabel} — longe do pickup`, 'error')
       return false
     }
     setLoading(true)
     onError('')
-    setStatus(`A executar: ${actionName}...`)
-    addLog(`Clique: ${actionName}`, 'action')
+    setStatus(t('actions.executing', { action: actionLabel }))
+    addLog(`Clique: ${actionLabel}`, 'action')
     try {
       const res = await action()
       onTripActionSuccess(res.status)
       setStatus(driverActiveTripUi(res.status).label)
-      addLog(`${actionName} concluído (${res.status})`, 'success')
+      addLog(`${actionLabel} concluído (${res.status})`, 'success')
       if (res.status === 'ongoing' && !navOpenedForOngoingRef.current) {
         navOpenedForOngoingRef.current = true
-        sonnerToast.success('Viagem iniciada')
+        sonnerToast.success(t('actions.tripStarted'))
         if (destinationCoords) {
           openDriverExternalNav(destinationCoords.lat, destinationCoords.lng)
-          sonnerToast.message(`A abrir ${driverNavAppLabel()} (destino)`, { duration: 3000 })
+          sonnerToast.message(
+            t('actions.openingNav', {
+              app: driverNavAppLabel(),
+              phase: t('actions.destinationPhase'),
+            }),
+            { duration: 3000 }
+          )
         }
       }
       if (res.status === 'arriving') {
-        sonnerToast.success('Chegada confirmada')
+        sonnerToast.success(t('actions.arrivalConfirmed'))
       }
       if (res.status === 'completed') {
-        sonnerToast.success('Viagem concluída')
+        sonnerToast.success(t('actions.tripCompleted'))
         onTripCompleted?.()
       }
       if (res.status === 'cancelled') onComplete()
       return true
     } catch (err: unknown) {
-      const e = err as { status?: number; detail?: string }
-      const msg = isTimeoutLikeError(err) || e?.status === 0
-        ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
-        : String(e?.detail ?? 'Erro')
+      const e = err as { status?: number; detail?: unknown }
+      const msg =
+        isTimeoutLikeError(err) || e?.status === 0
+          ? t('actions.networkError')
+          : resolveApiErrorDetail(e?.detail) || t('actions.error')
       onError(msg)
-      setStatus('Erro')
-      addLog(`Erro ${actionName}: ${msg}`, 'error')
+      setStatus(t('actions.error'))
+      addLog(`Erro ${actionLabel}: ${msg}`, 'error')
       return false
     } finally {
       setLoading(false)
@@ -226,28 +241,46 @@ export function ActiveTripActions({
   if (!hasTripContext && !statusOverride) {
     return (
       <div className={`${INFO_BOX_MAP_HINT} px-4 py-3 text-center text-sm text-foreground/75`}>
-        A sincronizar estado da viagem… Se persistir, recarrega a página.
+        {t('actions.syncing')}
       </div>
     )
   }
 
   const buttonConfig =
     displayStatus === 'assigned'
-      ? { label: 'Aceitar', action: () => driverPerformAccept(tripId, token) }
+      ? {
+        label: t('actions.accept'),
+        action: () => driverPerformAccept(tripId, token),
+      }
       : displayStatus === 'accepted'
         ? nearPickup
-          ? { label: 'Iniciar viagem', action: () => driverPerformStartFromAccepted(tripId, token) }
-          : { label: 'Cheguei', action: () => driverPerformMarkArriving(tripId, token), skipStartGate: true }
+          ? {
+            label: t('actions.startTrip'),
+            action: () => driverPerformStartFromAccepted(tripId, token),
+            actionKey: 'startTrip' as const,
+          }
+          : {
+            label: t('actions.arrived'),
+            action: () => driverPerformMarkArriving(tripId, token),
+            skipStartGate: true,
+          }
         : displayStatus === 'arriving'
-          ? { label: 'Iniciar viagem', action: () => driverPerformStartFromArriving(tripId, token) }
+          ? {
+            label: t('actions.startTrip'),
+            action: () => driverPerformStartFromArriving(tripId, token),
+            actionKey: 'startTrip' as const,
+          }
           : displayStatus === 'ongoing'
-            ? { label: 'Terminar viagem', action: () => driverPerformComplete(tripId, token) }
+            ? {
+              label: t('actions.endTrip'),
+              action: () => driverPerformComplete(tripId, token),
+            }
             : null
 
   if (!buttonConfig) {
     return (
       <div className={`${INFO_BOX_MAP_HINT} px-4 py-3 text-center text-sm text-foreground/75`}>
-        A sincronizar estado da viagem… Se persistir, recarrega a página.
+        {t('actions.syncing')}
       </div>
     )
   }
@@ -271,13 +304,13 @@ export function ActiveTripActions({
 
   const nextStepHint =
     displayStatus === 'assigned'
-      ? 'Aceita para começar a aproximação ao passageiro.'
+      ? t('actions.hintAssigned')
       : displayStatus === 'accepted' && !nearPickup
-        ? 'Confirma «Cheguei» quando estiveres no ponto de recolha.'
+        ? t('actions.hintAcceptedFar')
         : displayStatus === 'accepted' || displayStatus === 'arriving'
-          ? 'Inicia a viagem quando o passageiro estiver contigo.'
+          ? t('actions.hintStart')
           : displayStatus === 'ongoing'
-            ? 'Segue para o destino e termina a viagem no fim.'
+            ? t('actions.hintOngoing')
             : null
 
   const startTripGateActive =
@@ -291,7 +324,7 @@ export function ActiveTripActions({
   return (
     <div className="space-y-2">
       {loadingLong ? (
-        <HintLine>Ainda a processar… Se demorar muito, verifica a ligação.</HintLine>
+        <HintLine>{t('actions.processing')}</HintLine>
       ) : null}
       {tripPollHint ? (
         <HintLine className="-mt-1" testId="driver-trip-poll-hint">
@@ -305,9 +338,11 @@ export function ActiveTripActions({
       ) : null}
       {startTripGateActive && !startTripAllowed ? (
         <div className="text-center text-sm text-foreground/75 px-1 leading-snug" aria-live="polite">
-          <p>Aproxima-te do ponto de recolha (~{DRIVER_START_TRIP_MAX_DISTANCE_M} m) para iniciar a viagem.</p>
+          <p>{t('actions.nearPickup', { meters: DRIVER_START_TRIP_MAX_DISTANCE_M })}</p>
           {distanceToPickupM != null ? (
-            <p className="mt-1 font-medium">Distância ao pickup: ~{distanceToPickupM} m</p>
+            <p className="mt-1 font-medium">
+              {t('actions.distancePickup', { meters: distanceToPickupM })}
+            </p>
           ) : null}
         </div>
       ) : null}
@@ -320,7 +355,7 @@ export function ActiveTripActions({
             onClick={openNavForPhase}
             disabled={loading}
           >
-            Abrir navegação
+            {t('actions.openNav')}
           </button>
         ) : null}
         {displayStatus === 'ongoing' ? (
@@ -332,7 +367,7 @@ export function ActiveTripActions({
             }}
             disabled={loading}
           >
-            {loading ? 'A processar…' : buttonConfig.label}
+            {loading ? t('actions.processingBtn') : buttonConfig.label}
           </button>
         ) : (
           <PrimaryActionButton
@@ -341,7 +376,8 @@ export function ActiveTripActions({
             className={compactTripActions ? 'flex-[2] min-w-0 text-xs' : 'flex-1 min-w-0'}
             onClick={() => {
               void run(buttonConfig.action, buttonConfig.label, {
-                skipStartGate: buttonConfig.skipStartGate,
+                skipStartGate: 'skipStartGate' in buttonConfig ? buttonConfig.skipStartGate : undefined,
+                actionKey: 'actionKey' in buttonConfig ? buttonConfig.actionKey : undefined,
               })
             }}
             disabled={loading || (startTripGateActive && !startTripAllowed)}
@@ -358,7 +394,7 @@ export function ActiveTripActions({
             disabled={loading}
             className={cancelBtnClass}
           >
-            Cancelar
+            {t('actions.cancel')}
           </button>
         ) : null}
       </MapActionRow>
@@ -367,9 +403,9 @@ export function ActiveTripActions({
           className={`${BTN_SECONDARY_RADIUS} border border-destructive/35 bg-destructive/5 px-3 py-3 space-y-3`}
           data-testid="driver-trip-cancel-panel"
         >
-          <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
+          <p className="text-sm font-medium text-foreground">{t('actions.cancelTitle')}</p>
           <label className="block text-xs text-muted-foreground" htmlFor="driver-cancel-preset">
-            Escolha rápida
+            {t('actions.cancelQuick')}
           </label>
           <select
             id="driver-cancel-preset"
@@ -379,7 +415,7 @@ export function ActiveTripActions({
             onChange={(e) => setCancelPreset(e.target.value)}
             disabled={loading}
           >
-            {DRIVER_TRIP_CANCEL_PRESETS.map((o) => (
+            {cancelPresets.map((o) => (
               <option key={o.value || 'none'} value={o.value}>
                 {o.label}
               </option>
@@ -389,7 +425,7 @@ export function ActiveTripActions({
             <textarea
               data-testid="driver-cancel-other"
               className={`w-full min-h-[72px] ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 py-2 text-sm text-foreground`}
-              placeholder="Descreve em poucas palavras (opcional)."
+              placeholder={t('actions.cancelOtherPlaceholder')}
               maxLength={280}
               value={cancelOtherDetail}
               onChange={(e) => setCancelOtherDetail(e.target.value)}
@@ -405,8 +441,8 @@ export function ActiveTripActions({
                   const reason = tripCancelReasonForApi(cancelPreset, cancelOtherDetail)
                   const ok = await run(
                     () => driverPerformCancel(tripId, token, reason),
-                    'Cancelar viagem',
-                    { skipStartGate: true }
+                    t('actions.cancelTrip'),
+                    { skipStartGate: true, actionKey: 'cancelTrip' }
                   )
                   if (ok) {
                     setCancelPanelOpen(false)
@@ -418,7 +454,7 @@ export function ActiveTripActions({
               disabled={loading}
               className={`min-h-[44px] flex-1 ${BTN_SECONDARY_RADIUS} bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/90 disabled:opacity-50 touch-manipulation`}
             >
-              Confirmar cancelamento
+              {t('actions.cancelConfirm')}
             </button>
             <button
               type="button"
@@ -431,7 +467,7 @@ export function ActiveTripActions({
               disabled={loading}
               className={`min-h-[44px] flex-1 ${BTN_SECONDARY}`}
             >
-              Voltar
+              {t('common:back')}
             </button>
           </div>
         </div>

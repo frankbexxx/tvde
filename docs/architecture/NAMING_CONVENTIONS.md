@@ -93,7 +93,7 @@ trip.not_found
 driver.not_available
 ```
 
-A implementação de i18n **não faz parte** desta convenção; apenas a estrutura de chaves deve ser planeada.
+A implementação activa está em [`I18N.md`](I18N.md) (`i18next`, chaves `namespace:chave`, ex. `trip:status.ongoing`).
 
 ---
 

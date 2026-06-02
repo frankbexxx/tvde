@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth, type Role } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
@@ -45,8 +46,8 @@ import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
   mergeDriverPolledWithOverride,
   tripStateRank,
-  DRIVER_AVAILABLE_TRIP_STATUS_LABEL,
-  DRIVER_NEW_TRIP_LIST_HINT,
+  driverAvailableTripStatusLabel,
+  driverNewTripListHint,
   driverActiveTripUi,
   driverTripBadgeShort,
   historyStatusDotColor,
@@ -210,32 +211,34 @@ function setStoredOffline(offline: boolean) {
 
 /** §9.4 — barra sob o mapa (barra inferior activa): disponível → toque passa a offline. */
 function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void }) {
+  const { t } = useTranslation('driver')
   return (
     <button
       type="button"
       data-testid="driver-map-availability-pill"
       onClick={onGoOffline}
-      aria-label="Estás disponível. Toca para ficar offline."
+      aria-label={t('availability.onlineAria')}
       className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
     >
       <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-400/55" aria-hidden />
-      <span className="leading-snug truncate">Disponível — tocar para offline</span>
+      <span className="leading-snug truncate">{t('availability.onlineLabel')}</span>
     </button>
   )
 }
 
 /** §9.2 — com barra inferior, mapa em fundo mesmo offline; toque passa a disponível (mesmas regras que o toggle). */
 function DriverMapOfflinePill({ onGoOnline }: { onGoOnline: () => void }) {
+  const { t } = useTranslation('driver')
   return (
     <button
       type="button"
       data-testid="driver-map-offline-pill"
       onClick={onGoOnline}
-      aria-label="Estás offline. Toca para ficares disponível."
+      aria-label={t('availability.offlineAria')}
       className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
     >
       <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
-      <span className="leading-snug truncate">Offline — tocar para disponível</span>
+      <span className="leading-snug truncate">{t('availability.offlineLabel')}</span>
     </button>
   )
 }
@@ -256,18 +259,7 @@ function DriverShellAvailabilityInner({
     return <DriverMapAvailabilityPill onGoOffline={onGoOffline} />
   }
   if (mapTapGoesOnline) {
-    return (
-      <button
-        type="button"
-        data-testid="driver-map-offline-pill"
-        onClick={onGoOnline}
-        aria-label="Estás offline. Toca para ficares disponível."
-        className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
-      >
-        <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
-        <span className="leading-snug truncate">Offline — tocar para disponível</span>
-      </button>
-    )
+    return <DriverMapOfflinePill onGoOnline={onGoOnline} />
   }
   return <DriverMapOfflinePill onGoOnline={onGoOnline} />
 }
@@ -327,6 +319,8 @@ export function DriverDashboard() {
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
+  const availableTripLabel = driverAvailableTripStatusLabel()
+  const newTripHint = driverNewTripListHint()
 
   const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
   const driverBottomNav = isDriverBottomNavEnabled()
@@ -1546,10 +1540,10 @@ export function DriverDashboard() {
                         {filteredAvailable.map((t: TripAvailableItem) => (
                           <li key={t.trip_id}>
                             <RequestCard
-                              contextHint={DRIVER_NEW_TRIP_LIST_HINT}
+                              contextHint={newTripHint}
                               pickup={formatPickup(t.origin_lat, t.origin_lng)}
                               destination={formatDestination(t.destination_lat, t.destination_lng)}
-                              statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                              statusLabel={availableTripLabel}
                               vehicleCategoryLabel={(() => {
                                 const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
                                 return one ? driverVehicleCategoryLabel(one) : null
@@ -1872,7 +1866,7 @@ export function DriverDashboard() {
                           onClose={() => setSelectedOfferTripId(null)}
                         >
                           <RequestCard
-                            contextHint={DRIVER_NEW_TRIP_LIST_HINT}
+                            contextHint={newTripHint}
                             pickup={formatPickup(
                               selectedAvailableTrip.origin_lat,
                               selectedAvailableTrip.origin_lng
@@ -1881,7 +1875,7 @@ export function DriverDashboard() {
                               selectedAvailableTrip.destination_lat,
                               selectedAvailableTrip.destination_lng
                             )}
-                            statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                            statusLabel={availableTripLabel}
                             vehicleCategoryLabel={(() => {
                               const one = normalizeDriverVehicleCategory(
                                 selectedAvailableTrip.vehicle_category ?? undefined
@@ -2205,10 +2199,10 @@ export function DriverDashboard() {
                           {filteredAvailable.map((t: TripAvailableItem) => (
                             <li key={t.trip_id}>
                               <RequestCard
-                                contextHint={DRIVER_NEW_TRIP_LIST_HINT}
+                                contextHint={newTripHint}
                                 pickup={formatPickup(t.origin_lat, t.origin_lng)}
                                 destination={formatDestination(t.destination_lat, t.destination_lng)}
-                                statusLabel={DRIVER_AVAILABLE_TRIP_STATUS_LABEL}
+                                statusLabel={availableTripLabel}
                                 vehicleCategoryLabel={(() => {
                                   const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
                                   return one ? driverVehicleCategoryLabel(one) : null
