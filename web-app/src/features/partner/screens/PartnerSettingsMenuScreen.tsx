@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next'
 import { AppAppearanceSettings } from '../../settings/AppAppearanceSettings'
 import { AppRouteModeSwitch } from '../../settings/AppRouteModeSwitch'
 
@@ -6,11 +7,16 @@ type PartnerSettingsMenuScreenProps = {
 }
 
 export function PartnerSettingsMenuScreen({ onRefresh }: PartnerSettingsMenuScreenProps) {
+  const { t } = useTranslation('partner')
+
   return (
     <div className="space-y-4 text-sm text-foreground" data-testid="partner-settings-screen">
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Preferências do gestor de frota. Conta e sessão estão em{' '}
-        <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
+        <Trans
+          i18nKey="settingsMenu.intro"
+          ns="partner"
+          components={{ profile: <span className="font-medium text-foreground/90" /> }}
+        />
       </p>
       <AppAppearanceSettings />
       <AppRouteModeSwitch />
@@ -19,7 +25,7 @@ export function PartnerSettingsMenuScreen({ onRefresh }: PartnerSettingsMenuScre
         onClick={onRefresh}
         className="w-full min-h-11 rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation"
       >
-        Actualizar vista
+        {t('settingsMenu.refreshView')}
       </button>
     </div>
   )

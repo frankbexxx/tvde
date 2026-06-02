@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -20,14 +21,15 @@ import { isBackofficeStaffRole, useAuth } from '@/context/AuthContext'
 import { BetaPasswordChangeForm } from './BetaPasswordChangeForm'
 import { DRIVER_OPEN_ACCOUNT_EVENT } from '@/features/driver/driverShellEvents'
 
-function roleLabel(role: string): string {
-  if (role === 'driver') return 'Motorista'
-  if (isBackofficeStaffRole(role)) return 'Administrador'
-  if (role === 'partner') return 'Frota'
-  return 'Passageiro'
+function roleLabel(role: string, t: (key: string) => string): string {
+  if (role === 'driver') return t('roleDriver')
+  if (isBackofficeStaffRole(role)) return t('roleStaff')
+  if (role === 'partner') return t('rolePartner')
+  return t('rolePassenger')
 }
 
 export function ProfileButton() {
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 639px)')
   const { sessionPhone, sessionDisplayName, sessionRole, betaMode, token, logout } = useAuth()
@@ -42,19 +44,19 @@ export function ProfileButton() {
     <div className="mt-4 flex flex-col gap-4">
       {sessionDisplayName?.trim() ? (
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">Nome</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('profilePanel.name')}</p>
           <p className="text-base font-medium text-foreground break-words">{sessionDisplayName.trim()}</p>
         </div>
       ) : null}
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">Telemóvel</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('profilePanel.phone')}</p>
         <p className="text-base font-medium text-foreground break-all">
           {sessionPhone ?? '—'}
         </p>
       </div>
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">Papel</p>
-        <p className="text-base font-medium text-foreground">{roleLabel(sessionRole)}</p>
+        <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('profilePanel.role')}</p>
+        <p className="text-base font-medium text-foreground">{roleLabel(sessionRole, t)}</p>
       </div>
       {betaMode && token ? <BetaPasswordChangeForm token={token} /> : null}
       {betaMode ? (
@@ -67,7 +69,7 @@ export function ProfileButton() {
             setOpen(false)
           }}
         >
-          Sair
+          {t('logout')}
         </Button>
       ) : null}
     </div>
@@ -77,7 +79,7 @@ export function ProfileButton() {
     <Button
       variant="ghost"
       size="icon"
-      aria-label="Conta"
+      aria-label={t('profilePanel.accountAria')}
       className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
     >
       <UserIcon />
@@ -90,9 +92,9 @@ export function ProfileButton() {
         <DialogTrigger asChild>{trigger}</DialogTrigger>
         <DialogContent className="max-w-[min(100vw-1.5rem,380px)] max-h-[85dvh] overflow-y-auto rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Conta</DialogTitle>
+            <DialogTitle>{t('profilePanel.accountTitle')}</DialogTitle>
             <DialogDescription className="sr-only">
-              Dados da conta: nome, telemóvel, papel e palavra-passe em BETA. Terminar sessão aqui.
+              {t('profilePanel.accountDescription')}
             </DialogDescription>
           </DialogHeader>
           {body}
@@ -109,7 +111,7 @@ export function ProfileButton() {
         className="rounded-t-2xl min-h-[200px] max-h-[85dvh] overflow-y-auto safe-area-pb"
       >
         <SheetHeader>
-          <SheetTitle>Conta</SheetTitle>
+          <SheetTitle>{t('profilePanel.accountTitle')}</SheetTitle>
         </SheetHeader>
         {body}
       </SheetContent>

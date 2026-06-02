@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { usePolling } from '../../hooks/usePolling'
 import {
@@ -65,6 +66,7 @@ export function usePartnerWorkspace() {
 
 /** Menu + dados partilhados — montado no Layout para NAV-P-04 (deep routes). */
 export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation('partner')
   const { token } = useAuth()
   const {
     menuOpen,
@@ -107,11 +109,11 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
       setTrips(tr)
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao carregar dados da frota.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('workspace.loadError'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     void load()
@@ -143,7 +145,7 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
       setDiscoverSearched(true)
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Não foi possível pesquisar motoristas.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('workspace.searchError'))
     } finally {
       setDiscoverLoading(false)
     }
@@ -154,12 +156,12 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
     setError(null)
     try {
       await addDriverToFleet(driverUserId)
-      setDiscoverOk('Motorista adicionado à frota.')
+      setDiscoverOk(t('workspace.driverAdded'))
       await load()
       void runDiscovery()
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Não foi possível adicionar o motorista.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('workspace.addError'))
     }
   }
 
@@ -241,7 +243,7 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) {
-        setError('Exportação CSV falhou.')
+        setError(t('workspace.exportFailed'))
         return
       }
       const blob = await res.blob()
@@ -252,7 +254,7 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
       a.click()
       URL.revokeObjectURL(objectUrl)
     } catch {
-      setError('Exportação CSV falhou.')
+      setError(t('workspace.exportFailed'))
     }
   }
 

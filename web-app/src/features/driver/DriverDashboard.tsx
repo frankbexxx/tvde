@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { Link } from 'react-router-dom'
 import { useAuth, type Role } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
@@ -289,25 +290,24 @@ function formatDrivingDurationShort(sec: number): string {
   return `${h} h ${m} min`
 }
 
-function buildDriverWaitingHint(opts: {
-  categoryFilteredOutCount: number
-  silencedActiveCount: number
-  expiredAvailableCount: number
-  hasAnyCategoryAwareOffer: boolean
-}): string | null {
+function buildDriverWaitingHint(
+  t: TFunction<'driver'>,
+  opts: {
+    categoryFilteredOutCount: number
+    silencedActiveCount: number
+    expiredAvailableCount: number
+    hasAnyCategoryAwareOffer: boolean
+  },
+): string | null {
   const parts: string[] = []
   if (opts.categoryFilteredOutCount > 0 && opts.hasAnyCategoryAwareOffer) {
-    parts.push(
-      `Existem ${opts.categoryFilteredOutCount} viagem(ns) fora das tuas categorias activas.`
-    )
+    parts.push(t('mapHome.waitingHintCategory', { count: opts.categoryFilteredOutCount }))
   }
   if (opts.silencedActiveCount > 0) {
-    parts.push(
-      `${opts.silencedActiveCount} oferta(s) silenciada(s). Ver em Menu → Viagens.`
-    )
+    parts.push(t('mapHome.waitingHintSilenced', { count: opts.silencedActiveCount }))
   }
   if (opts.expiredAvailableCount > 0) {
-    parts.push(`${opts.expiredAvailableCount} oferta(s) expirada(s).`)
+    parts.push(t('mapHome.waitingHintExpired', { count: opts.expiredAvailableCount }))
   }
   if (parts.length === 0) return null
   return parts.join(' ')
@@ -315,6 +315,7 @@ function buildDriverWaitingHint(opts: {
 
 export function DriverDashboard() {
   useDia23LayoutProbe('driver')
+  const { t } = useTranslation('driver')
   const { token, sessionRole } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
@@ -439,9 +440,7 @@ export function DriverDashboard() {
   const handleDriverAvailabilityChange = useCallback(
     (checked: boolean) => {
       if (checked && effectiveDocsGate && !isDriverDocumentsReady(driverDocuments)) {
-        setToast(
-          'Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.'
-        )
+        setToast(t('mapHome.docsToastBlocked'))
         addLog('Bloqueado: documentos obrigatórios em falta', 'error')
         return
       }
@@ -450,7 +449,7 @@ export function DriverDashboard() {
       addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
       setStatus(checked ? 'Disponível' : 'Offline')
     },
-    [addLog, effectiveDocsGate, driverDocuments, setStatus]
+    [addLog, effectiveDocsGate, driverDocuments, setStatus, t]
   )
 
   /** Toque no mapa: ficar disponível (mesmas regras que a pill). */
@@ -557,13 +556,14 @@ export function DriverDashboard() {
 
   const driverWaitingHint = useMemo(
     () =>
-      buildDriverWaitingHint({
+      buildDriverWaitingHint(t, {
         categoryFilteredOutCount,
         silencedActiveCount,
         expiredAvailableCount,
         hasAnyCategoryAwareOffer,
       }),
     [
+      t,
       categoryFilteredOutCount,
       silencedActiveCount,
       expiredAvailableCount,
@@ -1345,22 +1345,22 @@ export function DriverDashboard() {
                           style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
                         >
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span>Localização indisponível — a usar posição aproximada.</span>
+                            <span>{t('mapHome.locationFallback')}</span>
                             <button
                               type="button"
                               onClick={retryGeolocation}
                               className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
                             >
-                              Tentar outra vez
+                              {t('mapHome.retryLocation')}
                             </button>
                           </div>
                         </div>
                       )}
                       {docsBlockedOffline ? (
                         <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
-                          <p className="font-medium text-foreground">Documentos em falta</p>
+                          <p className="font-medium text-foreground">{t('mapHome.docsMissingTitle')}</p>
                           <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
-                            Completa em Menu → Documentos para ficares disponível.
+                            {t('mapHome.docsMissingBody')}
                           </p>
                         </div>
                       ) : null}
@@ -1374,14 +1374,13 @@ export function DriverDashboard() {
                         >
                           {drivingCompliance.blocked ? (
                             <>
-                              <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
+                              <p className="font-semibold leading-snug">{t('mapHome.drivingHoursBlockedTitle')}</p>
                               <p className="mt-1 text-foreground/90 leading-snug">
-                                Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
-                                repouso ou o limite diário deixar de aplicar (dia civil, Lisboa).
+                                {t('mapHome.drivingHoursBlockedBody')}
                               </p>
                               {drivingCompliance.rest_until ? (
                                 <p className="mt-1 text-xs opacity-90">
-                                  Repouso até:{' '}
+                                  {t('mapHome.restUntil')}{' '}
                                   {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
                                     timeZone: 'Europe/Lisbon',
                                   })}
@@ -1390,13 +1389,19 @@ export function DriverDashboard() {
                             </>
                           ) : (
                             <>
-                              <p className="font-medium leading-snug">Aviso de tempo de condução</p>
+                              <p className="font-medium leading-snug">{t('mapHome.drivingHoursWarningTitle')}</p>
                               <p className="mt-1 text-foreground/85 leading-snug">
-                                Hoje acumulaste cerca de{' '}
-                                <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong>{' '}
-                                em viagem activa (máx. referência{' '}
-                                {formatDrivingDurationShort(drivingCompliance.max_seconds)} / dia civil, Lisboa). Evita
-                                aceitar serviços se estiveres perto do limite.
+                                <Trans
+                                  i18nKey="mapHome.drivingHoursWarningBody"
+                                  ns="driver"
+                                  values={{
+                                    duration: formatDrivingDurationShort(
+                                      drivingCompliance.active_seconds_today,
+                                    ),
+                                    max: formatDrivingDurationShort(drivingCompliance.max_seconds),
+                                  }}
+                                  components={{ strong: <strong /> }}
+                                />
                               </p>
                             </>
                           )}
@@ -1452,23 +1457,18 @@ export function DriverDashboard() {
                       ) : null}
                       {!isOnline && (
                         <div className={MAP_HINT_WARNING}>
-                          <p className="font-medium text-foreground">Sem ligação à internet</p>
-                          <p className="text-foreground/80 mt-1">
-                            Quando voltares a ficar online, a app volta a actualizar. Podes recarregar a página se
-                            precisares.
-                          </p>
+                          <p className="font-medium text-foreground">{t('mapHome.offlineInternetTitle')}</p>
+                          <p className="text-foreground/80 mt-1">{t('mapHome.offlineInternetBody')}</p>
                         </div>
                       )}
                       {pollEnabled && availablePollFault && (
                         <div className={MAP_HINT_WARNING}>
-                          Não foi possível actualizar a lista de viagens. A última informação mantém-se; voltamos a
-                          tentar automaticamente — verifica a ligação se persistir.
+                          {t('mapHome.pollAvailableFault')}
                         </div>
                       )}
                       {historyPollFault && (
                         <div className={MAP_HINT_WARNING_SM}>
-                          Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso
-                          persistir.
+                          {t('mapHome.pollHistoryFault')}
                         </div>
                       )}
                       {toast && (
@@ -1476,7 +1476,7 @@ export function DriverDashboard() {
                           <button
                             type="button"
                             className={MAP_DISMISS_BTN_WARNING}
-                            aria-label="Fechar aviso"
+                            aria-label={t('mapHome.dismissWarning')}
                             onClick={() => setToast(null)}
                           >
                             ×
@@ -1489,7 +1489,7 @@ export function DriverDashboard() {
                           <button
                             type="button"
                             className={MAP_DISMISS_BTN_ERROR}
-                            aria-label="Fechar mensagem de erro"
+                            aria-label={t('mapHome.dismissError')}
                             onClick={() => setError(null)}
                           >
                             ×
@@ -1499,7 +1499,7 @@ export function DriverDashboard() {
                       )}
                       {actionLoading && actionTakingLong ? (
                         <p className="text-center text-sm text-foreground/70" aria-live="polite">
-                          Ainda a processar… Se demorar muito, verifica a ligação.
+                          {t('actions.processing')}
                         </p>
                       ) : null}
                     </div>
@@ -1510,7 +1510,7 @@ export function DriverDashboard() {
                       aria-hidden
                     >
                       <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                        Toca no mapa para ficares disponível e activar o GPS
+                        {t('mapHome.mapTapHintGps')}
                       </span>
                     </div>
                   ) : null}
@@ -1519,7 +1519,7 @@ export function DriverDashboard() {
                   pollEnabled && availableLoading && available == null ? (
                     <div className={MAP_IDLE_PLACEHOLDER}>
                       <Spinner size="md" />
-                      <p className="text-xs text-foreground/80">A carregar viagens…</p>
+                      <p className="text-xs text-foreground/80">{t('mapHome.loadingTrips')}</p>
                     </div>
                   ) : hasAvailableTrips ? (
                     <div
@@ -1529,8 +1529,8 @@ export function DriverDashboard() {
                       <StatusHeader
                         label={
                           filteredAvailable.length === 1
-                            ? '1 viagem disponível'
-                            : `${filteredAvailable.length} viagens disponíveis`
+                            ? t('mapHome.tripAvailableOne')
+                            : t('mapHome.tripsAvailableMany', { count: filteredAvailable.length })
                         }
                         variant="idle"
                         emphasis="subdued"
@@ -1575,9 +1575,9 @@ export function DriverDashboard() {
                       id="driver-main-scroll"
                       className="rounded-md border border-border/60 bg-muted/15 px-2 py-1.5 text-center"
                     >
-                      <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
+                      <p className="text-xs font-medium text-foreground/90">{t('mapHome.waitingTitle')}</p>
                       <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
-                        {driverWaitingHint ?? 'Sem pedidos. Histórico em Menu → Viagens.'}
+                        {driverWaitingHint ?? t('mapHome.waitingNoRequests')}
                       </p>
                     </div>
                   )
@@ -1586,8 +1586,8 @@ export function DriverDashboard() {
             )}
             {offline && !driverBottomNav && (
               <div className={MAP_EMPTY_STATE}>
-                <p className="text-foreground/85 text-base">Estás offline.</p>
-                <p className="text-foreground/75 mt-2 text-sm">Activa a disponibilidade para veres o mapa.</p>
+                <p className="text-foreground/85 text-base">{t('mapHome.shellOfflineTitle')}</p>
+                <p className="text-foreground/75 mt-2 text-sm">{t('mapHome.offlineMapBody')}</p>
               </div>
             )}
             {!driverBottomNav ? (
@@ -1689,22 +1689,22 @@ export function DriverDashboard() {
                         style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
                       >
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                          <span>Localização indisponível — a usar posição aproximada.</span>
+                          <span>{t('mapHome.locationFallback')}</span>
                           <button
                             type="button"
                             onClick={retryGeolocation}
                             className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
                           >
-                            Tentar outra vez
+                            {t('mapHome.retryLocation')}
                           </button>
                         </div>
                       </div>
                     )}
                     {docsBlockedOffline ? (
                       <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
-                        <p className="font-medium text-foreground">Documentos em falta</p>
+                        <p className="font-medium text-foreground">{t('mapHome.docsMissingTitle')}</p>
                         <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
-                          Completa em Menu → Documentos para ficares disponível.
+                          {t('mapHome.docsMissingBody')}
                         </p>
                       </div>
                     ) : null}
@@ -1718,14 +1718,13 @@ export function DriverDashboard() {
                       >
                         {drivingCompliance.blocked ? (
                           <>
-                            <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
+                            <p className="font-semibold leading-snug">{t('mapHome.drivingHoursBlockedTitle')}</p>
                             <p className="mt-1 text-foreground/90 leading-snug">
-                              Não podes ficar disponível nem aceitar novas viagens até terminar o período de
-                              repouso ou o limite do dia (referência Lisboa) deixar de bloquear.
+                              {t('mapHome.drivingHoursBlockedBodyAlt')}
                             </p>
                             {drivingCompliance.rest_until ? (
                               <p className="mt-1 text-xs opacity-90">
-                                Repouso até:{' '}
+                                {t('mapHome.restUntil')}{' '}
                                 {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
                                   timeZone: 'Europe/Lisbon',
                                 })}
@@ -1734,12 +1733,19 @@ export function DriverDashboard() {
                           </>
                         ) : (
                           <>
-                            <p className="font-medium leading-snug">Aviso de tempo de condução</p>
+                            <p className="font-medium leading-snug">{t('mapHome.drivingHoursWarningTitle')}</p>
                             <p className="mt-1 text-foreground/85 leading-snug">
-                              Hoje: <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong>{' '}
-                              em viagem activa (tecto referência{' '}
-                              {formatDrivingDurationShort(drivingCompliance.max_seconds)} / dia, Lisboa). Se estiveres
-                              perto do limite, evita novas aceitações.
+                              <Trans
+                                i18nKey="mapHome.drivingHoursWarningBodyAlt"
+                                ns="driver"
+                                values={{
+                                  duration: formatDrivingDurationShort(
+                                    drivingCompliance.active_seconds_today,
+                                  ),
+                                  max: formatDrivingDurationShort(drivingCompliance.max_seconds),
+                                }}
+                                components={{ strong: <strong /> }}
+                              />
                             </p>
                           </>
                         )}
@@ -1792,23 +1798,18 @@ export function DriverDashboard() {
                     ) : null}
                     {!isOnline && (
                       <div className={MAP_HINT_WARNING}>
-                        <p className="font-medium text-foreground">Sem ligação à internet</p>
-                        <p className="text-foreground/80 mt-1">
-                          Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se
-                          precisares.
-                        </p>
+                        <p className="font-medium text-foreground">{t('mapHome.offlineInternetTitle')}</p>
+                        <p className="text-foreground/80 mt-1">{t('mapHome.offlineInternetBodyAlt')}</p>
                       </div>
                     )}
                     {pollEnabled && availablePollFault && (
                       <div className={MAP_HINT_WARNING}>
-                        Não foi possível actualizar a lista de viagens. A última informação mantém-se; voltamos a
-                        tentar automaticamente — verifica a ligação se persistir.
+                        {t('mapHome.pollAvailableFault')}
                       </div>
                     )}
                     {historyPollFault && (
                       <div className={MAP_HINT_WARNING_SM}>
-                        Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso
-                        persistir.
+                        {t('mapHome.pollHistoryFault')}
                       </div>
                     )}
                     {toast && (
@@ -1816,7 +1817,7 @@ export function DriverDashboard() {
                         <button
                           type="button"
                           className={MAP_DISMISS_BTN_WARNING}
-                          aria-label="Fechar aviso"
+                          aria-label={t('mapHome.dismissWarning')}
                           onClick={() => setToast(null)}
                         >
                           ×
@@ -1829,7 +1830,7 @@ export function DriverDashboard() {
                         <button
                           type="button"
                           className={MAP_DISMISS_BTN_ERROR}
-                          aria-label="Fechar mensagem de erro"
+                          aria-label={t('mapHome.dismissError')}
                           onClick={() => setError(null)}
                         >
                           ×
@@ -1839,7 +1840,7 @@ export function DriverDashboard() {
                     )}
                     {actionLoading && actionTakingLong ? (
                       <p className="text-center text-sm text-foreground/70" aria-live="polite">
-                        Ainda a processar… Se demorar muito, verifica a ligação.
+                        {t('actions.processing')}
                       </p>
                     ) : null}
                   </div>
@@ -1920,15 +1921,14 @@ export function DriverDashboard() {
                         <div className={`${INFO_BOX_MAP_HINT} px-2 py-1.5 text-center`}>
                           <div className="flex flex-col items-center justify-center gap-1.5 py-1 text-foreground/80">
                             <Spinner size="md" />
-                            <p className="text-xs">A carregar viagens…</p>
+                            <p className="text-xs">{t('mapHome.loadingTrips')}</p>
                           </div>
                         </div>
                       ) : (
                         <div className={`${INFO_BOX_MAP_HINT} px-2 py-1.5 text-center`}>
-                          <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
+                          <p className="text-xs font-medium text-foreground/90">{t('mapHome.waitingTitle')}</p>
                           <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
-                            {driverWaitingHint ??
-                              'Sem viagens disponíveis. Histórico em Menu → Viagens.'}
+                            {driverWaitingHint ?? t('mapHome.waitingEmptyHistory')}
                           </p>
                         </div>
                       )}
@@ -1941,7 +1941,7 @@ export function DriverDashboard() {
                     aria-hidden
                   >
                     <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                      Toca no mapa para ficares disponível
+                      {t('mapHome.mapTapHint')}
                     </span>
                   </div>
                 ) : null}
@@ -1968,19 +1968,22 @@ export function DriverDashboard() {
                   style={{ borderLeftColor: 'hsl(var(--color-flag-yellow, 42 100% 54%))' }}
                 >
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span>Localização indisponível — a usar posição aproximada.</span>
+                    <span>{t('mapHome.locationFallback')}</span>
                     <button
                       type="button"
                       onClick={retryGeolocation}
                       className="inline-flex items-center min-h-[28px] px-2.5 rounded-md border border-warning/50 bg-warning/10 hover:bg-warning/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-warning/60 focus-visible:ring-offset-2 text-warning font-medium text-xs touch-manipulation transition-colors"
                     >
-                      Tentar outra vez
+                      {t('mapHome.retryLocation')}
                     </button>
                   </div>
                   {import.meta.env.DEV ? (
                     <div className="mt-1">
-                      Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em{' '}
-                      <strong>Configuração</strong> (ícone de engrenagem).
+                      <Trans
+                        i18nKey="mapHome.devLocationHint"
+                        ns="driver"
+                        components={{ strong: <strong /> }}
+                      />
                     </div>
                   ) : null}
                 </div>
@@ -1996,14 +1999,13 @@ export function DriverDashboard() {
                 >
                   {drivingCompliance.blocked ? (
                     <>
-                      <p className="font-semibold leading-snug">Tempo de condução / repouso</p>
+                      <p className="font-semibold leading-snug">{t('mapHome.drivingHoursBlockedTitle')}</p>
                       <p className="mt-1 text-foreground/90 leading-snug">
-                        Não podes ficar disponível nem aceitar novas viagens até cumprires o período de
-                        repouso ou o limite diário deixar de aplicar (dia civil, Lisboa).
+                        {t('mapHome.drivingHoursBlockedBody')}
                       </p>
                       {drivingCompliance.rest_until ? (
                         <p className="mt-1 text-xs opacity-90">
-                          Repouso até:{' '}
+                          {t('mapHome.restUntil')}{' '}
                           {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
                             timeZone: 'Europe/Lisbon',
                           })}
@@ -2012,12 +2014,17 @@ export function DriverDashboard() {
                     </>
                   ) : (
                     <>
-                      <p className="font-medium leading-snug">Aviso de tempo de condução</p>
+                      <p className="font-medium leading-snug">{t('mapHome.drivingHoursWarningTitle')}</p>
                       <p className="mt-1 text-foreground/85 leading-snug">
-                        Hoje acumulaste cerca de{' '}
-                        <strong>{formatDrivingDurationShort(drivingCompliance.active_seconds_today)}</strong> em
-                        viagem activa (máx. referência {formatDrivingDurationShort(drivingCompliance.max_seconds)} /
-                        dia civil, Lisboa). Evita aceitar serviços se estiveres perto do limite.
+                        <Trans
+                          i18nKey="mapHome.drivingHoursWarningBody"
+                          ns="driver"
+                          values={{
+                            duration: formatDrivingDurationShort(drivingCompliance.active_seconds_today),
+                            max: formatDrivingDurationShort(drivingCompliance.max_seconds),
+                          }}
+                          components={{ strong: <strong /> }}
+                        />
                       </p>
                     </>
                   )}
@@ -2069,17 +2076,14 @@ export function DriverDashboard() {
 
               {!isOnline && (
                 <div className={MAP_HINT_WARNING}>
-                  <p className="font-medium text-foreground">Sem ligação à internet</p>
-                  <p className="text-foreground/80 mt-1">
-                    Quando voltares a ficar online, a app volta a atualizar. Podes recarregar a página se precisares.
-                  </p>
+                  <p className="font-medium text-foreground">{t('mapHome.offlineInternetTitle')}</p>
+                  <p className="text-foreground/80 mt-1">{t('mapHome.offlineInternetBodyAlt')}</p>
                 </div>
               )}
 
               {pollEnabled && availablePollFault && (
                 <div className={MAP_HINT_WARNING}>
-                  Não foi possível atualizar a lista de viagens. A última informação mantém-se; voltamos a tentar
-                  automaticamente — verifica a ligação se persistir.
+                  {t('mapHome.pollAvailableFaultAlt')}
                 </div>
               )}
 
@@ -2087,11 +2091,11 @@ export function DriverDashboard() {
                 {!activeTripId ? (
                   driverBottomNav ? null : (
                     <Toggle
-                      label="Estado"
+                      label={t('mapHome.toggleLabel')}
                       checked={!offline}
                       onChange={handleDriverAvailabilityChange}
-                      onLabel="Disponível"
-                      offLabel="Offline"
+                      onLabel={t('mapHome.toggleOn')}
+                      offLabel={t('mapHome.toggleOff')}
                     />
                   )
                 ) : null}
@@ -2101,7 +2105,7 @@ export function DriverDashboard() {
                     <button
                       type="button"
                       className={MAP_DISMISS_BTN_WARNING}
-                      aria-label="Fechar aviso"
+                      aria-label={t('mapHome.dismissWarning')}
                       onClick={() => setToast(null)}
                     >
                       ×
@@ -2115,7 +2119,7 @@ export function DriverDashboard() {
                     <button
                       type="button"
                       className={MAP_DISMISS_BTN_ERROR}
-                      aria-label="Fechar mensagem de erro"
+                      aria-label={t('mapHome.dismissError')}
                       onClick={() => setError(null)}
                     >
                       ×
@@ -2126,7 +2130,7 @@ export function DriverDashboard() {
 
                 {actionLoading && actionTakingLong && (
                   <p className="text-center text-sm text-foreground/70" aria-live="polite">
-                    Ainda a processar… Se demorar muito, verifica a ligação.
+                    {t('actions.processing')}
                   </p>
                 )}
 
@@ -2157,7 +2161,7 @@ export function DriverDashboard() {
                         aria-hidden
                       >
                         <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                          Toca no mapa para ficares disponível e activar o GPS
+                          {t('mapHome.mapTapHintGps')}
                         </span>
                       </div>
                     ) : null}
@@ -2176,8 +2180,8 @@ export function DriverDashboard() {
 
                 {offline && !(driverBottomNav && !activeTripId) && (
                   <div className="py-12 text-center">
-                    <p className="text-foreground/85 text-lg">Estás offline.</p>
-                    <p className="text-foreground/75 mt-2">Ativa a disponibilidade para receber viagens.</p>
+                    <p className="text-foreground/85 text-lg">{t('mapHome.shellOfflineTitle')}</p>
+                    <p className="text-foreground/75 mt-2">{t('mapHome.shellOfflineBody')}</p>
                   </div>
                 )}
 
@@ -2188,8 +2192,8 @@ export function DriverDashboard() {
                         <StatusHeader
                           label={
                             filteredAvailable.length === 1
-                              ? '1 viagem disponível'
-                              : `${filteredAvailable.length} viagens disponíveis`
+                              ? t('mapHome.tripAvailableOne')
+                              : t('mapHome.tripsAvailableMany', { count: filteredAvailable.length })
                           }
                           variant="idle"
                           emphasis="subdued"
@@ -2232,7 +2236,7 @@ export function DriverDashboard() {
                     ) : pollEnabled && availableLoading && available == null ? (
                       <>
                         <StatusHeader
-                          label="À espera de viagens"
+                          label={t('mapHome.waitingTitle')}
                           variant="idle"
                           emphasis="subdued"
                           compact
@@ -2244,10 +2248,9 @@ export function DriverDashboard() {
                       </>
                     ) : (
                       <div className="rounded-md border border-border/60 bg-muted/15 px-2 py-1.5 text-center">
-                        <p className="text-xs font-medium text-foreground/90">À espera de viagens</p>
+                        <p className="text-xs font-medium text-foreground/90">{t('mapHome.waitingTitle')}</p>
                         <p className="mt-0.5 text-[11px] leading-snug text-foreground/65">
-                          {driverWaitingHint ??
-                            'Sem viagens disponíveis. Fica disponível para receberes novos pedidos.'}
+                          {driverWaitingHint ?? t('mapHome.waitingEmpty')}
                         </p>
                       </div>
                     )}
@@ -2256,40 +2259,42 @@ export function DriverDashboard() {
 
                 {historyPollFault && (
                   <div className={MAP_HINT_WARNING_SM}>
-                    Não foi possível atualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
+                    {t('mapHome.pollHistoryFaultAlt')}
                   </div>
                 )}
 
                 {!hasAvailableTrips && history && history.length > 0 && !driverMapStageLayout && (
                   <section className="pt-6 mt-6 border-t border-border">
-                    <h2 className="text-base font-medium text-foreground/75 mb-3">Histórico</h2>
+                    <h2 className="text-base font-medium text-foreground/75 mb-3">{t('opsMenu.historySectionTitle')}</h2>
                     <ul className="space-y-2">
-                      {history.slice(0, 5).map((t: TripHistoryItem) => (
+                      {history.slice(0, 5).map((trip: TripHistoryItem) => (
                         <li
-                          key={t.trip_id}
+                          key={trip.trip_id}
                           className="flex flex-col gap-1 py-2 border-b border-border last:border-0 transition-opacity duration-150"
                         >
                           <div className="flex justify-between items-center gap-3">
                             <span className="flex items-center gap-2 text-base text-foreground/85 min-w-0">
                               <span
                                 aria-hidden="true"
-                                className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
+                                className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(trip.status)}`}
                               />
                               <span className="truncate">
-                                {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                                {formatDestination(t.destination_lat, t.destination_lng)}
+                                {formatPickup(trip.origin_lat, trip.origin_lng)} →{' '}
+                                {formatDestination(trip.destination_lat, trip.destination_lng)}
                               </span>
                             </span>
                             <div className="shrink-0 text-right">
-                              <p className="font-medium text-foreground">{driverHistoryPriceLabel(t)}</p>
-                              {formatMoneyEur(t.driver_payout) ? (
+                              <p className="font-medium text-foreground">{driverHistoryPriceLabel(trip)}</p>
+                              {formatMoneyEur(trip.driver_payout) ? (
                                 <p className="text-[11px] text-muted-foreground">
-                                  Parte motorista: {formatMoneyEur(t.driver_payout)}
+                                  {t('opsMenu.historyDriverShare', {
+                                    amount: formatMoneyEur(trip.driver_payout),
+                                  })}
                                 </p>
                               ) : null}
                             </div>
                           </div>
-                          <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
+                          <CancellationReasonMuted reason={trip.cancellation_reason} className="mt-0" />
                         </li>
                       ))}
                     </ul>
@@ -2333,6 +2338,7 @@ function ActiveTripSummary({
   /** Resumo fino por cima do mapa cheio (FIX-007). */
   compact?: boolean
 }) {
+  const { t } = useTranslation('driver')
   const internalPoll = useDriverActiveTripPoll(
     sharedPoll ? null : tripId,
     sharedPoll ? null : token,
@@ -2465,8 +2471,8 @@ function ActiveTripSummary({
           estimateFallback="4–6"
           priceCaption={
             displayStatus === 'completed' && effectiveTrip.final_price != null
-              ? 'Preço final'
-              : 'Estimativa (indicativa)'
+              ? t('opsMenu.historyMoney.finalPrice')
+              : t('opsMenu.historyMoney.estimate')
           }
         />
       ) : effectiveTrip && compact ? (
@@ -2537,30 +2543,42 @@ function weekHasDriverPayout(
 }
 
 /** Preço / payout / comissão por linha de histórico (menu motorista). */
-function DriverHistoryTripMoney({ t }: { t: TripHistoryItem }) {
-  const payout = formatMoneyEur(t.driver_payout)
-  const commission = formatMoneyEur(t.commission_amount)
+function DriverHistoryTripMoney({ trip }: { trip: TripHistoryItem }) {
+  const { t } = useTranslation('driver')
+  const payout = formatMoneyEur(trip.driver_payout)
+  const commission = formatMoneyEur(trip.commission_amount)
+  const priceLabel =
+    trip.status === 'completed'
+      ? t('opsMenu.historyMoney.finalPrice')
+      : t('opsMenu.historyMoney.estimate')
   return (
     <>
       <p className="text-[11px] text-foreground/85">
-        {t.status === 'completed' ? 'Preço final' : 'Estimativa'}: {driverHistoryPriceLabel(t)}
+        {t('opsMenu.historyMoney.priceLine', {
+          label: priceLabel,
+          price: driverHistoryPriceLabel(trip),
+        })}
       </p>
       {payout ? (
-        <p className="text-[11px] text-foreground/75">Parte motorista (payout): {payout}</p>
+        <p className="text-[11px] text-foreground/75">
+          {t('opsMenu.historyMoney.driverPayout', { amount: payout })}
+        </p>
       ) : null}
-      {t.status === 'completed' && commission ? (
-        <p className="text-[10px] text-muted-foreground">Comissão plataforma: {commission}</p>
+      {trip.status === 'completed' && commission ? (
+        <p className="text-[10px] text-muted-foreground">
+          {t('opsMenu.historyMoney.platformCommission', { amount: commission })}
+        </p>
       ) : null}
     </>
   )
 }
 
-function zoneArrivedErrorMessagePt(detail: string): string {
+function zoneArrivedErrorMessage(t: TFunction<'driver'>, detail: string): string {
   if (detail === 'driver_location_required_for_zone_arrived') {
-    return 'Sem posição GPS recente no servidor — espera uns segundos ou abre o mapa e tenta outra vez.'
+    return t('opsMenu.zones.errors.locationRequired')
   }
   if (detail === 'driver_outside_zone_for_arrived') {
-    return 'A tua posição está longe da zona seleccionada. Aproxima-te ou cancela e corrige o pedido.'
+    return t('opsMenu.zones.errors.outsideZone')
   }
   return detail
 }
@@ -2626,6 +2644,7 @@ function DriverOperationsMenu({
   onToggleDriverDocsGate: (enabled: boolean) => void
   onNavigateSection?: (screen: DriverMenuScreen) => void
 }) {
+  const { t } = useTranslation('driver')
   const { isAdmin, token } = useAuth()
   const [historyVisible, setHistoryVisible] = useState(5)
   const [historyDetailTripId, setHistoryDetailTripId] = useState<string | null>(null)
@@ -2717,7 +2736,7 @@ function DriverOperationsMenu({
         setZoneCatalogErr(null)
       } catch {
         setZoneCatalog(null)
-        setZoneCatalogErr('Catálogo de zonas indisponível — usa o ID manual se precisares.')
+        setZoneCatalogErr(t('opsMenu.zones.catalogUnavailable'))
       }
       try {
         const custom = await getDriverZoneCustomZones(token)
@@ -2726,18 +2745,18 @@ function DriverOperationsMenu({
         setZoneCustomIds([])
       }
       if (showTapFeedback) {
-        sonnerToast.success('Zonas actualizadas.', { duration: 2500 })
+        sonnerToast.success(t('opsMenu.zones.refreshed'), { duration: 2500 })
       }
     } catch (e) {
       const detail =
         e !== null && typeof e === 'object' && 'detail' in e
           ? String((e as { detail: unknown }).detail)
-          : 'Erro ao carregar zonas'
+          : t('opsMenu.zones.loadError')
       setZoneLoadErr(detail)
     } finally {
       if (showTapFeedback) setZoneRefreshing(false)
     }
-  }, [token])
+  }, [token, t])
 
   useEffect(() => {
     void reloadZones()
@@ -2766,12 +2785,12 @@ function DriverOperationsMenu({
       if (zoneCatalogIds.has(id.toLowerCase())) continue
       items.push({
         id,
-        label: `${id} (custom)`,
+        label: `${id} ${t('opsMenu.zones.customSuffix')}`,
         custom: true,
       })
     }
     return items
-  }, [zoneCatalog, zoneCustomIds, zoneCatalogIds])
+  }, [zoneCatalog, zoneCustomIds, zoneCatalogIds, t])
 
   const selectedZoneCatalogItem = useMemo(() => {
     const zid = zoneNewZoneId.trim().toLowerCase()
@@ -2783,22 +2802,22 @@ function DriverOperationsMenu({
     if (!token) return
     const zid = zoneNewZoneId.trim().toLowerCase()
     if (!zid) {
-      sonnerToast.error('Indica um ID de zona para guardar.')
+      sonnerToast.error(t('opsMenu.zones.toast.zoneIdRequired'))
       return
     }
     if (zoneCatalogIds.has(zid)) {
-      sonnerToast.error('Essa zona já existe no catálogo.')
+      sonnerToast.error(t('opsMenu.zones.toast.catalogExists'))
       return
     }
     if (zoneCustomIds.includes(zid)) {
-      sonnerToast.error('Essa zona custom já está guardada.')
+      sonnerToast.error(t('opsMenu.zones.toast.customSaved'))
       return
     }
     setZoneBusy(true)
     void postDriverZoneCustomZone(token, zid)
       .then(() => {
         setZoneCustomIds((prev) => Array.from(new Set([...prev, zid])).slice(0, 30))
-        sonnerToast.success(`Zona custom «${zid}» guardada.`)
+        sonnerToast.success(t('opsMenu.zones.toast.customSavedSuccess', { id: zid }))
       })
       .catch((e: unknown) => {
         const detail =
@@ -2806,14 +2825,14 @@ function DriverOperationsMenu({
             ? String((e as { detail: unknown }).detail)
             : ''
         if (detail === 'custom_zone_conflicts_catalog') {
-          sonnerToast.error('Essa zona já existe no catálogo oficial.')
+          sonnerToast.error(t('opsMenu.zones.toast.catalogOfficialExists'))
           return
         }
         if (detail === 'custom_zone_limit_reached') {
-          sonnerToast.error('Atingiste o limite de 30 zonas custom.')
+          sonnerToast.error(t('opsMenu.zones.toast.customLimit'))
           return
         }
-        sonnerToast.error('Não foi possível guardar a zona custom.')
+        sonnerToast.error(t('opsMenu.zones.toast.customSaveFailed'))
       })
       .finally(() => setZoneBusy(false))
   }
@@ -2822,22 +2841,22 @@ function DriverOperationsMenu({
     if (!token) return
     const zid = zoneNewZoneId.trim().toLowerCase()
     if (!zid || !zoneCustomIds.includes(zid)) {
-      sonnerToast.error('A zona actual não é custom guardada.')
+      sonnerToast.error(t('opsMenu.zones.toast.notCustomSaved'))
       return
     }
     setZoneBusy(true)
     void deleteDriverZoneCustomZone(token, zid)
       .then(() => {
         setZoneCustomIds((prev) => prev.filter((id) => id !== zid))
-        sonnerToast.success(`Zona custom «${zid}» removida.`)
+        sonnerToast.success(t('opsMenu.zones.toast.customRemoved', { id: zid }))
       })
       .catch((e: unknown) => {
         const detail =
           e !== null && typeof e === 'object' && 'detail' in e
             ? String((e as { detail: unknown }).detail)
-            : 'Não foi possível remover a zona custom.'
+            : t('opsMenu.zones.toast.customRemoveFailed')
         if (detail === 'custom_zone_not_found') {
-          sonnerToast.error('Essa zona custom já não existe no servidor.')
+          sonnerToast.error(t('opsMenu.zones.toast.customNotOnServer'))
           return
         }
         sonnerToast.error(detail)
@@ -2856,15 +2875,20 @@ function DriverOperationsMenu({
             const serverEstimate = await postDriverZoneEtaEstimate(token, zid)
             const etaServerMin = Math.max(1, Math.min(2880, Math.round(serverEstimate.eta_seconds_baseline / 60)))
             setZoneEtaMinutes(etaServerMin)
-            setZoneEtaHint(`Servidor: ~${etaServerMin} min (${serverEstimate.distance_km.toFixed(1)} km em linha reta).`)
-            if (showToast) sonnerToast.success(`ETA estimado no servidor (~${etaServerMin} min).`)
+            setZoneEtaHint(
+              t('opsMenu.zones.etaHint.server', {
+                minutes: etaServerMin,
+                km: serverEstimate.distance_km.toFixed(1),
+              })
+            )
+            if (showToast) sonnerToast.success(t('opsMenu.zones.toast.etaServer', { minutes: etaServerMin }))
             return
           } catch {
             // Fallback below (OSRM/haversine) when server estimate is unavailable for this zone/context.
           }
         }
         if (!driverLocationForZones) {
-          if (showToast) sonnerToast.error('Sem posição actual para estimar ETA.')
+          if (showToast) sonnerToast.error(t('opsMenu.zones.toast.noLocationForEta'))
           return
         }
         let target:
@@ -2895,7 +2919,7 @@ function DriverOperationsMenu({
         }
 
         if (!target) {
-          if (showToast) sonnerToast.error('Não consegui localizar esta zona para calcular ETA.')
+          if (showToast) sonnerToast.error(t('opsMenu.zones.toast.zoneNotFoundForEta'))
           return
         }
         const meta = await getOsrmRouteMeta(driverLocationForZones, target)
@@ -2904,15 +2928,23 @@ function DriverOperationsMenu({
         if (meta && Number.isFinite(meta.durationSec) && meta.durationSec > 0) {
           etaMin = Math.round(meta.durationSec / 60)
           source = 'route'
-          setZoneEtaHint(geocodeHint ? `${geocodeHint} · Rota: ~${etaMin} min (OSRM).` : `Rota: ~${etaMin} min (OSRM).`)
+          setZoneEtaHint(
+            geocodeHint
+              ? t('opsMenu.zones.etaHint.geocodeRoute', { geocode: geocodeHint, minutes: etaMin })
+              : t('opsMenu.zones.etaHint.route', { minutes: etaMin })
+          )
         } else {
           const km = haversineKm(driverLocationForZones, target)
           etaMin = Math.round((km / 45) * 60 * 1.25)
           source = 'fallback'
           setZoneEtaHint(
             geocodeHint
-              ? `${geocodeHint} · Fallback: ~${etaMin} min (${km.toFixed(1)} km em linha reta).`
-              : `Fallback: ~${etaMin} min (${km.toFixed(1)} km em linha reta).`
+              ? t('opsMenu.zones.etaHint.geocodeFallback', {
+                  geocode: geocodeHint,
+                  minutes: etaMin,
+                  km: km.toFixed(1),
+                })
+              : t('opsMenu.zones.etaHint.fallback', { minutes: etaMin, km: km.toFixed(1) })
           )
         }
         etaMin = Math.max(1, Math.min(2880, etaMin))
@@ -2920,15 +2952,15 @@ function DriverOperationsMenu({
         if (showToast) {
           sonnerToast.success(
             source === 'route'
-              ? `ETA atualizado automaticamente (~${etaMin} min).`
-              : `ETA estimado por distância (~${etaMin} min).`
+              ? t('opsMenu.zones.toast.etaUpdatedRoute', { minutes: etaMin })
+              : t('opsMenu.zones.toast.etaUpdatedDistance', { minutes: etaMin })
           )
         }
       } finally {
         setZoneEtaAutoBusy(false)
       }
     },
-    [driverLocationForZones, selectedZoneCatalogItem, token, zoneNewZoneId]
+    [driverLocationForZones, selectedZoneCatalogItem, token, zoneNewZoneId, t]
   )
 
   useEffect(() => {
@@ -2970,22 +3002,22 @@ function DriverOperationsMenu({
     const km = hit?.arrived_max_km
     if (km == null || typeof km !== 'number' || Number.isNaN(km)) return null
     const rounded = Math.max(1, Math.round(km))
-    return `O «Cheguei» usa a última posição no servidor face ao centro da zona (até ~${rounded} km). Mantém o GPS activo.`
-  }, [zoneSession, zoneCatalog])
+    return t('opsMenu.zones.arrivedGateHint', { km: rounded })
+  }, [zoneSession, zoneCatalog, t])
   const zoneStateLabel =
     zoneSession == null
       ? null
       : zoneSession.status === 'open' && !zoneSession.arrived_at
-        ? 'A caminho da zona-alvo'
+        ? t('opsMenu.zones.stateHeading')
         : zoneSession.status === 'open' && zoneSession.arrived_at
-          ? 'Em zona — o uso conta na 1.ª viagem concluída aqui'
+          ? t('opsMenu.zones.stateInZone')
           : zoneSession.status
 
   const handleCreateZoneSession = async () => {
     if (!token || zoneBusy) return
     const zid = zoneNewZoneId.trim()
     if (!zid) {
-      sonnerToast.error('Indica um ID de zona.')
+      sonnerToast.error(t('opsMenu.zones.toast.zoneIdRequiredSession'))
       return
     }
     const etaSec = Math.min(86400 * 2, Math.max(60, Math.round(zoneEtaMinutes * 60)))
@@ -2998,12 +3030,12 @@ function DriverOperationsMenu({
       })
       setZoneSession(s)
       setZoneBudget(await getDriverZoneBudgetToday(token))
-      sonnerToast.success('Pedido de mudança de zona registado.')
+      sonnerToast.success(t('opsMenu.zones.toast.sessionRegistered'))
     } catch (e) {
       const detail =
         e !== null && typeof e === 'object' && 'detail' in e
           ? String((e as { detail: unknown }).detail)
-          : 'Erro'
+          : t('opsMenu.genericError')
       sonnerToast.error(detail)
     } finally {
       setZoneBusy(false)
@@ -3016,13 +3048,13 @@ function DriverOperationsMenu({
     try {
       const s = await postDriverZoneSessionArrived(token, zoneSession.id)
       setZoneSession(s)
-      sonnerToast.success('Entrada na zona registada.')
+      sonnerToast.success(t('opsMenu.zones.toast.arrivedRegistered'))
     } catch (e) {
       const detail =
         e !== null && typeof e === 'object' && 'detail' in e
           ? String((e as { detail: unknown }).detail)
-          : 'Erro'
-      sonnerToast.error(zoneArrivedErrorMessagePt(detail))
+          : t('opsMenu.genericError')
+      sonnerToast.error(zoneArrivedErrorMessage(t, detail))
     } finally {
       setZoneBusy(false)
     }
@@ -3030,19 +3062,19 @@ function DriverOperationsMenu({
 
   const handleZoneCancel = async () => {
     if (!token || !zoneSession || zoneBusy) return
-    if (!window.confirm('Cancelar este pedido de mudança de zona?')) return
+    if (!window.confirm(t('opsMenu.zones.toast.cancelConfirm'))) return
     setZoneBusy(true)
     try {
       await postDriverZoneSessionCancel(token, zoneSession.id, null)
       setZoneSession(null)
       setZoneExtensionReason('')
       setZoneBudget(await getDriverZoneBudgetToday(token))
-      sonnerToast.success('Pedido cancelado.')
+      sonnerToast.success(t('opsMenu.zones.toast.cancelled'))
     } catch (e) {
       const detail =
         e !== null && typeof e === 'object' && 'detail' in e
           ? String((e as { detail: unknown }).detail)
-          : 'Erro'
+          : t('opsMenu.genericError')
       sonnerToast.error(detail)
     } finally {
       setZoneBusy(false)
@@ -3053,7 +3085,7 @@ function DriverOperationsMenu({
     if (!token || !zoneSession || zoneBusy) return
     const reason = zoneExtensionReason.trim()
     if (reason.length < 3) {
-      sonnerToast.error('Explica o motivo em pelo menos 3 caracteres.')
+      sonnerToast.error(t('opsMenu.zones.toast.extensionReasonMin'))
       return
     }
     setZoneBusy(true)
@@ -3061,12 +3093,12 @@ function DriverOperationsMenu({
       const s = await postDriverZoneSessionRequestExtension(token, zoneSession.id, reason)
       setZoneSession(s)
       setZoneExtensionReason('')
-      sonnerToast.success('Pedido de mais tempo enviado ao partner.')
+      sonnerToast.success(t('opsMenu.zones.toast.extensionSent'))
     } catch (e) {
       const detail =
         e !== null && typeof e === 'object' && 'detail' in e
           ? String((e as { detail: unknown }).detail)
-          : 'Erro'
+          : t('opsMenu.genericError')
       sonnerToast.error(detail)
     } finally {
       setZoneBusy(false)
@@ -3088,13 +3120,16 @@ function DriverOperationsMenu({
   const showDocs = section === 'docs'
 
   return (
-    <section className="space-y-4" data-testid="driver-ops-menu" aria-label="Menu do motorista">
+    <section className="space-y-4" data-testid="driver-ops-menu" aria-label={t('opsMenu.ariaLabel')}>
       {!hideHeader ? (
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-base font-semibold text-foreground">Menu do motorista</h2>
+            <h2 className="text-base font-semibold text-foreground">{t('opsMenu.title')}</h2>
             <p className="text-sm text-foreground/75">
-              {sessionDisplayName ?? 'Motorista'} · canceladas após aceitar: {cancelRate}%
+              {t('opsMenu.headerSubtitle', {
+                name: sessionDisplayName ?? t('opsMenu.defaultName'),
+                rate: cancelRate,
+              })}
             </p>
           </div>
           <div className="flex flex-col items-end gap-2 shrink-0">
@@ -3105,7 +3140,7 @@ function DriverOperationsMenu({
                 onClick={() => onCloseMenu()}
                 className={BTN_SECONDARY_SM}
               >
-                Fechar
+                {t('opsMenu.close')}
               </button>
             ) : null}
           </div>
@@ -3117,46 +3152,42 @@ function DriverOperationsMenu({
           id="driver-menu-earnings"
           className={`scroll-mt-6 ${MENU_PANEL}`}
         >
-          <p className="text-sm font-medium text-foreground">Rendimentos</p>
+          <p className="text-sm font-medium text-foreground">{t('opsMenu.earnings.title')}</p>
           <p className="text-xs text-muted-foreground leading-snug">
-            Soma do <span className="font-medium text-foreground/85">preço final</span> das viagens concluídas na
-            semana. A linha «Parte motorista» aparece quando a API envia payout por viagem.
+            <Trans i18nKey="opsMenu.earnings.intro" ns="driver" components={{ strong: <strong /> }} />
           </p>
           <div className="grid grid-cols-2 gap-2">
             <div className={MENU_CARD}>
-              <p className="text-[11px] text-foreground/70">Hoje</p>
+              <p className="text-[11px] text-foreground/70">{t('opsMenu.earnings.today')}</p>
               <p className="text-base font-semibold text-foreground">{todayRevenue.toFixed(2)} €</p>
             </div>
             <div className={MENU_CARD}>
-              <p className="text-[11px] text-foreground/70">Este mês</p>
+              <p className="text-[11px] text-foreground/70">{t('opsMenu.earnings.thisMonth')}</p>
               <p className="text-base font-semibold text-foreground">{monthRevenue.toFixed(2)} €</p>
             </div>
             <div className={MENU_CARD}>
-              <p className="text-[11px] text-foreground/70">Semana atual</p>
+              <p className="text-[11px] text-foreground/70">{t('opsMenu.earnings.thisWeek')}</p>
               <p className="text-base font-semibold text-foreground">{thisWeekRevenue.toFixed(2)} €</p>
               {showThisWeekPayout ? (
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Parte motorista:{' '}
+                  {t('opsMenu.earnings.driverShare')}{' '}
                   <span className="font-medium text-foreground/85">{thisWeekPayoutSum.toFixed(2)} €</span>
                 </p>
               ) : null}
             </div>
             <div className={MENU_CARD}>
-              <p className="text-[11px] text-foreground/70">Semana anterior</p>
+              <p className="text-[11px] text-foreground/70">{t('opsMenu.earnings.lastWeek')}</p>
               <p className="text-base font-semibold text-foreground">{lastWeekRevenue.toFixed(2)} €</p>
               {showLastWeekPayout ? (
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Parte motorista:{' '}
+                  {t('opsMenu.earnings.driverShare')}{' '}
                   <span className="font-medium text-foreground/85">{lastWeekPayoutSum.toFixed(2)} €</span>
                 </p>
               ) : null}
             </div>
           </div>
           {completedTrips.length === 0 ? (
-            <p className="text-xs text-muted-foreground leading-snug">
-              Sem viagens concluídas a contar para já — os totais actualizam quando concluíres viagens com data
-              de fim.
-            </p>
+            <p className="text-xs text-muted-foreground leading-snug">{t('opsMenu.earnings.emptyHint')}</p>
           ) : null}
         </div>
       ) : null}
@@ -3164,47 +3195,50 @@ function DriverOperationsMenu({
       {showTrips ? (
         <div id="driver-menu-trips" className={MENU_PANEL}>
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-sm font-medium text-foreground">Viagens</p>
+            <p className="text-sm font-medium text-foreground">{t('opsMenu.trips.title')}</p>
             {history && history.length > 0 ? (
               <p className="text-[11px] text-muted-foreground shrink-0">
-                {Math.min(historyVisible, history.length)} de {history.length}
+                {t('opsMenu.trips.visibleOf', {
+                  visible: Math.min(historyVisible, history.length),
+                  total: history.length,
+                })}
               </p>
             ) : null}
           </div>
           {history && history.length > 0 ? (
             <>
               <ul className="space-y-2 max-h-[min(50vh,22rem)] overflow-y-auto overscroll-contain pr-0.5">
-                {history.slice(0, historyVisible).map((t) => (
-                  <li key={t.trip_id} className={MENU_CARD}>
+                {history.slice(0, historyVisible).map((trip) => (
+                  <li key={trip.trip_id} className={MENU_CARD}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1 space-y-0.5">
                         <p className="text-xs font-medium text-foreground truncate">
-                          #{t.trip_id.slice(0, 8)} · {passengerTripStatusLabel(t.status)}
+                          #{trip.trip_id.slice(0, 8)} · {passengerTripStatusLabel(trip.status)}
                         </p>
                         <p
                           className="text-[11px] text-foreground/75 truncate"
-                          title={`${formatPickup(t.origin_lat, t.origin_lng)} → ${formatDestination(t.destination_lat, t.destination_lng)}`}
+                          title={`${formatPickup(trip.origin_lat, trip.origin_lng)} → ${formatDestination(trip.destination_lat, trip.destination_lng)}`}
                         >
-                          {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                          {formatDestination(t.destination_lat, t.destination_lng)}
+                          {formatPickup(trip.origin_lat, trip.origin_lng)} →{' '}
+                          {formatDestination(trip.destination_lat, trip.destination_lng)}
                         </p>
                         <p className="text-[11px] text-muted-foreground">
-                          {t.completed_at
-                            ? `${t.status === 'completed' ? 'Concluída' : 'Registo'} · ${formatDriverHistoryWhen(t.completed_at)}`
-                            : t.status === 'completed'
-                              ? 'Data de conclusão indisponível'
-                              : 'Viagem ainda não concluída neste resumo'}
+                          {trip.completed_at
+                            ? `${trip.status === 'completed' ? t('opsMenu.trips.completed') : t('opsMenu.trips.record')} · ${formatDriverHistoryWhen(trip.completed_at)}`
+                            : trip.status === 'completed'
+                              ? t('opsMenu.trips.completionDateMissing')
+                              : t('opsMenu.trips.notCompletedInSummary')}
                         </p>
-                        <DriverHistoryTripMoney t={t} />
-                        <CancellationReasonMuted reason={t.cancellation_reason} />
+                        <DriverHistoryTripMoney trip={trip} />
+                        <CancellationReasonMuted reason={trip.cancellation_reason} />
                       </div>
                     </div>
                     <button
                       type="button"
-                      onClick={() => setHistoryDetailTripId(t.trip_id)}
+                      onClick={() => setHistoryDetailTripId(trip.trip_id)}
                       className="mt-2 min-h-[32px] rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 touch-manipulation"
                     >
-                      Ver detalhe
+                      {t('opsMenu.trips.viewDetail')}
                     </button>
                   </li>
                 ))}
@@ -3215,12 +3249,12 @@ function DriverOperationsMenu({
                   className={MENU_BTN}
                   onClick={() => setHistoryVisible((n) => Math.min(n + 5, history.length))}
                 >
-                  Mostrar mais
+                  {t('opsMenu.trips.showMore')}
                 </button>
               ) : null}
             </>
           ) : (
-            <p className="text-xs text-muted-foreground">Sem viagens recentes no histórico.</p>
+            <p className="text-xs text-muted-foreground">{t('opsMenu.trips.empty')}</p>
           )}
           <button
             type="button"
@@ -3228,15 +3262,16 @@ function DriverOperationsMenu({
             className={`${MENU_BTN} min-h-9 mt-2`}
             onClick={() => onNavigateSection?.('trips_silenced')}
           >
-            Ofertas silenciadas
-            {silencedOfferEntries.length > 0 ? ` (${silencedOfferEntries.length})` : ''}
+            {silencedOfferEntries.length > 0
+              ? t('opsMenu.trips.silencedCount', { count: silencedOfferEntries.length })
+              : t('opsMenu.trips.silencedOffers')}
           </button>
         </div>
       ) : null}
 
       {showTripsSilenced ? (
         <div className={MENU_PANEL} data-testid="driver-menu-silenced-offers">
-          <p className="text-xs font-medium text-foreground">Ofertas silenciadas</p>
+          <p className="text-xs font-medium text-foreground">{t('opsMenu.silenced.title')}</p>
           {silencedOfferEntries.length > 0 ? (
             <>
               <ul className="mt-2 space-y-2">
@@ -3245,9 +3280,9 @@ function DriverOperationsMenu({
                     <span className="min-w-0 truncate text-foreground/85">
                       {o.label}
                       {o.state === 'expired' ? (
-                        <span className="ml-1 text-[10px] text-muted-foreground">(expirada)</span>
+                        <span className="ml-1 text-[10px] text-muted-foreground">{t('opsMenu.silenced.expired')}</span>
                       ) : o.state === 'gone' ? (
-                        <span className="ml-1 text-[10px] text-muted-foreground">(já não disponível)</span>
+                        <span className="ml-1 text-[10px] text-muted-foreground">{t('opsMenu.silenced.gone')}</span>
                       ) : null}
                     </span>
                     <button
@@ -3256,7 +3291,7 @@ function DriverOperationsMenu({
                       className="shrink-0 rounded-md border border-border px-2 py-1 text-[11px] font-medium disabled:opacity-40"
                       onClick={() => onRestoreSilencedOffer?.(o.tripId)}
                     >
-                      Voltar a mostrar
+                      {t('opsMenu.silenced.restoreOne')}
                     </button>
                   </li>
                 ))}
@@ -3266,11 +3301,11 @@ function DriverOperationsMenu({
                 className={`mt-2 ${MENU_BTN_SM}`}
                 onClick={() => onRestoreAllSilencedOffers?.()}
               >
-                Mostrar todas
+                {t('opsMenu.silenced.restoreAll')}
               </button>
             </>
           ) : (
-            <p className="text-xs text-muted-foreground mt-2">Sem ofertas silenciadas.</p>
+            <p className="text-xs text-muted-foreground mt-2">{t('opsMenu.silenced.empty')}</p>
           )}
         </div>
       ) : null}
@@ -3281,7 +3316,7 @@ function DriverOperationsMenu({
           className={`scroll-mt-6 ${MENU_PANEL}`}
           data-testid="driver-menu-inbox"
         >
-          <p className="text-sm font-medium text-foreground">Caixa de entrada</p>
+          <p className="text-sm font-medium text-foreground">{t('opsMenu.inbox.title')}</p>
           <DriverInboxPanel />
           <button
             type="button"
@@ -3292,7 +3327,7 @@ function DriverOperationsMenu({
             }}
             className={`${MENU_BTN} min-h-9`}
           >
-            Ver registo de atividade
+            {t('opsMenu.inbox.openActivityLog')}
           </button>
         </div>
       ) : null}
@@ -3300,21 +3335,18 @@ function DriverOperationsMenu({
       {showPricing ? (
         <details className={`${INNER_RADIUS} border border-border/80 bg-muted/15 px-3 py-2 text-sm`}>
           <summary className="cursor-pointer font-medium text-foreground select-none">
-            Como funciona a estimativa
+            {t('opsMenu.pricing.summary')}
           </summary>
           <p className="mt-2 text-xs text-foreground/85 leading-snug">
-            O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no
-            fim da viagem.
+            <Trans i18nKey="opsMenu.pricing.body" ns="driver" components={{ strong: <strong /> }} />
           </p>
         </details>
       ) : null}
 
       {showZonesHub ? (
         <div className={MENU_PANEL} data-testid="driver-zones-hub">
-          <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
-          <p className="text-xs text-muted-foreground leading-snug">
-            Escolhe o sub-ecrã: orçamento diário, sessão activa ou novo pedido.
-          </p>
+          <p className="text-sm font-medium text-foreground">{t('opsMenu.zones.hubTitle')}</p>
+          <p className="text-xs text-muted-foreground leading-snug">{t('opsMenu.zones.hubIntro')}</p>
           <div className="space-y-2">
             <button
               type="button"
@@ -3322,7 +3354,7 @@ function DriverOperationsMenu({
               className={`${MENU_BTN} min-h-9`}
               onClick={() => onNavigateSection?.('zones_budget')}
             >
-              Orçamento hoje
+              {t('opsMenu.zones.budgetToday')}
             </button>
             <button
               type="button"
@@ -3331,7 +3363,7 @@ function DriverOperationsMenu({
               onClick={() => onNavigateSection?.('zones_session')}
               disabled={!zoneSession}
             >
-              Sessão activa
+              {t('opsMenu.zones.activeSession')}
             </button>
             <button
               type="button"
@@ -3340,7 +3372,7 @@ function DriverOperationsMenu({
               onClick={() => onNavigateSection?.('zones_request')}
               disabled={!zoneBudget || zoneBudget.remaining <= 0 || !!zoneSession}
             >
-              Pedir mudança de zona
+              {t('opsMenu.zones.requestChange')}
             </button>
           </div>
         </div>
@@ -3349,7 +3381,7 @@ function DriverOperationsMenu({
       {showZonesPanel ? (
         <div className={MENU_PANEL}>
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-sm font-medium text-foreground">Mudança de zona (v1)</p>
+            <p className="text-sm font-medium text-foreground">{t('opsMenu.zones.hubTitle')}</p>
             <button
               type="button"
               data-testid="driver-zones-refresh"
@@ -3358,41 +3390,40 @@ function DriverOperationsMenu({
               aria-busy={zoneRefreshing}
               className="min-h-[32px] shrink-0 rounded-md border border-border px-2 text-xs font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
             >
-              {zoneRefreshing ? 'A actualizar…' : 'Atualizar'}
+              {zoneRefreshing ? t('opsMenu.zones.refreshing') : t('opsMenu.zones.refresh')}
             </button>
           </div>
-          <p className="text-xs text-muted-foreground leading-snug">
-            Contador diário (meia-noite Lisboa). O uso só desce quando concluíres a primeira viagem na zona-alvo
-            depois de confirmares «Cheguei».
-          </p>
+          <p className="text-xs text-muted-foreground leading-snug">{t('opsMenu.zones.dailyCounterIntro')}</p>
           {(showZonesBudget) && (
             <>
               {zoneLoadErr ? (
                 <p className="text-xs text-destructive">{zoneLoadErr}</p>
               ) : zoneBudget ? (
                 <p className="text-sm text-foreground/90">
-                  Mudanças hoje:{' '}
+                  {t('opsMenu.zones.changesToday')}{' '}
                   <span className="font-semibold">
                     {zoneBudget.used_changes}/{zoneBudget.max_changes}
                   </span>{' '}
-                  · restantes {zoneBudget.remaining}
+                  · {t('opsMenu.zones.remaining', { count: zoneBudget.remaining })}
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">A carregar orçamento…</p>
+                <p className="text-xs text-muted-foreground">{t('opsMenu.zones.loadingBudget')}</p>
               )}
             </>
           )}
           {(showZonesSession) && zoneSession && zoneStateLabel ? (
             <div className={`${MENU_CARD} space-y-2`}>
               <p className="text-xs font-medium text-foreground">
-                Sessão: <span className="font-mono">{zoneSession.zone_id}</span>
+                {t('opsMenu.zones.sessionLabel')}{' '}
+                <span className="font-mono">{zoneSession.zone_id}</span>
                 {activeZoneLabelPt ? (
                   <span className="text-muted-foreground font-normal"> — {activeZoneLabelPt}</span>
                 ) : null}
               </p>
               <p className="text-xs text-foreground/85">{zoneStateLabel}</p>
               <p className="text-[11px] text-muted-foreground">
-                Prazo (local): {formatZoneDeadlineLocal(zoneSession.deadline_at, zoneTz)}
+                {t('opsMenu.zones.deadlineLocal')}{' '}
+                {formatZoneDeadlineLocal(zoneSession.deadline_at, zoneTz)}
               </p>
               {activeZoneOpsNotePt ? (
                 <p
@@ -3416,7 +3447,7 @@ function DriverOperationsMenu({
                     disabled={zoneBusy}
                     className={`min-h-9 ${INNER_RADIUS} border border-info bg-info/10 px-3 text-sm font-semibold text-foreground hover:bg-info/20 disabled:opacity-50 touch-manipulation`}
                   >
-                    Cheguei à zona
+                    {t('opsMenu.zones.arrivedBtn')}
                   </button>
                 ) : null}
                 <button
@@ -3426,19 +3457,18 @@ function DriverOperationsMenu({
                   disabled={zoneBusy}
                   className={`${MENU_BTN} disabled:opacity-50`}
                 >
-                  Cancelar intenção
+                  {t('opsMenu.zones.cancelIntent')}
                 </button>
               </div>
               {zoneSession.status === 'open' && zoneSession.extension_seconds_approved == null ? (
                 zoneSession.extension_requested ? (
                   <p className="text-[11px] text-muted-foreground leading-snug">
-                    Pedido de mais tempo enviado ao partner. Quando for aceite, o prazo (acima) actualiza
-                    automaticamente.
+                    {t('opsMenu.zones.extensionPending')}
                   </p>
                 ) : (
                   <div className="space-y-1.5 pt-1 border-t border-border/60">
                     <label className="block text-[11px] text-muted-foreground" htmlFor="driver-zone-ext-reason">
-                      Pedir mais tempo (bloqueio, fila, etc.)
+                      {t('opsMenu.zones.extensionReasonLabel')}
                     </label>
                     <textarea
                       id="driver-zone-ext-reason"
@@ -3446,7 +3476,7 @@ function DriverOperationsMenu({
                       onChange={(ev) => setZoneExtensionReason(ev.target.value)}
                       rows={2}
                       maxLength={2000}
-                      placeholder="Ex.: Acidente na A5; preciso de mais 15 min para chegar."
+                      placeholder={t('opsMenu.zones.extensionReasonPlaceholder')}
                       className={`w-full min-h-9 ${INNER_RADIUS} border border-border bg-background px-2 py-1.5 text-xs text-foreground`}
                     />
                     <button
@@ -3456,24 +3486,23 @@ function DriverOperationsMenu({
                       disabled={zoneBusy}
                       className={`${MENU_BTN_SM} px-3 disabled:opacity-50`}
                     >
-                      Pedir mais tempo ao partner
+                      {t('opsMenu.zones.extensionRequestBtn')}
                     </button>
                   </div>
                 )
               ) : null}
               {zoneSession.extension_seconds_approved != null && zoneSession.extension_seconds_approved > 0 ? (
                 <p className="text-[11px] text-foreground/90">
-                  Partner concedeu +{Math.max(1, Math.round(zoneSession.extension_seconds_approved / 60))} min ao
-                  prazo de entrada.
+                  {t('opsMenu.zones.extensionGranted', {
+                    minutes: Math.max(1, Math.round(zoneSession.extension_seconds_approved / 60)),
+                  })}
                 </p>
               ) : null}
             </div>
           ) : (showZonesRequest) && !zoneSession && zoneBudget && zoneBudget.remaining > 0 ? (
             <div className={`${MENU_CARD} space-y-2`}>
               <label className="block space-y-1">
-                <span className="text-[11px] text-muted-foreground">
-                  Zona-alvo · catálogo v1 (também podes escrever à mão se o catálogo falhar)
-                </span>
+                <span className="text-[11px] text-muted-foreground">{t('opsMenu.zones.targetZoneLabel')}</span>
                 {zoneSelectableItems.length > 0 ? (
                   <select
                     value={zoneNewZoneId}
@@ -3509,7 +3538,7 @@ function DriverOperationsMenu({
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
-                  placeholder="Escreve ID manual (ex.: lisboa-norte)"
+                  placeholder={t('opsMenu.zones.zoneIdPlaceholder')}
                 />
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -3518,7 +3547,7 @@ function DriverOperationsMenu({
                     disabled={zoneBusy}
                     className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
                   >
-                    Guardar zona custom
+                    {t('opsMenu.zones.saveCustom')}
                   </button>
                   <button
                     type="button"
@@ -3526,13 +3555,13 @@ function DriverOperationsMenu({
                     disabled={zoneBusy}
                     className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
                   >
-                    Remover custom
+                    {t('opsMenu.zones.removeCustom')}
                   </button>
                 </div>
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <label className="block space-y-1">
-                  <span className="text-[11px] text-muted-foreground">ETA (min)</span>
+                  <span className="text-[11px] text-muted-foreground">{t('opsMenu.zones.etaMin')}</span>
                   <input
                     type="number"
                     min={1}
@@ -3546,7 +3575,7 @@ function DriverOperationsMenu({
                   />
                 </label>
                 <label className="block space-y-1">
-                  <span className="text-[11px] text-muted-foreground">Margem (%)</span>
+                  <span className="text-[11px] text-muted-foreground">{t('opsMenu.zones.marginPct')}</span>
                   <input
                     type="number"
                     min={0}
@@ -3563,7 +3592,7 @@ function DriverOperationsMenu({
                 disabled={zoneBusy || zoneEtaAutoBusy}
                 className="min-h-[36px] rounded-md border border-border px-2.5 text-[11px] font-medium text-foreground hover:bg-muted/50 disabled:opacity-50 touch-manipulation"
               >
-                {zoneEtaAutoBusy ? 'A calcular ETA…' : 'Calcular ETA automático'}
+                {zoneEtaAutoBusy ? t('opsMenu.zones.calcEtaBusy') : t('opsMenu.zones.calcEtaAuto')}
               </button>
               {zoneEtaHint ? <p className="text-[11px] text-muted-foreground">{zoneEtaHint}</p> : null}
               <button
@@ -3573,7 +3602,7 @@ function DriverOperationsMenu({
                 disabled={zoneBusy || !token}
                 className={`w-full min-h-9 ${INNER_RADIUS} border border-info bg-info/15 text-sm font-semibold text-foreground hover:bg-info/25 disabled:opacity-50 touch-manipulation`}
               >
-                Pedir mudança de zona
+                {t('opsMenu.zones.requestChange')}
               </button>
             </div>
           ) : (showZonesBudget) && !zoneSession && zoneBudget && zoneBudget.remaining <= 0 ? (
@@ -3581,12 +3610,8 @@ function DriverOperationsMenu({
               className={`${INNER_RADIUS} border border-warning/45 bg-warning/10 px-3 py-2.5 space-y-2`}
               data-testid="driver-zones-budget-exhausted"
             >
-              <p className="text-sm font-semibold text-foreground">Orçamento de mudanças esgotado hoje</p>
-              <p className="text-xs text-foreground/85 leading-snug">
-                Não é possível abrir um novo pedido automático até ao reset (meia-noite Lisboa) ou até o partner
-                autorizar uma excepção. Contacta a operação / frota pelo canal habitual se precisares de entrar
-                numa zona extra hoje.
-              </p>
+              <p className="text-sm font-semibold text-foreground">{t('opsMenu.zones.budgetExhaustedTitle')}</p>
+              <p className="text-xs text-foreground/85 leading-snug">{t('opsMenu.zones.budgetExhaustedBody')}</p>
               <button
                 type="button"
                 data-testid="driver-zones-budget-exhausted-activity"
@@ -3596,27 +3621,23 @@ function DriverOperationsMenu({
                 }}
                 className={`${MENU_BTN} min-h-9`}
               >
-                Abrir registo de atividade
+                {t('opsMenu.zones.openActivityLog')}
               </button>
             </div>
           ) : null}
           {showZonesSession && !zoneSession ? (
-            <p className="text-xs text-muted-foreground">Sem sessão activa.</p>
+            <p className="text-xs text-muted-foreground">{t('opsMenu.zones.noActiveSession')}</p>
           ) : null}
           {showZonesRequest && (zoneSession || !zoneBudget || zoneBudget.remaining <= 0) ? (
-            <p className="text-xs text-muted-foreground">
-              Pedido indisponível — verifica orçamento ou sessão activa no hub Zonas.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('opsMenu.zones.requestUnavailable')}</p>
           ) : null}
         </div>
       ) : null}
 
       {showNavPref ? (
         <div className={MENU_PANEL}>
-          <p className="text-sm font-medium text-foreground">Navegação (preferência)</p>
-          <p className="text-xs text-muted-foreground">
-            Ao iniciar a viagem abrimos o destino; para a recolha usa «Abrir navegação» durante a viagem.
-          </p>
+          <p className="text-sm font-medium text-foreground">{t('opsMenu.nav.title')}</p>
+          <p className="text-xs text-muted-foreground">{t('opsMenu.nav.intro')}</p>
           <div className="flex gap-2">
             <button
               type="button"
@@ -3646,11 +3667,8 @@ function DriverOperationsMenu({
 
       {showCategories ? (
         <div className={MENU_PANEL}>
-          <p className="text-sm font-medium text-foreground">Categorias de veículo</p>
-          <p className="text-xs text-muted-foreground leading-snug">
-            Sincroniza com o servidor e filtra os pedidos que vês na lista. Mantém pelo menos uma categoria
-            activa.
-          </p>
+          <p className="text-sm font-medium text-foreground">{t('opsMenu.categories.title')}</p>
+          <p className="text-xs text-muted-foreground leading-snug">{t('opsMenu.categories.intro')}</p>
           <div className="grid grid-cols-2 gap-2">
             {(
               [
@@ -3659,7 +3677,7 @@ function DriverOperationsMenu({
                 ['pet', 'Pet'],
                 ['comfort', 'Comfort'],
                 ['black', 'Black'],
-                ['electric', 'Elétrico'],
+                ['electric', t('opsMenu.categories.electric')],
                 ['van', 'Van'],
               ] as Array<[DriverVehicleCategory, string]>
             ).map(([key, label]) => {
@@ -3689,10 +3707,9 @@ function DriverOperationsMenu({
           className={MENU_PANEL}
           data-testid="driver-menu-documents-panel"
         >
-          <p className="text-sm font-medium text-foreground">Documentos e licenças</p>
+          <p className="text-sm font-medium text-foreground">{t('opsMenu.docs.title')}</p>
           <p className="text-xs text-muted-foreground leading-snug">
-            Envia os documentos para revisão da tua frota (partner). A <span className="font-medium">aprovação</span> é
-            feita no painel da frota.
+            <Trans i18nKey="opsMenu.docs.intro" ns="driver" components={{ strong: <span className="font-medium" /> }} />
           </p>
           {(() => {
             const { hasExpired, hasSoon } = driverDocumentsExpiryAttention(driverDocuments)
@@ -3705,16 +3722,19 @@ function DriverOperationsMenu({
                   }`}
               >
                 {hasExpired ? (
-                  <p className="font-semibold">Tens documentos expirados ou datas em atraso — contacta a tua frota.</p>
+                  <p className="font-semibold">{t('opsMenu.docs.expiredWarning')}</p>
                 ) : (
-                  <p className="font-semibold">Há validades a expirar em breve (30 dias). Confirma com a tua frota.</p>
+                  <p className="font-semibold">{t('opsMenu.docs.expiringSoon')}</p>
                 )}
               </div>
             )
           })()}
           <div className={`flex items-center justify-between gap-2 ${MENU_CARD}`}>
             <p className="text-xs text-foreground/85">
-              Aprovados: {driverDocumentsApprovedCount(driverDocuments)} / {REQUIRED_DRIVER_DOCUMENTS.length}
+              {t('opsMenu.docs.approvedCount', {
+                approved: driverDocumentsApprovedCount(driverDocuments),
+                total: REQUIRED_DRIVER_DOCUMENTS.length,
+              })}
             </p>
             <span
               className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${isDriverDocumentsReady(driverDocuments)
@@ -3722,7 +3742,9 @@ function DriverOperationsMenu({
                 : 'border-warning/45 bg-warning/15 text-foreground'
                 }`}
             >
-              {isDriverDocumentsReady(driverDocuments) ? 'Pronto para disponibilidade' : 'Documentos em falta'}
+              {isDriverDocumentsReady(driverDocuments)
+                ? t('opsMenu.docs.readyForAvailability')
+                : t('opsMenu.docs.missing')}
             </span>
           </div>
           <div className="space-y-2">
@@ -3752,19 +3774,21 @@ function DriverOperationsMenu({
                   ) : null}
                   {noteLine ? (
                     <p className="mt-1 text-[11px] text-foreground/80 leading-snug">
-                      <span className="font-medium text-foreground/90">Frota:</span> {noteLine}
+                      <span className="font-medium text-foreground/90">{t('opsMenu.docs.fleetNote')}</span> {noteLine}
                     </p>
                   ) : null}
                   <div className="mt-2 flex flex-col gap-2">
                     {meta?.fileName || status !== 'missing' ? (
                       <p className="text-[11px] text-foreground/85">
                         {meta?.fileName
-                          ? `Ficheiro enviado: ${meta.fileName}`
-                          : 'Ficheiro enviado'}
+                          ? t('opsMenu.docs.fileUploadedNamed', { name: meta.fileName })
+                          : t('opsMenu.docs.fileUploaded')}
                       </p>
                     ) : null}
                     <label className="text-[11px] text-muted-foreground">
-                      {status === 'missing' ? 'Carregar ficheiro (PDF/imagem)' : 'Substituir ficheiro (PDF/imagem)'}
+                      {status === 'missing'
+                        ? t('opsMenu.docs.uploadLabelMissing')
+                        : t('opsMenu.docs.uploadLabelReplace')}
                       <input
                         type="file"
                         accept=".pdf,image/*"
@@ -3774,14 +3798,14 @@ function DriverOperationsMenu({
                           if (!file || !token) return
                           void uploadDriverDocument(token, doc, file)
                             .then((server) => {
-                              sonnerToast.success('Ficheiro enviado')
+                              sonnerToast.success(t('opsMenu.docs.uploadSuccess'))
                               onMergeDriverDocuments?.(server)
                               onRefreshDriverDocuments?.()
                               if (driverDocuments.docs[doc] === 'missing') {
                                 onPatchDriverDocument?.(doc, 'pending_review')
                               }
                             })
-                            .catch(() => sonnerToast.error('Falha no upload'))
+                            .catch(() => sonnerToast.error(t('opsMenu.docs.uploadFailed')))
                           e.target.value = ''
                         }}
                       />
@@ -3791,7 +3815,7 @@ function DriverOperationsMenu({
                       className="min-h-[32px] w-full rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"
                       onClick={() => onPatchDriverDocument(doc, 'pending_review')}
                     >
-                      Enviar para revisão da frota
+                      {t('opsMenu.docs.submitForReview')}
                     </button>
                   </div>
                 </div>
@@ -3802,7 +3826,7 @@ function DriverOperationsMenu({
             {import.meta.env.DEV ? (
               <>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-foreground/85">Bloquear disponibilidade até todos estarem aprovados</p>
+                  <p className="text-xs text-foreground/85">{t('opsMenu.docs.gateBlockLabel')}</p>
                   <button
                     type="button"
                     aria-pressed={driverDocsGateEnabled}
@@ -3812,23 +3836,19 @@ function DriverOperationsMenu({
                       : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                       }`}
                   >
-                    {driverDocsGateEnabled ? 'Ligado' : 'Desligado'}
+                    {driverDocsGateEnabled ? t('opsMenu.docs.gateOn') : t('opsMenu.docs.gateOff')}
                   </button>
                 </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Só visível em DEV — em produção o bloqueio segue o estado dos documentos no servidor.
-                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{t('opsMenu.docs.gateDevHint')}</p>
               </>
             ) : (
-              <p className="text-[11px] text-muted-foreground">
-                Documentos obrigatórios são validados no servidor antes de ficares disponível.
-              </p>
+              <p className="text-[11px] text-muted-foreground">{t('opsMenu.docs.gateProdHint')}</p>
             )}
           </div>
           {isAdmin ? (
             <Button type="button" variant="outline" className="w-full min-h-[40px] text-sm font-medium" asChild>
               <Link to="/admin" onClick={() => onCloseMenu()}>
-                Abrir painel admin
+                {t('opsMenu.docs.openAdmin')}
               </Link>
             </Button>
           ) : null}
@@ -3843,36 +3863,35 @@ function DriverOperationsMenu({
       >
         <DialogContent className="max-w-[min(100vw-1.5rem,520px)] max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhe da viagem</DialogTitle>
-            <DialogDescription>
-              Resumo operacional para referência rápida no menu do motorista.
-            </DialogDescription>
+            <DialogTitle>{t('opsMenu.tripDetail.title')}</DialogTitle>
+            <DialogDescription>{t('opsMenu.tripDetail.description')}</DialogDescription>
           </DialogHeader>
           {historyDetailTrip ? (
             <div className="space-y-2 text-sm">
               <p className="text-foreground/85">
-                <span className="font-medium text-foreground">ID:</span> #{historyDetailTrip.trip_id}
+                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.id')}</span> #
+                {historyDetailTrip.trip_id}
               </p>
               <p className="text-foreground/85">
-                <span className="font-medium text-foreground">Estado:</span>{' '}
+                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.status')}</span>{' '}
                 {passengerTripStatusLabel(historyDetailTrip.status)}
               </p>
               <p className="text-foreground/85">
-                <span className="font-medium text-foreground">Recolha:</span>{' '}
+                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.pickup')}</span>{' '}
                 {formatPickup(historyDetailTrip.origin_lat, historyDetailTrip.origin_lng)}
               </p>
               <p className="text-foreground/85">
-                <span className="font-medium text-foreground">Destino:</span>{' '}
+                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.destination')}</span>{' '}
                 {formatDestination(historyDetailTrip.destination_lat, historyDetailTrip.destination_lng)}
               </p>
               <p className="text-foreground/85">
-                <span className="font-medium text-foreground">Data:</span>{' '}
+                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.date')}</span>{' '}
                 {historyDetailTrip.completed_at
                   ? formatDriverHistoryWhen(historyDetailTrip.completed_at)
-                  : 'Sem data de conclusão'}
+                  : t('opsMenu.tripDetail.noCompletionDate')}
               </p>
               <div className="space-y-1 text-foreground/85">
-                <DriverHistoryTripMoney t={historyDetailTrip} />
+                <DriverHistoryTripMoney trip={historyDetailTrip} />
               </div>
               <CancellationReasonMuted reason={historyDetailTrip.cancellation_reason} className="text-sm" />
             </div>

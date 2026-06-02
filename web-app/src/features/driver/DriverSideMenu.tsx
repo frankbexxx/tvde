@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useAuth, isBackofficeStaffRole } from '../../context/AuthContext'
 import { parseJwtPayload } from '../../utils/jwt'
 import type { DriverNavApp } from '../../services/driverNavPreference'
@@ -51,11 +52,11 @@ export type DriverMenuScreen =
   | 'pricing'
   | 'settings'
 
-function menuRoleLabel(role: string): string {
-  if (role === 'driver') return 'Motorista'
-  if (isBackofficeStaffRole(role)) return 'Staff'
-  if (role === 'partner') return 'Frota'
-  return 'Passageiro'
+function menuRoleLabel(role: string, t: (key: string, opts?: { ns?: string }) => string): string {
+  if (role === 'driver') return t('roleDriver', { ns: 'common' })
+  if (isBackofficeStaffRole(role)) return t('roleStaff', { ns: 'common' })
+  if (role === 'partner') return t('rolePartner', { ns: 'common' })
+  return t('rolePassenger', { ns: 'common' })
 }
 
 export function DriverSideMenu(props: {
@@ -81,6 +82,7 @@ export function DriverSideMenu(props: {
   activeTripId?: string | null
   onRequestGoAvailable?: () => void
 }) {
+  const { t } = useTranslation('driver')
   const {
     open,
     onOpenChange,
@@ -104,6 +106,8 @@ export function DriverSideMenu(props: {
 
   const title = useMemo(() => driverMenuTitle(screen), [screen])
   const hl = menuRootHighlight
+  const defaultName = t('sideMenu.defaultName')
+  const roleBadge = t('roleDriver', { ns: 'common' })
 
   const close = () => {
     onScreenChange('root')
@@ -116,17 +120,17 @@ export function DriverSideMenu(props: {
       : undefined
 
   const headerTitle =
-    screen === 'root' ? (sessionDisplayName ?? 'Motorista') : title
-  const initial = (sessionDisplayName ?? 'M').slice(0, 1).toUpperCase()
+    screen === 'root' ? (sessionDisplayName ?? defaultName) : title
+  const initial = (sessionDisplayName ?? defaultName.charAt(0)).slice(0, 1).toUpperCase()
 
   return (
     <AppSideMenuSheet
       open={open}
       onOpenChange={onOpenChange}
       testId="driver-side-menu"
-      ariaLabel="Menu lateral do motorista"
-      srTitle={screen === 'root' ? 'Menu do motorista' : title}
-      srDescription="Navegação do motorista: rendimentos, viagens, definições e mais."
+      ariaLabel={t('sideMenu.ariaLabel')}
+      srTitle={screen === 'root' ? t('sideMenu.srTitleRoot') : title}
+      srDescription={t('sideMenu.srDescription')}
       closeOnDismiss={close}
     >
       <AppMenuHeader
@@ -140,9 +144,9 @@ export function DriverSideMenu(props: {
           <>
             <AppMenuIdentity
               initial={initial}
-              name={sessionDisplayName ?? 'Motorista'}
-              phone={sessionPhone ?? 'Sessão de teste'}
-              roleBadge="Motorista"
+              name={sessionDisplayName ?? defaultName}
+              phone={sessionPhone ?? t('sideMenu.testSession')}
+              roleBadge={roleBadge}
               trailing={
                 <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-muted-foreground">
                   BETA
@@ -160,26 +164,26 @@ export function DriverSideMenu(props: {
                 }}
                 className={`w-full min-h-9 ${BTN_SECONDARY_RADIUS} border border-primary/35 bg-primary/10 px-4 text-left text-sm font-semibold text-primary hover:bg-primary/15 touch-manipulation`}
               >
-                Ficar disponível
+                {t('sideMenu.goAvailable')}
               </button>
             ) : null}
 
-            <AppMenuSection title="Operação">
+            <AppMenuSection title={t('sideMenu.sections.operation')}>
               <AppMenuRow
-                label="Rendimentos"
+                label={t('sideMenu.rows.earnings')}
                 icon={<CreditCard className="h-4 w-4" />}
                 rowId="driver-menu-earnings"
                 active={hl === 'earnings'}
                 onClick={() => onScreenChange('earnings')}
               />
               <AppMenuRow
-                label="Viagens"
+                label={t('sideMenu.rows.trips')}
                 icon={<History className="h-4 w-4" />}
                 active={hl === 'trips'}
                 onClick={() => onScreenChange('trips')}
               />
               <AppMenuRow
-                label="Caixa de entrada"
+                label={t('sideMenu.rows.inbox')}
                 icon={<Inbox className="h-4 w-4" />}
                 rowId="driver-menu-inbox"
                 badge={inboxUnreadCount}
@@ -187,7 +191,7 @@ export function DriverSideMenu(props: {
                 onClick={() => onScreenChange('inbox')}
               />
               <AppMenuRow
-                label="Registo de atividade"
+                label={t('sideMenu.rows.activityLog')}
                 icon={<ClipboardList className="h-4 w-4" />}
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent(DRIVER_OPEN_ACTIVITY_LOG_EVENT))
@@ -196,48 +200,48 @@ export function DriverSideMenu(props: {
               />
             </AppMenuSection>
 
-            <AppMenuSection title="Conta">
+            <AppMenuSection title={t('sideMenu.sections.account')}>
               <AppMenuRow
-                label="Perfil"
+                label={t('sideMenu.rows.profile')}
                 icon={<User className="h-4 w-4" />}
                 active={hl === 'profile'}
                 onClick={() => onScreenChange('profile')}
               />
               <AppMenuRow
-                label="Documentos"
+                label={t('sideMenu.rows.documents')}
                 icon={<FileText className="h-4 w-4" />}
                 active={hl === 'docs'}
                 onClick={() => onScreenChange('docs')}
               />
             </AppMenuSection>
 
-            <AppMenuSection title="Configuração">
+            <AppMenuSection title={t('sideMenu.sections.configuration')}>
               <AppMenuRow
-                label="Zonas"
+                label={t('sideMenu.rows.zones')}
                 icon={<MapPin className="h-4 w-4" />}
                 active={hl === 'zones'}
                 onClick={() => onScreenChange('zones')}
               />
               <AppMenuRow
-                label="Navegação"
+                label={t('sideMenu.rows.navigation')}
                 icon={<Compass className="h-4 w-4" />}
                 active={hl === 'nav'}
                 onClick={() => onScreenChange('nav')}
               />
               <AppMenuRow
-                label="Categorias"
+                label={t('sideMenu.rows.categories')}
                 icon={<SlidersHorizontal className="h-4 w-4" />}
                 active={hl === 'categories'}
                 onClick={() => onScreenChange('categories')}
               />
               <AppMenuRow
-                label="Como funciona a estimativa"
+                label={t('sideMenu.rows.pricingEstimate')}
                 icon={<CreditCard className="h-4 w-4" />}
                 active={hl === 'pricing'}
                 onClick={() => onScreenChange('pricing')}
               />
               <AppMenuRow
-                label="Definições"
+                label={t('sideMenu.rows.settings')}
                 icon={<Settings className="h-4 w-4" />}
                 active={hl === 'settings'}
                 onClick={() => onScreenChange('settings')}
@@ -255,23 +259,25 @@ export function DriverSideMenu(props: {
           <div className="space-y-4" data-testid="driver-menu-profile-screen">
             <div className={`${BTN_SECONDARY_RADIUS} border border-border bg-card px-4 py-3 space-y-3`}>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Nome</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('sideMenu.profile.name')}</p>
                 <p className="text-sm font-medium text-foreground break-words">
                   {sessionDisplayName?.trim() || '—'}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Telemóvel</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('sideMenu.profile.phone')}</p>
                 <p className="text-sm font-medium text-foreground break-all">{sessionPhone ?? '—'}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Papel</p>
-                <p className="text-sm font-medium text-foreground">{menuRoleLabel(sessionRole)}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('sideMenu.profile.role')}</p>
+                <p className="text-sm font-medium text-foreground">{menuRoleLabel(sessionRole, t)}</p>
               </div>
               {accountRef ? (
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Conta</p>
-                  <p className="text-sm font-medium text-foreground tabular-nums">Conta · {accountRef}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('sideMenu.profile.account')}</p>
+                  <p className="text-sm font-medium text-foreground tabular-nums">
+                    {t('sideMenu.profile.accountRef', { ref: accountRef })}
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -286,7 +292,7 @@ export function DriverSideMenu(props: {
                 className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
               >
                 <User className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-                Conta (detalhe)
+                {t('sideMenu.profile.accountDetail')}
               </button>
               <button
                 type="button"
@@ -295,15 +301,20 @@ export function DriverSideMenu(props: {
                 className={`flex min-h-9 items-center justify-center gap-2 ${BTN_SECONDARY_RADIUS} border border-border bg-background px-4 text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
               >
                 <Settings className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
-                Definições
+                {t('sideMenu.rows.settings')}
               </button>
             </div>
           </div>
         ) : screen === 'settings' ? (
           <div className="space-y-4" data-testid="driver-settings-screen">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Preferências da app. Conta e sessão estão em{' '}
-              <span className="font-medium text-foreground/90">Perfil</span> no menu principal.
+              <Trans
+                i18nKey="sideMenu.settings.intro"
+                ns="driver"
+                components={{
+                  profile: <span className="font-medium text-foreground/90" />,
+                }}
+              />
             </p>
             <AppAppearanceSettings />
             <AppRouteModeSwitch />

@@ -1,21 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { changeMyPassword, getMeProfile, patchMeProfile, type MeProfileResponse } from '../../api/auth'
 import { withColdStartRetries } from '../../api/client'
 import type { ApiError } from '../../api/client'
 import { toast } from 'sonner'
 
-function errDetail(err: unknown): string {
+function errDetail(err: unknown, fallback: string): string {
   const e = err as ApiError
   const d = e?.detail
   if (typeof d === 'string') return d
   if (Array.isArray(d)) return d.map((x) => JSON.stringify(x)).join(' · ')
   if (err instanceof Error && err.message) return err.message
-  return 'Erro'
+  return fallback
 }
 
 /** M1: conta mínima no ecrã (BETA) — nome, telefone só leitura, alterar palavra-passe. */
 export function BetaAccountPanel() {
+  const { t } = useTranslation('common')
   const { token, refreshSessionProfile } = useAuth()
   const [profile, setProfile] = useState<MeProfileResponse | null>(null)
   const [loadErr, setLoadErr] = useState<string | null>(null)
@@ -35,9 +37,9 @@ export function BetaAccountPanel() {
       setProfile(me)
       setNameDraft(me.name || me.phone)
     } catch (e) {
-      setLoadErr(errDetail(e))
+      setLoadErr(errDetail(e, t('error')))
     }
-  }, [token])
+  }, [token, t])
 
   useEffect(() => {
     void load()
@@ -47,7 +49,7 @@ export function BetaAccountPanel() {
     if (!token) return
     const next = nameDraft.trim()
     if (next.length < 1) {
-      toast.error('Indica um nome (1–120 caracteres).')
+      toast.error(t('betaAccount.nameValidation'))
       return
     }
     setSavingName(true)
@@ -55,9 +57,9 @@ export function BetaAccountPanel() {
       const me = await patchMeProfile(token, next)
       setProfile(me)
       await refreshSessionProfile()
-      toast.success('Nome actualizado.')
+      toast.success(t('betaAccount.nameUpdated'))
     } catch (e) {
-      toast.error(errDetail(e))
+      toast.error(errDetail(e, t('error')))
     } finally {
       setSavingName(false)
     }
@@ -67,15 +69,15 @@ export function BetaAccountPanel() {
     if (!token || !profile) return
     setPwErr(null)
     if (newPw.length < 8) {
-      setPwErr('A nova palavra-passe precisa de pelo menos 8 caracteres.')
+      setPwErr(t('betaAccount.passwordMinError'))
       return
     }
     if (newPw !== confirmPw) {
-      setPwErr('A confirmação não coincide com a nova palavra-passe.')
+      setPwErr(t('betaAccount.passwordMismatch'))
       return
     }
     if (profile.has_custom_password && !currentPw.trim()) {
-      setPwErr('Indica a palavra-passe actual.')
+      setPwErr(t('betaAccount.currentRequired'))
       return
     }
     setSavingPw(true)
@@ -88,9 +90,9 @@ export function BetaAccountPanel() {
       setNewPw('')
       setConfirmPw('')
       await load()
-      toast.success('Palavra-passe actualizada.')
+      toast.success(t('betaAccount.passwordUpdated'))
     } catch (e) {
-      const msg = errDetail(e)
+      const msg = errDetail(e, t('error'))
       setPwErr(msg)
       toast.error(msg)
     } finally {
@@ -102,10 +104,16 @@ export function BetaAccountPanel() {
 
   return (
     <section className="pt-8 mt-8 border-t border-border" data-testid="beta-account-panel">
-      <h2 className="text-base font-medium text-foreground/75 mb-2">Conta (BETA)</h2>
+      <h2 className="text-base font-medium text-foreground/75 mb-2">{t('betaAccount.title')}</h2>
       <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-        O <span className="font-medium">telemóvel</span> só pode ser alterado pelo administrador. Para repor a password
-        por defeito, o admin pode usar <span className="font-medium">Limpar palavra-passe</span> no painel.
+        <Trans
+          i18nKey="betaAccount.intro"
+          ns="common"
+          components={{
+            phone: <span className="font-medium" />,
+            clear: <span className="font-medium" />,
+          }}
+        />
       </p>
       {loadErr ? (
         <p className="text-sm text-destructive mb-3">{loadErr}</p>
@@ -114,7 +122,7 @@ export function BetaAccountPanel() {
         <div className="space-y-5 rounded-xl border border-border bg-card/60 p-4">
           <div>
             <label htmlFor="beta-acct-phone" className="block text-xs font-medium text-muted-foreground mb-1">
-              Telemóvel
+              {t('betaAccount.phone')}
             </label>
             <p id="beta-acct-phone" className="text-sm font-mono text-foreground">
               {profile.phone}
@@ -122,7 +130,7 @@ export function BetaAccountPanel() {
           </div>
           <div>
             <label htmlFor="beta-acct-name" className="block text-xs font-medium text-muted-foreground mb-1">
-              Nome visível
+              {t('betaAccount.visibleName')}
             </label>
             <input
               id="beta-acct-name"
@@ -138,15 +146,15 @@ export function BetaAccountPanel() {
               onClick={() => void saveName()}
               className="mt-2 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
             >
-              {savingName ? 'A guardar…' : 'Guardar nome'}
+              {savingName ? t('betaAccount.saving') : t('betaAccount.saveName')}
             </button>
           </div>
           <div className="pt-2 border-t border-border/80">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Alterar palavra-passe</p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">{t('betaAccount.changePassword')}</p>
             {profile.has_custom_password ? (
               <div className="mb-2">
                 <label htmlFor="beta-acct-curpw" className="block text-xs text-muted-foreground mb-1">
-                  Palavra-passe actual
+                  {t('betaAccount.currentPassword')}
                 </label>
                 <input
                   id="beta-acct-curpw"
@@ -159,11 +167,11 @@ export function BetaAccountPanel() {
               </div>
             ) : (
               <p className="text-xs text-muted-foreground mb-2">
-                Ainda usas a password por defeito do BETA — define uma nova abaixo (não precisas da actual).
+                {t('betaAccount.defaultPasswordHint')}
               </p>
             )}
             <label htmlFor="beta-acct-newpw" className="block text-xs text-muted-foreground mb-1">
-              Nova palavra-passe (mín. 8 caracteres)
+              {t('betaAccount.newPasswordMin')}
             </label>
             <input
               id="beta-acct-newpw"
@@ -174,7 +182,7 @@ export function BetaAccountPanel() {
               className="w-full px-3 py-2 border border-input rounded-lg bg-background text-base mb-2"
             />
             <label htmlFor="beta-acct-confpw" className="block text-xs text-muted-foreground mb-1">
-              Confirmar nova
+              {t('betaAccount.confirmNew')}
             </label>
             <input
               id="beta-acct-confpw"
@@ -191,12 +199,12 @@ export function BetaAccountPanel() {
               onClick={() => void savePassword()}
               className="px-3 py-1.5 bg-secondary text-secondary-foreground text-sm font-medium rounded-lg disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
             >
-              {savingPw ? 'A actualizar…' : 'Actualizar palavra-passe'}
+              {savingPw ? t('betaAccount.updating') : t('betaAccount.updatePassword')}
             </button>
           </div>
         </div>
       ) : !loadErr ? (
-        <p className="text-sm text-muted-foreground">A carregar dados da conta…</p>
+        <p className="text-sm text-muted-foreground">{t('betaAccount.loading')}</p>
       ) : null}
     </section>
   )

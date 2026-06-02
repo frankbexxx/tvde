@@ -30,9 +30,9 @@ export function PartnerHome() {
       </div>
 
       <div className="sticky bottom-[52px] z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
-        <h3 className="text-sm font-medium text-foreground">Alertas operacionais</h3>
+        <h3 className="text-sm font-medium text-foreground">{t('home.alertsTitle')}</h3>
         <p className="text-[11px] text-foreground/75 mt-0.5">
-          Documentos, GPS, viagens bloqueadas — clique para ir ao detalhe.
+          {t('home.alertsHint')}
         </p>
         <div className="mt-2 max-h-[min(28dvh,200px)] overflow-y-auto">
           <PartnerAlertsPanel alerts={operationalAlerts} />

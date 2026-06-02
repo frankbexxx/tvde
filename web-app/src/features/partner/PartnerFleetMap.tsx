@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { MapView } from '../../maps/MapView'
 import type { PartnerDriverRow, PartnerTripRow } from '../../api/partner'
@@ -42,6 +43,7 @@ export function PartnerFleetMap({
   drivers: PartnerDriverRow[]
   trips: PartnerTripRow[]
 }) {
+  const { t } = useTranslation('partner')
   const navigate = useNavigate()
 
   const activeTrips = useMemo(
@@ -84,7 +86,7 @@ export function PartnerFleetMap({
     <div className="space-y-3" data-testid="partner-fleet-map">
       <MapView
         showMap={showMap}
-        mapPlaceholder="Sem posições GPS recentes nem viagens activas para mostrar no mapa."
+        mapPlaceholder={t('fleet.mapPlaceholder')}
         fleetDrivers={fleetDrivers.length ? fleetDrivers : null}
         onFleetDriverClick={(userId) => {
           void navigate(`/partner/drivers/${encodeURIComponent(userId)}`)
@@ -98,23 +100,23 @@ export function PartnerFleetMap({
         className="border border-border"
       />
       <div className="rounded-xl border border-border bg-card p-3 text-xs space-y-2">
-        <p className="font-medium text-foreground text-sm">Legenda</p>
+        <p className="font-medium text-foreground text-sm">{t('fleet.legendTitle')}</p>
         <ul className="space-y-1 text-muted-foreground">
           <li>
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 mr-1.5" />
-            Disponível (online, sem viagem activa)
+            {t('fleet.legendAvailable')}
           </li>
           <li>
             <span className="inline-block h-2 w-2 rounded-full bg-sky-500 mr-1.5" />
-            Em viagem
+            {t('fleet.legendOnTrip')}
           </li>
           <li>
             <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground mr-1.5" />
-            Offline / GPS antigo (&gt;15 min)
+            {t('fleet.legendOfflineStale')}
           </li>
           <li>
             <span className="inline-block h-2 w-2 rounded-full bg-amber-500 mr-1.5" />
-            Recolha viagem activa (número = link detalhe)
+            {t('fleet.legendPickup')}
           </li>
         </ul>
       </div>
@@ -138,7 +140,7 @@ export function PartnerFleetMap({
                 onClick={() => void navigate(`/partner/drivers/${encodeURIComponent(d.user_id)}`)}
                 className="shrink-0 text-primary text-xs underline touch-manipulation"
               >
-                Detalhe
+                {t('fleet.detailBtn')}
               </button>
             </li>
           )

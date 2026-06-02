@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { assignTripAdmin, runTimeoutsAdmin } from '../../api/trips'
@@ -51,6 +52,7 @@ export function DevTools({
   onAssigned?: () => void
   mode?: 'passenger' | 'driver'
 }) {
+  const { t } = useTranslation('driver')
   const { tokens } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const [open, setOpen] = useState(false)
@@ -58,52 +60,52 @@ export function DevTools({
 
   const handleAssign = async () => {
     if (!lastCreatedTripId || !tokens?.admin) return
-    setStatus('A atribuir viagem...')
+    setStatus(t('devTools.statusAssigning'))
     addLog('Clique: Assign', 'action')
     try {
       await assignTripAdmin(lastCreatedTripId, tokens.admin)
       addLog('Assign concluído', 'success')
-      setStatus('Pronto')
+      setStatus(t('devTools.statusReady'))
       onAssigned?.()
     } catch (err) {
       addLog(`Erro Assign: ${errMsg(err)}`, 'error')
-      setStatus('Erro ao atribuir')
+      setStatus(t('devTools.statusAssignError'))
     }
   }
 
   const handleRunTimeouts = async () => {
     if (!tokens?.admin) return
-    setStatus('A executar timeouts...')
+    setStatus(t('devTools.statusRunningTimeouts'))
     addLog('Clique: Timeouts', 'action')
     try {
       const res = await runTimeoutsAdmin(tokens.admin)
       const total = res.assigned_to_requested + res.accepted_to_cancelled + res.ongoing_to_failed
       addLog(`Timeouts: ${total} ações`, 'success')
-      setStatus('Pronto')
+      setStatus(t('devTools.statusReady'))
       onAssigned?.()
     } catch (err) {
       addLog(`Erro Timeouts: ${errMsg(err)}`, 'error')
-      setStatus('Erro')
+      setStatus(t('devTools.statusError'))
     }
   }
 
   const handleAutoTrip = async () => {
-    setStatus('Auto-trip em execução...')
+    setStatus(t('devTools.statusAutoTrip'))
     addLog('Clique: Auto-trip', 'action')
     try {
       await apiFetch<{ trip_id: string }>('/dev/auto-trip', { method: 'POST' })
       addLog(`Auto-trip concluído`, 'success')
-      setStatus('Pronto')
+      setStatus(t('devTools.statusReady'))
       onAssigned?.()
     } catch (err) {
       addLog(`Erro Auto-trip: ${errMsg(err)}`, 'error')
-      setStatus('Erro')
+      setStatus(t('devTools.statusError'))
     }
   }
 
   const handleExportLogs = async () => {
     if (!tokens?.admin) return
-    setStatus('A exportar logs...')
+    setStatus(t('devTools.statusExporting'))
     addLog('Clique: Export logs', 'action')
     try {
       const res = await fetch(`${API_BASE}/admin/export-logs?format=csv`, {
@@ -118,10 +120,10 @@ export function DevTools({
       a.click()
       URL.revokeObjectURL(url)
       addLog('Logs exportados', 'success')
-      setStatus('Pronto')
+      setStatus(t('devTools.statusReady'))
     } catch (err) {
       addLog(`Erro Export: ${errMsg(err)}`, 'error')
-      setStatus('Erro')
+      setStatus(t('devTools.statusError'))
     }
   }
 
@@ -129,7 +131,7 @@ export function DevTools({
     resetRun()
     setResetKey((k) => k + 1)
     addLog(`Run resetado (device ${getDeviceId()})`, 'info')
-    setStatus('Pronto')
+    setStatus(t('devTools.statusReady'))
   }
 
   const handleToggleDemoLocation = () => {
@@ -155,7 +157,7 @@ export function DevTools({
   }
 
   const handleSeed = async () => {
-    setStatus('A executar seed...')
+    setStatus(t('devTools.statusSeeding'))
     addLog('Clique: Seed', 'action')
     try {
       await apiFetch('/dev/seed', { method: 'POST' })
@@ -163,13 +165,13 @@ export function DevTools({
       window.location.reload()
     } catch (err) {
       addLog(`Erro Seed: ${errMsg(err)}`, 'error')
-      setStatus('Erro ao executar seed')
+      setStatus(t('devTools.statusSeedError'))
     }
   }
 
   const handleTripDiagnostic = async () => {
     if (!lastCreatedTripId) return
-    setStatus('A diagnosticar viagem...')
+    setStatus(t('devTools.statusTripDiagnostic'))
     addLog('Clique: Diagnóstico viagem', 'action')
     try {
       const d = await apiFetch<TripMatchingDiagnostic>(`/debug/trip-matching/${lastCreatedTripId}`)
@@ -186,15 +188,15 @@ export function DevTools({
         )
         devLog('Diagnóstico viagem:', d)
       }
-      setStatus('Pronto')
+      setStatus(t('devTools.statusReady'))
     } catch (err) {
       addLog(`Erro Diagnóstico: ${errMsg(err)}`, 'error')
-      setStatus('Erro')
+      setStatus(t('devTools.statusError'))
     }
   }
 
   const handleDriverDiagnostic = async () => {
-    setStatus('A diagnosticar motorista...')
+    setStatus(t('devTools.statusDriverDiagnostic'))
     addLog('Clique: Diagnóstico motorista', 'action')
     try {
       const d = await apiFetch<DriverEligibilityDiagnostic>('/debug/driver-eligibility')
@@ -211,10 +213,10 @@ export function DevTools({
         )
         devLog('Diagnóstico motorista:', d)
       }
-      setStatus('Pronto')
+      setStatus(t('devTools.statusReady'))
     } catch (err) {
       addLog(`Erro Diagnóstico: ${errMsg(err)}`, 'error')
-      setStatus('Erro')
+      setStatus(t('devTools.statusError'))
     }
   }
 
@@ -225,14 +227,13 @@ export function DevTools({
         onClick={() => setOpen(!open)}
         className="w-full px-4 py-3 text-left text-sm font-medium text-foreground/85 hover:text-foreground transition-colors"
       >
-        {open ? '▼ Dev' : '▶ Dev'}
+        {open ? t('devTools.toggleOpen') : t('devTools.toggleClosed')}
       </button>
       {open && (
         <div className="px-4 pb-4 flex flex-wrap gap-2 border-t border-border pt-3">
           {import.meta.env.DEV && mode === 'driver' && isMockLocationModeEnabled() ? (
             <p className="w-full text-xs text-muted-foreground">
-              Simulação OSRM: após aceitar, até à recolha; após «Iniciar viagem», até ao destino (1&nbsp;s por
-              ponto).
+              {t('devTools.mockRouteHint')}
             </p>
           ) : null}
           <button
@@ -241,9 +242,9 @@ export function DevTools({
                 ? 'bg-success/30 text-success'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
-            title="Usar Oeiras (Câmara Municipal) sem pedir permissão de localização (útil no PC)"
+            title={t('devTools.demoOeirasTitle')}
           >
-            {isDemoLocationEnabled() ? '✓ Demo Oeiras' : 'Demo Oeiras'}
+            {isDemoLocationEnabled() ? t('devTools.demoOeirasOn') : t('devTools.demoOeirasOff')}
           </button>
           <button
             type="button"
@@ -252,15 +253,15 @@ export function DevTools({
                 ? 'bg-violet-500/25 text-violet-200 border border-violet-400/40'
                 : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
-            title="Simular movimento ao longo de uma rota de teste (só npm run dev). Console: localStorage.setItem('mockLocation','true')"
+            title={t('devTools.mockRouteTitle')}
           >
-            {isMockLocationModeEnabled() ? '✓ Simular rota' : 'Simular rota'}
+            {isMockLocationModeEnabled() ? t('devTools.mockRouteOn') : t('devTools.mockRouteOff')}
           </button>
           <button
             onClick={handleSeed}
             className="px-3 py-1.5 text-sm bg-warning/20 text-warning rounded-lg hover:bg-warning/30"
           >
-            Seed
+            {t('devTools.seed')}
           </button>
           {tokens && (
             <>
@@ -268,26 +269,26 @@ export function DevTools({
                 onClick={handleAutoTrip}
                 className="px-3 py-1.5 text-sm bg-warning/20 text-warning rounded-lg hover:bg-warning/30"
               >
-                Auto-trip
+                {t('devTools.autoTrip')}
               </button>
               <button
                 onClick={handleRunTimeouts}
                 className="px-3 py-1.5 text-sm bg-warning/20 text-warning rounded-lg hover:bg-warning/30"
               >
-                Timeouts
+                {t('devTools.timeouts')}
               </button>
               <button
                 onClick={handleExportLogs}
                 className="px-3 py-1.5 text-sm bg-info/20 text-info rounded-lg hover:bg-info/30"
               >
-                Export logs
+                {t('devTools.exportLogs')}
               </button>
               <button
                 onClick={handleResetRun}
                 className="px-3 py-1.5 text-sm bg-muted text-muted-foreground rounded-lg hover:bg-muted/80"
                 title={`Device ${getDeviceId()}, run ${getCurrentRun()}`}
               >
-                Reset run
+                {t('devTools.resetRun')}
               </button>
             </>
           )}
@@ -296,25 +297,25 @@ export function DevTools({
               onClick={handleAssign}
               className="px-3 py-1.5 text-sm bg-success/20 text-success rounded-lg hover:bg-success/30"
             >
-              Assign
+              {t('devTools.assign')}
             </button>
           )}
           {mode === 'passenger' && lastCreatedTripId && (
             <button
               onClick={handleTripDiagnostic}
               className="px-3 py-1.5 text-sm bg-secondary/20 text-secondary rounded-lg hover:bg-secondary/30"
-              title="Diagnosticar por que o motorista não vê a viagem"
+              title={t('devTools.tripDiagnosticTitle')}
             >
-              Diagnóstico viagem
+              {t('devTools.tripDiagnostic')}
             </button>
           )}
           {mode === 'driver' && (
             <button
               onClick={handleDriverDiagnostic}
               className="px-3 py-1.5 text-sm bg-secondary/20 text-secondary rounded-lg hover:bg-secondary/30"
-              title="Diagnosticar por que não aparecem viagens"
+              title={t('devTools.driverDiagnosticTitle')}
             >
-              Diagnóstico motorista
+              {t('devTools.driverDiagnostic')}
             </button>
           )}
         </div>

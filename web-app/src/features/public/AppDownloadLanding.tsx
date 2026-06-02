@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { LanguageSelector } from '../settings/LanguageSelector'
 
 /**
  * Ponto de entrada para QR / materiais impressos: mesmo domínio que a app,
@@ -11,6 +12,9 @@ export function AppDownloadLanding() {
   const { t: tc } = useTranslation('common')
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center gap-6 bg-background px-6 py-10 text-center">
+      <div className="w-full max-w-sm flex justify-end">
+        <LanguageSelector variant="compact" />
+      </div>
       <div className="max-w-sm space-y-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {tc('appName')}

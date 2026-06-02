@@ -8,6 +8,7 @@ import { appBuildDisplayLine } from '../../lib/appBuildMeta'
 import { BTN_PRIMARY_RADIUS, BTN_SECONDARY_RADIUS, SURFACE_RADIUS } from '../../components/layout/infoBoxTemplate'
 import { useTranslation } from 'react-i18next'
 import { formatLoginError } from '../../i18n/apiErrors'
+import { LanguageSelector } from '../settings/LanguageSelector'
 
 interface LoginScreenProps {
   /** BETA: `admin` = fluxo dedicado ao painel (URL `/admin` ou `/admin/login`). */
@@ -86,13 +87,16 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       <div className={`w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
         <BrandStripe />
         <div className="p-6">
-          <div className="flex flex-wrap items-end gap-2 mb-4" data-testid="login-brand">
-            <img
-              src="/brand/vamula-wordmark.png"
-              alt="V@mulá"
-              className="h-8 w-auto rounded-sm object-contain"
-            />
-            <span className="text-sm font-normal text-muted-foreground pb-0.5">(beta mode)</span>
+          <div className="flex flex-wrap items-end justify-between gap-2 mb-4" data-testid="login-brand">
+            <div className="flex flex-wrap items-end gap-2 min-w-0">
+              <img
+                src="/brand/vamula-wordmark.png"
+                alt="V@mulá"
+                className="h-8 w-auto rounded-sm object-contain"
+              />
+              <span className="text-sm font-normal text-muted-foreground pb-0.5">{t('betaMode')}</span>
+            </div>
+            <LanguageSelector variant="compact" />
           </div>
           <div role="tablist" aria-label={t('userTypeTabs')} className="grid grid-cols-2 gap-2 mb-4">
             <Link
@@ -140,9 +144,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               {t('administrator')}
             </Link>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Entra com o teu telemóvel (+351...)
-          </p>
+          <p className="text-sm text-muted-foreground mb-4">{t('phoneHint')}</p>
           {requestedRole === 'passenger' && googleClientId && (
             <div className="mb-4">
               <button
@@ -150,9 +152,9 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 onClick={startGoogleLogin}
                 className={`w-full min-h-[44px] py-2.5 ${BTN_SECONDARY_RADIUS} border border-input bg-background text-foreground font-medium hover:bg-muted/80 transition-colors`}
               >
-                Continuar com Google
+                {t('continueGoogle')}
               </button>
-              <p className="text-xs text-muted-foreground mt-2 text-center">Só para passageiro (v1).</p>
+              <p className="text-xs text-muted-foreground mt-2 text-center">{t('passengerGoogleOnly')}</p>
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -201,7 +203,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             aria-label="Informação da versão da aplicação"
           >
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground/85">
-              Versão da aplicação
+              {t('appVersionLabel')}
             </p>
             <p
               className="mt-1.5 font-mono text-xs text-muted-foreground tabular-nums tracking-tight select-all"
@@ -210,10 +212,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             >
               {appBuildDisplayLine}
             </p>
-            <p className="mt-1.5 text-[0.7rem] text-muted-foreground/75 leading-snug">
-              Usa este identificador em comunicações com o suporte ou para confirmar que o teu dispositivo
-              carregou a versão mais recente.
-            </p>
+            <p className="mt-1.5 text-[0.7rem] text-muted-foreground/75 leading-snug">{t('appVersionSupport')}</p>
           </footer>
         </div>
       </div>

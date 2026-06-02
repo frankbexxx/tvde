@@ -30,12 +30,12 @@ import {
 
 const VEHICLE_DOCUMENT_KEYS: DriverRequiredDocument[] = ['inspecao_viatura']
 
-function locationBlock(d: PartnerDriverRow) {
+function locationBlock(d: PartnerDriverRow, t: (key: string) => string) {
   const loc = d.last_location
-  if (!loc) return <p className="text-muted-foreground text-sm">Sem localização recente.</p>
+  if (!loc) return <p className="text-muted-foreground text-sm">{t('driverDetail.noLocation')}</p>
   return (
     <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-1">
-      <p className="font-medium text-foreground">Última localização</p>
+      <p className="font-medium text-foreground">{t('driverDetail.lastLocation')}</p>
       <p className="text-muted-foreground font-mono text-xs">
         {loc.lat.toFixed(6)}, {loc.lng.toFixed(6)}
       </p>
@@ -46,6 +46,7 @@ function locationBlock(d: PartnerDriverRow) {
 
 export function PartnerDriverDetail() {
   const { t } = useTranslation('partner')
+  const { t: tc } = useTranslation('common')
   const { userId } = useParams<{ userId: string }>()
   const { token } = useAuth()
   const navigate = useNavigate()
@@ -80,12 +81,12 @@ export function PartnerDriverDetail() {
       })
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao carregar motorista.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('driverDetail.loadError'))
       setD(null)
     } finally {
       setLoading(false)
     }
-  }, [userId])
+  }, [userId, t])
 
   useEffect(() => {
     if (!userId || !d || d.status !== 'approved') {
@@ -159,7 +160,7 @@ export function PartnerDriverDetail() {
       setD(row)
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Erro.')
+      setError(typeof err?.detail === 'string' ? err.detail : tc('error'))
     } finally {
       setBusy(null)
     }
@@ -167,17 +168,17 @@ export function PartnerDriverDetail() {
 
   const fleetRemoveErrorPt = (detail: string | undefined): string => {
     if (detail === 'driver_has_active_trip') {
-      return 'Motorista com viagem activa — conclui ou cancela antes de remover da frota.'
+      return t('driverDetail.removeActiveTrip')
     }
     if (detail === 'not_found' || detail === 'driver_not_found') {
-      return 'Motorista não encontrado nesta frota.'
+      return t('driverDetail.notFoundFleet')
     }
-    return detail ?? 'Não foi possível remover da frota.'
+    return detail ?? t('driverDetail.removeFailed')
   }
 
   const removeFromFleet = async () => {
     if (!userId) return
-    if (!window.confirm('Remover este motorista da frota? Volta para a frota por defeito da plataforma.')) return
+    if (!window.confirm(t('driverDetail.removeConfirm'))) return
     setBusy('remove')
     setError(null)
     try {
@@ -195,15 +196,17 @@ export function PartnerDriverDetail() {
     if (!tripStats) return null
     return (
       <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-1">
-        <p className="font-medium text-foreground">Viagens (frota)</p>
+        <p className="font-medium text-foreground">{t('driverDetail.tripsFleet')}</p>
         <p className="text-muted-foreground">
-          Concluídas: <span className="text-foreground font-medium">{tripStats.completed}</span>
+          {t('driverDetail.tripsCompleted')}{' '}
+          <span className="text-foreground font-medium">{tripStats.completed}</span>
           {' · '}
-          Canceladas: <span className="text-foreground font-medium">{tripStats.cancelled}</span>
+          {t('driverDetail.tripsCancelled')}{' '}
+          <span className="text-foreground font-medium">{tripStats.cancelled}</span>
         </p>
       </div>
     )
-  }, [tripStats])
+  }, [tripStats, t])
 
   const runDoc = async (docKey: DriverRequiredDocument, status: string) => {
     if (!userId) return
@@ -214,7 +217,7 @@ export function PartnerDriverDetail() {
       setD(row)
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao actualizar documentos.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('driverDetail.docUpdateError'))
     } finally {
       setBusy(null)
     }
@@ -234,7 +237,7 @@ export function PartnerDriverDetail() {
       setD(row)
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao guardar validade/nota.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('driverDetail.docSaveError'))
     } finally {
       setBusy(null)
     }
@@ -267,7 +270,7 @@ export function PartnerDriverDetail() {
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 <label className="block space-y-1 text-[11px] text-muted-foreground">
-                  <span>Validade (data)</span>
+                  <span>{t('driverDetail.expiryDate')}</span>
                   <input
                     type="date"
                     value={draftExpires[key] ?? ''}
@@ -280,7 +283,7 @@ export function PartnerDriverDetail() {
                 </label>
               </div>
               <label className="block space-y-1 text-[11px] text-muted-foreground">
-                <span>Nota interna (frota)</span>
+                <span>{t('driverDetail.internalNote')}</span>
                 <textarea
                   value={draftNotes[key] ?? ''}
                   disabled={busy !== null}
@@ -311,10 +314,10 @@ export function PartnerDriverDetail() {
                       })
                   }}
                 >
-                  Ver documento
+                  {t('driverDetail.viewDocument')}
                 </a>
               ) : (
-                <p className="text-[11px] text-muted-foreground">Sem ficheiro carregado pelo motorista.</p>
+                <p className="text-[11px] text-muted-foreground">{t('driverDetail.noFileUploaded')}</p>
               )}
               <button
                 type="button"
@@ -322,23 +325,23 @@ export function PartnerDriverDetail() {
                 onClick={() => void saveDocMeta(key)}
                 className="w-full min-h-9 rounded-md border border-primary/40 bg-primary/10 text-xs font-semibold text-foreground disabled:opacity-50"
               >
-                {busy === 'docMeta' ? '…' : 'Guardar validade e nota'}
+                {busy === 'docMeta' ? '…' : t('driverDetail.saveExpiryNote')}
               </button>
               <div className="flex flex-wrap gap-1">
                 {(
                   [
-                    ['approved', 'Aprovar'],
-                    ['pending_review', 'Revisão'],
-                    ['rejected', 'Rejeitar'],
-                    ['expired', 'Expirado'],
-                    ['missing', 'Em falta'],
+                    ['approved', t('driverDetail.docApprove')],
+                    ['pending_review', t('driverDetail.docReview')],
+                    ['rejected', t('driverDetail.docReject')],
+                    ['expired', t('driverDetail.docExpired')],
+                    ['missing', t('driverDetail.docMissing')],
                   ] as const
                 ).map(([s, label]) => (
                   <button
                     key={s}
                     type="button"
                     disabled={busy !== null || (s === 'approved' && !hasFile)}
-                    title={s === 'approved' && !hasFile ? 'Aguarda upload do motorista' : undefined}
+                    title={s === 'approved' && !hasFile ? t('driverDetail.awaitUpload') : undefined}
                     onClick={() => void runDoc(key, s)}
                     className="min-h-8 rounded-md border border-border px-2 text-[11px] font-medium disabled:opacity-50"
                   >
@@ -354,14 +357,14 @@ export function PartnerDriverDetail() {
   )
 
   if (loading) {
-    return <p className="p-4 text-sm text-muted-foreground">A carregar…</p>
+    return <p className="p-4 text-sm text-muted-foreground">{tc('loading')}</p>
   }
   if (!d || !userId) {
     return (
       <div className="p-4 space-y-2">
-        <p className="text-destructive text-sm">{error ?? 'Motorista não encontrado.'}</p>
+        <p className="text-destructive text-sm">{error ?? t('driverDetail.notFound')}</p>
         <Link to="/partner" className="text-primary text-sm underline">
-          Voltar
+          {tc('back')}
         </Link>
       </div>
     )
@@ -373,43 +376,43 @@ export function PartnerDriverDetail() {
   return (
     <div className="p-4 space-y-4 max-w-lg mx-auto w-full">
       <Link to="/partner" className="text-sm text-primary hover:underline">
-        ← Frota
+        {t('driverDetail.backToFleet')}
       </Link>
-      <h2 className="text-lg font-semibold text-foreground">{d.user.name ?? 'Motorista'}</h2>
+      <h2 className="text-lg font-semibold text-foreground">{d.user.name ?? t('driverDetail.defaultDriverName')}</h2>
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-1">
         <p>
-          <span className="text-muted-foreground">Telefone:</span>{' '}
+          <span className="text-muted-foreground">{t('driverDetail.phone')}</span>{' '}
           <span className="text-foreground">{d.user.phone ?? '—'}</span>
         </p>
         <p>
-          <span className="text-muted-foreground">Estado na frota:</span>{' '}
+          <span className="text-muted-foreground">{t('driverDetail.fleetStatus')}</span>{' '}
           <span className="text-foreground">{d.status}</span>
         </p>
         <p>
           <span className="text-muted-foreground">{t('driverDetail.availableApp')}:</span>{' '}
-          <span className="text-foreground">{d.is_available ? 'sim' : 'não'}</span>
+          <span className="text-foreground">{d.is_available ? tc('yes') : tc('no')}</span>
         </p>
       </div>
 
-      {locationBlock(d)}
+      {locationBlock(d, t)}
 
       {kpiLine}
 
       <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-2">
-        <p className="font-medium text-foreground">Enviar aviso</p>
+        <p className="font-medium text-foreground">{t('driverDetail.sendNotice')}</p>
         <input
           type="text"
           value={msgTitle}
           onChange={(e) => setMsgTitle(e.target.value)}
-          placeholder="Título"
+          placeholder={t('driverDetail.titlePlaceholder')}
           className="w-full rounded-lg border border-border px-2 py-2 text-sm"
         />
         <textarea
           value={msgBody}
           onChange={(e) => setMsgBody(e.target.value)}
-          placeholder="Mensagem"
+          placeholder={t('driverDetail.messagePlaceholder')}
           rows={3}
           className="w-full rounded-lg border border-border px-2 py-2 text-sm"
         />
@@ -418,8 +421,8 @@ export function PartnerDriverDetail() {
           onChange={(e) => setMsgPriority(e.target.value as 'normal' | 'high')}
           className="w-full rounded-lg border border-border px-2 py-2 text-sm"
         >
-          <option value="normal">Prioridade normal</option>
-          <option value="high">Prioridade alta</option>
+          <option value="normal">{t('driverDetail.priorityNormal')}</option>
+          <option value="high">{t('driverDetail.priorityHigh')}</option>
         </select>
         <button
           type="button"
@@ -436,12 +439,12 @@ export function PartnerDriverDetail() {
                   priority: msgPriority,
                   driver_user_id: userId ?? null,
                 })
-                setMsgOk('Aviso enviado.')
+                setMsgOk(t('driverDetail.noticeSent'))
                 setMsgTitle('')
                 setMsgBody('')
               } catch (e: unknown) {
                 const err = e as { detail?: string }
-                setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao enviar aviso.')
+                setError(typeof err?.detail === 'string' ? err.detail : t('driverDetail.sendNoticeError'))
               } finally {
                 setBusy(null)
               }
@@ -449,7 +452,7 @@ export function PartnerDriverDetail() {
           }}
           className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {busy === 'msg' ? '…' : 'Enviar aviso a este motorista'}
+          {busy === 'msg' ? '…' : t('driverDetail.sendNoticeBtn')}
         </button>
         {msgOk ? <p className="text-xs text-success">{msgOk}</p> : null}
       </div>
@@ -458,37 +461,37 @@ export function PartnerDriverDetail() {
         className="text-sm text-foreground/90"
         data-testid="partner-driver-docs-counter"
       >
-        Aprovados: {partnerDocumentsApprovedCount(d.documents)} / {REQUIRED_DRIVER_DOCUMENTS.length}
+        {t('driverDetail.approvedCount')} {partnerDocumentsApprovedCount(d.documents)} / {REQUIRED_DRIVER_DOCUMENTS.length}
       </p>
 
       {renderDocSection(
         d,
-        'Viatura (documentos)',
-        'Inspeção e elementos ligados ao veículo associado ao motorista.',
+        t('driverDetail.vehicleDocsTitle'),
+        t('driverDetail.vehicleDocsHint'),
         VEHICLE_DOCUMENT_KEYS,
       )}
       {renderDocSection(
         d,
-        'Motorista (documentos)',
-        'Estados partilhados com a app do motorista; validade e notas centralizadas na frota.',
+        t('driverDetail.driverDocsTitle'),
+        t('driverDetail.driverDocsHint'),
         driverOnlyDocKeys,
       )}
 
       {approved && (
         <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-2">
-          <p className="font-medium text-foreground">Mudanças de zona (hoje)</p>
+          <p className="font-medium text-foreground">{t('driverDetail.zoneChangesToday')}</p>
           {zoneBudgetLoading && (
-            <p className="text-muted-foreground text-xs">A carregar orçamento…</p>
+            <p className="text-muted-foreground text-xs">{t('driverDetail.loadingBudget')}</p>
           )}
           {!zoneBudgetLoading && zoneBudget && (
             <>
               <p>
-                <span className="text-muted-foreground">Usadas / máx.:</span>{' '}
+                <span className="text-muted-foreground">{t('driverDetail.usedMax')}</span>{' '}
                 <span className="text-foreground font-medium">
                   {zoneBudget.used_changes} / {zoneBudget.max_changes}
                 </span>
                 {' — '}
-                <span className="text-muted-foreground">restam {zoneBudget.remaining}</span>
+                <span className="text-muted-foreground">{t('driverDetail.remaining', { count: zoneBudget.remaining })}</span>
               </p>
               <p className="text-xs text-muted-foreground">
                 Dia {zoneBudget.service_date} ({zoneBudget.timezone})
@@ -496,13 +499,13 @@ export function PartnerDriverDetail() {
             </>
           )}
           {!zoneBudgetLoading && !zoneBudget && (
-            <p className="text-xs text-muted-foreground">Orçamento não disponível.</p>
+            <p className="text-xs text-muted-foreground">{t('driverDetail.budgetUnavailable')}</p>
           )}
           <button
             type="button"
             disabled={busy !== null || zoneBudgetLoading}
             onClick={() => {
-              if (!window.confirm('Autorizar +1 mudança de zona para o dia civil actual (Lisboa)?')) return
+              if (!window.confirm(t('driverDetail.grantZoneConfirm'))) return
               void (async () => {
                 setBusy('grantZone')
                 setError(null)
@@ -511,7 +514,7 @@ export function PartnerDriverDetail() {
                   setZoneBudget(b)
                 } catch (e: unknown) {
                   const err = e as { detail?: string }
-                  setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao autorizar.')
+                  setError(typeof err?.detail === 'string' ? err.detail : t('driverDetail.grantZoneError'))
                 } finally {
                   setBusy(null)
                 }
@@ -519,22 +522,25 @@ export function PartnerDriverDetail() {
             }}
             className="w-full rounded-xl border border-border bg-secondary/50 py-2 text-sm font-medium text-foreground disabled:opacity-50"
           >
-            {busy === 'grantZone' ? '…' : '+1 mudança autorizada (hoje)'}
+            {busy === 'grantZone' ? '…' : t('driverDetail.grantZoneBtn')}
           </button>
           {zoneSessionLoading ? (
-            <p className="text-xs text-muted-foreground">A carregar sessão de zona…</p>
+            <p className="text-xs text-muted-foreground">{t('driverDetail.loadingZoneSession')}</p>
           ) : zoneSession?.extension_requested &&
             zoneSession.extension_seconds_approved == null ? (
             <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 space-y-2 text-xs">
-              <p className="font-medium text-foreground">Pedido de extensão de prazo</p>
+              <p className="font-medium text-foreground">{t('driverDetail.extensionRequest')}</p>
               {zoneSession.extension_reason ? (
                 <p className="text-foreground/85 whitespace-pre-wrap">{zoneSession.extension_reason}</p>
               ) : null}
               <p className="text-muted-foreground">
-                Zona {zoneSession.zone_id} · prazo {new Date(zoneSession.deadline_at).toLocaleString('pt-PT')}
+                {t('driverDetail.zoneDeadline', {
+                  zoneId: zoneSession.zone_id,
+                  deadline: new Date(zoneSession.deadline_at).toLocaleString('pt-PT'),
+                })}
               </p>
               <label className="block space-y-1">
-                <span>Minutos extra a aprovar</span>
+                <span>{t('driverDetail.extraMinutes')}</span>
                 <input
                   type="number"
                   min={1}
@@ -564,7 +570,7 @@ export function PartnerDriverDetail() {
                       setError(
                         typeof err?.detail === 'string'
                           ? err.detail
-                          : 'Erro ao aprovar extensão.'
+                          : t('driverDetail.extensionError')
                       )
                     } finally {
                       setBusy(null)
@@ -573,13 +579,15 @@ export function PartnerDriverDetail() {
                 }}
                 className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
               >
-                {busy === 'zoneExt' ? '…' : 'Aprovar extensão'}
+                {busy === 'zoneExt' ? '…' : t('driverDetail.approveExtension')}
               </button>
             </div>
           ) : zoneSession?.extension_seconds_approved != null &&
             zoneSession.extension_seconds_approved > 0 ? (
             <p className="text-xs text-success">
-              Extensão aprovada (+{Math.round(zoneSession.extension_seconds_approved / 60)} min).
+              {t('driverDetail.extensionApproved', {
+                minutes: Math.round(zoneSession.extension_seconds_approved / 60),
+              })}
             </p>
           ) : null}
         </div>
@@ -587,7 +595,7 @@ export function PartnerDriverDetail() {
 
       {canToggleFleet && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Ativar / desativar na frota</p>
+          <p className="text-sm font-medium text-foreground">{t('driverDetail.toggleFleet')}</p>
           <div className="flex gap-2">
             <button
               type="button"
@@ -597,7 +605,7 @@ export function PartnerDriverDetail() {
               }
               className="flex-1 rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {busy === 'en' ? '…' : 'Ativar'}
+              {busy === 'en' ? '…' : t('driverDetail.activate')}
             </button>
             <button
               type="button"
@@ -607,7 +615,7 @@ export function PartnerDriverDetail() {
               }
               className="flex-1 rounded-xl border border-border bg-card py-2 text-sm font-medium disabled:opacity-50"
             >
-              {busy === 'dis' ? '…' : 'Desativar'}
+              {busy === 'dis' ? '…' : t('driverDetail.deactivate')}
             </button>
           </div>
         </div>
@@ -615,7 +623,7 @@ export function PartnerDriverDetail() {
 
       {approved && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Forçar online / offline</p>
+          <p className="text-sm font-medium text-foreground">{t('driverDetail.forceOnlineOffline')}</p>
           <div className="flex gap-2">
             <button
               type="button"
@@ -625,7 +633,7 @@ export function PartnerDriverDetail() {
               }
               className="flex-1 rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {busy === 'on' ? '…' : 'Online'}
+              {busy === 'on' ? '…' : t('driverDetail.online')}
             </button>
             <button
               type="button"
@@ -635,21 +643,21 @@ export function PartnerDriverDetail() {
               }
               className="flex-1 rounded-xl border border-border bg-card py-2 text-sm font-medium disabled:opacity-50"
             >
-              {busy === 'off' ? '…' : 'Offline'}
+              {busy === 'off' ? '…' : t('driverDetail.offline')}
             </button>
           </div>
         </div>
       )}
 
       <div className="space-y-2 pt-1">
-        <p className="text-sm font-medium text-foreground">Remover da frota</p>
+        <p className="text-sm font-medium text-foreground">{t('driverDetail.removeFromFleet')}</p>
         <button
           type="button"
           disabled={busy !== null}
           onClick={() => void removeFromFleet()}
           className="w-full rounded-xl border border-destructive/50 bg-destructive/5 py-2 text-sm font-medium text-destructive disabled:opacity-50"
         >
-          {busy === 'remove' ? '…' : 'Remover da frota'}
+          {busy === 'remove' ? '…' : t('driverDetail.removeFromFleetBtn')}
         </button>
       </div>
 
@@ -658,7 +666,7 @@ export function PartnerDriverDetail() {
         onClick={() => void load()}
         className="w-full rounded-xl bg-secondary py-2 text-sm font-medium text-secondary-foreground"
       >
-        Atualizar
+        {tc('refresh')}
       </button>
     </div>
   )

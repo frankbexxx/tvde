@@ -45,5 +45,30 @@
     "other": "Other…"
   },
   "cancelOtherApi": "Other",
-  "stateLine": "Status: {{status}}"
+  "stateLine": "Status: {{status}}",
+  "paymentLine": "Payment: {{status}}",
+  "requestCard": {
+    "expiresIn": "Expires in {{seconds}}s",
+    "expired": "Offer expired",
+    "silenceOfferAria": "Silence offer",
+    "silence": "Silence",
+    "state": "Status:",
+    "category": "Category:",
+    "pickup": "Pickup",
+    "destination": "Destination",
+    "estimate": "Estimate (indicative)",
+    "reject": "REJECT",
+    "accept": "ACCEPT",
+    "processing": "Processing…"
+  },
+  "slideAccept": {
+    "label": "Slide to accept",
+    "processing": "Processing…"
+  },
+  "completedOverlay": {
+    "paymentFailed": "Payment declined — follow platform instructions.",
+    "payment": "Payment: {{status}}",
+    "processing": "Processing — wait for sync.",
+    "continue": "Continue"
+  }
 }

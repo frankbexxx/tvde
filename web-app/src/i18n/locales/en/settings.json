@@ -8,5 +8,25 @@
   "appMode": "App mode",
   "adminPanel": "Admin panel",
   "accountHint": "Personal data and password: Account icon (profile).",
-  "driverRoleRequired": "This account has no driver profile; the driver panel requires a driver JWT."
+  "driverRoleRequired": "This account has no driver profile; the driver panel requires a driver JWT.",
+  "settingsTitle": "Settings",
+  "settingsAria": "Settings",
+  "activityLog": {
+    "button": "Activity log",
+    "title": "Activity log",
+    "mainDescription": "Theme, passenger or driver mode, admin panel and activity log.",
+    "logsDescription": "Chronological list of session events.",
+    "back": "← Back",
+    "development": "Development",
+    "ariaLabel": "Activity log",
+    "view": "View",
+    "live": "Live",
+    "status": "Status",
+    "log": "Log",
+    "copy": "Copy",
+    "copyTitle": "Copy log",
+    "clear": "Clear",
+    "empty": "No events recorded",
+    "copyEmpty": "No events"
+  }
 }

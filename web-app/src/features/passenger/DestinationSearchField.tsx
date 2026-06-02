@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import type { GeocodeSuggestion } from '@/services/geocoding'
 import { BTN_SECONDARY_RADIUS } from '../../components/layout/infoBoxTemplate'
@@ -24,12 +25,15 @@ export function DestinationSearchField({
   suggestions,
   loading,
   onSelect,
-  label = 'Destino da viagem',
-  placeholder = 'Destino: rua, localidade, código postal…',
+  label,
+  placeholder,
   disabled,
   geocodingUnavailable,
   onDismissSuggestions,
 }: DestinationSearchFieldProps) {
+  const { t } = useTranslation('passenger')
+  const resolvedLabel = label ?? t('search.destinationLabel')
+  const resolvedPlaceholder = placeholder ?? t('search.destinationPlaceholder')
   const id = useId()
   const listId = `${id}-list`
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -48,14 +52,14 @@ export function DestinationSearchField({
   return (
     <div ref={wrapRef} className="relative space-y-1.5">
       <label htmlFor={id} className="sr-only">
-        {label}
+        {resolvedLabel}
       </label>
       <Input
         id={id}
         type="search"
         autoComplete="off"
         enterKeyHint="search"
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         value={query}
         disabled={disabled}
         onChange={(e) => onQueryChange(e.target.value)}
@@ -66,12 +70,12 @@ export function DestinationSearchField({
       />
       {geocodingUnavailable ? (
         <p className="text-xs text-muted-foreground leading-snug">
-          Pesquisa por morada requer chave MapTiler. Podes continuar só com o mapa.
+          {t('search.geocodingUnavailable')}
         </p>
       ) : null}
       {loading && query.trim().length >= 2 ? (
         <p className="text-xs text-muted-foreground" aria-live="polite">
-          A procurar…
+          {t('search.searching')}
         </p>
       ) : null}
       {showList ? (

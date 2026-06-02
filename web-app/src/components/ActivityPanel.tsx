@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useActivityLog } from '../context/ActivityLogContext'
 import { useAuth } from '../context/AuthContext'
 import type { LogEntry, LogType } from '../context/ActivityLogContext'
@@ -27,25 +28,27 @@ function LogLine({ entry }: { entry: LogEntry }) {
 }
 
 function CopyLogButton({ logs }: { logs: LogEntry[] }) {
+  const { t } = useTranslation('settings')
   const copy = () => {
     const text = logs
       .map((e) => `[${formatTime(e.ts)}] ${e.msg}`)
       .reverse()
       .join('\n')
-    navigator.clipboard.writeText(text || 'Nenhum evento')
+    navigator.clipboard.writeText(text || t('activityLog.copyEmpty'))
   }
   return (
     <button
       onClick={copy}
       className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-      title="Copiar log"
+      title={t('activityLog.copyTitle')}
     >
-      Copiar
+      {t('activityLog.copy')}
     </button>
   )
 }
 
 export function ActivityPanel({ embedded = false }: { embedded?: boolean }) {
+  const { t } = useTranslation('settings')
   const { logs, status, clearLogs } = useActivityLog()
   const { role } = useAuth()
 
@@ -58,43 +61,43 @@ export function ActivityPanel({ embedded = false }: { embedded?: boolean }) {
       {...(!embedded ? { id: 'activity-log-panel' as const } : {})}
       className={rootClass}
       role="region"
-      aria-label="Registo de atividade"
+      aria-label={t('activityLog.ariaLabel')}
     >
       {/* Vista + Live */}
       <div className="p-2.5 bg-muted/20 border-b border-border/40 flex justify-between items-center">
         <div>
-          <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Vista</div>
+          <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('activityLog.view')}</div>
           <div className="text-xs font-medium text-muted-foreground capitalize">{role}</div>
         </div>
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span className="w-1.5 h-1.5 rounded-full bg-success/80 animate-pulse" />
-          Ao vivo
+          {t('activityLog.live')}
         </div>
       </div>
 
       {/* Status */}
       <div className="p-2.5 bg-muted/15 border-b border-border/40">
-        <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">Estado</div>
+        <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-0.5">{t('activityLog.status')}</div>
         <div className="text-xs font-medium text-muted-foreground">{status}</div>
       </div>
 
       {/* Log */}
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex justify-between items-center px-2.5 py-1.5 border-b border-border/40">
-          <span className="text-muted-foreground text-[10px] font-medium">Registo</span>
+          <span className="text-muted-foreground text-[10px] font-medium">{t('activityLog.log')}</span>
           <div className="flex gap-2">
             <CopyLogButton logs={logs} />
             <button
               onClick={clearLogs}
               className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
             >
-              Limpar
+              {t('activityLog.clear')}
             </button>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-2 font-mono text-[10px] text-muted-foreground">
           {logs.length === 0 ? (
-            <p className="italic">Nenhum evento registado</p>
+            <p className="italic">{t('activityLog.empty')}</p>
           ) : (
             [...logs].reverse().map((e) => <LogLine key={e.id} entry={e} />)
           )}

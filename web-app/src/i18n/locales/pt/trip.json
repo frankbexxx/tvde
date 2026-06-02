@@ -45,5 +45,30 @@
     "other": "Outro…"
   },
   "cancelOtherApi": "Outro",
-  "stateLine": "Estado: {{status}}"
+  "stateLine": "Estado: {{status}}",
+  "paymentLine": "Pagamento: {{status}}",
+  "requestCard": {
+    "expiresIn": "Expira em {{seconds}}s",
+    "expired": "Oferta expirada",
+    "silenceOfferAria": "Silenciar oferta",
+    "silence": "Silenciar",
+    "state": "Estado:",
+    "category": "Categoria:",
+    "pickup": "Recolha",
+    "destination": "Destino",
+    "estimate": "Estimativa (indicativa)",
+    "reject": "REJEITAR",
+    "accept": "ACEITAR",
+    "processing": "A processar…"
+  },
+  "slideAccept": {
+    "label": "Deslizar para aceitar",
+    "processing": "A processar…"
+  },
+  "completedOverlay": {
+    "paymentFailed": "Pagamento recusado — segue instruções da plataforma.",
+    "payment": "Pagamento: {{status}}",
+    "processing": "A processar — aguarda sincronização.",
+    "continue": "Continuar"
+  }
 }

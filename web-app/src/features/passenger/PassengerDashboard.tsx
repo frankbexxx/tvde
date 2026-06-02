@@ -604,7 +604,7 @@ export function PassengerDashboard() {
       if (!activeTripId || !token || cancelling) return
       setError(null)
       setCancelling(true)
-      setStatus('A cancelar...')
+      setStatus(t('cancelFlow.cancellingStatus'))
       addLog('Clique: Cancelar viagem', 'action')
       try {
         const r = reasonForApi?.trim()
@@ -615,16 +615,16 @@ export function PassengerDashboard() {
         setPassengerCancelPreset('')
         setPassengerCancelOther('')
         setPlanningRouteGeoJSON(null)
-        setStatus('Pronto')
+        setStatus(t('banner.ready'))
         addLog('Viagem cancelada', 'success')
         toast.success(t('trip.cancelled'))
         refetchHistory()
       } catch (err: unknown) {
         const msg = isTimeoutLikeError(err)
-          ? 'Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta cancelar de novo.'
+          ? t('cancelFlow.networkError')
           : humanizeCancelError(err)
         setError(msg)
-        setStatus('Não foi possível cancelar')
+        setStatus(t('cancelFlow.cancelFailedStatus'))
         addLog(`Erro: ${msg}`, 'error')
       } finally {
         setCancelling(false)
@@ -945,11 +945,19 @@ export function PassengerDashboard() {
       (!!activeTrip &&
         ['requested', 'assigned', 'accepted', 'arriving'].includes(activeTrip.status)))
 
+  const passengerPrimaryAction = useMemo((): 'cancel' | 'newTrip' | null => {
+    if (activeTrip?.status === 'completed') return 'newTrip'
+    if (activeTrip && ['requested', 'assigned', 'accepted', 'arriving'].includes(activeTrip.status)) {
+      return 'cancel'
+    }
+    return null
+  }, [activeTrip])
+
   const primaryLabel =
-    activeTrip?.status === 'completed'
-      ? 'Pedir nova viagem'
-      : activeTrip && ['requested', 'assigned', 'accepted', 'arriving'].includes(activeTrip.status)
-        ? 'Cancelar'
+    passengerPrimaryAction === 'newTrip'
+      ? t('trip.requestNew')
+      : passengerPrimaryAction === 'cancel'
+        ? t('cancelFlow.cancelBtn')
         : null
 
   const handleStartNewTripAfterComplete = useCallback(() => {
@@ -960,10 +968,10 @@ export function PassengerDashboard() {
   }, [setPassengerActiveTripId])
 
   const primaryOnClick = useMemo(() => {
-    if (primaryLabel === 'Pedir nova viagem') return handleStartNewTripAfterComplete
-    if (primaryLabel === 'Cancelar') return () => setPassengerCancelOpen(true)
+    if (passengerPrimaryAction === 'newTrip') return handleStartNewTripAfterComplete
+    if (passengerPrimaryAction === 'cancel') return () => setPassengerCancelOpen(true)
     return passengerDashboardNoop
-  }, [primaryLabel, handleStartNewTripAfterComplete])
+  }, [passengerPrimaryAction, handleStartNewTripAfterComplete])
 
   const handleRatingSubmitted = useCallback(() => {
     void refetchActiveTrip()
@@ -1022,11 +1030,11 @@ export function PassengerDashboard() {
   )
 
   const passengerCancelPanelInOverlay =
-    passengerCancelOpen && primaryLabel === 'Cancelar' ? (
+    passengerCancelOpen && passengerPrimaryAction === 'cancel' ? (
       <div className="space-y-3 pt-1" data-testid="passenger-cancel-panel">
-        <p className="text-sm font-medium text-foreground">Motivo do cancelamento</p>
+        <p className="text-sm font-medium text-foreground">{t('cancelFlow.title')}</p>
         <label className="block text-xs text-muted-foreground" htmlFor="passenger-cancel-preset">
-          Escolha rápida
+          {t('cancelFlow.quickPick')}
         </label>
         <select
           id="passenger-cancel-preset"
@@ -1046,7 +1054,7 @@ export function PassengerDashboard() {
           <textarea
             data-testid="passenger-cancel-other"
             className={`w-full min-h-[72px] ${BTN_SECONDARY_RADIUS} border border-border bg-card px-2 py-2 text-sm text-foreground`}
-            placeholder="Descreve em poucas palavras (opcional)."
+            placeholder={t('cancelFlow.otherPlaceholder')}
             maxLength={280}
             value={passengerCancelOther}
             onChange={(e) => setPassengerCancelOther(e.target.value)}
@@ -1064,7 +1072,7 @@ export function PassengerDashboard() {
               void handleCancel(tripCancelReasonForApi(passengerCancelPreset, passengerCancelOther))
             }
           >
-            Confirmar cancelamento
+            {t('cancelFlow.confirm')}
           </PrimaryActionButton>
           <button
             type="button"
@@ -1077,7 +1085,7 @@ export function PassengerDashboard() {
               setPassengerCancelOther('')
             }}
           >
-            Voltar
+            {t('common:back')}
           </button>
         </MapActionRow>
       </div>
@@ -1090,9 +1098,9 @@ export function PassengerDashboard() {
           className="flex-1 min-w-0"
           size="compact"
           onClick={primaryOnClick}
-          disabled={primaryLabel === 'Cancelar' ? cancelling : false}
-          loading={primaryLabel === 'Cancelar' && cancelling}
-          variant={primaryLabel === 'Cancelar' ? 'danger' : 'confirm'}
+          disabled={passengerPrimaryAction === 'cancel' ? cancelling : false}
+          loading={passengerPrimaryAction === 'cancel' && cancelling}
+          variant={passengerPrimaryAction === 'cancel' ? 'danger' : 'confirm'}
         >
           {primaryLabel}
         </PrimaryActionButton>
@@ -1215,22 +1223,22 @@ export function PassengerDashboard() {
                         suggestions={pickupGeoSuggestions}
                         loading={pickupGeoLoading}
                         onSelect={handlePickupPick}
-                        label="Recolha da viagem"
-                        placeholder="Recolha: rua, localidade, código postal…"
+                        label={t('search.pickupLabel')}
+                        placeholder={t('search.pickupPlaceholder')}
                         disabled={creating}
                         geocodingUnavailable={false}
                         onDismissSuggestions={dismissPickupGeoSuggestions}
                       />
                       {pickupCandidate ? (
                         <div className={INFO_BOX_PREVIEW}>
-                          <p className={INFO_BOX_TITLE_COMPACT}>Recolha em pré-visualização</p>
+                          <p className={INFO_BOX_TITLE_COMPACT}>{t('trip.pickupPreview')}</p>
                           <p className="text-xs text-muted-foreground leading-snug">
                             {pickupCandidate.primary}
                             {pickupCandidate.secondary ? ` · ${pickupCandidate.secondary}` : ''}
                           </p>
                           <MapActionRow testId="passenger-pickup-preview-actions">
-                            <button type="button" onClick={confirmPickupCandidate} className={BTN_PRIMARY_COMPACT}>Confirmar recolha</button>
-                            <button type="button" onClick={clearPickupCandidate} className={`flex-1 min-w-0 ${BTN_SECONDARY}`}>Limpar</button>
+                            <button type="button" onClick={confirmPickupCandidate} className={BTN_PRIMARY_COMPACT}>{t('preview.confirmPickup')}</button>
+                            <button type="button" onClick={clearPickupCandidate} className={`flex-1 min-w-0 ${BTN_SECONDARY}`}>{t('preview.clear')}</button>
                           </MapActionRow>
                         </div>
                       ) : null}
@@ -1244,22 +1252,22 @@ export function PassengerDashboard() {
                         suggestions={geoSuggestions}
                         loading={geoLoading}
                         onSelect={handleDestinationPick}
-                        label="Destino da viagem"
-                        placeholder="Destino: rua, localidade, código postal…"
+                        label={t('search.destinationLabel')}
+                        placeholder={t('search.destinationPlaceholder')}
                         disabled={creating}
                         geocodingUnavailable={false}
                         onDismissSuggestions={dismissGeoSuggestions}
                       />
                       {destinationCandidate ? (
                         <div className={INFO_BOX_PREVIEW}>
-                          <p className={INFO_BOX_TITLE_COMPACT}>Destino em pré-visualização</p>
+                          <p className={INFO_BOX_TITLE_COMPACT}>{t('trip.dropoffPreview')}</p>
                           <p className="text-xs text-muted-foreground leading-snug">
                             {destinationCandidate.primary}
                             {destinationCandidate.secondary ? ` · ${destinationCandidate.secondary}` : ''}
                           </p>
                           <MapActionRow testId="passenger-dest-preview-actions">
-                            <button type="button" onClick={confirmDestinationCandidate} className={BTN_PRIMARY_COMPACT}>Confirmar destino</button>
-                            <button type="button" onClick={clearDestinationCandidate} className={`flex-1 min-w-0 ${BTN_SECONDARY}`}>Limpar</button>
+                            <button type="button" onClick={confirmDestinationCandidate} className={BTN_PRIMARY_COMPACT}>{t('preview.confirmDestination')}</button>
+                            <button type="button" onClick={clearDestinationCandidate} className={`flex-1 min-w-0 ${BTN_SECONDARY}`}>{t('preview.clear')}</button>
                           </MapActionRow>
                         </div>
                       ) : null}
@@ -1282,7 +1290,7 @@ export function PassengerDashboard() {
                     driverTrackingHint={driverTrackingHint}
                     slowRequestHint={
                       creating && createTakingLong
-                        ? 'Ainda a processar o pedido… Se demorar muito, verifica a ligação.'
+                        ? t('planner.slowRequestHint')
                         : null
                     }
                     onChooseMap={onChoosePlanningModeAndScrollToMap}
@@ -1293,7 +1301,7 @@ export function PassengerDashboard() {
                     confirmTripPending={creating}
                     confirmBlockedReason={
                       pickupDestinationTooClose
-                        ? 'A recolha e o destino estão demasiado próximos (quase o mesmo sítio). Ajusta um dos pontos antes de confirmar.'
+                        ? t('planner.confirmTooClose')
                         : null
                     }
                     visualWeight={a021Layout.panel}
@@ -1312,7 +1320,7 @@ export function PassengerDashboard() {
                       data-testid="passenger-info-panel-submitting"
                     >
                       <Spinner size="md" />
-                      <p className="text-sm font-semibold text-foreground">A enviar pedido…</p>
+                      <p className="text-sm font-semibold text-foreground">{t('sheet.submitting')}</p>
                     </div>
                   ) : uxState && activeTrip ? (
                     <div className="space-y-2">
@@ -1341,7 +1349,7 @@ export function PassengerDashboard() {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-4 space-y-2">
                       <Spinner size="md" />
-                      <p className="text-sm text-foreground">A sincronizar viagem…</p>
+                      <p className="text-sm text-foreground">{t('sheet.syncing')}</p>
                     </div>
                   )}
                 </MapBottomSheet>

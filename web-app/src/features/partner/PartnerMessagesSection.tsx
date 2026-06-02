@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { usePolling } from '../../hooks/usePolling'
 import {
@@ -14,6 +15,7 @@ type PartnerMessagesSectionProps = {
 }
 
 export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: PartnerMessagesSectionProps) {
+  const { t } = useTranslation('partner')
   const [error, setError] = useState<string | null>(null)
   const [openId, setOpenId] = useState<string | null>(null)
   const [broadcastOpen, setBroadcastOpen] = useState(false)
@@ -30,10 +32,10 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
       setError(null)
       return rows
     } catch {
-      setError('Não foi possível carregar mensagens dos motoristas.')
+      setError(t('messages.loadError'))
       throw new Error('inbox_load_failed')
     }
-  }, [])
+  }, [t])
 
   const { data, refetch, isLoading, isRefreshing } = usePolling(load, [load], true, 15_000, {
     equals: (prev, next) =>
@@ -77,10 +79,10 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
       setBTitle('')
       setBBody('')
       setBroadcastOpen(false)
-      setOk('Aviso enviado a toda a frota.')
+      setOk(t('messages.broadcastSent'))
       void refetch()
     } catch {
-      setError('Falha ao enviar aviso à frota.')
+      setError(t('messages.sendFleetError'))
     } finally {
       setBusy(false)
     }
@@ -93,14 +95,14 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium text-foreground">
-          Mensagens dos motoristas
+          {t('messages.sectionTitle')}
           {unread > 0 ? (
             <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">
               {unread}
             </span>
           ) : null}
           {isRefreshing ? (
-            <span className="ml-2 text-[10px] font-normal text-muted-foreground">A actualizar…</span>
+            <span className="ml-2 text-[10px] font-normal text-muted-foreground">{t('messages.refreshing')}</span>
           ) : null}
         </p>
         <button
@@ -108,7 +110,7 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
           onClick={() => setBroadcastOpen((v) => !v)}
           className="min-h-8 rounded-lg border border-border px-2 text-xs font-medium"
         >
-          Aviso à frota
+          {t('messages.fleetNotice')}
         </button>
       </div>
 
@@ -118,13 +120,13 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
             type="text"
             value={bTitle}
             onChange={(e) => setBTitle(e.target.value)}
-            placeholder="Título do aviso"
+            placeholder={t('messages.titlePlaceholder')}
             className="w-full rounded-lg border border-border px-2 py-2 text-sm"
           />
           <textarea
             value={bBody}
             onChange={(e) => setBBody(e.target.value)}
-            placeholder="Mensagem para todos os motoristas"
+            placeholder={t('messages.bodyPlaceholder')}
             rows={3}
             className="w-full rounded-lg border border-border px-2 py-2 text-sm"
           />
@@ -133,8 +135,8 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
             onChange={(e) => setBPriority(e.target.value as 'normal' | 'high')}
             className="w-full rounded-lg border border-border px-2 py-2 text-sm"
           >
-            <option value="normal">Prioridade normal</option>
-            <option value="high">Prioridade alta</option>
+            <option value="normal">{t('messages.priorityNormal')}</option>
+            <option value="high">{t('messages.priorityHigh')}</option>
           </select>
           <button
             type="button"
@@ -142,18 +144,18 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
             onClick={() => void sendBroadcast()}
             className="w-full min-h-9 rounded-xl bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {busy ? 'A enviar…' : 'Enviar à frota'}
+            {busy ? t('messages.sending') : t('messages.sendToFleet')}
           </button>
         </div>
       ) : null}
 
       {ok ? <p className="text-xs text-success">{ok}</p> : null}
       {isLoading && inbox.length === 0 ? (
-        <p className="text-xs text-muted-foreground">A carregar…</p>
+        <p className="text-xs text-muted-foreground">{t('messages.loading')}</p>
       ) : error ? (
         <p className="text-xs text-destructive">{error}</p>
       ) : inbox.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Sem mensagens dos motoristas.</p>
+        <p className="text-xs text-muted-foreground">{t('messages.empty')}</p>
       ) : (
         <>
           <ul className={`space-y-2 overflow-y-auto ${listMaxH}`}>

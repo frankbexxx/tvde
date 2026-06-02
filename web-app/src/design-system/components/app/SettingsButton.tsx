@@ -108,12 +108,12 @@ export function SettingsButton() {
         className="w-full justify-center font-medium"
         onClick={() => setView("logs")}
       >
-        Registo de atividade
+        {t("activityLog.button")}
       </Button>
       {import.meta.env.DEV ? (
         <div className="pt-2 border-t border-border/60">
           <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-            Desenvolvimento
+            {t("activityLog.development")}
           </p>
           <DevTools
             lastCreatedTripId={devToolsTripId}
@@ -134,7 +134,7 @@ export function SettingsButton() {
         className="self-start -ml-2 text-muted-foreground"
         onClick={() => setView("main")}
       >
-        ← Voltar
+        {t("activityLog.back")}
       </Button>
       <ActivityPanel embedded />
     </div>
@@ -144,7 +144,7 @@ export function SettingsButton() {
     <Button
       variant="ghost"
       size="icon"
-      aria-label="Configurações"
+      aria-label={t("settingsAria")}
       className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
     >
       <SettingsIcon />
@@ -163,11 +163,11 @@ export function SettingsButton() {
           }
         >
           <DialogHeader>
-            <DialogTitle>{view === "main" ? "Configurações" : "Registo de atividade"}</DialogTitle>
+            <DialogTitle>{view === "main" ? t("settingsTitle") : t("activityLog.title")}</DialogTitle>
             <DialogDescription className="sr-only">
               {view === "main"
-                ? "Tema, modo passageiro ou motorista, painel administrativo e registo de actividade."
-                : "Lista cronológica de eventos da sessão."}
+                ? t("activityLog.mainDescription")
+                : t("activityLog.logsDescription")}
             </DialogDescription>
           </DialogHeader>
           {view === "main" ? mainBody : logsBody}
@@ -188,7 +188,7 @@ export function SettingsButton() {
         }
       >
         <SheetHeader>
-          <SheetTitle>{view === "main" ? "Configurações" : "Registo de atividade"}</SheetTitle>
+          <SheetTitle>{view === "main" ? t("settingsTitle") : t("activityLog.title")}</SheetTitle>
         </SheetHeader>
         {view === "main" ? mainBody : logsBody}
       </SheetContent>

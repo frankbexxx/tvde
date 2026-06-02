@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { LogOut } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '../ui/sheet'
 import { MENU_BTN_SM, MENU_ROW_BTN, MENU_SECTION_TITLE, MENU_SURFACE } from './infoBoxTemplate'
@@ -51,12 +52,13 @@ export function AppMenuHeader({
   onClose: () => void
   closeTestId: string
 }) {
+  const { t } = useTranslation('common')
   return (
     <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
       <div className="flex min-w-0 items-center gap-2">
         {onBack ? (
           <button type="button" onClick={onBack} className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}>
-            Voltar
+            {t('back')}
           </button>
         ) : null}
         <p className="truncate text-sm font-semibold text-foreground">{title}</p>
@@ -67,7 +69,7 @@ export function AppMenuHeader({
         data-testid={closeTestId}
         className={`${MENU_BTN_SM} px-3 text-sm font-semibold`}
       >
-        Fechar
+        {t('close')}
       </button>
     </div>
   )
@@ -168,6 +170,7 @@ export function AppMenuRow({
 }
 
 export function AppMenuLogoutRow({ onClick, testId }: { onClick: () => void; testId?: string }) {
+  const { t } = useTranslation('common')
   return (
     <button
       type="button"
@@ -176,7 +179,7 @@ export function AppMenuLogoutRow({ onClick, testId }: { onClick: () => void; tes
       className={cn(MENU_ROW_BTN, 'w-full bg-background')}
     >
       <LogOut className="h-4 w-4 text-foreground/80" />
-      Sair
+      {t('logout')}
     </button>
   )
 }

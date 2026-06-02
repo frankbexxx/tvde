@@ -18,5 +18,39 @@
   "rolePartner": "Fleet",
   "roleStaff": "Staff",
   "unexpectedError": "Unexpected error response.",
-  "legalEnSummary": "English summary — the legally binding text is in Portuguese."
+  "legalEnSummary": "English summary — the legally binding text is in Portuguese.",
+  "logout": "Sign out",
+  "yes": "yes",
+  "no": "no",
+  "error": "Error",
+  "profilePanel": {
+    "name": "Name",
+    "phone": "Phone",
+    "role": "Role",
+    "accountAria": "Account",
+    "accountTitle": "Account",
+    "accountDescription": "Account details: name, phone, role and BETA password. Sign out here."
+  },
+  "betaAccount": {
+    "title": "Account (BETA)",
+    "intro": "The <phone>phone</phone> can only be changed by an administrator. To reset the default password, the admin can use <clear>Clear password</clear> in the panel.",
+    "phone": "Phone",
+    "visibleName": "Display name",
+    "nameValidation": "Enter a name (1–120 characters).",
+    "nameUpdated": "Name updated.",
+    "saving": "Saving…",
+    "saveName": "Save name",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "defaultPasswordHint": "You still use the default BETA password — set a new one below (current password not required).",
+    "newPasswordMin": "New password (min. 8 characters)",
+    "confirmNew": "Confirm new",
+    "passwordMinError": "New password must be at least 8 characters.",
+    "passwordMismatch": "Confirmation does not match the new password.",
+    "currentRequired": "Enter your current password.",
+    "passwordUpdated": "Password updated.",
+    "updating": "Updating…",
+    "updatePassword": "Update password",
+    "loading": "Loading account data…"
+  }
 }
