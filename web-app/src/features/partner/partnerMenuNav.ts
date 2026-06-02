@@ -1,4 +1,5 @@
 import type { PartnerMenuScreen } from './PartnerSideMenu'
+import i18n from '../../i18n'
 
 /** Deep routes com ecrã full no Outlet (detalhe motorista/viagem). */
 export function isPartnerDeepRoute(pathname: string): boolean {
@@ -42,18 +43,7 @@ export function partnerRootHighlightKey(screen: PartnerMenuScreen): string | nul
 }
 
 export function partnerMenuTitle(screen: PartnerMenuScreen): string {
-  if (screen === 'root') return 'Menu'
-  if (screen === 'fleet') return 'Frota'
-  if (screen === 'fleet_list') return 'Lista motoristas'
-  if (screen === 'fleet_map') return 'Mapa live'
-  if (screen === 'fleet_add') return 'Adicionar à frota'
-  if (screen === 'trips') return 'Viagens'
-  if (screen === 'trips_summary') return 'Resumo viagens'
-  if (screen === 'trips_list') return 'Lista viagens'
-  if (screen === 'trips_export') return 'Exportar viagens'
-  if (screen === 'reports') return 'Relatórios'
-  if (screen === 'settings') return 'Definições'
-  if (screen === 'profile') return 'Perfil'
-  if (screen === 'inbox') return 'Caixa'
-  return 'Partner'
+  const key = `partner:menuTitle.${screen}`
+  if (i18n.exists(key)) return i18n.t(key)
+  return i18n.t('partner:menuTitle.default')
 }

@@ -6,12 +6,14 @@ import { useAuth, isBackofficeStaffRole } from '@/context/AuthContext'
 import { parseJwtPayload } from '@/utils/jwt'
 import { HEADER_ROTATING_HINTS } from '@/components/layout/headerRotatingHints'
 import { fetchRotacionalMessages } from '@/api/rotacional'
+import { useTranslation } from 'react-i18next'
+import { formatHeaderDateTime } from '@/i18n/format'
 
-function headerRoleLabel(role: string): string {
-  if (role === 'driver') return 'Motorista'
-  if (isBackofficeStaffRole(role)) return 'Staff'
-  if (role === 'partner') return 'Frota'
-  return 'Passageiro'
+function headerRoleLabel(role: string, t: (k: string) => string): string {
+  if (role === 'driver') return t('common:roleDriver')
+  if (isBackofficeStaffRole(role)) return t('common:roleStaff')
+  if (role === 'partner') return t('common:rolePartner')
+  return t('common:rolePassenger')
 }
 
 export type AppHeaderBarVariant = 'default' | 'userCompact'
@@ -26,6 +28,7 @@ interface AppHeaderBarProps {
  * + linha rotacional de dicas (v1 estática + v2 feed opcional via API).
  */
 export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
+  const { t } = useTranslation()
   const compact = variant === 'userCompact' || variant === 'driverCompact'
   const { sessionDisplayName, sessionPhone, sessionRole, token } = useAuth()
   const [now, setNow] = useState(() => new Date())
@@ -65,15 +68,7 @@ export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
     return () => window.clearInterval(id)
   }, [allHints.length])
 
-  const dateStr = now.toLocaleDateString('pt-PT', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  })
-  const timeStr = now.toLocaleTimeString('pt-PT', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const { dateStr, timeStr } = formatHeaderDateTime(now)
   const dateTimeLine = `${dateStr} · ${timeStr}`
   const who = sessionDisplayName?.trim() || sessionPhone?.trim() || null
   const jwtSub = token ? parseJwtPayload(token)?.sub : undefined
@@ -168,7 +163,7 @@ export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
                 title="Papel desta sessão na API"
                 data-testid="app-header-role-pill"
               >
-                {headerRoleLabel(sessionRole)}
+                {headerRoleLabel(sessionRole, t)}
               </span>
               {accountRef ? (
                 <span

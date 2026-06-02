@@ -676,8 +676,8 @@ export function AdminDashboard() {
   /** Viagem seleccionada que não está na lista activa; no modo Histórico deixa de ser «órfã» se já aparece na lista. */
   const tripOrphanFromDeepLink = Boolean(
     selectedTripId &&
-    !selectedTripInActiveList &&
-    !(tripsListMode === 'history' && selectedTripInHistoryList)
+      !selectedTripInActiveList &&
+      !(tripsListMode === 'history' && selectedTripInHistoryList)
   )
 
   /** SP-D: indicador na tab Saúde quando há linhas ou avisos. */
@@ -685,7 +685,7 @@ export function AdminDashboard() {
     () =>
       Boolean(
         health &&
-        (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
+          (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
       ),
     [health]
   )
@@ -733,9 +733,9 @@ export function AdminDashboard() {
                   : syncAdminUrl({ tab: id, tripId: null })
               }
               className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${tab === id
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
-                }`}
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
+              }`}
               title={healthDot ? 'Há anomalias ou avisos na Saúde' : undefined}
             >
               <span className="inline-flex items-center gap-1.5">
@@ -757,7 +757,7 @@ export function AdminDashboard() {
           Sessão (JWT):{' '}
           <span
             className={`font-mono font-medium ${isSuperAdminSession ? 'text-foreground' : 'text-warning'
-              }`}
+            }`}
           >
             {parseJwtPayload(token)?.role ?? '—'}
           </span>
@@ -878,7 +878,7 @@ export function AdminDashboard() {
           tripActionLoading={tripActionLoading}
           tripDebug={tripDebug}
           tripDebugId={tripDebugId}
-          tripDetail={tripDetail}
+                      tripDetail={tripDetail}
           tripDetailLoading={tripDetailLoading}
           tripOrphanFromDeepLink={tripOrphanFromDeepLink}
           tripsListMode={tripsListMode}
@@ -988,7 +988,7 @@ export function AdminDashboard() {
           usersLoadingMore={usersLoadingMore}
           usersSort={usersSort}
         />
-      )}
-    </div>
+                          )}
+                        </div>
   )
 }

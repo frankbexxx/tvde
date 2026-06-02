@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -44,6 +45,7 @@ function locationBlock(d: PartnerDriverRow) {
 }
 
 export function PartnerDriverDetail() {
+  const { t } = useTranslation('partner')
   const { userId } = useParams<{ userId: string }>()
   const { token } = useAuth()
   const navigate = useNavigate()
@@ -386,7 +388,7 @@ export function PartnerDriverDetail() {
           <span className="text-foreground">{d.status}</span>
         </p>
         <p>
-          <span className="text-muted-foreground">Disponível (app):</span>{' '}
+          <span className="text-muted-foreground">{t('driverDetail.availableApp')}:</span>{' '}
           <span className="text-foreground">{d.is_available ? 'sim' : 'não'}</span>
         </p>
       </div>

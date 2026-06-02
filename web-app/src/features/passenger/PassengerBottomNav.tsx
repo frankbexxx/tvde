@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { History, Home, Menu, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export type PassengerShellTab = 'home' | 'history' | 'account' | 'menu'
 
@@ -9,6 +10,7 @@ type PassengerBottomNavProps = {
 }
 
 export function PassengerBottomNav({ active, onSelect }: PassengerBottomNavProps) {
+  const { t } = useTranslation('passenger')
   const item = (tab: PassengerShellTab, testId: string, label: string, Icon: LucideIcon) => {
     const isOn = active === tab
     return (
@@ -29,12 +31,12 @@ export function PassengerBottomNav({ active, onSelect }: PassengerBottomNavProps
   return (
     <nav
       className="flex w-full border-t border-border bg-background/95 backdrop-blur-sm safe-area-pb"
-      aria-label="Navegação principal do passageiro"
+      aria-label={t('nav.aria')}
     >
-      {item('home', 'passenger-bottom-nav-home', 'Início', Home)}
-      {item('history', 'passenger-bottom-nav-history', 'Histórico', History)}
-      {item('account', 'passenger-bottom-nav-account', 'Conta', User)}
-      {item('menu', 'passenger-bottom-nav-menu', 'Menu', Menu)}
+      {item('home', 'passenger-bottom-nav-home', t('nav.home'), Home)}
+      {item('history', 'passenger-bottom-nav-history', t('nav.history'), History)}
+      {item('account', 'passenger-bottom-nav-account', t('nav.account'), User)}
+      {item('menu', 'passenger-bottom-nav-menu', t('nav.menu'), Menu)}
     </nav>
   )
 }

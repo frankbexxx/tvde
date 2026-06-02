@@ -1,4 +1,5 @@
 import type { PassengerMenuScreen } from './PassengerSideMenu'
+import i18n from '../../i18n'
 
 export function passengerRootHighlightKey(screen: PassengerMenuScreen): string | null {
   if (screen === 'root') return null
@@ -9,10 +10,7 @@ export function passengerRootHighlightKey(screen: PassengerMenuScreen): string |
 }
 
 export function passengerMenuTitle(screen: PassengerMenuScreen): string {
-  if (screen === 'history') return 'Histórico'
-  if (screen === 'history_detail') return 'Detalhe da viagem'
-  if (screen === 'account') return 'Conta'
-  if (screen === 'share_app') return 'Partilhar app'
-  if (screen === 'settings') return 'Definições'
-  return 'Menu'
+  const key = `passenger:menuTitle.${screen}`
+  if (i18n.exists(key)) return i18n.t(key)
+  return i18n.t('common:menu')
 }

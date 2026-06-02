@@ -1,0 +1,49 @@
+{
+  "status": {
+    "requested": "Looking for a driver",
+    "assigned": "Driver assigned",
+    "accepted": "Driver on the way",
+    "arriving": "Driver almost there",
+    "ongoing": "Trip in progress",
+    "completed": "Trip completed",
+    "cancelled": "Trip cancelled",
+    "failed": "Trip not completed"
+  },
+  "payment": {
+    "pending": "Payment pending",
+    "processing": "Payment processing…",
+    "succeeded": "Payment completed",
+    "failed": "Payment declined"
+  },
+  "driverActive": {
+    "assigned": "Trip assigned — confirm to proceed",
+    "accepted": "Heading to passenger",
+    "arriving": "At pickup point",
+    "ongoing": "On trip",
+    "completed": "Trip completed"
+  },
+  "driverAvailable": "Request available",
+  "driverNewTripHint": "New trip available",
+  "driverBadge": {
+    "requested": "Waiting",
+    "assigned": "Waiting",
+    "accepted": "En route",
+    "arriving": "En route",
+    "ongoing": "In progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "failed": "Interrupted"
+  },
+  "cancelPreset": {
+    "none": "No reason given",
+    "driverNoShow": "Passenger no-show",
+    "unexpected": "Unexpected event",
+    "vehicleIssue": "Vehicle issue",
+    "passengerPlans": "Change of plans",
+    "driverSlow": "Driver taking too long",
+    "mistake": "Requested by mistake",
+    "other": "Other…"
+  },
+  "cancelOtherApi": "Other",
+  "stateLine": "Status: {{status}}"
+}

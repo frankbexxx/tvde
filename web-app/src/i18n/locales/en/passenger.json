@@ -1,0 +1,61 @@
+{
+  "nav": {
+    "aria": "Passenger main navigation",
+    "home": "Home",
+    "history": "History",
+    "account": "Account",
+    "menu": "Menu"
+  },
+  "menuTitle": {
+    "history": "History",
+    "history_detail": "Trip details",
+    "account": "Account",
+    "share_app": "Share app",
+    "settings": "Settings",
+    "root": "Menu"
+  },
+  "banner": {
+    "creating": "Sending request…",
+    "ready": "Ready",
+    "offline": "Offline — check your network",
+    "offlineSub": "When you are back online, the app will update again. You can try reloading the page.",
+    "paymentFailed": "Payment declined",
+    "paymentFailedSub": "Try requesting again or contact support if the problem continues.",
+    "syncing": "Syncing trip…",
+    "searching": "Looking for a driver",
+    "assigned": "Driver assigned",
+    "enRoute": "Driver on the way",
+    "ongoing": "Trip in progress",
+    "completed": "Trip completed",
+    "paymentConfirmed": "Payment confirmed.",
+    "paymentProcessing": "Payment may take a few seconds to show as completed — keep this page open."
+  },
+  "payment": {
+    "mockConfirming": "Simulated payment in this environment. No charge or card.",
+    "cardConfirming": "Card payment. Bank authorisation or confirmation only happens when a driver accepts; confirming here does not charge the trip amount immediately.",
+    "mockSearching": "Simulated payment — no card needed in this environment.",
+    "cardSearching": "Is your card handy? When a driver accepts, your bank may ask for extra confirmation (e.g. 3-D Secure)."
+  },
+  "planner": {
+    "searchingTitle": "Looking for a driver…",
+    "searchingTrip": "Request {{id}}…",
+    "searchingSending": "Sending your request…"
+  },
+  "pickupTooClose": "Pickup and destination are too close — choose two different points before requesting.",
+  "requestingStatus": "Requesting trip…",
+  "trip": {
+    "request": "Request trip",
+    "cancel": "Cancel trip",
+    "tryAgain": "Try again",
+    "sendRating": "Submit rating",
+    "thanksRating": "Thanks for your rating",
+    "pickupPreview": "Pickup in preview",
+    "pickupConfirmed": "Pickup confirmed",
+    "dropoffPreview": "Destination in preview",
+    "dropoffConfirmed": "Destination confirmed",
+    "sent": "Request sent — syncing…",
+    "cancelled": "Trip cancelled",
+    "resent": "Request sent again"
+  },
+  "unreadBadge": "{{count}} unread message(s)"
+}

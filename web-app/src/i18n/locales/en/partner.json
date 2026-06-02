@@ -1,0 +1,36 @@
+{
+  "nav": {
+    "aria": "Partner main navigation",
+    "home": "Home",
+    "fleet": "Fleet",
+    "inbox": "Inbox",
+    "menu": "Menu"
+  },
+  "menuTitle": {
+    "root": "Menu",
+    "fleet": "Fleet",
+    "fleet_list": "Driver list",
+    "fleet_map": "Live map",
+    "fleet_add": "Add to fleet",
+    "trips": "Trips",
+    "trips_summary": "Trip summary",
+    "trips_list": "Trip list",
+    "trips_export": "Export trips",
+    "reports": "Reports",
+    "settings": "Settings",
+    "profile": "Profile",
+    "inbox": "Inbox",
+    "default": "Partner"
+  },
+  "home": {
+    "title": "Home"
+  },
+  "driverDetail": {
+    "availableApp": "Available (app)"
+  },
+  "settings": {
+    "title": "Settings",
+    "refreshHint": "Refresh fleet and trip data."
+  },
+  "unreadBadge": "{{count}} unread message(s)"
+}

@@ -1,4 +1,5 @@
 import { BrowserRouter } from 'react-router-dom'
+import { LocaleProvider } from './i18n/LocaleProvider'
 import { ActivityLogProvider } from './context/ActivityLogContext'
 import { AuthProvider } from './context/AuthContext'
 import { ActiveTripProvider } from './context/ActiveTripContext'
@@ -11,17 +12,19 @@ import './App.css'
 function App() {
   return (
     <BrowserRouter>
-      <ActivityLogProvider>
-        <AuthProvider>
-          <AppLifecycleLogger />
-          <DevToolsCallbackProvider>
-            <ActiveTripProvider>
-              <AppRoutes />
-            </ActiveTripProvider>
-          </DevToolsCallbackProvider>
-        </AuthProvider>
-      </ActivityLogProvider>
-      <Toaster />
+      <LocaleProvider>
+        <ActivityLogProvider>
+          <AuthProvider>
+            <AppLifecycleLogger />
+            <DevToolsCallbackProvider>
+              <ActiveTripProvider>
+                <AppRoutes />
+              </ActiveTripProvider>
+            </DevToolsCallbackProvider>
+          </AuthProvider>
+        </ActivityLogProvider>
+        <Toaster />
+      </LocaleProvider>
     </BrowserRouter>
   )
 }

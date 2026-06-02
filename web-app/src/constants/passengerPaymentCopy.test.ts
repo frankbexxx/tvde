@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
-  PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING,
-  PASSENGER_PAYMENT_DISCLOSURE_SEARCHING,
+  passengerPaymentDisclosureConfirming,
+  passengerPaymentDisclosureSearching,
 } from './passengerPaymentCopy'
 
 describe('passengerPaymentCopy', () => {
   it('has non-empty disclosure strings', () => {
-    expect(PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING.length).toBeGreaterThan(40)
-    expect(PASSENGER_PAYMENT_DISCLOSURE_SEARCHING.length).toBeGreaterThan(20)
+    expect(passengerPaymentDisclosureConfirming().length).toBeGreaterThan(40)
+    expect(passengerPaymentDisclosureSearching().length).toBeGreaterThan(20)
   })
 })

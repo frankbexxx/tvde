@@ -5,13 +5,16 @@ import type { StatusVariant } from '../../components/layout/StatusHeader'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
-import { formatApiErrorFromUnknown } from '../../utils/apiErrorDetail'
+import { humanizeCancelError, humanizeCreateTripError } from '../../i18n/apiErrors'
+import i18n from '../../i18n'
 
-/** Evita «Estado: X» quando X já é o título — menos ruído com StatusHeader + cartão A014. */
+export { humanizeCreateTripError, humanizeCancelError }
+
 function dedupeEstadoSubLabel(label: string, subLabel?: string): string | undefined {
   if (!subLabel) return undefined
-  if (!/^Estado:\s*/i.test(subLabel)) return subLabel
-  const tail = subLabel.replace(/^Estado:\s*/i, '').trim()
+  const prefix = i18n.language === 'en' ? /^Status:\s*/i : /^Estado:\s*/i
+  if (!prefix.test(subLabel)) return subLabel
+  const tail = subLabel.replace(prefix, '').trim()
   if (tail === label.trim()) return undefined
   return subLabel
 }
@@ -27,23 +30,23 @@ export function getPassengerBannerState(params: {
   const { creating, activeTripId, activeTripLoading, activeTrip, uxState, isOnline } = params
 
   if (creating && !activeTripId) {
-    return { label: 'A enviar pedido…', variant: 'requested' }
+    return { label: i18n.t('passenger:banner.creating'), variant: 'requested' }
   }
   if (!activeTripId) {
-    return { label: 'Pronto', variant: 'idle' }
+    return { label: i18n.t('passenger:banner.ready'), variant: 'idle' }
   }
   if (activeTripId && !isOnline) {
     return {
-      label: 'Sem ligação — verifica a rede',
+      label: i18n.t('passenger:banner.offline'),
       variant: 'idle',
-      subLabel: 'Quando voltares a ficar online, a app volta a atualizar sozinha. Podes tentar recarregar a página.',
+      subLabel: i18n.t('passenger:banner.offlineSub'),
     }
   }
   if (activeTrip?.payment_status === 'failed') {
     return {
-      label: 'Pagamento recusado',
+      label: i18n.t('passenger:banner.paymentFailed'),
       variant: 'error',
-      subLabel: 'Tenta pedir de novo ou contacta o suporte se o problema continuar.',
+      subLabel: i18n.t('passenger:banner.paymentFailedSub'),
     }
   }
   if (activeTrip?.status === 'cancelled') {
@@ -53,17 +56,18 @@ export function getPassengerBannerState(params: {
     return { label: passengerTripStatusLabel('failed'), variant: 'error' }
   }
   if (activeTripLoading && !activeTrip) {
-    return { label: 'A sincronizar viagem…', variant: 'idle' }
+    return { label: i18n.t('passenger:banner.syncing'), variant: 'idle' }
   }
   if (!uxState) {
-    return { label: 'A sincronizar viagem…', variant: 'idle' }
+    return { label: i18n.t('passenger:banner.syncing'), variant: 'idle' }
   }
 
-  const statusLine = (s: string) => `Estado: ${passengerTripStatusLabel(s)}`
+  const statusLine = (s: string) =>
+    i18n.t('trip:stateLine', { status: passengerTripStatusLabel(s) })
 
   switch (uxState) {
     case 'SEARCHING_DRIVER': {
-      const label = 'À procura de motorista'
+      const label = i18n.t('passenger:banner.searching')
       return {
         label,
         variant: 'requested' as const,
@@ -72,7 +76,7 @@ export function getPassengerBannerState(params: {
     }
     case 'DRIVER_ASSIGNED':
       if (activeTrip?.status === 'assigned') {
-        const label = 'Motorista atribuído'
+        const label = i18n.t('passenger:banner.assigned')
         return {
           label,
           variant: 'assigned',
@@ -80,7 +84,7 @@ export function getPassengerBannerState(params: {
         }
       }
       {
-        const label = 'Motorista a caminho'
+        const label = i18n.t('passenger:banner.enRoute')
         return {
           label,
           variant: 'accepted',
@@ -96,7 +100,7 @@ export function getPassengerBannerState(params: {
       }
     }
     case 'TRIP_ONGOING': {
-      const label = 'Viagem em curso'
+      const label = i18n.t('passenger:banner.ongoing')
       return {
         label,
         variant: 'ongoing',
@@ -107,47 +111,21 @@ export function getPassengerBannerState(params: {
       const ps = activeTrip?.payment_status
       if (ps === 'succeeded') {
         return {
-          label: 'Viagem concluída',
+          label: i18n.t('passenger:banner.completed'),
           variant: 'completed',
-          subLabel: 'Pagamento confirmado.',
+          subLabel: i18n.t('passenger:banner.paymentConfirmed'),
         }
       }
       if (ps === 'processing' || ps === 'pending') {
         return {
-          label: 'Viagem concluída',
+          label: i18n.t('passenger:banner.completed'),
           variant: 'completed',
-          subLabel:
-            'O pagamento pode demorar alguns segundos a aparecer como concluído — mantém esta página aberta.',
+          subLabel: i18n.t('passenger:banner.paymentProcessing'),
         }
       }
-      return { label: 'Viagem concluída', variant: 'completed' }
+      return { label: i18n.t('passenger:banner.completed'), variant: 'completed' }
     }
     default:
-      return { label: 'A sincronizar viagem…', variant: 'idle' }
+      return { label: i18n.t('passenger:banner.syncing'), variant: 'idle' }
   }
-}
-
-export function humanizeCreateTripError(errOrDetail: unknown): string {
-  const raw = formatApiErrorFromUnknown(errOrDetail)
-  const s = raw.toLowerCase()
-  if (s.includes('timeout') || s.includes('indispon') || s.includes('abort')) {
-    return 'Servidor lento ou indisponível. Tenta novamente dentro de momentos.'
-  }
-  if (s.includes('rate') || s.includes('limite') || s.includes('too many')) {
-    return 'Muitos pedidos seguidos. Aguarda um pouco e tenta de novo.'
-  }
-  if (raw.length > 0 && raw.length < 160) {
-    return raw
-  }
-  return 'Não foi possível pedir a viagem. Verifica a ligação e tenta de novo.'
-}
-
-export function humanizeCancelError(errOrDetail: unknown): string {
-  const raw = formatApiErrorFromUnknown(errOrDetail)
-  const s = raw.toLowerCase()
-  if (s.includes('timeout') || s.includes('indispon') || s.includes('network')) {
-    return 'Não foi possível cancelar agora — verifica a ligação e tenta de novo.'
-  }
-  if (raw.length > 0 && raw.length < 160) return raw
-  return 'Não foi possível cancelar a viagem. Tenta de novo.'
 }

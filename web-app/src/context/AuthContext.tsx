@@ -15,6 +15,7 @@ import {
   type ApiError,
 } from '../api/client'
 import { warn as logWarn } from '../utils/logger'
+import i18n from '../i18n'
 import { validateAccessToken } from '../api/session'
 import {
   exchangeGoogleCode,
@@ -100,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [betaMode, setBetaMode] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [splashPrimary, setSplashPrimary] = useState('A iniciar serviço…')
+  const [splashPrimary, setSplashPrimary] = useState(() => i18n.t('auth:splashStarting'))
   const [appRouteRole, setAppRouteRoleState] = useState<AppRouteRole>(
     () => getStoredAppRouteRole() as AppRouteRole
   )
@@ -211,8 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
     setLoadError(null)
-    setSplashPrimary('A iniciar serviço…')
-    setStatus('A iniciar serviço...')
+    setSplashPrimary(i18n.t('auth:splashStarting'))
+    setStatus(i18n.t('auth:splashStarting'))
     try {
       const config = await withColdStartRetries((timeoutMs) => getConfig(timeoutMs))
 

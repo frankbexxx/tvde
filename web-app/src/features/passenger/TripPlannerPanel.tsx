@@ -2,7 +2,7 @@ import { memo } from 'react'
 import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
-import { PASSENGER_PAYMENT_DISCLOSURE_SEARCHING } from '../../constants/passengerPaymentCopy'
+import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
 import {
   BTN_COMPACT_HEIGHT,
   BTN_PRIMARY_RADIUS,
@@ -274,7 +274,7 @@ function TripPlannerPanelInner({
             className="text-xs text-foreground/65 text-center max-w-sm px-3 leading-snug"
             data-testid="passenger-payment-disclosure-searching"
           >
-            {PASSENGER_PAYMENT_DISCLOSURE_SEARCHING}
+            {passengerPaymentDisclosureSearching()}
           </p>
           {slowRequestHint ? (
             <p className="text-xs text-foreground/70 text-center px-2" aria-live="polite">

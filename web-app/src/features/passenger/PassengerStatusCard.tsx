@@ -10,7 +10,7 @@ import { formatPickup, formatDestination } from '../../utils/format'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
-import { PASSENGER_PAYMENT_DISCLOSURE_SEARCHING } from '../../constants/passengerPaymentCopy'
+import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
 import { BTN_SECONDARY, INFO_BOX_PASSENGER } from '../../components/layout/infoBoxTemplate'
 
 const ESTIMATE_FALLBACK = '4–6'
@@ -76,7 +76,7 @@ function SearchingDriverPhase({
       : Math.max(0, (nowMs - new Date(tripCreatedAtIso).getTime()) / 1000)
   const showFallback = elapsedSec >= PASSENGER_SEARCH_FALLBACK_AFTER_SEC
 
-  const meta = !showFallback ? [PASSENGER_PAYMENT_DISCLOSURE_SEARCHING] : undefined
+  const meta = !showFallback ? [passengerPaymentDisclosureSearching()] : undefined
 
   return (
     <InfoPanel

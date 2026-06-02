@@ -1,0 +1,36 @@
+{
+  "nav": {
+    "aria": "Navegação principal do parceiro",
+    "home": "Início",
+    "fleet": "Frota",
+    "inbox": "Caixa",
+    "menu": "Menu"
+  },
+  "menuTitle": {
+    "root": "Menu",
+    "fleet": "Frota",
+    "fleet_list": "Lista motoristas",
+    "fleet_map": "Mapa live",
+    "fleet_add": "Adicionar à frota",
+    "trips": "Viagens",
+    "trips_summary": "Resumo viagens",
+    "trips_list": "Lista viagens",
+    "trips_export": "Exportar viagens",
+    "reports": "Relatórios",
+    "settings": "Definições",
+    "profile": "Perfil",
+    "inbox": "Caixa",
+    "default": "Partner"
+  },
+  "home": {
+    "title": "Início"
+  },
+  "driverDetail": {
+    "availableApp": "Disponível (app)"
+  },
+  "settings": {
+    "title": "Definições",
+    "refreshHint": "Actualiza dados da frota e viagens."
+  },
+  "unreadBadge": "{{count}} mensagem(ns) por ler"
+}

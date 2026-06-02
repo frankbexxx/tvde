@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Euro, Home, Inbox, Menu } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export type DriverShellTab = 'home' | 'earnings' | 'inbox' | 'menu'
 
@@ -10,6 +11,7 @@ type DriverBottomNavProps = {
 }
 
 export function DriverBottomNav({ active, onSelect, inboxUnreadCount = 0 }: DriverBottomNavProps) {
+  const { t } = useTranslation('driver')
   const item = (
     tab: DriverShellTab,
     testId: string,
@@ -32,7 +34,7 @@ export function DriverBottomNav({ active, onSelect, inboxUnreadCount = 0 }: Driv
           {badge != null && badge > 0 ? (
             <span
               className="absolute -right-2 -top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-info px-1 text-[9px] font-bold text-info-foreground"
-              aria-label={`${badge} mensagem(ns) por ler`}
+              aria-label={t('unreadBadge', { count: badge })}
             >
               {badge > 9 ? '9+' : badge}
             </span>
@@ -46,12 +48,12 @@ export function DriverBottomNav({ active, onSelect, inboxUnreadCount = 0 }: Driv
   return (
     <nav
       className="flex w-full border-t border-border bg-background/95 backdrop-blur-sm safe-area-pb"
-      aria-label="Navegação principal do motorista"
+      aria-label={t('nav.aria')}
     >
-      {item('home', 'driver-bottom-nav-home', 'Início', Home)}
-      {item('earnings', 'driver-bottom-nav-earnings', 'Rendimentos', Euro)}
-      {item('inbox', 'driver-bottom-nav-inbox', 'Caixa', Inbox, inboxUnreadCount)}
-      {item('menu', 'driver-bottom-nav-menu', 'Menu', Menu)}
+      {item('home', 'driver-bottom-nav-home', t('nav.home'), Home)}
+      {item('earnings', 'driver-bottom-nav-earnings', t('nav.earnings'), Euro)}
+      {item('inbox', 'driver-bottom-nav-inbox', t('nav.inbox'), Inbox, inboxUnreadCount)}
+      {item('menu', 'driver-bottom-nav-menu', t('nav.menu'), Menu)}
     </nav>
   )
 }

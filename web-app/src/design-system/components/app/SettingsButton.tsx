@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { AppAppearanceSettings } from "@/features/settings/AppAppearanceSettings"
+import { useTranslation } from "react-i18next"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useAuth } from "@/context/AuthContext"
 import { useActiveTrip } from "@/context/ActiveTripContext"
@@ -30,6 +31,8 @@ import {
 type ConfigView = "main" | "logs"
 
 export function SettingsButton() {
+  const { t } = useTranslation("settings")
+  const { t: tc } = useTranslation("common")
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<ConfigView>("main")
   const isMobile = useMediaQuery("(max-width: 639px)")
@@ -59,12 +62,10 @@ export function SettingsButton() {
 
   const mainBody = (
     <div className="mt-4 flex flex-col gap-4">
-      <p className="text-xs text-muted-foreground leading-snug">
-        Dados pessoais e palavra-passe: ícone <span className="font-medium text-foreground/90">Conta</span> (perfil).
-      </p>
+      <p className="text-xs text-muted-foreground leading-snug">{t("accountHint")}</p>
       <AppAppearanceSettings />
       <div>
-        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">Modo da app</p>
+        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">{t("appMode")}</p>
         <div className="flex gap-2">
           <Button
             type="button"
@@ -76,32 +77,28 @@ export function SettingsButton() {
               setOpen(false)
             }}
           >
-            Passageiro
+            {tc("rolePassenger")}
           </Button>
           <Button
             type="button"
             variant={appRouteRole === "driver" ? "default" : "outline"}
             className="flex-1 font-medium"
             disabled={sessionRole !== "driver"}
-            title={
-              sessionRole !== "driver"
-                ? "A conta não tem perfil de motorista; o painel motorista exige JWT de motorista."
-                : undefined
-            }
+            title={sessionRole !== "driver" ? t("driverRoleRequired") : undefined}
             onClick={() => {
               setAppRouteRole("driver")
               navigate("/driver", { replace: true })
               setOpen(false)
             }}
           >
-            Motorista
+            {tc("roleDriver")}
           </Button>
         </div>
       </div>
       {isAdmin ? (
         <Button type="button" variant="outline" className="w-full font-medium" asChild>
           <Link to="/admin" onClick={() => setOpen(false)}>
-            Painel admin
+            {t("adminPanel")}
           </Link>
         </Button>
       ) : null}

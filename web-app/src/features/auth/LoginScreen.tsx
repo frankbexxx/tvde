@@ -1,49 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
-import type { ApiError } from '../../api/client'
 import { getConfig } from '../../api/auth'
 import { LS_LAST_PHONE } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 import { appBuildDisplayLine } from '../../lib/appBuildMeta'
 import { BTN_PRIMARY_RADIUS, BTN_SECONDARY_RADIUS, SURFACE_RADIUS } from '../../components/layout/infoBoxTemplate'
-
-function formatLoginError(err: unknown): string {
-  if (err !== null && typeof err === 'object' && 'status' in err) {
-    const e = err as ApiError
-    const st = e.status ?? 0
-    const d = e.detail
-    if (typeof d === 'string') {
-      const s = d.trim()
-      if (s === 'pending_approval') return 'Aguardar aprovação do administrador.'
-      if (s === 'BETA cheio' || s.includes('cheio')) return 'BETA cheio. Tenta mais tarde.'
-      if (s === 'invalid_credentials') return 'Password incorrecta.'
-      if (s === 'blocked') return 'Conta bloqueada.'
-      if (s.toLowerCase() === 'not available')
-        return 'Login BETA indisponível neste servidor (modo BETA desligado).'
-      if (st >= 500) {
-        if (/password_hash|column|undefinedcolumn|relation/i.test(s)) {
-          return 'Servidor e base de dados desalinhados (falta coluna ou tabela). No host da API corre: alembic upgrade head.'
-        }
-        return `Erro no servidor (${st}). Após deploy recente, confirma migrações (Alembic) e logs da API. Detalhe: ${s.slice(0, 180)}`
-      }
-      return s.length > 280 ? `${s.slice(0, 280)}…` : s
-    }
-    if (Array.isArray(d)) {
-      const parts = d.map((x) =>
-        typeof x === 'object' && x !== null && 'msg' in x ? String((x as { msg?: unknown }).msg) : JSON.stringify(x)
-      )
-      return parts.join(' · ') || 'Pedido inválido.'
-    }
-    if (st >= 500) {
-      return `Erro no servidor (${st}). Após deploy recente, confirma migrações na base de dados (Alembic) e dependências.`
-    }
-  }
-  if (err instanceof Error && err.message) {
-    return `Falha de ligação: ${err.message}`
-  }
-  return 'Erro ao iniciar sessão.'
-}
+import { useTranslation } from 'react-i18next'
+import { formatLoginError } from '../../i18n/apiErrors'
 
 interface LoginScreenProps {
   /** BETA: `admin` = fluxo dedicado ao painel (URL `/admin` ou `/admin/login`). */
@@ -51,6 +15,8 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
+  const { t } = useTranslation('auth')
+  const { t: tc } = useTranslation('common')
   const { login } = useAuth()
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
@@ -82,11 +48,11 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       localStorage.setItem(LS_LAST_PHONE, phone.trim())
       const r = res.role as Role
       if (requestedRole === 'partner' && r !== 'partner') {
-        setError('Esta conta não tem acesso Frota (partner).')
+        setError(t('noPartnerAccess'))
         return
       }
       if (requestedRole === 'admin' && !isBackofficeStaffRole(r)) {
-        setError('Esta conta não é administrador.')
+        setError(t('notAdmin'))
         return
       }
       if (isBackofficeStaffRole(r))
@@ -128,7 +94,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             />
             <span className="text-sm font-normal text-muted-foreground pb-0.5">(beta mode)</span>
           </div>
-          <div role="tablist" aria-label="Tipo de utilizador" className="grid grid-cols-2 gap-2 mb-4">
+          <div role="tablist" aria-label={t('userTypeTabs')} className="grid grid-cols-2 gap-2 mb-4">
             <Link
               to="/passenger"
               role="tab"
@@ -138,7 +104,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 : 'bg-muted text-muted-foreground'
                 }`}
             >
-              Passageiro
+              {tc('rolePassenger')}
             </Link>
             <Link
               to="/driver"
@@ -149,7 +115,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 : 'bg-muted text-muted-foreground'
                 }`}
             >
-              Motorista
+              {tc('roleDriver')}
             </Link>
             <Link
               to="/partner"
@@ -160,7 +126,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 : 'bg-muted text-muted-foreground'
                 }`}
             >
-              Frota
+              {tc('rolePartner')}
             </Link>
             <Link
               to="/admin/login"
@@ -171,7 +137,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 : 'bg-muted text-muted-foreground'
                 }`}
             >
-              Administrador
+              {t('administrator')}
             </Link>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
@@ -192,7 +158,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-1">
-                Telemóvel
+                {t('phone')}
               </label>
               <input
                 id="phone"
@@ -206,7 +172,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
-                Password
+                {t('password')}
               </label>
               <input
                 id="password"
@@ -227,7 +193,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               disabled={loading}
               className={`w-full min-h-[44px] py-2.5 bg-primary text-primary-foreground font-medium ${BTN_PRIMARY_RADIUS} hover:bg-primary/90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100`}
             >
-              {loading ? 'A entrar...' : 'Entrar'}
+              {loading ? t('loggingIn') : t('login')}
             </button>
           </form>
           <footer

@@ -1,0 +1,49 @@
+{
+  "status": {
+    "requested": "À procura de motorista",
+    "assigned": "Motorista atribuído",
+    "accepted": "Motorista a caminho",
+    "arriving": "Motorista quase a chegar",
+    "ongoing": "Viagem em curso",
+    "completed": "Viagem concluída",
+    "cancelled": "Viagem cancelada",
+    "failed": "Viagem não concluída"
+  },
+  "payment": {
+    "pending": "Pagamento pendente",
+    "processing": "Pagamento a processar…",
+    "succeeded": "Pagamento concluído",
+    "failed": "Pagamento recusado"
+  },
+  "driverActive": {
+    "assigned": "Viagem atribuída — confirma para avançar",
+    "accepted": "A caminho do passageiro",
+    "arriving": "No local de recolha",
+    "ongoing": "Em viagem",
+    "completed": "Viagem concluída"
+  },
+  "driverAvailable": "Pedido disponível",
+  "driverNewTripHint": "Nova viagem disponível",
+  "driverBadge": {
+    "requested": "Aguardando",
+    "assigned": "Aguardando",
+    "accepted": "A caminho",
+    "arriving": "A caminho",
+    "ongoing": "Em curso",
+    "completed": "Concluída",
+    "cancelled": "Cancelada",
+    "failed": "Interrompida"
+  },
+  "cancelPreset": {
+    "none": "Não indicar motivo",
+    "driverNoShow": "Passageiro não compareceu",
+    "unexpected": "Imprevisto",
+    "vehicleIssue": "Problema com o veículo",
+    "passengerPlans": "Alteração de planos",
+    "driverSlow": "Motorista demora demasiado",
+    "mistake": "Pedido por engano",
+    "other": "Outro…"
+  },
+  "cancelOtherApi": "Outro",
+  "stateLine": "Estado: {{status}}"
+}
