@@ -4,6 +4,7 @@
  * No IDs, no coords.
  */
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SlideToAccept } from './SlideToAccept'
 import { INFO_BOX_DRIVER_LARGE, BTN_COMPACT_HEIGHT, BTN_PRIMARY_RADIUS } from '../layout/infoBoxTemplate'
 
@@ -26,7 +27,7 @@ interface RequestCardProps {
   contextHint?: string
   vehicleCategoryLabel?: string | null
   onAccept: () => void
-  /** Quando existe `offer_id` no backend, o motorista pode recusar a oferta. */
+  /** When exists `offer_id` on backend, driver can reject offer. */
   offerId?: string | null
   onReject?: () => void
   /** Fechar box localmente (sem reject API). */
@@ -65,11 +66,12 @@ export function RequestCard({
   rejectButtonTestId,
   acceptVariant = 'button',
 }: RequestCardProps) {
+  const { t } = useTranslation('trip')
   const [, setTick] = useState(0)
 
   useEffect(() => {
     if (!expiresAt) return
-    const id = window.setInterval(() => setTick((t) => t + 1), 1000)
+    const id = window.setInterval(() => setTick((tick) => tick + 1), 1000)
     return () => window.clearInterval(id)
   }, [expiresAt])
 
@@ -88,7 +90,7 @@ export function RequestCard({
         data-testid="driver-offer-expiry"
         aria-live="polite"
       >
-        {secondsLeft > 0 ? `Expira em ${secondsLeft}s` : 'Oferta expirada'}
+        {secondsLeft > 0 ? t('requestCard.expiresIn', { seconds: secondsLeft }) : t('requestCard.expired')}
       </p>
     ) : null
 
@@ -106,14 +108,14 @@ export function RequestCard({
         onClick={onDismiss}
         disabled={Boolean(loading || rejectLoading)}
         data-testid={dismissButtonTestId}
-        aria-label="Silenciar oferta"
+        aria-label={t('requestCard.silenceOfferAria')}
         className={
           dismissPlacement === 'bottom-right-silence'
             ? `${dismissPosClass} flex min-h-7 items-center justify-center rounded-md border border-destructive/60 bg-destructive/10 px-1.5 text-[10px] font-semibold text-destructive hover:bg-destructive/20 touch-manipulation`
             : `${dismissPosClass} flex h-8 w-8 items-center justify-center rounded-full border border-border/80 bg-background/90 text-foreground/70 hover:bg-muted touch-manipulation`
         }
       >
-        {dismissPlacement === 'bottom-right-silence' ? 'Silenciar' : '×'}
+        {dismissPlacement === 'bottom-right-silence' ? t('requestCard.silence') : '×'}
       </button>
     ) : null
 
@@ -135,17 +137,17 @@ export function RequestCard({
       ) : null}
       {statusLabel ? (
         <p className="text-xs font-medium text-foreground/70">
-          Estado: <span className="text-foreground">{statusLabel}</span>
+          {t('requestCard.state')} <span className="text-foreground">{statusLabel}</span>
         </p>
       ) : null}
       {vehicleCategoryLabel ? (
         <p className="text-xs font-medium text-foreground/70">
-          Categoria: <span className="text-foreground">{vehicleCategoryLabel}</span>
+          {t('requestCard.category')} <span className="text-foreground">{vehicleCategoryLabel}</span>
         </p>
       ) : null}
       {expiryLine}
       <div className="space-y-0.5">
-        <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Recolha</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">{t('requestCard.pickup')}</p>
         <p
           className={
             slideCompact
@@ -158,7 +160,7 @@ export function RequestCard({
       </div>
       {destination ? (
         <div className="space-y-0.5">
-          <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Destino</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">{t('requestCard.destination')}</p>
           <p className="text-sm font-semibold text-foreground/95 truncate">{destination}</p>
         </div>
       ) : null}
@@ -178,7 +180,7 @@ export function RequestCard({
         {slideAccept}
         {tripDetails}
         <div>
-          <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
+          <p className="text-xs font-medium text-foreground/70">{t('requestCard.estimate')}</p>
           <span className="text-base font-bold text-foreground">{priceDisplay}</span>
         </div>
       </div>
@@ -191,7 +193,7 @@ export function RequestCard({
       {tripDetails}
       <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-medium text-foreground/70">Estimativa (indicativa)</p>
+          <p className="text-xs font-medium text-foreground/70">{t('requestCard.estimate')}</p>
           <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:min-w-[200px]">
@@ -206,10 +208,10 @@ export function RequestCard({
               {rejectLoading ? (
                 <span className="inline-flex items-center justify-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  A processar…
+                  {t('requestCard.processing')}
                 </span>
               ) : (
-                'REJEITAR'
+                t('requestCard.reject')
               )}
             </button>
           ) : null}
@@ -223,10 +225,10 @@ export function RequestCard({
             {loading ? (
               <span className="inline-flex items-center gap-2">
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                A processar...
+                {t('requestCard.processing')}
               </span>
             ) : (
-              'ACEITAR'
+              t('requestCard.accept')
             )}
           </button>
         </div>

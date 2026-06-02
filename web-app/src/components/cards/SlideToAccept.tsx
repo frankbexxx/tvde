@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const THUMB_SIZE_DEFAULT = 48
 const THUMB_SIZE_COMPACT = 36
@@ -9,7 +10,7 @@ export function SlideToAccept({
   onConfirm,
   disabled,
   loading,
-  label = 'Deslizar para aceitar',
+  label,
   testId,
   trackTestId,
   density = 'default',
@@ -23,6 +24,8 @@ export function SlideToAccept({
   trackTestId?: string
   density?: 'default' | 'compact'
 }) {
+  const { t } = useTranslation('trip')
+  const resolvedLabel = label ?? t('slideAccept.label')
   const thumbSize = density === 'compact' ? THUMB_SIZE_COMPACT : THUMB_SIZE_DEFAULT
   const trackHeightClass = density === 'compact' ? 'h-10' : 'h-[52px]'
   const thumbShift = density === 'compact' ? 'top-0.5 left-0.5 h-9 w-9 text-xs' : 'top-1 left-1 h-11 w-11'
@@ -102,7 +105,7 @@ export function SlideToAccept({
           <span
             className={`${density === 'compact' ? 'text-[11px]' : 'text-xs'} font-semibold text-foreground/75 ${labelPadClass} text-center leading-tight`}
           >
-            {loading ? 'A processar…' : label}
+            {loading ? t('slideAccept.processing') : resolvedLabel}
           </span>
         </div>
         <div

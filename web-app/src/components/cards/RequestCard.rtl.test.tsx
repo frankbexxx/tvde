@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import '../../i18n'
 import { RequestCard } from './RequestCard'
 
 describe('RequestCard (RTL)', () => {

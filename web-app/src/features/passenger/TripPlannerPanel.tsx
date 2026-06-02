@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
@@ -17,18 +18,6 @@ import {
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
 
 export type TripPlannerVisualWeight = 'default' | 'subdued'
-
-function formatEta(durationSec: number): string {
-  const m = Math.max(1, Math.round(durationSec / 60))
-  return m === 1 ? '~1 min' : `~${m} min`
-}
-
-function formatDistance(distanceM: number): string {
-  if (distanceM >= 1000) {
-    return `${(distanceM / 1000).toFixed(1)} km`
-  }
-  return `${Math.round(distanceM)} m`
-}
 
 /** A021: painel secundário quando StatusHeader ou mapa têm foco */
 export type PanelEmphasis = 'primary' | 'subdued'
@@ -111,7 +100,20 @@ function TripPlannerPanelInner({
   inTripSuppressPaymentEcho = false,
   inTripSuppressMetaEcho = false,
 }: TripPlannerPanelProps) {
+  const { t } = useTranslation('passenger')
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
+
+  const formatEta = (durationSec: number): string => {
+    const m = Math.max(1, Math.round(durationSec / 60))
+    return m === 1 ? t('planner.etaOneMin') : t('planner.etaMinutes', { count: m })
+  }
+
+  const formatDistance = (distanceM: number): string => {
+    if (distanceM >= 1000) {
+      return t('planner.distanceKm', { value: (distanceM / 1000).toFixed(1) })
+    }
+    return t('planner.distanceM', { value: Math.round(distanceM) })
+  }
 
   const panelSurface = embedded
     ? 'border-0 bg-transparent shadow-none opacity-100'
@@ -136,17 +138,17 @@ function TripPlannerPanelInner({
   const pickupLine =
     !hasPickup
       ? embedded
-        ? 'Recolha por definir'
-        : 'Escreve a recolha em cima ou toca no mapa'
+        ? t('planner.pickupUndefinedEmbedded')
+        : t('planner.pickupPrompt')
       : pickupAddressLoading
-        ? 'A obter morada…'
-        : (pickupAddress ?? 'Local selecionado')
+        ? t('planner.addressLoading')
+        : (pickupAddress ?? t('planner.locationSelected'))
   const dropLine =
     !hasDropoff
-      ? 'Indica o destino por texto ou no mapa'
+      ? t('planner.dropoffPrompt')
       : dropoffAddressLoading
-        ? 'A obter morada…'
-        : (dropoffAddress ?? 'Local selecionado')
+        ? t('planner.addressLoading')
+        : (dropoffAddress ?? t('planner.locationSelected'))
 
   const inner = (
     <>
@@ -154,11 +156,11 @@ function TripPlannerPanelInner({
         <>
           {!embedded && (
             <>
-              <p className="text-lg font-semibold text-foreground">Confirma a recolha</p>
+              <p className="text-lg font-semibold text-foreground">{t('planner.idleTitle')}</p>
               <p className="text-sm text-foreground/80">
-                Primeiro escreve onde queres entrar no carro.
+                {t('planner.idleBody')}
               </p>
-              <p className="text-sm text-muted-foreground">Também podes tocar no mapa.</p>
+              <p className="text-sm text-muted-foreground">{t('planner.idleMapHint')}</p>
             </>
           )}
           <button
@@ -167,14 +169,14 @@ function TripPlannerPanelInner({
             disabled={confirmTripPending}
             className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-info text-info-foreground text-sm font-bold shadow-floating hover:bg-info/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:pointer-events-none touch-manipulation`}
           >
-            {embedded ? 'Marcar recolha no mapa' : 'Escolher recolha no mapa'}
+            {embedded ? t('planner.choosePickupMapEmbedded') : t('planner.choosePickupMap')}
           </button>
         </>
       )}
 
       {uiState === 'planning' && (
         <>
-          {!embedded && <p className="text-base font-semibold text-foreground">Percurso</p>}
+          {!embedded && <p className="text-base font-semibold text-foreground">{t('planner.routeTitle')}</p>}
           {(embedded ? hasPickup && hasDropoff : true) ? (
             <p className={`${INFO_BOX_BODY_COMPACT} font-medium text-foreground leading-snug`}>
               <span className="text-foreground/75">{pickupLine}</span>
@@ -189,7 +191,7 @@ function TripPlannerPanelInner({
                 onClick={onSetDestinationHint}
                 className={`w-full ${BTN_SECONDARY_RADIUS} border border-border bg-muted/50 py-3 text-base font-medium text-foreground hover:bg-muted transition-colors`}
               >
-                Também podes tocar no mapa para marcar destino
+                {t('planner.tapMapForDestination')}
               </button>
             )}
             <button
@@ -198,7 +200,7 @@ function TripPlannerPanelInner({
               disabled={confirmTripPending}
               className={`w-full ${BTN_SECONDARY}`}
             >
-              Repor
+              {t('planner.reset')}
             </button>
           </div>
         </>
@@ -206,7 +208,7 @@ function TripPlannerPanelInner({
 
       {uiState === 'confirming' && (
         <>
-          {!embedded && <p className={INFO_BOX_TITLE_COMPACT}>Confirma a viagem</p>}
+          {!embedded && <p className={INFO_BOX_TITLE_COMPACT}>{t('planner.confirmTripTitle')}</p>}
           <p className={`${INFO_BOX_BODY_COMPACT} font-medium text-foreground leading-snug`}>
             <span className="text-foreground/80">{pickupAddress ?? '—'}</span>
             <span className="mx-1.5 text-foreground/45">→</span>
@@ -214,7 +216,7 @@ function TripPlannerPanelInner({
           </p>
           <div className="flex items-center gap-2 text-xs text-foreground/80 min-h-[1rem]">
             {routeMetaLoading ? (
-              <span>A calcular percurso…</span>
+              <span>{t('planner.calculatingRoute')}</span>
             ) : routeMeta ? (
               <>
                 <span className="font-medium">{formatDistance(routeMeta.distanceM)}</span>
@@ -222,14 +224,14 @@ function TripPlannerPanelInner({
                 <span className="font-medium">{formatEta(routeMeta.durationSec)}</span>
               </>
             ) : (
-              <span>Percurso estimado indisponível</span>
+              <span>{t('planner.routeUnavailable')}</span>
             )}
           </div>
           <p
             className="text-xs text-foreground/60 leading-snug"
             data-testid="passenger-payment-disclosure-confirming"
           >
-            Pagamento simulado — sem cobrança
+            {t('planner.paymentMockShort')}
           </p>
           {confirmBlockedReason ? (
             <div
@@ -247,7 +249,7 @@ function TripPlannerPanelInner({
               disabled={confirmTripPending || routeMetaLoading || Boolean(confirmBlockedReason)}
               className={`flex-1 ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-success text-success-foreground px-3 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation`}
             >
-              {confirmTripPending ? 'A confirmar…' : 'Confirmar viagem'}
+              {confirmTripPending ? t('planner.confirming') : t('planner.confirmTrip')}
             </button>
             {onEditDestination ? (
               <button
@@ -256,7 +258,7 @@ function TripPlannerPanelInner({
                 disabled={confirmTripPending}
                 className={`${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation`}
               >
-                Alterar
+                {t('planner.edit')}
               </button>
             ) : null}
           </div>
@@ -266,9 +268,11 @@ function TripPlannerPanelInner({
       {uiState === 'searching' && (
         <div className="flex flex-col items-center gap-3 py-2">
           <Spinner size="lg" />
-          <p className="text-base font-semibold text-foreground text-center">À procura de motorista…</p>
+          <p className="text-base font-semibold text-foreground text-center">{t('planner.searchingTitle')}</p>
           <p className="text-sm text-foreground/75 text-center">
-            {activeTrip ? `Pedido ${activeTrip.trip_id.slice(0, 8)}…` : 'A enviar o teu pedido…'}
+            {activeTrip
+              ? t('planner.searchingTrip', { id: activeTrip.trip_id.slice(0, 8) })
+              : t('planner.searchingSending')}
           </p>
           <p
             className="text-xs text-foreground/65 text-center max-w-sm px-3 leading-snug"
@@ -288,14 +292,15 @@ function TripPlannerPanelInner({
         <div className="space-y-1">
           {!inTripSuppressEstadoEcho ? (
             <p className="text-sm text-foreground/85">
-              Estado:{' '}
-              <span className="text-foreground font-semibold">
-                {passengerTripStatusLabel(activeTrip.status)}
-              </span>
+              {t('trip:stateLine', {
+                status: passengerTripStatusLabel(activeTrip.status),
+              })}
             </p>
           ) : null}
           {inTripPaymentLine && !inTripSuppressPaymentEcho && !inTripSuppressMetaEcho ? (
-            <p className="text-sm text-foreground/80">Pagamento: {inTripPaymentLine}</p>
+            <p className="text-sm text-foreground/80">
+              {t('trip:paymentLine', { status: inTripPaymentLine })}
+            </p>
           ) : null}
           {driverTrackingHint && !inTripSuppressMetaEcho ? (
             <p className="text-sm text-foreground font-medium pt-0.5" aria-live="polite">
@@ -308,7 +313,7 @@ function TripPlannerPanelInner({
             </p>
           ) : null}
           {!inTripSuppressEstadoEcho ? (
-            <p className="text-sm text-foreground/80 pt-0.5">Acompanha o mapa e o estado acima.</p>
+            <p className="text-sm text-foreground/80 pt-0.5">{t('planner.followMapHint')}</p>
           ) : null}
         </div>
       )}
@@ -317,7 +322,7 @@ function TripPlannerPanelInner({
 
   if (embedded) {
     return (
-      <div className={MAP_SHEET_GAP} aria-label="Planeamento da viagem">
+      <div className={MAP_SHEET_GAP} aria-label={t('planner.ariaLabel')}>
         {inner}
       </div>
     )
@@ -326,7 +331,7 @@ function TripPlannerPanelInner({
   return (
     <section
       className={`${SURFACE_RADIUS} border px-3 py-3 ${MAP_SHEET_GAP} transition-all duration-300 ease-out ${panelSurface} ${emphasisWrap}`}
-      aria-label="Planeamento da viagem"
+      aria-label={t('planner.ariaLabel')}
     >
       {inner}
     </section>

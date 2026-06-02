@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import i18n from '../../i18n'
 import { loadStripe } from '@stripe/stripe-js'
 import {
@@ -29,6 +30,7 @@ function ConfirmInner({
   clientSecret,
   onConfirmed,
 }: Pick<PassengerPaymentConfirmCardProps, 'clientSecret' | 'onConfirmed'>) {
+  const { t } = useTranslation('passenger')
   const stripe = useStripe()
   const elements = useElements()
   const [busy, setBusy] = useState(false)
@@ -45,7 +47,7 @@ function ConfirmInner({
           payment_method: { card },
         })
         if (error) {
-          toast.error(error.message ?? 'Pagamento recusado.')
+          toast.error(error.message ?? t('paymentConfirm.declined'))
           return
         }
         const st = paymentIntent?.status
@@ -54,19 +56,23 @@ function ConfirmInner({
           st === 'requires_capture' ||
           st === 'processing'
         ) {
-          toast.success('Cartão autorizado.')
+          toast.success(t('paymentConfirm.cardAuthorized'))
           await onConfirmed()
         } else if (st === 'requires_action') {
-          toast.message('Confirmação adicional necessária — segue as instruções do teu banco.')
+          toast.message(t('paymentConfirm.extraAuthRequired'))
         } else {
-          toast.message(`Estado do pagamento: ${st ?? 'desconhecido'}`)
+          toast.message(
+            t('paymentConfirm.statusLine', {
+              status: st ?? t('paymentConfirm.unknownStatus'),
+            })
+          )
           await onConfirmed()
         }
       } finally {
         setBusy(false)
       }
     },
-    [stripe, elements, clientSecret, onConfirmed]
+    [stripe, elements, clientSecret, onConfirmed, t]
   )
 
   return (
@@ -80,7 +86,7 @@ function ConfirmInner({
         data-testid="passenger-payment-confirm-submit"
         className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-primary text-sm font-semibold text-primary-foreground hover:opacity-95 disabled:opacity-50 touch-manipulation`}
       >
-        {busy ? 'A confirmar…' : 'Autorizar cartão'}
+        {busy ? t('paymentConfirm.confirming') : t('paymentConfirm.authorizeCard')}
       </button>
     </form>
   )
@@ -92,6 +98,7 @@ export function PassengerPaymentConfirmCard({
   onConfirmed,
   onSkip,
 }: PassengerPaymentConfirmCardProps) {
+  const { t } = useTranslation('passenger')
   const publishable =
     typeof import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY === 'string'
       ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY.trim()
@@ -112,8 +119,8 @@ export function PassengerPaymentConfirmCard({
         data-testid="passenger-payment-mock-banner"
         className={`${INFO_BOX_PASSENGER} px-2 py-2 ${INFO_BOX_BODY_COMPACT} space-y-2`}
       >
-        <p className="font-medium">Pagamento simulado</p>
-        <p className="text-muted-foreground leading-snug">Sem cartão real neste ambiente (DEV).</p>
+        <p className="font-medium">{t('paymentConfirm.mockTitle')}</p>
+        <p className="text-muted-foreground leading-snug">{t('paymentConfirm.mockBody')}</p>
         {onSkip ? (
           <button
             type="button"
@@ -121,7 +128,7 @@ export function PassengerPaymentConfirmCard({
             onClick={() => void onSkip()}
             className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_SECONDARY_RADIUS} border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
           >
-            Continuar (simulado)
+            {t('paymentConfirm.mockContinue')}
           </button>
         ) : null}
       </section>
@@ -134,10 +141,9 @@ export function PassengerPaymentConfirmCard({
         data-testid="passenger-payment-missing-publishable"
         className={`${INFO_BOX_PASSENGER} border-dashed px-2 py-2 ${INFO_BOX_BODY_COMPACT} space-y-2`}
       >
-        <p className="font-medium">Cartão indisponível</p>
+        <p className="font-medium">{t('paymentConfirm.unavailableTitle')}</p>
         <p className="text-muted-foreground leading-snug">
-          Pagamento por cartão não está configurado neste build. A viagem pode continuar se o backend
-          não exigir autorização imediata.
+          {t('paymentConfirm.unavailableBody')}
         </p>
         {onSkip ? (
           <button
@@ -146,7 +152,7 @@ export function PassengerPaymentConfirmCard({
             onClick={() => void onSkip()}
             className={`w-full ${BTN_COMPACT_HEIGHT} ${BTN_SECONDARY_RADIUS} border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted/40 touch-manipulation`}
           >
-            Continuar sem cartão
+            {t('paymentConfirm.continueWithoutCard')}
           </button>
         ) : null}
       </section>
@@ -155,8 +161,8 @@ export function PassengerPaymentConfirmCard({
 
   return (
     <section className={`${INFO_BOX_PASSENGER} p-2 ${MAP_SHEET_GAP}`} data-testid="passenger-payment-confirm-card">
-      <h3 className={INFO_BOX_TITLE_COMPACT}>Autorizar pagamento</h3>
-      <p className={INFO_BOX_BODY_COMPACT}>Motorista aceitou — confirma o cartão.</p>
+      <h3 className={INFO_BOX_TITLE_COMPACT}>{t('paymentConfirm.authorizeTitle')}</h3>
+      <p className={INFO_BOX_BODY_COMPACT}>{t('paymentConfirm.authorizeSubtitle')}</p>
       <Elements
         stripe={stripePromise}
         options={{ clientSecret, locale: i18n.language === 'en' ? 'en' : 'pt' }}

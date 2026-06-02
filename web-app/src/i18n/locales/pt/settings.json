@@ -8,5 +8,25 @@
   "appMode": "Modo da app",
   "adminPanel": "Painel admin",
   "accountHint": "Dados pessoais e palavra-passe: ícone Conta (perfil).",
-  "driverRoleRequired": "A conta não tem perfil de motorista; o painel motorista exige JWT de motorista."
+  "driverRoleRequired": "A conta não tem perfil de motorista; o painel motorista exige JWT de motorista.",
+  "settingsTitle": "Configurações",
+  "settingsAria": "Configurações",
+  "activityLog": {
+    "button": "Registo de atividade",
+    "title": "Registo de atividade",
+    "mainDescription": "Tema, modo passageiro ou motorista, painel administrativo e registo de actividade.",
+    "logsDescription": "Lista cronológica de eventos da sessão.",
+    "back": "← Voltar",
+    "development": "Desenvolvimento",
+    "ariaLabel": "Registo de atividade",
+    "view": "Vista",
+    "live": "Ao vivo",
+    "status": "Estado",
+    "log": "Registo",
+    "copy": "Copiar",
+    "copyTitle": "Copiar log",
+    "clear": "Limpar",
+    "empty": "Nenhum evento registado",
+    "copyEmpty": "Nenhum evento"
+  }
 }

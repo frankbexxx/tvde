@@ -1,4 +1,5 @@
 import { List, MapPin, UserPlus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { PartnerMetrics } from '../../../api/partner'
 import {
   PARTNER_HUB_CARD,
@@ -11,51 +12,53 @@ type PartnerFleetHubScreenProps = {
   onNavigate: (screen: 'fleet_list' | 'fleet_map' | 'fleet_add') => void
 }
 
-const FLEET_HUB_ITEMS = [
-  {
-    id: 'fleet_list' as const,
-    testId: 'partner-fleet-hub-list',
-    icon: List,
-    title: 'Lista motoristas',
-    subtitle: 'Frota completa, filtros e detalhe',
-  },
-  {
-    id: 'fleet_map' as const,
-    testId: 'partner-fleet-hub-map',
-    icon: MapPin,
-    title: 'Mapa live',
-    subtitle: 'Posição GPS recente na frota',
-  },
-  {
-    id: 'fleet_add' as const,
-    testId: 'partner-fleet-hub-add',
-    icon: UserPlus,
-    title: 'Adicionar à frota',
-    subtitle: 'Descobrir e associar motorista',
-  },
-]
-
 export function PartnerFleetHubScreen({ metrics, onNavigate }: PartnerFleetHubScreenProps) {
+  const { t } = useTranslation('partner')
+
+  const fleetHubItems = [
+    {
+      id: 'fleet_list' as const,
+      testId: 'partner-fleet-hub-list',
+      icon: List,
+      title: t('fleet.listTitle'),
+      subtitle: t('fleet.listSubtitle'),
+    },
+    {
+      id: 'fleet_map' as const,
+      testId: 'partner-fleet-hub-map',
+      icon: MapPin,
+      title: t('fleet.mapTitle'),
+      subtitle: t('fleet.mapSubtitle'),
+    },
+    {
+      id: 'fleet_add' as const,
+      testId: 'partner-fleet-hub-add',
+      icon: UserPlus,
+      title: t('fleet.addTitle'),
+      subtitle: t('fleet.addSubtitle'),
+    },
+  ]
+
   return (
     <div className="space-y-4 text-sm text-foreground" data-testid="partner-fleet-hub">
       {metrics ? (
         <section className="space-y-2">
-          <p className={PARTNER_SECTION_TITLE}>Frota agora</p>
+          <p className={PARTNER_SECTION_TITLE}>{t('fleet.hubTitle')}</p>
           <div className="grid grid-cols-2 gap-2">
             <div className={PARTNER_KPI_CARD}>
-              <p className="text-[11px] text-muted-foreground">Motoristas (total)</p>
+              <p className="text-[11px] text-muted-foreground">{t('fleet.driversTotal')}</p>
               <p className="text-lg font-semibold tabular-nums">{metrics.total_drivers}</p>
             </div>
             <div className={PARTNER_KPI_CARD}>
-              <p className="text-[11px] text-muted-foreground">Com GPS recente</p>
+              <p className="text-[11px] text-muted-foreground">{t('fleet.recentGps')}</p>
               <p className="text-lg font-semibold tabular-nums">{metrics.active_drivers}</p>
             </div>
           </div>
         </section>
       ) : null}
       <section className="space-y-2">
-        <p className={PARTNER_SECTION_TITLE}>Acções</p>
-        {FLEET_HUB_ITEMS.map(({ id, testId, icon: Icon, title, subtitle }) => (
+        <p className={PARTNER_SECTION_TITLE}>{t('fleet.actionsTitle')}</p>
+        {fleetHubItems.map(({ id, testId, icon: Icon, title, subtitle }) => (
           <button
             key={id}
             type="button"

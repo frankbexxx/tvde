@@ -1,5 +1,6 @@
 import { useAuth } from '../../context/AuthContext'
 import { BarChart3, Car, FileText, Inbox, Settings, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getTheme } from '@/hooks/useTheme'
 import { partnerMenuTitle } from './partnerMenuNav'
 import { usePartnerShell } from './partnerShellContext'
@@ -36,12 +37,13 @@ export function PartnerSideMenu(props: {
   onBack: () => void
   renderScreen: (screen: PartnerMenuScreen) => React.ReactNode
 }) {
+  const { t } = useTranslation('partner')
   const { open, onOpenChange, screen, onNavigate, onBack, renderScreen } = props
   const { logout, sessionDisplayName, sessionPhone } = useAuth()
   const { inboxUnreadCount, menuRootHighlight } = usePartnerShell()
 
   const headerTitle =
-    screen === 'root' ? (sessionDisplayName ?? 'Parceiro') : partnerMenuTitle(screen)
+    screen === 'root' ? (sessionDisplayName ?? t('menuTitle.default')) : partnerMenuTitle(screen)
   const flagAccent = getTheme() === 'portugal' || getTheme() === 'atlantico'
 
   const close = () => {
@@ -59,7 +61,7 @@ export function PartnerSideMenu(props: {
       onOpenChange={onOpenChange}
       testId="partner-side-menu"
       srTitle={headerTitle}
-      srDescription="Navegação do parceiro: frota, viagens, relatórios, caixa, perfil e definições."
+      srDescription={t('sideMenu.srDescription')}
       closeOnDismiss={close}
     >
       <AppMenuHeader title={headerTitle} onBack={back} onClose={close} closeTestId="partner-close-menu" />
@@ -69,50 +71,50 @@ export function PartnerSideMenu(props: {
             <AppMenuIdentity
               testId="partner-menu-identity"
               initial={initial}
-              name={sessionDisplayName ?? 'Gestor frota'}
-              phone={sessionPhone ?? 'Sessão'}
-              roleBadge="Parceiro"
+              name={sessionDisplayName ?? t('sideMenu.defaultName')}
+              phone={sessionPhone ?? t('sideMenu.sessionFallback')}
+              roleBadge={t('sideMenu.roleBadge')}
               flagAccent={flagAccent}
             />
-            <AppMenuSection title="Operação">
+            <AppMenuSection title={t('sideMenu.sections.operation')}>
               <AppMenuRow
-                label="Frota"
+                label={t('sideMenu.rows.fleet')}
                 icon={<Car className="h-4 w-4" />}
                 active={hl === 'fleet'}
                 onClick={() => onNavigate('fleet')}
               />
               <AppMenuRow
-                label="Viagens"
+                label={t('sideMenu.rows.trips')}
                 icon={<FileText className="h-4 w-4" />}
                 active={hl === 'trips'}
                 onClick={() => onNavigate('trips')}
               />
               <AppMenuRow
-                label="Relatórios"
+                label={t('sideMenu.rows.reports')}
                 icon={<BarChart3 className="h-4 w-4" />}
                 active={hl === 'reports'}
                 onClick={() => onNavigate('reports')}
               />
               <AppMenuRow
-                label="Caixa"
+                label={t('sideMenu.rows.inbox')}
                 icon={<Inbox className="h-4 w-4" />}
                 badge={inboxUnreadCount}
                 active={hl === 'inbox'}
                 onClick={() => onNavigate('inbox')}
               />
             </AppMenuSection>
-            <AppMenuSection title="Conta">
+            <AppMenuSection title={t('sideMenu.sections.account')}>
               <AppMenuRow
-                label="Perfil"
+                label={t('sideMenu.rows.profile')}
                 icon={<User className="h-4 w-4" />}
                 testId="partner-menu-profile"
                 active={hl === 'profile'}
                 onClick={() => onNavigate('profile')}
               />
             </AppMenuSection>
-            <AppMenuSection title="App">
+            <AppMenuSection title={t('sideMenu.sections.app')}>
               <AppMenuRow
-                label="Definições"
+                label={t('sideMenu.rows.settings')}
                 icon={<Settings className="h-4 w-4" />}
                 testId="partner-menu-settings"
                 active={hl === 'settings'}

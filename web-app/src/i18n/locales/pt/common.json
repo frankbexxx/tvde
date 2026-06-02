@@ -18,5 +18,39 @@
   "rolePartner": "Frota",
   "roleStaff": "Staff",
   "unexpectedError": "Resposta de erro inesperada.",
-  "legalEnSummary": "English summary — the legally binding text is in Portuguese."
+  "legalEnSummary": "English summary — the legally binding text is in Portuguese.",
+  "logout": "Sair",
+  "yes": "sim",
+  "no": "não",
+  "error": "Erro",
+  "profilePanel": {
+    "name": "Nome",
+    "phone": "Telemóvel",
+    "role": "Papel",
+    "accountAria": "Conta",
+    "accountTitle": "Conta",
+    "accountDescription": "Dados da conta: nome, telemóvel, papel e palavra-passe em BETA. Terminar sessão aqui."
+  },
+  "betaAccount": {
+    "title": "Conta (BETA)",
+    "intro": "O <phone>telemóvel</phone> só pode ser alterado pelo administrador. Para repor a password por defeito, o admin pode usar <clear>Limpar palavra-passe</clear> no painel.",
+    "phone": "Telemóvel",
+    "visibleName": "Nome visível",
+    "nameValidation": "Indica um nome (1–120 caracteres).",
+    "nameUpdated": "Nome actualizado.",
+    "saving": "A guardar…",
+    "saveName": "Guardar nome",
+    "changePassword": "Alterar palavra-passe",
+    "currentPassword": "Palavra-passe actual",
+    "defaultPasswordHint": "Ainda usas a password por defeito do BETA — define uma nova abaixo (não precisas da actual).",
+    "newPasswordMin": "Nova palavra-passe (mín. 8 caracteres)",
+    "confirmNew": "Confirmar nova",
+    "passwordMinError": "A nova palavra-passe precisa de pelo menos 8 caracteres.",
+    "passwordMismatch": "A confirmação não coincide com a nova palavra-passe.",
+    "currentRequired": "Indica a palavra-passe actual.",
+    "passwordUpdated": "Palavra-passe actualizada.",
+    "updating": "A actualizar…",
+    "updatePassword": "Actualizar palavra-passe",
+    "loading": "A carregar dados da conta…"
+  }
 }

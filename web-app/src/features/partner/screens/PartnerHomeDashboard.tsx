@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { PartnerMetrics } from '../../../api/partner'
 import { getTheme } from '@/hooks/useTheme'
 import { themeUsesFlagAccent } from '@/design-system/ambianceMeta'
@@ -17,36 +18,38 @@ export function PartnerHomeDashboard({
   metrics,
   onRefresh,
 }: PartnerHomeDashboardProps) {
+  const { t } = useTranslation('partner')
+  const { t: tc } = useTranslation('common')
   const kpiAccent = themeUsesFlagAccent(getTheme()) ? PARTNER_KPI_FLAG_ACCENT : ''
 
   return (
     <div className="space-y-4" data-testid="partner-home-dashboard">
       {metrics ? (
         <section className="space-y-2">
-          <p className={PARTNER_SECTION_TITLE}>Resumo operacional</p>
+          <p className={PARTNER_SECTION_TITLE}>{t('home.dashboard.summaryTitle')}</p>
           <div className="grid grid-cols-2 gap-3">
             <div className={cn(PARTNER_KPI_CARD, kpiAccent)}>
-              <p className="text-xs text-muted-foreground">Viagens hoje</p>
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.tripsToday')}</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_today}</p>
             </div>
             <div className={PARTNER_KPI_CARD}>
-              <p className="text-xs text-muted-foreground">Total viagens</p>
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.tripsTotal')}</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_total}</p>
             </div>
             <div className={PARTNER_KPI_CARD}>
-              <p className="text-xs text-muted-foreground">Concluídas</p>
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.completed')}</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_completed}</p>
             </div>
             <div className={PARTNER_KPI_CARD}>
-              <p className="text-xs text-muted-foreground">Canceladas</p>
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.cancelled')}</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.trips_cancelled}</p>
             </div>
             <div className={PARTNER_KPI_CARD}>
-              <p className="text-xs text-muted-foreground">Motoristas ativos (GPS)</p>
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.activeDriversGps')}</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.active_drivers}</p>
             </div>
             <div className={PARTNER_KPI_CARD}>
-              <p className="text-xs text-muted-foreground">Total motoristas</p>
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.totalDrivers')}</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.total_drivers}</p>
             </div>
           </div>
@@ -58,7 +61,7 @@ export function PartnerHomeDashboard({
         onClick={onRefresh}
         className="w-full rounded-xl bg-secondary py-2 text-sm font-medium text-secondary-foreground"
       >
-        Atualizar
+        {tc('refresh')}
       </button>
     </div>
   )

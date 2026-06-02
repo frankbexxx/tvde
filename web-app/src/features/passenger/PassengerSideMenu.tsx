@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { History, QrCode, Settings, User } from 'lucide-react'
 import QRCode from 'react-qr-code'
+import { useTranslation } from 'react-i18next'
 import { getTheme } from '@/hooks/useTheme'
 import { themeUsesFlagAccent } from '@/design-system/ambianceMeta'
 import { useAuth } from '../../context/AuthContext'
@@ -60,6 +61,7 @@ export function PassengerSideMenu({
   historyDetailError: string | null
   onHistoryTripSelect: (tripId: string) => void
 }) {
+  const { t } = useTranslation('passenger')
   const { sessionDisplayName, sessionPhone, logout } = useAuth()
 
   const shareUrl = useMemo(() => {
@@ -87,8 +89,8 @@ export function PassengerSideMenu({
     onScreenChange('root')
   }
 
-  const title = screen === 'root' ? 'Menu' : passengerMenuTitle(screen)
-  const headerTitle = screen === 'root' ? (sessionDisplayName ?? 'Passageiro') : title
+  const title = passengerMenuTitle(screen)
+  const headerTitle = screen === 'root' ? (sessionDisplayName ?? t('common:rolePassenger')) : title
   const initial = (sessionDisplayName ?? 'P').slice(0, 1).toUpperCase()
   const hl = menuRootHighlight
   const flagAccent = themeUsesFlagAccent(getTheme())
@@ -99,7 +101,7 @@ export function PassengerSideMenu({
       onOpenChange={onOpenChange}
       testId="passenger-side-menu"
       srTitle={title}
-      srDescription="Navegação do passageiro e histórico de viagens."
+      srDescription={t('sideMenu.srDescription')}
       closeOnDismiss={close}
     >
       <AppMenuHeader
@@ -114,36 +116,36 @@ export function PassengerSideMenu({
             <AppMenuIdentity
               testId="passenger-menu-identity"
               initial={initial}
-              name={sessionDisplayName ?? 'Passageiro'}
-              phone={sessionPhone ?? 'Sessão'}
-              roleBadge="Passageiro"
+              name={sessionDisplayName ?? t('common:rolePassenger')}
+              phone={sessionPhone ?? t('sideMenu.sessionFallback')}
+              roleBadge={t('common:rolePassenger')}
               flagAccent={flagAccent}
             />
-            <AppMenuSection title="Viagens">
+            <AppMenuSection title={t('sideMenu.sectionTrips')}>
               <AppMenuRow
-                label="Histórico"
+                label={t('nav.history')}
                 icon={<History className="h-4 w-4" />}
                 active={hl === 'trips'}
                 onClick={() => onScreenChange('history')}
               />
               <AppMenuRow
-                label="Partilhar app (QR)"
+                label={t('sideMenu.shareQr')}
                 icon={<QrCode className="h-4 w-4" />}
                 active={hl === 'trips'}
                 onClick={() => onScreenChange('share_app')}
               />
             </AppMenuSection>
-            <AppMenuSection title="Conta">
+            <AppMenuSection title={t('sideMenu.sectionAccount')}>
               <AppMenuRow
-                label="Conta"
+                label={t('nav.account')}
                 icon={<User className="h-4 w-4" />}
                 active={hl === 'account'}
                 onClick={() => onScreenChange('account')}
               />
             </AppMenuSection>
-            <AppMenuSection title="App">
+            <AppMenuSection title={t('sideMenu.sectionApp')}>
               <AppMenuRow
-                label="Definições"
+                label={t('menuTitle.settings')}
                 icon={<Settings className="h-4 w-4" />}
                 testId="passenger-menu-settings"
                 active={hl === 'settings'}
@@ -159,9 +161,7 @@ export function PassengerSideMenu({
           </>
         ) : screen === 'share_app' ? (
           <div className="space-y-4">
-            <p className="text-sm text-foreground/85 leading-snug">
-              Mostra este código a quem quiseres que instale ou abra a app neste ambiente. O link aponta para a mesma URL que estás a usar agora.
-            </p>
+            <p className="text-sm text-foreground/85 leading-snug">{t('sideMenu.shareIntro')}</p>
             {shareUrl ? (
               <div className={`flex flex-col items-center gap-3 ${MENU_SURFACE} bg-background p-4`}>
                 <div className={`${BTN_SECONDARY_RADIUS} bg-white p-3 shadow-sm`}>
@@ -179,18 +179,19 @@ export function PassengerSideMenu({
                     }
                   }}
                 >
-                  Copiar link
+                  {t('sideMenu.copyLink')}
                 </button>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Link indisponível neste contexto.</p>
+              <p className="text-sm text-muted-foreground">{t('sideMenu.linkUnavailable')}</p>
             )}
           </div>
         ) : screen === 'settings' ? (
           <div className="space-y-4" data-testid="passenger-settings-screen">
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Preferências da app. Conta e sessão estão em{' '}
-              <span className="font-medium text-foreground/90">Conta</span> no menu principal.
+              {t('sideMenu.settingsHintBefore')}{' '}
+              <span className="font-medium text-foreground/90">{t('nav.account')}</span>{' '}
+              {t('sideMenu.settingsHintAfter')}
             </p>
             <AppAppearanceSettings />
             <AppRouteModeSwitch />
@@ -208,42 +209,40 @@ export function PassengerSideMenu({
         ) : (
           <div className="space-y-3">
             {historyPollFault ? (
-              <p className="text-xs text-warning">
-                Não foi possível actualizar o histórico. Verifica a ligação.
-              </p>
+              <p className="text-xs text-warning">{t('sideMenu.historyPollFault')}</p>
             ) : null}
             {historyLoading && history == null ? (
-              <p className="text-sm text-muted-foreground">A carregar…</p>
+              <p className="text-sm text-muted-foreground">{t('common:loading')}</p>
             ) : null}
             {history && history.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Ainda não há viagens nesta conta.</p>
+              <p className="text-sm text-muted-foreground">{t('sideMenu.historyEmpty')}</p>
             ) : null}
             {history && history.length > 0 ? (
               <ul className="space-y-2">
-                {history.map((t) => (
-                  <li key={t.trip_id}>
+                {history.map((trip) => (
+                  <li key={trip.trip_id}>
                     <button
                       type="button"
-                      data-testid={`passenger-history-row-${t.trip_id}`}
-                      onClick={() => onHistoryTripSelect(t.trip_id)}
+                      data-testid={`passenger-history-row-${trip.trip_id}`}
+                      onClick={() => onHistoryTripSelect(trip.trip_id)}
                       className="flex w-full flex-col gap-1 py-2 border-b border-border last:border-0 text-left hover:bg-muted/30 rounded-lg px-1 -mx-1 touch-manipulation"
                     >
                       <div className="flex justify-between items-center gap-3">
                         <span className="flex items-center gap-2 text-sm text-foreground/85 min-w-0">
                           <span
                             aria-hidden="true"
-                            className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(t.status)}`}
+                            className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(trip.status)}`}
                           />
                           <span className="truncate">
-                            {formatPickup(t.origin_lat, t.origin_lng)} →{' '}
-                            {formatDestination(t.destination_lat, t.destination_lng)}
+                            {formatPickup(trip.origin_lat, trip.origin_lng)} →{' '}
+                            {formatDestination(trip.destination_lat, trip.destination_lng)}
                           </span>
                         </span>
                         <span className="font-medium text-foreground shrink-0 text-sm">
-                          {t.final_price != null ? `${t.final_price} €` : '—'}
+                          {trip.final_price != null ? `${trip.final_price} €` : '—'}
                         </span>
                       </div>
-                      <CancellationReasonMuted reason={t.cancellation_reason} className="mt-0" />
+                      <CancellationReasonMuted reason={trip.cancellation_reason} className="mt-0" />
                     </button>
                   </li>
                 ))}

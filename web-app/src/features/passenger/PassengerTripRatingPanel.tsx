@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { rateTripPassenger } from '../../api/trips'
 import { isTimeoutLikeError } from '../../api/client'
 import { toast } from 'sonner'
@@ -23,6 +24,7 @@ export function PassengerTripRatingPanel({
   onSubmitted: () => void
   onSkip: () => void
 }) {
+  const { t } = useTranslation('passenger')
   const [rating, setRating] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -31,19 +33,19 @@ export function PassengerTripRatingPanel({
     setBusy(true)
     try {
       await rateTripPassenger(tripId, token, rating)
-      toast.success('Obrigado pela avaliação')
+      toast.success(t('trip.thanksRating'))
       onSubmitted()
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: string }
       const msg = isTimeoutLikeError(err) || e?.status === 0
-        ? 'Sem ligação ou o pedido demorou demasiado. Tenta de novo.'
+        ? t('rating.errorNetwork')
         : e?.status === 403
-          ? 'Sem permissão para avaliar — em modo BETA, a conta tem de ser de passageiro (não motorista) para esta viagem.'
+          ? t('rating.errorForbidden')
           : e?.status === 404
-            ? 'Viagem não encontrada para avaliação. Pede nova viagem e tenta novamente no fim.'
+            ? t('rating.errorNotFound')
             : e?.detail === 'trip_not_completed'
-              ? 'A viagem ainda não está concluída. Aguarda alguns segundos e tenta de novo.'
-              : String(e?.detail ?? 'Não foi possível enviar a avaliação.')
+              ? t('rating.errorNotCompleted')
+              : String(e?.detail ?? t('rating.errorGeneric'))
       toast.error(msg)
     } finally {
       setBusy(false)
@@ -56,10 +58,10 @@ export function PassengerTripRatingPanel({
       data-testid="passenger-trip-rating"
     >
       <div>
-        <h2 className={INFO_BOX_TITLE_COMPACT}>Como correu a viagem?</h2>
-        <p className={`${INFO_BOX_BODY_COMPACT} mt-0.5`}>Avalia o motorista (opcional).</p>
+        <h2 className={INFO_BOX_TITLE_COMPACT}>{t('rating.title')}</h2>
+        <p className={`${INFO_BOX_BODY_COMPACT} mt-0.5`}>{t('rating.subtitle')}</p>
       </div>
-      <div className="flex flex-wrap gap-2 justify-center sm:justify-start" role="group" aria-label="Estrelas de 1 a 5">
+      <div className="flex flex-wrap gap-2 justify-center sm:justify-start" role="group" aria-label={t('rating.starsAria')}>
         {STARS.map((n) => (
           <button
             key={n}
@@ -85,7 +87,7 @@ export function PassengerTripRatingPanel({
           onClick={onSkip}
           className={`min-h-[44px] ${BTN_SECONDARY} px-4`}
         >
-          Agora não
+          {t('rating.skip')}
         </button>
         <button
           type="button"
@@ -93,7 +95,7 @@ export function PassengerTripRatingPanel({
           onClick={() => void submit()}
           className={`min-h-[44px] ${BTN_SECONDARY_RADIUS} bg-success px-4 text-sm font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 touch-manipulation`}
         >
-          {busy ? 'A enviar…' : 'Enviar avaliação'}
+          {busy ? t('rating.submitting') : t('trip.sendRating')}
         </button>
       </div>
     </div>

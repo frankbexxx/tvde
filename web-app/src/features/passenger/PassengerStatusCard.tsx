@@ -3,6 +3,8 @@
  * USER-SHELL-B: moldura unificada via InfoPanel.
  */
 import { memo, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { Spinner } from '../../components/ui/Spinner'
 import { TripCard } from '../../components/cards/TripCard'
 import { InfoPanel } from '../../components/layout/InfoPanel'
@@ -20,7 +22,11 @@ const ESTIMATE_FALLBACK = '4–6'
  */
 export const PASSENGER_SEARCH_FALLBACK_AFTER_SEC = 25
 
-function tripCardFooter(activeTrip: TripDetailResponse, priceCaption: string) {
+function tripCardFooter(
+  activeTrip: TripDetailResponse,
+  priceCaption: string,
+  t: TFunction<'passenger'>,
+) {
   return (
     <TripCard
       pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
@@ -29,9 +35,9 @@ function tripCardFooter(activeTrip: TripDetailResponse, priceCaption: string) {
       estimateFallback={ESTIMATE_FALLBACK}
       priceCaption={priceCaption}
       driverName={
-        activeTrip.status === 'assigned' ? undefined : 'Motorista TVDE'
+        activeTrip.status === 'assigned' ? undefined : t('statusCard.driverName')
       }
-      vehicleLabel={activeTrip.status === 'assigned' ? undefined : 'Veículo TVDE'}
+      vehicleLabel={activeTrip.status === 'assigned' ? undefined : t('statusCard.vehicleLabel')}
     />
   )
 }
@@ -40,12 +46,13 @@ function buildTripMetaLines(
   activeTrip: TripDetailResponse,
   trackingHint: string | null | undefined,
   pollHint: string | null | undefined,
+  t: TFunction<'passenger'>,
 ): string[] {
   const lines: string[] = []
   const ps = activeTrip.payment_status
   if (ps === 'pending' || ps === 'processing' || ps === 'failed') {
     const pay = paymentStatusLabel(ps)
-    if (pay) lines.push(`Pagamento: ${pay}`)
+    if (pay) lines.push(t('trip:paymentLine', { status: pay }))
   }
   if (trackingHint?.trim()) lines.push(trackingHint.trim())
   if (pollHint?.trim()) lines.push(pollHint.trim())
@@ -63,6 +70,7 @@ function SearchingDriverPhase({
   retrySearchPending?: boolean
   compact?: boolean
 }) {
+  const { t } = useTranslation('passenger')
   const [nowMs, setNowMs] = useState<number | null>(null)
   useEffect(() => {
     const tick = () => setNowMs(Date.now())
@@ -84,12 +92,12 @@ function SearchingDriverPhase({
       tone={showFallback ? 'empty' : 'waiting'}
       centered
       title={
-        showFallback ? 'Sem motoristas disponíveis de momento' : 'A procurar motorista…'
+        showFallback ? t('statusCard.searchingFallbackTitle') : t('statusCard.searchingTitle')
       }
       subtitle={
         showFallback
-          ? 'Não encontrámos um motorista na zona. Podes cancelar e voltar a pedir — ou esperar mais um pouco.'
-          : 'Estamos a contactar motoristas na zona. Pode demorar um instante.'
+          ? t('statusCard.searchingFallbackSubtitle')
+          : t('statusCard.searchingSubtitle')
       }
       meta={meta}
       testId={showFallback ? 'passenger-info-panel-empty' : 'passenger-info-panel-searching'}
@@ -101,7 +109,7 @@ function SearchingDriverPhase({
             disabled={retrySearchPending}
             onClick={onRetrySearch}
           >
-            {retrySearchPending ? 'A processar…' : 'Tentar novamente'}
+            {retrySearchPending ? t('statusCard.retryPending') : t('statusCard.retry')}
           </button>
         ) : undefined
       }
@@ -133,6 +141,8 @@ function PassengerStatusCardInner({
   pollHint = null,
   compact = false,
 }: PassengerStatusCardProps) {
+  const { t } = useTranslation('passenger')
+
   if (isSubmittingTrip) {
     return (
       <div
@@ -140,15 +150,16 @@ function PassengerStatusCardInner({
         data-testid="passenger-info-panel-submitting"
       >
         <Spinner size="lg" />
-        <p className="text-foreground text-base font-semibold">A enviar pedido…</p>
-        <p className="text-foreground/80 text-sm text-center px-4">Aguarda um momento.</p>
+        <p className="text-foreground text-base font-semibold">{t('statusCard.submittingTitle')}</p>
+        <p className="text-foreground/80 text-sm text-center px-4">{t('statusCard.submittingSubtitle')}</p>
       </div>
     )
   }
 
   if (!uxState || !activeTrip) return null
 
-  const metaForTrip = buildTripMetaLines(activeTrip, trackingHint, pollHint)
+  const metaForTrip = buildTripMetaLines(activeTrip, trackingHint, pollHint, t)
+  const estimateCaption = t('statusCard.estimateCaption')
 
   switch (uxState) {
     case 'SEARCHING_DRIVER':
@@ -168,11 +179,11 @@ function PassengerStatusCardInner({
           <InfoPanel
             compact={compact}
             tone="primary"
-            title="Motorista encontrado"
-            subtitle="A obter localização — o mapa aparece em breve."
+            title={t('statusCard.driverFound')}
+            subtitle={t('statusCard.driverLocating')}
             meta={metaForTrip.length > 0 ? metaForTrip : undefined}
             testId="passenger-info-panel-assigned"
-            footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+            footer={compact ? undefined : tripCardFooter(activeTrip, estimateCaption, t)}
           />
         )
       }
@@ -180,10 +191,10 @@ function PassengerStatusCardInner({
         <InfoPanel
           compact={compact}
           tone="success"
-          title="Motorista a caminho"
+          title={t('statusCard.driverEnRoute')}
           meta={metaForTrip.length > 0 ? metaForTrip : undefined}
           testId="passenger-info-panel-en-route"
-          footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, estimateCaption, t)}
         />
       )
     }
@@ -194,10 +205,10 @@ function PassengerStatusCardInner({
           compact={compact}
           tone="success"
           title={passengerTripStatusLabel('arriving')}
-          subtitle={compact ? undefined : 'O motorista está próximo do ponto de recolha.'}
+          subtitle={compact ? undefined : t('statusCard.driverNearPickup')}
           meta={metaForTrip.length > 0 ? metaForTrip : undefined}
           testId="passenger-info-panel-arriving"
-          footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, estimateCaption, t)}
         />
       )
 
@@ -206,10 +217,10 @@ function PassengerStatusCardInner({
         <InfoPanel
           compact={compact}
           tone="secondary"
-          title="Viagem em curso"
+          title={t('statusCard.tripOngoing')}
           meta={metaForTrip.length > 0 ? metaForTrip : undefined}
           testId="passenger-info-panel-ongoing"
-          footer={compact ? undefined : tripCardFooter(activeTrip, 'Estimativa (indicativa)')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, estimateCaption, t)}
         />
       )
 
@@ -219,10 +230,10 @@ function PassengerStatusCardInner({
         <InfoPanel
           compact={compact}
           tone="neutral"
-          title="Viagem concluída"
-          meta={payDone ? [`Pagamento: ${payDone}`] : undefined}
+          title={t('statusCard.tripCompleted')}
+          meta={payDone ? [t('trip:paymentLine', { status: payDone })] : undefined}
           testId="passenger-info-panel-completed"
-          footer={compact ? undefined : tripCardFooter(activeTrip, 'Preço final')}
+          footer={compact ? undefined : tripCardFooter(activeTrip, t('statusCard.finalPriceCaption'), t)}
         />
       )
     }

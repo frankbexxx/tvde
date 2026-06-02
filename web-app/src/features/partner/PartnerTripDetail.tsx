@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import {
   fetchPartnerDriver,
@@ -15,6 +16,8 @@ function mapsUrl(lat: number, lng: number): string {
 }
 
 export function PartnerTripDetail() {
+  const { t } = useTranslation('partner')
+  const { t: tc } = useTranslation('common')
   const { tripId } = useParams<{ tripId: string }>()
   const [trip, setTrip] = useState<PartnerTripRow | null>(null)
   const [drivers, setDrivers] = useState<PartnerDriverRow[]>([])
@@ -31,15 +34,15 @@ export function PartnerTripDetail() {
     setLoading(true)
     setError(null)
     try {
-      const [t, dr] = await Promise.all([fetchPartnerTrip(tripId), fetchPartnerDrivers()])
-      setTrip(t)
+      const [row, dr] = await Promise.all([fetchPartnerTrip(tripId), fetchPartnerDrivers()])
+      setTrip(row)
       setDrivers(dr)
       setPick('')
-      void reverseGeocode(t.origin_lng, t.origin_lat).then(setOriginLabel).catch(() => setOriginLabel(null))
-      void reverseGeocode(t.destination_lng, t.destination_lat).then(setDestLabel).catch(() => setDestLabel(null))
-      if (t.driver_id) {
+      void reverseGeocode(row.origin_lng, row.origin_lat).then(setOriginLabel).catch(() => setOriginLabel(null))
+      void reverseGeocode(row.destination_lng, row.destination_lat).then(setDestLabel).catch(() => setDestLabel(null))
+      if (row.driver_id) {
         try {
-          const cd = await fetchPartnerDriver(t.driver_id)
+          const cd = await fetchPartnerDriver(row.driver_id)
           setCurrentDriver(cd)
         } catch {
           setCurrentDriver(null)
@@ -49,12 +52,12 @@ export function PartnerTripDetail() {
       }
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Erro ao carregar viagem.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('tripDetail.loadError'))
       setTrip(null)
     } finally {
       setLoading(false)
     }
-  }, [tripId])
+  }, [tripId, t])
 
   useEffect(() => {
     void load()
@@ -65,30 +68,30 @@ export function PartnerTripDetail() {
     setBusy(true)
     setError(null)
     try {
-      const t = await postPartnerTripReassign(tripId, pick)
-      setTrip(t)
+      const nextTrip = await postPartnerTripReassign(tripId, pick)
+      setTrip(nextTrip)
       setPick('')
-      if (t.driver_id) {
-        const cd = await fetchPartnerDriver(t.driver_id)
+      if (nextTrip.driver_id) {
+        const cd = await fetchPartnerDriver(nextTrip.driver_id)
         setCurrentDriver(cd)
       }
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setError(typeof err?.detail === 'string' ? err.detail : 'Não foi possível reatribuir.')
+      setError(typeof err?.detail === 'string' ? err.detail : t('tripDetail.reassignError'))
     } finally {
       setBusy(false)
     }
   }
 
   if (loading) {
-    return <p className="p-4 text-sm text-muted-foreground">A carregar…</p>
+    return <p className="p-4 text-sm text-muted-foreground">{tc('loading')}</p>
   }
   if (!trip || !tripId) {
     return (
       <div className="p-4 space-y-2">
-        <p className="text-destructive text-sm">{error ?? 'Viagem não encontrada.'}</p>
+        <p className="text-destructive text-sm">{error ?? t('tripDetail.notFound')}</p>
         <Link to="/partner" className="text-primary text-sm underline">
-          Voltar
+          {tc('back')}
         </Link>
       </div>
     )
@@ -100,13 +103,13 @@ export function PartnerTripDetail() {
   const canReassign = trip.status === 'assigned' && trip.driver_id && approvedOthers.length > 0
   const price =
     trip.final_price != null && trip.final_price > 0
-      ? `${trip.final_price.toFixed(2)} € (final)`
-      : `${trip.estimated_price.toFixed(2)} € (estimativa)`
+      ? t('tripDetail.priceFinal', { value: trip.final_price.toFixed(2) })
+      : t('tripDetail.priceEstimate', { value: trip.estimated_price.toFixed(2) })
 
   return (
     <div className="p-4 space-y-4 max-w-lg mx-auto w-full">
       <Link to="/partner" className="text-sm text-primary hover:underline">
-        ← Frota
+        {t('tripDetail.backToFleet')}
       </Link>
       <h2 className="text-base font-semibold text-foreground font-mono break-all">
         {trip.trip_id}
@@ -115,19 +118,19 @@ export function PartnerTripDetail() {
 
       <div className="rounded-xl border border-border bg-card p-3 text-sm space-y-2">
         <p>
-          <span className="text-muted-foreground">Estado:</span>{' '}
+          <span className="text-muted-foreground">{t('tripDetail.status')}</span>{' '}
           <span className="text-foreground font-medium">{trip.status}</span>
         </p>
         <p>
-          <span className="text-muted-foreground">Preço:</span>{' '}
+          <span className="text-muted-foreground">{t('tripDetail.price')}</span>{' '}
           <span className="text-foreground font-medium">{price}</span>
         </p>
         <p>
-          <span className="text-muted-foreground">Passageiro:</span>{' '}
+          <span className="text-muted-foreground">{t('tripDetail.passenger')}</span>{' '}
           <span className="text-foreground font-mono text-xs">{trip.passenger_id}</span>
         </p>
         <p>
-          <span className="text-muted-foreground">Motorista:</span>{' '}
+          <span className="text-muted-foreground">{t('tripDetail.driver')}</span>{' '}
           <span className="text-foreground font-mono text-xs">{trip.driver_id ?? '—'}</span>
         </p>
         {currentDriver && (
@@ -137,7 +140,7 @@ export function PartnerTripDetail() {
         )}
         <hr className="border-border" />
         <div className="space-y-1">
-          <p className="text-muted-foreground">Recolha</p>
+          <p className="text-muted-foreground">{t('tripDetail.pickup')}</p>
           <p className="text-foreground text-xs font-mono">
             {trip.origin_lat.toFixed(5)}, {trip.origin_lng.toFixed(5)}
           </p>
@@ -148,11 +151,11 @@ export function PartnerTripDetail() {
             rel="noopener noreferrer"
             className="text-xs text-primary underline"
           >
-            Abrir no mapa
+            {t('tripDetail.openMap')}
           </a>
         </div>
         <div className="space-y-1">
-          <p className="text-muted-foreground">Destino</p>
+          <p className="text-muted-foreground">{t('tripDetail.destination')}</p>
           <p className="text-foreground text-xs font-mono">
             {trip.destination_lat.toFixed(5)}, {trip.destination_lng.toFixed(5)}
           </p>
@@ -163,41 +166,41 @@ export function PartnerTripDetail() {
             rel="noopener noreferrer"
             className="text-xs text-primary underline"
           >
-            Abrir no mapa
+            {t('tripDetail.openMap')}
           </a>
         </div>
         {trip.cancel_reason ? (
           <p>
-            <span className="text-muted-foreground">Motivo cancelamento:</span>{' '}
+            <span className="text-muted-foreground">{t('tripDetail.cancelReason')}</span>{' '}
             <span className="text-foreground">{trip.cancel_reason}</span>
           </p>
         ) : null}
         <hr className="border-border" />
         <p>
-          <span className="text-muted-foreground">Criada:</span> {trip.created_at}
+          <span className="text-muted-foreground">{t('tripDetail.created')}</span> {trip.created_at}
         </p>
         <p>
-          <span className="text-muted-foreground">Início:</span> {trip.started_at ?? '—'}
+          <span className="text-muted-foreground">{t('tripDetail.started')}</span> {trip.started_at ?? '—'}
         </p>
         <p>
-          <span className="text-muted-foreground">Concluída:</span> {trip.completed_at ?? '—'}
+          <span className="text-muted-foreground">{t('tripDetail.completed')}</span> {trip.completed_at ?? '—'}
         </p>
         <p>
-          <span className="text-muted-foreground">Atualizada:</span> {trip.updated_at}
+          <span className="text-muted-foreground">{t('tripDetail.updated')}</span> {trip.updated_at}
         </p>
       </div>
 
       {trip.status === 'assigned' && trip.driver_id ? (
         canReassign ? (
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Atribuir a outro motorista</p>
+            <p className="text-sm font-medium text-foreground">{t('tripDetail.reassignTitle')}</p>
             <select
               value={pick}
               onChange={(e) => setPick(e.target.value)}
               disabled={busy}
               className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
             >
-              <option value="">— escolher —</option>
+              <option value="">{t('tripDetail.chooseDriver')}</option>
               {approvedOthers.map((x) => (
                 <option key={x.user_id} value={x.user_id}>
                   {x.user.name ?? x.user_id} ({x.user.phone ?? ''})
@@ -210,17 +213,17 @@ export function PartnerTripDetail() {
               onClick={() => void reassign()}
               className="w-full rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {busy ? '…' : 'Reatribuir viagem'}
+              {busy ? '…' : t('tripDetail.reassignBtn')}
             </button>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Reatribuição só disponível com estado «assigned» e outro motorista aprovado na frota.
+            {t('tripDetail.reassignHintAssigned')}
           </p>
         )
       ) : trip.driver_id ? (
         <p className="text-xs text-muted-foreground">
-          Reatribuição indisponível — a viagem já passou de «assigned» (estado actual: {trip.status}).
+          {t('tripDetail.reassignUnavailable', { status: trip.status })}
         </p>
       ) : null}
     </div>
