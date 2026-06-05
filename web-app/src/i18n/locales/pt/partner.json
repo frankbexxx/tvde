@@ -242,7 +242,10 @@
     "refreshing": "A actualizar…",
     "loading": "A carregar…",
     "empty": "Sem mensagens dos motoristas.",
-    "broadcastSent": "Aviso enviado a toda a frota."
+    "broadcastSent": "Aviso enviado a toda a frota.",
+    "refresh": "Actualizar",
+    "driverPrefix": "Motorista ·",
+    "viewDriver": "Ver motorista"
   },
   "workspace": {
     "loadError": "Erro ao carregar dados da frota.",

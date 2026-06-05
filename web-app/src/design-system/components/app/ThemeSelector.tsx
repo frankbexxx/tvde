@@ -1,8 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { useTheme, THEME_PREFERENCE_AUTO, type ThemePreference } from '@/hooks/useTheme'
 import { cn } from '@/lib/utils'
-import { AMBIANCE_OPTIONS, AUTO_AMBIANCE_HINT, ambianceSwatchStyle } from '@/design-system/ambianceMeta'
+import { AMBIANCE_THEME_OPTIONS, ambianceSwatchStyle } from '@/design-system/ambianceMeta'
 
-function SwatchStrip({ swatch }: { swatch: (typeof AMBIANCE_OPTIONS)[0]['swatch'] }) {
+function SwatchStrip({ swatch }: { swatch: (typeof AMBIANCE_THEME_OPTIONS)[0]['swatch'] }) {
   const style = ambianceSwatchStyle(swatch)
   return (
     <div
@@ -35,6 +36,7 @@ function isActive(preference: ThemePreference, id: ThemePreference): boolean {
 }
 
 export function ThemeSelector() {
+  const { t } = useTranslation('settings')
   const [current, setTheme] = useTheme()
 
   return (
@@ -51,17 +53,17 @@ export function ThemeSelector() {
             : 'border-border bg-card hover:bg-muted/30',
         )}
       >
-        <p className="text-sm font-semibold text-foreground">Automático (sistema)</p>
-        <p className="mt-1 text-xs text-muted-foreground leading-snug">{AUTO_AMBIANCE_HINT}</p>
+        <p className="text-sm font-semibold text-foreground">{t('ambiance.auto.label')}</p>
+        <p className="mt-1 text-xs text-muted-foreground leading-snug">{t('ambiance.auto.hint')}</p>
         {isActive(current, THEME_PREFERENCE_AUTO) ? (
-          <p className="mt-2 text-[11px] font-medium text-primary">Activo</p>
+          <p className="mt-2 text-[11px] font-medium text-primary">{t('ambiance.active')}</p>
         ) : null}
       </button>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {AMBIANCE_OPTIONS.map(({ id, label, description, swatch }, index) => {
+        {AMBIANCE_THEME_OPTIONS.map(({ id, swatch }, index) => {
           const active = isActive(current, id)
-          const isLastOdd = AMBIANCE_OPTIONS.length % 2 === 1 && index === AMBIANCE_OPTIONS.length - 1
+          const isLastOdd = AMBIANCE_THEME_OPTIONS.length % 2 === 1 && index === AMBIANCE_THEME_OPTIONS.length - 1
           return (
             <button
               key={id}
@@ -78,10 +80,12 @@ export function ThemeSelector() {
               )}
             >
               <SwatchStrip swatch={swatch} />
-              <p className="mt-2 text-sm font-semibold text-foreground">{label}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground leading-snug">{description}</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{t(`ambiance.${id}.label`)}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground leading-snug">
+                {t(`ambiance.${id}.description`)}
+              </p>
               {active ? (
-                <p className="mt-1.5 text-[11px] font-medium text-primary">Activo</p>
+                <p className="mt-1.5 text-[11px] font-medium text-primary">{t('ambiance.active')}</p>
               ) : null}
             </button>
           )

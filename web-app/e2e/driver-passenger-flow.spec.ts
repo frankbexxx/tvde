@@ -31,7 +31,7 @@ async function waitForDriverMapOfferUi(page: Page, tripId: string) {
     .poll(
       async () => {
         const hint = await page
-          .getByText(/viagem no mapa|toca no marcador/i)
+          .getByText(/viagem no mapa|trip on the map|toca no marcador|tap the marker/i)
           .first()
           .isVisible()
           .catch(() => false)

@@ -28,5 +28,32 @@
     "clear": "Limpar",
     "empty": "Nenhum evento registado",
     "copyEmpty": "Nenhum evento"
+  },
+  "ambiance": {
+    "active": "Activo",
+    "auto": {
+      "label": "Automático (sistema)",
+      "hint": "Segue claro/escuro do telemóvel → Portugal (claro) ou Nocturno (escuro)."
+    },
+    "portugal": {
+      "label": "Portugal",
+      "description": "Claro, operacional — marca PT discreta."
+    },
+    "atlantico": {
+      "label": "Atlântico",
+      "description": "Costa atlântica — brisa, cinza-mar e verde suave."
+    },
+    "dev": {
+      "label": "Nocturno",
+      "description": "Escuro, menos glare — ideal à noite."
+    },
+    "minimal": {
+      "label": "Minimal",
+      "description": "Neutro — dados e listas em primeiro."
+    },
+    "neon": {
+      "label": "Neon (sandbox)",
+      "description": "Experimental — alto contraste, só testes."
+    }
   }
 }

@@ -24,6 +24,15 @@
   "yes": "yes",
   "no": "no",
   "error": "Error",
+  "headerHints": {
+    "tripEstimate": "Estimate when you request; final price appears at the end of the trip.",
+    "tripNetworkBattery": "During a trip, keep enough network signal and battery.",
+    "staleMapState": "If the map or status stalls, check your connection or reload the page.",
+    "activityLog": "Operational questions: use the activity log (⚙️) to review what the app did.",
+    "zoneArrived": "Zone change: «Arrived» confirms with the server position — keep GPS on a moment before.",
+    "airportLis": "Airport zone (LIS): live queues and times need future integrations; follow operations rules for now.",
+    "zoneArrivedFailed": "If «Arrived at zone» fails, check you are inside the area and the app has your location."
+  },
   "profilePanel": {
     "name": "Name",
     "phone": "Phone",

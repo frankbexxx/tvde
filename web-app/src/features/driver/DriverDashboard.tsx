@@ -87,6 +87,7 @@ import { CancellationReasonMuted } from '../../components/trips/CancellationReas
 import { uploadDriverDocument, fetchDriverMessages } from '../../api/driverMessages'
 import { ActiveTripActions } from './ActiveTripActions'
 import { DriverInboxPanel } from './DriverInboxPanel'
+import { FilePickerButton } from '../../components/forms/FilePickerButton'
 import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
 import {
   isDriverOfferExpired,
@@ -1947,14 +1948,14 @@ export function DriverDashboard() {
                         <div className={`${INFO_BOX_MAP_HINT} px-2 py-2 text-center space-y-1`}>
                           <p className="text-xs font-medium text-foreground/90">
                             {filteredAvailable.length === 1
-                              ? '1 viagem no mapa'
-                              : `${filteredAvailable.length} viagens no mapa`}
+                              ? t('mapHome.tripsOnMapOne')
+                              : t('mapHome.tripsOnMapMany', { count: filteredAvailable.length })}
                           </p>
                           <HintLine
                             className="text-[11px] text-foreground/65"
                             testId="driver-map-offer-hint"
                           >
-                            Toca no marcador no mapa para ver o pedido e aceitar.
+                            {t('mapHome.tapMarkerHint')}
                           </HintLine>
                         </div>
                       ) : pollEnabled && availableLoading && available == null ? (
@@ -3845,17 +3846,18 @@ function DriverOperationsMenu({
                           : t('opsMenu.docs.fileUploaded')}
                       </p>
                     ) : null}
-                    <label className="text-[11px] text-muted-foreground">
-                      {status === 'missing'
-                        ? t('opsMenu.docs.uploadLabelMissing')
-                        : t('opsMenu.docs.uploadLabelReplace')}
-                      <input
-                        type="file"
+                    <div className="text-[11px] text-muted-foreground">
+                      <p>
+                        {status === 'missing'
+                          ? t('opsMenu.docs.uploadLabelMissing')
+                          : t('opsMenu.docs.uploadLabelReplace')}
+                      </p>
+                      <FilePickerButton
                         accept=".pdf,image/*"
-                        className="mt-1 block w-full text-xs"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (!file || !token) return
+                        className="mt-1"
+                        disabled={!token}
+                        onFileSelected={(file) => {
+                          if (!token) return
                           void uploadDriverDocument(token, doc, file)
                             .then((server) => {
                               sonnerToast.success(t('opsMenu.docs.uploadSuccess'))
@@ -3866,10 +3868,9 @@ function DriverOperationsMenu({
                               }
                             })
                             .catch(() => sonnerToast.error(t('opsMenu.docs.uploadFailed')))
-                          e.target.value = ''
                         }}
                       />
-                    </label>
+                    </div>
                     <button
                       type="button"
                       className="min-h-[32px] w-full rounded-md border border-warning/50 bg-warning/10 px-2 text-xs font-medium text-foreground hover:bg-warning/20"

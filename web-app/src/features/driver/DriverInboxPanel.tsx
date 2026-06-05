@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../context/AuthContext'
 import {
   fetchDriverMessages,
@@ -7,10 +8,12 @@ import {
   postDriverMessage,
   type DriverMessageRow,
 } from '../../api/driverMessages'
+import { formatDateTime } from '../../i18n/format'
 
 type InboxTab = 'received' | 'sent' | 'compose'
 
 export function DriverInboxPanel() {
+  const { t } = useTranslation('driver')
   const { token } = useAuth()
   const [tab, setTab] = useState<InboxTab>('received')
   const [received, setReceived] = useState<DriverMessageRow[]>([])
@@ -36,11 +39,11 @@ export function DriverInboxPanel() {
       setReceived(inbox)
       setSent(outbox)
     } catch {
-      setError('Não foi possível carregar a caixa de entrada.')
+      setError(t('inbox.loadError'))
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, t])
 
   useEffect(() => {
     void load()
@@ -70,26 +73,26 @@ export function DriverInboxPanel() {
       await postDriverMessage(token, { title: title.trim(), body: body.trim(), priority })
       setTitle('')
       setBody('')
-      setSendOk('Pedido enviado à frota.')
+      setSendOk(t('inbox.sendOk'))
       setTab('sent')
       await load()
     } catch {
-      setError('Não foi possível enviar. Tenta outra vez.')
+      setError(t('inbox.sendError'))
     } finally {
       setSending(false)
     }
   }
 
+  const tabLabels: Record<InboxTab, string> = {
+    received: t('inbox.tabReceived'),
+    sent: t('inbox.tabSent'),
+    compose: t('inbox.tabCompose'),
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex gap-1 rounded-lg border border-border p-0.5">
-        {(
-          [
-            ['received', 'Recebidas'],
-            ['sent', 'Enviadas'],
-            ['compose', 'Pedir ajuda'],
-          ] as const
-        ).map(([id, label]) => (
+        {(['received', 'sent', 'compose'] as const).map((id) => (
           <button
             key={id}
             type="button"
@@ -99,7 +102,7 @@ export function DriverInboxPanel() {
             }}
             className={`flex-1 min-h-8 rounded-md text-xs font-medium touch-manipulation ${tab === id ? 'bg-primary/15 text-foreground' : 'text-muted-foreground'}`}
           >
-            {label}
+            {tabLabels[id]}
           </button>
         ))}
       </div>
@@ -110,13 +113,13 @@ export function DriverInboxPanel() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Assunto"
+            placeholder={t('inbox.subjectPlaceholder')}
             className="w-full rounded-lg border border-border px-2 py-2 text-sm"
           />
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Descreve o que precisas da frota"
+            placeholder={t('inbox.bodyPlaceholder')}
             rows={4}
             className="w-full rounded-lg border border-border px-2 py-2 text-sm"
           />
@@ -125,8 +128,8 @@ export function DriverInboxPanel() {
             onChange={(e) => setPriority(e.target.value as 'normal' | 'high')}
             className="w-full rounded-lg border border-border px-2 py-2 text-sm"
           >
-            <option value="normal">Prioridade normal</option>
-            <option value="high">Prioridade alta</option>
+            <option value="normal">{t('inbox.priorityNormal')}</option>
+            <option value="high">{t('inbox.priorityHigh')}</option>
           </select>
           <button
             type="button"
@@ -134,17 +137,17 @@ export function DriverInboxPanel() {
             onClick={() => void handleSend()}
             className="w-full min-h-10 rounded-xl bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {sending ? 'A enviar…' : 'Enviar à frota'}
+            {sending ? t('inbox.sending') : t('inbox.sendToFleet')}
           </button>
           {sendOk ? <p className="text-xs text-success">{sendOk}</p> : null}
         </div>
       ) : loading ? (
-        <p className="text-xs text-muted-foreground">A carregar mensagens…</p>
+        <p className="text-xs text-muted-foreground">{t('inbox.loading')}</p>
       ) : error ? (
         <p className="text-xs text-destructive">{error}</p>
       ) : rows.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          {tab === 'sent' ? 'Ainda não enviaste mensagens à frota.' : 'Sem avisos da frota.'}
+          {tab === 'sent' ? t('inbox.emptySent') : t('inbox.emptyReceived')}
         </p>
       ) : (
         <>
@@ -162,11 +165,13 @@ export function DriverInboxPanel() {
                     ) : null}
                     {m.title}
                     {m.priority === 'high' ? (
-                      <span className="text-[10px] uppercase text-destructive font-semibold">Alta</span>
+                      <span className="text-[10px] uppercase text-destructive font-semibold">
+                        {t('inbox.priorityBadgeHigh')}
+                      </span>
                     ) : null}
                   </p>
                   <p className="text-muted-foreground mt-0.5">
-                    {new Date(m.created_at).toLocaleString('pt-PT')}
+                    {formatDateTime(m.created_at)}
                   </p>
                 </button>
               </li>
@@ -183,7 +188,7 @@ export function DriverInboxPanel() {
 
       {tab !== 'compose' ? (
         <button type="button" onClick={() => void load()} className="text-xs text-primary underline">
-          Actualizar
+          {t('inbox.refresh')}
         </button>
       ) : null}
     </div>

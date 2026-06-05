@@ -242,7 +242,10 @@
     "refreshing": "Refreshing…",
     "loading": "Loading…",
     "empty": "No driver messages.",
-    "broadcastSent": "Notice sent to entire fleet."
+    "broadcastSent": "Notice sent to entire fleet.",
+    "refresh": "Refresh",
+    "driverPrefix": "Driver ·",
+    "viewDriver": "View driver"
   },
   "workspace": {
     "loadError": "Error loading fleet data.",
