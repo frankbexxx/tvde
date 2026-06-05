@@ -45,17 +45,17 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (lista consolidada — **2026-05-29**)
+## Painel — **PRÓXIMA SESSÃO** (lista consolidada — **2026-05-22**)
 
-**Objectivo:** escolher **1 carril** antes de codar (P0 produto · P1 staging · P5 ops).
+**Objectivo:** carril **A** (P0 produto). Docs audit L1–L4 **concluída** em `main`.
 
-**`main`:** i18n v2 merged (**#353**, **#354**); nichos EN via screenshots — [`I18N_NICHOS_EN.md`](docs/architecture/I18N_NICHOS_EN.md).
+**`main`:** i18n v2 (**#353**, **#354**); nichos EN — [`I18N_NICHOS_EN.md`](docs/architecture/I18N_NICHOS_EN.md).
 
 ### Aberto agora (P0 — produto)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TW-SMK-DOC-4** | Banner «Documentos em falta» topo mapa → infobox bottom | Por iniciar | Único fix docs pendente |
+| **TW-SMK-DOC-4** | Banner «Documentos em falta» topo mapa → infobox bottom | Smoke pendente | Infobox `MapBottomSheet` / step1 bottom; build OK |
 | **O-NAV-REV-1** | Rever G12 auto-open recolha vs política B | Por iniciar | Decisão produto |
 | **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Frank lista ecrãs Render |
 | **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro + menu tree | Smoke pendente | Partner tree v2; passageiro OK |

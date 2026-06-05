@@ -386,6 +386,17 @@ export function DriverDashboard() {
   const effectiveDocsGate = import.meta.env.DEV ? driverDocsGateEnabled : true
   const docsReady = isDriverDocumentsReady(driverDocuments)
   const docsBlockedOffline = effectiveDocsGate && !docsReady && offline
+  const driverDocsBlockedHintBox = (
+    <div
+      className={`${INFO_BOX_MAP_HINT} w-full border-warning/40 bg-warning/15 px-2 py-2 text-center`}
+      data-testid="driver-docs-blocked-banner"
+    >
+      <p className="text-xs font-medium text-foreground">{t('mapHome.docsMissingTitle')}</p>
+      <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
+        {t('mapHome.docsMissingBody')}
+      </p>
+    </div>
+  )
   const [driverAcceptSoundTick, setDriverAcceptSoundTick] = useState(0)
   const [driverCompleteSoundTick, setDriverCompleteSoundTick] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -1356,14 +1367,6 @@ export function DriverDashboard() {
                           </div>
                         </div>
                       )}
-                      {docsBlockedOffline ? (
-                        <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
-                          <p className="font-medium text-foreground">{t('mapHome.docsMissingTitle')}</p>
-                          <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
-                            {t('mapHome.docsMissingBody')}
-                          </p>
-                        </div>
-                      ) : null}
                       {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                         <div
                           className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
@@ -1504,6 +1507,11 @@ export function DriverDashboard() {
                       ) : null}
                     </div>
                   </div>
+                  {docsBlockedOffline ? (
+                    <div className="pointer-events-auto absolute inset-x-0 bottom-2 z-[6] flex justify-center px-2">
+                      {driverDocsBlockedHintBox}
+                    </div>
+                  ) : null}
                   {driverMapTapOnlineHint ? (
                     <div
                       className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
@@ -1700,14 +1708,6 @@ export function DriverDashboard() {
                         </div>
                       </div>
                     )}
-                    {docsBlockedOffline ? (
-                      <div className={MAP_HINT_WARNING} data-testid="driver-docs-blocked-banner">
-                        <p className="font-medium text-foreground">{t('mapHome.docsMissingTitle')}</p>
-                        <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
-                          {t('mapHome.docsMissingBody')}
-                        </p>
-                      </div>
-                    ) : null}
                     {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
                       <div
                         className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
@@ -1847,6 +1847,12 @@ export function DriverDashboard() {
                   {activeTripId ? (
                     <MapBottomSheet className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_TRIP}`}>
                       {driverActiveTripPanel}
+                    </MapBottomSheet>
+                  ) : docsBlockedOffline ? (
+                    <MapBottomSheet
+                      className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_WAIT}`}
+                    >
+                      {driverDocsBlockedHintBox}
                     </MapBottomSheet>
                   ) : !offline ? (
                     <MapBottomSheet

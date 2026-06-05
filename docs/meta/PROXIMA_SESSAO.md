@@ -6,11 +6,11 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-05-29**)
+## Contexto actual (**2026-05-22**)
 
-- **`main`:** smokes **#341** fechados; fixes **F-SMK-DOC-1…3**, **TW-SMK-OFFER-1…2**, **F-SMK-CAT-1**, **F-NAV-1** (política B) entregues.
-- **i18n v2** merged (**#353**, **#354**); nichos EN: [`I18N_NICHOS_EN.md`](../architecture/I18N_NICHOS_EN.md).
-- **Ambiance O1–O6** smokes **#349** OK; contrato [`ambiance-chrome-contract.md`](../ux/ambiance-chrome-contract.md).
+- **Docs audit L1–L4:** concluída; handoff único (`TODOdoDIA` + este ficheiro).
+- **Carril A (P0):** **TW-SMK-DOC-4** — banner docs no infobox inferior (em curso).
+- **`main`:** smokes **#341** fechados; i18n v2 (**#353**, **#354**); ambiance **#349** OK.
 
 ### O que fazer a seguir (escolher 1 carril)
 
