@@ -1,3 +1,6 @@
+import i18n from '../i18n'
+import { formatDate } from '../i18n/format'
+
 export const REQUIRED_DRIVER_DOCUMENTS = [
   'carta_tvde',
   'certificado_motorista_tvde',
@@ -128,36 +131,11 @@ export function setDriverDocumentsGateEnabled(enabled: boolean): void {
 }
 
 export function driverDocumentLabel(key: DriverRequiredDocument): string {
-  switch (key) {
-    case 'carta_tvde':
-      return 'Carta TVDE'
-    case 'certificado_motorista_tvde':
-      return 'Certificado motorista TVDE'
-    case 'seguro_responsabilidade_civil':
-      return 'Seguro responsabilidade civil'
-    case 'inspecao_viatura':
-      return 'Inspeção da viatura'
-    case 'cartao_cidadao':
-      return 'Cartão de cidadão'
-    case 'registo_criminal':
-      return 'Registo criminal'
-  }
+  return i18n.t(`documents.labels.${key}`, { ns: 'driver' })
 }
 
 export function driverDocumentStatusLabel(status: DriverDocumentStatus): string {
-  switch (status) {
-    case 'approved':
-      return 'Aprovado'
-    case 'pending_review':
-      return 'Em revisão'
-    case 'rejected':
-      return 'Rejeitado'
-    case 'expired':
-      return 'Expirado'
-    case 'missing':
-    default:
-      return 'Em falta'
-  }
+  return i18n.t(`documents.status.${status}`, { ns: 'driver' })
 }
 
 export function driverDocumentsApprovedCount(state: DriverDocumentsState): number {
@@ -184,15 +162,21 @@ export function formatDriverDocExpiresLine(iso: string | null | undefined): stri
   const s = String(iso).trim()
   try {
     const d = new Date(s)
-    if (Number.isNaN(d.getTime())) return `Validade: ${s}`
-    const dayStr = d.toLocaleDateString('pt-PT')
+    if (Number.isNaN(d.getTime())) {
+      return i18n.t('documents.expires.labelRaw', { ns: 'driver', raw: s })
+    }
+    const dayStr = formatDate(d)
     const days = daysUntilIso(s)
-    if (days == null) return `Validade: ${dayStr}`
-    if (days < 0) return `Validade: ${dayStr} (expirada — contacta a tua frota)`
-    if (days <= 14) return `Validade: ${dayStr} (faltam ${days} dias)`
-    return `Validade: ${dayStr}`
+    if (days == null) return i18n.t('documents.expires.label', { ns: 'driver', date: dayStr })
+    if (days < 0) {
+      return i18n.t('documents.expires.expiredContact', { ns: 'driver', date: dayStr })
+    }
+    if (days <= 14) {
+      return i18n.t('documents.expires.daysLeft', { ns: 'driver', date: dayStr, days })
+    }
+    return i18n.t('documents.expires.label', { ns: 'driver', date: dayStr })
   } catch {
-    return `Validade: ${s}`
+    return i18n.t('documents.expires.labelRaw', { ns: 'driver', raw: s })
   }
 }
 

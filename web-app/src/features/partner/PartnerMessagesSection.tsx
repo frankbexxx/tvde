@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { usePolling } from '../../hooks/usePolling'
+import { formatDateTime } from '../../i18n/format'
 import {
   fetchPartnerInboxMessages,
   markPartnerMessageRead,
@@ -171,7 +172,7 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
                     {m.title}
                   </p>
                   <p className="text-muted-foreground mt-0.5">
-                    Motorista · {new Date(m.created_at).toLocaleString('pt-PT')}
+                    {t('messages.driverPrefix')} {formatDateTime(m.created_at)}
                   </p>
                 </button>
               </li>
@@ -185,14 +186,14 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
                 to={`/partner/drivers/${encodeURIComponent(selected.driver_user_id)}`}
                 className="text-primary underline"
               >
-                Ver motorista
+                {t('messages.viewDriver')}
               </Link>
             </div>
           ) : null}
         </>
       )}
       <button type="button" onClick={() => void refetch()} className="text-xs text-primary underline">
-        Actualizar
+        {t('messages.refresh')}
       </button>
     </div>
   )

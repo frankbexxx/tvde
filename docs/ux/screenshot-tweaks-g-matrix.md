@@ -112,7 +112,7 @@
 | G09 | IMG03-P-02 | P | Sem motoristas + retry | B | **Fechado** |
 | G10 | IMG04-M-05 | M | Mapa palco cheio | D | **Fechado** |
 | G11 | IMG04-M-06 | M | Confirma chegada… | B | **Fechado** |
-| G12 | IMG04-M-07 | M | Navegação recolha (app externa, sem UI) | F | **MUDAR** TW-04 |
+| G12 | IMG04-M-07 | M | Navegação recolha (toggle auto ao aceitar) | F | **Fechado** #361 |
 | G13 | IMG04-M-08 | M | Iniciar + Cancelar | C | **Fechado** |
 | G14 | IMG04-P-01 | P | Mapa + pins | D | **Fechado** |
 | G15 | IMG04-P-02 | P | Pagamento + ~0 m | B | **Fechado** |

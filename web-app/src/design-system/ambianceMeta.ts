@@ -1,23 +1,22 @@
 import type { CSSProperties } from 'react'
 import type { ThemeId } from '@/hooks/useTheme'
 
-export type AmbianceOption = {
-  id: ThemeId
-  label: string
-  description: string
-  swatch: {
-    primary: string
-    sheetBg: string
-    sheetBorder: string
-    menuGradient: string
-  }
+export type AmbianceSwatch = {
+  primary: string
+  sheetBg: string
+  sheetBorder: string
+  menuGradient: string
 }
 
-export const AMBIANCE_OPTIONS: AmbianceOption[] = [
+export type AmbianceThemeMeta = {
+  id: ThemeId
+  swatch: AmbianceSwatch
+}
+
+/** Theme ids shown in Settings → Appearance (order preserved). */
+export const AMBIANCE_THEME_OPTIONS: AmbianceThemeMeta[] = [
   {
     id: 'portugal',
-    label: 'Portugal',
-    description: 'Claro, operacional — marca PT discreta.',
     swatch: {
       primary: '150 55% 36%',
       sheetBg: '0 0% 100%',
@@ -27,8 +26,6 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
   },
   {
     id: 'atlantico',
-    label: 'Atlântico',
-    description: 'Costa atlântica — brisa, cinza-mar e verde suave.',
     swatch: {
       primary: '158 48% 34%',
       sheetBg: '0 0% 100%',
@@ -38,8 +35,6 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
   },
   {
     id: 'dev',
-    label: 'Nocturno',
-    description: 'Escuro, menos glare — ideal à noite.',
     swatch: {
       primary: '150 55% 42%',
       sheetBg: '222 47% 12%',
@@ -49,8 +44,6 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
   },
   {
     id: 'minimal',
-    label: 'Minimal',
-    description: 'Neutro — dados e listas em primeiro.',
     swatch: {
       primary: '220 14% 30%',
       sheetBg: '0 0% 100%',
@@ -60,8 +53,6 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
   },
   {
     id: 'neon',
-    label: 'Neon (sandbox)',
-    description: 'Experimental — alto contraste, só testes.',
     swatch: {
       primary: '280 100% 60%',
       sheetBg: '240 10% 10%',
@@ -71,9 +62,10 @@ export const AMBIANCE_OPTIONS: AmbianceOption[] = [
   },
 ]
 
-export const AUTO_AMBIANCE_HINT = 'Segue claro/escuro do telemóvel → Portugal (claro) ou Nocturno (escuro).'
+/** @deprecated use AMBIANCE_THEME_OPTIONS */
+export const AMBIANCE_OPTIONS = AMBIANCE_THEME_OPTIONS
 
-export function ambianceSwatchStyle(swatch: AmbianceOption['swatch']): CSSProperties {
+export function ambianceSwatchStyle(swatch: AmbianceSwatch): CSSProperties {
   return {
     ['--swatch-primary' as string]: swatch.primary,
     ['--swatch-sheet-bg' as string]: swatch.sheetBg,

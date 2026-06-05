@@ -24,6 +24,15 @@
   "yes": "sim",
   "no": "não",
   "error": "Erro",
+  "headerHints": {
+    "tripEstimate": "Estimativa ao pedir; o preço final aparece no fim da viagem.",
+    "tripNetworkBattery": "Em viagem, convém ter rede e bateria suficientes.",
+    "staleMapState": "Se o mapa ou o estado ficarem parados, verifica a ligação ou recarrega a página.",
+    "activityLog": "Dúvidas operacionais: usa o registo de actividade (⚙️) para rever o que a app fez.",
+    "zoneArrived": "Mudança de zona: o «Cheguei» confirma com a posição que o servidor tem — deixa o GPS ligado um pouco antes.",
+    "airportLis": "Zona aeroporto (LIS): filas e tempos em tempo real dependem de integrações futuras; por agora segue as regras da operação.",
+    "zoneArrivedFailed": "Se o «Cheguei à zona» falhar, verifica se estás dentro da área e se a app já recebeu a tua localização."
+  },
   "profilePanel": {
     "name": "Nome",
     "phone": "Telemóvel",

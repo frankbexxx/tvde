@@ -143,7 +143,10 @@
     "devLocationHint": "To test without location permission, enable <strong>Demo Oeiras</strong> under <strong>Settings</strong> (gear icon).",
     "waitingHintCategory": "{{count}} trip(s) outside your active categories.",
     "waitingHintSilenced": "{{count}} silenced offer(s). See Menu → Trips.",
-    "waitingHintExpired": "{{count}} expired offer(s)."
+    "waitingHintExpired": "{{count}} expired offer(s).",
+    "tripsOnMapOne": "1 trip on the map",
+    "tripsOnMapMany": "{{count}} trips on the map",
+    "tapMarkerHint": "Tap the marker on the map to view the request and accept."
   },
   "opsMenu": {
     "ariaLabel": "Driver menu",
@@ -356,5 +359,50 @@
     "statusAssignError": "Assign error",
     "statusError": "Error",
     "statusSeedError": "Seed error"
+  },
+  "inbox": {
+    "tabReceived": "Received",
+    "tabSent": "Sent",
+    "tabCompose": "Ask for help",
+    "subjectPlaceholder": "Subject",
+    "bodyPlaceholder": "Describe what you need from the fleet",
+    "priorityNormal": "Normal priority",
+    "priorityHigh": "High priority",
+    "sending": "Sending…",
+    "sendToFleet": "Send to fleet",
+    "sendOk": "Request sent to fleet.",
+    "loadError": "Could not load inbox.",
+    "sendError": "Could not send. Try again.",
+    "loading": "Loading messages…",
+    "emptySent": "You have not sent any messages to the fleet yet.",
+    "emptyReceived": "No notices from the fleet.",
+    "priorityBadgeHigh": "High",
+    "refresh": "Refresh"
+  },
+  "documents": {
+    "labels": {
+      "carta_tvde": "TVDE licence",
+      "certificado_motorista_tvde": "TVDE driver certificate",
+      "seguro_responsabilidade_civil": "Civil liability insurance",
+      "inspecao_viatura": "Vehicle inspection",
+      "cartao_cidadao": "Citizen card",
+      "registo_criminal": "Criminal record"
+    },
+    "status": {
+      "approved": "Approved",
+      "pending_review": "Under review",
+      "rejected": "Rejected",
+      "expired": "Expired",
+      "missing": "Missing"
+    },
+    "expires": {
+      "label": "Valid until: {{date}}",
+      "labelRaw": "Valid until: {{raw}}",
+      "expiredContact": "Valid until: {{date}} (expired — contact your fleet)",
+      "daysLeft": "Valid until: {{date}} ({{days}} days left)"
+    },
+    "browse": "Choose file",
+    "noFileSelected": "No file selected",
+    "fileSelected": "{{name}}"
   }
 }

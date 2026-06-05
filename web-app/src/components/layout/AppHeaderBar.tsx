@@ -4,7 +4,7 @@ import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 import { BrandStripe } from '@/design-system/components/brand/BrandStripe'
 import { useAuth, isBackofficeStaffRole } from '@/context/AuthContext'
 import { parseJwtPayload } from '@/utils/jwt'
-import { HEADER_ROTATING_HINTS } from '@/components/layout/headerRotatingHints'
+import { HEADER_ROTATING_HINT_KEYS } from '@/components/layout/headerRotatingHints'
 import { fetchRotacionalMessages } from '@/api/rotacional'
 import { useTranslation } from 'react-i18next'
 import { formatHeaderDateTime } from '@/i18n/format'
@@ -36,8 +36,11 @@ export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
   const [serverHints, setServerHints] = useState<readonly string[]>([])
 
   const allHints = useMemo(
-    () => [...HEADER_ROTATING_HINTS, ...serverHints],
-    [serverHints],
+    () => [
+      ...HEADER_ROTATING_HINT_KEYS.map((key) => t(`common:${key}`)),
+      ...serverHints,
+    ],
+    [serverHints, t],
   )
 
   useEffect(() => {

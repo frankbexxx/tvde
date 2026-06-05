@@ -28,5 +28,32 @@
     "clear": "Clear",
     "empty": "No events recorded",
     "copyEmpty": "No events"
+  },
+  "ambiance": {
+    "active": "Active",
+    "auto": {
+      "label": "Automatic (system)",
+      "hint": "Follows device light/dark → Portugal (light) or Night (dark)."
+    },
+    "portugal": {
+      "label": "Portugal",
+      "description": "Light, operational — subtle PT branding."
+    },
+    "atlantico": {
+      "label": "Atlantic",
+      "description": "Atlantic coast — sea breeze, grey-blue and soft green."
+    },
+    "dev": {
+      "label": "Night",
+      "description": "Dark, less glare — ideal at night."
+    },
+    "minimal": {
+      "label": "Minimal",
+      "description": "Neutral — data and lists first."
+    },
+    "neon": {
+      "label": "Neon (sandbox)",
+      "description": "Experimental — high contrast, testing only."
+    }
   }
 }

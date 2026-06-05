@@ -143,7 +143,10 @@
     "devLocationHint": "Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em <strong>Configuração</strong> (ícone de engrenagem).",
     "waitingHintCategory": "Existem {{count}} viagem(ns) fora das tuas categorias activas.",
     "waitingHintSilenced": "{{count}} oferta(s) silenciada(s). Ver em Menu → Viagens.",
-    "waitingHintExpired": "{{count}} oferta(s) expirada(s)."
+    "waitingHintExpired": "{{count}} oferta(s) expirada(s).",
+    "tripsOnMapOne": "1 viagem no mapa",
+    "tripsOnMapMany": "{{count}} viagens no mapa",
+    "tapMarkerHint": "Toca no marcador no mapa para ver o pedido e aceitar."
   },
   "opsMenu": {
     "ariaLabel": "Menu do motorista",
@@ -356,5 +359,50 @@
     "statusAssignError": "Erro ao atribuir",
     "statusError": "Erro",
     "statusSeedError": "Erro ao executar seed"
+  },
+  "inbox": {
+    "tabReceived": "Recebidas",
+    "tabSent": "Enviadas",
+    "tabCompose": "Pedir ajuda",
+    "subjectPlaceholder": "Assunto",
+    "bodyPlaceholder": "Descreve o que precisas da frota",
+    "priorityNormal": "Prioridade normal",
+    "priorityHigh": "Prioridade alta",
+    "sending": "A enviar…",
+    "sendToFleet": "Enviar à frota",
+    "sendOk": "Pedido enviado à frota.",
+    "loadError": "Não foi possível carregar a caixa de entrada.",
+    "sendError": "Não foi possível enviar. Tenta outra vez.",
+    "loading": "A carregar mensagens…",
+    "emptySent": "Ainda não enviaste mensagens à frota.",
+    "emptyReceived": "Sem avisos da frota.",
+    "priorityBadgeHigh": "Alta",
+    "refresh": "Actualizar"
+  },
+  "documents": {
+    "labels": {
+      "carta_tvde": "Carta TVDE",
+      "certificado_motorista_tvde": "Certificado motorista TVDE",
+      "seguro_responsabilidade_civil": "Seguro responsabilidade civil",
+      "inspecao_viatura": "Inspeção da viatura",
+      "cartao_cidadao": "Cartão de cidadão",
+      "registo_criminal": "Registo criminal"
+    },
+    "status": {
+      "approved": "Aprovado",
+      "pending_review": "Em revisão",
+      "rejected": "Rejeitado",
+      "expired": "Expirado",
+      "missing": "Em falta"
+    },
+    "expires": {
+      "label": "Validade: {{date}}",
+      "labelRaw": "Validade: {{raw}}",
+      "expiredContact": "Validade: {{date}} (expirada — contacta a tua frota)",
+      "daysLeft": "Validade: {{date}} (faltam {{days}} dias)"
+    },
+    "browse": "Escolher ficheiro",
+    "noFileSelected": "Nenhum ficheiro seleccionado",
+    "fileSelected": "{{name}}"
   }
 }
