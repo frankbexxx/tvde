@@ -93,7 +93,7 @@
 | **G01** | **MUDAR** — chip «Modo Destino – em breve» visível no palco | `driver-map-destino-chip` em overlay mapa |
 | **G02** | **ACERTAR** — Estatuto · Disponível + Breve | [`DriverShellTopChips.tsx`](../../web-app/src/features/driver/DriverShellTopChips.tsx) |
 | **G06** | **MUDAR** — menos espaço antes Cancelar (P) | `BottomActionStack` padding reduzido |
-| **G12**, **G19** | **MUDAR** — sem botões legacy; **G19** auto-open destino ao iniciar; **G12** auto-open recolha **suspenso** (2026-05-29, política B — rever **O-NAV-REV-1**); manual «Abrir navegação»; pref em Definições | [`openDriverExternalNav.ts`](../../web-app/src/utils/openDriverExternalNav.ts), [`DriverDashboard.tsx`](../../web-app/src/features/driver/DriverDashboard.tsx), [`ActiveTripActions.tsx`](../../web-app/src/features/driver/ActiveTripActions.tsx) |
+| **G12**, **G19** | **MUDAR** — **G19** auto-open destino ao iniciar; **G12** híbrido: toggle «Abrir recolha ao aceitar» em Menu → Navegação (default OFF); manual «Abrir navegação»; pref Waze/Maps em Definições (**O-NAV-REV-1**) | [`driverNavAutoPickup.ts`](../../web-app/src/services/driverNavAutoPickup.ts), [`openDriverExternalNav.ts`](../../web-app/src/utils/openDriverExternalNav.ts), [`DriverDashboard.tsx`](../../web-app/src/features/driver/DriverDashboard.tsx), [`ActiveTripActions.tsx`](../../web-app/src/features/driver/ActiveTripActions.tsx) |
 
 ---
 

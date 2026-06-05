@@ -16,7 +16,7 @@ Pacote i18n v2 **concluído** (PRs #353, #354). Prompts de execução arquivados
 | Área | Notas |
 |------|-------|
 | Motorista legacy menu | Sub-painéis antigos podem ter PT |
-| Legal / política | Bloqueado — ver [`PROMPT_I18N_X3_LEGAL_POLICY.md`](../prompts/i18n-v2/PROMPT_I18N_X3_LEGAL_POLICY.md) |
+| Legal / política | Opção B — `LegalLocaleNotice`; páginas completas PT quando existirem |
 | Admin | Fora do âmbito v1 (PT-only) |
 
 ## Referências

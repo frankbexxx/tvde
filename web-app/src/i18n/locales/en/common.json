@@ -19,6 +19,7 @@
   "roleStaff": "Staff",
   "unexpectedError": "Unexpected error response.",
   "legalEnSummary": "English summary — the legally binding text is in Portuguese.",
+  "legalPtBinding": "Terms and privacy policy are provided in Portuguese.",
   "logout": "Sign out",
   "yes": "yes",
   "no": "no",

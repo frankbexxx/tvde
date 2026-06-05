@@ -279,7 +279,11 @@
     },
     "nav": {
       "title": "Navigation (preference)",
-      "intro": "When starting the trip we open the destination; use «Open navigation» for pickup during the trip."
+      "intro": "When starting the trip we open the destination automatically. Pickup can be manual or auto on accept (option below).",
+      "autoPickupLabel": "Open pickup on accept",
+      "autoPickupOn": "On",
+      "autoPickupOff": "Off",
+      "autoPickupHint": "Off by default: use «Open navigation» during the trip. When on, opens your preferred app right after you accept."
     },
     "categories": {
       "title": "Vehicle categories",

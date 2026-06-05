@@ -23,6 +23,7 @@ import { useAuth } from "@/context/AuthContext"
 import { useActiveTrip } from "@/context/ActiveTripContext"
 import { useDevToolsCallbacks } from "@/context/DevToolsCallbackContext"
 import { ActivityPanel } from "@/components/ActivityPanel"
+import { LegalLocaleNotice } from "@/components/legal/LegalLocaleNotice"
 import { DevTools } from "@/features/shared/DevTools"
 import {
   DRIVER_OPEN_ACTIVITY_LOG_EVENT,
@@ -122,6 +123,7 @@ export function SettingsButton() {
           />
         </div>
       ) : null}
+      <LegalLocaleNotice className="text-[0.7rem] text-muted-foreground/80 leading-snug border-t border-border/60 pt-3" />
     </div>
   )
 

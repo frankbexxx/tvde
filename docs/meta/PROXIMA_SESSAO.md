@@ -9,12 +9,12 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 ## Contexto actual (**2026-05-22**)
 
 - **Docs audit L1–L4:** concluída; handoff único (`TODOdoDIA` + este ficheiro).
-- **Carril A (P0):** **TW-SMK-DOC-4** — banner docs no infobox inferior (em curso).
+- **Carril A (P0):** DOC-4 + NAV-PP-1 concluídos; **O-NAV-REV-1** (G12 híbrido) smoke pendente; **TW-DIA23-1** adiado.
 - **`main`:** smokes **#341** fechados; i18n v2 (**#353**, **#354**); ambiance **#349** OK.
 
 ### O que fazer a seguir (escolher 1 carril)
 
-1. **P0 produto** — **TW-SMK-DOC-4** (banner docs no mapa) · **O-NAV-PP-1** smoke · **TW-DIA23-1** micro layout
+1. **P0 produto** — smoke **O-NAV-REV-1** (toggle recolha) · **TW-DIA23-1** quando houver batch de ecrãs
 2. **P1 staging** — **A2-02** OAuth + smokes ([`STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md))
 3. **P5 ops** — [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) PROD validation + cron
 
