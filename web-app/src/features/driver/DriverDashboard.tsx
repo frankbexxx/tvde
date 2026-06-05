@@ -114,7 +114,11 @@ import {
   haversineKm,
   isWithinHaversineM,
 } from '../../utils/geo'
-import { warmDriverNavSessionIfNeeded } from '../../utils/openDriverExternalNav'
+import {
+  driverNavAppLabel,
+  openDriverExternalNav,
+  warmDriverNavSessionIfNeeded,
+} from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import {
   BTN_DRIVER_STEP1,
@@ -160,6 +164,10 @@ import {
   setDriverNavApp,
   type DriverNavApp,
 } from '../../services/driverNavPreference'
+import {
+  getDriverNavAutoPickupOnAccept,
+  setDriverNavAutoPickupOnAccept as persistDriverNavAutoPickupOnAccept,
+} from '../../services/driverNavAutoPickup'
 import {
   getDriverVehicleCategories,
   setDriverVehicleCategories,
@@ -374,6 +382,9 @@ export function DriverDashboard() {
   const [toast, setToast] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [driverNavPref, setDriverNavPref] = useState<DriverNavApp>(() => getDriverNavApp())
+  const [driverNavAutoPickupOnAccept, setDriverNavAutoPickupOnAccept] = useState<boolean>(() =>
+    getDriverNavAutoPickupOnAccept()
+  )
   const [vehicleCategories, setVehicleCategories] = useState<DriverVehicleCategory[]>(() =>
     getDriverVehicleCategories()
   )
@@ -982,6 +993,19 @@ export function DriverDashboard() {
             lng: availableForFallback.destination_lng,
           },
         }
+        if (getDriverNavAutoPickupOnAccept()) {
+          openDriverExternalNav(
+            availableForFallback.origin_lat,
+            availableForFallback.origin_lng
+          )
+          sonnerToast.message(
+            t('actions.openingNav', {
+              app: driverNavAppLabel(),
+              phase: t('actions.pickupPhase'),
+            }),
+            { duration: 3000 }
+          )
+        }
       }
       // Fase 1 mock: MOCK_DRIVER_START → pickup (só DEV + mock, após ACEITAR).
       if (
@@ -1289,6 +1313,7 @@ export function DriverDashboard() {
                 history={history}
                 driverLocationForZones={mapDotLatLng ?? null}
                 navPref={driverNavPref}
+                navAutoPickupOnAccept={driverNavAutoPickupOnAccept}
                 vehicleCategories={vehicleCategories}
                 driverDocuments={driverDocuments}
                 driverDocsGateEnabled={driverDocsGateEnabled}
@@ -1297,6 +1322,16 @@ export function DriverDashboard() {
                   setDriverNavApp(app)
                   setDriverNavPref(app)
                   addLog(app === 'waze' ? 'Preferência navegação: Waze' : 'Preferência navegação: Google Maps', 'info')
+                }}
+                onToggleNavAutoPickupOnAccept={(enabled) => {
+                  persistDriverNavAutoPickupOnAccept(enabled)
+                  setDriverNavAutoPickupOnAccept(enabled)
+                  addLog(
+                    enabled
+                      ? 'Navegação: auto-open recolha ao aceitar activo'
+                      : 'Navegação: auto-open recolha ao aceitar inactivo',
+                    'info'
+                  )
                 }}
                 onToggleVehicleCategory={handleToggleVehicleCategory}
                 onPatchDriverDocument={handlePatchDriverDocument}
@@ -2609,6 +2644,7 @@ function DriverOperationsMenu({
   history,
   driverLocationForZones,
   navPref,
+  navAutoPickupOnAccept,
   vehicleCategories,
   driverDocuments,
   driverDocsGateEnabled,
@@ -2620,6 +2656,7 @@ function DriverOperationsMenu({
   hideCloseButton = false,
   onCloseMenu,
   onSelectNavPref,
+  onToggleNavAutoPickupOnAccept,
   onToggleVehicleCategory,
   onPatchDriverDocument,
   onRefreshDriverDocuments,
@@ -2631,6 +2668,7 @@ function DriverOperationsMenu({
   history: TripHistoryItem[] | null
   driverLocationForZones: { lat: number; lng: number } | null
   navPref: DriverNavApp
+  navAutoPickupOnAccept: boolean
   vehicleCategories: DriverVehicleCategory[]
   driverDocuments: DriverDocumentsState
   driverDocsGateEnabled: boolean
@@ -2642,6 +2680,7 @@ function DriverOperationsMenu({
   hideCloseButton?: boolean
   onCloseMenu: () => void
   onSelectNavPref: (app: DriverNavApp) => void
+  onToggleNavAutoPickupOnAccept: (enabled: boolean) => void
   onToggleVehicleCategory: (category: DriverVehicleCategory) => void
   onPatchDriverDocument: (doc: DriverRequiredDocument, status: DriverDocumentStatus) => void
   onRefreshDriverDocuments?: () => void
@@ -3667,6 +3706,22 @@ function DriverOperationsMenu({
               Google Maps
             </button>
           </div>
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <p className="text-xs text-foreground/85 leading-snug">{t('opsMenu.nav.autoPickupLabel')}</p>
+            <button
+              type="button"
+              data-testid="driver-nav-auto-pickup-toggle"
+              aria-pressed={navAutoPickupOnAccept}
+              onClick={() => onToggleNavAutoPickupOnAccept(!navAutoPickupOnAccept)}
+              className={`min-h-[30px] shrink-0 rounded-md border px-2 text-[11px] font-medium transition-colors ${navAutoPickupOnAccept
+                ? 'border-info bg-info/15 text-foreground'
+                : 'border-border bg-muted/40 text-foreground/75 hover:bg-muted/60'
+                }`}
+            >
+              {navAutoPickupOnAccept ? t('opsMenu.nav.autoPickupOn') : t('opsMenu.nav.autoPickupOff')}
+            </button>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-snug">{t('opsMenu.nav.autoPickupHint')}</p>
         </div>
       ) : null}
 

@@ -55,12 +55,12 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TW-SMK-DOC-4** | Banner «Documentos em falta» topo mapa → infobox bottom | Smoke pendente | Infobox `MapBottomSheet` / step1 bottom; build OK |
-| **O-NAV-REV-1** | Rever G12 auto-open recolha vs política B | Por iniciar | Decisão produto |
-| **TW-DIA23-1** | Micro ajustes layout mapa/caixas | Por iniciar | Frank lista ecrãs Render |
-| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro + menu tree | Smoke pendente | Partner tree v2; passageiro OK |
-| **O-i18n-NICHOS** | Strings PT residuais em EN | Por iniciar | Workflow screenshot; não bloqueante |
-| **O-i18n-X3** | Texto legal completo EN | Bloqueado | [`PROMPT_I18N_X3_LEGAL_POLICY.md`](docs/prompts/i18n-v2/PROMPT_I18N_X3_LEGAL_POLICY.md) |
+| **TW-SMK-DOC-4** | Banner «Documentos em falta» topo mapa → infobox bottom | Concluído | #359 + #360; smoke OK (só infobox em baixo) |
+| **O-NAV-REV-1** | G12 híbrido — toggle auto-open recolha ao aceitar | Smoke pendente | Default OFF; Menu → Navegação |
+| **TW-DIA23-1** | Micro ajustes layout mapa/caixas | N/A | Adiar — acumular ecrãs em testes |
+| **O-NAV-PP-1** | Barra 4 ícones passageiro/parceiro + menu tree | Concluído | Smoke passageiro + parceiro OK |
+| **O-i18n-NICHOS** | Strings PT residuais em EN | Em curso | Frank — workflow screenshot |
+| **O-i18n-X3** | Legal EN — opção B (resumo + PT vinculante) | Concluído | `LegalLocaleNotice` login + Definições |
 
 ### P1 — infra / gates
 

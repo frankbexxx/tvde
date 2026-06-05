@@ -29,7 +29,7 @@ E0 → X1 → P1P2 → P3 → P4P5 → P6 → X2 → D7 → D1 → D2 → D3 →
 | X0 | Concluído | Settings shell |
 | R1–R6 | Concluído | Parceiro |
 | Z0 | Concluído | build/test/lint |
-| X3 | Bloqueado | [`PROMPT_I18N_X3_LEGAL_POLICY.md`](./PROMPT_I18N_X3_LEGAL_POLICY.md) |
+| X3 | Concluído (opção B) | [`PROMPT_I18N_X3_LEGAL_POLICY.md`](./PROMPT_I18N_X3_LEGAL_POLICY.md) |
 
 ## Manutenção EN
 

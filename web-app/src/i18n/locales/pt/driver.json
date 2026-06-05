@@ -279,7 +279,11 @@
     },
     "nav": {
       "title": "Navegação (preferência)",
-      "intro": "Ao iniciar a viagem abrimos o destino; para a recolha usa «Abrir navegação» durante a viagem."
+      "intro": "Ao iniciar a viagem abrimos o destino automaticamente. A recolha pode ser manual ou automática ao aceitar (opção abaixo).",
+      "autoPickupLabel": "Abrir recolha ao aceitar",
+      "autoPickupOn": "Activo",
+      "autoPickupOff": "Inactivo",
+      "autoPickupHint": "Inactivo por omissão: usa «Abrir navegação» na viagem. Com activo, abre a app preferida logo após aceitares."
     },
     "categories": {
       "title": "Categorias de veículo",

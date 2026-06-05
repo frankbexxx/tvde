@@ -9,6 +9,7 @@ import { BTN_PRIMARY_RADIUS, BTN_SECONDARY_RADIUS, SURFACE_RADIUS } from '../../
 import { useTranslation } from 'react-i18next'
 import { formatLoginError } from '../../i18n/apiErrors'
 import { LanguageSelector } from '../settings/LanguageSelector'
+import { LegalLocaleNotice } from '../../components/legal/LegalLocaleNotice'
 
 interface LoginScreenProps {
   /** BETA: `admin` = fluxo dedicado ao painel (URL `/admin` ou `/admin/login`). */
@@ -213,6 +214,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               {appBuildDisplayLine}
             </p>
             <p className="mt-1.5 text-[0.7rem] text-muted-foreground/75 leading-snug">{t('appVersionSupport')}</p>
+            <LegalLocaleNotice className="mt-3 text-[0.7rem] text-muted-foreground/80 leading-snug" />
           </footer>
         </div>
       </div>
