@@ -110,7 +110,7 @@ Documento vivo: ideias **sem implementação obrigatória** até decisão conjun
 2. **Primeiro alavanca estrutural** se quiseres reduzir risco: clarificar **OTP/roles** (comportamento + testes).
 3. **Segundo:** observabilidade mínima (**request_id → logs**) ou aceitar risco até incidente.
 4. **Terceiro:** guideline **tenant** em reviews + decisão de produto **histórico vs frota actual**.
-5. O restante (runner, UI, E2E, OpenAPI) encaixa em **melhoria contínua** já alinhada com `IMPLEMENTATION_REPORT_C009_K007.md`.
+5. O restante (runner, UI, E2E, OpenAPI) encaixa em **melhoria contínua** (relatório C009/K007 arquivado Lote 4).
 
 Quando quiseres **endereçar**, escolhemos 1–2 linhas de trabalho por iteração para não espalhar.
 

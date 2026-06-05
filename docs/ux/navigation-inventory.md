@@ -10,6 +10,8 @@
 
 **Related:** [`ambiance-chrome-contract.md`](ambiance-chrome-contract.md) · [`shell-menu-centric.md`](shell-menu-centric.md) · [`shell-menu-ia-canonical.md`](shell-menu-ia-canonical.md)
 
+**Supersedes:** `docs/audit/INVENTARIO_UI_*_2026-05.md` (arquivados auditoria Lote 4) — matriz feature-complete Maio; este doc cobre **rotas, menus e estados** pós-**#349**.
+
 **Diagram suffixes:** `[PARTIAL]` · `[MOCK]` · `[HIDDEN]` · `[DEAD]` — critical gaps only.
 
 ---

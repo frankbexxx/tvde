@@ -4,7 +4,7 @@
 >
 > **Objectivo:** parqueamento disciplinado de ideias e decisões pequenas que emergiram durante a preparação do piloto Alpha 2026-04-25, mas que foram **conscientemente adiadas** para não introduzir risco a D-2 / D-1 / D.
 >
-> **Não duplica** `PROXIMA_SESSAO.md` (handoff do dia) nem `ALPHA_2026-04-25.md` (plano operacional). Este ficheiro é o parking lot pós-piloto.
+> **Não duplica** `PROXIMA_SESSAO.md` (handoff do dia). Pack Alpha Abril arquivado (auditoria Lote 4). Este ficheiro é o parking lot pós-piloto.
 >
 > **Regra:** ao mergear um destes items, remover daqui com `✅ fechado em #PR` + linha apontando para o commit.
 
@@ -16,7 +16,7 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 
 - 1 casal amigo (pessoa A = passenger, pessoa B = driver) vindo de Cascais para Oeiras
 - Frank + parceiro no Chá da Barra Vila, Oeiras, a acolher e monitorizar
-- 4 contas principais + 2 reserva (ver `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E`)
+- 4 contas principais + 2 reserva (ver arquivo Lote 4: `ALPHA_2026-04-25_ONDA0_RUNBOOK.md §E`)
 - Handouts bilingue EN+PT em PDF distribuídos via WhatsApp (ver `docs/_local/pilot_handouts/`)
 - Excepção D-1 aplicada por risco de UX no piloto: PRs **#177**, **#178**, **#179** corrigiram geocoding/texto (fallback Nominatim, Portugal-first, recolha/destino por texto). Smoke real sexta noite passou.
 - A partir daqui volta a regra: **zero código novo durante a janela do piloto**. As ideias abaixo entram **depois** do piloto + retro.
@@ -99,7 +99,7 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 
 ### P2.1 StatusHeader — contraste em modo escuro
 
-**Origem:** `AUDIT_DEEP_2026-04-21.md` findings — H.1 (StatusHeader contrast). Marcado `🟡 em aberto por decisão`.
+**Origem:** audit Abril 2026 (arquivado Lote 4) — H.1 (StatusHeader contrast). Marcado `🟡 em aberto por decisão`.
 
 **Tarefa:** ajustar tons do StatusHeader em dark mode para passar AA contraste em texto secundário. Não é bloqueador, mas merece polish antes de demo formal.
 
@@ -139,7 +139,7 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 
 ### P3.2 Test hardening — gaps identificados pós-PRs críticos
 
-**Origem:** audit de cobertura dos PRs #162, #168, #169, #170, #171 (2026-04-23 manhã). Ver `docs/meta/AUDIT_STATUS_2026-04-23.md`.
+**Origem:** audit de cobertura dos PRs #162, #168, #169, #170, #171 (2026-04-23 manhã). Detalhe em arquivo Lote 4 (`AUDIT_STATUS_2026-04-23.md`).
 
 **Gaps concretos:**
 
