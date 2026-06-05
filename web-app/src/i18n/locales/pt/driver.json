@@ -141,7 +141,6 @@
     "toggleOn": "Disponível",
     "toggleOff": "Offline",
     "devLocationHint": "Para testar sem permissão de localização, ativa <strong>Demo Oeiras</strong> em <strong>Configuração</strong> (ícone de engrenagem).",
-    "docsToastBlocked": "Faltam documentos obrigatórios. Completa-os em Menu > Documentos para ficares disponível.",
     "waitingHintCategory": "Existem {{count}} viagem(ns) fora das tuas categorias activas.",
     "waitingHintSilenced": "{{count}} oferta(s) silenciada(s). Ver em Menu → Viagens.",
     "waitingHintExpired": "{{count}} oferta(s) expirada(s)."

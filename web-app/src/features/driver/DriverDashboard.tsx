@@ -451,7 +451,6 @@ export function DriverDashboard() {
   const handleDriverAvailabilityChange = useCallback(
     (checked: boolean) => {
       if (checked && effectiveDocsGate && !isDriverDocumentsReady(driverDocuments)) {
-        setToast(t('mapHome.docsToastBlocked'))
         addLog('Bloqueado: documentos obrigatórios em falta', 'error')
         return
       }
@@ -460,7 +459,7 @@ export function DriverDashboard() {
       addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
       setStatus(checked ? 'Disponível' : 'Offline')
     },
-    [addLog, effectiveDocsGate, driverDocuments, setStatus, t]
+    [addLog, effectiveDocsGate, driverDocuments, setStatus]
   )
 
   /** Toque no mapa: ficar disponível (mesmas regras que a pill). */

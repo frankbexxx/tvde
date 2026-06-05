@@ -141,7 +141,6 @@
     "toggleOn": "Available",
     "toggleOff": "Offline",
     "devLocationHint": "To test without location permission, enable <strong>Demo Oeiras</strong> under <strong>Settings</strong> (gear icon).",
-    "docsToastBlocked": "Required documents are missing. Complete them in Menu > Documents to go available.",
     "waitingHintCategory": "{{count}} trip(s) outside your active categories.",
     "waitingHintSilenced": "{{count}} silenced offer(s). See Menu → Trips.",
     "waitingHintExpired": "{{count}} expired offer(s)."
