@@ -74,7 +74,7 @@ Checklist quando **L1** estiver fechado e **antes** de abrir Google a testers ex
 
 ## A4 — Fecho da onda auditoria (após L3)
 
-- Reconciliar itens **P1/P2** não feitos com [`docs/todo-em-curso.md`](../todo-em-curso.md) e próximo trimestre.
+- Reconciliar itens **P1/P2** não feitos com painel **PRÓXIMA SESSÃO** em [`TODOdoDIA.md`](../../TODOdoDIA.md).
 - Actualizar este ficheiro com data de conclusão por item quando aplicável.
 
 ---

@@ -1,179 +1,134 @@
 # Índice da Documentação — TVDE
 
-Referência de todos os ficheiros de documentação do projeto.
+~40 entradas activas (pós-auditoria Lotes 1–3). Histórico fora do Git: [`HISTORICO_FORA_DO_GIT.md`](../HISTORICO_FORA_DO_GIT.md).
+
+**Começar aqui:** [`README.md`](../../README.md) → [`TODOdoDIA.md`](../../TODOdoDIA.md) → [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) → este índice.
 
 ---
 
-## Espinha dorsal (canónico)
+## Operação e handoff
 
-Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub manual** → **PROXIMA_SESSAO** → este índice para o resto. Implementação técnica e testes: **[IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md)**. Documentação histórica que **já não está no clone**: **[HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)**.
-
----
-
-## Inventário e próximo arquivo
-
-| Ficheiro                                                                          | Propósito                                                                                                                                                                                    |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) | O que saiu do Git e cópias em `C:\dev\_archives\APP\` (Lote 1 docs audit 2026-06) |
-
----
-
-## Documentos principais
-
-| Ficheiro                                                                                     | Propósito                                                                                                                                                             |
-| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [README.md](../../README.md)                                                                 | Entrada do projeto — estrutura, início rápido                                                                                                                         |
-| [PROJECT.md](PROJECT.md)                                                                     | Visão geral, stack, modelo de dados, fluxo de viagem e pagamento                                                                                                      |
-| [docs/product/DRIVER_MENU_SPEC.md](../product/DRIVER_MENU_SPEC.md)                           | Menu motorista (rendimentos, histórico, preferências, zonas v1)                                                                                                       |
-| [docs/product/PORTAGENS_SPEC.md](../product/PORTAGENS_SPEC.md)                                | Portagens em viagem — fases v0→v1, dados, API sugerida, pagamentos, riscos                                                                                             |
-| [docs/product/DRIVER_HOME_TOP3_MANEL.md](../product/DRIVER_HOME_TOP3_MANEL.md)               | **Top 3 Manel:** ecrã principal em 2 passos (mapa + activo → acções em baixo), prompts e métricas mínimas                                                             |
-| [docs/audit/PROJECT_AUDIT_2026-05-02.md](../audit/PROJECT_AUDIT_2026-05-02.md)               | Auditoria negócio+produto (snapshot 2026-05-02) — só leitura                                                                                                            |
-| [docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md)      | **A+L:** inventário A1, backlog priorizado A2, gate A3, fecho A4 (login social)                                                                                         |
-| [docs/product/SOCIAL_LOGIN_L1_SPEC.md](../product/SOCIAL_LOGIN_L1_SPEC.md)                  | **L1** login social — Google v1, passageiro, fluxos, RGPD mínimo                                                                                                         |
-| [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (fases 1–6) + **anexo A023–A035** com colunas Estado/Evidência + **checklist entrega app**; **estado atual 2026-03-28** (Alembic, CI, gaps A028/A034) |
-| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                       | Handoff — estado, roadmap resumido; **Seção F** operação (ex-checklist); **Seção G** relatório projeto                                                                |
-| [ADMIN_DASHBOARD_REFACTOR_PLAN.md](ADMIN_DASHBOARD_REFACTOR_PLAN.md)                         | Plano **só planeamento**: refactor incremental `AdminDashboard.tsx` — modelo de prompt + **P0–P12** (execução agendada)                                               |
-| [docs/visao_cursor.md](../visao_cursor.md)                                                   | Visão geral do projeto (perspectiva Cursor), ideias e checklist de comercialização                                                                                    |
-| [docs/super-prompts/README.md](../super-prompts/README.md)                                   | Roadmap operacional (super-prompts B→A→G→D→C→E→F) — especificação por ondas                                                                                           |
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo (tabelas ID/Estado) |
+| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto + Seções F/G resumo |
+| [TODO_FUTURO.md](../TODO_FUTURO.md) | Backlog produto/técnico não urgente |
+| [todo-futuro-nuances.md](../todo-futuro-nuances.md) | Nuances e decisões futuras |
+| [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) | Checklist pré-produção (PROD, staging, backups) |
+| [GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md) | Git + GitHub — fluxo TVDE |
 
 ---
 
-## Deploy e operação
+## Produto (`docs/product/`)
 
-| Ficheiro                                                          | Propósito                                                                     |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)            | Deploy no Render — PostgreSQL, backend, Stripe webhook, frontend              |
-| [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md) | Teste humano em campo — preparação, cenários, observação                      |
-| [docs/DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md)              | Depuração modo BETA no Render                                                 |
-| [docs/TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md)                | TODO código top-down — validação PROD, staging, backups, migrações, hardening |
-
----
-
-## Legal e parceiro (operacional)
-
-| Ficheiro                                                                     | Propósito                                                                                                                                        |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md) | Inventário **não jurídico**: perguntas e papelada para alinhar com o **titular TVDE**; liga a onboarding técnico e a `visao_cursor` (compliance) |
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [DRIVER_MENU_SPEC.md](../product/DRIVER_MENU_SPEC.md) | Menu motorista |
+| [DRIVER_HOME_TOP3_MANEL.md](../product/DRIVER_HOME_TOP3_MANEL.md) | Ecrã principal motorista (2 passos) |
+| [DRIVER_UX_2_0.md](../product/DRIVER_UX_2_0.md) | Evolução UX motorista |
+| [PORTAGENS_SPEC.md](../product/PORTAGENS_SPEC.md) | Portagens em viagem |
+| [ROTACIONAL_V2_SPEC.md](../product/ROTACIONAL_V2_SPEC.md) | Rotacional v2/v3 |
+| [SOCIAL_LOGIN_L1_SPEC.md](../product/SOCIAL_LOGIN_L1_SPEC.md) | Login social Google L1 |
+| [MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md](../product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) | Backlog Manel/legal |
 
 ---
 
-## Testes e guias
+## Arquitectura
 
-| Ficheiro                                                        | Propósito                                       |
-| --------------------------------------------------------------- | ----------------------------------------------- |
-| [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                     | Manual de testes passo a passo (local e Render) |
-| [DEV_BASELINE_ROSTER.md](../testing/DEV_BASELINE_ROSTER.md)     | Baseline canónico de users + wipe/seed (dev/Render) |
-| [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md) | Fluxo Stripe end-to-end, troubleshooting        |
-
----
-
-## Git e GitHub
-
-| Ficheiro                                               | Propósito                                                                                                            |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| [docs/GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md) | Manual ordenado: antes de começar, sessão de trabalho, branch, PR, merge, limpeza — com links para `frankbexxx/tvde` |
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico + A023–A035 |
+| [TVDE_SYSTEM_BLUEPRINT.md](../architecture/TVDE_SYSTEM_BLUEPRINT.md) | Blueprint sistema |
+| [ARCHITECTURE_STATUS.md](../architecture/ARCHITECTURE_STATUS.md) | Estado técnico actual |
+| [I18N.md](../architecture/I18N.md) | i18n PT/EN web-app |
+| [I18N_NICHOS_EN.md](../architecture/I18N_NICHOS_EN.md) | Workflow nichos EN (screenshots) |
 
 ---
 
-## Observabilidade
+## UX (`docs/ux/`)
 
-| Ficheiro                                                                                                   | Propósito                                                                         |
-| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Telemetria comportamental — export de logs (request_trip, accept, complete, etc.) |
-| [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md)                                                                | Smoke W1 — cron + webhook Stripe + env (alinhado a A033 e `TODOdoDIA`)            |
-| [W2_RUNBOOK_UI_DESIGN.md](../ops/W2_RUNBOOK_UI_DESIGN.md)                                                  | W2 — desenho: runbook só no Admin web, sem Swagger; fases A–D                     |
-| [W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                                      | W2 — runbook operacional v0 (placeholder até fase A)                              |
-| [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade, reconciliação via cron, roadmap escala                  |
-
----
-
-## Arquitetura e prompts
-
-| Ficheiro                                                                                                   | Propósito                                                                                              |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| [docs/README.md](../README.md)                                                                             | Mapa da pasta `docs/` (ativo vs arquivo)                                                               |
-| [docs/architecture/TVDE_SYSTEM_BLUEPRINT.md](../architecture/TVDE_SYSTEM_BLUEPRINT.md)                     | Blueprint do sistema — objetivos, camadas, trip lifecycle                                              |
-| [docs/architecture/ARCHITECTURE_STATUS.md](../architecture/ARCHITECTURE_STATUS.md)                         | Estado técnico atual — backend, frontend, pipelines                                                    |
-| [docs/prompts/A000_SYSTEM_RULES.md](../prompts/A000_SYSTEM_RULES.md)                                       | Regras do projeto para agentes / implementação                                                         |
-| [docs/prompts/A014_UX_POLISH.md](../prompts/A014_UX_POLISH.md)                                             | Polish UX (em curso)                                                                                   |
-| [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | A033-B — validação produção (env, webhook, cron, e2e, migrações, backup)                               |
-| [docs/ux/driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md)                                     | Backlog UX motorista (fixes entregues + pendentes)                                                     |
-| [docs/architecture/I18N.md](../architecture/I18N.md)                                                       | i18n PT/EN web-app + índice resumido                                                                   |
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [navigation-inventory.md](../ux/navigation-inventory.md) | Inventário navegação 4 apps |
+| [ambiance-chrome-contract.md](../ux/ambiance-chrome-contract.md) | Contrato ambiance/chrome |
+| [shell-menu-centric.md](../ux/shell-menu-centric.md) | Shell menu-centric partner |
+| [shell-menu-ia-canonical.md](../ux/shell-menu-ia-canonical.md) | IA menus canónica |
+| [driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md) | Backlog fixes motorista |
+| [screenshot-tweaks-g-matrix.md](../ux/screenshot-tweaks-g-matrix.md) | Matriz G01–G27 |
 
 ---
 
-## Diagramas (Mermaid)
+## Testes e deploy
 
-| Ficheiro                                                   | Propósito                                                                                        |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [docs/diagrams/README.md](../diagrams/README.md)           | **Índice** — mapa do sistema + links para fluxos (viagem, ofertas, pagamentos, WS, cron, papéis) |
-| [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md) | OTP + login BETA (Mermaid)                                                                       |
-
----
-
-## Referência técnica
-
-| Ficheiro                                                               | Propósito                        |
-| ---------------------------------------------------------------------- | -------------------------------- |
-| [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)                   | Stack e convenções técnicas      |
-| [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                           | Estrutura da GUI (web e Android) |
-| [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md) | Schema da base de dados          |
-| [web-app/README.md](../../web-app/README.md)                           | Web app — visão geral            |
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [GUIA_TESTES.md](../testing/GUIA_TESTES.md) | Manual testes passo a passo |
+| [DEV_BASELINE_ROSTER.md](../testing/DEV_BASELINE_ROSTER.md) | Users baseline dev/Render |
+| [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md) | Teste em campo |
+| [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md) | Deploy Render |
+| [IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md) | Implementação + Parte II logs/pytest |
 
 ---
 
-## Fluxo recomendado para novos devs
+## Ops e staging
 
-1. **README.md** — visão geral e estrutura
-2. **docs/GITHUB_MANUAL_TVDE.md** — clone, `main`, branches, PRs e limpeza (ordem obrigatória)
-3. **PROJECT.md** — produto e modelo
-4. **PREPARACAO_RENDER.md** — deploy (ou **GUIA_TESTES.md** para local)
-5. **PROXIMA_SESSAO.md** — estado atual e próximos passos
-
----
-
-## Lista de documentos ativos
-
-| #   | Ficheiro                                                                                                   | Propósito                                                                     |
-| --- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1   | [README.md](../../README.md)                                                                               | Entrada do projeto                                                            |
-| 2   | [PROJECT.md](PROJECT.md)                                                                                   | Visão geral, stack, modelo                                                    |
-| 3   | [docs/architecture/TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md)               | Roadmap técnico + entrega app (atualizado 2026-03-28)                         |
-| 4   | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md)                                                                     | Handoff e contexto                                                            |
-| 5   | [DOCS_INDEX.md](DOCS_INDEX.md)                                                                             | Este índice                                                                   |
-| 6   | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md)                                                     | Deploy no Render                                                              |
-| 7   | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                | Manual de testes                                                              |
-| 8   | [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md)                                          | Teste em campo                                                                |
-| 9   | [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md)                                            | Fluxo Stripe                                                                  |
-| 10  | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md)                                                    | Logs e telemetria                                                             |
-| 11  | [docs/DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md)                                                       | Depuração BETA                                                                |
-| 12  | [docs/README.md](../README.md)                                                                             | Mapa da documentação ativa em `docs/`                                         |
-| 13  | [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)                                                       | Stack técnico                                                                 |
-| 14  | [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                                                               | Estrutura da GUI                                                              |
-| 15  | [docs/IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md)                                             | Implementação, testes e logs (Parte II = ex-LOGS_E_TESTES)                    |
-| 16  | [docs/IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md) Parte II                                    | Logs / síntese pytest (stub LOGS arquivado Lote 1)                            |
-| 17  | [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md)                                     | Schema da BD                                                                  |
-| 18  | [web-app/README.md](../../web-app/README.md)                                                               | Web app                                                                       |
-| 19  | [scripts/README.md](../../scripts/README.md)                                                               | Scripts do projeto                                                            |
-| 20  | [docs/visao_cursor.md](../visao_cursor.md)                                                                 | Visão Cursor + checklist comercialização                                      |
-| 21  | [docs/TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md)                                                         | TODO código pré-produção (árvore ajustada)                                    |
-| 22  | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD (A033-B)                                              |
-| 23  | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade e reconciliação                                      |
-| 24  | [docs/GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md)                                                     | Git + GitHub — fluxo TVDE (antes / durante / depois)                          |
-| 25  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | Inventário de arquivo fora do Git                                             |
-| 26  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                                    |
-| 27  | [docs/ux/driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md)                                     | Backlog UX motorista                                                          |
-| 28  | [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md)                               | Checklist operacional parceiro / licença TVDE (não é aconselhamento jurídico) |
-| 29  | [docs/diagrams/README.md](../diagrams/README.md)                                                           | Índice Mermaid — fluxos TVDE (viagem, ofertas, pagamentos, …)                 |
-| 30  | [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md)                                                 | Mermaid — OTP / login BETA / parceiro só via admin                            |
-| 31  | [docs/ops/W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md)                                                       | Smoke operacional W1 — cron + webhook (teste real)                            |
-| 32  | [docs/ops/W2_RUNBOOK_UI_DESIGN.md](../ops/W2_RUNBOOK_UI_DESIGN.md)                                         | W2 — desenho runbook Admin-only, fases A–D                                    |
-| 33  | [docs/ops/W2_RUNBOOK.md](../ops/W2_RUNBOOK.md)                                                             | W2 — runbook v0 (placeholder)                                                 |
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [CRON_JOB_ORG_INSTRUCOES.md](../CRON_JOB_ORG_INSTRUCOES.md) | Cron externo |
+| [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md) | Smoke W1 prod |
+| [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) | OAuth staging A2-02 |
+| [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md) | Telemetria / export logs |
+| [DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md) | Depuração BETA Render |
 
 ---
 
-## Documentos arquivados (fora do Git)
+## Prompts e piloto
 
-A pasta `archive/` e `archive_support/` **deixaram de fazer parte do repositório** (clone mais leve). Cópia de segurança e lista de ficheiros: **[docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)**.
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [A000_SYSTEM_RULES.md](../prompts/A000_SYSTEM_RULES.md) | Regras agentes |
+| [A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD |
+| [pilot-commercial/README.md](../prompts/pilot-commercial/README.md) | Piloto comercial 4 superfícies |
+| [PILOT_COMMERCIAL_PLACEHOLDER_INDEX.md](../prompts/pilot-commercial/PILOT_COMMERCIAL_PLACEHOLDER_INDEX.md) | Índice placeholders arquivados L1 |
+| [PROMPT_I18N_INDEX.md](../prompts/i18n-v2/PROMPT_I18N_INDEX.md) | i18n v2 resumo |
 
-Histórico ainda acessível com `git show <commit>:archive/...` para commits **anteriores** à remoção.
+---
+
+## Meta, legal, diagramas
+
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [PROJECT.md](PROJECT.md) | Visão produto + modelo dados |
+| [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) | Arquivo fora do Git (Lotes 1–3) |
+| [PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md) | Checklist operacional parceiro |
+| [diagrams/README.md](../diagrams/README.md) | Índice Mermaid fluxos TVDE |
+| [visao_cursor.md](../visao_cursor.md) | Visão + checklist comercialização |
+
+---
+
+## Lista numerada (referência rápida)
+
+| # | Ficheiro |
+|---|----------|
+| 1 | [README.md](../../README.md) |
+| 2 | [TODOdoDIA.md](../../TODOdoDIA.md) |
+| 3 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) |
+| 4 | [DOCS_INDEX.md](DOCS_INDEX.md) |
+| 5 | [PROJECT.md](PROJECT.md) |
+| 6 | [GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md) |
+| 7 | [TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) |
+| 8 | [I18N.md](../architecture/I18N.md) |
+| 9 | [GUIA_TESTES.md](../testing/GUIA_TESTES.md) |
+| 10 | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md) |
+| 11 | [IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md) |
+| 12 | [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) |
+| 13 | [driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md) |
+| 14 | [navigation-inventory.md](../ux/navigation-inventory.md) |
+| 15 | [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) |
+| 16 | [AUDIT_EXEC_BACKLOG_AL_2026-05.md](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+| 17 | [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) |
+| 18 | [pilot-commercial/README.md](../prompts/pilot-commercial/README.md) |
+| 19 | [A000_SYSTEM_RULES.md](../prompts/A000_SYSTEM_RULES.md) |
+| 20 | [A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) |
+
+_Arquivado Lotes 1–3: prompts entregues, handoff histórico, `todo-em-curso.md` — ver HISTORICO._
