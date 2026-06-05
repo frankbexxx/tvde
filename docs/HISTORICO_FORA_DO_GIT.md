@@ -47,6 +47,16 @@ Na máquina onde foi feita a remoção, cópia completa em:
 
 **Cópia:** `C:\dev\_archives\APP\docs-2026-06\lote-2\` (`README_SNAPSHOT.txt` + espelho de pastas).
 
+## O que foi retirado do Git (2026-06 — auditoria Lote 3)
+
+| Conteúdo | Nota |
+| -------- | ---- |
+| `docs/todo-em-curso.md` | Triple handoff eliminado — fonte única: `TODOdoDIA.md` + `PROXIMA_SESSAO.md` |
+| Corpo histórico `TODOdoDIA.md` | Painéis Abril–Maio truncados (~1180 linhas → ~100) |
+| Corpo histórico `PROXIMA_SESSAO.md` | Fechos Abril/Alpha/duplicados truncados (~895 linhas → ~70) |
+
+**Cópia:** `C:\dev\_archives\APP\docs-2026-06\lote-3\` (`TODOdoDIA.md`, `PROXIMA_SESSAO.md`, `todo-em-curso.md`, `README_SNAPSHOT.txt`).
+
 ## Referências úteis que continuam no repo
 
 - Roadmap técnico + anexo A023–A035: `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`

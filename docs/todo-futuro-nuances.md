@@ -12,7 +12,7 @@ Coisas que **não** vamos fazer neste momento, mas queremos **não esquecer** (c
 
 | Camada | Conteúdo                                                         | Onde está                                                            |
 | ------ | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **1**  | Simulação, estado, movimento, coerência visual com o **pin**     | Fechado no fluxo actual (ver [`todo-em-curso.md`](todo-em-curso.md)) |
+| **1**  | Simulação, estado, movimento, coerência visual com o **pin**     | Fechado no fluxo actual (ver [`TODOdoDIA.md`](../TODOdoDIA.md)) |
 | **2**  | Qualidade do pickup, precisão GPS, expectativa do **passageiro** | Esta lista                                                           |
 
 ---

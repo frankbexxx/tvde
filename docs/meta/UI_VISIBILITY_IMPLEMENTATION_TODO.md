@@ -14,7 +14,7 @@
 | **Roles** | **Admin:** operações do dia-a-dia que **não** exigem “grande decisão” de sistema (ex.: aceitar novo utilizador, alterar password a pedido, estados legíveis). **Super admin:** **omnisciente** do processo — o que o admin **não** resolve (reconcile Stripe, stuck profundo, overrides perigosos, ferramentas de sistema). |
 | **Naming dos `.md`** | Mantém-se a estrutura actual do repo; **renomear** ficheiros de docs fica para **outra altura**. |
 
-**Ficheiros relacionados:** [`TODOdoDIA.md`](../../TODOdoDIA.md) (prioridades do dia), [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) (handoff), [`todo-em-curso.md`](../todo-em-curso.md) (fio “agora”), [`GUIA_TESTES.md`](../testing/GUIA_TESTES.md) (passos manuais quando aplicável).
+**Ficheiros relacionados:** [`TODOdoDIA.md`](../../TODOdoDIA.md) (prioridades + abertos), [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) (handoff), [`GUIA_TESTES.md`](../testing/GUIA_TESTES.md) (passos manuais quando aplicável).
 
 ---
 

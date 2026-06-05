@@ -2,7 +2,7 @@
 
 **Status:** documento de **consulta obrigatória** na primeira mensagem do dia seguinte à conversa de **2026-04-08**. Resume decisões, circuito de trabalho e avisos legais.
 
-**Relacionado:** [`UI_VISIBILITY_IMPLEMENTATION_TODO.md`](UI_VISIBILITY_IMPLEMENTATION_TODO.md) · [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) · [`../../TODOdoDIA.md`](../../TODOdoDIA.md) · [`../todo-em-curso.md`](../todo-em-curso.md)
+**Relacionado:** [`UI_VISIBILITY_IMPLEMENTATION_TODO.md`](UI_VISIBILITY_IMPLEMENTATION_TODO.md) · [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) · [`../../TODOdoDIA.md`](../../TODOdoDIA.md)
 
 ---
 
@@ -44,7 +44,7 @@
 
 ## 5. Estado Git / docs (pós-merge conversa 2026-04-08)
 
-- **`main`:** inclui merge do handoff de visibilidade (PR **#140** — docs: `UI_VISIBILITY_IMPLEMENTATION_TODO.md`, actualizações em `TODOdoDIA`, `PROXIMA_SESSAO`, `todo-em-curso`, `GUIA_TESTES`, `TODO_FUTURO`).
+- **`main`:** inclui merge do handoff de visibilidade (PR **#140** — docs: `UI_VISIBILITY_IMPLEMENTATION_TODO.md`, actualizações em `TODOdoDIA`, `PROXIMA_SESSAO`, `GUIA_TESTES`, `TODO_FUTURO`).
 - **#139** já na `main` antes disso — **Alinhar pagamento** em Activas/Histórico.
 
 ---
