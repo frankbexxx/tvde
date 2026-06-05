@@ -362,7 +362,7 @@ _Quadro operacional:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 | **X-6** | Driver → partner: documentos, caducidade, centralização | Concluído | Parceiro edita **validade** + **nota** + estado; API existente `PATCH …/documents` |
 | **X-7** | QR partilhável: **visível na app** (menu passageiro → botão → imagem) | Concluído | Menu [`PassengerSideMenu`](web-app/src/features/passenger/PassengerSideMenu.tsx): «Partilhar app (QR)» + `react-qr-code`; `/download` continua URL auxiliar |
 | **X-8** | Driver: deslizar para aceitar oferta | Concluído | **F-1** entregue em código: folha inferior com `max-h` por número de ofertas; REJEITAR compacto slide; `main` sem scroll em `/driver`; gradiente no palco do mapa |
-| **X-9** | Driver: repensar ecrã principal (simplicidade) | Concluído | **B5** + mapa-fundo/interacção no mapa ([`DECISOES`](docs/prompts/EXTRA-2026-05-13-DECISOES.md)); copy horas sem `[PLACEHOLDER]` longo; botão **Vista compacta** |
+| **X-9** | Driver: repensar ecrã principal (simplicidade) | Concluído | **B5** + mapa-fundo/interacção no mapa (lista EXTRA arquivada L2; ver [`driver-ux-fixes-backlog`](docs/ux/driver-ux-fixes-backlog.md)); copy horas sem `[PLACEHOLDER]` longo; botão **Vista compacta** |
 
 ### Rasto / backlog (**R-**)
 
@@ -460,7 +460,7 @@ _Quadro:_ [`docs/todo-em-curso.md`](docs/todo-em-curso.md).
 
 ## Painel — 2026-05-06 (arquivo)
 
-**Feito:** `main` **#287** — barra inferior passageiro + Frota **«Por aceitar»**; prompts [`docs/prompts/passenger-frota-2026-05-06/`](docs/prompts/passenger-frota-2026-05-06/). Contexto anterior: **#285**, **#282**, **#280**/**#281**.
+**Feito:** `main` **#287** — barra inferior passageiro + Frota **«Por aceitar»**; prompts passenger-frota arquivados (auditoria L2). Contexto anterior: **#285**, **#282**, **#280**/**#281**.
 
 **Prioridade da altura (fechado ou absorvido no painel 2026-05-11):**
 

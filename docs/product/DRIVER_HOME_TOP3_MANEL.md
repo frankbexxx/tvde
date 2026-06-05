@@ -103,7 +103,7 @@ Entregável: lista de ficheiros tocados + screenshots ou notas de smoke + risco 
 - **§10** — Top 3 + ordem completa do menu motorista (proposta canónica até feedback Manel).
 - [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) — menu, rendimentos, histórico, zonas v1; **§7** mudanças de zona / excepção partner; **§7.8** smoke UI motorista (menu no topo, GPS, copy estimativa).
 - [`driver-app-benchmarks.md`](../research/driver-app-benchmarks.md) — contexto competitivo; **§6** — capturas LIS (fila aeroporto / zona de espera, ref. Manel).
-- [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md) — princípios gerais de UX web.
+- [`driver-ux-fixes-backlog.md`](../ux/driver-ux-fixes-backlog.md) — backlog UX motorista (princípios e fixes).
 
 ---
 

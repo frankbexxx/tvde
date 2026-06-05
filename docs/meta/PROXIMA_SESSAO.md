@@ -884,7 +884,7 @@ O núcleo (**financeiro + UI validável**) está **fechado** em “funciona de p
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | Continuar amanhã                    | Este ficheiro (`PROXIMA_SESSAO.md`)                                                                                                             |
 | Roadmap engenharia + A023–A035      | [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md)                                                                    |
-| UX web-app (mini roadmap + prompts) | [`UX_MINI_ROADMAP_E_PROMPTS.md`](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                                                                       |
+| UX web-app (backlog + i18n)         | [`driver-ux-fixes-backlog.md`](../ux/driver-ux-fixes-backlog.md), [`I18N.md`](../architecture/I18N.md)                                           |
 | Roadmap histórico / Stripe futuro   | Snapshot local — [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) (`archive/docs_2026_03_22/ROADMAP.md`, `STRIPE_CONFIRMACAO_FUTURA.md`) |
 | Testes manuais                      | [GUIA_TESTES.md](../testing/GUIA_TESTES.md)                                                                                                     |
 | Observabilidade backend             | [`TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md`](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md)                                         |
