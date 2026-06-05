@@ -34,6 +34,19 @@ Na máquina onde foi feita a remoção, cópia completa em:
 
 **Cópia:** `C:\dev\_archives\APP\docs-2026-06\lote-1\` (`README_SNAPSHOT.txt` + espelho de pastas).
 
+## O que foi retirado do Git (2026-06 — auditoria Lote 2)
+
+| Conteúdo | Nota |
+| -------- | ---- |
+| `docs/prompts/EXTRA-2026-05-13-*` (8) | Lista EXTRA driver/passageiro — **feito** em `main`; decisões absorvidas em `docs/ux/` e painéis |
+| `docs/prompts/ambiance/` (7) | Prompts DOC; contratos vivos em `docs/ux/` |
+| `docs/prompts/passenger-frota-2026-05-06/` (3) | PR **#287** entregue |
+| `docs/prompts/manel-legal-extra-2026-05/` (4) | Prompts pontuais Manel — entregues ou absorvidos |
+| `docs/prompts/i18n-v2/PROMPT_I18N_*.md` (22) | Série concluída; mantidos `PROMPT_I18N_INDEX.md`, `PROMPT_I18N_X3_LEGAL_POLICY.md` + [`I18N_NICHOS_EN.md`](architecture/I18N_NICHOS_EN.md) |
+| `CRUISE_PROMPTS_2026-04-28`, `UX_MINI_ROADMAP_E_PROMPTS`, `PROMPT_ZONES_V1_*` | Roadmaps/prompts históricos |
+
+**Cópia:** `C:\dev\_archives\APP\docs-2026-06\lote-2\` (`README_SNAPSHOT.txt` + espelho de pastas).
+
 ## Referências úteis que continuam no repo
 
 - Roadmap técnico + anexo A023–A035: `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`

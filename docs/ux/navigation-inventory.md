@@ -8,7 +8,7 @@
 
 **Architecture:** Passenger, Driver, and most Partner screens use **one React Router path** + **in-app state** (sheet menus, bottom nav, overlays). Admin uses **one path + query tabs**. Partner adds **2 deep URL routes**.
 
-**Related:** [`ambiance-chrome-contract.md`](ambiance-chrome-contract.md) · [`shell-menu-centric.md`](shell-menu-centric.md) · [`shell-menu-ia-canonical.md`](shell-menu-ia-canonical.md) · [`../build/AMBIANCE_O1_O6_BUILD.md`](../build/AMBIANCE_O1_O6_BUILD.md)
+**Related:** [`ambiance-chrome-contract.md`](ambiance-chrome-contract.md) · [`shell-menu-centric.md`](shell-menu-centric.md) · [`shell-menu-ia-canonical.md`](shell-menu-ia-canonical.md)
 
 **Diagram suffixes:** `[PARTIAL]` · `[MOCK]` · `[HIDDEN]` · `[DEAD]` — critical gaps only.
 

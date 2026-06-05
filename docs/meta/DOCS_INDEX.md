@@ -97,7 +97,8 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | [docs/prompts/A000_SYSTEM_RULES.md](../prompts/A000_SYSTEM_RULES.md)                                       | Regras do projeto para agentes / implementação                                                         |
 | [docs/prompts/A014_UX_POLISH.md](../prompts/A014_UX_POLISH.md)                                             | Polish UX (em curso)                                                                                   |
 | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | A033-B — validação produção (env, webhook, cron, e2e, migrações, backup)                               |
-| [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | **UX web-app (3–5 dias):** princípios, mini-roadmap, formato de prompts, **Prompt 1** estados visíveis |
+| [docs/ux/driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md)                                     | Backlog UX motorista (fixes entregues + pendentes)                                                     |
+| [docs/architecture/I18N.md](../architecture/I18N.md)                                                       | i18n PT/EN web-app + índice resumido                                                                   |
 
 ---
 
@@ -161,7 +162,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 24  | [docs/GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md)                                                     | Git + GitHub — fluxo TVDE (antes / durante / depois)                          |
 | 25  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | Inventário de arquivo fora do Git                                             |
 | 26  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                                    |
-| 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis)                  |
+| 27  | [docs/ux/driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md)                                     | Backlog UX motorista                                                          |
 | 28  | [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md)                               | Checklist operacional parceiro / licença TVDE (não é aconselhamento jurídico) |
 | 29  | [docs/diagrams/README.md](../diagrams/README.md)                                                           | Índice Mermaid — fluxos TVDE (viagem, ofertas, pagamentos, …)                 |
 | 30  | [docs/diagrams/07_AUTH_OTP.md](../diagrams/07_AUTH_OTP.md)                                                 | Mermaid — OTP / login BETA / parceiro só via admin                            |

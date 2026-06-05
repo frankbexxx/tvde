@@ -188,7 +188,7 @@ Ajustes **só** de composição visual (texto, cores, densidade, espaçamento). 
 
 **Estado:** entregue.
 
-**Referência histórica (slider após painel):** [`EXTRA-2026-05-13-driver-accept-compact.md`](../prompts/EXTRA-2026-05-13-driver-accept-compact.md).
+**Referência histórica (slider após painel):** prompt EXTRA aceitar compacto — arquivado (auditoria docs Lote 2); ver FIX acima.
 
 ---
 
