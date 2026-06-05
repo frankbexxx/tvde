@@ -4,7 +4,7 @@
 
 Provar que o sistema em **produção** é **confiável**, **consistente** e **operável** — não implementar features novas.
 
-**Relacionado:** [`docs/TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) (seção PROD_VALIDATION), [`OPERATION_CHECKLIST.md`](../ops/OPERATION_CHECKLIST.md), [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
+**Relacionado:** [`docs/TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) (seção PROD_VALIDATION), [`docs/meta/PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) Seção F, [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
 
 ---
 
@@ -81,7 +81,7 @@ curl "https://<api>/cron/jobs?secret=<CRON_SECRET>"
 
 ### 4.3 Agendamento
 
-Garantir job externo: **cron-job.org**, **GitHub Actions** (scheduled), **Render cron**, etc. — frequência sugerida 30–60 s (ver `OPERATION_CHECKLIST.md`).
+Garantir job externo: **cron-job.org**, **GitHub Actions** (scheduled), **Render cron**, etc. — frequência sugerida 30–60 s (ver `PROXIMA_SESSAO` Seção F).
 
 ---
 

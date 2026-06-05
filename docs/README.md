@@ -13,7 +13,7 @@ Estrutura enxuta após arquivo (2026-02): implementação, testes e arquitetura 
 | `prompts/`                   | Regras fixas, UX em curso, playbooks: `A000`, `A014`, … — **piloto comercial / 4 superfícies:** [`prompts/pilot-commercial/README.md`](prompts/pilot-commercial/README.md) |
 | `IMPLEMENTACAO_E_TESTES.md`  | Código, testes, deploy e **Parte II** (logs / buffer / pytest detalhado)                                                                                                   |
 | `ESTRUTURA_GUI.md`           | Mapa da GUI                                                                                                                                                                |
-| `LOGS_E_TESTES_SINTESE.md`   | Atalho — conteúdo em `IMPLEMENTACAO_E_TESTES.md` Parte II                                                                                                                  |
+| `IMPLEMENTACAO_E_TESTES.md` Parte II | Logs estruturados e síntese pytest (ex-`LOGS_E_TESTES_SINTESE`, arquivado Lote 1) |
 | `STACK_TECNOLOGICO.md`       | Stack e convenções                                                                                                                                                         |
 | `CRON_JOB_ORG_INSTRUCOES.md` | Cron externo                                                                                                                                                               |
 | `DEBUG_BETA_RENDER.md`       | Depuração BETA no Render                                                                                                                                                   |

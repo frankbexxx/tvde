@@ -23,6 +23,17 @@ Na máquina onde foi feita a remoção, cópia completa em:
 
 **Outros clones / CI:** este caminho **não existe** — quem precisar do histórico deve usar o backup acima, um zip partilhado, ou `git show <commit>:archive/...` antes da remoção.
 
+## O que foi retirado do Git (2026-06 — auditoria Lote 1)
+
+| Conteúdo | Nota |
+| -------- | ---- |
+| `docs/prompts/pilot-commercial/**` (65 placeholders) | Só texto «aguardando redacção»; índice em `PILOT_COMMERCIAL_PLACEHOLDER_INDEX.md` |
+| `docs/build/` (7 ficheiros) | Ondas A–D + ambiance — concluídas; contratos em `docs/ux/` |
+| Stubs | `LOGS_E_TESTES_SINTESE`, `ROADMAP_TVDE_ATE_PRODUCAO`, `RELATORIO_PROJETO_ROADMAP`, `OPERATION_CHECKLIST`, `DOCUMENTATION_INVENTORY_2026-03-27` |
+| `docs/snapshots/SNAPSHOT_2026-04-*.md` | Abril 2026 |
+
+**Cópia:** `C:\dev\_archives\APP\docs-2026-06\lote-1\` (`README_SNAPSHOT.txt` + espelho de pastas).
+
 ## Referências úteis que continuam no repo
 
 - Roadmap técnico + anexo A023–A035: `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`

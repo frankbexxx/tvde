@@ -12,7 +12,7 @@ Fase AMB-F0 — Contrato ambiance/chrome (DOC ONLY)
 Objectivo: produzir documentação antes de qualquer código visual. Zero alterações em web-app/src.
 
 Criar/atualizar:
-1. docs/build/AMBIANCE_CHROME_BUILD.md — índice master (objectivo, fases, gates, links)
+1. docs/ux/ambiance-chrome-contract.md — contrato vivo (build plan arquivado em `C:\dev\_archives\APP\docs-2026-06\lote-1\docs\build\`)
 2. docs/ux/ambiance-chrome-contract.md — contrato técnico
 
 O contrato DEVE incluir:

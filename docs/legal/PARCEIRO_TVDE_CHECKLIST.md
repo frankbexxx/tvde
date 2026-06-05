@@ -11,7 +11,7 @@
 | [`docs/visao_cursor.md`](../visao_cursor.md) §4.2                  | Estado geral legal/compliance no projecto               |
 | [`docs/PARTNER_ONBOARDING.md`](../PARTNER_ONBOARDING.md)           | Fluxo técnico mínimo: org, gestor `partner`, motoristas |
 | [`docs/meta/PROJECT.md`](../meta/PROJECT.md)                       | Visão produto, comissão, stack                          |
-| [`docs/ops/OPERATION_CHECKLIST.md`](../ops/OPERATION_CHECKLIST.md) | Operação diária (cron, Stripe, saúde)                   |
+| [`docs/meta/PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) Seção F | Operação diária (cron, Stripe, saúde)                   |
 
 ---
 
@@ -93,7 +93,7 @@ Marca uma linha de decisão por tópico e regista em **Notas** (abaixo ou anexo)
 | Multi-frota / gestor `partner` | [`PARTNER_ONBOARDING.md`](../PARTNER_ONBOARDING.md), rotas `/partner/*` | Contratos e RGPD por escrito                   |
 | Motoristas                     | Aprovação admin, estados de viagem                                      | Processo documental formal por motorista       |
 | Pagamentos                     | Stripe, webhooks documentados                                           | Conta live, modelo fiscal, recibos             |
-| Operação                       | `OPERATION_CHECKLIST`, cron, health                                     | Runbook sinistros + contacto 24h se necessário |
+| Operação                       | `PROXIMA_SESSAO` Seção F, cron, health                                  | Runbook sinistros + contacto 24h se necessário |
 
 ---
 

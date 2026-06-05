@@ -35,7 +35,7 @@ Painéis com data **2026-05-13** ou anteriores mantêm o formato em que foram es
 
 **Smokes:** **S-SMK-349-1…5** **Concluídos** (sessão Frank **2026-05-22**).
 
-**Referência:** [`AMBIANCE_O1_O6_BUILD.md`](docs/build/AMBIANCE_O1_O6_BUILD.md) · PR **#349** · merge `4f3ace9`
+**Referência:** ambiance O1–O6 · PR **#349** · contratos em [`docs/ux/ambiance-chrome-contract.md`](docs/ux/ambiance-chrome-contract.md) (build plan arquivado Lote 1)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
