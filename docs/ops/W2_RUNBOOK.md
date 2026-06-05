@@ -1,6 +1,6 @@
 # W2 — Runbook operacional (v0, só Admin web)
 
-**Fase:** **W2-A**–**W2-D** (runbook + deep links + Saúde→Viagens + Operações picker/Stripe). Desenho: [`W2_RUNBOOK_UI_DESIGN.md`](W2_RUNBOOK_UI_DESIGN.md).  
+**Fase:** **W2-A**–**W2-D** (runbook + deep links + Saúde→Viagens + Operações picker/Stripe). Desenho W2 arquivado (auditoria Lote 4).  
 **Regra:** **não** uses Swagger nem `curl` com Bearer para estes fluxos — login **admin** na app; o token fica na sessão.
 
 **URL:** abre a **web-app de produção** (Render) e vai a **`/admin`** (ou o caminho equivalente que já usas). Os nomes das tabs coincidem com a UI: **Pendentes**, **Utilizadores**, **Frota**, **Dados**, **Viagens**, **Métricas**, **Operações**, **Saúde**.

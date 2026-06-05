@@ -1,6 +1,6 @@
 # Documentação ativa (`docs/`)
 
-Estrutura enxuta após auditoria docs 2026-06 (Lotes 1–3).
+Estrutura enxuta após auditoria docs 2026-06 (Lotes 1–4 concluídos).
 
 **Começar aqui:** [`TODOdoDIA.md`](../TODOdoDIA.md) (operacional) · [`meta/PROXIMA_SESSAO.md`](meta/PROXIMA_SESSAO.md) (handoff) · [`meta/DOCS_INDEX.md`](meta/DOCS_INDEX.md) (índice ~40 entradas).
 
@@ -27,4 +27,4 @@ Estrutura enxuta após auditoria docs 2026-06 (Lotes 1–3).
 | `CRON_JOB_ORG_INSTRUCOES.md` | Cron externo |
 | `HISTORICO_FORA_DO_GIT.md` | O que saiu do Git + cópias `C:\dev\_archives\APP\` |
 
-**Histórico:** prompts entregues, painéis antigos e `todo-em-curso.md` arquivados — [`HISTORICO_FORA_DO_GIT.md`](HISTORICO_FORA_DO_GIT.md).
+**Histórico:** Alpha Abril, inventários UI, test book EN, prompts entregues e handoff antigo arquivados — [`HISTORICO_FORA_DO_GIT.md`](HISTORICO_FORA_DO_GIT.md).

@@ -1,6 +1,6 @@
 # Índice da Documentação — TVDE
 
-~40 entradas activas (pós-auditoria Lotes 1–3). Histórico fora do Git: [`HISTORICO_FORA_DO_GIT.md`](../HISTORICO_FORA_DO_GIT.md).
+~40 entradas activas (pós-auditoria Lotes 1–4). Histórico fora do Git: [`HISTORICO_FORA_DO_GIT.md`](../HISTORICO_FORA_DO_GIT.md).
 
 **Começar aqui:** [`README.md`](../../README.md) → [`TODOdoDIA.md`](../../TODOdoDIA.md) → [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) → este índice.
 
@@ -125,10 +125,10 @@
 | 13 | [driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md) |
 | 14 | [navigation-inventory.md](../ux/navigation-inventory.md) |
 | 15 | [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) |
-| 16 | [AUDIT_EXEC_BACKLOG_AL_2026-05.md](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
-| 17 | [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) |
-| 18 | [pilot-commercial/README.md](../prompts/pilot-commercial/README.md) |
-| 19 | [A000_SYSTEM_RULES.md](../prompts/A000_SYSTEM_RULES.md) |
-| 20 | [A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) |
+| 16 | [PROJECT_AUDIT_2026-05-02.md](../audit/PROJECT_AUDIT_2026-05-02.md) |
+| 17 | [AUDIT_EXEC_BACKLOG_AL_2026-05.md](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+| 18 | [BACKLOG_POST_PILOTO.md](BACKLOG_POST_PILOTO.md) |
+| 19 | [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) |
+| 20 | [pilot-commercial/README.md](../prompts/pilot-commercial/README.md) |
 
-_Arquivado Lotes 1–3: prompts entregues, handoff histórico, `todo-em-curso.md` — ver HISTORICO._
+_Arquivado Lotes 1–4: Alpha Abril, inventários UI Maio, test book EN, handoff histórico — ver HISTORICO._

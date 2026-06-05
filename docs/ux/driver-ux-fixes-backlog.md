@@ -75,7 +75,7 @@ Ajustes **só** de composição visual (texto, cores, densidade, espaçamento). 
 
 **Entrada:** screenshots Frank (**próxima sessão**).
 
-**TW-05 / dia 23:** fase fechada **2026-05-23** — residual **TW-DIA23-1** (micro layout). Ver [`docs/dia23-gate-checklist.md`](../dia23-gate-checklist.md).
+**TW-05 / dia 23:** fase fechada **2026-05-23** — residual **TW-DIA23-1** (micro layout). Gate dia 23 arquivado (auditoria Lote 4).
 
 **F-NAV-1 (aberto):** Waze abre no aceite (`DriverDashboard`) e ao iniciar viagem (`ActiveTripActions`) — unificar política; ver grelha **G12/G19**.
 

@@ -57,6 +57,30 @@ Na máquina onde foi feita a remoção, cópia completa em:
 
 **Cópia:** `C:\dev\_archives\APP\docs-2026-06\lote-3\` (`TODOdoDIA.md`, `PROXIMA_SESSAO.md`, `todo-em-curso.md`, `README_SNAPSHOT.txt`).
 
+## O que foi retirado do Git (2026-06 — auditoria Lote 4)
+
+| Conteúdo | Nota |
+| -------- | ---- |
+| `docs/meta/ALPHA_*`, `PILOTO_*`, `PARCEIRO_ESTADO_*`, `MARKETING_*` (10) | Pack Alpha Abril — evento fechado |
+| `AUDIT_DEEP_*`, `AUDIT_STATUS_*`, `CRUISE_AUDIT_*`, `CONSULTA_OBRIGATORIA_*` (5) | Auditorias/sessões Abril |
+| `ADMIN_DASHBOARD_REFACTOR_PLAN.md` | Plano admin concluído 2026-05-11 |
+| `docs/audit/INVENTARIO_UI_*_2026-05.md` (5) | Snapshot Maio — canónico: [`navigation-inventory.md`](ux/navigation-inventory.md) |
+| `docs/testing/1_`…`11_` test book EN (11) | Canónico PT: `GUIA_TESTES.md`, `VALIDACAO_HUMANA_CAMPO.md` |
+| Relatórios/RFC Abril–Maio (8) | `IMPLEMENTATION_REPORT_C009`, `CODE_AUDIT_RFC`, `PARTNER_MULTITENANT`, `MANUEL_DRIVER_QA`, `BATCH_TESTING_*`, `dia23-gate-checklist`, `W2_RUNBOOK_UI_DESIGN` |
+
+**Cópia:** `C:\dev\_archives\APP\docs-2026-06\lote-4\` (`README_SNAPSHOT.txt` + espelho de pastas).
+
+## Resumo auditoria documentação (Lotes 1–4)
+
+| Lote | Foco | ~ficheiros removidos |
+|------|------|----------------------|
+| 1 | Placeholders pilot-commercial, build, stubs | ~79 |
+| 2 | EXTRA, ambiance, i18n prompts, frota | ~47 |
+| 3 | Handoff triple → único | ~3 + truncagem |
+| 4 | Alpha, inventários UI, test book EN | ~40 |
+
+**Activos canónicos:** `TODOdoDIA.md`, `PROXIMA_SESSAO.md`, `DOCS_INDEX.md`, `docs/ux/navigation-inventory.md`, `GUIA_TESTES.md`, `docs/audit/PROJECT_AUDIT_2026-05-02.md`, `AUDIT_EXEC_BACKLOG_AL_2026-05.md`.
+
 ## Referências úteis que continuam no repo
 
 - Roadmap técnico + anexo A023–A035: `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`
