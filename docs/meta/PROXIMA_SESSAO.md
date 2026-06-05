@@ -340,7 +340,7 @@ Onda 0 — estado (resto adiado para sexta):
 
 **Fora do âmbito até sábado** (não abrir por engano): Stripe real, Stripe Connect, app nativa, PWA install, WebSockets no front, `/driver/offers`, `matching/find-driver` na UI, push, staging, CI de segurança (GHAS/Snyk/Semgrep/pentest), docs legais, M2-PERFIL, M3-DOCS.
 
-**Snapshots de referência:** [`docs/snapshots/SNAPSHOT_2026-04-19.md`](../snapshots/SNAPSHOT_2026-04-19.md) (histórico) e [`docs/snapshots/SNAPSHOT_2026-04-20.md`](../snapshots/SNAPSHOT_2026-04-20.md) (estado actual com deltas).
+**Snapshots Abril (arquivados Lote 1):** `C:\dev\_archives\APP\docs-2026-06\lote-1\docs\snapshots\SNAPSHOT_2026-04-19.md` e `SNAPSHOT_2026-04-20.md`.
 
 ---
 
@@ -681,7 +681,7 @@ Ver **[GUIA_TESTES.md](../testing/GUIA_TESTES.md)** para instruções completas 
 
 # Seção F — Operação (checklist consolidado)
 
-_Conteúdo fundido a partir de `OPERATION_CHECKLIST.md` (stub em [OPERATION_CHECKLIST.md](../ops/OPERATION_CHECKLIST.md)); esse ficheiro aponta para aqui._
+_Conteúdo fundido a partir de `OPERATION_CHECKLIST.md` (arquivado Lote 1; canónico nesta Seção F)._
 
 ## F.0 Fecho de sessão antes de merge
 
@@ -792,7 +792,7 @@ Se aparecer resposta **422** com `trip_metrics_required_before_completion`, a vi
 
 # Seção G — Relatório projeto / roadmap (março 2026)
 
-_Conteúdo fundido a partir de `RELATORIO_PROJETO_ROADMAP.md` (stub em [RELATORIO_PROJETO_ROADMAP.md](RELATORIO_PROJETO_ROADMAP.md)); esse ficheiro aponta para aqui._
+_Conteúdo fundido a partir de `RELATORIO_PROJETO_ROADMAP.md` (arquivado Lote 1; canónico nesta Seção G)._
 
 Documento descritivo (nem genérico nem exaustivo). Estado verificado no código em **março de 2026** (incl. Alembic, dedup de webhook por `evt_`, CI com Postgres + migrações, audit JSONB e job de saúde no cron).
 

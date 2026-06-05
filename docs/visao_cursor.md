@@ -1,6 +1,6 @@
 # Visão geral do projeto TVDE — perspectiva Cursor
 
-_Documento gerado como síntese de contexto de repositório, conversas de implementação e leitura de `README`, `docs/meta/PROJECT.md`, `docs/ops/OPERATION_CHECKLIST.md`, `docs/meta/DOCS_INDEX.md` e roadmap. Serve de handoff mental entre sessões e de quadro para decisões de comercialização._
+_Documento gerado como síntese de contexto de repositório, conversas de implementação e leitura de `README`, `docs/meta/PROJECT.md`, `docs/meta/PROXIMA_SESSAO.md` (Seção F), `docs/meta/DOCS_INDEX.md` e roadmap. Serve de handoff mental entre sessões e de quadro para decisões de comercialização._
 
 ---
 
@@ -28,7 +28,7 @@ Uma **plataforma de ride-sharing** orientada ao mercado português — **MVP tec
 
 ### 2.3 Documentação e operação
 
-- Índice em `docs/meta/DOCS_INDEX.md`; checklists em `docs/ops/OPERATION_CHECKLIST.md`, `docs/testing/GUIA_TESTES.md`, prompts A022/A026/A032, etc.
+- Índice em `docs/meta/DOCS_INDEX.md`; operação em `docs/meta/PROXIMA_SESSAO.md` Seção F, `docs/testing/GUIA_TESTES.md`, prompts A022/A026/A032, etc.
 - O projeto **não é** só código: há explícita preocupação com **deploy Render**, **Stripe**, **cron**, **migrações SQL** e **saúde operacional**.
 
 ---
@@ -102,7 +102,7 @@ Legenda: **Temos** = existe de forma utilizável ou documentada no repo / opera�
 | Preço/comissão definidos e comunicados                   | **Parcial** (`PROJECT.md` + `PRICING_DECISION.md`; falta contrato comercial padrão) |
 | Faturação/recibos conforme contabilidade PT              | **Falta**                                                                           |
 | Conta Stripe em modo live + webhook produção             | **Parcial** (depende do teu ambiente; checklist em docs)                            |
-| Cron `CRON_SECRET` + job em produção                     | **Parcial** (`OPERATION_CHECKLIST.md`; tem de estar configurado no host)            |
+| Cron `CRON_SECRET` + job em produção                     | **Parcial** (`PROXIMA_SESSAO` Seção F; tem de estar configurado no host)              |
 | Playbook de incidentes (pagamento preso, disputa Stripe) | **Parcial** (system-health + logs; falta runbook humano curto)                      |
 | Marca, site marketing, App Store assets                  | **Falta**                                                                           |
 | Plano de aquisição (motoristas primeiro vs passageiros)  | **Falta** (estratégia comercial)                                                    |

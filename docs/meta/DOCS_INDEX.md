@@ -14,7 +14,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 
 | Ficheiro                                                                          | Propósito                                                                                                                                                                                    |
 | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [DOCUMENTATION_INVENTORY_2026-03-27.md](../DOCUMENTATION_INVENTORY_2026-03-27.md) | O que o Git rastreia (`.md` + imagens): **manter / fundir / arquivar** — fusões principais feitas; próximo passo opcional: cópia para `C:\dev\_archives\APP\` + `git rm` do que sair do repo |
+| [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) | O que saiu do Git e cópias em `C:\dev\_archives\APP\` (Lote 1 docs audit 2026-06) |
 
 ---
 
@@ -150,7 +150,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 13  | [docs/STACK_TECNOLOGICO.md](../STACK_TECNOLOGICO.md)                                                       | Stack técnico                                                                 |
 | 14  | [docs/ESTRUTURA_GUI.md](../ESTRUTURA_GUI.md)                                                               | Estrutura da GUI                                                              |
 | 15  | [docs/IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md)                                             | Implementação, testes e logs (Parte II = ex-LOGS_E_TESTES)                    |
-| 16  | [docs/LOGS_E_TESTES_SINTESE.md](../LOGS_E_TESTES_SINTESE.md)                                               | Redireciona para IMPLEMENTACAO_E_TESTES (Parte II)                            |
+| 16  | [docs/IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md) Parte II                                    | Logs / síntese pytest (stub LOGS arquivado Lote 1)                            |
 | 17  | [backend/DATABASE_SCHEMA_RAW.md](../../backend/DATABASE_SCHEMA_RAW.md)                                     | Schema da BD                                                                  |
 | 18  | [web-app/README.md](../../web-app/README.md)                                                               | Web app                                                                       |
 | 19  | [scripts/README.md](../../scripts/README.md)                                                               | Scripts do projeto                                                            |
@@ -159,7 +159,7 @@ Ordem sugerida para não te perderes: **README** → **PROJECT** → **GitHub ma
 | 22  | [docs/prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD (A033-B)                                              |
 | 23  | [docs/TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md](../TVDE_BACKEND_PROXIMOS_PASSOS_OBSERVABILIDADE.md) | Backend: observabilidade e reconciliação                                      |
 | 24  | [docs/GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md)                                                     | Git + GitHub — fluxo TVDE (antes / durante / depois)                          |
-| 25  | [docs/DOCUMENTATION_INVENTORY_2026-03-27.md](../DOCUMENTATION_INVENTORY_2026-03-27.md)                     | Inventário docs/media tracked — plano manter/fundir/arquivar                  |
+| 25  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | Inventário de arquivo fora do Git                                             |
 | 26  | [docs/HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md)                                               | O que saiu do Git + cópia local de arquivo                                    |
 | 27  | [docs/prompts/UX_MINI_ROADMAP_E_PROMPTS.md](../prompts/UX_MINI_ROADMAP_E_PROMPTS.md)                       | UX web-app: mini roadmap 3–5 d + Prompt 1 (estados visíveis)                  |
 | 28  | [docs/legal/PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md)                               | Checklist operacional parceiro / licença TVDE (não é aconselhamento jurídico) |

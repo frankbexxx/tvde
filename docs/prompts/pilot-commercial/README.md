@@ -50,7 +50,9 @@ Cada ficheiro: `PROMPT_<ID>_<SNAKE_NAME>.md` na pasta da fase.
 - **Fase 9:** `PROMPT_J001` … `PROMPT_J006`
 - **Fase 10:** `PROMPT_K001` … `PROMPT_K006`
 
-**Total:** 68 placeholders (ficheiros `PROMPT_*.md` por fase).
+**Placeholders arquivados (Lote 1):** ver [`PILOT_COMMERCIAL_PLACEHOLDER_INDEX.md`](PILOT_COMMERCIAL_PLACEHOLDER_INDEX.md) — corpo em `C:\dev\_archives\APP\docs-2026-06\lote-1\`.
+
+**Prompts com conteúdo no Git:** A001–A003, C018, H009, H010, J009, K008, I012 (+ extensões abaixo).
 
 **Extensão (IDs novos):** sequência e notas em [`super-prompts/`](super-prompts/) — C013–C017, I009–I011, G008–G010, H009–H010, J009–J010, K008–K009. Os `SUPER_PROMPT_0N_*.md` são **roteiros de ordem**; cada tarefa deve acabar num **`PROMPT_<ID>_*.md`** na pasta da fase (a criar quando fores executar).
 

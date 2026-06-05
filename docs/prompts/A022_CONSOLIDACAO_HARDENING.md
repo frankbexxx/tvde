@@ -30,7 +30,7 @@ Passar de «funciona» a «previsível em produção» **sem**:
 
 1. **Pricing** — integridade (`distance_km` / `duration_min` obrigatórios no `complete_trip`).
 2. **Payments** — rastreabilidade (`log_event`) + confirmação operacional do webhook (manual/staging).
-3. **Operação** — cron / admin documentados (`docs/ops/OPERATION_CHECKLIST.md`).
+3. **Operação** — cron / admin documentados (`docs/meta/PROXIMA_SESSAO.md` Seção F).
 4. **Testes** — mínimo crítico: webhook simulado + fluxo `ongoing` → `completed` com `STRIPE_MOCK`.
 
 ---
@@ -91,7 +91,7 @@ _(O `request_id` já pode existir via middleware; não obrigatório neste increm
 
 Frequência sugerida: **30–60 s** em produção (ajustar à carga).
 
-Documentação canónica: **`docs/ops/OPERATION_CHECKLIST.md`** (stub; canónico em `docs/meta/PROXIMA_SESSAO.md` Seção F).
+Documentação canónica: **`docs/meta/PROXIMA_SESSAO.md`** Seção F (ex-`OPERATION_CHECKLIST`, arquivado Lote 1).
 
 ---
 
@@ -120,7 +120,7 @@ Não exigir E2E browser neste incremento.
 - Nenhum fallback aleatório de métricas no `complete_trip`.
 - Webhook continua a atualizar `payment.status` (teste verde).
 - Logs permitem seguir `trip_id` / `payment_id` no aceite, complete e webhook.
-- `OPERATION_CHECKLIST.md` descreve cron/admin e verificação de saúde.
+- `PROXIMA_SESSAO.md` Seção F descreve cron/admin e verificação de saúde.
 - `pytest` nos novos testes + regressões conhecidas verdes.
 
 ---
