@@ -20,7 +20,8 @@ No global aggregates; partner role cannot call admin-only dependencies (require_
 import csv
 import io
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, time, timezone
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import FileResponse, StreamingResponse
@@ -98,6 +99,7 @@ def _utc_iso(dt: datetime | None) -> str:
 
 
 router = APIRouter(prefix="/partner", tags=["partner"])
+PARTNER_EXPORT_TZ = ZoneInfo("Europe/Lisbon")
 
 
 def _require_partner_id(ctx: UserContext) -> str:
@@ -108,6 +110,16 @@ def _require_partner_id(ctx: UserContext) -> str:
             detail="partner_scope_required",
         )
     return pid
+
+
+def _partner_export_date_bound_utc(raw: str, *, end_of_day: bool) -> datetime:
+    day = date.fromisoformat(raw)
+    local_bound = datetime.combine(
+        day,
+        time.max if end_of_day else time.min,
+        tzinfo=PARTNER_EXPORT_TZ,
+    )
+    return local_bound.astimezone(timezone.utc)
 
 
 def _driver_item(d, *, include_documents: bool = False) -> PartnerDriverItem:
@@ -412,7 +424,7 @@ async def partner_export_trips_csv(
     request: Request,
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
-    status: str | None = Query(None, alias="status"),
+    trip_status: str | None = Query(None, alias="status"),
     driver_id: str | None = Query(None),
     from_date: str | None = Query(None, alias="from"),
     to_date: str | None = Query(None, alias="to"),
@@ -431,21 +443,21 @@ async def partner_export_trips_csv(
     date_to: datetime | None = None
     if from_date:
         try:
-            date_from = datetime.fromisoformat(f"{from_date}T00:00:00").replace(tzinfo=timezone.utc)
+            date_from = _partner_export_date_bound_utc(from_date, end_of_day=False)
         except ValueError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_from_date")
     if to_date:
         try:
-            date_to = datetime.fromisoformat(f"{to_date}T23:59:59.999").replace(tzinfo=timezone.utc)
+            date_to = _partner_export_date_bound_utc(to_date, end_of_day=True)
         except ValueError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_to_date")
 
-    has_filters = any([status, driver_id, from_date, to_date, q])
+    has_filters = any([trip_status, driver_id, from_date, to_date, q])
     if has_filters:
         trips = list_trips_for_partner_filtered(
             db,
             partner_id,
-            status_filter=status,
+            status_filter=trip_status,
             driver_id=driver_id,
             date_from=date_from,
             date_to=date_to,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -289,6 +290,125 @@ def test_partner_trips_export_respects_status_filter() -> None:
     done_ids = {r[0] for r in list(csv.reader(io.StringIO(rex_done.text)))[1:]}
     assert completed_id in done_ids
     assert cancelled_id not in done_ids
+
+
+def test_partner_trips_export_uses_lisbon_calendar_day_bounds() -> None:
+    db = SessionLocal()
+    try:
+        pid = uuid.uuid4()
+        db.add(Partner(id=pid, name="Export Lisbon Day Co"))
+        u_d = User(
+            role=Role.driver,
+            name="Lisbon Boundary Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        u_p = User(
+            role=Role.passenger,
+            name="Lisbon Boundary Pax",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        mgr = User(
+            role=Role.partner,
+            name="Lisbon Boundary Mgr",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+            partner_org_id=pid,
+        )
+        db.add_all([u_d, u_p, mgr])
+        db.flush()
+        db.add(
+            Driver(
+                user_id=u_d.id,
+                partner_id=pid,
+                status=DriverStatus.approved,
+                commission_percent=12.0,
+                is_available=False,
+            )
+        )
+        db.flush()
+        included = Trip(
+            passenger_id=u_p.id,
+            driver_id=u_d.id,
+            status=TripStatus.completed,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=9.0,
+            created_at=datetime(2026, 5, 31, 23, 30, tzinfo=timezone.utc),
+        )
+        before_lisbon_day = Trip(
+            passenger_id=u_p.id,
+            driver_id=u_d.id,
+            status=TripStatus.completed,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=11.0,
+            created_at=datetime(2026, 5, 31, 22, 30, tzinfo=timezone.utc),
+        )
+        after_lisbon_day = Trip(
+            passenger_id=u_p.id,
+            driver_id=u_d.id,
+            status=TripStatus.completed,
+            origin_lat=38.7,
+            origin_lng=-9.1,
+            destination_lat=38.8,
+            destination_lng=-9.2,
+            estimated_price=13.0,
+            created_at=datetime(2026, 6, 1, 23, 30, tzinfo=timezone.utc),
+        )
+        db.add_all([included, before_lisbon_day, after_lisbon_day])
+        db.commit()
+        included_id = str(included.id)
+        before_id = str(before_lisbon_day.id)
+        after_id = str(after_lisbon_day.id)
+        tok = create_access_token(subject=str(mgr.id), role=mgr.role.value)["token"]
+    finally:
+        db.close()
+
+    client = TestClient(app)
+    h = {"Authorization": f"Bearer {tok}"}
+
+    rex = client.get("/partner/trips/export?from=2026-06-01&to=2026-06-01", headers=h)
+    assert rex.status_code == 200
+    exported_ids = {r[0] for r in list(csv.reader(io.StringIO(rex.text)))[1:]}
+    assert included_id in exported_ids
+    assert before_id not in exported_ids
+    assert after_id not in exported_ids
+
+
+def test_partner_trips_export_invalid_dates_return_400() -> None:
+    db = SessionLocal()
+    try:
+        pid = uuid.uuid4()
+        db.add(Partner(id=pid, name="Export Bad Date Co"))
+        mgr = User(
+            role=Role.partner,
+            name="Export Bad Date Mgr",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+            partner_org_id=pid,
+        )
+        db.add(mgr)
+        db.commit()
+        tok = create_access_token(subject=str(mgr.id), role=mgr.role.value)["token"]
+    finally:
+        db.close()
+
+    client = TestClient(app)
+    h = {"Authorization": f"Bearer {tok}"}
+
+    r_from = client.get("/partner/trips/export?from=not-a-date", headers=h)
+    assert r_from.status_code == 400
+    assert r_from.json().get("detail") == "invalid_from_date"
+
+    r_to = client.get("/partner/trips/export?to=not-a-date", headers=h)
+    assert r_to.status_code == 400
+    assert r_to.json().get("detail") == "invalid_to_date"
 
 
 def test_c012_delete_unassign_idempotent(admin_ctx_override: str) -> None:
