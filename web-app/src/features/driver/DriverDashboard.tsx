@@ -392,10 +392,12 @@ export function DriverDashboard() {
   const [driverDocuments, setDriverDocuments] = useState<DriverDocumentsState>(() =>
     defaultDriverDocumentsState()
   )
+  const [driverDocumentsLoaded, setDriverDocumentsLoaded] = useState(false)
   const [driverDocsGateEnabled, setDriverDocsGateEnabled] = useState<boolean>(() =>
     import.meta.env.DEV ? isDriverDocumentsGateEnabled() : true
   )
   const effectiveDocsGate = import.meta.env.DEV ? driverDocsGateEnabled : true
+  const driverDocumentsGatePending = effectiveDocsGate && !driverDocumentsLoaded
   const docsReady = isDriverDocumentsReady(driverDocuments)
   const docsBlockedOffline = effectiveDocsGate && !docsReady && offline
   const driverDocsBlockedHintBox = (
@@ -835,7 +837,10 @@ export function DriverDashboard() {
   const refreshDriverDocumentsFromServer = useCallback(() => {
     if (!token) return Promise.resolve()
     return fetchDriverDocuments(token)
-      .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
+      .then((server) => {
+        setDriverDocuments(driverDocumentsFromServer(server))
+        setDriverDocumentsLoaded(true)
+      })
       .catch(() => {
         /* API antiga ou offline */
       })
@@ -879,19 +884,27 @@ export function DriverDashboard() {
     (doc: DriverRequiredDocument, status: DriverDocumentStatus) => {
       if (!token) return
       void patchDriverDocuments(token, { [doc]: { status } })
-        .then((server) => setDriverDocuments(driverDocumentsFromServer(server)))
+        .then((server) => {
+          setDriverDocuments(driverDocumentsFromServer(server))
+          setDriverDocumentsLoaded(true)
+        })
         .catch(() => { })
     },
     [token]
   )
 
   useEffect(() => {
-    if (!token || sessionRole !== 'driver') return
+    if (!token || sessionRole !== 'driver') {
+      setDriverDocumentsLoaded(false)
+      return
+    }
     let cancelled = false
+    setDriverDocumentsLoaded(false)
     void fetchDriverDocuments(token)
       .then((server) => {
         if (cancelled) return
         setDriverDocuments(driverDocumentsFromServer(server))
+        setDriverDocumentsLoaded(true)
       })
       .catch(() => {
         /* API antiga ou offline */
@@ -908,7 +921,8 @@ export function DriverDashboard() {
     void getDriverStatus(token)
       .then(({ is_available }) => {
         if (cancelled) return
-        const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
+        const canGoOnline =
+          !effectiveDocsGate || driverDocumentsGatePending || isDriverDocumentsReady(driverDocuments)
         if (is_available && canGoOnline) {
           setOffline(false)
         } else {
@@ -921,11 +935,12 @@ export function DriverDashboard() {
     return () => {
       cancelled = true
     }
-  }, [token, sessionRole, driverDocuments, effectiveDocsGate])
+  }, [token, sessionRole, driverDocuments, effectiveDocsGate, driverDocumentsGatePending])
 
   // Sync backend when token/offline changes; não forçar /online com viagem activa (repor is_available).
   useEffect(() => {
     if (!token) return
+    if (driverDocumentsGatePending) return
     if (offline) {
       void setDriverOffline(token).catch(() => { })
       return
@@ -945,7 +960,7 @@ export function DriverDashboard() {
         addLog('Bloqueio: horas de condução / repouso', 'error')
       }
     })
-  }, [token, offline, activeTripId, addLog, effectiveDocsGate, driverDocuments])
+  }, [token, offline, activeTripId, addLog, effectiveDocsGate, driverDocuments, driverDocumentsGatePending])
 
   useEffect(() => {
     if (toast) {
@@ -1337,9 +1352,10 @@ export function DriverDashboard() {
                 onToggleVehicleCategory={handleToggleVehicleCategory}
                 onPatchDriverDocument={handlePatchDriverDocument}
                 onRefreshDriverDocuments={refreshDriverDocumentsFromServer}
-                onMergeDriverDocuments={(server) =>
+                onMergeDriverDocuments={(server) => {
                   setDriverDocuments(driverDocumentsFromServer(server))
-                }
+                  setDriverDocumentsLoaded(true)
+                }}
                 onToggleDriverDocsGate={(enabled) => {
                   setDriverDocsGateEnabled(enabled)
                   setDriverDocumentsGateEnabled(enabled)
