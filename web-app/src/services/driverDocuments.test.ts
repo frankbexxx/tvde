@@ -8,6 +8,7 @@ import {
   partnerDocumentsApprovedCount,
   setDriverDocumentsGateEnabled,
   setDriverDocumentsState,
+  shouldBlockDriverAvailabilityForDocuments,
   type DriverDocumentsState,
 } from './driverDocuments'
 import { driverDocumentsFromServer, mergeServerDriverDocuments } from '../api/driverDocuments'
@@ -104,6 +105,18 @@ describe('driverDocuments service', () => {
     expect(s.onboardingCompleted).toBe(false)
     expect(isDriverDocumentsReady(s)).toBe(false)
     expect(driverDocumentsApprovedCount(s)).toBe(0)
+  })
+
+  it('does not block availability from placeholder documents before server load', () => {
+    expect(
+      shouldBlockDriverAvailabilityForDocuments(defaultDriverDocumentsState(), true, false)
+    ).toBe(false)
+  })
+
+  it('blocks availability when the loaded server documents are incomplete', () => {
+    expect(
+      shouldBlockDriverAvailabilityForDocuments(defaultDriverDocumentsState(), true, true)
+    ).toBe(true)
   })
 
   it('mergeServerDriverDocuments copies expires_at e partner_note', () => {

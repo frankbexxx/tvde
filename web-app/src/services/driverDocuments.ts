@@ -110,6 +110,14 @@ export function isDriverDocumentsReady(state: DriverDocumentsState): boolean {
   return REQUIRED_DRIVER_DOCUMENTS.every((k) => state.docs[k] === 'approved')
 }
 
+export function shouldBlockDriverAvailabilityForDocuments(
+  state: DriverDocumentsState,
+  gateEnabled: boolean,
+  documentsLoaded: boolean
+): boolean {
+  return gateEnabled && documentsLoaded && !isDriverDocumentsReady(state)
+}
+
 /**
  * Gate desligado por defeito para não bloquear smoke/dev.
  * Ativar manualmente com localStorage key: `tvde_driver_documents_gate_enabled=1`.
