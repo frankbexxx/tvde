@@ -27,6 +27,7 @@ from app.services.driver_preferences import (
     decode_driver_categories_csv,
     normalize_driver_categories,
 )
+from app.services.driver_documents import driver_documents_gate_allows
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.driver_zones import maybe_consume_zone_session_on_trip_complete
@@ -105,6 +106,13 @@ def _raise_not_found() -> None:
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail="not_found",
+    )
+
+
+def _raise_driver_documents_not_ready() -> None:
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="driver_documents_not_ready",
     )
 
 
@@ -680,6 +688,10 @@ def accept_trip(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
+    if not driver_documents_gate_allows(driver.documents):
+        driver.is_available = False
+        db.flush()
+        _raise_driver_documents_not_ready()
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
@@ -832,6 +844,10 @@ def accept_offer(
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+    if not driver_documents_gate_allows(driver.documents):
+        driver.is_available = False
+        db.flush()
+        _raise_driver_documents_not_ready()
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
@@ -1040,6 +1056,12 @@ def list_available_trips(
                 "driver_status": driver.status.value,
                 "is_available": getattr(driver, "is_available", None),
             },
+        )
+        return []
+    if not driver_documents_gate_allows(driver.documents):
+        logger.info(
+            "list_available_trips: driver documents not ready",
+            extra={"driver_id": str(driver_id), "driver_status": driver.status.value},
         )
         return []
 

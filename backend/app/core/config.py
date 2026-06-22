@@ -71,6 +71,8 @@ class Settings(BaseSettings):
 
     # Local driver document uploads (Onda D — no S3)
     UPLOAD_DIR: str = "./uploads"
+    # None mirrors the frontend rollout: enforce in production, keep dev/test opt-in.
+    DRIVER_DOCUMENTS_GATE_ENABLED: bool | None = None
 
     # Minimum seconds between redispatch attempts for the same trip (zero-offer recovery).
     # B1 (alpha 2026-04-25): descido de 10→5 para reduzir o gap se a oferta expirar.
@@ -138,6 +140,11 @@ class Settings(BaseSettings):
         if self.is_production_environment():
             return bool(self.BETA_MODE)
         return True
+
+    def driver_documents_gate_enabled(self) -> bool:
+        if self.DRIVER_DOCUMENTS_GATE_ENABLED is not None:
+            return self.DRIVER_DOCUMENTS_GATE_ENABLED
+        return self.is_production_environment()
 
 
 settings = Settings()  # type: ignore[call-arg]

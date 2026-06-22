@@ -9,12 +9,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from app.auth.security import create_access_token
+from app.core.config import settings
 from app.db.models.driver import Driver
 from app.db.models.partner import Partner
 from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
+from app.services.driver_documents import DOC_KEYS, serialize_state
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -167,3 +169,62 @@ def test_driver_upload_sets_pending_review_status() -> None:
     )
     assert r_get.status_code == 200
     assert r_get.json()["docs"]["carta_tvde"]["status"] == "pending_review"
+
+
+def test_driver_replacement_upload_resets_approved_document_to_review(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "DRIVER_DOCUMENTS_GATE_ENABLED", True)
+    db = SessionLocal()
+    try:
+        pid = uuid.uuid4()
+        db.add(Partner(id=pid, name="Doc Replacement"))
+        u_d = User(
+            role=Role.driver,
+            name="Replacement Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        db.add(u_d)
+        db.flush()
+        approved_docs = serialize_state(
+            {
+                "version": 1,
+                "docs": {
+                    key: {"status": "approved", "file_path": f"{key}/old.pdf"}
+                    for key in DOC_KEYS
+                },
+            }
+        )
+        db.add(
+            Driver(
+                user_id=u_d.id,
+                partner_id=pid,
+                status=DriverStatus.approved,
+                documents=approved_docs,
+                commission_percent=10.0,
+                is_available=True,
+            )
+        )
+        db.commit()
+        driver_id = u_d.id
+        driver_tok = create_access_token(subject=str(u_d.id), role=u_d.role.value)["token"]
+    finally:
+        db.close()
+
+    c = TestClient(app)
+    r_up = c.post(
+        "/driver/documents/carta_tvde/upload",
+        headers={"Authorization": f"Bearer {driver_tok}"},
+        files={"file": ("nova-licenca.pdf", b"%PDF-1.4 replacement", "application/pdf")},
+    )
+
+    assert r_up.status_code == 200
+    assert r_up.json()["docs"]["carta_tvde"]["status"] == "pending_review"
+    assert r_up.json()["docs"]["carta_tvde"]["file_name"] == "nova-licenca.pdf"
+
+    db = SessionLocal()
+    try:
+        driver = db.get(Driver, driver_id)
+        assert driver is not None
+        assert driver.is_available is False
+    finally:
+        db.close()

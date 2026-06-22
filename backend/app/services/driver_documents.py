@@ -14,6 +14,7 @@ from typing import Any
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.models.driver import Driver
 from app.schemas.driver_documents import DriverDocumentEntryPayload
 
@@ -107,6 +108,18 @@ def _ensure_driver_row(db: Session, user_id: uuid.UUID) -> Driver:
 def get_documents_for_driver(db: Session, user_id: uuid.UUID) -> dict[str, Any]:
     driver = _ensure_driver_row(db, user_id)
     return parse_documents_column(driver.documents)
+
+
+def driver_documents_are_ready(raw_documents: str | None) -> bool:
+    state = parse_documents_column(raw_documents)
+    docs = state["docs"]
+    return all((docs.get(key) or {}).get("status") == "approved" for key in DOC_KEYS)
+
+
+def driver_documents_gate_allows(raw_documents: str | None) -> bool:
+    if not settings.driver_documents_gate_enabled():
+        return True
+    return driver_documents_are_ready(raw_documents)
 
 
 def apply_driver_documents_patch(

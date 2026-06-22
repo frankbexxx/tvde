@@ -3,10 +3,13 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import pytest
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.core.config import settings
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
@@ -20,6 +23,7 @@ from app.services.offer_dispatch import (
     expire_stale_offers,
     redispatch_expired_trips,
 )
+from app.services.trips import accept_offer as accept_offer_service
 
 
 def _make_db() -> Session:
@@ -124,6 +128,57 @@ def test_ot_001_offer_expires_after_timeout() -> None:
 
     db.refresh(offer)
     assert offer.status == OfferStatus.expired
+
+    db.close()
+
+
+def test_offer_dispatch_skips_driver_without_approved_documents_when_gate_enabled(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(settings, "DRIVER_DOCUMENTS_GATE_ENABLED", True)
+    db = _make_db()
+    for loc in db.execute(select(DriverLocation)).scalars().all():
+        db.delete(loc)
+    db.commit()
+    _create_driver_with_location(db, 38.7, -9.1)
+    _, trip_id = _create_passenger_and_trip(db)
+    trip = db.execute(select(Trip).where(Trip.id == uuid.UUID(trip_id))).scalar_one()
+
+    offers = create_offers_for_trip(db=db, trip=trip)
+    db.commit()
+
+    assert offers == []
+    assert (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
+        .scalars()
+        .all()
+        == []
+    )
+
+    db.close()
+
+
+def test_accept_offer_rejects_driver_without_approved_documents_when_gate_enabled(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(settings, "DRIVER_DOCUMENTS_GATE_ENABLED", True)
+    db = _make_db()
+    driver_id = _create_driver_with_location(db, 38.7, -9.1)
+    _, trip_id = _create_passenger_and_trip(db)
+    offer = TripOffer(
+        trip_id=uuid.UUID(trip_id),
+        driver_id=uuid.UUID(driver_id),
+        status=OfferStatus.pending,
+        expires_at=datetime.now(timezone.utc) + timedelta(seconds=60),
+    )
+    db.add(offer)
+    db.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        accept_offer_service(db=db, driver_id=driver_id, offer_id=str(offer.id))
+
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.detail == "driver_documents_not_ready"
 
     db.close()
 

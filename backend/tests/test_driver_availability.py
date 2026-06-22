@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
+from app.core.config import settings
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.trip import Trip
@@ -14,13 +15,28 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
+from app.services.driver_documents import DOC_KEYS, serialize_state
 
 
 def _make_db() -> Session:
     return SessionLocal()
 
 
-def _create_driver(db: Session, is_available: bool = True) -> str:
+def _approved_documents() -> str:
+    return serialize_state(
+        {
+            "version": 1,
+            "docs": {
+                key: {"status": "approved", "file_path": f"{key}/approved.pdf"}
+                for key in DOC_KEYS
+            },
+        }
+    )
+
+
+def _create_driver(
+    db: Session, is_available: bool = True, documents: str | None = None
+) -> str:
     user = User(
         role=Role.driver,
         name=f"Driver Avail {uuid.uuid4()}",
@@ -34,7 +50,7 @@ def _create_driver(db: Session, is_available: bool = True) -> str:
         partner_id=DEFAULT_PARTNER_UUID,
         user_id=user.id,
         status=DriverStatus.approved,
-        documents=None,
+        documents=_approved_documents() if documents is None else documents,
         commission_percent=20.0,
         is_available=is_available,
     )
@@ -107,6 +123,29 @@ def test_da_002_driver_goes_offline() -> None:
 
     assert r.status_code == 200
     assert r.json()["is_available"] is False
+
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(driver_id))
+    ).scalar_one()
+    assert driver.is_available is False
+
+    _reset_overrides()
+    db.close()
+
+
+def test_da_006_driver_cannot_go_online_without_approved_documents(monkeypatch) -> None:
+    """Direct API calls cannot bypass the production document gate."""
+    monkeypatch.setattr(settings, "DRIVER_DOCUMENTS_GATE_ENABLED", True)
+    db = _make_db()
+    driver_id = _create_driver(db, is_available=True, documents="")
+    user_ctx = UserContext(user_id=driver_id, role=Role.driver)
+    _override_dependencies(db, user_ctx)
+
+    client = TestClient(app)
+    r = client.post("/driver/status/online")
+
+    assert r.status_code == 409
+    assert r.json()["detail"] == "driver_documents_not_ready"
 
     driver = db.execute(
         select(Driver).where(Driver.user_id == uuid.UUID(driver_id))

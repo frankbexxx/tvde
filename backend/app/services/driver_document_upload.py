@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.db.models.driver import Driver
 from app.services.driver_documents import (
     _utc_iso_now,
+    driver_documents_gate_allows,
     get_documents_for_driver,
     serialize_state,
 )
@@ -58,13 +59,13 @@ def save_driver_document_file(
     entry = dict(docs.get(doc_key) or {})
     entry["file_path"] = str(rel).replace("\\", "/")
     entry["file_name"] = upload.filename or dest.name
-    prev_status = entry.get("status")
-    if prev_status not in ("approved", "pending_review", "rejected", "expired"):
-        entry["status"] = "pending_review"
-        entry["submitted_at"] = _utc_iso_now()
+    entry["status"] = "pending_review"
+    entry["submitted_at"] = _utc_iso_now()
     docs[doc_key] = entry
     state["docs"] = docs
     driver.documents = serialize_state(state)
+    if not driver_documents_gate_allows(driver.documents):
+        driver.is_available = False
     db.commit()
     db.refresh(driver)
     return state

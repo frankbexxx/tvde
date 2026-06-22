@@ -15,6 +15,7 @@ from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.models.enums import DriverStatus, OfferStatus, TripStatus
+from app.services.driver_documents import driver_documents_gate_allows
 from app.utils.geo import haversine_km
 from app.utils.logging import log_debug_event, log_event
 
@@ -89,6 +90,11 @@ def create_offers_for_trip(
             .where(Driver.is_available)
         ).all()
     )
+    drivers_with_loc = [
+        (driver, loc)
+        for driver, loc in drivers_with_loc
+        if driver_documents_gate_allows(driver.documents)
+    ]
 
     # A006: filter by location freshness
     fresh: list[tuple[Driver, DriverLocation]] = []
@@ -316,6 +322,11 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         if excluded_ids:
             q = q.where(Driver.user_id.notin_(list(excluded_ids)))
         drivers_with_loc = list(db.execute(q).all())
+        drivers_with_loc = [
+            (driver, loc)
+            for driver, loc in drivers_with_loc
+            if driver_documents_gate_allows(driver.documents)
+        ]
         candidates: list[tuple[Driver, float]] = []
         for driver, loc in drivers_with_loc:
             loc_ts = loc.timestamp

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import UserContext, get_db, require_role
 from app.db.models.driver import Driver
 from app.models.enums import Role
+from app.services.driver_documents import driver_documents_gate_allows
 from app.schemas.driving_compliance import DrivingHoursComplianceResponse
 from app.services.driving_compliance import (
     driver_compliance_snapshot,
@@ -63,6 +64,14 @@ async def go_online(
     if driver_has_active_assigned_trip(db=db, driver_user_id=str(user.user_id)):
         db.refresh(driver)
         return {"status": "online", "is_available": driver.is_available}
+    if not driver_documents_gate_allows(driver.documents):
+        driver.is_available = False
+        db.commit()
+        db.refresh(driver)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="driver_documents_not_ready",
+        )
     snap = driver_compliance_snapshot(db, user.user_id)
     if snap["enabled"] and snap["blocked_accept"]:
         driver.is_available = False

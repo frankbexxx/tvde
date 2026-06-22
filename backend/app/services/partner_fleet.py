@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models.driver import Driver
 from app.models.enums import DriverStatus
+from app.services.driver_documents import driver_documents_gate_allows
 from app.services.partner_queries import get_driver_for_partner
 
 
@@ -55,6 +56,13 @@ def set_partner_driver_availability(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="driver_not_approved",
+        )
+    if online and not driver_documents_gate_allows(d.documents):
+        d.is_available = False
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="driver_documents_not_ready",
         )
     d.is_available = online
     db.commit()
