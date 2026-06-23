@@ -56,6 +56,7 @@
     "pickupPhase": "pickup",
     "destinationPhase": "destination",
     "openingNav": "Opening {{app}} ({{phase}})",
+    "navPopupBlocked": "Could not open navigation automatically. Use \"Open navigation\" on the trip.",
     "openNav": "Open navigation",
     "processingBtn": "Processing…",
     "cancel": "Cancel",

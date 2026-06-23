@@ -124,6 +124,70 @@ def test_partner_can_approve_document_after_driver_upload() -> None:
     assert r.json()["documents"]["carta_tvde"]["status"] == "approved"
 
 
+def test_driver_reupload_resets_approved_document_to_pending_review() -> None:
+    db = SessionLocal()
+    try:
+        pid = uuid.uuid4()
+        db.add(Partner(id=pid, name="Doc Reupload"))
+        u_d = User(
+            role=Role.driver,
+            name="Reupload Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        u_p = User(
+            role=Role.partner,
+            name="Reupload Partner",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+            partner_org_id=pid,
+        )
+        db.add_all([u_d, u_p])
+        db.flush()
+        db.add(
+            Driver(
+                user_id=u_d.id,
+                partner_id=pid,
+                status=DriverStatus.approved,
+                commission_percent=10.0,
+                is_available=False,
+            )
+        )
+        db.commit()
+        driver_id = str(u_d.id)
+        driver_tok = create_access_token(subject=str(u_d.id), role=u_d.role.value)["token"]
+        partner_tok = create_access_token(subject=str(u_p.id), role=u_p.role.value)["token"]
+    finally:
+        db.close()
+
+    c = TestClient(app)
+    r_up = c.post(
+        "/driver/documents/carta_tvde/upload",
+        headers={"Authorization": f"Bearer {driver_tok}"},
+        files={"file": ("licenca.pdf", b"%PDF-1.4 minimal", "application/pdf")},
+    )
+    assert r_up.status_code == 200
+
+    r_approve = c.patch(
+        f"/partner/drivers/{driver_id}/documents",
+        json={"docs": {"carta_tvde": {"status": "approved"}}},
+        headers={"Authorization": f"Bearer {partner_tok}"},
+    )
+    assert r_approve.status_code == 200
+    assert r_approve.json()["documents"]["carta_tvde"]["status"] == "approved"
+
+    r_replace = c.post(
+        "/driver/documents/carta_tvde/upload",
+        headers={"Authorization": f"Bearer {driver_tok}"},
+        files={"file": ("substituida.pdf", b"%PDF-1.4 replacement", "application/pdf")},
+    )
+    assert r_replace.status_code == 200
+    doc = r_replace.json()["docs"]["carta_tvde"]
+    assert doc["status"] == "pending_review"
+    assert doc["file_name"] == "substituida.pdf"
+    assert doc.get("submitted_at")
+
+
 def test_driver_upload_sets_pending_review_status() -> None:
     db = SessionLocal()
     try:

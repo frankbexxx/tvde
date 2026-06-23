@@ -118,6 +118,7 @@ import {
 import {
   driverNavAppLabel,
   openDriverExternalNav,
+  reserveDriverExternalNavWindow,
   warmDriverNavSessionIfNeeded,
 } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
@@ -963,6 +964,11 @@ export function DriverDashboard() {
   ) => {
     if (actionLoading != null) return
     // Não definir activeTripId antes do POST: o poll GET pode 404 até o accept persistir driver_id.
+    const shouldAutoOpenPickupNav =
+      actionName === 'ACEITAR' && availableForFallback != null && getDriverNavAutoPickupOnAccept()
+    const reservedPickupNavWindow = shouldAutoOpenPickupNav
+      ? reserveDriverExternalNavWindow()
+      : null
     setError(null)
     setActionLoading(tripId)
     setStatus(`A executar: ${actionName}...`)
@@ -994,18 +1000,23 @@ export function DriverDashboard() {
             lng: availableForFallback.destination_lng,
           },
         }
-        if (getDriverNavAutoPickupOnAccept()) {
-          openDriverExternalNav(
+        if (shouldAutoOpenPickupNav) {
+          const opened = openDriverExternalNav(
             availableForFallback.origin_lat,
-            availableForFallback.origin_lng
+            availableForFallback.origin_lng,
+            reservedPickupNavWindow
           )
-          sonnerToast.message(
-            t('actions.openingNav', {
-              app: driverNavAppLabel(),
-              phase: t('actions.pickupPhase'),
-            }),
-            { duration: 3000 }
-          )
+          if (opened) {
+            sonnerToast.message(
+              t('actions.openingNav', {
+                app: driverNavAppLabel(),
+                phase: t('actions.pickupPhase'),
+              }),
+              { duration: 3000 }
+            )
+          } else {
+            sonnerToast.error(t('actions.navPopupBlocked'), { duration: 5000 })
+          }
         }
       }
       // Fase 1 mock: MOCK_DRIVER_START → pickup (só DEV + mock, após ACEITAR).
@@ -1024,6 +1035,13 @@ export function DriverDashboard() {
       refetchHistory()
       refetchAvailable()
     } catch (err: unknown) {
+      if (reservedPickupNavWindow && !reservedPickupNavWindow.closed) {
+        try {
+          reservedPickupNavWindow.close()
+        } catch {
+          /* ignore */
+        }
+      }
       const e = err as { status?: number; detail?: string }
       if (e?.status === 409) {
         if (e?.detail === 'driving_hours_blocked') {
