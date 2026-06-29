@@ -198,6 +198,7 @@ import {
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
+import { reconcileDriverOfflineState } from './driverAvailabilityReconcile'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 
@@ -909,11 +910,7 @@ export function DriverDashboard() {
       .then(({ is_available }) => {
         if (cancelled) return
         const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
-        if (is_available && canGoOnline) {
-          setOffline(false)
-        } else {
-          setOffline(true)
-        }
+        setOffline((prev) => reconcileDriverOfflineState(prev, is_available, canGoOnline))
       })
       .catch(() => {
         /* keep local state if status fetch fails */
