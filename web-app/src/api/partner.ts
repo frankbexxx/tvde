@@ -268,16 +268,16 @@ export type PartnerTripsExportFilters = {
 
 export function partnerTripsExportUrl(filters?: PartnerTripsExportFilters): string {
   const base = API_BASE.replace(/\/$/, '')
-  const url = new URL(`${base}/partner/trips/export`)
-  if (!filters) return url.toString()
+  const params = new URLSearchParams()
   if (filters.tripFilter && filters.tripFilter !== 'all') {
-    url.searchParams.set('status', filters.tripFilter)
+    params.set('status', filters.tripFilter)
   }
-  if (filters.driverId) url.searchParams.set('driver_id', filters.driverId)
-  if (filters.dateFrom) url.searchParams.set('from', filters.dateFrom)
-  if (filters.dateTo) url.searchParams.set('to', filters.dateTo)
-  if (filters.search?.trim()) url.searchParams.set('q', filters.search.trim())
-  return url.toString()
+  if (filters.driverId) params.set('driver_id', filters.driverId)
+  if (filters.dateFrom) params.set('from', filters.dateFrom)
+  if (filters.dateTo) params.set('to', filters.dateTo)
+  if (filters.search?.trim()) params.set('q', filters.search.trim())
+  const qs = params.toString()
+  return `${base}/partner/trips/export${qs ? `?${qs}` : ''}`
 }
 
 /** SP-C: cabeçalho CSV `GET /partner/trips/export` (UTF-8). Não reordenar colunas; só acrescentar no fim em versões futuras. */
