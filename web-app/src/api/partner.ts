@@ -269,13 +269,13 @@ export type PartnerTripsExportFilters = {
 export function partnerTripsExportUrl(filters?: PartnerTripsExportFilters): string {
   const base = API_BASE.replace(/\/$/, '')
   const params = new URLSearchParams()
-  if (filters.tripFilter && filters.tripFilter !== 'all') {
+  if (filters?.tripFilter && filters.tripFilter !== 'all') {
     params.set('status', filters.tripFilter)
   }
-  if (filters.driverId) params.set('driver_id', filters.driverId)
-  if (filters.dateFrom) params.set('from', filters.dateFrom)
-  if (filters.dateTo) params.set('to', filters.dateTo)
-  if (filters.search?.trim()) params.set('q', filters.search.trim())
+  if (filters?.driverId) params.set('driver_id', filters.driverId)
+  if (filters?.dateFrom) params.set('from', filters.dateFrom)
+  if (filters?.dateTo) params.set('to', filters.dateTo)
+  if (filters?.search?.trim()) params.set('q', filters.search.trim())
   const qs = params.toString()
   return `${base}/partner/trips/export${qs ? `?${qs}` : ''}`
 }
