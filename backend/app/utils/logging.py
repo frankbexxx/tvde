@@ -224,51 +224,50 @@ def get_trip_summary(trip_id: str) -> dict:
 
 
 def _trip_banner_title_new() -> str:
-    """ASCII in ENV=test so pytest -s works on Windows (cp1252); emoji kept for dev."""
-    try:
-        from app.core.config import settings
-    except Exception:
-        return "🚗 NEW TRIP STARTED"
-    if getattr(settings, "ENV", "") == "test":
-        return "NEW TRIP STARTED"
-    return "🚗 NEW TRIP STARTED"
+    """ASCII-only: Windows cp1252 consoles cannot encode trip banner emoji."""
+    return "NEW TRIP STARTED"
 
 
 def _trip_banner_title_done() -> str:
+    return "TRIP COMPLETED"
+
+
+def _safe_console_print(*parts: str) -> None:
+    """Print to stdout; never raise (logging must not break API handlers)."""
+    line = "".join(parts)
     try:
-        from app.core.config import settings
-    except Exception:
-        return "✅ TRIP COMPLETED"
-    if getattr(settings, "ENV", "") == "test":
-        return "TRIP COMPLETED"
-    return "✅ TRIP COMPLETED"
+        print(line)
+    except UnicodeEncodeError:
+        logger.info(line.encode("ascii", errors="replace").decode("ascii"))
+    except OSError as exc:
+        logger.warning("console print failed: %s", exc)
 
 
 def _print_trip_header(trip_id: str) -> None:
     """A008: Print NEW TRIP banner."""
     tid = _serialize_value(trip_id)
-    print("\n" + "=" * 30)
-    print(_trip_banner_title_new())
-    print(f"trip_id={tid}")
-    print("=" * 30)
+    _safe_console_print("\n", "=" * 30, "\n")
+    _safe_console_print(_trip_banner_title_new(), "\n")
+    _safe_console_print(f"trip_id={tid}", "\n")
+    _safe_console_print("=" * 30)
 
 
 def _print_trip_completed(trip_id: str) -> None:
     """A008: Print TRIP COMPLETED banner and summary."""
     tid = _serialize_value(trip_id)
     summary = _compute_trip_summary(tid)
-    print("\n" + "=" * 30)
-    print(_trip_banner_title_done())
-    print(f"trip_id={tid}")
-    print("=" * 30)
-    print("----- TRIP SUMMARY -----")
-    print(f"trip_id={tid}")
-    print(f"time_to_assign: {summary.get('time_to_assign', '?')}s")
-    print(f"time_to_accept: {summary.get('time_to_accept', '?')}s")
-    print(f"time_to_start: {summary.get('time_to_start', '?')}s")
-    print(f"total_duration: {summary.get('total_duration', '?')}s")
-    print(f"offers_sent: {summary.get('offers_sent', 0)}")
-    print("------------------------")
+    _safe_console_print("\n", "=" * 30, "\n")
+    _safe_console_print(_trip_banner_title_done(), "\n")
+    _safe_console_print(f"trip_id={tid}", "\n")
+    _safe_console_print("=" * 30, "\n")
+    _safe_console_print("----- TRIP SUMMARY -----\n")
+    _safe_console_print(f"trip_id={tid}", "\n")
+    _safe_console_print(f"time_to_assign: {summary.get('time_to_assign', '?')}s", "\n")
+    _safe_console_print(f"time_to_accept: {summary.get('time_to_accept', '?')}s", "\n")
+    _safe_console_print(f"time_to_start: {summary.get('time_to_start', '?')}s", "\n")
+    _safe_console_print(f"total_duration: {summary.get('total_duration', '?')}s", "\n")
+    _safe_console_print(f"offers_sent: {summary.get('offers_sent', 0)}", "\n")
+    _safe_console_print("------------------------")
 
 
 def log_event(event_name: str, **fields) -> None:

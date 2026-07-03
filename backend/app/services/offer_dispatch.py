@@ -15,6 +15,7 @@ from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.models.enums import DriverStatus, OfferStatus, TripStatus
+from app.services.driver_preferences import decode_driver_categories_csv
 from app.utils.geo import haversine_km
 from app.utils.logging import log_debug_event, log_event
 
@@ -139,7 +140,15 @@ def create_offers_for_trip(
             candidates.append((driver, dist_km))
 
     candidates.sort(key=lambda x: x[1])
-    selected = candidates[:top_n]
+    trip_category = (trip.vehicle_category or "x").strip().lower()
+    category_matched: list[tuple[Driver, float]] = []
+    for driver, dist_km in candidates:
+        driver_categories = decode_driver_categories_csv(
+            getattr(driver, "vehicle_categories", None)
+        )
+        if trip_category in driver_categories:
+            category_matched.append((driver, dist_km))
+    selected = category_matched[:top_n]
 
     if not selected:
         logger.warning(

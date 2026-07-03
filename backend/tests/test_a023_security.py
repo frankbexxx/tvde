@@ -17,6 +17,7 @@ import pytest
 from fastapi.testclient import TestClient
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.auth.security import create_access_token, decode_access_token
 from app.core.config import settings
@@ -221,6 +222,91 @@ def test_debug_routes_blocked_production_without_beta(
     r = client.get(f"/debug/trip/{rid}/logs")
     assert r.status_code == 404
     assert r.json().get("detail") == "debug_not_available"
+
+
+def test_debug_trip_logs_requires_auth(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENV", "dev", raising=False)
+    rid = uuid.uuid4()
+    r = client.get(f"/debug/trip/{rid}/logs")
+    assert r.status_code == 401
+    assert r.json()["detail"] == "not_authenticated"
+
+
+def test_debug_trip_logs_forbidden_for_non_owner(
+    client: TestClient, rbac_tokens: dict[str, str], monkeypatch: pytest.MonkeyPatch, db: Session
+) -> None:
+    from app.db.models.trip import Trip
+    from app.models.enums import TripStatus
+
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENV", "dev", raising=False)
+
+    other_passenger = User(
+        role=Role.passenger,
+        name="Owner",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+    )
+    db.add(other_passenger)
+    db.flush()
+    trip = Trip(
+        passenger_id=other_passenger.id,
+        status=TripStatus.requested,
+        origin_lat=38.7,
+        origin_lng=-9.1,
+        destination_lat=38.8,
+        destination_lng=-9.2,
+        estimated_price=1.0,
+    )
+    db.add(trip)
+    db.commit()
+
+    r = client.get(
+        f"/debug/trip/{trip.id}/logs",
+        headers={"Authorization": f"Bearer {rbac_tokens['passenger']}"},
+    )
+    assert r.status_code == 403
+    assert r.json()["detail"] == "forbidden_trip_access"
+
+
+def test_debug_trip_logs_ok_for_admin(
+    client: TestClient, rbac_tokens: dict[str, str], monkeypatch: pytest.MonkeyPatch, db: Session
+) -> None:
+    from app.db.models.trip import Trip
+    from app.models.enums import TripStatus
+
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENV", "dev", raising=False)
+
+    owner = User(
+        role=Role.passenger,
+        name="Owner2",
+        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        status=UserStatus.active,
+    )
+    db.add(owner)
+    db.flush()
+    trip = Trip(
+        passenger_id=owner.id,
+        status=TripStatus.requested,
+        origin_lat=38.7,
+        origin_lng=-9.1,
+        destination_lat=38.8,
+        destination_lng=-9.2,
+        estimated_price=1.0,
+    )
+    db.add(trip)
+    db.commit()
+
+    r = client.get(
+        f"/debug/trip/{trip.id}/logs",
+        headers={"Authorization": f"Bearer {rbac_tokens['admin']}"},
+    )
+    assert r.status_code == 200
+    assert r.json()["trip_id"] == str(trip.id)
 
 
 def test_debug_driver_locations_blocked_in_production(
