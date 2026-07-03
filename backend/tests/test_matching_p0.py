@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,7 +18,8 @@ from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
 from app.services.driver_location import upsert_driver_location
-from app.services.offer_dispatch import create_offers_for_trip
+from app.services.offer_dispatch import create_offers_for_trip, redispatch_expired_trips
+from app.services.trips import accept_offer
 
 
 def _create_driver(
@@ -109,6 +111,61 @@ def test_dispatch_creates_offer_matching_category(db: Session) -> None:
 
     assert len(offers) == 1
     assert str(offers[0].driver_id) == driver_id
+
+
+def test_redispatch_skips_driver_wrong_vehicle_category(db: Session) -> None:
+    for loc in db.execute(select(DriverLocation)).scalars().all():
+        db.delete(loc)
+    db.commit()
+    matching_driver_id = _create_driver(
+        db, lat=38.701, lng=-9.101, vehicle_categories="comfort"
+    )
+    wrong_driver_id = _create_driver(db, lat=38.702, lng=-9.102, vehicle_categories="x")
+    trip = _create_requested_trip(db, vehicle_category="comfort")
+
+    offers = create_offers_for_trip(db=db, trip=trip)
+    assert len(offers) == 1
+    assert str(offers[0].driver_id) == matching_driver_id
+    offers[0].expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+    db.commit()
+
+    new_offers = redispatch_expired_trips(db)
+
+    new_offers_for_trip = [
+        offer for offer in new_offers if str(offer.trip_id) == str(trip.id)
+    ]
+    assert new_offers_for_trip == []
+    wrong_driver_offers = (
+        db.execute(
+            select(TripOffer).where(
+                TripOffer.trip_id == trip.id,
+                TripOffer.driver_id == uuid.UUID(wrong_driver_id),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert wrong_driver_offers == []
+
+
+def test_accept_offer_rejects_wrong_vehicle_category(db: Session) -> None:
+    wrong_driver_id = _create_driver(db, lat=38.702, lng=-9.102, vehicle_categories="x")
+    trip = _create_requested_trip(db, vehicle_category="comfort")
+    offer = TripOffer(
+        trip_id=trip.id,
+        driver_id=uuid.UUID(wrong_driver_id),
+        status=OfferStatus.pending,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=1),
+    )
+    db.add(offer)
+    db.commit()
+    db.refresh(offer)
+
+    with pytest.raises(HTTPException) as exc_info:
+        accept_offer(db=db, driver_id=wrong_driver_id, offer_id=str(offer.id))
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail == "forbidden_vehicle_category"
 
 
 def test_beta_fallback_runs_when_only_expired_offers(
