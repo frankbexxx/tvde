@@ -24,6 +24,14 @@ logger = logging.getLogger(__name__)
 LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 
 
+def _driver_matches_trip_category(driver: Driver, trip: Trip) -> bool:
+    trip_category = (trip.vehicle_category or "x").strip().lower()
+    driver_categories = decode_driver_categories_csv(
+        getattr(driver, "vehicle_categories", None)
+    )
+    return trip_category in driver_categories
+
+
 def _offer_ttl_seconds() -> int:
     """TTL efectivo das ofertas novas. Com E2E_KEEP_OFFERS_ALIVE, garante mínimo para browser/CI."""
     base = int(getattr(settings, "OFFER_TIMEOUT_SECONDS", 60))
@@ -140,13 +148,9 @@ def create_offers_for_trip(
             candidates.append((driver, dist_km))
 
     candidates.sort(key=lambda x: x[1])
-    trip_category = (trip.vehicle_category or "x").strip().lower()
     category_matched: list[tuple[Driver, float]] = []
     for driver, dist_km in candidates:
-        driver_categories = decode_driver_categories_csv(
-            getattr(driver, "vehicle_categories", None)
-        )
-        if trip_category in driver_categories:
+        if _driver_matches_trip_category(driver, trip):
             category_matched.append((driver, dist_km))
     selected = category_matched[:top_n]
 
@@ -338,7 +342,11 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             if dist_km <= radius_km:
                 candidates.append((driver, dist_km))
         candidates.sort(key=lambda x: x[1])
-        selected_redispatch = candidates[:top_n]
+        category_matched: list[tuple[Driver, float]] = []
+        for driver, dist_km in candidates:
+            if _driver_matches_trip_category(driver, trip):
+                category_matched.append((driver, dist_km))
+        selected_redispatch = category_matched[:top_n]
         for driver, dist_km in selected_redispatch:
             if _has_active_pending_offer(
                 db, trip_id=trip.id, driver_id=driver.user_id, now=now
