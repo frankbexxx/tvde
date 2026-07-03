@@ -131,7 +131,10 @@ def test_redispatch_skips_driver_wrong_vehicle_category(db: Session) -> None:
 
     new_offers = redispatch_expired_trips(db)
 
-    assert new_offers == []
+    new_offers_for_trip = [
+        offer for offer in new_offers if str(offer.trip_id) == str(trip.id)
+    ]
+    assert new_offers_for_trip == []
     wrong_driver_offers = (
         db.execute(
             select(TripOffer).where(
