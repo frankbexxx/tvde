@@ -148,10 +148,10 @@ class Settings(BaseSettings):
         return not self.is_production_environment()
 
     def is_forbidden_default_password(self, password: str) -> bool:
-        """Block the well-known default in production even when login is otherwise allowed."""
+        """Block DEFAULT_PASSWORD in production even when login is otherwise allowed."""
         if not self.is_production_environment():
             return False
-        return password == "123456" or password == self.DEFAULT_PASSWORD
+        return password == self.DEFAULT_PASSWORD
 
 
 settings = Settings()  # type: ignore[call-arg]
