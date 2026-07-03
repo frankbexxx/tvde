@@ -270,6 +270,16 @@ async def login(
                 detail="invalid_credentials",
             )
     else:
+        if not settings.allow_default_password_login():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="default_password_disabled",
+            )
+        if settings.is_forbidden_default_password(payload.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="weak_default_password_forbidden",
+            )
         if payload.password != getattr(settings, "DEFAULT_PASSWORD", "123456"):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

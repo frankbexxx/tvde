@@ -47,6 +47,33 @@ def _require_dev_or_beta() -> None:
         raise HTTPException(status_code=404, detail="debug_not_available")
 
 
+def _debug_env_guard() -> None:
+    """Dependency: ambiente debug antes de exigir JWT."""
+    _require_dev_or_beta()
+
+
+def _assert_debug_trip_access(trip: Trip, user: UserContext) -> None:
+    """Passageiro dono, motorista atribuído, ou staff admin/super_admin."""
+    if user.role in (Role.admin, Role.super_admin):
+        return
+    if str(trip.passenger_id) == str(user.user_id):
+        return
+    if trip.driver_id is not None and str(trip.driver_id) == str(user.user_id):
+        return
+    raise HTTPException(status_code=403, detail="forbidden_trip_access")
+
+
+def _load_trip_or_404(db: Session, trip_id: str) -> Trip:
+    try:
+        tid = uuid.UUID(trip_id.strip())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="invalid_trip_id") from exc
+    trip = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
+    if not trip:
+        raise HTTPException(status_code=404, detail="not_found")
+    return trip
+
+
 router = APIRouter(prefix="/debug", tags=["debug"])
 
 
@@ -171,23 +198,35 @@ async def debug_trip_matching(
 
 
 @router.get("/trip/{trip_id}/logs")
-async def debug_trip_logs(trip_id: str) -> dict:
+async def debug_trip_logs(
+    trip_id: str,
+    _: None = Depends(_debug_env_guard),
+    db: Session = Depends(get_db),
+    user: UserContext = Depends(get_current_user),
+) -> dict:
     """
     Return recent in-memory log lines for a trip (A007 buffer).
     Dev only. Max 50 events per trip.
     """
-    _require_dev_or_beta()
+    trip = _load_trip_or_404(db, trip_id)
+    _assert_debug_trip_access(trip, user)
     logs_list = get_recent_trip_logs(trip_id.strip())
     return {"trip_id": trip_id, "logs": logs_list, "count": len(logs_list)}
 
 
 @router.get("/trip/{trip_id}/summary")
-async def debug_trip_summary(trip_id: str) -> dict:
+async def debug_trip_summary(
+    trip_id: str,
+    _: None = Depends(_debug_env_guard),
+    db: Session = Depends(get_db),
+    user: UserContext = Depends(get_current_user),
+) -> dict:
     """
     Return trip summary: time_to_assign, time_to_accept, time_to_start, events_count.
     A008. Dev only.
     """
-    _require_dev_or_beta()
+    trip = _load_trip_or_404(db, trip_id)
+    _assert_debug_trip_access(trip, user)
     return get_trip_summary(trip_id.strip())
 
 

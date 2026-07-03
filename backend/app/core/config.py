@@ -44,7 +44,9 @@ class Settings(BaseSettings):
         None  # e.g. +351924075365 — auto super_admin backoffice, no approval
     )
     MAX_BETA_USERS: int = 30
-    DEFAULT_PASSWORD: str = "123456"  # Pre-filled for BETA testers
+    DEFAULT_PASSWORD: str = "123456"  # Pre-filled for BETA testers (dev only)
+    # When False in production, accounts without password_hash cannot use DEFAULT_PASSWORD.
+    ALLOW_DEFAULT_PASSWORD_LOGIN: bool | None = None
 
     # Future: confirm PaymentIntent at accept (frontend 3DS). When True, accept_trip
     # returns payment_intent_client_secret for frontend confirmation. Default False.
@@ -138,6 +140,18 @@ class Settings(BaseSettings):
         if self.is_production_environment():
             return bool(self.BETA_MODE)
         return True
+
+    def allow_default_password_login(self) -> bool:
+        """Dev: True by default. Production: False unless ALLOW_DEFAULT_PASSWORD_LOGIN=true."""
+        if self.ALLOW_DEFAULT_PASSWORD_LOGIN is not None:
+            return bool(self.ALLOW_DEFAULT_PASSWORD_LOGIN)
+        return not self.is_production_environment()
+
+    def is_forbidden_default_password(self, password: str) -> bool:
+        """Block the well-known default in production even when login is otherwise allowed."""
+        if not self.is_production_environment():
+            return False
+        return password == "123456" or password == self.DEFAULT_PASSWORD
 
 
 settings = Settings()  # type: ignore[call-arg]
