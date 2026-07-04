@@ -211,6 +211,36 @@ async def verify_otp(
     return _token_response(user, token_data)
 
 
+def _verify_login_password(user: User, password: str) -> None:
+    if user.is_test_account:
+        if not _is_beta():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="test_account_disabled",
+            )
+        if not user.password_hash:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="test_account_password_not_set",
+            )
+        if not verify_password(password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="invalid_credentials",
+            )
+        return
+    if not user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="password_not_set",
+        )
+    if not verify_password(password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_credentials",
+        )
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(
     payload: LoginRequest,
@@ -263,28 +293,7 @@ async def login(
         db.commit()
         db.refresh(user)
 
-    if user.password_hash:
-        if not verify_password(payload.password, user.password_hash):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="invalid_credentials",
-            )
-    else:
-        if not settings.allow_default_password_login():
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="default_password_disabled",
-            )
-        if settings.is_forbidden_default_password(payload.password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="weak_default_password_forbidden",
-            )
-        if payload.password != getattr(settings, "DEFAULT_PASSWORD", "123456"):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="invalid_credentials",
-            )
+    _verify_login_password(user, payload.password)
 
     if user.status == UserStatus.pending:
         raise HTTPException(

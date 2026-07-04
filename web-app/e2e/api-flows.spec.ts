@@ -216,7 +216,7 @@ test.describe('API flows (sem browser)', () => {
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
         phone: '+351900000000',
-        password: '123456',
+        password: 'demo1234',
       }),
     })
     expect(login.ok(), await login.text()).toBeTruthy()

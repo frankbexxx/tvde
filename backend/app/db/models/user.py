@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from app.db.models.partner import Partner
     from app.db.models.trip import Trip
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, String, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -83,7 +83,14 @@ class User(Base):
     password_hash: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True,
-        comment="Optional bcrypt hash; if null, BETA login uses DEFAULT_PASSWORD.",
+        comment="Optional bcrypt hash; required for password login on real accounts.",
+    )
+    is_test_account: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+        comment="Demo/dev account; password login only when BETA_MODE is enabled.",
     )
     email: Mapped[Optional[str]] = mapped_column(
         String(255),

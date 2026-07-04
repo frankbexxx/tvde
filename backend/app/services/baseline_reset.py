@@ -18,12 +18,13 @@ from app.core.partner_constants import (
     BASELINE_PARTNER_FLEET_UUID,
     DEFAULT_PARTNER_UUID,
 )
+from app.auth.passwords import hash_password
+from app.core.config import settings
 from app.db.models.driver import Driver, DriverLocation
 from app.db.models.partner import Partner
 from app.db.models.user import User
 from app.models.enums import DriverStatus, Role, UserStatus
 
-# (phone E.164, role, display name) — canónico do projecto; vê ``docs/testing/DEV_BASELINE_ROSTER.md``.
 BASELINE_USERS: Sequence[tuple[str, Role, str]] = (
     ("+351911111111", Role.driver, "test_driver"),
     ("+351912345678", Role.passenger, "test_passenger"),
@@ -66,6 +67,15 @@ def _default_lisbon_coords() -> tuple[float, float]:
     return 38.720000, -9.140000
 
 
+def seed_user_auth_fields(phone: str) -> dict[str, object]:
+    """Test accounts get bcrypt hash from TEST_ACCOUNT_PASSWORD; owner phone stays real."""
+    is_test = not settings.is_owner_phone(phone)
+    fields: dict[str, object] = {"is_test_account": is_test}
+    if is_test:
+        fields["password_hash"] = hash_password(settings.resolved_test_account_password())
+    return fields
+
+
 def seed_baseline_users(db: Session) -> dict[str, Any]:
     """
     After ``wipe_all_application_data``, insert Default fleet + baseline partner org and users.
@@ -92,6 +102,7 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
             phone=phone,
             status=UserStatus.active,
             partner_org_id=partner_org,
+            **seed_user_auth_fields(phone),
         )
         db.add(user)
         db.flush()

@@ -64,6 +64,7 @@ jobs:
           OTP_SECRET: ci-otp-secret-key-at-least-32-characters-long
           STRIPE_MOCK: "true"
           ENV: dev
+          TEST_ACCOUNT_PASSWORD: demo1234
         run: alembic upgrade head
 
       - name: Run pytest
@@ -73,4 +74,6 @@ jobs:
           OTP_SECRET: ci-otp-secret-key-at-least-32-characters-long
           STRIPE_MOCK: "true"
           ENV: dev
+          TEST_ACCOUNT_PASSWORD: demo1234
+          BETA_MODE: "true"
         run: pytest tests/ -v

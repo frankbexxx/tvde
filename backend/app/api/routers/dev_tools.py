@@ -22,7 +22,7 @@ from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.schemas.trip import TripCreateRequest
-from app.services.baseline_reset import run_full_baseline_reset
+from app.services.baseline_reset import run_full_baseline_reset, seed_user_auth_fields
 from app.services.trips import (
     accept_trip as accept_trip_service,
     assign_trip as assign_trip_service,
@@ -106,15 +106,21 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
 
     def get_or_create_user(phone: str, role: Role) -> User:
         user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+        auth_fields = seed_user_auth_fields(phone)
         if not user:
             user = User(
                 role=role,
                 name=phone,
                 phone=phone,
                 status=UserStatus.active,
+                **auth_fields,
             )
             db.add(user)
             db.flush()
+        else:
+            user.is_test_account = bool(auth_fields["is_test_account"])
+            if auth_fields.get("password_hash"):
+                user.password_hash = str(auth_fields["password_hash"])
         return user
 
     passenger = get_or_create_user("+351912345678", Role.passenger)
@@ -140,12 +146,17 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
             phone="+351955555502",
             status=UserStatus.active,
             partner_org_id=BASELINE_PARTNER_FLEET_UUID,
+            **seed_user_auth_fields("+351955555502"),
         )
         db.add(partner_user)
     else:
         partner_user.role = Role.partner
         partner_user.status = UserStatus.active
         partner_user.partner_org_id = BASELINE_PARTNER_FLEET_UUID
+        auth_fields = seed_user_auth_fields("+351955555502")
+        partner_user.is_test_account = bool(auth_fields["is_test_account"])
+        if auth_fields.get("password_hash"):
+            partner_user.password_hash = str(auth_fields["password_hash"])
         if partner_user.name == partner_user.phone or not (partner_user.name or "").strip():
             partner_user.name = "test_partner"
 
@@ -192,15 +203,21 @@ async def dev_seed_simulator(
 
     def get_or_create_user(phone: str, role: Role) -> User:
         user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+        auth_fields = seed_user_auth_fields(phone)
         if not user:
             user = User(
                 role=role,
                 name=phone,
                 phone=phone,
                 status=UserStatus.active,
+                **auth_fields,
             )
             db.add(user)
             db.flush()
+        else:
+            user.is_test_account = bool(auth_fields["is_test_account"])
+            if auth_fields.get("password_hash"):
+                user.password_hash = str(auth_fields["password_hash"])
         return user
 
     def make_token(user: User) -> str:
