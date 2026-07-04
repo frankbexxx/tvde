@@ -32,6 +32,7 @@ def run_backfill(
     from app.core.config import settings
     from app.db.models.user import User
     from app.db.session import SessionLocal
+    from app.models.enums import Role
     from app.services.baseline_reset import BASELINE_USERS
 
     admin_phone = settings.ADMIN_PHONE
@@ -41,7 +42,11 @@ def run_backfill(
     test_password = settings.resolved_test_account_password()
     test_hash = hash_password(test_password)
     allowed_test_phones = _allowed_test_phones(
-        baseline_phones=(phone for phone, _, _ in BASELINE_USERS),
+        baseline_phones=(
+            phone
+            for phone, role, _ in BASELINE_USERS
+            if role not in {Role.admin, Role.super_admin}
+        ),
         real_phone=real_phone,
         extra_test_phones=test_phones,
     )

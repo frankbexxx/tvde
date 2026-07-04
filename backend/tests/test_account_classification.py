@@ -263,3 +263,46 @@ def test_backfill_allows_explicit_extra_test_phone(
     extra_user = db.execute(select(User).where(User.phone == extra_phone)).scalar_one()
     assert extra_user.is_test_account is True
     assert verify_password(TEST_PWD, extra_user.password_hash or "")
+
+
+def test_backfill_preserves_baseline_admin_by_default(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ADMIN_PHONE", "+351924075365", raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
+    from scripts.backfill_test_accounts import run_backfill
+
+    admin_phone = "+351900000000"
+    admin_hash = hash_password("AdminAccountPass1")
+    admin_user = db.execute(
+        select(User).where(User.phone == admin_phone)
+    ).scalar_one_or_none()
+    if admin_user is None:
+        admin_user = User(
+            role=Role.admin,
+            name="dev_admin",
+            phone=admin_phone,
+            status=UserStatus.active,
+        )
+        db.add(admin_user)
+
+    admin_user.role = Role.admin
+    admin_user.status = UserStatus.active
+    admin_user.is_test_account = False
+    admin_user.password_hash = admin_hash
+    db.commit()
+
+    result = run_backfill(dry_run=False)
+
+    db.expire_all()
+    admin_user = db.execute(select(User).where(User.phone == admin_phone)).scalar_one()
+    assert result["unchanged"] >= 1
+    assert admin_user.is_test_account is False
+    assert admin_user.password_hash == admin_hash
+
+    run_backfill(dry_run=False, test_phones=[admin_phone])
+
+    db.expire_all()
+    admin_user = db.execute(select(User).where(User.phone == admin_phone)).scalar_one()
+    assert admin_user.is_test_account is True
+    assert verify_password(TEST_PWD, admin_user.password_hash or "")
