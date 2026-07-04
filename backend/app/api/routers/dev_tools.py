@@ -12,6 +12,7 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
+from app.auth.passwords import verify_password
 from app.auth.security import create_access_token
 from app.core.config import settings
 from app.core.partner_constants import BASELINE_PARTNER_FLEET_UUID, DEFAULT_PARTNER_UUID
@@ -40,6 +41,20 @@ def _require_dev() -> None:
 
 
 router = APIRouter(prefix="/dev", tags=["dev"])
+
+
+def _apply_seed_auth_fields(user: User, auth_fields: dict[str, object]) -> None:
+    user.is_test_account = bool(auth_fields["is_test_account"])
+    password_hash = auth_fields.get("password_hash")
+    if password_hash:
+        user.password_hash = str(password_hash)
+    elif user.password_hash:
+        try:
+            test_password = settings.resolved_test_account_password()
+        except RuntimeError:
+            return
+        if verify_password(test_password, user.password_hash):
+            user.password_hash = None
 
 
 # --- Lisbon bounding box ---
@@ -118,9 +133,7 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
             db.add(user)
             db.flush()
         else:
-            user.is_test_account = bool(auth_fields["is_test_account"])
-            if auth_fields.get("password_hash"):
-                user.password_hash = str(auth_fields["password_hash"])
+            _apply_seed_auth_fields(user, auth_fields)
         return user
 
     passenger = get_or_create_user("+351912345678", Role.passenger)
@@ -154,9 +167,7 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
         partner_user.status = UserStatus.active
         partner_user.partner_org_id = BASELINE_PARTNER_FLEET_UUID
         auth_fields = seed_user_auth_fields("+351955555502", Role.partner)
-        partner_user.is_test_account = bool(auth_fields["is_test_account"])
-        if auth_fields.get("password_hash"):
-            partner_user.password_hash = str(auth_fields["password_hash"])
+        _apply_seed_auth_fields(partner_user, auth_fields)
         if partner_user.name == partner_user.phone or not (partner_user.name or "").strip():
             partner_user.name = "test_partner"
 
@@ -215,9 +226,7 @@ async def dev_seed_simulator(
             db.add(user)
             db.flush()
         else:
-            user.is_test_account = bool(auth_fields["is_test_account"])
-            if auth_fields.get("password_hash"):
-                user.password_hash = str(auth_fields["password_hash"])
+            _apply_seed_auth_fields(user, auth_fields)
         return user
 
     def make_token(user: User) -> str:
