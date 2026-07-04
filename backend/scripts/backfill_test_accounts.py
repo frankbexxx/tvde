@@ -28,11 +28,14 @@ def run_backfill(
 ) -> dict[str, int | list[str]]:
     from sqlalchemy import select
 
-    from app.auth.passwords import hash_password
+    from app.auth.passwords import hash_password, verify_password
     from app.core.config import settings
     from app.db.models.user import User
     from app.db.session import SessionLocal
-    from app.services.baseline_reset import BASELINE_USERS
+    from app.services.baseline_reset import (
+        BASELINE_USERS,
+        role_uses_shared_test_password,
+    )
 
     admin_phone = settings.ADMIN_PHONE
     if not admin_phone or not str(admin_phone).strip():
@@ -40,11 +43,23 @@ def run_backfill(
     real_phone = _normalize_phone(str(admin_phone))
     test_password = settings.resolved_test_account_password()
     test_hash = hash_password(test_password)
+    default_test_phones = (
+        phone
+        for phone, role, _ in BASELINE_USERS
+        if role_uses_shared_test_password(role)
+    )
+    privileged_baseline_phones = {
+        _normalize_phone(phone)
+        for phone, role, _ in BASELINE_USERS
+        if not role_uses_shared_test_password(role)
+    }
     allowed_test_phones = _allowed_test_phones(
-        baseline_phones=(phone for phone, _, _ in BASELINE_USERS),
+        baseline_phones=default_test_phones,
         real_phone=real_phone,
         extra_test_phones=test_phones,
     )
+    privileged_baseline_phones.difference_update(allowed_test_phones)
+    privileged_baseline_phones.discard(real_phone)
 
     session = SessionLocal()
     try:
@@ -55,21 +70,34 @@ def run_backfill(
                 "test": 0,
                 "real": 0,
                 "unchanged": 0,
+                "secured_privileged": 0,
                 "real_phones": [],
             }
 
         real_phones: list[str] = []
         test_count = 0
         unchanged_count = 0
+        secured_privileged_count = 0
         for user in users:
             phone = _normalize_phone(user.phone)
             if phone == real_phone:
                 user.is_test_account = False
+                if user.password_hash and verify_password(
+                    test_password, user.password_hash
+                ):
+                    user.password_hash = None
                 real_phones.append(phone)
             elif phone in allowed_test_phones:
                 user.is_test_account = True
                 user.password_hash = test_hash
                 test_count += 1
+            elif phone in privileged_baseline_phones:
+                user.is_test_account = False
+                if user.password_hash and verify_password(
+                    test_password, user.password_hash
+                ):
+                    user.password_hash = None
+                secured_privileged_count += 1
             else:
                 unchanged_count += 1
 
@@ -83,6 +111,7 @@ def run_backfill(
             "test": test_count,
             "real": len(real_phones),
             "unchanged": unchanged_count,
+            "secured_privileged": secured_privileged_count,
             "real_phones": real_phones,
         }
     finally:
@@ -144,7 +173,8 @@ def main() -> None:
     mode = "DRY-RUN" if args.dry_run else "APPLIED"
     print(
         f"[{mode}] users total={result['total']} test={result['test']} "
-        f"real={result['real']} unchanged={result['unchanged']}"
+        f"real={result['real']} secured_privileged={result['secured_privileged']} "
+        f"unchanged={result['unchanged']}"
     )
     if result["real_phones"]:
         print(f"[{mode}] real account phone(s): {', '.join(result['real_phones'])}")

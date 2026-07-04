@@ -106,7 +106,7 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
 
     def get_or_create_user(phone: str, role: Role) -> User:
         user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
-        auth_fields = seed_user_auth_fields(phone)
+        auth_fields = seed_user_auth_fields(phone, role)
         if not user:
             user = User(
                 role=role,
@@ -146,14 +146,14 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
             phone="+351955555502",
             status=UserStatus.active,
             partner_org_id=BASELINE_PARTNER_FLEET_UUID,
-            **seed_user_auth_fields("+351955555502"),
+            **seed_user_auth_fields("+351955555502", Role.partner),
         )
         db.add(partner_user)
     else:
         partner_user.role = Role.partner
         partner_user.status = UserStatus.active
         partner_user.partner_org_id = BASELINE_PARTNER_FLEET_UUID
-        auth_fields = seed_user_auth_fields("+351955555502")
+        auth_fields = seed_user_auth_fields("+351955555502", Role.partner)
         partner_user.is_test_account = bool(auth_fields["is_test_account"])
         if auth_fields.get("password_hash"):
             partner_user.password_hash = str(auth_fields["password_hash"])
@@ -203,7 +203,7 @@ async def dev_seed_simulator(
 
     def get_or_create_user(phone: str, role: Role) -> User:
         user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
-        auth_fields = seed_user_auth_fields(phone)
+        auth_fields = seed_user_auth_fields(phone, role)
         if not user:
             user = User(
                 role=role,

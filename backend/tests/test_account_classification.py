@@ -162,11 +162,19 @@ def test_owner_phone_stays_real_in_seed_fields(
     monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
     from app.services.baseline_reset import seed_user_auth_fields
 
-    owner_fields = seed_user_auth_fields(owner)
+    owner_fields = seed_user_auth_fields(owner, Role.super_admin)
     assert owner_fields["is_test_account"] is False
     assert "password_hash" not in owner_fields
 
-    test_fields = seed_user_auth_fields("+351912345678")
+    admin_fields = seed_user_auth_fields("+351900000000", Role.admin)
+    assert admin_fields["is_test_account"] is False
+    assert "password_hash" not in admin_fields
+
+    partner_fields = seed_user_auth_fields("+351955555502", Role.partner)
+    assert partner_fields["is_test_account"] is False
+    assert "password_hash" not in partner_fields
+
+    test_fields = seed_user_auth_fields("+351912345678", Role.passenger)
     assert test_fields["is_test_account"] is True
     assert test_fields["password_hash"]
 
@@ -184,6 +192,34 @@ def test_baseline_seed_marks_test_accounts(
     assert by_phone["+351912345678"].is_test_account is True
     assert by_phone["+351912345678"].password_hash
     assert by_phone["+351924075365"].is_test_account is False
+    assert by_phone["+351924075365"].password_hash is None
+    assert by_phone["+351900000000"].is_test_account is False
+    assert by_phone["+351900000000"].password_hash is None
+    assert by_phone["+351955555502"].is_test_account is False
+    assert by_phone["+351955555502"].password_hash is None
+
+
+def test_privileged_baseline_users_reject_shared_password_login(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _patch_test_password(monkeypatch)
+    monkeypatch.setattr(settings, "ADMIN_PHONE", "+351924075365", raising=False)
+    from app.services.baseline_reset import run_full_baseline_reset
+
+    run_full_baseline_reset(db)
+
+    admin_login = client.post(
+        "/auth/login",
+        json={"phone": "+351900000000", "password": TEST_PWD},
+    )
+    partner_login = client.post(
+        "/auth/login",
+        json={"phone": "+351955555502", "password": TEST_PWD},
+    )
+    assert admin_login.status_code == 401
+    assert admin_login.json()["detail"] == "password_not_set"
+    assert partner_login.status_code == 401
+    assert partner_login.json()["detail"] == "password_not_set"
 
 
 def test_backfill_preserves_non_seed_real_account_password(
@@ -263,3 +299,57 @@ def test_backfill_allows_explicit_extra_test_phone(
     extra_user = db.execute(select(User).where(User.phone == extra_phone)).scalar_one()
     assert extra_user.is_test_account is True
     assert verify_password(TEST_PWD, extra_user.password_hash or "")
+
+
+def test_backfill_secures_privileged_baseline_accounts_by_default(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ADMIN_PHONE", "+351924075365", raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
+    from scripts.backfill_test_accounts import run_backfill
+
+    admin_phone = "+351900000000"
+    partner_phone = "+351955555502"
+    admin_user = db.execute(
+        select(User).where(User.phone == admin_phone)
+    ).scalar_one_or_none()
+    if admin_user is None:
+        admin_user = User(
+            role=Role.admin,
+            name="dev_admin",
+            phone=admin_phone,
+            status=UserStatus.active,
+        )
+        db.add(admin_user)
+    admin_user.is_test_account = True
+    admin_user.password_hash = hash_password(TEST_PWD)
+
+    partner_user = db.execute(
+        select(User).where(User.phone == partner_phone)
+    ).scalar_one_or_none()
+    if partner_user is None:
+        partner_user = User(
+            role=Role.partner,
+            name="test_partner",
+            phone=partner_phone,
+            status=UserStatus.active,
+        )
+        db.add(partner_user)
+    partner_user.is_test_account = True
+    partner_user.password_hash = hash_password(TEST_PWD)
+    db.commit()
+
+    result = run_backfill(dry_run=False)
+
+    db.expire_all()
+    admin_user = db.execute(
+        select(User).where(User.phone == admin_phone)
+    ).scalar_one()
+    partner_user = db.execute(
+        select(User).where(User.phone == partner_phone)
+    ).scalar_one()
+    assert result["secured_privileged"] >= 2
+    assert admin_user.is_test_account is False
+    assert admin_user.password_hash is None
+    assert partner_user.is_test_account is False
+    assert partner_user.password_hash is None

@@ -38,6 +38,8 @@ BASELINE_USERS: Sequence[tuple[str, Role, str]] = (
     ("+351900000000", Role.admin, "dev_admin"),
 )
 
+SHARED_PASSWORD_TEST_ROLES = frozenset({Role.passenger, Role.driver})
+
 _TRIP_EVENT_TABLES = (
     "stripe_webhook_events",
     "audit_events",
@@ -67,9 +69,15 @@ def _default_lisbon_coords() -> tuple[float, float]:
     return 38.720000, -9.140000
 
 
-def seed_user_auth_fields(phone: str) -> dict[str, object]:
-    """Test accounts get bcrypt hash from TEST_ACCOUNT_PASSWORD; owner phone stays real."""
-    is_test = not settings.is_owner_phone(phone)
+def role_uses_shared_test_password(role: Role | None) -> bool:
+    return role in SHARED_PASSWORD_TEST_ROLES
+
+
+def seed_user_auth_fields(phone: str, role: Role | None = None) -> dict[str, object]:
+    """Passenger/driver test accounts get the shared test password; staff/partner do not."""
+    is_test = not settings.is_owner_phone(phone) and role_uses_shared_test_password(
+        role
+    )
     fields: dict[str, object] = {"is_test_account": is_test}
     if is_test:
         fields["password_hash"] = hash_password(settings.resolved_test_account_password())
@@ -102,7 +110,7 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
             phone=phone,
             status=UserStatus.active,
             partner_org_id=partner_org,
-            **seed_user_auth_fields(phone),
+            **seed_user_auth_fields(phone, role),
         )
         db.add(user)
         db.flush()
