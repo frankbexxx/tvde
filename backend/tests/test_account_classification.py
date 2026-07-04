@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth.passwords import hash_password
+from app.auth.passwords import hash_password, verify_password
 from app.core.config import settings
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
@@ -184,3 +184,82 @@ def test_baseline_seed_marks_test_accounts(
     assert by_phone["+351912345678"].is_test_account is True
     assert by_phone["+351912345678"].password_hash
     assert by_phone["+351924075365"].is_test_account is False
+
+
+def test_backfill_preserves_non_seed_real_account_password(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ADMIN_PHONE", "+351924075365", raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
+    from scripts.backfill_test_accounts import run_backfill
+
+    seeded_test_phone = "+351912345678"
+    real_phone = _unique_beta_phone()
+    real_hash = hash_password("RealAccountPass1")
+
+    seeded_user = db.execute(
+        select(User).where(User.phone == seeded_test_phone)
+    ).scalar_one_or_none()
+    if seeded_user is None:
+        seeded_user = User(
+            role=Role.passenger,
+            name="Seeded test",
+            phone=seeded_test_phone,
+            status=UserStatus.active,
+        )
+        db.add(seeded_user)
+    seeded_user.is_test_account = False
+    seeded_user.password_hash = hash_password("old-demo-password")
+
+    db.add(
+        User(
+            role=Role.passenger,
+            name="Real",
+            phone=real_phone,
+            status=UserStatus.active,
+            is_test_account=False,
+            password_hash=real_hash,
+        )
+    )
+    db.commit()
+
+    result = run_backfill(dry_run=False)
+
+    db.expire_all()
+    seeded_user = db.execute(
+        select(User).where(User.phone == seeded_test_phone)
+    ).scalar_one()
+    real_user = db.execute(select(User).where(User.phone == real_phone)).scalar_one()
+    assert result["test"] >= 1
+    assert seeded_user.is_test_account is True
+    assert verify_password(TEST_PWD, seeded_user.password_hash or "")
+    assert real_user.is_test_account is False
+    assert real_user.password_hash == real_hash
+
+
+def test_backfill_allows_explicit_extra_test_phone(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ADMIN_PHONE", "+351924075365", raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
+    from scripts.backfill_test_accounts import run_backfill
+
+    extra_phone = _unique_beta_phone()
+    db.add(
+        User(
+            role=Role.passenger,
+            name="Extra tester",
+            phone=extra_phone,
+            status=UserStatus.active,
+            is_test_account=False,
+            password_hash=hash_password("old-extra-password"),
+        )
+    )
+    db.commit()
+
+    run_backfill(dry_run=False, test_phones=[extra_phone])
+
+    db.expire_all()
+    extra_user = db.execute(select(User).where(User.phone == extra_phone)).scalar_one()
+    assert extra_user.is_test_account is True
+    assert verify_password(TEST_PWD, extra_user.password_hash or "")
