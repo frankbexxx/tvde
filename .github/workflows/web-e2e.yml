@@ -34,6 +34,8 @@ jobs:
       STRIPE_MOCK: "true"
       ENV: dev
       CI: true
+      BETA_MODE: "true"
+      TEST_ACCOUNT_PASSWORD: demo1234
       # Valor lido pelo Settings (logs). Com E2E_KEEP_OFFERS_ALIVE, o TTL real é max(isto, floor).
       OFFER_TIMEOUT_SECONDS: "1"
       E2E_KEEP_OFFERS_ALIVE: "true"

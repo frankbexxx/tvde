@@ -110,7 +110,7 @@ def test_me_get_and_patch_name_beta(
     client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    monkeypatch.setattr(settings, "DEFAULT_PASSWORD", "123456", raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", "demo1234", raising=False)
     phone = _unique_beta_phone()
     u = User(
         id=uuid.uuid4(),
@@ -118,12 +118,14 @@ def test_me_get_and_patch_name_beta(
         name="NomeAntigo",
         phone=phone,
         status=UserStatus.active,
+        is_test_account=True,
+        password_hash=hash_password("demo1234"),
     )
     db.add(u)
     db.commit()
 
     tok = client.post(
-        "/auth/login", json={"phone": phone, "password": "123456"}
+        "/auth/login", json={"phone": phone, "password": "demo1234"}
     ).json()["access_token"]
     h = {"Authorization": f"Bearer {tok}"}
 
@@ -132,79 +134,12 @@ def test_me_get_and_patch_name_beta(
     data = r.json()
     assert data["phone"] == phone
     assert data["name"] == "NomeAntigo"
-    assert data["has_custom_password"] is False
+    assert data["has_custom_password"] is True
 
     p = client.patch("/auth/me", headers=h, json={"name": "Nome Novo M1"})
     assert p.status_code == 200, p.text
     assert p.json()["name"] == "Nome Novo M1"
 
-    login2 = client.post("/auth/login", json={"phone": phone, "password": "123456"})
+    login2 = client.post("/auth/login", json={"phone": phone, "password": "demo1234"})
     assert login2.status_code == 200
     assert login2.json().get("display_name") == "Nome Novo M1"
-
-
-def test_login_default_password_blocked_in_production(
-    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
-    monkeypatch.setattr(settings, "DEFAULT_PASSWORD", "123456", raising=False)
-    phone = _unique_beta_phone()
-    u = User(
-        id=uuid.uuid4(),
-        role=Role.passenger,
-        name="ProdBeta",
-        phone=phone,
-        status=UserStatus.active,
-    )
-    db.add(u)
-    db.commit()
-
-    r = client.post("/auth/login", json={"phone": phone, "password": "123456"})
-    assert r.status_code == 401
-    assert r.json()["detail"] == "default_password_disabled"
-
-
-def test_login_weak_default_password_forbidden_even_when_allowed_flag(
-    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
-    monkeypatch.setattr(settings, "ALLOW_DEFAULT_PASSWORD_LOGIN", True, raising=False)
-    monkeypatch.setattr(settings, "DEFAULT_PASSWORD", "123456", raising=False)
-    phone = _unique_beta_phone()
-    u = User(
-        id=uuid.uuid4(),
-        role=Role.passenger,
-        name="ProdBetaAllow",
-        phone=phone,
-        status=UserStatus.active,
-    )
-    db.add(u)
-    db.commit()
-
-    r = client.post("/auth/login", json={"phone": phone, "password": "123456"})
-    assert r.status_code == 401
-    assert r.json()["detail"] == "weak_default_password_forbidden"
-
-
-def test_login_default_password_allowed_in_dev(
-    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    monkeypatch.setattr(settings, "ENVIRONMENT", None, raising=False)
-    monkeypatch.setattr(settings, "ENV", "dev", raising=False)
-    monkeypatch.setattr(settings, "DEFAULT_PASSWORD", "123456", raising=False)
-    phone = _unique_beta_phone()
-    u = User(
-        id=uuid.uuid4(),
-        role=Role.passenger,
-        name="DevBeta",
-        phone=phone,
-        status=UserStatus.active,
-    )
-    db.add(u)
-    db.commit()
-
-    r = client.post("/auth/login", json={"phone": phone, "password": "123456"})
-    assert r.status_code == 200

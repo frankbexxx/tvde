@@ -44,9 +44,11 @@ class Settings(BaseSettings):
         None  # e.g. +351924075365 — auto super_admin backoffice, no approval
     )
     MAX_BETA_USERS: int = 30
-    DEFAULT_PASSWORD: str = "123456"  # Pre-filled for BETA testers (dev only)
+    DEFAULT_PASSWORD: str = "123456"  # Legacy; not used for login after test-account MVP
     # When False in production, accounts without password_hash cannot use DEFAULT_PASSWORD.
     ALLOW_DEFAULT_PASSWORD_LOGIN: bool | None = None
+    # Shared demo password for is_test_account users (seed/backfill only; stored as bcrypt hash).
+    TEST_ACCOUNT_PASSWORD: str | None = None
 
     # Future: confirm PaymentIntent at accept (frontend 3DS). When True, accept_trip
     # returns payment_intent_client_secret for frontend confirmation. Default False.
@@ -152,6 +154,18 @@ class Settings(BaseSettings):
         if not self.is_production_environment():
             return False
         return password == self.DEFAULT_PASSWORD
+
+    def is_owner_phone(self, phone: str) -> bool:
+        admin_phone = self.ADMIN_PHONE
+        if not admin_phone:
+            return False
+        return admin_phone.strip() == phone.strip()
+
+    def resolved_test_account_password(self) -> str:
+        pwd = self.TEST_ACCOUNT_PASSWORD
+        if not pwd or not str(pwd).strip():
+            raise RuntimeError("TEST_ACCOUNT_PASSWORD is not configured")
+        return str(pwd).strip()
 
 
 settings = Settings()  # type: ignore[call-arg]
