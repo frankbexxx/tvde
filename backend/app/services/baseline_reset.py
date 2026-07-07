@@ -38,6 +38,8 @@ BASELINE_USERS: Sequence[tuple[str, Role, str]] = (
     ("+351900000000", Role.admin, "dev_admin"),
 )
 
+_SHARED_TEST_ACCOUNT_ROLES = frozenset({Role.driver, Role.passenger})
+
 _TRIP_EVENT_TABLES = (
     "stripe_webhook_events",
     "audit_events",
@@ -67,9 +69,26 @@ def _default_lisbon_coords() -> tuple[float, float]:
     return 38.720000, -9.140000
 
 
-def seed_user_auth_fields(phone: str) -> dict[str, object]:
-    """Test accounts get bcrypt hash from TEST_ACCOUNT_PASSWORD; owner phone stays real."""
-    is_test = not settings.is_owner_phone(phone)
+def _is_shared_test_seed_account(phone: str, role: Role | None) -> bool:
+    if settings.is_owner_phone(phone):
+        return False
+    if role is None:
+        return True
+    return role in _SHARED_TEST_ACCOUNT_ROLES
+
+
+def validate_baseline_seed_config() -> None:
+    """Fail before destructive reset work if seed credentials are incomplete."""
+    needs_test_password = any(
+        _is_shared_test_seed_account(phone, role) for phone, role, _ in BASELINE_USERS
+    )
+    if needs_test_password:
+        settings.resolved_test_account_password()
+
+
+def seed_user_auth_fields(phone: str, role: Role | None = None) -> dict[str, object]:
+    """Only passenger/driver demo accounts get the shared test password."""
+    is_test = _is_shared_test_seed_account(phone, role)
     fields: dict[str, object] = {"is_test_account": is_test}
     if is_test:
         fields["password_hash"] = hash_password(settings.resolved_test_account_password())
@@ -80,6 +99,7 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
     """
     After ``wipe_all_application_data``, insert Default fleet + baseline partner org and users.
     """
+    validate_baseline_seed_config()
     now = datetime.now(timezone.utc)
     lat, lng = _default_lisbon_coords()
 
@@ -102,7 +122,7 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
             phone=phone,
             status=UserStatus.active,
             partner_org_id=partner_org,
-            **seed_user_auth_fields(phone),
+            **seed_user_auth_fields(phone, role),
         )
         db.add(user)
         db.flush()
@@ -157,6 +177,7 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
 
 
 def run_full_baseline_reset(db: Session) -> dict[str, Any]:
+    validate_baseline_seed_config()
     wipe_all_application_data(db)
     return seed_baseline_users(db)
 

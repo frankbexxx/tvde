@@ -171,6 +171,23 @@ def test_owner_phone_stays_real_in_seed_fields(
     assert test_fields["password_hash"]
 
 
+def test_privileged_baseline_roles_stay_real_in_seed_fields(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "ADMIN_PHONE", None, raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
+    from app.services.baseline_reset import seed_user_auth_fields
+
+    for phone, role in (
+        ("+351924075365", Role.super_admin),
+        ("+351955555502", Role.partner),
+        ("+351900000000", Role.admin),
+    ):
+        fields = seed_user_auth_fields(phone, role)
+        assert fields["is_test_account"] is False
+        assert "password_hash" not in fields
+
+
 def test_baseline_seed_marks_test_accounts(
     db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -184,6 +201,33 @@ def test_baseline_seed_marks_test_accounts(
     assert by_phone["+351912345678"].is_test_account is True
     assert by_phone["+351912345678"].password_hash
     assert by_phone["+351924075365"].is_test_account is False
+    assert by_phone["+351955555502"].is_test_account is False
+    assert by_phone["+351900000000"].is_test_account is False
+
+
+def test_full_baseline_reset_requires_test_password_before_wipe(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ADMIN_PHONE", "+351924075365", raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", None, raising=False)
+    from app.services.baseline_reset import run_full_baseline_reset
+
+    phone = _unique_beta_phone()
+    db.add(
+        User(
+            role=Role.passenger,
+            name="Sentinel",
+            phone=phone,
+            status=UserStatus.active,
+            is_test_account=False,
+        )
+    )
+    db.commit()
+
+    with pytest.raises(RuntimeError, match="TEST_ACCOUNT_PASSWORD"):
+        run_full_baseline_reset(db)
+
+    assert db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
 
 
 def test_backfill_preserves_non_seed_real_account_password(
@@ -235,6 +279,40 @@ def test_backfill_preserves_non_seed_real_account_password(
     assert verify_password(TEST_PWD, seeded_user.password_hash or "")
     assert real_user.is_test_account is False
     assert real_user.password_hash == real_hash
+
+
+def test_backfill_keeps_privileged_baseline_accounts_real(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ADMIN_PHONE", "+351924075365", raising=False)
+    monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
+    from scripts.backfill_test_accounts import run_backfill
+
+    for phone, role in (
+        ("+351924075365", Role.super_admin),
+        ("+351955555502", Role.partner),
+        ("+351900000000", Role.admin),
+    ):
+        user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+        if user is None:
+            user = User(
+                role=role,
+                name=f"Privileged {role.value}",
+                phone=phone,
+                status=UserStatus.active,
+            )
+            db.add(user)
+        user.is_test_account = True
+        user.password_hash = hash_password(TEST_PWD)
+    db.commit()
+
+    run_backfill(dry_run=False)
+
+    db.expire_all()
+    for phone in ("+351924075365", "+351955555502", "+351900000000"):
+        user = db.execute(select(User).where(User.phone == phone)).scalar_one()
+        assert user.is_test_account is False
+        assert user.password_hash is None
 
 
 def test_backfill_allows_explicit_extra_test_phone(
