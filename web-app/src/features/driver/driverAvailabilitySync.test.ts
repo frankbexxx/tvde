@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   formatDriverAvailabilityError,
   isDriverAvailabilityOperational,
+  isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
 } from './driverAvailabilitySync'
@@ -37,6 +38,43 @@ describe('isDriverAvailabilityOperational', () => {
 
   it('antes de hidratar servidor → poll inactivo', () => {
     expect(isDriverAvailabilityOperational({ ...base, hydrated: false })).toBe(false)
+  })
+})
+
+describe('isDriverLocationReportingOperational', () => {
+  const base = { token: 'tok', offline: false, hydrated: true, syncing: false }
+
+  it('viagem activa → reporter activo mesmo se disponibilidade backend está false', () => {
+    expect(
+      isDriverLocationReportingOperational({
+        ...base,
+        offline: true,
+        hydrated: false,
+        syncing: true,
+        activeTripId: 'trip-1',
+      })
+    ).toBe(true)
+  })
+
+  it('sem viagem activa → segue a disponibilidade operacional para ofertas', () => {
+    expect(isDriverLocationReportingOperational({ ...base, activeTripId: null })).toBe(true)
+    expect(
+      isDriverLocationReportingOperational({
+        ...base,
+        offline: true,
+        activeTripId: null,
+      })
+    ).toBe(false)
+  })
+
+  it('sem token → reporter inactivo mesmo com viagem activa', () => {
+    expect(
+      isDriverLocationReportingOperational({
+        ...base,
+        token: null,
+        activeTripId: 'trip-1',
+      })
+    ).toBe(false)
   })
 })
 
