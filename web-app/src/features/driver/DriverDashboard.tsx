@@ -198,18 +198,16 @@ import {
 } from './driverShellEvents'
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
+import {
+  formatDriverAvailabilityError,
+  isDriverAvailabilityOperational,
+  isDrivingHoursBlockedError,
+  offlineFromBackendAvailability,
+} from './driverAvailabilitySync'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 
 const DRIVER_OFFLINE_KEY = 'tvde_driver_offline'
-
-function getStoredOffline(): boolean {
-  try {
-    return localStorage.getItem(DRIVER_OFFLINE_KEY) === '1'
-  } catch {
-    return false
-  }
-}
 
 function setStoredOffline(offline: boolean) {
   try {
@@ -334,20 +332,29 @@ export function DriverDashboard() {
 
   const driverHomeTwoStep = isDriverHomeTwoStepEnabled()
   const driverBottomNav = isDriverBottomNavEnabled()
-  const [offline, setOffline] = useState(getStoredOffline)
+  const [offline, setOffline] = useState(true)
+  const [availabilityHydrated, setAvailabilityHydrated] = useState(false)
+  const [availabilitySyncing, setAvailabilitySyncing] = useState(false)
   useScreenWakeLock(
     sessionRole === 'driver' &&
     Boolean(token) &&
     (!offline || Boolean(activeTripId)),
   )
 
-  /** GPS activo em disponível ou com viagem; offline poupa bateria e prompts. */
+  /** GPS activo em disponível confirmada no backend ou com viagem; offline poupa bateria e prompts. */
+  const availabilityOperational = isDriverAvailabilityOperational({
+    token,
+    offline,
+    hydrated: availabilityHydrated,
+    syncing: availabilitySyncing,
+  })
+
   const geoWatchEnabled =
     isMockLocationModeEnabled() ||
     isDemoLocationEnabled() ||
     !driverBottomNav ||
     Boolean(activeTripId) ||
-    !offline
+    availabilityOperational
 
   const {
     position: geoDriverPosition,
@@ -461,17 +468,55 @@ export function DriverDashboard() {
   const sessionDisplayName = useMemo(() => getStoredSessionDisplayName(), [])
 
   const handleDriverAvailabilityChange = useCallback(
-    (checked: boolean) => {
+    async (checked: boolean) => {
+      if (!token || availabilitySyncing) return
       if (checked && effectiveDocsGate && !isDriverDocumentsReady(driverDocuments)) {
         addLog('Bloqueado: documentos obrigatórios em falta', 'error')
         return
       }
-      setOffline(!checked)
-      if (checked) warmDriverNavSessionIfNeeded()
-      addLog(checked ? 'Toggle: Disponível' : 'Toggle: Offline', 'info')
-      setStatus(checked ? 'Disponível' : 'Offline')
+      if (checked && activeTripId) return
+
+      setAvailabilitySyncing(true)
+      setError(null)
+      try {
+        if (checked) {
+          await setDriverOnline(token)
+          setOffline(false)
+          warmDriverNavSessionIfNeeded()
+          addLog('Toggle: Disponível', 'info')
+          setStatus('Disponível')
+        } else {
+          await setDriverOffline(token)
+          setOffline(true)
+          addLog('Toggle: Offline', 'info')
+          setStatus('Offline')
+        }
+      } catch (err: unknown) {
+        if (checked) {
+          setOffline(true)
+        }
+        if (isDrivingHoursBlockedError(err)) {
+          setToast(formatDriverAvailabilityError(err))
+          addLog('Bloqueio: horas de condução / repouso', 'error')
+        } else {
+          const msg = formatDriverAvailabilityError(err)
+          setError(msg)
+          setToast(msg)
+          addLog(`Erro disponibilidade: ${msg}`, 'error')
+        }
+      } finally {
+        setAvailabilitySyncing(false)
+      }
     },
-    [addLog, effectiveDocsGate, driverDocuments, setStatus]
+    [
+      token,
+      availabilitySyncing,
+      effectiveDocsGate,
+      driverDocuments,
+      activeTripId,
+      addLog,
+      setStatus,
+    ]
   )
 
   /** Toque no mapa: ficar disponível (mesmas regras que a pill). */
@@ -480,7 +525,7 @@ export function DriverDashboard() {
     handleDriverAvailabilityChange(true)
   }, [mapTapGoesOnline, offline, handleDriverAvailabilityChange])
 
-  const pollEnabled = !!token && !offline
+  const pollEnabled = availabilityOperational
 
   const driverActiveTripPoll = useDriverActiveTripPoll(
     activeTripId,
@@ -681,7 +726,7 @@ export function DriverDashboard() {
     })
   }, [offerIdsFingerprint, filteredAvailable, pollEnabled, availableLoading, available])
   useDriverOfferSounds({
-    enabled: sessionRole === 'driver' && Boolean(token) && !offline,
+    enabled: sessionRole === 'driver' && availabilityOperational,
     offerIdsFingerprint,
     acceptSignal: driverAcceptSoundTick,
     completeSignal: driverCompleteSoundTick,
@@ -717,7 +762,7 @@ export function DriverDashboard() {
   }, [actionLoading])
 
   const gpsReport = useDriverLocationReporter({
-    enabled: !offline && !!token && !!driverLocation,
+    enabled: availabilityOperational && !!driverLocation,
     accessToken: token,
     lat: driverLocation?.lat,
     lng: driverLocation?.lng,
@@ -901,51 +946,31 @@ export function DriverDashboard() {
     }
   }, [token, sessionRole])
 
-  // Reconcile local offline flag with server is_available (fixes localStorage desync).
+  // Alinhar disponibilidade local com GET /driver/status (não confiar só no localStorage).
   useEffect(() => {
-    if (!token || sessionRole !== 'driver') return
+    if (!token || sessionRole !== 'driver') {
+      setAvailabilityHydrated(false)
+      return
+    }
     let cancelled = false
+    setAvailabilityHydrated(false)
     void getDriverStatus(token)
       .then(({ is_available }) => {
         if (cancelled) return
         const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
-        if (is_available && canGoOnline) {
-          setOffline(false)
-        } else {
-          setOffline(true)
-        }
+        setOffline(offlineFromBackendAvailability(is_available, canGoOnline))
       })
       .catch(() => {
-        /* keep local state if status fetch fails */
+        if (cancelled) return
+        setOffline(true)
+      })
+      .finally(() => {
+        if (!cancelled) setAvailabilityHydrated(true)
       })
     return () => {
       cancelled = true
     }
   }, [token, sessionRole, driverDocuments, effectiveDocsGate])
-
-  // Sync backend when token/offline changes; não forçar /online com viagem activa (repor is_available).
-  useEffect(() => {
-    if (!token) return
-    if (offline) {
-      void setDriverOffline(token).catch(() => { })
-      return
-    }
-    if (activeTripId) return
-    if (effectiveDocsGate && !isDriverDocumentsReady(driverDocuments)) {
-      setOffline(true)
-      return
-    }
-    void setDriverOnline(token).catch((err: unknown) => {
-      const e = err as { status?: number; detail?: unknown }
-      if (e?.status === 409 && e?.detail === 'driving_hours_blocked') {
-        setOffline(true)
-        setToast(
-          'Limite de tempo de condução ou repouso legal: não foi possível ficar disponível. Ver o aviso de horas no ecrã.'
-        )
-        addLog('Bloqueio: horas de condução / repouso', 'error')
-      }
-    })
-  }, [token, offline, activeTripId, addLog, effectiveDocsGate, driverDocuments])
 
   useEffect(() => {
     if (toast) {
@@ -2985,10 +3010,10 @@ function DriverOperationsMenu({
           setZoneEtaHint(
             geocodeHint
               ? t('opsMenu.zones.etaHint.geocodeFallback', {
-                  geocode: geocodeHint,
-                  minutes: etaMin,
-                  km: km.toFixed(1),
-                })
+                geocode: geocodeHint,
+                minutes: etaMin,
+                km: km.toFixed(1),
+              })
               : t('opsMenu.zones.etaHint.fallback', { minutes: etaMin, km: km.toFixed(1) })
           )
         }
