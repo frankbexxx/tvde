@@ -15,9 +15,34 @@ from app.utils.state_machine import validate_trip_transition
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, Role, TripStatus
 from app.schemas.driver import DriverLocationResponse
+from app.services.driver_preferences import decode_driver_categories_csv
+from app.utils.geo import haversine_km
 
 
 logger = logging.getLogger(__name__)
+
+
+def _driver_can_receive_location_redispatch(
+    *,
+    driver: Driver,
+    trip: Trip,
+    lat: float,
+    lng: float,
+) -> bool:
+    trip_category = (trip.vehicle_category or "x").strip().lower()
+    driver_categories = decode_driver_categories_csv(
+        getattr(driver, "vehicle_categories", None)
+    )
+    if trip_category not in driver_categories:
+        return False
+
+    distance_km = haversine_km(
+        float(trip.origin_lat),
+        float(trip.origin_lng),
+        lat,
+        lng,
+    )
+    return distance_km <= settings.GEO_RADIUS_KM
 
 
 def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
@@ -170,7 +195,19 @@ def upsert_driver_location(
         )
         if ids_with_any_offers:
             q = q.where(Trip.id.notin_(ids_with_any_offers))
-        trip_for_dispatch = db.execute(q).scalars().first()
+        trip_for_dispatch = next(
+            (
+                trip
+                for trip in db.execute(q).scalars().all()
+                if _driver_can_receive_location_redispatch(
+                    driver=driver,
+                    trip=trip,
+                    lat=lat,
+                    lng=lng,
+                )
+            ),
+            None,
+        )
         if trip_for_dispatch is not None:
             db.flush()
             offers = create_offers_for_trip(db=db, trip=trip_for_dispatch)
