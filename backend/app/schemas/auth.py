@@ -31,7 +31,7 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=1)
     requested_role: str | None = Field(
         None,
-        description="BETA: passenger or driver (só usado ao criar novo utilizador pendente).",
+        description="BETA: ignored by password login; use OTP/Google signup flows for role requests.",
     )
 
 
