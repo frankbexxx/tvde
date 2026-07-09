@@ -13,13 +13,14 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
+from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
 from app.services.driver_location import upsert_driver_location
 from app.services.offer_dispatch import create_offers_for_trip, redispatch_expired_trips
-from app.services.trips import accept_offer
+from app.services.trips import accept_offer, accept_trip
 
 
 def _create_driver(
@@ -168,6 +169,32 @@ def test_accept_offer_rejects_wrong_vehicle_category(db: Session) -> None:
     assert exc_info.value.detail == "forbidden_vehicle_category"
 
 
+def test_accept_trip_rejects_wrong_vehicle_category(db: Session) -> None:
+    wrong_driver_id = _create_driver(db, lat=38.702, lng=-9.102, vehicle_categories="x")
+    trip = _create_requested_trip(db, vehicle_category="comfort")
+    trip.status = TripStatus.assigned
+    db.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        accept_trip(db=db, driver_id=wrong_driver_id, trip_id=str(trip.id))
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail == "forbidden_vehicle_category"
+
+    db.refresh(trip)
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(wrong_driver_id))
+    ).scalar_one()
+    payment = db.execute(
+        select(Payment).where(Payment.trip_id == trip.id)
+    ).scalar_one_or_none()
+
+    assert trip.status == TripStatus.assigned
+    assert trip.driver_id is None
+    assert driver.is_available is True
+    assert payment is None
+
+
 def test_beta_fallback_runs_when_only_expired_offers(
     db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -201,3 +228,51 @@ def test_beta_fallback_runs_when_only_expired_offers(
     db.refresh(trip)
 
     assert trip.status == TripStatus.assigned
+
+
+def test_location_redispatch_skips_older_unserviceable_zero_offer_trip(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", False, raising=False)
+    for loc in db.execute(select(DriverLocation)).scalars().all():
+        db.delete(loc)
+    for offer in db.execute(select(TripOffer)).scalars().all():
+        db.delete(offer)
+    for trip in (
+        db.execute(select(Trip).where(Trip.status == TripStatus.requested))
+        .scalars()
+        .all()
+    ):
+        trip.status = TripStatus.cancelled
+    db.commit()
+
+    driver_id = _create_driver(db, lat=38.701, lng=-9.101, vehicle_categories="x")
+    older_blocker = _create_requested_trip(db, vehicle_category="comfort")
+    target = _create_requested_trip(db, vehicle_category="x")
+    older_blocker.created_at = datetime.now(timezone.utc) - timedelta(minutes=2)
+    target.created_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    db.commit()
+
+    ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    upsert_driver_location(
+        db=db,
+        driver_id=driver_id,
+        lat=38.701,
+        lng=-9.101,
+        timestamp_ms=ts_ms,
+    )
+
+    blocker_offers = (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == older_blocker.id))
+        .scalars()
+        .all()
+    )
+    target_offers = (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == target.id))
+        .scalars()
+        .all()
+    )
+
+    assert blocker_offers == []
+    assert len(target_offers) == 1
+    assert str(target_offers[0].driver_id) == driver_id
