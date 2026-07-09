@@ -19,6 +19,18 @@ export function isDriverAvailabilityOperational(opts: {
   return Boolean(opts.token && !opts.offline && opts.hydrated && !opts.syncing)
 }
 
+export function isDriverLocationReportingOperational(opts: {
+  token: string | null
+  offline: boolean
+  hydrated: boolean
+  syncing: boolean
+  activeTripId: string | null | undefined
+}): boolean {
+  if (!opts.token) return false
+  if (opts.activeTripId) return true
+  return isDriverAvailabilityOperational(opts)
+}
+
 export function isDrivingHoursBlockedError(err: unknown): boolean {
   const e = err as { status?: number; detail?: unknown }
   return e?.status === 409 && e?.detail === 'driving_hours_blocked'

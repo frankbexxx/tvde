@@ -201,6 +201,7 @@ import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroTo
 import {
   formatDriverAvailabilityError,
   isDriverAvailabilityOperational,
+  isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
 } from './driverAvailabilitySync'
@@ -347,6 +348,13 @@ export function DriverDashboard() {
     offline,
     hydrated: availabilityHydrated,
     syncing: availabilitySyncing,
+  })
+  const locationReportingOperational = isDriverLocationReportingOperational({
+    token,
+    offline,
+    hydrated: availabilityHydrated,
+    syncing: availabilitySyncing,
+    activeTripId,
   })
 
   const geoWatchEnabled =
@@ -762,7 +770,7 @@ export function DriverDashboard() {
   }, [actionLoading])
 
   const gpsReport = useDriverLocationReporter({
-    enabled: availabilityOperational && !!driverLocation,
+    enabled: locationReportingOperational && !!driverLocation,
     accessToken: token,
     lat: driverLocation?.lat,
     lng: driverLocation?.lng,
