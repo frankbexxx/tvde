@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends
 from sqlalchemy import and_, select
@@ -30,6 +30,7 @@ from app.services.trips import (
     accept_trip as accept_trip_service,
     cancel_trip_by_driver,
     complete_trip as complete_trip_service,
+    get_current_active_trip_for_driver,
     list_available_trips as list_available_trips_service,
     get_trip_for_driver,
     list_completed_trips_for_driver,
@@ -76,6 +77,18 @@ async def list_available_trips(
         )
         for trip, offer in items
     ]
+
+
+@router.get("/active", response_model=Optional[TripDetailResponse])
+async def get_active_trip(
+    user: UserContext = Depends(require_role(Role.driver)),
+    db: Session = Depends(get_db),
+) -> Optional[TripDetailResponse]:
+    """Current accepted/arriving/ongoing trip for dashboard bootstrap after reload."""
+    trip = get_current_active_trip_for_driver(db=db, driver_id=user.user_id)
+    if trip is None:
+        return None
+    return trip_to_detail(trip, include_stripe_pi=False)
 
 
 @router.get("/{trip_id}", response_model=TripDetailResponse)

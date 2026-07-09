@@ -5,6 +5,7 @@ import {
   isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
+  shouldBootstrapDriverActiveTrip,
 } from './driverAvailabilitySync'
 
 describe('offlineFromBackendAvailability', () => {
@@ -73,6 +74,42 @@ describe('isDriverLocationReportingOperational', () => {
         ...base,
         token: null,
         activeTripId: 'trip-1',
+      })
+    ).toBe(false)
+  })
+})
+
+describe('shouldBootstrapDriverActiveTrip', () => {
+  it('restaura viagem activa só para motorista autenticado sem id em memória', () => {
+    expect(
+      shouldBootstrapDriverActiveTrip({
+        token: 'tok',
+        sessionRole: 'driver',
+        activeTripId: null,
+      })
+    ).toBe(true)
+  })
+
+  it('não consulta bootstrap quando já há viagem, sem token, ou noutra role', () => {
+    expect(
+      shouldBootstrapDriverActiveTrip({
+        token: 'tok',
+        sessionRole: 'driver',
+        activeTripId: 'trip-1',
+      })
+    ).toBe(false)
+    expect(
+      shouldBootstrapDriverActiveTrip({
+        token: null,
+        sessionRole: 'driver',
+        activeTripId: null,
+      })
+    ).toBe(false)
+    expect(
+      shouldBootstrapDriverActiveTrip({
+        token: 'tok',
+        sessionRole: 'passenger',
+        activeTripId: null,
       })
     ).toBe(false)
   })
