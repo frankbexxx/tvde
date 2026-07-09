@@ -136,22 +136,33 @@ def test_real_account_rejects_global_test_password(
     assert r.json()["detail"] == "invalid_credentials"
 
 
-def test_new_user_from_login_is_real_account(
+def test_unknown_login_does_not_create_pending_user_or_consume_beta_capacity(
     client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _patch_test_password(monkeypatch)
-    monkeypatch.setattr(settings, "MAX_BETA_USERS", 99999, raising=False)
+    monkeypatch.setattr(settings, "MAX_BETA_USERS", 1, raising=False)
+    db.add(
+        User(
+            role=Role.passenger,
+            name="Tester",
+            phone=_unique_beta_phone(),
+            status=UserStatus.active,
+            is_test_account=True,
+            password_hash=hash_password(TEST_PWD),
+        )
+    )
+    db.commit()
+
     phone = _unique_beta_phone()
     r = client.post(
         "/auth/login",
         json={"phone": phone, "password": TEST_PWD, "requested_role": "passenger"},
     )
     assert r.status_code == 401
-    assert r.json()["detail"] == "password_not_set"
+    assert r.json()["detail"] == "invalid_credentials"
 
-    user = db.execute(select(User).where(User.phone == phone)).scalar_one()
-    assert user.is_test_account is False
-    assert user.status == UserStatus.pending
+    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+    assert user is None
 
 
 def test_owner_phone_stays_real_in_seed_fields(

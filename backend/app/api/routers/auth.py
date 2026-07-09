@@ -247,7 +247,7 @@ async def login(
     request: Request,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
-    """BETA: login with phone + default password. No OTP required."""
+    """BETA: login existing users with phone + password. No OTP required."""
     if not _is_beta():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
@@ -262,36 +262,10 @@ async def login(
         )
     user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not user:
-        count = db.execute(select(func.count()).select_from(User)).scalar() or 0
-        if count >= settings.MAX_BETA_USERS:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="BETA cheio",
-            )
-        admin_phone = getattr(settings, "ADMIN_PHONE", None)
-        if admin_phone and _normalize_phone(admin_phone) == phone:
-            user = User(
-                role=Role.super_admin,
-                name=phone,
-                phone=phone,
-                status=UserStatus.active,
-            )
-            db.add(user)
-        else:
-            # Same rule as OTP: no public signup path for Role.partner.
-            req_role = (payload.requested_role or "passenger").strip().lower()
-            if req_role not in ("passenger", "driver"):
-                req_role = "passenger"
-            user = User(
-                role=Role.passenger,
-                name=phone,
-                phone=phone,
-                status=UserStatus.pending,
-                requested_role=req_role,
-            )
-            db.add(user)
-        db.commit()
-        db.refresh(user)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_credentials",
+        )
 
     _verify_login_password(user, payload.password)
 
