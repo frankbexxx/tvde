@@ -228,3 +228,51 @@ def test_beta_fallback_runs_when_only_expired_offers(
     db.refresh(trip)
 
     assert trip.status == TripStatus.assigned
+
+
+def test_location_redispatch_skips_older_unserviceable_zero_offer_trip(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", False, raising=False)
+    for loc in db.execute(select(DriverLocation)).scalars().all():
+        db.delete(loc)
+    for offer in db.execute(select(TripOffer)).scalars().all():
+        db.delete(offer)
+    for trip in (
+        db.execute(select(Trip).where(Trip.status == TripStatus.requested))
+        .scalars()
+        .all()
+    ):
+        trip.status = TripStatus.cancelled
+    db.commit()
+
+    driver_id = _create_driver(db, lat=38.701, lng=-9.101, vehicle_categories="x")
+    older_blocker = _create_requested_trip(db, vehicle_category="comfort")
+    target = _create_requested_trip(db, vehicle_category="x")
+    older_blocker.created_at = datetime.now(timezone.utc) - timedelta(minutes=2)
+    target.created_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    db.commit()
+
+    ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    upsert_driver_location(
+        db=db,
+        driver_id=driver_id,
+        lat=38.701,
+        lng=-9.101,
+        timestamp_ms=ts_ms,
+    )
+
+    blocker_offers = (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == older_blocker.id))
+        .scalars()
+        .all()
+    )
+    target_offers = (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == target.id))
+        .scalars()
+        .all()
+    )
+
+    assert blocker_offers == []
+    assert len(target_offers) == 1
+    assert str(target_offers[0].driver_id) == driver_id
