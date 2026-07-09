@@ -108,6 +108,18 @@ def _raise_not_found() -> None:
     )
 
 
+def _assert_driver_matches_trip_category(driver: Driver, trip: Trip) -> None:
+    trip_category = (trip.vehicle_category or "x").strip().lower()
+    driver_categories = decode_driver_categories_csv(
+        getattr(driver, "vehicle_categories", None)
+    )
+    if trip_category not in driver_categories:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="forbidden_vehicle_category",
+        )
+
+
 def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int]:
     """
     Estimate distance, duration, price, ETA.
@@ -681,6 +693,7 @@ def accept_trip(
             detail="forbidden",
         )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
+    _assert_driver_matches_trip_category(driver, trip)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -833,15 +846,7 @@ def accept_offer(
     if not driver:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
     assert_driver_can_accept_by_driving_hours(db, driver_id)
-    trip_category = (trip.vehicle_category or "x").strip().lower()
-    driver_categories = decode_driver_categories_csv(
-        getattr(driver, "vehicle_categories", None)
-    )
-    if trip_category not in driver_categories:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="forbidden_vehicle_category",
-        )
+    _assert_driver_matches_trip_category(driver, trip)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
