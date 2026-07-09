@@ -153,11 +153,43 @@ def upsert_driver_location(
             timestamp=ts,
         )
 
-    # Fallback auto-dispatch for BETA/dev: when multi-offer created 0 offers
-    # (no drivers had locations). Assign oldest requested trip to pool.
     from app.db.models.trip_offer import TripOffer
     from app.models.enums import OfferStatus
+    from app.services.offer_dispatch import create_offers_for_trip
 
+    # Re-dispatch when a fresh location arrives after trip creation produced 0 offers.
+    if driver.status == DriverStatus.approved and getattr(driver, "is_available", True):
+        ids_with_any_offers = {
+            row[0]
+            for row in db.execute(select(TripOffer.trip_id).distinct()).all()
+        }
+        q = (
+            select(Trip)
+            .where(Trip.status == TripStatus.requested)
+            .order_by(Trip.created_at.asc())
+        )
+        if ids_with_any_offers:
+            q = q.where(Trip.id.notin_(ids_with_any_offers))
+        trip_for_dispatch = db.execute(q).scalars().first()
+        if trip_for_dispatch is not None:
+            db.flush()
+            offers = create_offers_for_trip(db=db, trip=trip_for_dispatch)
+            if offers:
+                log_event(
+                    "location_redispatch_offers_created",
+                    trip_id=str(trip_for_dispatch.id),
+                    driver_id=driver_id,
+                    offer_count=len(offers),
+                )
+            else:
+                log_event(
+                    "location_redispatch_no_offers",
+                    trip_id=str(trip_for_dispatch.id),
+                    driver_id=driver_id,
+                )
+
+    # Fallback auto-dispatch for BETA/dev: when multi-offer created 0 offers
+    # (no drivers had locations). Assign oldest requested trip to pool.
     beta_mode = getattr(settings, "BETA_MODE", False)
     if beta_mode and getattr(driver, "is_available", True):
         # Only skip trips that still have live pending offers (not expired/rejected).
