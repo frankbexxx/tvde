@@ -13,13 +13,14 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
+from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
 from app.services.driver_location import upsert_driver_location
 from app.services.offer_dispatch import create_offers_for_trip, redispatch_expired_trips
-from app.services.trips import accept_offer
+from app.services.trips import accept_offer, accept_trip
 
 
 def _create_driver(
@@ -166,6 +167,32 @@ def test_accept_offer_rejects_wrong_vehicle_category(db: Session) -> None:
 
     assert exc_info.value.status_code == 403
     assert exc_info.value.detail == "forbidden_vehicle_category"
+
+
+def test_accept_trip_rejects_wrong_vehicle_category(db: Session) -> None:
+    wrong_driver_id = _create_driver(db, lat=38.702, lng=-9.102, vehicle_categories="x")
+    trip = _create_requested_trip(db, vehicle_category="comfort")
+    trip.status = TripStatus.assigned
+    db.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        accept_trip(db=db, driver_id=wrong_driver_id, trip_id=str(trip.id))
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail == "forbidden_vehicle_category"
+
+    db.refresh(trip)
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == uuid.UUID(wrong_driver_id))
+    ).scalar_one()
+    payment = db.execute(
+        select(Payment).where(Payment.trip_id == trip.id)
+    ).scalar_one_or_none()
+
+    assert trip.status == TripStatus.assigned
+    assert trip.driver_id is None
+    assert driver.is_available is True
+    assert payment is None
 
 
 def test_beta_fallback_runs_when_only_expired_offers(
