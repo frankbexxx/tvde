@@ -154,6 +154,41 @@ def test_da_004_online_does_not_override_availability_during_active_trip() -> No
     db.close()
 
 
+def test_driver_active_trip_bootstrap_returns_current_trip_when_unavailable() -> None:
+    """GET /driver/trips/active restores an accepted trip after driver UI reload."""
+    db = _make_db()
+    driver_id = _create_driver(db, is_available=False)
+    passenger_id = _create_passenger(db)
+    trip = Trip(
+        passenger_id=uuid.UUID(passenger_id),
+        driver_id=uuid.UUID(driver_id),
+        status=TripStatus.accepted,
+        origin_lat=38.7,
+        origin_lng=-9.1,
+        destination_lat=38.8,
+        destination_lng=-9.2,
+        estimated_price=10.0,
+        vehicle_category="x",
+    )
+    db.add(trip)
+    db.commit()
+
+    user_ctx = UserContext(user_id=driver_id, role=Role.driver)
+    _override_dependencies(db, user_ctx)
+
+    client = TestClient(app)
+    r = client.get("/driver/trips/active")
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["trip_id"] == str(trip.id)
+    assert body["status"] == "accepted"
+    assert body["driver_id"] == driver_id
+
+    _reset_overrides()
+    db.close()
+
+
 def test_da_005_get_availability_status() -> None:
     """GET /driver/status returns current is_available."""
     db = _make_db()

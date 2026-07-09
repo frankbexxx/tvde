@@ -1607,6 +1607,30 @@ def driver_has_active_assigned_trip(*, db: Session, driver_user_id: str) -> bool
     return found is not None
 
 
+def get_current_active_trip_for_driver(
+    *,
+    db: Session,
+    driver_id: str,
+) -> Trip | None:
+    """Return the driver's accepted/arriving/ongoing trip, if one is active."""
+    did = uuid.UUID(str(driver_id))
+    trip = (
+        db.execute(
+            select(Trip)
+            .options(joinedload(Trip.payment))
+            .where(
+                Trip.driver_id == did,
+                Trip.status.in_(ACTIVE_TRIP_BLOCKS_DRIVER_AVAILABILITY),
+            )
+            .order_by(Trip.updated_at.desc())
+            .limit(1)
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
+    return trip
+
+
 def get_trip_for_driver(
     *,
     db: Session,

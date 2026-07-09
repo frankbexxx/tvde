@@ -212,6 +212,10 @@ export async function getDriverTripHistory(token: string): Promise<TripHistoryIt
   return apiFetch<TripHistoryItem[]>('/driver/trips/history', { token })
 }
 
+export async function getDriverActiveTrip(token: string): Promise<TripDetailResponse | null> {
+  return apiFetch<TripDetailResponse | null>('/driver/trips/active', { token })
+}
+
 export async function getDriverTripDetail(tripId: string, token: string): Promise<TripDetailResponse> {
   return apiFetch<TripDetailResponse>(`/driver/trips/${tripId}`, { token })
 }
