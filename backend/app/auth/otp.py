@@ -9,7 +9,10 @@ from app.core.config import settings
 def generate_otp_code(length: int = 6) -> str:
     min_value = 10 ** (length - 1)
     max_value = (10**length) - 1
-    if getattr(settings, "ENABLE_DEV_TOOLS", False):
+    if (
+        getattr(settings, "ENABLE_DEV_TOOLS", False)
+        and not settings.is_production_environment()
+    ):
         return "123456"  # Beta: código fixo para testadores
     return str(secrets.randbelow(max_value - min_value + 1) + min_value)
 

@@ -1,5 +1,6 @@
 """Google OAuth exchange + auth rate limits (A2-01)."""
 
+from app.auth import otp as otp_module
 from app.core.config import settings
 
 
@@ -69,3 +70,23 @@ def test_otp_request_rate_limit_per_phone(client, monkeypatch) -> None:
     r13 = client.post("/auth/otp/request", json={"phone": phone})
     assert r13.status_code == 429
     assert r13.json()["detail"] == "rate_limit_otp_request"
+
+
+def test_otp_verify_rate_limit_per_phone(client) -> None:
+    phone = "+351934999777"
+    for i in range(12):
+        r = client.post("/auth/otp/verify", json={"phone": phone, "code": "000000"})
+        assert r.status_code == 401, f"iteration {i}"
+        assert r.json()["detail"] == "invalid_otp"
+
+    r13 = client.post("/auth/otp/verify", json={"phone": phone, "code": "000000"})
+    assert r13.status_code == 429
+    assert r13.json()["detail"] == "rate_limit_otp_verify"
+
+
+def test_dev_tools_fixed_otp_disabled_in_production(monkeypatch) -> None:
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
+    monkeypatch.setattr(settings, "ENABLE_DEV_TOOLS", True, raising=False)
+    monkeypatch.setattr(otp_module.secrets, "randbelow", lambda _n: 0)
+
+    assert otp_module.generate_otp_code() == "100000"
