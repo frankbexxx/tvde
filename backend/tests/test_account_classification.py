@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user
@@ -214,7 +214,8 @@ def test_pending_beta_users_do_not_consume_otp_request_capacity(
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     monkeypatch.setattr(settings, "ENABLE_DEV_TOOLS", True, raising=False)
-    monkeypatch.setattr(settings, "MAX_BETA_USERS", 1, raising=False)
+    total_users = db.execute(select(func.count()).select_from(User)).scalar() or 0
+    monkeypatch.setattr(settings, "MAX_BETA_USERS", total_users + 1, raising=False)
     pending_phone = _unique_beta_phone()
 
     requested = client.post(
