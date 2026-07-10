@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.passwords import hash_password, verify_password
 from app.core.config import settings
+from app.db.models.otp import OtpCode
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
 
@@ -163,6 +164,36 @@ def test_unknown_login_does_not_create_pending_user_or_consume_beta_capacity(
 
     user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     assert user is None
+
+
+def test_otp_verify_persists_pending_beta_user_for_admin_approval(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_DEV_TOOLS", True, raising=False)
+    monkeypatch.setattr(settings, "MAX_BETA_USERS", 99999, raising=False)
+    phone = _unique_beta_phone()
+
+    requested = client.post(
+        "/auth/otp/request",
+        json={"phone": phone, "requested_role": "driver"},
+    )
+    assert requested.status_code == 200
+
+    verified = client.post(
+        "/auth/otp/verify",
+        json={"phone": phone, "code": "123456", "requested_role": "driver"},
+    )
+    assert verified.status_code == 403
+    assert verified.json()["detail"] == "pending_approval"
+
+    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+    assert user is not None
+    assert user.status == UserStatus.pending
+    assert user.requested_role == "driver"
+
+    otp = db.execute(select(OtpCode).where(OtpCode.phone == phone)).scalar_one()
+    assert otp.consumed_at is not None
 
 
 def test_owner_phone_stays_real_in_seed_fields(

@@ -193,6 +193,8 @@ async def verify_otp(
         user.status = UserStatus.active
 
     if user.status == UserStatus.pending:
+        # The pending account is the durable signup request shown in the admin queue.
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="pending_approval",
