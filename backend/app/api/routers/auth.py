@@ -109,7 +109,7 @@ async def request_otp(
             )
 
     code = generate_otp_code()
-    if settings.ENV == "dev" or getattr(settings, "ENABLE_DEV_TOOLS", False):
+    if settings.dev_tools_router_enabled():
         print(f"[OTP] phone={phone} code={code}")
     expires_at = otp_expiration_time()
     code_hash = hash_otp_code(phone, code)
