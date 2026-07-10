@@ -87,6 +87,8 @@ def test_otp_verify_rate_limit_per_phone(client) -> None:
 def test_dev_tools_fixed_otp_disabled_in_production(client, monkeypatch, capsys) -> None:
     monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
     monkeypatch.setattr(settings, "ENABLE_DEV_TOOLS", True, raising=False)
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "MAX_BETA_USERS", 9999, raising=False)
     monkeypatch.setattr(otp_module.secrets, "randbelow", lambda _n: 0)
 
     assert otp_module.generate_otp_code() == "100000"
