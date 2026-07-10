@@ -1416,7 +1416,7 @@ def complete_trip(
                 ) from e
 
             try:
-                if settings.ENV == "dev" or settings.ENABLE_DEV_TOOLS:
+                if settings.dev_tools_router_enabled():
                     confirm_payment_intent(
                         payment.stripe_payment_intent_id,
                         payment_method="pm_card_visa",
