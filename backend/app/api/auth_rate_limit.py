@@ -13,6 +13,7 @@ _buckets: dict[tuple[str, str, str], list[float]] = defaultdict(list)
 
 # Por IP+telefone (OTP / login BETA)
 _MAX_OTP_REQUEST_PER_MINUTE = 12
+_MAX_OTP_VERIFY_PER_MINUTE = 12
 _MAX_LOGIN_PER_MINUTE = 24
 # Por IP (Google code exchange — sem telefone na chave)
 _MAX_GOOGLE_EXCHANGE_PER_MINUTE = 30
@@ -42,6 +43,20 @@ def check_otp_request_rate_limit(request: Request, phone: str) -> None:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="rate_limit_otp_request",
+        )
+    bucket.append(now)
+
+
+def check_otp_verify_rate_limit(request: Request, phone: str) -> None:
+    now = time.monotonic()
+    ip = client_ip(request)
+    key = phone.strip()[:32]
+    bucket = _buckets[("otp_verify", ip, key)]
+    _prune(bucket, window_s=60.0, now=now)
+    if len(bucket) >= _MAX_OTP_VERIFY_PER_MINUTE:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="rate_limit_otp_verify",
         )
     bucket.append(now)
 

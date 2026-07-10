@@ -12,6 +12,7 @@ from app.api.auth_rate_limit import (
     check_beta_login_rate_limit,
     check_google_exchange_rate_limit,
     check_otp_request_rate_limit,
+    check_otp_verify_rate_limit,
 )
 from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
@@ -127,10 +128,12 @@ async def request_otp(
 @router.post("/otp/verify", response_model=TokenResponse)
 async def verify_otp(
     payload: OtpVerifyRequest,
+    request: Request,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
     now = datetime.now(timezone.utc)
     phone = _normalize_phone(payload.phone)
+    check_otp_verify_rate_limit(request, phone)
     otp: Optional[OtpCode] = db.execute(
         select(OtpCode)
         .where(
