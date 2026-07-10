@@ -31,6 +31,14 @@ export function isDriverLocationReportingOperational(opts: {
   return isDriverAvailabilityOperational(opts)
 }
 
+export function shouldBootstrapDriverActiveTrip(opts: {
+  token: string | null
+  sessionRole: string | null | undefined
+  activeTripId: string | null | undefined
+}): boolean {
+  return Boolean(opts.token && opts.sessionRole === 'driver' && !opts.activeTripId)
+}
+
 export function isDrivingHoursBlockedError(err: unknown): boolean {
   const e = err as { status?: number; detail?: unknown }
   return e?.status === 409 && e?.detail === 'driving_hours_blocked'

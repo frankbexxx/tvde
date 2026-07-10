@@ -9,6 +9,7 @@ import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
 import {
   getAvailableTrips,
   getDriverTripHistory,
+  getDriverActiveTrip,
   getDriverTripDetail,
   acceptTrip,
   getDriverVehicleCategories as getDriverVehicleCategoriesApi,
@@ -204,6 +205,7 @@ import {
   isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
+  shouldBootstrapDriverActiveTrip,
 } from './driverAvailabilitySync'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
@@ -953,6 +955,25 @@ export function DriverDashboard() {
       cancelled = true
     }
   }, [token, sessionRole])
+
+  useEffect(() => {
+    if (!token || !shouldBootstrapDriverActiveTrip({ token, sessionRole, activeTripId })) return
+    let cancelled = false
+    void getDriverActiveTrip(token)
+      .then((trip) => {
+        if (cancelled || !trip) return
+        setDriverActiveTripId(trip.trip_id)
+        setAcceptedDetailFallback(trip)
+        setDriverStatusOverride(trip.status)
+        setStatus(driverActiveTripUi(trip.status).label)
+      })
+      .catch(() => {
+        /* No bootstrap on older/offline API; normal accept flow still sets activeTripId. */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token, sessionRole, activeTripId, setDriverActiveTripId, setStatus])
 
   // Alinhar disponibilidade local com GET /driver/status (não confiar só no localStorage).
   useEffect(() => {
