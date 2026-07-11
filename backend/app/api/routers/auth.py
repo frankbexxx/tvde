@@ -31,6 +31,7 @@ from app.auth.security import create_access_token
 from app.db.models.otp import OtpCode
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
+from app.services.beta_capacity import active_beta_user_count
 from app.schemas.auth import (
     GoogleExchangeRequest,
     LoginRequest,
@@ -101,8 +102,7 @@ async def request_otp(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
             )
-        count = db.execute(select(func.count()).select_from(User)).scalar() or 0
-        if count >= settings.MAX_BETA_USERS:
+        if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="BETA cheio",
@@ -373,8 +373,7 @@ async def google_exchange(
             user.oauth_google_sub = sub
 
     if user is None:
-        count = db.execute(select(func.count()).select_from(User)).scalar() or 0
-        if count >= settings.MAX_BETA_USERS:
+        if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="BETA cheio",

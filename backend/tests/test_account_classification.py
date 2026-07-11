@@ -6,16 +6,19 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.api.deps import UserContext, get_current_user
 from app.auth.passwords import hash_password, verify_password
 from app.core.config import settings
 from app.db.models.otp import OtpCode
 from app.db.models.user import User
+from app.main import app
 from app.models.enums import Role, UserStatus
 
 TEST_PWD = "demo1234"
+ADMIN_ACTOR_ID = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 
 
 def _unique_beta_phone() -> str:
@@ -25,6 +28,16 @@ def _unique_beta_phone() -> str:
 def _patch_test_password(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     monkeypatch.setattr(settings, "TEST_ACCOUNT_PASSWORD", TEST_PWD, raising=False)
+
+
+@pytest.fixture
+def admin_actor() -> None:
+    async def _admin() -> UserContext:
+        return UserContext(user_id=ADMIN_ACTOR_ID, role=Role.admin)
+
+    app.dependency_overrides[get_current_user] = _admin
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 def test_test_account_login_with_beta(
@@ -194,6 +207,73 @@ def test_otp_verify_persists_pending_beta_user_for_admin_approval(
 
     otp = db.execute(select(OtpCode).where(OtpCode.phone == phone)).scalar_one()
     assert otp.consumed_at is not None
+
+
+def test_pending_beta_users_do_not_consume_otp_request_capacity(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_DEV_TOOLS", True, raising=False)
+    total_users = db.execute(select(func.count()).select_from(User)).scalar() or 0
+    monkeypatch.setattr(settings, "MAX_BETA_USERS", total_users + 1, raising=False)
+    pending_phone = _unique_beta_phone()
+
+    requested = client.post(
+        "/auth/otp/request",
+        json={"phone": pending_phone, "requested_role": "driver"},
+    )
+    assert requested.status_code == 200
+
+    verified = client.post(
+        "/auth/otp/verify",
+        json={"phone": pending_phone, "code": "123456", "requested_role": "driver"},
+    )
+    assert verified.status_code == 403
+    assert verified.json()["detail"] == "pending_approval"
+
+    user = db.execute(select(User).where(User.phone == pending_phone)).scalar_one()
+    assert user.status == UserStatus.pending
+
+    second = client.post(
+        "/auth/otp/request",
+        json={"phone": _unique_beta_phone(), "requested_role": "passenger"},
+    )
+    assert second.status_code == 200
+
+
+@pytest.mark.usefixtures("admin_actor")
+def test_admin_approval_enforces_active_beta_capacity(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "MAX_BETA_USERS", 1, raising=False)
+    pending_phone = _unique_beta_phone()
+    pending = User(
+        role=Role.passenger,
+        name=pending_phone,
+        phone=pending_phone,
+        status=UserStatus.pending,
+        requested_role="passenger",
+    )
+    db.add_all(
+        [
+            User(
+                role=Role.passenger,
+                name="Active beta user",
+                phone=_unique_beta_phone(),
+                status=UserStatus.active,
+            ),
+            pending,
+        ]
+    )
+    db.commit()
+
+    approved = client.post("/admin/approve-user", json={"phone": pending_phone})
+    assert approved.status_code == 403
+    assert approved.json()["detail"] == "BETA cheio"
+
+    db.refresh(pending)
+    assert pending.status == UserStatus.pending
 
 
 def test_owner_phone_stays_real_in_seed_fields(

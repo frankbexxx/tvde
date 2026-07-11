@@ -47,6 +47,7 @@ from app.schemas.trip import (
     TripStatusResponse,
 )
 from app.services.admin_metrics import get_admin_metrics
+from app.services.beta_capacity import active_beta_user_count
 from app.services.system_health import get_system_health
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
 from app.services.rotacional_external import refresh_rotacional_external_cache
@@ -1065,6 +1066,8 @@ async def approve_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if u.status != UserStatus.pending:
         raise HTTPException(status_code=400, detail="user_not_pending")
+    if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
+        raise HTTPException(status_code=403, detail="BETA cheio")
     u.status = UserStatus.active
     req_role = (u.requested_role or "passenger").lower()
     if req_role == "driver":
