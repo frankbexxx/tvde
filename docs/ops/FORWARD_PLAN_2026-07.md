@@ -1,7 +1,7 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-10 (após smoke prod ponta-a-ponta: viagem completa em `tvde-app` + `tvde-api`).
+**Última actualização:** 2026-07-11 (P5 ops: cron-job.org activo + `ENABLE_DEV_TOOLS=false` no Render).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md)
 
@@ -12,10 +12,12 @@
 | Área | Estado |
 |------|--------|
 | Matching / disponibilidade UI | PRs **#386–#388** em `main` |
+| Auth hardening | PRs **#389–#390–#393** em `main` (OTP persist, throttle, sem log OTP em prod) |
 | Vars prod | Auditadas e coerentes (API↔web↔BD) |
 | Smoke UI prod | Login → docs → partner → online → viagem fresca → **em viagem → concluída** |
 | Backlog BD | Admin cancelou viagens antigas; BETA auto-assign explicado |
-| `ENABLE_DEV_TOOLS` | Funcionalmente OFF (`/health?diagnostic=1` → `dev_tools: false`); higiene no painel Render pendente |
+| **Cron produção** | **OK** — cron-job.org `TVDE Background Workers`, GET + `X-Cron-Secret`, 1 min, 200 OK (11:49–11:51) |
+| **`ENABLE_DEV_TOOLS`** | **OK** — `false` no painel Render; `/health?diagnostic=1` → `dev_tools: false`, `beta_mode: true` |
 
 ---
 
@@ -47,7 +49,10 @@
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | E2E real feito; faltam cron, webhook Stripe assertivo, rotação secrets |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools painel ✅ · faltam webhook Stripe assertivo, rotação secrets, backups |
+| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; secret só em header; jobs antigos removidos |
+| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11; health confirmado |
+| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR dedicada; não bloqueia P5 |
 | **TVDE-STG** | Staging `smoke_validation` | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 |
 | **TVDE-BKP** | Backups + restore test | **Por iniciar** | Idem §3 |
 
@@ -61,11 +66,11 @@
 
 | Bloco | Conteúdo | Estado |
 |-------|----------|--------|
-| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — e2e OK; cron/webhook/live keys por validar |
+| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — e2e OK; **cron OK**; webhook/live keys por validar |
 | **§2 STAGING** | infra isolada, stripe test, smokes | **Por iniciar** |
 | **§3 BACKUPS** | pg_dump + restore testado | **Por iniciar** |
 | **§4 MIGRATIONS** | A025 em todas DBs, integridade dados | **Verificar** |
-| **§5 HARDENING** | CORS, dev endpoints OFF, auth | **Parcial** — dev OFF; `/debug/*` ainda ON com BETA |
+| **§5 HARDENING** | CORS, dev endpoints OFF, auth | **Parcial** — `ENABLE_DEV_TOOLS=false` no painel; `/debug/*` ainda ON com BETA |
 | **§6 OBSERVABILITY** | logs, system-health, alerting | **Parcial** — Sentry ON; alerting mínimo em falta |
 | **§7 TESTS** | webhook sim, flows críticos, concurrency | **Parcial** — pytest/E2E CI OK; gaps pontuais |
 | **§8 DEPENDENCIES** | pip-audit, pins | **Por iniciar** |
@@ -80,7 +85,7 @@
 
 Carrís sugeridos (actualizar após esta sessão):
 
-1. **P5 ops** — fechar TVDE-PROD (cron, secrets, webhook)
+1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅, ~~dev tools painel~~ ✅, **rotação secrets**, webhook Stripe)
 2. **P1 staging** — A2-02 OAuth + smokes
 3. **P0 produto** — O-i18n-NICHOS smoke #362
 
@@ -224,11 +229,11 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 | Ordem | Carril | Porquê |
 |-------|--------|--------|
-| **1** | **P5 ops** | Cron activo, rotação secrets, webhook Stripe validado, backups — evita repetir backlog de 19 viagens e viagens presas |
-| **2** | **Hardening BETA** | Desligar `/debug/*` pós-estabilização; limpar `ENABLE_DEV_TOOLS` no painel; política cron timeouts |
+| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools painel~~ ✅ · **próximo: rotação secrets (O-ROTATE-1)**, webhook Stripe, backups |
+| **2** | **Hardening BETA** | Planear desligar `/debug/*` (O-DEBUG-1); cron timeouts já activos |
 | **3** | **P1 staging** | Regra do repo: staging antes de releases com OAuth/webhook |
-| **4** | **Bot PRs auth** | #389 + #390 — fecham buracos pós-#381 (OTP) |
-| **5** | **P0 polish** | i18n nichos #362 quando ops estiver verde |
+| **4** | **R-E2E-1** | Estabilizar flake proximity E2E — PR dedicada, não bloqueia deploy |
+| **5** | **P0 polish** | i18n nichos #362 quando webhook/secrets estiverem verdes |
 
 ### O que não fazer agora
 
@@ -239,7 +244,7 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 ### Risco residual #1
 
-**Dados de teste em prod** (viagens, offers, users) sem cron/limpeza → confunde smokes e motoristas. Solução: **cron + política de cancelamento** + eventual script de limpeza test trips.
+**Dados de teste em prod** (viagens, offers, users) → cron activo reduz ofertas/viagens presas; ainda pode confundir smokes. Complementar com política de cancelamento + eventual script de limpeza test trips.
 
 ### Risco residual #2
 
@@ -247,31 +252,33 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 ---
 
-## 13. PRs Cursor Bot — análise preliminar (rever em conjunto)
+## 13. PRs Cursor Bot — estado (2026-07-11)
 
-| PR | Título | Veredicto preliminar | Notas |
-|----|--------|----------------------|-------|
-| [**#389**](https://github.com/frankbexxx/tvde/pull/389) | Fix beta OTP signup persistence | **Merge recomendado** | Complementa **#381** (login não cria users): OTP signup pending deve fazer commit antes de 403 |
-| [**#390**](https://github.com/frankbexxx/tvde/pull/390) | throttle OTP verification attempts | **Merge recomendado** | Segurança: brute-force OTP; desactiva código fixo `123456` em prod |
+| PR | Título | Estado |
+|----|--------|--------|
+| **#389** | Fix beta OTP signup persistence | **Merged** (`89556e6`) |
+| **#390** | throttle OTP verification attempts | **Merged** (`9575600`) |
+| **#393** | prevent OTP code logging in production | **Merged** (`983c58e`) |
+| **#394** | pending beta users / capacity | **Draft** — rever quando fechar O-ROTATE-1 |
+| **#392** | driver docs review after replace | **Draft** |
 
-**Ordem sugerida:** #389 → #389 merged → update branch #390 → merge #390.  
-**Não mergear às cegas:** ambas draft; esperar CI verde; tocam `auth.py` (conflito possível se em paralelo).
-
-**PRs bot fechadas nesta onda (já em `main`):** #387, #382, #381, #384, #388.  
+**PRs bot fechadas nesta onda (já em `main`):** #387, #382, #381, #384, #388, #389, #390, #393.  
 **PRs bot fechadas como redundantes:** #379, #380, #385.
 
 ---
 
 ## 14. Próxima sessão — acções concretas
 
-| ID | Acção | Dono |
-|----|-------|------|
-| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` no painel tvde-api | Frank |
-| **O-CRON-1** | Validar cron-job.org → `GET /cron/jobs` 200 | Frank + agente |
-| **O-ROTATE-1** | Rodar JWT, OTP, CRON_SECRET, TEST_ACCOUNT_PASSWORD | Frank |
-| **O-DEBUG-1** | Planear desligar `/debug/*` quando sair fase BETA | Decisão |
-| **R-BOT-1** | Review + merge #389, #390 | Frank + agente |
-| **S-PROD-2** | Repetir smoke após rotação secrets | Frank |
+| ID | Acção | Estado | Notas |
+|----|-------|--------|-------|
+| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; header `X-Cron-Secret`; 1 min |
+| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11; health `dev_tools: false` |
+| **R-BOT-1** | Review + merge #389, #390, #393 | **Concluído** | Em `main` |
+| **O-ROTATE-1** | Rodar JWT, OTP, CRON_SECRET, TEST_ACCOUNT_PASSWORD | **Por iniciar** | **Próximo P5** — secrets expostos em chat histórico |
+| **O-STRIPE-1** | Webhook Stripe assertivo (test event + BD idempotência) | **Por iniciar** | [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 |
+| **O-DEBUG-1** | Planear desligar `/debug/*` quando sair fase BETA | **Por iniciar** | Decisão produto; `BETA_MODE` mantém `/debug` |
+| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR dedicada; CI `main` pode falhar sem bloquear deploy |
+| **S-PROD-2** | Repetir smoke após rotação secrets | **Smoke pendente** | Só após O-ROTATE-1 |
 
 ---
 
