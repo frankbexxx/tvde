@@ -123,6 +123,15 @@ def test_partner_can_approve_document_after_driver_upload() -> None:
     assert r.status_code == 200
     assert r.json()["documents"]["carta_tvde"]["status"] == "approved"
 
+    r_replace = c.post(
+        "/driver/documents/carta_tvde/upload",
+        headers={"Authorization": f"Bearer {driver_tok}"},
+        files={"file": ("licenca-revista.pdf", b"%PDF-1.4 replacement", "application/pdf")},
+    )
+    assert r_replace.status_code == 200
+    assert r_replace.json()["docs"]["carta_tvde"]["status"] == "pending_review"
+    assert r_replace.json()["docs"]["carta_tvde"]["file_name"] == "licenca-revista.pdf"
+
 
 def test_driver_upload_sets_pending_review_status() -> None:
     db = SessionLocal()
