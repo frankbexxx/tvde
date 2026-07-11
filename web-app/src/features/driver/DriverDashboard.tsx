@@ -25,7 +25,7 @@ import type {
   TripHistoryItem,
   TripStatus,
 } from '../../api/trips'
-import { isTimeoutLikeError } from '../../api/client'
+import { isTimeoutLikeError, withColdStartRetries } from '../../api/client'
 import {
   createDriverZoneSession,
   deleteDriverZoneCustomZone,
@@ -330,6 +330,7 @@ export function DriverDashboard() {
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
   const activeTripId = driverActiveTripId
+  const [activeTripBootstrapPending, setActiveTripBootstrapPending] = useState(false)
   const availableTripLabel = driverAvailableTripStatusLabel()
   const newTripHint = driverNewTripListHint()
 
@@ -357,6 +358,7 @@ export function DriverDashboard() {
     hydrated: availabilityHydrated,
     syncing: availabilitySyncing,
     activeTripId,
+    activeTripBootstrapPending,
   })
 
   const geoWatchEnabled =
@@ -364,6 +366,7 @@ export function DriverDashboard() {
     isDemoLocationEnabled() ||
     !driverBottomNav ||
     Boolean(activeTripId) ||
+    activeTripBootstrapPending ||
     availabilityOperational
 
   const {
@@ -477,6 +480,17 @@ export function DriverDashboard() {
   const isOnline = useOnlineStatus()
   const sessionDisplayName = useMemo(() => getStoredSessionDisplayName(), [])
 
+  const restoreDriverActiveTrip = useCallback(async (): Promise<TripDetailResponse | null> => {
+    if (!token) return null
+    const trip = await withColdStartRetries((timeoutMs) => getDriverActiveTrip(token, timeoutMs))
+    if (!trip) return null
+    setDriverActiveTripId(trip.trip_id)
+    setAcceptedDetailFallback(trip)
+    setDriverStatusOverride(trip.status)
+    setStatus(driverActiveTripUi(trip.status).label)
+    return trip
+  }, [token, setDriverActiveTripId, setStatus])
+
   const handleDriverAvailabilityChange = useCallback(
     async (checked: boolean) => {
       if (!token || availabilitySyncing) return
@@ -490,11 +504,23 @@ export function DriverDashboard() {
       setError(null)
       try {
         if (checked) {
-          await setDriverOnline(token)
-          setOffline(false)
-          warmDriverNavSessionIfNeeded()
-          addLog('Toggle: Disponível', 'info')
-          setStatus('Disponível')
+          const serverAvailability = await setDriverOnline(token)
+          const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
+          const nextOffline = offlineFromBackendAvailability(serverAvailability.is_available, canGoOnline)
+          setOffline(nextOffline)
+          if (nextOffline) {
+            addLog('Servidor manteve indisponível; a procurar viagem activa', 'info')
+            setStatus('A sincronizar viagem…')
+            setActiveTripBootstrapPending(true)
+            const trip = await restoreDriverActiveTrip()
+            if (!trip) {
+              setToast('Continuas indisponível no servidor. Se estiveres em viagem, verifica a ligação.')
+            }
+          } else {
+            warmDriverNavSessionIfNeeded()
+            addLog('Toggle: Disponível', 'info')
+            setStatus('Disponível')
+          }
         } else {
           await setDriverOffline(token)
           setOffline(true)
@@ -515,6 +541,7 @@ export function DriverDashboard() {
           addLog(`Erro disponibilidade: ${msg}`, 'error')
         }
       } finally {
+        setActiveTripBootstrapPending(false)
         setAvailabilitySyncing(false)
       }
     },
@@ -526,6 +553,7 @@ export function DriverDashboard() {
       activeTripId,
       addLog,
       setStatus,
+      restoreDriverActiveTrip,
     ]
   )
 
@@ -959,21 +987,29 @@ export function DriverDashboard() {
   useEffect(() => {
     if (!token || !shouldBootstrapDriverActiveTrip({ token, sessionRole, activeTripId })) return
     let cancelled = false
-    void getDriverActiveTrip(token)
+    setActiveTripBootstrapPending(true)
+    void restoreDriverActiveTrip()
       .then((trip) => {
         if (cancelled || !trip) return
-        setDriverActiveTripId(trip.trip_id)
-        setAcceptedDetailFallback(trip)
-        setDriverStatusOverride(trip.status)
-        setStatus(driverActiveTripUi(trip.status).label)
+        addLog('Viagem activa recuperada após recarregar', 'info')
       })
-      .catch(() => {
-        /* No bootstrap on older/offline API; normal accept flow still sets activeTripId. */
+      .catch((err: unknown) => {
+        if (cancelled) return
+        const msg =
+          isTimeoutLikeError(err) || (err as { status?: number })?.status === 0
+            ? 'Sem ligação para confirmar viagem activa. Mantemos o GPS pronto e voltamos quando a ligação recuperar.'
+            : 'Não foi possível confirmar viagem activa. Verifica a ligação se estiveres em viagem.'
+        setToast(msg)
+        addLog(`Erro ao recuperar viagem activa: ${msg}`, 'error')
+      })
+      .finally(() => {
+        if (!cancelled) setActiveTripBootstrapPending(false)
       })
     return () => {
       cancelled = true
+      setActiveTripBootstrapPending(false)
     }
-  }, [token, sessionRole, activeTripId, setDriverActiveTripId, setStatus])
+  }, [token, sessionRole, activeTripId, restoreDriverActiveTrip, addLog])
 
   // Alinhar disponibilidade local com GET /driver/status (não confiar só no localStorage).
   useEffect(() => {

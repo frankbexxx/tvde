@@ -160,8 +160,13 @@ export async function getTripDetail(tripId: string, token: string): Promise<Trip
 
 // --- Driver ---
 
-export async function setDriverOnline(token: string): Promise<void> {
-  await apiFetch<void>('/driver/status/online', {
+export interface DriverAvailabilityMutationResponse {
+  status: 'online' | 'offline'
+  is_available: boolean
+}
+
+export async function setDriverOnline(token: string): Promise<DriverAvailabilityMutationResponse> {
+  return apiFetch<DriverAvailabilityMutationResponse>('/driver/status/online', {
     method: 'POST',
     token,
   })
@@ -212,8 +217,11 @@ export async function getDriverTripHistory(token: string): Promise<TripHistoryIt
   return apiFetch<TripHistoryItem[]>('/driver/trips/history', { token })
 }
 
-export async function getDriverActiveTrip(token: string): Promise<TripDetailResponse | null> {
-  return apiFetch<TripDetailResponse | null>('/driver/trips/active', { token })
+export async function getDriverActiveTrip(
+  token: string,
+  timeoutMs?: number
+): Promise<TripDetailResponse | null> {
+  return apiFetch<TripDetailResponse | null>('/driver/trips/active', { token, timeoutMs })
 }
 
 export async function getDriverTripDetail(tripId: string, token: string): Promise<TripDetailResponse> {
