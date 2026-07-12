@@ -1,7 +1,7 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-12 (P5 ops: **O-ROTATE-1** concluído — rotação secrets prod + backfill contas teste).
+**Última actualização:** 2026-07-12 (P5 ops: **O-ROTATE-1** fechado + **S-PROD-2** smoke prod pós-rotação OK).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md)
 
@@ -16,10 +16,13 @@
 | Bot merges Jul | **#392** docs motorista · **#395** fechada (dup #397) |
 | Vars prod | Auditadas; **secrets rodados 2026-07-12** (valores só no Render / password manager) |
 | Smoke UI prod | Login → docs → partner → online → viagem fresca → **em viagem → concluída** |
+| **S-PROD-2** | **OK** — smoke curto pós-rotação (login passageiro/motorista, online, GPS, viagem, oferta, aceite/cancel) |
 | Backlog BD | Admin cancelou viagens antigas; BETA auto-assign explicado |
-| **Cron produção** | **OK** — cron-job.org `TVDE Background Workers`, GET + `X-Cron-Secret`, 1 min, 200 OK |
+| **Cron produção** | **OK** — cron-job.org activo; 200 OK **pós-rotação** `CRON_SECRET` |
 | **`ENABLE_DEV_TOOLS`** | **OK** — `false` no painel Render; `/health?diagnostic=1` → `dev_tools: false`, `beta_mode: true` |
-| **O-ROTATE-1** | **OK** — `CRON_SECRET`, `OTP_SECRET`, `JWT_SECRET_KEY`, `TEST_ACCOUNT_PASSWORD` rodados; backfill 9 contas teste; login teste OK |
+| **Health API** | **OK** — `https://tvde-api-fd2z.onrender.com/health?diagnostic=1` validado pós-rotação |
+| **O-ROTATE-1** | **OK** — 4 secrets rodados; backfill 9 contas teste; login teste OK; conta real preservada |
+| **Browsers teste** | **OK** — matriz: Chrome, Vivaldi, Firefox; **Midori removido** (ruído GPS) |
 
 ---
 
@@ -51,10 +54,11 @@
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools ✅ · secrets ✅ · faltam **O-STRIPE-1**, **TVDE-BKP** |
-| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; secret só em header |
-| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11 |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools ✅ · secrets ✅ · smoke ✅ · faltam **TVDE-BKP**, **O-STRIPE-1** |
+| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; 200 OK pós-rotação secret |
+| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11; health validado pós-rotação |
 | **O-ROTATE-1** | Rotação secrets prod + backfill teste | **Concluído** | 2026-07-12; ver §14 |
+| **S-PROD-2** | Smoke prod pós-rotação | **Concluído** | 2026-07-12; viagem curta OK — ver §14 |
 | **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** draft — rever depois |
 | **TVDE-STG** | Staging `smoke_validation` | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 |
 | **TVDE-BKP** | Backups + restore test | **Por iniciar** | Idem §3 |
@@ -69,7 +73,7 @@
 
 | Bloco | Conteúdo | Estado |
 |-------|----------|--------|
-| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — e2e OK; cron ✅; secrets ✅; webhook/live keys por validar |
+| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — smoke prod ✅; cron ✅; secrets ✅; webhook/live keys por validar |
 | **§2 STAGING** | infra isolada, stripe test, smokes | **Por iniciar** |
 | **§3 BACKUPS** | pg_dump + restore testado | **Por iniciar** |
 | **§4 MIGRATIONS** | A025 em todas DBs, integridade dados | **Verificar** |
@@ -88,7 +92,7 @@
 
 Carrís sugeridos (actualizar após esta sessão):
 
-1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅ · ~~dev tools~~ ✅ · ~~secrets~~ ✅ · **O-STRIPE-1**, **TVDE-BKP**)
+1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅ · ~~dev tools~~ ✅ · ~~secrets~~ ✅ · ~~smoke~~ ✅ · **TVDE-BKP**, **O-STRIPE-1**)
 2. **P1 staging** — A2-02 OAuth + smokes
 3. **P0 produto** — O-i18n-NICHOS smoke #362
 
@@ -202,7 +206,7 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 |----------|----------------------|
 | [`deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md) | 11 checkboxes deploy inicial |
 | [`ops/STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) | OAuth staging, smokes, dev tools policy |
-| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron ✅ (2026-07-11); secrets ✅ (2026-07-12); webhook Stripe pendente |
+| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron ✅; secrets ✅; smoke pós-rotação ✅ (2026-07-12); webhook Stripe pendente |
 | [`ops/W2_RUNBOOK.md`](W2_RUNBOOK.md) | Registo hora/resultado smokes manuais |
 | [`testing/GUIA_TESTES.md`](../testing/GUIA_TESTES.md) | ~20 passos manuais por fluxo |
 | [`testing/VALIDACAO_HUMANA_CAMPO.md`](../testing/VALIDACAO_HUMANA_CAMPO.md) | 6 itens campo |
@@ -232,7 +236,7 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 | Ordem | Carril | Porquê |
 |-------|--------|--------|
-| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools~~ ✅ · ~~O-ROTATE-1~~ ✅ · **próximo: O-STRIPE-1 ou TVDE-BKP** |
+| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools~~ ✅ · ~~O-ROTATE-1~~ ✅ · ~~S-PROD-2~~ ✅ · **próximo: TVDE-BKP ou O-STRIPE-1** |
 | **2** | **Hardening BETA** | Planear desligar `/debug/*` (O-DEBUG-1); cron timeouts já activos |
 | **3** | **P1 staging** | Regra do repo: staging antes de releases com OAuth/webhook |
 | **4** | **R-E2E-1** | Estabilizar flake proximity E2E — PR dedicada, não bloqueia deploy |
@@ -285,11 +289,15 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 | **O-ROTATE-E** | `TEST_ACCOUNT_PASSWORD` Render | **Concluído** | Nova pwd só no Render |
 | **O-ROTATE-F** | `backfill_test_accounts.py` prod | **Concluído** | 9 test · 1 real preservado |
 | **O-ROTATE-G** | Smoke login contas teste | **Concluído** | passageiro / motorista / partner OK |
+| **S-PROD-2** | Smoke prod pós-rotação | **Concluído** | 2026-07-12; Frank manual — ver abaixo |
+| **S-PROD-2a** | Health `/health?diagnostic=1` | **Concluído** | `status: ok`, `dev_tools: false`, `beta_mode: true` |
+| **S-PROD-2b** | Cron pós-rotação | **Concluído** | cron-job.org activo; execuções 200 OK |
+| **S-PROD-2c** | Viagem curta prod | **Concluído** | login P/M · online · GPS · pedido · oferta · aceite/cancel OK |
+| **O-BROWSER-1** | Matriz browsers teste manual | **Concluído** | Chrome, Vivaldi, Firefox; Midori removido (GPS) |
 | **O-STRIPE-1** | Webhook Stripe assertivo | **Por iniciar** | **Próximo P5** · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 |
 | **TVDE-BKP** | Backups + restore test | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §3 |
 | **O-DEBUG-1** | Planear desligar `/debug/*` pós-BETA | **Por iniciar** | Decisão produto |
-| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** |
-| **S-PROD-2** | Smoke prod pós-rotação | **Parcial** | Login teste OK; viagem curta opcional |
+| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** — não bloqueia agora |
 
 ---
 
