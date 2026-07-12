@@ -1,7 +1,7 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-12 (P5 ops: **O-ROTATE-1** fechado + **S-PROD-2** smoke prod pós-rotação OK).
+**Última actualização:** 2026-07-12 (P5 ops: **TVDE-BKP** concluído — backup manual + restore local isolado validados).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md)
 
@@ -23,6 +23,7 @@
 | **Health API** | **OK** — `https://tvde-api-fd2z.onrender.com/health?diagnostic=1` validado pós-rotação |
 | **O-ROTATE-1** | **OK** — 4 secrets rodados; backfill 9 contas teste; login teste OK; conta real preservada |
 | **Browsers teste** | **OK** — matriz: Chrome, Vivaldi, Firefox; **Midori removido** (ruído GPS) |
+| **TVDE-BKP** | **OK** — PITR 3d + export lógico; `pg_dump` + restore Docker local validados — [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 
 ---
 
@@ -54,14 +55,14 @@
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools ✅ · secrets ✅ · smoke ✅ · faltam **TVDE-BKP**, **O-STRIPE-1** |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools ✅ · secrets ✅ · smoke ✅ · backups ✅ · falta **O-STRIPE-1** |
 | **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; 200 OK pós-rotação secret |
 | **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11; health validado pós-rotação |
 | **O-ROTATE-1** | Rotação secrets prod + backfill teste | **Concluído** | 2026-07-12; ver §14 |
 | **S-PROD-2** | Smoke prod pós-rotação | **Concluído** | 2026-07-12; viagem curta OK — ver §14 |
+| **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12; [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 | **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** draft — rever depois |
 | **TVDE-STG** | Staging `smoke_validation` | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 |
-| **TVDE-BKP** | Backups + restore test | **Por iniciar** | Idem §3 |
 
 **Regra do painel:** escolher **1 carril** (P0 vs P1 vs P5) antes de codar.
 
@@ -75,7 +76,7 @@
 |-------|----------|--------|
 | **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — smoke prod ✅; cron ✅; secrets ✅; webhook/live keys por validar |
 | **§2 STAGING** | infra isolada, stripe test, smokes | **Por iniciar** |
-| **§3 BACKUPS** | pg_dump + restore testado | **Por iniciar** |
+| **§3 BACKUPS** | pg_dump + restore testado | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 | **§4 MIGRATIONS** | A025 em todas DBs, integridade dados | **Verificar** |
 | **§5 HARDENING** | CORS, dev endpoints OFF, auth | **Parcial** — `ENABLE_DEV_TOOLS=false` no painel; `/debug/*` ainda ON com BETA |
 | **§6 OBSERVABILITY** | logs, system-health, alerting | **Parcial** — Sentry ON; alerting mínimo em falta |
@@ -92,7 +93,7 @@
 
 Carrís sugeridos (actualizar após esta sessão):
 
-1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅ · ~~dev tools~~ ✅ · ~~secrets~~ ✅ · ~~smoke~~ ✅ · **TVDE-BKP**, **O-STRIPE-1**)
+1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅ · ~~dev tools~~ ✅ · ~~secrets~~ ✅ · ~~smoke~~ ✅ · ~~TVDE-BKP~~ ✅ · **O-STRIPE-1**)
 2. **P1 staging** — A2-02 OAuth + smokes
 3. **P0 produto** — O-i18n-NICHOS smoke #362
 
@@ -175,7 +176,7 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 | ID | Item | P |
 |----|------|---|
 | A2-05 | bandit + pip-audit em CI | P1 |
-| A2-06 | Backups Postgres + restore doc | P1 |
+| A2-06 | Backups Postgres + restore doc | P1 | **Concluído** — [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 | A2-07 | Incident runbook | P1 |
 | A2-08 | Pentest light + RBAC | P1 |
 | A2-09 | pytest-cov gate | P1 |
@@ -206,7 +207,8 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 |----------|----------------------|
 | [`deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md) | 11 checkboxes deploy inicial |
 | [`ops/STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) | OAuth staging, smokes, dev tools policy |
-| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron ✅; secrets ✅; smoke pós-rotação ✅ (2026-07-12); webhook Stripe pendente |
+| [`ops/TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) | Backups Postgres + restore test (2026-07-12 ✅) |
+| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron ✅; secrets ✅; smoke ✅; backups ✅; webhook Stripe pendente |
 | [`ops/W2_RUNBOOK.md`](W2_RUNBOOK.md) | Registo hora/resultado smokes manuais |
 | [`testing/GUIA_TESTES.md`](../testing/GUIA_TESTES.md) | ~20 passos manuais por fluxo |
 | [`testing/VALIDACAO_HUMANA_CAMPO.md`](../testing/VALIDACAO_HUMANA_CAMPO.md) | 6 itens campo |
@@ -236,7 +238,7 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 | Ordem | Carril | Porquê |
 |-------|--------|--------|
-| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools~~ ✅ · ~~O-ROTATE-1~~ ✅ · ~~S-PROD-2~~ ✅ · **próximo: TVDE-BKP ou O-STRIPE-1** |
+| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools~~ ✅ · ~~O-ROTATE-1~~ ✅ · ~~S-PROD-2~~ ✅ · ~~TVDE-BKP~~ ✅ · **próximo: O-STRIPE-1** |
 | **2** | **Hardening BETA** | Planear desligar `/debug/*` (O-DEBUG-1); cron timeouts já activos |
 | **3** | **P1 staging** | Regra do repo: staging antes de releases com OAuth/webhook |
 | **4** | **R-E2E-1** | Estabilizar flake proximity E2E — PR dedicada, não bloqueia deploy |
@@ -294,8 +296,12 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 | **S-PROD-2b** | Cron pós-rotação | **Concluído** | cron-job.org activo; execuções 200 OK |
 | **S-PROD-2c** | Viagem curta prod | **Concluído** | login P/M · online · GPS · pedido · oferta · aceite/cancel OK |
 | **O-BROWSER-1** | Matriz browsers teste manual | **Concluído** | Chrome, Vivaldi, Firefox; Midori removido (GPS) |
+| **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12; pg_dump + restore Docker :5433 — [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) §7 |
+| **TVDE-BKP-a** | Render PITR + export lógico | **Concluído** | PITR 3d · Basic-256mb · export 7d retenção |
+| **TVDE-BKP-b** | `pg_dump` manual | **Concluído** | CUSTOM · PG 18.3 · ~149 KB |
+| **TVDE-BKP-c** | Restore local isolado | **Concluído** | Docker postgres:18 · sem erros fatais |
+| **TVDE-BKP-d** | Validação schema/dados | **Concluído** | alembic `b5c6d7e8f9a0` · real + testes OK |
 | **O-STRIPE-1** | Webhook Stripe assertivo | **Por iniciar** | **Próximo P5** · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 |
-| **TVDE-BKP** | Backups + restore test | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §3 |
 | **O-DEBUG-1** | Planear desligar `/debug/*` pós-BETA | **Por iniciar** | Decisão produto |
 | **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** — não bloqueia agora |
 

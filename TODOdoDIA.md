@@ -82,9 +82,9 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | cron ✅ · dev tools ✅ · secrets ✅ · S-PROD-2 ✅ · faltam backups, Stripe webhook — [`FORWARD_PLAN_2026-07.md`](docs/ops/FORWARD_PLAN_2026-07.md) |
-| **TVDE-STG** | Staging smoke_validation | Por iniciar | Idem §2 |
-| **TVDE-BKP** | Backups + restore test | Por iniciar | Idem §3 |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | cron ✅ · dev tools ✅ · secrets ✅ · S-PROD-2 ✅ · TVDE-BKP ✅ · falta Stripe webhook — [`FORWARD_PLAN_2026-07.md`](docs/ops/FORWARD_PLAN_2026-07.md) |
+| **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](docs/ops/TVDE_BKP_RUNBOOK.md) |
+| **TVDE-STG** | Staging smoke_validation | Por iniciar | [`TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md) §2 |
 
 **Regra:** Frank + agente **escolhem 1 carril** (P0 vs P1 vs P5) antes de codar.
 
