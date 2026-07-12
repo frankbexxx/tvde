@@ -1,7 +1,7 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-11 (P5 ops: cron-job.org activo + `ENABLE_DEV_TOOLS=false` no Render).
+**Última actualização:** 2026-07-12 (P5 ops: **O-ROTATE-1** concluído — rotação secrets prod + backfill contas teste).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md)
 
@@ -12,12 +12,14 @@
 | Área | Estado |
 |------|--------|
 | Matching / disponibilidade UI | PRs **#386–#388** em `main` |
-| Auth hardening | PRs **#389–#390–#393** em `main` (OTP persist, throttle, sem log OTP em prod) |
-| Vars prod | Auditadas e coerentes (API↔web↔BD) |
+| Auth hardening | PRs **#389–#393** + **#394** + **#397** em `main` (OTP, throttle, log, beta capacity, Stripe prod guard) |
+| Bot merges Jul | **#392** docs motorista · **#395** fechada (dup #397) |
+| Vars prod | Auditadas; **secrets rodados 2026-07-12** (valores só no Render / password manager) |
 | Smoke UI prod | Login → docs → partner → online → viagem fresca → **em viagem → concluída** |
 | Backlog BD | Admin cancelou viagens antigas; BETA auto-assign explicado |
-| **Cron produção** | **OK** — cron-job.org `TVDE Background Workers`, GET + `X-Cron-Secret`, 1 min, 200 OK (11:49–11:51) |
+| **Cron produção** | **OK** — cron-job.org `TVDE Background Workers`, GET + `X-Cron-Secret`, 1 min, 200 OK |
 | **`ENABLE_DEV_TOOLS`** | **OK** — `false` no painel Render; `/health?diagnostic=1` → `dev_tools: false`, `beta_mode: true` |
+| **O-ROTATE-1** | **OK** — `CRON_SECRET`, `OTP_SECRET`, `JWT_SECRET_KEY`, `TEST_ACCOUNT_PASSWORD` rodados; backfill 9 contas teste; login teste OK |
 
 ---
 
@@ -49,10 +51,11 @@
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools painel ✅ · faltam webhook Stripe assertivo, rotação secrets, backups |
-| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; secret só em header; jobs antigos removidos |
-| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11; health confirmado |
-| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR dedicada; não bloqueia P5 |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools ✅ · secrets ✅ · faltam **O-STRIPE-1**, **TVDE-BKP** |
+| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; secret só em header |
+| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11 |
+| **O-ROTATE-1** | Rotação secrets prod + backfill teste | **Concluído** | 2026-07-12; ver §14 |
+| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** draft — rever depois |
 | **TVDE-STG** | Staging `smoke_validation` | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 |
 | **TVDE-BKP** | Backups + restore test | **Por iniciar** | Idem §3 |
 
@@ -66,7 +69,7 @@
 
 | Bloco | Conteúdo | Estado |
 |-------|----------|--------|
-| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — e2e OK; **cron OK**; webhook/live keys por validar |
+| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — e2e OK; cron ✅; secrets ✅; webhook/live keys por validar |
 | **§2 STAGING** | infra isolada, stripe test, smokes | **Por iniciar** |
 | **§3 BACKUPS** | pg_dump + restore testado | **Por iniciar** |
 | **§4 MIGRATIONS** | A025 em todas DBs, integridade dados | **Verificar** |
@@ -85,7 +88,7 @@
 
 Carrís sugeridos (actualizar após esta sessão):
 
-1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅, ~~dev tools painel~~ ✅, **rotação secrets**, webhook Stripe)
+1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅ · ~~dev tools~~ ✅ · ~~secrets~~ ✅ · **O-STRIPE-1**, **TVDE-BKP**)
 2. **P1 staging** — A2-02 OAuth + smokes
 3. **P0 produto** — O-i18n-NICHOS smoke #362
 
@@ -199,7 +202,7 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 |----------|----------------------|
 | [`deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md) | 11 checkboxes deploy inicial |
 | [`ops/STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) | OAuth staging, smokes, dev tools policy |
-| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron + webhook (parcialmente feito em sessões anteriores) |
+| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron ✅ (2026-07-11); secrets ✅ (2026-07-12); webhook Stripe pendente |
 | [`ops/W2_RUNBOOK.md`](W2_RUNBOOK.md) | Registo hora/resultado smokes manuais |
 | [`testing/GUIA_TESTES.md`](../testing/GUIA_TESTES.md) | ~20 passos manuais por fluxo |
 | [`testing/VALIDACAO_HUMANA_CAMPO.md`](../testing/VALIDACAO_HUMANA_CAMPO.md) | 6 itens campo |
@@ -229,11 +232,11 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 | Ordem | Carril | Porquê |
 |-------|--------|--------|
-| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools painel~~ ✅ · **próximo: rotação secrets (O-ROTATE-1)**, webhook Stripe, backups |
+| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools~~ ✅ · ~~O-ROTATE-1~~ ✅ · **próximo: O-STRIPE-1 ou TVDE-BKP** |
 | **2** | **Hardening BETA** | Planear desligar `/debug/*` (O-DEBUG-1); cron timeouts já activos |
 | **3** | **P1 staging** | Regra do repo: staging antes de releases com OAuth/webhook |
 | **4** | **R-E2E-1** | Estabilizar flake proximity E2E — PR dedicada, não bloqueia deploy |
-| **5** | **P0 polish** | i18n nichos #362 quando webhook/secrets estiverem verdes |
+| **5** | **P0 polish** | i18n nichos #362 quando O-STRIPE-1 estiver verde |
 
 ### O que não fazer agora
 
@@ -252,18 +255,19 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 ---
 
-## 13. PRs Cursor Bot — estado (2026-07-11)
+## 13. PRs Cursor Bot — estado (2026-07-12)
 
 | PR | Título | Estado |
 |----|--------|--------|
-| **#389** | Fix beta OTP signup persistence | **Merged** (`89556e6`) |
-| **#390** | throttle OTP verification attempts | **Merged** (`9575600`) |
-| **#393** | prevent OTP code logging in production | **Merged** (`983c58e`) |
-| **#394** | pending beta users / capacity | **Draft** — rever quando fechar O-ROTATE-1 |
-| **#392** | driver docs review after replace | **Draft** |
+| **#389–#393** | Auth OTP persist / throttle / log | **Merged** |
+| **#394** | pending beta users / capacity | **Merged** (`dfcbf39`) |
+| **#397** | block dev Stripe test card in prod | **Merged** (`1331414`) |
+| **#392** | driver docs → pending_review on replace | **Merged** (`a150b78`) |
+| **#395** | dup Stripe test card | **Closed** (dup #397) |
+| **#398** | harden active trip recovery after reload | **Draft** — rever depois |
 
-**PRs bot fechadas nesta onda (já em `main`):** #387, #382, #381, #384, #388, #389, #390, #393.  
-**PRs bot fechadas como redundantes:** #379, #380, #385.
+**Aberta:** só **#398**.  
+**Merged nesta onda:** #387–#394, #397, #392, #393. **Fechadas redundantes:** #379, #380, #385, #395.
 
 ---
 
@@ -271,14 +275,21 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 | ID | Acção | Estado | Notas |
 |----|-------|--------|-------|
-| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; header `X-Cron-Secret`; 1 min |
-| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11; health `dev_tools: false` |
-| **R-BOT-1** | Review + merge #389, #390, #393 | **Concluído** | Em `main` |
-| **O-ROTATE-1** | Rodar JWT, OTP, CRON_SECRET, TEST_ACCOUNT_PASSWORD | **Por iniciar** | **Próximo P5** — secrets expostos em chat histórico |
-| **O-STRIPE-1** | Webhook Stripe assertivo (test event + BD idempotência) | **Por iniciar** | [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 |
-| **O-DEBUG-1** | Planear desligar `/debug/*` quando sair fase BETA | **Por iniciar** | Decisão produto; `BETA_MODE` mantém `/debug` |
-| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR dedicada; CI `main` pode falhar sem bloquear deploy |
-| **S-PROD-2** | Repetir smoke após rotação secrets | **Smoke pendente** | Só após O-ROTATE-1 |
+| **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11 |
+| **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11 |
+| **R-BOT-1** | Review + merge bot PRs auth/payments/docs | **Concluído** | #389–#394, #397, #392 |
+| **O-ROTATE-1** | Rotação secrets prod (4 vars) | **Concluído** | 2026-07-12; Frank manual |
+| **O-ROTATE-B** | `CRON_SECRET` Render + cron-job.org header | **Concluído** | Cron 200 OK pós-rotação |
+| **O-ROTATE-C** | `OTP_SECRET` Render + health | **Concluído** | OTPs pendentes invalidados |
+| **O-ROTATE-D** | `JWT_SECRET_KEY` Render + health | **Concluído** | Sessões antigas invalidadas |
+| **O-ROTATE-E** | `TEST_ACCOUNT_PASSWORD` Render | **Concluído** | Nova pwd só no Render |
+| **O-ROTATE-F** | `backfill_test_accounts.py` prod | **Concluído** | 9 test · 1 real preservado |
+| **O-ROTATE-G** | Smoke login contas teste | **Concluído** | passageiro / motorista / partner OK |
+| **O-STRIPE-1** | Webhook Stripe assertivo | **Por iniciar** | **Próximo P5** · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 |
+| **TVDE-BKP** | Backups + restore test | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §3 |
+| **O-DEBUG-1** | Planear desligar `/debug/*` pós-BETA | **Por iniciar** | Decisão produto |
+| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** |
+| **S-PROD-2** | Smoke prod pós-rotação | **Parcial** | Login teste OK; viagem curta opcional |
 
 ---
 

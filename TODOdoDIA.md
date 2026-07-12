@@ -82,7 +82,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | Por iniciar | [`TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md) §1 |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | cron ✅ · dev tools ✅ · secrets ✅ · faltam Stripe webhook, backups — [`FORWARD_PLAN_2026-07.md`](docs/ops/FORWARD_PLAN_2026-07.md) |
 | **TVDE-STG** | Staging smoke_validation | Por iniciar | Idem §2 |
 | **TVDE-BKP** | Backups + restore test | Por iniciar | Idem §3 |
 
