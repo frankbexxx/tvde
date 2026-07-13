@@ -57,7 +57,7 @@ curl -sS "https://<API_HOST>/cron/jobs" -H "X-Cron-Secret: <CRON_SECRET>"
 
 - [x] `curl` / pedido HTTP ao cron com **200** e JSON coerente.
 - [x] Agendador externo a bater o mesmo endpoint (frequência + evidência **200**).
-- [x] Webhook Stripe: entrega testada + assinatura + evidência (Stripe «delivered» / logs API / BD).
+- [x] Webhook Stripe (gate técnico): Fase A local test mode — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) (2026-07-13). Endpoint prod com `STRIPE_MOCK=true` permanece opcional até conta live do parceiro.
 
 *Registo no repo:* secção **Fecho do dia** em [`TODOdoDIA.md`](../../TODOdoDIA.md) quando fechares a onda (sem colar segredos nem URLs com `secret=`).*
 
