@@ -1,14 +1,19 @@
-# Postgres tab: venv + Docker Desktop + 10s + docker start only
-$ErrorActionPreference = "Continue"
-$root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-Set-Location (Join-Path $root "backend")
-if (Test-Path ".\venv\Scripts\Activate.ps1") {
-    . ".\venv\Scripts\Activate.ps1"
-}
+# Postgres_Local — Docker Desktop + ride_postgres.
+$ErrorActionPreference = 'Stop'
+$lib = Join-Path $PSScriptRoot 'lib'
+. (Join-Path $lib 'Resolve-RepoRoot.ps1')
+. (Join-Path $lib 'Ensure-PostgresContainer.ps1')
 
-$dockerExe = Join-Path $env:ProgramFiles "Docker\Docker\Docker Desktop.exe"
-if (Test-Path -LiteralPath $dockerExe) {
-    Start-Process -FilePath $dockerExe
-}
-Start-Sleep -Seconds 10
-docker start ride_postgres
+$root = Get-TvdeRepoRoot -FromPath $PSScriptRoot
+
+Write-Host ''
+Write-Host '=== Postgres_Local ===' -ForegroundColor Cyan
+Write-Host "Repo: $root"
+Write-Host ''
+
+Ensure-PostgresContainer -ContainerName 'ride_postgres'
+
+Write-Host ''
+Write-Host 'DATABASE_URL local tipica:'
+Write-Host '  postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/ride_db'
+Write-Host ''

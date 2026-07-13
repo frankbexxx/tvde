@@ -1,7 +1,6 @@
-# Stripe tab: venv only
-$ErrorActionPreference = "Stop"
-$root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-Set-Location (Join-Path $root "backend")
-if (Test-Path ".\venv\Scripts\Activate.ps1") {
-    . ".\venv\Scripts\Activate.ps1"
-}
+# DEPRECATED — usar Open-TVDE-Stripe-WT.bat
+$ErrorActionPreference = 'Stop'
+Write-Host ''
+Write-Host 'tab-stripe.ps1 esta obsoleto.' -ForegroundColor Yellow
+Write-Host 'Usa: scripts\windows\Open-TVDE-Stripe-WT.bat'
+Write-Host ''
