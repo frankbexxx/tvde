@@ -1,7 +1,7 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-12 (P5 ops: **TVDE-BKP** concluído — backup manual + restore local isolado validados).
+**Última actualização:** 2026-07-13 (P5 ops: **O-STRIPE-1** Fase A local concluída — webhook Stripe test mode; **TVDE-PROD** gate P5 fechado).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md)
 
@@ -24,6 +24,8 @@
 | **O-ROTATE-1** | **OK** — 4 secrets rodados; backfill 9 contas teste; login teste OK; conta real preservada |
 | **Browsers teste** | **OK** — matriz: Chrome, Vivaldi, Firefox; **Midori removido** (ruído GPS) |
 | **TVDE-BKP** | **OK** — PITR 3d + export lógico; `pg_dump` + restore Docker local validados — [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
+| **O-STRIPE-1** | **OK** — Fase A local: webhook assinatura + fluxo PI real test mode — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) |
+| **TVDE-PROD** | **OK** (gate P5 beta) | Piloto: `STRIPE_MOCK=true` em prod; live/parceiro fora de scope |
 
 ---
 
@@ -55,12 +57,13 @@
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Parcial** | Cron ✅ · dev tools ✅ · secrets ✅ · smoke ✅ · backups ✅ · falta **O-STRIPE-1** |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Concluído** | Gate P5 beta ✅ · prod `STRIPE_MOCK=true` · live keys pós-parceiro |
 | **O-CRON-1** | Cron-job.org → `GET /cron/jobs` 200 | **Concluído** | 2026-07-11; 200 OK pós-rotação secret |
 | **O-RENDER-1** | `ENABLE_DEV_TOOLS=false` tvde-api | **Concluído** | 2026-07-11; health validado pós-rotação |
 | **O-ROTATE-1** | Rotação secrets prod + backfill teste | **Concluído** | 2026-07-12; ver §14 |
 | **S-PROD-2** | Smoke prod pós-rotação | **Concluído** | 2026-07-12; viagem curta OK — ver §14 |
 | **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12; [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
+| **O-STRIPE-1** | Webhook Stripe assertivo (test mode) | **Concluído** | 2026-07-13; Fase A local — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) |
 | **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** draft — rever depois |
 | **TVDE-STG** | Staging `smoke_validation` | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 |
 
@@ -74,7 +77,7 @@
 
 | Bloco | Conteúdo | Estado |
 |-------|----------|--------|
-| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Parcial** — smoke prod ✅; cron ✅; secrets ✅; webhook/live keys por validar |
+| **§1 PROD_VALIDATION** | webhook Stripe, cron, env, e2e real | **Concluído** (gate beta) — webhook test mode ✅ Fase A; prod `STRIPE_MOCK=true`; live pós-parceiro |
 | **§2 STAGING** | infra isolada, stripe test, smokes | **Por iniciar** |
 | **§3 BACKUPS** | pg_dump + restore testado | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 | **§4 MIGRATIONS** | A025 em todas DBs, integridade dados | **Verificar** |
@@ -93,7 +96,7 @@
 
 Carrís sugeridos (actualizar após esta sessão):
 
-1. **P5 ops** — fechar TVDE-PROD (~~cron~~ ✅ · ~~dev tools~~ ✅ · ~~secrets~~ ✅ · ~~smoke~~ ✅ · ~~TVDE-BKP~~ ✅ · **O-STRIPE-1**)
+1. **P5 ops** — ~~fechado~~ ✅ (cron · dev tools · secrets · smoke · TVDE-BKP · O-STRIPE-1 Fase A)
 2. **P1 staging** — A2-02 OAuth + smokes
 3. **P0 produto** — O-i18n-NICHOS smoke #362
 
@@ -207,8 +210,9 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 |----------|----------------------|
 | [`deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md) | 11 checkboxes deploy inicial |
 | [`ops/STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) | OAuth staging, smokes, dev tools policy |
+| [`ops/O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) | Webhook Stripe Fase A local (2026-07-13 ✅) |
 | [`ops/TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) | Backups Postgres + restore test (2026-07-12 ✅) |
-| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron ✅; secrets ✅; smoke ✅; backups ✅; webhook Stripe pendente |
+| [`ops/W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) | Cron ✅; secrets ✅; smoke ✅; backups ✅; webhook Fase A local ✅ |
 | [`ops/W2_RUNBOOK.md`](W2_RUNBOOK.md) | Registo hora/resultado smokes manuais |
 | [`testing/GUIA_TESTES.md`](../testing/GUIA_TESTES.md) | ~20 passos manuais por fluxo |
 | [`testing/VALIDACAO_HUMANA_CAMPO.md`](../testing/VALIDACAO_HUMANA_CAMPO.md) | 6 itens campo |
@@ -238,11 +242,11 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 | Ordem | Carril | Porquê |
 |-------|--------|--------|
-| **1** | **P5 ops** | ~~Cron~~ ✅ · ~~dev tools~~ ✅ · ~~O-ROTATE-1~~ ✅ · ~~S-PROD-2~~ ✅ · ~~TVDE-BKP~~ ✅ · **próximo: O-STRIPE-1** |
-| **2** | **Hardening BETA** | Planear desligar `/debug/*` (O-DEBUG-1); cron timeouts já activos |
-| **3** | **P1 staging** | Regra do repo: staging antes de releases com OAuth/webhook |
-| **4** | **R-E2E-1** | Estabilizar flake proximity E2E — PR dedicada, não bloqueia deploy |
-| **5** | **P0 polish** | i18n nichos #362 quando O-STRIPE-1 estiver verde |
+| **1** | **P1 staging** | P5 beta fechado — OAuth A2-02 + smokes assertivos |
+| **2** | **Hardening BETA** | Planear desligar `/debug/*` (O-DEBUG-1) |
+| **3** | **R-E2E-1** | Flake proximity E2E — PR **#398** |
+| **4** | **P0 polish** | i18n nichos #362 |
+| **5** | **Stripe live** | Conta parceiro + `sk_live_*` — fora do gate P5 actual |
 
 ### O que não fazer agora
 
@@ -301,7 +305,12 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 | **TVDE-BKP-b** | `pg_dump` manual | **Concluído** | CUSTOM · PG 18.3 · ~149 KB |
 | **TVDE-BKP-c** | Restore local isolado | **Concluído** | Docker postgres:18 · sem erros fatais |
 | **TVDE-BKP-d** | Validação schema/dados | **Concluído** | alembic `b5c6d7e8f9a0` · real + testes OK |
-| **O-STRIPE-1** | Webhook Stripe assertivo | **Por iniciar** | **Próximo P5** · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 |
+| **O-STRIPE-1** | Webhook Stripe assertivo (test mode) | **Concluído** | 2026-07-13; Fase A local — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) §8 |
+| **O-STRIPE-1a** | T0/T1 assinatura webhook | **Concluído** | 422 sem header · 401 inválida |
+| **O-STRIPE-1b** | T2 trigger sem PI na BD | **Concluído** | 200 ack · sem mutação |
+| **O-STRIPE-1c** | T3b fluxo PI real + succeeded | **Concluído** | trip `5629c3fa-…` · payment succeeded |
+| **O-STRIPE-1d** | `.env` Render vs local | **Concluído** | Incidente detectado; `looks_render: false` antes de retomar |
+| **O-STRIPE-LIVE** | Stripe live / conta parceiro | **Bloqueado** | Fora do gate P5 beta |
 | **O-DEBUG-1** | Planear desligar `/debug/*` pós-BETA | **Por iniciar** | Decisão produto |
 | **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** — não bloqueia agora |
 

@@ -75,6 +75,7 @@
 | Ficheiro | Propósito |
 | -------- | --------- |
 | [CRON_JOB_ORG_INSTRUCOES.md](../CRON_JOB_ORG_INSTRUCOES.md) | Cron externo |
+| [O_STRIPE_1_RUNBOOK.md](../ops/O_STRIPE_1_RUNBOOK.md) | Webhook Stripe Fase A local (test mode) |
 | [TVDE_BKP_RUNBOOK.md](../ops/TVDE_BKP_RUNBOOK.md) | Backups Postgres + restore test |
 | [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md) | Smoke W1 prod |
 | [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) | OAuth staging A2-02 |
