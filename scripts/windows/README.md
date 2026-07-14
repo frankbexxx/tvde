@@ -11,7 +11,7 @@
 Ambos os launchers Dev/Stripe:
 
 - **Não** pedem UAC nem usam `-Verb RunAs`.
-- Abrem Cursor via `lib/Open-CursorWorkspace.ps1` (workspace = raiz do repo, ex. `C:\dev\APP`).
+- Abrem Cursor via `lib/Open-CursorWorkspace.ps1` (workspace = raiz do repo, ex. `C:\dev\APP`), **detached** — sem consola extra nem logs na shell.
 - Se forem arrancados **já como Administrador**, relançam-se automaticamente **sem** elevacao.
 
 ## Prefixo `Administrator:` nas abas

@@ -1,4 +1,4 @@
-# Open Cursor on repo workspace (no elevation).
+# Open Cursor on repo workspace (detached GUI — no console inheritance).
 function Open-TvdeCursorWorkspace {
     param(
         [Parameter(Mandatory = $true)]
@@ -15,6 +15,13 @@ function Open-TvdeCursorWorkspace {
         return
     }
 
-    Start-Process -FilePath $exe -ArgumentList @($RepoRoot) | Out-Null
-    Write-Host "Cursor: $RepoRoot" -ForegroundColor DarkGray
+    $resolvedRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
+
+    # UseShellExecute detaches from the launching console (avoids node logs in cmd.exe).
+    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $startInfo.FileName = $exe
+    $startInfo.Arguments = "`"$resolvedRoot`""
+    $startInfo.WorkingDirectory = $resolvedRoot
+    $startInfo.UseShellExecute = $true
+    [System.Diagnostics.Process]::Start($startInfo) | Out-Null
 }
