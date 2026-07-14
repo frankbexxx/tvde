@@ -1,7 +1,17 @@
-# Utils tab: venv only (no git / no extras)
-$ErrorActionPreference = "Stop"
-$root = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
-Set-Location (Join-Path $root "backend")
-if (Test-Path ".\venv\Scripts\Activate.ps1") {
-    . ".\venv\Scripts\Activate.ps1"
-}
+# Utils_Dev — repo root, git/alembic hints.
+$ErrorActionPreference = 'Stop'
+$lib = Join-Path $PSScriptRoot 'lib'
+. (Join-Path $lib 'Resolve-RepoRoot.ps1')
+
+$root = Get-TvdeRepoRoot -FromPath $PSScriptRoot
+Set-Location $root
+
+Write-Host ''
+Write-Host '=== Utils_Dev ===' -ForegroundColor Cyan
+Write-Host "PWD: $root"
+Write-Host ''
+Write-Host 'Comandos uteis:'
+Write-Host '  git status'
+Write-Host '  cd backend; alembic upgrade head'
+Write-Host '  cd web-app; npm run build'
+Write-Host ''

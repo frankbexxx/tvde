@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 
-rem Dev normal — sem UAC, sem Stripe.
+rem Stripe local O-STRIPE-1 — sem UAC.
 rem Se arrancou elevado (ex.: atalho "Run as administrator"), relanca sem admin.
 net session >nul 2>&1
 if %errorLevel% equ 0 (
@@ -27,15 +27,17 @@ if %errorLevel% equ 0 (
 set "PSFLAGS=-NoExit -NoProfile -ExecutionPolicy Bypass -File"
 
 "%WINWT%" ^
- -p "Windows PowerShell" --title "Backend_Dev" --tabColor "#e81123" -d "%BACKEND%" ^
- %PS% %PSFLAGS% "%SCRIPTS%\tab-backend.ps1" ^
- ; new-tab -p "Windows PowerShell" --title "Frontend_Dev" --tabColor "#c87310" -d "%ROOT%\web-app" ^
- %PS% %PSFLAGS% "%SCRIPTS%\tab-frontend.ps1" ^
- ; new-tab -p "Windows PowerShell" --title "Postgres_Local" --tabColor "#107c10" -d "%ROOT%" ^
+ -p "Windows PowerShell" --title "Postgres_Local" --tabColor "#107c10" -d "%ROOT%" ^
  %PS% %PSFLAGS% "%SCRIPTS%\tab-docker-postgres.ps1" ^
- ; new-tab -p "Windows PowerShell" --title "Utils_Dev" --tabColor "#605e1b" -d "%ROOT%" ^
- %PS% %PSFLAGS% "%SCRIPTS%\tab-utils.ps1" ^
- ; focus-tab -t 0
+ ; new-tab -p "Windows PowerShell" --title "Stripe_Listen" --tabColor "#635bff" -d "%ROOT%" ^
+ %PS% %PSFLAGS% "%SCRIPTS%\tab-stripe-listen.ps1" ^
+ ; new-tab -p "Windows PowerShell" --title "Backend_Stripe_Local" --tabColor "#e81123" -d "%BACKEND%" ^
+ %PS% %PSFLAGS% "%SCRIPTS%\tab-backend-stripe-local.ps1" ^
+ ; new-tab -p "Windows PowerShell" --title "Test_Commands" --tabColor "#00bcf2" -d "%ROOT%" ^
+ %PS% %PSFLAGS% "%SCRIPTS%\tab-test-commands.ps1" ^
+ ; new-tab -p "Windows PowerShell" --title "Utils_Stripe" --tabColor "#605e1b" -d "%ROOT%" ^
+ %PS% %PSFLAGS% "%SCRIPTS%\tab-utils-stripe.ps1" ^
+ ; focus-tab -t 2
 
 rem Cursor detached — abre workspace directamente, sem pwsh intermédio.
 if exist "%LOCALAPPDATA%\Programs\cursor\Cursor.exe" (
