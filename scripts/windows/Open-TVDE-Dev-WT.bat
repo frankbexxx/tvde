@@ -37,8 +37,12 @@ set "PSFLAGS=-NoExit -NoProfile -ExecutionPolicy Bypass -File"
  %PS% %PSFLAGS% "%SCRIPTS%\tab-utils.ps1" ^
  ; focus-tab -t 0
 
-rem Cursor detached — async/hidden pwsh; bat termina sem consola extra.
-start "" "%PS%" -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "%SCRIPTS%\invoke-cursor-workspace.ps1"
+rem Cursor detached — abre workspace directamente, sem pwsh intermédio.
+if exist "%LOCALAPPDATA%\Programs\cursor\Cursor.exe" (
+  start "" "%LOCALAPPDATA%\Programs\cursor\Cursor.exe" "%ROOT%"
+) else if exist "%ProgramFiles%\Cursor\Cursor.exe" (
+  start "" "%ProgramFiles%\Cursor\Cursor.exe" "%ROOT%"
+)
 
 endlocal
 exit /b 0
