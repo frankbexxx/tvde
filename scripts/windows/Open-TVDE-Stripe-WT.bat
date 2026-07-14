@@ -2,6 +2,14 @@
 setlocal EnableExtensions
 
 rem Stripe local O-STRIPE-1 — sem UAC.
+rem Se arrancou elevado (ex.: atalho "Run as administrator"), relanca sem admin.
+net session >nul 2>&1
+if %errorLevel% equ 0 (
+  echo [TVDE] Detetado modo Administrador — a relancar sem elevacao...
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -WorkingDirectory '%~dp0'"
+  exit /b 0
+)
+
 for %%I in ("%~dp0..\..") do set "ROOT=%%~fI"
 set "BACKEND=%ROOT%\backend"
 set "SCRIPTS=%ROOT%\scripts\windows"
@@ -30,6 +38,8 @@ set "PSFLAGS=-NoExit -NoProfile -ExecutionPolicy Bypass -File"
  ; new-tab -p "Windows PowerShell" --title "Utils_Stripe" --tabColor "#605e1b" -d "%ROOT%" ^
  %PS% %PSFLAGS% "%SCRIPTS%\tab-utils-stripe.ps1" ^
  ; focus-tab -t 2
+
+%PS% -NoProfile -ExecutionPolicy Bypass -File "%SCRIPTS%\invoke-cursor-workspace.ps1"
 
 endlocal
 exit /b 0

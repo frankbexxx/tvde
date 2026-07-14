@@ -2,6 +2,14 @@
 setlocal EnableExtensions
 
 rem Dev normal — sem UAC, sem Stripe.
+rem Se arrancou elevado (ex.: atalho "Run as administrator"), relanca sem admin.
+net session >nul 2>&1
+if %errorLevel% equ 0 (
+  echo [TVDE] Detetado modo Administrador — a relancar sem elevacao...
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -WorkingDirectory '%~dp0'"
+  exit /b 0
+)
+
 for %%I in ("%~dp0..\..") do set "ROOT=%%~fI"
 set "BACKEND=%ROOT%\backend"
 set "SCRIPTS=%ROOT%\scripts\windows"
@@ -29,11 +37,7 @@ set "PSFLAGS=-NoExit -NoProfile -ExecutionPolicy Bypass -File"
  %PS% %PSFLAGS% "%SCRIPTS%\tab-utils.ps1" ^
  ; focus-tab -t 0
 
-if exist "%LOCALAPPDATA%\Programs\cursor\Cursor.exe" (
-  start "" "%LOCALAPPDATA%\Programs\cursor\Cursor.exe" "%ROOT%"
-) else if exist "%ProgramFiles%\Cursor\Cursor.exe" (
-  start "" "%ProgramFiles%\Cursor\Cursor.exe" "%ROOT%"
-)
+%PS% -NoProfile -ExecutionPolicy Bypass -File "%SCRIPTS%\invoke-cursor-workspace.ps1"
 
 endlocal
 exit /b 0
