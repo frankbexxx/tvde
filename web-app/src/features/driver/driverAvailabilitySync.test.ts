@@ -57,6 +57,19 @@ describe('isDriverLocationReportingOperational', () => {
     ).toBe(true)
   })
 
+  it('bootstrap de viagem activa pendente → reporter activo durante retry', () => {
+    expect(
+      isDriverLocationReportingOperational({
+        ...base,
+        offline: true,
+        hydrated: false,
+        syncing: true,
+        activeTripId: null,
+        activeTripBootstrapPending: true,
+      })
+    ).toBe(true)
+  })
+
   it('sem viagem activa → segue a disponibilidade operacional para ofertas', () => {
     expect(isDriverLocationReportingOperational({ ...base, activeTripId: null })).toBe(true)
     expect(

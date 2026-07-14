@@ -25,9 +25,10 @@ export function isDriverLocationReportingOperational(opts: {
   hydrated: boolean
   syncing: boolean
   activeTripId: string | null | undefined
+  activeTripBootstrapPending?: boolean
 }): boolean {
   if (!opts.token) return false
-  if (opts.activeTripId) return true
+  if (opts.activeTripId || opts.activeTripBootstrapPending) return true
   return isDriverAvailabilityOperational(opts)
 }
 
