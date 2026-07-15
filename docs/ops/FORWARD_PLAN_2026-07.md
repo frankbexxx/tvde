@@ -1,13 +1,28 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-13 (P5 ops: **O-STRIPE-1** Fase A local concluída — webhook Stripe test mode; **TVDE-PROD** gate P5 fechado).
+**Última actualização:** 2026-07-15 (checkpoint **TVDE-PROD pós-P5** — PRs **#398** + **#403** merged; `main` @ `8b5f75f`; PRs abertas **0**; CI verde).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md)
 
 ---
 
-## 0. O que fechámos recentemente (contexto)
+## 0. Checkpoint repo (**2026-07-15**)
+
+| Item | Estado |
+|------|--------|
+| **`main` / `origin/main`** | `8b5f75f` — alinhados |
+| **PRs abertas** | **0** |
+| **CI `main` (pós-merge #398)** | `backend-ci` ✅ · `frontend-ci` ✅ · `web-e2e` ✅ (18/18) |
+| **Working tree** | Limpa |
+
+**Próxima ordem recomendada:** (1) walkthrough demo/produto · (2) UX/copy estados viagem · (3) P0/i18n ou staging só se objectivo mudar.
+
+**Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
+
+---
+
+## 0b. O que fechámos recentemente (contexto)
 
 | Área | Estado |
 |------|--------|
@@ -26,6 +41,8 @@
 | **TVDE-BKP** | **OK** — PITR 3d + export lógico; `pg_dump` + restore Docker local validados — [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 | **O-STRIPE-1** | **OK** — Fase A local: webhook assinatura + fluxo PI real test mode — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) |
 | **TVDE-PROD** | **OK** (gate P5 beta) | Piloto: `STRIPE_MOCK=true` em prod; live/parceiro fora de scope |
+| **PR #398** | **Merged** (`8b5f75f`) | Recuperação viagem activa motorista após reload/cold start — smoke manual PASS |
+| **PR #403** | **Merged** (`9c1c444`) | Launchers WT: Dev normal (4 abas) + Stripe local O-STRIPE-1 (5 abas) — [`scripts/windows/README.md`](../../scripts/windows/README.md) |
 
 ---
 
@@ -64,7 +81,7 @@
 | **S-PROD-2** | Smoke prod pós-rotação | **Concluído** | 2026-07-12; viagem curta OK — ver §14 |
 | **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12; [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 | **O-STRIPE-1** | Webhook Stripe assertivo (test mode) | **Concluído** | 2026-07-13; Fase A local — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) |
-| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** draft — rever depois |
+| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts` (intermitente) | **Monitorizar** | CI `main` verde pós-#398; não prioritário enquanto CI estiver verde |
 | **TVDE-STG** | Staging `smoke_validation` | **Por iniciar** | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 |
 
 **Regra do painel:** escolher **1 carril** (P0 vs P1 vs P5) antes de codar.
@@ -96,9 +113,11 @@
 
 Carrís sugeridos (actualizar após esta sessão):
 
-1. **P5 ops** — ~~fechado~~ ✅ (cron · dev tools · secrets · smoke · TVDE-BKP · O-STRIPE-1 Fase A)
-2. **P1 staging** — A2-02 OAuth + smokes
-3. **P0 produto** — O-i18n-NICHOS smoke #362
+1. **Walkthrough demo/produto** — revisão end-to-end sem código (passageiro · motorista · parceiro)
+2. **UX/copy estados viagem** — «A caminho…», «Em viagem», toasts pós-reload (#398)
+3. **P0 i18n** — O-i18n-NICHOS (#362) — *se objectivo mudar*
+4. **P1 staging** — A2-02 OAuth + smokes — *se staging for foco*
+5. ~~**P5 ops**~~ — ✅ fechado (cron · dev tools · secrets · smoke · TVDE-BKP · O-STRIPE-1 Fase A · #403 launchers)
 
 Operação: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) · [`A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md)
 
@@ -238,15 +257,17 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 
 O **núcleo de produto funciona em produção** — não é MVP de papel. O gargalo deixou de ser “código partido” e passou a ser **operação + higiene de dados + escala controlada**.
 
-### Prioridade recomendada (próximas 2–4 semanas)
+### Prioridade recomendada (próximas sessões)
 
 | Ordem | Carril | Porquê |
 |-------|--------|--------|
-| **1** | **P1 staging** | P5 beta fechado — OAuth A2-02 + smokes assertivos |
-| **2** | **Hardening BETA** | Planear desligar `/debug/*` (O-DEBUG-1) |
-| **3** | **R-E2E-1** | Flake proximity E2E — PR **#398** |
-| **4** | **P0 polish** | i18n nichos #362 |
-| **5** | **Stripe live** | Conta parceiro + `sk_live_*` — fora do gate P5 actual |
+| **1** | **Walkthrough demo** | Validar fluxo completo antes de polish; sem código |
+| **2** | **UX/copy viagem** | Estados motorista/passageiro pós-#398; impacto visível demo |
+| **3** | **P0 i18n** | O-i18n-NICHOS (#362) — se objectivo mudar |
+| **4** | **P1 staging** | OAuth A2-02 + smokes — quando staging for prioridade |
+| **5** | **R-E2E-1** | Monitorizar — só reabrir se CI falhar 2× ou selectors mudarem |
+| **6** | **O-DEBUG-1** | Carril ops — desligar `/debug/*` pós-BETA |
+| **7** | **O-STRIPE-LIVE** | Bloqueado — conta parceiro + `sk_live_*` + documentação |
 
 ### O que não fazer agora
 
@@ -265,19 +286,17 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 
 ---
 
-## 13. PRs Cursor Bot — estado (2026-07-12)
+## 13. PRs recentes — estado (2026-07-15)
 
 | PR | Título | Estado |
 |----|--------|--------|
-| **#389–#393** | Auth OTP persist / throttle / log | **Merged** |
-| **#394** | pending beta users / capacity | **Merged** (`dfcbf39`) |
-| **#397** | block dev Stripe test card in prod | **Merged** (`1331414`) |
-| **#392** | driver docs → pending_review on replace | **Merged** (`a150b78`) |
-| **#395** | dup Stripe test card | **Closed** (dup #397) |
-| **#398** | harden active trip recovery after reload | **Draft** — rever depois |
+| **#398** | harden active trip recovery after reload | **Merged** (`8b5f75f`) — smoke manual PASS |
+| **#403** | split Dev and Stripe WT launchers | **Merged** (`9c1c444`) |
+| **#389–#397** | Auth OTP / beta capacity / Stripe prod guard | **Merged** |
+| **#402** | O-STRIPE-1 Fase A docs | **Merged** |
+| **#401** | TVDE-BKP validation docs | **Merged** |
 
-**Aberta:** só **#398**.  
-**Merged nesta onda:** #387–#394, #397, #392, #393. **Fechadas redundantes:** #379, #380, #385, #395.
+**PRs abertas:** **0**.
 
 ---
 
@@ -310,9 +329,12 @@ O **núcleo de produto funciona em produção** — não é MVP de papel. O garg
 | **O-STRIPE-1b** | T2 trigger sem PI na BD | **Concluído** | 200 ack · sem mutação |
 | **O-STRIPE-1c** | T3b fluxo PI real + succeeded | **Concluído** | trip `5629c3fa-…` · payment succeeded |
 | **O-STRIPE-1d** | `.env` Render vs local | **Concluído** | Incidente detectado; `looks_render: false` antes de retomar |
-| **O-STRIPE-LIVE** | Stripe live / conta parceiro | **Bloqueado** | Fora do gate P5 beta |
-| **O-DEBUG-1** | Planear desligar `/debug/*` pós-BETA | **Por iniciar** | Decisão produto |
-| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts:577` | **Por iniciar** | PR **#398** — não bloqueia agora |
+| **O-STRIPE-LIVE** | Stripe live / conta parceiro | **Bloqueado** | Fora do gate P5 beta — parceiro + `sk_live_*` + documentação |
+| **O-DEBUG-1** | Planear desligar `/debug/*` pós-BETA | **Por iniciar** | Carril ops — decisão produto |
+| **R-E2E-1** | Flake `driver-passenger-flow.spec.ts` | **Monitorizar** | CI `main` verde pós-#398; não prioritário enquanto CI verde |
+| **R-GIT-1** | Limpeza branches locais antigas (~190) | **Por iniciar** | Higiene futura separada — não apagar sem critério |
+| **PR-398** | Driver active trip recovery | **Concluído** | Merged 2026-07-14; F5 «A caminho» + «Em viagem» PASS |
+| **PR-403** | WT launchers Dev + Stripe local | **Concluído** | Merged 2026-07-14; [`scripts/windows/README.md`](../../scripts/windows/README.md) |
 
 ---
 

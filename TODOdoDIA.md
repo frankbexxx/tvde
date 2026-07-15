@@ -16,6 +16,30 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-15** — checkpoint TVDE-PROD pós-P5)
+
+**`main` / `origin/main`:** `8b5f75f` · PRs abertas **0** · CI verde (`backend-ci` · `frontend-ci` · `web-e2e` 18/18).
+
+**Objectivo imediato:** walkthrough demo/produto (sem código) → depois UX/copy estados viagem.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **CHK-0715** | Checkpoint docs pós-P5 | Concluído | PR docs 2026-07-15 |
+| **PR-398** | Driver active trip recovery (reload) | Concluído | Merged 2026-07-14; smoke manual PASS |
+| **PR-403** | WT launchers Dev + Stripe local | Concluído | Merged 2026-07-14; [`scripts/windows/README.md`](scripts/windows/README.md) |
+| **TVDE-PROD** | Gate P5 beta | Concluído | O-ROTATE-1 · S-PROD-2 · O-CRON-1 · O-RENDER-1 · TVDE-BKP · O-STRIPE-1 |
+| **D-DEMO-1** | Walkthrough demo/produto | Por iniciar | Passageiro · motorista · parceiro — sem PR |
+| **TW-TRIP-COPY-1** | UX/copy estados viagem | Por iniciar | Depois de D-DEMO-1 |
+| **O-i18n-NICHOS** | Strings PT residuais EN batch A–F | Smoke pendente | PR **#362** — se objectivo mudar |
+| **A2-02-1** | OAuth staging + URIs Google | Em curso | Se staging for foco |
+| **R-E2E-1** | Flake web-e2e intermitente | Monitorizar | CI verde; não prioritário |
+| **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
+| **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
+
+**Regra:** escolher **1 carril** por sessão (demo → copy → i18n/staging).
+
+---
+
 ## Painel — 2026-05-22 (smokes pós-merge **#349** — Ambiance O1–O6)
 
 **Smokes S-SMK-349-1…5:** Concluídos. Contratos: [`docs/ux/ambiance-chrome-contract.md`](docs/ux/ambiance-chrome-contract.md)
@@ -45,9 +69,9 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (lista consolidada — **2026-05-22**)
+## Painel — **PRÓXIMA SESSÃO** (lista consolidada — **2026-05-22** — histórico)
 
-**Objectivo:** carril **A** (P0 produto). Docs audit L1–L4 **concluída** em `main`.
+_Ver painel **2026-07-15** acima para estado actual._
 
 **`main`:** i18n v2 (**#353**, **#354**); nichos EN — [`I18N_NICHOS_EN.md`](docs/architecture/I18N_NICHOS_EN.md).
 

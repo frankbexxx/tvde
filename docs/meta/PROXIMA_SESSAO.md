@@ -4,19 +4,43 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 **Histórico completo (fechos Abril–Maio, Seções A–E):** `C:\dev\_archives\APP\docs-2026-06\lote-3\PROXIMA_SESSAO.md`
 
+**Plano operacional Julho:** [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md)
+
 ---
 
-## Contexto actual (**2026-05-22**)
+## Contexto actual (**2026-07-15**)
 
-- **Docs audit L1–L4:** concluída; handoff único (`TODOdoDIA` + este ficheiro).
-- **Carril A (P0):** DOC-4, NAV-PP-1, **O-NAV-REV-1** (#361), X3 legal B — concluídos; **TW-DIA23-1** adiado; **O-i18n-NICHOS** contigo.
-- **`main`:** smokes **#341** fechados; i18n v2 (**#353**, **#354**); ambiance **#349** OK.
+### Checkpoint TVDE-PROD pós-P5
 
-### O que fazer a seguir (escolher 1 carril)
+| Item | Estado |
+|------|--------|
+| **`main` / `origin/main`** | `8b5f75f` |
+| **PRs abertas** | **0** |
+| **CI `main`** | `backend-ci` ✅ · `frontend-ci` ✅ · `web-e2e` ✅ (18/18) |
+| **Gate P5 beta** | **Concluído** — O-ROTATE-1 · S-PROD-2 · O-CRON-1 · O-RENDER-1 · TVDE-BKP · O-STRIPE-1 Fase A |
 
-1. **P0 produto** — **TW-DIA23-1** quando houver batch de ecrãs · **O-i18n-NICHOS** (Frank)
-2. **P1 staging** — **A2-02** OAuth + smokes ([`STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md))
-3. **P5 ops** — [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) PROD validation + cron
+### Entregas recentes (merged)
+
+| PR | O quê |
+|----|-------|
+| **#398** | Recuperação viagem activa motorista após reload/cold start — smoke manual PASS (F5 «A caminho» + «Em viagem») |
+| **#403** | Launchers Windows Terminal: **Dev normal** (4 abas) + **Stripe local** O-STRIPE-1 (5 abas) — [`scripts/windows/README.md`](../../scripts/windows/README.md) |
+
+### Em pausa / monitorizar
+
+| ID | Notas |
+|----|-------|
+| **R-E2E-1** | Flake intermitente — **monitorizar**; não prioritário enquanto CI verde |
+| **O-STRIPE-LIVE** | **Bloqueado** — conta parceiro / `sk_live_*` / documentação |
+| **R-GIT-1** | ~190 branches locais antigas — higiene futura separada; **não apagar ainda** |
+
+### O que fazer a seguir (ordem acordada)
+
+1. **Walkthrough demo/produto** — revisão end-to-end **sem código** (passageiro · motorista · parceiro)
+2. **UX/copy estados viagem** — «A caminho do passageiro», «Em viagem», toasts pós-reload
+3. **P0 i18n** (O-i18n-NICHOS #362) ou **P1 staging** (A2-02 OAuth) — *só se objectivo mudar*
+
+**Ambiente local recomendado:** `scripts/windows/Open-TVDE-Dev-WT.bat` (Dev normal, sem Stripe).
 
 ### Specs activas
 
@@ -27,6 +51,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | i18n | [`I18N.md`](../architecture/I18N.md) |
 | Login social L1 | [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md) |
 | Roadmap engenharia | [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md) |
+| Ops Julho | [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md) |
 
 ---
 
@@ -38,6 +63,8 @@ _Canónico detalhado arquivado Lote 3; procedimentos em docs ops._
 |------|------|
 | Cron externo | `GET /cron/jobs?secret=<CRON_SECRET>` cada 30–60 s — [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) |
 | Smoke W1 prod | [`W1_PROD_SMOKE.md`](../ops/W1_PROD_SMOKE.md) |
+| Launchers WT local | [`scripts/windows/README.md`](../../scripts/windows/README.md) |
+| Stripe Fase A local | [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) |
 | Timeouts manual | `POST /admin/run-timeouts`, `POST /admin/run-offer-expiry` |
 | Fecho sessão | Testes → PR → actualizar [`TODOdoDIA.md`](../../TODOdoDIA.md) + este ficheiro |
 | Validação PROD | [`A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) |
