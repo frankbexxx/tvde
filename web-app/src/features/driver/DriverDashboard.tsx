@@ -119,7 +119,6 @@ import {
 import {
   driverNavAppLabel,
   openDriverExternalNav,
-  warmDriverNavSessionIfNeeded,
 } from '../../utils/openDriverExternalNav'
 import { MapBottomSheet } from '../../components/layout/MapBottomSheet'
 import {
@@ -517,7 +516,6 @@ export function DriverDashboard() {
               setToast('Continuas indisponível no servidor. Se estiveres em viagem, verifica a ligação.')
             }
           } else {
-            warmDriverNavSessionIfNeeded()
             addLog('Toggle: Disponível', 'info')
             setStatus('Disponível')
           }
