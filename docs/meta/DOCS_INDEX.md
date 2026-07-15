@@ -12,6 +12,7 @@
 | -------- | --------- |
 | [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo (tabelas ID/Estado) |
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto + Seções F/G resumo |
+| [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 + checkpoint Julho 2026 |
 | [TODO_FUTURO.md](../TODO_FUTURO.md) | Backlog produto/técnico não urgente |
 | [todo-futuro-nuances.md](../todo-futuro-nuances.md) | Nuances e decisões futuras |
 | [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) | Checklist pré-produção (PROD, staging, backups) |
@@ -75,12 +76,14 @@
 | Ficheiro | Propósito |
 | -------- | --------- |
 | [CRON_JOB_ORG_INSTRUCOES.md](../CRON_JOB_ORG_INSTRUCOES.md) | Cron externo |
+| [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 · checkpoint Julho 2026 |
 | [O_STRIPE_1_RUNBOOK.md](../ops/O_STRIPE_1_RUNBOOK.md) | Webhook Stripe Fase A local (test mode) |
 | [TVDE_BKP_RUNBOOK.md](../ops/TVDE_BKP_RUNBOOK.md) | Backups Postgres + restore test |
 | [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md) | Smoke W1 prod |
 | [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) | OAuth staging A2-02 |
 | [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md) | Telemetria / export logs |
 | [DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md) | Depuração BETA Render |
+| [scripts/windows/README.md](../../scripts/windows/README.md) | Launchers WT Dev + Stripe local |
 
 ---
 
