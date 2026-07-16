@@ -13,6 +13,7 @@
 | [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo (tabelas ID/Estado) |
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto + Seções F/G resumo |
 | [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 + checkpoint Julho 2026 |
+| [D_DEMO_1_CHECKPOINT_2026-07-16.md](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) | Fecho walkthrough multi-role D-DEMO-1 PASS |
 | [TODO_FUTURO.md](../TODO_FUTURO.md) | Backlog produto/técnico não urgente |
 | [todo-futuro-nuances.md](../todo-futuro-nuances.md) | Nuances e decisões futuras |
 | [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) | Checklist pré-produção (PROD, staging, backups) |

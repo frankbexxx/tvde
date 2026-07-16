@@ -8,64 +8,75 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-15**)
+## Contexto actual (**2026-07-16**)
 
-### Checkpoint TVDE-PROD pós-P5
+### Checkpoint D-DEMO-1 PASS + NAV/WAZE-1
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `8b5f75f` |
-| **PRs abertas** | **0** |
-| **CI `main`** | `backend-ci` ✅ · `frontend-ci` ✅ · `web-e2e` ✅ (18/18) |
-| **Gate P5 beta** | **Concluído** — O-ROTATE-1 · S-PROD-2 · O-CRON-1 · O-RENDER-1 · TVDE-BKP · O-STRIPE-1 Fase A |
+| **`main` / `origin/main`** | `624ab4e` |
+| **PRs abertas** | **0** (docs checkpoint local pendente commit/PR) |
+| **CI `main`** | Verde (pós-#405) |
+| **D-DEMO-1** | **PASS** — multi-role local (Pax · Driver · Partner · Admin) |
+| **PR #405** | **Merged** — NAV/WAZE-1 Opção B; S-NAV-1…4 PASS |
+| **Relatório demo** | [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) |
 
 ### Entregas recentes (merged)
 
 | PR | O quê |
 |----|-------|
-| **#398** | Recuperação viagem activa motorista após reload/cold start — smoke manual PASS (F5 «A caminho» + «Em viagem») |
-| **#403** | Launchers Windows Terminal: **Dev normal** (4 abas) + **Stripe local** O-STRIPE-1 (5 abas) — [`scripts/windows/README.md`](../../scripts/windows/README.md) |
+| **#405** | Nav externa: sem warm online; aceitar → recolha; iniciar sem auto-nav; manual → destino |
+| **#398** | Recuperação viagem activa motorista após reload/cold start |
+| **#403** | Launchers WT Dev + Stripe local — [`scripts/windows/README.md`](../../scripts/windows/README.md) |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
-| **R-E2E-1** | Flake intermitente — **monitorizar**; não prioritário enquanto CI verde |
-| **O-STRIPE-LIVE** | **Bloqueado** — conta parceiro / `sk_live_*` / documentação |
-| **R-GIT-1** | ~190 branches locais antigas — higiene futura separada; **não apagar ainda** |
+| **BACKEND-DBPOOL-1 / ADMIN-POLL-1** | Incidente pool local com Admin aberto — backlog; **não** leak confirmado |
+| **R-E2E-1** | Flake intermitente — monitorizar |
+| **O-STRIPE-LIVE** | Bloqueado — conta parceiro / `sk_live_*` |
+| **R-GIT-1** | ~190 branches locais — **não apagar ainda** |
 
-### O que fazer a seguir (ordem acordada)
+### O que fazer a seguir (ordem)
 
-1. **Walkthrough demo/produto** — revisão end-to-end **sem código** (passageiro · motorista · parceiro)
-2. **UX/copy estados viagem** — «A caminho do passageiro», «Em viagem», toasts pós-reload
-3. **P0 i18n** (O-i18n-NICHOS #362) ou **P1 staging** (A2-02 OAuth) — *só se objectivo mudar*
+**Amanhã (docs):**
 
-**Ambiente local recomendado:** `scripts/windows/Open-TVDE-Dev-WT.bat` (Dev normal, sem Stripe).
+1. Commit **docs-only** (checkpoint D-DEMO-1 + painéis)
+2. PR docs-only → `main`
+3. Escolher **1** carril funcional:
+
+| Prioridade sugerida | ID | Foco |
+|---------------------|-----|------|
+| 1 | **TW-TRIP-COPY-1** | Copy passenger/driver/pagamento para demo |
+| 2 | **ADMIN-POLL-1 / BACKEND-DBPOOL-1** | Poll Admin on-enter + Actualizar; aliviar system-health/pool |
+| 3 | **ADMIN-OPS-1** | Detalhe viagem, desbloqueios, pagamentos stuck |
+| 4 | **PARTNER-FLEET-1** | Viaturas, docs viatura, associação, rendimentos |
+
+**Produto nav (Manel):** abrir Waze/Maps só por botão; botão sempre visível com próxima acção de condução; futuro `nextStop` em NAV-ROUTE-STOPS.
+
+**Ambiente local:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Walkthrough longo: preferir Vivaldi vista partilhada; fechar Admin se pool saturar (reiniciar uvicorn).
 
 ### Specs activas
 
 | Área | Onde |
 |------|------|
+| Demo checkpoint | [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) |
+| Backlog ops/nav | [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md) |
 | Motorista UX | [`driver-ux-fixes-backlog.md`](../ux/driver-ux-fixes-backlog.md), [`DRIVER_HOME_TOP3_MANEL.md`](../product/DRIVER_HOME_TOP3_MANEL.md) |
 | Shell / nav | [`shell-menu-centric.md`](../ux/shell-menu-centric.md), [`navigation-inventory.md`](../ux/navigation-inventory.md) |
-| i18n | [`I18N.md`](../architecture/I18N.md) |
-| Login social L1 | [`SOCIAL_LOGIN_L1_SPEC.md`](../product/SOCIAL_LOGIN_L1_SPEC.md) |
-| Roadmap engenharia | [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md) |
 | Ops Julho | [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md) |
 
 ---
 
 ## Seção F — Operação (resumo)
 
-_Canónico detalhado arquivado Lote 3; procedimentos em docs ops._
-
 | Tema | Onde |
 |------|------|
-| Cron externo | `GET /cron/jobs?secret=<CRON_SECRET>` cada 30–60 s — [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) |
+| Cron externo | [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) |
 | Smoke W1 prod | [`W1_PROD_SMOKE.md`](../ops/W1_PROD_SMOKE.md) |
 | Launchers WT local | [`scripts/windows/README.md`](../../scripts/windows/README.md) |
 | Stripe Fase A local | [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) |
-| Timeouts manual | `POST /admin/run-timeouts`, `POST /admin/run-offer-expiry` |
 | Fecho sessão | Testes → PR → actualizar [`TODOdoDIA.md`](../../TODOdoDIA.md) + este ficheiro |
 | Validação PROD | [`A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) |
 
@@ -73,12 +84,7 @@ _Canónico detalhado arquivado Lote 3; procedimentos em docs ops._
 
 ## Seção G — Relatório / roadmap (resumo)
 
-_Verdade operacional no código + [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md). Relatório texto histórico: snapshot em [`HISTORICO_FORA_DO_GIT.md`](../HISTORICO_FORA_DO_GIT.md)._
-
 | Necessidade | Onde |
 |-------------|------|
 | Continuar amanhã | [`TODOdoDIA.md`](../../TODOdoDIA.md) + este ficheiro |
-| Índice docs | [DOCS_INDEX.md](DOCS_INDEX.md) |
-| Testes manuais | [GUIA_TESTES.md](../testing/GUIA_TESTES.md) |
-| Implementação + pytest | [`IMPLEMENTACAO_E_TESTES.md`](../IMPLEMENTACAO_E_TESTES.md) |
-| Arquivo fora do Git | [`HISTORICO_FORA_DO_GIT.md`](../HISTORICO_FORA_DO_GIT.md) |
+| Roadmap engenharia | [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md) |

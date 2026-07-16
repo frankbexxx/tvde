@@ -16,27 +16,37 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-15** — checkpoint TVDE-PROD pós-P5)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-16** — D-DEMO-1 PASS)
 
-**`main` / `origin/main`:** `8b5f75f` · PRs abertas **0** · CI verde (`backend-ci` · `frontend-ci` · `web-e2e` 18/18).
+**`main` / `origin/main`:** `624ab4e` · PRs abertas **0** · CI verde.
 
-**Objectivo imediato:** walkthrough demo/produto (sem código) → depois UX/copy estados viagem.
+**Objectivo imediato (amanhã):** commit + PR **docs-only** do checkpoint → depois **1** carril funcional.
+
+**Checkpoint demo:** [`docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md`](docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **CHK-0715** | Checkpoint docs pós-P5 | Concluído | PR docs 2026-07-15 |
-| **PR-398** | Driver active trip recovery (reload) | Concluído | Merged 2026-07-14; smoke manual PASS |
-| **PR-403** | WT launchers Dev + Stripe local | Concluído | Merged 2026-07-14; [`scripts/windows/README.md`](scripts/windows/README.md) |
+| **PR-405** | NAV/WAZE-1 Opção B | Concluído | Merged 2026-07-16; S-NAV-1…4 PASS |
+| **D-DEMO-1** | Walkthrough multi-role local | Concluído | PASS 2026-07-16 — Pax+Driver+Partner+Admin; Vivaldi partilhado |
+| **CHK-DEMO-1** | Commit/PR docs checkpoint D-DEMO-1 | Por iniciar | **Amanhã** — docs-only; sem código funcional |
+| **PR-398** | Driver active trip recovery (reload) | Concluído | Merged 2026-07-14 |
+| **PR-403** | WT launchers Dev + Stripe local | Concluído | Merged 2026-07-14 |
 | **TVDE-PROD** | Gate P5 beta | Concluído | O-ROTATE-1 · S-PROD-2 · O-CRON-1 · O-RENDER-1 · TVDE-BKP · O-STRIPE-1 |
-| **D-DEMO-1** | Walkthrough demo/produto | Por iniciar | Passageiro · motorista · parceiro — sem PR |
-| **TW-TRIP-COPY-1** | UX/copy estados viagem | Por iniciar | Depois de D-DEMO-1 |
+| **TW-TRIP-COPY-1** | UX/copy estados viagem / pagamento | Por iniciar | Candidato #1 pós-docs |
+| **BACKEND-DBPOOL-1** / **ADMIN-POLL-1** | Reduzir poll Admin + aliviar pool | Por iniciar | Candidato #2; [`BACKLOG_POST_PILOTO.md`](docs/meta/BACKLOG_POST_PILOTO.md) |
+| **ADMIN-OPS-1** | Detalhe trip, desbloqueios, pagamentos stuck | Por iniciar | Candidato #3 — após walkthrough Admin base |
+| **PARTNER-FLEET-1** | Viaturas, docs, associação, rendimentos | Por iniciar | Candidato #4 — gaps produto Partner |
+| **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
 | **O-i18n-NICHOS** | Strings PT residuais EN batch A–F | Smoke pendente | PR **#362** — se objectivo mudar |
 | **A2-02-1** | OAuth staging + URIs Google | Em curso | Se staging for foco |
 | **R-E2E-1** | Flake web-e2e intermitente | Monitorizar | CI verde; não prioritário |
 | **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
 | **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
 
-**Regra:** escolher **1 carril** por sessão (demo → copy → i18n/staging).
+**Amanhã:** A docs checkpoint → B commit docs-only → C PR docs-only → D escolher 1 de TW-TRIP-COPY-1 · ADMIN-POLL-1 · ADMIN-OPS-1 · PARTNER-FLEET-1.
+
+**Regra:** **1 carril** por sessão.
 
 ---
 
