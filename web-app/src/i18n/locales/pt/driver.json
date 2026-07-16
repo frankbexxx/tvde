@@ -286,7 +286,7 @@
       "autoPickupLabel": "Abrir recolha ao aceitar",
       "autoPickupOn": "Activo",
       "autoPickupOff": "Inactivo",
-      "autoPickupHint": "Inactivo por omissão: usa «Abrir navegação» na viagem. Com activo, abre a app preferida logo após aceitares."
+      "autoPickupHint": "Activo por omissão: abre a app preferida logo após aceitares. Desactiva para usar só «Abrir navegação» na viagem."
     },
     "categories": {
       "title": "Categorias de veículo",

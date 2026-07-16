@@ -125,13 +125,11 @@ export function ActiveTripActions({
   const [cancelPanelOpen, setCancelPanelOpen] = useState(false)
   const [cancelPreset, setCancelPreset] = useState('')
   const [cancelOtherDetail, setCancelOtherDetail] = useState('')
-  const navOpenedForOngoingRef = useRef(false)
 
   useEffect(() => {
     setCancelPanelOpen(false)
     setCancelPreset('')
     setCancelOtherDetail('')
-    navOpenedForOngoingRef.current = false
   }, [tripId])
 
   const hasTripContext = Boolean(coordsSource)
@@ -199,19 +197,10 @@ export function ActiveTripActions({
       onTripActionSuccess(res.status)
       setStatus(driverActiveTripUi(res.status).label)
       addLog(`${actionLabel} concluído (${res.status})`, 'success')
-      if (res.status === 'ongoing' && !navOpenedForOngoingRef.current) {
-        navOpenedForOngoingRef.current = true
+      // NAV/WAZE-1 Opção B: não abrir navegação ao iniciar — evita 2.ª janela Waze;
+      // destino fica no botão manual «Abrir navegação» (e futuro NAV-ROUTE-STOPS).
+      if (res.status === 'ongoing') {
         sonnerToast.success(t('actions.tripStarted'))
-        if (destinationCoords) {
-          openDriverExternalNav(destinationCoords.lat, destinationCoords.lng)
-          sonnerToast.message(
-            t('actions.openingNav', {
-              app: driverNavAppLabel(),
-              phase: t('actions.destinationPhase'),
-            }),
-            { duration: 3000 }
-          )
-        }
       }
       if (res.status === 'arriving') {
         sonnerToast.success(t('actions.arrivalConfirmed'))

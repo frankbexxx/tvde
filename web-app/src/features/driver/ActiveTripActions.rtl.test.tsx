@@ -151,13 +151,14 @@ describe('ActiveTripActions (RTL)', () => {
     expect(screen.getByTestId('driver-open-nav')).toBeInTheDocument()
   })
 
-  it('TW-04: ao iniciar viagem abre navegação para destino', async () => {
+  it('NAV/WAZE-1 Opção B: ao iniciar viagem NÃO abre navegação automaticamente', async () => {
     pollingCtx.trip = minimalTrip('accepted')
     renderActions(DRIVER_NEAR_PICKUP_0)
     fireEvent.click(screen.getByRole('button', { name: /iniciar viagem/i }))
     await waitFor(() => {
-      expect(openDriverNav.openDriverExternalNav).toHaveBeenCalledWith(1, 1)
+      expect(driverTripActions.driverPerformStartFromAccepted).toHaveBeenCalled()
     })
+    expect(openDriverNav.openDriverExternalNav).not.toHaveBeenCalled()
   })
 
   it('poll sem trip e sem fallback: mostra estado de sincronização e não expõe CTA de iniciar', () => {

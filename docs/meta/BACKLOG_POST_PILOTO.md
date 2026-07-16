@@ -164,6 +164,23 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 
 **Decisão:** não justifica prioridade. URL actual cobre 90% dos casos. Reavaliar só se queixas explícitas dos drivers.
 
+### NAV-ROUTE-STOPS — itinerário com paragens (futuro)
+
+**Origem:** smoke NAV/WAZE-1 (2026-07) + decisão produto — viagem não é só pickup/dropoff; evitar duplicar janelas Waze.
+
+**Estado actual:** trip A→B (`origin_*` / `destination_*`); nav externa = um lat/lng; Waze deep link sem waypoints; Google Maps URLs suportam `waypoints` com limites.
+
+**Carril futuro (não na #405):**
+
+- Modelo `trip_stops` (ordem, kind pickup/stop/dropoff, status pending/arrived/completed/skipped)
+- UI passageiro: adicionar destino/paragem (pré e durante viagem)
+- UI motorista: lista de próximas paragens; nav aponta para **próxima paragem**
+- Waze: alvo único por deep link (abrir perna a perna)
+- Google Maps: waypoints possível mas limitado (mobile/browser)
+- Preço/estimativa e E2E a redesenhar quando o modelo existir
+
+**Decisão:** documentar aqui; executar só após fechar política de triggers da #405 (Opção B) e priorização explícita.
+
 ---
 
 ## Legenda de estado

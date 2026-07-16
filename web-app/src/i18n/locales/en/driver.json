@@ -286,7 +286,7 @@
       "autoPickupLabel": "Open pickup on accept",
       "autoPickupOn": "On",
       "autoPickupOff": "Off",
-      "autoPickupHint": "Off by default: use «Open navigation» during the trip. When on, opens your preferred app right after you accept."
+      "autoPickupHint": "On by default: opens your preferred app right after you accept. Turn off to use «Open navigation» during the trip only."
     },
     "categories": {
       "title": "Vehicle categories",
