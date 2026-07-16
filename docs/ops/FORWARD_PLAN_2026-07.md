@@ -1,22 +1,23 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-15 (checkpoint **TVDE-PROD pós-P5** — PRs **#398** + **#403** merged; `main` @ `8b5f75f`; PRs abertas **0**; CI verde).
+**Última actualização:** 2026-07-16 (checkpoint **D-DEMO-1 PASS** + PR **#405** NAV/WAZE-1; `main` @ `624ab4e`; PRs abertas **0**; CI verde).
 
-**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md)
+**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
 ---
 
-## 0. Checkpoint repo (**2026-07-15**)
+## 0. Checkpoint repo (**2026-07-16**)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `8b5f75f` — alinhados |
-| **PRs abertas** | **0** |
-| **CI `main` (pós-merge #398)** | `backend-ci` ✅ · `frontend-ci` ✅ · `web-e2e` ✅ (18/18) |
-| **Working tree** | Limpa |
+| **`main` / `origin/main`** | `624ab4e` — alinhados |
+| **PRs abertas** | **0** (docs D-DEMO-1 locais pendentes de commit/PR) |
+| **CI `main` (pós-merge #405)** | Verde |
+| **D-DEMO-1** | **PASS** — Partner + Admin + circuito Pax/Driver multi-role |
+| **PR #405** | **Merged** — NAV/WAZE-1 Opção B |
 
-**Próxima ordem recomendada:** (1) walkthrough demo/produto · (2) UX/copy estados viagem · (3) P0/i18n ou staging só se objectivo mudar.
+**Próxima ordem recomendada:** (1) PR docs-only checkpoint · (2) **1** de TW-TRIP-COPY-1 · ADMIN-POLL-1 · ADMIN-OPS-1 · PARTNER-FLEET-1.
 
 **Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
 
@@ -41,8 +42,10 @@
 | **TVDE-BKP** | **OK** — PITR 3d + export lógico; `pg_dump` + restore Docker local validados — [`TVDE_BKP_RUNBOOK.md`](TVDE_BKP_RUNBOOK.md) |
 | **O-STRIPE-1** | **OK** — Fase A local: webhook assinatura + fluxo PI real test mode — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) |
 | **TVDE-PROD** | **OK** (gate P5 beta) | Piloto: `STRIPE_MOCK=true` em prod; live/parceiro fora de scope |
-| **PR #398** | **Merged** (`8b5f75f`) | Recuperação viagem activa motorista após reload/cold start — smoke manual PASS |
-| **PR #403** | **Merged** (`9c1c444`) | Launchers WT: Dev normal (4 abas) + Stripe local O-STRIPE-1 (5 abas) — [`scripts/windows/README.md`](../../scripts/windows/README.md) |
+| **PR #398** | **Merged** | Recuperação viagem activa motorista após reload/cold start — smoke manual PASS |
+| **PR #403** | **Merged** | Launchers WT: Dev normal (4 abas) + Stripe local O-STRIPE-1 (5 abas) — [`scripts/windows/README.md`](../../scripts/windows/README.md) |
+| **PR #405** | **Merged** (`624ab4e`) | NAV/WAZE-1 Opção B — online sem nav; aceitar→recolha; iniciar sem auto-nav; manual→destino |
+| **D-DEMO-1** | **PASS** (2026-07-16) | Walkthrough multi-role local — [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md) |
 
 ---
 
@@ -113,11 +116,14 @@
 
 Carrís sugeridos (actualizar após esta sessão):
 
-1. **Walkthrough demo/produto** — revisão end-to-end sem código (passageiro · motorista · parceiro)
-2. **UX/copy estados viagem** — «A caminho…», «Em viagem», toasts pós-reload (#398)
-3. **P0 i18n** — O-i18n-NICHOS (#362) — *se objectivo mudar*
-4. **P1 staging** — A2-02 OAuth + smokes — *se staging for foco*
-5. ~~**P5 ops**~~ — ✅ fechado (cron · dev tools · secrets · smoke · TVDE-BKP · O-STRIPE-1 Fase A · #403 launchers)
+1. ~~**Walkthrough demo/produto**~~ — ✅ **D-DEMO-1 PASS** 2026-07-16
+2. **PR docs-only** — checkpoint D-DEMO-1 (amanhã)
+3. **TW-TRIP-COPY-1** — copy passenger/driver/pagamento para demo
+4. **ADMIN-POLL-1 / BACKEND-DBPOOL-1** — reduzir poll Admin; aliviar pool/system-health
+5. **ADMIN-OPS-1** — detalhe viagem, desbloqueios, pagamentos stuck
+6. **PARTNER-FLEET-1** — viaturas / docs / associação / rendimentos
+7. **P0 i18n** — O-i18n-NICHOS (#362) — *se objectivo mudar*
+8. ~~**P5 ops**~~ — ✅ fechado · ~~**#405 NAV/WAZE**~~ — ✅ merged
 
 Operação: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) · [`A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md)
 
@@ -136,6 +142,10 @@ Operação: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) · [`W
 | **P3.1** | ruff format `sentry.py` | Trivial |
 | **P3.2** | Test hardening (geolocation, nav, etc.) | ~90 min |
 | **P3.3** | Waze deep link | Baixa prioridade |
+| **BACKEND-DBPOOL-1 / ADMIN-POLL-1** | Poll Admin + pool local | Após demo — ver backlog |
+| **NAV-ROUTE-STOPS** | Paragens + botão nextStop | Produto futuro (Manel) |
+| **PARTNER-FLEET-1** | Viaturas / earnings frota | Gaps D-DEMO-1 |
+| **ADMIN-OPS-1** | Desbloqueios / payments stuck | Gaps D-DEMO-1 |
 
 **Checkboxes abertos em P1.2:** decisão A vs B; migração schema users; onboarding obrigatório; política `DEFAULT_PASSWORD`.
 

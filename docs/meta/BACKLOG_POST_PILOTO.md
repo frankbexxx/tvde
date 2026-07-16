@@ -164,22 +164,52 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 
 **Decisão:** não justifica prioridade. URL actual cobre 90% dos casos. Reavaliar só se queixas explícitas dos drivers.
 
-### NAV-ROUTE-STOPS — itinerário com paragens (futuro)
+### NAV-ROUTE-STOPS / NAV-WAZE-2 — itinerário com paragens (futuro)
 
-**Origem:** smoke NAV/WAZE-1 (2026-07) + decisão produto — viagem não é só pickup/dropoff; evitar duplicar janelas Waze.
+**Origem:** smoke NAV/WAZE-1 + D-DEMO-1 (2026-07) + alinhamento Manel (prática Uber/Waze).
 
-**Estado actual:** trip A→B (`origin_*` / `destination_*`); nav externa = um lat/lng; Waze deep link sem waypoints; Google Maps URLs suportam `waypoints` com limites.
+**Estado actual (#405 em `main`):** online sem nav; aceitar → recolha (opt-out); iniciar sem auto-nav; botão manual → destino. Trip A→B; Waze deep link 1 alvo; Google Maps `waypoints` possíveis mas limitados.
 
-**Carril futuro (não na #405):**
+**Decisão produto (Manel 2026-07-16):**
+
+- Navegação externa abre por **botão** — não em cadeia automática
+- Botão «Abrir navegação» **sempre visível** quando há próxima acção de condução
+- Com paragens: botão aponta para **`nextStop`**; driver vê paragem activa e abre manualmente
+- Reutilizar mesma janela/app Waze/Google se a plataforma permitir (investigar deep links / Android)
+
+**Carril futuro:**
 
 - Modelo `trip_stops` (ordem, kind pickup/stop/dropoff, status pending/arrived/completed/skipped)
 - UI passageiro: adicionar destino/paragem (pré e durante viagem)
-- UI motorista: lista de próximas paragens; nav aponta para **próxima paragem**
-- Waze: alvo único por deep link (abrir perna a perna)
-- Google Maps: waypoints possível mas limitado (mobile/browser)
-- Preço/estimativa e E2E a redesenhar quando o modelo existir
+- UI motorista: lista de próximas paragens; nav = próxima paragem
+- Preço/estimativa e E2E quando o modelo existir
 
-**Decisão:** documentar aqui; executar só após fechar política de triggers da #405 (Opção B) e priorização explícita.
+### PARTNER-FLEET-1 — viaturas e rendimentos (gaps D-DEMO-1)
+
+Partner demonstrável como ops base; falta produto: entidade Viatura, docs de viatura, associação motorista ↔ viatura, rendimentos por frota/motorista/viatura.
+
+### ADMIN-OPS-1 — ferramenta de correcção (gaps D-DEMO-1)
+
+Admin OK como backoffice base; aprofundar: detalhe de viagem, acções de desbloqueio/correcção, runbook pagamentos presos. (Não priorizar polish visual mobile agora.)
+
+### BACKEND-DBPOOL-1 / ADMIN-POLL-1 — poll Admin + pool SQLAlchemy
+
+**Origem:** incidente local D-DEMO-1 (2026-07-16) — passenger + driver + admin abertos; `QueuePool limit of size 5 overflow 10 reached, timeout 30.00`. Postgres vivo; uvicorn LISTENING mas instável; reiniciar uvicorn recuperou.
+
+**Análise (sem fix):** leak clássico improvável (`get_db` fecha sessão). Causa provável: stress local + pool default 5+10 + Admin a disparar ~7 endpoints em paralelo a cada ~8s; `/admin/system-health` relativamente pesado; `/health` compete pelo mesmo pool → splash «A iniciar serviço…».
+
+**Decisão produto/ops:** Admin **não** deve fazer polling agressivo por defeito. Actualizar: (1) ao entrar na tab/ecrã; (2) botão «Actualizar»; (3) eventual poll leve/intervalos maiores só em painéis específicos; (4) nunca 7 endpoints pesados em paralelo a cada 8s.
+
+**Scope futuro (produção intocada até diagnóstico):**
+
+- Frontend Admin: estratégia refresh (on-enter + manual; poll opcional)
+- Aliviar `/admin/system-health` (queries/N+1 / full join payments)
+- Instrumentação pool local + avaliar `pool_size`/`max_overflow` só em dev
+- Documentar workaround: ≤2 roles ou fechar Admin em walkthroughs longos
+
+**Classificação:** dívida ops real; D-DEMO-1 **já PASS** (não bloqueou); **não** tratar como leak confirmado. Prioridade: antes de sessões longas com Admin aberto; candidato #2 pós-PR docs.
+
+**Workaround actual:** fechar Admin quando não necessário; reiniciar uvicorn se saturar.
 
 ---
 
