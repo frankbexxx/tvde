@@ -9,8 +9,8 @@ describe('driverNavAutoPickup', () => {
     localStorage.clear()
   })
 
-  it('defaults to false when storage empty', () => {
-    expect(getDriverNavAutoPickupOnAccept()).toBe(false)
+  it('defaults to true when storage empty', () => {
+    expect(getDriverNavAutoPickupOnAccept()).toBe(true)
   })
 
   it('persists enabled preference', () => {

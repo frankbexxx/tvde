@@ -574,7 +574,7 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await passengerCtx.close()
   })
 
-  test('preferência Google Maps persiste; navegação abre ao iniciar viagem (sem links legacy)', async ({
+  test('preferência Google Maps persiste; nav manual ao destino (sem auto-open ao iniciar)', async ({
     browser,
     request,
   }) => {
@@ -619,18 +619,80 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await waitForDriverMapOfferUi(driverPage, tripId)
 
     await acceptDriverTripFromMap(driverPage, tripId)
+    // Auto-pickup (default ON) pode abrir Maps na recolha — fechar para isolar Opção B no start.
+    for (const p of driverCtx.pages()) {
+      if (p !== driverPage) await p.close().catch(() => undefined)
+    }
     await refreshDriverLocationNearPickup(request, tokens.driver)
     await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
       timeout: sec(60),
     })
     await expect(driverPage.getByTestId('driver-nav-pickup-primary')).toHaveCount(0)
+    await expect(driverPage.getByTestId('driver-open-nav')).toBeVisible()
 
-    const popupOnStart = driverPage.waitForEvent('popup', { timeout: sec(45) })
-    await driverPage.getByRole('button', { name: /iniciar viagem/i }).click()
-    const popup = await popupOnStart
+    const passengerCtx = await createAuthenticatedContext(browser, tokens, 'passenger', tripId)
+    const passengerPage = await passengerCtx.newPage()
+    await passengerPage.goto('/passenger', { waitUntil: 'domcontentloaded', timeout: sec(120) })
+    await expect(passengerPage.getByTestId('app-header-brand')).toBeVisible({ timeout: sec(60) })
+
+    const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
+    await expect(startBtn).toBeEnabled({ timeout: sec(45) })
+    await refreshDriverLocationNearPickup(request, tokens.driver)
+    const arrivingResP = waitForDriverTripPost(driverPage, tripId, 'arriving')
+    const startResP = waitForDriverTripPost(driverPage, tripId, 'start')
+    await syncDriverNearPickupForStart(driverPage, request, tokens.driver)
+
+    let popupOnStart = false
+    const onStartPopup = () => {
+      popupOnStart = true
+    }
+    driverPage.on('popup', onStartPopup)
+    try {
+      await startBtn.click()
+      const arrivingRes = await arrivingResP
+      expect(
+        arrivingRes.ok(),
+        `driver markArriving: ${arrivingRes.status()} ${await arrivingRes.text()}`
+      ).toBeTruthy()
+      const startRes = await startResP
+      expect(
+        startRes.ok(),
+        `driver startTrip: ${startRes.status()} ${await startRes.text()}`
+      ).toBeTruthy()
+      await expect
+        .poll(
+          async () => {
+            const r = await request.get(`${API}/driver/trips/${tripId}`, {
+              headers: { Authorization: `Bearer ${tokens.driver}` },
+            })
+            if (!r.ok()) return null
+            const d = (await r.json()) as { status?: string }
+            return d.status ?? null
+          },
+          { timeout: sec(120), intervals: pollLook }
+        )
+        .toBe('ongoing')
+    } finally {
+      driverPage.off('popup', onStartPopup)
+    }
+    expect(popupOnStart, 'Opção B: iniciar viagem não deve abrir navegação').toBe(false)
+
+    await expect(driverPage.getByRole('button', { name: /terminar viagem/i })).toBeVisible({
+      timeout: sec(90),
+    })
+    await expect(driverPage.getByText(/em viagem/i).first()).toBeVisible({ timeout: sec(30) })
+    await expect(passengerPage.getByText(/viagem em curso/i).first()).toBeVisible({
+      timeout: sec(90),
+    })
+
+    const popupOnManual = driverPage.waitForEvent('popup', { timeout: sec(45) })
+    await driverPage.getByTestId('driver-open-nav').click()
+    const popup = await popupOnManual
     expect(popup.url()).toContain('google.com/maps')
+    expect(popup.url()).toContain(encodeURIComponent(`${TRIP_DEST.lat},${TRIP_DEST.lng}`))
     await popup.close().catch(() => undefined)
 
+    await passengerCtx.close()
     await driverCtx.close()
   })
 })
