@@ -42,6 +42,6 @@ describe('formatApproxDistanceKm', () => {
   })
 
   it('uses km with one decimal from 1 km', () => {
-    expect(formatApproxDistanceKm(2.25)).toBe('a ~2.3 km')
+    expect(formatApproxDistanceKm(2.25)).toBe('~2.3 km')
   })
 })

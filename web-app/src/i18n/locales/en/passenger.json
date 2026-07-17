@@ -87,12 +87,12 @@
     "submittingSubtitle": "Please wait a moment.",
     "searchingTitle": "Looking for a driver…",
     "searchingSubtitle": "We are contacting drivers in the area. This may take a moment.",
-    "searchingFallbackTitle": "No drivers available right now",
-    "searchingFallbackSubtitle": "We could not find a driver in the area. You can cancel and request again — or wait a little longer.",
+    "searchingFallbackTitle": "Still looking for a driver",
+    "searchingFallbackSubtitle": "This can take a little longer in the area. You can wait, or cancel and request again.",
     "retryPending": "Processing…",
     "retry": "Try again",
     "driverFound": "Driver found",
-    "driverLocating": "Getting location — map will appear shortly.",
+    "driverLocating": "Getting the driver’s location…",
     "driverEnRoute": "Driver on the way",
     "driverNearPickup": "The driver is near the pickup point.",
     "tripOngoing": "Trip in progress",
@@ -101,6 +101,10 @@
     "finalPriceCaption": "Final price",
     "driverName": "TVDE driver",
     "vehicleLabel": "TVDE vehicle"
+  },
+  "tracking": {
+    "driverDistance": "Driver {{distance}} from you (estimate).",
+    "followingRoute": "Following the route."
   },
   "sheet": {
     "submitting": "Sending request…",

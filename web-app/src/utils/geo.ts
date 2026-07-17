@@ -24,8 +24,8 @@ export function isWithinHaversineM(
   return haversineKm(a, b) * 1000 <= maxMeters
 }
 
-/** Copy curta para UI passageiro (PT). */
+/** Fragmento de distância neutro para interpolação i18n (sem prefixo linguístico). */
 export function formatApproxDistanceKm(km: number): string {
-  if (km < 1) return `a ~${Math.round(km * 1000)} m`
-  return `a ~${km.toFixed(1)} km`
+  if (km < 1) return `~${Math.round(km * 1000)} m`
+  return `~${km.toFixed(1)} km`
 }
