@@ -87,12 +87,12 @@
     "submittingSubtitle": "Aguarda um momento.",
     "searchingTitle": "A procurar motorista…",
     "searchingSubtitle": "Estamos a contactar motoristas na zona. Pode demorar um instante.",
-    "searchingFallbackTitle": "Sem motoristas disponíveis de momento",
-    "searchingFallbackSubtitle": "Não encontrámos um motorista na zona. Podes cancelar e voltar a pedir — ou esperar mais um pouco.",
+    "searchingFallbackTitle": "Ainda à procura de motorista",
+    "searchingFallbackSubtitle": "Pode demorar um pouco na zona. Podes esperar mais, ou cancelar e voltar a pedir.",
     "retryPending": "A processar…",
     "retry": "Tentar novamente",
     "driverFound": "Motorista encontrado",
-    "driverLocating": "A obter localização — o mapa aparece em breve.",
+    "driverLocating": "A obter a posição do motorista…",
     "driverEnRoute": "Motorista a caminho",
     "driverNearPickup": "O motorista está próximo do ponto de recolha.",
     "tripOngoing": "Viagem em curso",
@@ -101,6 +101,10 @@
     "finalPriceCaption": "Preço final",
     "driverName": "Motorista TVDE",
     "vehicleLabel": "Veículo TVDE"
+  },
+  "tracking": {
+    "driverDistance": "Motorista a {{distance}} de ti (estimativa).",
+    "followingRoute": "A acompanhar o percurso."
   },
   "sheet": {
     "submitting": "A enviar pedido…",

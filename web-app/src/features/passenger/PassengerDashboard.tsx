@@ -696,11 +696,15 @@ export function PassengerDashboard() {
   ])
 
   const driverTrackingHint = useMemo(() => {
-    if (!passengerLocation || !driverLocation || !activeTrip) return null
-    if (!isPassengerDriverTrackingStatus(activeTrip.status)) return null
+    if (!activeTrip || !isPassengerDriverTrackingStatus(activeTrip.status)) return null
+    // TW-TRIP-COPY-1: em viagem não mostrar metros (ex. ~0 m no carro).
+    if (activeTrip.status === 'ongoing') {
+      return t('tracking.followingRoute')
+    }
+    if (!passengerLocation || !driverLocation) return null
     const km = haversineKm(passengerLocation, driverLocation)
-    return `Motorista ${formatApproxDistanceKm(km)} de ti (estimativa).`
-  }, [passengerLocation, driverLocation, activeTrip])
+    return t('tracking.driverDistance', { distance: formatApproxDistanceKm(km) })
+  }, [passengerLocation, driverLocation, activeTrip, t])
 
   // B002: UX state with 500ms delay to avoid flicker (must be declared before useEffects that use it)
   const uxState = usePassengerUxState(

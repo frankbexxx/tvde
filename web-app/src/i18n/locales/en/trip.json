@@ -11,7 +11,7 @@
   },
   "payment": {
     "pending": "Payment pending",
-    "processing": "Payment processing…",
+    "processing": "Confirming payment…",
     "succeeded": "Payment completed",
     "failed": "Payment declined"
   },
@@ -68,7 +68,7 @@
   "completedOverlay": {
     "paymentFailed": "Payment declined — follow platform instructions.",
     "payment": "Payment: {{status}}",
-    "processing": "Processing — wait for sync.",
+    "processing": "Updating payment status…",
     "continue": "Continue"
   }
 }
