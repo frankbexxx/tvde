@@ -84,7 +84,8 @@ export function AdminDashboard() {
   const { activeTrips, historyTrips, historyTripsError, fetchActiveTrips, fetchHistoryTrips } =
     useAdminTripLists(token)
   const [pending, setPending] = useState<PendingUser[]>([])
-  const [loading, setLoading] = useState(true)
+  /** ADMIN-POLL-1: já não bloqueia no dump global de users; tabs carregam on-enter. */
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [opsLoading, setOpsLoading] = useState<string | null>(null)
   const {
@@ -240,23 +241,13 @@ export function AdminDashboard() {
     }
   }, [token, partners.length, driversList.length])
 
-  const refresh = useCallback(() => {
-    fetchPending()
-    fetchUsers()
-    fetchActiveTrips()
-    fetchHistoryTrips()
-    fetchMetrics()
-    fetchHealth()
+  const refreshAgora = useCallback(() => {
+    void fetchPending()
+    void fetchActiveTrips()
+    void fetchMetrics()
+    void fetchHealth()
     void fetchAdminAlerts()
-  }, [
-    fetchPending,
-    fetchUsers,
-    fetchActiveTrips,
-    fetchHistoryTrips,
-    fetchMetrics,
-    fetchHealth,
-    fetchAdminAlerts,
-  ])
+  }, [fetchPending, fetchActiveTrips, fetchMetrics, fetchHealth, fetchAdminAlerts])
 
   const handleRunCronNow = async () => {
     if (!token) return
@@ -533,32 +524,29 @@ export function AdminDashboard() {
     }
   }
 
-  useEffect(() => {
-    if (!token) return
-    setLoading(true)
-    fetchPending()
-    fetchUsers()
-    const id = setInterval(refresh, 8000)
-    return () => clearInterval(id)
-  }, [token, fetchPending, fetchUsers, refresh])
-
+  // ADMIN-POLL-1 / BACKEND-DBPOOL-1: sem setInterval global — só on-enter por tab + botões Actualizar.
   useEffect(() => {
     if (!token) return
     if (tab === 'agora') {
-      void fetchActiveTrips()
-      void fetchMetrics()
-      void fetchHealth()
-      void fetchAdminAlerts()
+      refreshAgora()
+    }
+    if (tab === 'pending') {
+      void fetchPending()
+    }
+    if (tab === 'users' || tab === 'docs') {
+      void fetchUsers()
     }
     if (tab === 'trips') {
       if (tripsListMode === 'active') void fetchActiveTrips()
       else void fetchHistoryTrips()
     }
-    if (tab === 'metrics') fetchMetrics()
-    if (tab === 'health') fetchHealth()
-    if (tab === 'ops') fetchHealth()
+    if (tab === 'metrics') {
+      void fetchMetrics()
+      void fetchUsage()
+    }
+    if (tab === 'health') void fetchHealth()
+    if (tab === 'ops') void fetchHealth()
     if (tab === 'dados') void fetchDataVisibility()
-    if (tab === 'metrics') fetchUsage()
     if (tab === 'frota') void ensureDataLoaded()
     // Tab-driven fetches; fetchDataVisibility / fetchUsage / ensureDataLoaded are stable enough for this pattern.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-running on every render of inline fetch helpers
@@ -566,9 +554,13 @@ export function AdminDashboard() {
     token,
     tab,
     tripsListMode,
+    refreshAgora,
+    fetchPending,
+    fetchUsers,
     fetchActiveTrips,
     fetchHistoryTrips,
     fetchMetrics,
+    fetchUsage,
     fetchHealth,
     fetchAdminAlerts,
   ])
@@ -676,8 +668,8 @@ export function AdminDashboard() {
   /** Viagem seleccionada que não está na lista activa; no modo Histórico deixa de ser «órfã» se já aparece na lista. */
   const tripOrphanFromDeepLink = Boolean(
     selectedTripId &&
-      !selectedTripInActiveList &&
-      !(tripsListMode === 'history' && selectedTripInHistoryList)
+    !selectedTripInActiveList &&
+    !(tripsListMode === 'history' && selectedTripInHistoryList)
   )
 
   /** SP-D: indicador na tab Saúde quando há linhas ou avisos. */
@@ -685,7 +677,7 @@ export function AdminDashboard() {
     () =>
       Boolean(
         health &&
-          (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
+        (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
       ),
     [health]
   )
@@ -733,9 +725,9 @@ export function AdminDashboard() {
                   : syncAdminUrl({ tab: id, tripId: null })
               }
               className={`px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${tab === id
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
-              }`}
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
+                }`}
               title={healthDot ? 'Há anomalias ou avisos na Saúde' : undefined}
             >
               <span className="inline-flex items-center gap-1.5">
@@ -757,7 +749,7 @@ export function AdminDashboard() {
           Sessão (JWT):{' '}
           <span
             className={`font-mono font-medium ${isSuperAdminSession ? 'text-foreground' : 'text-warning'
-            }`}
+              }`}
           >
             {parseJwtPayload(token)?.role ?? '—'}
           </span>
@@ -782,6 +774,7 @@ export function AdminDashboard() {
           countHealthSignalRows={countHealthSignalRows}
           health={health}
           metrics={metrics}
+          onRefresh={refreshAgora}
           pending={pending}
           syncAdminUrl={syncAdminUrl}
         />
@@ -878,7 +871,7 @@ export function AdminDashboard() {
           tripActionLoading={tripActionLoading}
           tripDebug={tripDebug}
           tripDebugId={tripDebugId}
-                      tripDetail={tripDetail}
+          tripDetail={tripDetail}
           tripDetailLoading={tripDetailLoading}
           tripOrphanFromDeepLink={tripOrphanFromDeepLink}
           tripsListMode={tripsListMode}
@@ -988,7 +981,7 @@ export function AdminDashboard() {
           usersLoadingMore={usersLoadingMore}
           usersSort={usersSort}
         />
-                          )}
-                        </div>
+      )}
+    </div>
   )
 }
