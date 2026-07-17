@@ -16,11 +16,11 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-16** — D-DEMO-1 PASS)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-17** — pós TW-TRIP-COPY-1)
 
-**`main` / `origin/main`:** `624ab4e` · PRs abertas **0** · CI verde.
+**`main` / `origin/main`:** `ce12e73` · PRs abertas **0** · CI verde (pós-#407).
 
-**Objectivo imediato (amanhã):** commit + PR **docs-only** do checkpoint → depois **1** carril funcional.
+**Objectivo imediato:** carril **ADMIN-POLL-1 / BACKEND-DBPOOL-1** (análise → implementação; produção intocada até diagnóstico).
 
 **Checkpoint demo:** [`docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md`](docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
@@ -28,23 +28,26 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 |----|------|--------|-------|
 | **CHK-0715** | Checkpoint docs pós-P5 | Concluído | PR docs 2026-07-15 |
 | **PR-405** | NAV/WAZE-1 Opção B | Concluído | Merged 2026-07-16; S-NAV-1…4 PASS |
-| **D-DEMO-1** | Walkthrough multi-role local | Concluído | PASS 2026-07-16 — Pax+Driver+Partner+Admin; Vivaldi partilhado |
-| **CHK-DEMO-1** | Commit/PR docs checkpoint D-DEMO-1 | Por iniciar | **Amanhã** — docs-only; sem código funcional |
-| **PR-398** | Driver active trip recovery (reload) | Concluído | Merged 2026-07-14 |
+| **D-DEMO-1** | Walkthrough multi-role local | Concluído | PASS 2026-07-16 — Pax+Driver+Partner+Admin |
+| **CHK-DEMO-1** | Docs checkpoint D-DEMO-1 | Concluído | PR **#406** merged |
+| **PR-407** / **TW-TRIP-COPY-1** | Soften trip copy demo | Concluído | Merged `ce12e73`; Vitest 19/19; CI verde; **smoke visual PASS** 2026-07-17 (Pax+Driver) |
+| **S-TW407-1** | Smoke visual #407 | Concluído | Idle/search/accepted/ongoing/completed; NAV manual intacto; sem ~0 m em ongoing |
+| **BACKEND-DBPOOL-1** / **ADMIN-POLL-1** | Reduzir poll Admin + aliviar pool | Por iniciar | **Próximo carril**; [`BACKLOG_POST_PILOTO.md`](docs/meta/BACKLOG_POST_PILOTO.md) |
+| **ADMIN-OPS-1** | Detalhe trip, desbloqueios, pagamentos stuck | Por iniciar | Depois de ADMIN-POLL se necessário |
+| **PARTNER-FLEET-1** | Viaturas, docs, associação, rendimentos | Por iniciar | Gaps produto Partner |
+| **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
+| **PR-398** | Driver active trip recovery | Concluído | Merged 2026-07-14 |
 | **PR-403** | WT launchers Dev + Stripe local | Concluído | Merged 2026-07-14 |
 | **TVDE-PROD** | Gate P5 beta | Concluído | O-ROTATE-1 · S-PROD-2 · O-CRON-1 · O-RENDER-1 · TVDE-BKP · O-STRIPE-1 |
-| **TW-TRIP-COPY-1** | UX/copy estados viagem / pagamento | Por iniciar | Candidato #1 pós-docs |
-| **BACKEND-DBPOOL-1** / **ADMIN-POLL-1** | Reduzir poll Admin + aliviar pool | Por iniciar | Candidato #2; [`BACKLOG_POST_PILOTO.md`](docs/meta/BACKLOG_POST_PILOTO.md) |
-| **ADMIN-OPS-1** | Detalhe trip, desbloqueios, pagamentos stuck | Por iniciar | Candidato #3 — após walkthrough Admin base |
-| **PARTNER-FLEET-1** | Viaturas, docs, associação, rendimentos | Por iniciar | Candidato #4 — gaps produto Partner |
-| **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
 | **O-i18n-NICHOS** | Strings PT residuais EN batch A–F | Smoke pendente | PR **#362** — se objectivo mudar |
 | **A2-02-1** | OAuth staging + URIs Google | Em curso | Se staging for foco |
 | **R-E2E-1** | Flake web-e2e intermitente | Monitorizar | CI verde; não prioritário |
 | **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
 | **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
 
-**Amanhã:** A docs checkpoint → B commit docs-only → C PR docs-only → D escolher 1 de TW-TRIP-COPY-1 · ADMIN-POLL-1 · ADMIN-OPS-1 · PARTNER-FLEET-1.
+**Smoke #407 (resumo):** fallback procura calmo; distância útil em accepted; ongoing «A acompanhar o percurso»; pagamento «A confirmar…»; driver idle «À espera de pedidos»; NAV/WAZE intacto. Nota residual: alguma duplicação «Pagamento: …» — não bloqueante.
+
+**Próximo:** ADMIN-POLL — refresh on-enter + botão Actualizar; nunca 7 endpoints/8s; aliviar `/admin/system-health`; pool local só após diagnóstico; **não** mexer produção.
 
 **Regra:** **1 carril** por sessão.
 
