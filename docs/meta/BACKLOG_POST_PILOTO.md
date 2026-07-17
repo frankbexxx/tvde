@@ -207,7 +207,7 @@ Admin OK como backoffice base; aprofundar: detalhe de viagem, acções de desblo
 - Instrumentação pool local + avaliar `pool_size`/`max_overflow` só em dev
 - Documentar workaround: ≤2 roles ou fechar Admin em walkthroughs longos
 
-**Classificação:** dívida ops real; D-DEMO-1 **já PASS** (não bloqueou); **não** tratar como leak confirmado. Prioridade: antes de sessões longas com Admin aberto; candidato #2 pós-PR docs.
+**Classificação:** dívida ops real; D-DEMO-1 **já PASS**; TW-TRIP-COPY-1 **#407** fechado (smoke visual PASS 2026-07-17). **Não** tratar como leak confirmado. **Próximo carril recomendado** após #407.
 
 **Workaround actual:** fechar Admin quando não necessário; reiniciar uvicorn se saturar.
 
