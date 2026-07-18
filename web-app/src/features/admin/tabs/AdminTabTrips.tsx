@@ -108,11 +108,11 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
                 tripsListMode === 'active' ? void fetchActiveTrips() : void fetchHistoryTrips()
               }
               className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground/85 text-sm font-medium rounded-xl hover:bg-muted/40"
-              title="Força refresh imediato; polling automático continua a cada poucos segundos"
+              title="Actualiza a lista agora"
             >
               ↻ Atualizar lista
             </button>
-            <span>Polling natural activo — usa o botão para refresh imediato.</span>
+            <span>Actualiza ao abrir e quando carregas em Atualizar.</span>
           </div>
 
           {tripOrphanFromDeepLink && selectedTripId ? (

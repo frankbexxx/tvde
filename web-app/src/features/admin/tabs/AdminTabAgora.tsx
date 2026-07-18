@@ -12,6 +12,7 @@ export type AdminTabAgoraProps = {
   countHealthSignalRows: (h: SystemHealthResponse | null) => number
   health: SystemHealthResponse | null
   metrics: AdminMetricsResponse | null
+  onRefresh: () => void
   pending: PendingUser[]
   syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
 }
@@ -23,6 +24,7 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
     countHealthSignalRows,
     health,
     metrics,
+    onRefresh,
     pending,
     syncAdminUrl,
   } = props
@@ -30,11 +32,20 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
   return (
     <>
         <section className="space-y-4 mb-6" aria-labelledby="admin-agora-heading">
-          <h2 id="admin-agora-heading" className="text-lg font-semibold text-foreground">
-            Estado agora
-          </h2>
-          <p className="text-sm text-foreground/70 -mt-2">
-            Resumo em segundos (actualiza com o painel, ~8 s). Usa as tabs abaixo para agir.
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 id="admin-agora-heading" className="text-lg font-semibold text-foreground">
+              Estado agora
+            </h2>
+            <button
+              type="button"
+              onClick={() => onRefresh()}
+              className="min-h-11 w-full px-4 py-2.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 sm:w-auto shrink-0"
+            >
+              Atualizar
+            </button>
+          </div>
+          <p className="text-sm text-foreground/70 -mt-1 sm:-mt-2">
+            Actualiza ao abrir esta tab e quando carregas em Atualizar. Usa as tabs abaixo para agir.
           </p>
 
           {(() => {
