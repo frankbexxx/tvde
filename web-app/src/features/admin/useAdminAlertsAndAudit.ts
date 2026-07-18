@@ -4,7 +4,7 @@ import { getAdminAlerts, getAdminAuditTrail, type AdminAlertsResponse, type Admi
 /** Alertas operacionais globais + cache do trilho de auditoria por utilizador (P6). */
 export function useAdminAlertsAndAudit(token: string | null): {
   adminAlerts: AdminAlertsResponse | null
-  fetchAdminAlerts: () => Promise<void>
+  fetchAdminAlerts: () => Promise<boolean>
   userAuditRows: Record<string, AdminAuditTrailItem[]>
   userAuditLoading: string | null
   userAuditError: Record<string, string>
@@ -19,13 +19,15 @@ export function useAdminAlertsAndAudit(token: string | null): {
   const userAuditRowsRef = useRef(userAuditRows)
   userAuditRowsRef.current = userAuditRows
 
-  const fetchAdminAlerts = useCallback(async () => {
-    if (!token) return
+  const fetchAdminAlerts = useCallback(async (): Promise<boolean> => {
+    if (!token) return false
     try {
       const a = await getAdminAlerts(token)
       setAdminAlerts(a)
+      return true
     } catch {
       setAdminAlerts(null)
+      return false
     }
   }, [token])
 

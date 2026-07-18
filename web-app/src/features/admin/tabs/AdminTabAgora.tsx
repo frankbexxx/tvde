@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { AdminAlertsResponse, AdminMetricsResponse, SystemHealthResponse, TripActiveItem } from '../../../api/admin'
 import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
 
@@ -6,13 +7,17 @@ interface PendingUser {
   requested_role: string
 }
 
+type AgoraRefreshPhase = 'idle' | 'loading' | 'success' | 'error'
+
+const AGORA_FEEDBACK_MS = 2500
+
 export type AdminTabAgoraProps = {
   activeTrips: TripActiveItem[]
   adminAlerts: AdminAlertsResponse | null
   countHealthSignalRows: (h: SystemHealthResponse | null) => number
   health: SystemHealthResponse | null
   metrics: AdminMetricsResponse | null
-  onRefresh: () => void
+  onRefresh: () => Promise<'ok' | 'error'>
   pending: PendingUser[]
   syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
 }
@@ -29,6 +34,32 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
     syncAdminUrl,
   } = props
 
+  const [refreshPhase, setRefreshPhase] = useState<AgoraRefreshPhase>('idle')
+  const feedbackTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current != null) {
+        window.clearTimeout(feedbackTimerRef.current)
+      }
+    }
+  }, [])
+
+  const handleRefreshClick = async () => {
+    if (refreshPhase === 'loading') return
+    if (feedbackTimerRef.current != null) {
+      window.clearTimeout(feedbackTimerRef.current)
+      feedbackTimerRef.current = null
+    }
+    setRefreshPhase('loading')
+    const result = await onRefresh()
+    setRefreshPhase(result === 'ok' ? 'success' : 'error')
+    feedbackTimerRef.current = window.setTimeout(() => {
+      setRefreshPhase('idle')
+      feedbackTimerRef.current = null
+    }, AGORA_FEEDBACK_MS)
+  }
+
   return (
     <>
         <section className="space-y-4 mb-6" aria-labelledby="admin-agora-heading">
@@ -36,13 +67,28 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
             <h2 id="admin-agora-heading" className="text-lg font-semibold text-foreground">
               Estado agora
             </h2>
-            <button
-              type="button"
-              onClick={() => onRefresh()}
-              className="min-h-11 w-full px-4 py-2.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 sm:w-auto shrink-0"
-            >
-              Atualizar
-            </button>
+            <div className="flex flex-col items-stretch gap-1 sm:items-end">
+              <button
+                type="button"
+                onClick={() => void handleRefreshClick()}
+                disabled={refreshPhase === 'loading'}
+                aria-busy={refreshPhase === 'loading'}
+                data-testid="admin-agora-refresh"
+                className="min-h-11 w-full px-4 py-2.5 bg-card border border-border text-foreground/80 text-sm rounded-xl hover:bg-muted/40 disabled:opacity-60 disabled:pointer-events-none sm:w-auto shrink-0"
+              >
+                {refreshPhase === 'loading' ? 'A atualizar…' : 'Atualizar'}
+              </button>
+              {refreshPhase === 'success' ? (
+                <p className="text-xs text-emerald-700 dark:text-emerald-400" data-testid="admin-agora-refresh-ok">
+                  Dados atualizados.
+                </p>
+              ) : null}
+              {refreshPhase === 'error' ? (
+                <p className="text-xs text-destructive" data-testid="admin-agora-refresh-error">
+                  Não foi possível atualizar.
+                </p>
+              ) : null}
+            </div>
           </div>
           <p className="text-sm text-foreground/70 -mt-1 sm:-mt-2">
             Actualiza ao abrir esta tab e quando carregas em Atualizar. Usa as tabs abaixo para agir.
