@@ -83,6 +83,10 @@ export function AdminDashboard() {
     useAdminDashboardNavigation()
   const { activeTrips, historyTrips, historyTripsError, fetchActiveTrips, fetchHistoryTrips } =
     useAdminTripLists(token)
+  /** Wrappers void para props/hooks que esperam Promise<void>; boolean fica para refreshAgora. */
+  const fetchActiveTripsVoid = useCallback(async () => {
+    await fetchActiveTrips()
+  }, [fetchActiveTrips])
   const [pending, setPending] = useState<PendingUser[]>([])
   /** ADMIN-POLL-1: já não bloqueia no dump global de users; tabs carregam on-enter. */
   const [loading, setLoading] = useState(false)
@@ -99,7 +103,13 @@ export function AdminDashboard() {
     handleFetchPhase0,
     handleRunTimeouts,
     handleRunOfferExpiry,
-  } = useAdminSystemPanels({ token, setError, setOpsLoading, fetchActiveTrips })
+  } = useAdminSystemPanels({ token, setError, setOpsLoading, fetchActiveTrips: fetchActiveTripsVoid })
+  const fetchMetricsVoid = useCallback(async () => {
+    await fetchMetrics()
+  }, [fetchMetrics])
+  const fetchHealthVoid = useCallback(async () => {
+    await fetchHealth()
+  }, [fetchHealth])
   const {
     adminAlerts,
     fetchAdminAlerts,
@@ -223,8 +233,8 @@ export function AdminDashboard() {
     token,
     selectedTripId,
     syncAdminUrl,
-    fetchActiveTrips,
-    fetchHealth,
+    fetchActiveTrips: fetchActiveTripsVoid,
+    fetchHealth: fetchHealthVoid,
     setError,
   })
 
@@ -861,7 +871,7 @@ export function AdminDashboard() {
         <AdminTabTrips
           activeTrips={activeTrips}
           canPostPaymentOpsNote={canPostPaymentOpsNote}
-          fetchActiveTrips={fetchActiveTrips}
+          fetchActiveTrips={fetchActiveTripsVoid}
           fetchHistoryTrips={fetchHistoryTrips}
           fetchTripDebug={fetchTripDebug}
           handleAdminTripTransition={handleAdminTripTransition}
@@ -889,7 +899,7 @@ export function AdminDashboard() {
 
       {tab === 'metrics' && (
         <AdminTabMetrics
-          fetchMetrics={fetchMetrics}
+          fetchMetrics={fetchMetricsVoid}
           fetchUsage={fetchUsage}
           metrics={metrics}
           syncAdminUrl={syncAdminUrl}
@@ -903,7 +913,7 @@ export function AdminDashboard() {
           envReveal={envReveal}
           envText={envText}
           envValidate={envValidate}
-          fetchHealth={fetchHealth}
+          fetchHealth={fetchHealthVoid}
           handleExportLogs={handleExportLogs}
           handleFetchPhase0={handleFetchPhase0}
           handleReconcileCloseNoPi={handleReconcileCloseNoPi}
@@ -940,7 +950,7 @@ export function AdminDashboard() {
 
       {tab === 'health' && (
         <AdminTabHealth
-          fetchHealth={fetchHealth}
+          fetchHealth={fetchHealthVoid}
           health={health}
           syncAdminUrl={syncAdminUrl}
         />
