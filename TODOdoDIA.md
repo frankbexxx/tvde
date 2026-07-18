@@ -16,11 +16,11 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-18** — pós ADMIN-POLL frontend)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-18** — ADMIN-OPS-1 Fase 0 parcial)
 
-**`main` / `origin/main`:** `b64a67c` · PRs abertas **0** · CI verde (pós-#410).
+**`main` / `origin/main`:** `9b6260e` · PRs abertas **0** · CI verde (pós-#411 docs).
 
-**Objectivo imediato:** smoke multi-janela leve **Passenger + Driver + Admin** (validar estabilidade local pós-remoção do poll).
+**Objectivo imediato:** continuar smoke **ADMIN-OPS-1 Fase 0** (B/C) — force arriving/ongoing, gap ongoing, nota ops, playbook Saúde; **sem** tratar «Atribuir» como ops normal.
 
 **Checkpoint demo:** [`docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md`](docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
@@ -32,13 +32,16 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **CHK-DEMO-1** | Docs checkpoint D-DEMO-1 | Concluído | PR **#406** merged |
 | **PR-407** / **TW-TRIP-COPY-1** | Soften trip copy demo | Concluído | Merged; smoke visual PASS 2026-07-17 |
 | **S-TW407-1** | Smoke visual #407 | Concluído | Idle/search/accepted/ongoing/completed; NAV manual intacto |
-| **PR-409** / **ADMIN-POLL-1** | Admin: on-enter + refresh manual | Concluído | Merged; sem `setInterval` global; sem burst 7×/8s |
-| **PR-410** / **ADMIN-POLL-2** | Feedback botão Atualizar (Agora) | Concluído | Merged `b64a67c`; loading/success/error; Vitest admin 16/16; smoke visual PASS |
-| **S-ADMIN-POLL** | Smoke multi-janela Pax+Driver+Admin | Por iniciar | **Próximo** — leve; confirmar sem saturação óbvia de pool |
-| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Só se saturar com Admin aberto; produção intocada até diagnóstico |
+| **PR-409** / **ADMIN-POLL-1** | Admin: on-enter + refresh manual | Concluído | Merged; sem `setInterval` global |
+| **PR-410** / **ADMIN-POLL-2** | Feedback botão Atualizar (Agora) | Concluído | Merged; smoke visual PASS |
+| **PR-411** | Docs fecho ADMIN-POLL frontend | Concluído | Merged `9b6260e` |
+| **S-ADMIN-POLL** | Smoke multi-janela Pax+Driver+Admin | Concluído | PASS — estabilidade OK pós-#409/#410 |
+| **ADMIN-OPS-1** | Admin como ferramenta de excepção | Em curso | Fase 0 parcial — decisão produto abaixo; smoke B/C a seguir |
+| **S-ADMIN-OPS-0** | Smoke Fase 0 (force / gap / nota / playbook) | Smoke pendente | **Próximo**; 1B Assign = SKIP (ou só recovery SA) |
+| **R-AGORA-SNAP** | Agora vs Viagens (contagens) | Por iniciar | Observação: Agora snapshot/manual; **não** bug confirmado |
+| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Só se saturar; produção intocada até diagnóstico |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated | Por iniciar | Baixa prioridade |
-| **ADMIN-OPS-1** | Detalhe trip, desbloqueios, pagamentos stuck | Por iniciar | Depois do smoke multi-janela se necessário |
-| **PARTNER-FLEET-1** | Viaturas, docs, associação, rendimentos | Por iniciar | Gaps produto Partner |
+| **PARTNER-FLEET-1** | Viaturas, docs, associação, reassign ops | Por iniciar | Assign/reassign **diário** vive aqui (não Admin) |
 | **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
 | **PR-398** | Driver active trip recovery | Concluído | Merged 2026-07-14 |
 | **PR-403** | WT launchers Dev + Stripe local | Concluído | Merged 2026-07-14 |
@@ -49,9 +52,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
 | **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
 
-**ADMIN-POLL frontend (fecho):** sem polling global Admin; refresh on-enter + botão; Agora mostra «A atualizar…» / «Dados atualizados.» / «Não foi possível atualizar.» Fora de scope (correcto): backend, pool, system-health internals, Pax/Driver, NAV, Stripe/Render/env.
+**Decisão ADMIN-OPS-1 Fase 0 (parcial, 2026-07-18):**
 
-**Próximo:** smoke multi-janela leve Pax+Driver+Admin. Backend pool/system-health só se ainda saturar.
+1. Admin **≠** dispatcher normal.
+2. Botão **Atribuir** no Admin = **recovery / super_admin**, não fluxo de negócio.
+3. Assign/reassign operacional diário → matching automático e/ou **PARTNER-FLEET-1**.
+4. Admin = excepções, bloqueios, suporte, auditoria, recuperação.
+5. Tab **Agora** = snapshot/manual (ADMIN-POLL-1); Agora «0 activas» vs Viagens com `requested` = **observação a verificar**, não bug confirmado.
+
+**Próximo smoke (B/C):** force `accepted→arriving` · force `arriving→ongoing` · gap `ongoing` (sem complete/cancel/fail admin) · nota ops · playbook Saúde/Ops mismatch. **1B Assign:** SKIP por defeito.
 
 **Regra:** **1 carril** por sessão.
 

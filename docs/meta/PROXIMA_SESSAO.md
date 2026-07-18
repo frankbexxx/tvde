@@ -10,47 +10,58 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ## Contexto actual (**2026-07-18**)
 
-### Checkpoint pós ADMIN-POLL-1/2 (fase frontend)
+### Checkpoint — ADMIN-OPS-1 Fase 0 parcial + ADMIN-POLL fechado
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `b64a67c` |
+| **`main` / `origin/main`** | `9b6260e` |
 | **PRs abertas** | **0** |
-| **CI `main`** | Verde (backend-ci · web-app · web-e2e) pós-#410 |
-| **PR #409 / ADMIN-POLL-1** | **Concluído** — removeu `setInterval` global 8s; tab on-enter + refresh manual |
-| **PR #410 / ADMIN-POLL-2** | **Concluído** — feedback botão Atualizar (Agora); fix TS wrappers; smoke visual PASS |
-| **BACKEND-DBPOOL-1 fase frontend** | **Fechada** — backend/pool/system-health **fora de scope** (correcto) |
-| **D-DEMO-1** | PASS (docs #406) — [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) |
+| **CI `main`** | Verde (pós-#411) |
+| **ADMIN-POLL-1/2 frontend** | Fechado (#409 + #410); docs #411 |
+| **S-ADMIN-POLL** | PASS — multi-janela Pax+Driver+Admin |
+| **ADMIN-OPS-1** | Em curso — decisão produto Fase 0 parcial; smoke B/C a seguir |
+| **D-DEMO-1** | PASS — [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) |
 
-### O que ficou resolvido (frontend)
+### Decisão produto — Admin ≠ dispatcher (Fase 0 parcial)
 
-- Admin **sem** polling global (`setInterval`).
-- Sem refresh silencioso de pending-users / users / trips / metrics / system-health / alerts a cada 8s.
-- Botão **Atualizar** (Admin > Agora): «A atualizar…» · «Dados atualizados.» · «Não foi possível atualizar.»
+| Princípio | Detalhe |
+|-----------|---------|
+| Papel Admin | Excepções, bloqueios, suporte, auditoria, recuperação |
+| **Não** é | Dispatcher / gestão operacional diária de frota |
+| Botão **Atribuir** | Recovery / **super_admin** — **não** fluxo de negócio normal |
+| Assign/reassign diário | Matching automático e/ou **PARTNER-FLEET-1** (Partner Ops) |
+| Tab **Agora** | Snapshot/manual após ADMIN-POLL-1 |
+| Agora vs Viagens | Contagens diferentes observadas no smoke → **observação a verificar** (`R-AGORA-SNAP`), **não** bug confirmado |
 
-### Smoke visual #410 (Admin > Agora) — PASS
+Classificação A–D e matriz: [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md) · secção ADMIN-OPS-1.
 
-| Check | Resultado |
-|-------|-----------|
-| Botão Atualizar | Funciona |
-| Feedback pós-clique | «Dados atualizados.» |
-| Polling automático | Não reintroduzido |
+### Smoke ADMIN-OPS-1 Fase 0 — o que falta (B/C)
+
+Continuar **depois** desta decisão docs. Foco:
+
+1. Force `accepted → arriving` (motivo/governance; Pax/Driver coerentes)
+2. Force `arriving → ongoing`
+3. Gap `ongoing`: Admin **sem** complete/cancel/fail seguro — confirmar gap real
+4. Nota operacional (audit; sem alterar pagamento); **sem** reconcile apply
+5. Saúde/Ops: links + playbook mismatch (ex. ongoing vs cancel)
+
+**1B Assign:** **SKIP** por defeito; se testado, só como recovery SA — **não** conta como PASS de ops normal.
 
 ### Entregas recentes (merged)
 
 | PR | O quê |
 |----|-------|
+| **#411** | Docs fecho ADMIN-POLL frontend; próximo smoke multi-janela |
 | **#410** | Feedback refresh manual Admin > Agora + fix tipos TS |
 | **#409** | Admin: poll global → on-enter + refresh manual |
-| **#408** | Docs fecho smoke TW-TRIP-COPY-1 |
-| **#407** | Soften trip copy demo |
-| **#406** | Checkpoint docs D-DEMO-1 PASS |
-| **#405** | NAV/WAZE-1 Opção B |
+| **#407–#408** | TW-TRIP-COPY-1 + docs smoke |
+| **#405–#406** | NAV/WAZE-1 + checkpoint D-DEMO-1 |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
+| **R-AGORA-SNAP** | Copy/UX snapshot Agora vs refresh on-return — após smoke B/C |
 | **R-E2E-1** | Flake intermitente — monitorizar |
 | **O-STRIPE-LIVE** | Bloqueado — conta parceiro / `sk_live_*` |
 | **R-GIT-1** | ~190 branches locais — **não apagar ainda** |
@@ -58,21 +69,13 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ### O que fazer a seguir (ordem)
 
-**Próximo (recomendado):** smoke multi-janela leve **Passenger + Driver + Admin**
+1. **S-ADMIN-OPS-0** — smoke Fase 0 B/C (lista acima); local only  
+2. Docs/runbook pós-smoke (playbook mismatch, matriz estado→acção)  
+3. UI honesty só se gaps confirmados (ex. relabel/esconder Atribuir) — **não agora**  
+4. **PARTNER-FLEET-1** — casa natural do assign/reassign diário  
+5. **ADMIN-HEALTH-1 / BACKEND-DBPOOL-2** — só se pool saturar  
 
-| Objectivo | Detalhe |
-|-----------|---------|
-| Validar | Estabilidade local com 3 superfícies abertas após remoção do poll Admin |
-| Critério | Sem saturação óbvia de pool / splash «A iniciar serviço…» |
-| Scope | Smoke humano leve — **sem** alterar código salvo regressão |
-
-**Follow-up backend (só se ainda saturar):** **ADMIN-HEALTH-1** ou **BACKEND-DBPOOL-2** — aliviar `/admin/system-health` e/ou instrumentar pool **local**. Produção intocada até diagnóstico.
-
-Backlog: [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md) · secção BACKEND-DBPOOL-1 / ADMIN-POLL-1.
-
-**Depois (não agora):** ADMIN-OPS-1 · PARTNER-FLEET-1 · NAV-ROUTE-STOPS.
-
-**Ambiente local:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Em walkthroughs: se pool saturar, fechar Admin e reiniciar uvicorn.
+**Ambiente local:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Contas baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` (frank).
 
 ### Specs activas
 
