@@ -188,9 +188,52 @@ Piloto Alpha 25/04 foi redesenhado 2026-04-23 (tarde/noite) para formato **infor
 
 Partner demonstrável como ops base; falta produto: entidade Viatura, docs de viatura, associação motorista ↔ viatura, rendimentos por frota/motorista/viatura.
 
-### ADMIN-OPS-1 — ferramenta de correcção (gaps D-DEMO-1)
+### ADMIN-OPS-1 — ferramenta de excepção / correcção (gaps D-DEMO-1)
 
-Admin OK como backoffice base; aprofundar: detalhe de viagem, acções de desbloqueio/correcção, runbook pagamentos presos. (Não priorizar polish visual mobile agora.)
+Admin OK como backoffice base; **não** é dispatcher operacional. Aprofundar: desbloqueios, suporte, auditoria, runbook pagamentos presos. (Não priorizar polish visual mobile agora.)
+
+#### Decisão produto — Fase 0 parcial (`main` `9b6260e`, 2026-07-18)
+
+Registada durante smoke local Pax+Driver+Admin (pós ADMIN-POLL #409/#410).
+
+| Princípio | Decisão |
+|-----------|---------|
+| Admin ≠ dispatcher | Fluxo normal de negócio = matching automático e/ou Partner/Frota |
+| Botão **Atribuir** (Admin > Viagens) | Ferramenta **excepcional / recovery**; alvo de produto: **super_admin** — **não** acção do dia-a-dia |
+| Assign / reassign diário | **PARTNER-FLEET-1** (ou Partner Ops) + matching — **não** Admin central |
+| Papel Admin | Excepções, bloqueios, suporte, auditoria, recuperação |
+| Tab **Agora** | Snapshot/manual (ADMIN-POLL-1); refresh on-enter / botão Atualizar |
+| Agora vs Viagens | Smoke viu «Viagens activas: 0» em Agora com `requested` em Viagens → **R-AGORA-SNAP** observação a verificar, **não** bug confirmado |
+
+#### Classificação A–D (acções)
+
+| Classe | O quê |
+|--------|--------|
+| **A — Fluxo normal** | Matching auto; aceitar/iniciar/completar no Driver; Pax acompanha |
+| **B — Admin excepcional** | Ver detalhe + lista vs API; force `accepted→arriving` / `arriving→ongoing`; cancel early (`requested`/`assigned`/`accepted`); nota ops (audit); Saúde/playbooks; recover driver |
+| **C — Partner / Frota** | Assign/reassign operacional diário; motorista↔viatura; gestão frota como produto (**PARTNER-FLEET-1**) |
+| **D — super_admin / recovery** | **Atribuir** no Admin; reconcile Stripe; trip-debug; cron/timeouts/offers em massa; export/env |
+
+#### Smoke Fase 0
+
+| Item | Estado / regra |
+|------|----------------|
+| S-ADMIN-POLL (estabilidade) | PASS |
+| 1A cancel `requested` | Válido (B) — se ainda por registar no smoke |
+| **1B Assign** | **SKIP** por defeito; se correr, só como recovery SA — **não** PASS de ops normal |
+| B/C a seguir | Force arriving/ongoing · gap ongoing · nota ops · playbook mismatch |
+| Código/UI | Relabel/esconder Atribuir / copy Agora — **só após** smoke B/C + aprovação |
+
+#### Matriz rápida por estado (pós-decisão)
+
+| Estado | Normal | Admin (B) | SA/recovery (D) |
+|--------|--------|-----------|-----------------|
+| requested | Matching / Partner | Cancel (excepção) | **Atribuir** = recovery only |
+| assigned | Matching / Partner | Cancel se política | — |
+| accepted | Driver avança | → arriving · Cancel | — |
+| arriving | Driver inicia | → ongoing | — |
+| ongoing | Driver completa | Ver / debug / nota | (futuro fecho recovery) — **hoje sem** complete/cancel/fail admin = gap |
+| terminal | — | Detalhe · nota | Reconcile se stuck |
 
 ### BACKEND-DBPOOL-1 / ADMIN-POLL-1 — poll Admin + pool SQLAlchemy
 
