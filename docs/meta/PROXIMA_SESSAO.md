@@ -8,41 +8,44 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-17**)
+## Contexto actual (**2026-07-18**)
 
-### Checkpoint pós TW-TRIP-COPY-1 (#407)
+### Checkpoint pós ADMIN-POLL-1/2 (fase frontend)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `ce12e73` |
+| **`main` / `origin/main`** | `b64a67c` |
 | **PRs abertas** | **0** |
-| **CI `main`** | Verde (backend-ci · frontend-ci · web-e2e) pós-#407 |
-| **PR #407 / TW-TRIP-COPY-1** | **Concluído** — merged + Vitest 19/19 + **smoke visual PASS** (Pax+Driver, sem Admin/Partner) |
+| **CI `main`** | Verde (backend-ci · web-app · web-e2e) pós-#410 |
+| **PR #409 / ADMIN-POLL-1** | **Concluído** — removeu `setInterval` global 8s; tab on-enter + refresh manual |
+| **PR #410 / ADMIN-POLL-2** | **Concluído** — feedback botão Atualizar (Agora); fix TS wrappers; smoke visual PASS |
+| **BACKEND-DBPOOL-1 fase frontend** | **Fechada** — backend/pool/system-health **fora de scope** (correcto) |
 | **D-DEMO-1** | PASS (docs #406) — [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) |
-| **PR #405 NAV/WAZE-1** | Merged — intacto no smoke #407 |
 
-### Smoke visual #407 (2026-07-17) — PASS
+### O que ficou resolvido (frontend)
 
-| Fase | Observado |
-|------|-----------|
-| Driver idle | «À espera de viagens» + «À espera de pedidos. Histórico…» |
-| Passenger procura / fallback | «Ainda à procura de motorista» — menos alarmante |
-| Accepted/arriving | Distância útil (`~N m`); pagamento «A confirmar pagamento…» |
-| Ongoing | «A acompanhar o percurso.» — **sem** «~0 m de ti» |
-| Driver trip | «Abrir navegação» manual visível (NAV/WAZE OK) |
-| Completed | Overlay «A actualizar o estado do pagamento…»; avaliação OK |
+- Admin **sem** polling global (`setInterval`).
+- Sem refresh silencioso de pending-users / users / trips / metrics / system-health / alerts a cada 8s.
+- Botão **Atualizar** (Admin > Agora): «A atualizar…» · «Dados atualizados.» · «Não foi possível atualizar.»
 
-**Nota residual:** alguma duplicação «Pagamento: …» no UI — não bloqueante; fora de scope #407.
+### Smoke visual #410 (Admin > Agora) — PASS
+
+| Check | Resultado |
+|-------|-----------|
+| Botão Atualizar | Funciona |
+| Feedback pós-clique | «Dados atualizados.» |
+| Polling automático | Não reintroduzido |
 
 ### Entregas recentes (merged)
 
 | PR | O quê |
 |----|-------|
-| **#407** | Soften trip copy demo (C1–C4, C6–C7) |
+| **#410** | Feedback refresh manual Admin > Agora + fix tipos TS |
+| **#409** | Admin: poll global → on-enter + refresh manual |
+| **#408** | Docs fecho smoke TW-TRIP-COPY-1 |
+| **#407** | Soften trip copy demo |
 | **#406** | Checkpoint docs D-DEMO-1 PASS |
 | **#405** | NAV/WAZE-1 Opção B |
-| **#398** | Recuperação viagem activa motorista |
-| **#403** | Launchers WT Dev + Stripe local |
 
 ### Em pausa / monitorizar
 
@@ -51,24 +54,25 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **R-E2E-1** | Flake intermitente — monitorizar |
 | **O-STRIPE-LIVE** | Bloqueado — conta parceiro / `sk_live_*` |
 | **R-GIT-1** | ~190 branches locais — **não apagar ainda** |
+| **CI-MAINT-1** | Warning Actions Node 20 deprecated — baixa prioridade |
 
 ### O que fazer a seguir (ordem)
 
-**Próximo carril (recomendado):** **ADMIN-POLL-1 / BACKEND-DBPOOL-1**
+**Próximo (recomendado):** smoke multi-janela leve **Passenger + Driver + Admin**
 
 | Objectivo | Detalhe |
 |-----------|---------|
-| Poll Admin | Actualizar ao **entrar na tab** + botão **Actualizar**; eventual poll leve só em painéis específicos |
-| Anti-padrão | Nunca 7 endpoints pesados em paralelo a cada ~8s |
-| Backend | Aliviar `/admin/system-health` se necessário; instrumentar pool **local** |
-| Produção | **Intocada** até diagnóstico |
-| Classificação | Dívida ops; **não** leak de sessão confirmado |
+| Validar | Estabilidade local com 3 superfícies abertas após remoção do poll Admin |
+| Critério | Sem saturação óbvia de pool / splash «A iniciar serviço…» |
+| Scope | Smoke humano leve — **sem** alterar código salvo regressão |
+
+**Follow-up backend (só se ainda saturar):** **ADMIN-HEALTH-1** ou **BACKEND-DBPOOL-2** — aliviar `/admin/system-health` e/ou instrumentar pool **local**. Produção intocada até diagnóstico.
 
 Backlog: [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md) · secção BACKEND-DBPOOL-1 / ADMIN-POLL-1.
 
 **Depois (não agora):** ADMIN-OPS-1 · PARTNER-FLEET-1 · NAV-ROUTE-STOPS.
 
-**Ambiente local:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Em walkthroughs com Admin: fechar Admin se pool saturar; reiniciar uvicorn.
+**Ambiente local:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Em walkthroughs: se pool saturar, fechar Admin e reiniciar uvicorn.
 
 ### Specs activas
 

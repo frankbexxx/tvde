@@ -196,20 +196,30 @@ Admin OK como backoffice base; aprofundar: detalhe de viagem, acções de desblo
 
 **Origem:** incidente local D-DEMO-1 (2026-07-16) — passenger + driver + admin abertos; `QueuePool limit of size 5 overflow 10 reached, timeout 30.00`. Postgres vivo; uvicorn LISTENING mas instável; reiniciar uvicorn recuperou.
 
-**Análise (sem fix):** leak clássico improvável (`get_db` fecha sessão). Causa provável: stress local + pool default 5+10 + Admin a disparar ~7 endpoints em paralelo a cada ~8s; `/admin/system-health` relativamente pesado; `/health` compete pelo mesmo pool → splash «A iniciar serviço…».
+**Análise:** leak clássico improvável (`get_db` fecha sessão). Causa provável: stress local + pool default 5+10 + Admin a disparar ~7 endpoints em paralelo a cada ~8s; `/admin/system-health` relativamente pesado; `/health` compete pelo mesmo pool → splash «A iniciar serviço…».
 
 **Decisão produto/ops:** Admin **não** deve fazer polling agressivo por defeito. Actualizar: (1) ao entrar na tab/ecrã; (2) botão «Actualizar»; (3) eventual poll leve/intervalos maiores só em painéis específicos; (4) nunca 7 endpoints pesados em paralelo a cada 8s.
 
-**Scope futuro (produção intocada até diagnóstico):**
+#### Fase frontend — ✅ fechada (`main` `b64a67c`, 2026-07-18)
 
-- Frontend Admin: estratégia refresh (on-enter + manual; poll opcional)
-- Aliviar `/admin/system-health` (queries/N+1 / full join payments)
-- Instrumentação pool local + avaliar `pool_size`/`max_overflow` só em dev
-- Documentar workaround: ≤2 roles ou fechar Admin em walkthroughs longos
+| PR | Entrega |
+|----|---------|
+| **#409 ADMIN-POLL-1** | Removeu `setInterval` global 8s; load on-enter por tab + refresh manual |
+| **#410 ADMIN-POLL-2** | Feedback visual no botão Atualizar (Agora); wrappers TS; CI verde; smoke visual PASS |
 
-**Classificação:** dívida ops real; D-DEMO-1 **já PASS**; TW-TRIP-COPY-1 **#407** fechado (smoke visual PASS 2026-07-17). **Não** tratar como leak confirmado. **Próximo carril recomendado** após #407.
+**Fora de scope desta fase (correcto):** backend, pool SQLAlchemy, internals de `/admin/system-health`, Passenger/Driver, NAV/WAZE, Stripe/Render/env/secrets.
 
-**Workaround actual:** fechar Admin quando não necessário; reiniciar uvicorn se saturar.
+#### Scope futuro backend (só se ainda saturar com Admin aberto)
+
+- **ADMIN-HEALTH-1** ou **BACKEND-DBPOOL-2:** aliviar `/admin/system-health` (queries/N+1 / full join payments)
+- Instrumentação pool **local** + avaliar `pool_size`/`max_overflow` só em dev
+- Produção intocada até diagnóstico
+
+**Classificação:** dívida ops parcial — frontend fechado; backend opcional pós smoke multi-janela. **Não** tratar como leak confirmado.
+
+**Próximo ops:** smoke leve Passenger + Driver + Admin. Workaround residual: fechar Admin / reiniciar uvicorn se saturar.
+
+**Baixa prioridade:** **CI-MAINT-1** — warning GitHub Actions Node 20 deprecated.
 
 ---
 
