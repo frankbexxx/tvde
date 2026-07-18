@@ -16,11 +16,11 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-17** — pós TW-TRIP-COPY-1)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-18** — pós ADMIN-POLL frontend)
 
-**`main` / `origin/main`:** `ce12e73` · PRs abertas **0** · CI verde (pós-#407).
+**`main` / `origin/main`:** `b64a67c` · PRs abertas **0** · CI verde (pós-#410).
 
-**Objectivo imediato:** carril **ADMIN-POLL-1 / BACKEND-DBPOOL-1** (análise → implementação; produção intocada até diagnóstico).
+**Objectivo imediato:** smoke multi-janela leve **Passenger + Driver + Admin** (validar estabilidade local pós-remoção do poll).
 
 **Checkpoint demo:** [`docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md`](docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
@@ -30,10 +30,14 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-405** | NAV/WAZE-1 Opção B | Concluído | Merged 2026-07-16; S-NAV-1…4 PASS |
 | **D-DEMO-1** | Walkthrough multi-role local | Concluído | PASS 2026-07-16 — Pax+Driver+Partner+Admin |
 | **CHK-DEMO-1** | Docs checkpoint D-DEMO-1 | Concluído | PR **#406** merged |
-| **PR-407** / **TW-TRIP-COPY-1** | Soften trip copy demo | Concluído | Merged `ce12e73`; Vitest 19/19; CI verde; **smoke visual PASS** 2026-07-17 (Pax+Driver) |
-| **S-TW407-1** | Smoke visual #407 | Concluído | Idle/search/accepted/ongoing/completed; NAV manual intacto; sem ~0 m em ongoing |
-| **BACKEND-DBPOOL-1** / **ADMIN-POLL-1** | Reduzir poll Admin + aliviar pool | Por iniciar | **Próximo carril**; [`BACKLOG_POST_PILOTO.md`](docs/meta/BACKLOG_POST_PILOTO.md) |
-| **ADMIN-OPS-1** | Detalhe trip, desbloqueios, pagamentos stuck | Por iniciar | Depois de ADMIN-POLL se necessário |
+| **PR-407** / **TW-TRIP-COPY-1** | Soften trip copy demo | Concluído | Merged; smoke visual PASS 2026-07-17 |
+| **S-TW407-1** | Smoke visual #407 | Concluído | Idle/search/accepted/ongoing/completed; NAV manual intacto |
+| **PR-409** / **ADMIN-POLL-1** | Admin: on-enter + refresh manual | Concluído | Merged; sem `setInterval` global; sem burst 7×/8s |
+| **PR-410** / **ADMIN-POLL-2** | Feedback botão Atualizar (Agora) | Concluído | Merged `b64a67c`; loading/success/error; Vitest admin 16/16; smoke visual PASS |
+| **S-ADMIN-POLL** | Smoke multi-janela Pax+Driver+Admin | Por iniciar | **Próximo** — leve; confirmar sem saturação óbvia de pool |
+| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Só se saturar com Admin aberto; produção intocada até diagnóstico |
+| **CI-MAINT-1** | Warning Actions Node 20 deprecated | Por iniciar | Baixa prioridade |
+| **ADMIN-OPS-1** | Detalhe trip, desbloqueios, pagamentos stuck | Por iniciar | Depois do smoke multi-janela se necessário |
 | **PARTNER-FLEET-1** | Viaturas, docs, associação, rendimentos | Por iniciar | Gaps produto Partner |
 | **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
 | **PR-398** | Driver active trip recovery | Concluído | Merged 2026-07-14 |
@@ -45,9 +49,9 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
 | **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
 
-**Smoke #407 (resumo):** fallback procura calmo; distância útil em accepted; ongoing «A acompanhar o percurso»; pagamento «A confirmar…»; driver idle «À espera de pedidos»; NAV/WAZE intacto. Nota residual: alguma duplicação «Pagamento: …» — não bloqueante.
+**ADMIN-POLL frontend (fecho):** sem polling global Admin; refresh on-enter + botão; Agora mostra «A atualizar…» / «Dados atualizados.» / «Não foi possível atualizar.» Fora de scope (correcto): backend, pool, system-health internals, Pax/Driver, NAV, Stripe/Render/env.
 
-**Próximo:** ADMIN-POLL — refresh on-enter + botão Actualizar; nunca 7 endpoints/8s; aliviar `/admin/system-health`; pool local só após diagnóstico; **não** mexer produção.
+**Próximo:** smoke multi-janela leve Pax+Driver+Admin. Backend pool/system-health só se ainda saturar.
 
 **Regra:** **1 carril** por sessão.
 

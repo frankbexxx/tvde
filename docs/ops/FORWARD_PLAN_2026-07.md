@@ -1,23 +1,23 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-16 (checkpoint **D-DEMO-1 PASS** + PR **#405** NAV/WAZE-1; `main` @ `624ab4e`; PRs abertas **0**; CI verde).
+**Última actualização:** 2026-07-18 (ADMIN-POLL frontend **#409+#410** fechado; `main` @ `b64a67c`; PRs abertas **0**; CI verde).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
 ---
 
-## 0. Checkpoint repo (**2026-07-16**)
+## 0. Checkpoint repo (**2026-07-18**)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `624ab4e` — alinhados |
-| **PRs abertas** | **0** (docs D-DEMO-1 locais pendentes de commit/PR) |
-| **CI `main` (pós-merge #405)** | Verde |
+| **`main` / `origin/main`** | `b64a67c` — alinhados |
+| **PRs abertas** | **0** |
+| **CI `main` (pós-merge #410)** | Verde |
+| **ADMIN-POLL-1/2 frontend** | **Fechado** — #409 + #410 |
 | **D-DEMO-1** | **PASS** — Partner + Admin + circuito Pax/Driver multi-role |
-| **PR #405** | **Merged** — NAV/WAZE-1 Opção B |
 
-**Próxima ordem recomendada:** (1) PR docs-only checkpoint · (2) **1** de TW-TRIP-COPY-1 · ADMIN-POLL-1 · ADMIN-OPS-1 · PARTNER-FLEET-1.
+**Próxima ordem recomendada:** (1) smoke multi-janela Pax+Driver+Admin · (2) ADMIN-HEALTH-1 / BACKEND-DBPOOL-2 só se saturar · (3) ADMIN-OPS-1 · PARTNER-FLEET-1.
 
 **Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
 
@@ -117,13 +117,15 @@
 Carrís sugeridos (actualizar após esta sessão):
 
 1. ~~**Walkthrough demo/produto**~~ — ✅ **D-DEMO-1 PASS** 2026-07-16
-2. **PR docs-only** — checkpoint D-DEMO-1 (amanhã)
-3. **TW-TRIP-COPY-1** — copy passenger/driver/pagamento para demo
-4. **ADMIN-POLL-1 / BACKEND-DBPOOL-1** — reduzir poll Admin; aliviar pool/system-health
-5. **ADMIN-OPS-1** — detalhe viagem, desbloqueios, pagamentos stuck
-6. **PARTNER-FLEET-1** — viaturas / docs / associação / rendimentos
-7. **P0 i18n** — O-i18n-NICHOS (#362) — *se objectivo mudar*
-8. ~~**P5 ops**~~ — ✅ fechado · ~~**#405 NAV/WAZE**~~ — ✅ merged
+2. ~~**PR docs-only**~~ — ✅ checkpoint D-DEMO-1 (#406)
+3. ~~**TW-TRIP-COPY-1**~~ — ✅ #407 + smoke
+4. ~~**ADMIN-POLL-1/2 (frontend)**~~ — ✅ #409 + #410 (`b64a67c`)
+5. **Smoke multi-janela** — Pax + Driver + Admin (leve)
+6. **ADMIN-HEALTH-1 / BACKEND-DBPOOL-2** — só se pool ainda saturar
+7. **ADMIN-OPS-1** — detalhe viagem, desbloqueios, pagamentos stuck
+8. **PARTNER-FLEET-1** — viaturas / docs / associação / rendimentos
+9. **P0 i18n** — O-i18n-NICHOS (#362) — *se objectivo mudar*
+10. ~~**P5 ops**~~ — ✅ fechado · ~~**#405 NAV/WAZE**~~ — ✅ merged
 
 Operação: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) · [`A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md)
 
@@ -142,7 +144,8 @@ Operação: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) · [`W
 | **P3.1** | ruff format `sentry.py` | Trivial |
 | **P3.2** | Test hardening (geolocation, nav, etc.) | ~90 min |
 | **P3.3** | Waze deep link | Baixa prioridade |
-| **BACKEND-DBPOOL-1 / ADMIN-POLL-1** | Poll Admin + pool local | Após demo — ver backlog |
+| **BACKEND-DBPOOL-1 / ADMIN-POLL-1** | Poll Admin (frontend) | ✅ #409+#410 — backend residual ver backlog |
+| **ADMIN-HEALTH-1 / BACKEND-DBPOOL-2** | system-health / pool local | Só se saturar pós-smoke multi-janela |
 | **NAV-ROUTE-STOPS** | Paragens + botão nextStop | Produto futuro (Manel) |
 | **PARTNER-FLEET-1** | Viaturas / earnings frota | Gaps D-DEMO-1 |
 | **ADMIN-OPS-1** | Desbloqueios / payments stuck | Gaps D-DEMO-1 |
