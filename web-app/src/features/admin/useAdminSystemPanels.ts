@@ -27,9 +27,9 @@ export function useAdminSystemPanels(opts: {
   usage: AdminUsageSummaryResponse | null
   health: SystemHealthResponse | null
   phase0: AdminPhase0Response | null
-  fetchMetrics: () => Promise<void>
+  fetchMetrics: () => Promise<boolean>
   fetchUsage: () => Promise<void>
-  fetchHealth: () => Promise<void>
+  fetchHealth: () => Promise<boolean>
   handleFetchPhase0: () => Promise<void>
   handleRunTimeouts: () => Promise<void>
   handleRunOfferExpiry: () => Promise<void>
@@ -41,13 +41,15 @@ export function useAdminSystemPanels(opts: {
   const [health, setHealth] = useState<SystemHealthResponse | null>(null)
   const [phase0, setPhase0] = useState<AdminPhase0Response | null>(null)
 
-  const fetchMetrics = useCallback(async () => {
-    if (!token) return
+  const fetchMetrics = useCallback(async (): Promise<boolean> => {
+    if (!token) return false
     try {
       const m = await getMetrics(token)
       setMetrics(m)
+      return true
     } catch {
       setMetrics(null)
+      return false
     }
   }, [token])
 
@@ -61,13 +63,15 @@ export function useAdminSystemPanels(opts: {
     }
   }, [token])
 
-  const fetchHealth = useCallback(async () => {
-    if (!token) return
+  const fetchHealth = useCallback(async (): Promise<boolean> => {
+    if (!token) return false
     try {
       const h = await getSystemHealth(token)
       setHealth(h)
+      return true
     } catch {
       setHealth(null)
+      return false
     }
   }, [token])
 

@@ -8,20 +8,22 @@ export function useAdminTripLists(token: string | null): {
   activeTrips: TripActiveItem[]
   historyTrips: TripHistoryItem[]
   historyTripsError: string | null
-  fetchActiveTrips: () => Promise<void>
+  fetchActiveTrips: () => Promise<boolean>
   fetchHistoryTrips: () => Promise<void>
 } {
   const [activeTrips, setActiveTrips] = useState<TripActiveItem[]>([])
   const [historyTrips, setHistoryTrips] = useState<TripHistoryItem[]>([])
   const [historyTripsError, setHistoryTripsError] = useState<string | null>(null)
 
-  const fetchActiveTrips = useCallback(async () => {
-    if (!token) return
+  const fetchActiveTrips = useCallback(async (): Promise<boolean> => {
+    if (!token) return false
     try {
       const data = await getActiveTrips(token)
       setActiveTrips(data)
+      return true
     } catch {
       setActiveTrips([])
+      return false
     }
   }, [token])
 

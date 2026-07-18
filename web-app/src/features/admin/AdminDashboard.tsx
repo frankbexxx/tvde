@@ -193,13 +193,15 @@ export function AdminDashboard() {
     })
   }, [stuckPaymentsListLen])
 
-  const fetchPending = useCallback(async () => {
-    if (!token) return
+  const fetchPending = useCallback(async (): Promise<boolean> => {
+    if (!token) return false
     try {
       const data = await apiFetch<PendingUser[]>('/admin/pending-users', { token })
       setPending(data)
+      return true
     } catch {
       setPending([])
+      return false
     }
   }, [token])
 
@@ -241,12 +243,19 @@ export function AdminDashboard() {
     }
   }, [token, partners.length, driversList.length])
 
-  const refreshAgora = useCallback(() => {
-    void fetchPending()
-    void fetchActiveTrips()
-    void fetchMetrics()
-    void fetchHealth()
-    void fetchAdminAlerts()
+  /** ADMIN-POLL-2: async; ok se pelo menos um endpoint responder. */
+  const refreshAgora = useCallback(async (): Promise<'ok' | 'error'> => {
+    const settled = await Promise.allSettled([
+      fetchPending(),
+      fetchActiveTrips(),
+      fetchMetrics(),
+      fetchHealth(),
+      fetchAdminAlerts(),
+    ])
+    const anyOk = settled.some(
+      (r) => r.status === 'fulfilled' && r.value === true
+    )
+    return anyOk ? 'ok' : 'error'
   }, [fetchPending, fetchActiveTrips, fetchMetrics, fetchHealth, fetchAdminAlerts])
 
   const handleRunCronNow = async () => {
