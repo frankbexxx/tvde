@@ -12,9 +12,9 @@ import {
 } from '../../api/trips'
 import { isTimeoutLikeError, withColdStartRetries } from '../../api/client'
 import {
-  isPassengerActiveTripStatus,
   resolvePassengerActiveTripId,
   shouldBootstrapPassengerActiveTrip,
+  shouldClearPassengerLocalTripOnActiveMiss,
 } from './passengerActiveTripRecovery'
 import type { TripDetailResponse } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
@@ -273,10 +273,11 @@ export function PassengerDashboard() {
         return next
       }
       if (!passengerActiveTripId) return null
-      // Backend has no active trip — confirm local id is terminal/missing before clearing.
+      // Backend has no non-terminal trip — clear only cancelled/failed/404.
+      // Keep `completed` so rating/post-trip UI can mount after reload.
       try {
         const detail = await getTripDetail(passengerActiveTripId, token)
-        if (!isPassengerActiveTripStatus(detail.status)) {
+        if (shouldClearPassengerLocalTripOnActiveMiss(detail.status)) {
           const cleared = resolvePassengerActiveTripId({
             backendActiveTripId: null,
             localTripId: passengerActiveTripId,
@@ -284,6 +285,10 @@ export function PassengerDashboard() {
           })
           setPassengerActiveTripId(cleared)
           return cleared
+        }
+        // Keep completed (and any other non-clear status) for post-trip / rating UI.
+        if (detail.status === 'completed') {
+          setPassengerPendingTripDetail(detail)
         }
         return passengerActiveTripId
       } catch (err: unknown) {

@@ -5,6 +5,7 @@ import {
   readPassengerActiveTripIdFromStorage,
   resolvePassengerActiveTripId,
   shouldBootstrapPassengerActiveTrip,
+  shouldClearPassengerLocalTripOnActiveMiss,
   writePassengerActiveTripIdToStorage,
 } from './passengerActiveTripRecovery'
 import { PASSENGER_SEARCH_FALLBACK_AFTER_SEC } from './PassengerStatusCard'
@@ -64,6 +65,38 @@ describe('passengerActiveTripRecovery', () => {
         localTripTerminalOrMissing: true,
       })
     ).toBe(null)
+  })
+
+  it('shouldClearPassengerLocalTripOnActiveMiss: cancelled/failed yes, completed no', () => {
+    expect(shouldClearPassengerLocalTripOnActiveMiss('cancelled')).toBe(true)
+    expect(shouldClearPassengerLocalTripOnActiveMiss('failed')).toBe(true)
+    expect(shouldClearPassengerLocalTripOnActiveMiss('completed')).toBe(false)
+    expect(shouldClearPassengerLocalTripOnActiveMiss('requested')).toBe(false)
+    expect(shouldClearPassengerLocalTripOnActiveMiss('accepted')).toBe(false)
+  })
+
+  it('restore keep path: completed keeps id when /trips/active is null', () => {
+    // Mirrors Option A: after active-miss, completed must not set localTripTerminalOrMissing.
+    expect(shouldClearPassengerLocalTripOnActiveMiss('completed')).toBe(false)
+    expect(
+      resolvePassengerActiveTripId({
+        backendActiveTripId: null,
+        localTripId: 'completed-trip',
+        localTripTerminalOrMissing: shouldClearPassengerLocalTripOnActiveMiss('completed'),
+      })
+    ).toBe('completed-trip')
+  })
+
+  it('restore clear path: cancelled/failed clear id when /trips/active is null', () => {
+    for (const status of ['cancelled', 'failed'] as const) {
+      expect(
+        resolvePassengerActiveTripId({
+          backendActiveTripId: null,
+          localTripId: 'gone-trip',
+          localTripTerminalOrMissing: shouldClearPassengerLocalTripOnActiveMiss(status),
+        })
+      ).toBe(null)
+    }
   })
 
   it('sessionStorage round-trip for active trip id', () => {

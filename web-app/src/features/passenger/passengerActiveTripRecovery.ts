@@ -18,6 +18,16 @@ export function isPassengerActiveTripStatus(status: string | null | undefined): 
   return Boolean(status && ACTIVE_STATUSES.has(status))
 }
 
+/**
+ * When GET /trips/active returns null, clear local id only for cancelled/failed.
+ * `completed` stays — rating/post-trip UI still needs activeTripId (not backend-active).
+ */
+export function shouldClearPassengerLocalTripOnActiveMiss(
+  status: string | null | undefined
+): boolean {
+  return status === 'cancelled' || status === 'failed'
+}
+
 export function readPassengerActiveTripIdFromStorage(): string | null {
   try {
     if (import.meta.env.VITE_E2E === 'true') {
@@ -63,7 +73,7 @@ export function shouldBootstrapPassengerActiveTrip(opts: {
  * - Backend active → use it (authoritative).
  * - Backend null + no local → stay null.
  * - Backend null + local id → clear only when `localTripTerminalOrMissing` is true
- *   (confirmed terminal/404). Transient errors keep local id.
+ *   (cancelled/failed/404 — not completed; completed keeps id for rating UI).
  */
 export function resolvePassengerActiveTripId(opts: {
   backendActiveTripId: string | null
