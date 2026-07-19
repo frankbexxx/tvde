@@ -1,8 +1,9 @@
 # ADMIN-OPS-2 — Admin trip support surface
 
-**Estado:** implementação (branch `feat/admin-trip-support-surface`)  
+**Estado:** **PASS** (smoke 2026-07-19) · `main` `61ad836` ([#421](https://github.com/frankbexxx/tvde/pull/421))  
 **Pré-condição:** ADMIN-OPS-1 Fase 0 B/C **PASS**; Admin ≠ dispatcher diário.
 
+**Smoke:** [`ADMIN_OPS_2_SMOKE_2026-07-19.md`](./ADMIN_OPS_2_SMOKE_2026-07-19.md)  
 **Handoff:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`BACKLOG_POST_PILOTO.md`](../meta/BACKLOG_POST_PILOTO.md)
 
 ---
@@ -33,16 +34,19 @@ Melhorar a capacidade do Admin de perceber **o que aconteceu** numa trip e actua
 
 ---
 
-## Smoke manual proposto
+## Smoke manual
 
-| # | Passo | Esperado |
-|---|--------|----------|
-| 1 | Passenger cria trip; Driver aceita | Activas: `accepted` |
-| 2 | Admin força `accepted → arriving` | Detalhe + timeline com transição |
-| 3 | Admin força `arriving → ongoing` | Estado `ongoing`; **sem** botões complete/cancel/fail Admin |
-| 4 | Saúde → playbook ongoing longo | Texto pede Driver / cron / nota ops — sem cancel Admin |
-| 5 | Driver termina | Histórico `completed` com `payment_status` visível |
-| 6 | (opc.) Nota ops no detalhe | Aparece na linha temporal |
+**Resultado:** **PASS** — ver checklist completo em [`ADMIN_OPS_2_SMOKE_2026-07-19.md`](./ADMIN_OPS_2_SMOKE_2026-07-19.md).
+
+| # | Passo | Esperado | Smoke |
+|---|--------|----------|-------|
+| 1 | Passenger cria trip; Driver aceita | Activas: `accepted` | PASS |
+| 2 | Admin força `accepted → arriving` | Detalhe + timeline com transição | PASS |
+| 3 | Admin força `arriving → ongoing` | Estado `ongoing`; **sem** botões complete/cancel/fail Admin | PASS |
+| 4 | Saúde → playbook ongoing longo | Texto pede Driver / cron / nota ops — sem cancel Admin | N/A (Health limpa) |
+| 5 | Driver termina | Histórico `completed` com `payment_status` visível | PASS |
+| 6 | (opc.) Nota ops no detalhe | Aparece na linha temporal | SKIP |
+| — | Assign copy recuperação | «Atribuir (recuperação)» | SKIP (RTL) |
 
 ---
 
