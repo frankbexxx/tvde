@@ -8,25 +8,26 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-19** — pós PAYMENTS-STUCK)
+## Contexto actual (**2026-07-19** — pagamentos + O-SECURITY fechados)
 
 ### Checkpoint — [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](../ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `2fc46b9` |
+| **`main` / `origin/main`** | `77ddfac` |
 | **PRs abertas** | **0** |
 | **CI `main`** | Verde |
-| **#417** / **PAYMENTS-STUCK-1A** | **PASS** — mock settle no `complete_trip` |
-| **#418** / **PAYMENTS-STUCK-1B** | **PASS** — Admin close-mock + apply Render 41+10 |
-| **Mock stuck antigo** | **Limpo** |
-| **Saúde** | ainda `degraded` — **não** é mock (EDGE-1/2) |
+| **PAYMENTS-STUCK-1A/1B** | **PASS** (#417 / #418 + apply 41+10) |
+| **PAYMENTS-EDGE-1/2** | **PASS** — health limpa |
+| **O-SECURITY** | **PASS** — password SA rodada via `/auth/me/password` |
+| **Saúde** | **`ok`** — stuck/missing/inconsistent = 0 |
 | **ADMIN-OPS-1 Fase 0** | Fechada — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](../ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
 | **#415** | TEST-DB-GUARD — [`CHECKPOINT_2026-07-19_POST_415.md`](../ops/CHECKPOINT_2026-07-19_POST_415.md) |
 
-### Apply 1B (resumo)
+### Edges (resumo)
 
-Preview/apply/pós: `41` succeeded + `10` failed · pós-preview `count=0` · só `pi_mock_*` · API Admin, sem SQL.
+- **EDGE-2:** trip `4b29c6c9-…` → `failed` (órfã teste).  
+- **EDGE-1:** payment `c58c20d4-…` → `failed`; trip `591f6827-…` cancelled; Dashboard PI `requires_payment_method`, €0; sem Stripe API / sem mexer `STRIPE_MOCK`.
 
 ### Decisão produto (mantém-se)
 
@@ -47,22 +48,18 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → PARTNER-FLE
 
 | ID | Notas |
 |----|-------|
-| **PAYMENTS-EDGE-1** | cancelled + PI real processing — trip `591f6827-…` |
-| **PAYMENTS-EDGE-2** | completed sem payment — trip `4b29c6c9-…` |
-| **O-SECURITY** | Mudar password SA — **fim de sessão** |
 | **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed — UX futura |
 | **R-AGORA-SNAP** | Agora snapshot vs Viagens — não bug confirmado |
 | **R-E2E-1** | Flake intermitente — monitorizar |
-| **O-STRIPE-LIVE** | Bloqueado — conta parceiro / `sk_live_*` |
+| **O-STRIPE-LIVE** | Futuro — conta parceiro + documentação / `sk_live_*` |
 | **R-GIT-1** | ~190 branches locais — **não apagar ainda** |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated — baixa prioridade |
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **O-SECURITY** — mudar password SA  
-2. **PAYMENTS-EDGE-1** / **EDGE-2** — só se prioritário (reconcile Stripe real / trip órfã)  
-3. **Admin Ops seguinte** — playbook honesty; orphan-panel UX opcional  
-4. **PARTNER-FLEET-1** — assign/reassign diário / viaturas  
+1. **Admin Ops seguinte** — playbook honesty; orphan-panel UX opcional  
+2. **PARTNER-FLEET-1** — assign/reassign diário / viaturas  
+3. **Stripe live** — só com parceiro + docs
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
