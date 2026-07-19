@@ -245,14 +245,27 @@ Apply **só** com `"dry_run": false` (explícito) + `governance_reason` (≥10 c
 
 **Avisos:** não usar `stripe-sync` contra `pi_mock_*` (pode falhar trips). Não misturar com o caso `completed` sem payment (`4b29c6c9-…`).
 
+### Estado apply app (2026-07-19) — **PASS**
+
+| Fase | `to_succeeded` | `to_failed` | `count` |
+|------|---------------:|------------:|--------:|
+| Preview | 41 | 10 | 51 |
+| Apply | 41 | 10 | 51 |
+| Pós-preview | 0 | 0 | 0 |
+
+API Admin em `tvde-api` / BD `ride_db_wypz` — **sem SQL manual**. PI não-mock no lote: **0**.
+
+Pós-health: ainda `degraded` por **PAYMENTS-EDGE-1** (cancelled + PI real `591f6827-…`) e **PAYMENTS-EDGE-2** (`4b29c6c9-…` sem payment). Mock stuck: **limpo**. Checkpoint: [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md).
+
 ---
 
 ## 11. Próximos passos (fora deste gate)
 
 | Item | Quando |
 |------|--------|
+| **O-SECURITY** mudar password SA | Fim de sessão (pós-apply) |
+| **PAYMENTS-EDGE-1** / **EDGE-2** | Carris separados — ver checkpoint |
 | Webhook endpoint **produção** com `STRIPE_MOCK=true` | Smoke opcional (Send test event → 200) |
 | `STRIPE_MOCK=false` + `sk_live_*` em prod | Após conta Stripe do parceiro |
 | Fase B staging | [`STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) |
-| Apply 1B na BD app (após merge + dry-run aprovado) | Operação SA controlada |
 | Revisão `final_price` em `complete_trip` | Backlog produto/técnico |
