@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom'
 import type { PartnerDriverRow } from '../../../api/partner'
-import { filterChipClass, locationLabel, type DriverFilter } from '../partnerTypes'
+import {
+  driverIsOnActiveTrip,
+  filterChipClass,
+  locationLabel,
+  type DriverFilter,
+} from '../partnerTypes'
 
 type PartnerFleetDriversSectionProps = {
   filteredDrivers: PartnerDriverRow[]
@@ -25,6 +30,7 @@ export function PartnerFleetDriversSection({
             ['active', 'ativos'],
             ['online', 'online'],
             ['offline', 'offline'],
+            ['on_trip', 'Em viagem'],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -38,21 +44,44 @@ export function PartnerFleetDriversSection({
         ))}
       </div>
       <ul className="space-y-2">
-        {filteredDrivers.map((d) => (
-          <li key={d.user_id} className="rounded-xl border border-border bg-card p-3 text-sm">
-            <Link
-              to={`/partner/drivers/${encodeURIComponent(d.user_id)}`}
-              className="font-medium text-primary hover:underline"
+        {filteredDrivers.map((d) => {
+          const onTrip = driverIsOnActiveTrip(d)
+          return (
+            <li
+              key={d.user_id}
+              className="rounded-xl border border-border bg-card p-3 text-sm"
+              data-testid="partner-fleet-driver-row"
             >
-              {d.user.name ?? '—'}
-            </Link>
-            <p className="text-muted-foreground">
-              Estado: {d.status}
-              {d.is_available ? ' · disponível' : ' · indisponível'}
-            </p>
-            <p className="text-muted-foreground text-xs mt-1">{locationLabel(d)}</p>
-          </li>
-        ))}
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  to={`/partner/drivers/${encodeURIComponent(d.user_id)}`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {d.user.name ?? '—'}
+                </Link>
+                {onTrip ? (
+                  <span
+                    className="inline-flex items-center rounded-full bg-info/15 border border-info/40 px-2 py-0.5 text-[11px] font-semibold text-info"
+                    data-testid="partner-driver-on-trip-badge"
+                    title={
+                      d.active_trip_status
+                        ? `Viagem activa (${d.active_trip_status})`
+                        : 'Viagem activa'
+                    }
+                  >
+                    Em viagem
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-muted-foreground">
+                Estado: {d.status}
+                {d.is_available ? ' · disponível' : ' · indisponível'}
+                {onTrip && d.active_trip_status ? ` · ${d.active_trip_status}` : null}
+              </p>
+              <p className="text-muted-foreground text-xs mt-1">{locationLabel(d)}</p>
+            </li>
+          )
+        })}
       </ul>
       {!loading && filteredDrivers.length === 0 && (
         <p className="text-sm text-muted-foreground">Sem motoristas neste filtro.</p>

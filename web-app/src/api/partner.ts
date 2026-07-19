@@ -17,6 +17,9 @@ export interface PartnerDriverRow {
       ocr_suggested_expires_at?: string | null
     }
   > | null
+  /** PARTNER-FLEET-1A: trip activa na frota (assigned|accepted|arriving|ongoing). */
+  active_trip_id?: string | null
+  active_trip_status?: string | null
 }
 
 export interface PartnerDriverDiscoveryItem {
@@ -52,6 +55,9 @@ export interface PartnerMetrics {
   trips_completed: number
   trips_cancelled: number
   total_drivers: number
+  /** PARTNER-FLEET-1A: completed hoje + receita bruta app (€). */
+  trips_completed_today?: number
+  revenue_completed_today?: number
 }
 
 export async function fetchPartnerDrivers(): Promise<PartnerDriverRow[]> {
@@ -290,4 +296,6 @@ export const PARTNER_TRIPS_CSV_COLUMNS = [
   'started_at',
   'completed_at',
   'updated_at',
+  'estimated_price',
+  'final_price',
 ] as const

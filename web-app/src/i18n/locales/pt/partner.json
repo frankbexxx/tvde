@@ -52,7 +52,10 @@
       "completed": "Concluídas",
       "cancelled": "Canceladas",
       "activeDriversGps": "Motoristas ativos (GPS)",
-      "totalDrivers": "Total motoristas"
+      "totalDrivers": "Total motoristas",
+      "completedToday": "Concluídas hoje",
+      "revenueToday": "Receita hoje (€)",
+      "revenueHint": "Soma bruta da app (final ou estimativa); não é payout Stripe."
     }
   },
   "fleet": {
@@ -217,6 +220,9 @@
     "fleetTrips": "Viagens na frota:",
     "cancelledFailed": "Canceladas / falhadas:",
     "activeDriversGps": "Motoristas activos (GPS):",
+    "completedToday": "Concluídas hoje:",
+    "revenueToday": "Receita hoje (€):",
+    "revenueHint": "Soma bruta da app (final ou estimativa); não é payout Stripe.",
     "downloadCsv": "Descarregar CSV (filtros actuais)",
     "csvColumnsPrefix": "Colunas do CSV:"
   },

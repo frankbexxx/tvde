@@ -225,8 +225,8 @@ def partner_remove_driver_from_fleet(
     return unassign_driver_from_partner(db, driver_user_id=driver_user_id)
 
 
-def partner_metrics(db: Session, partner_id: uuid.UUID) -> dict[str, int]:
-    """Counts for partner dashboard."""
+def partner_metrics(db: Session, partner_id: uuid.UUID) -> dict[str, int | float]:
+    """Counts + PARTNER-FLEET-1A revenue for partner dashboard (tenant-scoped)."""
     now = datetime.now(timezone.utc)
     day_start, day_end = get_today_range_utc(now)
 
@@ -289,6 +289,42 @@ def partner_metrics(db: Session, partner_id: uuid.UUID) -> dict[str, int]:
         select(func.count()).select_from(Driver).where(Driver.partner_id == partner_id)
     ).scalar_one()
 
+    # Completed today: prefer completed_at in local "today" window; fallback created_at.
+    completed_today_filter = and_(
+        Driver.partner_id == partner_id,
+        Trip.status == TripStatus.completed,
+        or_(
+            and_(
+                Trip.completed_at.is_not(None),
+                Trip.completed_at >= day_start,
+                Trip.completed_at < day_end,
+            ),
+            and_(
+                Trip.completed_at.is_(None),
+                Trip.created_at >= day_start,
+                Trip.created_at < day_end,
+            ),
+        ),
+    )
+    trips_completed_today = db.execute(
+        select(func.count())
+        .select_from(Trip)
+        .join(Driver, Trip.driver_id == Driver.user_id)
+        .where(completed_today_filter)
+    ).scalar_one()
+    # Receita bruta app: final_price se existir, senão estimated_price (não é payout Stripe).
+    revenue_completed_today = db.execute(
+        select(
+            func.coalesce(
+                func.sum(func.coalesce(Trip.final_price, Trip.estimated_price)),
+                0,
+            )
+        )
+        .select_from(Trip)
+        .join(Driver, Trip.driver_id == Driver.user_id)
+        .where(completed_today_filter)
+    ).scalar_one()
+
     return {
         "trips_total": int(trips_total or 0),
         "trips_today": int(trips_today or 0),
@@ -296,4 +332,6 @@ def partner_metrics(db: Session, partner_id: uuid.UUID) -> dict[str, int]:
         "trips_completed": int(trips_completed or 0),
         "trips_cancelled": int(trips_cancelled or 0),
         "total_drivers": int(total_drivers or 0),
+        "trips_completed_today": int(trips_completed_today or 0),
+        "revenue_completed_today": float(revenue_completed_today or 0),
     }

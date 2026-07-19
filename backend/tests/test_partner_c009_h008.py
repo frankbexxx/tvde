@@ -207,6 +207,8 @@ def test_c010_c011_partner_detail_and_h007_csv() -> None:
         "started_at",
         "completed_at",
         "updated_at",
+        "estimated_price",
+        "final_price",
     ]
     assert any(r[0] == trip_id for r in rows[1:])
 

@@ -52,6 +52,22 @@ export function PartnerHomeDashboard({
               <p className="text-xs text-muted-foreground">{t('home.dashboard.totalDrivers')}</p>
               <p className="text-xl font-bold text-foreground tabular-nums">{metrics.total_drivers}</p>
             </div>
+            <div className={PARTNER_KPI_CARD} data-testid="partner-kpi-completed-today">
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.completedToday')}</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">
+                {metrics.trips_completed_today ?? 0}
+              </p>
+            </div>
+            <div
+              className={PARTNER_KPI_CARD}
+              data-testid="partner-kpi-revenue-today"
+              title={t('home.dashboard.revenueHint')}
+            >
+              <p className="text-xs text-muted-foreground">{t('home.dashboard.revenueToday')}</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">
+                {(metrics.revenue_completed_today ?? 0).toFixed(2)}
+              </p>
+            </div>
           </div>
         </section>
       ) : null}

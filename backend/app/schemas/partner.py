@@ -23,6 +23,9 @@ class PartnerDriverItem(BaseModel):
     user: PartnerDriverUserBrief
     last_location: PartnerDriverLastLocation | None = None
     documents: dict[str, dict[str, Any]] | None = None
+    # PARTNER-FLEET-1A: trip activa (assigned|accepted|arriving|ongoing), se existir.
+    active_trip_id: str | None = None
+    active_trip_status: str | None = None
 
 
 class PartnerTripItem(BaseModel):
@@ -50,6 +53,9 @@ class PartnerMetricsResponse(BaseModel):
     trips_completed: int
     trips_cancelled: int
     total_drivers: int
+    # PARTNER-FLEET-1A: completed hoje (por completed_at) + receita bruta app (€).
+    trips_completed_today: int = 0
+    revenue_completed_today: float = 0.0
 
 
 class PartnerDriverStatusPatchRequest(BaseModel):
