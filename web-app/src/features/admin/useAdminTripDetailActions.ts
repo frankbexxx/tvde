@@ -2,11 +2,13 @@ import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateA
 import {
   getTripDetailAdmin,
   getTripDebug,
+  getAdminAuditTrail,
   assignTripAdmin,
   adminTripTransition,
   cancelTripAdmin,
   postAdminTripReconcilePaymentStripe,
   postAdminTripPaymentOpsNote,
+  type AdminAuditTrailItem,
   type TripDetailAdmin,
 } from '../../api/admin'
 import { adminErrDetail, promptGovernanceReason } from './adminDashboardHelpers'
@@ -32,10 +34,39 @@ export function useAdminTripDetailActions(opts: {
   const [tripDebugId, setTripDebugId] = useState<string | null>(null)
   const [tripActionLoading, setTripActionLoading] = useState<string | null>(null)
   const [paymentOpsNoteText, setPaymentOpsNoteText] = useState('')
+  const [tripAuditRows, setTripAuditRows] = useState<AdminAuditTrailItem[] | undefined>(undefined)
+  const [tripAuditLoading, setTripAuditLoading] = useState(false)
+  const [tripAuditError, setTripAuditError] = useState<string | null>(null)
 
   useEffect(() => {
     setPaymentOpsNoteText('')
   }, [selectedTripId])
+
+  const fetchTripAuditTrail = useCallback(
+    async (tripId: string) => {
+      if (!token) return
+      setTripAuditLoading(true)
+      setTripAuditError(null)
+      try {
+        const rows = await getAdminAuditTrail(token, {
+          entity_type: 'trip',
+          entity_id: tripId,
+          limit: 50,
+        })
+        if (selectedTripForDetailRef.current !== tripId) return
+        setTripAuditRows(rows)
+      } catch {
+        if (selectedTripForDetailRef.current !== tripId) return
+        setTripAuditRows(undefined)
+        setTripAuditError('Não foi possível carregar a linha temporal.')
+      } finally {
+        if (selectedTripForDetailRef.current === tripId) {
+          setTripAuditLoading(false)
+        }
+      }
+    },
+    [token]
+  )
 
   const fetchTripDetail = useCallback(
     async (tripId: string) => {
@@ -99,6 +130,7 @@ export function useAdminTripDetailActions(opts: {
       }
       setError(null)
       await fetchTripDetail(tripId)
+      await fetchTripAuditTrail(tripId)
       await fetchHealth()
     } catch (err) {
       setError(adminErrDetail(err, 'Erro ao alinhar pagamento com Stripe'))
@@ -128,6 +160,7 @@ export function useAdminTripDetailActions(opts: {
       setPaymentOpsNoteText('')
       setError(null)
       await fetchTripDetail(tripId)
+      await fetchTripAuditTrail(tripId)
     } catch (err) {
       setError(adminErrDetail(err, 'Erro ao registar nota operacional'))
     } finally {
@@ -202,6 +235,7 @@ export function useAdminTripDetailActions(opts: {
       if (selectedTripId === tripId) {
         const d = await getTripDetailAdmin(tripId, token)
         setTripDetail(d)
+        await fetchTripAuditTrail(tripId)
       }
     } catch (err) {
       setError(adminErrDetail(err, 'Erro na transição admin'))
@@ -213,13 +247,17 @@ export function useAdminTripDetailActions(opts: {
   useEffect(() => {
     if (selectedTripId && token) {
       void fetchTripDetail(selectedTripId)
+      void fetchTripAuditTrail(selectedTripId)
     } else {
       setTripDetailLoading(false)
       setTripDetail(null)
       setTripDebug(null)
       setTripDebugId(null)
+      setTripAuditRows(undefined)
+      setTripAuditLoading(false)
+      setTripAuditError(null)
     }
-  }, [selectedTripId, token, fetchTripDetail])
+  }, [selectedTripId, token, fetchTripDetail, fetchTripAuditTrail])
 
   return {
     tripDetail,
@@ -229,8 +267,12 @@ export function useAdminTripDetailActions(opts: {
     tripActionLoading,
     paymentOpsNoteText,
     setPaymentOpsNoteText,
+    tripAuditRows,
+    tripAuditLoading,
+    tripAuditError,
     fetchTripDetail,
     fetchTripDebug,
+    fetchTripAuditTrail,
     handleReconcileSingleTripPayment,
     handlePaymentOpsNote,
     handleAssignTrip,

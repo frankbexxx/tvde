@@ -1303,10 +1303,11 @@ async def admin_trip_payment_ops_note(
         db,
         actor_user_id=admin_ctx.user_id,
         action="payment_ops_note",
-        entity_type="payment",
-        entity_id=str(pay.id),
+        # entity trip para aparecer na linha temporal Admin da viagem (ADMIN-OPS-2)
+        entity_type="trip",
+        entity_id=str(trip.id),
         payload={
-            "trip_id": str(trip.id),
+            "payment_id": str(pay.id),
             "note": payload.note.strip()[:2000],
             "payment_status": pay.status.value,
             "stripe_payment_intent_id": pay.stripe_payment_intent_id,

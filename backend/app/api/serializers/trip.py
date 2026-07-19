@@ -112,6 +112,7 @@ def trip_to_detail(
         driver_rating=trip.driver_rating,
         passenger_rating=trip.passenger_rating,
         cancellation_reason=trip.cancellation_reason,
+        cancelled_by=trip.cancelled_by,
         payment_intent_client_secret=client_secret,
     )
 
