@@ -16,13 +16,13 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-18** — ADMIN-OPS-1 Fase 0 parcial)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-19** — pós ADMIN-OPS-1 Fase 0 B/C PASS)
 
-**`main` / `origin/main`:** `9b6260e` · PRs abertas **0** · CI verde (pós-#411 docs).
+**`main` / `origin/main`:** `590aea3` · PRs abertas **0** · CI verde (pós-#413).
 
-**Objectivo imediato:** continuar smoke **ADMIN-OPS-1 Fase 0** (B/C) — force arriving/ongoing, gap ongoing, nota ops, playbook Saúde; **sem** tratar «Atribuir» como ops normal.
+**Objectivo imediato:** fechar docs/runbook ADMIN-OPS (playbook honesty) **ou** carril seguinte (PARTNER-FLEET-1 / payments stuck) — **1 carril**.
 
-**Checkpoint demo:** [`docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md`](docs/ops/D_DEMO_1_CHECKPOINT_2026-07-16.md)
+**Checkpoint smoke:** [`docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -34,12 +34,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **S-TW407-1** | Smoke visual #407 | Concluído | Idle/search/accepted/ongoing/completed; NAV manual intacto |
 | **PR-409** / **ADMIN-POLL-1** | Admin: on-enter + refresh manual | Concluído | Merged; sem `setInterval` global |
 | **PR-410** / **ADMIN-POLL-2** | Feedback botão Atualizar (Agora) | Concluído | Merged; smoke visual PASS |
-| **PR-411** | Docs fecho ADMIN-POLL frontend | Concluído | Merged `9b6260e` |
+| **PR-411** | Docs fecho ADMIN-POLL frontend | Concluído | Merged |
+| **PR-412** | Docs Admin ≠ dispatcher | Concluído | Merged |
+| **PR-413** | Passenger active-trip recovery | Concluído | Merged `590aea3`; E2E + smoke PASS |
 | **S-ADMIN-POLL** | Smoke multi-janela Pax+Driver+Admin | Concluído | PASS — estabilidade OK pós-#409/#410 |
-| **ADMIN-OPS-1** | Admin como ferramenta de excepção | Em curso | Fase 0 parcial — decisão produto abaixo; smoke B/C a seguir |
-| **S-ADMIN-OPS-0** | Smoke Fase 0 (force / gap / nota / playbook) | Smoke pendente | **Próximo**; 1B Assign = SKIP (ou só recovery SA) |
-| **R-AGORA-SNAP** | Agora vs Viagens (contagens) | Por iniciar | Observação: Agora snapshot/manual; **não** bug confirmado |
-| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Só se saturar; produção intocada até diagnóstico |
+| **ADMIN-OPS-1** | Admin como ferramenta de excepção | Concluído | Fase 0 B/C **PASS** 2026-07-19 — ver checkpoint |
+| **S-ADMIN-OPS-0** | Smoke Fase 0 B/C (force / gap ongoing) | Concluído | PASS; nota ops **SKIP**; 1B Assign SKIP |
+| **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed | Por iniciar | Observação UX; não blocker |
+| **R-AGORA-SNAP** | Agora vs Viagens (contagens) | Por iniciar | Observação snapshot/manual; **não** bug confirmado |
+| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Saúde degraded (stuck payments antigos) — carril à parte |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated | Por iniciar | Baixa prioridade |
 | **PARTNER-FLEET-1** | Viaturas, docs, associação, reassign ops | Por iniciar | Assign/reassign **diário** vive aqui (não Admin) |
 | **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
@@ -52,15 +55,9 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
 | **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
 
-**Decisão ADMIN-OPS-1 Fase 0 (parcial, 2026-07-18):**
+**ADMIN-OPS-1 Fase 0 B/C (fecho):** force arriving/ongoing OK; Pax/Driver coerentes; gap `ongoing` (sem complete/cancel/fail admin) confirmado; Driver completa; Histórico `completed`. Nota ops SKIP. Saúde degraded / payments stuck = dívida separada.
 
-1. Admin **≠** dispatcher normal.
-2. Botão **Atribuir** no Admin = **recovery / super_admin**, não fluxo de negócio.
-3. Assign/reassign operacional diário → matching automático e/ou **PARTNER-FLEET-1**.
-4. Admin = excepções, bloqueios, suporte, auditoria, recuperação.
-5. Tab **Agora** = snapshot/manual (ADMIN-POLL-1); Agora «0 activas» vs Viagens com `requested` = **observação a verificar**, não bug confirmado.
-
-**Próximo smoke (B/C):** force `accepted→arriving` · force `arriving→ongoing` · gap `ongoing` (sem complete/cancel/fail admin) · nota ops · playbook Saúde/Ops mismatch. **1B Assign:** SKIP por defeito.
+**Próximo:** runbook playbook honesty **ou** PARTNER-FLEET-1 / payments — escolher **1** carril.
 
 **Regra:** **1 carril** por sessão.
 
