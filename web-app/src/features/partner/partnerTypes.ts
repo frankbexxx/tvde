@@ -1,6 +1,10 @@
 import type { PartnerDriverRow, PartnerTripRow } from '../../api/partner'
 
-export type DriverFilter = 'all' | 'active' | 'online' | 'offline'
+export type DriverFilter = 'all' | 'active' | 'online' | 'offline' | 'on_trip'
+
+export function driverIsOnActiveTrip(d: PartnerDriverRow): boolean {
+  return Boolean(d.active_trip_id && d.active_trip_status)
+}
 export type TripFilter = 'all' | 'ongoing' | 'completed' | 'cancelled' | 'failed' | 'assigned'
 
 export const TRIP_FILTER_HINT: Partial<Record<TripFilter, string>> = {
@@ -28,6 +32,7 @@ export function matchesDriverFilter(d: PartnerDriverRow, f: DriverFilter): boole
   if (f === 'active') return approved
   if (f === 'online') return approved && d.is_available
   if (f === 'offline') return approved && !d.is_available
+  if (f === 'on_trip') return approved && driverIsOnActiveTrip(d)
   return true
 }
 

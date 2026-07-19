@@ -58,6 +58,18 @@ export function PartnerReportsMenuScreen({
               {t('reports.activeDriversGps')}{' '}
               <span className="font-semibold tabular-nums">{metrics.active_drivers}</span>
             </li>
+            <li data-testid="partner-reports-completed-today">
+              {t('reports.completedToday')}{' '}
+              <span className="font-semibold tabular-nums">
+                {metrics.trips_completed_today ?? 0}
+              </span>
+            </li>
+            <li data-testid="partner-reports-revenue-today" title={t('reports.revenueHint')}>
+              {t('reports.revenueToday')}{' '}
+              <span className="font-semibold tabular-nums">
+                {(metrics.revenue_completed_today ?? 0).toFixed(2)}
+              </span>
+            </li>
           </>
         ) : null}
       </ul>

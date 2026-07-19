@@ -61,6 +61,7 @@ from app.services.partner_fleet import (
     set_partner_driver_enabled,
 )
 from app.services.partner_queries import (
+    active_trip_by_driver_for_partner,
     get_driver_for_partner,
     get_trip_for_partner,
     list_drivers_for_partner_enriched,
@@ -110,7 +111,13 @@ def _require_partner_id(ctx: UserContext) -> str:
     return pid
 
 
-def _driver_item(d, *, include_documents: bool = False) -> PartnerDriverItem:
+def _driver_item(
+    d,
+    *,
+    include_documents: bool = False,
+    active_trip_id: str | None = None,
+    active_trip_status: str | None = None,
+) -> PartnerDriverItem:
     loc = None
     if d.last_location is not None:
         loc = PartnerDriverLastLocation(
@@ -133,6 +140,8 @@ def _driver_item(d, *, include_documents: bool = False) -> PartnerDriverItem:
         ),
         last_location=loc,
         documents=documents,
+        active_trip_id=active_trip_id,
+        active_trip_status=active_trip_status,
     )
 
 
@@ -170,7 +179,19 @@ async def partner_list_drivers(
         partner_id=partner_id,
     )
     drivers = list_drivers_for_partner_enriched(db, partner_id)
-    return [_driver_item(d, include_documents=True) for d in drivers]
+    active_by_driver = active_trip_by_driver_for_partner(db, partner_id)
+    out: list[PartnerDriverItem] = []
+    for d in drivers:
+        at = active_by_driver.get(d.user_id)
+        out.append(
+            _driver_item(
+                d,
+                include_documents=True,
+                active_trip_id=str(at.id) if at else None,
+                active_trip_status=at.status.value if at else None,
+            )
+        )
+    return out
 
 
 @router.get("/drivers/discover", response_model=list[PartnerDriverDiscoveryItem])
@@ -228,7 +249,13 @@ async def partner_get_driver(
     d = get_driver_for_partner(db, partner_id, did)
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
-    return _driver_item(d, include_documents=True)
+    at = active_trip_by_driver_for_partner(db, partner_id).get(did)
+    return _driver_item(
+        d,
+        include_documents=True,
+        active_trip_id=str(at.id) if at else None,
+        active_trip_status=at.status.value if at else None,
+    )
 
 
 @router.post("/drivers/{driver_user_id}/add-to-fleet", response_model=PartnerDriverItem)
@@ -456,7 +483,7 @@ async def partner_export_trips_csv(
 
     buf = io.StringIO()
     w = csv.writer(buf)
-    # SP-C: contrato estável — só acrescentar colunas no fim; versão no comentário da doc partner + UI.
+    # SP-C / PARTNER-FLEET-1A: contrato estável — só acrescentar colunas no fim.
     w.writerow(
         [
             "trip_id",
@@ -467,6 +494,8 @@ async def partner_export_trips_csv(
             "started_at",
             "completed_at",
             "updated_at",
+            "estimated_price",
+            "final_price",
         ]
     )
     for t in trips:
@@ -480,6 +509,8 @@ async def partner_export_trips_csv(
                 _utc_iso(t.started_at),
                 _utc_iso(t.completed_at),
                 _utc_iso(t.updated_at),
+                f"{float(t.estimated_price):.2f}",
+                f"{float(t.final_price):.2f}" if t.final_price is not None else "",
             ]
         )
 

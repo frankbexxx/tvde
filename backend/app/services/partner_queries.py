@@ -99,6 +99,41 @@ _ONGOING_STATUSES = (
     TripStatus.ongoing,
 )
 
+PARTNER_ACTIVE_TRIP_STATUSES = _ONGOING_STATUSES
+
+
+def active_trip_by_driver_for_partner(
+    db: Session, partner_id: str
+) -> dict[uuid.UUID, Trip]:
+    """
+    Map driver_user_id → one active trip for drivers currently in this fleet.
+
+    Tenant-safe: JOIN Trip→Driver filtered by partner_id. If a driver has more than
+    one non-terminal trip (data anomaly), keep the most recently updated.
+    """
+    pid = uuid.UUID(partner_id)
+    rows = list(
+        db.execute(
+            select(Trip)
+            .join(Driver, Trip.driver_id == Driver.user_id)
+            .where(
+                Driver.partner_id == pid,
+                Trip.status.in_(PARTNER_ACTIVE_TRIP_STATUSES),
+                Trip.driver_id.is_not(None),
+            )
+            .order_by(Trip.updated_at.desc())
+        )
+        .scalars()
+        .all()
+    )
+    out: dict[uuid.UUID, Trip] = {}
+    for t in rows:
+        if t.driver_id is None:
+            continue
+        if t.driver_id not in out:
+            out[t.driver_id] = t
+    return out
+
 
 def list_trips_for_partner_filtered(
     db: Session,
