@@ -224,6 +224,14 @@ export async function getDriverActiveTrip(
   return apiFetch<TripDetailResponse | null>('/driver/trips/active', { token, timeoutMs })
 }
 
+/** Passenger non-terminal trip for dashboard bootstrap after reload (PASSENGER-REQUEST-TIMEOUT-UX-1). */
+export async function getPassengerActiveTrip(
+  token: string,
+  timeoutMs?: number
+): Promise<TripDetailResponse | null> {
+  return apiFetch<TripDetailResponse | null>('/trips/active', { token, timeoutMs })
+}
+
 export async function getDriverTripDetail(tripId: string, token: string): Promise<TripDetailResponse> {
   return apiFetch<TripDetailResponse>(`/driver/trips/${tripId}`, { token })
 }

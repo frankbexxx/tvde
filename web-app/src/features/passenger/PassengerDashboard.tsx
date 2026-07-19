@@ -3,8 +3,19 @@ import { useAuth } from '../../context/AuthContext'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
 import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
-import { createTrip, getTripHistory, getTripDetail, cancelTrip } from '../../api/trips'
-import { isTimeoutLikeError } from '../../api/client'
+import {
+  createTrip,
+  getTripHistory,
+  getTripDetail,
+  getPassengerActiveTrip,
+  cancelTrip,
+} from '../../api/trips'
+import { isTimeoutLikeError, withColdStartRetries } from '../../api/client'
+import {
+  resolvePassengerActiveTripId,
+  shouldBootstrapPassengerActiveTrip,
+  shouldClearPassengerLocalTripOnActiveMiss,
+} from './passengerActiveTripRecovery'
 import type { TripDetailResponse } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
@@ -239,6 +250,87 @@ export function PassengerDashboard() {
     setPassengerCancelPreset('')
     setPassengerCancelOther('')
   }, [activeTripId])
+
+  /** PASSENGER-REQUEST-TIMEOUT-UX-1: reconcile with GET /trips/active (Driver #398 pattern). */
+  const restorePassengerActiveTrip = useCallback(async (): Promise<string | null> => {
+    if (!token) return null
+    try {
+      const trip = await withColdStartRetries((timeoutMs) =>
+        getPassengerActiveTrip(token, timeoutMs)
+      )
+      if (trip?.trip_id) {
+        const next = resolvePassengerActiveTripId({
+          backendActiveTripId: trip.trip_id,
+          localTripId: passengerActiveTripId,
+        })
+        if (next && next !== passengerActiveTripId) {
+          setPassengerActiveTripId(next)
+          setPassengerPendingTripDetail(trip)
+          setStatus(passengerTripStatusLabel(trip.status))
+        } else if (next && next === passengerActiveTripId) {
+          setPassengerPendingTripDetail((prev) => prev ?? trip)
+        }
+        return next
+      }
+      if (!passengerActiveTripId) return null
+      // Backend has no non-terminal trip — clear only cancelled/failed/404.
+      // Keep `completed` so rating/post-trip UI can mount after reload.
+      try {
+        const detail = await getTripDetail(passengerActiveTripId, token)
+        if (shouldClearPassengerLocalTripOnActiveMiss(detail.status)) {
+          const cleared = resolvePassengerActiveTripId({
+            backendActiveTripId: null,
+            localTripId: passengerActiveTripId,
+            localTripTerminalOrMissing: true,
+          })
+          setPassengerActiveTripId(cleared)
+          return cleared
+        }
+        // Keep completed (and any other non-clear status) for post-trip / rating UI.
+        if (detail.status === 'completed') {
+          setPassengerPendingTripDetail(detail)
+        }
+        return passengerActiveTripId
+      } catch (err: unknown) {
+        const st = (err as { status?: number })?.status
+        if (st === 404) {
+          setPassengerActiveTripId(null)
+          return null
+        }
+        // Transient: keep local id (never silent idle on network blip).
+        return passengerActiveTripId
+      }
+    } catch {
+      return passengerActiveTripId
+    }
+  }, [token, passengerActiveTripId, setPassengerActiveTripId, setStatus])
+
+  const passengerActiveBootstrapTokenRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!shouldBootstrapPassengerActiveTrip({ token, sessionRole })) {
+      passengerActiveBootstrapTokenRef.current = null
+      return
+    }
+    if (!token || passengerActiveBootstrapTokenRef.current === token) return
+    passengerActiveBootstrapTokenRef.current = token
+    let cancelled = false
+    const hadLocalId = Boolean(passengerActiveTripId)
+    void restorePassengerActiveTrip()
+      .then((id) => {
+        if (cancelled || !id) return
+        if (!hadLocalId) {
+          addLog('Viagem activa recuperada após sincronizar', 'info')
+        }
+      })
+      .catch(() => {
+        /* restorePassengerActiveTrip already swallows; keep local id */
+      })
+    return () => {
+      cancelled = true
+    }
+    // One reconcile per passenger token mount; retry path calls restorePassengerActiveTrip directly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional once-per-token bootstrap
+  }, [token, sessionRole])
 
   const isOnline = useOnlineStatus()
   const fetchPassengerActiveTrip = useCallback((): Promise<PassengerTripPollResult> => {
@@ -675,11 +767,22 @@ export function PassengerDashboard() {
       toast.success(t('trip.resent'))
       refetchHistory()
     } catch (err: unknown) {
-      const msg = isTimeoutLikeError(err)
-        ? 'Sem ligação ou o servidor demorou a responder. Tenta outra vez.'
-        : humanizeCreateTripError(err)
-      setError(msg)
-      addLog(`Erro ao tentar novamente: ${msg}`, 'error')
+      // Harden: cancel+create timeout must not leave UI idle while backend has a trip.
+      const recoveredId = await restorePassengerActiveTrip()
+      if (recoveredId) {
+        addLog('Pedido re-sincronizado após falha ao tentar novamente', 'info')
+        setError(
+          isTimeoutLikeError(err)
+            ? 'Ligação instável — mantivemos o pedido activo. A procurar motorista…'
+            : 'Não concluímos o reenvio, mas há um pedido activo — a sincronizar…'
+        )
+      } else {
+        const msg = isTimeoutLikeError(err)
+          ? 'Sem ligação ou o servidor demorou a responder. Tenta outra vez.'
+          : humanizeCreateTripError(err)
+        setError(msg)
+        addLog(`Erro ao tentar novamente: ${msg}`, 'error')
+      }
     } finally {
       setRetrySearchPending(false)
     }
@@ -692,6 +795,7 @@ export function PassengerDashboard() {
     setPassengerActiveTripId,
     setStatus,
     refetchHistory,
+    restorePassengerActiveTrip,
     t,
   ])
 
@@ -736,10 +840,12 @@ export function PassengerDashboard() {
       toast.success('Viagem concluída')
       setTripCompletedFromLocation(true)
     } else if (activeTrip?.status === 'cancelled') {
+      // During retry (cancel+recreate), do not clear yet — restore may attach the new trip.
+      if (retrySearchPending) return
       addLog('Viagem cancelada', 'success')
       setPassengerActiveTripId(null)
     }
-  }, [activeTrip?.status, addLog, setPassengerActiveTripId])
+  }, [activeTrip?.status, retrySearchPending, addLog, setPassengerActiveTripId])
 
   /** Mapa da viagem: desde o pedido (requested) até concluída — dia 22 mapa sempre. */
   const showPassengerMap = useMemo(() => {

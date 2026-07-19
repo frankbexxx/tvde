@@ -51,6 +51,17 @@ ACTIVE_TRIP_BLOCKS_DRIVER_AVAILABILITY: frozenset[TripStatus] = frozenset(
     (TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing)
 )
 
+# Passenger UI bootstrap: non-terminal trip the passenger still owns.
+ACTIVE_PASSENGER_TRIP_STATUSES: frozenset[TripStatus] = frozenset(
+    (
+        TripStatus.requested,
+        TripStatus.assigned,
+        TripStatus.accepted,
+        TripStatus.arriving,
+        TripStatus.ongoing,
+    )
+)
+
 
 ACTIVE_PASSENGER_CANCEL = {
     TripStatus.requested,
@@ -1590,6 +1601,30 @@ def get_trip_for_passenger(
     )
     if not trip or str(trip.passenger_id) != str(passenger_id):
         _raise_not_found()
+    return trip
+
+
+def get_current_active_trip_for_passenger(
+    *,
+    db: Session,
+    passenger_id: str,
+) -> Trip | None:
+    """Return the passenger's newest non-terminal trip, if any (UI bootstrap after reload)."""
+    pid = uuid.UUID(str(passenger_id))
+    trip = (
+        db.execute(
+            select(Trip)
+            .options(joinedload(Trip.payment))
+            .where(
+                Trip.passenger_id == pid,
+                Trip.status.in_(ACTIVE_PASSENGER_TRIP_STATUSES),
+            )
+            .order_by(Trip.updated_at.desc())
+            .limit(1)
+        )
+        .unique()
+        .scalar_one_or_none()
+    )
     return trip
 
 
