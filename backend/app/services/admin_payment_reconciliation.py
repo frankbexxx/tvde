@@ -356,6 +356,152 @@ def preview_reconciliation(db: Session, *, limit: int) -> dict[str, Any]:
     }
 
 
+_MOCK_PI_PREFIX = "pi_mock_"
+_CLOSE_MOCK_TRIP_STATUSES = frozenset({TripStatus.completed, TripStatus.cancelled})
+
+
+@dataclass
+class CloseMockItemResult:
+    trip_id: str
+    payment_id: str
+    trip_status: str
+    payment_status_before: str
+    payment_status_after: str
+    action: str
+    pi_prefix: str
+
+
+def _pi_prefix(pi_id: str | None, *, max_len: int = 16) -> str:
+    raw = (pi_id or "").strip()
+    return raw[:max_len] if raw else ""
+
+
+def list_mock_processing_pairs(
+    db: Session, *, limit: int, for_update: bool = False
+) -> list[tuple[Trip, Payment]]:
+    """Pares trip+payment elegíveis para PAYMENTS-STUCK-1B (só `pi_mock_*`)."""
+    lim = max(1, min(int(limit), 500))
+    q = (
+        select(Trip, Payment)
+        .join(Payment, Payment.trip_id == Trip.id)
+        .where(
+            Payment.status == PaymentStatus.processing,
+            Payment.stripe_payment_intent_id.like(f"{_MOCK_PI_PREFIX}%"),
+            Trip.status.in_(_CLOSE_MOCK_TRIP_STATUSES),
+        )
+        .order_by(Payment.updated_at.asc())
+        .limit(lim)
+    )
+    if for_update:
+        q = q.with_for_update(of=Payment)
+    return [(t, p) for t, p in db.execute(q).all()]
+
+
+def preview_close_mock_processing(db: Session, *, limit: int = 200) -> dict[str, Any]:
+    """Read-only: conta e lista candidatos mock stuck (sem writes)."""
+    return close_mock_processing_payments(
+        db,
+        actor_user_id="",
+        governance_reason="preview_read_only",
+        dry_run=True,
+        limit=limit,
+        record_audit=False,
+    )
+
+
+def close_mock_processing_payments(
+    db: Session,
+    *,
+    actor_user_id: str,
+    governance_reason: str,
+    dry_run: bool = True,
+    limit: int = 200,
+    record_audit: bool = True,
+) -> dict[str, Any]:
+    """
+    PAYMENTS-STUCK-1B: fecha payments mock antigos sem chamar Stripe.
+
+    - completed + processing + pi_mock_* → payment.succeeded (trip fica completed)
+    - cancelled + processing + pi_mock_* → payment.failed (trip fica cancelled)
+
+    Dry-run por defeito. Apply só com dry_run=False. Idempotente (2.ª apply → 0).
+    """
+    pairs = list_mock_processing_pairs(db, limit=limit, for_update=not dry_run)
+    items: list[CloseMockItemResult] = []
+    to_succeeded = 0
+    to_failed = 0
+
+    for trip, pay in pairs:
+        pi_id = (pay.stripe_payment_intent_id or "").strip()
+        if not pi_id.startswith(_MOCK_PI_PREFIX):
+            # Defesa em profundidade — query já filtra.
+            continue
+        before = pay.status.value
+        if trip.status == TripStatus.completed:
+            after_status = PaymentStatus.succeeded
+            action = "dry_run_succeed" if dry_run else "updated_succeeded"
+            to_succeeded += 1
+        elif trip.status == TripStatus.cancelled:
+            after_status = PaymentStatus.failed
+            action = "dry_run_fail" if dry_run else "updated_failed"
+            to_failed += 1
+        else:
+            continue
+
+        if not dry_run:
+            pay.status = after_status
+
+        items.append(
+            CloseMockItemResult(
+                trip_id=str(trip.id),
+                payment_id=str(pay.id),
+                trip_status=trip.status.value,
+                payment_status_before=before,
+                payment_status_after=after_status.value,
+                action=action,
+                pi_prefix=_pi_prefix(pi_id),
+            )
+        )
+
+    if not dry_run and items:
+        if record_audit:
+            record_admin_action(
+                db,
+                actor_user_id=actor_user_id,
+                action="close_mock_processing",
+                entity_type="payment_batch",
+                entity_id=f"n{len(items)}"[:64],
+                payload={
+                    "governance_reason": (governance_reason or "").strip()[:500],
+                    "to_succeeded": to_succeeded,
+                    "to_failed": to_failed,
+                    "count": len(items),
+                    "items": [
+                        {
+                            "trip_id": i.trip_id,
+                            "payment_id": i.payment_id,
+                            "trip_status": i.trip_status,
+                            "action": i.action,
+                            "pi_prefix": i.pi_prefix,
+                        }
+                        for i in items
+                    ],
+                },
+            )
+        db.commit()
+    elif not dry_run:
+        # Nada a alterar — garantir que locks são libertados sem commit de lixo.
+        db.rollback()
+
+    return {
+        "dry_run": dry_run,
+        "to_succeeded": to_succeeded,
+        "to_failed": to_failed,
+        "count": len(items),
+        "items": [vars(x) for x in items],
+    }
+
+
 def reconcile_single_trip_payment_with_stripe(
     db: Session,
     *,

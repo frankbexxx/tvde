@@ -197,16 +197,62 @@ Com `STRIPE_MOCK=true` **ou** PI `pi_mock_*`, `complete_trip` marca `payment.sta
 
 Com `STRIPE_MOCK=false` e PI real: comportamento inalterado — payment fica `processing` até webhook / reconcile Stripe. **Não** inventar sucesso em Stripe real.
 
-Dívida legada (`completed` + `pi_mock_*` já na BD) **não** é limpa por este fix — carril de cleanup separado.
+Dívida legada (`completed`/`cancelled` + `pi_mock_*` já na BD) limpa-se com **PAYMENTS-STUCK-1B** (§10) — não por este settle no `complete_trip`.
 
 ---
 
-## 10. Próximos passos (fora deste gate)
+## 10. PAYMENTS-STUCK-1B — close mock processing (Admin API)
+
+Fecha **só** payments com `stripe_payment_intent_id LIKE 'pi_mock_%'`:
+
+| Trip | Payment antes | Payment depois | Trip depois |
+|------|---------------|----------------|-------------|
+| `completed` | `processing` | `succeeded` | `completed` (inalterada) |
+| `cancelled` | `processing` | `failed` | `cancelled` (inalterada) |
+
+**Não toca:** PI real / não-mock · `succeeded` · trips sem payment · Stripe API.
+
+### Preview (read-only)
+
+```http
+GET /admin/ops/reconcile-payments/close-mock-processing/preview?limit=200
+Authorization: Bearer <super_admin>
+```
+
+Resposta: `dry_run=true`, `to_succeeded`, `to_failed`, `count`, `items[]` (`trip_id`, `payment_id`, `pi_prefix`, …).
+
+### Dry-run (default) / Apply
+
+```http
+POST /admin/ops/reconcile-payments/close-mock-processing
+Content-Type: application/json
+
+{
+  "governance_reason": "PAYMENTS-STUCK-1B cleanup mock stuck após diagnóstico",
+  "dry_run": true,
+  "limit": 200
+}
+```
+
+Apply **só** com `"dry_run": false` (explícito) + `governance_reason` (≥10 chars). Super_admin. Auditoria batch `admin.close_mock_processing`.
+
+### Verificação pós-apply
+
+1. Preview de novo → `count=0` (ou só rows novas, se houver).
+2. SELECT: `completed`+`processing`+`pi_mock_%` = 0; `cancelled`+`processing`+`pi_mock_%` = 0.
+3. Saúde: `stuck_payments` / inconsistent completed devem cair (pode restar PI real stuck fora de scope).
+4. Segunda apply → `to_succeeded=0`, `to_failed=0`, `count=0`.
+
+**Avisos:** não usar `stripe-sync` contra `pi_mock_*` (pode falhar trips). Não misturar com o caso `completed` sem payment (`4b29c6c9-…`).
+
+---
+
+## 11. Próximos passos (fora deste gate)
 
 | Item | Quando |
 |------|--------|
 | Webhook endpoint **produção** com `STRIPE_MOCK=true` | Smoke opcional (Send test event → 200) |
 | `STRIPE_MOCK=false` + `sk_live_*` em prod | Após conta Stripe do parceiro |
 | Fase B staging | [`STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) |
-| Cleanup dívida mock stuck (PAYMENTS-STUCK-1B) | Após merge 1A + aprovação |
+| Apply 1B na BD app (após merge + dry-run aprovado) | Operação SA controlada |
 | Revisão `final_price` em `complete_trip` | Backlog produto/técnico |
