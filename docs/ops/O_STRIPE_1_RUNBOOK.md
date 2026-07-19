@@ -191,11 +191,22 @@ Produção: manter `STRIPE_MOCK=true` no Render; não alterar env Stripe prod ne
 
 ---
 
-## 9. Próximos passos (fora deste gate)
+## 9. STRIPE_MOCK — `complete_trip` settle (PAYMENTS-STUCK-1A)
+
+Com `STRIPE_MOCK=true` **ou** PI `pi_mock_*`, `complete_trip` marca `payment.status = succeeded` após gravar montantes finais. Não há webhook mock; sem isto a Saúde fica `degraded` (`stuck_payments` / `trip_completed_but_payment_not_succeeded`).
+
+Com `STRIPE_MOCK=false` e PI real: comportamento inalterado — payment fica `processing` até webhook / reconcile Stripe. **Não** inventar sucesso em Stripe real.
+
+Dívida legada (`completed` + `pi_mock_*` já na BD) **não** é limpa por este fix — carril de cleanup separado.
+
+---
+
+## 10. Próximos passos (fora deste gate)
 
 | Item | Quando |
 |------|--------|
 | Webhook endpoint **produção** com `STRIPE_MOCK=true` | Smoke opcional (Send test event → 200) |
 | `STRIPE_MOCK=false` + `sk_live_*` em prod | Após conta Stripe do parceiro |
 | Fase B staging | [`STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) |
+| Cleanup dívida mock stuck (PAYMENTS-STUCK-1B) | Após merge 1A + aprovação |
 | Revisão `final_price` em `complete_trip` | Backlog produto/técnico |

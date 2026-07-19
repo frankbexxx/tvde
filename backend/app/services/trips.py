@@ -1272,6 +1272,8 @@ def complete_trip(
     - payment.status must be processing
     - payment.stripe_payment_intent_id must exist
     - Prevents double capture via row lock (FOR UPDATE) and status check
+    - STRIPE_MOCK / pi_mock_*: payment → succeeded (no webhook). Real PI: stays
+      processing until Stripe webhook / reconcile.
     """
     trip = _get_trip_for_driver_locked(db=db, driver_id=driver_id, trip_id=trip_id)
 
@@ -1502,13 +1504,18 @@ def complete_trip(
     payment.commission_amount = float(commission_amount)
     payment.driver_amount = float(driver_payout)
     payment.driver_payout = float(driver_payout)
+    # Mock: no Stripe webhook — settle payment here. Real Stripe: webhook/reconcile.
+    if stripe_mock:
+        payment.status = PaymentStatus.succeeded
+    # else: stays processing until webhook confirms succeeded.
     _trip_payment_total_mismatch_log(trip, payment, context="post_assign_before_commit")
-    # payment.status stays processing until webhook confirms succeeded.
     log_event(
         "trip_completion_commit",
         trip_id=str(trip.id),
         payment_id=str(payment.id),
         payment_intent_id=payment.stripe_payment_intent_id or "",
+        payment_status=payment.status.value,
+        stripe_mock=bool(stripe_mock),
     )
     if trip.driver_id is not None:
         maybe_consume_zone_session_on_trip_complete(
