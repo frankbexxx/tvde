@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -32,6 +32,7 @@ from app.services.interaction_logging import log_interaction
 from app.services.trips import (
     cancel_trip_by_passenger,
     create_trip as create_trip_service,
+    get_current_active_trip_for_passenger,
     get_trip_for_passenger,
     list_completed_trips_for_passenger,
     rate_trip_as_passenger,
@@ -49,6 +50,24 @@ async def trip_history(
     """Completed trips for passenger. Read-only."""
     trips = list_completed_trips_for_passenger(db=db, passenger_id=user.user_id)
     return [trip_to_history_item(t, include_stripe_pi=False) for t in trips]
+
+
+@router.get("/active", response_model=Optional[TripDetailResponse])
+async def get_active_trip(
+    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
+    db: Session = Depends(get_db),
+) -> Optional[TripDetailResponse]:
+    """Current non-terminal trip for passenger dashboard bootstrap after reload."""
+    trip = get_current_active_trip_for_passenger(db=db, passenger_id=user.user_id)
+    if trip is None:
+        return None
+    emb = driver_location_embed_for_trip_detail(db, trip)
+    return trip_to_detail(
+        trip,
+        include_stripe_pi=False,
+        driver_location=emb,
+        include_passenger_payment_client_secret=True,
+    )
 
 
 @router.get("/{trip_id}", response_model=TripDetailResponse)
