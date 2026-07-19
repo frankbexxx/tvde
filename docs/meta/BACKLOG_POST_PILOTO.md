@@ -219,10 +219,12 @@ Registada durante smoke local Pax+Driver+Admin (pós ADMIN-POLL #409/#410).
 | Item | Estado / regra |
 |------|----------------|
 | S-ADMIN-POLL (estabilidade) | PASS |
-| 1A cancel `requested` | Válido (B) — se ainda por registar no smoke |
-| **1B Assign** | **SKIP** por defeito; se correr, só como recovery SA — **não** PASS de ops normal |
-| B/C a seguir | Force arriving/ongoing · gap ongoing · nota ops · playbook mismatch |
-| Código/UI | Relabel/esconder Atribuir / copy Agora — **só após** smoke B/C + aprovação |
+| **S-ADMIN-OPS-0 B/C** | **PASS** 2026-07-19 — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](../ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
+| Force arriving / ongoing | PASS — Pax/Driver coerentes |
+| Gap `ongoing` (sem complete/cancel/fail admin) | **Confirmado** — fecho pelo Driver |
+| Nota operacional | **SKIP** (não validada) |
+| **1B Assign** | **SKIP** — recovery SA; não ops normal |
+| Código/UI follow-up | Relabel Atribuir · orphan panel pós-completed · playbook honesty — não blocker |
 
 #### Matriz rápida por estado (pós-decisão)
 

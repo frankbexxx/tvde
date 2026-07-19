@@ -1,7 +1,7 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-18 (ADMIN-OPS-1 Fase 0 parcial — Admin ≠ dispatcher; `main` @ `9b6260e`; PRs abertas **0**; CI verde).
+**Última actualização:** 2026-07-19 (ADMIN-OPS-1 Fase 0 B/C **PASS**; `main` @ `590aea3`; PRs abertas **0**; CI verde).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
@@ -11,15 +11,15 @@
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `9b6260e` — alinhados |
+| **`main` / `origin/main`** | `590aea3` — alinhados |
 | **PRs abertas** | **0** |
-| **CI `main` (pós-merge #411)** | Verde |
+| **CI `main` (pós-merge #413)** | Verde |
 | **ADMIN-POLL-1/2 frontend** | **Fechado** — #409 + #410 + docs #411 |
 | **S-ADMIN-POLL** | **PASS** multi-janela |
-| **ADMIN-OPS-1** | Fase 0 parcial — Admin ≠ dispatcher; Atribuir = recovery SA |
+| **ADMIN-OPS-1 Fase 0** | **PASS** B/C 2026-07-19 — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
 | **D-DEMO-1** | **PASS** — Partner + Admin + circuito Pax/Driver multi-role |
 
-**Próxima ordem recomendada:** (1) smoke ADMIN-OPS-1 Fase 0 B/C · (2) docs/runbook pós-smoke · (3) PARTNER-FLEET-1 para assign diário · (4) ADMIN-HEALTH-1 / BACKEND-DBPOOL-2 só se saturar.
+**Próxima ordem recomendada:** (1) playbook honesty / orphan-panel UX (opcional) · (2) PARTNER-FLEET-1 assign diário · (3) payments stuck / Saúde · (4) ADMIN-HEALTH-1 / BACKEND-DBPOOL-2 só se saturar.
 
 **Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
 
@@ -123,11 +123,12 @@ Carrís sugeridos (actualizar após esta sessão):
 3. ~~**TW-TRIP-COPY-1**~~ — ✅ #407 + smoke
 4. ~~**ADMIN-POLL-1/2 (frontend)**~~ — ✅ #409 + #410 (`b64a67c`)
 5. ~~**Smoke multi-janela**~~ — ✅ S-ADMIN-POLL PASS
-6. **ADMIN-OPS-1 Fase 0** — decisão Admin ≠ dispatcher (docs); smoke B/C (force/gap/nota/playbook); 1B Assign SKIP
+6. ~~**ADMIN-OPS-1 Fase 0**~~ — ✅ decisão + smoke B/C PASS 2026-07-19
 7. **PARTNER-FLEET-1** — viaturas / docs / associação / **assign-reassign diário** / rendimentos
-8. **ADMIN-HEALTH-1 / BACKEND-DBPOOL-2** — só se pool ainda saturar
-9. **P0 i18n** — O-i18n-NICHOS (#362) — *se objectivo mudar*
-10. ~~**P5 ops**~~ — ✅ fechado · ~~**#405 NAV/WAZE**~~ — ✅ merged
+8. **Payments stuck / Saúde** — dívida antiga; não misturar com force transitions
+9. **ADMIN-HEALTH-1 / BACKEND-DBPOOL-2** — só se pool ainda saturar
+10. **P0 i18n** — O-i18n-NICHOS (#362) — *se objectivo mudar*
+11. ~~**P5 ops**~~ — ✅ fechado · ~~**#405 NAV/WAZE**~~ — ✅ merged
 
 Operação: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) · [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) · [`A033_B_VALIDATION_HARDENING_PLAYBOOK.md`](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md)
 
@@ -150,7 +151,7 @@ Operação: [`CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md) · [`W
 | **ADMIN-HEALTH-1 / BACKEND-DBPOOL-2** | system-health / pool local | Só se saturar pós-smoke multi-janela |
 | **NAV-ROUTE-STOPS** | Paragens + botão nextStop | Produto futuro (Manel) |
 | **PARTNER-FLEET-1** | Viaturas / earnings frota | Gaps D-DEMO-1 |
-| **ADMIN-OPS-1** | Excepções / desbloqueios / audit (≠ dispatcher) | Fase 0 parcial 2026-07-18; Atribuir = recovery SA |
+| **ADMIN-OPS-1** | Excepções / desbloqueios / audit (≠ dispatcher) | Fase 0 B/C **PASS** 2026-07-19; Atribuir = recovery SA |
 | **R-AGORA-SNAP** | Agora snapshot vs Viagens | Observação pós-POLL; não bug confirmado |
 
 **Checkboxes abertos em P1.2:** decisão A vs B; migração schema users; onboarding obrigatório; política `DEFAULT_PASSWORD`.
