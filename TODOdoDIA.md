@@ -16,13 +16,13 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-19** — pós-#415)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-19** — pós PAYMENTS-STUCK)
 
-**`main` / `origin/main`:** `916ddb2` · PRs abertas **0** · CI verde · working tree limpa.
+**`main` / `origin/main`:** `2fc46b9` · PRs abertas **0** · CI verde · working tree limpa (docs checkpoint locais).
 
-**Objectivo imediato:** **1 carril** — pagamentos stuck / reconcile · **ou** Admin Ops seguinte · **ou** PARTNER-FLEET-1.
+**Objectivo imediato:** **O-SECURITY** (mudar password SA) · depois **1 carril** — PAYMENTS-EDGE · Admin Ops · PARTNER-FLEET-1.
 
-**Checkpoint:** [`docs/ops/CHECKPOINT_2026-07-19_POST_415.md`](docs/ops/CHECKPOINT_2026-07-19_POST_415.md) · Smoke ADMIN-OPS: [`docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md)
+**Checkpoint:** [`docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · pós-#415: [`docs/ops/CHECKPOINT_2026-07-19_POST_415.md`](docs/ops/CHECKPOINT_2026-07-19_POST_415.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -38,14 +38,20 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-412** | Docs Admin ≠ dispatcher | Concluído | Merged |
 | **PR-413** | Passenger active-trip recovery | Concluído | Merged; E2E + smoke PASS |
 | **PR-414** | Docs ADMIN-OPS-1 Fase 0 B/C PASS | Concluído | Checkpoint smoke |
-| **PR-415** / **TEST-DB-GUARD-1** | Guard pytest ≠ BD remota | Concluído | Merged `916ddb2`; ver [`BACKEND_PYTEST_SAFE.md`](docs/testing/BACKEND_PYTEST_SAFE.md) |
-| **CHK-0719** | Checkpoint docs pós-#415 | Em curso | [`CHECKPOINT_2026-07-19_POST_415.md`](docs/ops/CHECKPOINT_2026-07-19_POST_415.md) — commit pendente |
+| **PR-415** / **TEST-DB-GUARD-1** | Guard pytest ≠ BD remota | Concluído | Merged; ver [`BACKEND_PYTEST_SAFE.md`](docs/testing/BACKEND_PYTEST_SAFE.md) |
+| **CHK-0719** | Checkpoint docs pós-#415 | Concluído | PR **#416** |
+| **PR-417** / **PAYMENTS-STUCK-1A** | Mock settle no `complete_trip` | Concluído | **PASS** — #417 |
+| **PR-418** / **PAYMENTS-STUCK-1B** | Admin close-mock dry-run/apply | Concluído | **PASS** — #418 + apply Render 41+10 |
+| **CHK-PAY-0719** | Checkpoint docs PAYMENTS-STUCK | Em curso | [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) — commit pendente |
+| **PAYMENTS-EDGE-1** | cancelled + PI real processing | Por iniciar | trip `591f6827-…` · `pi_3Tsh…` — não é mock |
+| **PAYMENTS-EDGE-2** | completed sem payment | Por iniciar | trip `4b29c6c9-…` |
+| **O-SECURITY** | Mudar password SA | Em curso | fim de sessão (após apply API) |
 | **S-ADMIN-POLL** | Smoke multi-janela Pax+Driver+Admin | Concluído | PASS — estabilidade OK pós-#409/#410 |
 | **ADMIN-OPS-1** | Admin como ferramenta de excepção | Concluído | Fase 0 B/C **PASS** 2026-07-19 — ver checkpoint |
 | **S-ADMIN-OPS-0** | Smoke Fase 0 B/C (force / gap ongoing) | Concluído | PASS; nota ops **SKIP**; 1B Assign SKIP |
 | **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed | Por iniciar | Observação UX; não blocker |
 | **R-AGORA-SNAP** | Agora vs Viagens (contagens) | Por iniciar | Observação snapshot/manual; **não** bug confirmado |
-| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Saúde degraded (stuck payments antigos) — carril à parte |
+| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Saúde ainda degraded por EDGE-1/2 — não mock |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated | Por iniciar | Baixa prioridade |
 | **PARTNER-FLEET-1** | Viaturas, docs, associação, reassign ops | Por iniciar | Assign/reassign **diário** vive aqui (não Admin) |
 | **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
@@ -62,7 +68,9 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 **Incidente mitigado (#415):** pytest local → Render via `.env`; guard + launcher seguro.
 
-**Próximo:** pagamentos stuck / reconcile · **ou** Admin Ops seguinte · **ou** PARTNER-FLEET-1 — escolher **1** carril.
+**PAYMENTS-STUCK PASS:** 1A settle mock · 1B cleanup 41 succeeded + 10 failed · mock stuck limpo. Saúde degraded restante = EDGE-1/2 (PI real / sem payment).
+
+**Próximo:** **O-SECURITY** · depois EDGE-1/2 **ou** Admin Ops **ou** PARTNER-FLEET-1 — **1** carril.
 
 **Regra:** **1 carril** por sessão.
 

@@ -1,28 +1,28 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-19 (pós-#415 TEST-DB-GUARD; `main` @ `916ddb2`; PRs abertas **0**; CI verde).
+**Última actualização:** 2026-07-19 (PAYMENTS-STUCK-1A/1B **PASS** + apply Render; `main` @ `2fc46b9`; PRs abertas **0**; CI verde).
 
-**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
+**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
 ---
 
-## 0. Checkpoint repo (**2026-07-19** — pós-#415)
+## 0. Checkpoint repo (**2026-07-19** — pós PAYMENTS-STUCK)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `916ddb2` — alinhados |
+| **`main` / `origin/main`** | `2fc46b9` — alinhados |
 | **PRs abertas** | **0** |
 | **CI `main`** | Verde |
-| **#413** | Passenger active-trip recovery — merged |
-| **#414** | Docs ADMIN-OPS-1 Fase 0 B/C PASS — merged |
-| **#415** / **TEST-DB-GUARD-1** | Pytest recusa BD remota — merged · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
+| **#417** / **PAYMENTS-STUCK-1A** | **PASS** — mock settle no complete |
+| **#418** / **PAYMENTS-STUCK-1B** | **PASS** — Admin close-mock + apply 41+10 |
+| **Mock stuck na BD app** | **Limpo** |
+| **Saúde degraded restante** | EDGE-1 (PI real) + EDGE-2 (sem payment) — **não** mock |
+| **#415** / **TEST-DB-GUARD-1** | Merged · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
 | **ADMIN-OPS-1 Fase 0** | **PASS** B/C — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
-| **ADMIN-POLL-1/2 frontend** | **Fechado** — #409 + #410 + docs #411 |
-| **D-DEMO-1** | **PASS** — Partner + Admin + circuito Pax/Driver multi-role |
-| **Checkpoint curto** | [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) |
+| **Checkpoint** | [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) |
 
-**Próxima ordem recomendada:** (1) pagamentos stuck / reconcile / mock processing · (2) Admin Ops seguinte (playbook honesty) · (3) PARTNER-FLEET-1 · (4) ADMIN-HEALTH-1 / BACKEND-DBPOOL-2 só se saturar.
+**Próxima ordem recomendada:** (1) O-SECURITY password SA · (2) PAYMENTS-EDGE-1/2 se prioritário · (3) Admin Ops seguinte · (4) PARTNER-FLEET-1.
 
 **Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
 
