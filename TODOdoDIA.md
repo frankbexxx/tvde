@@ -16,13 +16,13 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-19** — pós ADMIN-OPS-1 Fase 0 B/C PASS)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-19** — pós-#415)
 
-**`main` / `origin/main`:** `590aea3` · PRs abertas **0** · CI verde (pós-#413).
+**`main` / `origin/main`:** `916ddb2` · PRs abertas **0** · CI verde · working tree limpa.
 
-**Objectivo imediato:** fechar docs/runbook ADMIN-OPS (playbook honesty) **ou** carril seguinte (PARTNER-FLEET-1 / payments stuck) — **1 carril**.
+**Objectivo imediato:** **1 carril** — pagamentos stuck / reconcile · **ou** Admin Ops seguinte · **ou** PARTNER-FLEET-1.
 
-**Checkpoint smoke:** [`docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md)
+**Checkpoint:** [`docs/ops/CHECKPOINT_2026-07-19_POST_415.md`](docs/ops/CHECKPOINT_2026-07-19_POST_415.md) · Smoke ADMIN-OPS: [`docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](docs/ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -36,7 +36,10 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-410** / **ADMIN-POLL-2** | Feedback botão Atualizar (Agora) | Concluído | Merged; smoke visual PASS |
 | **PR-411** | Docs fecho ADMIN-POLL frontend | Concluído | Merged |
 | **PR-412** | Docs Admin ≠ dispatcher | Concluído | Merged |
-| **PR-413** | Passenger active-trip recovery | Concluído | Merged `590aea3`; E2E + smoke PASS |
+| **PR-413** | Passenger active-trip recovery | Concluído | Merged; E2E + smoke PASS |
+| **PR-414** | Docs ADMIN-OPS-1 Fase 0 B/C PASS | Concluído | Checkpoint smoke |
+| **PR-415** / **TEST-DB-GUARD-1** | Guard pytest ≠ BD remota | Concluído | Merged `916ddb2`; ver [`BACKEND_PYTEST_SAFE.md`](docs/testing/BACKEND_PYTEST_SAFE.md) |
+| **CHK-0719** | Checkpoint docs pós-#415 | Em curso | [`CHECKPOINT_2026-07-19_POST_415.md`](docs/ops/CHECKPOINT_2026-07-19_POST_415.md) — commit pendente |
 | **S-ADMIN-POLL** | Smoke multi-janela Pax+Driver+Admin | Concluído | PASS — estabilidade OK pós-#409/#410 |
 | **ADMIN-OPS-1** | Admin como ferramenta de excepção | Concluído | Fase 0 B/C **PASS** 2026-07-19 — ver checkpoint |
 | **S-ADMIN-OPS-0** | Smoke Fase 0 B/C (force / gap ongoing) | Concluído | PASS; nota ops **SKIP**; 1B Assign SKIP |
@@ -55,9 +58,11 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
 | **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
 
-**ADMIN-OPS-1 Fase 0 B/C (fecho):** force arriving/ongoing OK; Pax/Driver coerentes; gap `ongoing` (sem complete/cancel/fail admin) confirmado; Driver completa; Histórico `completed`. Nota ops SKIP. Saúde degraded / payments stuck = dívida separada.
+**ADMIN-OPS-1 Fase 0 B/C (fecho):** force arriving/ongoing OK; Pax/Driver coerentes; gap `ongoing` (sem complete/cancel/fail admin) confirmado; Driver completa; Histórico `completed`. Nota ops SKIP.
 
-**Próximo:** runbook playbook honesty **ou** PARTNER-FLEET-1 / payments — escolher **1** carril.
+**Incidente mitigado (#415):** pytest local → Render via `.env`; guard + launcher seguro.
+
+**Próximo:** pagamentos stuck / reconcile · **ou** Admin Ops seguinte · **ou** PARTNER-FLEET-1 — escolher **1** carril.
 
 **Regra:** **1 carril** por sessão.
 

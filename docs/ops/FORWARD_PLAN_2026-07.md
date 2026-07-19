@@ -1,25 +1,28 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-19 (ADMIN-OPS-1 Fase 0 B/C **PASS**; `main` @ `590aea3`; PRs abertas **0**; CI verde).
+**Última actualização:** 2026-07-19 (pós-#415 TEST-DB-GUARD; `main` @ `916ddb2`; PRs abertas **0**; CI verde).
 
-**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
+**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
 ---
 
-## 0. Checkpoint repo (**2026-07-18**)
+## 0. Checkpoint repo (**2026-07-19** — pós-#415)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `590aea3` — alinhados |
+| **`main` / `origin/main`** | `916ddb2` — alinhados |
 | **PRs abertas** | **0** |
-| **CI `main` (pós-merge #413)** | Verde |
+| **CI `main`** | Verde |
+| **#413** | Passenger active-trip recovery — merged |
+| **#414** | Docs ADMIN-OPS-1 Fase 0 B/C PASS — merged |
+| **#415** / **TEST-DB-GUARD-1** | Pytest recusa BD remota — merged · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
+| **ADMIN-OPS-1 Fase 0** | **PASS** B/C — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
 | **ADMIN-POLL-1/2 frontend** | **Fechado** — #409 + #410 + docs #411 |
-| **S-ADMIN-POLL** | **PASS** multi-janela |
-| **ADMIN-OPS-1 Fase 0** | **PASS** B/C 2026-07-19 — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
 | **D-DEMO-1** | **PASS** — Partner + Admin + circuito Pax/Driver multi-role |
+| **Checkpoint curto** | [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) |
 
-**Próxima ordem recomendada:** (1) playbook honesty / orphan-panel UX (opcional) · (2) PARTNER-FLEET-1 assign diário · (3) payments stuck / Saúde · (4) ADMIN-HEALTH-1 / BACKEND-DBPOOL-2 só se saturar.
+**Próxima ordem recomendada:** (1) pagamentos stuck / reconcile / mock processing · (2) Admin Ops seguinte (playbook honesty) · (3) PARTNER-FLEET-1 · (4) ADMIN-HEALTH-1 / BACKEND-DBPOOL-2 só se saturar.
 
 **Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
 

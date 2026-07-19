@@ -8,23 +8,25 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-19**)
+## Contexto actual (**2026-07-19** — pós-#415)
 
-### Checkpoint — ADMIN-OPS-1 Fase 0 B/C PASS
+### Checkpoint — [`CHECKPOINT_2026-07-19_POST_415.md`](../ops/CHECKPOINT_2026-07-19_POST_415.md)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `590aea3` |
+| **`main` / `origin/main`** | `916ddb2` |
 | **PRs abertas** | **0** |
-| **CI `main`** | Verde (pós-#413) |
-| **S-ADMIN-OPS-0** | **PASS** — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](../ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
-| **ADMIN-OPS-1 Fase 0** | **Fechada** (produto + smoke B/C) |
-| **PR #413** | Passenger active-trip recovery — merged |
+| **CI `main`** | Verde |
+| **Working tree** | Limpa |
+| **#413** | Passenger active-trip recovery — merged |
+| **#414** | Docs ADMIN-OPS-1 Fase 0 B/C PASS — merged |
+| **#415** | TEST-DB-GUARD-1 (pytest ≠ BD remota) — merged |
+| **ADMIN-OPS-1 Fase 0** | **Fechada** — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](../ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
 | **D-DEMO-1** | PASS — [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) |
 
-### Smoke B/C — resumo
+### Incidente pytest → Render (mitigado #415)
 
-Trip `bd904271-…` (~1.59 €): Pax cria → Driver aceita → Admin force arriving → force ongoing → Driver completa → Pax rating → Admin Histórico `completed`. Em `ongoing`, Admin **sem** complete/cancel/fail (gap confirmado). Nota ops **SKIP**.
+Local `pytest` lia `DATABASE_URL` de `backend/.env` (Render). Guard aborta cedo salvo localhost / `ALLOW_REMOTE_TEST_DB=YES`. Usar `scripts/windows/Invoke-BackendPytest.ps1` · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md).
 
 ### Decisão produto (mantém-se)
 
@@ -34,6 +36,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → PARTNER-FLE
 
 | PR | O quê |
 |----|-------|
+| **#415** | Guard pytest contra BD remota + launcher Windows + docs |
+| **#414** | Docs ADMIN-OPS-1 Fase 0 B/C PASS |
 | **#413** | Passenger recover active trip + keep completed for rating |
 | **#412** | Docs Admin ≠ dispatcher |
 | **#411** | Docs fecho ADMIN-POLL frontend |
@@ -51,20 +55,21 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → PARTNER-FLE
 | **R-GIT-1** | ~190 branches locais — **não apagar ainda** |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated — baixa prioridade |
 
-### O que fazer a seguir (ordem)
+### O que fazer a seguir (ordem — 1 carril)
 
-1. Docs/runbook: alinhar playbook Saúde com capacidades reais (ongoing ≠ cancel admin) — opcional curto  
-2. **PARTNER-FLEET-1** — assign/reassign diário / viaturas  
-3. Payments stuck / Saúde (não misturar com Admin force transitions)  
-4. UI honesty Atribuir (relabel/SA) — só se priorizado  
+1. **Pagamentos stuck** — reconcile / mock processing / Saúde  
+2. **Admin Ops seguinte** — playbook honesty; orphan-panel UX opcional  
+3. **PARTNER-FLEET-1** — assign/reassign diário / viaturas  
 
-**Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Evitar pytest contra `DATABASE_URL` Render.
+**Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
 ### Specs activas
 
 | Área | Onde |
 |------|------|
+| Checkpoint pós-#415 | [`CHECKPOINT_2026-07-19_POST_415.md`](../ops/CHECKPOINT_2026-07-19_POST_415.md) |
 | Smoke ADMIN-OPS Fase 0 | [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](../ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
+| Pytest BD segura | [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
 | Demo checkpoint | [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) |
 | Backlog ops/nav | [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md) |
 | Ops Julho | [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md) |
