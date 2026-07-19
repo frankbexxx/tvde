@@ -34,6 +34,15 @@ export interface TripDetailAdmin {
   final_price?: number
   stripe_payment_intent_id?: string
   cancellation_reason?: string | null
+  /** Quem cancelou: passenger | driver | admin (quando aplicável). */
+  cancelled_by?: string | null
+  /** Só se a API o enviar — a BD actual não tem coluna dedicada. */
+  cancelled_at?: string | null
+  payment_status?: string | null
+  created_at?: string
+  updated_at?: string
+  started_at?: string | null
+  completed_at?: string | null
   [key: string]: unknown
 }
 

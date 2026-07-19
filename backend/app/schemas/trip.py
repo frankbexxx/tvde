@@ -162,6 +162,10 @@ class TripDetailResponse(BaseModel):
         default=None,
         description="Motivo registado quando a viagem foi cancelada (passageiro, motorista ou admin).",
     )
+    cancelled_by: Optional[str] = Field(
+        default=None,
+        description="Quem cancelou: passenger, driver ou admin (quando aplicável).",
+    )
     payment_intent_client_secret: Optional[str] = Field(
         default=None,
         description="Secret para Stripe.js (só GET /trips/:id como passageiro, com ENABLE_CONFIRM_ON_ACCEPT).",

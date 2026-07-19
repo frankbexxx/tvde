@@ -24,11 +24,11 @@ export const PB_TRIPS_ACCEPTED_LONG: HealthAnomalyPlaybook = {
 }
 
 export const PB_TRIPS_ONGOING_LONG: HealthAnomalyPlaybook = {
-  what: 'Viagens em «ongoing» há tempo excessivo: viagem iniciada mas não concluída nem falhou pelo motor automático.',
+  what: 'Viagens em «ongoing» há tempo excessivo: viagem iniciada mas não concluída nem falhou pelo motor automático. O Admin não fecha «ongoing» (complete/cancel/fail ficam fora de scope).',
   steps: [
-    'Abre a viagem em Viagens: confirma se o motorista ainda está em serviço ou se a app perdeu o «Complete».',
-    'Se a viagem já terminou no mundo real, orienta o motorista a concluir na app; se está presa por bug, avalia cancelamento admin ou suporte em campo.',
-    'Operações → cron + Atualizar Saúde; investiga logs Stripe se o pagamento ficou em processing.',
+    'Abre a viagem em Viagens e confirma no Driver se a corrida ainda está activa ou se a app perdeu o fecho.',
+    'Se for caso real já terminado, pede ao Driver para terminar na app; regista nota ops se precisares de rasto. Em extremo, escala manualmente — não há cancelamento Admin em ongoing.',
+    'Operações → cron/timeouts/recover quando aplicável; Atualizar Saúde; se o pagamento ficou em processing, cruza Stripe / nota ops (sem inventar fecho Admin).',
   ],
 }
 

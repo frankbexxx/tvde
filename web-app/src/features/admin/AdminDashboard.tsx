@@ -223,7 +223,11 @@ export function AdminDashboard() {
     tripActionLoading,
     paymentOpsNoteText,
     setPaymentOpsNoteText,
+    tripAuditRows,
+    tripAuditLoading,
+    tripAuditError,
     fetchTripDebug,
+    fetchTripAuditTrail,
     handleReconcileSingleTripPayment,
     handlePaymentOpsNote,
     handleAssignTrip,
@@ -894,6 +898,10 @@ export function AdminDashboard() {
           tripDetailLoading={tripDetailLoading}
           tripOrphanFromDeepLink={tripOrphanFromDeepLink}
           tripsListMode={tripsListMode}
+          tripAuditRows={tripAuditRows}
+          tripAuditLoading={tripAuditLoading}
+          tripAuditError={tripAuditError}
+          fetchTripAuditTrail={fetchTripAuditTrail}
         />
       )}
 
