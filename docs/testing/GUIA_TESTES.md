@@ -192,6 +192,8 @@ Os serviços devem ser iniciados **por esta ordem** e **todos a correr em simult
    ```
 3. Pode usar o Notepad: `notepad .env`
 
+**Pytest / testes backend:** não uses a `DATABASE_URL` Render por engano. Ver [`BACKEND_PYTEST_SAFE.md`](BACKEND_PYTEST_SAFE.md) e o script `scripts/windows/Invoke-BackendPytest.ps1` (força `127.0.0.1` + `test_db`).
+
 ### 5.7 Iniciar o servidor
 
 1. Execute:
