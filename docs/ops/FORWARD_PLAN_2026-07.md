@@ -1,28 +1,28 @@
 # Plano operacional pós-piloto — Julho 2026
 
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
-**Última actualização:** 2026-07-19 (PAYMENTS-STUCK-1A/1B **PASS** + apply Render; `main` @ `2fc46b9`; PRs abertas **0**; CI verde).
+**Última actualização:** 2026-07-19 (pagamentos + **O-SECURITY PASS**; Saúde **ok**; `main` @ `77ddfac`; PRs abertas **0**).
 
 **Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
 ---
 
-## 0. Checkpoint repo (**2026-07-19** — pós PAYMENTS-STUCK)
+## 0. Checkpoint repo (**2026-07-19** — pagamentos + O-SECURITY fechados)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `2fc46b9` — alinhados |
+| **`main` / `origin/main`** | `77ddfac` — alinhados |
 | **PRs abertas** | **0** |
 | **CI `main`** | Verde |
-| **#417** / **PAYMENTS-STUCK-1A** | **PASS** — mock settle no complete |
-| **#418** / **PAYMENTS-STUCK-1B** | **PASS** — Admin close-mock + apply 41+10 |
-| **Mock stuck na BD app** | **Limpo** |
-| **Saúde degraded restante** | EDGE-1 (PI real) + EDGE-2 (sem payment) — **não** mock |
+| **PAYMENTS-STUCK-1A/1B** | **PASS** |
+| **PAYMENTS-EDGE-1/2** | **PASS** |
+| **O-SECURITY** | **PASS** — password SA rodada (API; sem env) |
+| **Saúde / system-health** | **`ok`** — stuck/missing/inconsistent = 0 |
 | **#415** / **TEST-DB-GUARD-1** | Merged · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
 | **ADMIN-OPS-1 Fase 0** | **PASS** B/C — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
 | **Checkpoint** | [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) |
 
-**Próxima ordem recomendada:** (1) O-SECURITY password SA · (2) PAYMENTS-EDGE-1/2 se prioritário · (3) Admin Ops seguinte · (4) PARTNER-FLEET-1.
+**Próxima ordem recomendada:** (1) Admin Ops seguinte · (2) PARTNER-FLEET-1 · (3) Stripe live só com parceiro + docs.
 
 **Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
 

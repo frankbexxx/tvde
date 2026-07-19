@@ -255,7 +255,16 @@ Apply **só** com `"dry_run": false` (explícito) + `governance_reason` (≥10 c
 
 API Admin em `tvde-api` / BD `ride_db_wypz` — **sem SQL manual**. PI não-mock no lote: **0**.
 
-Pós-health: ainda `degraded` por **PAYMENTS-EDGE-1** (cancelled + PI real `591f6827-…`) e **PAYMENTS-EDGE-2** (`4b29c6c9-…` sem payment). Mock stuck: **limpo**. Checkpoint: [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md).
+Pós-1B health ficou `degraded` só por EDGE-1/2; ambos **PASS** depois (cleanup pontual). Health final **`ok`**. Checkpoint: [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md).
+
+### EDGE-1/2 (fecho 2026-07-19)
+
+| Edge | Acção | Resultado |
+|------|--------|-----------|
+| **EDGE-2** | trip `4b29c6c9-…` → `failed` (órfã teste) | `missing_payment_records` 0 |
+| **EDGE-1** | payment `c58c20d4-…` → `failed`; trip cancelled; Dashboard PI `requires_payment_method`, €0 | `stuck_payments` 0 |
+
+Sem Stripe API · `STRIPE_MOCK` intocado · sem reconcile lote.
 
 ---
 
@@ -263,9 +272,9 @@ Pós-health: ainda `degraded` por **PAYMENTS-EDGE-1** (cancelled + PI real `591f
 
 | Item | Quando |
 |------|--------|
-| **O-SECURITY** mudar password SA | Fim de sessão (pós-apply) |
-| **PAYMENTS-EDGE-1** / **EDGE-2** | Carris separados — ver checkpoint |
+| **O-SECURITY** | **PASS** 2026-07-19 — password SA rodada via `/auth/me/password` (sem env) |
 | Webhook endpoint **produção** com `STRIPE_MOCK=true` | Smoke opcional (Send test event → 200) |
-| `STRIPE_MOCK=false` + `sk_live_*` em prod | Após conta Stripe do parceiro |
+| `STRIPE_MOCK=false` + `sk_live_*` em prod | Futuro — conta Stripe do parceiro + docs |
 | Fase B staging | [`STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) |
 | Revisão `final_price` em `complete_trip` | Backlog produto/técnico |
+| Admin Ops / PARTNER-FLEET-1 | Próximos carris produto |
