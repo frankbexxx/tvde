@@ -442,6 +442,7 @@ def test_complete_trip_full_flow_with_unique_pi_constraint(client: TestClient) -
         assert trip.status == TripStatus.completed
         assert pay.stripe_payment_intent_id
         assert str(pay.stripe_payment_intent_id).startswith("pi_")
+        assert pay.status == PaymentStatus.succeeded  # PAYMENTS-STUCK-1A mock settle
         assert trip.final_price is not None
         assert round(float(trip.final_price), 2) == round(float(pay.total_amount), 2)
     finally:
