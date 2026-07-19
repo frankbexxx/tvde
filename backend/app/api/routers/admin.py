@@ -78,6 +78,8 @@ from app.services.partners_admin import (
 from app.services.admin_audit import record_admin_action
 from app.services.admin_payment_reconciliation import (
     close_completed_processing_without_pi,
+    close_mock_processing_payments,
+    preview_close_mock_processing,
     preview_reconciliation,
     reconcile_single_trip_payment_with_stripe,
     reconcile_stripe_for_completed_processing,
@@ -1999,6 +2001,53 @@ async def admin_reconcile_payments_close_no_pi(
         "admin_reconcile_close_no_pi",
         dry_run=body.dry_run,
         limit=body.limit,
+        result_count=out.get("count", 0),
+        request_id=rid,
+    )
+    return {**out, "request_id": rid}
+
+
+@router.get("/ops/reconcile-payments/close-mock-processing/preview")
+async def admin_close_mock_processing_preview(
+    request: Request,
+    limit: int = Query(200, ge=1, le=500),
+    user: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """PAYMENTS-STUCK-1B: lista `pi_mock_*` stuck (read-only / dry-run)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    _ = user
+    out = preview_close_mock_processing(db, limit=limit)
+    return {**out, "request_id": rid}
+
+
+@router.post("/ops/reconcile-payments/close-mock-processing")
+async def admin_close_mock_processing(
+    request: Request,
+    body: AdminReconcilePaymentsRunBody,
+    user: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """
+    PAYMENTS-STUCK-1B: fecha payments mock antigos.
+
+    Dry-run por defeito (`dry_run=true`). Apply só com `dry_run=false` + governance.
+    Não chama Stripe. Não toca PI reais.
+    """
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    out = close_mock_processing_payments(
+        db,
+        actor_user_id=user.user_id,
+        governance_reason=body.governance_reason,
+        dry_run=body.dry_run,
+        limit=body.limit,
+    )
+    log_event(
+        "admin_close_mock_processing",
+        dry_run=body.dry_run,
+        limit=body.limit,
+        to_succeeded=out.get("to_succeeded", 0),
+        to_failed=out.get("to_failed", 0),
         result_count=out.get("count", 0),
         request_id=rid,
     )
