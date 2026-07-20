@@ -1,4 +1,4 @@
-import { List, MapPin, UserPlus } from 'lucide-react'
+import { Car, List, MapPin, UserPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { PartnerMetrics } from '../../../api/partner'
 import {
@@ -9,7 +9,7 @@ import {
 
 type PartnerFleetHubScreenProps = {
   metrics: PartnerMetrics | null
-  onNavigate: (screen: 'fleet_list' | 'fleet_map' | 'fleet_add') => void
+  onNavigate: (screen: 'fleet_list' | 'fleet_map' | 'fleet_add' | 'fleet_vehicles') => void
 }
 
 export function PartnerFleetHubScreen({ metrics, onNavigate }: PartnerFleetHubScreenProps) {
@@ -36,6 +36,13 @@ export function PartnerFleetHubScreen({ metrics, onNavigate }: PartnerFleetHubSc
       icon: UserPlus,
       title: t('fleet.addTitle'),
       subtitle: t('fleet.addSubtitle'),
+    },
+    {
+      id: 'fleet_vehicles' as const,
+      testId: 'partner-fleet-hub-vehicles',
+      icon: Car,
+      title: t('fleet.vehiclesTitle'),
+      subtitle: t('fleet.vehiclesSubtitle'),
     },
   ]
 

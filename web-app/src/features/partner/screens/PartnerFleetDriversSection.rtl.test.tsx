@@ -13,6 +13,10 @@ const onTrip: PartnerDriverRow = {
   last_location: null,
   active_trip_id: 'trip-1',
   active_trip_status: 'ongoing',
+  active_vehicle_id: 'veh-1',
+  vehicle_plate: '12-AB-34',
+  vehicle_make: 'Toyota',
+  vehicle_model: 'Corolla',
 }
 
 const idle: PartnerDriverRow = {
@@ -26,7 +30,7 @@ const idle: PartnerDriverRow = {
   active_trip_status: null,
 }
 
-describe('PartnerFleetDriversSection (PARTNER-FLEET-1A)', () => {
+describe('PartnerFleetDriversSection (PARTNER-FLEET-1A / 2B)', () => {
   it('mostra badge Em viagem só para motorista com trip activa', () => {
     render(
       <MemoryRouter>
@@ -44,4 +48,23 @@ describe('PartnerFleetDriversSection (PARTNER-FLEET-1A)', () => {
     expect(screen.getByText('Em Serviço')).toBeInTheDocument()
     expect(screen.getByText('Livre')).toBeInTheDocument()
   })
+
+  it('mostra vehicle_plate sem quebrar badge Em viagem', () => {
+    render(
+      <MemoryRouter>
+        <PartnerFleetDriversSection
+          filteredDrivers={[onTrip, idle]}
+          driverFilter="all"
+          onDriverFilterChange={vi.fn()}
+          loading={false}
+        />
+      </MemoryRouter>
+    )
+    const plates = screen.getAllByTestId('partner-driver-vehicle-plate')
+    expect(plates).toHaveLength(1)
+    expect(plates[0]).toHaveTextContent(/12-AB-34/)
+    expect(plates[0]).toHaveTextContent(/Toyota Corolla/)
+    expect(screen.getByTestId('partner-driver-on-trip-badge')).toHaveTextContent('Em viagem')
+  })
 })
+

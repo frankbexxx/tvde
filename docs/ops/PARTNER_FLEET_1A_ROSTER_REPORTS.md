@@ -73,9 +73,9 @@ Detalhe: [`PARTNER_FLEET_1A_SMOKE_2026-07-20.md`](./PARTNER_FLEET_1A_SMOKE_2026-
 - «Receita» = soma bruta da app, **não** payout Stripe.  
 - `passenger_id` no CSV é UUID (já existia); não se exporta telefone/nome do passageiro.
 
-## Próximo Partner / Fleet (provável)
+## Próximo Partner / Fleet
 
-1. Viaturas / motorista↔viatura  
-2. Documentos de viatura  
+1. **PARTNER-FLEET-2** — viaturas + associação → [`PARTNER_FLEET_2_VEHICLES.md`](./PARTNER_FLEET_2_VEHICLES.md)  
+2. Documentos de viatura (após 2B)  
 3. Relatórios por motorista / período  
 4. Polish visual se necessário  

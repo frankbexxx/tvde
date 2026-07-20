@@ -12,6 +12,7 @@ export const PARTNER_MENU_DEFAULT_BACK: Partial<Record<PartnerMenuScreen, Partne
   fleet_list: 'fleet',
   fleet_map: 'fleet',
   fleet_add: 'fleet',
+  fleet_vehicles: 'fleet',
   trips: 'root',
   trips_summary: 'trips',
   trips_list: 'trips',
@@ -27,7 +28,8 @@ export function isPartnerFleetNavScreen(screen: PartnerMenuScreen): boolean {
     screen === 'fleet' ||
     screen === 'fleet_list' ||
     screen === 'fleet_map' ||
-    screen === 'fleet_add'
+    screen === 'fleet_add' ||
+    screen === 'fleet_vehicles'
   )
 }
 
