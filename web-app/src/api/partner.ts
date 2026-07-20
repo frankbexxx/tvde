@@ -20,6 +20,50 @@ export interface PartnerDriverRow {
   /** PARTNER-FLEET-1A: trip activa na frota (assigned|accepted|arriving|ongoing). */
   active_trip_id?: string | null
   active_trip_status?: string | null
+  /** PARTNER-FLEET-2A/2B: viatura activa (0/1). */
+  active_vehicle_id?: string | null
+  vehicle_plate?: string | null
+  vehicle_make?: string | null
+  vehicle_model?: string | null
+  vehicle_service_category?: string | null
+}
+
+/** PARTNER-FLEET-2A/2B — viatura da frota. */
+export interface PartnerVehicleRow {
+  id: string
+  partner_id: string
+  plate: string
+  plate_normalized: string
+  make: string
+  model: string
+  year: number | null
+  color: string | null
+  service_category: string
+  status: string
+  created_at: string
+  updated_at: string
+  assigned_driver_id: string | null
+  assigned_driver_name: string | null
+}
+
+export type PartnerVehicleCreateBody = {
+  plate: string
+  make: string
+  model: string
+  year?: number | null
+  color?: string | null
+  service_category?: string | null
+  status?: string | null
+}
+
+export type PartnerVehiclePatchBody = {
+  plate?: string
+  make?: string
+  model?: string
+  year?: number | null
+  color?: string | null
+  service_category?: string
+  status?: string
 }
 
 export interface PartnerDriverDiscoveryItem {
@@ -62,6 +106,53 @@ export interface PartnerMetrics {
 
 export async function fetchPartnerDrivers(): Promise<PartnerDriverRow[]> {
   return apiFetch<PartnerDriverRow[]>('/partner/drivers')
+}
+
+export async function fetchPartnerVehicles(): Promise<PartnerVehicleRow[]> {
+  return apiFetch<PartnerVehicleRow[]>('/partner/vehicles')
+}
+
+export async function fetchPartnerVehicle(vehicleId: string): Promise<PartnerVehicleRow> {
+  return apiFetch<PartnerVehicleRow>(`/partner/vehicles/${encodeURIComponent(vehicleId)}`)
+}
+
+export async function createPartnerVehicle(
+  body: PartnerVehicleCreateBody
+): Promise<PartnerVehicleRow> {
+  return apiFetch<PartnerVehicleRow>('/partner/vehicles', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function patchPartnerVehicle(
+  vehicleId: string,
+  body: PartnerVehiclePatchBody
+): Promise<PartnerVehicleRow> {
+  return apiFetch<PartnerVehicleRow>(`/partner/vehicles/${encodeURIComponent(vehicleId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function assignPartnerVehicle(
+  vehicleId: string,
+  driverUserId: string
+): Promise<PartnerVehicleRow> {
+  return apiFetch<PartnerVehicleRow>(
+    `/partner/vehicles/${encodeURIComponent(vehicleId)}/assign`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ driver_user_id: driverUserId }),
+    }
+  )
+}
+
+export async function unassignPartnerVehicle(vehicleId: string): Promise<PartnerVehicleRow> {
+  return apiFetch<PartnerVehicleRow>(
+    `/partner/vehicles/${encodeURIComponent(vehicleId)}/unassign`,
+    { method: 'POST' }
+  )
 }
 
 export async function fetchPartnerDriver(userId: string): Promise<PartnerDriverRow> {

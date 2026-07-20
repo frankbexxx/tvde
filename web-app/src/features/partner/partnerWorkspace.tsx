@@ -28,6 +28,7 @@ import { PartnerFleetHubScreen } from './screens/PartnerFleetHubScreen'
 import { PartnerFleetListScreen } from './screens/PartnerFleetListScreen'
 import { PartnerFleetMapScreen } from './screens/PartnerFleetMapScreen'
 import { PartnerFleetAddScreen } from './screens/PartnerFleetAddScreen'
+import { PartnerVehiclesScreen } from './screens/PartnerVehiclesScreen'
 import { PartnerTripsHubScreen } from './screens/PartnerTripsHubScreen'
 import { PartnerTripsSummaryScreen } from './screens/PartnerTripsSummaryScreen'
 import { PartnerTripsListScreen } from './screens/PartnerTripsListScreen'
@@ -347,6 +348,9 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
           onAddToFleet={(id) => void addToFleet(id)}
         />
       )
+    }
+    if (screen === 'fleet_vehicles') {
+      return <PartnerVehiclesScreen onFleetChanged={() => void load()} />
     }
     if (screen === 'trips') {
       return <PartnerTripsHubScreen onNavigate={(leaf) => navigateMenu(leaf)} />

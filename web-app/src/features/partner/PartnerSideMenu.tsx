@@ -20,6 +20,7 @@ export type PartnerMenuScreen =
   | 'fleet_list'
   | 'fleet_map'
   | 'fleet_add'
+  | 'fleet_vehicles'
   | 'trips'
   | 'trips_summary'
   | 'trips_list'

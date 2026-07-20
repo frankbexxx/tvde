@@ -78,6 +78,17 @@ export function PartnerFleetDriversSection({
                 {d.is_available ? ' · disponível' : ' · indisponível'}
                 {onTrip && d.active_trip_status ? ` · ${d.active_trip_status}` : null}
               </p>
+              {d.vehicle_plate ? (
+                <p
+                  className="text-muted-foreground text-xs mt-1"
+                  data-testid="partner-driver-vehicle-plate"
+                >
+                  Viatura: {d.vehicle_plate}
+                  {d.vehicle_make || d.vehicle_model
+                    ? ` · ${[d.vehicle_make, d.vehicle_model].filter(Boolean).join(' ')}`
+                    : ''}
+                </p>
+              ) : null}
               <p className="text-muted-foreground text-xs mt-1">{locationLabel(d)}</p>
             </li>
           )
