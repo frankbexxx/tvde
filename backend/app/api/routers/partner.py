@@ -5,6 +5,10 @@ Endpoint audit (tenant scope = ctx.partner_id from get_current_partner only):
 - GET /partner/drivers/{driver_user_id}
 - PATCH /partner/drivers/{driver_user_id}/status  (C013)
 - PATCH /partner/drivers/{driver_user_id}/availability  (C014)
+- GET/POST /partner/vehicles  (PARTNER-FLEET-2A)
+- GET/PATCH /partner/vehicles/{vehicle_id}
+- POST /partner/vehicles/{vehicle_id}/assign
+- POST /partner/vehicles/{vehicle_id}/unassign
 - GET /partner/trips
 - POST /partner/trips/{trip_id}/reassign-driver  (I011)
 - GET /partner/trips/{trip_id}
@@ -45,6 +49,10 @@ from app.schemas.partner import (
     PartnerMetricsResponse,
     PartnerTripItem,
     PartnerTripReassignRequest,
+    PartnerVehicleAssignRequest,
+    PartnerVehicleCreateRequest,
+    PartnerVehicleItem,
+    PartnerVehiclePatchRequest,
 )
 from app.schemas.partner_messages import (
     PartnerInboxMessageItem,
@@ -76,6 +84,15 @@ from app.services.driver_zones import (
     service_date_local_now,
 )
 from app.services.partner_trip_ops import partner_reassign_trip_driver
+from app.services.partner_vehicles import (
+    assign_vehicle_to_driver,
+    create_vehicle_for_partner,
+    get_vehicle_for_partner,
+    list_vehicles_for_partner,
+    patch_vehicle_for_partner,
+    unassign_vehicle,
+    vehicle_to_item,
+)
 from app.services.partner_messages import (
     create_partner_message,
     list_partner_inbox_from_drivers,
@@ -129,6 +146,7 @@ def _driver_item(
     documents = None
     if include_documents:
         documents = parse_documents_column(d.documents)["docs"]
+    v = getattr(d, "active_vehicle", None)
     return PartnerDriverItem(
         user_id=str(d.user_id),
         partner_id=str(d.partner_id),
@@ -142,6 +160,11 @@ def _driver_item(
         documents=documents,
         active_trip_id=active_trip_id,
         active_trip_status=active_trip_status,
+        active_vehicle_id=str(d.active_vehicle_id) if d.active_vehicle_id else None,
+        vehicle_plate=v.plate if v else None,
+        vehicle_make=v.make if v else None,
+        vehicle_model=v.model if v else None,
+        vehicle_service_category=v.service_category if v else None,
     )
 
 
@@ -415,6 +438,154 @@ async def partner_patch_driver_documents(
     if d is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     return _driver_item(d, include_documents=True)
+
+
+@router.get("/vehicles", response_model=list[PartnerVehicleItem])
+async def partner_list_vehicles(
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> list[PartnerVehicleItem]:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    return list_vehicles_for_partner(db, partner_id)
+
+
+@router.post(
+    "/vehicles",
+    response_model=PartnerVehicleItem,
+    status_code=status.HTTP_201_CREATED,
+)
+async def partner_create_vehicle(
+    body: PartnerVehicleCreateRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    return create_vehicle_for_partner(db, partner_id=partner_id, body=body)
+
+
+@router.get("/vehicles/{vehicle_id}", response_model=PartnerVehicleItem)
+async def partner_get_vehicle(
+    vehicle_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    vehicle = get_vehicle_for_partner(db, partner_id, vid)
+    if vehicle is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+    return vehicle_to_item(db, vehicle)
+
+
+@router.patch("/vehicles/{vehicle_id}", response_model=PartnerVehicleItem)
+async def partner_patch_vehicle(
+    vehicle_id: str,
+    body: PartnerVehiclePatchRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    return patch_vehicle_for_partner(
+        db, partner_id=partner_id, vehicle_id=vid, body=body
+    )
+
+
+@router.post(
+    "/vehicles/{vehicle_id}/assign",
+    response_model=PartnerVehicleItem,
+)
+async def partner_assign_vehicle(
+    vehicle_id: str,
+    body: PartnerVehicleAssignRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+        did = uuid.UUID(body.driver_user_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    return assign_vehicle_to_driver(
+        db,
+        partner_id=partner_id,
+        vehicle_id=vid,
+        driver_user_id=did,
+    )
+
+
+@router.post(
+    "/vehicles/{vehicle_id}/unassign",
+    response_model=PartnerVehicleItem,
+)
+async def partner_unassign_vehicle(
+    vehicle_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    return unassign_vehicle(db, partner_id=partner_id, vehicle_id=vid)
 
 
 @router.get("/trips", response_model=list[PartnerTripItem])

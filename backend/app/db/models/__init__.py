@@ -14,6 +14,7 @@ from app.db.models.stripe_webhook_event import StripeWebhookEvent
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
+from app.db.models.vehicle import Vehicle
 
 __all__ = [
     "User",
@@ -25,6 +26,7 @@ __all__ = [
     "DriverZoneCustom",
     "DriverZoneDayBudget",
     "DriverZoneSession",
+    "Vehicle",
     "Trip",
     "Payment",
     "TripOffer",

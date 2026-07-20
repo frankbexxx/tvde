@@ -13,6 +13,7 @@ from app.db.base import Base
 if TYPE_CHECKING:
     from app.db.models.driver import Driver
     from app.db.models.user import User
+    from app.db.models.vehicle import Vehicle
 
 
 class Partner(Base):
@@ -37,6 +38,7 @@ class Partner(Base):
     )
 
     drivers: Mapped[List["Driver"]] = relationship(back_populates="partner")
+    vehicles: Mapped[List["Vehicle"]] = relationship(back_populates="partner")
     users: Mapped[List["User"]] = relationship(
         back_populates="partner_org",
         foreign_keys="User.partner_org_id",
