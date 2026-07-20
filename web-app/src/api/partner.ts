@@ -272,18 +272,28 @@ export type PartnerTripsExportFilters = {
   search?: string
 }
 
-export function partnerTripsExportUrl(filters?: PartnerTripsExportFilters): string {
-  const base = API_BASE.replace(/\/$/, '')
-  const url = new URL(`${base}/partner/trips/export`)
-  if (!filters) return url.toString()
+/**
+ * Build GET /partner/trips/export URL.
+ * Uses string + URLSearchParams (not `new URL(relative)`) so API_BASE='/api' works in Vite proxy/dev.
+ * `apiBase` override is for tests only.
+ */
+export function partnerTripsExportUrl(
+  filters?: PartnerTripsExportFilters,
+  apiBase: string = API_BASE
+): string {
+  const base = apiBase.replace(/\/$/, '')
+  const path = `${base}/partner/trips/export`
+  if (!filters) return path
+  const q = new URLSearchParams()
   if (filters.tripFilter && filters.tripFilter !== 'all') {
-    url.searchParams.set('status', filters.tripFilter)
+    q.set('status', filters.tripFilter)
   }
-  if (filters.driverId) url.searchParams.set('driver_id', filters.driverId)
-  if (filters.dateFrom) url.searchParams.set('from', filters.dateFrom)
-  if (filters.dateTo) url.searchParams.set('to', filters.dateTo)
-  if (filters.search?.trim()) url.searchParams.set('q', filters.search.trim())
-  return url.toString()
+  if (filters.driverId) q.set('driver_id', filters.driverId)
+  if (filters.dateFrom) q.set('from', filters.dateFrom)
+  if (filters.dateTo) q.set('to', filters.dateTo)
+  if (filters.search?.trim()) q.set('q', filters.search.trim())
+  const qs = q.toString()
+  return qs ? `${path}?${qs}` : path
 }
 
 /** SP-C: cabeçalho CSV `GET /partner/trips/export` (UTF-8). Não reordenar colunas; só acrescentar no fim em versões futuras. */

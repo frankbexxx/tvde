@@ -251,7 +251,23 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) {
-        const msg = t('workspace.exportFailed')
+        let detail = ''
+        try {
+          const ct = res.headers.get('content-type') ?? ''
+          if (ct.includes('application/json')) {
+            const body = (await res.json()) as { detail?: unknown; message?: unknown }
+            const raw = body.detail ?? body.message
+            if (typeof raw === 'string') detail = raw.trim().slice(0, 120)
+          } else {
+            const text = (await res.text()).trim()
+            if (text && !text.startsWith('<')) detail = text.slice(0, 80)
+          }
+        } catch {
+          /* ignore parse errors */
+        }
+        const msg = detail
+          ? `${t('workspace.exportFailed')} (${res.status}: ${detail})`
+          : `${t('workspace.exportFailed')} (${res.status})`
         setCsvExportError(msg)
         setError(msg)
         return
@@ -261,8 +277,12 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
       triggerBlobDownload(blob, 'partner_trips_export.csv', { revokeDelayMs: 1000 })
       setCsvExportSuccess(t('workspace.exportSuccess'))
       window.setTimeout(() => setCsvExportSuccess(null), 4000)
-    } catch {
-      const msg = t('workspace.exportFailed')
+    } catch (err) {
+      const hint =
+        err instanceof TypeError && /invalid url|failed to construct/i.test(String(err.message))
+          ? ` (${err.message})`
+          : ''
+      const msg = `${t('workspace.exportFailed')}${hint}`
       setCsvExportError(msg)
       setError(msg)
     } finally {
@@ -361,6 +381,11 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
           onDownloadAllCsv={() => void downloadCsv('all')}
           filteredCount={filteredTrips.length}
           totalCount={trips.length}
+          csvExport={{
+            exporting: csvExporting,
+            error: csvExportError,
+            success: csvExportSuccess,
+          }}
         />
       )
     }
