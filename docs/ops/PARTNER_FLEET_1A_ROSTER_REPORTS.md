@@ -55,10 +55,11 @@ Melhorar o Partner como ferramenta operacional **normal** da frota: ver quem est
 | 5b | Feedback Relatórios | «A exportar…» / erro visível / «CSV descarregado» |
 | 6 | Admin / Passenger / Driver | Sem regressão intencional |
 
-### CSV download (PARTNER-FLEET-1A-CSV-FIX)
+### CSV download (PARTNER-FLEET-1A-CSV-FIX / FIX-2)
 
 - FE: `triggerBlobDownload` — append `<a>` ao DOM + `revokeObjectURL` atrasado (1s).
-- FE: erro/sucesso visíveis no ecrã Relatórios (não só `sr-only`).
+- FE: erro/sucesso visíveis em Relatórios **e** Viagens → Exportar.
+- FE FIX-2: `partnerTripsExportUrl` usa string + `URLSearchParams` (não `new URL` sem base) — funciona com `API_BASE='/api'` e absoluto.
 - BE micro: query param interno `status` → `status_filter` (alias HTTP `status` inalterado).
 
 ---
