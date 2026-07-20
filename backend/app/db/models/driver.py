@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from app.db.models.trip import Trip
     from app.db.models.trip_offer import TripOffer
     from app.db.models.user import User
+    from app.db.models.vehicle import Vehicle
 
 
 class Driver(Base):
@@ -61,6 +62,13 @@ class Driver(Base):
         Text,
         nullable=True,
         comment="Preferred vehicle categories for this driver (csv, ex: x,xl,pet).",
+    )
+    active_vehicle_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("vehicles.id", ondelete="SET NULL"),
+        nullable=True,
+        unique=True,
+        comment="Currently assigned fleet vehicle (0/1); UNIQUE allows multiple NULL.",
     )
     commission_percent: Mapped[float] = mapped_column(
         Numeric(5, 2),
@@ -107,6 +115,10 @@ class Driver(Base):
 
     user: Mapped["User"] = relationship(back_populates="driver_profile")
     partner: Mapped["Partner"] = relationship(back_populates="drivers")
+    active_vehicle: Mapped[Optional["Vehicle"]] = relationship(
+        back_populates="assigned_driver",
+        foreign_keys=[active_vehicle_id],
+    )
     trips: Mapped[List["Trip"]] = relationship(back_populates="driver")
     offers: Mapped[List["TripOffer"]] = relationship(
         back_populates="driver",

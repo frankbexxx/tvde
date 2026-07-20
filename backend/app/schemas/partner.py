@@ -26,6 +26,53 @@ class PartnerDriverItem(BaseModel):
     # PARTNER-FLEET-1A: trip activa (assigned|accepted|arriving|ongoing), se existir.
     active_trip_id: str | None = None
     active_trip_status: str | None = None
+    # PARTNER-FLEET-2A: viatura activa (0/1).
+    active_vehicle_id: str | None = None
+    vehicle_plate: str | None = None
+    vehicle_make: str | None = None
+    vehicle_model: str | None = None
+    vehicle_service_category: str | None = None
+
+
+class PartnerVehicleCreateRequest(BaseModel):
+    plate: str = Field(..., min_length=1, max_length=32)
+    make: str = Field(..., min_length=1, max_length=80)
+    model: str = Field(..., min_length=1, max_length=80)
+    year: int | None = None
+    color: str | None = Field(default=None, max_length=40)
+    service_category: str | None = Field(default="x", max_length=24)
+    status: str | None = Field(default="active", max_length=24)
+
+
+class PartnerVehiclePatchRequest(BaseModel):
+    plate: str | None = Field(default=None, min_length=1, max_length=32)
+    make: str | None = Field(default=None, min_length=1, max_length=80)
+    model: str | None = Field(default=None, min_length=1, max_length=80)
+    year: int | None = None
+    color: str | None = Field(default=None, max_length=40)
+    service_category: str | None = Field(default=None, max_length=24)
+    status: str | None = Field(default=None, max_length=24)
+
+
+class PartnerVehicleAssignRequest(BaseModel):
+    driver_user_id: str = Field(..., min_length=1)
+
+
+class PartnerVehicleItem(BaseModel):
+    id: str
+    partner_id: str
+    plate: str
+    plate_normalized: str
+    make: str
+    model: str
+    year: int | None = None
+    color: str | None = None
+    service_category: str
+    status: str
+    created_at: str
+    updated_at: str
+    assigned_driver_id: str | None = None
+    assigned_driver_name: str | None = None
 
 
 class PartnerTripItem(BaseModel):

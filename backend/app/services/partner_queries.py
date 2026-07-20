@@ -37,6 +37,7 @@ def list_drivers_for_partner_enriched(db: Session, partner_id: str) -> list[Driv
             .options(
                 joinedload(Driver.user),
                 joinedload(Driver.last_location),
+                joinedload(Driver.active_vehicle),
             )
             .order_by(Driver.created_at.asc())
         )
@@ -74,6 +75,7 @@ def get_driver_for_partner(
             .options(
                 joinedload(Driver.user),
                 joinedload(Driver.last_location),
+                joinedload(Driver.active_vehicle),
             )
         )
         .unique()
