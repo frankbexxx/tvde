@@ -1,10 +1,11 @@
 # PARTNER-FLEET-1A — Fleet roster + CSV/relatório €
 
-**Estado:** merged (#423) · smoke parcial PASS (roster + €) · CSV download fix em `fix/partner-csv-download`  
-**Base:** `main` `eb49cc2` (+ CSV-FIX).  
+**Estado:** **PASS** (smoke final 2026-07-20)  
+**`main`:** `4152f77` — [#423](https://github.com/frankbexxx/tvde/pull/423) feature · [#424](https://github.com/frankbexxx/tvde/pull/424) CSV-FIX · [#425](https://github.com/frankbexxx/tvde/pull/425) CSV-FIX-2.  
+**Smoke:** [`PARTNER_FLEET_1A_SMOKE_2026-07-20.md`](./PARTNER_FLEET_1A_SMOKE_2026-07-20.md)  
 **Pré-condição:** Partner ops base (D-DEMO-1) · Admin ≠ dispatcher.
 
-**Handoff:** [`BACKLOG_POST_PILOTO.md`](../meta/BACKLOG_POST_PILOTO.md) · PARTNER-FLEET-1 (slice A; viaturas ficam para slice maior).
+**Handoff:** [`BACKLOG_POST_PILOTO.md`](../meta/BACKLOG_POST_PILOTO.md) · PARTNER-FLEET-1 (slice A fechado; viaturas / docs / associação ficam para slices seguintes).
 
 ---
 
@@ -21,7 +22,7 @@ Melhorar o Partner como ferramenta operacional **normal** da frota: ver quem est
 | 1 | Roster «Em viagem» | `active_trip_id` / `active_trip_status` em `GET /partner/drivers` (statuses: assigned, accepted, arriving, ongoing); badge + filtro na lista |
 | 2 | Relatórios / Home € | `trips_completed_today` + `revenue_completed_today` em `GET /partner/metrics` (receita bruta app: `final_price` ou `estimated_price`) |
 | 3 | CSV | Append `estimated_price`, `final_price` no fim; colunas antigas intactas; sem PII passageiro (só `passenger_id`) |
-| 4 | Docs / smoke | Este ficheiro |
+| 4 | Docs / smoke | Este ficheiro + smoke PASS |
 
 ### Fora de scope
 
@@ -43,24 +44,27 @@ Melhorar o Partner como ferramenta operacional **normal** da frota: ver quem est
 
 ---
 
-## Smoke manual proposto
+## Smoke manual (resultado final)
 
-| # | Passo | Esperado |
-|---|--------|----------|
-| 1 | Login Partner | Frota carrega |
-| 2 | Passenger cria trip; Driver da frota aceita / ongoing | Lista frota: badge **Em viagem** |
-| 3 | Driver completa | Badge some |
-| 4 | Home / Relatórios | Concluídas hoje + receita € actualizam |
-| 5 | Export CSV | Download `partner_trips_export.csv` com `estimated_price` / `final_price` |
-| 5b | Feedback Relatórios | «A exportar…» / erro visível / «CSV descarregado» |
-| 6 | Admin / Passenger / Driver | Sem regressão intencional |
+| # | Passo | Resultado |
+|---|--------|-----------|
+| 1 | Login Partner · Home / Relatórios métricas | **PASS** |
+| 2 | Driver em viagem na frota (mapa / lista) | **PASS** |
+| 3 | Driver completa → sai de «Em viagem» | **PASS** |
+| 4 | Receita hoje actualiza (ex.: 1.54) | **PASS** |
+| 5 | Relatórios → Descarregar CSV | **PASS** |
+| 6 | Viagens → Exportar CSV | **PASS** |
+| 7 | Dois caminhos → ficheiros iguais; colunas preço | **PASS** |
 
-### CSV download (PARTNER-FLEET-1A-CSV-FIX / FIX-2)
+Detalhe: [`PARTNER_FLEET_1A_SMOKE_2026-07-20.md`](./PARTNER_FLEET_1A_SMOKE_2026-07-20.md).
 
-- FE: `triggerBlobDownload` — append `<a>` ao DOM + `revokeObjectURL` atrasado (1s).
-- FE: erro/sucesso visíveis em Relatórios **e** Viagens → Exportar.
-- FE FIX-2: `partnerTripsExportUrl` usa string + `URLSearchParams` (não `new URL` sem base) — funciona com `API_BASE='/api'` e absoluto.
-- BE micro: query param interno `status` → `status_filter` (alias HTTP `status` inalterado).
+### CSV download (cadeia de fixes)
+
+| PR | Fix |
+|----|-----|
+| #424 | `triggerBlobDownload` — append `<a>` + `revokeObjectURL` atrasado; feedback em Relatórios |
+| #425 | `partnerTripsExportUrl` — string + `URLSearchParams` (não `new URL` sem base); feedback em Viagens → Exportar; funciona com `API_BASE='/api'` e absoluto |
+| BE (micro, #424) | Query param interno `status` → `status_filter` (alias HTTP `status` inalterado) |
 
 ---
 
@@ -68,3 +72,10 @@ Melhorar o Partner como ferramenta operacional **normal** da frota: ver quem est
 
 - «Receita» = soma bruta da app, **não** payout Stripe.  
 - `passenger_id` no CSV é UUID (já existia); não se exporta telefone/nome do passageiro.
+
+## Próximo Partner / Fleet (provável)
+
+1. Viaturas / motorista↔viatura  
+2. Documentos de viatura  
+3. Relatórios por motorista / período  
+4. Polish visual se necessário  
