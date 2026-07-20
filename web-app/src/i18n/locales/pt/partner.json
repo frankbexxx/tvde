@@ -224,6 +224,7 @@
     "revenueToday": "Receita hoje (€):",
     "revenueHint": "Soma bruta da app (final ou estimativa); não é payout Stripe.",
     "downloadCsv": "Descarregar CSV (filtros actuais)",
+    "exportingCsv": "A exportar…",
     "csvColumnsPrefix": "Colunas do CSV:"
   },
   "settingsMenu": {
@@ -258,7 +259,8 @@
     "searchError": "Não foi possível pesquisar motoristas.",
     "driverAdded": "Motorista adicionado à frota.",
     "addError": "Não foi possível adicionar o motorista.",
-    "exportFailed": "Exportação CSV falhou."
+    "exportFailed": "Exportação CSV falhou.",
+    "exportSuccess": "CSV descarregado."
   },
   "settings": {
     "title": "Definições",

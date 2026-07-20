@@ -1,7 +1,7 @@
 # PARTNER-FLEET-1A — Fleet roster + CSV/relatório €
 
-**Estado:** implementação (branch `feat/partner-fleet-roster-reports`)  
-**Base:** `main` pós ADMIN-OPS-2 smoke PASS (`59fef17` ou HEAD alinhada).  
+**Estado:** merged (#423) · smoke parcial PASS (roster + €) · CSV download fix em `fix/partner-csv-download`  
+**Base:** `main` `eb49cc2` (+ CSV-FIX).  
 **Pré-condição:** Partner ops base (D-DEMO-1) · Admin ≠ dispatcher.
 
 **Handoff:** [`BACKLOG_POST_PILOTO.md`](../meta/BACKLOG_POST_PILOTO.md) · PARTNER-FLEET-1 (slice A; viaturas ficam para slice maior).
@@ -51,8 +51,15 @@ Melhorar o Partner como ferramenta operacional **normal** da frota: ver quem est
 | 2 | Passenger cria trip; Driver da frota aceita / ongoing | Lista frota: badge **Em viagem** |
 | 3 | Driver completa | Badge some |
 | 4 | Home / Relatórios | Concluídas hoje + receita € actualizam |
-| 5 | Export CSV | Colunas antigas + `estimated_price` / `final_price` / `status` / `driver_id` |
+| 5 | Export CSV | Download `partner_trips_export.csv` com `estimated_price` / `final_price` |
+| 5b | Feedback Relatórios | «A exportar…» / erro visível / «CSV descarregado» |
 | 6 | Admin / Passenger / Driver | Sem regressão intencional |
+
+### CSV download (PARTNER-FLEET-1A-CSV-FIX)
+
+- FE: `triggerBlobDownload` — append `<a>` ao DOM + `revokeObjectURL` atrasado (1s).
+- FE: erro/sucesso visíveis no ecrã Relatórios (não só `sr-only`).
+- BE micro: query param interno `status` → `status_filter` (alias HTTP `status` inalterado).
 
 ---
 
