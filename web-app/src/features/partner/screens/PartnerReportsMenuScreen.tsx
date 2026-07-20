@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { PARTNER_TRIPS_CSV_COLUMNS, type PartnerMetrics } from '../../../api/partner'
+import type { PartnerCsvExportUi } from '../partnerCsvExport'
 
 type TripStats = {
   total: number
@@ -13,14 +14,19 @@ type PartnerReportsMenuScreenProps = {
   metrics: PartnerMetrics | null
   tripStats: TripStats
   onDownloadCsv: () => void
+  csvExport?: PartnerCsvExportUi
 }
 
 export function PartnerReportsMenuScreen({
   metrics,
   tripStats,
   onDownloadCsv,
+  csvExport,
 }: PartnerReportsMenuScreenProps) {
   const { t } = useTranslation('partner')
+  const exporting = Boolean(csvExport?.exporting)
+  const exportError = csvExport?.error ?? null
+  const exportSuccess = csvExport?.success ?? null
 
   return (
     <div className="space-y-4 text-sm text-foreground" data-testid="partner-reports-screen">
@@ -76,12 +82,24 @@ export function PartnerReportsMenuScreen({
       <p className="text-xs text-muted-foreground">
         {t('reports.csvColumnsPrefix')} {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}.
       </p>
+      {exportError ? (
+        <p className="text-sm text-destructive" data-testid="partner-reports-csv-error" role="alert">
+          {exportError}
+        </p>
+      ) : null}
+      {exportSuccess && !exportError ? (
+        <p className="text-sm text-success" data-testid="partner-reports-csv-success" role="status">
+          {exportSuccess}
+        </p>
+      ) : null}
       <button
         type="button"
         onClick={onDownloadCsv}
-        className="w-full min-h-11 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 touch-manipulation"
+        disabled={exporting}
+        data-testid="partner-reports-csv-download"
+        className="w-full min-h-11 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-95 touch-manipulation disabled:opacity-50"
       >
-        {t('reports.downloadCsv')}
+        {exporting ? t('reports.exportingCsv') : t('reports.downloadCsv')}
       </button>
     </div>
   )

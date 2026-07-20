@@ -224,6 +224,7 @@
     "revenueToday": "Revenue today (€):",
     "revenueHint": "App gross sum (final or estimate); not a Stripe payout.",
     "downloadCsv": "Download CSV (current filters)",
+    "exportingCsv": "Exporting…",
     "csvColumnsPrefix": "CSV columns:"
   },
   "settingsMenu": {
@@ -258,7 +259,8 @@
     "searchError": "Could not search drivers.",
     "driverAdded": "Driver added to fleet.",
     "addError": "Could not add driver.",
-    "exportFailed": "CSV export failed."
+    "exportFailed": "CSV export failed.",
+    "exportSuccess": "CSV downloaded."
   },
   "settings": {
     "title": "Settings",

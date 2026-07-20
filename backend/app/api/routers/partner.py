@@ -439,7 +439,7 @@ async def partner_export_trips_csv(
     request: Request,
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
-    status: str | None = Query(None, alias="status"),
+    status_filter: str | None = Query(None, alias="status"),
     driver_id: str | None = Query(None),
     from_date: str | None = Query(None, alias="from"),
     to_date: str | None = Query(None, alias="to"),
@@ -467,12 +467,12 @@ async def partner_export_trips_csv(
         except ValueError:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_to_date")
 
-    has_filters = any([status, driver_id, from_date, to_date, q])
+    has_filters = any([status_filter, driver_id, from_date, to_date, q])
     if has_filters:
         trips = list_trips_for_partner_filtered(
             db,
             partner_id,
-            status_filter=status,
+            status_filter=status_filter,
             driver_id=driver_id,
             date_from=date_from,
             date_to=date_to,

@@ -36,6 +36,7 @@ import { PartnerReportsMenuScreen } from './screens/PartnerReportsMenuScreen'
 import { PartnerSettingsMenuScreen } from './screens/PartnerSettingsMenuScreen'
 import { PartnerProfileScreen } from './screens/PartnerProfileScreen'
 import { PartnerInboxScreen } from './screens/PartnerInboxScreen'
+import { triggerBlobDownload } from './triggerBlobDownload'
 
 function normalizeSearch(q: string): string {
   return q.trim().toLowerCase()
@@ -94,6 +95,9 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
   const [discoverLoading, setDiscoverLoading] = useState(false)
   const [discoverOk, setDiscoverOk] = useState<string | null>(null)
   const [discoverSearched, setDiscoverSearched] = useState(false)
+  const [csvExporting, setCsvExporting] = useState(false)
+  const [csvExportError, setCsvExportError] = useState<string | null>(null)
+  const [csvExportSuccess, setCsvExportSuccess] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -227,7 +231,11 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
   }, [trips, tripFilter, tripDriverFilter, tripDateFrom, tripDateTo, q, driverById])
 
   const downloadCsv = async (scope: 'all' | 'filtered' = 'filtered') => {
-    if (!token) return
+    if (!token || csvExporting) return
+    setCsvExporting(true)
+    setCsvExportError(null)
+    setCsvExportSuccess(null)
+    setError(null)
     try {
       const url =
         scope === 'filtered'
@@ -243,18 +251,22 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) {
-        setError(t('workspace.exportFailed'))
+        const msg = t('workspace.exportFailed')
+        setCsvExportError(msg)
+        setError(msg)
         return
       }
-      const blob = await res.blob()
-      const objectUrl = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = objectUrl
-      a.download = 'partner_trips_export.csv'
-      a.click()
-      URL.revokeObjectURL(objectUrl)
+      const buf = await res.arrayBuffer()
+      const blob = new Blob([buf], { type: 'text/csv;charset=utf-8' })
+      triggerBlobDownload(blob, 'partner_trips_export.csv', { revokeDelayMs: 1000 })
+      setCsvExportSuccess(t('workspace.exportSuccess'))
+      window.setTimeout(() => setCsvExportSuccess(null), 4000)
     } catch {
-      setError(t('workspace.exportFailed'))
+      const msg = t('workspace.exportFailed')
+      setCsvExportError(msg)
+      setError(msg)
+    } finally {
+      setCsvExporting(false)
     }
   }
 
@@ -358,6 +370,11 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
           metrics={metrics}
           tripStats={tripStats}
           onDownloadCsv={() => void downloadCsv('filtered')}
+          csvExport={{
+            exporting: csvExporting,
+            error: csvExportError,
+            success: csvExportSuccess,
+          }}
         />
       )
     }
