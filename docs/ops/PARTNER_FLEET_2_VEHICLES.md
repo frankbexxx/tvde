@@ -1,8 +1,9 @@
 # PARTNER-FLEET-2 — Vehicles + associação motorista↔viatura
 
-**Estado:** PF2A+2B **merged** · smoke funcional **PASS** (2026-07-20) · **PF2C** categorias multi (em curso)  
-**`main` (pré-2C):** `a22df10` ([#427](https://github.com/frankbexxx/tvde/pull/427) + [#428](https://github.com/frankbexxx/tvde/pull/428))  
-**Pré-condição:** PARTNER-FLEET-1A **PASS** · Partner ops base.
+**Estado:** **PASS** (smoke final 2026-07-21)  
+**`main`:** `8921bd5` — [#427](https://github.com/frankbexxx/tvde/pull/427) PF2A · [#428](https://github.com/frankbexxx/tvde/pull/428) PF2B · [#429](https://github.com/frankbexxx/tvde/pull/429) PF2C.  
+**Smoke:** [`PARTNER_FLEET_2_SMOKE_2026-07-21.md`](./PARTNER_FLEET_2_SMOKE_2026-07-21.md)  
+**Pré-condição:** PARTNER-FLEET-1A **PASS** · Partner ops base · Admin ≠ dispatcher.
 
 **Handoff:** [`BACKLOG_POST_PILOTO.md`](../meta/BACKLOG_POST_PILOTO.md)
 
@@ -14,50 +15,50 @@ Introduzir entidade **Vehicle** própria e permitir ao Partner gerir viaturas e 
 
 ---
 
-## Smoke PF2 (2026-07-20) — PASS funcional
+## Cadeia de PRs
 
-| # | Passo | Resultado |
-|---|--------|-----------|
-| 1 | Criar viatura | PASS |
-| 2 | Associar motorista | PASS |
-| 3 | Lista motoristas mostra matrícula | PASS |
-| 4 | «Em viagem» mantém matrícula | PASS |
-| 5 | Completed / remove badge mantém matrícula | PASS |
-| 6 | CSV | PASS |
-| 7 | Matrícula duplicada | PASS |
-| 8 | Desassociação | PASS |
-
-**Bloqueador leve (antes do fecho documental):** categorias da viatura eram input livre → **PF2C**.
+| PR | Slice | Tema |
+|----|--------|------|
+| [#427](https://github.com/frankbexxx/tvde/pull/427) | **PF2A** | Vehicle model + migration + Partner API CRUD + assign/unassign · `plate_normalized` UNIQUE global · tenant-safe |
+| [#428](https://github.com/frankbexxx/tvde/pull/428) | **PF2B** | UI Frota → Viaturas · lista/criar/editar · associar/desassociar · matrícula na lista motoristas · «Em viagem» intacto |
+| [#429](https://github.com/frankbexxx/tvde/pull/429) | **PF2C** | `service_categories` multi (CSV, vocabulário Driver) · chips · sem texto livre · matching intacto |
 
 ---
 
-## PF2A — Backend
+## Resumo técnico
 
-| Item | Detalhe |
+| Área | Detalhe |
 |------|---------|
-| Tabela `vehicles` | `partner_id`, `plate`, `plate_normalized` UNIQUE global, make/model, year/color, status |
-| `drivers.active_vehicle_id` | FK nullable + UNIQUE |
-| API Partner | CRUD + assign/unassign |
-| Matching | **Intacto** — `drivers.vehicle_categories` |
+| Tabela `vehicles` | `partner_id`, `plate`, `plate_normalized` UNIQUE global, make/model, year/color, `service_categories`, status |
+| Associação | `drivers.active_vehicle_id` FK nullable + UNIQUE (0/1 ↔ 0/1); sem histórico neste slice |
+| API Partner | `GET/POST /partner/vehicles`, `GET/PATCH …/{id}`, `POST …/assign`, `POST …/unassign` |
+| Categorias | Mesmos códigos que Driver (`x,xl,pet,comfort,black,electric,van`); CSV; UI chips |
+| Matching | **Intacto** — continua `drivers.vehicle_categories` |
 
-## PF2B — Frontend
+### Fora de scope (confirmado)
 
-Frota → Viaturas: lista / criar / editar / associar; lista motoristas com placa; erros 409.
-
-## PF2C — Categorias multi (este slice)
-
-| Decisão | Detalhe |
-|---------|---------|
-| Fonte Driver | `VALID_DRIVER_CATEGORIES` + CSV (`encode/decode_driver_categories_csv`) · FE `DRIVER_VEHICLE_CATEGORIES` |
-| Persistência Vehicle | `service_categories` Text CSV (mesmo vocabulário: x, xl, pet, comfort, black, electric, van) |
-| API | `service_categories: list[str]`; rejeita inválidas (`invalid_service_category`) |
-| UI | Chips multi-select (mesmo padrão Driver); sem texto livre |
-| Matching | Continua **só** em `drivers.vehicle_categories` |
+- Documentos de viatura / upload docs  
+- Histórico de associações  
+- Admin CRUD de viaturas  
+- Matching por viatura  
+- Stripe / payments  
+- Passenger / Driver / NAV  
+- env / secrets · DB cleanup  
 
 ---
 
-## Próximo (após 2C)
+## Smoke final
 
-1. Documentos na entidade Vehicle  
-2. Relatórios por motorista / período  
-3. Admin recovery assign (opcional)  
+Ver checklist completo: [`PARTNER_FLEET_2_SMOKE_2026-07-21.md`](./PARTNER_FLEET_2_SMOKE_2026-07-21.md).
+
+**PARTNER-FLEET-2 = PASS.**
+
+---
+
+## Próximos naturais
+
+1. Vehicle documents  
+2. Alertas de caducidade  
+3. Compliance gates / bloqueios legais  
+4. Turnos / check-in / check-out  
+5. Relatórios por motorista / viatura / período  

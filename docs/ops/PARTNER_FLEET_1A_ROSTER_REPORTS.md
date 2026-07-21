@@ -75,7 +75,7 @@ Detalhe: [`PARTNER_FLEET_1A_SMOKE_2026-07-20.md`](./PARTNER_FLEET_1A_SMOKE_2026-
 
 ## Próximo Partner / Fleet
 
-1. **PARTNER-FLEET-2** — viaturas + associação → [`PARTNER_FLEET_2_VEHICLES.md`](./PARTNER_FLEET_2_VEHICLES.md)  
-2. Documentos de viatura (após 2B)  
-3. Relatórios por motorista / período  
-4. Polish visual se necessário  
+1. **PARTNER-FLEET-2** — viaturas + associação → **PASS** ([`PARTNER_FLEET_2_SMOKE_2026-07-21.md`](./PARTNER_FLEET_2_SMOKE_2026-07-21.md))  
+2. Documentos de viatura / caducidade / compliance  
+3. Relatórios por motorista / viatura / período  
+4. Turnos / check-in / check-out (futuro)  
