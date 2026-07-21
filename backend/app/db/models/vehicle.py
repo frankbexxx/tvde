@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -13,6 +13,7 @@ from app.db.base import Base
 if TYPE_CHECKING:
     from app.db.models.driver import Driver
     from app.db.models.partner import Partner
+    from app.db.models.vehicle_document import VehicleDocument
 
 
 class Vehicle(Base):
@@ -77,4 +78,8 @@ class Vehicle(Base):
         back_populates="active_vehicle",
         uselist=False,
         foreign_keys="Driver.active_vehicle_id",
+    )
+    documents: Mapped[List["VehicleDocument"]] = relationship(
+        back_populates="vehicle",
+        cascade="all, delete-orphan",
     )

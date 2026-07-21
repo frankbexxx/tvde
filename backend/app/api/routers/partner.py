@@ -9,6 +9,10 @@ Endpoint audit (tenant scope = ctx.partner_id from get_current_partner only):
 - GET/PATCH /partner/vehicles/{vehicle_id}
 - POST /partner/vehicles/{vehicle_id}/assign
 - POST /partner/vehicles/{vehicle_id}/unassign
+- GET/POST /partner/vehicles/{vehicle_id}/documents  (PARTNER-FLEET-3A)
+- GET/PATCH/DELETE /partner/vehicles/{vehicle_id}/documents/{document_id}
+- POST /partner/vehicles/{vehicle_id}/documents/{document_id}/upload
+- GET /partner/vehicles/{vehicle_id}/documents/{document_id}/file
 - GET /partner/trips
 - POST /partner/trips/{trip_id}/reassign-driver  (I011)
 - GET /partner/trips/{trip_id}
@@ -26,7 +30,7 @@ import io
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -53,6 +57,11 @@ from app.schemas.partner import (
     PartnerVehicleCreateRequest,
     PartnerVehicleItem,
     PartnerVehiclePatchRequest,
+)
+from app.schemas.partner_vehicle_documents import (
+    PartnerVehicleDocumentCreateRequest,
+    PartnerVehicleDocumentItem,
+    PartnerVehicleDocumentPatchRequest,
 )
 from app.schemas.partner_messages import (
     PartnerInboxMessageItem,
@@ -93,6 +102,18 @@ from app.services.partner_vehicles import (
     patch_vehicle_for_partner,
     unassign_vehicle,
     vehicle_to_item,
+)
+from app.services.partner_vehicle_documents import (
+    create_vehicle_document,
+    delete_vehicle_document,
+    document_to_item,
+    get_document_for_partner_or_404,
+    list_vehicle_documents,
+    patch_vehicle_document,
+)
+from app.services.vehicle_document_upload import (
+    resolve_vehicle_document_path,
+    save_vehicle_document_file,
 )
 from app.services.partner_messages import (
     create_partner_message,
@@ -589,6 +610,226 @@ async def partner_unassign_vehicle(
             status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
         ) from None
     return unassign_vehicle(db, partner_id=partner_id, vehicle_id=vid)
+
+
+@router.get(
+    "/vehicles/{vehicle_id}/documents",
+    response_model=list[PartnerVehicleDocumentItem],
+)
+async def partner_list_vehicle_documents(
+    vehicle_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> list[PartnerVehicleDocumentItem]:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    return list_vehicle_documents(db, partner_id=partner_id, vehicle_id=vid)
+
+
+@router.post(
+    "/vehicles/{vehicle_id}/documents",
+    response_model=PartnerVehicleDocumentItem,
+    status_code=status.HTTP_201_CREATED,
+)
+async def partner_create_vehicle_document(
+    vehicle_id: str,
+    body: PartnerVehicleDocumentCreateRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleDocumentItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    return create_vehicle_document(
+        db, partner_id=partner_id, vehicle_id=vid, body=body
+    )
+
+
+@router.get(
+    "/vehicles/{vehicle_id}/documents/{document_id}",
+    response_model=PartnerVehicleDocumentItem,
+)
+async def partner_get_vehicle_document(
+    vehicle_id: str,
+    document_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleDocumentItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+        did = uuid.UUID(document_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    doc = get_document_for_partner_or_404(
+        db, partner_id=partner_id, vehicle_id=vid, document_id=did
+    )
+    return document_to_item(doc)
+
+
+@router.patch(
+    "/vehicles/{vehicle_id}/documents/{document_id}",
+    response_model=PartnerVehicleDocumentItem,
+)
+async def partner_patch_vehicle_document(
+    vehicle_id: str,
+    document_id: str,
+    body: PartnerVehicleDocumentPatchRequest,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> PartnerVehicleDocumentItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+        did = uuid.UUID(document_id.strip())
+        reviewer = uuid.UUID(ctx.user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    return patch_vehicle_document(
+        db,
+        partner_id=partner_id,
+        vehicle_id=vid,
+        document_id=did,
+        body=body,
+        reviewer_user_id=reviewer,
+    )
+
+
+@router.post(
+    "/vehicles/{vehicle_id}/documents/{document_id}/upload",
+    response_model=PartnerVehicleDocumentItem,
+)
+async def partner_upload_vehicle_document(
+    vehicle_id: str,
+    document_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+) -> PartnerVehicleDocumentItem:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+        did = uuid.UUID(document_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    return save_vehicle_document_file(
+        db,
+        partner_id=partner_id,
+        vehicle_id=vid,
+        document_id=did,
+        upload=file,
+    )
+
+
+@router.get("/vehicles/{vehicle_id}/documents/{document_id}/file")
+async def partner_download_vehicle_document(
+    vehicle_id: str,
+    document_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> FileResponse:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+        did = uuid.UUID(document_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    path = resolve_vehicle_document_path(
+        db,
+        partner_id=partner_id,
+        vehicle_id=vid,
+        document_id=did,
+    )
+    return FileResponse(path, filename=path.name)
+
+
+@router.delete(
+    "/vehicles/{vehicle_id}/documents/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def partner_delete_vehicle_document(
+    vehicle_id: str,
+    document_id: str,
+    request: Request,
+    ctx: UserContext = Depends(get_current_partner),
+    db: Session = Depends(get_db),
+) -> None:
+    partner_id = _require_partner_id(ctx)
+    log_event(
+        "partner_api_access",
+        path=request.url.path,
+        user_id=ctx.user_id,
+        partner_id=partner_id,
+    )
+    try:
+        vid = uuid.UUID(vehicle_id.strip())
+        did = uuid.UUID(document_id.strip())
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_uuid"
+        ) from None
+    delete_vehicle_document(
+        db, partner_id=partner_id, vehicle_id=vid, document_id=did
+    )
 
 
 @router.get("/trips", response_model=list[PartnerTripItem])
