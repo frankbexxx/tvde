@@ -133,7 +133,9 @@ def assign_driver_to_partner(
     to avoid ambiguous fleet ownership during live execution.
     """
     driver = db.execute(
-        select(Driver).where(Driver.user_id == driver_user_id)
+        select(Driver)
+        .where(Driver.user_id == driver_user_id)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(
@@ -181,7 +183,9 @@ def unassign_driver_from_partner(db: Session, *, driver_user_id: uuid.UUID) -> D
     Idempotent if already on default partner. Same active-trip guard as assign.
     """
     driver = db.execute(
-        select(Driver).where(Driver.user_id == driver_user_id)
+        select(Driver)
+        .where(Driver.user_id == driver_user_id)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(
@@ -217,7 +221,9 @@ def partner_remove_driver_from_fleet(
 ) -> Driver:
     """Partner-scoped wrapper: driver must belong to fleet before unassign to default."""
     driver = db.execute(
-        select(Driver).where(Driver.user_id == driver_user_id)
+        select(Driver)
+        .where(Driver.user_id == driver_user_id)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if not driver or driver.partner_id != partner_id:
         raise HTTPException(
