@@ -15,6 +15,7 @@ from app.db.models.driver import Driver, DriverLocation
 from app.db.models.partner import Partner
 from app.db.models.trip import Trip
 from app.db.models.user import User
+from app.db.models.vehicle import Vehicle
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
@@ -82,8 +83,14 @@ def test_c001_create_partner_name_required(admin_ctx_override: str) -> None:
 def test_c002_assign_driver_partner(admin_ctx_override: str) -> None:
     db = SessionLocal()
     try:
+        pid_old = uuid.uuid4()
         pid_new = uuid.uuid4()
-        db.add(Partner(id=pid_new, name="Assign Test Fleet"))
+        db.add_all(
+            [
+                Partner(id=pid_old, name="Previous Test Fleet"),
+                Partner(id=pid_new, name="Assign Test Fleet"),
+            ]
+        )
         u = User(
             role=Role.driver,
             name="Drv Assign",
@@ -92,12 +99,22 @@ def test_c002_assign_driver_partner(admin_ctx_override: str) -> None:
         )
         db.add(u)
         db.flush()
+        vehicle = Vehicle(
+            partner_id=pid_old,
+            plate="C002-ASSIGN",
+            plate_normalized=f"C002ASSIGN{uuid.uuid4().hex[:8].upper()}",
+            make="Test",
+            model="Transfer",
+        )
+        db.add(vehicle)
+        db.flush()
         db.add(
             Driver(
                 user_id=u.id,
-                partner_id=DEFAULT_PARTNER_UUID,
+                partner_id=pid_old,
                 status=DriverStatus.approved,
                 commission_percent=15.0,
+                active_vehicle_id=vehicle.id,
             )
         )
         db.commit()
@@ -117,6 +134,7 @@ def test_c002_assign_driver_partner(admin_ctx_override: str) -> None:
     try:
         d = db.get(Driver, uuid.UUID(driver_id))
         assert d is not None and d.partner_id == pid_new
+        assert d.active_vehicle_id is None
     finally:
         db.close()
 

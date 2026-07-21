@@ -14,6 +14,7 @@ from app.db.models.driver import Driver
 from app.db.models.partner import Partner
 from app.db.models.trip import Trip
 from app.db.models.user import User
+from app.db.models.vehicle import Vehicle
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
@@ -197,6 +198,15 @@ def test_partner_remove_driver_from_fleet() -> None:
         )
         db.add_all([u_d, u_p])
         db.flush()
+        vehicle = Vehicle(
+            partner_id=pid,
+            plate="REMOVE-VEHICLE",
+            plate_normalized=f"REMOVEVEHICLE{uuid.uuid4().hex[:8].upper()}",
+            make="Test",
+            model="Remove",
+        )
+        db.add(vehicle)
+        db.flush()
         db.add(
             Driver(
                 user_id=u_d.id,
@@ -204,6 +214,7 @@ def test_partner_remove_driver_from_fleet() -> None:
                 status=DriverStatus.approved,
                 commission_percent=10.0,
                 is_available=False,
+                active_vehicle_id=vehicle.id,
             )
         )
         db.commit()
@@ -222,5 +233,6 @@ def test_partner_remove_driver_from_fleet() -> None:
         d = db2.get(Driver, uuid.UUID(driver_id))
         assert d is not None
         assert str(d.partner_id) == str(DEFAULT_PARTNER_UUID)
+        assert d.active_vehicle_id is None
     finally:
         db2.close()
