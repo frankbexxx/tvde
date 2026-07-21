@@ -199,7 +199,10 @@ def test_partner_vehicle_documents_crud_upload_tenant() -> None:
     r_patch = c.patch(
         f"/partner/vehicles/{veh_a}/documents/{doc_id}",
         headers=ha,
-        json={"notes": "ok", "expires_at": (datetime.now(timezone.utc) + timedelta(days=10)).isoformat()},
+        json={
+            "notes": "ok",
+            "expires_at": (datetime.now(timezone.utc) + timedelta(days=10)).isoformat(),
+        },
     )
     assert r_patch.status_code == 200
     assert r_patch.json()["notes"] == "ok"
@@ -235,6 +238,35 @@ def test_partner_vehicle_documents_crud_upload_tenant() -> None:
     assert r_up.status_code == 200, r_up.text
     assert r_up.json()["has_file"] is True
     assert r_up.json()["file_name"] == "apolice.pdf"
+    assert r_up.json()["status"] == "pending_review"
+
+    r_approve = c.patch(
+        f"/partner/vehicles/{veh_a}/documents/{doc_id}",
+        headers=ha,
+        json={"status": "approved"},
+    )
+    assert r_approve.status_code == 200, r_approve.text
+    assert r_approve.json()["status"] == "approved"
+    assert r_approve.json()["reviewed_by"] is not None
+    assert r_approve.json()["reviewed_at"] is not None
+
+    replacement = {
+        "file": (
+            "apolice-renovada.pdf",
+            io.BytesIO(b"%PDF-1.5 replacement"),
+            "application/pdf",
+        )
+    }
+    r_replace = c.post(
+        f"/partner/vehicles/{veh_a}/documents/{doc_id}/upload",
+        headers=ha,
+        files=replacement,
+    )
+    assert r_replace.status_code == 200, r_replace.text
+    assert r_replace.json()["file_name"] == "apolice-renovada.pdf"
+    assert r_replace.json()["status"] == "pending_review"
+    assert r_replace.json()["reviewed_by"] is None
+    assert r_replace.json()["reviewed_at"] is None
 
     r_dl = c.get(
         f"/partner/vehicles/{veh_a}/documents/{doc_id}/file",
