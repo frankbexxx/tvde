@@ -57,7 +57,7 @@ Ver checklist completo: [`PARTNER_FLEET_2_SMOKE_2026-07-21.md`](./PARTNER_FLEET_
 
 ## Próximos naturais
 
-1. Vehicle documents  
+1. Vehicle documents — ver [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](./PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md) (PF3A merged · PF3B UI)  
 2. Alertas de caducidade  
 3. Compliance gates / bloqueios legais  
 4. Turnos / check-in / check-out  

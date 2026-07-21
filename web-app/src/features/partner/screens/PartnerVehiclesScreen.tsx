@@ -17,6 +17,7 @@ import {
   driverVehicleCategoryLabel,
   type DriverVehicleCategory,
 } from '../../../services/driverVehicleCategories'
+import { PartnerVehicleDocumentsPanel } from './PartnerVehicleDocumentsPanel'
 
 type VehicleFormState = {
   plate: string
@@ -92,6 +93,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<VehicleFormState>(emptyForm)
   const [assignByVehicle, setAssignByVehicle] = useState<Record<string, string>>({})
+  const [docsOpenId, setDocsOpenId] = useState<string | null>(null)
 
   const apiErrorMessage = useCallback(
     (e: unknown, fallbackKey: string) => {
@@ -446,6 +448,26 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
                   </button>
                 </div>
               </div>
+
+              <div className="border-t border-border pt-2 space-y-2">
+                <button
+                  type="button"
+                  data-testid="partner-vehicle-docs-toggle"
+                  disabled={busy}
+                  aria-expanded={docsOpenId === v.id}
+                  onClick={() =>
+                    setDocsOpenId((cur) => (cur === v.id ? null : v.id))
+                  }
+                  className="w-full min-h-10 rounded-xl border border-border text-xs font-semibold hover:bg-muted/40 disabled:opacity-50"
+                >
+                  {docsOpenId === v.id
+                    ? t('vehicles.documents.hide')
+                    : t('vehicles.documents.show')}
+                </button>
+                {docsOpenId === v.id ? (
+                  <PartnerVehicleDocumentsPanel vehicleId={v.id} />
+                ) : null}
+              </div>
             </li>
           )
         })}
@@ -536,8 +558,8 @@ function VehicleFields({
                 aria-pressed={active}
                 onClick={() => toggleCategory(key)}
                 className={`min-h-9 rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
-                    ? 'border-info bg-info/15 text-foreground'
-                    : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                  ? 'border-info bg-info/15 text-foreground'
+                  : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                   }`}
               >
                 {driverVehicleCategoryLabel(key)}

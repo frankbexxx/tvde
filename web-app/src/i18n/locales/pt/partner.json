@@ -307,6 +307,63 @@
       "driverRequired": "Selecciona um motorista.",
       "plateDuplicate": "Esta matrícula já existe na plataforma.",
       "alreadyAssigned": "Esta viatura já está associada a outro motorista."
+    },
+    "documents": {
+      "show": "Documentos",
+      "hide": "Ocultar documentos",
+      "title": "Documentos da viatura",
+      "loading": "A carregar documentos…",
+      "add": "Adicionar",
+      "edit": "Editar",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "saving": "A guardar…",
+      "download": "Descarregar",
+      "remove": "Remover",
+      "confirmDelete": "Remover este documento? Esta acção não se pode anular.",
+      "createdOk": "Documento criado.",
+      "updatedOk": "Documento actualizado.",
+      "deletedOk": "Documento removido.",
+      "expiresAt": "Validade",
+      "loadError": "Erro ao carregar documentos.",
+      "saveError": "Não foi possível guardar o documento.",
+      "uploadError": "Não foi possível enviar o ficheiro.",
+      "downloadError": "Não foi possível descarregar o ficheiro.",
+      "deleteError": "Não foi possível remover o documento.",
+      "types": {
+        "vehicle_registration": "DUA / Certificado de Matrícula",
+        "vehicle_insurance": "Seguro TVDE",
+        "periodic_inspection": "Inspeção Periódica Obrigatória",
+        "tvde_sticker": "Dístico TVDE / Identificação TVDE"
+      },
+      "status": {
+        "missing": "Em falta",
+        "pending_review": "Pendente",
+        "valid": "Válido",
+        "expiring_soon": "Expira em breve",
+        "expired": "Expirado",
+        "rejected": "Rejeitado"
+      },
+      "storedStatus": {
+        "pending_review": "Pendente de revisão",
+        "approved": "Aprovado",
+        "rejected": "Rejeitado"
+      },
+      "fields": {
+        "documentNumber": "Número do documento (opcional)",
+        "issuer": "Emissor (opcional)",
+        "issuedAt": "Data de emissão",
+        "validFrom": "Válido desde",
+        "expiresAt": "Válido até",
+        "notes": "Notas (opcional)",
+        "file": "Ficheiro (máx. 5 MB)"
+      },
+      "errors": {
+        "typeExists": "Já existe um documento deste tipo nesta viatura.",
+        "fileTooLarge": "O ficheiro excede o limite de 5 MB.",
+        "forbidden": "Não tens permissão para aceder a este documento.",
+        "notFound": "Documento ou viatura não encontrado."
+      }
     }
   },
   "workspace": {

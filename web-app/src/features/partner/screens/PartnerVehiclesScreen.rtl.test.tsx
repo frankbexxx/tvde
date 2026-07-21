@@ -37,6 +37,7 @@ const api = vi.hoisted(() => ({
   patchPartnerVehicle: vi.fn(),
   assignPartnerVehicle: vi.fn(),
   unassignPartnerVehicle: vi.fn(),
+  fetchPartnerVehicleDocuments: vi.fn(),
 }))
 
 vi.mock('../../../api/partner', async (importOriginal) => {
@@ -49,6 +50,7 @@ vi.mock('../../../api/partner', async (importOriginal) => {
     patchPartnerVehicle: api.patchPartnerVehicle,
     assignPartnerVehicle: api.assignPartnerVehicle,
     unassignPartnerVehicle: api.unassignPartnerVehicle,
+    fetchPartnerVehicleDocuments: api.fetchPartnerVehicleDocuments,
   }
 })
 
@@ -56,6 +58,7 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     api.fetchPartnerDrivers.mockResolvedValue([driver])
+    api.fetchPartnerVehicleDocuments.mockResolvedValue([])
     await i18n.changeLanguage('pt')
   })
 
@@ -255,6 +258,23 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
       expect(screen.getByTestId('partner-vehicles-error')).toHaveTextContent(
         /já está associada a outro motorista/i
       )
+    })
+  })
+
+  it('botão Documentos está visível e só carrega painel ao abrir (lazy)', async () => {
+    api.fetchPartnerVehicles.mockResolvedValue([vehicle])
+    render(<PartnerVehiclesScreen />)
+    await waitFor(() => expect(screen.getByTestId('partner-vehicle-docs-toggle')).toBeInTheDocument())
+    expect(screen.getByTestId('partner-vehicle-docs-toggle')).toHaveTextContent(/documentos/i)
+    expect(screen.queryByTestId('partner-vehicle-docs-panel')).not.toBeInTheDocument()
+    expect(api.fetchPartnerVehicleDocuments).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByTestId('partner-vehicle-docs-toggle'))
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-docs-panel')).toBeInTheDocument()
+    })
+    await waitFor(() => {
+      expect(api.fetchPartnerVehicleDocuments).toHaveBeenCalledWith('veh-1')
     })
   })
 })

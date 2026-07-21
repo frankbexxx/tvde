@@ -307,6 +307,63 @@
       "driverRequired": "Select a driver.",
       "plateDuplicate": "This plate already exists on the platform.",
       "alreadyAssigned": "This vehicle is already assigned to another driver."
+    },
+    "documents": {
+      "show": "Documents",
+      "hide": "Hide documents",
+      "title": "Vehicle documents",
+      "loading": "Loading documents…",
+      "add": "Add",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving…",
+      "download": "Download",
+      "remove": "Remove",
+      "confirmDelete": "Remove this document? This cannot be undone.",
+      "createdOk": "Document created.",
+      "updatedOk": "Document updated.",
+      "deletedOk": "Document removed.",
+      "expiresAt": "Expires",
+      "loadError": "Error loading documents.",
+      "saveError": "Could not save the document.",
+      "uploadError": "Could not upload the file.",
+      "downloadError": "Could not download the file.",
+      "deleteError": "Could not remove the document.",
+      "types": {
+        "vehicle_registration": "Registration certificate (DUA)",
+        "vehicle_insurance": "TVDE insurance",
+        "periodic_inspection": "Periodic inspection",
+        "tvde_sticker": "TVDE sticker / ID"
+      },
+      "status": {
+        "missing": "Missing",
+        "pending_review": "Pending",
+        "valid": "Valid",
+        "expiring_soon": "Expiring soon",
+        "expired": "Expired",
+        "rejected": "Rejected"
+      },
+      "storedStatus": {
+        "pending_review": "Pending review",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "fields": {
+        "documentNumber": "Document number (optional)",
+        "issuer": "Issuer (optional)",
+        "issuedAt": "Issue date",
+        "validFrom": "Valid from",
+        "expiresAt": "Valid until",
+        "notes": "Notes (optional)",
+        "file": "File (max 5 MB)"
+      },
+      "errors": {
+        "typeExists": "A document of this type already exists for this vehicle.",
+        "fileTooLarge": "The file exceeds the 5 MB limit.",
+        "forbidden": "You do not have permission to access this document.",
+        "notFound": "Document or vehicle not found."
+      }
     }
   },
   "workspace": {
