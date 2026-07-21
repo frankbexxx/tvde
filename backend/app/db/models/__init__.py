@@ -15,6 +15,7 @@ from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.user import User
 from app.db.models.vehicle import Vehicle
+from app.db.models.vehicle_document import VehicleDocument
 
 __all__ = [
     "User",
@@ -27,6 +28,7 @@ __all__ = [
     "DriverZoneDayBudget",
     "DriverZoneSession",
     "Vehicle",
+    "VehicleDocument",
     "Trip",
     "Payment",
     "TripOffer",
