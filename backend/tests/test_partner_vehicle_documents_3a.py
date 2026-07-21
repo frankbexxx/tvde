@@ -199,7 +199,10 @@ def test_partner_vehicle_documents_crud_upload_tenant() -> None:
     r_patch = c.patch(
         f"/partner/vehicles/{veh_a}/documents/{doc_id}",
         headers=ha,
-        json={"notes": "ok", "expires_at": (datetime.now(timezone.utc) + timedelta(days=10)).isoformat()},
+        json={
+            "notes": "ok",
+            "expires_at": (datetime.now(timezone.utc) + timedelta(days=10)).isoformat(),
+        },
     )
     assert r_patch.status_code == 200
     assert r_patch.json()["notes"] == "ok"
