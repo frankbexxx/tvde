@@ -5,12 +5,36 @@ from __future__ import annotations
 import uuid
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.db.models.driver import Driver
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, TripStatus
-from app.services.partner_queries import get_driver_for_partner, get_trip_for_partner
 from app.utils.logging import log_event
+
+
+def _lock_partner_drivers(
+    db: Session,
+    *,
+    partner_id: uuid.UUID,
+    driver_user_ids: set[uuid.UUID],
+) -> dict[uuid.UUID, Driver]:
+    """Lock drivers in a stable order so fleet transfers cannot pass stale checks."""
+    rows = (
+        db.execute(
+            select(Driver)
+            .where(
+                Driver.user_id.in_(driver_user_ids),
+                Driver.partner_id == partner_id,
+            )
+            .order_by(Driver.user_id)
+            .with_for_update(of=Driver)
+        )
+        .scalars()
+        .all()
+    )
+    return {row.user_id: row for row in rows}
 
 
 def partner_reassign_trip_driver(
@@ -24,7 +48,13 @@ def partner_reassign_trip_driver(
     Swap assigned driver for another driver in the same fleet.
     Trip must be in assigned; both drivers must belong to this partner.
     """
-    t = get_trip_for_partner(db, partner_id, trip_id)
+    pid = uuid.UUID(partner_id)
+    t = db.execute(
+        select(Trip)
+        .join(Driver, Trip.driver_id == Driver.user_id)
+        .where(Trip.id == trip_id, Driver.partner_id == pid)
+        .with_for_update(of=Trip)
+    ).scalar_one_or_none()
     if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     if t.status != TripStatus.assigned:
@@ -37,10 +67,16 @@ def partner_reassign_trip_driver(
             status_code=status.HTTP_409_CONFLICT,
             detail="trip_has_no_driver",
         )
-    old = get_driver_for_partner(db, partner_id, t.driver_id)
+    old_driver_user_id = t.driver_id
+    locked_drivers = _lock_partner_drivers(
+        db,
+        partner_id=pid,
+        driver_user_ids={old_driver_user_id, new_driver_user_id},
+    )
+    old = locked_drivers.get(old_driver_user_id)
     if not old:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
-    new_d = get_driver_for_partner(db, partner_id, new_driver_user_id)
+    new_d = locked_drivers.get(new_driver_user_id)
     if not new_d or new_d.status != DriverStatus.approved:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

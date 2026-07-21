@@ -14,12 +14,14 @@ from sqlalchemy import text
 from app.auth.security import create_access_token
 from app.db.models.driver import Driver
 from app.db.models.partner import Partner
+from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.db.models.vehicle import Vehicle
 from app.db.session import SessionLocal, engine
 from app.main import app
-from app.models.enums import DriverStatus, Role, UserStatus
-from app.services import partner_vehicles, partners_admin
+from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
+from app.services import partner_trip_ops, partner_vehicles, partners_admin
+from app.services.partner_trip_ops import partner_reassign_trip_driver
 from app.services.partner_vehicles import assign_vehicle_to_driver, normalize_plate
 from app.services.partners_admin import assign_driver_to_partner
 
@@ -167,6 +169,163 @@ def test_vehicle_assignment_cannot_cross_concurrent_fleet_transfer(
         assert driver is not None
         assert driver.partner_id == new_pid
         assert driver.active_vehicle_id is None
+    finally:
+        verify_db.close()
+
+
+def test_trip_reassignment_cannot_cross_concurrent_fleet_transfer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = SessionLocal()
+    try:
+        fleet_pid = uuid.uuid4()
+        other_pid = uuid.uuid4()
+        passenger = User(
+            role=Role.passenger,
+            name="Concurrent Trip Passenger",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        old_driver_user = User(
+            role=Role.driver,
+            name="Concurrent Old Trip Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        new_driver_user = User(
+            role=Role.driver,
+            name="Concurrent New Trip Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        db.add_all(
+            [
+                Partner(id=fleet_pid, name="Concurrent Trip Fleet"),
+                Partner(id=other_pid, name="Concurrent Trip Other Fleet"),
+                passenger,
+                old_driver_user,
+                new_driver_user,
+            ]
+        )
+        db.flush()
+        db.add_all(
+            [
+                Driver(
+                    user_id=old_driver_user.id,
+                    partner_id=fleet_pid,
+                    status=DriverStatus.approved,
+                    commission_percent=15.0,
+                ),
+                Driver(
+                    user_id=new_driver_user.id,
+                    partner_id=fleet_pid,
+                    status=DriverStatus.approved,
+                    commission_percent=15.0,
+                ),
+            ]
+        )
+        trip = Trip(
+            passenger_id=passenger.id,
+            driver_id=old_driver_user.id,
+            status=TripStatus.assigned,
+            origin_lat=38.72,
+            origin_lng=-9.14,
+            destination_lat=38.73,
+            destination_lng=-9.13,
+            estimated_price=10.0,
+            vehicle_category="x",
+        )
+        db.add(trip)
+        db.commit()
+        trip_id = trip.id
+        new_driver_user_id = new_driver_user.id
+    finally:
+        db.close()
+
+    drivers_locked = threading.Event()
+    release_reassignment = threading.Event()
+    transfer_done = threading.Event()
+    outcomes: queue.Queue[tuple[str, object]] = queue.Queue()
+    original_lock_partner_drivers = partner_trip_ops._lock_partner_drivers
+
+    def pause_after_driver_locks(db, *, partner_id, driver_user_ids):
+        result = original_lock_partner_drivers(
+            db,
+            partner_id=partner_id,
+            driver_user_ids=driver_user_ids,
+        )
+        drivers_locked.set()
+        if not release_reassignment.wait(timeout=5):
+            raise TimeoutError("test did not release trip reassignment")
+        return result
+
+    monkeypatch.setattr(
+        partner_trip_ops,
+        "_lock_partner_drivers",
+        pause_after_driver_locks,
+    )
+
+    def run_reassignment() -> None:
+        thread_db = SessionLocal()
+        try:
+            partner_reassign_trip_driver(
+                thread_db,
+                partner_id=str(fleet_pid),
+                trip_id=trip_id,
+                new_driver_user_id=new_driver_user_id,
+            )
+            outcomes.put(("reassignment", "ok"))
+        except BaseException as exc:
+            outcomes.put(("reassignment_error", exc))
+        finally:
+            thread_db.close()
+
+    def run_transfer() -> None:
+        thread_db = SessionLocal()
+        try:
+            assign_driver_to_partner(
+                thread_db,
+                driver_user_id=new_driver_user_id,
+                partner_id=other_pid,
+            )
+            outcomes.put(("transfer", "unexpected_success"))
+        except HTTPException as exc:
+            outcomes.put(("transfer_error", (exc.status_code, exc.detail)))
+        except BaseException as exc:
+            outcomes.put(("transfer_exception", exc))
+        finally:
+            thread_db.close()
+            transfer_done.set()
+
+    reassignment_thread = threading.Thread(target=run_reassignment)
+    transfer_thread = threading.Thread(target=run_transfer)
+    reassignment_thread.start()
+    assert drivers_locked.wait(timeout=5)
+    transfer_thread.start()
+    try:
+        assert not transfer_done.wait(timeout=0.25)
+    finally:
+        release_reassignment.set()
+
+    reassignment_thread.join(timeout=5)
+    transfer_thread.join(timeout=5)
+    assert not reassignment_thread.is_alive()
+    assert not transfer_thread.is_alive()
+
+    result = dict(outcomes.get_nowait() for _ in range(2))
+    assert result == {
+        "reassignment": "ok",
+        "transfer_error": (409, "driver_has_active_trip"),
+    }
+
+    verify_db = SessionLocal()
+    try:
+        trip = verify_db.get(Trip, trip_id)
+        driver = verify_db.get(Driver, new_driver_user_id)
+        assert trip is not None
+        assert driver is not None
+        assert trip.driver_id == new_driver_user_id
+        assert driver.partner_id == fleet_pid
     finally:
         verify_db.close()
 
