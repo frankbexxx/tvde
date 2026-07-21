@@ -141,7 +141,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
             "model": "Corolla",
             "year": 2020,
             "color": "preto",
-            "service_category": "x",
+            "service_categories": ["x"],
         },
     )
     assert r.status_code == 201, r.text
@@ -149,8 +149,37 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
     assert v1["plate"] == plate_display
     assert v1["plate_normalized"] == normalize_plate(plate_display)
     assert v1["make"] == "Toyota"
+    assert v1["service_categories"] == ["x"]
     assert v1["assigned_driver_id"] is None
     vid1 = v1["id"]
+
+    # multi categories
+    r_multi = c.post(
+        "/partner/vehicles",
+        headers=ha,
+        json={
+            "plate": f"77-{tag[:2]}-{tag[4:6]}",
+            "make": "Mercedes",
+            "model": "Vito",
+            "service_categories": ["x", "xl", "van"],
+        },
+    )
+    assert r_multi.status_code == 201, r_multi.text
+    assert r_multi.json()["service_categories"] == ["x", "xl", "van"]
+
+    # invalid category
+    r_bad = c.post(
+        "/partner/vehicles",
+        headers=ha,
+        json={
+            "plate": f"88-{tag[2:4]}-{tag[:2]}",
+            "make": "Bad",
+            "model": "Cat",
+            "service_categories": ["x", "spaceship"],
+        },
+    )
+    assert r_bad.status_code == 400
+    assert r_bad.json()["detail"] == "invalid_service_category"
 
     # 10) driver without vehicle still OK on list
     rd0 = c.get("/partner/drivers", headers=ha)
@@ -214,7 +243,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
     assert d1["vehicle_plate"] == plate_display
     assert d1["vehicle_make"] == "Toyota"
     assert d1["vehicle_model"] == "Corolla"
-    assert d1["vehicle_service_category"] == "x"
+    assert d1["vehicle_service_categories"] == ["x"]
 
     # 5) assign vehicle to other partner's driver → 404
     r_wrong = c.post(
@@ -232,7 +261,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
             "plate": plate_a2,
             "make": "Seat",
             "model": "Leon",
-            "service_category": "xl",
+            "service_categories": ["xl"],
         },
     )
     assert r2.status_code == 201

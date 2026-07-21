@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -48,11 +48,11 @@ class Vehicle(Base):
     model: Mapped[str] = mapped_column(String(80), nullable=False)
     year: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     color: Mapped[Optional[str]] = mapped_column(String(40), nullable=True)
-    service_category: Mapped[str] = mapped_column(
-        String(24),
+    service_categories: Mapped[str] = mapped_column(
+        Text,
         nullable=False,
         server_default="x",
-        comment="Vehicle metadata only; does not drive matching (use drivers.vehicle_categories).",
+        comment="CSV of service categories (same codes as drivers.vehicle_categories); metadata only.",
     )
     status: Mapped[str] = mapped_column(
         String(24),
