@@ -13,6 +13,7 @@ import {
   type PartnerVehicleDocumentStoredStatus,
   type PartnerVehicleDocumentType,
 } from '../../../api/partner'
+import { triggerBlobDownload } from '../triggerBlobDownload'
 
 type DocFormState = {
   document_number: string
@@ -228,15 +229,7 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
     setBusy(true)
     try {
       const blob = await downloadPartnerVehicleDocumentFile(vehicleId, doc.id)
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = doc.file_name || `${doc.document_type}.bin`
-      a.rel = 'noopener'
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
+      triggerBlobDownload(blob, doc.file_name || `${doc.document_type}.bin`)
     } catch (e) {
       setError(apiErrorMessage(e, 'vehicles.documents.downloadError'))
     } finally {

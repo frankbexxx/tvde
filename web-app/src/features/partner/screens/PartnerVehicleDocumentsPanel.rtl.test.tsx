@@ -39,6 +39,10 @@ const api = vi.hoisted(() => ({
   downloadPartnerVehicleDocumentFile: vi.fn(),
 }))
 
+const downloads = vi.hoisted(() => ({
+  triggerBlobDownload: vi.fn(),
+}))
+
 vi.mock('../../../api/partner', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../../api/partner')>()
   return {
@@ -51,6 +55,10 @@ vi.mock('../../../api/partner', async (importOriginal) => {
     downloadPartnerVehicleDocumentFile: api.downloadPartnerVehicleDocumentFile,
   }
 })
+
+vi.mock('../triggerBlobDownload', () => ({
+  triggerBlobDownload: downloads.triggerBlobDownload,
+}))
 
 describe('PartnerVehicleDocumentsPanel (PARTNER-FLEET-3B)', () => {
   beforeEach(async () => {
@@ -241,15 +249,8 @@ describe('PartnerVehicleDocumentsPanel (PARTNER-FLEET-3B)', () => {
       file_name: 'distico.pdf',
     })
     api.fetchPartnerVehicleDocuments.mockResolvedValue([existing])
-    api.downloadPartnerVehicleDocumentFile.mockResolvedValue(new Blob(['x']))
-
-    const createObjectURL = vi.fn(() => 'blob:mock')
-    const revokeObjectURL = vi.fn()
-    vi.stubGlobal('URL', {
-      ...URL,
-      createObjectURL,
-      revokeObjectURL,
-    })
+    const blob = new Blob(['x'])
+    api.downloadPartnerVehicleDocumentFile.mockResolvedValue(blob)
 
     render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)
     await waitFor(() =>
@@ -259,7 +260,7 @@ describe('PartnerVehicleDocumentsPanel (PARTNER-FLEET-3B)', () => {
     await waitFor(() => {
       expect(api.downloadPartnerVehicleDocumentFile).toHaveBeenCalledWith('veh-1', existing.id)
     })
-    vi.unstubAllGlobals()
+    expect(downloads.triggerBlobDownload).toHaveBeenCalledWith(blob, 'distico.pdf')
   })
 
   it('delete remove documento e volta a Em falta', async () => {
