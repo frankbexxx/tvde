@@ -53,7 +53,9 @@ def _seed_stale_assigned_trip() -> tuple[
         db.add_all(
             [
                 Partner(id=fleet_id, name=f"Timeout Fleet {fleet_id}"),
-                Partner(id=other_fleet_id, name=f"Timeout Other Fleet {other_fleet_id}"),
+                Partner(
+                    id=other_fleet_id, name=f"Timeout Other Fleet {other_fleet_id}"
+                ),
                 passenger,
                 old_driver,
                 new_driver,
@@ -184,7 +186,9 @@ def test_timeout_cannot_overwrite_concurrent_partner_reassignment(
         def note_first_statement(*_args, **_kwargs) -> None:
             timeout_statement_started.set()
 
-        event.listen(connection, "before_cursor_execute", note_first_statement, once=True)
+        event.listen(
+            connection, "before_cursor_execute", note_first_statement, once=True
+        )
         thread_db = Session(bind=connection)
         try:
             counts = trip_timeouts.run_trip_timeouts(thread_db)

@@ -13,7 +13,10 @@ from app.db.models.trip import Trip
 from app.events.dispatcher import emit
 from app.models.enums import TripStatus
 from app.schemas.realtime import TripStatusChangedEvent
-from app.services.trips import _set_driver_available, on_trip_status_change_for_driving_compliance
+from app.services.trips import (
+    _set_driver_available,
+    on_trip_status_change_for_driving_compliance,
+)
 from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
