@@ -162,6 +162,7 @@ def assign_driver_to_partner(
             detail="driver_has_active_trip",
         )
     old_pid = str(driver.partner_id)
+    driver.active_vehicle_id = None
     driver.partner_id = partner_id
     db.commit()
     db.refresh(driver)
@@ -195,6 +196,7 @@ def unassign_driver_from_partner(db: Session, *, driver_user_id: uuid.UUID) -> D
             detail="driver_has_active_trip",
         )
     old_pid = str(driver.partner_id)
+    driver.active_vehicle_id = None
     driver.partner_id = DEFAULT_PARTNER_UUID
     db.commit()
     db.refresh(driver)
