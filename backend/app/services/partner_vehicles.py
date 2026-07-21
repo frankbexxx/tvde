@@ -289,6 +289,7 @@ def assign_vehicle_to_driver(
             select(Driver)
             .where(Driver.user_id == driver_user_id, Driver.partner_id == pid)
             .options(joinedload(Driver.user))
+            .with_for_update(of=Driver)
         )
         .unique()
         .scalar_one_or_none()

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import queue
+import threading
 import uuid
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
@@ -12,10 +15,13 @@ from app.auth.security import create_access_token
 from app.db.models.driver import Driver
 from app.db.models.partner import Partner
 from app.db.models.user import User
+from app.db.models.vehicle import Vehicle
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
-from app.services.partner_vehicles import normalize_plate
+from app.services import partner_vehicles, partners_admin
+from app.services.partner_vehicles import assign_vehicle_to_driver, normalize_plate
+from app.services.partners_admin import assign_driver_to_partner
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -30,6 +36,139 @@ def _require_postgres() -> None:
 def test_normalize_plate_strips_spaces_hyphens_upper() -> None:
     assert normalize_plate("  ab-12-cd ") == "AB12CD"
     assert normalize_plate("aa 11 bb") == "AA11BB"
+
+
+def test_vehicle_assignment_cannot_cross_concurrent_fleet_transfer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = SessionLocal()
+    try:
+        old_pid = uuid.uuid4()
+        new_pid = uuid.uuid4()
+        driver_user = User(
+            role=Role.driver,
+            name="Concurrent Transfer Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        db.add_all(
+            [
+                Partner(id=old_pid, name="Concurrent Old Fleet"),
+                Partner(id=new_pid, name="Concurrent New Fleet"),
+                driver_user,
+            ]
+        )
+        db.flush()
+        vehicle = Vehicle(
+            partner_id=old_pid,
+            plate="RACE-TRANSFER",
+            plate_normalized=f"RACETRANSFER{uuid.uuid4().hex[:8].upper()}",
+            make="Test",
+            model="Race",
+        )
+        db.add_all(
+            [
+                Driver(
+                    user_id=driver_user.id,
+                    partner_id=old_pid,
+                    status=DriverStatus.approved,
+                    commission_percent=15.0,
+                ),
+                vehicle,
+            ]
+        )
+        db.commit()
+        driver_user_id = driver_user.id
+        vehicle_id = vehicle.id
+    finally:
+        db.close()
+
+    transfer_locked = threading.Event()
+    release_transfer = threading.Event()
+    vehicle_checked = threading.Event()
+    assignment_done = threading.Event()
+    outcomes: queue.Queue[tuple[str, object]] = queue.Queue()
+    original_has_active_trip = partners_admin._driver_has_active_trip
+    original_get_vehicle = partner_vehicles.get_vehicle_for_partner
+
+    def pause_transfer_after_driver_lock(db, user_id):
+        transfer_locked.set()
+        if not release_transfer.wait(timeout=5):
+            raise TimeoutError("test did not release fleet transfer")
+        return original_has_active_trip(db, user_id)
+
+    def note_vehicle_check(db, partner_id, requested_vehicle_id):
+        result = original_get_vehicle(db, partner_id, requested_vehicle_id)
+        vehicle_checked.set()
+        return result
+
+    monkeypatch.setattr(
+        partners_admin, "_driver_has_active_trip", pause_transfer_after_driver_lock
+    )
+    monkeypatch.setattr(partner_vehicles, "get_vehicle_for_partner", note_vehicle_check)
+
+    def run_transfer() -> None:
+        thread_db = SessionLocal()
+        try:
+            assign_driver_to_partner(
+                thread_db,
+                driver_user_id=driver_user_id,
+                partner_id=new_pid,
+            )
+            outcomes.put(("transfer", "ok"))
+        except BaseException as exc:
+            outcomes.put(("transfer_error", exc))
+        finally:
+            thread_db.close()
+
+    def run_vehicle_assignment() -> None:
+        thread_db = SessionLocal()
+        try:
+            assign_vehicle_to_driver(
+                thread_db,
+                partner_id=str(old_pid),
+                vehicle_id=vehicle_id,
+                driver_user_id=driver_user_id,
+            )
+            outcomes.put(("assignment", "unexpected_success"))
+        except HTTPException as exc:
+            outcomes.put(("assignment_error", (exc.status_code, exc.detail)))
+        except BaseException as exc:
+            outcomes.put(("assignment_exception", exc))
+        finally:
+            thread_db.close()
+            assignment_done.set()
+
+    transfer_thread = threading.Thread(target=run_transfer)
+    assignment_thread = threading.Thread(target=run_vehicle_assignment)
+    transfer_thread.start()
+    assert transfer_locked.wait(timeout=5)
+    assignment_thread.start()
+    assert vehicle_checked.wait(timeout=5)
+    try:
+        assert not assignment_done.wait(timeout=0.25)
+    finally:
+        release_transfer.set()
+
+    transfer_thread.join(timeout=5)
+    assignment_thread.join(timeout=5)
+    assert not transfer_thread.is_alive()
+    assert not assignment_thread.is_alive()
+
+    result = dict(outcomes.get_nowait() for _ in range(2))
+    assert result == {
+        "transfer": "ok",
+        "assignment_error": (404, "not_found"),
+    }
+
+    verify_db = SessionLocal()
+    try:
+        driver = verify_db.get(Driver, driver_user_id)
+        assert driver is not None
+        assert driver.partner_id == new_pid
+        assert driver.active_vehicle_id is None
+    finally:
+        verify_db.close()
 
 
 def _seed_two_fleets() -> dict[str, str]:
