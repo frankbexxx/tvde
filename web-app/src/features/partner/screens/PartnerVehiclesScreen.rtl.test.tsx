@@ -13,7 +13,7 @@ const vehicle: PartnerVehicleRow = {
   model: 'Corolla',
   year: 2020,
   color: 'preto',
-  service_category: 'x',
+  service_categories: ['x'],
   status: 'active',
   created_at: '2026-07-20T00:00:00Z',
   updated_at: '2026-07-20T00:00:00Z',
@@ -74,7 +74,50 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
       expect(screen.getByTestId('partner-vehicle-plate')).toHaveTextContent('12-AB-34')
     })
     expect(screen.getByTestId('partner-vehicle-make-model')).toHaveTextContent(/Toyota Corolla/)
+    expect(screen.getByTestId('partner-vehicle-categories')).toHaveTextContent(/X/)
     expect(screen.getByTestId('partner-vehicle-assigned')).toHaveTextContent(/sem motorista/i)
+  })
+
+  it('usa chips das mesmas categorias do Driver e envia lista no create', async () => {
+    api.fetchPartnerVehicles.mockResolvedValue([])
+    api.createPartnerVehicle.mockResolvedValue({
+      ...vehicle,
+      service_categories: ['x', 'xl', 'pet'],
+    })
+    render(<PartnerVehiclesScreen />)
+    await waitFor(() => expect(screen.getByTestId('partner-vehicles-empty')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByTestId('partner-vehicles-toggle-create'))
+    expect(screen.getByTestId('partner-vehicle-field-categories')).toBeInTheDocument()
+    expect(screen.queryByTestId('partner-vehicle-field-service-category')).not.toBeInTheDocument()
+    for (const key of ['x', 'xl', 'pet', 'comfort', 'black', 'electric', 'van']) {
+      expect(screen.getByTestId(`partner-vehicle-category-${key}`)).toBeInTheDocument()
+    }
+
+    fireEvent.change(screen.getByTestId('partner-vehicle-field-plate'), {
+      target: { value: '12-AB-34' },
+    })
+    fireEvent.change(screen.getByTestId('partner-vehicle-field-make'), {
+      target: { value: 'Toyota' },
+    })
+    fireEvent.change(screen.getByTestId('partner-vehicle-field-model'), {
+      target: { value: 'Corolla' },
+    })
+    fireEvent.click(screen.getByTestId('partner-vehicle-category-xl'))
+    fireEvent.click(screen.getByTestId('partner-vehicle-category-pet'))
+
+    api.fetchPartnerVehicles.mockResolvedValue([
+      { ...vehicle, service_categories: ['x', 'xl', 'pet'] },
+    ])
+    fireEvent.click(screen.getByTestId('partner-vehicles-create-submit'))
+
+    await waitFor(() => {
+      expect(api.createPartnerVehicle).toHaveBeenCalledWith(
+        expect.objectContaining({
+          service_categories: expect.arrayContaining(['x', 'xl', 'pet']),
+        })
+      )
+    })
   })
 
   it('criar viatura chama API e mostra sucesso', async () => {

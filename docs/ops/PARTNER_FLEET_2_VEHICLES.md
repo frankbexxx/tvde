@@ -1,9 +1,10 @@
 # PARTNER-FLEET-2 — Vehicles + associação motorista↔viatura
 
-**Estado:** PF2A backend **merged** (`7a5ca81` / [#427](https://github.com/frankbexxx/tvde/pull/427)) · PF2B frontend **em curso**  
+**Estado:** PF2A+2B **merged** · smoke funcional **PASS** (2026-07-20) · **PF2C** categorias multi (em curso)  
+**`main` (pré-2C):** `a22df10` ([#427](https://github.com/frankbexxx/tvde/pull/427) + [#428](https://github.com/frankbexxx/tvde/pull/428))  
 **Pré-condição:** PARTNER-FLEET-1A **PASS** · Partner ops base.
 
-**Handoff:** [`BACKLOG_POST_PILOTO.md`](../meta/BACKLOG_POST_PILOTO.md) · slice seguinte após 1A.
+**Handoff:** [`BACKLOG_POST_PILOTO.md`](../meta/BACKLOG_POST_PILOTO.md)
 
 ---
 
@@ -13,56 +14,50 @@ Introduzir entidade **Vehicle** própria e permitir ao Partner gerir viaturas e 
 
 ---
 
-## PF2A — Backend (feito)
+## Smoke PF2 (2026-07-20) — PASS funcional
+
+| # | Passo | Resultado |
+|---|--------|-----------|
+| 1 | Criar viatura | PASS |
+| 2 | Associar motorista | PASS |
+| 3 | Lista motoristas mostra matrícula | PASS |
+| 4 | «Em viagem» mantém matrícula | PASS |
+| 5 | Completed / remove badge mantém matrícula | PASS |
+| 6 | CSV | PASS |
+| 7 | Matrícula duplicada | PASS |
+| 8 | Desassociação | PASS |
+
+**Bloqueador leve (antes do fecho documental):** categorias da viatura eram input livre → **PF2C**.
+
+---
+
+## PF2A — Backend
 
 | Item | Detalhe |
 |------|---------|
-| Tabela `vehicles` | `partner_id`, `plate`, `plate_normalized` **UNIQUE global**, make/model, year/color, `service_category`, status |
-| `drivers.active_vehicle_id` | FK nullable + UNIQUE (Postgres: vários NULL) |
-| API Partner | `GET/POST /partner/vehicles`, `GET/PATCH …/{id}`, `POST …/assign`, `POST …/unassign` |
-| `PartnerDriverItem` | `active_vehicle_id`, `vehicle_plate/make/model/service_category` |
-| Matching | **Intacto** — continua `drivers.vehicle_categories` |
-| Docs viatura | Continuam em `drivers.documents` (`inspecao_viatura`) — fora deste slice |
+| Tabela `vehicles` | `partner_id`, `plate`, `plate_normalized` UNIQUE global, make/model, year/color, status |
+| `drivers.active_vehicle_id` | FK nullable + UNIQUE |
+| API Partner | CRUD + assign/unassign |
+| Matching | **Intacto** — `drivers.vehicle_categories` |
 
-### Regras assign
+## PF2B — Frontend
 
-- Driver e vehicle do mesmo partner.
-- Se vehicle já noutro driver → **409** `vehicle_already_assigned` (sem swap silencioso).
-- Se driver já tinha outra viatura → desassocia a anterior e fica com a nova.
-- Unassign idempotente.
+Frota → Viaturas: lista / criar / editar / associar; lista motoristas com placa; erros 409.
 
----
+## PF2C — Categorias multi (este slice)
 
-## PF2B — Frontend Partner (este slice)
-
-| Superfície | Comportamento |
-|------------|----------------|
-| Frota → **Viaturas** | Lista, criar, editar, associar/desassociar |
-| Lista motoristas | Mostra matrícula quando associada; badge **Em viagem** (1A) intacto |
-| Erros | 409 matrícula duplicada / viatura já atribuída — mensagem clara |
-
-### Fora de scope (2B)
-
-- Upload / docs de viatura · histórico · Admin CRUD · matching · Stripe · Passenger/Driver/NAV · migrations novas
+| Decisão | Detalhe |
+|---------|---------|
+| Fonte Driver | `VALID_DRIVER_CATEGORIES` + CSV (`encode/decode_driver_categories_csv`) · FE `DRIVER_VEHICLE_CATEGORIES` |
+| Persistência Vehicle | `service_categories` Text CSV (mesmo vocabulário: x, xl, pet, comfort, black, electric, van) |
+| API | `service_categories: list[str]`; rejeita inválidas (`invalid_service_category`) |
+| UI | Chips multi-select (mesmo padrão Driver); sem texto livre |
+| Matching | Continua **só** em `drivers.vehicle_categories` |
 
 ---
 
-## Smoke manual (após deploy PF2B)
+## Próximo (após 2C)
 
-| # | Passo | Esperado |
-|---|--------|----------|
-| 1 | Partner → Frota → Viaturas | Ecrã lista |
-| 2 | Criar viatura | Aparece na lista |
-| 3 | Associar a motorista da frota | Lista viaturas + lista motoristas com matrícula |
-| 4 | Trip: aceitar/iniciar | **Em viagem** OK; matrícula continua |
-| 5 | Desassociar | Matrícula some da lista motoristas |
-| 6 | Matrícula duplicada | Erro claro |
-| 7 | Regressão 1A | € hoje + CSV intactos |
-
----
-
-## Próximo (após 2B PASS)
-
-1. Documentos na entidade Vehicle (migrar `inspecao_viatura`)  
+1. Documentos na entidade Vehicle  
 2. Relatórios por motorista / período  
 3. Admin recovery assign (opcional)  

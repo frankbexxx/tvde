@@ -12,6 +12,11 @@ import {
   type PartnerVehicleRow,
 } from '../../../api/partner'
 import { PARTNER_SECTION_TITLE } from '../../../components/layout/infoBoxTemplate'
+import {
+  DRIVER_VEHICLE_CATEGORIES,
+  driverVehicleCategoryLabel,
+  type DriverVehicleCategory,
+} from '../../../services/driverVehicleCategories'
 
 type VehicleFormState = {
   plate: string
@@ -19,7 +24,7 @@ type VehicleFormState = {
   model: string
   year: string
   color: string
-  service_category: string
+  service_categories: DriverVehicleCategory[]
   status: string
 }
 
@@ -29,18 +34,23 @@ const emptyForm = (): VehicleFormState => ({
   model: '',
   year: '',
   color: '',
-  service_category: 'x',
+  service_categories: ['x'],
   status: 'active',
 })
 
 function formFromVehicle(v: PartnerVehicleRow): VehicleFormState {
+  const cats = (v.service_categories ?? [])
+    .map((c) => c.trim().toLowerCase())
+    .filter((c): c is DriverVehicleCategory =>
+      (DRIVER_VEHICLE_CATEGORIES as readonly string[]).includes(c)
+    )
   return {
     plate: v.plate,
     make: v.make,
     model: v.model,
     year: v.year != null ? String(v.year) : '',
     color: v.color ?? '',
-    service_category: v.service_category || 'x',
+    service_categories: cats.length > 0 ? cats : ['x'],
     status: v.status || 'active',
   }
 }
@@ -51,6 +61,17 @@ function parseYear(raw: string): number | null {
   const n = Number(t)
   if (!Number.isInteger(n) || n < 1980 || n > 2100) return NaN
   return n
+}
+
+function formatCategories(cats: string[]): string {
+  return cats
+    .map((c) => {
+      if ((DRIVER_VEHICLE_CATEGORIES as readonly string[]).includes(c)) {
+        return driverVehicleCategoryLabel(c as DriverVehicleCategory)
+      }
+      return c
+    })
+    .join(', ')
 }
 
 type PartnerVehiclesScreenProps = {
@@ -83,6 +104,12 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
       }
       if (detail === 'vehicle_already_assigned') {
         return t('vehicles.errors.alreadyAssigned')
+      }
+      if (detail === 'invalid_service_category') {
+        return t('vehicles.errors.invalidCategory')
+      }
+      if (detail === 'service_categories_required') {
+        return t('vehicles.errors.categoriesRequired')
       }
       if (detail) return detail
       return t(fallbackKey)
@@ -127,6 +154,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
     if (requirePlate && !form.plate.trim()) return t('vehicles.errors.plateRequired')
     if (!form.make.trim()) return t('vehicles.errors.makeRequired')
     if (!form.model.trim()) return t('vehicles.errors.modelRequired')
+    if (form.service_categories.length === 0) return t('vehicles.errors.categoriesRequired')
     const year = parseYear(form.year)
     if (Number.isNaN(year)) return t('vehicles.errors.yearInvalid')
     return null
@@ -149,7 +177,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
         model: createForm.model.trim(),
         year,
         color: createForm.color.trim() || null,
-        service_category: createForm.service_category.trim() || 'x',
+        service_categories: createForm.service_categories,
         status: createForm.status || 'active',
       })
       setCreateForm(emptyForm())
@@ -188,7 +216,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
         model: editForm.model.trim(),
         year,
         color: editForm.color.trim() || null,
-        service_category: editForm.service_category.trim() || 'x',
+        service_categories: editForm.service_categories,
         status: editForm.status || 'active',
       })
       setEditingId(null)
@@ -351,8 +379,8 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
                     {v.year != null ? ` · ${v.year}` : ''}
                     {v.color ? ` · ${v.color}` : ''}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('vehicles.serviceCategory')}: {v.service_category}
+                  <p className="text-xs text-muted-foreground" data-testid="partner-vehicle-categories">
+                    {t('vehicles.serviceCategories')}: {formatCategories(v.service_categories ?? [])}
                   </p>
                   <p className="text-xs" data-testid="partner-vehicle-assigned">
                     {v.assigned_driver_id
@@ -448,6 +476,13 @@ function VehicleFields({
   t: (key: string) => string
 }) {
   const set = (key: keyof VehicleFormState, value: string) => onChange({ ...form, [key]: value })
+  const toggleCategory = (key: DriverVehicleCategory) => {
+    const active = form.service_categories.includes(key)
+    const next = active
+      ? form.service_categories.filter((c) => c !== key)
+      : [...form.service_categories, key]
+    onChange({ ...form, service_categories: next.length > 0 ? next : ['x'] })
+  }
   return (
     <div className="grid gap-2">
       <input
@@ -488,13 +523,29 @@ function VehicleFields({
           onChange={(e) => set('color', e.target.value)}
         />
       </div>
-      <input
-        className={fieldClass}
-        data-testid="partner-vehicle-field-service-category"
-        placeholder={t('vehicles.fields.serviceCategory')}
-        value={form.service_category}
-        onChange={(e) => set('service_category', e.target.value)}
-      />
+      <div data-testid="partner-vehicle-field-categories">
+        <p className="text-xs text-muted-foreground mb-1.5">{t('vehicles.fields.serviceCategories')}</p>
+        <div className="grid grid-cols-2 gap-2">
+          {DRIVER_VEHICLE_CATEGORIES.map((key) => {
+            const active = form.service_categories.includes(key)
+            return (
+              <button
+                key={key}
+                type="button"
+                data-testid={`partner-vehicle-category-${key}`}
+                aria-pressed={active}
+                onClick={() => toggleCategory(key)}
+                className={`min-h-9 rounded-lg border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
+                    ? 'border-info bg-info/15 text-foreground'
+                    : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
+                  }`}
+              >
+                {driverVehicleCategoryLabel(key)}
+              </button>
+            )
+          })}
+        </div>
+      </div>
       <select
         className={fieldClass}
         data-testid="partner-vehicle-field-status"

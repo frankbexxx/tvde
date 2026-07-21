@@ -60,6 +60,7 @@ from app.schemas.partner_messages import (
     PartnerMessageItem,
 )
 from app.services.driver_documents import apply_partner_documents_patch, parse_documents_column
+from app.services.driver_preferences import decode_driver_categories_csv
 from app.services.partner_driver_discovery import (
     discover_drivers_for_partner,
     partner_add_driver_to_fleet,
@@ -164,7 +165,9 @@ def _driver_item(
         vehicle_plate=v.plate if v else None,
         vehicle_make=v.make if v else None,
         vehicle_model=v.model if v else None,
-        vehicle_service_category=v.service_category if v else None,
+        vehicle_service_categories=(
+            decode_driver_categories_csv(v.service_categories) if v else None
+        ),
     )
 
 

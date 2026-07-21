@@ -1,12 +1,14 @@
-"""PARTNER-FLEET-2A — Partner vehicle CRUD + 0/1 assign (tenant-scoped).
+"""PARTNER-FLEET-2A/2C — Partner vehicle CRUD + 0/1 assign (tenant-scoped).
 
-Matching continues to use ``drivers.vehicle_categories``; ``service_category`` is metadata only.
+Matching continues to use ``drivers.vehicle_categories``;
+``service_categories`` is fleet metadata only (same codes/CSV as Driver).
 """
 
 from __future__ import annotations
 
 import re
 import uuid
+from collections.abc import Iterable
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
@@ -22,6 +24,11 @@ from app.schemas.partner import (
     PartnerVehicleItem,
     PartnerVehiclePatchRequest,
 )
+from app.services.driver_preferences import (
+    VALID_DRIVER_CATEGORIES,
+    decode_driver_categories_csv,
+    encode_driver_categories_csv,
+)
 
 _ALLOWED_STATUS = frozenset({"active", "inactive"})
 _PLATE_STRIP_RE = re.compile(r"[\s\-]+")
@@ -30,6 +37,40 @@ _PLATE_STRIP_RE = re.compile(r"[\s\-]+")
 def normalize_plate(plate: str) -> str:
     """Uppercase; strip whitespace/hyphens for global uniqueness."""
     return _PLATE_STRIP_RE.sub("", plate.strip().upper())
+
+
+def require_vehicle_service_categories_csv(values: Iterable[str] | None) -> str:
+    """Validate against Driver category vocabulary; return CSV for persistence."""
+    if values is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="service_categories_required",
+        )
+    items = list(values)
+    if not items:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="service_categories_required",
+        )
+    mapped: list[str] = []
+    for raw in items:
+        v = str(raw).strip().lower()
+        if not v:
+            continue
+        if v == "standard":
+            v = "x"
+        if v not in VALID_DRIVER_CATEGORIES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid_service_category",
+            )
+        mapped.append(v)
+    if not mapped:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="service_categories_required",
+        )
+    return encode_driver_categories_csv(mapped)
 
 
 def _utc_iso(dt: datetime | None) -> str:
@@ -82,7 +123,7 @@ def vehicle_to_item(db: Session, vehicle: Vehicle) -> PartnerVehicleItem:
         model=vehicle.model,
         year=vehicle.year,
         color=vehicle.color,
-        service_category=vehicle.service_category,
+        service_categories=decode_driver_categories_csv(vehicle.service_categories),
         status=vehicle.status,
         created_at=_utc_iso(vehicle.created_at),
         updated_at=_utc_iso(vehicle.updated_at),
@@ -140,7 +181,7 @@ def create_vehicle_for_partner(
         )
 
     status_val = _validate_status(body.status or "active")
-    service_cat = (body.service_category or "x").strip() or "x"
+    cats_csv = require_vehicle_service_categories_csv(body.service_categories)
 
     vehicle = Vehicle(
         id=uuid.uuid4(),
@@ -151,7 +192,7 @@ def create_vehicle_for_partner(
         model=body.model.strip(),
         year=body.year,
         color=body.color.strip() if body.color else None,
-        service_category=service_cat[:24],
+        service_categories=cats_csv,
         status=status_val,
     )
     db.add(vehicle)
@@ -213,9 +254,10 @@ def patch_vehicle_for_partner(
     if "color" in data:
         color = data["color"]
         vehicle.color = color.strip() if isinstance(color, str) and color else color
-    if "service_category" in data and data["service_category"] is not None:
-        sc = data["service_category"].strip() or "x"
-        vehicle.service_category = sc[:24]
+    if "service_categories" in data and data["service_categories"] is not None:
+        vehicle.service_categories = require_vehicle_service_categories_csv(
+            data["service_categories"]
+        )
     if "status" in data and data["status"] is not None:
         vehicle.status = _validate_status(data["status"])
 
@@ -261,7 +303,6 @@ def assign_vehicle_to_driver(
             detail="vehicle_already_assigned",
         )
 
-    # Driver swap: free previous vehicle for this driver.
     if (
         driver.active_vehicle_id is not None
         and driver.active_vehicle_id != vehicle.id

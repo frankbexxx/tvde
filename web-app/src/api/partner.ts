@@ -20,15 +20,15 @@ export interface PartnerDriverRow {
   /** PARTNER-FLEET-1A: trip activa na frota (assigned|accepted|arriving|ongoing). */
   active_trip_id?: string | null
   active_trip_status?: string | null
-  /** PARTNER-FLEET-2A/2B: viatura activa (0/1). */
+  /** PARTNER-FLEET-2A/2C: viatura activa (0/1). */
   active_vehicle_id?: string | null
   vehicle_plate?: string | null
   vehicle_make?: string | null
   vehicle_model?: string | null
-  vehicle_service_category?: string | null
+  vehicle_service_categories?: string[] | null
 }
 
-/** PARTNER-FLEET-2A/2B — viatura da frota. */
+/** PARTNER-FLEET-2A/2C — viatura da frota. */
 export interface PartnerVehicleRow {
   id: string
   partner_id: string
@@ -38,7 +38,7 @@ export interface PartnerVehicleRow {
   model: string
   year: number | null
   color: string | null
-  service_category: string
+  service_categories: string[]
   status: string
   created_at: string
   updated_at: string
@@ -52,7 +52,7 @@ export type PartnerVehicleCreateBody = {
   model: string
   year?: number | null
   color?: string | null
-  service_category?: string | null
+  service_categories: string[]
   status?: string | null
 }
 
@@ -62,7 +62,7 @@ export type PartnerVehiclePatchBody = {
   model?: string
   year?: number | null
   color?: string | null
-  service_category?: string
+  service_categories?: string[]
   status?: string
 }
 

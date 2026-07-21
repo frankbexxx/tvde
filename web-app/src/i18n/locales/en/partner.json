@@ -270,7 +270,7 @@
     "save": "Save",
     "cancel": "Cancel",
     "refresh": "Refresh",
-    "serviceCategory": "Service category",
+    "serviceCategories": "Categories",
     "noDriver": "No driver",
     "assignedTo": "Driver: {{name}}",
     "assignLabel": "Assign driver",
@@ -295,13 +295,15 @@
       "model": "Model",
       "year": "Year (optional)",
       "color": "Color (optional)",
-      "serviceCategory": "Service category (e.g. x)"
+      "serviceCategories": "Service categories"
     },
     "errors": {
       "plateRequired": "Plate is required.",
       "makeRequired": "Make is required.",
       "modelRequired": "Model is required.",
       "yearInvalid": "Invalid year.",
+      "categoriesRequired": "Select at least one category.",
+      "invalidCategory": "Invalid category.",
       "driverRequired": "Select a driver.",
       "plateDuplicate": "This plate already exists on the platform.",
       "alreadyAssigned": "This vehicle is already assigned to another driver."

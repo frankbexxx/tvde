@@ -270,7 +270,7 @@
     "save": "Guardar",
     "cancel": "Cancelar",
     "refresh": "Atualizar",
-    "serviceCategory": "Categoria serviço",
+    "serviceCategories": "Categorias",
     "noDriver": "Sem motorista",
     "assignedTo": "Motorista: {{name}}",
     "assignLabel": "Associar motorista",
@@ -295,13 +295,15 @@
       "model": "Modelo",
       "year": "Ano (opcional)",
       "color": "Cor (opcional)",
-      "serviceCategory": "Categoria serviço (ex.: x)"
+      "serviceCategories": "Categorias de serviço"
     },
     "errors": {
       "plateRequired": "Matrícula obrigatória.",
       "makeRequired": "Marca obrigatória.",
       "modelRequired": "Modelo obrigatório.",
       "yearInvalid": "Ano inválido.",
+      "categoriesRequired": "Selecciona pelo menos uma categoria.",
+      "invalidCategory": "Categoria inválida.",
       "driverRequired": "Selecciona um motorista.",
       "plateDuplicate": "Esta matrícula já existe na plataforma.",
       "alreadyAssigned": "Esta viatura já está associada a outro motorista."
