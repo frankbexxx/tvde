@@ -64,8 +64,9 @@ def save_vehicle_document_file(
 
     doc.file_path = str(rel).replace("\\", "/")
     doc.file_name = upload.filename or dest.name
-    if doc.status != "approved":
-        doc.status = "pending_review"
+    doc.status = "pending_review"
+    doc.reviewed_by = None
+    doc.reviewed_at = None
     db.commit()
     db.refresh(doc)
     return document_to_item(doc)
