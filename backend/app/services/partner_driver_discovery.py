@@ -56,7 +56,9 @@ def partner_add_driver_to_fleet(
         .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if not driver:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="driver_not_found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="driver_not_found"
+        )
     if driver.partner_id != DEFAULT_PARTNER_UUID:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

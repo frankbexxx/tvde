@@ -304,10 +304,7 @@ def assign_vehicle_to_driver(
             detail="vehicle_already_assigned",
         )
 
-    if (
-        driver.active_vehicle_id is not None
-        and driver.active_vehicle_id != vehicle.id
-    ):
+    if driver.active_vehicle_id is not None and driver.active_vehicle_id != vehicle.id:
         driver.active_vehicle_id = None
         db.flush()
 
