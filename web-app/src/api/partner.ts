@@ -1,4 +1,5 @@
-import { API_BASE, apiFetch } from './client'
+import { API_BASE, apiFetch, type ApiError } from './client'
+import { getStoredAccessToken } from '../utils/authStorage'
 
 export interface PartnerDriverRow {
   user_id: string
@@ -153,6 +154,167 @@ export async function unassignPartnerVehicle(vehicleId: string): Promise<Partner
     `/partner/vehicles/${encodeURIComponent(vehicleId)}/unassign`,
     { method: 'POST' }
   )
+}
+
+/** PARTNER-FLEET-3A/3B — tipos P0 de documentos da viatura. */
+export const PARTNER_VEHICLE_DOCUMENT_TYPES = [
+  'vehicle_registration',
+  'vehicle_insurance',
+  'periodic_inspection',
+  'tvde_sticker',
+] as const
+
+export type PartnerVehicleDocumentType = (typeof PARTNER_VEHICLE_DOCUMENT_TYPES)[number]
+
+export type PartnerVehicleDocumentStoredStatus =
+  | 'pending_review'
+  | 'approved'
+  | 'rejected'
+
+export type PartnerVehicleDocumentComputedStatus =
+  | 'pending_review'
+  | 'valid'
+  | 'expiring_soon'
+  | 'expired'
+  | 'rejected'
+
+export interface PartnerVehicleDocumentRow {
+  id: string
+  vehicle_id: string
+  partner_id: string
+  document_type: string
+  status: string
+  computed_status: PartnerVehicleDocumentComputedStatus | string
+  file_path: string | null
+  file_name: string | null
+  has_file: boolean
+  document_number: string | null
+  issuer: string | null
+  valid_from: string | null
+  expires_at: string | null
+  issued_at: string | null
+  metadata: Record<string, unknown> | null
+  notes: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type PartnerVehicleDocumentCreateBody = {
+  document_type: PartnerVehicleDocumentType | string
+  status?: PartnerVehicleDocumentStoredStatus | string | null
+  document_number?: string | null
+  issuer?: string | null
+  valid_from?: string | null
+  expires_at?: string | null
+  issued_at?: string | null
+  notes?: string | null
+  metadata?: Record<string, unknown> | null
+}
+
+export type PartnerVehicleDocumentPatchBody = {
+  status?: PartnerVehicleDocumentStoredStatus | string | null
+  document_number?: string | null
+  issuer?: string | null
+  valid_from?: string | null
+  expires_at?: string | null
+  issued_at?: string | null
+  notes?: string | null
+  metadata?: Record<string, unknown> | null
+}
+
+export async function fetchPartnerVehicleDocuments(
+  vehicleId: string
+): Promise<PartnerVehicleDocumentRow[]> {
+  return apiFetch<PartnerVehicleDocumentRow[]>(
+    `/partner/vehicles/${encodeURIComponent(vehicleId)}/documents`
+  )
+}
+
+export async function createPartnerVehicleDocument(
+  vehicleId: string,
+  body: PartnerVehicleDocumentCreateBody
+): Promise<PartnerVehicleDocumentRow> {
+  return apiFetch<PartnerVehicleDocumentRow>(
+    `/partner/vehicles/${encodeURIComponent(vehicleId)}/documents`,
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }
+  )
+}
+
+export async function patchPartnerVehicleDocument(
+  vehicleId: string,
+  documentId: string,
+  body: PartnerVehicleDocumentPatchBody
+): Promise<PartnerVehicleDocumentRow> {
+  return apiFetch<PartnerVehicleDocumentRow>(
+    `/partner/vehicles/${encodeURIComponent(vehicleId)}/documents/${encodeURIComponent(documentId)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }
+  )
+}
+
+export async function deletePartnerVehicleDocument(
+  vehicleId: string,
+  documentId: string
+): Promise<void> {
+  await apiFetch<void>(
+    `/partner/vehicles/${encodeURIComponent(vehicleId)}/documents/${encodeURIComponent(documentId)}`,
+    { method: 'DELETE' }
+  )
+}
+
+export function partnerVehicleDocumentFileUrl(vehicleId: string, documentId: string): string {
+  return `${API_BASE.replace(/\/$/, '')}/partner/vehicles/${encodeURIComponent(vehicleId)}/documents/${encodeURIComponent(documentId)}/file`
+}
+
+export async function uploadPartnerVehicleDocument(
+  vehicleId: string,
+  documentId: string,
+  file: File
+): Promise<PartnerVehicleDocumentRow> {
+  const authToken = getStoredAccessToken()
+  const form = new FormData()
+  form.append('file', file)
+  const headers: HeadersInit = {}
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`
+  }
+  const res = await fetch(
+    `${API_BASE.replace(/\/$/, '')}/partner/vehicles/${encodeURIComponent(vehicleId)}/documents/${encodeURIComponent(documentId)}/upload`,
+    {
+      method: 'POST',
+      headers,
+      body: form,
+    }
+  )
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { detail?: string }
+    throw { status: res.status, detail: data.detail ?? res.statusText } as ApiError
+  }
+  return (await res.json()) as PartnerVehicleDocumentRow
+}
+
+export async function downloadPartnerVehicleDocumentFile(
+  vehicleId: string,
+  documentId: string
+): Promise<Blob> {
+  const authToken = getStoredAccessToken()
+  const headers: HeadersInit = {}
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`
+  }
+  const res = await fetch(partnerVehicleDocumentFileUrl(vehicleId, documentId), { headers })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { detail?: string }
+    throw { status: res.status, detail: data.detail ?? res.statusText } as ApiError
+  }
+  return res.blob()
 }
 
 export async function fetchPartnerDriver(userId: string): Promise<PartnerDriverRow> {
