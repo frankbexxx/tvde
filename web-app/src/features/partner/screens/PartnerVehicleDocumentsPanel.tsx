@@ -176,6 +176,13 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
           ...body,
         })
       }
+      // Metadata is committed before the separate upload request. Keep the
+      // persisted row in local state so a failed upload retries as an edit
+      // instead of attempting a duplicate create.
+      setDocs((current) => [
+        ...current.filter((item) => item.document_type !== doc.document_type),
+        doc,
+      ])
       if (file) {
         doc = await uploadPartnerVehicleDocument(vehicleId, doc.id, file)
       }

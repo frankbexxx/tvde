@@ -129,6 +129,63 @@ describe('PartnerVehicleDocumentsPanel (PARTNER-FLEET-3B)', () => {
     })
   })
 
+  it('repete o upload como edição quando a criação já foi persistida', async () => {
+    const created = baseDoc({
+      id: 'doc-new',
+      document_type: 'vehicle_insurance',
+      computed_status: 'pending_review',
+      status: 'pending_review',
+    })
+    const uploaded = {
+      ...created,
+      has_file: true,
+      file_name: 'seguro.pdf',
+    }
+    api.createPartnerVehicleDocument.mockResolvedValue(created)
+    api.patchPartnerVehicleDocument.mockResolvedValue(created)
+    api.uploadPartnerVehicleDocument
+      .mockRejectedValueOnce({ status: 413, detail: 'file_too_large' })
+      .mockResolvedValueOnce(uploaded)
+    api.fetchPartnerVehicleDocuments
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([uploaded])
+
+    render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)
+    await waitFor(() =>
+      expect(screen.getByTestId('partner-vehicle-doc-add-vehicle_insurance')).toBeInTheDocument()
+    )
+
+    fireEvent.click(screen.getByTestId('partner-vehicle-doc-add-vehicle_insurance'))
+    const file = new File(['pdf-bytes'], 'seguro.pdf', { type: 'application/pdf' })
+    fireEvent.change(screen.getByTestId('partner-vehicle-doc-field-file-vehicle_insurance'), {
+      target: { files: [file] },
+    })
+    fireEvent.click(screen.getByTestId('partner-vehicle-doc-save-vehicle_insurance'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-docs-error')).toHaveTextContent(/5 MB/i)
+      expect(screen.getByTestId('partner-vehicle-doc-edit-vehicle_insurance')).toBeInTheDocument()
+    })
+    expect(screen.queryByTestId('partner-vehicle-doc-add-vehicle_insurance')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByTestId('partner-vehicle-doc-save-vehicle_insurance'))
+
+    await waitFor(() => {
+      expect(api.patchPartnerVehicleDocument).toHaveBeenCalledWith(
+        'veh-1',
+        'doc-new',
+        expect.any(Object)
+      )
+      expect(api.createPartnerVehicleDocument).toHaveBeenCalledTimes(1)
+      expect(api.uploadPartnerVehicleDocument).toHaveBeenCalledTimes(2)
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-doc-file-vehicle_insurance')).toHaveTextContent(
+        'seguro.pdf'
+      )
+    })
+  })
+
   it('edita validade/status/notas via PATCH', async () => {
     const existing = baseDoc({
       document_type: 'periodic_inspection',
