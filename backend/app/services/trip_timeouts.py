@@ -6,7 +6,7 @@ Read-only + state updates only. No Stripe interaction.
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.db.models.trip import Trip
@@ -41,26 +41,27 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
     pending_events: list[TripStatusChangedEvent] = []
 
     # 1) assigned > 2 min → requested
-    assigned_stuck = (
+    assigned_stuck_ids = (
         db.execute(
-            select(Trip)
-            .where(Trip.status == TripStatus.assigned)
-            .where(Trip.updated_at < assigned_cutoff)
+            update(Trip)
+            .where(
+                Trip.status == TripStatus.assigned,
+                Trip.updated_at < assigned_cutoff,
+            )
+            .values(status=TripStatus.requested, driver_id=None)
+            .returning(Trip.id)
+            .execution_options(synchronize_session=False)
         )
         .scalars()
         .all()
     )
-    for trip in assigned_stuck:
-        trip.status = TripStatus.requested
+    for trip_id in assigned_stuck_ids:
         counts["assigned_to_requested"] += 1
-        logger.info(
-            f"trip_timeouts: assigned→requested trip_id={trip.id}, "
-            f"updated_at={trip.updated_at}"
-        )
+        logger.info("trip_timeouts: assigned→requested trip_id=%s", trip_id)
         pending_events.append(
             TripStatusChangedEvent(
-                trip_id=str(trip.id),
-                status=trip.status,
+                trip_id=str(trip_id),
+                status=TripStatus.requested,
                 timestamp=now,
             )
         )
