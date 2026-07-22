@@ -7,7 +7,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import text
+from sqlalchemy import event, text
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.driver import Driver
@@ -115,7 +116,7 @@ def test_trip_acceptance_serializes_with_fleet_transfer(
     old_partner_id, new_partner_id, driver_id, accept_id = _seed_acceptance(accept_mode)
     acceptance_holds_driver = threading.Event()
     release_acceptance = threading.Event()
-    transfer_started = threading.Event()
+    transfer_lock_started = threading.Event()
     transfer_done = threading.Event()
     outcomes: queue.Queue[tuple[str, object]] = queue.Queue()
 
@@ -154,8 +155,18 @@ def test_trip_acceptance_serializes_with_fleet_transfer(
             thread_db.close()
 
     def run_transfer() -> None:
-        thread_db = SessionLocal()
-        transfer_started.set()
+        connection = engine.connect()
+
+        def note_driver_lock_started(*_args, **_kwargs) -> None:
+            transfer_lock_started.set()
+
+        event.listen(
+            connection,
+            "before_cursor_execute",
+            note_driver_lock_started,
+            once=True,
+        )
+        thread_db = Session(bind=connection)
         try:
             assign_driver_to_partner(
                 thread_db,
@@ -169,6 +180,7 @@ def test_trip_acceptance_serializes_with_fleet_transfer(
             outcomes.put(("transfer_exception", exc))
         finally:
             thread_db.close()
+            connection.close()
             transfer_done.set()
 
     acceptance_thread = threading.Thread(target=run_acceptance)
@@ -176,7 +188,7 @@ def test_trip_acceptance_serializes_with_fleet_transfer(
     acceptance_thread.start()
     assert acceptance_holds_driver.wait(timeout=5)
     transfer_thread.start()
-    assert transfer_started.wait(timeout=5)
+    assert transfer_lock_started.wait(timeout=5)
     try:
         assert not transfer_done.wait(timeout=0.25)
     finally:
