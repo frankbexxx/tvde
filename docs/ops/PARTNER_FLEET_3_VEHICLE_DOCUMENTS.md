@@ -76,11 +76,15 @@ Regras:
 2. Abrir Documentos de uma viatura  
 3. Ver 4 tipos P0  
 4. Adicionar Seguro TVDE com `expires_at` futuro  
-5. Upload ficheiro  
+5. Upload ficheiro (PDF/JPG/PNG ≤5 MB)  
 6. Descarregar/ver ficheiro  
 7. Editar validade/notas  
 8. Adicionar Inspeção com validade futura  
 9. Confirmar estados válidos / pendente  
-10. Documento expirado → estado expirado  
+10. Documento expirado → estado **Expirado** (mesmo se pendente de revisão)  
 11. Remover → Em falta  
 12. Regressão: assign/desassign, categorias, «Em viagem», CSV OK  
+13. Ficheiro >5 MB ou tipo inválido → erro local, sem request preso  
+
+**Correcções pós-smoke (PF3B-SMOKE-FIX-1):** validação cliente 5 MB + PDF/JPG/PNG; display expirado prioriza validade; backend rejeita `invalid_file_type` (415).
+ 

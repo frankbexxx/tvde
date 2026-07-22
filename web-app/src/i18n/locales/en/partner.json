@@ -342,6 +342,7 @@
         "valid": "Valid",
         "expiring_soon": "Expiring soon",
         "expired": "Expired",
+        "expiredPending": "Expired · Pending",
         "rejected": "Rejected"
       },
       "storedStatus": {
@@ -356,11 +357,12 @@
         "validFrom": "Valid from",
         "expiresAt": "Valid until",
         "notes": "Notes (optional)",
-        "file": "File (max 5 MB)"
+        "file": "File (PDF, JPG or PNG · max 5 MB)"
       },
       "errors": {
         "typeExists": "A document of this type already exists for this vehicle.",
         "fileTooLarge": "The file exceeds the 5 MB limit.",
+        "invalidFileType": "Invalid format. Use PDF, JPG or PNG.",
         "forbidden": "You do not have permission to access this document.",
         "notFound": "Document or vehicle not found."
       }

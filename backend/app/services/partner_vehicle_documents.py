@@ -70,12 +70,13 @@ def compute_vehicle_document_status(
     expires_at: datetime | None,
     now: datetime | None = None,
 ) -> str:
-    """Derived status for API consumers (alerts/gates later)."""
+    """Derived status for API/UI (expiry beats pending_review for compliance).
+
+    Priority: rejected → expired → expiring_soon → pending_review → valid.
+    """
     st = (status_value or "").strip().lower()
     if st == "rejected":
         return "rejected"
-    if st == "pending_review":
-        return "pending_review"
     ref = now or _utc_now()
     if expires_at is not None:
         exp = expires_at
@@ -86,9 +87,9 @@ def compute_vehicle_document_status(
         if exp < ref:
             return "expired"
         if exp <= ref + timedelta(days=_EXPIRING_SOON_DAYS):
-            if st == "approved":
-                return "expiring_soon"
             return "expiring_soon"
+    if st == "pending_review":
+        return "pending_review"
     if st == "approved":
         return "valid"
     return st or "pending_review"

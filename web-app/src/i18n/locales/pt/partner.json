@@ -342,6 +342,7 @@
         "valid": "Válido",
         "expiring_soon": "Expira em breve",
         "expired": "Expirado",
+        "expiredPending": "Expirado · Pendente",
         "rejected": "Rejeitado"
       },
       "storedStatus": {
@@ -356,11 +357,12 @@
         "validFrom": "Válido desde",
         "expiresAt": "Válido até",
         "notes": "Notas (opcional)",
-        "file": "Ficheiro (máx. 5 MB)"
+        "file": "Ficheiro (PDF, JPG ou PNG · máx. 5 MB)"
       },
       "errors": {
         "typeExists": "Já existe um documento deste tipo nesta viatura.",
         "fileTooLarge": "O ficheiro excede o limite de 5 MB.",
+        "invalidFileType": "Formato inválido. Usa PDF, JPG ou PNG.",
         "forbidden": "Não tens permissão para aceder a este documento.",
         "notFound": "Documento ou viatura não encontrado."
       }

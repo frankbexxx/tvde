@@ -14,6 +14,11 @@ import {
   type PartnerVehicleDocumentType,
 } from '../../../api/partner'
 import { triggerBlobDownload } from '../triggerBlobDownload'
+import {
+  VEHICLE_DOC_ACCEPT,
+  validateVehicleDocumentFile,
+  vehicleDocumentDisplayStatus,
+} from '../vehicleDocumentHelpers'
 
 type DocFormState = {
   document_number: string
@@ -96,6 +101,9 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
       if (detail === 'file_too_large' || status === 413) {
         return t('vehicles.documents.errors.fileTooLarge')
       }
+      if (detail === 'invalid_file_type' || status === 415) {
+        return t('vehicles.documents.errors.invalidFileType')
+      }
       if (status === 403) return t('vehicles.documents.errors.forbidden')
       if (status === 404 || detail === 'not_found' || detail === 'document_not_found') {
         return t('vehicles.documents.errors.notFound')
@@ -153,9 +161,32 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
     setFile(null)
   }
 
+  const onPickFile = (picked: File | null, inputEl: HTMLInputElement | null) => {
+    if (!picked) {
+      setFile(null)
+      return
+    }
+    const invalid = validateVehicleDocumentFile(picked)
+    if (invalid) {
+      setError(t(`vehicles.documents.errors.${invalid}`))
+      setFile(null)
+      if (inputEl) inputEl.value = ''
+      return
+    }
+    setError(null)
+    setFile(picked)
+  }
+
   const onSave = async (documentType: PartnerVehicleDocumentType) => {
     setError(null)
     setSuccess(null)
+    if (file) {
+      const invalid = validateVehicleDocumentFile(file)
+      if (invalid) {
+        setError(t(`vehicles.documents.errors.${invalid}`))
+        return
+      }
+    }
     setBusy(true)
     try {
       const existing = docs.find((d) => d.document_type === documentType) ?? null
@@ -240,10 +271,11 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
   const fieldClass =
     'w-full min-h-10 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground'
 
-  const statusLabel = (computed: string, missing: boolean) => {
-    if (missing) return t('vehicles.documents.status.missing')
-    const key = computed.trim().toLowerCase()
+  const statusLabel = (doc: PartnerVehicleDocumentRow | null, missing: boolean) => {
+    const key = vehicleDocumentDisplayStatus(doc, missing)
+    if (key === 'expired_pending') return t('vehicles.documents.status.expiredPending')
     const known = [
+      'missing',
       'pending_review',
       'valid',
       'expiring_soon',
@@ -253,7 +285,7 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
     if ((known as readonly string[]).includes(key)) {
       return t(`vehicles.documents.status.${key}`)
     }
-    return computed
+    return key
   }
 
   const typeLabel = (documentType: PartnerVehicleDocumentType) =>
@@ -308,7 +340,7 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
                     className="text-[11px] text-muted-foreground"
                     data-testid={`partner-vehicle-doc-status-${document_type}`}
                   >
-                    {statusLabel(doc?.computed_status ?? 'missing', missing)}
+                    {statusLabel(doc, missing)}
                     {doc?.expires_at
                       ? ` · ${t('vehicles.documents.expiresAt')}: ${toDateInput(doc.expires_at)}`
                       : ''}
@@ -459,9 +491,12 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
                     <span>{t('vehicles.documents.fields.file')}</span>
                     <input
                       type="file"
+                      accept={VEHICLE_DOC_ACCEPT}
                       data-testid={`partner-vehicle-doc-field-file-${document_type}`}
                       className="block w-full text-xs"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) =>
+                        onPickFile(e.target.files?.[0] ?? null, e.currentTarget)
+                      }
                     />
                   </label>
                   <div className="flex gap-1.5">
