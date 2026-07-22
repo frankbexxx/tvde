@@ -367,6 +367,44 @@ describe('PartnerVehicleDocumentsPanel (PARTNER-FLEET-3B)', () => {
     )
   })
 
+  it('expires_at = hoje (00:00Z) com pending_review não mostra Expirado', async () => {
+    const todayMidnight = `${new Date().toISOString().slice(0, 10)}T00:00:00Z`
+    api.fetchPartnerVehicleDocuments.mockResolvedValue([
+      baseDoc({
+        document_type: 'vehicle_insurance',
+        computed_status: 'pending_review',
+        status: 'pending_review',
+        expires_at: todayMidnight,
+      }),
+    ])
+    render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-doc-status-vehicle_insurance')).toBeInTheDocument()
+    })
+    const label = screen.getByTestId('partner-vehicle-doc-status-vehicle_insurance')
+    expect(label.textContent).not.toMatch(/expirado/i)
+    expect(label).toHaveTextContent(/expira em breve/i)
+  })
+
+  it('expires_at = hoje (00:00Z) com approved não mostra Expirado', async () => {
+    const todayMidnight = `${new Date().toISOString().slice(0, 10)}T00:00:00Z`
+    api.fetchPartnerVehicleDocuments.mockResolvedValue([
+      baseDoc({
+        document_type: 'vehicle_insurance',
+        computed_status: 'valid',
+        status: 'approved',
+        expires_at: todayMidnight,
+      }),
+    ])
+    render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-doc-status-vehicle_insurance')).toBeInTheDocument()
+    })
+    const label = screen.getByTestId('partner-vehicle-doc-status-vehicle_insurance')
+    expect(label.textContent).not.toMatch(/expirado/i)
+    expect(label).toHaveTextContent(/expira em breve/i)
+  })
+
   it('rejeita ficheiro >5 MB sem chamar upload API', async () => {
     api.fetchPartnerVehicleDocuments.mockResolvedValue([])
     render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)

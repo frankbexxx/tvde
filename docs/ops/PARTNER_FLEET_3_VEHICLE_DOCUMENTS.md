@@ -87,4 +87,6 @@ Regras:
 13. Ficheiro >5 MB ou tipo inválido → erro local, sem request preso  
 
 **Correcções pós-smoke (PF3B-SMOKE-FIX-1):** validação cliente 5 MB + PDF/JPG/PNG; display expirado prioriza validade; backend rejeita `invalid_file_type` (415).
+
+**PF3B-SMOKE-FIX-2:** `expires_at` compara por **data UTC** (não timestamp). Validade = hoje → ainda válido / `expiring_soon`, nunca `expired`.
  

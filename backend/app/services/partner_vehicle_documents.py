@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import HTTPException, status
@@ -64,6 +64,15 @@ def _parse_optional_dt(raw: str | None, *, field: str) -> datetime | None:
     return dt.astimezone(timezone.utc)
 
 
+def _as_utc_date(dt: datetime) -> date:
+    """Calendar date in UTC (date-only validity; today counts as still valid)."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.date()
+
+
 def compute_vehicle_document_status(
     *,
     status_value: str,
@@ -73,20 +82,20 @@ def compute_vehicle_document_status(
     """Derived status for API/UI (expiry beats pending_review for compliance).
 
     Priority: rejected → expired → expiring_soon → pending_review → valid.
+
+    Expiry uses **UTC calendar dates**, not wall-clock timestamps:
+    ``expires_at`` on today's date is still valid (not expired) until end of day.
     """
     st = (status_value or "").strip().lower()
     if st == "rejected":
         return "rejected"
     ref = now or _utc_now()
     if expires_at is not None:
-        exp = expires_at
-        if exp.tzinfo is None:
-            exp = exp.replace(tzinfo=timezone.utc)
-        else:
-            exp = exp.astimezone(timezone.utc)
-        if exp < ref:
+        exp_day = _as_utc_date(expires_at)
+        today = _as_utc_date(ref)
+        if exp_day < today:
             return "expired"
-        if exp <= ref + timedelta(days=_EXPIRING_SOON_DAYS):
+        if exp_day <= today + timedelta(days=_EXPIRING_SOON_DAYS):
             return "expiring_soon"
     if st == "pending_review":
         return "pending_review"
