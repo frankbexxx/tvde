@@ -71,6 +71,22 @@ def test_compute_vehicle_document_status() -> None:
         )
         == "valid"
     )
+    assert (
+        compute_vehicle_document_status(
+            status_value="pending_review",
+            expires_at=now - timedelta(days=1),
+            now=now,
+        )
+        == "expired"
+    )
+    assert (
+        compute_vehicle_document_status(
+            status_value="pending_review",
+            expires_at=now + timedelta(days=10),
+            now=now,
+        )
+        == "expiring_soon"
+    )
 
 
 def _seed() -> dict[str, str]:
@@ -267,6 +283,14 @@ def test_partner_vehicle_documents_crud_upload_tenant() -> None:
     assert r_replace.json()["status"] == "pending_review"
     assert r_replace.json()["reviewed_by"] is None
     assert r_replace.json()["reviewed_at"] is None
+
+    r_bad_type = c.post(
+        f"/partner/vehicles/{veh_a}/documents/{doc_id}/upload",
+        headers=ha,
+        files={"file": ("notes.txt", io.BytesIO(b"hello"), "text/plain")},
+    )
+    assert r_bad_type.status_code == 415, r_bad_type.text
+    assert r_bad_type.json()["detail"] == "invalid_file_type"
 
     r_dl = c.get(
         f"/partner/vehicles/{veh_a}/documents/{doc_id}/file",

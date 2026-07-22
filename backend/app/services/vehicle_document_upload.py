@@ -16,12 +16,31 @@ from app.services.partner_vehicle_documents import (
 )
 
 _MAX_BYTES = 5 * 1024 * 1024
+_ALLOWED_EXTS = frozenset({".pdf", ".jpg", ".jpeg", ".png"})
+_ALLOWED_MIMES = frozenset({"application/pdf", "image/jpeg", "image/png"})
 
 
 def _upload_root() -> Path:
     root = Path(settings.UPLOAD_DIR)
     root.mkdir(parents=True, exist_ok=True)
     return root
+
+
+def _validate_vehicle_document_file(upload: UploadFile) -> str:
+    """Return normalised extension (.pdf/.jpg/.jpeg/.png) or raise 415."""
+    ext = Path(upload.filename or "").suffix.lower()[:12]
+    if ext not in _ALLOWED_EXTS:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="invalid_file_type",
+        )
+    mime = (upload.content_type or "").split(";")[0].strip().lower()
+    if mime and mime not in _ALLOWED_MIMES:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="invalid_file_type",
+        )
+    return ext
 
 
 def save_vehicle_document_file(
@@ -39,6 +58,8 @@ def save_vehicle_document_file(
         document_id=document_id,
     )
 
+    ext = _validate_vehicle_document_file(upload)
+
     raw = upload.file.read(_MAX_BYTES + 1)
     if len(raw) > _MAX_BYTES:
         raise HTTPException(
@@ -50,7 +71,6 @@ def save_vehicle_document_file(
             status_code=status.HTTP_400_BAD_REQUEST, detail="empty_file"
         )
 
-    ext = Path(upload.filename or "file.bin").suffix.lower()[:12] or ".bin"
     rel = (
         Path(str(doc.partner_id))
         / "vehicles"

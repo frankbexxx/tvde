@@ -15,6 +15,27 @@ import {
 } from '../../../api/partner'
 import { triggerBlobDownload } from '../triggerBlobDownload'
 
+/** PARTNER-FLEET-3B smoke: client-side upload limits (must match backend). */
+export const VEHICLE_DOC_MAX_BYTES = 5 * 1024 * 1024
+export const VEHICLE_DOC_ACCEPT =
+  '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png'
+const VEHICLE_DOC_EXTS = new Set(['.pdf', '.jpg', '.jpeg', '.png'])
+const VEHICLE_DOC_MIMES = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+
+/** Returns i18n key under vehicles.documents.errors.*, or null if OK. */
+export function validateVehicleDocumentFile(
+  file: File
+): 'fileTooLarge' | 'invalidFileType' | null {
+  if (file.size > VEHICLE_DOC_MAX_BYTES) return 'fileTooLarge'
+  const name = file.name || ''
+  const dot = name.lastIndexOf('.')
+  const ext = dot >= 0 ? name.slice(dot).toLowerCase() : ''
+  if (!VEHICLE_DOC_EXTS.has(ext)) return 'invalidFileType'
+  const mime = (file.type || '').split(';')[0].trim().toLowerCase()
+  if (mime && !VEHICLE_DOC_MIMES.has(mime)) return 'invalidFileType'
+  return null
+}
+
 type DocFormState = {
   document_number: string
   issuer: string
@@ -64,6 +85,51 @@ function dateToApi(raw: string): string | null {
   return `${t}T00:00:00Z`
 }
 
+function parseExpiresAt(iso: string | null | undefined): Date | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+/**
+ * Display status for compliance UI.
+ * Priority: rejected → expired → expiring_soon → pending → valid → missing.
+ * Expired date beats pending_review (backend may still send pending_review).
+ */
+export function vehicleDocumentDisplayStatus(
+  doc: PartnerVehicleDocumentRow | null,
+  missing: boolean,
+  now: Date = new Date()
+):
+  | 'missing'
+  | 'rejected'
+  | 'expired'
+  | 'expired_pending'
+  | 'expiring_soon'
+  | 'pending_review'
+  | 'valid'
+  | string {
+  if (missing || !doc) return 'missing'
+  const stored = (doc.status || '').trim().toLowerCase()
+  const computed = (doc.computed_status || '').trim().toLowerCase()
+  if (stored === 'rejected' || computed === 'rejected') return 'rejected'
+  const exp = parseExpiresAt(doc.expires_at)
+  if (exp && exp.getTime() < now.getTime()) {
+    return stored === 'pending_review' || computed === 'pending_review'
+      ? 'expired_pending'
+      : 'expired'
+  }
+  if (computed === 'expired') return 'expired'
+  if (computed === 'expiring_soon') return 'expiring_soon'
+  if (exp) {
+    const soon = exp.getTime() - now.getTime()
+    if (soon >= 0 && soon <= 30 * 24 * 60 * 60 * 1000) return 'expiring_soon'
+  }
+  if (stored === 'pending_review' || computed === 'pending_review') return 'pending_review'
+  if (computed === 'valid' || stored === 'approved') return 'valid'
+  return computed || stored || 'pending_review'
+}
+
 type SlotView = {
   document_type: PartnerVehicleDocumentType
   doc: PartnerVehicleDocumentRow | null
@@ -95,6 +161,9 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
       }
       if (detail === 'file_too_large' || status === 413) {
         return t('vehicles.documents.errors.fileTooLarge')
+      }
+      if (detail === 'invalid_file_type' || status === 415) {
+        return t('vehicles.documents.errors.invalidFileType')
       }
       if (status === 403) return t('vehicles.documents.errors.forbidden')
       if (status === 404 || detail === 'not_found' || detail === 'document_not_found') {
@@ -153,9 +222,32 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
     setFile(null)
   }
 
+  const onPickFile = (picked: File | null, inputEl: HTMLInputElement | null) => {
+    if (!picked) {
+      setFile(null)
+      return
+    }
+    const invalid = validateVehicleDocumentFile(picked)
+    if (invalid) {
+      setError(t(`vehicles.documents.errors.${invalid}`))
+      setFile(null)
+      if (inputEl) inputEl.value = ''
+      return
+    }
+    setError(null)
+    setFile(picked)
+  }
+
   const onSave = async (documentType: PartnerVehicleDocumentType) => {
     setError(null)
     setSuccess(null)
+    if (file) {
+      const invalid = validateVehicleDocumentFile(file)
+      if (invalid) {
+        setError(t(`vehicles.documents.errors.${invalid}`))
+        return
+      }
+    }
     setBusy(true)
     try {
       const existing = docs.find((d) => d.document_type === documentType) ?? null
@@ -240,10 +332,11 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
   const fieldClass =
     'w-full min-h-10 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground'
 
-  const statusLabel = (computed: string, missing: boolean) => {
-    if (missing) return t('vehicles.documents.status.missing')
-    const key = computed.trim().toLowerCase()
+  const statusLabel = (doc: PartnerVehicleDocumentRow | null, missing: boolean) => {
+    const key = vehicleDocumentDisplayStatus(doc, missing)
+    if (key === 'expired_pending') return t('vehicles.documents.status.expiredPending')
     const known = [
+      'missing',
       'pending_review',
       'valid',
       'expiring_soon',
@@ -253,7 +346,7 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
     if ((known as readonly string[]).includes(key)) {
       return t(`vehicles.documents.status.${key}`)
     }
-    return computed
+    return key
   }
 
   const typeLabel = (documentType: PartnerVehicleDocumentType) =>
@@ -308,7 +401,7 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
                     className="text-[11px] text-muted-foreground"
                     data-testid={`partner-vehicle-doc-status-${document_type}`}
                   >
-                    {statusLabel(doc?.computed_status ?? 'missing', missing)}
+                    {statusLabel(doc, missing)}
                     {doc?.expires_at
                       ? ` · ${t('vehicles.documents.expiresAt')}: ${toDateInput(doc.expires_at)}`
                       : ''}
@@ -459,9 +552,12 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
                     <span>{t('vehicles.documents.fields.file')}</span>
                     <input
                       type="file"
+                      accept={VEHICLE_DOC_ACCEPT}
                       data-testid={`partner-vehicle-doc-field-file-${document_type}`}
                       className="block w-full text-xs"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                      onChange={(e) =>
+                        onPickFile(e.target.files?.[0] ?? null, e.currentTarget)
+                      }
                     />
                   </label>
                   <div className="flex gap-1.5">

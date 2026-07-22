@@ -344,6 +344,72 @@ describe('PartnerVehicleDocumentsPanel (PARTNER-FLEET-3B)', () => {
     )
   })
 
+  it('expires_at passado com pending_review mostra Expirado · Pendente', async () => {
+    api.fetchPartnerVehicleDocuments.mockResolvedValue([
+      baseDoc({
+        document_type: 'vehicle_insurance',
+        computed_status: 'pending_review',
+        status: 'pending_review',
+        expires_at: '2020-01-01T00:00:00Z',
+      }),
+    ])
+    render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-doc-status-vehicle_insurance')).toHaveTextContent(
+        /expirado/i
+      )
+    })
+    expect(screen.getByTestId('partner-vehicle-doc-status-vehicle_insurance')).toHaveTextContent(
+      /pendente/i
+    )
+    expect(screen.getByTestId('partner-vehicle-doc-status-vehicle_insurance').textContent).not.toMatch(
+      /^Pendente/
+    )
+  })
+
+  it('rejeita ficheiro >5 MB sem chamar upload API', async () => {
+    api.fetchPartnerVehicleDocuments.mockResolvedValue([])
+    render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)
+    await waitFor(() =>
+      expect(screen.getByTestId('partner-vehicle-doc-add-vehicle_insurance')).toBeInTheDocument()
+    )
+    fireEvent.click(screen.getByTestId('partner-vehicle-doc-add-vehicle_insurance'))
+    const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'huge.pdf', {
+      type: 'application/pdf',
+    })
+    fireEvent.change(screen.getByTestId('partner-vehicle-doc-field-file-vehicle_insurance'), {
+      target: { files: [big] },
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-docs-error')).toHaveTextContent(/5 MB/i)
+    })
+    expect(api.createPartnerVehicleDocument).not.toHaveBeenCalled()
+    expect(api.uploadPartnerVehicleDocument).not.toHaveBeenCalled()
+    expect(screen.getByTestId('partner-vehicle-doc-form-vehicle_insurance')).toBeInTheDocument()
+    expect(screen.getByTestId('partner-vehicle-doc-save-vehicle_insurance')).not.toBeDisabled()
+  })
+
+  it('rejeita TXT sem chamar upload API', async () => {
+    api.fetchPartnerVehicleDocuments.mockResolvedValue([])
+    render(<PartnerVehicleDocumentsPanel vehicleId="veh-1" />)
+    await waitFor(() =>
+      expect(screen.getByTestId('partner-vehicle-doc-add-vehicle_insurance')).toBeInTheDocument()
+    )
+    fireEvent.click(screen.getByTestId('partner-vehicle-doc-add-vehicle_insurance'))
+    const txt = new File(['hello'], 'notes.txt', { type: 'text/plain' })
+    fireEvent.change(screen.getByTestId('partner-vehicle-doc-field-file-vehicle_insurance'), {
+      target: { files: [txt] },
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-docs-error')).toHaveTextContent(
+        /formato inválido/i
+      )
+    })
+    expect(api.createPartnerVehicleDocument).not.toHaveBeenCalled()
+    expect(api.uploadPartnerVehicleDocument).not.toHaveBeenCalled()
+    expect(screen.getByTestId('partner-vehicle-doc-form-vehicle_insurance')).toBeInTheDocument()
+  })
+
   it('mostra rejected e file_too_large', async () => {
     api.fetchPartnerVehicleDocuments.mockResolvedValue([
       baseDoc({
