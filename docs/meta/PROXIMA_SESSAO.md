@@ -8,58 +8,54 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-19** — pagamentos + O-SECURITY fechados)
+## Contexto actual (**2026-07-22** — Partner-Fleet 3B PASS + hardenings)
 
-### Checkpoint — [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](../ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md)
+### Checkpoint — [`CHECKPOINT_2026-07-22_PARTNER_FLEET.md`](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `77ddfac` |
-| **PRs abertas** | **0** |
-| **CI `main`** | Verde |
-| **PAYMENTS-STUCK-1A/1B** | **PASS** (#417 / #418 + apply 41+10) |
-| **PAYMENTS-EDGE-1/2** | **PASS** — health limpa |
-| **O-SECURITY** | **PASS** — password SA rodada via `/auth/me/password` |
-| **Saúde** | **`ok`** — stuck/missing/inconsistent = 0 |
-| **ADMIN-OPS-1 Fase 0** | Fechada — [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](../ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
-| **#415** | TEST-DB-GUARD — [`CHECKPOINT_2026-07-19_POST_415.md`](../ops/CHECKPOINT_2026-07-19_POST_415.md) |
-
-### Edges (resumo)
-
-- **EDGE-2:** trip `4b29c6c9-…` → `failed` (órfã teste).  
-- **EDGE-1:** payment `c58c20d4-…` → `failed`; trip `591f6827-…` cancelled; Dashboard PI `requires_payment_method`, €0; sem Stripe API / sem mexer `STRIPE_MOCK`.
+| **`main` / `origin/main`** | `8c7cc9e` |
+| **Working tree** | Limpa |
+| **PARTNER-FLEET-1A / 2** | **PASS** |
+| **PARTNER-FLEET-3A / 3B** | **PASS** (UI + smoke docs [#443](https://github.com/frankbexxx/tvde/pull/443)) |
+| **Smoke geral Pax/Driver/Partner** | **PASS** |
+| **Hardenings concorrência** | #430 · #434 · #438 · #442 · #439 em `main` |
+| **OPS-UX-1** | Dívida — navegação viagem activa Partner/Admin |
+| **PF3B-UX-FOLLOWUP** | Dívida — painel documentos denso |
 
 ### Decisão produto (mantém-se)
 
-Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → PARTNER-FLEET-1 / matching. Ver [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md).
+Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fleet / matching. Ver [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md).
 
-### Entregas recentes (merged)
+### Entregas recentes (merged — fase Partner-Fleet)
 
 | PR | O quê |
 |----|-------|
-| **#418** | Admin cleanup mock processing (dry-run/apply) |
-| **#417** | Settle mock payments on trip completion |
-| **#416** | Checkpoint pós-#415 |
-| **#415** | Guard pytest contra BD remota |
-| **#414** | Docs ADMIN-OPS-1 Fase 0 B/C PASS |
-| **#413** | Passenger recover active trip |
+| **#439** | Timeout assigned→requested não clobber reassign |
+| **#442** | Serialize acceptance × fleet transfers |
+| **#443** | Docs PF3B smoke PASS |
+| **#441** | Expiry documentos por data UTC |
+| **#440** | Harden upload UX documentos |
+| **#435** | PF3B UI documentos viatura |
+| **#432** | PF3A backend documentos viatura |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
+| **OPS-UX-1** | Acompanhar viagem activa — mobile-first |
+| **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
 | **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed — UX futura |
-| **R-AGORA-SNAP** | Agora snapshot vs Viagens — não bug confirmado |
-| **R-E2E-1** | Flake intermitente — monitorizar |
+| **R-E2E-1** | Flake intermitente (ex. «iniciar viagem») — monitorizar |
 | **O-STRIPE-LIVE** | Futuro — conta parceiro + documentação / `sk_live_*` |
-| **R-GIT-1** | ~190 branches locais — **não apagar ainda** |
+| **R-GIT-1** | Branches locais — **não apagar ainda** |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated — baixa prioridade |
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Admin Ops seguinte** — playbook honesty; orphan-panel UX opcional  
-2. **PARTNER-FLEET-1** — assign/reassign diário / viaturas  
-3. **Stripe live** — só com parceiro + docs
+1. **PF3C** — alertas de caducidade (badges / resumo; sem gates)  
+2. **OPS-UX-1** — navegação operacional viagem activa Partner/Admin  
+3. **Smoke alargado final** — Pax+Driver+Partner+Admin após hardenings  
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
@@ -67,13 +63,28 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → PARTNER-FLE
 
 | Área | Onde |
 |------|------|
+| Checkpoint Partner-Fleet 2026-07-22 | [`CHECKPOINT_2026-07-22_PARTNER_FLEET.md`](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) |
+| PF3B smoke | [`PARTNER_FLEET_3B_SMOKE_2026-07-22.md`](../ops/PARTNER_FLEET_3B_SMOKE_2026-07-22.md) |
+| PF3 documentos | [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](../ops/PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md) |
 | Checkpoint PAYMENTS-STUCK | [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](../ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) |
 | Stripe / mock / 1B API | [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §§9–10 |
-| Checkpoint pós-#415 | [`CHECKPOINT_2026-07-19_POST_415.md`](../ops/CHECKPOINT_2026-07-19_POST_415.md) |
-| Smoke ADMIN-OPS Fase 0 | [`ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md`](../ops/ADMIN_OPS_1_FASE0_SMOKE_2026-07-19.md) |
 | Pytest BD segura | [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
 | Ops Julho | [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md) |
 | Painel vivo | [`TODOdoDIA.md`](../../TODOdoDIA.md) |
+
+---
+
+## Contexto anterior (**2026-07-19** — pagamentos + O-SECURITY)
+
+### Checkpoint — [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](../ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md)
+
+| Item | Estado |
+|------|--------|
+| **`main` / `origin/main`** | `77ddfac` (histórico) |
+| **PAYMENTS-STUCK-1A/1B** | **PASS** (#417 / #418) |
+| **O-SECURITY** | **PASS** |
+| **ADMIN-OPS-1 Fase 0** | Fechada |
+| **#415** | TEST-DB-GUARD — [`CHECKPOINT_2026-07-19_POST_415.md`](../ops/CHECKPOINT_2026-07-19_POST_415.md) |
 
 ---
 
