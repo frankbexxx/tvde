@@ -34,7 +34,10 @@ def _require_postgres() -> None:
 
 
 def test_compute_vehicle_document_status() -> None:
-    now = datetime(2026, 7, 21, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 21, 15, 30, tzinfo=timezone.utc)
+    today_midnight = datetime(2026, 7, 21, 0, 0, tzinfo=timezone.utc)
+    yesterday = datetime(2026, 7, 20, 0, 0, tzinfo=timezone.utc)
+    tomorrow = datetime(2026, 7, 22, 0, 0, tzinfo=timezone.utc)
     assert (
         compute_vehicle_document_status(
             status_value="rejected", expires_at=None, now=now
@@ -50,10 +53,35 @@ def test_compute_vehicle_document_status() -> None:
     assert (
         compute_vehicle_document_status(
             status_value="approved",
-            expires_at=now - timedelta(days=1),
+            expires_at=yesterday,
             now=now,
         )
         == "expired"
+    )
+    # Same calendar day at 00:00 UTC must NOT be expired (date-only validity).
+    assert (
+        compute_vehicle_document_status(
+            status_value="approved",
+            expires_at=today_midnight,
+            now=now,
+        )
+        == "expiring_soon"
+    )
+    assert (
+        compute_vehicle_document_status(
+            status_value="pending_review",
+            expires_at=today_midnight,
+            now=now,
+        )
+        == "expiring_soon"
+    )
+    assert (
+        compute_vehicle_document_status(
+            status_value="approved",
+            expires_at=tomorrow,
+            now=now,
+        )
+        == "expiring_soon"
     )
     assert (
         compute_vehicle_document_status(
@@ -74,7 +102,7 @@ def test_compute_vehicle_document_status() -> None:
     assert (
         compute_vehicle_document_status(
             status_value="pending_review",
-            expires_at=now - timedelta(days=1),
+            expires_at=yesterday,
             now=now,
         )
         == "expired"
@@ -86,6 +114,23 @@ def test_compute_vehicle_document_status() -> None:
             now=now,
         )
         == "expiring_soon"
+    )
+    # Exactly 30 days ahead (date) → still expiring_soon; 31 → valid.
+    assert (
+        compute_vehicle_document_status(
+            status_value="approved",
+            expires_at=datetime(2026, 8, 20, 0, 0, tzinfo=timezone.utc),
+            now=now,
+        )
+        == "expiring_soon"
+    )
+    assert (
+        compute_vehicle_document_status(
+            status_value="approved",
+            expires_at=datetime(2026, 8, 21, 0, 0, tzinfo=timezone.utc),
+            now=now,
+        )
+        == "valid"
     )
 
 

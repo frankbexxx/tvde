@@ -6,6 +6,7 @@ export const VEHICLE_DOC_ACCEPT =
   '.pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png'
 const VEHICLE_DOC_EXTS = new Set(['.pdf', '.jpg', '.jpeg', '.png'])
 const VEHICLE_DOC_MIMES = new Set(['application/pdf', 'image/jpeg', 'image/png'])
+const EXPIRING_SOON_DAYS = 30
 
 /** Returns i18n key under vehicles.documents.errors.*, or null if OK. */
 export function validateVehicleDocumentFile(
@@ -27,10 +28,25 @@ function parseExpiresAt(iso: string | null | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d
 }
 
+/** UTC YYYY-MM-DD for date-only expiry (matches backend). */
+export function utcDateKey(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Whole UTC calendar days from `from` to `to` (to - from).
+ * Negative ⇒ expiry date already passed.
+ */
+export function utcCalendarDaysBetween(from: Date, to: Date): number {
+  const a = Date.parse(`${utcDateKey(from)}T00:00:00.000Z`)
+  const b = Date.parse(`${utcDateKey(to)}T00:00:00.000Z`)
+  return Math.round((b - a) / 86_400_000)
+}
+
 /**
  * Display status for compliance UI.
  * Priority: rejected → expired → expiring_soon → pending → valid → missing.
- * Expired date beats pending_review (backend may still send pending_review).
+ * Expiry uses UTC calendar dates: expires_at on today is NOT expired.
  */
 export function vehicleDocumentDisplayStatus(
   doc: PartnerVehicleDocumentRow | null,
@@ -49,18 +65,22 @@ export function vehicleDocumentDisplayStatus(
   const stored = (doc.status || '').trim().toLowerCase()
   const computed = (doc.computed_status || '').trim().toLowerCase()
   if (stored === 'rejected' || computed === 'rejected') return 'rejected'
+
   const exp = parseExpiresAt(doc.expires_at)
-  if (exp && exp.getTime() < now.getTime()) {
-    return stored === 'pending_review' || computed === 'pending_review'
-      ? 'expired_pending'
-      : 'expired'
-  }
-  if (computed === 'expired') return 'expired'
-  if (computed === 'expiring_soon') return 'expiring_soon'
   if (exp) {
-    const soon = exp.getTime() - now.getTime()
-    if (soon >= 0 && soon <= 30 * 24 * 60 * 60 * 1000) return 'expiring_soon'
+    const daysLeft = utcCalendarDaysBetween(now, exp)
+    if (daysLeft < 0) {
+      return stored === 'pending_review' || computed === 'pending_review'
+        ? 'expired_pending'
+        : 'expired'
+    }
+    if (daysLeft <= EXPIRING_SOON_DAYS) return 'expiring_soon'
+  } else if (computed === 'expired') {
+    return 'expired'
+  } else if (computed === 'expiring_soon') {
+    return 'expiring_soon'
   }
+
   if (stored === 'pending_review' || computed === 'pending_review') return 'pending_review'
   if (computed === 'valid' || stored === 'approved') return 'valid'
   return computed || stored || 'pending_review'
