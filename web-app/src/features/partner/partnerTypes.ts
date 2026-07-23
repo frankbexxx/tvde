@@ -14,6 +14,18 @@ export const TRIP_FILTER_HINT: Partial<Record<TripFilter, string>> = {
 
 export const ONGOING_TRIP_STATUSES = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
 
+/** Active trips newest-first by updated_at (OPS-UX-1C Home card). */
+export function listActivePartnerTrips(trips: PartnerTripRow[]): PartnerTripRow[] {
+  return trips
+    .filter((t) => ONGOING_TRIP_STATUSES.has(t.status))
+    .slice()
+    .sort((a, b) => (parseIsoMs(b.updated_at) ?? 0) - (parseIsoMs(a.updated_at) ?? 0))
+}
+
+export function primaryActivePartnerTrip(trips: PartnerTripRow[]): PartnerTripRow | null {
+  return listActivePartnerTrips(trips)[0] ?? null
+}
+
 export function locationLabel(d: PartnerDriverRow): string {
   const loc = d.last_location
   if (!loc) return 'Sem localização recente'
