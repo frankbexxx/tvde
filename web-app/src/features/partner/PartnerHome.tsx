@@ -9,7 +9,7 @@ import { usePartnerWorkspace } from './partnerWorkspace'
 export function PartnerHome() {
   const { t } = useTranslation('partner')
   const { menuOpen } = usePartnerShell()
-  const { metrics, loading, error, load, operationalAlertsSource } = usePartnerWorkspace()
+  const { metrics, trips, loading, error, load, operationalAlertsSource } = usePartnerWorkspace()
 
   const operationalAlerts = useMemo(
     () => buildPartnerAlerts(operationalAlertsSource.drivers, operationalAlertsSource.trips),
@@ -26,7 +26,7 @@ export function PartnerHome() {
         {loading && <p className="text-sm text-muted-foreground">{t('common:loading')}</p>}
         {error && !menuOpen ? <p className="text-sm text-destructive">{error}</p> : null}
 
-        <PartnerHomeDashboard metrics={metrics} onRefresh={() => void load()} />
+        <PartnerHomeDashboard metrics={metrics} trips={trips} onRefresh={() => void load()} />
       </div>
 
       <div className="sticky bottom-[52px] z-10 border-t border-amber-500/35 bg-amber-500/10 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">

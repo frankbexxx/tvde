@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { PARTNER_TRIPS_CSV_COLUMNS } from '../../api/partner'
 import {
   driverIsOnActiveTrip,
+  listActivePartnerTrips,
   matchesDriverFilter,
+  primaryActivePartnerTrip,
   type DriverFilter,
 } from './partnerTypes'
-import type { PartnerDriverRow } from '../../api/partner'
+import type { PartnerDriverRow, PartnerTripRow } from '../../api/partner'
 
 function driver(over: Partial<PartnerDriverRow> = {}): PartnerDriverRow {
   return {
@@ -54,5 +56,34 @@ describe('PARTNER-FLEET-1A CSV columns', () => {
     expect(PARTNER_TRIPS_CSV_COLUMNS.slice(-2)).toEqual(['estimated_price', 'final_price'])
     expect(PARTNER_TRIPS_CSV_COLUMNS).not.toContain('phone')
     expect(PARTNER_TRIPS_CSV_COLUMNS).not.toContain('passenger_name')
+  })
+})
+
+describe('OPS-UX-1C active trip helpers', () => {
+  function t(over: Partial<PartnerTripRow> & Pick<PartnerTripRow, 'trip_id' | 'status'>): PartnerTripRow {
+    return {
+      passenger_id: 'p',
+      driver_id: 'd',
+      origin_lat: 1,
+      origin_lng: 2,
+      destination_lat: 3,
+      destination_lng: 4,
+      estimated_price: 1,
+      created_at: '2026-07-23T08:00:00Z',
+      started_at: null,
+      completed_at: null,
+      updated_at: '2026-07-23T08:00:00Z',
+      ...over,
+    }
+  }
+
+  it('lista só assigned/accepted/arriving/ongoing e ordena por updated_at', () => {
+    const rows = listActivePartnerTrips([
+      t({ trip_id: 'a', status: 'assigned', updated_at: '2026-07-23T09:00:00Z' }),
+      t({ trip_id: 'b', status: 'completed', updated_at: '2026-07-23T12:00:00Z' }),
+      t({ trip_id: 'c', status: 'ongoing', updated_at: '2026-07-23T10:00:00Z' }),
+    ])
+    expect(rows.map((x) => x.trip_id)).toEqual(['c', 'a'])
+    expect(primaryActivePartnerTrip(rows)?.trip_id).toBe('c')
   })
 })

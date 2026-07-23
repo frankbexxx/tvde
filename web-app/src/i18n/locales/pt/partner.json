@@ -46,6 +46,13 @@
     "title": "Início",
     "alertsTitle": "Alertas operacionais",
     "alertsHint": "Documentos, GPS, viagens bloqueadas — clique para ir ao detalhe.",
+    "activeTrip": {
+      "titleSingular": "Viagem activa",
+      "titlePlural": "Viagens activas",
+      "count": "{{count}} viagens activas",
+      "follow": "Acompanhar",
+      "empty": "Nenhuma viagem activa"
+    },
     "dashboard": {
       "summaryTitle": "Resumo operacional",
       "tripsToday": "Viagens hoje",

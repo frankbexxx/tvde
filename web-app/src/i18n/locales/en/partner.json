@@ -46,6 +46,13 @@
     "title": "Home",
     "alertsTitle": "Operational alerts",
     "alertsHint": "Documents, GPS, blocked trips — tap to go to details.",
+    "activeTrip": {
+      "titleSingular": "Active trip",
+      "titlePlural": "Active trips",
+      "count": "{{count}} active trips",
+      "follow": "Follow",
+      "empty": "No active trip"
+    },
     "dashboard": {
       "summaryTitle": "Operational summary",
       "tripsToday": "Trips today",
