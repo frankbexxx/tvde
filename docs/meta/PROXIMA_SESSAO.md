@@ -8,54 +8,53 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-22** — Partner-Fleet 3B PASS + hardenings)
+## Contexto actual (**2026-07-23** — OPS-UX-1 PASS funcional)
 
-### Checkpoint — [`CHECKPOINT_2026-07-22_PARTNER_FLEET.md`](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md)
+### Smoke — [`OPS_UX_1_SMOKE_PASS_2026-07-23.md`](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `8c7cc9e` |
+| **`main` / `origin/main`** | `233255e` |
 | **Working tree** | Limpa |
-| **PARTNER-FLEET-1A / 2** | **PASS** |
-| **PARTNER-FLEET-3A / 3B** | **PASS** (UI + smoke docs [#443](https://github.com/frankbexxx/tvde/pull/443)) |
-| **Smoke geral Pax/Driver/Partner** | **PASS** |
-| **Hardenings concorrência** | #430 · #434 · #438 · #442 · #439 em `main` |
-| **OPS-UX-1** | Dívida — navegação viagem activa Partner/Admin |
-| **PF3B-UX-FOLLOWUP** | Dívida — painel documentos denso |
+| **OPS-UX-1A/B/C** | **PASS** (#445 · #446 · #447) |
+| **Guardas trip detail** | #448 stale · #450 access-loss · #449 fechada (superseded) |
+| **Smoke Pax/Driver/Partner** | **PASS** (2026-07-23) |
+| **PARTNER-FLEET-1A / 2 / 3A / 3B** | **PASS** (prévio) |
+| **Polish futuro** | Não blocker — mobile, densidades, Admin, docs UI |
 
 ### Decisão produto (mantém-se)
 
 Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fleet / matching. Ver [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md).
 
-### Entregas recentes (merged — fase Partner-Fleet)
+### Entregas recentes (merged — OPS-UX-1)
 
 | PR | O quê |
 |----|-------|
-| **#439** | Timeout assigned→requested não clobber reassign |
-| **#442** | Serialize acceptance × fleet transfers |
-| **#443** | Docs PF3B smoke PASS |
-| **#441** | Expiry documentos por data UTC |
-| **#440** | Harden upload UX documentos |
-| **#435** | PF3B UI documentos viatura |
-| **#432** | PF3A backend documentos viatura |
+| **#450** | Clear trip detail após 401/403/404 |
+| **#448** | Prevent stale trip refresh / navegação |
+| **#447** | Home — cartão Viagem activa + Acompanhar |
+| **#446** | Trip detail — Actualizar + poll leve |
+| **#445** | Frota — Ver viagem |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
-| **OPS-UX-1** | Acompanhar viagem activa — mobile-first |
+| **OPS-UX-POLISH** | Mobile / densidades / alertas / Home-Detail visual — não blocker |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
-| **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed — UX futura |
-| **R-E2E-1** | Flake intermitente (ex. «iniciar viagem») — monitorizar |
-| **O-STRIPE-LIVE** | Futuro — conta parceiro + documentação / `sk_live_*` |
+| **ADMIN-OPS-UX** | Acompanhar / refresh Admin — opção B |
+| **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed |
+| **R-E2E-1** | Flake intermitente — monitorizar |
+| **O-STRIPE-LIVE** | Futuro — conta parceiro + documentação |
 | **R-GIT-1** | Branches locais — **não apagar ainda** |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated — baixa prioridade |
 
 ### O que fazer a seguir (ordem — 1 carril)
 
 1. **PF3C** — alertas de caducidade (badges / resumo; sem gates)  
-2. **OPS-UX-1** — navegação operacional viagem activa Partner/Admin  
-3. **Smoke alargado final** — Pax+Driver+Partner+Admin após hardenings  
+2. **Admin OPS-UX** leve — Acompanhar / refresh  
+3. **Polish mobile Partner** — Home, detail, frota, documentos  
+4. **Smoke alargado** Pax+Driver+Partner+Admin  
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
@@ -63,6 +62,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| OPS-UX-1 smoke PASS | [`OPS_UX_1_SMOKE_PASS_2026-07-23.md`](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) |
 | Checkpoint Partner-Fleet 2026-07-22 | [`CHECKPOINT_2026-07-22_PARTNER_FLEET.md`](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) |
 | PF3B smoke | [`PARTNER_FLEET_3B_SMOKE_2026-07-22.md`](../ops/PARTNER_FLEET_3B_SMOKE_2026-07-22.md) |
 | PF3 documentos | [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](../ops/PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md) |
@@ -71,6 +71,18 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | Pytest BD segura | [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
 | Ops Julho | [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md) |
 | Painel vivo | [`TODOdoDIA.md`](../../TODOdoDIA.md) |
+
+---
+
+## Contexto anterior (**2026-07-22** — Partner-Fleet 3B PASS + hardenings)
+
+### Checkpoint — [`CHECKPOINT_2026-07-22_PARTNER_FLEET.md`](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md)
+
+| Item | Estado |
+|------|--------|
+| **`main`** | `8c7cc9e` (histórico) |
+| **PARTNER-FLEET-3B** | **PASS** |
+| **OPS-UX-1** | Era dívida → **PASS** em 2026-07-23 |
 
 ---
 
