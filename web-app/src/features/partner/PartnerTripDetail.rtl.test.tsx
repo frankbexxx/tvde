@@ -156,6 +156,23 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
   })
 
+  it('remove dados antigos quando o refresh perde acesso à viagem', async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText('pax-1')).toBeInTheDocument()
+      expect(screen.getByText(/Motorista Teste/)).toBeInTheDocument()
+    })
+
+    api.fetchPartnerTrip.mockRejectedValueOnce({ status: 404, detail: 'not_found' })
+    fireEvent.click(screen.getByTestId('partner-trip-detail-refresh'))
+
+    await waitFor(() => {
+      expect(screen.getByText('not_found')).toBeInTheDocument()
+      expect(screen.queryByText('pax-1')).not.toBeInTheDocument()
+      expect(screen.queryByText(/Motorista Teste/)).not.toBeInTheDocument()
+    })
+  })
+
   it('ignora resposta pendente da viagem anterior após navegar para outra', async () => {
     const firstTrip = deferred<PartnerTripRow>()
     api.fetchPartnerTrip.mockImplementation((tripId: string) =>
