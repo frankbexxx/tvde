@@ -27,6 +27,7 @@ import {
   type DriverDocumentStatus,
   type DriverRequiredDocument,
 } from '../../services/driverDocuments'
+import { driverIsOnActiveTrip } from './partnerTypes'
 
 const VEHICLE_DOCUMENT_KEYS: DriverRequiredDocument[] = ['inspecao_viatura']
 
@@ -395,6 +396,16 @@ export function PartnerDriverDetail() {
           <span className="text-foreground">{d.is_available ? tc('yes') : tc('no')}</span>
         </p>
       </div>
+
+      {driverIsOnActiveTrip(d) && d.active_trip_id ? (
+        <Link
+          to={`/partner/trips/${encodeURIComponent(d.active_trip_id)}`}
+          className="inline-flex w-full items-center justify-center rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-semibold text-primary hover:bg-primary/15"
+          data-testid="partner-driver-detail-view-trip"
+        >
+          {t('driverDetail.viewTrip')}
+        </Link>
+      ) : null}
 
       {locationBlock(d, t)}
 

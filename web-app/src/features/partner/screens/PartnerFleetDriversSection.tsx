@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PartnerDriverRow } from '../../../api/partner'
 import {
@@ -20,6 +21,8 @@ export function PartnerFleetDriversSection({
   onDriverFilterChange,
   loading,
 }: PartnerFleetDriversSectionProps) {
+  const { t } = useTranslation('partner')
+
   return (
     <div data-testid="partner-fleet-drivers-section">
       <h3 className="text-base font-medium text-foreground mb-2">Motoristas</h3>
@@ -46,6 +49,7 @@ export function PartnerFleetDriversSection({
       <ul className="space-y-2">
         {filteredDrivers.map((d) => {
           const onTrip = driverIsOnActiveTrip(d)
+          const tripId = d.active_trip_id?.trim() || null
           return (
             <li
               key={d.user_id}
@@ -71,6 +75,15 @@ export function PartnerFleetDriversSection({
                   >
                     Em viagem
                   </span>
+                ) : null}
+                {onTrip && tripId ? (
+                  <Link
+                    to={`/partner/trips/${encodeURIComponent(tripId)}`}
+                    className="inline-flex items-center rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/15"
+                    data-testid="partner-driver-view-trip"
+                  >
+                    {t('fleet.viewTrip')}
+                  </Link>
                 ) : null}
               </div>
               <p className="text-muted-foreground">
