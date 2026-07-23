@@ -160,7 +160,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     renderDetail()
     await waitFor(() => {
       expect(screen.getByText('pax-1')).toBeInTheDocument()
-      expect(screen.getByText('+351900000000')).toBeInTheDocument()
+      expect(screen.getByText(/Motorista Teste/)).toBeInTheDocument()
     })
 
     api.fetchPartnerTrip.mockRejectedValueOnce({ status: 404, detail: 'not_found' })
@@ -169,7 +169,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     await waitFor(() => {
       expect(screen.getByText('not_found')).toBeInTheDocument()
       expect(screen.queryByText('pax-1')).not.toBeInTheDocument()
-      expect(screen.queryByText('+351900000000')).not.toBeInTheDocument()
+      expect(screen.queryByText(/Motorista Teste/)).not.toBeInTheDocument()
     })
   })
 
