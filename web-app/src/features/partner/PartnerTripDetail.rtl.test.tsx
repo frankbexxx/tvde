@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import type { PartnerTripRow } from '../../api/partner'
+import { VISIBILITY_VISIBLE_EVENT } from '../../constants/events'
 import i18n from '../../i18n'
 import { PartnerTripDetail } from './PartnerTripDetail'
 
@@ -48,9 +49,31 @@ function baseTrip(overrides: Partial<PartnerTripRow> = {}): PartnerTripRow {
   }
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((done) => {
+    resolve = done
+  })
+  return { promise, resolve }
+}
+
+function TripSwitcher() {
+  const navigate = useNavigate()
+  return (
+    <button
+      type="button"
+      data-testid="switch-trip"
+      onClick={() => void navigate('/partner/trips/trip-2')}
+    >
+      switch
+    </button>
+  )
+}
+
 function renderDetail(tripId = 'trip-1') {
   return render(
     <MemoryRouter initialEntries={[`/partner/trips/${tripId}`]}>
+      <TripSwitcher />
       <Routes>
         <Route path="/partner/trips/:tripId" element={<PartnerTripDetail />} />
       </Routes>
@@ -131,5 +154,95 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
       expect(screen.getByTestId('partner-trip-detail-error')).toHaveTextContent(/rede_indisponivel/i)
     })
     expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+  })
+
+  it('ignora resposta pendente da viagem anterior após navegar para outra', async () => {
+    const firstTrip = deferred<PartnerTripRow>()
+    api.fetchPartnerTrip.mockImplementation((tripId: string) =>
+      tripId === 'trip-1'
+        ? firstTrip.promise
+        : Promise.resolve(baseTrip({ trip_id: 'trip-2', status: 'completed' }))
+    )
+    renderDetail()
+    await waitFor(() => expect(api.fetchPartnerTrip).toHaveBeenCalledWith('trip-1'))
+
+    fireEvent.click(screen.getByTestId('switch-trip'))
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'trip-2' })).toBeInTheDocument()
+    })
+
+    await act(async () => {
+      firstTrip.resolve(baseTrip({ trip_id: 'trip-1', status: 'assigned' }))
+      await firstTrip.promise
+    })
+    expect(screen.getByRole('heading', { name: 'trip-2' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'trip-1' })).not.toBeInTheDocument()
+  })
+
+  it('mantém a resposta do refresh mais recente quando pedidos terminam fora de ordem', async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+    })
+    const staleRefresh = deferred<PartnerTripRow>()
+    api.fetchPartnerTrip
+      .mockReturnValueOnce(staleRefresh.promise)
+      .mockResolvedValueOnce(
+        baseTrip({ status: 'completed', completed_at: '2026-07-23T09:00:00Z' })
+      )
+
+    fireEvent.click(screen.getByTestId('partner-trip-detail-refresh'))
+    await waitFor(() => expect(api.fetchPartnerTrip).toHaveBeenCalledTimes(2))
+    fireEvent(window, new CustomEvent(VISIBILITY_VISIBLE_EVENT))
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('completed')
+    })
+
+    await act(async () => {
+      staleRefresh.resolve(baseTrip({ status: 'ongoing' }))
+      await staleRefresh.promise
+    })
+    expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('completed')
+  })
+
+  it('não deixa um poll pendente desfazer uma reatribuição concluída', async () => {
+    api.fetchPartnerTrip.mockResolvedValue(baseTrip({ status: 'assigned' }))
+    api.fetchPartnerDrivers.mockResolvedValue([
+      {
+        user_id: 'drv-1',
+        partner_id: 'p1',
+        status: 'approved',
+        is_available: false,
+        user: { name: 'Motorista Um', phone: null },
+        last_location: null,
+      },
+      {
+        user_id: 'drv-2',
+        partner_id: 'p1',
+        status: 'approved',
+        is_available: true,
+        user: { name: 'Motorista Dois', phone: null },
+        last_location: null,
+      },
+    ])
+    api.postPartnerTripReassign.mockResolvedValue(
+      baseTrip({ status: 'assigned', driver_id: 'drv-2' })
+    )
+    renderDetail()
+    await waitFor(() => expect(screen.getByText('drv-1')).toBeInTheDocument())
+    const staleRefresh = deferred<PartnerTripRow>()
+    api.fetchPartnerTrip.mockReturnValueOnce(staleRefresh.promise)
+
+    fireEvent.click(screen.getByTestId('partner-trip-detail-refresh'))
+    await waitFor(() => expect(api.fetchPartnerTrip).toHaveBeenCalledTimes(2))
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'drv-2' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Reatribuir viagem' }))
+    await waitFor(() => expect(screen.getByText('drv-2')).toBeInTheDocument())
+
+    await act(async () => {
+      staleRefresh.resolve(baseTrip({ status: 'assigned', driver_id: 'drv-1' }))
+      await staleRefresh.promise
+    })
+    expect(screen.getByText('drv-2')).toBeInTheDocument()
   })
 })
