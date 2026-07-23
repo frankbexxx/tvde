@@ -88,9 +88,18 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
         if (requestSequence === requestSequenceRef.current) setLastFetchedAt(Date.now())
       } catch (e: unknown) {
         if (requestSequence !== requestSequenceRef.current) return
-        const err = e as { detail?: string }
+        const err = e as { detail?: string; status?: number }
         setError(typeof err?.detail === 'string' ? err.detail : t('tripDetail.loadError'))
-        if (!soft) setTrip(null)
+        const accessRevoked = err?.status === 401 || err?.status === 403 || err?.status === 404
+        if (!soft || accessRevoked) {
+          setTrip(null)
+          setDrivers([])
+          setCurrentDriver(null)
+          setPick('')
+          setOriginLabel(null)
+          setDestLabel(null)
+          setLastFetchedAt(null)
+        }
       } finally {
         if (requestSequence === requestSequenceRef.current) {
           setLoading(false)
