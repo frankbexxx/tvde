@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router-dom'
 import {
@@ -40,47 +40,78 @@ export function PartnerTripDetail() {
   const [busy, setBusy] = useState(false)
   const [originLabel, setOriginLabel] = useState<string | null>(null)
   const [destLabel, setDestLabel] = useState<string | null>(null)
+  const requestGenerationRef = useRef(0)
+  const busyRef = useRef(false)
 
   const load = useCallback(
     async (mode: 'full' | 'soft' = 'full') => {
       if (!tripId) return
       const soft = mode === 'soft'
+      if (soft && busyRef.current) return
+      const generation = ++requestGenerationRef.current
       if (soft) setRefreshing(true)
       else setLoading(true)
       setError(null)
       try {
         const [row, dr] = await Promise.all([fetchPartnerTrip(tripId), fetchPartnerDrivers()])
-        setTrip(row)
-        setDrivers(dr)
-        if (!soft) setPick('')
-        void reverseGeocode(row.origin_lng, row.origin_lat)
-          .then(setOriginLabel)
-          .catch(() => setOriginLabel(null))
-        void reverseGeocode(row.destination_lng, row.destination_lat)
-          .then(setDestLabel)
-          .catch(() => setDestLabel(null))
+        let nextCurrentDriver: PartnerDriverRow | null = null
         if (row.driver_id) {
           try {
-            const cd = await fetchPartnerDriver(row.driver_id)
-            setCurrentDriver(cd)
+            nextCurrentDriver = await fetchPartnerDriver(row.driver_id)
           } catch {
-            setCurrentDriver(null)
+            nextCurrentDriver = null
           }
-        } else {
-          setCurrentDriver(null)
         }
+        if (generation !== requestGenerationRef.current) return
+        setTrip(row)
+        setDrivers(dr)
+        setCurrentDriver(nextCurrentDriver)
+        if (!soft) setPick('')
+        setOriginLabel(null)
+        setDestLabel(null)
+        void reverseGeocode(row.origin_lng, row.origin_lat)
+          .then((label) => {
+            if (generation === requestGenerationRef.current) setOriginLabel(label)
+          })
+          .catch(() => {
+            if (generation === requestGenerationRef.current) setOriginLabel(null)
+          })
+        void reverseGeocode(row.destination_lng, row.destination_lat)
+          .then((label) => {
+            if (generation === requestGenerationRef.current) setDestLabel(label)
+          })
+          .catch(() => {
+            if (generation === requestGenerationRef.current) setDestLabel(null)
+          })
         setLastFetchedAt(Date.now())
       } catch (e: unknown) {
+        if (generation !== requestGenerationRef.current) return
         const err = e as { detail?: string }
         setError(typeof err?.detail === 'string' ? err.detail : t('tripDetail.loadError'))
         if (!soft) setTrip(null)
       } finally {
-        setLoading(false)
-        setRefreshing(false)
+        if (generation === requestGenerationRef.current) {
+          setLoading(false)
+          setRefreshing(false)
+        }
       }
     },
     [tripId, t]
   )
+
+  useEffect(() => {
+    requestGenerationRef.current += 1
+    busyRef.current = false
+    setTrip(null)
+    setCurrentDriver(null)
+    setPick('')
+    setError(null)
+    setRefreshing(false)
+    setLastFetchedAt(null)
+    setBusy(false)
+    setOriginLabel(null)
+    setDestLabel(null)
+  }, [tripId])
 
   useEffect(() => {
     void load('full')
@@ -107,25 +138,40 @@ export function PartnerTripDetail() {
 
   const reassign = async () => {
     if (!tripId || !pick) return
+    const generation = ++requestGenerationRef.current
+    busyRef.current = true
     setBusy(true)
     setError(null)
     try {
       const nextTrip = await postPartnerTripReassign(tripId, pick)
+      let nextCurrentDriver: PartnerDriverRow | null = null
+      if (nextTrip.driver_id) {
+        try {
+          nextCurrentDriver = await fetchPartnerDriver(nextTrip.driver_id)
+        } catch {
+          nextCurrentDriver = null
+        }
+      }
+      if (generation !== requestGenerationRef.current) return
       setTrip(nextTrip)
+      setCurrentDriver(nextCurrentDriver)
       setPick('')
       setLastFetchedAt(Date.now())
-      if (nextTrip.driver_id) {
-        const cd = await fetchPartnerDriver(nextTrip.driver_id)
-        setCurrentDriver(cd)
-      }
     } catch (e: unknown) {
+      if (generation !== requestGenerationRef.current) return
       const err = e as { detail?: string }
       setError(typeof err?.detail === 'string' ? err.detail : t('tripDetail.reassignError'))
     } finally {
-      setBusy(false)
+      if (generation === requestGenerationRef.current) {
+        busyRef.current = false
+        setBusy(false)
+      }
     }
   }
 
+  if (trip && trip.trip_id !== tripId) {
+    return <p className="p-4 text-sm text-muted-foreground">{tc('loading')}</p>
+  }
   if (loading && !trip) {
     return <p className="p-4 text-sm text-muted-foreground">{tc('loading')}</p>
   }

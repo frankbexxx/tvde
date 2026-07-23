@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import type { PartnerTripRow } from '../../api/partner'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom'
+import type { PartnerDriverRow, PartnerTripRow } from '../../api/partner'
 import i18n from '../../i18n'
 import { PartnerTripDetail } from './PartnerTripDetail'
 
@@ -48,9 +48,39 @@ function baseTrip(overrides: Partial<PartnerTripRow> = {}): PartnerTripRow {
   }
 }
 
+function driver(userId: string): PartnerDriverRow {
+  return {
+    user_id: userId,
+    partner_id: 'p1',
+    status: 'approved',
+    is_available: false,
+    user: { name: `Motorista ${userId}`, phone: '+351900000000' },
+    last_location: null,
+  }
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((next) => {
+    resolve = next
+  })
+  return { promise, resolve }
+}
+
 function renderDetail(tripId = 'trip-1') {
   return render(
     <MemoryRouter initialEntries={[`/partner/trips/${tripId}`]}>
+      <Routes>
+        <Route path="/partner/trips/:tripId" element={<PartnerTripDetail />} />
+      </Routes>
+    </MemoryRouter>
+  )
+}
+
+function renderSwitchableDetail() {
+  return render(
+    <MemoryRouter initialEntries={['/partner/trips/trip-1']}>
+      <Link to="/partner/trips/trip-2">trip-2</Link>
       <Routes>
         <Route path="/partner/trips/:tripId" element={<PartnerTripDetail />} />
       </Routes>
@@ -63,14 +93,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     await i18n.changeLanguage('pt')
     vi.useFakeTimers({ shouldAdvanceTime: true })
     api.fetchPartnerDrivers.mockResolvedValue([])
-    api.fetchPartnerDriver.mockResolvedValue({
-      user_id: 'drv-1',
-      partner_id: 'p1',
-      status: 'approved',
-      is_available: false,
-      user: { name: 'Motorista Teste', phone: '+351900000000' },
-      last_location: null,
-    })
+    api.fetchPartnerDriver.mockResolvedValue(driver('drv-1'))
     api.fetchPartnerTrip.mockResolvedValue(baseTrip())
   })
 
@@ -131,5 +154,69 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
       expect(screen.getByTestId('partner-trip-detail-error')).toHaveTextContent(/rede_indisponivel/i)
     })
     expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+  })
+
+  it('ignora resposta atrasada da viagem anterior após mudar de rota', async () => {
+    const staleTrip = deferred<PartnerTripRow>()
+    api.fetchPartnerTrip.mockImplementation((tripId: string) =>
+      tripId === 'trip-1'
+        ? staleTrip.promise
+        : Promise.resolve(baseTrip({ trip_id: 'trip-2', passenger_id: 'pax-2' }))
+    )
+
+    renderSwitchableDetail()
+    await waitFor(() => {
+      expect(api.fetchPartnerTrip).toHaveBeenCalledWith('trip-1')
+    })
+    fireEvent.click(screen.getByRole('link', { name: 'trip-2' }))
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('trip-2')
+    })
+
+    await act(async () => {
+      staleTrip.resolve(baseTrip({ trip_id: 'trip-1', passenger_id: 'pax-1' }))
+      await staleTrip.promise
+    })
+
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('trip-2')
+    expect(screen.getByText('pax-2')).toBeInTheDocument()
+    expect(screen.queryByText('pax-1')).toBeNull()
+  })
+
+  it('não deixa refresh atrasado desfazer uma reatribuição concluída', async () => {
+    const staleRefresh = deferred<PartnerTripRow>()
+    const assignedToFirst = baseTrip({ status: 'assigned', driver_id: 'drv-1' })
+    const assignedToSecond = baseTrip({ status: 'assigned', driver_id: 'drv-2' })
+    api.fetchPartnerTrip
+      .mockResolvedValueOnce(assignedToFirst)
+      .mockReturnValueOnce(staleRefresh.promise)
+    api.fetchPartnerDrivers.mockResolvedValue([driver('drv-1'), driver('drv-2')])
+    api.fetchPartnerDriver.mockImplementation((driverId: string) =>
+      Promise.resolve(driver(driverId))
+    )
+    api.postPartnerTripReassign.mockResolvedValue(assignedToSecond)
+
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText('drv-1')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTestId('partner-trip-detail-refresh'))
+    await waitFor(() => {
+      expect(api.fetchPartnerTrip).toHaveBeenCalledTimes(2)
+    })
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'drv-2' } })
+    fireEvent.click(screen.getByRole('button', { name: /reatribuir viagem/i }))
+    await waitFor(() => {
+      expect(screen.getByText('drv-2')).toBeInTheDocument()
+    })
+
+    await act(async () => {
+      staleRefresh.resolve(assignedToFirst)
+      await staleRefresh.promise
+    })
+
+    expect(screen.getByText('drv-2')).toBeInTheDocument()
+    expect(api.postPartnerTripReassign).toHaveBeenCalledWith('trip-1', 'drv-2')
   })
 })
