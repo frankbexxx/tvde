@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models.vehicle import Vehicle
 from app.db.models.vehicle_document import VehicleDocument
+from app.schemas.partner import PartnerVehicleDocumentSummary
 from app.schemas.partner_vehicle_documents import (
     VEHICLE_DOCUMENT_STATUSES,
     VEHICLE_DOCUMENT_TYPES,
@@ -28,6 +29,24 @@ from app.schemas.partner_vehicle_documents import (
 )
 
 _EXPIRING_SOON_DAYS = 30
+
+# Stable P0 order — matches FE PARTNER_VEHICLE_DOCUMENT_TYPES / PF3C-1.
+VEHICLE_DOCUMENT_REQUIRED_TYPES_ORDERED: tuple[str, ...] = (
+    "vehicle_registration",
+    "vehicle_insurance",
+    "periodic_inspection",
+    "tvde_sticker",
+)
+
+_WORST_STATUS_RANK: dict[str, int] = {
+    "rejected": 0,
+    "expired": 1,
+    "expired_pending": 2,
+    "missing": 3,
+    "expiring_soon": 4,
+    "pending_review": 5,
+    "valid": 6,
+}
 
 
 def _utc_now() -> datetime:
@@ -102,6 +121,184 @@ def compute_vehicle_document_status(
     if st == "approved":
         return "valid"
     return st or "pending_review"
+
+
+def document_alert_slot_status(
+    *,
+    status_value: str,
+    expires_at: datetime | None,
+    now: datetime | None = None,
+) -> str:
+    """PF3C-2A alert slot status (FE-aligned; may emit ``expired_pending``).
+
+    Distinct from ``compute_vehicle_document_status`` used by GET …/documents,
+    which collapses pending+expired → ``expired`` only.
+    """
+    st = (status_value or "").strip().lower()
+    if st == "rejected":
+        return "rejected"
+    ref = now or _utc_now()
+    if expires_at is not None:
+        exp_day = _as_utc_date(expires_at)
+        today = _as_utc_date(ref)
+        days_left = (exp_day - today).days
+        if days_left < 0:
+            return "expired_pending" if st == "pending_review" else "expired"
+        if days_left <= _EXPIRING_SOON_DAYS:
+            return "expiring_soon"
+    if st == "pending_review":
+        return "pending_review"
+    if st == "approved":
+        return "valid"
+    return st or "pending_review"
+
+
+def empty_vehicle_document_summary(
+    *,
+    required_types: tuple[str, ...] = VEHICLE_DOCUMENT_REQUIRED_TYPES_ORDERED,
+) -> PartnerVehicleDocumentSummary:
+    n = len(required_types)
+    if n == 0:
+        return PartnerVehicleDocumentSummary(
+            total_required=0,
+            present_count=0,
+            missing_count=0,
+            expired_count=0,
+            expiring_soon_count=0,
+            pending_review_count=0,
+            rejected_count=0,
+            valid_count=0,
+            worst_status="valid",
+        )
+    return PartnerVehicleDocumentSummary(
+        total_required=n,
+        present_count=0,
+        missing_count=n,
+        expired_count=0,
+        expiring_soon_count=0,
+        pending_review_count=0,
+        rejected_count=0,
+        valid_count=0,
+        worst_status="missing",
+    )
+
+
+def summarize_vehicle_documents_rows(
+    rows: list[VehicleDocument],
+    *,
+    required_types: tuple[str, ...] = VEHICLE_DOCUMENT_REQUIRED_TYPES_ORDERED,
+    now: datetime | None = None,
+) -> PartnerVehicleDocumentSummary:
+    """Aggregate P0 slots from ORM rows (last-wins per document_type)."""
+    if not required_types:
+        return empty_vehicle_document_summary(required_types=required_types)
+
+    required = set(required_types)
+    by_type: dict[str, VehicleDocument] = {}
+    for row in rows:
+        key = (row.document_type or "").strip()
+        if key and key in required:
+            by_type[key] = row
+
+    present_count = 0
+    missing_count = 0
+    expired_count = 0
+    expiring_soon_count = 0
+    pending_review_count = 0
+    rejected_count = 0
+    valid_count = 0
+    worst_status: str | None = None
+
+    for doc_type in required_types:
+        row = by_type.get(doc_type)
+        if row is None:
+            missing_count += 1
+            status_key = "missing"
+        else:
+            present_count += 1
+            status_key = document_alert_slot_status(
+                status_value=row.status,
+                expires_at=row.expires_at,
+                now=now,
+            )
+
+        if status_key == "rejected":
+            rejected_count += 1
+        elif status_key in ("expired", "expired_pending"):
+            expired_count += 1
+        elif status_key == "expiring_soon":
+            expiring_soon_count += 1
+        elif status_key == "pending_review":
+            pending_review_count += 1
+        elif status_key == "valid":
+            valid_count += 1
+
+        rank = _WORST_STATUS_RANK.get(status_key, 100)
+        if worst_status is None or rank < _WORST_STATUS_RANK.get(worst_status, 100):
+            worst_status = status_key
+
+    return PartnerVehicleDocumentSummary(
+        total_required=len(required_types),
+        present_count=present_count,
+        missing_count=missing_count,
+        expired_count=expired_count,
+        expiring_soon_count=expiring_soon_count,
+        pending_review_count=pending_review_count,
+        rejected_count=rejected_count,
+        valid_count=valid_count,
+        worst_status=worst_status or "missing",
+    )
+
+
+def batch_document_summaries_for_vehicles(
+    db: Session,
+    *,
+    partner_id: uuid.UUID,
+    vehicle_ids: list[uuid.UUID],
+    now: datetime | None = None,
+) -> dict[uuid.UUID, PartnerVehicleDocumentSummary]:
+    """One query for all docs of the partner's vehicles; aggregate in memory."""
+    out: dict[uuid.UUID, PartnerVehicleDocumentSummary] = {
+        vid: empty_vehicle_document_summary() for vid in vehicle_ids
+    }
+    if not vehicle_ids:
+        return out
+
+    rows = list(
+        db.execute(
+            select(VehicleDocument).where(
+                VehicleDocument.partner_id == partner_id,
+                VehicleDocument.vehicle_id.in_(vehicle_ids),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    by_vid: dict[uuid.UUID, list[VehicleDocument]] = {vid: [] for vid in vehicle_ids}
+    for row in rows:
+        bucket = by_vid.get(row.vehicle_id)
+        if bucket is not None:
+            bucket.append(row)
+
+    for vid, docs in by_vid.items():
+        out[vid] = summarize_vehicle_documents_rows(docs, now=now)
+    return out
+
+
+def document_summary_for_vehicle(
+    db: Session,
+    *,
+    partner_id: uuid.UUID,
+    vehicle_id: uuid.UUID,
+    now: datetime | None = None,
+) -> PartnerVehicleDocumentSummary:
+    """Single-vehicle summary (1 query); used by get/create/patch/assign."""
+    return batch_document_summaries_for_vehicles(
+        db,
+        partner_id=partner_id,
+        vehicle_ids=[vehicle_id],
+        now=now,
+    )[vehicle_id]
 
 
 def _decode_metadata(raw: str | None) -> dict[str, Any] | None:

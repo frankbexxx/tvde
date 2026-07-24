@@ -21,6 +21,7 @@ from app.db.models.user import User
 from app.db.models.vehicle import Vehicle
 from app.schemas.partner import (
     PartnerVehicleCreateRequest,
+    PartnerVehicleDocumentSummary,
     PartnerVehicleItem,
     PartnerVehiclePatchRequest,
 )
@@ -28,6 +29,10 @@ from app.services.driver_preferences import (
     VALID_DRIVER_CATEGORIES,
     decode_driver_categories_csv,
     encode_driver_categories_csv,
+)
+from app.services.partner_vehicle_documents import (
+    batch_document_summaries_for_vehicles,
+    document_summary_for_vehicle,
 )
 
 _ALLOWED_STATUS = frozenset({"active", "inactive"})
@@ -106,7 +111,12 @@ def _assigned_driver_row(
     return row[0], row[1]
 
 
-def vehicle_to_item(db: Session, vehicle: Vehicle) -> PartnerVehicleItem:
+def vehicle_to_item(
+    db: Session,
+    vehicle: Vehicle,
+    *,
+    document_summary: PartnerVehicleDocumentSummary | None = None,
+) -> PartnerVehicleItem:
     assigned = _assigned_driver_row(db, vehicle_id=vehicle.id)
     driver_id = None
     driver_name = None
@@ -114,6 +124,13 @@ def vehicle_to_item(db: Session, vehicle: Vehicle) -> PartnerVehicleItem:
         d, u = assigned
         driver_id = str(d.user_id)
         driver_name = u.name if u else None
+    summary = document_summary
+    if summary is None:
+        summary = document_summary_for_vehicle(
+            db,
+            partner_id=vehicle.partner_id,
+            vehicle_id=vehicle.id,
+        )
     return PartnerVehicleItem(
         id=str(vehicle.id),
         partner_id=str(vehicle.partner_id),
@@ -129,6 +146,7 @@ def vehicle_to_item(db: Session, vehicle: Vehicle) -> PartnerVehicleItem:
         updated_at=_utc_iso(vehicle.updated_at),
         assigned_driver_id=driver_id,
         assigned_driver_name=driver_name,
+        document_summary=summary,
     )
 
 
@@ -152,7 +170,14 @@ def list_vehicles_for_partner(db: Session, partner_id: str) -> list[PartnerVehic
         .scalars()
         .all()
     )
-    return [vehicle_to_item(db, v) for v in vehicles]
+    summaries = batch_document_summaries_for_vehicles(
+        db,
+        partner_id=pid,
+        vehicle_ids=[v.id for v in vehicles],
+    )
+    return [
+        vehicle_to_item(db, v, document_summary=summaries[v.id]) for v in vehicles
+    ]
 
 
 def create_vehicle_for_partner(
