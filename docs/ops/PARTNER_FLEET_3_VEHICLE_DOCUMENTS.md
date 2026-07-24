@@ -15,7 +15,7 @@
 | **PF3A** | Tabela `vehicle_documents` · Partner API CRUD · upload/download `UPLOAD_DIR` · `computed_status` · UNIQUE `(vehicle_id, document_type)` · hard delete MVP | **PASS** [#432](https://github.com/frankbexxx/tvde/pull/432) |
 | **PF3B** | UI Partner Frota → Viaturas · painel Documentos expansível · 4 tipos P0 · form inline · upload/download | **PASS** ([#435](https://github.com/frankbexxx/tvde/pull/435) + smoke fixes [#440](https://github.com/frankbexxx/tvde/pull/440) · [#441](https://github.com/frankbexxx/tvde/pull/441)) |
 | **PF3C** | Alertas de caducidade — `document_summary` · badges lista · Home agregado | **PASS** ([#452](https://github.com/frankbexxx/tvde/pull/452)–[#456](https://github.com/frankbexxx/tvde/pull/456)) |
-| **PF3D** | Compliance gates / bloqueios | Fora deste slice / próximo natural |
+| **PF3D** | Compliance gates / bloqueios | **PF3D-0** decisão — [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](./PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md); implementação só após A–E |
 
 ---
 

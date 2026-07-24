@@ -8,39 +8,37 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-24** — PF3C PASS funcional)
+## Contexto actual (**2026-07-24** — PF3D-0 decisão / PF3C PASS)
 
-### Smoke — [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](../ops/PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md)
+### Spec PF3D-0 — [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | `bd2664c` |
-| **Working tree** | Limpa |
-| **PF3C-1 / 2A / 2B / 2B-FIX / 3** | **PASS** (#452 · #453 · #454 · #455 · #456) |
-| **Smoke visual Home + Viaturas + painel** | **PASS** (2026-07-24) |
-| **PARTNER-FLEET-1A / 2 / 3A / 3B** | **PASS** (prévio) |
+| **`main` / `origin/main`** | ≥ `e2b98f9` |
+| **Working tree** | Limpa (fecho docs) |
+| **PF3C** | **PASS** (#452–#456; docs #457) |
+| **PF3D-0** | Decisão/matriz documentada — **sem** código / gates |
+| **Decisões A–E** | **Abertas** — fechar antes de PF3D-3 |
+| **PARTNER-FLEET-1A / 2 / 3A / 3B / PF3C** | **PASS** |
 | **OPS-UX-1** | **PASS** (prévio) |
-| **Polish futuro** | Não blocker — densidades, alertas mobile, Documentos UX |
 
 ### Decisão produto (mantém-se)
 
 Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fleet / matching. Ver [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md).
 
-### Entregas recentes (merged — PF3C)
+### Entregas recentes
 
-| PR | O quê |
-|----|-------|
-| **#456** | Home — alerta Documentos de viaturas + Ver viaturas |
-| **#455** | Pluralização badges missing (1 doc / N docs) |
-| **#454** | Badges documentais na lista Viaturas |
-| **#453** | Backend `document_summary` + batch |
-| **#452** | Helpers FE summary + pin ruff 0.15.22 |
+| PR / doc | O quê |
+|----------|-------|
+| **#457** | Docs PF3C smoke PASS |
+| **#456–#452** | PF3C runtime (Home · badges · summary · helpers) |
+| **PF3D-0** | Matriz compliance + decisões A–E (este handoff) |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
-| **PF3D** | Compliance gates documentais — só quando produto pedir |
+| **PF3D** | **PF3D-0** feito (docs); próximo código = **PF3D-1** helper puro — só após aprovação; gates **PF3D-3** só após A–E |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
 | **OPS-UX-POLISH** | Mobile / densidades / alertas Home — não blocker |
 | **ADMIN-OPS-UX** | Acompanhar / refresh Admin · docs Admin |
@@ -53,10 +51,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Admin OPS-UX** leve — Acompanhar / refresh / docs visibility  
-2. **Polish mobile Partner** — Home, Viaturas, Documentos  
-3. **PF3D** — compliance gates (só se produto pedir)  
-4. **Smoke alargado** Pax+Driver+Partner+Admin  
+1. **Fechar decisões PF3D A–E** (produto) — ver [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md)  
+2. **PF3D-1** — helper puro + pytest (**sem** wiring) — só com aprovação  
+3. Auditoria `active_vehicle_id` (pré-gates)  
+4. **Admin OPS-UX** / polish mobile / smoke alargado (carril paralelo se PF3D pausar)  
 5. **CHORE-LINT-1** — Ruff 0.16 (opcional)
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
@@ -65,6 +63,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| PF3D-0 compliance (decisão) | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) |
 | PF3C smoke PASS | [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](../ops/PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md) |
 | PF3 documentos (cadeia) | [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](../ops/PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md) |
 | OPS-UX-1 smoke PASS | [`OPS_UX_1_SMOKE_PASS_2026-07-23.md`](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) |
