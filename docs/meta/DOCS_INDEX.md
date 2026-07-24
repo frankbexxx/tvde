@@ -13,6 +13,7 @@
 | [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo (tabelas ID/Estado) |
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto + Seções F/G resumo |
 | [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 + checkpoint Julho 2026 |
+| [PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | PF3D-0 — decisão/matriz compliance gates docs viatura (sem implementação) |
 | [PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md](../ops/PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md) | PF3C PASS funcional — alertas/badges docs viatura 2026-07-24 |
 | [OPS_UX_1_SMOKE_PASS_2026-07-23.md](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) | OPS-UX-1 PASS funcional — smoke Pax/Driver/Partner 2026-07-23 |
 | [CHECKPOINT_2026-07-22_PARTNER_FLEET.md](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) | Encerramento sessão Partner-Fleet 3B PASS + hardenings |
