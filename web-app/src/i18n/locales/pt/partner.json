@@ -342,6 +342,14 @@
       "uploadError": "Não foi possível enviar o ficheiro.",
       "downloadError": "Não foi possível descarregar o ficheiro.",
       "deleteError": "Não foi possível remover o documento.",
+      "badge": {
+        "ok": "Documentos OK",
+        "missing": "{{count}} docs em falta",
+        "expired": "Expirado",
+        "expiring_soon": "A expirar",
+        "pending_review": "Pendente",
+        "rejected": "Rejeitado"
+      },
       "types": {
         "vehicle_registration": "DUA / Certificado de Matrícula",
         "vehicle_insurance": "Seguro TVDE",

@@ -1,8 +1,24 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import type { PartnerDriverRow, PartnerVehicleRow } from '../../../api/partner'
+import type {
+  PartnerDriverRow,
+  PartnerVehicleDocumentSummary,
+  PartnerVehicleRow,
+} from '../../../api/partner'
 import i18n from '../../../i18n'
 import { PartnerVehiclesScreen } from './PartnerVehiclesScreen'
+
+const summaryMissing: PartnerVehicleDocumentSummary = {
+  total_required: 4,
+  present_count: 0,
+  missing_count: 4,
+  expired_count: 0,
+  expiring_soon_count: 0,
+  pending_review_count: 0,
+  rejected_count: 0,
+  valid_count: 0,
+  worst_status: 'missing',
+}
 
 const vehicle: PartnerVehicleRow = {
   id: 'veh-1',
@@ -19,6 +35,24 @@ const vehicle: PartnerVehicleRow = {
   updated_at: '2026-07-20T00:00:00Z',
   assigned_driver_id: null,
   assigned_driver_name: null,
+  document_summary: summaryMissing,
+}
+
+function withSummary(
+  worst: PartnerVehicleDocumentSummary['worst_status'],
+  overrides: Partial<PartnerVehicleDocumentSummary> = {}
+): PartnerVehicleRow {
+  return {
+    ...vehicle,
+    document_summary: {
+      ...summaryMissing,
+      present_count: 4,
+      missing_count: 0,
+      valid_count: 4,
+      worst_status: worst,
+      ...overrides,
+    },
+  }
 }
 
 const driver: PartnerDriverRow = {
@@ -276,5 +310,64 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
     await waitFor(() => {
       expect(api.fetchPartnerVehicleDocuments).toHaveBeenCalledWith('veh-1')
     })
+  })
+
+  it('mostra badge documental a partir de document_summary (PF3C-2B)', async () => {
+    const cases: Array<{
+      row: PartnerVehicleRow
+      key: string
+      text: RegExp
+    }> = [
+        {
+          row: withSummary('valid', { valid_count: 4, missing_count: 0 }),
+          key: 'ok',
+          text: /documentos ok/i,
+        },
+        {
+          row: vehicle,
+          key: 'missing',
+          text: /4 docs em falta/i,
+        },
+        {
+          row: withSummary('expired', { expired_count: 1, valid_count: 3 }),
+          key: 'expired',
+          text: /expirado/i,
+        },
+        {
+          row: withSummary('expiring_soon', {
+            expiring_soon_count: 1,
+            valid_count: 3,
+          }),
+          key: 'expiring_soon',
+          text: /a expirar/i,
+        },
+        {
+          row: withSummary('pending_review', {
+            pending_review_count: 1,
+            valid_count: 3,
+          }),
+          key: 'pending_review',
+          text: /^pendente$/i,
+        },
+        {
+          row: withSummary('rejected', { rejected_count: 1, valid_count: 3 }),
+          key: 'rejected',
+          text: /rejeitado/i,
+        },
+      ]
+
+    for (const c of cases) {
+      api.fetchPartnerVehicles.mockResolvedValue([c.row])
+      const { unmount } = render(<PartnerVehiclesScreen />)
+      await waitFor(() => {
+        expect(screen.getByTestId('partner-vehicle-docs-badge')).toHaveAttribute(
+          'data-badge-key',
+          c.key
+        )
+      })
+      expect(screen.getByTestId('partner-vehicle-docs-badge')).toHaveTextContent(c.text)
+      expect(screen.getByTestId('partner-vehicle-docs-toggle')).toBeInTheDocument()
+      unmount()
+    }
   })
 })

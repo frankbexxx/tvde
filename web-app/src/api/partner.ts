@@ -30,6 +30,18 @@ export interface PartnerDriverRow {
 }
 
 /** PARTNER-FLEET-2A/2C — viatura da frota. */
+export interface PartnerVehicleDocumentSummary {
+  total_required: number
+  present_count: number
+  missing_count: number
+  expired_count: number
+  expiring_soon_count: number
+  pending_review_count: number
+  rejected_count: number
+  valid_count: number
+  worst_status: string
+}
+
 export interface PartnerVehicleRow {
   id: string
   partner_id: string
@@ -45,6 +57,8 @@ export interface PartnerVehicleRow {
   updated_at: string
   assigned_driver_id: string | null
   assigned_driver_name: string | null
+  /** PF3C-2A/2B — aggregate P0 document alerts. */
+  document_summary: PartnerVehicleDocumentSummary
 }
 
 export type PartnerVehicleCreateBody = {

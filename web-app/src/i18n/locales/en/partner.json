@@ -342,6 +342,14 @@
       "uploadError": "Could not upload the file.",
       "downloadError": "Could not download the file.",
       "deleteError": "Could not remove the document.",
+      "badge": {
+        "ok": "Documents OK",
+        "missing": "{{count}} missing docs",
+        "expired": "Expired",
+        "expiring_soon": "Expiring soon",
+        "pending_review": "Pending",
+        "rejected": "Rejected"
+      },
       "types": {
         "vehicle_registration": "Registration certificate (DUA)",
         "vehicle_insurance": "TVDE insurance",

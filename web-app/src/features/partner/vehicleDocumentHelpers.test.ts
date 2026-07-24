@@ -4,6 +4,7 @@ import {
   summarizeVehicleDocuments,
   utcCalendarDaysBetween,
   vehicleDocumentDisplayStatus,
+  vehicleDocumentListBadge,
 } from './vehicleDocumentHelpers'
 import type { PartnerVehicleDocumentRow } from '../../api/partner'
 
@@ -363,5 +364,67 @@ describe('summarizeVehicleDocuments (PF3C-1)', () => {
     expect(s.expired_count).toBe(1)
     expect(s.pending_review_count).toBe(0)
     expect(s.worst_status).toBe('expired_pending')
+  })
+})
+
+describe('vehicleDocumentListBadge (PF3C-2B)', () => {
+  const base = {
+    total_required: 4,
+    present_count: 4,
+    missing_count: 0,
+    expired_count: 0,
+    expiring_soon_count: 0,
+    pending_review_count: 0,
+    rejected_count: 0,
+    valid_count: 4,
+    worst_status: 'valid',
+  }
+
+  it('maps worst_status to badge keys and tones', () => {
+    expect(vehicleDocumentListBadge({ ...base, worst_status: 'valid' })).toEqual({
+      badgeKey: 'ok',
+      tone: 'ok',
+      count: 4,
+    })
+    expect(
+      vehicleDocumentListBadge({
+        ...base,
+        missing_count: 2,
+        valid_count: 2,
+        present_count: 2,
+        worst_status: 'missing',
+      })
+    ).toMatchObject({ badgeKey: 'missing', tone: 'warn', count: 2 })
+    expect(
+      vehicleDocumentListBadge({ ...base, expired_count: 1, worst_status: 'expired' })
+    ).toMatchObject({ badgeKey: 'expired', tone: 'crit' })
+    expect(
+      vehicleDocumentListBadge({
+        ...base,
+        expired_count: 1,
+        worst_status: 'expired_pending',
+      })
+    ).toMatchObject({ badgeKey: 'expired', tone: 'crit' })
+    expect(
+      vehicleDocumentListBadge({
+        ...base,
+        expiring_soon_count: 1,
+        worst_status: 'expiring_soon',
+      })
+    ).toMatchObject({ badgeKey: 'expiring_soon', tone: 'warn' })
+    expect(
+      vehicleDocumentListBadge({
+        ...base,
+        pending_review_count: 1,
+        worst_status: 'pending_review',
+      })
+    ).toMatchObject({ badgeKey: 'pending_review', tone: 'info' })
+    expect(
+      vehicleDocumentListBadge({
+        ...base,
+        rejected_count: 1,
+        worst_status: 'rejected',
+      })
+    ).toMatchObject({ badgeKey: 'rejected', tone: 'crit' })
   })
 })
