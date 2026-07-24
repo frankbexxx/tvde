@@ -52,6 +52,71 @@ export type VehicleDocumentsSummary = {
   worst_status: VehicleDocumentDisplayStatusKey | string
 }
 
+/** Compact list badge derived from API/FE document_summary. */
+export type VehicleDocListBadgeTone = 'ok' | 'info' | 'warn' | 'crit'
+
+export type VehicleDocListBadge = {
+  /** i18n key under vehicles.documents.badge.* */
+  badgeKey:
+  | 'ok'
+  | 'missing'
+  | 'expired'
+  | 'expiring_soon'
+  | 'pending_review'
+  | 'rejected'
+  tone: VehicleDocListBadgeTone
+  /** For missing badge: count to interpolate. */
+  count: number
+}
+
+/**
+ * PF3C-2B — one compact badge from document_summary.worst_status.
+ * ``expired_pending`` maps to the expired badge (same alert level).
+ */
+export function vehicleDocumentListBadge(
+  summary: VehicleDocumentsSummary | null | undefined
+): VehicleDocListBadge | null {
+  if (!summary) return null
+  const raw = (summary.worst_status || '').trim().toLowerCase()
+  const status = raw === 'expired_pending' ? 'expired' : raw
+
+  switch (status) {
+    case 'rejected':
+      return { badgeKey: 'rejected', tone: 'crit', count: summary.rejected_count }
+    case 'expired':
+      return { badgeKey: 'expired', tone: 'crit', count: summary.expired_count }
+    case 'missing':
+      return {
+        badgeKey: 'missing',
+        tone: 'warn',
+        count: summary.missing_count,
+      }
+    case 'expiring_soon':
+      return {
+        badgeKey: 'expiring_soon',
+        tone: 'warn',
+        count: summary.expiring_soon_count,
+      }
+    case 'pending_review':
+      return {
+        badgeKey: 'pending_review',
+        tone: 'info',
+        count: summary.pending_review_count,
+      }
+    case 'valid':
+      return { badgeKey: 'ok', tone: 'ok', count: summary.valid_count }
+    default:
+      return null
+  }
+}
+
+export function vehicleDocListBadgeClass(tone: VehicleDocListBadgeTone): string {
+  if (tone === 'crit') return 'border-destructive/40 bg-destructive/10 text-destructive'
+  if (tone === 'warn') return 'border-warning/40 bg-warning/10 text-foreground'
+  if (tone === 'info') return 'border-border bg-muted/40 text-muted-foreground'
+  return 'border-border bg-muted/20 text-muted-foreground'
+}
+
 function worstStatusRank(status: string): number {
   return WORST_STATUS_RANK[status] ?? 100
 }

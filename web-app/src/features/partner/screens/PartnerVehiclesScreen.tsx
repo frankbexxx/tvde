@@ -18,6 +18,10 @@ import {
   type DriverVehicleCategory,
 } from '../../../services/driverVehicleCategories'
 import { PartnerVehicleDocumentsPanel } from './PartnerVehicleDocumentsPanel'
+import {
+  vehicleDocListBadgeClass,
+  vehicleDocumentListBadge,
+} from '../vehicleDocumentHelpers'
 
 type VehicleFormState = {
   plate: string
@@ -332,6 +336,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
       <ul className="space-y-2">
         {vehicles.map((v) => {
           const editing = editingId === v.id
+          const docBadge = vehicleDocumentListBadge(v.document_summary)
           return (
             <li
               key={v.id}
@@ -375,6 +380,19 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
                     <span className="text-muted-foreground text-xs uppercase tracking-wide">
                       {v.status}
                     </span>
+                    {docBadge ? (
+                      <span
+                        data-testid="partner-vehicle-docs-badge"
+                        data-badge-key={docBadge.badgeKey}
+                        className={`inline-flex max-w-full items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold leading-tight ${vehicleDocListBadgeClass(docBadge.tone)}`}
+                      >
+                        {docBadge.badgeKey === 'missing'
+                          ? t('vehicles.documents.badge.missing', {
+                            count: docBadge.count,
+                          })
+                          : t(`vehicles.documents.badge.${docBadge.badgeKey}`)}
+                      </span>
+                    ) : null}
                   </div>
                   <p data-testid="partner-vehicle-make-model">
                     {v.make} {v.model}
