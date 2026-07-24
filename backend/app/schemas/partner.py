@@ -58,6 +58,20 @@ class PartnerVehicleAssignRequest(BaseModel):
     driver_user_id: str = Field(..., min_length=1)
 
 
+class PartnerVehicleDocumentSummary(BaseModel):
+    """PF3C-2A — aggregate P0 document alert counts (FE-aligned worst_status)."""
+
+    total_required: int
+    present_count: int
+    missing_count: int
+    expired_count: int
+    expiring_soon_count: int
+    pending_review_count: int
+    rejected_count: int
+    valid_count: int
+    worst_status: str
+
+
 class PartnerVehicleItem(BaseModel):
     id: str
     partner_id: str
@@ -73,6 +87,8 @@ class PartnerVehicleItem(BaseModel):
     updated_at: str
     assigned_driver_id: str | None = None
     assigned_driver_name: str | None = None
+    # PF3C-2A — document alert summary (always present; empty fleet = all missing).
+    document_summary: PartnerVehicleDocumentSummary
 
 
 class PartnerTripItem(BaseModel):
