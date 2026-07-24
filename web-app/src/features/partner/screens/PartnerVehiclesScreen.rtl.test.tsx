@@ -324,9 +324,27 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
           text: /documentos ok/i,
         },
         {
+          row: withSummary('missing', {
+            present_count: 3,
+            missing_count: 1,
+            valid_count: 3,
+          }),
+          key: 'missing',
+          text: /^1 doc em falta$/i,
+        },
+        {
+          row: withSummary('missing', {
+            present_count: 2,
+            missing_count: 2,
+            valid_count: 2,
+          }),
+          key: 'missing',
+          text: /^2 docs em falta$/i,
+        },
+        {
           row: vehicle,
           key: 'missing',
-          text: /4 docs em falta/i,
+          text: /^4 docs em falta$/i,
         },
         {
           row: withSummary('expired', { expired_count: 1, valid_count: 3 }),
@@ -369,5 +387,35 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
       expect(screen.getByTestId('partner-vehicle-docs-toggle')).toBeInTheDocument()
       unmount()
     }
+  })
+
+  it('pluraliza badge missing em EN (1 vs N)', async () => {
+    await i18n.changeLanguage('en')
+    const one = withSummary('missing', {
+      present_count: 3,
+      missing_count: 1,
+      valid_count: 3,
+    })
+    api.fetchPartnerVehicles.mockResolvedValue([one])
+    const { unmount } = render(<PartnerVehiclesScreen />)
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-docs-badge')).toHaveTextContent(
+        /^1 missing doc$/i
+      )
+    })
+    unmount()
+
+    const many = withSummary('missing', {
+      present_count: 2,
+      missing_count: 2,
+      valid_count: 2,
+    })
+    api.fetchPartnerVehicles.mockResolvedValue([many])
+    render(<PartnerVehiclesScreen />)
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-vehicle-docs-badge')).toHaveTextContent(
+        /^2 missing docs$/i
+      )
+    })
   })
 })

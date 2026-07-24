@@ -344,7 +344,8 @@
       "deleteError": "Não foi possível remover o documento.",
       "badge": {
         "ok": "Documentos OK",
-        "missing": "{{count}} docs em falta",
+        "missing_one": "{{count}} doc em falta",
+        "missing_other": "{{count}} docs em falta",
         "expired": "Expirado",
         "expiring_soon": "A expirar",
         "pending_review": "Pendente",
