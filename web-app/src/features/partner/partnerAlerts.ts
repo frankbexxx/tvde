@@ -1,4 +1,5 @@
 import type { PartnerDriverRow, PartnerTripRow } from '../../api/partner'
+import type { PartnerMenuScreen } from './PartnerSideMenu'
 
 export type PartnerAlertSeverity = 'info' | 'warn' | 'crit'
 
@@ -7,7 +8,12 @@ export type PartnerAlert = {
   severity: PartnerAlertSeverity
   title: string
   body: string
-  href: string
+  /** Deep route (drivers/trips). Prefer `menuScreen` for in-shell screens. */
+  href?: string
+  /** Open Partner menu screen (e.g. fleet_vehicles). */
+  menuScreen?: PartnerMenuScreen
+  /** CTA label; defaults to “Ver detalhe” when omitted. */
+  ctaLabel?: string
 }
 
 const PIPELINE = new Set(['searching', 'assigned', 'accepted', 'arriving', 'ongoing'])

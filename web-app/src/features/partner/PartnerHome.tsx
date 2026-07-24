@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PartnerAlertsPanel } from './PartnerAlertsPanel'
 import { buildPartnerAlerts } from './partnerAlerts'
+import { buildPartnerVehicleDocumentAlert } from './partnerVehicleDocumentAlerts'
 import { usePartnerShell } from './partnerShellContext'
 import { PartnerHomeDashboard } from './screens/PartnerHomeDashboard'
 import { usePartnerWorkspace } from './partnerWorkspace'
@@ -11,10 +12,19 @@ export function PartnerHome() {
   const { menuOpen } = usePartnerShell()
   const { metrics, trips, loading, error, load, operationalAlertsSource } = usePartnerWorkspace()
 
-  const operationalAlerts = useMemo(
-    () => buildPartnerAlerts(operationalAlertsSource.drivers, operationalAlertsSource.trips),
-    [operationalAlertsSource]
-  )
+  const operationalAlerts = useMemo(() => {
+    const base = buildPartnerAlerts(
+      operationalAlertsSource.drivers,
+      operationalAlertsSource.trips
+    )
+    const docAlert = buildPartnerVehicleDocumentAlert(
+      operationalAlertsSource.vehicles,
+      t
+    )
+    if (!docAlert) return base
+    const rank = { crit: 0, warn: 1, info: 2 } as const
+    return [...base, docAlert].sort((a, b) => rank[a.severity] - rank[b.severity])
+  }, [operationalAlertsSource, t])
 
   return (
     <div className="flex min-h-full flex-col max-w-lg mx-auto w-full">

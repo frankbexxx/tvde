@@ -46,6 +46,20 @@
     "title": "Início",
     "alertsTitle": "Alertas operacionais",
     "alertsHint": "Documentos, GPS, viagens bloqueadas — clique para ir ao detalhe.",
+    "vehicleDocsAlert": {
+      "title": "Documentos de viaturas",
+      "cta": "Ver viaturas",
+      "rejected_one": "{{count}} viatura com documentos rejeitados",
+      "rejected_other": "{{count}} viaturas com documentos rejeitados",
+      "expired_one": "{{count}} viatura com documento expirado",
+      "expired_other": "{{count}} viaturas com documentos expirados",
+      "missing_one": "{{count}} viatura com documentos em falta",
+      "missing_other": "{{count}} viaturas com documentos em falta",
+      "expiring_soon_one": "{{count}} viatura com documentos a expirar",
+      "expiring_soon_other": "{{count}} viaturas com documentos a expirar",
+      "pending_review_one": "{{count}} viatura com documentos pendentes",
+      "pending_review_other": "{{count}} viaturas com documentos pendentes"
+    },
     "activeTrip": {
       "titleSingular": "Viagem activa",
       "titlePlural": "Viagens activas",
