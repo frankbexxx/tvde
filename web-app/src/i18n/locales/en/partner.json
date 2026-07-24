@@ -46,6 +46,20 @@
     "title": "Home",
     "alertsTitle": "Operational alerts",
     "alertsHint": "Documents, GPS, blocked trips — tap to go to details.",
+    "vehicleDocsAlert": {
+      "title": "Vehicle documents",
+      "cta": "View vehicles",
+      "rejected_one": "{{count}} vehicle with rejected documents",
+      "rejected_other": "{{count}} vehicles with rejected documents",
+      "expired_one": "{{count}} vehicle with expired document",
+      "expired_other": "{{count}} vehicles with expired documents",
+      "missing_one": "{{count}} vehicle with missing documents",
+      "missing_other": "{{count}} vehicles with missing documents",
+      "expiring_soon_one": "{{count}} vehicle with documents expiring soon",
+      "expiring_soon_other": "{{count}} vehicles with documents expiring soon",
+      "pending_review_one": "{{count}} vehicle with pending documents",
+      "pending_review_other": "{{count}} vehicles with pending documents"
+    },
     "activeTrip": {
       "titleSingular": "Active trip",
       "titlePlural": "Active trips",

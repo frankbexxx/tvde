@@ -8,11 +8,13 @@ import {
   fetchPartnerDrivers,
   fetchPartnerMetrics,
   fetchPartnerTrips,
+  fetchPartnerVehicles,
   partnerTripsExportUrl,
   type PartnerDriverDiscoveryItem,
   type PartnerDriverRow,
   type PartnerMetrics,
   type PartnerTripRow,
+  type PartnerVehicleRow,
 } from '../../api/partner'
 import { PartnerSideMenu, type PartnerMenuScreen } from './PartnerSideMenu'
 import { usePartnerShell } from './partnerShellContext'
@@ -51,10 +53,15 @@ type PartnerWorkspaceContextValue = {
   metrics: PartnerMetrics | null
   drivers: PartnerDriverRow[]
   trips: PartnerTripRow[]
+  vehicles: PartnerVehicleRow[]
   loading: boolean
   error: string | null
   load: () => Promise<void>
-  operationalAlertsSource: { drivers: PartnerDriverRow[]; trips: PartnerTripRow[] }
+  operationalAlertsSource: {
+    drivers: PartnerDriverRow[]
+    trips: PartnerTripRow[]
+    vehicles: PartnerVehicleRow[]
+  }
 }
 
 const PartnerWorkspaceContext = createContext<PartnerWorkspaceContextValue | null>(null)
@@ -83,6 +90,7 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
   const [metrics, setMetrics] = useState<PartnerMetrics | null>(null)
   const [drivers, setDrivers] = useState<PartnerDriverRow[]>([])
   const [trips, setTrips] = useState<PartnerTripRow[]>([])
+  const [vehicles, setVehicles] = useState<PartnerVehicleRow[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [driverFilter, setDriverFilter] = useState<DriverFilter>('all')
@@ -115,6 +123,14 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
     } catch (e: unknown) {
       const err = e as { detail?: string }
       setError(typeof err?.detail === 'string' ? err.detail : t('workspace.loadError'))
+    }
+
+    // PF3C-3 — soft-load vehicles (document_summary). Failure must not break Home.
+    try {
+      const veh = await fetchPartnerVehicles()
+      setVehicles(veh)
+    } catch {
+      setVehicles([])
     } finally {
       setLoading(false)
     }
@@ -424,12 +440,13 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
       metrics,
       drivers,
       trips,
+      vehicles,
       loading,
       error,
       load,
-      operationalAlertsSource: { drivers, trips },
+      operationalAlertsSource: { drivers, trips, vehicles },
     }),
-    [metrics, drivers, trips, loading, error, load]
+    [metrics, drivers, trips, vehicles, loading, error, load]
   )
 
   return (
