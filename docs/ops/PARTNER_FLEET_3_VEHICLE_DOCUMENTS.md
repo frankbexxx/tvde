@@ -1,8 +1,9 @@
 # PARTNER-FLEET-3 — Documentos da viatura
 
-**Estado:** PF3A **PASS** · PF3B **PASS** (smoke final 2026-07-22)  
-**`main`:** ≥ `387c491` (merge [#441](https://github.com/frankbexxx/tvde/pull/441); cadeia PF3B + smoke fixes).  
+**Estado:** PF3A **PASS** · PF3B **PASS** · PF3C **PASS** (smoke visual 2026-07-24)  
+**`main`:** ≥ `bd2664c` (merge [#456](https://github.com/frankbexxx/tvde/pull/456); cadeia PF3C).  
 **Smoke 3B:** [`PARTNER_FLEET_3B_SMOKE_2026-07-22.md`](./PARTNER_FLEET_3B_SMOKE_2026-07-22.md)  
+**Smoke 3C:** [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](./PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md)  
 **Pré-condição:** PARTNER-FLEET-2 **PASS** · `main` inclui [#432](https://github.com/frankbexxx/tvde/pull/432) (backend docs) e [#430](https://github.com/frankbexxx/tvde/pull/430) (clear `active_vehicle_id` em transfer/remove).
 
 ---
@@ -13,8 +14,8 @@
 |-------|------|--------|
 | **PF3A** | Tabela `vehicle_documents` · Partner API CRUD · upload/download `UPLOAD_DIR` · `computed_status` · UNIQUE `(vehicle_id, document_type)` · hard delete MVP | **PASS** [#432](https://github.com/frankbexxx/tvde/pull/432) |
 | **PF3B** | UI Partner Frota → Viaturas · painel Documentos expansível · 4 tipos P0 · form inline · upload/download | **PASS** ([#435](https://github.com/frankbexxx/tvde/pull/435) + smoke fixes [#440](https://github.com/frankbexxx/tvde/pull/440) · [#441](https://github.com/frankbexxx/tvde/pull/441)) |
-| **PF3C** | Alertas de caducidade (lista / agregados) | Fora deste slice / próximo natural |
-| **PF3D** | Compliance gates / bloqueios | Fora deste slice |
+| **PF3C** | Alertas de caducidade — `document_summary` · badges lista · Home agregado | **PASS** ([#452](https://github.com/frankbexxx/tvde/pull/452)–[#456](https://github.com/frankbexxx/tvde/pull/456)) |
+| **PF3D** | Compliance gates / bloqueios | Fora deste slice / próximo natural |
 
 ---
 
@@ -56,27 +57,36 @@ Regras:
 - Sempre 4 slots P0 (incluindo **Em falta**)
 - Form inline: número, emissor, datas, notas, status armazenado, ficheiro
 - Validação cliente: ≤5 MB · PDF/JPG/PNG · erros locais sem request preso
-- Sem alertas agregados na lista; sem redesign da frota
+
+---
+
+## Alertas (PF3C)
+
+- `GET /partner/vehicles` → `document_summary` (batch backend)
+- Badges na lista Viaturas (pluralização PT/EN)
+- Partner Home: alerta agregado «Documentos de viaturas» + CTA «Ver viaturas» (`openMenu('fleet_vehicles')`)
+- Soft-load vehicles na Home; falha não derruba métricas/drivers/trips
+- **Sem** gates / **sem** bloqueio operacional
 
 ---
 
 ## Fora de scope (confirmado)
 
-- Alertas agregados na lista de viaturas  
-- Badges na lista de motoristas  
-- Compliance gates / bloqueios  
-- Admin approval  
+- Compliance gates / bloqueios (→ **PF3D**)  
+- Admin approval / alertas Admin  
 - Integração IMT · OCR · S3/CDN  
 - Histórico de versões  
 - Driver docs / migrar `inspecao_viatura`  
 - Matching · Stripe/payments · Passenger/Driver/NAV  
-- Migrations novas · DB cleanup · env/secrets · backend novo neste slice  
+- Redesign total Documentos / mobile  
+- DB cleanup · env/secrets · Ruff 0.16  
 
 ---
 
-## Smoke manual PF3B
+## Smoke manual
 
-Checklist e resultado final: [`PARTNER_FLEET_3B_SMOKE_2026-07-22.md`](./PARTNER_FLEET_3B_SMOKE_2026-07-22.md).
+- **PF3B:** [`PARTNER_FLEET_3B_SMOKE_2026-07-22.md`](./PARTNER_FLEET_3B_SMOKE_2026-07-22.md)  
+- **PF3C:** [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](./PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md)  
 
 **Correcções pós-smoke (PF3B-SMOKE-FIX-1)** [#440](https://github.com/frankbexxx/tvde/pull/440): validação cliente 5 MB + PDF/JPG/PNG; display expirado prioriza validade; backend rejeita `invalid_file_type` (415).
 
@@ -99,6 +109,6 @@ Melhorar no futuro (fora de PF3B):
 
 ## Conclusão
 
-**PARTNER-FLEET-3B = PASS funcional.**
+**PARTNER-FLEET-3B = PASS funcional** · **PF3C = PASS funcional.**
 
-UI Partner de documentos da viatura (4 tipos P0, upload/download, estados, validações) validada em smoke real após fixes #440 e #441 em `main` ≥ `387c491`. Próximos naturais: PF3C alertas · PF3D gates.
+UI Partner de documentos da viatura (4 tipos P0, upload/download, estados) + alertas/badges/Home (`document_summary`) validados em smoke. Próximo natural: **PF3D** gates (quando produto pedir).
