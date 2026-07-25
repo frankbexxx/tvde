@@ -100,6 +100,79 @@ def test_partner_patch_driver_status_and_availability() -> None:
     assert r4.json()["is_available"] is False
 
 
+def test_partner_force_online_blocked_during_active_trip() -> None:
+    """Force-online must not restore dispatch eligibility mid-trip (double-book risk)."""
+    db = SessionLocal()
+    try:
+        pid = uuid.uuid4()
+        db.add(Partner(id=pid, name="Fleet Active Guard"))
+        u_d = User(
+            role=Role.driver,
+            name="Busy Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        u_pax = User(
+            role=Role.passenger,
+            name="Busy Pax",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        u_p = User(
+            role=Role.partner,
+            name="Busy Mgr",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+            partner_org_id=pid,
+        )
+        db.add_all([u_d, u_pax, u_p])
+        db.flush()
+        db.add(
+            Driver(
+                user_id=u_d.id,
+                partner_id=pid,
+                status=DriverStatus.approved,
+                commission_percent=10.0,
+                is_available=False,
+            )
+        )
+        db.add(
+            Trip(
+                passenger_id=u_pax.id,
+                driver_id=u_d.id,
+                status=TripStatus.accepted,
+                origin_lat=38.7,
+                origin_lng=-9.1,
+                destination_lat=38.8,
+                destination_lng=-9.2,
+                estimated_price=10.0,
+            )
+        )
+        db.commit()
+        driver_id = str(u_d.id)
+        tok = create_access_token(subject=str(u_p.id), role=u_p.role.value)["token"]
+    finally:
+        db.close()
+
+    c = TestClient(app)
+    h = {"Authorization": f"Bearer {tok}"}
+    r = c.patch(
+        f"/partner/drivers/{driver_id}/availability",
+        json={"online": True},
+        headers=h,
+    )
+    assert r.status_code == 409
+    assert r.json().get("detail") == "driver_has_active_trip"
+
+    db2 = SessionLocal()
+    try:
+        d = db2.get(Driver, uuid.UUID(driver_id))
+        assert d is not None
+        assert d.is_available is False
+    finally:
+        db2.close()
+
+
 def test_partner_reassign_trip_driver() -> None:
     db = SessionLocal()
     try:
