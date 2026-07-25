@@ -35,6 +35,9 @@ from app.services.driving_compliance import (
     on_trip_status_change_for_driving_compliance,
     apply_availability_after_trip_ends_with_compliance,
 )
+from app.services.vehicle_compliance_gate import (
+    assert_driver_vehicle_compliance_for_accept,
+)
 from app.services.stripe_service import (
     cancel_payment_intent,
     capture_payment_intent,
@@ -704,6 +707,7 @@ def accept_trip(
             detail="forbidden",
         )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
+    assert_driver_vehicle_compliance_for_accept(db, driver)
     _assert_driver_matches_trip_category(driver, trip)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
@@ -857,6 +861,7 @@ def accept_offer(
     if not driver:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
     assert_driver_can_accept_by_driving_hours(db, driver_id)
+    assert_driver_vehicle_compliance_for_accept(db, driver)
     _assert_driver_matches_trip_category(driver, trip)
     if not getattr(driver, "is_available", True):
         raise HTTPException(

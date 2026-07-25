@@ -12,6 +12,9 @@ from app.services.driving_compliance import (
     driver_compliance_snapshot,
 )
 from app.services.trips import driver_has_active_assigned_trip
+from app.services.vehicle_compliance_gate import (
+    evaluate_driver_vehicle_compliance_gate,
+)
 
 
 router = APIRouter(prefix="/driver/status", tags=["driver"])
@@ -71,6 +74,15 @@ async def go_online(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="driving_hours_blocked",
+        )
+    gate = evaluate_driver_vehicle_compliance_gate(db, driver)
+    if not gate.allowed:
+        driver.is_available = False
+        db.commit()
+        db.refresh(driver)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=gate.code,
         )
     driver.is_available = True
     db.commit()

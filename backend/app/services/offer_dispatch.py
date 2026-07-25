@@ -16,6 +16,10 @@ from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.models.enums import DriverStatus, OfferStatus, TripStatus
 from app.services.driver_preferences import decode_driver_categories_csv
+from app.services.vehicle_compliance_gate import (
+    batch_evaluate_driver_vehicle_compliance_gates,
+    vehicle_compliance_gates_enabled,
+)
 from app.utils.geo import haversine_km
 from app.utils.logging import log_debug_event, log_event
 
@@ -152,6 +156,27 @@ def create_offers_for_trip(
     for driver, dist_km in candidates:
         if _driver_matches_trip_category(driver, trip):
             category_matched.append((driver, dist_km))
+
+    # PF3D-3A: soft-filter by vehicle document compliance before top_n (flag OFF = no-op).
+    if vehicle_compliance_gates_enabled() and category_matched:
+        gate_by_driver = batch_evaluate_driver_vehicle_compliance_gates(
+            db, (driver for driver, _ in category_matched)
+        )
+        compliance_matched: list[tuple[Driver, float]] = []
+        for driver, dist_km in category_matched:
+            gate = gate_by_driver.get(driver.user_id)
+            if gate is None or gate.allowed:
+                compliance_matched.append((driver, dist_km))
+                continue
+            log_event(
+                "vehicle_compliance_filtered",
+                trip_id=str(trip.id),
+                driver_id=str(driver.user_id),
+                reason=gate.code,
+                compliance_status=gate.compliance_status,
+            )
+        category_matched = compliance_matched
+
     selected = category_matched[:top_n]
 
     if not selected:
