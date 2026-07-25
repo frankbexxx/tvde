@@ -8,19 +8,19 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-24** — PF3D-0 decisão / PF3C PASS)
+## Contexto actual (**2026-07-25** — PF3D-DATA-1E re-audit / PF3C PASS)
 
-### Spec PF3D-0 — [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md)
+### Re-audit — [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](../ops/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | ≥ `e2b98f9` |
-| **Working tree** | Limpa (fecho docs) |
-| **PF3C** | **PASS** (#452–#456; docs #457) |
-| **PF3D-0** | Decisão/matriz documentada — **sem** código / gates |
-| **Decisões A–E** | **Abertas** — fechar antes de PF3D-3 |
-| **PARTNER-FLEET-1A / 2 / 3A / 3B / PF3C** | **PASS** |
-| **OPS-UX-1** | **PASS** (prévio) |
+| **`main` / `origin/main`** | ≥ `31406fb` |
+| **PF3C** | **PASS** |
+| **PF3D-0 / 1** | Matriz + helper puro em main |
+| **DATA-1A…1D** | Scripts audit / suggest / apply / seed docs em main |
+| **DATA-1E** | Re-audit local documentado — **sem** gates |
+| **would_pass_gates (local)** | **12** (8 compliant + 4 warning); `no_active_vehicle` **110** |
+| **PF3D-3** | **Bloqueado** globalmente |
 
 ### Decisão produto (mantém-se)
 
@@ -30,15 +30,17 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / doc | O quê |
 |----------|-------|
-| **#457** | Docs PF3C smoke PASS |
-| **#456–#452** | PF3C runtime (Home · badges · summary · helpers) |
-| **PF3D-0** | Matriz compliance + decisões A–E (este handoff) |
+| **#464** | DATA-1D seed docs mínimos dev/test |
+| **#463** | DATA-1C apply active_vehicle 1:1 |
+| **#462 / #461 / #460** | Suggest + audit DATA-1B/1A |
+| **#459** | PF3D-1 helper compliance |
+| **#458** | PF3D-0 matriz |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
-| **PF3D** | **PF3D-0** feito (docs); próximo código = **PF3D-1** helper puro — só após aprovação; gates **PF3D-3** só após A–E |
+| **PF3D** | Próximo: **PF3D-2** read-only API; **PF3D-3** só com flag OFF / subconjunto — nunca global ainda |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
 | **OPS-UX-POLISH** | Mobile / densidades / alertas Home — não blocker |
 | **ADMIN-OPS-UX** | Acompanhar / refresh Admin · docs Admin |
@@ -51,10 +53,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Fechar decisões PF3D A–E** (produto) — ver [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md)  
-2. **PF3D-1** — helper puro + pytest (**sem** wiring) — só com aprovação  
-3. Auditoria `active_vehicle_id` (pré-gates)  
-4. **Admin OPS-UX** / polish mobile / smoke alargado (carril paralelo se PF3D pausar)  
+1. **PF3D-2** — expor `compliance_status` read-only (**sem** bloquear)  
+2. **PF3D-3A** — gates atrás de feature flag **default OFF** (só após PF3D-2 + aprovação)  
+3. Atribuição real de viaturas / docs reais antes de qualquer gate em prod  
+4. **Admin OPS-UX** / polish mobile (carril paralelo)  
 5. **CHORE-LINT-1** — Ruff 0.16 (opcional)
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
@@ -63,6 +65,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| PF3D-DATA-1E re-audit | [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](../ops/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
 | PF3D-0 compliance (decisão) | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) |
 | PF3C smoke PASS | [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](../ops/PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md) |
 | PF3 documentos (cadeia) | [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](../ops/PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md) |

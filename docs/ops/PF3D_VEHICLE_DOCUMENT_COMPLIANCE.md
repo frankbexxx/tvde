@@ -1,7 +1,7 @@
 # PF3D-0 — Vehicle Document Compliance Gates (decisão / arquitectura)
 
-**Estado:** **PF3D-0** — docs-only (decisão/matriz). **Sem implementação.**  
-**`main`:** ≥ `e2b98f9` (fecho docs PF3C [#457](https://github.com/frankbexxx/tvde/pull/457))  
+**Estado:** **PF3D-0** matriz · **PF3D-1** helper · **DATA-1A…1E** scripts/re-audit. **Sem runtime gates.**  
+**`main`:** ≥ `31406fb` · re-audit: [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md)  
 **Pré-condição:** PF3C **PASS** — [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](./PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md)  
 **Cadeia:** [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](./PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md)
@@ -128,14 +128,15 @@ Listagem de candidatos — **não** implementar nesta fase:
 
 ## 5. Fases propostas
 
-| Fase | Tema | Bloqueia ops? |
-|------|------|---------------|
-| **PF3D-0** | Docs-only — decisão / matriz (este ficheiro) | Não |
-| **PF3D-1** | Backend helper puro: `vehicle_compliance_status` · `vehicle_is_compliant` + pytest — **sem** wiring operacional | Não |
-| **PF3D-2** | API read-only — expor `compliance_status` — **sem** bloqueio | Não |
-| **PF3D-3** | Gates backend: online · matching · accept · (talvez reassign / force-online) | **Sim** |
-| **PF3D-4** | FE mensagens Driver / Partner / Admin | UX |
-| **PF3D-5** | Override Admin / Partner — só se necessário | Controlo ops |
+| Fase | Tema | Bloqueia ops? | Estado (2026-07-25) |
+|------|------|---------------|---------------------|
+| **PF3D-0** | Docs-only — decisão / matriz (este ficheiro) | Não | **PASS** |
+| **PF3D-1** | Backend helper puro: `vehicle_compliance_status` · `vehicle_is_compliant` + pytest — **sem** wiring operacional | Não | **PASS** (#459) |
+| **DATA-1A…1E** | Audit / suggest / apply local / seed docs dummy / re-audit | Não (scripts) | **PASS** — [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
+| **PF3D-2** | API read-only — expor `compliance_status` — **sem** bloqueio | Não | **Próximo recomendado** |
+| **PF3D-3** | Gates backend: online · matching · accept · (talvez reassign / force-online) | **Sim** | **Bloqueado** globalmente; só 3A com flag OFF depois de PF3D-2 |
+| **PF3D-4** | FE mensagens Driver / Partner / Admin | UX | Pendente |
+| **PF3D-5** | Override Admin / Partner — só se necessário | Controlo ops | Pendente |
 
 ---
 
@@ -168,13 +169,13 @@ Listagem de candidatos — **não** implementar nesta fase:
 
 ## 8. Recomendação final
 
-1. **Não começar por PF3D-3** (gates) — risco operacional alto.  
-2. **Primeira implementação futura:** **PF3D-1** — helper puro + pytest, zero wiring em dispatch / accept / online.  
-3. **Gates (PF3D-3) só depois** de fechar decisões **A–E**.  
-4. **Antes de gates:** auditoria de `active_vehicle_id` na frota de teste (e prod quando aplicável) + backfill / atribuição.  
-5. Preferir gates **backend** (espelho driving-hours); FE só mensagens (PF3D-4), não fonte única de verdade.  
+1. **Não ligar PF3D-3 globalmente** — re-audit 1E: ainda **110** `no_active_vehicle` em `test_db`.  
+2. **PF3D-1 + DATA-1\*** feitos; caminho limpo: **PF3D-2** read-only (expor `compliance_status` sem bloquear).  
+3. Só depois **PF3D-3A** com feature flag **default OFF** (dev/test/smoke).  
+4. Produção: atribuição real de viaturas + docs reais — **não** seed dummy.  
+5. Preferir gates **backend** (espelho driving-hours); FE só mensagens (PF3D-4).  
 6. Set bloqueante mínimo provisório (sujeito a B): `{ rejected, expired, expired_pending, missing }` + (se A) sem `active_vehicle_id`.  
-7. `expiring_soon` e (proposta B) `pending_review` → **alerta apenas** até decisão legal/produto.
+7. `expiring_soon` e (proposta B) `pending_review` → **alerta apenas** (warning OK operacionalmente).
 
 ---
 
