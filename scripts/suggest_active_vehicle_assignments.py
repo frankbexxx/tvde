@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
-"""PF3D-DATA-1B — Dry-run suggestions for safe active_vehicle_id assignments.
+"""PF3D-DATA-1B/1C — Suggest (and optionally apply) safe active_vehicle_id assignments.
 
-Read-only. Never applies assignments, never enables gates, never prints secrets.
+Default is dry-run / read-only. Apply is **dev/test local only**.
 
-Safe suggestion rule (per partner)::
+Safe rule (per partner)::
 
     exactly 1 approved driver without active_vehicle_id
     AND exactly 1 active vehicle not assigned to any driver
-    → SUGGEST one_to_one_partner_match
+    → SUGGEST / APPLY one_to_one_partner_match
 
-Run::
+Dry-run::
 
     $env:DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:5432/test_db'
     python scripts/suggest_active_vehicle_assignments.py
     python scripts/suggest_active_vehicle_assignments.py --format json
-    python scripts/suggest_active_vehicle_assignments.py --partner-id <uuid>
 
-Remote hosts refused unless ``ALLOW_REMOTE_AUDIT_DB=YES``.
+Apply (local only)::
+
+    python scripts/suggest_active_vehicle_assignments.py --apply --confirm ASSIGN_ACTIVE_VEHICLES_DEV
+
+Never enables PF3D-3 gates. Never prints DATABASE_URL / passwords / tokens.
 """
 
 from __future__ import annotations
@@ -27,7 +30,7 @@ import os
 import sys
 import uuid
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -39,10 +42,11 @@ if str(_BACKEND_ROOT) not in sys.path:
 
 _LOCAL_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 _REASON_ONE_TO_ONE = "one_to_one_partner_match"
+_CONFIRM_TOKEN = "ASSIGN_ACTIVE_VEHICLES_DEV"
 
 
 class ReadOnlyAuditError(RuntimeError):
-    """Raised if the audit session attempts a write."""
+    """Raised if a dry-run session attempts a write."""
 
 
 @dataclass(frozen=True)
@@ -73,6 +77,8 @@ class Report:
     suggestions: list[Suggestion]
     ambiguous: list[AmbiguousPartner]
     skipped: list[SkippedPartner]
+    applied: list[Suggestion] = field(default_factory=list)
+    skipped_due_to_race: list[dict[str, str]] = field(default_factory=list)
 
 
 def _database_hostname(url: str) -> str:
@@ -96,12 +102,13 @@ def _allow_remote_audit() -> bool:
 
 
 def _assert_safe_audit_database(*, hostname: str) -> None:
+    """Dry-run may use remote only with ALLOW_REMOTE_AUDIT_DB=YES."""
     if hostname in _LOCAL_HOSTS:
         return
     if _allow_remote_audit():
         print(
             f"WARNING: remote audit host allowed via ALLOW_REMOTE_AUDIT_DB "
-            f"(host={hostname or '(unknown)'}). Read-only mode still enforced.",
+            f"(host={hostname or '(unknown)'}). Dry-run only; apply still forbidden.",
             file=sys.stderr,
         )
         return
@@ -114,6 +121,28 @@ def _assert_safe_audit_database(*, hostname: str) -> None:
     raise SystemExit(2)
 
 
+def _assert_apply_allowed(*, hostname: str) -> None:
+    """Apply: local host only + non-production ENV. Remote never allowed in this PR."""
+    if hostname not in _LOCAL_HOSTS:
+        print(
+            f"Refusing --apply against non-local database "
+            f"(host={hostname or '(unknown)'}). "
+            "DATA-1C apply is local/dev/test only; remote apply is not permitted.",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
+    from app.core.config import settings
+
+    if settings.is_production_environment():
+        print(
+            "Refusing --apply: production environment detected "
+            "(ENV/ENVIRONMENT is prod/production).",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
+
 def _mask_plate(plate_normalized: str | None) -> str:
     s = (plate_normalized or "").strip().upper()
     if len(s) <= 4:
@@ -123,10 +152,10 @@ def _mask_plate(plate_normalized: str | None) -> str:
 
 def _install_readonly_guards(session: Any) -> None:
     def _refuse_commit() -> None:
-        raise ReadOnlyAuditError("read-only suggest: Session.commit() refused")
+        raise ReadOnlyAuditError("dry-run: Session.commit() refused")
 
     def _refuse_flush(*_a: Any, **_k: Any) -> None:
-        raise ReadOnlyAuditError("read-only suggest: Session.flush() refused")
+        raise ReadOnlyAuditError("dry-run: Session.flush() refused")
 
     session.commit = _refuse_commit  # type: ignore[method-assign]
     session.flush = _refuse_flush  # type: ignore[method-assign]
@@ -135,20 +164,35 @@ def _install_readonly_guards(session: Any) -> None:
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "PF3D DATA-1B dry-run suggestions for safe active_vehicle_id assignments."
+            "PF3D DATA-1B/1C: dry-run suggestions for safe active_vehicle_id; "
+            "optional local apply with --confirm."
         ),
     )
     parser.add_argument(
         "--partner-id",
         type=str,
         default=None,
-        help="Limit suggestions to a single partner UUID.",
+        help="Limit to a single partner UUID.",
     )
     parser.add_argument(
         "--format",
         choices=("text", "json"),
         default="text",
         help="Output format (default: text).",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help=(
+            "Apply 1:1 suggestions (local/dev/test only). "
+            f"Requires --confirm {_CONFIRM_TOKEN}."
+        ),
+    )
+    parser.add_argument(
+        "--confirm",
+        type=str,
+        default=None,
+        help=f"Exact token required with --apply: {_CONFIRM_TOKEN}",
     )
     return parser.parse_args(argv)
 
@@ -163,10 +207,27 @@ def _parse_partner_filter(raw: str | None) -> uuid.UUID | None:
         raise SystemExit(2) from exc
 
 
+def _assert_apply_confirm(confirm: str | None) -> None:
+    if confirm is None or not str(confirm).strip():
+        print(
+            f"Refusing --apply without --confirm {_CONFIRM_TOKEN}",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    if str(confirm).strip() != _CONFIRM_TOKEN:
+        print(
+            "Refusing --apply: --confirm token mismatch "
+            f"(expected {_CONFIRM_TOKEN}).",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
+
 def _build_report(
     *,
     db: Any,
     partner_filter: uuid.UUID | None,
+    mode: str,
 ) -> Report:
     from sqlalchemy import select
 
@@ -200,7 +261,6 @@ def _build_report(
     ]
     approved_without_vehicle = [r for r in approved_rows if r[2] is None]
 
-    # Any driver assignment blocks a vehicle (approved or not).
     assigned_vehicle_ids: set[uuid.UUID] = {
         avid for _uid, _pid, avid, _st in all_drivers if avid is not None
     }
@@ -277,7 +337,7 @@ def _build_report(
     )
 
     summary = {
-        "mode": "dry_run_read_only",
+        "mode": mode,
         "partner_filter": str(partner_filter) if partner_filter else None,
         "approved_drivers_without_active_vehicle_id": len(approved_without_vehicle),
         "active_unassigned_vehicles": unassigned_active_total,
@@ -294,10 +354,154 @@ def _build_report(
     )
 
 
-def _print_text(report: Report, *, hostname: str) -> None:
-    print("=== PF3D-DATA-1B — Suggest active_vehicle_id (dry-run only) ===")
+def _revalidate_and_apply_one(
+    db: Any,
+    suggestion: Suggestion,
+) -> tuple[bool, str]:
+    """Return (applied, race_reason). Re-check 1:1 + row state under locks."""
+    from sqlalchemy import select
+
+    from app.db.models.driver import Driver
+    from app.db.models.vehicle import Vehicle
+    from app.models.enums import DriverStatus
+
+    partner_id = uuid.UUID(suggestion.partner_id)
+    driver_id = uuid.UUID(suggestion.driver_id)
+    vehicle_id = uuid.UUID(suggestion.vehicle_id)
+
+    driver = db.execute(
+        select(Driver).where(Driver.user_id == driver_id).with_for_update()
+    ).scalar_one_or_none()
+    vehicle = db.execute(
+        select(Vehicle).where(Vehicle.id == vehicle_id).with_for_update()
+    ).scalar_one_or_none()
+
+    if driver is None:
+        return False, "driver_not_found"
+    if vehicle is None:
+        return False, "vehicle_not_found"
+    if driver.status != DriverStatus.approved:
+        return False, "driver_not_approved"
+    if driver.active_vehicle_id is not None:
+        return False, "driver_already_has_active_vehicle"
+    if vehicle.status != "active":
+        return False, "vehicle_not_active"
+    if driver.partner_id != vehicle.partner_id:
+        return False, "partner_mismatch"
+    if driver.partner_id != partner_id or vehicle.partner_id != partner_id:
+        return False, "partner_scope_mismatch"
+
+    # Vehicle must still be unassigned.
+    holder = db.execute(
+        select(Driver.user_id).where(Driver.active_vehicle_id == vehicle_id)
+    ).scalar_one_or_none()
+    if holder is not None:
+        return False, "vehicle_already_assigned"
+
+    # Partner must still be exact 1:1.
+    free_drivers = list(
+        db.execute(
+            select(Driver.user_id).where(
+                Driver.partner_id == partner_id,
+                Driver.status == DriverStatus.approved,
+                Driver.active_vehicle_id.is_(None),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assigned_on_partner = set(
+        db.execute(
+            select(Driver.active_vehicle_id).where(
+                Driver.partner_id == partner_id,
+                Driver.active_vehicle_id.is_not(None),
+            )
+        )
+        .scalars()
+        .all()
+    )
+    all_active = list(
+        db.execute(
+            select(Vehicle.id).where(
+                Vehicle.partner_id == partner_id,
+                Vehicle.status == "active",
+            )
+        )
+        .scalars()
+        .all()
+    )
+    free_vehicles = [vid for vid in all_active if vid not in assigned_on_partner]
+
+    if len(free_drivers) != 1 or len(free_vehicles) != 1:
+        return False, "partner_no_longer_one_to_one"
+    if free_drivers[0] != driver_id or free_vehicles[0] != vehicle_id:
+        return False, "one_to_one_pair_changed"
+
+    driver.active_vehicle_id = vehicle_id
+    db.flush()
+    return True, "applied"
+
+
+def _apply_suggestions(
+    db: Any,
+    *,
+    partner_filter: uuid.UUID | None,
+) -> Report:
+    before = _build_report(
+        db=db,
+        partner_filter=partner_filter,
+        mode="apply_dev_only",
+    )
+    applied: list[Suggestion] = []
+    raced: list[dict[str, str]] = []
+
+    for suggestion in before.suggestions:
+        ok, reason = _revalidate_and_apply_one(db, suggestion)
+        if ok:
+            applied.append(suggestion)
+        else:
+            raced.append(
+                {
+                    "partner_id": suggestion.partner_id,
+                    "driver_id": suggestion.driver_id,
+                    "vehicle_id": suggestion.vehicle_id,
+                    "reason": reason,
+                }
+            )
+
+    db.commit()
+    db.expire_all()
+
+    after = _build_report(
+        db=db,
+        partner_filter=partner_filter,
+        mode="apply_dev_only",
+    )
+    after.applied = applied
+    after.skipped_due_to_race = raced
+    after.summary = {
+        **after.summary,
+        "mode": "apply_dev_only",
+        "before_approved_without_active_vehicle_id": before.summary[
+            "approved_drivers_without_active_vehicle_id"
+        ],
+        "before_active_unassigned_vehicles": before.summary[
+            "active_unassigned_vehicles"
+        ],
+        "before_safe_suggestions_count": before.summary["safe_suggestions_count"],
+        "applied_count": len(applied),
+        "skipped_due_to_race_count": len(raced),
+        "still_ambiguous_count": after.summary["ambiguous_partner_count"],
+    }
+    # Preserve pre-apply suggestion list for transparency.
+    after.suggestions = before.suggestions
+    return after
+
+
+def _print_text_dry_run(report: Report, *, hostname: str) -> None:
+    print("=== PF3D-DATA-1B/1C — Suggest active_vehicle_id (dry-run) ===")
     print(f"db_host: {hostname or '(unknown)'}")
-    print("mode: READ_ONLY dry-run (no apply; no gates; no writes)")
+    print("mode: dry_run_read_only (no writes; no gates)")
     if report.summary.get("partner_filter"):
         print(f"partner_filter: {report.summary['partner_filter']}")
     print()
@@ -346,7 +550,6 @@ def _print_text(report: Report, *, hostname: str) -> None:
     print("--- SKIPPED (no free drivers and no free vehicles) ---")
     print(f"skipped_partner_count: {len(report.skipped)}")
     if report.skipped:
-        # Keep short: first 10 ids only.
         preview = report.skipped[:10]
         for sk in preview:
             print(f"  partner_id={sk.partner_id} reason={sk.reason}")
@@ -354,8 +557,81 @@ def _print_text(report: Report, *, hostname: str) -> None:
             print(f"  ... and {len(report.skipped) - 10} more")
     print()
     print(
-        "NOTE: DATA-1B does not write active_vehicle_id. "
-        "Apply is out of scope (future DATA-1C, dev/test only)."
+        "To apply locally (dev/test only; never production/remote):\n"
+        f"  python scripts/suggest_active_vehicle_assignments.py "
+        f"--apply --confirm {_CONFIRM_TOKEN}"
+    )
+
+
+def _print_text_apply(report: Report, *, hostname: str) -> None:
+    print("=== PF3D-DATA-1C — Apply active_vehicle_id (dev/test local) ===")
+    print(f"db_host: {hostname or '(unknown)'}")
+    print("mode: apply_dev_only")
+    if report.summary.get("partner_filter"):
+        print(f"partner_filter: {report.summary['partner_filter']}")
+    print()
+
+    print("--- Before / after ---")
+    print(
+        "before_approved_without_active_vehicle_id: "
+        f"{report.summary.get('before_approved_without_active_vehicle_id')}"
+    )
+    print(
+        "after_approved_without_active_vehicle_id: "
+        f"{report.summary['approved_drivers_without_active_vehicle_id']}"
+    )
+    print(
+        "before_active_unassigned_vehicles: "
+        f"{report.summary.get('before_active_unassigned_vehicles')}"
+    )
+    print(
+        "after_active_unassigned_vehicles: "
+        f"{report.summary['active_unassigned_vehicles']}"
+    )
+    print(
+        "before_safe_suggestions_count: "
+        f"{report.summary.get('before_safe_suggestions_count')}"
+    )
+    print(f"applied_count: {report.summary.get('applied_count', 0)}")
+    print(
+        "skipped_due_to_race_count: "
+        f"{report.summary.get('skipped_due_to_race_count', 0)}"
+    )
+    print(
+        f"still_ambiguous_count: {report.summary.get('still_ambiguous_count', 0)}"
+    )
+    print()
+
+    print("--- APPLIED ---")
+    if not report.applied:
+        print("(none)")
+    else:
+        for s in report.applied:
+            print(
+                "  APPLIED "
+                f"partner_id={s.partner_id} "
+                f"driver_id={s.driver_id} "
+                f"vehicle_id={s.vehicle_id} "
+                f"plate={s.plate_masked} "
+                f"reason={s.reason}"
+            )
+    print()
+
+    if report.skipped_due_to_race:
+        print("--- SKIPPED DUE TO RACE ---")
+        for row in report.skipped_due_to_race:
+            print(
+                "  "
+                f"partner_id={row['partner_id']} "
+                f"driver_id={row['driver_id']} "
+                f"vehicle_id={row['vehicle_id']} "
+                f"reason={row['reason']}"
+            )
+        print()
+
+    print(
+        "NOTE: Assignments only. No document seed, no PF3D-3 gates. "
+        "Re-run audit_vehicle_document_compliance.py next."
     )
 
 
@@ -366,6 +642,8 @@ def _print_json(report: Report, *, hostname: str) -> None:
         "suggestions": [asdict(s) for s in report.suggestions],
         "ambiguous": [asdict(a) for a in report.ambiguous],
         "skipped": [asdict(s) for s in report.skipped],
+        "applied": [asdict(s) for s in report.applied],
+        "skipped_due_to_race": list(report.skipped_due_to_race),
     }
     print(json.dumps(payload, indent=2, sort_keys=False))
 
@@ -373,26 +651,49 @@ def _print_json(report: Report, *, hostname: str) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     partner_filter = _parse_partner_filter(args.partner_id)
+    apply_mode = bool(args.apply)
+
+    if apply_mode:
+        _assert_apply_confirm(args.confirm)
 
     from app.db.session import SessionLocal, get_database_url
 
     hostname = _database_hostname(get_database_url())
-    _assert_safe_audit_database(hostname=hostname)
+    if apply_mode:
+        _assert_apply_allowed(hostname=hostname)
+    else:
+        _assert_safe_audit_database(hostname=hostname)
 
     db = SessionLocal()
-    _install_readonly_guards(db)
+    if not apply_mode:
+        _install_readonly_guards(db)
+
     try:
-        report = _build_report(db=db, partner_filter=partner_filter)
-        if args.format == "json":
-            _print_json(report, hostname=hostname)
+        if apply_mode:
+            report = _apply_suggestions(db, partner_filter=partner_filter)
+            if args.format == "json":
+                _print_json(report, hostname=hostname)
+            else:
+                _print_text_apply(report, hostname=hostname)
         else:
-            _print_text(report, hostname=hostname)
-        db.rollback()
+            report = _build_report(
+                db=db,
+                partner_filter=partner_filter,
+                mode="dry_run_read_only",
+            )
+            if args.format == "json":
+                _print_json(report, hostname=hostname)
+            else:
+                _print_text_dry_run(report, hostname=hostname)
+            db.rollback()
         return 0
     except ReadOnlyAuditError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         db.rollback()
         return 3
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
