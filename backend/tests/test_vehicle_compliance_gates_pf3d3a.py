@@ -26,7 +26,7 @@ from app.main import app
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
 from app.schemas.partner import PartnerVehicleDocumentSummary
 from app.services import partner_vehicles, trips
-from app.services.offer_dispatch import create_offers_for_trip
+from app.services.offer_dispatch import create_offers_for_trip, redispatch_expired_trips
 from app.services.partner_vehicle_documents import VEHICLE_DOCUMENT_REQUIRED_TYPES_ORDERED
 from app.services.trips import accept_offer, start_trip
 from app.services.vehicle_compliance_gate import (
@@ -431,6 +431,53 @@ def test_matching_flag_on_excludes_blocked_docs(
     db.commit()
     assert len(offers) == 1
     assert str(offers[0].driver_id) == ok_id
+
+
+def test_redispatch_flag_on_excludes_blocked_and_no_vehicle(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Expired-offer redispatch must use the same PF3D-3A filter as initial dispatch."""
+    monkeypatch.setattr(settings, "ENABLE_VEHICLE_COMPLIANCE_GATES", True, raising=False)
+    monkeypatch.setattr(settings, "OFFER_TOP_N", 1, raising=False)
+    _clear_locations(db)
+    first_vid = _create_vehicle_with_docs(db, doc_mode="compliant")
+    blocked_vid = _create_vehicle_with_docs(db, doc_mode="blocked_expired")
+    first_id = _create_driver(db, lat=38.701, lng=-9.101, active_vehicle_id=first_vid)
+    blocked_id = _create_driver(
+        db, lat=38.702, lng=-9.102, active_vehicle_id=blocked_vid
+    )
+    no_vehicle_id = _create_driver(db, lat=38.703, lng=-9.103, active_vehicle_id=None)
+    ok_vid = _create_vehicle_with_docs(db, doc_mode="compliant")
+    ok_id = _create_driver(db, lat=38.704, lng=-9.104, active_vehicle_id=ok_vid)
+    trip = _create_requested_trip(db)
+
+    offers = create_offers_for_trip(db=db, trip=trip)
+    db.commit()
+    # Closest compliant only (top_n=1); blocked/no-vehicle must not steal the slot.
+    assert len(offers) == 1
+    assert str(offers[0].driver_id) == first_id
+
+    offers[0].expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+    db.commit()
+
+    new_offers = redispatch_expired_trips(db)
+    new_for_trip = [o for o in new_offers if str(o.trip_id) == str(trip.id)]
+    # Without the redispatch filter, blocked (closer) would win top_n=1 over ok.
+    assert len(new_for_trip) == 1
+    assert str(new_for_trip[0].driver_id) == ok_id
+
+    for excluded_id in (blocked_id, no_vehicle_id):
+        excluded_offers = (
+            db.execute(
+                select(TripOffer).where(
+                    TripOffer.trip_id == trip.id,
+                    TripOffer.driver_id == uuid.UUID(excluded_id),
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert excluded_offers == []
 
 
 # --- accept ---
