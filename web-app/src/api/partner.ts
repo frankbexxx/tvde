@@ -42,6 +42,14 @@ export interface PartnerVehicleDocumentSummary {
   worst_status: string
 }
 
+/** PF3D-2 — read-only vehicle document compliance (no runtime gates). */
+export interface PartnerVehicleCompliance {
+  compliance_status: 'compliant' | 'warning' | 'blocked' | 'no_active_vehicle' | 'unknown' | string
+  blocking_reasons: string[]
+  warning_reasons: string[]
+  worst_status: string | null
+}
+
 export interface PartnerVehicleRow {
   id: string
   partner_id: string
@@ -59,6 +67,8 @@ export interface PartnerVehicleRow {
   assigned_driver_name: string | null
   /** PF3C-2A/2B — aggregate P0 document alerts. */
   document_summary: PartnerVehicleDocumentSummary
+  /** PF3D-2 — derived from document_summary; docs of the vehicle only. */
+  vehicle_compliance: PartnerVehicleCompliance
 }
 
 export type PartnerVehicleCreateBody = {

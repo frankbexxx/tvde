@@ -36,6 +36,12 @@ const vehicle: PartnerVehicleRow = {
   assigned_driver_id: null,
   assigned_driver_name: null,
   document_summary: summaryMissing,
+  vehicle_compliance: {
+    compliance_status: 'blocked',
+    blocking_reasons: ['missing_documents'],
+    warning_reasons: [],
+    worst_status: 'missing',
+  },
 }
 
 function withSummary(

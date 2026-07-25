@@ -327,10 +327,15 @@ def test_partner_vehicles_list_includes_document_summary() -> None:
     mine = next(v for v in rows if v["id"] == seed["veh_a"])
     assert "plate" in mine
     assert "document_summary" in mine
+    assert "vehicle_compliance" in mine
     s = mine["document_summary"]
     assert s["total_required"] == 4
     assert s["missing_count"] == 4
     assert s["worst_status"] == "missing"
+    vc = mine["vehicle_compliance"]
+    assert vc["compliance_status"] == "blocked"
+    assert "missing_documents" in vc["blocking_reasons"]
+    assert vc["compliance_status"] != "no_active_vehicle"
 
     # Partner B vehicle not listed for A
     assert all(v["id"] != seed["veh_b"] for v in rows)
