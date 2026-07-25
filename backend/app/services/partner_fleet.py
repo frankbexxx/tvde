@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session
 from app.db.models.driver import Driver
 from app.models.enums import DriverStatus
 from app.services.partner_queries import get_driver_for_partner
+from app.services.vehicle_compliance_gate import (
+    evaluate_driver_vehicle_compliance_gate,
+)
 
 
 def set_partner_driver_enabled(
@@ -56,6 +59,13 @@ def set_partner_driver_availability(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="driver_not_approved",
         )
+    if online:
+        gate = evaluate_driver_vehicle_compliance_gate(db, d)
+        if not gate.allowed:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=gate.code,
+            )
     d.is_available = online
     db.commit()
     db.refresh(d)

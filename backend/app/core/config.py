@@ -114,6 +114,10 @@ class Settings(BaseSettings):
     # B4: limite diário condução activa + repouso (Europe/Lisbon). Desligar só em diagnóstico.
     ENABLE_DRIVING_HOURS_COMPLIANCE: bool = True
 
+    # PF3D-3A — vehicle document compliance gates (online / matching / accept).
+    # Default OFF: production-safe; enable only for controlled dev/test/smoke.
+    ENABLE_VEHICLE_COMPLIANCE_GATES: bool = False
+
     # Login Google (OAuth2 authorization code). Ambos obrigatórios para activar POST /auth/google/exchange.
     GOOGLE_OAUTH_CLIENT_ID: str = ""
     GOOGLE_OAUTH_CLIENT_SECRET: str = ""
