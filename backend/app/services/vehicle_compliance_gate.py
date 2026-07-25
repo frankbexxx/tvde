@@ -175,8 +175,10 @@ def batch_evaluate_driver_vehicle_compliance_gates(
 
     by_partner: dict[uuid.UUID, list[uuid.UUID]] = defaultdict(list)
     for d in need_summary:
-        assert d.active_vehicle_id is not None
-        by_partner[d.partner_id].append(d.active_vehicle_id)
+        avid = d.active_vehicle_id
+        if avid is None:
+            continue
+        by_partner[d.partner_id].append(avid)
 
     summaries: dict[uuid.UUID, PartnerVehicleDocumentSummary] = {}
     for partner_id, vids in by_partner.items():
@@ -191,7 +193,8 @@ def batch_evaluate_driver_vehicle_compliance_gates(
 
     for d in need_summary:
         avid = d.active_vehicle_id
-        assert avid is not None
+        if avid is None:
+            continue
         out[d.user_id] = evaluate_driver_vehicle_compliance_gate(
             db,
             d,
