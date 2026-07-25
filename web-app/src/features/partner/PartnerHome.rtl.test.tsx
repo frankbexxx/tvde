@@ -57,6 +57,12 @@ function vehicle(id: string, worst: string): PartnerVehicleRow {
       valid_count: worst === 'valid' ? 4 : 0,
       worst_status: worst,
     },
+    vehicle_compliance: {
+      compliance_status: worst === 'valid' ? 'compliant' : 'blocked',
+      blocking_reasons: worst === 'valid' ? [] : ['missing_documents'],
+      warning_reasons: [],
+      worst_status: worst,
+    },
   }
 }
 

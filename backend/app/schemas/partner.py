@@ -72,6 +72,19 @@ class PartnerVehicleDocumentSummary(BaseModel):
     worst_status: str
 
 
+class PartnerVehicleCompliance(BaseModel):
+    """PF3D-2 — read-only vehicle document compliance (no runtime gates).
+
+    Evaluates the vehicle's documents only (``has_active_vehicle=True``).
+    ``no_active_vehicle`` is a driver/gate concept — not used on vehicle items.
+    """
+
+    compliance_status: str
+    blocking_reasons: list[str]
+    warning_reasons: list[str]
+    worst_status: str | None = None
+
+
 class PartnerVehicleItem(BaseModel):
     id: str
     partner_id: str
@@ -89,6 +102,8 @@ class PartnerVehicleItem(BaseModel):
     assigned_driver_name: str | None = None
     # PF3C-2A — document alert summary (always present; empty fleet = all missing).
     document_summary: PartnerVehicleDocumentSummary
+    # PF3D-2 — derived from document_summary; always present; does not gate ops.
+    vehicle_compliance: PartnerVehicleCompliance
 
 
 class PartnerTripItem(BaseModel):

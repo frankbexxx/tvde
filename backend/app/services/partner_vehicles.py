@@ -20,6 +20,7 @@ from app.db.models.driver import Driver
 from app.db.models.user import User
 from app.db.models.vehicle import Vehicle
 from app.schemas.partner import (
+    PartnerVehicleCompliance,
     PartnerVehicleCreateRequest,
     PartnerVehicleDocumentSummary,
     PartnerVehicleItem,
@@ -34,6 +35,7 @@ from app.services.partner_vehicle_documents import (
     batch_document_summaries_for_vehicles,
     document_summary_for_vehicle,
 )
+from app.services.vehicle_document_compliance import vehicle_compliance_status
 
 _ALLOWED_STATUS = frozenset({"active", "inactive"})
 _PLATE_STRIP_RE = re.compile(r"[\s\-]+")
@@ -111,6 +113,19 @@ def _assigned_driver_row(
     return row[0], row[1]
 
 
+def vehicle_compliance_for_summary(
+    summary: PartnerVehicleDocumentSummary | None,
+) -> PartnerVehicleCompliance:
+    """PF3D-2 — docs-only compliance for a vehicle item (never no_active_vehicle)."""
+    result = vehicle_compliance_status(summary, has_active_vehicle=True)
+    return PartnerVehicleCompliance(
+        compliance_status=result.compliance_status,
+        blocking_reasons=list(result.blocking_reasons),
+        warning_reasons=list(result.warning_reasons),
+        worst_status=result.worst_status,
+    )
+
+
 def vehicle_to_item(
     db: Session,
     vehicle: Vehicle,
@@ -147,6 +162,7 @@ def vehicle_to_item(
         assigned_driver_id=driver_id,
         assigned_driver_name=driver_name,
         document_summary=summary,
+        vehicle_compliance=vehicle_compliance_for_summary(summary),
     )
 
 

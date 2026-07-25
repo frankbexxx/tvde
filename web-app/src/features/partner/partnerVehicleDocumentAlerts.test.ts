@@ -45,6 +45,12 @@ function vehicle(
     assigned_driver_id: null,
     assigned_driver_name: null,
     document_summary: summary(worst, overrides),
+    vehicle_compliance: {
+      compliance_status: worst === 'valid' ? 'compliant' : 'blocked',
+      blocking_reasons: worst === 'valid' ? [] : ['missing_documents'],
+      warning_reasons: [],
+      worst_status: worst,
+    },
   }
 }
 
