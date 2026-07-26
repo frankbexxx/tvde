@@ -36,6 +36,34 @@ def _driver_matches_trip_category(driver: Driver, trip: Trip) -> bool:
     return trip_category in driver_categories
 
 
+def _filter_by_vehicle_compliance(
+    db: Session,
+    trip: Trip,
+    category_matched: list[tuple[Driver, float]],
+) -> list[tuple[Driver, float]]:
+    """PF3D-3A soft-filter before top_n. Flag OFF → identity (no queries)."""
+    if not vehicle_compliance_gates_enabled() or not category_matched:
+        return category_matched
+
+    gate_by_driver = batch_evaluate_driver_vehicle_compliance_gates(
+        db, (driver for driver, _ in category_matched)
+    )
+    compliance_matched: list[tuple[Driver, float]] = []
+    for driver, dist_km in category_matched:
+        gate = gate_by_driver.get(driver.user_id)
+        if gate is None or gate.allowed:
+            compliance_matched.append((driver, dist_km))
+            continue
+        log_event(
+            "vehicle_compliance_filtered",
+            trip_id=str(trip.id),
+            driver_id=str(driver.user_id),
+            reason=gate.code,
+            compliance_status=gate.compliance_status,
+        )
+    return compliance_matched
+
+
 def _offer_ttl_seconds() -> int:
     """TTL efectivo das ofertas novas. Com E2E_KEEP_OFFERS_ALIVE, garante mínimo para browser/CI."""
     base = int(getattr(settings, "OFFER_TIMEOUT_SECONDS", 60))
@@ -158,24 +186,7 @@ def create_offers_for_trip(
             category_matched.append((driver, dist_km))
 
     # PF3D-3A: soft-filter by vehicle document compliance before top_n (flag OFF = no-op).
-    if vehicle_compliance_gates_enabled() and category_matched:
-        gate_by_driver = batch_evaluate_driver_vehicle_compliance_gates(
-            db, (driver for driver, _ in category_matched)
-        )
-        compliance_matched: list[tuple[Driver, float]] = []
-        for driver, dist_km in category_matched:
-            gate = gate_by_driver.get(driver.user_id)
-            if gate is None or gate.allowed:
-                compliance_matched.append((driver, dist_km))
-                continue
-            log_event(
-                "vehicle_compliance_filtered",
-                trip_id=str(trip.id),
-                driver_id=str(driver.user_id),
-                reason=gate.code,
-                compliance_status=gate.compliance_status,
-            )
-        category_matched = compliance_matched
+    category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
 
     selected = category_matched[:top_n]
 
@@ -371,6 +382,8 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         for driver, dist_km in candidates:
             if _driver_matches_trip_category(driver, trip):
                 category_matched.append((driver, dist_km))
+        # Same PF3D-3A soft-filter as create_offers_for_trip (flag OFF = no-op).
+        category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
         selected_redispatch = category_matched[:top_n]
         for driver, dist_km in selected_redispatch:
             if _has_active_pending_offer(
