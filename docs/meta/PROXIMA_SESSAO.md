@@ -8,20 +8,20 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-26** — PF3D-3A/OFF smoke PASS)
+## Contexto actual (**2026-07-26** — Availability sync Caso A PASS)
 
-### Smoke — [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md)
+### Smoke — [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md)
 
 | Item | Estado |
 |------|--------|
-| **`main` / `origin/main`** | ≥ `5f07c60` |
-| **PF3C** | **PASS** |
-| **PF3D-0 / 1 / 2** | Matriz · helper · API read-only em main |
-| **PF3D-3A** | Código em main (#467 + #468); flag default **false** |
-| **Smoke PF3D-3A/OFF** | **PASS** funcional (Pax+Driver+Partner viagem completa) |
-| **Render env** | **Não alterado** — ausência de `ENABLE_VEHICLE_COMPLIANCE_GATES` ≡ OFF |
-| **PF3D-3 global / ON** | **Bloqueado** (DATA-1E: muitos `no_active_vehicle`) |
-| **Force-online (#469/#470)** | Código merged; **não** validado neste smoke (não blocker) |
+| **`main` / `origin/main`** | ≥ `ea4678a` |
+| **Availability Caso A** | **PASS** — Partner force-online/offline reflectido na Driver app aberta (sem refresh) |
+| **Availability Caso B** | **Por iniciar** — smoke com viagem activa (próxima sessão) |
+| **PF3D-3A/OFF** | **PASS** — [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
+| **PF3D gates** | OFF; não activados |
+| **Render env / DB / migrations** | Intactos nesta sessão |
+
+**Frase de fecho:** Availability sync Caso A fechado com PASS. Caso B fica para próxima sessão.
 
 ### Decisão produto (mantém-se)
 
@@ -31,38 +31,36 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / doc | O quê |
 |----------|-------|
+| Smoke Caso A | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) |
+| **#477** | Driver remote GET — epoch/seq anti-stale |
+| **#476** | Driver sync remoto poll/focus `GET /driver/status` |
+| **#475** | UX Partner Detail availability |
+| **#474…#469** | Locks cancel/timeouts/go_online/force-online |
 | Smoke OFF | [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
-| **#470** | Force-online `FOR UPDATE` vs accept |
-| **#469** | Block force-online during active trip |
-| **#468** | Compliance filter no redispatch (flag ON) |
-| **#467** | PF3D-3A gates flag OFF |
-| **#466** | PF3D-2 `vehicle_compliance` read-only |
-| **#465…#458** | DATA-1E…PF3D-0 |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
+| **AVAIL-GUARD-B** | Caso B manual — force-online com trip activa |
 | **PF3D-3 ON** | Só após atribuição real + docs reais; nunca global ainda |
-| **PF3B-UX-DRIVER-DETAIL** | Partner Driver Detail — scroll / tabs / force-online visível (UX debt smoke OFF) |
+| **PF3B-UX-DRIVER-DETAIL** | Tabs / scroll Partner Detail — debt, não blocker Caso A |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
-| **OPS-UX-POLISH** | Mobile / densidades / alertas Home — não blocker |
-| **ADMIN-OPS-UX** | Acompanhar / refresh Admin · docs Admin |
-| **CHORE-LINT-1** | Avaliar Ruff 0.16 — baixa prioridade |
-| **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed |
-| **R-E2E-1** | Flake intermitente — monitorizar |
-| **O-STRIPE-LIVE** | Futuro — conta parceiro + documentação |
+| **OPS-UX-POLISH** | Mobile / densidades — não blocker |
+| **ADMIN-OPS-UX** | Acompanhar / refresh Admin |
+| **CHORE-LINT-1** | Ruff 0.16 — baixa prioridade |
+| **R-E2E-1** | Flake intermitente (ex. nav Maps) — monitorizar |
+| **O-STRIPE-LIVE** | Futuro |
 | **R-GIT-1** | Branches locais — **não apagar ainda** |
-| **CI-MAINT-1** | Warning Actions Node 20 deprecated — baixa prioridade |
+| **CI-MAINT-1** | Warning Actions Node 20 — baixa prioridade |
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. Atribuição real de viaturas / docs reais (pré-requisito qualquer gate ON)  
-2. Opcional: smoke dedicado Partner force-online (#469/#470)  
-3. Só depois smoke controlado **PF3D-3A/ON** (nunca prod global ainda)  
-4. **Partner Ops UX** — Driver Detail (tabs / acções críticas)  
-5. **PF3D-4** — mensagens FE quando gates existirem  
-6. **CHORE-LINT-1** — Ruff 0.16 (opcional)
+1. **Caso B** — viagem activa → Partner «Colocar online» → 409 amigável + Offline  
+2. Se Caso B PASS → documentar Availability Guard Smoke final (A+B)  
+3. Atribuição real de viaturas / docs reais (pré-requisito gates ON)  
+4. Roadmap PF3D / Partner Fleet  
+5. **Partner Ops UX** tabs (opcional) · **CHORE-LINT-1** (opcional)
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
@@ -70,6 +68,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| Availability Caso A PASS | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) |
 | PF3D-3A/OFF smoke PASS | [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
 | PF3D-DATA-1E re-audit | [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](../ops/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
 | PF3D-0 compliance (decisão) | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) |
@@ -77,14 +76,16 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | PF3 documentos (cadeia) | [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](../ops/PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md) |
 | OPS-UX-1 smoke PASS | [`OPS_UX_1_SMOKE_PASS_2026-07-23.md`](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) |
 | Checkpoint Partner-Fleet 2026-07-22 | [`CHECKPOINT_2026-07-22_PARTNER_FLEET.md`](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) |
-| PF3B smoke | [`PARTNER_FLEET_3B_SMOKE_2026-07-22.md`](../ops/PARTNER_FLEET_3B_SMOKE_2026-07-22.md) |
-| Checkpoint PAYMENTS-STUCK | [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](../ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) |
 | Stripe / mock / 1B API | [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §§9–10 |
 | Pytest BD segura | [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
 | Ops Julho | [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md) |
 | Painel vivo | [`TODOdoDIA.md`](../../TODOdoDIA.md) |
 
 ---
+
+## Contexto anterior (**2026-07-26** — PF3D-3A/OFF smoke PASS)
+
+[`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) — viagem completa com gates OFF.
 
 ## Contexto anterior (**2026-07-25** — DATA-1E / PF3C)
 
