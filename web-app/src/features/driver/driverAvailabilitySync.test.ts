@@ -1,11 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
+  DRIVER_REMOTE_AVAILABILITY_POLL_MS,
+  fetchRemoteAvailabilityOfflineUpdate,
   formatDriverAvailabilityError,
   isDriverAvailabilityOperational,
   isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
+  remoteAvailabilityOfflineUpdate,
   shouldBootstrapDriverActiveTrip,
+  shouldSkipRemoteAvailabilityApply,
 } from './driverAvailabilitySync'
 
 describe('offlineFromBackendAvailability', () => {
@@ -19,6 +23,104 @@ describe('offlineFromBackendAvailability', () => {
 
   it('documentos bloqueiam → UI offline', () => {
     expect(offlineFromBackendAvailability(true, false)).toBe(true)
+  })
+})
+
+describe('remote availability sync (Partner force-online)', () => {
+  it('poll interval está entre 10s e 15s', () => {
+    expect(DRIVER_REMOTE_AVAILABILITY_POLL_MS).toBeGreaterThanOrEqual(10_000)
+    expect(DRIVER_REMOTE_AVAILABILITY_POLL_MS).toBeLessThanOrEqual(15_000)
+  })
+
+  it('skip apply enquanto user sync (POST) em curso', () => {
+    expect(shouldSkipRemoteAvailabilityApply(true)).toBe(true)
+    expect(
+      remoteAvailabilityOfflineUpdate({
+        remoteIsAvailable: true,
+        canGoOnline: true,
+        localOffline: true,
+        syncing: true,
+      })
+    ).toBeNull()
+  })
+
+  it('remote true + local offline → aplica online (false)', () => {
+    expect(
+      remoteAvailabilityOfflineUpdate({
+        remoteIsAvailable: true,
+        canGoOnline: true,
+        localOffline: true,
+        syncing: false,
+      })
+    ).toBe(false)
+  })
+
+  it('remote false + local online → aplica offline (true)', () => {
+    expect(
+      remoteAvailabilityOfflineUpdate({
+        remoteIsAvailable: false,
+        canGoOnline: true,
+        localOffline: false,
+        syncing: false,
+      })
+    ).toBe(true)
+  })
+
+  it('sem divergência → null (não setState)', () => {
+    expect(
+      remoteAvailabilityOfflineUpdate({
+        remoteIsAvailable: false,
+        canGoOnline: true,
+        localOffline: true,
+        syncing: false,
+      })
+    ).toBeNull()
+  })
+
+  it('fetch: GET true aplica online; não exige POST', async () => {
+    const getStatus = vi.fn().mockResolvedValue({ is_available: true })
+    const next = await fetchRemoteAvailabilityOfflineUpdate({
+      getStatus,
+      canGoOnline: true,
+      localOffline: true,
+      syncing: false,
+    })
+    expect(next).toBe(false)
+    expect(getStatus).toHaveBeenCalledTimes(1)
+  })
+
+  it('fetch: GET false aplica offline', async () => {
+    const getStatus = vi.fn().mockResolvedValue({ is_available: false })
+    const next = await fetchRemoteAvailabilityOfflineUpdate({
+      getStatus,
+      canGoOnline: true,
+      localOffline: false,
+      syncing: false,
+    })
+    expect(next).toBe(true)
+  })
+
+  it('fetch: falha GET não altera estado local', async () => {
+    const getStatus = vi.fn().mockRejectedValue(new Error('network'))
+    const next = await fetchRemoteAvailabilityOfflineUpdate({
+      getStatus,
+      canGoOnline: true,
+      localOffline: true,
+      syncing: false,
+    })
+    expect(next).toBeNull()
+  })
+
+  it('fetch: syncing true não chama GET', async () => {
+    const getStatus = vi.fn().mockResolvedValue({ is_available: true })
+    const next = await fetchRemoteAvailabilityOfflineUpdate({
+      getStatus,
+      canGoOnline: true,
+      localOffline: true,
+      syncing: true,
+    })
+    expect(next).toBeNull()
+    expect(getStatus).not.toHaveBeenCalled()
   })
 })
 

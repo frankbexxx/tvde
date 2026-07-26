@@ -1,5 +1,8 @@
 import { isTimeoutLikeError } from '../../api/client'
 
+/** Poll leve para reflectir Partner/Admin force-online sem refresh manual. */
+export const DRIVER_REMOTE_AVAILABILITY_POLL_MS = 12_000
+
 /** Offline local quando o backend não confirma disponibilidade operacional. */
 export function offlineFromBackendAvailability(
   isAvailable: boolean,
@@ -7,6 +10,51 @@ export function offlineFromBackendAvailability(
 ): boolean {
   if (!canGoOnline) return true
   return !isAvailable
+}
+
+/** Skip remote GET apply while the user is mid POST online/offline. */
+export function shouldSkipRemoteAvailabilityApply(syncing: boolean): boolean {
+  return syncing
+}
+
+/**
+ * Next local offline from a remote GET, or null if unchanged / should not apply.
+ * Never calls POST — read-only sync.
+ */
+export function remoteAvailabilityOfflineUpdate(opts: {
+  remoteIsAvailable: boolean
+  canGoOnline: boolean
+  localOffline: boolean
+  syncing: boolean
+}): boolean | null {
+  if (shouldSkipRemoteAvailabilityApply(opts.syncing)) return null
+  const nextOffline = offlineFromBackendAvailability(
+    opts.remoteIsAvailable,
+    opts.canGoOnline,
+  )
+  if (nextOffline === opts.localOffline) return null
+  return nextOffline
+}
+
+/** Read-only tick used by poll / focus / visibility. GET failure → no local change. */
+export async function fetchRemoteAvailabilityOfflineUpdate(opts: {
+  getStatus: () => Promise<{ is_available: boolean }>
+  canGoOnline: boolean
+  localOffline: boolean
+  syncing: boolean
+}): Promise<boolean | null> {
+  if (shouldSkipRemoteAvailabilityApply(opts.syncing)) return null
+  try {
+    const { is_available } = await opts.getStatus()
+    return remoteAvailabilityOfflineUpdate({
+      remoteIsAvailable: is_available,
+      canGoOnline: opts.canGoOnline,
+      localOffline: opts.localOffline,
+      syncing: false,
+    })
+  } catch {
+    return null
+  }
 }
 
 /** Poll de /available e reporter só após confirmação explícita de online no backend. */
