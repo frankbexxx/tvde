@@ -18,6 +18,25 @@ export function shouldSkipRemoteAvailabilityApply(syncing: boolean): boolean {
 }
 
 /**
+ * Gate for applying a remote availability GET result.
+ * Drops cancelled, in-flight-toggle, stale overlapping polls, and pre-toggle responses.
+ */
+export function shouldAcceptRemoteAvailabilityResponse(opts: {
+  cancelled: boolean
+  syncing: boolean
+  responseSeq: number
+  latestSeq: number
+  epochAtStart: number
+  currentEpoch: number
+}): boolean {
+  if (opts.cancelled) return false
+  if (shouldSkipRemoteAvailabilityApply(opts.syncing)) return false
+  if (opts.responseSeq !== opts.latestSeq) return false
+  if (opts.epochAtStart !== opts.currentEpoch) return false
+  return true
+}
+
+/**
  * Next local offline from a remote GET, or null if unchanged / should not apply.
  * Never calls POST — read-only sync.
  */
@@ -40,17 +59,18 @@ export function remoteAvailabilityOfflineUpdate(opts: {
 export async function fetchRemoteAvailabilityOfflineUpdate(opts: {
   getStatus: () => Promise<{ is_available: boolean }>
   canGoOnline: boolean
-  localOffline: boolean
-  syncing: boolean
+  /** Re-read after await so a completed POST toggle is not undone by a stale GET. */
+  getLocalOffline: () => boolean
+  getSyncing: () => boolean
 }): Promise<boolean | null> {
-  if (shouldSkipRemoteAvailabilityApply(opts.syncing)) return null
+  if (shouldSkipRemoteAvailabilityApply(opts.getSyncing())) return null
   try {
     const { is_available } = await opts.getStatus()
     return remoteAvailabilityOfflineUpdate({
       remoteIsAvailable: is_available,
       canGoOnline: opts.canGoOnline,
-      localOffline: opts.localOffline,
-      syncing: false,
+      localOffline: opts.getLocalOffline(),
+      syncing: opts.getSyncing(),
     })
   } catch {
     return null

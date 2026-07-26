@@ -8,6 +8,7 @@ import {
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
   remoteAvailabilityOfflineUpdate,
+  shouldAcceptRemoteAvailabilityResponse,
   shouldBootstrapDriverActiveTrip,
   shouldSkipRemoteAvailabilityApply,
 } from './driverAvailabilitySync'
@@ -82,8 +83,8 @@ describe('remote availability sync (Partner force-online)', () => {
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
       canGoOnline: true,
-      localOffline: true,
-      syncing: false,
+      getLocalOffline: () => true,
+      getSyncing: () => false,
     })
     expect(next).toBe(false)
     expect(getStatus).toHaveBeenCalledTimes(1)
@@ -94,8 +95,8 @@ describe('remote availability sync (Partner force-online)', () => {
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
       canGoOnline: true,
-      localOffline: false,
-      syncing: false,
+      getLocalOffline: () => false,
+      getSyncing: () => false,
     })
     expect(next).toBe(true)
   })
@@ -105,8 +106,8 @@ describe('remote availability sync (Partner force-online)', () => {
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
       canGoOnline: true,
-      localOffline: true,
-      syncing: false,
+      getLocalOffline: () => true,
+      getSyncing: () => false,
     })
     expect(next).toBeNull()
   })
@@ -116,11 +117,73 @@ describe('remote availability sync (Partner force-online)', () => {
     const next = await fetchRemoteAvailabilityOfflineUpdate({
       getStatus,
       canGoOnline: true,
-      localOffline: true,
-      syncing: true,
+      getLocalOffline: () => true,
+      getSyncing: () => true,
     })
     expect(next).toBeNull()
     expect(getStatus).not.toHaveBeenCalled()
+  })
+
+  it('fetch: syncing true após await (toggle em curso) → não aplica', async () => {
+    let syncing = false
+    const getStatus = vi.fn().mockImplementation(async () => {
+      syncing = true
+      return { is_available: true }
+    })
+    const next = await fetchRemoteAvailabilityOfflineUpdate({
+      getStatus,
+      canGoOnline: true,
+      getLocalOffline: () => true,
+      getSyncing: () => syncing,
+    })
+    expect(next).toBeNull()
+  })
+
+  it('fetch: re-lê localOffline após await (evita setState se já alinhado)', async () => {
+    let localOffline = false
+    const getStatus = vi.fn().mockImplementation(async () => {
+      localOffline = true
+      return { is_available: false }
+    })
+    const next = await fetchRemoteAvailabilityOfflineUpdate({
+      getStatus,
+      canGoOnline: true,
+      getLocalOffline: () => localOffline,
+      getSyncing: () => false,
+    })
+    expect(next).toBeNull()
+  })
+})
+
+describe('shouldAcceptRemoteAvailabilityResponse', () => {
+  const ok = {
+    cancelled: false,
+    syncing: false,
+    responseSeq: 2,
+    latestSeq: 2,
+    epochAtStart: 1,
+    currentEpoch: 1,
+  }
+
+  it('aceita resposta fresca alinhada', () => {
+    expect(shouldAcceptRemoteAvailabilityResponse(ok)).toBe(true)
+  })
+
+  it('rejeita cancelled / syncing', () => {
+    expect(shouldAcceptRemoteAvailabilityResponse({ ...ok, cancelled: true })).toBe(false)
+    expect(shouldAcceptRemoteAvailabilityResponse({ ...ok, syncing: true })).toBe(false)
+  })
+
+  it('rejeita poll sobreposto (seq stale)', () => {
+    expect(
+      shouldAcceptRemoteAvailabilityResponse({ ...ok, responseSeq: 1, latestSeq: 2 })
+    ).toBe(false)
+  })
+
+  it('rejeita GET iniciado antes de toggle local (epoch)', () => {
+    expect(
+      shouldAcceptRemoteAvailabilityResponse({ ...ok, epochAtStart: 1, currentEpoch: 2 })
+    ).toBe(false)
   })
 })
 

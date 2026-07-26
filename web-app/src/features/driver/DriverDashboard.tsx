@@ -206,6 +206,7 @@ import {
   isDriverLocationReportingOperational,
   isDrivingHoursBlockedError,
   offlineFromBackendAvailability,
+  shouldAcceptRemoteAvailabilityResponse,
   shouldBootstrapDriverActiveTrip,
 } from './driverAvailabilitySync'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
@@ -342,6 +343,8 @@ export function DriverDashboard() {
   const [availabilitySyncing, setAvailabilitySyncing] = useState(false)
   const offlineRef = useRef(offline)
   const availabilitySyncingRef = useRef(availabilitySyncing)
+  /** Bumped on local POST availability changes so in-flight remote GETs cannot undo them. */
+  const availabilityEpochRef = useRef(0)
   useEffect(() => {
     offlineRef.current = offline
   }, [offline])
@@ -550,6 +553,7 @@ export function DriverDashboard() {
         }
       } finally {
         setActiveTripBootstrapPending(false)
+        availabilityEpochRef.current += 1
         setAvailabilitySyncing(false)
       }
     },
@@ -1021,6 +1025,7 @@ export function DriverDashboard() {
 
   // Alinhar disponibilidade local com GET /driver/status (hydrate + poll + focus).
   // Partner/Admin force-online grava is_available no backend; sem refetch a UI fica stale.
+  // Seq + epoch drop stale overlapping GETs and GETs that raced a local POST toggle.
   useEffect(() => {
     if (!token || sessionRole !== 'driver') {
       setAvailabilityHydrated(false)
@@ -1028,18 +1033,33 @@ export function DriverDashboard() {
     }
     let cancelled = false
     let hydratedOnce = false
+    let fetchSeq = 0
     setAvailabilityHydrated(false)
 
     const tick = () => {
+      if (availabilitySyncingRef.current) return
       const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
+      const responseSeq = ++fetchSeq
+      const epochAtStart = availabilityEpochRef.current
       void fetchRemoteAvailabilityOfflineUpdate({
         getStatus: () => getDriverStatus(token),
         canGoOnline,
-        localOffline: offlineRef.current,
-        syncing: availabilitySyncingRef.current,
+        getLocalOffline: () => offlineRef.current,
+        getSyncing: () => availabilitySyncingRef.current,
       })
         .then((nextOffline) => {
-          if (cancelled) return
+          if (
+            !shouldAcceptRemoteAvailabilityResponse({
+              cancelled,
+              syncing: availabilitySyncingRef.current,
+              responseSeq,
+              latestSeq: fetchSeq,
+              epochAtStart,
+              currentEpoch: availabilityEpochRef.current,
+            })
+          ) {
+            return
+          }
           if (nextOffline !== null) {
             setOffline(nextOffline)
           }
@@ -1148,6 +1168,7 @@ export function DriverDashboard() {
       const e = err as { status?: number; detail?: string }
       if (e?.status === 409) {
         if (e?.detail === 'driving_hours_blocked') {
+          availabilityEpochRef.current += 1
           setOffline(true)
           setError(
             'Não podes aceitar novas viagens: limite de tempo de condução neste dia civil ou período de repouso obrigatório (informação genérica — validar quadro legal com apoio jurídico).'
