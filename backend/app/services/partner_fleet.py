@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.db.models.driver import Driver
 from app.models.enums import DriverStatus
 from app.services.partner_queries import get_driver_for_partner
+from app.services.trips import driver_has_active_assigned_trip
 from app.services.vehicle_compliance_gate import (
     evaluate_driver_vehicle_compliance_gate,
 )
@@ -60,6 +61,13 @@ def set_partner_driver_availability(
             detail="driver_not_approved",
         )
     if online:
+        # Match admin recover-driver / driver go_online: never restore dispatch
+        # eligibility while an accepted/arriving/ongoing trip is still live.
+        if driver_has_active_assigned_trip(db=db, driver_user_id=str(d.user_id)):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="driver_has_active_trip",
+            )
         gate = evaluate_driver_vehicle_compliance_gate(db, d)
         if not gate.allowed:
             raise HTTPException(
