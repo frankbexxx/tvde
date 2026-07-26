@@ -449,9 +449,17 @@ def cancel_trip_by_admin(
     trip_id: str,
     cancellation_reason: str | None = None,
 ) -> Trip:
-    """Admin force cancel. Only for requested, assigned, accepted."""
+    """Admin force cancel. Only for requested, assigned, accepted.
+
+    Lock the trip row before the status check so a concurrent
+    accepted→arriving→ongoing→completed settlement cannot be overwritten by a
+    stale unlocked cancel (completed→cancelled after payment capture).
+    """
     trip = db.execute(
-        select(Trip).where(Trip.id == trip_id).options(joinedload(Trip.payment))
+        select(Trip)
+        .where(Trip.id == trip_id)
+        .options(joinedload(Trip.payment))
+        .with_for_update(of=Trip)
     ).scalar_one_or_none()
     if not trip:
         _raise_not_found()
