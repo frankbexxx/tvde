@@ -6,8 +6,9 @@ Read-only + state updates only. No Stripe interaction.
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from app.db.models.trip import Trip
 from app.events.dispatcher import emit
@@ -30,6 +31,11 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
     """
     Apply timeout rules to stuck trips. Returns counts of actions taken.
     No Stripe interaction.
+
+    Accepted/ongoing transitions use conditional UPDATE … WHERE status=…
+    RETURNING so concurrent mark_arriving / start_trip / complete_trip
+    (which lock the trip row) cannot be overwritten by a stale timeout
+    mutate after they commit a newer state.
     """
     now = datetime.now(timezone.utc)
     assigned_cutoff = now - timedelta(minutes=ASSIGNED_TIMEOUT_MINUTES)
@@ -51,7 +57,11 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
                 Trip.status == TripStatus.assigned,
                 Trip.updated_at < assigned_cutoff,
             )
-            .values(status=TripStatus.requested, driver_id=None)
+            .values(
+                status=TripStatus.requested,
+                driver_id=None,
+                updated_at=func.now(),
+            )
             .returning(Trip.id)
             .execution_options(synchronize_session=False)
         )
@@ -70,58 +80,68 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
         )
 
     # 2) accepted > 10 min without start → cancelled, free driver
-    accepted_stuck = (
-        db.execute(
-            select(Trip)
-            .where(Trip.status == TripStatus.accepted)
-            .where(Trip.updated_at < accepted_cutoff)
+    # Conditional UPDATE: do not clobber a concurrent accepted→arriving transition.
+    accepted_stuck = db.execute(
+        update(Trip)
+        .where(
+            Trip.status == TripStatus.accepted,
+            Trip.updated_at < accepted_cutoff,
         )
-        .scalars()
-        .all()
-    )
-    for trip in accepted_stuck:
-        driver_id = trip.driver_id
-        trip.status = TripStatus.cancelled
+        .values(status=TripStatus.cancelled, updated_at=func.now())
+        .returning(Trip.id, Trip.driver_id)
+        .execution_options(synchronize_session=False)
+    ).all()
+    for trip_id, driver_id in accepted_stuck:
         _set_driver_available(db, str(driver_id) if driver_id else None)
         counts["accepted_to_cancelled"] += 1
         logger.info(
-            f"trip_timeouts: accepted→cancelled trip_id={trip.id}, "
-            f"driver_id={driver_id}, updated_at={trip.updated_at}"
+            "trip_timeouts: accepted→cancelled trip_id=%s, driver_id=%s",
+            trip_id,
+            driver_id,
         )
         pending_events.append(
             TripStatusChangedEvent(
-                trip_id=str(trip.id),
-                status=trip.status,
+                trip_id=str(trip_id),
+                status=TripStatus.cancelled,
                 timestamp=now,
             )
         )
 
     # 3) ongoing > 6 hours → failed, free driver
-    ongoing_stuck = (
-        db.execute(
-            select(Trip)
-            .where(Trip.status == TripStatus.ongoing)
-            .where(Trip.started_at.isnot(None))
-            .where(Trip.started_at < ongoing_cutoff)
+    # Conditional UPDATE: do not clobber a concurrent ongoing→completed settlement.
+    ongoing_stuck = db.execute(
+        update(Trip)
+        .where(
+            Trip.status == TripStatus.ongoing,
+            Trip.started_at.isnot(None),
+            Trip.started_at < ongoing_cutoff,
         )
-        .scalars()
-        .all()
-    )
-    for trip in ongoing_stuck:
-        driver_id = trip.driver_id
-        old_status = trip.status
-        trip.status = TripStatus.failed
-        on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
+        .values(status=TripStatus.failed, updated_at=func.now())
+        .returning(Trip.id, Trip.driver_id)
+        .execution_options(synchronize_session=False)
+    ).all()
+    for trip_id, driver_id in ongoing_stuck:
+        # Compliance helpers need a Trip instance; load after the conditional write.
+        trip = db.get(Trip, trip_id)
+        if trip is not None:
+            # Identity map may still show pre-UPDATE status with synchronize_session=False.
+            db.expire(trip)
+            trip = db.get(Trip, trip_id)
+        if trip is not None:
+            on_trip_status_change_for_driving_compliance(
+                db, trip, TripStatus.ongoing, TripStatus.failed
+            )
         _set_driver_available(db, str(driver_id) if driver_id else None)
         counts["ongoing_to_failed"] += 1
         logger.info(
-            f"trip_timeouts: ongoing→failed trip_id={trip.id}, "
-            f"driver_id={driver_id}, started_at={trip.started_at}"
+            "trip_timeouts: ongoing→failed trip_id=%s, driver_id=%s",
+            trip_id,
+            driver_id,
         )
         pending_events.append(
             TripStatusChangedEvent(
-                trip_id=str(trip.id),
-                status=trip.status,
+                trip_id=str(trip_id),
+                status=TripStatus.failed,
                 timestamp=now,
             )
         )
