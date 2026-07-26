@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useAuth } from '../../context/AuthContext'
 import {
   fetchPartnerDriver,
@@ -67,6 +68,17 @@ export function PartnerDriverDetail() {
   const [msgBody, setMsgBody] = useState('')
   const [msgPriority, setMsgPriority] = useState<'normal' | 'high'>('normal')
   const [msgOk, setMsgOk] = useState<string | null>(null)
+  const [availabilityFeedback, setAvailabilityFeedback] = useState<string | null>(null)
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+  const availabilityFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (availabilityFeedbackTimer.current) {
+        clearTimeout(availabilityFeedbackTimer.current)
+      }
+    }
+  }, [])
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -162,6 +174,41 @@ export function PartnerDriverDetail() {
     } catch (e: unknown) {
       const err = e as { detail?: string }
       setError(typeof err?.detail === 'string' ? err.detail : tc('error'))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const mapAvailabilityError = (detail: string | undefined): string => {
+    if (detail === 'driver_has_active_trip') {
+      return t('driverDetail.cannotOnlineActiveTrip')
+    }
+    return typeof detail === 'string' && detail.trim() ? detail : tc('error')
+  }
+
+  const runAvailability = async (online: boolean) => {
+    if (!userId) return
+    setBusy(online ? 'on' : 'off')
+    setAvailabilityError(null)
+    setAvailabilityFeedback(null)
+    try {
+      const row = await patchPartnerDriverAvailability(userId, online)
+      setD(row)
+      const msg = online
+        ? t('driverDetail.placedOnline')
+        : t('driverDetail.placedOffline')
+      setAvailabilityFeedback(msg)
+      toast.success(msg)
+      if (availabilityFeedbackTimer.current) {
+        clearTimeout(availabilityFeedbackTimer.current)
+      }
+      availabilityFeedbackTimer.current = setTimeout(() => {
+        setAvailabilityFeedback(null)
+        availabilityFeedbackTimer.current = null
+      }, 3500)
+    } catch (e: unknown) {
+      const err = e as { detail?: string }
+      setAvailabilityError(mapAvailabilityError(err?.detail))
     } finally {
       setBusy(null)
     }
@@ -633,28 +680,60 @@ export function PartnerDriverDetail() {
       )}
 
       {approved && (
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="partner-driver-availability-block">
           <p className="text-sm font-medium text-foreground">{t('driverDetail.forceOnlineOffline')}</p>
+          <p
+            className="text-sm text-foreground"
+            data-testid="partner-driver-availability-status"
+          >
+            {t('driverDetail.currentAvailability', {
+              state: d.is_available
+                ? t('driverDetail.stateOnline')
+                : t('driverDetail.stateOffline'),
+            })}
+          </p>
+          {availabilityFeedback ? (
+            <p
+              className="text-sm text-primary"
+              data-testid="partner-driver-availability-feedback"
+            >
+              {availabilityFeedback}
+            </p>
+          ) : null}
+          {availabilityError ? (
+            <p
+              className="text-sm text-destructive"
+              data-testid="partner-driver-availability-error"
+            >
+              {availabilityError}
+            </p>
+          ) : null}
           <div className="flex gap-2">
             <button
               type="button"
+              data-testid="partner-driver-availability-online"
               disabled={busy !== null || d.is_available}
-              onClick={() =>
-                void run('on', () => patchPartnerDriverAvailability(userId, true))
-              }
+              onClick={() => void runAvailability(true)}
               className="flex-1 rounded-xl bg-primary py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {busy === 'on' ? '…' : t('driverDetail.online')}
+              {busy === 'on'
+                ? '…'
+                : d.is_available
+                  ? t('driverDetail.alreadyOnline')
+                  : t('driverDetail.placeOnline')}
             </button>
             <button
               type="button"
+              data-testid="partner-driver-availability-offline"
               disabled={busy !== null || !d.is_available}
-              onClick={() =>
-                void run('off', () => patchPartnerDriverAvailability(userId, false))
-              }
+              onClick={() => void runAvailability(false)}
               className="flex-1 rounded-xl border border-border bg-card py-2 text-sm font-medium disabled:opacity-50"
             >
-              {busy === 'off' ? '…' : t('driverDetail.offline')}
+              {busy === 'off'
+                ? '…'
+                : !d.is_available
+                  ? t('driverDetail.alreadyOffline')
+                  : t('driverDetail.placeOffline')}
             </button>
           </div>
         </div>
