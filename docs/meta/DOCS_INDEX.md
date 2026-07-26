@@ -14,7 +14,8 @@
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto + Seções F/G resumo |
 | [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 + checkpoint Julho 2026 |
 | [PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md](../ops/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) | PF3D-DATA-1E — re-audit pós DATA-1C/D (dev/test; sem gates) |
-| [PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | PF3D-0 — decisão/matriz compliance gates docs viatura (sem implementação) |
+| [PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | PF3D-0 — decisão/matriz compliance gates docs viatura |
+| [PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) | PF3D-3A/OFF PASS — smoke Pax/Driver/Partner com flag OFF 2026-07-26 |
 | [PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md](../ops/PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md) | PF3C PASS funcional — alertas/badges docs viatura 2026-07-24 |
 | [OPS_UX_1_SMOKE_PASS_2026-07-23.md](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) | OPS-UX-1 PASS funcional — smoke Pax/Driver/Partner 2026-07-23 |
 | [CHECKPOINT_2026-07-22_PARTNER_FLEET.md](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) | Encerramento sessão Partner-Fleet 3B PASS + hardenings |
