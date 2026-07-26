@@ -19,6 +19,7 @@ __pycache__/
 *.so
 .Python
 backend/venv/
+backend/.venv/
 *.egg-info/
 .eggs/
 

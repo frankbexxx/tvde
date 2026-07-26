@@ -58,13 +58,17 @@ async def go_online(
     db: Session = Depends(get_db),
 ) -> dict:
     """Set driver available to receive trip offers."""
+    # Lock Driver before active-trip check/write so a concurrent accept cannot
+    # commit is_available=False + live trip and then lose to a stale go_online
+    # UPDATE that restores availability (multi-tab/double-submit TOCTOU).
     driver = db.execute(
-        select(Driver).where(Driver.user_id == user.user_id)
+        select(Driver)
+        .where(Driver.user_id == user.user_id)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=404, detail="driver_not_found")
     if driver_has_active_assigned_trip(db=db, driver_user_id=str(user.user_id)):
-        db.refresh(driver)
         return {"status": "online", "is_available": driver.is_available}
     snap = driver_compliance_snapshot(db, user.user_id)
     if snap["enabled"] and snap["blocked_accept"]:

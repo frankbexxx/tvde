@@ -1440,15 +1440,18 @@ async def recover_driver(
         driver_uuid = uuid.UUID(driver_id.strip())
     except ValueError:
         raise HTTPException(status_code=400, detail="invalid_driver_id")
+    # Lock Driver before availability checks so concurrent go_online + accept
+    # cannot commit a live trip and then lose to a stale recover UPDATE that
+    # restores is_available=True (same TOCTOU class as partner force-online).
     driver = db.execute(
-        select(Driver).where(Driver.user_id == driver_uuid)
+        select(Driver)
+        .where(Driver.user_id == driver_uuid)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=404, detail="driver_not_found")
     if driver.is_available:
         return RecoverDriverResponse(driver_id=str(driver.user_id), is_available=True)
-
-    from app.models.enums import TripStatus
 
     has_active = (
         db.execute(
