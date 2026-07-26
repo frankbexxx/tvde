@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models.driver import Driver
@@ -52,7 +53,15 @@ def set_partner_driver_availability(
     online: bool,
 ) -> Driver:
     """Force driver online (available) or offline without touching core trip logic."""
-    d = get_driver_for_partner(db, partner_id, driver_user_id)
+    # Lock the Driver row before availability checks so a concurrent accept
+    # cannot commit is_available=False + active trip and then be overwritten
+    # back to True by a stale force-online write (TOCTOU double-book).
+    pid = uuid.UUID(partner_id)
+    d = db.execute(
+        select(Driver)
+        .where(Driver.user_id == driver_user_id, Driver.partner_id == pid)
+        .with_for_update(of=Driver)
+    ).scalar_one_or_none()
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     if d.status != DriverStatus.approved:
