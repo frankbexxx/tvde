@@ -1127,7 +1127,9 @@ def mark_trip_arriving(
     driver_id: str,
     trip_id: str,
 ) -> Trip:
-    trip = _get_trip_for_driver(db=db, driver_id=driver_id, trip_id=trip_id)
+    # Lock trip so accepted-timeout / cancel cannot free the driver and then
+    # lose to a stale unlocked accepted→arriving write (double-book).
+    trip = _get_trip_for_driver_locked(db=db, driver_id=driver_id, trip_id=trip_id)
     if trip.status != TripStatus.accepted:
         log_event(
             "trip_state_guard_blocked",
@@ -1169,7 +1171,9 @@ def start_trip(
     driver_id: str,
     trip_id: str,
 ) -> Trip:
-    trip = _get_trip_for_driver(db=db, driver_id=driver_id, trip_id=trip_id)
+    # Lock trip so concurrent cancel/timeout cannot leave is_available=True
+    # while a stale unlocked arriving→ongoing write revives the trip.
+    trip = _get_trip_for_driver_locked(db=db, driver_id=driver_id, trip_id=trip_id)
     if trip.status != TripStatus.arriving:
         log_event(
             "trip_state_guard_blocked",
