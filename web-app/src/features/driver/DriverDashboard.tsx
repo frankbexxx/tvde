@@ -199,6 +199,8 @@ import {
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
 import {
+  DRIVER_REMOTE_AVAILABILITY_POLL_MS,
+  fetchRemoteAvailabilityOfflineUpdate,
   formatDriverAvailabilityError,
   isDriverAvailabilityOperational,
   isDriverLocationReportingOperational,
@@ -338,6 +340,14 @@ export function DriverDashboard() {
   const [offline, setOffline] = useState(true)
   const [availabilityHydrated, setAvailabilityHydrated] = useState(false)
   const [availabilitySyncing, setAvailabilitySyncing] = useState(false)
+  const offlineRef = useRef(offline)
+  const availabilitySyncingRef = useRef(availabilitySyncing)
+  useEffect(() => {
+    offlineRef.current = offline
+  }, [offline])
+  useEffect(() => {
+    availabilitySyncingRef.current = availabilitySyncing
+  }, [availabilitySyncing])
   useScreenWakeLock(
     sessionRole === 'driver' &&
     Boolean(token) &&
@@ -1009,29 +1019,52 @@ export function DriverDashboard() {
     }
   }, [token, sessionRole, activeTripId, restoreDriverActiveTrip, addLog])
 
-  // Alinhar disponibilidade local com GET /driver/status (não confiar só no localStorage).
+  // Alinhar disponibilidade local com GET /driver/status (hydrate + poll + focus).
+  // Partner/Admin force-online grava is_available no backend; sem refetch a UI fica stale.
   useEffect(() => {
     if (!token || sessionRole !== 'driver') {
       setAvailabilityHydrated(false)
       return
     }
     let cancelled = false
+    let hydratedOnce = false
     setAvailabilityHydrated(false)
-    void getDriverStatus(token)
-      .then(({ is_available }) => {
-        if (cancelled) return
-        const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
-        setOffline(offlineFromBackendAvailability(is_available, canGoOnline))
+
+    const tick = () => {
+      const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
+      void fetchRemoteAvailabilityOfflineUpdate({
+        getStatus: () => getDriverStatus(token),
+        canGoOnline,
+        localOffline: offlineRef.current,
+        syncing: availabilitySyncingRef.current,
       })
-      .catch(() => {
-        if (cancelled) return
-        setOffline(true)
-      })
-      .finally(() => {
-        if (!cancelled) setAvailabilityHydrated(true)
-      })
+        .then((nextOffline) => {
+          if (cancelled) return
+          if (nextOffline !== null) {
+            setOffline(nextOffline)
+          }
+        })
+        .finally(() => {
+          if (!cancelled && !hydratedOnce) {
+            hydratedOnce = true
+            setAvailabilityHydrated(true)
+          }
+        })
+    }
+
+    tick()
+    const intervalId = window.setInterval(tick, DRIVER_REMOTE_AVAILABILITY_POLL_MS)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') tick()
+    }
+    const onFocus = () => tick()
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', onFocus)
     return () => {
       cancelled = true
+      window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', onFocus)
     }
   }, [token, sessionRole, driverDocuments, effectiveDocsGate])
 
