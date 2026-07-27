@@ -135,8 +135,9 @@ Listagem de candidatos — **não** implementar nesta fase:
 | **DATA-1A…1E** | Audit / suggest / apply local / seed docs dummy / re-audit | Não (scripts) | **PASS** — [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
 | **PF3D-2** | API read-only — expor `compliance_status` — **sem** bloqueio | Não | **PASS** (#466) |
 | **PF3D-3A** | Gates atrás de `ENABLE_VEHICLE_COMPLIANCE_GATES` default **false** | Só se flag ON | **PASS** código (#467 + #468) · smoke **OFF** [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
-| **PF3D-3** | Ligar gates globalmente / ON em prod | **Sim** | **Bloqueado** — DATA-1E (muitos `no_active_vehicle`) |
-| **PF3D-4** | FE mensagens Driver / Partner / Admin | UX | Pendente |
+| **PF3D-3B** | Mensagens / observabilidade (i18n + CTA + logs) — **sem** activar flag | Não | **DIAG** — [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) · implementação pendente |
+| **PF3D-3** | Ligar gates globalmente / ON em prod | **Sim** | **Bloqueado** — DATA-1E (muitos `no_active_vehicle`) + preferir 3B antes de ON |
+| **PF3D-4** | FE mensagens ricas Driver / Partner / Admin (além do mínimo 3B) | UX | Pendente — 3B é a fatia mínima |
 | **PF3D-5** | Override Admin / Partner — só se necessário | Controlo ops | Pendente |
 
 ---
@@ -173,7 +174,7 @@ Listagem de candidatos — **não** implementar nesta fase:
 1. **Não ligar PF3D-3 globalmente** — re-audit 1E: ainda **110** `no_active_vehicle` em `test_db`.  
 2. **PF3D-1…3A** feitos; smoke **OFF** PASS — manter flag ausente/`false` em prod.  
 3. Antes de qualquer smoke **ON**: atribuição real de viaturas + docs reais — **não** seed dummy em prod.  
-4. Preferir gates **backend** (espelho driving-hours); FE só mensagens (PF3D-4).  
+4. Preferir gates **backend** (espelho driving-hours); FE mensagens mínimas = **PF3D-3B** ([`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md)); UX rica = PF3D-4.  
 5. Set bloqueante mínimo provisório (sujeito a B): `{ rejected, expired, expired_pending, missing }` + (se A) sem `active_vehicle_id`.  
 6. `expiring_soon` e (proposta B) `pending_review` → **alerta apenas** (warning OK operacionalmente).  
 7. Partner Driver Detail scroll / force-online enterrado → UX debt (não blocker) no smoke OFF.

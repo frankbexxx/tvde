@@ -19,6 +19,7 @@
 | [AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | Availability Caso A PASS — Partner force-online ↔ Driver sync 2026-07-26 |
 | [AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | Availability Caso B PASS — active trip guard (force-online bloqueado) 2026-07-27 |
 | [B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | B2-DIAG — next trip while ongoing / ETA ≤ 5 min (sem implementação) 2026-07-27 |
+| [PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) | PF3D-3B DIAG — mensagens/observabilidade gates (antes de ON) 2026-07-27 |
 | [PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md](../ops/PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md) | PF3C PASS funcional — alertas/badges docs viatura 2026-07-24 |
 | [OPS_UX_1_SMOKE_PASS_2026-07-23.md](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) | OPS-UX-1 PASS funcional — smoke Pax/Driver/Partner 2026-07-23 |
 | [CHECKPOINT_2026-07-22_PARTNER_FLEET.md](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) | Encerramento sessão Partner-Fleet 3B PASS + hardenings |
