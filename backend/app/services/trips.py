@@ -722,7 +722,9 @@ def accept_trip(
             detail="forbidden",
         )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
-    assert_driver_vehicle_compliance_for_accept(db, driver)
+    assert_driver_vehicle_compliance_for_accept(
+        db, driver, surface="accept_trip", trip_id=str(trip.id)
+    )
     _assert_driver_matches_trip_category(driver, trip)
     if not getattr(driver, "is_available", True):
         raise HTTPException(
@@ -883,7 +885,9 @@ def accept_offer(
             detail="forbidden",
         )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
-    assert_driver_vehicle_compliance_for_accept(db, driver)
+    assert_driver_vehicle_compliance_for_accept(
+        db, driver, surface="accept_offer", trip_id=str(trip.id)
+    )
     _assert_driver_matches_trip_category(driver, trip)
     if not getattr(driver, "is_available", True):
         raise HTTPException(

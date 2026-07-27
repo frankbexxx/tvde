@@ -1,4 +1,6 @@
 import { isTimeoutLikeError } from '../../api/client'
+import i18n from '../../i18n'
+import { driverAvailabilityComplianceI18nKey } from '../shared/vehicleComplianceGateMessages'
 
 /** Poll leve para reflectir Partner/Admin force-online sem refresh manual. */
 export const DRIVER_REMOTE_AVAILABILITY_POLL_MS = 12_000
@@ -122,5 +124,9 @@ export function formatDriverAvailabilityError(err: unknown): string {
   }
   const e = err as { status?: number; detail?: unknown }
   const detail = typeof e?.detail === 'string' ? e.detail : 'erro_desconhecido'
+  const complianceKey = driverAvailabilityComplianceI18nKey(detail)
+  if (complianceKey) {
+    return i18n.t(`driver:${complianceKey}`)
+  }
   return `Não foi possível alterar disponibilidade (${detail}).`
 }

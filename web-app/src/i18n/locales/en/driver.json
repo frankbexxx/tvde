@@ -28,7 +28,13 @@
     "onlineAria": "You are available. Tap to go offline.",
     "offlineAria": "You are offline. Tap to go available.",
     "onlineLabel": "Available — tap to go offline",
-    "offlineLabel": "Offline — tap to go available"
+    "offlineLabel": "Offline — tap to go available",
+    "noActiveVehicle": "You cannot go available: you have no active vehicle assigned.",
+    "vehicleDocumentsBlocked": "You cannot go available: the vehicle has missing, expired, or rejected documents.",
+    "unknownVehicleCompliance": "You cannot go available: vehicle documents could not be validated.",
+    "complianceWarning": "Warning: vehicle documents are expiring soon or pending review — you can stay available.",
+    "complianceOk": "Vehicle documents are compliant.",
+    "gatesDisabled": "Vehicle compliance gates are disabled (diagnostics only)."
   },
   "actions": {
     "accept": "Accept",
@@ -53,6 +59,9 @@
     "arrivalConfirmed": "Arrival confirmed",
     "tripCompleted": "Trip completed",
     "networkError": "No connection or the request timed out. Check your network and try again.",
+    "acceptBlockedNoActiveVehicle": "You cannot accept: you have no active vehicle assigned.",
+    "acceptBlockedVehicleDocuments": "You cannot accept: the vehicle has missing, expired, or rejected documents.",
+    "acceptBlockedUnknownVehicleCompliance": "You cannot accept: vehicle documents could not be validated.",
     "pickupPhase": "pickup",
     "destinationPhase": "destination",
     "openingNav": "Opening {{app}} ({{phase}})",

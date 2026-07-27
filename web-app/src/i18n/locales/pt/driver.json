@@ -28,7 +28,13 @@
     "onlineAria": "Estás disponível. Toca para ficar offline.",
     "offlineAria": "Estás offline. Toca para ficar disponível.",
     "onlineLabel": "Disponível — tocar para offline",
-    "offlineLabel": "Offline — tocar para disponível"
+    "offlineLabel": "Offline — tocar para disponível",
+    "noActiveVehicle": "Não podes ficar disponível: não tens uma viatura activa atribuída.",
+    "vehicleDocumentsBlocked": "Não podes ficar disponível: a viatura tem documentos em falta, expirados ou rejeitados.",
+    "unknownVehicleCompliance": "Não podes ficar disponível: não foi possível validar os documentos da viatura.",
+    "complianceWarning": "Aviso: documentos da viatura a expirar ou em revisão — podes continuar disponível.",
+    "complianceOk": "Documentos da viatura em conformidade.",
+    "gatesDisabled": "Gates de conformidade de viatura desactivados (só diagnóstico)."
   },
   "actions": {
     "accept": "Aceitar",
@@ -53,6 +59,9 @@
     "arrivalConfirmed": "Chegada confirmada",
     "tripCompleted": "Viagem concluída",
     "networkError": "Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.",
+    "acceptBlockedNoActiveVehicle": "Não podes aceitar: não tens uma viatura activa atribuída.",
+    "acceptBlockedVehicleDocuments": "Não podes aceitar: a viatura tem documentos em falta, expirados ou rejeitados.",
+    "acceptBlockedUnknownVehicleCompliance": "Não podes aceitar: não foi possível validar os documentos da viatura.",
     "pickupPhase": "recolha",
     "destinationPhase": "destino",
     "openingNav": "A abrir {{app}} ({{phase}})",

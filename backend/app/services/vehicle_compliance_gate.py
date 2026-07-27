@@ -27,6 +27,7 @@ from app.services.vehicle_document_compliance import (
     COMPLIANCE_WARNING,
     vehicle_compliance_status,
 )
+from app.utils.logging import log_event
 
 # Stable gate codes (logging / HTTP detail mapping).
 CODE_GATES_DISABLED = "vehicle_compliance_gates_disabled"
@@ -207,6 +208,9 @@ def batch_evaluate_driver_vehicle_compliance_gates(
 def assert_driver_vehicle_compliance_for_accept(
     db: Session,
     driver: Driver,
+    *,
+    surface: str = "accept",
+    trip_id: str | None = None,
 ) -> None:
     """Hard gate for accept_*; no-op when flag OFF. Raises HTTP 409 when blocked."""
     from fastapi import HTTPException, status
@@ -214,6 +218,14 @@ def assert_driver_vehicle_compliance_for_accept(
     result = evaluate_driver_vehicle_compliance_gate(db, driver)
     if result.allowed:
         return
+    fields: dict[str, object] = {
+        "surface": surface,
+        "driver_id": str(driver.user_id),
+        "code": result.code,
+    }
+    if trip_id:
+        fields["trip_id"] = trip_id
+    log_event("vehicle_compliance_gate_blocked", **fields)
     raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail=result.code,
