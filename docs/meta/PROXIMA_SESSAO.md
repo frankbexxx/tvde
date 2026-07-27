@@ -8,7 +8,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-27** — PF3D-3B DIAG + B2 espera + Guard A+B)
+## Contexto actual (**2026-07-27** — PF3D-3B OFF smoke PASS + B2 espera)
 
 ### Availability Guard (regra actual)
 
@@ -27,21 +27,22 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 | Doc | Estado |
 |-----|--------|
-| [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) | **3B DIAG** — mensagens/observabilidade antes de ON |
-| [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) | Smoke OFF **PASS** |
+| [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) | **3B/OFF smoke PASS** — #486 sem mudança operacional |
+| [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) | **3B DIAG** (pré-implementação) |
+| [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) | Smoke 3A/OFF **PASS** |
 | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | Matriz / fases |
 
 | Item | Estado |
 |------|--------|
-| **`main`** | ≥ `ac2540f` |
+| **`main`** | ≥ `e404bcd` |
 | **Availability Guard** | **PASS** (A+B) |
 | **B2 implementação** | **Não** — espera Manel |
 | **PF3D gates** | OFF |
-| **PF3D-3B** | DIAG feito; implementação mínima **antes** de qualquer ON |
-| **PF3D-3 ON** | Bloqueado — atribuição real + 3B recomendado antes |
+| **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
+| **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação |
 
-**Frase de fecho:** PF3D-3B DIAG registado. Gates OFF. B2 em espera. Não activar PF3D sem atribuição real + mensagens 3B.
+**Frase de fecho:** PF3D-3B implementado e smoke OFF PASS. Gates OFF. B2 em espera. Não activar PF3D sem atribuição real.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -53,9 +54,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / doc | O quê |
 |----------|-------|
+| **#486** + smoke 3B/OFF | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
+| **#485** / **#484** | Deadlock disable/accept · Admin promote/demote/assign offers |
 | PF3D-3B DIAG | [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | B2-DIAG | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
-| **#480** | Lock `assign_trip` vs accept + payment guard |
 | Smoke Caso B / A | Availability Guard PASS |
 
 ### Em pausa / monitorizar
@@ -63,8 +65,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | ID | Notas |
 |----|-------|
 | **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
-| **PF3D-3B** | DIAG feito — i18n/CTA/logs **antes** de ON |
-| **PF3D-3 ON** | Só após atribuição real + docs reais (+ preferir 3B) |
+| **PF3D-3B/ON** | Smoke ON controlado — opcional; **não** activar em prod global |
+| **PF3D-3 ON** | Só após atribuição real + docs reais |
 | **PF3B-UX-DRIVER-DETAIL** | Tabs / scroll Partner Detail — debt |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
 | **OPS-UX-POLISH** | Mobile / densidades — não blocker |
@@ -79,8 +81,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 1. **Espera Manel B2** (B/C/adiar) — sem implementação  
 2. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
-3. **PF3D-3B** implementação mínima (mensagens) — **sem** activar flag  
-4. Roadmap PF3D ON controlado (só após 2+3)  
+3. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
+4. Roadmap PF3D ON controlado (só após 2)  
 5. **Partner Ops UX** tabs (opcional) · **CHORE-LINT-1** (opcional)
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
@@ -89,6 +91,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| PF3D-3B/OFF smoke PASS | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
 | PF3D-3B DIAG mensagens | [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | B2-DIAG next-trip | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
 | Availability Caso B PASS | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) |

@@ -16,6 +16,7 @@
 | [PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md](../ops/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) | PF3D-DATA-1E — re-audit pós DATA-1C/D (dev/test; sem gates) |
 | [PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | PF3D-0 — decisão/matriz compliance gates docs viatura |
 | [PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) | PF3D-3A/OFF PASS — smoke Pax/Driver/Partner com flag OFF 2026-07-26 |
+| [PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) | PF3D-3B/OFF PASS — #486 zero mudança operacional com gates OFF 2026-07-27 |
 | [AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | Availability Caso A PASS — Partner force-online ↔ Driver sync 2026-07-26 |
 | [AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | Availability Caso B PASS — active trip guard (force-online bloqueado) 2026-07-27 |
 | [B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | B2-DIAG — next trip while ongoing / ETA ≤ 5 min (sem implementação) 2026-07-27 |

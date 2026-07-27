@@ -1,7 +1,7 @@
 # PF3D-0 — Vehicle Document Compliance Gates (decisão / arquitectura)
 
-**Estado:** **PF3D-0…2** + **PF3D-3A** em main (flag OFF) · smoke OFF **PASS** · **PF3D-3 global ainda bloqueado.**  
-**`main`:** ≥ `5f07c60` · re-audit: [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) · smoke OFF: [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md)
+**Estado:** **PF3D-0…2** + **PF3D-3A** + **PF3D-3B** em main (flag OFF) · smokes OFF **PASS** · **PF3D-3 global ainda bloqueado.**
+**`main`:** ≥ `e404bcd` · re-audit: [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) · smoke 3A/OFF: [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) · smoke 3B/OFF: [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](./PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md)
 **Pré-condição:** PF3C **PASS** — [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](./PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md)  
 **Cadeia:** [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](./PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md)
@@ -128,14 +128,14 @@ Listagem de candidatos — **não** implementar nesta fase:
 
 ## 5. Fases propostas
 
-| Fase | Tema | Bloqueia ops? | Estado (2026-07-26) |
+| Fase | Tema | Bloqueia ops? | Estado (2026-07-27) |
 |------|------|---------------|---------------------|
 | **PF3D-0** | Docs-only — decisão / matriz (este ficheiro) | Não | **PASS** |
 | **PF3D-1** | Backend helper puro: `vehicle_compliance_status` · `vehicle_is_compliant` + pytest — **sem** wiring operacional | Não | **PASS** (#459) |
 | **DATA-1A…1E** | Audit / suggest / apply local / seed docs dummy / re-audit | Não (scripts) | **PASS** — [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
 | **PF3D-2** | API read-only — expor `compliance_status` — **sem** bloqueio | Não | **PASS** (#466) |
 | **PF3D-3A** | Gates atrás de `ENABLE_VEHICLE_COMPLIANCE_GATES` default **false** | Só se flag ON | **PASS** código (#467 + #468) · smoke **OFF** [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
-| **PF3D-3B** | Mensagens / observabilidade (i18n + CTA + logs) — **sem** activar flag | Não | **DIAG** — [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) · implementação pendente |
+| **PF3D-3B** | Mensagens / observabilidade (i18n + CTA + logs) — **sem** activar flag | Não | **PASS** código (#486) · smoke **OFF** [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](./PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) · DIAG [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | **PF3D-3** | Ligar gates globalmente / ON em prod | **Sim** | **Bloqueado** — DATA-1E (muitos `no_active_vehicle`) + preferir 3B antes de ON |
 | **PF3D-4** | FE mensagens ricas Driver / Partner / Admin (além do mínimo 3B) | UX | Pendente — 3B é a fatia mínima |
 | **PF3D-5** | Override Admin / Partner — só se necessário | Controlo ops | Pendente |
@@ -188,7 +188,7 @@ Listagem de candidatos — **não** implementar nesta fase:
 | Objectivo | Visibilidade / alertas | Compliance / bloqueios |
 | `document_summary` | Sim | Reutilizar |
 | Matching / online / accept | Intactos | Gates em código; **OFF** por defeito (smoke OFF PASS) |
-| Estado | **PASS** | **PF3D-0…3A/OFF** (este doc + smoke) |
+| Estado | **PASS** | **PF3D-0…3B/OFF** (este doc + smokes 3A/3B) |
 
 ---
 
