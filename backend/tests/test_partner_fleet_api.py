@@ -74,6 +74,7 @@ def test_partner_patch_driver_status_and_availability() -> None:
     )
     assert r.status_code == 200
     assert r.json()["status"] == "rejected"
+    assert r.json()["is_available"] is False
 
     r2 = c.patch(
         f"/partner/drivers/{driver_id}/availability",

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models.driver import Driver
-from app.models.enums import DriverStatus
-from app.services.partner_queries import get_driver_for_partner
+from app.db.models.trip_offer import TripOffer
+from app.models.enums import DriverStatus, OfferStatus
 from app.services.trips import driver_has_active_assigned_trip
 from app.services.vehicle_compliance_gate import (
     evaluate_driver_vehicle_compliance_gate,
@@ -27,8 +28,18 @@ def set_partner_driver_enabled(
     """
     Enable/disable driver for fleet operations: approved vs rejected.
     Does not approve drivers still pending (admin flow).
+
+    Disable also clears dispatch eligibility and expires outstanding pending
+    offers so a stale accept cannot create Payment after partner disable.
     """
-    d = get_driver_for_partner(db, partner_id, driver_user_id)
+    pid = uuid.UUID(partner_id)
+    # Lock Driver so a concurrent accept cannot pass an approved check and then
+    # lose to a disable that only flipped status without serializing on the row.
+    d = db.execute(
+        select(Driver)
+        .where(Driver.user_id == driver_user_id, Driver.partner_id == pid)
+        .with_for_update(of=Driver)
+    ).scalar_one_or_none()
     if not d:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     if d.status == DriverStatus.pending:
@@ -40,6 +51,22 @@ def set_partner_driver_enabled(
         d.status = DriverStatus.approved
     else:
         d.status = DriverStatus.rejected
+        d.is_available = False
+        now = datetime.now(timezone.utc)
+        pending_offers = list(
+            db.execute(
+                select(TripOffer).where(
+                    TripOffer.driver_id == driver_user_id,
+                    TripOffer.status == OfferStatus.pending,
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for offer in pending_offers:
+            offer.status = OfferStatus.expired
+            if offer.expires_at is None or offer.expires_at > now:
+                offer.expires_at = now
     db.commit()
     db.refresh(d)
     return d
