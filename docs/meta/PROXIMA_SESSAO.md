@@ -8,47 +8,54 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-27** — Availability Guard A+B PASS)
+## Contexto actual (**2026-07-27** — B2-DIAG + Availability Guard A+B)
 
-### Smoke
+### Availability Guard (regra actual)
 
 | Doc | Estado |
 |-----|--------|
 | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | **Caso A PASS** — Partner force-online/offline → Driver app aberta sem refresh |
 | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | **Caso B PASS** — Partner force-online bloqueado com trip activa |
 
+### B2 — next trip while ongoing
+
+| Doc | Estado |
+|-----|--------|
+| [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | **B2-DIAG concluído** — sistema actual **não** suporta chain com segurança |
+
 | Item | Estado |
 |------|--------|
-| **`main` / app build** | `ea4678a` |
-| **Availability Guard actual** | **PASS** (Caso A + Caso B) |
-| **PF3D-3A/OFF** | **PASS** — [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
+| **`main`** | ≥ `aa63330` (#480 + smokes A/B docs) |
+| **Availability Guard actual** | **PASS** (Caso A + Caso B) — mantém-se |
+| **#480** | **Merged** — lock `assign_trip` / BETA auto-dispatch / payment guard `accept_offer` |
+| **B2 implementação** | **Não** — aguarda decisão produto |
+| **Decisão pendente** | Opção **B** queued/next vs **C** hold/intenção vs **adiar** |
 | **PF3D gates** | OFF; não activados |
-| **Render env / DB / migrations** | Intactos nesta sessão |
-| **Next-trip while ongoing (B2)** | Feature futura — **não** implementada; spike modelo 2 trips antes de código |
+| **Render env / DB / migrations** | Intactos nesta documentação |
 
-**Frase de fecho:** Availability Guard actual = PASS: Caso A sync PASS + Caso B active trip guard PASS. Next-trip ongoing/ETA fica como feature futura B2.
+**Frase de fecho:** B2-DIAG concluído. Não implementar B2 antes de decisão produto (B vs C vs adiar). Availability Guard A+B continua a regra actual.
 
-### Decisão produto (mantém-se)
+### Decisão produto (mantém-se + B2)
 
 Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fleet / matching. Ver [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md).
+
+**B2:** escolher modelo queued (**B**), hold (**C**), ou adiar — ver diagnóstico.
 
 ### Entregas recentes
 
 | PR / doc | O quê |
 |----------|-------|
+| B2-DIAG | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
+| **#480** | Lock `assign_trip` vs accept + payment guard `accept_offer` |
 | Smoke Caso B | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) |
 | Smoke Caso A | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) |
-| **#477** | Driver remote GET — epoch/seq anti-stale |
-| **#476** | Driver sync remoto poll/focus `GET /driver/status` |
-| **#475** | UX Partner Detail availability |
-| **#474…#469** | Locks cancel/timeouts/go_online/force-online |
-| Smoke OFF | [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
+| **#477…#469** | Sync availability + locks lifecycle |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
-| **AVAIL-B2-NEXT-TRIP** | Produto: next trip while ongoing ETA ≤ 5 min — spike 2 trips / queued / locks / UI **antes** de implementar |
+| **AVAIL-B2-NEXT-TRIP** | **DIAG feito** — decisão produto B/C/adiar; **sem** spike/código até decisão |
 | **PF3D-3 ON** | Só após atribuição real + docs reais; nunca global ainda |
 | **PF3B-UX-DRIVER-DETAIL** | Tabs / scroll Partner Detail — debt |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
@@ -62,8 +69,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. Decisão produto: desenhar **B2** «next trip while ongoing ETA ≤ 5 min»  
-2. Spike técnico: modelo 2 trips / queued trip / locks / UI (go/no-go) — **sem** implementar ainda  
+1. **Decisão produto B2:** Opção B queued/next vs C hold vs adiar ([`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md))  
+2. Se B ou C escolhido → spike flag OFF (sem ON) — **só após decisão**  
 3. Atribuição real de viaturas / docs reais (pré-requisito gates ON)  
 4. Roadmap PF3D / Partner Fleet  
 5. **Partner Ops UX** tabs (opcional) · **CHORE-LINT-1** (opcional)
@@ -74,6 +81,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| B2-DIAG next-trip | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
 | Availability Caso B PASS | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) |
 | Availability Caso A PASS | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) |
 | PF3D-3A/OFF smoke PASS | [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
