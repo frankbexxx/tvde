@@ -209,6 +209,7 @@ import {
   shouldAcceptRemoteAvailabilityResponse,
   shouldBootstrapDriverActiveTrip,
 } from './driverAvailabilitySync'
+import { driverAcceptComplianceI18nKey } from '../shared/vehicleComplianceGateMessages'
 import { ProfileButton } from '@/design-system/components/app/ProfileButton'
 import { SettingsButton } from '@/design-system/components/app/SettingsButton'
 
@@ -1176,9 +1177,16 @@ export function DriverDashboard() {
           addLog('409: Bloqueio horas de condução ao aceitar', 'error')
           refetchAvailable()
         } else {
-          setToast('Viagem já foi aceite por outro motorista.')
-          addLog('409: Viagem já aceite por outro motorista', 'error')
-          refetchAvailable()
+          const acceptComplianceKey = driverAcceptComplianceI18nKey(e?.detail)
+          if (acceptComplianceKey) {
+            setError(t(acceptComplianceKey))
+            addLog(`409: Compliance viatura (${e.detail})`, 'error')
+            refetchAvailable()
+          } else {
+            setToast('Viagem já foi aceite por outro motorista.')
+            addLog('409: Viagem já aceite por outro motorista', 'error')
+            refetchAvailable()
+          }
         }
       } else {
         const msg = isTimeoutLikeError(err) || e?.status === 0

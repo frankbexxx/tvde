@@ -16,6 +16,7 @@ from app.services.trips import driver_has_active_assigned_trip
 from app.services.vehicle_compliance_gate import (
     evaluate_driver_vehicle_compliance_gate,
 )
+from app.utils.logging import log_event
 
 
 def set_partner_driver_enabled(
@@ -116,6 +117,13 @@ def set_partner_driver_availability(
             )
         gate = evaluate_driver_vehicle_compliance_gate(db, d)
         if not gate.allowed:
+            log_event(
+                "vehicle_compliance_gate_blocked",
+                surface="partner_force_online",
+                partner_id=str(pid),
+                driver_id=str(d.user_id),
+                code=gate.code,
+            )
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=gate.code,

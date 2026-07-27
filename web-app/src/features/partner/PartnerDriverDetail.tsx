@@ -28,6 +28,7 @@ import {
   type DriverDocumentStatus,
   type DriverRequiredDocument,
 } from '../../services/driverDocuments'
+import { partnerForceOnlineComplianceI18nKey } from '../shared/vehicleComplianceGateMessages'
 import { driverIsOnActiveTrip } from './partnerTypes'
 
 const VEHICLE_DOCUMENT_KEYS: DriverRequiredDocument[] = ['inspecao_viatura']
@@ -70,6 +71,7 @@ export function PartnerDriverDetail() {
   const [msgOk, setMsgOk] = useState<string | null>(null)
   const [availabilityFeedback, setAvailabilityFeedback] = useState<string | null>(null)
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
+  const [availabilityVehiclesCta, setAvailabilityVehiclesCta] = useState(false)
   const availabilityFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -179,17 +181,27 @@ export function PartnerDriverDetail() {
     }
   }
 
-  const mapAvailabilityError = (detail: string | undefined): string => {
+  const mapAvailabilityError = (
+    detail: string | undefined
+  ): { message: string; vehiclesCta: boolean } => {
     if (detail === 'driver_has_active_trip') {
-      return t('driverDetail.cannotOnlineActiveTrip')
+      return { message: t('driverDetail.cannotOnlineActiveTrip'), vehiclesCta: false }
     }
-    return typeof detail === 'string' && detail.trim() ? detail : tc('error')
+    const complianceKey = partnerForceOnlineComplianceI18nKey(detail)
+    if (complianceKey) {
+      return { message: t(complianceKey), vehiclesCta: true }
+    }
+    return {
+      message: typeof detail === 'string' && detail.trim() ? detail : tc('error'),
+      vehiclesCta: false,
+    }
   }
 
   const runAvailability = async (online: boolean) => {
     if (!userId) return
     setBusy(online ? 'on' : 'off')
     setAvailabilityError(null)
+    setAvailabilityVehiclesCta(false)
     setAvailabilityFeedback(null)
     try {
       const row = await patchPartnerDriverAvailability(userId, online)
@@ -208,7 +220,9 @@ export function PartnerDriverDetail() {
       }, 3500)
     } catch (e: unknown) {
       const err = e as { detail?: string }
-      setAvailabilityError(mapAvailabilityError(err?.detail))
+      const mapped = mapAvailabilityError(err?.detail)
+      setAvailabilityError(mapped.message)
+      setAvailabilityVehiclesCta(mapped.vehiclesCta)
     } finally {
       setBusy(null)
     }
@@ -701,12 +715,23 @@ export function PartnerDriverDetail() {
             </p>
           ) : null}
           {availabilityError ? (
-            <p
-              className="text-sm text-destructive"
-              data-testid="partner-driver-availability-error"
-            >
-              {availabilityError}
-            </p>
+            <div className="space-y-1" data-testid="partner-driver-availability-error-block">
+              <p
+                className="text-sm text-destructive"
+                data-testid="partner-driver-availability-error"
+              >
+                {availabilityError}
+              </p>
+              {availabilityVehiclesCta ? (
+                <Link
+                  to="/partner"
+                  className="inline-block text-sm font-medium text-primary underline-offset-2 hover:underline"
+                  data-testid="partner-driver-availability-vehicles-cta"
+                >
+                  {t('driverDetail.fixVehiclesCta')}
+                </Link>
+              ) : null}
+            </div>
           ) : null}
           <div className="flex gap-2">
             <button

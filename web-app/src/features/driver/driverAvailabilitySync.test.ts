@@ -300,7 +300,31 @@ describe('formatDriverAvailabilityError', () => {
     expect(msg).toMatch(/condução/i)
   })
 
-  it('outros erros não são ignorados', () => {
+  it('PF3D no_active_vehicle mostra mensagem amigável PT', () => {
+    const msg = formatDriverAvailabilityError({ status: 409, detail: 'no_active_vehicle' })
+    expect(msg).toMatch(/viatura activa/i)
+    expect(msg).not.toContain('no_active_vehicle')
+  })
+
+  it('PF3D vehicle_documents_blocked mostra mensagem amigável PT', () => {
+    const msg = formatDriverAvailabilityError({
+      status: 409,
+      detail: 'vehicle_documents_blocked',
+    })
+    expect(msg).toMatch(/documentos/i)
+    expect(msg).not.toContain('vehicle_documents_blocked')
+  })
+
+  it('PF3D unknown_vehicle_compliance mostra mensagem amigável PT', () => {
+    const msg = formatDriverAvailabilityError({
+      status: 409,
+      detail: 'unknown_vehicle_compliance',
+    })
+    expect(msg).toMatch(/validar/i)
+    expect(msg).not.toContain('unknown_vehicle_compliance')
+  })
+
+  it('outros erros não são ignorados (fallback genérico com detail)', () => {
     const msg = formatDriverAvailabilityError({ status: 500, detail: 'internal_error' })
     expect(msg).toContain('internal_error')
     expect(isDrivingHoursBlockedError({ status: 500, detail: 'internal_error' })).toBe(false)

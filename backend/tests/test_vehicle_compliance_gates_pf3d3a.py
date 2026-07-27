@@ -553,6 +553,47 @@ def test_assert_accept_noop_when_flag_off(monkeypatch: pytest.MonkeyPatch) -> No
     assert_driver_vehicle_compliance_for_accept(MagicMock(), _driver_stub())
 
 
+def test_assert_accept_logs_block_when_flag_on(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "ENABLE_VEHICLE_COMPLIANCE_GATES", True, raising=False)
+    events: list[tuple[str, dict]] = []
+
+    def _capture(event_name: str, **fields: object) -> None:
+        events.append((event_name, fields))
+
+    monkeypatch.setattr(
+        "app.services.vehicle_compliance_gate.log_event",
+        _capture,
+    )
+    monkeypatch.setattr(
+        "app.services.vehicle_compliance_gate.evaluate_driver_vehicle_compliance_gate",
+        lambda *_a, **_k: MagicMock(
+            allowed=False,
+            code=CODE_NO_ACTIVE_VEHICLE,
+        ),
+    )
+    driver = _driver_stub()
+    with pytest.raises(HTTPException) as exc:
+        assert_driver_vehicle_compliance_for_accept(
+            MagicMock(),
+            driver,
+            surface="accept_offer",
+            trip_id="trip-1",
+        )
+    assert exc.value.status_code == 409
+    assert exc.value.detail == CODE_NO_ACTIVE_VEHICLE
+    assert events == [
+        (
+            "vehicle_compliance_gate_blocked",
+            {
+                "surface": "accept_offer",
+                "driver_id": str(driver.user_id),
+                "code": CODE_NO_ACTIVE_VEHICLE,
+                "trip_id": "trip-1",
+            },
+        )
+    ]
+
+
 def test_trips_module_wires_accept_not_start() -> None:
     src = inspect.getsource(trips)
     assert "assert_driver_vehicle_compliance_for_accept" in src
