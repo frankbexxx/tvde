@@ -877,6 +877,22 @@ def accept_offer(
             detail="Driver is not available to accept new trips.",
         )
 
+    # Idempotency: match accept_trip — refuse a second Payment for the same trip
+    # (e.g. after assigned-timeout cleared driver_id from a corrupted assigned row).
+    existing_payment = db.execute(
+        select(Payment).where(Payment.trip_id == trip.id)
+    ).scalar_one_or_none()
+    if existing_payment:
+        logger.warning(
+            "accept_offer: Payment already exists for trip_id=%s, driver_id=%s",
+            trip.id,
+            driver_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Payment already exists for this trip.",
+        )
+
     # Expire other offers for this trip
     for o in (
         db.execute(
@@ -1021,7 +1037,12 @@ def assign_trip(
     db: Session,
     trip_id: str,
 ) -> Trip:
-    trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one_or_none()
+    # Lock the trip before requested→assigned so a concurrent accept_offer
+    # (which also locks the trip) cannot be overwritten by a stale assign:
+    # accepted + payment + driver_id must not become assigned with an orphan PI.
+    trip = db.execute(
+        select(Trip).where(Trip.id == trip_id).with_for_update(of=Trip)
+    ).scalar_one_or_none()
     if not trip:
         _raise_not_found()
     if trip.status == TripStatus.assigned:
