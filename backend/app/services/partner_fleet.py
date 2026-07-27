@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.db.models.driver import Driver
@@ -32,6 +32,14 @@ def set_partner_driver_enabled(
 
     Disable also clears dispatch eligibility and expires outstanding pending
     offers so a stale accept cannot create Payment after partner disable.
+
+    Offer expiry runs in a *second* transaction after the Driver status commit.
+    Mutating offers while still holding Driver FOR UPDATE deadlocks with
+    accept_offer (Offer → Trip → Driver): accept holds the offer row and waits
+    for Driver, while disable holds Driver and waits to UPDATE the offer.
+    PostgreSQL then aborts disable; accept proceeds and creates Payment while
+    the driver remains approved. The approved check under Driver lock is the
+    hard gate; conditional offer expiry is best-effort cleanup afterward.
     """
     pid = uuid.UUID(partner_id)
     # Lock Driver so a concurrent accept cannot pass an approved check and then
@@ -50,26 +58,28 @@ def set_partner_driver_enabled(
         )
     if enabled:
         d.status = DriverStatus.approved
-    else:
-        d.status = DriverStatus.rejected
-        d.is_available = False
-        now = datetime.now(timezone.utc)
-        pending_offers = list(
-            db.execute(
-                select(TripOffer).where(
-                    TripOffer.driver_id == driver_user_id,
-                    TripOffer.status == OfferStatus.pending,
-                )
-            )
-            .scalars()
-            .all()
-        )
-        for offer in pending_offers:
-            offer.status = OfferStatus.expired
-            if offer.expires_at is None or offer.expires_at > now:
-                offer.expires_at = now
+        db.commit()
+        db.refresh(d)
+        return d
+
+    d.status = DriverStatus.rejected
+    d.is_available = False
+    # Commit Driver status *before* touching offers so we never hold Driver and
+    # need an offer row lock in the same transaction as accept_offer.
     db.commit()
     db.refresh(d)
+
+    now = datetime.now(timezone.utc)
+    # WHERE status=pending: never clobber an offer accept already committed.
+    db.execute(
+        update(TripOffer)
+        .where(
+            TripOffer.driver_id == driver_user_id,
+            TripOffer.status == OfferStatus.pending,
+        )
+        .values(status=OfferStatus.expired, expires_at=now)
+    )
+    db.commit()
     return d
 
 

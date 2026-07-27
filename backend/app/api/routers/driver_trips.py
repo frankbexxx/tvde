@@ -8,8 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import UserContext, get_db, require_role
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
-from app.models.enums import OfferStatus
-from app.models.enums import Role
+from app.models.enums import OfferStatus, Role, TripStatus
 from app.schemas.trip import (
     TripAvailableItem,
     TripCancelRequest,
@@ -116,16 +115,20 @@ async def accept_trip(
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
     previous_state = prev.status.value if prev else None
     t0 = time.perf_counter()
-    # If driver has pending offer for this trip, use accept_offer (multi-offer flow)
-    offer = db.execute(
-        select(TripOffer).where(
-            and_(
-                TripOffer.trip_id == tid,
-                TripOffer.driver_id == user.user_id,
-                TripOffer.status == OfferStatus.pending,
+    # Prefer multi-offer accept only while the trip is still requested.
+    # After admin assign (or BETA pool assign), pending offers must not force
+    # accept_offer → 409; fall through to accept_trip for the assigned pool.
+    offer = None
+    if prev is not None and prev.status == TripStatus.requested:
+        offer = db.execute(
+            select(TripOffer).where(
+                and_(
+                    TripOffer.trip_id == tid,
+                    TripOffer.driver_id == user.user_id,
+                    TripOffer.status == OfferStatus.pending,
+                )
             )
-        )
-    ).scalar_one_or_none()
+        ).scalar_one_or_none()
     if offer:
         trip, client_secret = accept_offer_service(
             db=db,
