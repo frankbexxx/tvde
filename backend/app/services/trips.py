@@ -714,6 +714,13 @@ def accept_trip(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
+    # Match list_available_trips / dispatch: partner-disabled (rejected) drivers
+    # must not bind a trip or create a Payment from a stale offer/assigned card.
+    if driver.status != DriverStatus.approved:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="forbidden",
+        )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     assert_driver_vehicle_compliance_for_accept(db, driver)
     _assert_driver_matches_trip_category(driver, trip)
@@ -868,6 +875,13 @@ def accept_offer(
     ).scalar_one_or_none()
     if not driver:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+    # Match list_available_trips / dispatch: partner-disabled (rejected) drivers
+    # must not bind a trip or create a Payment from a stale outstanding offer.
+    if driver.status != DriverStatus.approved:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="forbidden",
+        )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     assert_driver_vehicle_compliance_for_accept(db, driver)
     _assert_driver_matches_trip_category(driver, trip)
