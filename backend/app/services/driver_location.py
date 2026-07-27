@@ -225,32 +225,47 @@ def upsert_driver_location(
         q = (
             select(Trip)
             .where(Trip.status == TripStatus.requested)
+            .where(Trip.driver_id.is_(None))
             .order_by(Trip.created_at.asc())
+            .limit(1)
+            .with_for_update(of=Trip)
         )
         if ids_with_live_offers:
             q = q.where(Trip.id.notin_(ids_with_live_offers))
         trip = db.execute(q).scalars().first()
         if trip is not None:
-            previous_status = trip.status
-            validate_trip_transition(
-                previous_status, TripStatus.assigned, trip_id=str(trip.id)
-            )
-            trip.status = TripStatus.assigned
-            log_event(
-                "trip_auto_dispatched",
-                trip_id=trip.id,
-                driver_id=driver_id,
-            )
-            logger.info(
-                "upsert_driver_location: auto-dispatch trip",
-                extra={
-                    "trip_id": str(trip.id),
-                    "previous_status": previous_status.value,
-                    "new_status": trip.status.value,
-                    "driver_id": str(driver_id),
-                    "beta_mode": beta_mode,
-                },
-            )
+            # Re-check under the row lock: a concurrent accept_offer may have
+            # already bound this trip (payment + accepted) while we waited.
+            if trip.status != TripStatus.requested or trip.driver_id is not None:
+                logger.info(
+                    "upsert_driver_location: skip auto-dispatch; trip no longer free",
+                    extra={
+                        "trip_id": str(trip.id),
+                        "status": trip.status.value if trip.status else None,
+                        "driver_id": str(trip.driver_id) if trip.driver_id else None,
+                    },
+                )
+            else:
+                previous_status = trip.status
+                validate_trip_transition(
+                    previous_status, TripStatus.assigned, trip_id=str(trip.id)
+                )
+                trip.status = TripStatus.assigned
+                log_event(
+                    "trip_auto_dispatched",
+                    trip_id=trip.id,
+                    driver_id=driver_id,
+                )
+                logger.info(
+                    "upsert_driver_location: auto-dispatch trip",
+                    extra={
+                        "trip_id": str(trip.id),
+                        "previous_status": previous_status.value,
+                        "new_status": trip.status.value,
+                        "driver_id": str(driver_id),
+                        "beta_mode": beta_mode,
+                    },
+                )
         else:
             logger.info(
                 "upsert_driver_location: no requested trips to assign",
