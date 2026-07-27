@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import queue
+import threading
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -276,3 +279,128 @@ def test_accept_trip_rejects_partner_disabled_driver(
         assert trip.driver_id is None
     finally:
         db.close()
+
+
+def test_partner_disable_does_not_deadlock_with_concurrent_accept_offer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Disable must not mutate offers while holding Driver FOR UPDATE.
+
+    Concrete trigger: accept_offer locks Offer→Trip then waits for Driver;
+    disable locks Driver then UPDATEs the same offer → PostgreSQL deadlock.
+    Victim is often disable: accept creates Payment while driver stays approved.
+    """
+    monkeypatch.setattr(settings, "STRIPE_MOCK", True, raising=False)
+    partner_id, driver_id, offer_id = _seed_approved_driver_with_pending_offer()
+
+    accept_has_trip_lock = threading.Event()
+    disable_has_driver_lock = threading.Event()
+    outcomes: queue.Queue[tuple[str, object]] = queue.Queue()
+
+    def run_accept() -> None:
+        thread_db = SessionLocal()
+        real_execute = thread_db.execute
+        stage = {"seen_offer": False, "paused": False}
+
+        def wrapped_execute(statement, *args, **kwargs):  # type: ignore[no-untyped-def]
+            result = real_execute(statement, *args, **kwargs)
+            sql = str(statement)
+            if "trip_offers" in sql.lower() and "FOR UPDATE" in sql.upper():
+                stage["seen_offer"] = True
+            if (
+                stage["seen_offer"]
+                and not stage["paused"]
+                and "trips" in sql.lower()
+                and "FOR UPDATE" in sql.upper()
+                and "trip_offers" not in sql.lower()
+            ):
+                stage["paused"] = True
+                accept_has_trip_lock.set()
+                assert disable_has_driver_lock.wait(timeout=5)
+                # Let disable reach its post-Driver work while we still hold Offer.
+                time.sleep(0.25)
+            return result
+
+        thread_db.execute = wrapped_execute  # type: ignore[method-assign]
+        try:
+            with pytest.raises(HTTPException) as exc_info:
+                trips.accept_offer(
+                    db=thread_db,
+                    driver_id=str(driver_id),
+                    offer_id=str(offer_id),
+                )
+            outcomes.put(("accept_status", exc_info.value.status_code))
+            outcomes.put(("accept_detail", exc_info.value.detail))
+        except BaseException as exc:
+            outcomes.put(("accept_error", exc))
+        finally:
+            thread_db.close()
+
+    def run_disable() -> None:
+        thread_db = SessionLocal()
+        real_execute = thread_db.execute
+        signaled = {"done": False}
+
+        def wrapped_execute(statement, *args, **kwargs):  # type: ignore[no-untyped-def]
+            result = real_execute(statement, *args, **kwargs)
+            sql = str(statement)
+            if (
+                not signaled["done"]
+                and "drivers" in sql.lower()
+                and "FOR UPDATE" in sql.upper()
+            ):
+                signaled["done"] = True
+                disable_has_driver_lock.set()
+            return result
+
+        thread_db.execute = wrapped_execute  # type: ignore[method-assign]
+        try:
+            assert accept_has_trip_lock.wait(timeout=5)
+            partner_fleet.set_partner_driver_enabled(
+                thread_db,
+                partner_id=str(partner_id),
+                driver_user_id=driver_id,
+                enabled=False,
+            )
+            outcomes.put(("disable", "ok"))
+        except BaseException as exc:
+            outcomes.put(("disable_error", exc))
+        finally:
+            thread_db.close()
+
+    accept_thread = threading.Thread(target=run_accept)
+    disable_thread = threading.Thread(target=run_disable)
+    accept_thread.start()
+    assert accept_has_trip_lock.wait(timeout=5)
+    disable_thread.start()
+    accept_thread.join(timeout=15)
+    disable_thread.join(timeout=15)
+    assert not accept_thread.is_alive()
+    assert not disable_thread.is_alive()
+
+    results = dict(outcomes.get_nowait() for _ in range(outcomes.qsize()))
+    assert "disable_error" not in results, results
+    assert "accept_error" not in results, results
+    assert results.get("disable") == "ok"
+    # Accept may see expired offer (409) or rejected driver (403); never Payment.
+    assert results.get("accept_status") in {403, 409}
+
+    verify_db = SessionLocal()
+    try:
+        driver = verify_db.get(Driver, driver_id)
+        offer = verify_db.get(TripOffer, offer_id)
+        assert driver is not None
+        assert driver.status == DriverStatus.rejected
+        assert driver.is_available is False
+        assert offer is not None
+        assert offer.status == OfferStatus.expired
+        payment = verify_db.execute(
+            select(Payment).where(Payment.trip_id == offer.trip_id)
+        ).scalar_one_or_none()
+        assert payment is None
+        trip = verify_db.get(Trip, offer.trip_id)
+        assert trip is not None
+        assert trip.status == TripStatus.requested
+        assert trip.driver_id is None
+    finally:
+        verify_db.close()
