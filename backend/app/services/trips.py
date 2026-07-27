@@ -1054,6 +1054,20 @@ def assign_trip(
 
     validate_trip_transition(trip.status, TripStatus.assigned, trip_id=str(trip.id))
     old_status = trip.status
+    # Expire live pending offers so /driver/trips/{id}/accept does not prefer
+    # accept_offer (requires requested) and 409 after this assigned transition.
+    pending_offers = list(
+        db.execute(
+            select(TripOffer).where(
+                TripOffer.trip_id == trip.id,
+                TripOffer.status == OfferStatus.pending,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for o in pending_offers:
+        o.status = OfferStatus.expired
     trip.status = TripStatus.assigned
     db.commit()
     db.refresh(trip)
