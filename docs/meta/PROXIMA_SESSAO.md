@@ -8,32 +8,40 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-27** — B2-DIAG + Availability Guard A+B)
+## Contexto actual (**2026-07-27** — PF3D-3B DIAG + B2 espera + Guard A+B)
 
 ### Availability Guard (regra actual)
 
 | Doc | Estado |
 |-----|--------|
-| [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | **Caso A PASS** — Partner force-online/offline → Driver app aberta sem refresh |
-| [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | **Caso B PASS** — Partner force-online bloqueado com trip activa |
+| [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | **Caso A PASS** |
+| [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | **Caso B PASS** |
 
 ### B2 — next trip while ongoing
 
 | Doc | Estado |
 |-----|--------|
-| [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | **B2-DIAG concluído** — sistema actual **não** suporta chain com segurança |
+| [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | **DIAG concluído** — **em espera** (resposta Manel: B/C/adiar) |
+
+### PF3D
+
+| Doc | Estado |
+|-----|--------|
+| [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) | **3B DIAG** — mensagens/observabilidade antes de ON |
+| [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) | Smoke OFF **PASS** |
+| [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | Matriz / fases |
 
 | Item | Estado |
 |------|--------|
-| **`main`** | ≥ `aa63330` (#480 + smokes A/B docs) |
-| **Availability Guard actual** | **PASS** (Caso A + Caso B) — mantém-se |
-| **#480** | **Merged** — lock `assign_trip` / BETA auto-dispatch / payment guard `accept_offer` |
-| **B2 implementação** | **Não** — aguarda decisão produto |
-| **Decisão pendente** | Opção **B** queued/next vs **C** hold/intenção vs **adiar** |
-| **PF3D gates** | OFF; não activados |
+| **`main`** | ≥ `ac2540f` |
+| **Availability Guard** | **PASS** (A+B) |
+| **B2 implementação** | **Não** — espera Manel |
+| **PF3D gates** | OFF |
+| **PF3D-3B** | DIAG feito; implementação mínima **antes** de qualquer ON |
+| **PF3D-3 ON** | Bloqueado — atribuição real + 3B recomendado antes |
 | **Render env / DB / migrations** | Intactos nesta documentação |
 
-**Frase de fecho:** B2-DIAG concluído. Não implementar B2 antes de decisão produto (B vs C vs adiar). Availability Guard A+B continua a regra actual.
+**Frase de fecho:** PF3D-3B DIAG registado. Gates OFF. B2 em espera. Não activar PF3D sem atribuição real + mensagens 3B.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -45,18 +53,18 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / doc | O quê |
 |----------|-------|
+| PF3D-3B DIAG | [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | B2-DIAG | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
-| **#480** | Lock `assign_trip` vs accept + payment guard `accept_offer` |
-| Smoke Caso B | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) |
-| Smoke Caso A | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) |
-| **#477…#469** | Sync availability + locks lifecycle |
+| **#480** | Lock `assign_trip` vs accept + payment guard |
+| Smoke Caso B / A | Availability Guard PASS |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
-| **AVAIL-B2-NEXT-TRIP** | **DIAG feito** — decisão produto B/C/adiar; **sem** spike/código até decisão |
-| **PF3D-3 ON** | Só após atribuição real + docs reais; nunca global ainda |
+| **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
+| **PF3D-3B** | DIAG feito — i18n/CTA/logs **antes** de ON |
+| **PF3D-3 ON** | Só após atribuição real + docs reais (+ preferir 3B) |
 | **PF3B-UX-DRIVER-DETAIL** | Tabs / scroll Partner Detail — debt |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
 | **OPS-UX-POLISH** | Mobile / densidades — não blocker |
@@ -69,10 +77,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Decisão produto B2:** Opção B queued/next vs C hold vs adiar ([`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md))  
-2. Se B ou C escolhido → spike flag OFF (sem ON) — **só após decisão**  
-3. Atribuição real de viaturas / docs reais (pré-requisito gates ON)  
-4. Roadmap PF3D / Partner Fleet  
+1. **Espera Manel B2** (B/C/adiar) — sem implementação  
+2. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
+3. **PF3D-3B** implementação mínima (mensagens) — **sem** activar flag  
+4. Roadmap PF3D ON controlado (só após 2+3)  
 5. **Partner Ops UX** tabs (opcional) · **CHORE-LINT-1** (opcional)
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
@@ -81,6 +89,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| PF3D-3B DIAG mensagens | [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | B2-DIAG next-trip | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
 | Availability Caso B PASS | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) |
 | Availability Caso A PASS | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) |
