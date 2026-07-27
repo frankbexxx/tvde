@@ -2,7 +2,7 @@
 
 **Estado:** **PASS** — Caso A (sem viagem activa)  
 **`main` / `origin/main`:** ≥ `ea4678a` (merge [#477](https://github.com/frankbexxx/tvde/pull/477))  
-**Caso B (viagem activa):** **não** executado nesta sessão — próxima sessão  
+**Caso B (viagem activa):** **PASS** — [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](./AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md)
 
 ---
@@ -83,26 +83,23 @@ Esta sessão fechou:
 | Poll/focus + epoch/seq evitam GET stale | PASS (código + CI; smoke visual coerente) |
 | Force-online/offline operacionalmente efectivo fim-a-fim | PASS |
 
-**Frase de fecho:** Availability sync Caso A fechado com PASS. Caso B fica para próxima sessão.
+**Frase de fecho:** Availability sync Caso A fechado com PASS. Caso B (active trip guard) documentado em [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](./AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) — **PASS**.
 
 ---
 
-## 6. Fora de scope / não feito hoje
+## 6. Fora de scope / não feito neste doc (Caso A)
 
-- Caso B manual (viagem activa → Partner Colocar online → 409 amigável + Offline)  
 - Activar `ENABLE_VEHICLE_COMPLIANCE_GATES`  
 - Alterações env/prod · DB · migrations · workflows  
 - Mais UX/redesign Partner Driver Detail (tabs / scroll — debt PF3B-UX-DRIVER-DETAIL)  
+- Next-trip while ongoing / ETA ≤ 5 min (feature futura B2)  
 
 ---
 
 ## 7. Próximos passos
 
-1. **Caso B manual**  
-   - Pax cria viagem → Driver aceita  
-   - Partner → detalhe desse motorista → «Colocar online»  
-   - Esperado: erro local amigável (`driver_has_active_trip`); Estado actual Offline; Driver não fica disponível  
-2. Se Caso B **PASS** → documentar Availability Guard Smoke final (A+B)  
+1. ~~Caso B manual~~ → **PASS** ([`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](./AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md))  
+2. Decisão produto: desenhar B2 «next trip while ongoing ETA ≤ 5 min» — spike 2 trips / queued / locks / UI **antes** de implementar  
 3. Depois: roadmap PF3D / Partner Fleet (atribuição real, gates ON controlado, etc.)  
 
 ---
