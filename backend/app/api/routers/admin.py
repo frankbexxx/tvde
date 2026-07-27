@@ -56,6 +56,7 @@ from app.services.trips import (
     admin_apply_trip_transition,
     assign_trip,
     cancel_trip_by_admin,
+    driver_has_active_assigned_trip,
     get_trip_by_id,
 )
 from app.services.cleanup import run_cleanup
@@ -632,12 +633,20 @@ async def promote_user_to_driver(
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
+    # Lock Driver before any availability write so a concurrent accept cannot
+    # commit is_available=False + live trip and then lose to a stale promote
+    # UPDATE that restores dispatch mid-trip (same TOCTOU class as recover).
     existing = db.execute(
-        select(Driver).where(Driver.user_id == u.id)
+        select(Driver)
+        .where(Driver.user_id == u.id)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if existing:
         u.role = Role.driver
-        existing.is_available = True
+        # Never force online over an accepted/arriving/ongoing trip — that
+        # re-opens offer accept and enables a second live PaymentIntent.
+        if not driver_has_active_assigned_trip(db=db, driver_user_id=str(u.id)):
+            existing.is_available = True
         record_admin_action(
             db,
             actor_user_id=admin_ctx.user_id,
@@ -695,8 +704,13 @@ async def demote_user_from_driver(
         raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
+    # Lock Driver before the active-trip check/delete. Trip.driver_id is
+    # ON DELETE SET NULL — demoting during/after a concurrent accept would
+    # wipe driver_id from an accepted trip and leave an orphan PaymentIntent.
     driver = db.execute(
-        select(Driver).where(Driver.user_id == u.id)
+        select(Driver)
+        .where(Driver.user_id == u.id)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if not driver:
         u.role = Role.passenger
@@ -713,20 +727,8 @@ async def demote_user_from_driver(
         )
         db.commit()
         return {"status": "ok", "message": "Already passenger"}
-    from app.models.enums import TripStatus
 
-    has_active = (
-        db.execute(
-            select(Trip).where(
-                Trip.driver_id == u.id,
-                Trip.status.in_(
-                    [TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing]
-                ),
-            )
-        ).first()
-        is not None
-    )
-    if has_active:
+    if driver_has_active_assigned_trip(db=db, driver_user_id=str(u.id)):
         raise HTTPException(status_code=409, detail="driver_has_active_trip")
     db.delete(driver)
     u.role = Role.passenger
@@ -846,10 +848,17 @@ async def delete_user(
             status_code=409,
             detail="cannot_delete_user_with_trips",
         )
+    # Lock Driver before delete. trips.driver_id ON DELETE SET NULL would
+    # detach a live accepted/arriving/ongoing trip from its driver while
+    # leaving status + Payment(processing) intact.
     driver = db.execute(
-        select(Driver).where(Driver.user_id == u.id)
+        select(Driver)
+        .where(Driver.user_id == u.id)
+        .with_for_update(of=Driver)
     ).scalar_one_or_none()
     if driver:
+        if driver_has_active_assigned_trip(db=db, driver_user_id=str(u.id)):
+            raise HTTPException(status_code=409, detail="driver_has_active_trip")
         db.delete(driver)
     record_admin_action(
         db,
