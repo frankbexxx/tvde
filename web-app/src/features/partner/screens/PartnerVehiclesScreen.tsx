@@ -11,6 +11,7 @@ import {
   type PartnerDriverRow,
   type PartnerVehicleRow,
 } from '../../../api/partner'
+import { EmptyState } from '../../../components/feedback/EmptyState'
 import { PARTNER_SECTION_TITLE } from '../../../components/layout/infoBoxTemplate'
 import {
   DRIVER_VEHICLE_CATEGORIES,
@@ -328,9 +329,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
       {loading ? <p className="text-muted-foreground">{t('vehicles.loading')}</p> : null}
 
       {!loading && vehicles.length === 0 ? (
-        <p className="text-sm text-muted-foreground" data-testid="partner-vehicles-empty">
-          {t('vehicles.empty')}
-        </p>
+        <EmptyState title={t('vehicles.empty')} testId="partner-vehicles-empty" />
       ) : null}
 
       <ul className="space-y-2">
