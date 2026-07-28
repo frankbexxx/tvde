@@ -13,6 +13,7 @@ import {
   type PartnerVehicleDocumentStoredStatus,
   type PartnerVehicleDocumentType,
 } from '../../../api/partner'
+import { ErrorBanner } from '../../../components/feedback/ErrorBanner'
 import { triggerBlobDownload } from '../triggerBlobDownload'
 import {
   VEHICLE_DOC_ACCEPT,
@@ -299,13 +300,11 @@ export function PartnerVehicleDocumentsPanel({ vehicleId }: PartnerVehicleDocume
       <p className="text-xs font-semibold text-foreground">{t('vehicles.documents.title')}</p>
 
       {error ? (
-        <p
-          className="text-xs text-destructive"
+        <ErrorBanner
+          message={error}
           role="alert"
-          data-testid="partner-vehicle-docs-error"
-        >
-          {error}
-        </p>
+          testId="partner-vehicle-docs-error"
+        />
       ) : null}
       {success && !error ? (
         <p

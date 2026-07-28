@@ -12,6 +12,7 @@ import {
   type PartnerVehicleRow,
 } from '../../../api/partner'
 import { EmptyState } from '../../../components/feedback/EmptyState'
+import { ErrorBanner } from '../../../components/feedback/ErrorBanner'
 import { PARTNER_SECTION_TITLE } from '../../../components/layout/infoBoxTemplate'
 import {
   DRIVER_VEHICLE_CATEGORIES,
@@ -297,9 +298,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
       </div>
 
       {error ? (
-        <p className="text-sm text-destructive" role="alert" data-testid="partner-vehicles-error">
-          {error}
-        </p>
+        <ErrorBanner message={error} role="alert" testId="partner-vehicles-error" />
       ) : null}
       {success && !error ? (
         <p className="text-sm text-success" role="status" data-testid="partner-vehicles-success">
