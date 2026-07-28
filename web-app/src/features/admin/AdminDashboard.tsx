@@ -15,7 +15,12 @@ import {
   DRIVER_DOC_STATUSES,
   OPS_STUCK_PAYMENTS_PAGE_SIZE,
 } from './adminConstants'
-import { type AdminDashboardTab } from './adminDashboardQuery'
+import {
+  ADMIN_NAV_GROUPS,
+  defaultTabForGroup,
+  groupForTab,
+  tabsForGroup,
+} from './adminNavGroups'
 import { useAdminDashboardNavigation } from './useAdminDashboardNavigation'
 import { useAdminTripLists } from './useAdminTripLists'
 import { useAdminTripDetailActions } from './useAdminTripDetailActions'
@@ -63,29 +68,28 @@ interface PendingUser {
   requested_role: string
 }
 
-type Tab = AdminDashboardTab
-const TAB_IDS: Tab[] = [
-  'agora',
-  'docs',
-  'pending',
-  'users',
-  'frota',
-  'dados',
-  'trips',
-  'metrics',
-  'ops',
-  'health',
-]
-
 export function AdminDashboard() {
   const { t } = useTranslation('admin')
   const { token } = useAuth()
   const isSuperAdminSession = sessionJwtIsSuperAdmin(token)
   const { tab, tripsListMode, selectedTripId, syncAdminUrl, selectTripsListMode } =
     useAdminDashboardNavigation()
-  const tabs = useMemo(
-    () => TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) })),
-    [t]
+  const activeGroup = groupForTab(tab)
+  const tabs = useMemo(() => {
+    const visibleIds = tabsForGroup(activeGroup)
+    return visibleIds.map((id) => ({ id, label: t(`tabs.${id}`) }))
+  }, [activeGroup, t])
+
+  const selectGroup = useCallback(
+    (groupId: (typeof ADMIN_NAV_GROUPS)[number]['id']) => {
+      const nextTab = defaultTabForGroup(groupId)
+      if (nextTab === 'trips') {
+        syncAdminUrl({ tab: 'trips', tripId: selectedTripId, tripsList: tripsListMode })
+        return
+      }
+      syncAdminUrl({ tab: nextTab, tripId: null })
+    },
+    [selectedTripId, syncAdminUrl, tripsListMode]
   )
   const { activeTrips, historyTrips, historyTripsError, fetchActiveTrips, fetchHistoryTrips } =
     useAdminTripLists(token)
@@ -735,6 +739,28 @@ export function AdminDashboard() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
+      <nav
+        className="flex flex-wrap gap-2 mb-2 pb-1"
+        aria-label={t('groupsAria')}
+      >
+        {ADMIN_NAV_GROUPS.map((group) => {
+          const selected = activeGroup === group.id
+          return (
+            <button
+              key={group.id}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => selectGroup(group.id)}
+              className={`px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${selected
+                ? 'bg-foreground text-background shadow-sm'
+                : 'bg-muted/60 border border-border text-foreground/80 hover:bg-muted'
+                }`}
+            >
+              {t(`groups.${group.id}`)}
+            </button>
+          )
+        })}
+      </nav>
       <nav
         className="flex flex-wrap gap-2 mb-4 pb-1"
         role="tablist"
