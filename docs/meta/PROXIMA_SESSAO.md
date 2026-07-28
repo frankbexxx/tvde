@@ -8,13 +8,15 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-28** — NAV-0 contrato navegação + B2 espera + PF3D OFF)
+## Contexto actual (**2026-07-28** — NAV-3A Admin IA + NAV-2 feedback + B2 espera + PF3D OFF)
 
 ### NAV / UX
 
 | Doc | Estado |
 |-----|--------|
-| [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) | **NAV-0 PASS** — contrato 4 apps (docs-only) |
+| [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) | **NAV-3A PASS** — IA Admin / contrato query (docs-only) |
+| [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) | **NAV-0 PASS** — contrato 4 apps |
+| EmptyState / ErrorBanner | **NAV-2A/B/C** em main (#491–#493) |
 
 ### Availability Guard (regra actual)
 
@@ -40,17 +42,20 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 | Item | Estado |
 |------|--------|
-| **`main`** | ≥ `8aad43a` |
+| **`main`** | ≥ `fe6bbe5` |
 | **Availability Guard** | **PASS** (A+B) |
 | **B2 implementação** | **Não** — espera Manel |
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
 | **NAV-0** | Contrato 4 apps documentado |
-| **NAV-1** | Próxima fase UX sugerida (labels/i18n) |
+| **NAV-1** | Labels/i18n 4 apps (#490) |
+| **NAV-2** | EmptyState / ErrorBanner Partner (#491–#493) |
+| **NAV-3A** | IA Admin documentada |
+| **NAV-3B** | Próximo recomendado — i18n mínimo Admin |
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação |
 
-**Frase de fecho:** NAV-0 registado. Gates OFF. B2 em espera. Próximo carril UX sugerido: NAV-1 labels/i18n (sem refactor).
+**Frase de fecho:** NAV-3A registado. Próximo: NAV-3B i18n Admin. Gates OFF. B2 em espera. Sem rewrite Admin.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -62,25 +67,26 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / doc | O quê |
 |----------|-------|
-| NAV-0 | [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
-| **#488** | tsconfig `baseUrl` + relatório histórico Jul |
+| NAV-3A | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
+| **#493** / **#492** / **#491** | NAV-2C/B/A EmptyState + ErrorBanner Partner |
+| **#490** | NAV-1 labels/i18n |
+| **#489** | NAV-0 contrato 4 apps |
 | **#486** + smoke 3B/OFF | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
-| **#485** / **#484** | Deadlock disable/accept · Admin promote/demote/assign offers |
 | B2-DIAG | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
-| Smoke Caso B / A | Availability Guard PASS |
 
 ### Em pausa / monitorizar
 
 | ID | Notas |
 |----|-------|
 | **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
-| **NAV-1** | Labels/i18n 4 apps — após merge NAV-0 |
+| **NAV-3B** | i18n mínimo Admin (`admin.json` + tabs) — após NAV-3A |
+| **NAV-3C** | Agrupamento visual Admin — só após NAV-3B; **sem** mudar `?tab=` |
 | **PF3D-3B/ON** | Smoke ON controlado — opcional; **não** activar em prod global |
 | **PF3D-3 ON** | Só após atribuição real + docs reais |
 | **PF3B-UX-DRIVER-DETAIL** | Tabs / scroll Partner Detail — debt |
 | **PF3B-UX-FOLLOWUP** | Lista → detalhe documentos |
 | **OPS-UX-POLISH** | Mobile / densidades — não blocker |
-| **ADMIN-OPS-UX** | Acompanhar / refresh Admin · alinhar com NAV-3 |
+| **ADMIN-OPS-UX** | Alinhar com NAV-3 (sem rewrite) |
 | **CHORE-LINT-1** | Ruff 0.16 — baixa prioridade |
 | **R-E2E-1** | Flake intermitente (ex. nav Maps) — monitorizar |
 | **O-STRIPE-LIVE** | Futuro |
@@ -90,10 +96,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 ### O que fazer a seguir (ordem — 1 carril)
 
 1. **Espera Manel B2** (B/C/adiar) — sem implementação  
-2. **NAV-1** labels/i18n (após NAV-0 em main) — opcional paralelo a espera B2  
+2. **NAV-3B** i18n mínimo Admin (após NAV-3A em main) — opcional paralelo a espera B2  
 3. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
 4. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
-5. Roadmap PF3D ON controlado (só após 3) · **NAV-2/3** se produto pedir
+5. **NAV-3C** agrupamento visual Admin (só após 2; sem handlers/query) · roadmap PF3D ON (só após 3)
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
@@ -101,6 +107,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
 | NAV-0 contrato 4 apps | [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 | PF3D-3B/OFF smoke PASS | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
 | PF3D-3B DIAG mensagens | [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |

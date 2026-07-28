@@ -62,6 +62,7 @@
 
 | Ficheiro | Propósito |
 | -------- | --------- |
+| [AUDIT_ADMIN_NAV_IA_2026-07-28.md](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) | NAV-3A — Admin IA / navegação / contrato query |
 | [AUDIT_NAV_4APPS_2026-07-28.md](../ux/AUDIT_NAV_4APPS_2026-07-28.md) | NAV-0 — contrato navegação 4 apps (audit 2026-07-28) |
 | [navigation-inventory.md](../ux/navigation-inventory.md) | Inventário navegação 4 apps |
 | [ambiance-chrome-contract.md](../ux/ambiance-chrome-contract.md) | Contrato ambiance/chrome |
