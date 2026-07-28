@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PARTNER_TRIPS_CSV_COLUMNS, type PartnerDriverRow, type PartnerTripRow } from '../../../api/partner'
+import { EmptyState } from '../../../components/feedback/EmptyState'
 import { PartnerListSearch } from '../components/PartnerListSearch'
 import { filterChipClass, TRIP_FILTER_HINT, type TripFilter } from '../partnerTypes'
 
@@ -133,7 +134,7 @@ export function PartnerTripsSection({
         ))}
       </ul>
       {!loading && filteredTrips.length === 0 && (
-        <p className="text-sm text-muted-foreground">{t('trips.emptyFilter')}</p>
+        <EmptyState title={t('trips.emptyFilter')} />
       )}
     </div>
   )
