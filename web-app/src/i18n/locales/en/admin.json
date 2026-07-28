@@ -1,5 +1,13 @@
 {
   "navAria": "Admin panel sections",
+  "groupsAria": "Admin panel areas",
+  "groups": {
+    "agora": "Now",
+    "trips": "Trips",
+    "people": "People",
+    "fleet": "Fleet",
+    "system": "System"
+  },
   "tabs": {
     "agora": "Now",
     "docs": "Documents",

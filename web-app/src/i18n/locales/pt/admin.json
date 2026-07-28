@@ -1,5 +1,13 @@
 {
   "navAria": "Secções do painel admin",
+  "groupsAria": "Áreas do painel admin",
+  "groups": {
+    "agora": "Agora",
+    "trips": "Viagens",
+    "people": "Pessoas",
+    "fleet": "Frota",
+    "system": "Sistema"
+  },
   "tabs": {
     "agora": "Agora",
     "docs": "Documentos",
