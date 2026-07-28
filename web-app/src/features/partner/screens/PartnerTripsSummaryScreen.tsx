@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { PartnerTripRow } from '../../../api/partner'
+import { EmptyState } from '../../../components/feedback/EmptyState'
 
 type PartnerTripsSummaryScreenProps = {
   tripStats: {
@@ -48,7 +49,7 @@ export function PartnerTripsSummaryScreen({ tripStats, recentTrips }: PartnerTri
           </ul>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">Sem viagens carregadas.</p>
+        <EmptyState title="Sem viagens carregadas." />
       )}
     </div>
   )

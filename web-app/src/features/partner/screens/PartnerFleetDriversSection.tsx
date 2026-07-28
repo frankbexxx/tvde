@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PartnerDriverRow } from '../../../api/partner'
+import { EmptyState } from '../../../components/feedback/EmptyState'
 import {
   driverIsOnActiveTrip,
   filterChipClass,
@@ -108,7 +109,7 @@ export function PartnerFleetDriversSection({
         })}
       </ul>
       {!loading && filteredDrivers.length === 0 && (
-        <p className="text-sm text-muted-foreground">Sem motoristas neste filtro.</p>
+        <EmptyState title="Sem motoristas neste filtro." />
       )}
     </div>
   )

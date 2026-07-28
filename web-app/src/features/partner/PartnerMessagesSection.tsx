@@ -10,6 +10,7 @@ import {
   type PartnerInboxMessageRow,
 } from '../../api/partner'
 import { ErrorBanner } from '../../components/feedback/ErrorBanner'
+import { EmptyState } from '../../components/feedback/EmptyState'
 
 type PartnerMessagesSectionProps = {
   fullWidth?: boolean
@@ -157,7 +158,7 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
       ) : error ? (
         <ErrorBanner message={error} />
       ) : inbox.length === 0 ? (
-        <p className="text-xs text-muted-foreground">{t('messages.empty')}</p>
+        <EmptyState title={t('messages.empty')} />
       ) : (
         <>
           <ul className={`space-y-2 overflow-y-auto ${listMaxH}`}>
