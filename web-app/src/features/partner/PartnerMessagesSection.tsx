@@ -9,6 +9,7 @@ import {
   postPartnerMessage,
   type PartnerInboxMessageRow,
 } from '../../api/partner'
+import { ErrorBanner } from '../../components/feedback/ErrorBanner'
 
 type PartnerMessagesSectionProps = {
   fullWidth?: boolean
@@ -154,7 +155,7 @@ export function PartnerMessagesSection({ fullWidth = false, onUnreadChange }: Pa
       {isLoading && inbox.length === 0 ? (
         <p className="text-xs text-muted-foreground">{t('messages.loading')}</p>
       ) : error ? (
-        <p className="text-xs text-destructive">{error}</p>
+        <ErrorBanner message={error} />
       ) : inbox.length === 0 ? (
         <p className="text-xs text-muted-foreground">{t('messages.empty')}</p>
       ) : (

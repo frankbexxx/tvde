@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ErrorBanner } from '../../components/feedback/ErrorBanner'
 import { PartnerAlertsPanel } from './PartnerAlertsPanel'
 import { buildPartnerAlerts } from './partnerAlerts'
 import { buildPartnerVehicleDocumentAlert } from './partnerVehicleDocumentAlerts'
@@ -34,7 +35,7 @@ export function PartnerHome() {
         </div>
 
         {loading && <p className="text-sm text-muted-foreground">{t('common:loading')}</p>}
-        {error && !menuOpen ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error && !menuOpen ? <ErrorBanner message={error} /> : null}
 
         <PartnerHomeDashboard metrics={metrics} trips={trips} onRefresh={() => void load()} />
       </div>

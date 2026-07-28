@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { ErrorBanner } from '../../../components/feedback/ErrorBanner'
 import type { PartnerCsvExportUi } from '../partnerCsvExport'
 
 type PartnerTripsExportScreenProps = {
@@ -35,9 +36,11 @@ export function PartnerTripsExportScreen({
         </p>
       )}
       {exportError ? (
-        <p className="text-sm text-destructive" data-testid="partner-trips-export-csv-error" role="alert">
-          {exportError}
-        </p>
+        <ErrorBanner
+          message={exportError}
+          testId="partner-trips-export-csv-error"
+          role="alert"
+        />
       ) : null}
       {exportSuccess && !exportError ? (
         <p className="text-sm text-success" data-testid="partner-trips-export-csv-success" role="status">
