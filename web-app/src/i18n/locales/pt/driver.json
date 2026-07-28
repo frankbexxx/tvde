@@ -231,7 +231,7 @@
       "extensionReasonLabel": "Pedir mais tempo (bloqueio, fila, etc.)",
       "extensionReasonPlaceholder": "Ex.: Acidente na A5; preciso de mais 15 min para chegar.",
       "extensionRequestBtn": "Pedir mais tempo ao partner",
-      "extensionGranted": "Partner concedeu +{{minutes}} min ao prazo de entrada.",
+      "extensionGranted": "O parceiro concedeu +{{minutes}} min ao prazo de entrada.",
       "targetZoneLabel": "Zona-alvo · catálogo v1 (também podes escrever à mão se o catálogo falhar)",
       "zoneIdPlaceholder": "Escreve ID manual (ex.: lisboa-norte)",
       "saveCustom": "Guardar zona custom",

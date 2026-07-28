@@ -224,6 +224,15 @@
     "reassignUnavailable": "Reassignment unavailable — trip has moved past «assigned» (current status: {{status}})."
   },
   "trips": {
+    "hubTitle": "Trips",
+    "hub": {
+      "summaryTitle": "Summary",
+      "summarySubtitle": "Trip totals and indicators",
+      "listTitle": "List (filters)",
+      "listSubtitle": "Search, status, and date range",
+      "exportTitle": "Export CSV",
+      "exportSubtitle": "Download filtered trips"
+    },
     "filterCompleted": "Completed",
     "filterUntil": "Until",
     "exportHint": "CSV export (UTF-8) aligned with active filters in trip lists.",
