@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { EmptyState } from '../../../components/feedback/EmptyState'
 
 interface PendingUserRow {
   phone: string
@@ -19,33 +20,33 @@ export function AdminTabPending(props: AdminTabPendingProps) {
 
   return (
     <>
-        <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t('headings.pending')}</h2>
-          {pending.length === 0 ? (
-            <p className="text-muted-foreground">Nenhum utilizador pendente.</p>
-          ) : (
-            <ul className="space-y-3">
-              {pending.map((u) => (
-                <li
-                  key={u.phone}
-                  className="flex items-center justify-between bg-card border border-border rounded-2xl px-4 py-3 shadow-card"
+      <section className="space-y-6">
+        <h2 className="text-lg font-semibold text-foreground mb-4">{t('headings.pending')}</h2>
+        {pending.length === 0 ? (
+          <EmptyState title="Nenhum utilizador pendente." />
+        ) : (
+          <ul className="space-y-3">
+            {pending.map((u) => (
+              <li
+                key={u.phone}
+                className="flex items-center justify-between bg-card border border-border rounded-2xl px-4 py-3 shadow-card"
+              >
+                <div>
+                  <p className="font-medium text-foreground">{u.phone}</p>
+                  <p className="text-sm text-foreground/75">{u.requested_role}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleApprove(u.phone)}
+                  className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-success text-success-foreground text-sm font-medium rounded-lg hover:opacity-90"
                 >
-                  <div>
-                    <p className="font-medium text-foreground">{u.phone}</p>
-                    <p className="text-sm text-foreground/75">{u.requested_role}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleApprove(u.phone)}
-                    className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-success text-success-foreground text-sm font-medium rounded-lg hover:opacity-90"
-                  >
-                    Aprovar
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+                  Aprovar
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </>
   )
 }
