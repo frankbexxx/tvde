@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ADMIN_TRIP_CANCEL_STATUSES } from '../adminConstants'
 import { AdminTripAuditTimeline } from '../AdminTripAuditTimeline'
 import { AdminTripDetailSupportFields } from '../AdminTripDetailSupportFields'
@@ -53,6 +54,7 @@ export type AdminTabTripsProps = {
 }
 
 export function AdminTabTrips(props: AdminTabTripsProps) {
+  const { t } = useTranslation('admin')
   const {
     activeTrips,
     canPostPaymentOpsNote,
@@ -93,7 +95,7 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
   return (
     <>
       <section className="space-y-6">
-        <h2 className="text-lg font-semibold text-foreground mb-1">Viagens</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-1">{t('headings.trips')}</h2>
         <p className="text-xs text-muted-foreground mb-3">
           Activas: pedido até em curso. Histórico: concluídas, canceladas ou falha (últimas 50 por ordem de
           actualização).

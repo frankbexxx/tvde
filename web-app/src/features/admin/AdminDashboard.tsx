@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { isBackofficeStaffRole, useAuth } from '../../context/AuthContext'
 import {
   adminErrDetail,
@@ -63,24 +64,29 @@ interface PendingUser {
 }
 
 type Tab = AdminDashboardTab
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'agora', label: 'Agora' },
-  { id: 'docs', label: 'Documentos' },
-  { id: 'pending', label: 'Pendentes' },
-  { id: 'users', label: 'Utilizadores' },
-  { id: 'frota', label: 'Frota' },
-  { id: 'dados', label: 'Dados' },
-  { id: 'trips', label: 'Viagens' },
-  { id: 'metrics', label: 'Métricas' },
-  { id: 'ops', label: 'Operações' },
-  { id: 'health', label: 'Saúde' },
+const TAB_IDS: Tab[] = [
+  'agora',
+  'docs',
+  'pending',
+  'users',
+  'frota',
+  'dados',
+  'trips',
+  'metrics',
+  'ops',
+  'health',
 ]
 
 export function AdminDashboard() {
+  const { t } = useTranslation('admin')
   const { token } = useAuth()
   const isSuperAdminSession = sessionJwtIsSuperAdmin(token)
   const { tab, tripsListMode, selectedTripId, syncAdminUrl, selectTripsListMode } =
     useAdminDashboardNavigation()
+  const tabs = useMemo(
+    () => TAB_IDS.map((id) => ({ id, label: t(`tabs.${id}`) })),
+    [t]
+  )
   const { activeTrips, historyTrips, historyTripsError, fetchActiveTrips, fetchHistoryTrips } =
     useAdminTripLists(token)
   /** Wrappers void para props/hooks que esperam Promise<void>; boolean fica para refreshAgora. */
@@ -732,9 +738,9 @@ export function AdminDashboard() {
       <nav
         className="flex flex-wrap gap-2 mb-4 pb-1"
         role="tablist"
-        aria-label="Secções do painel admin"
+        aria-label={t('navAria')}
       >
-        {TABS.map(({ id, label }) => {
+        {tabs.map(({ id, label }) => {
           const healthDot = id === 'health' && healthTabHasSignals
           return (
             <button

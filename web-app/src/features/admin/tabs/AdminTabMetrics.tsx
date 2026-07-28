@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { AdminMetricsResponse, AdminUsageSummaryResponse, WeeklyReportRow } from '../../../api/admin'
 import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
 
@@ -10,6 +11,7 @@ export type AdminTabMetricsProps = {
 }
 
 export function AdminTabMetrics(props: AdminTabMetricsProps) {
+  const { t } = useTranslation('admin')
   const {
     fetchMetrics,
     fetchUsage,
@@ -21,7 +23,7 @@ export function AdminTabMetrics(props: AdminTabMetricsProps) {
   return (
     <>
         <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Métricas</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('headings.metrics')}</h2>
           <button
             type="button"
             onClick={() => fetchMetrics()}

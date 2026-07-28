@@ -1,4 +1,5 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { AdminUser } from '../useAdminUsersDirectory'
 
 type AdminPartnerRow = { id: string; name: string; created_at: string }
@@ -16,6 +17,7 @@ export type AdminTabDadosProps = {
 }
 
 export function AdminTabDados(props: AdminTabDadosProps) {
+  const { t } = useTranslation('admin')
   const {
     copy,
     dataLoading,
@@ -30,7 +32,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
   return (
     <>
         <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground mb-2">Dados (visibilidade)</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">{t('headings.dados')}</h2>
           <p className="text-sm text-foreground/75">
             IDs essenciais para operar o sistema — com botão de copiar.
           </p>

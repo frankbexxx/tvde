@@ -1,4 +1,5 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import { OPS_STUCK_PAYMENTS_PAGE_SIZE } from '../adminConstants'
 import { copyAdminClipboard, maskSensitiveEnvDisplay } from '../adminDashboardHelpers'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from '../healthTripLinks'
@@ -60,6 +61,7 @@ export type AdminTabOpsProps = {
 }
 
 export function AdminTabOps(props: AdminTabOpsProps) {
+  const { t } = useTranslation('admin')
   const {
     cronRun,
     envReveal,
@@ -102,7 +104,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
   return (
     <>
       <section className="space-y-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Operações</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">{t('headings.ops')}</h2>
         <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-foreground">FASE 0 — Pronto para testes</p>
