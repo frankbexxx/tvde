@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 interface PendingUserRow {
   phone: string
   requested_role: string
@@ -9,6 +11,7 @@ export type AdminTabPendingProps = {
 }
 
 export function AdminTabPending(props: AdminTabPendingProps) {
+  const { t } = useTranslation('admin')
   const {
     handleApprove,
     pending,
@@ -17,7 +20,7 @@ export function AdminTabPending(props: AdminTabPendingProps) {
   return (
     <>
         <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Utilizadores pendentes</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('headings.pending')}</h2>
           {pending.length === 0 ? (
             <p className="text-muted-foreground">Nenhum utilizador pendente.</p>
           ) : (

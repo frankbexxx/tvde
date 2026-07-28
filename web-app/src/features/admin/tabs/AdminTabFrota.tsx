@@ -1,4 +1,5 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { AdminUser } from '../useAdminUsersDirectory'
 
 type AdminPartnerRow = { id: string; name: string; created_at: string }
@@ -33,6 +34,7 @@ export type AdminTabFrotaProps = {
 }
 
 export function AdminTabFrota(props: AdminTabFrotaProps) {
+  const { t } = useTranslation('admin')
   const {
     dataLoading,
     frotaAssignDriverId,
@@ -71,7 +73,7 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
           {frotaAssignOk}
         </p>
         <section className="space-y-8">
-          <h2 className="text-lg font-semibold text-foreground">Frota (parceiros)</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t('headings.frota')}</h2>
           <p className="text-sm text-foreground/75 -mt-4">
             Cria uma organização e depois o gestor que inicia sessão na app no separador Frota — tudo aqui, sem
             ferramentas externas.

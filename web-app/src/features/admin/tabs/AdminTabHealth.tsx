@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { HealthAnomalyBlock } from '../AdminHealthAnomalyBlocks'
 import {
   healthBlockKey,
@@ -20,6 +21,7 @@ export type AdminTabHealthProps = {
 }
 
 export function AdminTabHealth(props: AdminTabHealthProps) {
+  const { t } = useTranslation('admin')
   const {
     fetchHealth,
     health,
@@ -30,7 +32,7 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
     <>
         <section className="space-y-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-1">
-            <h2 className="text-lg font-semibold text-foreground">Saúde do sistema</h2>
+            <h2 className="text-lg font-semibold text-foreground">{t('headings.health')}</h2>
             <button
               type="button"
               onClick={() => fetchHealth()}

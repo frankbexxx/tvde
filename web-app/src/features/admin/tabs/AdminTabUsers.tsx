@@ -1,4 +1,5 @@
 import type { ChangeEvent, Dispatch, SetStateAction, SyntheticEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { isBackofficeStaffRole } from '../../../context/AuthContext'
 import type { AdminAuditTrailItem } from '../../../api/admin'
 import type { AdminUser } from '../useAdminUsersDirectory'
@@ -48,6 +49,7 @@ export type AdminTabUsersProps = {
 }
 
 export function AdminTabUsers(props: AdminTabUsersProps) {
+  const { t } = useTranslation('admin')
   const {
     blockConfirmId,
     bulkSelectedIds,
@@ -95,7 +97,7 @@ export function AdminTabUsers(props: AdminTabUsersProps) {
   return (
     <>
         <section className="space-y-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Gestão de Utilizadores</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t('headings.users')}</h2>
           <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
             SP-F: <strong className="text-foreground/90">Eliminar conta</strong> e{' '}
             <strong className="text-foreground/90">Bloquear seleccionados</strong> exigem utilizador com papel{' '}

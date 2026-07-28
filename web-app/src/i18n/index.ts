@@ -10,6 +10,7 @@ import ptErrors from './locales/pt/errors.json'
 import ptPassenger from './locales/pt/passenger.json'
 import ptDriver from './locales/pt/driver.json'
 import ptPartner from './locales/pt/partner.json'
+import ptAdmin from './locales/pt/admin.json'
 
 import enCommon from './locales/en/common.json'
 import enTrip from './locales/en/trip.json'
@@ -19,6 +20,7 @@ import enErrors from './locales/en/errors.json'
 import enPassenger from './locales/en/passenger.json'
 import enDriver from './locales/en/driver.json'
 import enPartner from './locales/en/partner.json'
+import enAdmin from './locales/en/admin.json'
 
 const resources = {
   pt: {
@@ -30,6 +32,7 @@ const resources = {
     passenger: ptPassenger,
     driver: ptDriver,
     partner: ptPartner,
+    admin: ptAdmin,
   },
   en: {
     common: enCommon,
@@ -40,6 +43,7 @@ const resources = {
     passenger: enPassenger,
     driver: enDriver,
     partner: enPartner,
+    admin: enAdmin,
   },
 } as const
 
@@ -48,7 +52,7 @@ void i18n.use(initReactI18next).init({
   lng: readStoredLocale(),
   fallbackLng: 'pt',
   defaultNS: 'common',
-  ns: ['common', 'trip', 'auth', 'settings', 'errors', 'passenger', 'driver', 'partner'],
+  ns: ['common', 'trip', 'auth', 'settings', 'errors', 'passenger', 'driver', 'partner', 'admin'],
   interpolation: { escapeValue: false },
   returnEmptyString: false,
 })

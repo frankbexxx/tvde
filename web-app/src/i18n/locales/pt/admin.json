@@ -1,0 +1,27 @@
+{
+  "navAria": "Secções do painel admin",
+  "tabs": {
+    "agora": "Agora",
+    "docs": "Documentos",
+    "pending": "Pendentes",
+    "users": "Utilizadores",
+    "frota": "Frota",
+    "dados": "Dados",
+    "trips": "Viagens",
+    "metrics": "Métricas",
+    "ops": "Operações",
+    "health": "Saúde"
+  },
+  "headings": {
+    "agora": "Estado agora",
+    "docs": "Documentos e licenças",
+    "pending": "Utilizadores pendentes",
+    "users": "Gestão de Utilizadores",
+    "frota": "Frota (parceiros)",
+    "dados": "Dados (visibilidade)",
+    "trips": "Viagens",
+    "metrics": "Métricas",
+    "ops": "Operações",
+    "health": "Saúde do sistema"
+  }
+}

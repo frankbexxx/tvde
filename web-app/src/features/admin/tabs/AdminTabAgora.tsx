@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { AdminAlertsResponse, AdminMetricsResponse, SystemHealthResponse, TripActiveItem } from '../../../api/admin'
 import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
 
@@ -23,6 +24,7 @@ export type AdminTabAgoraProps = {
 }
 
 export function AdminTabAgora(props: AdminTabAgoraProps) {
+  const { t } = useTranslation('admin')
   const {
     activeTrips,
     adminAlerts,
@@ -65,7 +67,7 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
         <section className="space-y-4 mb-6" aria-labelledby="admin-agora-heading">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 id="admin-agora-heading" className="text-lg font-semibold text-foreground">
-              Estado agora
+              {t('headings.agora')}
             </h2>
             <div className="flex flex-col items-stretch gap-1 sm:items-end">
               <button

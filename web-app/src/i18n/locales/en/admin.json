@@ -1,0 +1,27 @@
+{
+  "navAria": "Admin panel sections",
+  "tabs": {
+    "agora": "Now",
+    "docs": "Documents",
+    "pending": "Pending",
+    "users": "Users",
+    "frota": "Fleet",
+    "dados": "Data",
+    "trips": "Trips",
+    "metrics": "Metrics",
+    "ops": "Operations",
+    "health": "Health"
+  },
+  "headings": {
+    "agora": "Status now",
+    "docs": "Documents and licences",
+    "pending": "Pending users",
+    "users": "User management",
+    "frota": "Fleet (partners)",
+    "dados": "Data (visibility)",
+    "trips": "Trips",
+    "metrics": "Metrics",
+    "ops": "Operations",
+    "health": "System health"
+  }
+}

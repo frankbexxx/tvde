@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { DriverDocumentStatus, DriverDocumentsState, DriverRequiredDocument } from '../../../services/driverDocuments'
 import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
 import type { AdminUser } from '../useAdminUsersDirectory'
@@ -28,6 +29,7 @@ export type AdminTabDocsProps = {
 }
 
 export function AdminTabDocs(props: AdminTabDocsProps) {
+  const { t } = useTranslation('admin')
   const {
     DRIVER_DOC_STATUSES,
     REQUIRED_DRIVER_DOCUMENTS,
@@ -47,7 +49,7 @@ export function AdminTabDocs(props: AdminTabDocsProps) {
     <>
         <section className="space-y-4 mb-6" aria-labelledby="admin-docs-heading">
           <h2 id="admin-docs-heading" className="text-lg font-semibold text-foreground">
-            Documentos e licenças
+            {t('headings.docs')}
           </h2>
           <div className="rounded-2xl border border-border bg-card px-4 py-4 space-y-3 shadow-card">
             <p className="text-sm text-foreground/85">
