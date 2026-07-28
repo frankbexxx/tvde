@@ -1,4 +1,5 @@
 import { BarChart3, Download, List } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   PARTNER_HUB_CARD,
   PARTNER_SECTION_TITLE,
@@ -8,35 +9,37 @@ type PartnerTripsHubScreenProps = {
   onNavigate: (screen: 'trips_summary' | 'trips_list' | 'trips_export') => void
 }
 
-const TRIPS_HUB_ITEMS = [
-  {
-    id: 'trips_summary' as const,
-    testId: 'partner-trips-hub-summary',
-    icon: BarChart3,
-    title: 'Resumo',
-    subtitle: 'Totais e indicadores de viagens',
-  },
-  {
-    id: 'trips_list' as const,
-    testId: 'partner-trips-hub-list',
-    icon: List,
-    title: 'Lista (filtros)',
-    subtitle: 'Pesquisa, estado e intervalo de datas',
-  },
-  {
-    id: 'trips_export' as const,
-    testId: 'partner-trips-hub-export',
-    icon: Download,
-    title: 'Exportar CSV',
-    subtitle: 'Descarregar viagens filtradas',
-  },
-]
-
 export function PartnerTripsHubScreen({ onNavigate }: PartnerTripsHubScreenProps) {
+  const { t } = useTranslation('partner')
+
+  const tripsHubItems = [
+    {
+      id: 'trips_summary' as const,
+      testId: 'partner-trips-hub-summary',
+      icon: BarChart3,
+      title: t('trips.hub.summaryTitle'),
+      subtitle: t('trips.hub.summarySubtitle'),
+    },
+    {
+      id: 'trips_list' as const,
+      testId: 'partner-trips-hub-list',
+      icon: List,
+      title: t('trips.hub.listTitle'),
+      subtitle: t('trips.hub.listSubtitle'),
+    },
+    {
+      id: 'trips_export' as const,
+      testId: 'partner-trips-hub-export',
+      icon: Download,
+      title: t('trips.hub.exportTitle'),
+      subtitle: t('trips.hub.exportSubtitle'),
+    },
+  ]
+
   return (
     <div className="space-y-2 text-sm text-foreground" data-testid="partner-trips-hub">
-      <p className={PARTNER_SECTION_TITLE}>Viagens</p>
-      {TRIPS_HUB_ITEMS.map(({ id, testId, icon: Icon, title, subtitle }) => (
+      <p className={PARTNER_SECTION_TITLE}>{t('trips.hubTitle')}</p>
+      {tripsHubItems.map(({ id, testId, icon: Icon, title, subtitle }) => (
         <button
           key={id}
           type="button"

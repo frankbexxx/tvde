@@ -20,8 +20,8 @@
     "reports": "Relatórios",
     "settings": "Definições",
     "profile": "Perfil",
-    "inbox": "Caixa",
-    "default": "Partner"
+    "inbox": "Caixa de entrada",
+    "default": "Parceiro"
   },
   "sideMenu": {
     "srDescription": "Navegação do parceiro: frota, viagens, relatórios, caixa, perfil e definições.",
@@ -37,7 +37,7 @@
       "fleet": "Frota",
       "trips": "Viagens",
       "reports": "Relatórios",
-      "inbox": "Caixa",
+      "inbox": "Caixa de entrada",
       "profile": "Perfil",
       "settings": "Definições"
     }
@@ -224,6 +224,15 @@
     "reassignUnavailable": "Reatribuição indisponível — a viagem já passou de «assigned» (estado actual: {{status}})."
   },
   "trips": {
+    "hubTitle": "Viagens",
+    "hub": {
+      "summaryTitle": "Resumo",
+      "summarySubtitle": "Totais e indicadores de viagens",
+      "listTitle": "Lista (filtros)",
+      "listSubtitle": "Pesquisa, estado e intervalo de datas",
+      "exportTitle": "Exportar CSV",
+      "exportSubtitle": "Descarregar viagens filtradas"
+    },
     "filterCompleted": "Concluídas",
     "filterUntil": "Até",
     "exportHint": "Exportação CSV (UTF-8) alinhada com os filtros activos nas listas de viagens.",

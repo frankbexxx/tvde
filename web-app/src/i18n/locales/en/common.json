@@ -15,7 +15,7 @@
   "profile": "Profile",
   "rolePassenger": "Passenger",
   "roleDriver": "Driver",
-  "rolePartner": "Fleet",
+  "rolePartner": "Partner",
   "roleStaff": "Staff",
   "unexpectedError": "Unexpected error response.",
   "legalEnSummary": "English summary — the legally binding text is in Portuguese.",
