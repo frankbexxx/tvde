@@ -8,17 +8,18 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-29** — NAV-3D.2 fechado + B2 espera + PF3D OFF)
+## Contexto actual (**2026-07-29** — NAV-3D.2 + Admin integrity #499 + B2 espera + PF3D OFF)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `a968c5f` |
+| **`main`** | `aa39a9f` |
 | **origin/main** | alinhado |
 | **working tree** | limpo |
+| **CI** | verde após re-run/sync (#499) |
 
-### NAV / UX (fechado até NAV-3D.2)
+### NAV / UX (fechado até NAV-3D.2) + integrity Admin
 
 | Item | PR / tip | Estado |
 |------|----------|--------|
@@ -27,8 +28,12 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | NAV-3B Admin i18n | [#495](https://github.com/frankbexxx/tvde/pull/495) · `298bd10` | **PASS** + smoke prod |
 | NAV-3C grupos Admin | [#496](https://github.com/frankbexxx/tvde/pull/496) · `9eff1e0` | **PASS** + smoke prod |
 | NAV-3D.1 EmptyState Admin | [#497](https://github.com/frankbexxx/tvde/pull/497) · `7e0cbce` | **PASS** + smoke 3 janelas |
-| NAV-3D.2 ErrorBanner Admin | [#500](https://github.com/frankbexxx/tvde/pull/500) · `a968c5f` | **PASS** — CI verde (backend / web-app / web-e2e) |
+| NAV-3D.2 ErrorBanner Admin | [#500](https://github.com/frankbexxx/tvde/pull/500) · `a968c5f` | **PASS** |
+| Handoff meta NAV-3D.2 | [#501](https://github.com/frankbexxx/tvde/pull/501) · `aa25cb2` | **PASS** — docs only |
+| Admin demote/delete integrity | [#499](https://github.com/frankbexxx/tvde/pull/499) · `aa39a9f` | **PASS** — backend only; CI verde pós re-run/sync |
 | NAV-0 contrato 4 apps | [#489](https://github.com/frankbexxx/tvde/pull/489) | **PASS** — [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
+
+**#499 (resumo):** bloqueia demote de driver e delete de user-driver com histórico de trips (`cannot_demote_driver_with_trips` / `cannot_delete_user_with_trips`) para preservar atribuição — `trips.driver_id` é `ON DELETE SET NULL`. Scope: `admin.py` + `test_admin_promote_demote_active_trip.py`.
 
 **Contrato Admin (intactos):** `?tab=` · `tripId` · `tripsList` · **sem** `?group=` · Admin **PT forçado** (`LocaleProvider`).
 
@@ -62,13 +67,14 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **B2 implementação** | **Não** — espera Manel |
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
-| **NAV-3D.2** | **Fechado** (#500 · `a968c5f`) — Dashboard `{error}` + retry |
+| **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3E** | **Não** nesta fase |
+| **Trips/Ops actions** | **Não** nesta linha |
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação |
 
-**Frase de fecho:** NAV-3D.2 fechado em `a968c5f`. Follow-up opcional: Agora refresh ErrorBanner. Gates OFF. B2 em espera. Sem PageHeader / Trips-Ops actions / NAV-3E.
+**Frase de fecho:** Handoff #501 + integrity #499 em `aa39a9f`. Follow-up opcional: Agora refresh ErrorBanner. Gates OFF. B2 em espera. Sem PageHeader / Trips-Ops actions / NAV-3E.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -80,6 +86,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#499** · `aa39a9f` | Admin integrity — demote/delete com histórico de trips (backend) |
+| **#501** · `aa25cb2` | Handoff meta após NAV-3D.2 |
 | **#500** · `a968c5f` | NAV-3D.2 ErrorBanner Admin + retry (`admin-dashboard-error`) |
 | **#498** · `4297332` | Handoff meta até NAV-3D.1 |
 | **#497** · `7e0cbce` | NAV-3D.1 EmptyState Admin (Pending / Dados / Metrics) |
