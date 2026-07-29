@@ -8,17 +8,17 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-29** — NAV-3D.1 fechado + B2 espera + PF3D OFF)
+## Contexto actual (**2026-07-29** — NAV-3D.2 fechado + B2 espera + PF3D OFF)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `7e0cbce` |
+| **`main`** | `a968c5f` |
 | **origin/main** | alinhado |
 | **working tree** | limpo |
 
-### NAV / UX (fechado até NAV-3D.1)
+### NAV / UX (fechado até NAV-3D.2)
 
 | Item | PR / tip | Estado |
 |------|----------|--------|
@@ -27,6 +27,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | NAV-3B Admin i18n | [#495](https://github.com/frankbexxx/tvde/pull/495) · `298bd10` | **PASS** + smoke prod |
 | NAV-3C grupos Admin | [#496](https://github.com/frankbexxx/tvde/pull/496) · `9eff1e0` | **PASS** + smoke prod |
 | NAV-3D.1 EmptyState Admin | [#497](https://github.com/frankbexxx/tvde/pull/497) · `7e0cbce` | **PASS** + smoke 3 janelas |
+| NAV-3D.2 ErrorBanner Admin | [#500](https://github.com/frankbexxx/tvde/pull/500) · `a968c5f` | **PASS** — CI verde (backend / web-app / web-e2e) |
 | NAV-0 contrato 4 apps | [#489](https://github.com/frankbexxx/tvde/pull/489) | **PASS** — [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 
 **Contrato Admin (intactos):** `?tab=` · `tripId` · `tripsList` · **sem** `?group=` · Admin **PT forçado** (`LocaleProvider`).
@@ -61,12 +62,13 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **B2 implementação** | **Não** — espera Manel |
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
-| **NAV-3D.2** | Próximo recomendado — ErrorBanner Admin (escopo pequeno) |
+| **NAV-3D.2** | **Fechado** (#500 · `a968c5f`) — Dashboard `{error}` + retry |
+| **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3E** | **Não** nesta fase |
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação |
 
-**Frase de fecho:** NAV-3D.1 fechado em `7e0cbce`. Próximo: **NAV-3D.2** ErrorBanner Admin. Gates OFF. B2 em espera. Sem PageHeader / Trips-Ops actions / NAV-3E.
+**Frase de fecho:** NAV-3D.2 fechado em `a968c5f`. Follow-up opcional: Agora refresh ErrorBanner. Gates OFF. B2 em espera. Sem PageHeader / Trips-Ops actions / NAV-3E.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -78,6 +80,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#500** · `a968c5f` | NAV-3D.2 ErrorBanner Admin + retry (`admin-dashboard-error`) |
+| **#498** · `4297332` | Handoff meta até NAV-3D.1 |
 | **#497** · `7e0cbce` | NAV-3D.1 EmptyState Admin (Pending / Dados / Metrics) |
 | **#496** · `9eff1e0` | NAV-3C grupos Admin + `adminNavGroups` |
 | **#495** · `298bd10` | NAV-3B Admin i18n (`pt`/`en` `admin.json`) |
@@ -93,7 +97,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | ID | Notas |
 |----|-------|
 | **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
-| **NAV-3D.2** | ErrorBanner Admin — Dashboard `{error}` + Agora refresh (`testId`) |
+| **NAV-3D.2b** | Opcional — `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3D.3+ / NAV-3E** | Só se valer; **sem** Trips/Ops mutáveis / PageHeader |
 | **PF3D-3B/ON** | Smoke ON controlado — opcional; **não** activar em prod global |
 | **PF3D-3 ON** | Só após atribuição real + docs reais |
@@ -110,13 +114,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 ### O que fazer a seguir (ordem — 1 carril)
 
 1. **Espera Manel B2** (B/C/adiar) — sem implementação  
-2. **NAV-3D.2** ErrorBanner Admin (escopo pequeno):  
-   - `AdminDashboard` `{error}`  
-   - `AdminTabAgora` refresh error — preservar `data-testid="admin-agora-refresh-error"`  
-   - **Sem** PageHeader · **sem** NAV-3E · **sem** Trips/Ops actions  
+2. **Opcional NAV-3D.2b:** migrar `admin-agora-refresh-error` → ErrorBanner (preservar `data-testid`) — **sem** PageHeader / NAV-3E / Trips-Ops  
 3. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
 4. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
-5. Roadmap PF3D ON (só após 3) · backlog produto se Manel responder
+5. Roadmap PF3D ON (só após 3) · backlog produto se Manel responder  
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
