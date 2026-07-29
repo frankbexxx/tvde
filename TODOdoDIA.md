@@ -36,7 +36,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PF3D-GATES** | Compliance gates viatura | Concluído | OFF em prod; smoke OFF PASS |
 | **NAV-3D.2** | Admin ErrorBanner dashboard | Concluído | #500 |
 | **NAV-3D.2b** | Agora refresh → ErrorBanner | Por iniciar | Opcional; preservar `testId` |
-| **O-DEMO-4ROLES** | Runbook/smoke demo 4 papéis | Por iniciar | Útil entrega; sem código |
+| **O-DEMO-4ROLES** | Runbook/smoke demo 4 papéis | Smoke pendente | [`DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) — doc criada; smoke humano por fazer |
 | **R-E2E-1** | Flake web-e2e residual | N/A | Maps mitigado #509; monitorizar |
 | **Bugbot / Cloud** | Automações Cursor | N/A | **OFF** · triggers apagados |
 | **O-STRIPE-LIVE** | Stripe live | Bloqueado | Parceiro + docs |
