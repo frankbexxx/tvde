@@ -8,16 +8,44 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-29** — NAV-3D.2 + Admin integrity #499 + B2 espera + PF3D OFF)
+## Contexto actual (**2026-07-29** — #504 auth prod fechado + #505 checklist review)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `aa39a9f` |
+| **`main`** | `641c0c7` (#505) |
 | **origin/main** | alinhado |
-| **working tree** | limpo |
-| **CI** | verde após re-run/sync (#499) |
+| **working tree** | handoff #504 por commit (só este ficheiro) |
+| **API prod (Render)** | Live em **`c510154`** (#504) |
+| **CI** | verde em `main` pós #505 |
+
+### #504 — privilegiados fora da password demo (fechado em prod)
+
+| Item | Estado |
+|------|--------|
+| PR | [#504](https://github.com/frankbexxx/tvde/pull/504) · tip `c510154` |
+| Deploy API | **Live** em `c510154` |
+| Backfill Render Shell | **APPLIED** — `total=18` · `test=7` · `real=3` · `unchanged=8` |
+| `real` phones | `+351900000000` · `+351955555502` · `+351924075365` |
+| Smoke UI pós-apply | **PASS** (S-504-A…E) |
+
+| Smoke | Resultado |
+|-------|-----------|
+| **S-504-A** Frank / SA real | Login OK (password real) |
+| **S-504-B** admin baseline + demo | Rejeitado |
+| **S-504-C** partner baseline + demo | Rejeitado |
+| **S-504-D** passenger demo | OK |
+| **S-504-E** driver demo | OK |
+
+**Notas #504:** `password_not_set` em admin/partner baseline é **esperado**. Privilegiados **não** usam password demo. Passenger/Driver demo continuam operacionais.
+
+### Processo review (sem Bugbot)
+
+| Item | Estado |
+|------|--------|
+| Bugbot / Cloud Agents / automações | **Desactivadas**; triggers apagados |
+| Checklist revisão manual | [#505](https://github.com/frankbexxx/tvde/pull/505) · [`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md) |
 
 ### NAV / UX (fechado até NAV-3D.2) + integrity Admin
 
@@ -30,10 +58,13 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | NAV-3D.1 EmptyState Admin | [#497](https://github.com/frankbexxx/tvde/pull/497) · `7e0cbce` | **PASS** + smoke 3 janelas |
 | NAV-3D.2 ErrorBanner Admin | [#500](https://github.com/frankbexxx/tvde/pull/500) · `a968c5f` | **PASS** |
 | Handoff meta NAV-3D.2 | [#501](https://github.com/frankbexxx/tvde/pull/501) · `aa25cb2` | **PASS** — docs only |
-| Admin demote/delete integrity | [#499](https://github.com/frankbexxx/tvde/pull/499) · `aa39a9f` | **PASS** — backend only; CI verde pós re-run/sync |
+| Admin demote/delete integrity | [#499](https://github.com/frankbexxx/tvde/pull/499) · `aa39a9f` | **PASS** — backend only |
+| OTP verify rate-limit (phone) | [#502](https://github.com/frankbexxx/tvde/pull/502) · `7556fb2` | **PASS** |
+| Privileged baseline / demo | [#504](https://github.com/frankbexxx/tvde/pull/504) · `c510154` | **PASS** + backfill + smoke prod |
+| PR review checklist | [#505](https://github.com/frankbexxx/tvde/pull/505) · `641c0c7` | **PASS** — docs only |
 | NAV-0 contrato 4 apps | [#489](https://github.com/frankbexxx/tvde/pull/489) | **PASS** — [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 
-**#499 (resumo):** bloqueia demote de driver e delete de user-driver com histórico de trips (`cannot_demote_driver_with_trips` / `cannot_delete_user_with_trips`) para preservar atribuição — `trips.driver_id` é `ON DELETE SET NULL`. Scope: `admin.py` + `test_admin_promote_demote_active_trip.py`.
+**#499 (resumo):** bloqueia demote de driver e delete de user-driver com histórico de trips (`cannot_demote_driver_with_trips` / `cannot_delete_user_with_trips`) para preservar atribuição — `trips.driver_id` é `ON DELETE SET NULL`.
 
 **Contrato Admin (intactos):** `?tab=` · `tripId` · `tripsList` · **sem** `?group=` · Admin **PT forçado** (`LocaleProvider`).
 
@@ -67,14 +98,16 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **B2 implementação** | **Não** — espera Manel |
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
+| **#504 auth prod** | **Fechado** — deploy `c510154` + backfill + smoke S-504-A…E **PASS** |
+| **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3E** | **Não** nesta fase |
 | **Trips/Ops actions** | **Não** nesta linha |
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
-| **Render env / DB / migrations** | Intactos nesta documentação |
+| **Render env / DB / migrations** | Intactos nesta documentação (backfill #504 já aplicado) |
 
-**Frase de fecho:** Handoff #501 + integrity #499 em `aa39a9f`. Follow-up opcional: Agora refresh ErrorBanner. Gates OFF. B2 em espera. Sem PageHeader / Trips-Ops actions / NAV-3E.
+**Frase de fecho:** #504 fechado em prod (`c510154` + backfill + smoke PASS). Checklist review #505. Bugbot/agents OFF. Gates PF3D OFF. B2 em espera Manel. Follow-up opcional: NAV-3D.2b.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -86,6 +119,9 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#505** · `641c0c7` | Checklist revisão manual de PRs ([`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md)) |
+| **#504** · `c510154` | Privilegiados fora da demo + backfill/smoke prod **PASS** |
+| **#502** · `7556fb2` | OTP verify rate-limit por phone (não XFF) |
 | **#499** · `aa39a9f` | Admin integrity — demote/delete com histórico de trips (backend) |
 | **#501** · `aa25cb2` | Handoff meta após NAV-3D.2 |
 | **#500** · `a968c5f` | NAV-3D.2 ErrorBanner Admin + retry (`admin-dashboard-error`) |
@@ -133,6 +169,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | Área | Onde |
 |------|------|
+| PR review checklist (manual) | [`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md) |
 | NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
 | NAV-0 contrato 4 apps | [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 | PF3D-3B/OFF smoke PASS | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
