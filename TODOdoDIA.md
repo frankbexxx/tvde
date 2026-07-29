@@ -16,11 +16,44 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-19** — pagamentos + O-SECURITY fechados)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-29** — tip `e086743` · auth/P-504-PWD · #509)
 
-**`main` / `origin/main`:** `77ddfac` · PRs abertas **0** · CI verde · Saúde **ok**.
+**`main` / `origin/main`:** `e086743` · alinhado · working tree limpa (após merge docs) · CI verde.
 
-**Objectivo imediato:** **1 carril** — Admin Ops seguinte · **ou** PARTNER-FLEET-1 · (Stripe live só com parceiro/docs).
+**Objectivo imediato:** **1 carril** — espera Manel **B2** · **ou** demo 4 papéis · **ou** NAV-3D.2b opcional. **Não** PF3D ON · **não** B2 sem decisão.
+
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **PR-504** | Auth: privilegiados ≠ demo | Concluído | `c510154` · backfill prod + smoke S-504-A…E |
+| **PR-507** / **P-504-PWD** | Script passwords admin/partner baseline | Concluído | `91a68f4` · Shell APPLIED · smoke UI PASS |
+| **PR-508** | Handoff P-504-PWD | Concluído | `61edcf8` · docs only |
+| **PR-509** | E2E Maps sync geo browser | Concluído | `e086743` · flake «Iniciar viagem» |
+| **PR-505** | Checklist review manual | Concluído | Sem Bugbot/agents |
+| **S-AUTH-PWD** | Smoke prod passwords próprias | Concluído | Admin/partner OK · demo FAIL · pax/driver OK · Frank OK |
+| **AVAIL-B2-NEXT-TRIP** | Next trip while ongoing | Bloqueado | Espera Manel B/C/adiar — [`B2_NEXT_TRIP_CHAINING_DIAG`](docs/architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
+| **PF3D-GATES** | Compliance gates viatura | Concluído | OFF em prod; smoke OFF PASS |
+| **NAV-3D.2** | Admin ErrorBanner dashboard | Concluído | #500 |
+| **NAV-3D.2b** | Agora refresh → ErrorBanner | Por iniciar | Opcional; preservar `testId` |
+| **O-DEMO-4ROLES** | Runbook/smoke demo 4 papéis | Por iniciar | Útil entrega; sem código |
+| **R-E2E-1** | Flake web-e2e residual | N/A | Maps mitigado #509; monitorizar |
+| **Bugbot / Cloud** | Automações Cursor | N/A | **OFF** · triggers apagados |
+| **O-STRIPE-LIVE** | Stripe live | Bloqueado | Parceiro + docs |
+| **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
+| **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
+
+**Próximo (recomendado):** sync docs (este painel) → demo 4 papéis **ou** NAV-3D.2b · B2 só com Manel · PF3D ON só com dados reais.
+
+**Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
+
+---
+
+## Painel — **2026-07-19** (histórico — pagamentos + O-SECURITY fechados)
+
+**`main` (nessa data):** `77ddfac` · checkpoint pagamentos.
+
+**Objectivo então:** Admin Ops seguinte · ou PARTNER-FLEET-1 · (Stripe live só com parceiro/docs).
 
 **Checkpoint:** [`docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · pós-#415: [`docs/ops/CHECKPOINT_2026-07-19_POST_415.md`](docs/ops/CHECKPOINT_2026-07-19_POST_415.md)
 
@@ -42,7 +75,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **CHK-0719** | Checkpoint docs pós-#415 | Concluído | PR **#416** |
 | **PR-417** / **PAYMENTS-STUCK-1A** | Mock settle no `complete_trip` | Concluído | **PASS** — #417 |
 | **PR-418** / **PAYMENTS-STUCK-1B** | Admin close-mock dry-run/apply | Concluído | **PASS** — #418 + apply Render 41+10 |
-| **CHK-PAY-0719** | Checkpoint docs pagamentos + O-SECURITY | Em curso | [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) — PR docs-only |
+| **CHK-PAY-0719** | Checkpoint docs pagamentos + O-SECURITY | Concluído | Checkpoint Julho — fecho auth SA nessa linha |
 | **PAYMENTS-EDGE-1** | cancelled + PI real → payment failed | Concluído | **PASS** — Dashboard `requires_payment_method`; sem Stripe API |
 | **PAYMENTS-EDGE-2** | completed inválida → failed | Concluído | **PASS** — trip `4b29c6c9-…` |
 | **O-SECURITY** | Rodar password SA | Concluído | **PASS** — `/auth/me/password`; nova OK · antiga FAIL; sem env |
@@ -52,15 +85,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed | Por iniciar | Observação UX; não blocker |
 | **R-AGORA-SNAP** | Agora vs Viagens (contagens) | Por iniciar | Observação snapshot/manual; **não** bug confirmado |
 | **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Saúde **ok** pós-edges; optimização só se saturar |
-| **CI-MAINT-1** | Warning Actions Node 20 deprecated | Por iniciar | Baixa prioridade |
-| **PARTNER-FLEET-1** | Viaturas, docs, associação, reassign ops | Por iniciar | Assign/reassign **diário** vive aqui (não Admin) |
+| **CI-MAINT-1** | Warning Actions Node 20 deprecated | Por iniciar | Baixa prioridade — ver painel 2026-07-29 |
+| **PARTNER-FLEET-1** | Viaturas, docs, associação, reassign ops | Concluído | Evoluiu para PF3* / PF3D (gates OFF) — ver handoff |
 | **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
 | **PR-398** | Driver active trip recovery | Concluído | Merged 2026-07-14 |
 | **PR-403** | WT launchers Dev + Stripe local | Concluído | Merged 2026-07-14 |
 | **TVDE-PROD** | Gate P5 beta | Concluído | O-ROTATE-1 · S-PROD-2 · O-CRON-1 · O-RENDER-1 · TVDE-BKP · O-STRIPE-1 |
 | **O-i18n-NICHOS** | Strings PT residuais EN batch A–F | Smoke pendente | PR **#362** — se objectivo mudar |
 | **A2-02-1** | OAuth staging + URIs Google | Em curso | Se staging for foco |
-| **R-E2E-1** | Flake web-e2e intermitente | Monitorizar | CI verde; não prioritário |
+| **R-E2E-1** | Flake web-e2e intermitente | N/A | Caso Maps → #509; residual no painel 29 |
 | **O-STRIPE-LIVE** | Stripe live / conta parceiro | Bloqueado | Parceiro + `sk_live_*` |
 | **R-GIT-1** | Limpeza branches locais (~190) | Por iniciar | Higiene futura — não apagar ainda |
 
@@ -70,7 +103,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 **Pagamentos + O-SECURITY fechados:** 1A/1B/EDGE-1/2 PASS · Health **ok** · password SA rodada (API; sem env).
 
-**Próximo:** Admin Ops seguinte · **ou** PARTNER-FLEET-1 — **1** carril. Stripe live = futuro (parceiro + docs).
+**Nota:** painel vivo passou para **2026-07-29** (acima).
 
 **Regra:** **1 carril** por sessão.
 
