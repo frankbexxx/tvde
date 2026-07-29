@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session, joinedload
 
+from app.auth.passwords import verify_password
 from app.api.deps import get_db
 from app.auth.security import create_access_token
 from app.core.config import settings
@@ -37,6 +38,22 @@ def _require_dev() -> None:
     # Router só montado fora de prod (main); reforço se ENV/staging correr código antigo.
     if settings.is_production_environment():
         raise HTTPException(status_code=404)
+
+
+def _apply_seed_auth_fields(user: User, phone: str, role: Role) -> None:
+    """Apply passenger/driver shared-demo flags; clear leftover privileged demo hashes."""
+    auth_fields = seed_user_auth_fields(phone, role)
+    user.is_test_account = bool(auth_fields["is_test_account"])
+    if auth_fields.get("password_hash"):
+        user.password_hash = str(auth_fields["password_hash"])
+        return
+    # Privileged / owner seeds must not keep a previously written shared demo hash.
+    try:
+        demo = settings.resolved_test_account_password()
+    except RuntimeError:
+        return
+    if user.password_hash and verify_password(demo, user.password_hash):
+        user.password_hash = None
 
 
 router = APIRouter(prefix="/dev", tags=["dev"])
@@ -106,8 +123,8 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
 
     def get_or_create_user(phone: str, role: Role) -> User:
         user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
-        auth_fields = seed_user_auth_fields(phone)
         if not user:
+            auth_fields = seed_user_auth_fields(phone, role)
             user = User(
                 role=role,
                 name=phone,
@@ -118,9 +135,7 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
             db.add(user)
             db.flush()
         else:
-            user.is_test_account = bool(auth_fields["is_test_account"])
-            if auth_fields.get("password_hash"):
-                user.password_hash = str(auth_fields["password_hash"])
+            _apply_seed_auth_fields(user, phone, role)
         return user
 
     passenger = get_or_create_user("+351912345678", Role.passenger)
@@ -146,17 +161,14 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
             phone="+351955555502",
             status=UserStatus.active,
             partner_org_id=BASELINE_PARTNER_FLEET_UUID,
-            **seed_user_auth_fields("+351955555502"),
+            **seed_user_auth_fields("+351955555502", Role.partner),
         )
         db.add(partner_user)
     else:
         partner_user.role = Role.partner
         partner_user.status = UserStatus.active
         partner_user.partner_org_id = BASELINE_PARTNER_FLEET_UUID
-        auth_fields = seed_user_auth_fields("+351955555502")
-        partner_user.is_test_account = bool(auth_fields["is_test_account"])
-        if auth_fields.get("password_hash"):
-            partner_user.password_hash = str(auth_fields["password_hash"])
+        _apply_seed_auth_fields(partner_user, "+351955555502", Role.partner)
         if partner_user.name == partner_user.phone or not (partner_user.name or "").strip():
             partner_user.name = "test_partner"
 
@@ -203,8 +215,8 @@ async def dev_seed_simulator(
 
     def get_or_create_user(phone: str, role: Role) -> User:
         user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
-        auth_fields = seed_user_auth_fields(phone)
         if not user:
+            auth_fields = seed_user_auth_fields(phone, role)
             user = User(
                 role=role,
                 name=phone,
@@ -215,9 +227,7 @@ async def dev_seed_simulator(
             db.add(user)
             db.flush()
         else:
-            user.is_test_account = bool(auth_fields["is_test_account"])
-            if auth_fields.get("password_hash"):
-                user.password_hash = str(auth_fields["password_hash"])
+            _apply_seed_auth_fields(user, phone, role)
         return user
 
     def make_token(user: User) -> str:

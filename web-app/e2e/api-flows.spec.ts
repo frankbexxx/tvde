@@ -203,7 +203,7 @@ test.describe('API flows (sem browser)', () => {
     expect(Array.isArray(body.warnings)).toBe(true)
   })
 
-  test('BETA login inclui display_name (admin seed)', async ({ request }) => {
+  test('BETA login inclui display_name e bloqueia admin seed', async ({ request }) => {
     const cfg = await request.get(`${API}/config`)
     expect(cfg.ok()).toBeTruthy()
     const { beta_mode: beta } = (await cfg.json()) as { beta_mode?: boolean }
@@ -215,13 +215,22 @@ test.describe('API flows (sem browser)', () => {
     const login = await request.post(`${API}/auth/login`, {
       headers: { 'Content-Type': 'application/json' },
       data: JSON.stringify({
-        phone: '+351900000000',
+        phone: '+351912345678',
         password: 'demo1234',
       }),
     })
     expect(login.ok(), await login.text()).toBeTruthy()
     const body = (await login.json()) as { display_name?: string; role?: string }
-    expect(body.role).toBe('admin')
-    expect(body.display_name).toBe('dev_admin')
+    expect(body.role).toBe('passenger')
+    expect(body.display_name).toBeTruthy()
+
+    const adminLogin = await request.post(`${API}/auth/login`, {
+      headers: { 'Content-Type': 'application/json' },
+      data: JSON.stringify({
+        phone: '+351900000000',
+        password: 'demo1234',
+      }),
+    })
+    expect(adminLogin.status()).toBe(401)
   })
 })
