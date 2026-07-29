@@ -623,10 +623,16 @@ test.describe('Driver + passenger (proximity gate)', () => {
     for (const p of driverCtx.pages()) {
       if (p !== driverPage) await p.close().catch(() => undefined)
     }
-    await refreshDriverLocationNearPickup(request, tokens.driver)
-    await expect(driverPage.getByRole('button', { name: /iniciar viagem/i })).toBeVisible({
-      timeout: sec(60),
-    })
+    // Após reload do menu de navegação, o gate UI usa geolocation do browser — não só /drivers/location.
+    await expect
+      .poll(
+        async () => {
+          await syncDriverNearPickupForStart(driverPage, request, tokens.driver)
+          return driverPage.getByRole('button', { name: /iniciar viagem/i }).isVisible()
+        },
+        { timeout: sec(60), intervals: pollLook }
+      )
+      .toBe(true)
     await expect(driverPage.getByTestId('driver-nav-pickup-primary')).toHaveCount(0)
     await expect(driverPage.getByTestId('driver-open-nav')).toBeVisible()
 
@@ -637,7 +643,6 @@ test.describe('Driver + passenger (proximity gate)', () => {
 
     const startBtn = driverPage.getByRole('button', { name: /iniciar viagem/i })
     await expect(startBtn).toBeEnabled({ timeout: sec(45) })
-    await refreshDriverLocationNearPickup(request, tokens.driver)
     const arrivingResP = waitForDriverTripPost(driverPage, tripId, 'arriving')
     const startResP = waitForDriverTripPost(driverPage, tripId, 'start')
     await syncDriverNearPickupForStart(driverPage, request, tokens.driver)
