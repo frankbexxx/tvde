@@ -26,6 +26,7 @@
 | [OPS_UX_1_SMOKE_PASS_2026-07-23.md](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) | OPS-UX-1 PASS funcional — smoke Pax/Driver/Partner 2026-07-23 |
 | [CHECKPOINT_2026-07-22_PARTNER_FLEET.md](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) | Encerramento sessão Partner-Fleet 3B PASS + hardenings |
 | [D_DEMO_1_CHECKPOINT_2026-07-16.md](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) | Fecho walkthrough multi-role D-DEMO-1 PASS |
+| [DEMO_4_PAPEIS.md](../ops/DEMO_4_PAPEIS.md) | Runbook demo/entrega 4 papéis (prod; sem passwords) |
 | [TODO_FUTURO.md](../TODO_FUTURO.md) | Backlog produto/técnico não urgente |
 | [todo-futuro-nuances.md](../todo-futuro-nuances.md) | Nuances e decisões futuras |
 | [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) | Checklist pré-produção (PROD, staging, backups) |
