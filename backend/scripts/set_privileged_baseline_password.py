@@ -21,14 +21,12 @@ _BACKEND_ROOT = Path(__file__).resolve().parent.parent
 if str(_BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(_BACKEND_ROOT))
 
-from app.auth.passwords import MIN_PASSWORD_LEN, hash_password, verify_password
-from app.models.enums import Role
-
 FRANK_PHONE = "+351924075365"
 
-ALLOWED_TARGETS: dict[str, Role] = {
-    "+351900000000": Role.admin,
-    "+351955555502": Role.partner,
+# Role values (str) — Role enum imported lazily to keep ruff E402 clean after sys.path.
+ALLOWED_TARGETS: dict[str, str] = {
+    "+351900000000": "admin",
+    "+351955555502": "partner",
 }
 
 
@@ -40,14 +38,16 @@ def normalize_phone(phone: str) -> str:
     return phone.strip()
 
 
-def expected_role_for_phone(phone: str) -> Role:
+def expected_role_for_phone(phone: str) -> Any:
+    from app.models.enums import Role
+
     normalized = normalize_phone(phone)
     if normalized == FRANK_PHONE:
         raise Abort("ABORT: não alterar conta Frank/super_admin")
-    expected = ALLOWED_TARGETS.get(normalized)
-    if expected is None:
+    expected_value = ALLOWED_TARGETS.get(normalized)
+    if expected_value is None:
         raise Abort("ABORT: telefone fora da allowlist")
-    return expected
+    return Role(expected_value)
 
 
 def reject_demo_password(password: str, demo_password: str | None) -> None:
@@ -56,6 +56,8 @@ def reject_demo_password(password: str, demo_password: str | None) -> None:
 
 
 def reject_short_password(password: str) -> None:
+    from app.auth.passwords import MIN_PASSWORD_LEN
+
     if len(password) < MIN_PASSWORD_LEN:
         raise Abort(f"ABORT: mínimo {MIN_PASSWORD_LEN} caracteres")
 
@@ -71,6 +73,9 @@ def apply_privileged_password(
 
     Raises ``Abort`` on policy violations. Does not commit.
     """
+    from app.auth.passwords import hash_password, verify_password
+    from app.models.enums import Role
+
     normalized = normalize_phone(phone)
     expected = expected_role_for_phone(normalized)
 
