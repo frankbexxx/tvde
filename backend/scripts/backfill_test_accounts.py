@@ -3,6 +3,10 @@
 
 Run once per environment after deploying the is_test_account migration.
 
+Only passenger/driver baseline phones receive the shared demo password.
+Privileged baseline roles (admin / super_admin / partner) are kept real and
+any leftover shared demo hash is cleared.
+
   cd backend
   $env:DATABASE_URL = "postgresql+psycopg2://..."
   $env:ADMIN_PHONE = "+351924075365"
@@ -28,10 +32,11 @@ def run_backfill(
 ) -> dict[str, int | list[str]]:
     from sqlalchemy import select
 
-    from app.auth.passwords import hash_password
+    from app.auth.passwords import hash_password, verify_password
     from app.core.config import settings
     from app.db.models.user import User
     from app.db.session import SessionLocal
+    from app.models.enums import Role
     from app.services.baseline_reset import BASELINE_USERS
 
     admin_phone = settings.ADMIN_PHONE
@@ -40,8 +45,16 @@ def run_backfill(
     real_phone = _normalize_phone(str(admin_phone))
     test_password = settings.resolved_test_account_password()
     test_hash = hash_password(test_password)
+    shared_test_roles = {Role.driver, Role.passenger}
+    privileged_baseline_phones = {
+        _normalize_phone(phone)
+        for phone, role, _ in BASELINE_USERS
+        if role not in shared_test_roles
+    }
     allowed_test_phones = _allowed_test_phones(
-        baseline_phones=(phone for phone, _, _ in BASELINE_USERS),
+        baseline_phones=(
+            phone for phone, role, _ in BASELINE_USERS if role in shared_test_roles
+        ),
         real_phone=real_phone,
         extra_test_phones=test_phones,
     )
@@ -63,8 +76,12 @@ def run_backfill(
         unchanged_count = 0
         for user in users:
             phone = _normalize_phone(user.phone)
-            if phone == real_phone:
+            if phone == real_phone or phone in privileged_baseline_phones:
                 user.is_test_account = False
+                if user.password_hash and verify_password(
+                    test_password, user.password_hash
+                ):
+                    user.password_hash = None
                 real_phones.append(phone)
             elif phone in allowed_test_phones:
                 user.is_test_account = True

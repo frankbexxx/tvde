@@ -50,6 +50,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 BETA_PHONE_REGEX = re.compile(r"^\+351\d{9}$")
 # OAuth 2.0 token type (RFC 6749); not a credential.
 OAUTH_ACCESS_TOKEN_TYPE = "bearer"  # nosec B105
+# Shared demo / is_test_account password must never authenticate privileged roles.
+_PRIVILEGED_TEST_LOGIN_ROLES = frozenset({Role.admin, Role.super_admin, Role.partner})
 
 
 def _normalize_phone(phone: str) -> str:
@@ -217,6 +219,12 @@ async def verify_otp(
 
 
 def _verify_login_password(user: User, password: str) -> None:
+    if user.is_test_account and user.role in _PRIVILEGED_TEST_LOGIN_ROLES:
+        # Defense in depth: privileged roles must never authenticate via shared demo hashes.
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_credentials",
+        )
     if user.is_test_account:
         if not _is_beta():
             raise HTTPException(
