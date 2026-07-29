@@ -1,6 +1,9 @@
 """Best-effort rate limits for auth endpoints (anti brute-force OTP / login).
 
 Por processo (memória). Em produção multi-worker, combinar com limite no proxy quando possível.
+
+OTP *verify* is keyed by phone alone: client-controlled ``X-Forwarded-For`` must
+not mint fresh buckets and enable 6-digit OTP brute-force / account takeover.
 """
 
 import time
@@ -11,8 +14,9 @@ from fastapi import HTTPException, Request, status
 # (kind, ip, key_suffix) -> timestamps monotonic
 _buckets: dict[tuple[str, str, str], list[float]] = defaultdict(list)
 
-# Por IP+telefone (OTP / login BETA)
+# Por IP+telefone (OTP request / login BETA)
 _MAX_OTP_REQUEST_PER_MINUTE = 12
+# Por telefone only (OTP verify — must not depend on spoofable client IP)
 _MAX_OTP_VERIFY_PER_MINUTE = 12
 _MAX_LOGIN_PER_MINUTE = 24
 # Por IP (Google code exchange — sem telefone na chave)
@@ -48,10 +52,16 @@ def check_otp_request_rate_limit(request: Request, phone: str) -> None:
 
 
 def check_otp_verify_rate_limit(request: Request, phone: str) -> None:
+    """Limit OTP guesses per phone.
+
+    Do not key by client IP: ``X-Forwarded-For`` is attacker-controlled unless a
+    trusted proxy strips it, and rotating the header previously bypassed the
+    IP+phone bucket entirely.
+    """
+    _ = request  # kept for call-site symmetry with other auth limit helpers
     now = time.monotonic()
-    ip = client_ip(request)
     key = phone.strip()[:32]
-    bucket = _buckets[("otp_verify", ip, key)]
+    bucket = _buckets[("otp_verify", "", key)]
     _prune(bucket, window_s=60.0, now=now)
     if len(bucket) >= _MAX_OTP_VERIFY_PER_MINUTE:
         raise HTTPException(
