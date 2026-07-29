@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ErrorBanner } from '../../components/feedback/ErrorBanner'
 import { isBackofficeStaffRole, useAuth } from '../../context/AuthContext'
 import {
   adminErrDetail,
@@ -612,6 +613,58 @@ export function AdminDashboard() {
     }
   }
 
+  /** NAV-3D.2: clear banner + re-fetch data for the active tab (no ops mutations). */
+  const retryDashboardLoad = useCallback(() => {
+    setError(null)
+    if (!token) return
+    if (tab === 'agora') {
+      void refreshAgora()
+      return
+    }
+    if (tab === 'pending') {
+      void fetchPending()
+      return
+    }
+    if (tab === 'users' || tab === 'docs') {
+      void fetchUsers()
+      return
+    }
+    if (tab === 'trips') {
+      if (tripsListMode === 'active') void fetchActiveTrips()
+      else void fetchHistoryTrips()
+      return
+    }
+    if (tab === 'metrics') {
+      void fetchMetrics()
+      void fetchUsage()
+      return
+    }
+    if (tab === 'health' || tab === 'ops') {
+      void fetchHealth()
+      return
+    }
+    if (tab === 'dados') {
+      void fetchDataVisibility()
+      return
+    }
+    if (tab === 'frota') {
+      void ensureDataLoaded()
+    }
+  }, [
+    token,
+    tab,
+    tripsListMode,
+    refreshAgora,
+    fetchPending,
+    fetchUsers,
+    fetchActiveTrips,
+    fetchHistoryTrips,
+    fetchMetrics,
+    fetchUsage,
+    fetchHealth,
+    ensureDataLoaded,
+  ])
+
   const copy = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value)
@@ -818,9 +871,24 @@ export function AdminDashboard() {
         </p>
       ) : null}
 
-      {error && (
-        <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-4">{error}</p>
-      )}
+      {error ? (
+        <ErrorBanner
+          message={error}
+          role="alert"
+          testId="admin-dashboard-error"
+          className="mb-4"
+          action={
+            <button
+              type="button"
+              data-testid="admin-dashboard-error-retry"
+              onClick={retryDashboardLoad}
+              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground text-sm font-medium rounded-lg hover:bg-muted/40"
+            >
+              Tentar novamente
+            </button>
+          }
+        />
+      ) : null}
 
       {tab === 'agora' && (
         <AdminTabAgora
