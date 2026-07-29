@@ -730,6 +730,17 @@ async def demote_user_from_driver(
 
     if driver_has_active_assigned_trip(db=db, driver_user_id=str(u.id)):
         raise HTTPException(status_code=409, detail="driver_has_active_trip")
+    # trips.driver_id ON DELETE SET NULL — deleting the Driver row would erase
+    # historical attribution on completed/cancelled trips and drop them from
+    # partner trip list/export (INNER JOIN Trip→Driver).
+    has_driver_trip_history = (
+        db.execute(select(Trip.id).where(Trip.driver_id == u.id).limit(1)).first()
+        is not None
+    )
+    if has_driver_trip_history:
+        raise HTTPException(
+            status_code=409, detail="cannot_demote_driver_with_trips"
+        )
     db.delete(driver)
     u.role = Role.passenger
     record_admin_action(
@@ -839,18 +850,18 @@ async def delete_user(
         raise HTTPException(status_code=400, detail="cannot_delete_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_delete_staff_role")
-    has_trips = (
-        db.execute(select(Trip).where(Trip.passenger_id == u.id).limit(1)).first()
+    has_passenger_trips = (
+        db.execute(select(Trip.id).where(Trip.passenger_id == u.id).limit(1)).first()
         is not None
     )
-    if has_trips:
+    if has_passenger_trips:
         raise HTTPException(
             status_code=409,
             detail="cannot_delete_user_with_trips",
         )
     # Lock Driver before delete. trips.driver_id ON DELETE SET NULL would
-    # detach a live accepted/arriving/ongoing trip from its driver while
-    # leaving status + Payment(processing) intact.
+    # detach live trips (orphan Payment) and erase historical driver
+    # attribution — partner list/export join Trip→Driver would lose those rows.
     driver = db.execute(
         select(Driver)
         .where(Driver.user_id == u.id)
@@ -859,6 +870,15 @@ async def delete_user(
     if driver:
         if driver_has_active_assigned_trip(db=db, driver_user_id=str(u.id)):
             raise HTTPException(status_code=409, detail="driver_has_active_trip")
+        has_driver_trips = (
+            db.execute(select(Trip.id).where(Trip.driver_id == u.id).limit(1)).first()
+            is not None
+        )
+        if has_driver_trips:
+            raise HTTPException(
+                status_code=409,
+                detail="cannot_delete_user_with_trips",
+            )
         db.delete(driver)
     record_admin_action(
         db,
