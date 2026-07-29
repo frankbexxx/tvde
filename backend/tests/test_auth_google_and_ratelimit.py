@@ -84,6 +84,31 @@ def test_otp_verify_rate_limit_per_phone(client) -> None:
     assert r13.json()["detail"] == "rate_limit_otp_verify"
 
 
+def test_otp_verify_rate_limit_not_bypassed_by_xff_rotation(client) -> None:
+    """Rotating X-Forwarded-For must not mint a fresh OTP verify bucket.
+
+    Spoofable leftmost XFF previously keyed IP+phone limits, enabling 6-digit
+    OTP brute-force within the code's validity window.
+    """
+    phone = "+351934999776"
+    for i in range(12):
+        r = client.post(
+            "/auth/otp/verify",
+            json={"phone": phone, "code": "000000"},
+            headers={"X-Forwarded-For": f"203.0.113.{i}"},
+        )
+        assert r.status_code == 401, f"iteration {i}"
+        assert r.json()["detail"] == "invalid_otp"
+
+    r13 = client.post(
+        "/auth/otp/verify",
+        json={"phone": phone, "code": "000000"},
+        headers={"X-Forwarded-For": "198.51.100.50"},
+    )
+    assert r13.status_code == 429
+    assert r13.json()["detail"] == "rate_limit_otp_verify"
+
+
 def test_dev_tools_fixed_otp_disabled_in_production(client, monkeypatch, capsys) -> None:
     monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
     monkeypatch.setattr(settings, "ENABLE_DEV_TOOLS", True, raising=False)
