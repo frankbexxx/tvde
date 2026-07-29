@@ -8,15 +8,30 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-28** — NAV-3A Admin IA + NAV-2 feedback + B2 espera + PF3D OFF)
+## Contexto actual (**2026-07-29** — NAV-3D.1 fechado + B2 espera + PF3D OFF)
 
-### NAV / UX
+### Checkpoint Git
 
-| Doc | Estado |
-|-----|--------|
-| [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) | **NAV-3A PASS** — IA Admin / contrato query (docs-only) |
-| [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) | **NAV-0 PASS** — contrato 4 apps |
-| EmptyState / ErrorBanner | **NAV-2A/B/C** em main (#491–#493) |
+| Item | Estado |
+|------|--------|
+| **`main`** | `7e0cbce` |
+| **origin/main** | alinhado |
+| **working tree** | limpo |
+
+### NAV / UX (fechado até NAV-3D.1)
+
+| Item | PR / tip | Estado |
+|------|----------|--------|
+| NAV-2C Partner Empty/Error | [#493](https://github.com/frankbexxx/tvde/pull/493) · `fe6bbe5` | **PASS** |
+| NAV-3A Admin IA docs | [#494](https://github.com/frankbexxx/tvde/pull/494) · `5b5f85a` | **PASS** — [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
+| NAV-3B Admin i18n | [#495](https://github.com/frankbexxx/tvde/pull/495) · `298bd10` | **PASS** + smoke prod |
+| NAV-3C grupos Admin | [#496](https://github.com/frankbexxx/tvde/pull/496) · `9eff1e0` | **PASS** + smoke prod |
+| NAV-3D.1 EmptyState Admin | [#497](https://github.com/frankbexxx/tvde/pull/497) · `7e0cbce` | **PASS** + smoke 3 janelas |
+| NAV-0 contrato 4 apps | [#489](https://github.com/frankbexxx/tvde/pull/489) | **PASS** — [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
+
+**Contrato Admin (intactos):** `?tab=` · `tripId` · `tripsList` · **sem** `?group=` · Admin **PT forçado** (`LocaleProvider`).
+
+**Smoke visual (processo):** preferir `Admin → Grupo → Tab` em **3 janelas**; URL só validação técnica do contrato.
 
 ### Availability Guard (regra actual)
 
@@ -42,20 +57,16 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 | Item | Estado |
 |------|--------|
-| **`main`** | ≥ `fe6bbe5` |
 | **Availability Guard** | **PASS** (A+B) |
 | **B2 implementação** | **Não** — espera Manel |
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
-| **NAV-0** | Contrato 4 apps documentado |
-| **NAV-1** | Labels/i18n 4 apps (#490) |
-| **NAV-2** | EmptyState / ErrorBanner Partner (#491–#493) |
-| **NAV-3A** | IA Admin documentada |
-| **NAV-3B** | Próximo recomendado — i18n mínimo Admin |
+| **NAV-3D.2** | Próximo recomendado — ErrorBanner Admin (escopo pequeno) |
+| **NAV-3E** | **Não** nesta fase |
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação |
 
-**Frase de fecho:** NAV-3A registado. Próximo: NAV-3B i18n Admin. Gates OFF. B2 em espera. Sem rewrite Admin.
+**Frase de fecho:** NAV-3D.1 fechado em `7e0cbce`. Próximo: **NAV-3D.2** ErrorBanner Admin. Gates OFF. B2 em espera. Sem PageHeader / Trips-Ops actions / NAV-3E.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -65,12 +76,15 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### Entregas recentes
 
-| PR / doc | O quê |
+| PR / tip | O quê |
 |----------|-------|
-| NAV-3A | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
-| **#493** / **#492** / **#491** | NAV-2C/B/A EmptyState + ErrorBanner Partner |
-| **#490** | NAV-1 labels/i18n |
-| **#489** | NAV-0 contrato 4 apps |
+| **#497** · `7e0cbce` | NAV-3D.1 EmptyState Admin (Pending / Dados / Metrics) |
+| **#496** · `9eff1e0` | NAV-3C grupos Admin + `adminNavGroups` |
+| **#495** · `298bd10` | NAV-3B Admin i18n (`pt`/`en` `admin.json`) |
+| **#494** · `5b5f85a` | NAV-3A IA Admin docs |
+| **#493** · `fe6bbe5` | NAV-2C EmptyState/ErrorBanner Partner |
+| **#492** / **#491** | NAV-2B/A pilots |
+| **#490** / **#489** | NAV-1 labels · NAV-0 contrato 4 apps |
 | **#486** + smoke 3B/OFF | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
 | B2-DIAG | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
 
@@ -79,8 +93,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | ID | Notas |
 |----|-------|
 | **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
-| **NAV-3B** | i18n mínimo Admin (`admin.json` + tabs) — após NAV-3A |
-| **NAV-3C** | Agrupamento visual Admin — só após NAV-3B; **sem** mudar `?tab=` |
+| **NAV-3D.2** | ErrorBanner Admin — Dashboard `{error}` + Agora refresh (`testId`) |
+| **NAV-3D.3+ / NAV-3E** | Só se valer; **sem** Trips/Ops mutáveis / PageHeader |
 | **PF3D-3B/ON** | Smoke ON controlado — opcional; **não** activar em prod global |
 | **PF3D-3 ON** | Só após atribuição real + docs reais |
 | **PF3B-UX-DRIVER-DETAIL** | Tabs / scroll Partner Detail — debt |
@@ -96,10 +110,13 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 ### O que fazer a seguir (ordem — 1 carril)
 
 1. **Espera Manel B2** (B/C/adiar) — sem implementação  
-2. **NAV-3B** i18n mínimo Admin (após NAV-3A em main) — opcional paralelo a espera B2  
+2. **NAV-3D.2** ErrorBanner Admin (escopo pequeno):  
+   - `AdminDashboard` `{error}`  
+   - `AdminTabAgora` refresh error — preservar `data-testid="admin-agora-refresh-error"`  
+   - **Sem** PageHeader · **sem** NAV-3E · **sem** Trips/Ops actions  
 3. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
 4. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
-5. **NAV-3C** agrupamento visual Admin (só após 2; sem handlers/query) · roadmap PF3D ON (só após 3)
+5. Roadmap PF3D ON (só após 3) · backlog produto se Manel responder
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
 
@@ -127,6 +144,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | Painel vivo | [`TODOdoDIA.md`](../../TODOdoDIA.md) |
 
 ---
+
+## Contexto anterior (**2026-07-28** — NAV-3A docs; depois NAV-3B→3D.1 na mesma linha)
+
+Checkpoint evoluiu até `7e0cbce` (NAV-3D.1). Contrato Admin e smokes 3B/3C/3D.1 registados acima.
 
 ## Contexto anterior (**2026-07-27** — PF3D-3B OFF + B2 DIAG)
 
