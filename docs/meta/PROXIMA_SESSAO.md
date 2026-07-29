@@ -8,17 +8,17 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-29** — P-504-PWD fechado + #504/#507)
+## Contexto actual (**2026-07-29** — tip `e086743` · auth/P-504-PWD fechados · #509 e2e)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `91a68f4` (#507) |
+| **`main`** | `e086743` (#509) |
 | **origin/main** | alinhado |
-| **working tree** | handoff P-504-PWD por commit (só este ficheiro) |
-| **API prod (Render)** | Live ≥ **`c510154`** (#504); script #507 aplicado em Shell |
-| **CI** | verde na PR #507 (`backend-ci` + `web-e2e`) |
+| **working tree** | sync tip `e086743` por commit (docs) |
+| **API prod (Render)** | Live ≥ **`c510154`** (#504); #507 aplicado em Shell |
+| **CI** | verde em `main` |
 
 ### #504 — privilegiados fora da password demo (fechado em prod)
 
@@ -43,6 +43,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Item | Estado |
 |------|--------|
 | PR script | [#507](https://github.com/frankbexxx/tvde/pull/507) · `91a68f4` |
+| Handoff P-504-PWD | [#508](https://github.com/frankbexxx/tvde/pull/508) · `61edcf8` |
 | Script | `backend/scripts/set_privileged_baseline_password.py` |
 | Render Shell | **APPLIED** em `+351900000000` (admin) e `+351955555502` (partner) |
 | Output seguro | `role=admin is_test_account=False password_set=yes` · `role=partner is_test_account=False password_set=yes` |
@@ -59,6 +60,14 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Frank SA | **OK** |
 
 **Notas:** privilegiados **não** usam `TEST_ACCOUNT_PASSWORD`. Frank/SA não foi alterado neste passo. Passenger/Driver demo continuam operacionais. Sem passwords/hashes em docs.
+
+### #509 — flake E2E Maps / geolocation (**fechado**)
+
+| Item | Estado |
+|------|--------|
+| PR | [#509](https://github.com/frankbexxx/tvde/pull/509) · `e086743` |
+| Fix | Poll com `syncDriverNearPickupForStart` antes de «Iniciar viagem» (browser + servidor) |
+| CI | `web-e2e` verde na PR + `main` |
 
 ### Processo review (sem Bugbot)
 
@@ -82,6 +91,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | OTP verify rate-limit (phone) | [#502](https://github.com/frankbexxx/tvde/pull/502) · `7556fb2` | **PASS** |
 | Privileged baseline / demo | [#504](https://github.com/frankbexxx/tvde/pull/504) · `c510154` | **PASS** + backfill + smoke prod |
 | Privileged baseline passwords | [#507](https://github.com/frankbexxx/tvde/pull/507) · `91a68f4` | **PASS** — script + apply prod + smoke |
+| Handoff P-504-PWD | [#508](https://github.com/frankbexxx/tvde/pull/508) · `61edcf8` | **PASS** — docs only |
+| E2E Maps geo sync | [#509](https://github.com/frankbexxx/tvde/pull/509) · `e086743` | **PASS** |
 | PR review checklist | [#505](https://github.com/frankbexxx/tvde/pull/505) · `641c0c7` | **PASS** — docs only |
 | NAV-0 contrato 4 apps | [#489](https://github.com/frankbexxx/tvde/pull/489) | **PASS** — [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 
@@ -120,7 +131,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
 | **#504 auth prod** | **Fechado** — deploy `c510154` + backfill + smoke S-504-A…E **PASS** |
-| **P-504-PWD** | **Fechado** — #507 + apply Shell + smoke UI final **PASS** |
+| **P-504-PWD** | **Fechado** — #507 + apply Shell + #508 handoff + smoke UI **PASS** |
+| **#509 e2e Maps** | **Fechado** — sync geo browser antes de «Iniciar viagem» |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
@@ -129,7 +141,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** P-504-PWD fechado em prod (#507 + passwords próprias admin/partner + smoke PASS). #504/#505 fechados. Bugbot/agents OFF. Gates PF3D OFF. B2 em espera Manel. Follow-up opcional: NAV-3D.2b.
+**Frase de fecho:** Tip `e086743`. Auth/demo privilegiados fechados em prod (#504/#507/#508). Flake Maps #509 fechada. Bugbot/agents OFF. Gates PF3D OFF. B2 espera Manel. Próximo seguro: demo 4 papéis ou NAV-3D.2b opcional.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -141,7 +153,9 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
-| **#507** · `91a68f4` | Script set password privilegiados baseline + P-504-PWD prod **PASS** |
+| **#509** · `e086743` | E2E: sync browser geo antes de assert «Iniciar viagem» (Maps) |
+| **#508** · `61edcf8` | Handoff meta fecho P-504-PWD |
+| **#507** · `91a68f4` | Script set password privilegiados baseline + apply prod **PASS** |
 | **#506** · `a61acfa` | Handoff meta fecho #504 |
 | **#505** · `641c0c7` | Checklist revisão manual de PRs ([`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md)) |
 | **#504** · `c510154` | Privilegiados fora da demo + backfill/smoke prod **PASS** |
@@ -174,7 +188,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | **OPS-UX-POLISH** | Mobile / densidades — não blocker |
 | **ADMIN-OPS-UX** | Alinhar com NAV-3 (sem rewrite) |
 | **CHORE-LINT-1** | Ruff 0.16 — baixa prioridade |
-| **R-E2E-1** | Flake intermitente (ex. nav Maps) — monitorizar |
+| **R-E2E-1** | Flake web-e2e — caso Maps mitigado em #509; monitorizar residual |
 | **O-STRIPE-LIVE** | Futuro |
 | **R-GIT-1** | Branches locais — **não apagar ainda** |
 | **CI-MAINT-1** | Warning Actions Node 20 — baixa prioridade |
@@ -182,12 +196,12 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 ### O que fazer a seguir (ordem — 1 carril)
 
 1. **Espera Manel B2** (B/C/adiar) — sem implementação  
-2. **Opcional NAV-3D.2b:** migrar `admin-agora-refresh-error` → ErrorBanner (preservar `data-testid`) — **sem** PageHeader / NAV-3E / Trips-Ops  
-3. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
-4. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
-5. Roadmap PF3D ON (só após 3) · backlog produto se Manel responder  
+2. **Demo 4 papéis** (opcional, útil entrega) — smoke UI com passwords já correctas; sem código  
+3. **Opcional NAV-3D.2b:** migrar `admin-agora-refresh-error` → ErrorBanner (preservar `data-testid`) — **sem** PageHeader / NAV-3E / Trips-Ops  
+4. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
+5. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
 
-**Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365`. Pytest: launcher seguro / BD local.
+**Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
 
 ### Specs activas
 
