@@ -8,17 +8,17 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-29** — #504 auth prod fechado + #505 checklist review)
+## Contexto actual (**2026-07-29** — P-504-PWD fechado + #504/#507)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `641c0c7` (#505) |
+| **`main`** | `91a68f4` (#507) |
 | **origin/main** | alinhado |
-| **working tree** | handoff #504 por commit (só este ficheiro) |
-| **API prod (Render)** | Live em **`c510154`** (#504) |
-| **CI** | verde em `main` pós #505 |
+| **working tree** | handoff P-504-PWD por commit (só este ficheiro) |
+| **API prod (Render)** | Live ≥ **`c510154`** (#504); script #507 aplicado em Shell |
+| **CI** | verde na PR #507 (`backend-ci` + `web-e2e`) |
 
 ### #504 — privilegiados fora da password demo (fechado em prod)
 
@@ -28,7 +28,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Deploy API | **Live** em `c510154` |
 | Backfill Render Shell | **APPLIED** — `total=18` · `test=7` · `real=3` · `unchanged=8` |
 | `real` phones | `+351900000000` · `+351955555502` · `+351924075365` |
-| Smoke UI pós-apply | **PASS** (S-504-A…E) |
+| Smoke UI pós-backfill | **PASS** (S-504-A…E) |
 
 | Smoke | Resultado |
 |-------|-----------|
@@ -38,7 +38,27 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **S-504-D** passenger demo | OK |
 | **S-504-E** driver demo | OK |
 
-**Notas #504:** `password_not_set` em admin/partner baseline é **esperado**. Privilegiados **não** usam password demo. Passenger/Driver demo continuam operacionais.
+### P-504-PWD — passwords próprias admin/partner baseline (**fechado em prod**)
+
+| Item | Estado |
+|------|--------|
+| PR script | [#507](https://github.com/frankbexxx/tvde/pull/507) · `91a68f4` |
+| Script | `backend/scripts/set_privileged_baseline_password.py` |
+| Render Shell | **APPLIED** em `+351900000000` (admin) e `+351955555502` (partner) |
+| Output seguro | `role=admin is_test_account=False password_set=yes` · `role=partner is_test_account=False password_set=yes` |
+| Smoke UI final | **PASS** |
+
+| Smoke | Resultado |
+|-------|-----------|
+| Admin baseline + password própria | **OK** |
+| Partner baseline + password própria | **OK** |
+| Admin baseline + demo | **FAIL** |
+| Partner baseline + demo | **FAIL** |
+| Passenger demo | **OK** |
+| Driver demo | **OK** |
+| Frank SA | **OK** |
+
+**Notas:** privilegiados **não** usam `TEST_ACCOUNT_PASSWORD`. Frank/SA não foi alterado neste passo. Passenger/Driver demo continuam operacionais. Sem passwords/hashes em docs.
 
 ### Processo review (sem Bugbot)
 
@@ -61,6 +81,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Admin demote/delete integrity | [#499](https://github.com/frankbexxx/tvde/pull/499) · `aa39a9f` | **PASS** — backend only |
 | OTP verify rate-limit (phone) | [#502](https://github.com/frankbexxx/tvde/pull/502) · `7556fb2` | **PASS** |
 | Privileged baseline / demo | [#504](https://github.com/frankbexxx/tvde/pull/504) · `c510154` | **PASS** + backfill + smoke prod |
+| Privileged baseline passwords | [#507](https://github.com/frankbexxx/tvde/pull/507) · `91a68f4` | **PASS** — script + apply prod + smoke |
 | PR review checklist | [#505](https://github.com/frankbexxx/tvde/pull/505) · `641c0c7` | **PASS** — docs only |
 | NAV-0 contrato 4 apps | [#489](https://github.com/frankbexxx/tvde/pull/489) | **PASS** — [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 
@@ -99,15 +120,16 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
 | **#504 auth prod** | **Fechado** — deploy `c510154` + backfill + smoke S-504-A…E **PASS** |
+| **P-504-PWD** | **Fechado** — #507 + apply Shell + smoke UI final **PASS** |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3E** | **Não** nesta fase |
 | **Trips/Ops actions** | **Não** nesta linha |
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
-| **Render env / DB / migrations** | Intactos nesta documentação (backfill #504 já aplicado) |
+| **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** #504 fechado em prod (`c510154` + backfill + smoke PASS). Checklist review #505. Bugbot/agents OFF. Gates PF3D OFF. B2 em espera Manel. Follow-up opcional: NAV-3D.2b.
+**Frase de fecho:** P-504-PWD fechado em prod (#507 + passwords próprias admin/partner + smoke PASS). #504/#505 fechados. Bugbot/agents OFF. Gates PF3D OFF. B2 em espera Manel. Follow-up opcional: NAV-3D.2b.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -119,6 +141,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#507** · `91a68f4` | Script set password privilegiados baseline + P-504-PWD prod **PASS** |
+| **#506** · `a61acfa` | Handoff meta fecho #504 |
 | **#505** · `641c0c7` | Checklist revisão manual de PRs ([`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md)) |
 | **#504** · `c510154` | Privilegiados fora da demo + backfill/smoke prod **PASS** |
 | **#502** · `7556fb2` | OTP verify rate-limit por phone (não XFF) |
