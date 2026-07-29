@@ -12,6 +12,7 @@
 | -------- | --------- |
 | [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo (tabelas ID/Estado) |
 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto + Seções F/G resumo |
+| [PR_REVIEW_CHECKLIST.md](PR_REVIEW_CHECKLIST.md) | Checklist revisão manual de PRs (sem Bugbot/agents) |
 | [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 + checkpoint Julho 2026 |
 | [PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md](../ops/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) | PF3D-DATA-1E — re-audit pós DATA-1C/D (dev/test; sem gates) |
 | [PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | PF3D-0 — decisão/matriz compliance gates docs viatura |
