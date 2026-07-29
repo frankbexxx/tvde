@@ -379,3 +379,109 @@ def test_demote_serializes_with_offer_accept(
         assert accepted.driver_id == driver_id
     finally:
         verify_db.close()
+
+
+def _seed_driver_with_completed_trip() -> tuple[uuid.UUID, uuid.UUID]:
+    """Driver with terminal trip history (no live trip). Returns (driver_id, trip_id)."""
+    db = SessionLocal()
+    try:
+        partner_id = _ensure_partner(db)
+        passenger = User(
+            role=Role.passenger,
+            name="History Pax",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        driver_user = User(
+            role=Role.driver,
+            name="History Driver",
+            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            status=UserStatus.active,
+        )
+        db.add_all([passenger, driver_user])
+        db.flush()
+        db.add(
+            Driver(
+                user_id=driver_user.id,
+                partner_id=partner_id,
+                status=DriverStatus.approved,
+                commission_percent=15.0,
+                is_available=True,
+                vehicle_categories="x",
+            )
+        )
+        trip = Trip(
+            passenger_id=passenger.id,
+            driver_id=driver_user.id,
+            status=TripStatus.completed,
+            origin_lat=38.72,
+            origin_lng=-9.14,
+            destination_lat=38.73,
+            destination_lng=-9.13,
+            estimated_price=10.0,
+            final_price=12.0,
+            vehicle_category="x",
+            distance_km=3.0,
+            duration_min=12.0,
+            completed_at=datetime.now(timezone.utc) - timedelta(hours=1),
+        )
+        db.add(trip)
+        db.commit()
+        return driver_user.id, trip.id
+    finally:
+        db.close()
+
+
+@pytest.mark.usefixtures("super_admin_ctx")
+def test_demote_blocked_when_driver_has_completed_trip_history(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Demote must not DELETE Driver: ON DELETE SET NULL would wipe trip.driver_id."""
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    driver_id, trip_id = _seed_driver_with_completed_trip()
+
+    r = client.post(
+        f"/admin/users/{driver_id}/demote-driver",
+        json={"governance_reason": "demote after completed trips xx"},
+    )
+    assert r.status_code == 409, r.text
+    assert r.json().get("detail") == "cannot_demote_driver_with_trips"
+
+    db = SessionLocal()
+    try:
+        assert db.get(Driver, driver_id) is not None
+        trip = db.get(Trip, trip_id)
+        assert trip is not None
+        assert trip.driver_id == driver_id
+        user = db.get(User, driver_id)
+        assert user is not None
+        assert user.role == Role.driver
+    finally:
+        db.close()
+
+
+@pytest.mark.usefixtures("super_admin_ctx")
+def test_delete_user_blocked_when_driver_has_completed_trip_history(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Delete must not erase historical trip.driver_id via Driver ON DELETE SET NULL."""
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    driver_id, trip_id = _seed_driver_with_completed_trip()
+
+    r = client.request(
+        "DELETE",
+        f"/admin/users/{driver_id}",
+        json={"governance_reason": "delete after completed trips xx"},
+    )
+    assert r.status_code == 409, r.text
+    assert r.json().get("detail") == "cannot_delete_user_with_trips"
+
+    db = SessionLocal()
+    try:
+        assert db.get(User, driver_id) is not None
+        assert db.get(Driver, driver_id) is not None
+        trip = db.get(Trip, trip_id)
+        assert trip is not None
+        assert trip.driver_id == driver_id
+    finally:
+        db.close()
