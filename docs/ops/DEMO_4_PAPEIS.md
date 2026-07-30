@@ -160,9 +160,9 @@ Marcar mentalmente ou numa nota local: **PASS** / **FAIL** / **SKIP**.
 | Viagem completa (pedir → accept → start → ongoing → complete → rating) | **OK** |
 | Partner Home/KPIs · lista/estado frota · viagens | **OK** |
 | Admin Agora · Viagens · Saúde/ops leitura | **OK** |
-| **BUG-DEMO-1** | Driver Menu → Viagens → detalhe/modal **atrás** da lista — follow-up UX; **não** bloqueou a demo |
+| **BUG-DEMO-1** | **Corrigido** #513 (`49509e2`) — detalhe acima do menu Sheet; `data-testid=driver-history-trip-detail` |
 
-Painel vivo: `O-DEMO-4ROLES` / `S-DEMO-4` = **Concluído** · `BUG-DEMO-1` = **Por iniciar** em [`TODOdoDIA.md`](../../TODOdoDIA.md).
+Painel vivo: `O-DEMO-4ROLES` / `S-DEMO-4` = **Concluído** · `BUG-DEMO-1` = **Concluído** em [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
 ---
 

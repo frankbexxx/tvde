@@ -16,11 +16,11 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-30** — tip `3b429c2` · DEMO_4_PAPEIS PASS)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-30** — tip `49509e2` · BUG-DEMO-1 fechado)
 
-**`main` / `origin/main`:** `3b429c2` · alinhado · working tree limpa (após merge docs) · CI verde.
+**`main` / `origin/main`:** `49509e2` · alinhado · working tree limpa (após merge docs) · CI verde.
 
-**Objectivo imediato:** **1 carril** — espera Manel **B2** · **ou** **BUG-DEMO-1** (Driver Viagens z-index) · **ou** NAV-3D.2b opcional. **Não** PF3D ON · **não** B2 sem decisão.
+**Objectivo imediato:** **1 carril** — espera Manel **B2** · **ou** NAV-3D.2b opcional. **Não** PF3D ON · **não** B2 sem decisão.
 
 **Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
@@ -31,10 +31,11 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-508** | Handoff P-504-PWD | Concluído | `61edcf8` · docs only |
 | **PR-509** | E2E Maps sync geo browser | Concluído | `e086743` · flake «Iniciar viagem» |
 | **PR-511** | Runbook DEMO_4_PAPEIS | Concluído | `3b429c2` · docs |
+| **PR-512** | Fecho smoke DEMO_4 + BUG-DEMO-1 aberto | Concluído | `c611580` · docs |
+| **PR-513** / **BUG-DEMO-1** | Driver detalhe Viagens acima do menu | Concluído | `49509e2` — Dialog `z-[70]` scoped vs Sheet `z-[60]` |
 | **PR-505** | Checklist review manual | Concluído | Sem Bugbot/agents |
 | **S-AUTH-PWD** | Smoke prod passwords próprias | Concluído | Admin/partner OK · demo FAIL · pax/driver OK · Frank OK |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke humano demo 4 papéis (prod) | Concluído | **PASS** 2026-07-30 — viagem completa + Partner + Admin |
-| **BUG-DEMO-1** | Driver: detalhe Viagens atrás do painel | Por iniciar | Menu → Viagens → detalhe/modal sob lista; UX; não bloqueia ciclo |
 | **AVAIL-B2-NEXT-TRIP** | Next trip while ongoing | Bloqueado | Espera Manel B/C/adiar — [`B2_NEXT_TRIP_CHAINING_DIAG`](docs/architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
 | **PF3D-GATES** | Compliance gates viatura | Concluído | OFF em prod; smoke OFF PASS |
 | **NAV-3D.2** | Admin ErrorBanner dashboard | Concluído | #500 |
@@ -45,7 +46,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (recomendado):** BUG-DEMO-1 (fix UX pequeno) **ou** NAV-3D.2b · B2 só com Manel · PF3D ON só com dados reais.
+**Próximo (recomendado):** espera Manel B2 · **ou** NAV-3D.2b · PF3D ON só com dados reais.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 
