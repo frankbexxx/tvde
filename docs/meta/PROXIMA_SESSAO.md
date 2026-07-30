@@ -8,15 +8,15 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-30** — tip `3b429c2` · DEMO_4_PAPEIS PASS · BUG-DEMO-1)
+## Contexto actual (**2026-07-30** — tip `49509e2` · DEMO_4_PAPEIS PASS · BUG-DEMO-1 fechado)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `3b429c2` (#511) |
+| **`main`** | `49509e2` (#513) |
 | **origin/main** | alinhado |
-| **working tree** | sync demo PASS / BUG-DEMO-1 por commit (docs) |
+| **working tree** | sync fecho BUG-DEMO-1 por commit (docs) |
 | **API prod (Render)** | Live ≥ **`c510154`** (#504); #507 aplicado em Shell |
 | **CI** | verde em `main` |
 
@@ -31,16 +31,15 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Partner | Home/KPIs · lista/estado frota · viagens/histórico — **OK** |
 | Admin | Agora · Viagens/histórico · Saúde/ops leitura — **OK** |
 
-### BUG-DEMO-1 — follow-up UX (não bloqueante)
+### BUG-DEMO-1 — Driver detalhe Viagens (**fechado** #513)
 
 | Campo | Valor |
 |-------|--------|
 | App | Driver |
 | Zona | Menu → Viagens → Ver detalhe |
-| Problema | Detalhe/modal abre **por trás** do painel/lista de viagens |
-| Impacto | UX; **não** bloqueia demo nem ciclo viagem |
-| Severidade | Média/baixa p/ demo · média p/ uso real |
-| Estado | **Por iniciar** — **não** implementar neste fecho docs |
+| Causa | Dialog `z-50` atrás do Sheet menu `z-[60]` |
+| Fix | [#513](https://github.com/frankbexxx/tvde/pull/513) · `49509e2` — `overlayClassName` + content `z-[70]` scoped |
+| Estado | **Concluído** — detalhe acima do menu; menu não fecha |
 
 ### #504 — privilegiados fora da password demo (fechado em prod)
 
@@ -156,7 +155,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **P-504-PWD** | **Fechado** — #507 + apply Shell + #508 handoff + smoke UI **PASS** |
 | **#509 e2e Maps** | **Fechado** — sync geo browser antes de «Iniciar viagem» |
 | **#511 DEMO_4_PAPEIS** | **Fechado** — runbook + smoke humano prod **PASS** |
-| **BUG-DEMO-1** | **Por iniciar** — Driver Viagens detalhe atrás do painel (UX) |
+| **BUG-DEMO-1** | **Fechado** — #513 · `49509e2` (Dialog `z-[70]` acima Sheet) |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
@@ -165,7 +164,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `3b429c2`. Demo 4 papéis prod **PASS**. Auth/P-504-PWD fechados. BUG-DEMO-1 em follow-up (sem fix agora). Bugbot OFF. PF3D OFF. B2 espera Manel.
+**Frase de fecho:** Tip `49509e2`. Demo 4 papéis prod **PASS**. BUG-DEMO-1 fechado (#513). Auth/P-504-PWD fechados. Bugbot OFF. PF3D OFF. B2 espera Manel.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -177,6 +176,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#513** · `49509e2` | BUG-DEMO-1 — detalhe Viagens Driver acima do menu Sheet |
+| **#512** · `c611580` | Docs: smoke DEMO_4_PAPEIS PASS + BUG-DEMO-1 aberto |
 | **#511** · `3b429c2` | Runbook demo 4 papéis + smoke humano prod **PASS** |
 | **#510** · `526e08f` | Sync handoff + TODOdoDIA tip `e086743` |
 | **#509** · `e086743` | E2E: sync browser geo antes de assert «Iniciar viagem» (Maps) |
@@ -204,7 +205,6 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | ID | Notas |
 |----|-------|
-| **BUG-DEMO-1** | Driver Menu → Viagens: detalhe/modal atrás da lista — fix UX pequeno |
 | **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
 | **NAV-3D.2b** | Opcional — `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3D.3+ / NAV-3E** | Só se valer; **sem** Trips/Ops mutáveis / PageHeader |
@@ -223,10 +223,9 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 ### O que fazer a seguir (ordem — 1 carril)
 
 1. **Espera Manel B2** (B/C/adiar) — sem implementação  
-2. **BUG-DEMO-1** *(opcional, UX)*: Driver Viagens — detalhe/modal acima do painel (z-index/stacking)  
-3. **Opcional NAV-3D.2b:** migrar `admin-agora-refresh-error` → ErrorBanner (preservar `data-testid`) — **sem** PageHeader / NAV-3E / Trips-Ops  
-4. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
-5. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
+2. **Opcional NAV-3D.2b:** migrar `admin-agora-refresh-error` → ErrorBanner (preservar `data-testid`) — **sem** PageHeader / NAV-3E / Trips-Ops  
+3. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
+4. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
 
