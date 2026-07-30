@@ -8,17 +8,39 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-29** — tip `e086743` · auth/P-504-PWD fechados · #509 e2e)
+## Contexto actual (**2026-07-30** — tip `3b429c2` · DEMO_4_PAPEIS PASS · BUG-DEMO-1)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `e086743` (#509) |
+| **`main`** | `3b429c2` (#511) |
 | **origin/main** | alinhado |
-| **working tree** | sync tip `e086743` por commit (docs) |
+| **working tree** | sync demo PASS / BUG-DEMO-1 por commit (docs) |
 | **API prod (Render)** | Live ≥ **`c510154`** (#504); #507 aplicado em Shell |
 | **CI** | verde em `main` |
+
+### DEMO_4_PAPEIS — smoke humano prod (**PASS** 2026-07-30)
+
+| Item | Estado |
+|------|--------|
+| Runbook | [`DEMO_4_PAPEIS.md`](../ops/DEMO_4_PAPEIS.md) · PR [#511](https://github.com/frankbexxx/tvde/pull/511) · `3b429c2` |
+| Health | **OK** |
+| Logins | Passenger · Driver+online · Partner · Admin/SA — **OK** |
+| Viagem | pedir → oferta → accept → start → ongoing (Pax) → complete → rating — **OK** |
+| Partner | Home/KPIs · lista/estado frota · viagens/histórico — **OK** |
+| Admin | Agora · Viagens/histórico · Saúde/ops leitura — **OK** |
+
+### BUG-DEMO-1 — follow-up UX (não bloqueante)
+
+| Campo | Valor |
+|-------|--------|
+| App | Driver |
+| Zona | Menu → Viagens → Ver detalhe |
+| Problema | Detalhe/modal abre **por trás** do painel/lista de viagens |
+| Impacto | UX; **não** bloqueia demo nem ciclo viagem |
+| Severidade | Média/baixa p/ demo · média p/ uso real |
+| Estado | **Por iniciar** — **não** implementar neste fecho docs |
 
 ### #504 — privilegiados fora da password demo (fechado em prod)
 
@@ -133,6 +155,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **#504 auth prod** | **Fechado** — deploy `c510154` + backfill + smoke S-504-A…E **PASS** |
 | **P-504-PWD** | **Fechado** — #507 + apply Shell + #508 handoff + smoke UI **PASS** |
 | **#509 e2e Maps** | **Fechado** — sync geo browser antes de «Iniciar viagem» |
+| **#511 DEMO_4_PAPEIS** | **Fechado** — runbook + smoke humano prod **PASS** |
+| **BUG-DEMO-1** | **Por iniciar** — Driver Viagens detalhe atrás do painel (UX) |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
@@ -141,7 +165,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `e086743`. Auth/demo privilegiados fechados em prod (#504/#507/#508). Flake Maps #509 fechada. Bugbot/agents OFF. Gates PF3D OFF. B2 espera Manel. Próximo seguro: demo 4 papéis ou NAV-3D.2b opcional.
+**Frase de fecho:** Tip `3b429c2`. Demo 4 papéis prod **PASS**. Auth/P-504-PWD fechados. BUG-DEMO-1 em follow-up (sem fix agora). Bugbot OFF. PF3D OFF. B2 espera Manel.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -153,6 +177,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#511** · `3b429c2` | Runbook demo 4 papéis + smoke humano prod **PASS** |
+| **#510** · `526e08f` | Sync handoff + TODOdoDIA tip `e086743` |
 | **#509** · `e086743` | E2E: sync browser geo antes de assert «Iniciar viagem» (Maps) |
 | **#508** · `61edcf8` | Handoff meta fecho P-504-PWD |
 | **#507** · `91a68f4` | Script set password privilegiados baseline + apply prod **PASS** |
@@ -178,6 +204,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | ID | Notas |
 |----|-------|
+| **BUG-DEMO-1** | Driver Menu → Viagens: detalhe/modal atrás da lista — fix UX pequeno |
 | **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
 | **NAV-3D.2b** | Opcional — `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3D.3+ / NAV-3E** | Só se valer; **sem** Trips/Ops mutáveis / PageHeader |
@@ -196,7 +223,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 ### O que fazer a seguir (ordem — 1 carril)
 
 1. **Espera Manel B2** (B/C/adiar) — sem implementação  
-2. **Demo 4 papéis** (opcional, útil entrega) — smoke UI com passwords já correctas; sem código  
+2. **BUG-DEMO-1** *(opcional, UX)*: Driver Viagens — detalhe/modal acima do painel (z-index/stacking)  
 3. **Opcional NAV-3D.2b:** migrar `admin-agora-refresh-error` → ErrorBanner (preservar `data-testid`) — **sem** PageHeader / NAV-3E / Trips-Ops  
 4. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
 5. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
@@ -208,6 +235,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | Área | Onde |
 |------|------|
 | PR review checklist (manual) | [`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md) |
+| Demo 4 papéis (prod) | [`DEMO_4_PAPEIS.md`](../ops/DEMO_4_PAPEIS.md) |
 | NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
 | NAV-0 contrato 4 apps | [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 | PF3D-3B/OFF smoke PASS | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |

@@ -151,4 +151,19 @@ Marcar mentalmente ou numa nota local: **PASS** / **FAIL** / **SKIP**.
 
 ---
 
-**Fim.** Após uma demo PASS, opcional: marcar `O-DEMO-4ROLES` no [`TODOdoDIA.md`](../../TODOdoDIA.md).
+## 8. Resultado smoke humano (prod) — **PASS** 2026-07-30
+
+| Área | Resultado |
+|------|-----------|
+| Health | **OK** |
+| Logins Pax / Driver+online / Partner / Admin-SA | **OK** |
+| Viagem completa (pedir → accept → start → ongoing → complete → rating) | **OK** |
+| Partner Home/KPIs · lista/estado frota · viagens | **OK** |
+| Admin Agora · Viagens · Saúde/ops leitura | **OK** |
+| **BUG-DEMO-1** | Driver Menu → Viagens → detalhe/modal **atrás** da lista — follow-up UX; **não** bloqueou a demo |
+
+Painel vivo: `O-DEMO-4ROLES` / `S-DEMO-4` = **Concluído** · `BUG-DEMO-1` = **Por iniciar** em [`TODOdoDIA.md`](../../TODOdoDIA.md).
+
+---
+
+**Fim.**
