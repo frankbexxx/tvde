@@ -16,13 +16,13 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-29** — tip `e086743` · auth/P-504-PWD · #509)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-30** — tip `3b429c2` · DEMO_4_PAPEIS PASS)
 
-**`main` / `origin/main`:** `e086743` · alinhado · working tree limpa (após merge docs) · CI verde.
+**`main` / `origin/main`:** `3b429c2` · alinhado · working tree limpa (após merge docs) · CI verde.
 
-**Objectivo imediato:** **1 carril** — espera Manel **B2** · **ou** demo 4 papéis · **ou** NAV-3D.2b opcional. **Não** PF3D ON · **não** B2 sem decisão.
+**Objectivo imediato:** **1 carril** — espera Manel **B2** · **ou** **BUG-DEMO-1** (Driver Viagens z-index) · **ou** NAV-3D.2b opcional. **Não** PF3D ON · **não** B2 sem decisão.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -30,20 +30,22 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-507** / **P-504-PWD** | Script passwords admin/partner baseline | Concluído | `91a68f4` · Shell APPLIED · smoke UI PASS |
 | **PR-508** | Handoff P-504-PWD | Concluído | `61edcf8` · docs only |
 | **PR-509** | E2E Maps sync geo browser | Concluído | `e086743` · flake «Iniciar viagem» |
+| **PR-511** | Runbook DEMO_4_PAPEIS | Concluído | `3b429c2` · docs |
 | **PR-505** | Checklist review manual | Concluído | Sem Bugbot/agents |
 | **S-AUTH-PWD** | Smoke prod passwords próprias | Concluído | Admin/partner OK · demo FAIL · pax/driver OK · Frank OK |
+| **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke humano demo 4 papéis (prod) | Concluído | **PASS** 2026-07-30 — viagem completa + Partner + Admin |
+| **BUG-DEMO-1** | Driver: detalhe Viagens atrás do painel | Por iniciar | Menu → Viagens → detalhe/modal sob lista; UX; não bloqueia ciclo |
 | **AVAIL-B2-NEXT-TRIP** | Next trip while ongoing | Bloqueado | Espera Manel B/C/adiar — [`B2_NEXT_TRIP_CHAINING_DIAG`](docs/architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
 | **PF3D-GATES** | Compliance gates viatura | Concluído | OFF em prod; smoke OFF PASS |
 | **NAV-3D.2** | Admin ErrorBanner dashboard | Concluído | #500 |
 | **NAV-3D.2b** | Agora refresh → ErrorBanner | Por iniciar | Opcional; preservar `testId` |
-| **O-DEMO-4ROLES** | Runbook/smoke demo 4 papéis | Smoke pendente | [`DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) — doc criada; smoke humano por fazer |
 | **R-E2E-1** | Flake web-e2e residual | N/A | Maps mitigado #509; monitorizar |
 | **Bugbot / Cloud** | Automações Cursor | N/A | **OFF** · triggers apagados |
 | **O-STRIPE-LIVE** | Stripe live | Bloqueado | Parceiro + docs |
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (recomendado):** sync docs (este painel) → demo 4 papéis **ou** NAV-3D.2b · B2 só com Manel · PF3D ON só com dados reais.
+**Próximo (recomendado):** BUG-DEMO-1 (fix UX pequeno) **ou** NAV-3D.2b · B2 só com Manel · PF3D ON só com dados reais.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 
