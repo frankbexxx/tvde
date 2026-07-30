@@ -8,15 +8,15 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-30** — tip `49509e2` · DEMO_4_PAPEIS PASS · BUG-DEMO-1 fechado)
+## Contexto actual (**2026-07-30** — tip `dc66772` · NAV-3D.2b + DEMO PASS · BUG-DEMO-1 fechado)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `49509e2` (#513) |
+| **`main`** | `dc66772` (#515) |
 | **origin/main** | alinhado |
-| **working tree** | sync fecho BUG-DEMO-1 por commit (docs) |
+| **working tree** | sync roadmap pós-demo por commit (docs) |
 | **API prod (Render)** | Live ≥ **`c510154`** (#504); #507 aplicado em Shell |
 | **CI** | verde em `main` |
 
@@ -156,15 +156,15 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **#509 e2e Maps** | **Fechado** — sync geo browser antes de «Iniciar viagem» |
 | **#511 DEMO_4_PAPEIS** | **Fechado** — runbook + smoke humano prod **PASS** |
 | **BUG-DEMO-1** | **Fechado** — #513 · `49509e2` (Dialog `z-[70]` acima Sheet) |
+| **NAV-3D.2b** | **Fechado** — #515 · `dc66772` (Agora refresh ErrorBanner) |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
-| **NAV-3D.2b** *(opcional)* | Migrar `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
 | **NAV-3E** | **Não** nesta fase |
 | **Trips/Ops actions** | **Não** nesta linha |
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `49509e2`. Demo 4 papéis prod **PASS**. BUG-DEMO-1 fechado (#513). Auth/P-504-PWD fechados. Bugbot OFF. PF3D OFF. B2 espera Manel.
+**Frase de fecho:** Tip `dc66772`. Demo 4 papéis **PASS**. BUG-DEMO-1 + NAV-3D.2b fechados. Auth/P-504-PWD fechados. Bugbot OFF. PF3D OFF. B2 espera Manel. Roadmap pós-demo: rascunho em ops.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -176,8 +176,9 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#515** · `dc66772` | NAV-3D.2b — Agora refresh ErrorBanner |
+| **#514** · `c9a24c6` | Docs fecho BUG-DEMO-1 |
 | **#513** · `49509e2` | BUG-DEMO-1 — detalhe Viagens Driver acima do menu Sheet |
-| **#512** · `c611580` | Docs: smoke DEMO_4_PAPEIS PASS + BUG-DEMO-1 aberto |
 | **#511** · `3b429c2` | Runbook demo 4 papéis + smoke humano prod **PASS** |
 | **#510** · `526e08f` | Sync handoff + TODOdoDIA tip `e086743` |
 | **#509** · `e086743` | E2E: sync browser geo antes de assert «Iniciar viagem» (Maps) |
@@ -235,6 +236,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 |------|------|
 | PR review checklist (manual) | [`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md) |
 | Demo 4 papéis (prod) | [`DEMO_4_PAPEIS.md`](../ops/DEMO_4_PAPEIS.md) |
+| Roadmap pós DEMO smoke (rascunho) | [`ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](../ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) |
 | NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
 | NAV-0 contrato 4 apps | [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |
 | PF3D-3B/OFF smoke PASS | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
