@@ -4072,7 +4072,11 @@ function DriverOperationsMenu({
           if (!next) setHistoryDetailTripId(null)
         }}
       >
-        <DialogContent className="max-w-[min(100vw-1.5rem,520px)] max-h-[85dvh] overflow-y-auto">
+        <DialogContent
+          data-testid="driver-history-trip-detail"
+          overlayClassName="z-[70]"
+          className="z-[70] max-w-[min(100vw-1.5rem,520px)] max-h-[85dvh] overflow-y-auto"
+        >
           <DialogHeader>
             <DialogTitle>{t('opsMenu.tripDetail.title')}</DialogTitle>
             <DialogDescription>{t('opsMenu.tripDetail.description')}</DialogDescription>
