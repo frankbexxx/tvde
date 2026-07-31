@@ -7,11 +7,6 @@ export function driverIsOnActiveTrip(d: PartnerDriverRow): boolean {
 }
 export type TripFilter = 'all' | 'ongoing' | 'completed' | 'cancelled' | 'failed' | 'assigned'
 
-export const TRIP_FILTER_HINT: Partial<Record<TripFilter, string>> = {
-  assigned:
-    'Viagens com motorista já atribuído; o motorista ainda não aceitou a viagem.',
-}
-
 export const ONGOING_TRIP_STATUSES = new Set(['assigned', 'accepted', 'arriving', 'ongoing'])
 
 /** Active trips newest-first by updated_at (OPS-UX-1C Home card). */

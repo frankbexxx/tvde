@@ -89,5 +89,24 @@ describe('PartnerFleetDriversSection (PARTNER-FLEET-1A / 2B / OPS-UX-1A)', () =>
     )
     expect(screen.getByTestId('partner-driver-vehicle-plate')).toHaveTextContent(/12-AB-34/)
   })
+
+  it('mostra estado motorista e viagem em PT', () => {
+    renderSection([onTrip, idle])
+    const rows = screen.getAllByTestId('partner-fleet-driver-row')
+    const onTripRow = rows.find((row) => within(row).queryByText('Em Serviço'))
+    expect(onTripRow).toBeTruthy()
+    expect(within(onTripRow!).getByText(/Estado:\s*Aprovado/)).toBeInTheDocument()
+    expect(within(onTripRow!).getByText(/Em curso/)).toBeInTheDocument()
+  })
+
+  it('empty filter mostra hint', () => {
+    renderSection([], 'on_trip')
+    expect(screen.getByTestId('partner-fleet-drivers-empty')).toHaveTextContent(
+      /sem motoristas neste filtro/i
+    )
+    expect(screen.getByTestId('partner-fleet-drivers-empty')).toHaveTextContent(
+      /ajusta o filtro/i
+    )
+  })
 })
 

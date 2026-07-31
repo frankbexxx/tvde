@@ -9,6 +9,7 @@ import {
   PARTNER_KPI_FLAG_ACCENT,
   PARTNER_SECTION_TITLE,
 } from '../../../components/layout/infoBoxTemplate'
+import { partnerTripStatusLabel } from '../partnerLabels'
 import {
   listActivePartnerTrips,
   primaryActivePartnerTrip,
@@ -55,8 +56,11 @@ export function PartnerHomeDashboard({
                     {t('home.activeTrip.count', { count: activeCount })}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground font-mono truncate">
-                    {primary.status}
+                  <p
+                    className="text-xs text-muted-foreground truncate"
+                    data-testid="partner-home-active-trip-status"
+                  >
+                    {partnerTripStatusLabel(primary.status)}
                   </p>
                 )}
               </div>

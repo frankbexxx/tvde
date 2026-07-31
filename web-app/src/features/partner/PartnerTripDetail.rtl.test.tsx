@@ -105,7 +105,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
   it('mostra Actualizar e refetch soft mantém dados', async () => {
     renderDetail()
     await waitFor(() => {
-      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Em curso')
     })
     expect(api.fetchPartnerTrip).toHaveBeenCalledTimes(1)
 
@@ -114,14 +114,14 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     await waitFor(() => {
       expect(api.fetchPartnerTrip).toHaveBeenCalledTimes(2)
     })
-    expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+    expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Em curso')
     expect(screen.getByTestId('partner-trip-detail-last-updated')).toBeInTheDocument()
   })
 
   it('polling leve em viagem activa (~12s)', async () => {
     renderDetail()
     await waitFor(() => {
-      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Em curso')
     })
     expect(api.fetchPartnerTrip).toHaveBeenCalledTimes(1)
 
@@ -135,7 +135,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     api.fetchPartnerTrip.mockResolvedValue(baseTrip({ status: 'completed', completed_at: '2026-07-23T09:00:00Z' }))
     renderDetail()
     await waitFor(() => {
-      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('completed')
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Concluída')
     })
     const callsAfterLoad = api.fetchPartnerTrip.mock.calls.length
     await vi.advanceTimersByTimeAsync(30_000)
@@ -145,7 +145,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
   it('erro no soft refresh mostra mensagem e mantém dados', async () => {
     renderDetail()
     await waitFor(() => {
-      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Em curso')
     })
 
     api.fetchPartnerTrip.mockRejectedValueOnce({ detail: 'rede_indisponivel' })
@@ -153,7 +153,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     await waitFor(() => {
       expect(screen.getByTestId('partner-trip-detail-error')).toHaveTextContent(/rede_indisponivel/i)
     })
-    expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+    expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Em curso')
   })
 
   it('remove dados antigos quando o refresh perde acesso à viagem', async () => {
@@ -199,7 +199,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
   it('mantém a resposta do refresh mais recente quando pedidos terminam fora de ordem', async () => {
     renderDetail()
     await waitFor(() => {
-      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('ongoing')
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Em curso')
     })
     const staleRefresh = deferred<PartnerTripRow>()
     api.fetchPartnerTrip
@@ -212,14 +212,14 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     await waitFor(() => expect(api.fetchPartnerTrip).toHaveBeenCalledTimes(2))
     fireEvent(window, new CustomEvent(VISIBILITY_VISIBLE_EVENT))
     await waitFor(() => {
-      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('completed')
+      expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Concluída')
     })
 
     await act(async () => {
       staleRefresh.resolve(baseTrip({ status: 'ongoing' }))
       await staleRefresh.promise
     })
-    expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('completed')
+    expect(screen.getByTestId('partner-trip-detail-status')).toHaveTextContent('Concluída')
   })
 
   it('não deixa um poll pendente desfazer uma reatribuição concluída', async () => {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { PARTNER_SECTION_TITLE } from '../../../components/layout/infoBoxTemplate'
 
 type PartnerListSearchProps = {
@@ -11,14 +12,18 @@ type PartnerListSearchProps = {
 export function PartnerListSearch({
   value,
   onChange,
-  placeholder = 'Nome, telefone ou ID viagem',
+  placeholder,
   testId = 'partner-list-search',
 }: PartnerListSearchProps) {
+  const { t } = useTranslation('partner')
+  const title = t('listSearch.title')
+  const resolvedPlaceholder = placeholder ?? t('trips.searchPlaceholder')
+
   return (
     <section className="space-y-2">
-      <p className={PARTNER_SECTION_TITLE}>Filtrar lista</p>
+      <p className={PARTNER_SECTION_TITLE}>{title}</p>
       <label className="sr-only" htmlFor={testId}>
-        Filtrar lista
+        {title}
       </label>
       <input
         id={testId}
@@ -26,7 +31,7 @@ export function PartnerListSearch({
         data-testid={testId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
+        placeholder={resolvedPlaceholder}
         className="w-full px-3 py-2 rounded-xl border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-panel-bg))] text-foreground text-sm"
       />
     </section>

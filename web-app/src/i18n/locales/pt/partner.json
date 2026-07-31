@@ -61,11 +61,11 @@
       "pending_review_other": "{{count}} viaturas com documentos pendentes"
     },
     "activeTrip": {
-      "titleSingular": "Viagem activa",
-      "titlePlural": "Viagens activas",
-      "count": "{{count}} viagens activas",
+      "titleSingular": "Viagem ativa",
+      "titlePlural": "Viagens ativas",
+      "count": "{{count}} viagens ativas",
       "follow": "Acompanhar",
-      "empty": "Nenhuma viagem activa"
+      "empty": "Nenhuma viagem ativa"
     },
     "dashboard": {
       "summaryTitle": "Resumo operacional",
@@ -111,7 +111,44 @@
     "discoverTitle": "Adicionar motorista à frota",
     "discoverSearchHint": "Pesquisa por nome ou telefone e adiciona com um clique (sem UUIDs manuais).",
     "discoverPlaceholder": "Nome ou telefone…",
-    "search": "Procurar"
+    "search": "Procurar",
+    "driversTitle": "Motoristas",
+    "filters": {
+      "all": "Todos",
+      "active": "Ativos",
+      "online": "Online",
+      "offline": "Offline",
+      "on_trip": "Em viagem"
+    },
+    "onTripBadge": "Em viagem",
+    "onTripTitle": "Viagem ativa",
+    "onTripTitleWithStatus": "Viagem ativa ({{status}})",
+    "statusPrefix": "Estado:",
+    "vehiclePrefix": "Viatura:",
+    "emptyFilter": "Sem motoristas neste filtro.",
+    "emptyFilterHint": "Ajusta o filtro ou a pesquisa.",
+    "listSearchPlaceholder": "Nome ou telefone do motorista",
+    "refresh": "Atualizar dados"
+  },
+  "listSearch": {
+    "title": "Filtrar lista"
+  },
+  "status": {
+    "trip": {
+      "requested": "Pedido",
+      "assigned": "Atribuída",
+      "accepted": "Aceite",
+      "arriving": "A chegar",
+      "ongoing": "Em curso",
+      "completed": "Concluída",
+      "cancelled": "Cancelada",
+      "failed": "Falhada"
+    },
+    "driver": {
+      "pending": "Pendente",
+      "approved": "Aprovado",
+      "rejected": "Rejeitado"
+    }
   },
   "driverDetail": {
     "availableApp": "Disponível (app)",
@@ -211,9 +248,9 @@
     "started": "Início:",
     "completed": "Concluída:",
     "updated": "Atualizada:",
-    "refresh": "Actualizar",
-    "refreshing": "A actualizar…",
-    "lastUpdated": "Última actualização",
+    "refresh": "Atualizar",
+    "refreshing": "A atualizar…",
+    "lastUpdated": "Última atualização",
     "priceFinal": "{{value}} € (final)",
     "priceEstimate": "{{value}} € (estimativa)",
     "reassignTitle": "Atribuir a outro motorista",
@@ -221,7 +258,7 @@
     "reassignBtn": "Reatribuir viagem",
     "reassignError": "Não foi possível reatribuir.",
     "reassignHintAssigned": "Reatribuição só disponível com estado «assigned» e outro motorista aprovado na frota.",
-    "reassignUnavailable": "Reatribuição indisponível — a viagem já passou de «assigned» (estado actual: {{status}})."
+    "reassignUnavailable": "Reatribuição indisponível — a viagem já passou de «assigned» (estado atual: {{status}})."
   },
   "trips": {
     "hubTitle": "Viagens",
@@ -236,8 +273,10 @@
     "filterCompleted": "Concluídas",
     "filterUntil": "Até",
     "exportHint": "Exportação CSV (UTF-8) alinhada com os filtros activos nas listas de viagens.",
+    "summaryTotal": "Total:",
+    "summaryOngoing": "Em curso:",
     "summaryRatio": "Concluídas / Canceladas / Falhadas:",
-    "recentUpdates": "Últimas actualizações",
+    "recentUpdates": "Últimas atualizações",
     "listTitle": "Viagens",
     "exportCsv": "Exportar CSV",
     "csvColumnsPrefix": "Colunas do CSV (UTF-8):",
@@ -248,6 +287,12 @@
     "created": "Criada:",
     "updated": "Atualizada:",
     "emptyFilter": "Sem viagens neste filtro.",
+    "emptyFilterHint": "Ajusta o filtro, o motorista ou as datas.",
+    "emptySummary": "Sem viagens carregadas.",
+    "emptySummaryHint": "Atualiza os dados ou espera por novas viagens.",
+    "filterHints": {
+      "assigned": "Viagens com motorista já atribuído; o motorista ainda não aceitou a viagem."
+    },
     "filters": {
       "all": "Todas",
       "ongoing": "Em curso",
@@ -257,7 +302,7 @@
       "assigned": "Por aceitar"
     },
     "exportScreen": {
-      "filtersActive": "Filtros activos: {{filtered}} de {{total}} viagens.",
+      "filtersActive": "Filtros ativos: {{filtered}} de {{total}} viagens.",
       "noFilters": "Sem filtros — exporta todas as {{total}} viagens.",
       "exportFiltered": "Exportar {{count}} viagens (filtros)",
       "exportDefault": "Exportar viagens (CSV)",
