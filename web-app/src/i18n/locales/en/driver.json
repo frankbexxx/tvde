@@ -66,6 +66,8 @@
     "destinationPhase": "destination",
     "openingNav": "Opening {{app}} ({{phase}})",
     "openNav": "Open navigation",
+    "openNavPickup": "Navigate to pickup",
+    "openNavDestination": "Navigate to destination",
     "processingBtn": "Processing…",
     "cancel": "Cancel",
     "cancelTitle": "Cancellation reason",

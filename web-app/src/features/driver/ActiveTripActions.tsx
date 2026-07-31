@@ -226,7 +226,13 @@ export function ActiveTripActions({
     }
   }
 
-  if (displayStatus === 'completed' || displayStatus === 'cancelled') return null
+  if (
+    displayStatus === 'completed' ||
+    displayStatus === 'cancelled' ||
+    displayStatus === 'failed'
+  ) {
+    return null
+  }
   if (!hasTripContext && !statusOverride) {
     return (
       <div className={`${INFO_BOX_MAP_HINT} px-4 py-3 text-center text-sm text-foreground/75`}>
@@ -282,6 +288,12 @@ export function ActiveTripActions({
     displayStatus === 'accepted' ||
     displayStatus === 'arriving' ||
     displayStatus === 'ongoing'
+  const navButtonLabel =
+    displayStatus === 'ongoing'
+      ? t('actions.openNavDestination')
+      : displayStatus === 'accepted' || displayStatus === 'arriving'
+        ? t('actions.openNavPickup')
+        : t('actions.openNav')
   const compactTripActions = showNavButton && showCancel && !cancelPanelOpen
   const navBtnClass = compactTripActions ? `${BTN_SECONDARY} flex-[2] min-w-0 px-2 text-xs` : BTN_SECONDARY
   const cancelBtnClass = compactTripActions
@@ -344,7 +356,7 @@ export function ActiveTripActions({
             onClick={openNavForPhase}
             disabled={loading}
           >
-            {t('actions.openNav')}
+            {navButtonLabel}
           </button>
         ) : null}
         {displayStatus === 'ongoing' ? (

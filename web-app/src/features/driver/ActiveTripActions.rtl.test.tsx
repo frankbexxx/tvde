@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import type { TripDetailResponse } from '../../api/trips'
+import i18n from '../../i18n'
 import { ActiveTripActions } from './ActiveTripActions'
 import * as driverTripActions from './driverTripActions'
 import * as openDriverNav from '../../utils/openDriverExternalNav'
@@ -97,9 +98,10 @@ function renderActions(
 }
 
 describe('ActiveTripActions (RTL)', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     pollingCtx.trip = null
     vi.clearAllMocks()
+    await i18n.changeLanguage('pt')
   })
 
   it('estado accepted perto: botão Iniciar viagem chama sequência start (driverPerformStartFromAccepted)', async () => {
@@ -148,7 +150,57 @@ describe('ActiveTripActions (RTL)', () => {
     expect(screen.queryByTestId('driver-nav-pickup-primary')).not.toBeInTheDocument()
     expect(screen.queryByTestId('driver-nav-destination-primary')).not.toBeInTheDocument()
     expect(screen.getByTestId('driver-trip-action-stack')).toBeInTheDocument()
-    expect(screen.getByTestId('driver-open-nav')).toBeInTheDocument()
+    expect(screen.getByTestId('driver-open-nav')).toHaveTextContent(/navegar até à recolha/i)
+  })
+
+  it('accepted: botão navegar até à recolha abre coords de pickup', () => {
+    pollingCtx.trip = minimalTrip('accepted')
+    renderActions(DRIVER_NEAR_PICKUP_0)
+    const nav = screen.getByTestId('driver-open-nav')
+    expect(nav).toHaveTextContent(/navegar até à recolha/i)
+    fireEvent.click(nav)
+    expect(openDriverNav.openDriverExternalNav).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('arriving: botão navegar até à recolha abre coords de pickup', () => {
+    pollingCtx.trip = minimalTrip('arriving')
+    renderActions(DRIVER_NEAR_PICKUP_0)
+    const nav = screen.getByTestId('driver-open-nav')
+    expect(nav).toHaveTextContent(/navegar até à recolha/i)
+    fireEvent.click(nav)
+    expect(openDriverNav.openDriverExternalNav).toHaveBeenCalledWith(0, 0)
+  })
+
+  it('ongoing: botão navegar até ao destino abre coords de dropoff', () => {
+    pollingCtx.trip = minimalTrip('ongoing')
+    renderActions(DRIVER_NEAR_PICKUP_0)
+    const nav = screen.getByTestId('driver-open-nav')
+    expect(nav).toHaveTextContent(/navegar até ao destino/i)
+    fireEvent.click(nav)
+    expect(openDriverNav.openDriverExternalNav).toHaveBeenCalledWith(1, 1)
+  })
+
+  it('completed / cancelled / failed: não mostram botão de navegação', () => {
+    for (const status of ['completed', 'cancelled', 'failed'] as const) {
+      pollingCtx.trip = minimalTrip(status)
+      const { unmount } = render(
+        <ActiveTripActions
+          tripId="tid"
+          token="tok"
+          tripDetailFallback={null}
+          driverLocation={DRIVER_NEAR_PICKUP_0}
+          addLog={vi.fn()}
+          setStatus={vi.fn()}
+          statusOverride={null}
+          onClearStatusOverride={vi.fn()}
+          onTripActionSuccess={vi.fn()}
+          onComplete={vi.fn()}
+          onError={vi.fn()}
+        />
+      )
+      expect(screen.queryByTestId('driver-open-nav')).not.toBeInTheDocument()
+      unmount()
+    }
   })
 
   it('NAV/WAZE-1 Opção B: ao iniciar viagem NÃO abre navegação automaticamente', async () => {
