@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { PartnerDriverRow } from '../../../api/partner'
 import { EmptyState } from '../../../components/feedback/EmptyState'
+import { partnerDriverStatusLabel, partnerTripStatusLabel } from '../partnerLabels'
 import {
   driverIsOnActiveTrip,
   filterChipClass,
@@ -16,6 +17,8 @@ type PartnerFleetDriversSectionProps = {
   loading: boolean
 }
 
+const DRIVER_FILTERS: DriverFilter[] = ['all', 'active', 'online', 'offline', 'on_trip']
+
 export function PartnerFleetDriversSection({
   filteredDrivers,
   driverFilter,
@@ -26,24 +29,16 @@ export function PartnerFleetDriversSection({
 
   return (
     <div data-testid="partner-fleet-drivers-section">
-      <h3 className="text-base font-medium text-foreground mb-2">Motoristas</h3>
+      <h3 className="text-base font-medium text-foreground mb-2">{t('fleet.driversTitle')}</h3>
       <div className="flex flex-wrap gap-1.5 mb-3">
-        {(
-          [
-            ['all', 'Todos'],
-            ['active', 'ativos'],
-            ['online', 'online'],
-            ['offline', 'offline'],
-            ['on_trip', 'Em viagem'],
-          ] as const
-        ).map(([id, label]) => (
+        {DRIVER_FILTERS.map((id) => (
           <button
             key={id}
             type="button"
             className={filterChipClass(driverFilter === id)}
             onClick={() => onDriverFilterChange(id)}
           >
-            {label}
+            {t(`fleet.filters.${id}`)}
           </button>
         ))}
       </div>
@@ -51,6 +46,9 @@ export function PartnerFleetDriversSection({
         {filteredDrivers.map((d) => {
           const onTrip = driverIsOnActiveTrip(d)
           const tripId = d.active_trip_id?.trim() || null
+          const tripStatusLabel = d.active_trip_status
+            ? partnerTripStatusLabel(d.active_trip_status)
+            : null
           return (
             <li
               key={d.user_id}
@@ -69,12 +67,12 @@ export function PartnerFleetDriversSection({
                     className="inline-flex items-center rounded-full bg-info/15 border border-info/40 px-2 py-0.5 text-[11px] font-semibold text-info"
                     data-testid="partner-driver-on-trip-badge"
                     title={
-                      d.active_trip_status
-                        ? `Viagem activa (${d.active_trip_status})`
-                        : 'Viagem activa'
+                      tripStatusLabel
+                        ? t('fleet.onTripTitleWithStatus', { status: tripStatusLabel })
+                        : t('fleet.onTripTitle')
                     }
                   >
-                    Em viagem
+                    {t('fleet.onTripBadge')}
                   </span>
                 ) : null}
                 {onTrip && tripId ? (
@@ -88,16 +86,16 @@ export function PartnerFleetDriversSection({
                 ) : null}
               </div>
               <p className="text-muted-foreground">
-                Estado: {d.status}
-                {d.is_available ? ' · disponível' : ' · indisponível'}
-                {onTrip && d.active_trip_status ? ` · ${d.active_trip_status}` : null}
+                {t('fleet.statusPrefix')} {partnerDriverStatusLabel(d.status)}
+                {d.is_available ? t('fleet.availableSuffix') : t('fleet.unavailableSuffix')}
+                {onTrip && tripStatusLabel ? ` · ${tripStatusLabel}` : null}
               </p>
               {d.vehicle_plate ? (
                 <p
                   className="text-muted-foreground text-xs mt-1"
                   data-testid="partner-driver-vehicle-plate"
                 >
-                  Viatura: {d.vehicle_plate}
+                  {t('fleet.vehiclePrefix')} {d.vehicle_plate}
                   {d.vehicle_make || d.vehicle_model
                     ? ` · ${[d.vehicle_make, d.vehicle_model].filter(Boolean).join(' ')}`
                     : ''}
@@ -109,7 +107,11 @@ export function PartnerFleetDriversSection({
         })}
       </ul>
       {!loading && filteredDrivers.length === 0 && (
-        <EmptyState title="Sem motoristas neste filtro." />
+        <EmptyState
+          title={t('fleet.emptyFilter')}
+          description={t('fleet.emptyFilterHint')}
+          testId="partner-fleet-drivers-empty"
+        />
       )}
     </div>
   )

@@ -62,31 +62,32 @@ describe('PartnerHomeDashboard (OPS-UX-1C)', () => {
     })
   })
 
-  it('sem viagens activas mostra fallback', () => {
+  it('sem viagens ativas mostra fallback', () => {
     renderDash([trip({ trip_id: 't-done', status: 'completed', completed_at: '2026-07-23T09:00:00Z' })])
     expect(screen.getByTestId('partner-home-active-trip-empty')).toHaveTextContent(
-      /nenhuma viagem activa/i
+      /nenhuma viagem ativa/i
     )
     expect(screen.queryByTestId('partner-home-active-trip-follow')).toBeNull()
     expect(screen.getByTestId('partner-kpi-completed-today')).toBeInTheDocument()
   })
 
-  it('uma viagem activa → cartão + Acompanhar para o detalhe', () => {
+  it('uma viagem ativa → cartão + status PT + Acompanhar para o detalhe', () => {
     renderDash([trip({ trip_id: 'trip-live', status: 'ongoing', updated_at: '2026-07-23T10:00:00Z' })])
-    expect(screen.getByTestId('partner-home-active-trip-card')).toHaveTextContent(/viagem activa/i)
+    expect(screen.getByTestId('partner-home-active-trip-card')).toHaveTextContent(/viagem ativa/i)
+    expect(screen.getByTestId('partner-home-active-trip-status')).toHaveTextContent(/em curso/i)
     const cta = screen.getByTestId('partner-home-active-trip-follow')
     expect(cta).toHaveTextContent(/acompanhar/i)
     expect(cta).toHaveAttribute('href', '/partner/trips/trip-live')
     expect(screen.getByTestId('partner-kpi-revenue-today')).toBeInTheDocument()
   })
 
-  it('várias viagens activas → contagem e CTA para a mais recente', () => {
+  it('várias viagens ativas → contagem e CTA para a mais recente', () => {
     renderDash([
       trip({ trip_id: 'older', status: 'assigned', updated_at: '2026-07-23T09:00:00Z' }),
       trip({ trip_id: 'newer', status: 'accepted', updated_at: '2026-07-23T11:00:00Z' }),
       trip({ trip_id: 'done', status: 'completed', updated_at: '2026-07-23T12:00:00Z' }),
     ])
-    expect(screen.getByTestId('partner-home-active-trip-count')).toHaveTextContent(/2 viagens activas/i)
+    expect(screen.getByTestId('partner-home-active-trip-count')).toHaveTextContent(/2 viagens ativas/i)
     expect(screen.getByTestId('partner-home-active-trip-follow')).toHaveAttribute(
       'href',
       '/partner/trips/newer'

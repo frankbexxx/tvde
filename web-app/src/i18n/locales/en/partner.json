@@ -111,7 +111,44 @@
     "discoverTitle": "Add driver to fleet",
     "discoverSearchHint": "Search by name or phone and add with one click (no manual UUIDs).",
     "discoverPlaceholder": "Name or phone…",
-    "search": "Search"
+    "search": "Search",
+    "driversTitle": "Drivers",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "online": "Online",
+      "offline": "Offline",
+      "on_trip": "On trip"
+    },
+    "onTripBadge": "On trip",
+    "onTripTitle": "Active trip",
+    "onTripTitleWithStatus": "Active trip ({{status}})",
+    "statusPrefix": "Status:",
+    "vehiclePrefix": "Vehicle:",
+    "emptyFilter": "No drivers in this filter.",
+    "emptyFilterHint": "Adjust the filter or search.",
+    "listSearchPlaceholder": "Driver name or phone",
+    "refresh": "Refresh data"
+  },
+  "listSearch": {
+    "title": "Filter list"
+  },
+  "status": {
+    "trip": {
+      "requested": "Requested",
+      "assigned": "Assigned",
+      "accepted": "Accepted",
+      "arriving": "Arriving",
+      "ongoing": "Ongoing",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "failed": "Failed"
+    },
+    "driver": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
   },
   "driverDetail": {
     "availableApp": "Available (app)",
@@ -236,6 +273,8 @@
     "filterCompleted": "Completed",
     "filterUntil": "Until",
     "exportHint": "CSV export (UTF-8) aligned with active filters in trip lists.",
+    "summaryTotal": "Total:",
+    "summaryOngoing": "Ongoing:",
     "summaryRatio": "Completed / Cancelled / Failed:",
     "recentUpdates": "Recent updates",
     "listTitle": "Trips",
@@ -248,6 +287,12 @@
     "created": "Created:",
     "updated": "Updated:",
     "emptyFilter": "No trips in this filter.",
+    "emptyFilterHint": "Adjust the filter, driver, or dates.",
+    "emptySummary": "No trips loaded.",
+    "emptySummaryHint": "Refresh data or wait for new trips.",
+    "filterHints": {
+      "assigned": "Trips with a driver already assigned; the driver has not accepted yet."
+    },
     "filters": {
       "all": "All",
       "ongoing": "Ongoing",

@@ -12,6 +12,7 @@ import {
 import { VISIBILITY_VISIBLE_EVENT } from '../../constants/events'
 import { formatDateTime } from '../../i18n/format'
 import { reverseGeocode } from '../../services/geocoding'
+import { partnerTripStatusLabel } from './partnerLabels'
 import { ONGOING_TRIP_STATUSES } from './partnerTypes'
 
 /** Soft auto-refresh while trip is live (OPS-UX-1B). */
@@ -217,7 +218,7 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
         <p>
           <span className="text-muted-foreground">{t('tripDetail.status')}</span>{' '}
           <span className="text-foreground font-medium" data-testid="partner-trip-detail-status">
-            {trip.status}
+            {partnerTripStatusLabel(trip.status)}
           </span>
         </p>
         <p>
@@ -276,18 +277,20 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
         ) : null}
         <hr className="border-border" />
         <p>
-          <span className="text-muted-foreground">{t('tripDetail.created')}</span> {trip.created_at}
+          <span className="text-muted-foreground">{t('tripDetail.created')}</span>{' '}
+          {formatDateTime(trip.created_at)}
         </p>
         <p>
           <span className="text-muted-foreground">{t('tripDetail.started')}</span>{' '}
-          {trip.started_at ?? '—'}
+          {trip.started_at ? formatDateTime(trip.started_at) : '—'}
         </p>
         <p>
           <span className="text-muted-foreground">{t('tripDetail.completed')}</span>{' '}
-          {trip.completed_at ?? '—'}
+          {trip.completed_at ? formatDateTime(trip.completed_at) : '—'}
         </p>
         <p>
-          <span className="text-muted-foreground">{t('tripDetail.updated')}</span> {trip.updated_at}
+          <span className="text-muted-foreground">{t('tripDetail.updated')}</span>{' '}
+          {trip.updated_at ? formatDateTime(trip.updated_at) : '—'}
         </p>
       </div>
 
@@ -322,7 +325,7 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
         )
       ) : trip.driver_id ? (
         <p className="text-xs text-muted-foreground">
-          {t('tripDetail.reassignUnavailable', { status: trip.status })}
+          {t('tripDetail.reassignUnavailable', { status: partnerTripStatusLabel(trip.status) })}
         </p>
       ) : null}
     </div>

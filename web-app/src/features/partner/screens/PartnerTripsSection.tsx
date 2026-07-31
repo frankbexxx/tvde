@@ -2,8 +2,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { PARTNER_TRIPS_CSV_COLUMNS, type PartnerDriverRow, type PartnerTripRow } from '../../../api/partner'
 import { EmptyState } from '../../../components/feedback/EmptyState'
+import { formatDateTime } from '../../../i18n/format'
 import { PartnerListSearch } from '../components/PartnerListSearch'
-import { filterChipClass, TRIP_FILTER_HINT, type TripFilter } from '../partnerTypes'
+import { partnerTripStatusLabel } from '../partnerLabels'
+import { filterChipClass, type TripFilter } from '../partnerTypes'
 
 type PartnerTripsSectionProps = {
   filteredTrips: PartnerTripRow[]
@@ -74,7 +76,7 @@ export function PartnerTripsSection({
           <button
             key={id}
             type="button"
-            title={TRIP_FILTER_HINT[id]}
+            title={id === 'assigned' ? t('trips.filterHints.assigned') : undefined}
             className={filterChipClass(tripFilter === id)}
             onClick={() => onTripFilterChange(id)}
           >
@@ -124,17 +126,21 @@ export function PartnerTripsSection({
               to={`/partner/trips/${encodeURIComponent(trip.trip_id)}`}
               className="font-medium text-primary hover:underline"
             >
-              {trip.trip_id.slice(0, 8)}… · {trip.status}
+              {trip.trip_id.slice(0, 8)}… · {partnerTripStatusLabel(trip.status)}
             </Link>
             <p className="text-muted-foreground text-xs mt-1">
-              {t('trips.created')} {trip.created_at}
-              {trip.updated_at ? ` · ${t('trips.updated')} ${trip.updated_at}` : null}
+              {t('trips.created')} {formatDateTime(trip.created_at)}
+              {trip.updated_at ? ` · ${t('trips.updated')} ${formatDateTime(trip.updated_at)}` : null}
             </p>
           </li>
         ))}
       </ul>
       {!loading && filteredTrips.length === 0 && (
-        <EmptyState title={t('trips.emptyFilter')} />
+        <EmptyState
+          title={t('trips.emptyFilter')}
+          description={t('trips.emptyFilterHint')}
+          testId="partner-trips-list-empty"
+        />
       )}
     </div>
   )
