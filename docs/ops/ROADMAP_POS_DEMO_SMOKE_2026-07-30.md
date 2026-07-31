@@ -11,12 +11,13 @@
 
 | Item | Valor |
 |------|--------|
-| `main` | `dc66772` (#515 NAV-3D.2b) |
+| `main` | `78fbd29` (#517 Partner labels/datas) |
 | `origin/main` | alinhado |
-| working tree | limpa de tracked |
+| working tree | limpa |
 | DEMO_4_PAPEIS smoke | **PASS** |
+| Partner smoke pós-#517 | **PASS** (2026-07-31) — pronto demo Manel |
 | BUG-DEMO-1 | corrigido e fechado (#513/#514) |
-| NAV-3D.2b | **Fechado** (#515) — Agora refresh → ErrorBanner |
+| NAV-3D.2b | **Fechado** (#515) |
 | PF3D gates | **OFF** |
 | B2 next-trip | espera decisão Manel |
 | Stripe live | espera parceiro / conta / docs |
@@ -36,6 +37,8 @@
 | #513 | fix BUG-DEMO-1 Driver detalhe acima do menu |
 | #514 | docs/meta fecho BUG-DEMO-1 |
 | #515 | NAV-3D.2b Agora refresh → ErrorBanner |
+| #516 | roadmap pós DEMO smoke |
+| #517 | Partner status labels + datas demo (+ smoke manual **PASS**) |
 
 ### Produção validada no smoke
 
@@ -93,11 +96,14 @@ Trocar apresentação do erro `admin-agora-refresh-error` para `ErrorBanner`, pr
 
 | | |
 |---|---|
+| **Estado** | **Concluído** (#517 · `78fbd29`) + smoke manual **PASS** 2026-07-31 |
 | **Tempo** | 0,5–2 dias |
 | **Risco** | médio |
-| **Prioridade** | alta se conversa for frota |
+| **Prioridade** | concluída para demo |
 
-1–2 ecrãs: Home mobile, lista motoristas/viagens, detalhe mais claro. **Não:** docs reais, mapa live Partner, financeiro, payouts, bulk, PF3D ON.
+Labels PT status + datas `formatDateTime` + empty hints. Smoke: login · Home/KPIs · frota · viagens · detalhe (`Concluída` + datas) · nav OK.
+
+**Residual (não bloqueante):** copy `tripDetail.reassignUnavailable` / hint ainda com «`assigned`» literal — polish display-only futuro; **não** bloquear demo Manel.
 
 ---
 
@@ -197,7 +203,7 @@ Upload real, revisão, auditoria, RGPD. Ligação futura a PF3D.
 
 ## 13. Próximo passo sugerido
 
-Demo real ao Manel com [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md). Depois decidir entre Partner UX polish · ActiveTrip restore · B2 (se Manel decidir).
+Demo real ao Manel com [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md) — Partner polish #517 + smoke **PASS**. Depois feedback · residual reassign-copy (opcional) · ActiveTrip restore · B2 (se Manel decidir).
 
 ---
 
