@@ -16,11 +16,11 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-30** — tip `dc66772` · NAV-3D.2b fechado)
+## Painel — **PRÓXIMA SESSÃO** (**2026-07-31** — tip `78fbd29` · Partner smoke #517 PASS)
 
-**`main` / `origin/main`:** `dc66772` · alinhado · working tree limpa de tracked · CI verde.
+**`main` / `origin/main`:** `78fbd29` · alinhado · working tree limpa · CI verde.
 
-**Objectivo imediato:** **1 carril** — demo Manel / feedback · **ou** espera Manel **B2** · **ou** Partner UX polish pequeno. **Não** PF3D ON · **não** B2 sem decisão.
+**Objectivo imediato:** **1 carril** — **demo Manel** (operacional) · **ou** espera Manel **B2**. **Não** PF3D ON · **não** B2 sem decisão.
 
 **Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Roadmap: [`docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
@@ -35,10 +35,14 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-513** / **BUG-DEMO-1** | Driver detalhe Viagens acima do menu | Concluído | `49509e2` — Dialog `z-[70]` scoped vs Sheet `z-[60]` |
 | **PR-514** | Docs fecho BUG-DEMO-1 | Concluído | `c9a24c6` |
 | **PR-515** / **NAV-3D.2b** | Agora refresh → ErrorBanner | Concluído | `dc66772` — `admin-agora-refresh-error` |
+| **PR-516** | Roadmap pós DEMO smoke | Concluído | `c0eb7b7` · docs |
+| **PR-517** | Partner status labels + datas demo | Concluído | `78fbd29` — labels PT + `formatDateTime` |
+| **S-PARTNER-517** | Smoke manual Partner pós-#517 | Concluído | **PASS** 2026-07-31 — Home/KPIs · frota · viagens · detalhe (`Concluída` + datas) · nav OK |
+| **R-PARTNER-REASSIGN-COPY** | Hint reassign ainda com `assigned` literal | Por iniciar | Display-only; **não** bloqueia demo |
 | **PR-505** | Checklist review manual | Concluído | Sem Bugbot/agents |
 | **S-AUTH-PWD** | Smoke prod passwords próprias | Concluído | Admin/partner OK · demo FAIL · pax/driver OK · Frank OK |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke humano demo 4 papéis (prod) | Concluído | **PASS** 2026-07-30 — viagem completa + Partner + Admin |
-| **O-ROADMAP-DEMO** | Roadmap pós DEMO smoke (rascunho) | Em curso | [`ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) |
+| **O-ROADMAP-DEMO** | Roadmap pós DEMO smoke (rascunho) | Concluído | tip sync + smoke Partner #517 |
 | **AVAIL-B2-NEXT-TRIP** | Next trip while ongoing | Bloqueado | Espera Manel B/C/adiar — [`B2_NEXT_TRIP_CHAINING_DIAG`](docs/architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
 | **PF3D-GATES** | Compliance gates viatura | Concluído | OFF em prod; smoke OFF PASS |
 | **NAV-3D.2** | Admin ErrorBanner dashboard | Concluído | #500 |
@@ -48,7 +52,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (recomendado):** demo Manel / feedback · **ou** Partner UX polish · B2 só com Manel · PF3D ON só com dados reais. Ver roadmap.
+**Próximo (recomendado):** **demo Manel** · B2 só com Manel · residual reassign-copy depois · PF3D ON só com dados reais.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 

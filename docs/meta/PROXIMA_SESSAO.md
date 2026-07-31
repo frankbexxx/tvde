@@ -8,17 +8,31 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-30** — tip `dc66772` · NAV-3D.2b + DEMO PASS · BUG-DEMO-1 fechado)
+## Contexto actual (**2026-07-31** — tip `78fbd29` · Partner smoke #517 PASS · pronto demo Manel)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `dc66772` (#515) |
+| **`main`** | `78fbd29` (#517) |
 | **origin/main** | alinhado |
-| **working tree** | sync roadmap pós-demo por commit (docs) |
+| **working tree** | sync docs smoke Partner #517 por commit |
 | **API prod (Render)** | Live ≥ **`c510154`** (#504); #507 aplicado em Shell |
 | **CI** | verde em `main` |
+
+### Partner smoke pós-#517 (**PASS** 2026-07-31)
+
+| Item | Estado |
+|------|--------|
+| PR | [#517](https://github.com/frankbexxx/tvde/pull/517) · `78fbd29` — labels PT + datas `formatDateTime` |
+| Login Partner | **OK** |
+| Home / KPIs | **OK** |
+| Frota / lista | **OK** |
+| Viagens / lista | **OK** |
+| Detalhe viagem | **OK** — estado `Concluída` + datas legíveis (Criada / Início / Concluída / Atualizada) |
+| Bottom nav / abertura detalhe | **OK** |
+| Conclusão | **PASS** — pronto para demo operacional com Manel |
+| Residual (não bloqueante) | `tripDetail.reassignUnavailable` / hint ainda com «`assigned`» literal — polish display-only futuro |
 
 ### DEMO_4_PAPEIS — smoke humano prod (**PASS** 2026-07-30)
 
@@ -157,6 +171,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **#511 DEMO_4_PAPEIS** | **Fechado** — runbook + smoke humano prod **PASS** |
 | **BUG-DEMO-1** | **Fechado** — #513 · `49509e2` (Dialog `z-[70]` acima Sheet) |
 | **NAV-3D.2b** | **Fechado** — #515 · `dc66772` (Agora refresh ErrorBanner) |
+| **#516 roadmap** | **Fechado** — `c0eb7b7` |
+| **#517 Partner labels** | **Fechado** — `78fbd29` + smoke manual Partner **PASS** |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3E** | **Não** nesta fase |
@@ -164,7 +180,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `dc66772`. Demo 4 papéis **PASS**. BUG-DEMO-1 + NAV-3D.2b fechados. Auth/P-504-PWD fechados. Bugbot OFF. PF3D OFF. B2 espera Manel. Roadmap pós-demo: rascunho em ops.
+**Frase de fecho:** Tip `78fbd29`. Partner smoke pós-#517 **PASS**. Demo 4 papéis **PASS**. Pronto demo Manel. BUG-DEMO-1 + NAV-3D.2b fechados. Auth/P-504-PWD fechados. Bugbot OFF. PF3D OFF. B2 espera Manel. Residual: copy reassign `assigned` literal (não bloqueia).
 
 ### Decisão produto (mantém-se + B2)
 
@@ -176,6 +192,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#517** · `78fbd29` | Partner status labels + datas demo · smoke manual **PASS** |
+| **#516** · `c0eb7b7` | Roadmap pós DEMO smoke |
 | **#515** · `dc66772` | NAV-3D.2b — Agora refresh ErrorBanner |
 | **#514** · `c9a24c6` | Docs fecho BUG-DEMO-1 |
 | **#513** · `49509e2` | BUG-DEMO-1 — detalhe Viagens Driver acima do menu Sheet |
@@ -207,7 +225,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | ID | Notas |
 |----|-------|
 | **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
-| **NAV-3D.2b** | Opcional — `admin-agora-refresh-error` → ErrorBanner (preservar `testId`) |
+| **R-PARTNER-REASSIGN-COPY** | Hint reassign com `assigned` literal — display-only; pós-demo |
 | **NAV-3D.3+ / NAV-3E** | Só se valer; **sem** Trips/Ops mutáveis / PageHeader |
 | **PF3D-3B/ON** | Smoke ON controlado — opcional; **não** activar em prod global |
 | **PF3D-3 ON** | Só após atribuição real + docs reais |
@@ -223,10 +241,11 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Espera Manel B2** (B/C/adiar) — sem implementação  
-2. **Opcional NAV-3D.2b:** migrar `admin-agora-refresh-error` → ErrorBanner (preservar `data-testid`) — **sem** PageHeader / NAV-3E / Trips-Ops  
-3. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
-4. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
+1. **Demo Manel** (operacional) — [`DEMO_4_PAPEIS.md`](../ops/DEMO_4_PAPEIS.md); Partner smoke #517 já **PASS**  
+2. **Espera Manel B2** (B/C/adiar) — sem implementação  
+3. Opcional pós-demo: **R-PARTNER-REASSIGN-COPY** (só copy i18n; sem UI reassign)  
+4. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
+5. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
 
