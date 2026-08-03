@@ -1,6 +1,6 @@
 /**
  * Request card for driver - available trip to accept.
- * Pickup, estimate €, ACEITAR (botão ou deslizar).
+ * Pickup, estimate €, ACEITAR (botão ou deslizar) + Recusar (API) + Silenciar (local).
  * No IDs, no coords.
  */
 import { useEffect, useState } from 'react'
@@ -76,6 +76,7 @@ export function RequestCard({
   }, [expiresAt])
 
   const secondsLeft = offerSecondsRemaining(expiresAt)
+  const busy = Boolean(loading || rejectLoading)
 
   const slideCompact = acceptVariant === 'slide'
   const priceDisplay =
@@ -106,7 +107,7 @@ export function RequestCard({
       <button
         type="button"
         onClick={onDismiss}
-        disabled={Boolean(loading || rejectLoading)}
+        disabled={busy}
         data-testid={dismissButtonTestId}
         aria-label={t('requestCard.silenceOfferAria')}
         className={
@@ -123,12 +124,36 @@ export function RequestCard({
     <SlideToAccept
       density="compact"
       onConfirm={onAccept}
-      disabled={Boolean(rejectLoading) || secondsLeft === 0}
+      disabled={busy || secondsLeft === 0}
       loading={Boolean(loading)}
       trackTestId={acceptButtonTestId ? `${acceptButtonTestId}-track` : undefined}
       testId={acceptButtonTestId ? `${acceptButtonTestId}-slide` : undefined}
     />
   )
+
+  const rejectButton =
+    offerId && onReject ? (
+      <button
+        type="button"
+        onClick={onReject}
+        disabled={busy}
+        data-testid={rejectButtonTestId ?? 'driver-offer-reject'}
+        className={
+          slideCompact
+            ? 'min-h-11 w-full rounded-xl border-2 border-destructive/70 bg-transparent px-3 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+            : 'min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-destructive/70 bg-transparent px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+        }
+      >
+        {rejectLoading ? (
+          <span className="inline-flex items-center justify-center gap-2">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {t('requestCard.processing')}
+          </span>
+        ) : (
+          t('requestCard.reject')
+        )}
+      </button>
+    ) : null
 
   const tripDetails = (
     <>
@@ -175,7 +200,7 @@ export function RequestCard({
           ? 'p-2 pl-8 pr-8'
           : 'p-2 pr-8'
     return (
-      <div className={`relative ${INFO_BOX_DRIVER_LARGE} ${padClass} space-y-0.5 transition-all duration-200`}>
+      <div className={`relative ${INFO_BOX_DRIVER_LARGE} ${padClass} space-y-1.5 transition-all duration-200`}>
         {dismissButton}
         {slideAccept}
         {tripDetails}
@@ -183,6 +208,7 @@ export function RequestCard({
           <p className="text-xs font-medium text-foreground/70">{t('requestCard.estimate')}</p>
           <span className="text-base font-bold text-foreground">{priceDisplay}</span>
         </div>
+        {rejectButton}
       </div>
     )
   }
@@ -197,28 +223,11 @@ export function RequestCard({
           <span className="text-2xl font-bold text-foreground">{priceDisplay}</span>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:min-w-[200px]">
-          {offerId && onReject ? (
-            <button
-              type="button"
-              onClick={onReject}
-              disabled={Boolean(loading || rejectLoading)}
-              data-testid={rejectButtonTestId}
-              className="min-h-[48px] w-full sm:w-auto sm:min-w-[120px] rounded-full border-2 border-destructive/70 bg-transparent px-4 text-sm font-semibold text-destructive hover:bg-destructive/10 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
-            >
-              {rejectLoading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  {t('requestCard.processing')}
-                </span>
-              ) : (
-                t('requestCard.reject')
-              )}
-            </button>
-          ) : null}
+          {rejectButton}
           <button
             type="button"
             onClick={onAccept}
-            disabled={Boolean(loading || rejectLoading)}
+            disabled={busy}
             data-testid={acceptButtonTestId}
             className={`${BTN_COMPACT_HEIGHT} min-w-[44px] px-4 ${BTN_PRIMARY_RADIUS} bg-info text-info-foreground font-semibold text-sm shadow-md hover:bg-info/90 hover:scale-105 active:scale-95 transition-all duration-150 ease-out disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed disabled:shadow-none disabled:hover:scale-100 touch-manipulation`}
           >

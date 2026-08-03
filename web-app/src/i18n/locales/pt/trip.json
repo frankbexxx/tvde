@@ -57,7 +57,9 @@
     "pickup": "Recolha",
     "destination": "Destino",
     "estimate": "Estimativa (indicativa)",
-    "reject": "REJEITAR",
+    "reject": "Recusar",
+    "rejectSuccess": "Oferta recusada",
+    "rejectError": "Não foi possível recusar a oferta.",
     "accept": "ACEITAR",
     "processing": "A processar…"
   },

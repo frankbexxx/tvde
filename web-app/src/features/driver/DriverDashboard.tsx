@@ -12,6 +12,7 @@ import {
   getDriverActiveTrip,
   getDriverTripDetail,
   acceptTrip,
+  rejectDriverOffer,
   getDriverVehicleCategories as getDriverVehicleCategoriesApi,
   patchDriverVehicleCategories as patchDriverVehicleCategoriesApi,
   setDriverOnline,
@@ -329,6 +330,7 @@ function buildDriverWaitingHint(
 export function DriverDashboard() {
   useDia23LayoutProbe('driver')
   const { t } = useTranslation('driver')
+  const { t: tTrip } = useTranslation('trip')
   const { token, sessionRole } = useAuth()
   const { addLog, setStatus } = useActivityLog()
   const { driverActiveTripId, setDriverActiveTripId } = useActiveTrip()
@@ -482,6 +484,7 @@ export function DriverDashboard() {
     })
     setSelectedOfferTripId((prev) => (prev === tripId ? null : prev))
   }, [])
+  const [rejectLoadingOfferId, setRejectLoadingOfferId] = useState<string | null>(null)
   const restoreSilencedOffer = useCallback((tripId: string) => {
     clearDismissedOfferTripId(tripId)
     setDismissedOfferTripIds(readDismissedOfferTripIds())
@@ -620,6 +623,37 @@ export function DriverDashboard() {
     [token],
     pollEnabled,
     4000
+  )
+  const handleRejectOffer = useCallback(
+    async (offerId: string, tripId: string) => {
+      if (!token) return
+      if (actionLoading != null || rejectLoadingOfferId != null) return
+      setError(null)
+      setRejectLoadingOfferId(tripId)
+      addLog('Clique: RECUSAR oferta', 'action')
+      try {
+        await rejectDriverOffer(offerId, token)
+        setSelectedOfferTripId((prev) => (prev === tripId ? null : prev))
+        sonnerToast.success(tTrip('requestCard.rejectSuccess'))
+        addLog('Oferta recusada', 'success')
+        await refetchAvailable()
+      } catch (err: unknown) {
+        const e = err as { status?: number; detail?: string }
+        const msg =
+          isTimeoutLikeError(err) || e?.status === 0
+            ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
+            : tTrip('requestCard.rejectError')
+        sonnerToast.error(msg)
+        setError(msg)
+        addLog(`Erro RECUSAR: ${String(e?.detail ?? msg)}`, 'error')
+        if (e?.status === 404 || e?.status === 409) {
+          void refetchAvailable()
+        }
+      } finally {
+        setRejectLoadingOfferId(null)
+      }
+    },
+    [token, actionLoading, rejectLoadingOfferId, addLog, refetchAvailable, tTrip]
   )
   const { data: history, refetch: refetchHistory, pollFault: historyPollFault } = usePolling(
     () => getDriverTripHistory(token!),
@@ -1103,7 +1137,7 @@ export function DriverDashboard() {
     onSuccess?: () => void,
     availableForFallback?: TripAvailableItem
   ) => {
-    if (actionLoading != null) return
+    if (actionLoading != null || rejectLoadingOfferId != null) return
     // Não definir activeTripId antes do POST: o poll GET pode 404 até o accept persistir driver_id.
     setError(null)
     setActionLoading(tripId)
@@ -1746,6 +1780,13 @@ export function DriverDashboard() {
                               expiresAt={t.expires_at ?? null}
                               dismissButtonTestId={`driver-dismiss-${t.trip_id}`}
                               onDismiss={() => dismissOffer(t.trip_id)}
+                              rejectButtonTestId={`driver-reject-${t.trip_id}`}
+                              onReject={
+                                t.offer_id
+                                  ? () => void handleRejectOffer(t.offer_id!, t.trip_id)
+                                  : undefined
+                              }
+                              rejectLoading={rejectLoadingOfferId === t.trip_id}
                               acceptButtonTestId={`driver-accept-${t.trip_id}`}
                               acceptVariant="slide"
                               onAccept={() =>
@@ -2080,6 +2121,19 @@ export function DriverDashboard() {
                             dismissButtonTestId={`driver-dismiss-${selectedAvailableTrip.trip_id}`}
                             dismissPlacement="bottom-right-silence"
                             onDismiss={() => dismissOffer(selectedAvailableTrip.trip_id)}
+                            rejectButtonTestId={`driver-reject-${selectedAvailableTrip.trip_id}`}
+                            onReject={
+                              selectedAvailableTrip.offer_id
+                                ? () =>
+                                  void handleRejectOffer(
+                                    selectedAvailableTrip.offer_id!,
+                                    selectedAvailableTrip.trip_id
+                                  )
+                                : undefined
+                            }
+                            rejectLoading={
+                              rejectLoadingOfferId === selectedAvailableTrip.trip_id
+                            }
                             acceptButtonTestId={`driver-accept-${selectedAvailableTrip.trip_id}`}
                             acceptVariant="slide"
                             onAccept={() =>
@@ -2407,6 +2461,13 @@ export function DriverDashboard() {
                                 expiresAt={t.expires_at ?? null}
                                 dismissButtonTestId={`driver-dismiss-${t.trip_id}`}
                                 onDismiss={() => dismissOffer(t.trip_id)}
+                                rejectButtonTestId={`driver-reject-${t.trip_id}`}
+                                onReject={
+                                  t.offer_id
+                                    ? () => void handleRejectOffer(t.offer_id!, t.trip_id)
+                                    : undefined
+                                }
+                                rejectLoading={rejectLoadingOfferId === t.trip_id}
                                 acceptButtonTestId={`driver-accept-${t.trip_id}`}
                                 acceptVariant="slide"
                                 onAccept={() =>
