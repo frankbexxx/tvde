@@ -8,16 +8,17 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-03** — tip `eb3c929` · DEMO MANEL 1 completa · semana acertos)
+## Contexto actual (**2026-08-03** — tip `c4690ea` · Driver Recusar **PASS**)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `eb3c929` (#519) |
+| **`main`** | `c4690ea` (#523) |
 | **origin/main** | alinhado |
-| **working tree** | sync docs arranque semana 08-03 por commit |
-| **API prod (Render)** | Live ≥ **`c510154`** (#504); #507 aplicado em Shell |
+| **prod build** | `c4690ea` (app + API health OK) |
+| **working tree** | sync docs fecho Recusar por commit |
+| **API prod (Render)** | Live ≥ **`c4690ea`**; #504/#507 já aplicados |
 | **CI** | verde em `main` (`backend-ci` · `web-app` · `web-e2e`) |
 
 ### Calendário (férias / demos)
@@ -30,15 +31,34 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Semana 10–13 ago | só correções/estabilização + portátil/SSD |
 | Férias | **14–31 agosto** |
 
-### Foco desta semana (1 carril)
+### Foco desta semana (1 carril) — actualizado pós-Recusar
 
-1. Partner mapa live existente — verificar  
-2. ActiveTrip restore  
-3. Driver rejeitar oferta  
+1. ~~Partner mapa live~~ — smoke **PASS** (polish residual não blocker)  
+2. ~~ActiveTrip F5 restore~~ — smoke **PASS** (sem PR código)  
+3. ~~Driver Recusar oferta~~ — **PASS** (#521–#523 · tip `c4690ea`)  
 4. B2 groundwork (**sem activar**)  
 5. Estabilização + SSD/férias readiness  
 
-**Fora:** Stripe live · PF3D ON · docs reais/OCR · contacto mascarado · B2 completo em prod · Bugbot/agents.
+**Fora:** Stripe live · PF3D ON · docs reais/OCR · contacto mascarado · B2 completo em prod · redispatch imediato · Bugbot/agents.
+
+### Driver Recusar oferta — bloco fechado (**PASS** 2026-08-03)
+
+| PR | Tip (squash) | O quê |
+|----|--------------|--------|
+| [#521](https://github.com/frankbexxx/tvde/pull/521) | `0294842` | `reject_offer` com locks / revalidation |
+| [#522](https://github.com/frankbexxx/tvde/pull/522) | `01d7fc1` | UI **Recusar** → API; **Silenciar** local/sessionStorage |
+| [#523](https://github.com/frankbexxx/tvde/pull/523) | `c4690ea` | BETA location: sem `assigned` órfão após offer rejected |
+
+| Smoke prod (pós-#523) | Resultado |
+|-----------------------|-----------|
+| Oferta: deslizar + Recusar + Silenciar | OK |
+| `POST /driver/offers/{id}/reject` | **200** `{"status":"rejected"}` |
+| Toast «Oferta recusada» · card some · Driver «À espera» / online | OK |
+| Passenger | `requested` / searching; `driver_id=null`; **sem** «Motorista atribuído» |
+| 3× `POST /drivers/location` | continua `requested`; ghost available = 0 |
+
+**Conclusão:** feature pronta para demo/piloto controlado.  
+**Residual (não bloqueante):** redispatch imediato pós-reject fora de scope — continua cron/TTL.
 
 ### Partner smoke pós-#517 (**PASS** 2026-07-31)
 
@@ -195,6 +215,10 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **#517 Partner labels** | **Fechado** — `78fbd29` + smoke manual Partner **PASS** |
 | **#518 docs Partner smoke** | **Fechado** — `aadc57d` |
 | **#519 Driver nav labels** | **Fechado** — `eb3c929` (recolha/destino por fase) |
+| **#520 week plan / MANEL 1** | **Fechado** — `aafe811` |
+| **#521–#523 Driver Recusar** | **Fechado** — tip `c4690ea` · smoke prod **PASS** |
+| **Partner mapa live** | Smoke **PASS** — polish residual depois |
+| **ActiveTrip F5** | Smoke **PASS** — sem PR código esta semana |
 | **DEMO MANEL 1** | **Completa** (2026-08) — real carro/telefone |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
@@ -203,7 +227,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `eb3c929`. **DEMO MANEL 1 completa.** DEMO MANEL 2 = Setembro. Partner smoke #517 + Driver nav #519 fechados. Foco semana: mapa Partner · ActiveTrip restore · rejeitar oferta · B2 groundwork sem activar. Bugbot OFF. PF3D OFF. Stripe fora. Residual: reassign `assigned` literal.
+**Frase de fecho:** Tip `c4690ea`. **DEMO MANEL 1 completa.** **Driver Recusar oferta PASS** (#521–#523). DEMO MANEL 2 = Setembro. Próximo: B2 groundwork (sem activar) · SSD/férias · polish Partner mapa se sobrar. Redispatch imediato fora de scope. Bugbot OFF. PF3D OFF. Stripe fora. Residual: reassign `assigned` literal.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -215,6 +239,10 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#523** · `c4690ea` | BETA location: sem assigned órfão após reject · smoke Recusar **PASS** |
+| **#522** · `01d7fc1` | UI Recusar → `reject_offer`; Silenciar local |
+| **#521** · `0294842` | `reject_offer` locking / revalidation |
+| **#520** · `aafe811` | Docs DEMO MANEL 1 complete + week plan |
 | **#519** · `eb3c929` | Driver nav labels por fase (recolha/destino) |
 | **#518** · `aadc57d` | Docs Partner smoke PASS pós-#517 |
 | **#517** · `78fbd29` | Partner status labels + datas demo · smoke manual **PASS** |
@@ -266,12 +294,11 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Verificar Partner mapa live** (Frota → Mapa live) — smoke + gaps; polish só se baixo risco  
-2. **ActiveTrip restore** — diagnóstico → PR mínimo se gap  
-3. **Driver rejeitar oferta** — diagnóstico → PR mínimo se gap  
-4. **B2 groundwork** — docs/spike alinhado a [`B2_NEXT_TRIP_CHAINING_DIAG`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md); **sem activar**  
-5. Semana 10–13: estabilização + portátil/SSD · preparar **DEMO MANEL 2 (Setembro)**  
-6. Opcional: **R-PARTNER-REASSIGN-COPY** (copy i18n)  
+1. **B2 groundwork** — docs/spike alinhado a [`B2_NEXT_TRIP_CHAINING_DIAG`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md); **sem activar**  
+2. Semana 10–13: estabilização + portátil/SSD · preparar **DEMO MANEL 2 (Setembro)**  
+3. Opcional: polish Partner mapa (zoom/timestamp) — **não** blocker demo  
+4. Opcional: **R-PARTNER-REASSIGN-COPY** (copy i18n)  
+5. **Não** redispatch imediato pós-reject (cron/TTL basta para demo)  
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
 

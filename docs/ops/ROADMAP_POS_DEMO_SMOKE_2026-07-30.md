@@ -11,13 +11,16 @@
 
 | Item | Valor |
 |------|--------|
-| `main` | `eb3c929` (#519 Driver nav labels) |
+| `main` | `c4690ea` (#523 Driver Recusar / BETA location) |
 | `origin/main` | alinhado |
-| working tree | limpa |
+| prod build | `c4690ea` |
 | DEMO_4_PAPEIS smoke | **PASS** |
 | DEMO MANEL 1 | **COMPLETA** (2026-08) |
 | DEMO MANEL 2 | Setembro |
 | Partner smoke pós-#517 | **PASS** (2026-07-31) |
+| Partner mapa live | smoke **PASS** (polish residual) |
+| ActiveTrip F5 | smoke **PASS** |
+| Driver Recusar oferta | **PASS** (#521–#523 · 2026-08-03) |
 | BUG-DEMO-1 | corrigido e fechado (#513/#514) |
 | NAV-3D.2b | **Fechado** (#515) |
 | PF3D gates | **OFF** |
@@ -41,6 +44,12 @@
 | #515 | NAV-3D.2b Agora refresh → ErrorBanner |
 | #516 | roadmap pós DEMO smoke |
 | #517 | Partner status labels + datas demo (+ smoke manual **PASS**) |
+| #518 | docs Partner smoke PASS |
+| #519 | Driver nav labels por fase |
+| #520 | docs DEMO MANEL 1 + week plan |
+| #521 | `reject_offer` locking |
+| #522 | UI Recusar → reject API (Silenciar local) |
+| #523 | BETA location: sem assigned órfão pós-reject · smoke Recusar **PASS** |
 
 ### Produção validada no smoke
 
@@ -73,7 +82,7 @@ Alinhar `TODOdoDIA.md`, `PROXIMA_SESSAO.md`, `DEMO_4_PAPEIS.md` com #513/#514 e 
 | **Tipo** | operacional/comercial |
 | **Prioridade** | Manel 1 concluída · preparar Manel 2 após semana de acertos |
 
-Usar [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md) como base. Semana 03–07 ago: mapa Partner · ActiveTrip restore · rejeitar oferta · B2 groundwork sem activar. Fora: Stripe live, PF3D ON, docs reais.
+Usar [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md) como base. Semana 03–07 ago: mapa Partner · ActiveTrip · **Recusar oferta** — fechados com smoke **PASS**. Segue: B2 groundwork sem activar · SSD/férias · Manel 2 Setembro. Fora: Stripe live, PF3D ON, docs reais, redispatch imediato.
 
 ---
 
@@ -107,15 +116,18 @@ Labels PT status + datas `formatDateTime` + empty hints. Smoke: login · Home/KP
 
 ---
 
-## 5. Driver UX polish pós-demo
+## 5. Driver UX polish pós-demo (+ Recusar oferta)
 
 | | |
 |---|---|
-| **Tempo** | 0,5–2 dias |
+| **Estado Recusar** | **Concluído** — #521–#523 · tip `c4690ea` · smoke prod **PASS** 2026-08-03 |
+| **Tempo (histórico)** | 0,5–2 dias |
 | **Risco** | médio |
-| **Prioridade** | média/alta |
+| **Prioridade** | Recusar fechado; polish residual baixa |
 
-Re-testar BUG-DEMO-1 em prod · Menu → Viagens · layering sheets/dialogs · empty states. **Não** tocar ciclo matching/accept/start/end · evitar refactor `DriverDashboard`.
+**Recusar:** Aceitar intocado · Recusar → API · Silenciar local · Pax fica `requested` · sem assigned órfão pós-location (#523).  
+**Residual (não bloqueante):** redispatch imediato pós-reject — cron/TTL actual basta para demo.  
+Outro polish Driver (empty states, etc.): **não** tocar ciclo matching/accept/start/end · evitar refactor `DriverDashboard`.
 
 ---
 
@@ -159,11 +171,12 @@ Parceiro + conta Stripe + docs. Sem colar secrets no chat.
 
 | | |
 |---|---|
-| **Tempo** | 2–4 dias |
+| **Estado F5 smoke** | **PASS** em prod (2026-08) — sem PR código nesta semana |
+| **Tempo (se gap futuro)** | 2–4 dias |
 | **Risco** | médio/alto |
-| **Prioridade** | alta p/ uso real |
+| **Prioridade** | baixa enquanto F5 PASS; reabrir só se regressão |
 
-Backend + frontend; estados activos claros; E2E refresh/reopen. Cuidado com regressões no fluxo smoke.
+Backend + frontend se gap voltar; E2E refresh/reopen. Cuidado com regressões no fluxo smoke.
 
 ---
 
@@ -203,7 +216,7 @@ Upload real, revisão, auditoria, RGPD. Ligação futura a PF3D.
 
 ## 13. Próximo passo sugerido
 
-**DEMO MANEL 1 completa.** Semana 03–07 ago: verificar Partner mapa live · ActiveTrip restore · rejeitar oferta · B2 groundwork sem activar. DEMO MANEL 2 = Setembro.
+**DEMO MANEL 1 completa.** **Driver Recusar PASS** (`c4690ea`). Partner mapa + ActiveTrip F5 smokes **PASS**. Próximo: B2 groundwork (sem activar) · SSD/férias · preparar **DEMO MANEL 2 (Setembro)**. Redispatch imediato **não** bloqueia demo.
 
 ---
 
