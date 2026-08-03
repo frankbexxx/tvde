@@ -1,4 +1,4 @@
-"""MATCHING-001: category filter at dispatch + BETA fallback with expired offers."""
+"""MATCHING-001: category filter at dispatch + BETA fallback (zero-offer only)."""
 
 from __future__ import annotations
 
@@ -195,9 +195,82 @@ def test_accept_trip_rejects_wrong_vehicle_category(db: Session) -> None:
     assert payment is None
 
 
-def test_beta_fallback_runs_when_only_expired_offers(
+def test_beta_fallback_promotes_when_zero_offers(
     db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """Cold start: requested trip with no TripOffer rows may enter assigned pool.
+
+    Driver is far from pickup so location-redispatch creates 0 offers; BETA
+    fallback can still promote the orphan requested trip to the legacy pool.
+    """
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    for loc in db.execute(select(DriverLocation)).scalars().all():
+        db.delete(loc)
+    db.commit()
+    # Far from trip origin (38.7, -9.1) so create_offers_for_trip yields [].
+    driver_id = _create_driver(db, lat=41.15, lng=-8.61)
+    trip = _create_requested_trip(db)
+    trip.created_at = datetime.now(timezone.utc) - timedelta(hours=2)
+    db.commit()
+
+    ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    upsert_driver_location(
+        db=db,
+        driver_id=driver_id,
+        lat=41.15,
+        lng=-8.61,
+        timestamp_ms=ts_ms,
+    )
+    db.refresh(trip)
+
+    assert trip.status == TripStatus.assigned
+    assert trip.driver_id is None
+    offers = (
+        db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id)).scalars().all()
+    )
+    assert offers == []
+
+
+def test_beta_fallback_keeps_requested_when_offer_rejected(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """BUG-REJECT-BETA-1: location ping must not orphan-assign after Recusar."""
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    for loc in db.execute(select(DriverLocation)).scalars().all():
+        db.delete(loc)
+    db.commit()
+    driver_id = _create_driver(db, lat=38.701, lng=-9.101)
+    trip = _create_requested_trip(db)
+    trip.created_at = datetime.now(timezone.utc) - timedelta(hours=2)
+    db.commit()
+
+    rejected = TripOffer(
+        trip_id=trip.id,
+        driver_id=uuid.UUID(driver_id),
+        status=OfferStatus.rejected,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=1),
+    )
+    db.add(rejected)
+    db.commit()
+
+    ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    upsert_driver_location(
+        db=db,
+        driver_id=driver_id,
+        lat=38.701,
+        lng=-9.101,
+        timestamp_ms=ts_ms,
+    )
+    db.refresh(trip)
+
+    assert trip.status == TripStatus.requested
+    assert trip.driver_id is None
+
+
+def test_beta_fallback_keeps_requested_when_only_expired_offers(
+    db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Expired offer history stays requested; cron redispatch owns recovery."""
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
@@ -227,7 +300,8 @@ def test_beta_fallback_runs_when_only_expired_offers(
     )
     db.refresh(trip)
 
-    assert trip.status == TripStatus.assigned
+    assert trip.status == TripStatus.requested
+    assert trip.driver_id is None
 
 
 def test_location_redispatch_skips_older_unserviceable_zero_offer_trip(

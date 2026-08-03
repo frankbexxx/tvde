@@ -156,7 +156,6 @@ def upsert_driver_location(
         )
 
     from app.db.models.trip_offer import TripOffer
-    from app.models.enums import OfferStatus
     from app.services.offer_dispatch import create_offers_for_trip
 
     # Re-dispatch when this driver's fresh location can recover a trip that
@@ -209,29 +208,23 @@ def upsert_driver_location(
 
     # Fallback auto-dispatch for BETA/dev: when multi-offer created 0 offers
     # (no drivers had locations). Assign oldest requested trip to pool.
+    # Trips that already have any TripOffer history (pending/rejected/expired/…)
+    # stay requested — cron redispatch handles them (BUG-REJECT-BETA-1).
     beta_mode = getattr(settings, "BETA_MODE", False)
     if beta_mode and getattr(driver, "is_available", True):
-        # Only skip trips that still have live pending offers (not expired/rejected).
-        now = datetime.now(timezone.utc)
-        ids_with_live_offers = {
-            row[0]
-            for row in db.execute(
-                select(TripOffer.trip_id)
-                .where(TripOffer.status == OfferStatus.pending)
-                .where(TripOffer.expires_at > now)
-                .distinct()
-            ).all()
-        }
         q = (
             select(Trip)
             .where(Trip.status == TripStatus.requested)
             .where(Trip.driver_id.is_(None))
+            .where(
+                ~select(TripOffer.id)
+                .where(TripOffer.trip_id == Trip.id)
+                .exists()
+            )
             .order_by(Trip.created_at.asc())
             .limit(1)
             .with_for_update(of=Trip)
         )
-        if ids_with_live_offers:
-            q = q.where(Trip.id.notin_(ids_with_live_offers))
         trip = db.execute(q).scalars().first()
         if trip is not None:
             # Re-check under the row lock: a concurrent accept_offer may have
