@@ -166,4 +166,16 @@ Painel vivo: `O-DEMO-4ROLES` / `S-DEMO-4` = **Concluído** · `BUG-DEMO-1` = **C
 
 ---
 
+## 9. DEMO MANEL 1 — **COMPLETA** (2026-08)
+
+| Item | Estado |
+|------|--------|
+| Formato | Testes reais em carro / telefone |
+| Cobertura | Não cobriu tudo · sem prints |
+| Resultado | O que deveria funcionar, **funcionou** → considerar **completa** |
+| **DEMO MANEL 2** | Agendada para **Setembro** (alargada) |
+| Runbook base | Este documento + painel em [`TODOdoDIA.md`](../../TODOdoDIA.md) |
+
+---
+
 **Fim.**

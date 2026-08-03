@@ -8,17 +8,37 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-07-31** — tip `78fbd29` · Partner smoke #517 PASS · pronto demo Manel)
+## Contexto actual (**2026-08-03** — tip `eb3c929` · DEMO MANEL 1 completa · semana acertos)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `78fbd29` (#517) |
+| **`main`** | `eb3c929` (#519) |
 | **origin/main** | alinhado |
-| **working tree** | sync docs smoke Partner #517 por commit |
+| **working tree** | sync docs arranque semana 08-03 por commit |
 | **API prod (Render)** | Live ≥ **`c510154`** (#504); #507 aplicado em Shell |
-| **CI** | verde em `main` |
+| **CI** | verde em `main` (`backend-ci` · `web-app` · `web-e2e`) |
+
+### Calendário (férias / demos)
+
+| Item | Estado |
+|------|--------|
+| **DEMO MANEL 1** | **COMPLETA** — testes reais carro/telefone; não cobriu tudo; sem prints; o que deveria funcionar, funcionou |
+| **DEMO MANEL 2** | **Setembro** — alargada (guião + smoke pré-demo) |
+| Semana 03–07 ago | 5 dias úteis — acertos com código |
+| Semana 10–13 ago | só correções/estabilização + portátil/SSD |
+| Férias | **14–31 agosto** |
+
+### Foco desta semana (1 carril)
+
+1. Partner mapa live existente — verificar  
+2. ActiveTrip restore  
+3. Driver rejeitar oferta  
+4. B2 groundwork (**sem activar**)  
+5. Estabilização + SSD/férias readiness  
+
+**Fora:** Stripe live · PF3D ON · docs reais/OCR · contacto mascarado · B2 completo em prod · Bugbot/agents.
 
 ### Partner smoke pós-#517 (**PASS** 2026-07-31)
 
@@ -173,6 +193,9 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **NAV-3D.2b** | **Fechado** — #515 · `dc66772` (Agora refresh ErrorBanner) |
 | **#516 roadmap** | **Fechado** — `c0eb7b7` |
 | **#517 Partner labels** | **Fechado** — `78fbd29` + smoke manual Partner **PASS** |
+| **#518 docs Partner smoke** | **Fechado** — `aadc57d` |
+| **#519 Driver nav labels** | **Fechado** — `eb3c929` (recolha/destino por fase) |
+| **DEMO MANEL 1** | **Completa** (2026-08) — real carro/telefone |
 | **#505 review checklist** | **Fechado** — revisão manual sem Bugbot |
 | **NAV-3D.2** | **Fechado** (#500) — Dashboard `{error}` + retry |
 | **NAV-3E** | **Não** nesta fase |
@@ -180,7 +203,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `78fbd29`. Partner smoke pós-#517 **PASS**. Demo 4 papéis **PASS**. Pronto demo Manel. BUG-DEMO-1 + NAV-3D.2b fechados. Auth/P-504-PWD fechados. Bugbot OFF. PF3D OFF. B2 espera Manel. Residual: copy reassign `assigned` literal (não bloqueia).
+**Frase de fecho:** Tip `eb3c929`. **DEMO MANEL 1 completa.** DEMO MANEL 2 = Setembro. Partner smoke #517 + Driver nav #519 fechados. Foco semana: mapa Partner · ActiveTrip restore · rejeitar oferta · B2 groundwork sem activar. Bugbot OFF. PF3D OFF. Stripe fora. Residual: reassign `assigned` literal.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -192,6 +215,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#519** · `eb3c929` | Driver nav labels por fase (recolha/destino) |
+| **#518** · `aadc57d` | Docs Partner smoke PASS pós-#517 |
 | **#517** · `78fbd29` | Partner status labels + datas demo · smoke manual **PASS** |
 | **#516** · `c0eb7b7` | Roadmap pós DEMO smoke |
 | **#515** · `dc66772` | NAV-3D.2b — Agora refresh ErrorBanner |
@@ -241,11 +266,12 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Demo Manel** (operacional) — [`DEMO_4_PAPEIS.md`](../ops/DEMO_4_PAPEIS.md); Partner smoke #517 já **PASS**  
-2. **Espera Manel B2** (B/C/adiar) — sem implementação  
-3. Opcional pós-demo: **R-PARTNER-REASSIGN-COPY** (só copy i18n; sem UI reassign)  
-4. Atribuição real de viaturas / docs reais (pré-requisito PF3D ON)  
-5. PF3D-3B smoke ON controlado (opcional; flag **não** em prod global)  
+1. **Verificar Partner mapa live** (Frota → Mapa live) — smoke + gaps; polish só se baixo risco  
+2. **ActiveTrip restore** — diagnóstico → PR mínimo se gap  
+3. **Driver rejeitar oferta** — diagnóstico → PR mínimo se gap  
+4. **B2 groundwork** — docs/spike alinhado a [`B2_NEXT_TRIP_CHAINING_DIAG`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md); **sem activar**  
+5. Semana 10–13: estabilização + portátil/SSD · preparar **DEMO MANEL 2 (Setembro)**  
+6. Opcional: **R-PARTNER-REASSIGN-COPY** (copy i18n)  
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
 

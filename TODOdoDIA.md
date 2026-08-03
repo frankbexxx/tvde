@@ -16,43 +16,38 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-07-31** — tip `78fbd29` · Partner smoke #517 PASS)
+## Painel — **PRÓXIMA SESSÃO** (**2026-08-03** — tip `eb3c929` · DEMO MANEL 1 completa)
 
-**`main` / `origin/main`:** `78fbd29` · alinhado · working tree limpa · CI verde.
+**`main` / `origin/main`:** `eb3c929` · alinhado · working tree limpa · CI verde (`backend-ci` · `web-app` · `web-e2e`).
 
-**Objectivo imediato:** **1 carril** — **demo Manel** (operacional) · **ou** espera Manel **B2**. **Não** PF3D ON · **não** B2 sem decisão.
+**Calendário:** semana 03–07 ago = **5 dias úteis código** · semana 10–13 ago = estabilização + portátil/SSD · férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (alargada).
+
+**Objectivo imediato:** **1 carril** — verificar Partner mapa live · **ou** ActiveTrip restore · **ou** Driver rejeitar oferta. B2 só **groundwork** (sem activar). **Não** PF3D ON · **não** Stripe live · **não** docs reais.
 
 **Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Roadmap: [`docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **PR-504** | Auth: privilegiados ≠ demo | Concluído | `c510154` · backfill prod + smoke S-504-A…E |
-| **PR-507** / **P-504-PWD** | Script passwords admin/partner baseline | Concluído | `91a68f4` · Shell APPLIED · smoke UI PASS |
-| **PR-508** | Handoff P-504-PWD | Concluído | `61edcf8` · docs only |
-| **PR-509** | E2E Maps sync geo browser | Concluído | `e086743` · flake «Iniciar viagem» |
-| **PR-511** | Runbook DEMO_4_PAPEIS | Concluído | `3b429c2` · docs |
-| **PR-512** | Fecho smoke DEMO_4 + BUG-DEMO-1 aberto | Concluído | `c611580` · docs |
-| **PR-513** / **BUG-DEMO-1** | Driver detalhe Viagens acima do menu | Concluído | `49509e2` — Dialog `z-[70]` scoped vs Sheet `z-[60]` |
-| **PR-514** | Docs fecho BUG-DEMO-1 | Concluído | `c9a24c6` |
-| **PR-515** / **NAV-3D.2b** | Agora refresh → ErrorBanner | Concluído | `dc66772` — `admin-agora-refresh-error` |
-| **PR-516** | Roadmap pós DEMO smoke | Concluído | `c0eb7b7` · docs |
-| **PR-517** | Partner status labels + datas demo | Concluído | `78fbd29` — labels PT + `formatDateTime` |
-| **S-PARTNER-517** | Smoke manual Partner pós-#517 | Concluído | **PASS** 2026-07-31 — Home/KPIs · frota · viagens · detalhe (`Concluída` + datas) · nav OK |
-| **R-PARTNER-REASSIGN-COPY** | Hint reassign ainda com `assigned` literal | Por iniciar | Display-only; **não** bloqueia demo |
-| **PR-505** | Checklist review manual | Concluído | Sem Bugbot/agents |
-| **S-AUTH-PWD** | Smoke prod passwords próprias | Concluído | Admin/partner OK · demo FAIL · pax/driver OK · Frank OK |
-| **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke humano demo 4 papéis (prod) | Concluído | **PASS** 2026-07-30 — viagem completa + Partner + Admin |
-| **O-ROADMAP-DEMO** | Roadmap pós DEMO smoke (rascunho) | Concluído | tip sync + smoke Partner #517 |
-| **AVAIL-B2-NEXT-TRIP** | Next trip while ongoing | Bloqueado | Espera Manel B/C/adiar — [`B2_NEXT_TRIP_CHAINING_DIAG`](docs/architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
-| **PF3D-GATES** | Compliance gates viatura | Concluído | OFF em prod; smoke OFF PASS |
-| **NAV-3D.2** | Admin ErrorBanner dashboard | Concluído | #500 |
-| **R-E2E-1** | Flake web-e2e residual | N/A | Maps mitigado #509; monitorizar |
-| **Bugbot / Cloud** | Automações Cursor | N/A | **OFF** · triggers apagados |
-| **O-STRIPE-LIVE** | Stripe live | Bloqueado | Parceiro + docs |
+| **S-DEMO-MANEL-1** | Demo Manel 1 (carro/telefone real) | Concluído | **COMPLETA** — o que deveria funcionar, funcionou; sem cobertura total / sem prints |
+| **O-DEMO-MANEL-2** | Demo Manel 2 (alargada) | Por iniciar | **Setembro** — guião + smoke pré-demo |
+| **PR-517** / **S-PARTNER-517** | Partner labels + smoke | Concluído | `78fbd29` · PASS |
+| **PR-518** | Docs smoke Partner #517 | Concluído | `aadc57d` |
+| **PR-519** | Driver nav labels por fase | Concluído | `eb3c929` — recolha/destino |
+| **PR-515** / **NAV-3D.2b** | Agora refresh ErrorBanner | Concluído | `dc66772` |
+| **A-PARTNER-MAP** | Partner mapa live — verificar | Em curso | Frota → Mapa live; dados API reais; poll 12s |
+| **X-ACTIVETRIP-RESTORE** | ActiveTrip restore Pax/Driver | Por iniciar | Diagnóstico → PR mínimo se gap |
+| **X-DRIVER-REJECT** | Driver rejeitar oferta | Por iniciar | Diagnóstico → PR mínimo se gap |
+| **AVAIL-B2-NEXT-TRIP** | B2 groundwork (sem activar) | Bloqueado | Só docs/spike; **não** activar em prod |
+| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Por iniciar | Semana 10–13 ago |
+| **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
+| **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
+| **PF3D-GATES** | Compliance gates | Concluído | OFF em prod |
+| **Bugbot / Cloud** | Automações Cursor | N/A | **OFF** |
+| **O-STRIPE-LIVE** | Stripe live | Bloqueado | Fora desta fase |
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (recomendado):** **demo Manel** · B2 só com Manel · residual reassign-copy depois · PF3D ON só com dados reais.
+**Próximo (recomendado Dia 1):** verificar Partner mapa live (smoke + gaps) · depois ActiveTrip restore ou rejeitar oferta.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 

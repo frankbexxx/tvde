@@ -11,11 +11,13 @@
 
 | Item | Valor |
 |------|--------|
-| `main` | `78fbd29` (#517 Partner labels/datas) |
+| `main` | `eb3c929` (#519 Driver nav labels) |
 | `origin/main` | alinhado |
 | working tree | limpa |
 | DEMO_4_PAPEIS smoke | **PASS** |
-| Partner smoke pós-#517 | **PASS** (2026-07-31) — pronto demo Manel |
+| DEMO MANEL 1 | **COMPLETA** (2026-08) |
+| DEMO MANEL 2 | Setembro |
+| Partner smoke pós-#517 | **PASS** (2026-07-31) |
 | BUG-DEMO-1 | corrigido e fechado (#513/#514) |
 | NAV-3D.2b | **Fechado** (#515) |
 | PF3D gates | **OFF** |
@@ -66,14 +68,12 @@ Alinhar `TODOdoDIA.md`, `PROXIMA_SESSAO.md`, `DEMO_4_PAPEIS.md` com #513/#514 e 
 
 | | |
 |---|---|
-| **Tempo** | 30–60 min preparar · 15–20 min executar |
+| **DEMO MANEL 1** | **COMPLETA** (2026-08) — carro/telefone real; sem cobertura total/prints |
+| **DEMO MANEL 2** | **Setembro** — alargada |
 | **Tipo** | operacional/comercial |
-| **Risco** | baixo/médio (GPS, matching, Render) |
-| **Prioridade** | **muito alta** |
+| **Prioridade** | Manel 1 concluída · preparar Manel 2 após semana de acertos |
 
-Usar [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md): 4 papéis, sem improvisar fora de âmbito (B2, PF3D ON, Stripe live, docs reais, payouts).
-
-**Necessidades:** passwords próprias admin/partner · demo pax/driver · GPS Driver · health OK · fallback matching.
+Usar [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md) como base. Semana 03–07 ago: mapa Partner · ActiveTrip restore · rejeitar oferta · B2 groundwork sem activar. Fora: Stripe live, PF3D ON, docs reais.
 
 ---
 
@@ -203,7 +203,7 @@ Upload real, revisão, auditoria, RGPD. Ligação futura a PF3D.
 
 ## 13. Próximo passo sugerido
 
-Demo real ao Manel com [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md) — Partner polish #517 + smoke **PASS**. Depois feedback · residual reassign-copy (opcional) · ActiveTrip restore · B2 (se Manel decidir).
+**DEMO MANEL 1 completa.** Semana 03–07 ago: verificar Partner mapa live · ActiveTrip restore · rejeitar oferta · B2 groundwork sem activar. DEMO MANEL 2 = Setembro.
 
 ---
 
