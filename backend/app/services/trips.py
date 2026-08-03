@@ -1013,9 +1013,13 @@ def reject_offer(
     driver_id: str,
     offer_id: str,
 ) -> TripOffer:
-    """Reject an offer."""
+    """Reject an offer.
+
+    Locks offer then trip (same order as accept_offer) so a concurrent accept
+    cannot leave the winning offer as rejected after the trip is assigned.
+    """
     offer = db.execute(
-        select(TripOffer).where(TripOffer.id == offer_id)
+        select(TripOffer).where(TripOffer.id == offer_id).with_for_update()
     ).scalar_one_or_none()
     if not offer:
         _raise_not_found()
@@ -1026,6 +1030,23 @@ def reject_offer(
             status_code=status.HTTP_409_CONFLICT,
             detail="offer_already_taken",
         )
+
+    trip = db.execute(
+        select(Trip).where(Trip.id == offer.trip_id).with_for_update()
+    ).scalar_one_or_none()
+    if not trip:
+        _raise_not_found()
+    if trip.status != TripStatus.requested:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="offer_already_taken",
+        )
+    if trip.driver_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="offer_already_taken",
+        )
+
     offer.status = OfferStatus.rejected
     db.commit()
     db.refresh(offer)
