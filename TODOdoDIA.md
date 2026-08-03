@@ -16,13 +16,13 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-08-03** — tip `eb3c929` · DEMO MANEL 1 completa)
+## Painel — **PRÓXIMA SESSÃO** (**2026-08-03** — tip `c4690ea` · Driver Recusar **PASS**)
 
-**`main` / `origin/main`:** `eb3c929` · alinhado · working tree limpa · CI verde (`backend-ci` · `web-app` · `web-e2e`).
+**`main` / `origin/main`:** `c4690ea` · alinhado · prod build `c4690ea` · CI verde (`backend-ci` · `web-app` · `web-e2e`).
 
 **Calendário:** semana 03–07 ago = **5 dias úteis código** · semana 10–13 ago = estabilização + portátil/SSD · férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (alargada).
 
-**Objectivo imediato:** **1 carril** — verificar Partner mapa live · **ou** ActiveTrip restore · **ou** Driver rejeitar oferta. B2 só **groundwork** (sem activar). **Não** PF3D ON · **não** Stripe live · **não** docs reais.
+**Objectivo imediato:** **1 carril** — B2 groundwork (sem activar) · **ou** polish Partner mapa (não blocker) · **ou** SSD/férias readiness. **Não** PF3D ON · **não** Stripe live · **não** docs reais · **não** redispatch imediato.
 
 **Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Roadmap: [`docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
@@ -33,10 +33,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-517** / **S-PARTNER-517** | Partner labels + smoke | Concluído | `78fbd29` · PASS |
 | **PR-518** | Docs smoke Partner #517 | Concluído | `aadc57d` |
 | **PR-519** | Driver nav labels por fase | Concluído | `eb3c929` — recolha/destino |
+| **PR-520** | Docs DEMO MANEL 1 + week plan | Concluído | `aafe811` |
 | **PR-515** / **NAV-3D.2b** | Agora refresh ErrorBanner | Concluído | `dc66772` |
-| **A-PARTNER-MAP** | Partner mapa live — verificar | Em curso | Frota → Mapa live; dados API reais; poll 12s |
-| **X-ACTIVETRIP-RESTORE** | ActiveTrip restore Pax/Driver | Por iniciar | Diagnóstico → PR mínimo se gap |
-| **X-DRIVER-REJECT** | Driver rejeitar oferta | Por iniciar | Diagnóstico → PR mínimo se gap |
+| **A-PARTNER-MAP** / **S-PARTNER-MAP** | Partner mapa live | Concluído | Smoke prod **PASS**; polish (zoom/timestamp) depois — não blocker |
+| **X-ACTIVETRIP-RESTORE** / **S-ACTIVETRIP-F5** | ActiveTrip F5 restore | Concluído | Smoke prod **PASS**; sem PR código esta semana |
+| **X-DRIVER-REJECT** / **S-DRIVER-REJECT** | Driver Recusar oferta | Concluído | #521+#522+#523 · tip `c4690ea` · smoke **PASS** |
+| **PR-521** | `reject_offer` locks | Concluído | `0294842` |
+| **PR-522** | UI Recusar → reject API | Concluído | `01d7fc1` · Silenciar local |
+| **PR-523** | BETA location sem assigned órfão | Concluído | `c4690ea` · BUG-REJECT-BETA-1 |
+| **R-REJECT-REDISPATCH** | Redispatch imediato pós-reject | Por iniciar | Fora de scope; cron/TTL actual OK p/ demo |
 | **AVAIL-B2-NEXT-TRIP** | B2 groundwork (sem activar) | Bloqueado | Só docs/spike; **não** activar em prod |
 | **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Por iniciar | Semana 10–13 ago |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
@@ -47,7 +52,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (recomendado Dia 1):** verificar Partner mapa live (smoke + gaps) · depois ActiveTrip restore ou rejeitar oferta.
+**Próximo (recomendado):** B2 groundwork (docs/spike, sem activar) · **ou** SSD/férias · residual Partner mapa polish se sobrar tempo. Redispatch imediato **não** bloqueia demo.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 
