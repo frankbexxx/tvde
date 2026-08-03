@@ -57,7 +57,9 @@
     "pickup": "Pickup",
     "destination": "Destination",
     "estimate": "Estimate (indicative)",
-    "reject": "REJECT",
+    "reject": "Decline",
+    "rejectSuccess": "Offer declined",
+    "rejectError": "Could not decline the offer.",
     "accept": "ACCEPT",
     "processing": "Processing…"
   },
