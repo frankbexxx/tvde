@@ -118,6 +118,13 @@ class Settings(BaseSettings):
     # Default OFF: production-safe; enable only for controlled dev/test/smoke.
     ENABLE_VEHICLE_COMPLIANCE_GATES: bool = False
 
+    # B2 next-trip chaining (groundwork only — no runtime consumers yet).
+    # Default OFF: zero behaviour change until B2-SPIKE / B2-MATCH wire these up.
+    # See docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md
+    ENABLE_NEXT_TRIP_CHAINING: bool = False
+    # Max ETA minutes to pickup for a chain offer (V1 product default = 12). Unused until matching reads it.
+    NEXT_TRIP_MAX_PICKUP_ETA_MINUTES: int = 12
+
     # Login Google (OAuth2 authorization code). Ambos obrigatórios para activar POST /auth/google/exchange.
     GOOGLE_OAUTH_CLIENT_ID: str = ""
     GOOGLE_OAUTH_CLIENT_SECRET: str = ""
