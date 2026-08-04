@@ -188,7 +188,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 | Doc | Estado |
 |-----|--------|
-| [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | **DIAG concluído** — **em espera** (resposta Manel: B/C/adiar) |
+| [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | **DIAG técnico** concluído |
+| [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) | **Decisões V1 fechadas** (docs) — Opção B · 1 queued · ETA 12 min · PI só na promoção · Pax mensagem+cancel · código **OFF** |
 
 ### PF3D
 
@@ -202,7 +203,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Item | Estado |
 |------|--------|
 | **Availability Guard** | **PASS** (A+B) |
-| **B2 implementação** | **Não** — espera Manel |
+| **B2 implementação** | **Não** — decisões docs OK; próximo B2-CONFIG/SPIKE atrás de flag OFF |
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
 | **#504 auth prod** | **Fechado** — deploy `c510154` + backfill + smoke S-504-A…E **PASS** |
@@ -227,13 +228,13 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `c4690ea`. **DEMO MANEL 1 completa.** **Driver Recusar oferta PASS** (#521–#523). DEMO MANEL 2 = Setembro. Próximo: B2 groundwork (sem activar) · SSD/férias · polish Partner mapa se sobrar. Redispatch imediato fora de scope. Bugbot OFF. PF3D OFF. Stripe fora. Residual: reassign `assigned` literal.
+**Frase de fecho:** Tip `df03395` (+ docs B2 decisões). **DEMO MANEL 1 completa.** **Driver Recusar PASS.** B2 V1 decisões **fechadas em docs** (Opção B · 12 min · PI na promoção) — código OFF. Próximo: B2-CONFIG flags OFF · SSD/férias. Bugbot OFF. PF3D OFF. Stripe fora.
 
 ### Decisão produto (mantém-se + B2)
 
 Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fleet / matching. Ver [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md).
 
-**B2:** escolher modelo queued (**B**), hold (**C**), ou adiar — ver diagnóstico.
+**B2:** modelo **B (queued)** aceite em docs 2026-08-04 — ver [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md). Sem código ainda.
 
 ### Entregas recentes
 
@@ -277,7 +278,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | ID | Notas |
 |----|-------|
-| **AVAIL-B2-NEXT-TRIP** | Espera Manel — sem spike/código até decisão |
+| **AVAIL-B2-NEXT-TRIP** | Decisões V1 docs OK · código OFF · B2-CONFIG/SPIKE a seguir |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign com `assigned` literal — display-only; pós-demo |
 | **NAV-3D.3+ / NAV-3E** | Só se valer; **sem** Trips/Ops mutáveis / PageHeader |
 | **PF3D-3B/ON** | Smoke ON controlado — opcional; **não** activar em prod global |
@@ -294,11 +295,12 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **B2 groundwork** — docs/spike alinhado a [`B2_NEXT_TRIP_CHAINING_DIAG`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md); **sem activar**  
+1. **B2-CONFIG** — flags OFF + `NEXT_TRIP_WINDOW_MINUTES=12` **sem consumers** (após merge decisões)  
 2. Semana 10–13: estabilização + portátil/SSD · preparar **DEMO MANEL 2 (Setembro)**  
 3. Opcional: polish Partner mapa (zoom/timestamp) — **não** blocker demo  
 4. Opcional: **R-PARTNER-REASSIGN-COPY** (copy i18n)  
-5. **Não** redispatch imediato pós-reject (cron/TTL basta para demo)  
+5. **Não** B2-UI / matching / PI ainda · **não** redispatch imediato pós-reject  
+
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
 
@@ -314,6 +316,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | PF3D-3B/OFF smoke PASS | [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) |
 | PF3D-3B DIAG mensagens | [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | B2-DIAG next-trip | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) |
+| B2 decisões produto 2026-08-04 | [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) |
 | Availability Caso B PASS | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) |
 | Availability Caso A PASS | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) |
 | PF3D-3A/OFF smoke PASS | [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
