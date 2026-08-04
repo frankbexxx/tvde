@@ -116,7 +116,7 @@ Accept / matching / `list_available_trips` exigem `is_available=True`; accept se
 
 ```text
 NEXT_TRIP_CHAINING_ENABLED=false   # default — zero impacto OFF
-NEXT_TRIP_WINDOW_MINUTES=5
+NEXT_TRIP_WINDOW_MINUTES=12        # produto 2026-08-04 (era 5 no rascunho)
 ```
 
 | Regra | Valor |
@@ -136,15 +136,23 @@ NEXT_TRIP_WINDOW_MINUTES=5
 
 ---
 
-## 7. Decisões pendentes do produto
+## 7. Decisões de produto
 
-1. **Modelo:** Opção **B** (queued) vs **C** (hold) vs **adiar** B2?  
-2. **Pagamento:** criar PI/autorização na aceitação da next, ou só na promoção?  
-3. **Pax:** copy/ETA honestos enquanto motorista ainda termina a actual?  
-4. **Limite:** confirmar max **1** next.  
-5. **Prioridade** vs PF3D / atribuição real de viaturas?
+**Fechadas em 2026-08-04** — ver addendum canónico:
 
-**Não implementar B2 antes desta decisão.**
+→ [`B2_PRODUCT_DECISIONS_2026-08-04.md`](B2_PRODUCT_DECISIONS_2026-08-04.md)
+
+Resumo: Opção **B** (1 ongoing + 1 queued) · janela ETA pickup **12 min** (env) · PI **só na promoção** · Pax mensagem + cancel · V2 zona/categoria depois · implementação **OFF**.
+
+*(Perguntas abaixo ficam históricas — respostas no addendum.)*
+
+1. ~~Modelo: B vs C vs adiar?~~ → **B**  
+2. ~~Pagamento na accept ou na promoção?~~ → **promoção**  
+3. ~~Pax copy/cancel?~~ → **sim**  
+4. ~~Max 1 next?~~ → **sim**  
+5. Prioridade vs PF3D / atribuição real — **continua** fora de B2 V1  
+
+**Não implementar B2 sem flag OFF e sem passar o plano faseado do addendum.**
 
 ---
 
@@ -153,11 +161,14 @@ NEXT_TRIP_WINDOW_MINUTES=5
 | ID | Item | Estado |
 |----|------|--------|
 | **B2-DIAG** | Este diagnóstico | **Concluído** |
-| **B2-PRODUTO** | Decisão Manel: B vs C vs adiar; UX/pagamento | **Por iniciar** |
-| **B2-SPIKE** | Spike flag OFF: queued + sibling-aware free + timeout rules (sem ON) | Após decisão |
-| **B2-IMPL** | Matching janela ETA fallback + accept next + UI mínima | Após spike go |
+| **B2-PRODUTO** | Decisões produto 2026-08-04 | **Concluído** (docs) — [`B2_PRODUCT_DECISIONS_2026-08-04.md`](B2_PRODUCT_DECISIONS_2026-08-04.md) |
+| **B2-CONFIG** | Flags OFF + defaults (window=12); sem consumers | Por iniciar |
+| **B2-SPIKE-BE** | Schema `queued` + max 1 + sibling-aware free; OFF | Por iniciar |
+| **B2-MATCH-ETA** | Elegibilidade ETA ≤ janela; OFF | Por iniciar |
+| **B2-ACCEPT-PROMOTE** | Accept queued sem PI; promote + PI na promoção; OFF | Por iniciar |
+| **B2-UI-MIN** | Driver current+next; Pax mensagem/cancel; OFF | Por iniciar |
 | **B2-SMOKE** | Smoke chain dedicado | Antes de ON |
-| **B3** | ETA OSRM live | Depois B2 estável |
+| **B3** | ETA OSRM live · V2 zona/categoria | Depois B2 estável |
 
 ### Ficheiros afectados (ordem de magnitude, se B avançar)
 
@@ -185,11 +196,12 @@ NEXT_TRIP_WINDOW_MINUTES=5
 |----------|------|
 | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | Caso A PASS |
 | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | Caso B PASS |
+| [`B2_PRODUCT_DECISIONS_2026-08-04.md`](B2_PRODUCT_DECISIONS_2026-08-04.md) | Decisões produto V1 fechadas (docs) |
 | [#480](https://github.com/frankbexxx/tvde/pull/480) | Lock `assign_trip` / BETA auto-dispatch / payment guard `accept_offer` |
 | [#469](https://github.com/frankbexxx/tvde/pull/469)…[#477](https://github.com/frankbexxx/tvde/pull/477) | Locks + sync availability |
 
 ---
 
-**Frase de fecho:** B2-DIAG concluído. Sistema actual **não** suporta next-trip while ongoing com segurança. Decisão produto pendente (B queued vs C hold vs adiar). **Não implementar** antes dessa decisão.
+**Frase de fecho:** B2-DIAG técnico válido. Decisões produto V1 fechadas em 2026-08-04 (Opção B · 12 min · PI na promoção). Sistema actual **ainda não** implementa next-trip. **Não activar** sem flag OFF + plano faseado.
 
 *Docs-only. Sem código · testes · env · DB · migrations · flags activas.*

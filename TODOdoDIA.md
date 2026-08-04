@@ -16,13 +16,13 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-08-03** — tip `c4690ea` · Driver Recusar **PASS**)
+## Painel — **PRÓXIMA SESSÃO** (**2026-08-04** — tip `df03395` · B2 decisões produto docs)
 
-**`main` / `origin/main`:** `c4690ea` · alinhado · prod build `c4690ea` · CI verde (`backend-ci` · `web-app` · `web-e2e`).
+**`main` / `origin/main`:** `df03395` · alinhado · prod build ≥ `c4690ea` · CI verde (`backend-ci` · `web-app` · `web-e2e`).
 
 **Calendário:** semana 03–07 ago = **5 dias úteis código** · semana 10–13 ago = estabilização + portátil/SSD · férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (alargada).
 
-**Objectivo imediato:** **1 carril** — B2 groundwork (sem activar) · **ou** polish Partner mapa (não blocker) · **ou** SSD/férias readiness. **Não** PF3D ON · **não** Stripe live · **não** docs reais · **não** redispatch imediato.
+**Objectivo imediato:** **1 carril** — B2 groundwork **só docs/config OFF** · **ou** SSD/férias · polish Partner mapa opcional. **Não** implementar B2 · **não** PF3D ON · **não** Stripe live · **não** docs reais · **não** redispatch imediato.
 
 **Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Roadmap: [`docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
@@ -42,7 +42,10 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **PR-522** | UI Recusar → reject API | Concluído | `01d7fc1` · Silenciar local |
 | **PR-523** | BETA location sem assigned órfão | Concluído | `c4690ea` · BUG-REJECT-BETA-1 |
 | **R-REJECT-REDISPATCH** | Redispatch imediato pós-reject | Por iniciar | Fora de scope; cron/TTL actual OK p/ demo |
-| **AVAIL-B2-NEXT-TRIP** | B2 groundwork (sem activar) | Bloqueado | Só docs/spike; **não** activar em prod |
+| **AVAIL-B2-NEXT-TRIP** | B2 next-trip chaining | Em curso | Decisões V1 **fechadas** (docs 2026-08-04); código **OFF** / não iniciado |
+| **B2-PRODUTO-DOCS** | Decisões produto B2 | Concluído | Opção B · 1 queued · ETA 12 min · PI na promoção — [`B2_PRODUCT_DECISIONS_2026-08-04.md`](docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) |
+| **B2-CONFIG** | Flags OFF + defaults | Por iniciar | Sem consumers; `ENABLED=false` · window=12 |
+| **B2-SPIKE-BE** | Schema queued + max 1 + testes | Por iniciar | Só após B2-CONFIG; flag OFF |
 | **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Por iniciar | Semana 10–13 ago |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
@@ -52,7 +55,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (recomendado):** B2 groundwork (docs/spike, sem activar) · **ou** SSD/férias · residual Partner mapa polish se sobrar tempo. Redispatch imediato **não** bloqueia demo.
+**Próximo (recomendado):** B2-CONFIG (flags OFF, sem consumers) · **ou** SSD/férias · polish Partner mapa opcional. **Não** B2-UI / matching / pagamentos ainda. Redispatch imediato **não** bloqueia demo.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 
