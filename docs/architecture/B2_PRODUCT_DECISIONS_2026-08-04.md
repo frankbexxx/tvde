@@ -31,12 +31,16 @@
 | Pagamento | **NÃO** autorizar na accept da queued · autorizar **só na promoção** da queued |
 | V2 (futuro) | Configuração por zona/categoria em Admin/Partner |
 
-### Flags / config (alvo — ainda sem código)
+### Flags / config (Settings — groundwork; sem consumers runtime)
+
+Naming alinhado a `ENABLE_*` / `*_MINUTES` em `backend/app/core/config.py`:
 
 ```text
-NEXT_TRIP_CHAINING_ENABLED=false          # default — zero impacto OFF
-NEXT_TRIP_WINDOW_MINUTES=12               # janela ETA até pickup (V1)
+ENABLE_NEXT_TRIP_CHAINING=false           # default — zero impacto OFF (sem consumers ainda)
+NEXT_TRIP_MAX_PICKUP_ETA_MINUTES=12       # teto ETA até pickup (V1); unused até B2-MATCH-ETA
 ```
+
+**Nota:** nomes antigos do rascunho (`NEXT_TRIP_CHAINING_ENABLED`, `NEXT_TRIP_WINDOW_MINUTES`) foram substituídos por estes.
 
 ---
 
@@ -59,7 +63,7 @@ NEXT_TRIP_WINDOW_MINUTES=12               # janela ETA até pickup (V1)
 | # | ID | Item | Estado |
 |---|-----|------|--------|
 | 1 | **B2-PRODUTO-DOCS** | Este documento + notas painel/handoff | **Esta PR** |
-| 2 | **B2-CONFIG** | Flags OFF + defaults (`ENABLED=false`, window=12); **sem consumers** | Por iniciar |
+| 2 | **B2-CONFIG** | Flags OFF + defaults (`ENABLE_NEXT_TRIP_CHAINING=false`, `NEXT_TRIP_MAX_PICKUP_ETA_MINUTES=12`); **sem consumers** | Em curso / esta PR |
 | 3 | **B2-SPIKE-BE** | Schema/status `queued` + max 1 queued + sibling-aware free + testes; **OFF** | Por iniciar |
 | 4 | **B2-MATCH-ETA** | Elegibilidade chain: ongoing + ETA ≤ janela; **OFF** | Por iniciar |
 | 5 | **B2-ACCEPT-PROMOTE** | Accept → queued **sem** PI; promote no complete da actual; PI **só** na promoção; **OFF** | Por iniciar |
