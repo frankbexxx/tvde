@@ -8,18 +8,18 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-04** — tip `1671c9f` · B2 groundwork pré-férias **fechado**)
+## Contexto actual (**2026-08-04** — tip `5a543be` · SSD/férias readiness)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `1671c9f` (#527 B2-SPIKE-BE-1) |
+| **`main`** | `5a543be` (#528 docs fecho B2 groundwork) |
 | **origin/main** | alinhado |
-| **prod build** | ≥ `c4690ea` Recusar; tip docs/código B2 groundwork `1671c9f` (deploy quando Render apanhar) |
-| **working tree** | sync docs fecho B2 groundwork por commit |
+| **prod build** | ≥ `c4690ea` Recusar; tip `5a543be` docs |
+| **working tree** | sync docs SSD readiness por commit |
 | **API prod (Render)** | Recusar live ≥ **`c4690ea`**; #504/#507 já aplicados |
-| **CI** | #527 verde (`backend-ci` · `web-e2e`); migration CI `b9c0d1e2f3a4 → c2d3e4f5a6b7` OK |
+| **CI** | #527 verde; migration `c2d3e4f5a6b7` OK em CI |
 
 ### Calendário (férias / demos)
 
@@ -36,8 +36,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 1. ~~Partner mapa live~~ — smoke **PASS** (polish residual não blocker)  
 2. ~~ActiveTrip F5 restore~~ — smoke **PASS** (sem PR código)  
 3. ~~Driver Recusar oferta~~ — **PASS** (#521–#523 · tip `c4690ea`)  
-4. ~~B2 groundwork pré-férias~~ — **PASS** (#525–#527 · tip `1671c9f`; flag OFF; zero writers)  
-5. Estabilização + SSD/férias readiness (semana 10–13) · preparar **DEMO MANEL 2**  
+4. ~~B2 groundwork pré-férias~~ — **PASS** (#525–#528 · tip `5a543be`; flag OFF; zero writers)  
+5. **SSD/férias readiness** — runbook [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) · executar cópia SSD + smoke portátil · preparar **DEMO MANEL 2**  
 
 **Fora agora:** B2-BE-2/BE-3 · MATCH-ETA · UI B2 · activar `ENABLE_NEXT_TRIP_CHAINING` · Stripe live · PF3D ON · docs reais/OCR · redispatch imediato · Bugbot/agents.
 
@@ -242,7 +242,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `1671c9f`. **DEMO MANEL 1 completa.** **Driver Recusar PASS.** **B2 groundwork pré-férias fechado** (#525 decisões · #526 flags OFF · #527 schema `queued` inerte). Flag OFF · zero writers. Próximo: SSD/férias · Manel 2 Setembro. **Não** BE-2/3 / MATCH-ETA / UI ainda. Bugbot OFF. PF3D OFF. Stripe fora.
+**Frase de fecho:** Tip `5a543be`. **DEMO MANEL 1 completa.** **Driver Recusar PASS.** **B2 groundwork fechado** (#525–#528). Próximo: executar [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) + Manel 2 Setembro. **Não** BE-2/3 / MATCH-ETA / UI ainda. Bugbot OFF. PF3D OFF. Stripe fora.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -254,6 +254,8 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#528** · `5a543be` | Docs fecho B2 groundwork pré-férias |
+| **SSD readiness** | Runbook [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) (esta linha / PR docs) |
 | **#527** · `1671c9f` | B2-SPIKE-BE-1 — `TripStatus.queued` + unique partial index · zero writers |
 | **#526** | B2-CONFIG — flags OFF + defaults 12 min · zero consumers |
 | **#525** | B2 decisões produto V1 (docs) |
@@ -312,9 +314,9 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. Semana 10–13: estabilização + portátil/SSD · preparar **DEMO MANEL 2 (Setembro)**  
-2. Opcional: polish Partner mapa (zoom/timestamp) — **não** blocker demo  
-3. Opcional: **R-PARTNER-REASSIGN-COPY** (copy i18n)  
+1. Executar [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) — cópia SSD + envelope secrets + smoke portátil  
+2. Semana 10–13: estabilização · preparar **DEMO MANEL 2 (Setembro)**  
+3. Opcional: polish Partner mapa (zoom/timestamp) — **não** blocker demo  
 4. **Pós-férias:** B2-SPIKE-BE-2 → BE-3 → MATCH-ETA → UI (sempre flag OFF até smoke)  
 5. **Não** activar `ENABLE_NEXT_TRIP_CHAINING` · **não** redispatch imediato pós-reject  
 
@@ -327,6 +329,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 |------|------|
 | PR review checklist (manual) | [`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md) |
 | Demo 4 papéis (prod) | [`DEMO_4_PAPEIS.md`](../ops/DEMO_4_PAPEIS.md) |
+| SSD / férias readiness | [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) |
 | Roadmap pós DEMO smoke (rascunho) | [`ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](../ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) |
 | NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
 | NAV-0 contrato 4 apps | [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |

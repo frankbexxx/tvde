@@ -16,15 +16,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-08-04** — tip `1671c9f` · B2 groundwork pré-férias **fechado**)
+## Painel — **PRÓXIMA SESSÃO** (**2026-08-04** — tip `5a543be` · SSD/férias readiness)
 
-**`main` / `origin/main`:** `1671c9f` · alinhado · CI verde na #527 (`backend-ci` · `web-e2e`) · migration CI `b9c0d1e2f3a4 → c2d3e4f5a6b7`.
+**`main` / `origin/main`:** `5a543be` · alinhado · B2 groundwork docs #528 · schema #527.
 
 **Calendário:** semana 03–07 ago = groundwork B2 **feito** · semana 10–13 ago = estabilização + portátil/SSD · férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (alargada).
 
-**Objectivo imediato:** **1 carril** — SSD/férias readiness · polish Partner mapa opcional. **Não** B2-BE-2/BE-3 · **não** MATCH-ETA/UI · **não** activar flag · **não** PF3D ON · **não** Stripe live · **não** docs reais · **não** redispatch imediato.
+**Objectivo imediato:** **1 carril** — executar checklist SSD/portátil ([`SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md)) · polish Partner mapa opcional. **Não** B2-BE-2/BE-3 · **não** MATCH-ETA/UI · **não** activar flag · **não** PF3D ON · **não** Stripe live · **não** docs reais · **não** redispatch imediato.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · B2: [`docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md`](docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Roadmap: [`docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](docs/ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · SSD: [`docs/ops/SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · B2: [`docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md`](docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -50,7 +50,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **B2-SPIKE-BE-3** | Accept→queued + promote + PI | Por iniciar | **Pós-férias** — atrás de flag OFF |
 | **B2-MATCH-ETA** | Matching janela ETA 12 min | Por iniciar | **Pós-férias** |
 | **B2-UI-MIN** | Driver current+next · Pax msg/cancel | Por iniciar | **Pós-férias** |
-| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Por iniciar | Semana 10–13 ago |
+| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Runbook [`SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · cópia SSD + smoke portátil = humano |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
 | **PF3D-GATES** | Compliance gates | Concluído | OFF em prod |
