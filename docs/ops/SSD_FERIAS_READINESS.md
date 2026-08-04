@@ -1,11 +1,34 @@
 # SSD / férias readiness — runbook operacional
 
-**Estado:** checklist docs · **Data:** 2026-08-04  
-**Tip referência:** `5a543be` (B2 groundwork docs fechado; actualizar após pull)  
+**Estado:** execução parcial **2026-08-04** · tip referência `939b8a4`  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)  
 **Envs (templates):** [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md)
 
 Objectivo: levar o projecto numa SSD e usar no portátil nas férias **sem** depender da memória da máquina fixa, **sem** perder secrets, **sem** partir `main`.
+
+---
+
+## Checkpoint executado (**2026-08-04**)
+
+| Item | Resultado |
+|------|-----------|
+| SSD | Disco **H:** |
+| Clone | `H:\TVDE_BACKUP\APP` · branch `main` · tip **`939b8a4`** · `origin/main` alinhado · working tree limpa |
+| Remote | `https://github.com/frankbexxx/tvde.git` |
+| Runbook no clone | Presente |
+| Secrets | Fora do repo: `H:\TVDE_SECRETS\backend.env` · `H:\TVDE_SECRETS\web-app.env.local` |
+| Clone limpo de envs | **Sem** `backend/.env` · **sem** `web-app/.env.local` dentro de `H:\TVDE_BACKUP\APP` |
+| Cifragem | **Pendente** — cifrar pasta `H:\TVDE_SECRETS` **antes da viagem** |
+| Smoke portátil | **Pendente** |
+
+**Próximos passos humanos**
+
+1. Cifrar `H:\TVDE_SECRETS` (BitLocker / ZIP-7z password / VeraCrypt — à escolha).  
+2. No portátil: abrir clone (ou copiar para disco interno) · validar `git status` / tip.  
+3. Restaurar envs **apenas no portátil**: copiar para `backend/.env` e `web-app/.env.local` (não deixar plaintext permanente na SSD sem cifra).  
+4. Smoke local mínimo: Docker `ride_postgres` · venv + alembic · `npm ci` · `/health` · Vite `:5173` (comandos §6).
+
+Sem valores de secrets neste documento.
 
 ---
 
