@@ -16,13 +16,13 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-08-04** — tip `5a543be` · SSD/férias readiness)
+## Painel — **PRÓXIMA SESSÃO** (**2026-08-04** — tip `939b8a4` · SSD clone PASS · cifra pendente)
 
-**`main` / `origin/main`:** `5a543be` · alinhado · B2 groundwork docs #528 · schema #527.
+**`main` / `origin/main`:** `939b8a4` · alinhado · CI verde · #529 runbook SSD.
 
 **Calendário:** semana 03–07 ago = groundwork B2 **feito** · semana 10–13 ago = estabilização + portátil/SSD · férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (alargada).
 
-**Objectivo imediato:** **1 carril** — executar checklist SSD/portátil ([`SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md)) · polish Partner mapa opcional. **Não** B2-BE-2/BE-3 · **não** MATCH-ETA/UI · **não** activar flag · **não** PF3D ON · **não** Stripe live · **não** docs reais · **não** redispatch imediato.
+**Objectivo imediato:** **1 carril** — cifrar `H:\TVDE_SECRETS` antes da viagem · smoke portátil ([`SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md)) · polish Partner mapa opcional. **Não** B2-BE-2/BE-3 · **não** MATCH-ETA/UI · **não** activar flag · **não** PF3D ON · **não** Stripe live · **não** docs reais · **não** redispatch imediato.
 
 **Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · SSD: [`docs/ops/SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · B2: [`docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md`](docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
@@ -50,7 +50,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **B2-SPIKE-BE-3** | Accept→queued + promote + PI | Por iniciar | **Pós-férias** — atrás de flag OFF |
 | **B2-MATCH-ETA** | Matching janela ETA 12 min | Por iniciar | **Pós-férias** |
 | **B2-UI-MIN** | Driver current+next · Pax msg/cancel | Por iniciar | **Pós-férias** |
-| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Runbook [`SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · cópia SSD + smoke portátil = humano |
+| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Clone `H:\TVDE_BACKUP\APP` tip `939b8a4` **PASS** · secrets fora repo **PASS** · **cifra pendente** · smoke portátil pendente |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
 | **PF3D-GATES** | Compliance gates | Concluído | OFF em prod |
@@ -59,7 +59,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (recomendado):** SSD/férias · polish Partner mapa opcional · preparar Manel 2. **Não** B2-BE-2/3 / MATCH-ETA / UI / activar flag. Redispatch imediato **não** bloqueia demo.
+**Próximo (humano):** (1) cifrar `H:\TVDE_SECRETS` · (2) testar no portátil · (3) restaurar envs só no portátil → `backend/.env` + `web-app/.env.local` · (4) smoke local mínimo. Depois: Manel 2. **Não** B2/Stripe/PF3D.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 

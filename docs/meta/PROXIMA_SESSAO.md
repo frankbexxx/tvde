@@ -8,18 +8,18 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-04** — tip `5a543be` · SSD/férias readiness)
+## Contexto actual (**2026-08-04** — tip `939b8a4` · SSD clone PASS · cifra pendente)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `5a543be` (#528 docs fecho B2 groundwork) |
+| **`main`** | `939b8a4` (#529 SSD readiness runbook) |
 | **origin/main** | alinhado |
-| **prod build** | ≥ `c4690ea` Recusar; tip `5a543be` docs |
-| **working tree** | sync docs SSD readiness por commit |
+| **prod build** | ≥ `c4690ea` Recusar; tip docs `939b8a4` |
+| **working tree** | sync docs checkpoint SSD por commit |
 | **API prod (Render)** | Recusar live ≥ **`c4690ea`**; #504/#507 já aplicados |
-| **CI** | #527 verde; migration `c2d3e4f5a6b7` OK em CI |
+| **CI** | verde em `main` |
 
 ### Calendário (férias / demos)
 
@@ -36,10 +36,24 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 1. ~~Partner mapa live~~ — smoke **PASS** (polish residual não blocker)  
 2. ~~ActiveTrip F5 restore~~ — smoke **PASS** (sem PR código)  
 3. ~~Driver Recusar oferta~~ — **PASS** (#521–#523 · tip `c4690ea`)  
-4. ~~B2 groundwork pré-férias~~ — **PASS** (#525–#528 · tip `5a543be`; flag OFF; zero writers)  
-5. **SSD/férias readiness** — runbook [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) · executar cópia SSD + smoke portátil · preparar **DEMO MANEL 2**  
+4. ~~B2 groundwork pré-férias~~ — **PASS** (#525–#528; flag OFF; zero writers)  
+5. **SSD/férias readiness** — parcial **PASS** 2026-08-04 (ver abaixo) · falta cifra + smoke portátil · **DEMO MANEL 2** Setembro  
 
 **Fora agora:** B2-BE-2/BE-3 · MATCH-ETA · UI B2 · activar `ENABLE_NEXT_TRIP_CHAINING` · Stripe live · PF3D ON · docs reais/OCR · redispatch imediato · Bugbot/agents.
+
+### SSD / férias — checkpoint executado (**2026-08-04**, parcial)
+
+| Item | Estado |
+|------|--------|
+| SSD | Disco **H:** |
+| Clone | `H:\TVDE_BACKUP\APP` · `main` · tip **`939b8a4`** · `origin/main` alinhado · working tree limpa |
+| Remote | `https://github.com/frankbexxx/tvde.git` |
+| Runbook no clone | `docs/ops/SSD_FERIAS_READINESS.md` presente |
+| Secrets | Fora do repo: `H:\TVDE_SECRETS\backend.env` · `H:\TVDE_SECRETS\web-app.env.local` |
+| Dentro do clone | **Sem** `backend/.env` · **sem** `web-app/.env.local` |
+| Cifragem | **Pendente** — cifrar `H:\TVDE_SECRETS` **antes da viagem** (decisão humana) |
+
+**Próximo humano:** (1) cifrar `H:\TVDE_SECRETS` · (2) testar no portátil · (3) restaurar envs **só no portátil** → `backend/.env` + `web-app/.env.local` · (4) smoke local mínimo. Sem valores de secrets em docs/chat.
 
 ### Driver Recusar oferta — bloco fechado (**PASS** 2026-08-03)
 
@@ -242,7 +256,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `5a543be`. **DEMO MANEL 1 completa.** **Driver Recusar PASS.** **B2 groundwork fechado** (#525–#528). Próximo: executar [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) + Manel 2 Setembro. **Não** BE-2/3 / MATCH-ETA / UI ainda. Bugbot OFF. PF3D OFF. Stripe fora.
+**Frase de fecho:** Tip `939b8a4`. **DEMO MANEL 1 completa.** **B2 groundwork fechado.** **SSD clone PASS** (`H:\TVDE_BACKUP\APP`) · secrets fora do repo **PASS** · **cifra pendente** antes da viagem · smoke portátil pendente. Sem B2/Stripe/PF3D. Manel 2 = Setembro.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -254,8 +268,9 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
+| **#529** · `939b8a4` | Runbook SSD/férias readiness |
 | **#528** · `5a543be` | Docs fecho B2 groundwork pré-férias |
-| **SSD readiness** | Runbook [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) (esta linha / PR docs) |
+| **SSD checkpoint** | Clone H: + secrets fora repo **PASS** 2026-08-04 · cifra pendente |
 | **#527** · `1671c9f` | B2-SPIKE-BE-1 — `TripStatus.queued` + unique partial index · zero writers |
 | **#526** | B2-CONFIG — flags OFF + defaults 12 min · zero consumers |
 | **#525** | B2 decisões produto V1 (docs) |
@@ -314,11 +329,11 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. Executar [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) — cópia SSD + envelope secrets + smoke portátil  
-2. Semana 10–13: estabilização · preparar **DEMO MANEL 2 (Setembro)**  
-3. Opcional: polish Partner mapa (zoom/timestamp) — **não** blocker demo  
-4. **Pós-férias:** B2-SPIKE-BE-2 → BE-3 → MATCH-ETA → UI (sempre flag OFF até smoke)  
-5. **Não** activar `ENABLE_NEXT_TRIP_CHAINING` · **não** redispatch imediato pós-reject  
+1. **Cifrar** `H:\TVDE_SECRETS` antes da viagem  
+2. Smoke no **portátil**: restaurar envs só lá → `backend/.env` + `web-app/.env.local` · Docker/venv/npm · `/health` (ver [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md))  
+3. Semana 10–13: estabilização · preparar **DEMO MANEL 2 (Setembro)**  
+4. **Pós-férias:** B2-SPIKE-BE-2 → BE-3 → MATCH-ETA → UI (flag OFF até smoke)  
+5. **Não** activar B2 · **não** Stripe live · **não** PF3D ON  
 
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
