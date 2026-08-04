@@ -30,6 +30,7 @@ class TripStatus(str, Enum):
     completed = "completed"
     cancelled = "cancelled"
     failed = "failed"
+    queued = "queued"  # B2 next-trip; inert until ENABLE_NEXT_TRIP_CHAINING writers
 
 
 class PaymentStatus(str, Enum):

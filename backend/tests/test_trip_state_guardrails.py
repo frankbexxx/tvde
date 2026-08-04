@@ -224,6 +224,9 @@ def test_valid_flow_still_works() -> None:
     # Valid transitions
     validate_trip_transition(TripStatus.requested, TripStatus.assigned)
     validate_trip_transition(TripStatus.requested, TripStatus.cancelled)
+    validate_trip_transition(TripStatus.requested, TripStatus.queued)  # B2-SPIKE-BE-1
+    validate_trip_transition(TripStatus.queued, TripStatus.accepted)
+    validate_trip_transition(TripStatus.queued, TripStatus.cancelled)
     validate_trip_transition(TripStatus.assigned, TripStatus.accepted)
     validate_trip_transition(TripStatus.accepted, TripStatus.arriving)
     validate_trip_transition(TripStatus.arriving, TripStatus.ongoing)
