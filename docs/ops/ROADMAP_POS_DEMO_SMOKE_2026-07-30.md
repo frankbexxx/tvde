@@ -11,9 +11,9 @@
 
 | Item | Valor |
 |------|--------|
-| `main` | `c4690ea` (#523 Driver Recusar / BETA location) |
+| `main` | `1671c9f` (#527 B2-SPIKE-BE-1) |
 | `origin/main` | alinhado |
-| prod build | `c4690ea` |
+| prod build | ≥ `c4690ea` Recusar; tip B2 groundwork `1671c9f` |
 | DEMO_4_PAPEIS smoke | **PASS** |
 | DEMO MANEL 1 | **COMPLETA** (2026-08) |
 | DEMO MANEL 2 | Setembro |
@@ -24,7 +24,7 @@
 | BUG-DEMO-1 | corrigido e fechado (#513/#514) |
 | NAV-3D.2b | **Fechado** (#515) |
 | PF3D gates | **OFF** |
-| B2 next-trip | espera decisão Manel |
+| B2 next-trip | **Groundwork pré-férias fechado** (#525–#527); flag OFF; BE-2/3/UI pós-férias |
 | Stripe live | espera parceiro / conta / docs |
 | Bugbot / Cloud automations | **OFF** |
 
@@ -50,6 +50,9 @@
 | #521 | `reject_offer` locking |
 | #522 | UI Recusar → reject API (Silenciar local) |
 | #523 | BETA location: sem assigned órfão pós-reject · smoke Recusar **PASS** |
+| #525 | B2 decisões produto V1 (docs) |
+| #526 | B2-CONFIG flags OFF + defaults 12 min |
+| #527 | B2-SPIKE-BE-1 schema `queued` inerte + unique partial index |
 
 ### Produção validada no smoke
 
@@ -82,7 +85,7 @@ Alinhar `TODOdoDIA.md`, `PROXIMA_SESSAO.md`, `DEMO_4_PAPEIS.md` com #513/#514 e 
 | **Tipo** | operacional/comercial |
 | **Prioridade** | Manel 1 concluída · preparar Manel 2 após semana de acertos |
 
-Usar [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md) como base. Semana 03–07 ago: mapa Partner · ActiveTrip · **Recusar oferta** — fechados com smoke **PASS**. Segue: B2 groundwork sem activar · SSD/férias · Manel 2 Setembro. Fora: Stripe live, PF3D ON, docs reais, redispatch imediato.
+Usar [`DEMO_4_PAPEIS.md`](DEMO_4_PAPEIS.md) como base. Semana 03–07 ago: mapa Partner · ActiveTrip · Recusar · **B2 groundwork** (#525–#527) — fechados. Segue: SSD/férias · Manel 2 Setembro. B2 lifecycle/UI **pós-férias**. Fora: Stripe live, PF3D ON, docs reais, redispatch imediato, activar flag B2.
 
 ---
 
@@ -135,11 +138,13 @@ Outro polish Driver (empty states, etc.): **não** tocar ciclo matching/accept/s
 
 | | |
 |---|---|
-| **Tempo** | 3–7+ dias |
-| **Risco** | alto |
-| **Prioridade** | **bloqueada** — decisão Manel |
+| **Groundwork pré-férias** | **Fechado** — #525 decisões · #526 flags OFF · #527 schema `queued` inerte (`1671c9f`) |
+| **Runtime** | Flag OFF · zero writers · comportamento actual idêntico |
+| **Residual** | BE-2/BE-3 · MATCH-ETA · UI — **pós-férias** (flag OFF até smoke) |
+| **Risco** | alto (lifecycle/matching/pagamentos) |
+| **Prioridade** | groundwork feito; resto **adiado** |
 
-**Não iniciar sem decisão explícita.**
+Doc: [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md). **Não** activar em prod nesta fase.
 
 ---
 
@@ -204,7 +209,7 @@ Upload real, revisão, auditoria, RGPD. Ligação futura a PF3D.
 
 ## 12. Não iniciar sem decisão explícita
 
-- B2 next-trip while ongoing  
+- B2 lifecycle / MATCH-ETA / UI / activar flag (groundwork #525–#527 já em `main`)  
 - PF3D gates ON em produção  
 - Stripe live  
 - documentos reais com upload  
@@ -216,7 +221,7 @@ Upload real, revisão, auditoria, RGPD. Ligação futura a PF3D.
 
 ## 13. Próximo passo sugerido
 
-**DEMO MANEL 1 completa.** **Driver Recusar PASS** (`c4690ea`). Partner mapa + ActiveTrip F5 smokes **PASS**. Próximo: B2 groundwork (sem activar) · SSD/férias · preparar **DEMO MANEL 2 (Setembro)**. Redispatch imediato **não** bloqueia demo.
+**DEMO MANEL 1 completa.** **Driver Recusar PASS.** **B2 groundwork pré-férias fechado** (`1671c9f` · #525–#527). Partner mapa + ActiveTrip F5 smokes **PASS**. Próximo: SSD/férias · preparar **DEMO MANEL 2 (Setembro)**. B2-BE-2+ **pós-férias**. Redispatch imediato **não** bloqueia demo.
 
 ---
 

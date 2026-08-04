@@ -8,18 +8,18 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-03** — tip `c4690ea` · Driver Recusar **PASS**)
+## Contexto actual (**2026-08-04** — tip `1671c9f` · B2 groundwork pré-férias **fechado**)
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `c4690ea` (#523) |
+| **`main`** | `1671c9f` (#527 B2-SPIKE-BE-1) |
 | **origin/main** | alinhado |
-| **prod build** | `c4690ea` (app + API health OK) |
-| **working tree** | sync docs fecho Recusar por commit |
-| **API prod (Render)** | Live ≥ **`c4690ea`**; #504/#507 já aplicados |
-| **CI** | verde em `main` (`backend-ci` · `web-app` · `web-e2e`) |
+| **prod build** | ≥ `c4690ea` Recusar; tip docs/código B2 groundwork `1671c9f` (deploy quando Render apanhar) |
+| **working tree** | sync docs fecho B2 groundwork por commit |
+| **API prod (Render)** | Recusar live ≥ **`c4690ea`**; #504/#507 já aplicados |
+| **CI** | #527 verde (`backend-ci` · `web-e2e`); migration CI `b9c0d1e2f3a4 → c2d3e4f5a6b7` OK |
 
 ### Calendário (férias / demos)
 
@@ -31,15 +31,15 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Semana 10–13 ago | só correções/estabilização + portátil/SSD |
 | Férias | **14–31 agosto** |
 
-### Foco desta semana (1 carril) — actualizado pós-Recusar
+### Foco (1 carril) — pós fecho B2 groundwork
 
 1. ~~Partner mapa live~~ — smoke **PASS** (polish residual não blocker)  
 2. ~~ActiveTrip F5 restore~~ — smoke **PASS** (sem PR código)  
 3. ~~Driver Recusar oferta~~ — **PASS** (#521–#523 · tip `c4690ea`)  
-4. B2 groundwork (**sem activar**)  
-5. Estabilização + SSD/férias readiness  
+4. ~~B2 groundwork pré-férias~~ — **PASS** (#525–#527 · tip `1671c9f`; flag OFF; zero writers)  
+5. Estabilização + SSD/férias readiness (semana 10–13) · preparar **DEMO MANEL 2**  
 
-**Fora:** Stripe live · PF3D ON · docs reais/OCR · contacto mascarado · B2 completo em prod · redispatch imediato · Bugbot/agents.
+**Fora agora:** B2-BE-2/BE-3 · MATCH-ETA · UI B2 · activar `ENABLE_NEXT_TRIP_CHAINING` · Stripe live · PF3D ON · docs reais/OCR · redispatch imediato · Bugbot/agents.
 
 ### Driver Recusar oferta — bloco fechado (**PASS** 2026-08-03)
 
@@ -184,12 +184,24 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | [`AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md`](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | **Caso A PASS** |
 | [`AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md`](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | **Caso B PASS** |
 
-### B2 — next trip while ongoing
+### B2 — next trip while ongoing (groundwork pré-férias **fechado**)
 
-| Doc | Estado |
-|-----|--------|
+| Doc / PR | Estado |
+|----------|--------|
 | [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | **DIAG técnico** concluído |
-| [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) | **Decisões V1 fechadas** (docs) — Opção B · 1 queued · ETA 12 min · PI só na promoção · Pax mensagem+cancel · código **OFF** |
+| [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) | Decisões V1 + estado groundwork (#525–#527) |
+| [#525](https://github.com/frankbexxx/tvde/pull/525) | Decisões produto — Opção B · 1 queued · ETA 12 · PI na promoção |
+| [#526](https://github.com/frankbexxx/tvde/pull/526) | Flags OFF: `ENABLE_NEXT_TRIP_CHAINING=False` · `NEXT_TRIP_MAX_PICKUP_ETA_MINUTES=12` · zero consumers |
+| [#527](https://github.com/frankbexxx/tvde/pull/527) · `1671c9f` | **B2-SPIKE-BE-1** — `TripStatus.queued` + SM declarativa + `uq_trips_one_queued_per_driver` · zero writers |
+
+| Residual (pós-férias) | Notas |
+|-----------------------|--------|
+| **B2-SPIKE-BE-2** | Lifecycle helpers sibling-aware (complete/cancel) |
+| **B2-SPIKE-BE-3** | Accept → queued sem PI · promote no complete · PI só na promoção |
+| **B2-MATCH-ETA** | Matching / janela ETA ≤ 12 min |
+| **B2-UI-MIN** | Driver current+next · Pax mensagem + cancel |
+
+**Runtime:** flag **OFF** · sem writers `queued` · comportamento actual idêntico.
 
 ### PF3D
 
@@ -203,7 +215,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | Item | Estado |
 |------|--------|
 | **Availability Guard** | **PASS** (A+B) |
-| **B2 implementação** | **Não** — decisões docs OK; próximo B2-CONFIG/SPIKE atrás de flag OFF |
+| **B2 groundwork** | **Fechado** (#525–#527) — schema inerte + flags OFF; lifecycle/UI **pós-férias** |
+| **B2 ON / matching / UI** | **Não** — flag OFF; sem BE-2/BE-3 ainda |
 | **PF3D gates** | OFF |
 | **PF3D-3B** | Implementado (#486) + smoke OFF **PASS** |
 | **#504 auth prod** | **Fechado** — deploy `c510154` + backfill + smoke S-504-A…E **PASS** |
@@ -218,6 +231,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **#519 Driver nav labels** | **Fechado** — `eb3c929` (recolha/destino por fase) |
 | **#520 week plan / MANEL 1** | **Fechado** — `aafe811` |
 | **#521–#523 Driver Recusar** | **Fechado** — tip `c4690ea` · smoke prod **PASS** |
+| **#525–#527 B2 groundwork** | **Fechado** — tip `1671c9f` · flag OFF · zero writers |
 | **Partner mapa live** | Smoke **PASS** — polish residual depois |
 | **ActiveTrip F5** | Smoke **PASS** — sem PR código esta semana |
 | **DEMO MANEL 1** | **Completa** (2026-08) — real carro/telefone |
@@ -228,18 +242,21 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `df03395` (+ docs B2 decisões). **DEMO MANEL 1 completa.** **Driver Recusar PASS.** B2 V1 decisões **fechadas em docs** (Opção B · 12 min · PI na promoção) — código OFF. Próximo: B2-CONFIG flags OFF · SSD/férias. Bugbot OFF. PF3D OFF. Stripe fora.
+**Frase de fecho:** Tip `1671c9f`. **DEMO MANEL 1 completa.** **Driver Recusar PASS.** **B2 groundwork pré-férias fechado** (#525 decisões · #526 flags OFF · #527 schema `queued` inerte). Flag OFF · zero writers. Próximo: SSD/férias · Manel 2 Setembro. **Não** BE-2/3 / MATCH-ETA / UI ainda. Bugbot OFF. PF3D OFF. Stripe fora.
 
 ### Decisão produto (mantém-se + B2)
 
 Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fleet / matching. Ver [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md).
 
-**B2:** modelo **B (queued)** aceite em docs 2026-08-04 — ver [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md). Sem código ainda.
+**B2:** modelo **B (queued)** — decisões + config OFF + schema inerte em `main` (`1671c9f`). Lifecycle/matching/UI **pós-férias**. Ver [`B2_PRODUCT_DECISIONS_2026-08-04.md`](../architecture/B2_PRODUCT_DECISIONS_2026-08-04.md).
 
 ### Entregas recentes
 
 | PR / tip | O quê |
 |----------|-------|
+| **#527** · `1671c9f` | B2-SPIKE-BE-1 — `TripStatus.queued` + unique partial index · zero writers |
+| **#526** | B2-CONFIG — flags OFF + defaults 12 min · zero consumers |
+| **#525** | B2 decisões produto V1 (docs) |
 | **#523** · `c4690ea` | BETA location: sem assigned órfão após reject · smoke Recusar **PASS** |
 | **#522** · `01d7fc1` | UI Recusar → `reject_offer`; Silenciar local |
 | **#521** · `0294842` | `reject_offer` locking / revalidation |
@@ -278,7 +295,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | ID | Notas |
 |----|-------|
-| **AVAIL-B2-NEXT-TRIP** | Decisões V1 docs OK · código OFF · B2-CONFIG/SPIKE a seguir |
+| **AVAIL-B2-NEXT-TRIP** | Groundwork #525–#527 OK · BE-2/3 · MATCH-ETA · UI **pós-férias** · flag OFF |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign com `assigned` literal — display-only; pós-demo |
 | **NAV-3D.3+ / NAV-3E** | Só se valer; **sem** Trips/Ops mutáveis / PageHeader |
 | **PF3D-3B/ON** | Smoke ON controlado — opcional; **não** activar em prod global |
@@ -295,11 +312,11 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **B2-CONFIG** — flags OFF + `NEXT_TRIP_WINDOW_MINUTES=12` **sem consumers** (após merge decisões)  
-2. Semana 10–13: estabilização + portátil/SSD · preparar **DEMO MANEL 2 (Setembro)**  
-3. Opcional: polish Partner mapa (zoom/timestamp) — **não** blocker demo  
-4. Opcional: **R-PARTNER-REASSIGN-COPY** (copy i18n)  
-5. **Não** B2-UI / matching / PI ainda · **não** redispatch imediato pós-reject  
+1. Semana 10–13: estabilização + portátil/SSD · preparar **DEMO MANEL 2 (Setembro)**  
+2. Opcional: polish Partner mapa (zoom/timestamp) — **não** blocker demo  
+3. Opcional: **R-PARTNER-REASSIGN-COPY** (copy i18n)  
+4. **Pós-férias:** B2-SPIKE-BE-2 → BE-3 → MATCH-ETA → UI (sempre flag OFF até smoke)  
+5. **Não** activar `ENABLE_NEXT_TRIP_CHAINING` · **não** redispatch imediato pós-reject  
 
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.

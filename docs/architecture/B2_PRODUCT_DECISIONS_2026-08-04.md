@@ -1,6 +1,7 @@
 # B2 — Decisões de produto (next-trip chaining) · 2026-08-04
 
-**Estado:** **DECISÕES FECHADAS** (docs) · **implementação NÃO iniciada** · feature continua **OFF**  
+**Estado:** **GROUNDWORK PRÉ-FÉRIAS FECHADO** · feature continua **OFF** · zero runtime writers  
+**Tip `main`:** `1671c9f` (#527)  
 **Base técnica:** [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)
 
@@ -11,9 +12,9 @@
 | Item | Valor |
 |------|--------|
 | Modelo V1 | **Opção B** — 1 trip `ongoing` + no máximo **1** trip `queued` por motorista |
-| Sistema actual | Continua a **não** suportar next-trip with safety (ver diag Julho) |
-| Código nesta data | **Zero** — só documentação |
-| Produção | **OFF**; qualquer código futuro atrás de flag default OFF |
+| Sistema actual (runtime) | Continua **sem** next-trip activo (flag OFF; sem writers) |
+| Groundwork em `main` | Decisões (#525) · flags OFF (#526) · schema inerte (#527) |
+| Produção | **OFF**; lifecycle/matching/UI só **pós-férias**, atrás de flag default OFF |
 
 ---
 
@@ -62,25 +63,38 @@ NEXT_TRIP_MAX_PICKUP_ETA_MINUTES=12       # teto ETA até pickup (V1); unused at
 
 | # | ID | Item | Estado |
 |---|-----|------|--------|
-| 1 | **B2-PRODUTO-DOCS** | Este documento + notas painel/handoff | **Esta PR** |
-| 2 | **B2-CONFIG** | Flags OFF + defaults (`ENABLE_NEXT_TRIP_CHAINING=false`, `NEXT_TRIP_MAX_PICKUP_ETA_MINUTES=12`); **sem consumers** | Em curso / esta PR |
-| 3 | **B2-SPIKE-BE** | Schema/status `queued` + max 1 queued + sibling-aware free + testes; **OFF** | Por iniciar |
-| 4 | **B2-MATCH-ETA** | Elegibilidade chain: ongoing + ETA ≤ janela; **OFF** | Por iniciar |
-| 5 | **B2-ACCEPT-PROMOTE** | Accept → queued **sem** PI; promote no complete da actual; PI **só** na promoção; **OFF** | Por iniciar |
-| 6 | **B2-UI-MIN** | Driver current+next; Pax mensagem + cancel; **OFF** | Por iniciar |
-| 7 | **B2-SMOKE** | Smoke dedicado staging/controlado antes de ON | Por iniciar |
-| 8 | **B3** | OSRM live ETA · config zona/categoria (V2) | Depois B2 estável |
+| 1 | **B2-PRODUTO-DOCS** | Este documento + notas painel/handoff | **Concluído** — [#525](https://github.com/frankbexxx/tvde/pull/525) |
+| 2 | **B2-CONFIG** | Flags OFF + defaults; **sem consumers** | **Concluído** — [#526](https://github.com/frankbexxx/tvde/pull/526) |
+| 3a | **B2-SPIKE-BE-1** | Enum `queued` + SM declarativa + unique partial index max 1; **zero writers** | **Concluído** — [#527](https://github.com/frankbexxx/tvde/pull/527) · `1671c9f` |
+| 3b | **B2-SPIKE-BE-2** | Helpers sibling-aware (complete/cancel); **OFF** | **Pós-férias** |
+| 3c | **B2-SPIKE-BE-3** | Accept → queued **sem** PI; promote no complete; PI **só** na promoção; **OFF** | **Pós-férias** |
+| 4 | **B2-MATCH-ETA** | Elegibilidade chain: ongoing + ETA ≤ janela; **OFF** | **Pós-férias** |
+| 5 | **B2-UI-MIN** | Driver current+next; Pax mensagem + cancel; **OFF** | **Pós-férias** |
+| 6 | **B2-SMOKE** | Smoke dedicado staging/controlado antes de ON | Depois UI |
+| 7 | **B3** | OSRM live ETA · config zona/categoria (V2) | Depois B2 estável |
+
+### Schema inerte (#527) — o que existe vs o que não
+
+| Existe em `main` | Ainda **não** |
+|------------------|---------------|
+| `TripStatus.queued` | Accept → `queued` |
+| SM: `requested→queued`, `queued→accepted\|cancelled` | Promote queued |
+| `uq_trips_one_queued_per_driver` | Sibling-aware complete/cancel |
+| Testes schema/SM + zero-writers | Matching ETA · FE · PI na accept |
+
+Migration: `c2d3e4f5a6b7` — `ALTER TYPE … ADD VALUE 'queued'` em `autocommit_block` + índice parcial.
 
 ---
 
-## 5. Fora de scope (agora e nesta PR)
+## 5. Fora de scope (agora / pré-férias)
 
-- Código · migrations · activar flags em prod  
+- Activar `ENABLE_NEXT_TRIP_CHAINING` em Render  
 - Stripe live · PF3D · docs reais/OCR  
 - Partner/Admin config V1  
 - Matching redesign geral  
 - B2 completo / ON em produção  
-- Redispatch imediato (outro residual)
+- Redispatch imediato (outro residual)  
+- BE-2 / BE-3 / MATCH-ETA / UI (adiados a **pós-férias**)
 
 ---
 
@@ -93,11 +107,11 @@ O diag Julho permanece válido como **análise técnica**. Este addendum **fecha
 | B vs C vs adiar? | **B (queued)** |
 | Pagamento na accept ou na promoção? | **Só na promoção** |
 | Pax copy / cancel? | **Sim** — mensagem clara + cancel |
-| Max 1 next? | **Confirmado** |
+| Max 1 next? | **Confirmado** (também no índice partial #527) |
 | Janela | **12 min** ETA pickup (era 5 no rascunho de flags) |
 
 ---
 
-**Frase de fecho:** Decisões B2 V1 fechadas em docs (Opção B · 12 min · PI na promoção). **Não implementar** ainda. Próximo código só atrás de flag OFF, começando por B2-CONFIG / B2-SPIKE-BE.
+**Frase de fecho:** Groundwork B2 V1 **fechado** em docs + flags OFF + schema inerte (`1671c9f`). Runtime idêntico. Próximo código: **B2-SPIKE-BE-2** pós-férias, sempre atrás de flag OFF.
 
-*Docs-only. Sem código · testes longos · env activo · DB · migrations.*
+*Sem activar B2 · sem BE-2/3 nesta fase.*
