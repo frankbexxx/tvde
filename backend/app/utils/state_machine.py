@@ -9,12 +9,18 @@ from app.models.enums import TripStatus
 logger = logging.getLogger(__name__)
 
 # Transições permitidas: old_state -> [new_states]
+# queued: declarado para B2 next-trip (SPIKE-BE-1); sem writers runtime ainda.
 ALLOWED_TRANSITIONS: dict[TripStatus, list[TripStatus]] = {
-    TripStatus.requested: [TripStatus.assigned, TripStatus.cancelled],
+    TripStatus.requested: [
+        TripStatus.assigned,
+        TripStatus.cancelled,
+        TripStatus.queued,
+    ],
     TripStatus.assigned: [TripStatus.accepted, TripStatus.cancelled],
     TripStatus.accepted: [TripStatus.arriving, TripStatus.cancelled],
     TripStatus.arriving: [TripStatus.ongoing, TripStatus.cancelled],
     TripStatus.ongoing: [TripStatus.completed, TripStatus.cancelled, TripStatus.failed],
+    TripStatus.queued: [TripStatus.accepted, TripStatus.cancelled],
 }
 
 
