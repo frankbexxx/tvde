@@ -16,15 +16,17 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-08-05** — tip `94b479a` · fecho pré-férias)
+## Painel — **PRÉ-FÉRIAS** (**2026-08-05** — tip `3aa2583` · MODO FÉRIAS ainda **OFF**)
 
-**`main` / `origin/main`:** `94b479a` · alinhado · #532 guião Manel 2 · #531 portátil MJ · #530 SSD.
+**Modo:** **pré-férias** — PC principal = máquina activa. **MODO FÉRIAS** só a **13/14 ago** (após refresh SSD + cifrar secrets). Modelo: [`MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md).
 
-**Calendário:** férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (guião pronto).
+**`main` / `origin/main`:** `3aa2583` · alinhado · #533 checklist · #532 Manel 2 · #531 MJ · #530 SSD.
 
-**Objectivo imediato:** **1 carril** — **cifrar `TVDE_SECRETS`** (único blocker viagem) · checklist em [`SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md). Em férias: prod + docs; **não** B2/Stripe/PF3D/Docker no portátil MJ.
+**Calendário:** até 13 ago = PC normal · **13/14** = gatilho férias · férias **14–31 ago** · **DEMO MANEL 2 = Setembro**.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · SSD: [`docs/ops/SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · Manel 2: [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
+**Objectivo imediato:** operação normal no PC · preparar kit: **cifrar `TVDE_SECRETS` (pendente)** · no dia 13/14 **actualizar SSD** + confirmar leitura no portátil MJ. Em férias: branches + push GitHub · sem B2/Stripe/PF3D/Docker MJ.
+
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Modo férias: [`docs/ops/MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md) · SSD: [`docs/ops/SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · Manel 2: [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -50,7 +52,8 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **B2-SPIKE-BE-3** | Accept→queued + promote + PI | Por iniciar | **Pós-férias** — atrás de flag OFF |
 | **B2-MATCH-ETA** | Matching janela ETA 12 min | Por iniciar | **Pós-férias** |
 | **B2-UI-MIN** | Driver current+next · Pax msg/cancel | Por iniciar | **Pós-férias** |
-| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Clone+MJ **PASS** · checklist final no runbook · **cifra secrets = blocker viagem** |
+| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Clone+MJ **PASS** · **cifra `TVDE_SECRETS` pendente** · refresh SSD **13/14 ago** · ver [`MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md) |
+| **O-MODO-FERIAS** | Entrada oficial MODO FÉRIAS | Por iniciar | Gatilho 13/14: SSD actualizada + secrets cifrados + main alinhada PC/SSD |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
 | **PF3D-GATES** | Compliance gates | Concluído | OFF em prod |
@@ -59,9 +62,9 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (humano):** (1) **cifrar `TVDE_SECRETS` antes da viagem** (ainda pendente) · (2) `git pull` PC + SSD/portátil · (3) férias = prod + guião Manel 2. **Não** B2/Stripe/PF3D/Docker MJ.
+**Próximo (humano):** até 13 = PC normal · **13/14** = refresh SSD + **cifrar `TVDE_SECRETS` (ainda pendente)** + smoke leitura MJ → **MODO FÉRIAS ON**. Em férias: branches + push; registo = branches/SSD/smoke campo. **Não** B2/Stripe/PF3D/Docker MJ.
 
-**Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
+**Regra:** **1 carril** · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)) · em férias preferir docs/FE leve.
 
 ---
 

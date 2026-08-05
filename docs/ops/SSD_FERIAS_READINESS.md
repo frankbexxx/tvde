@@ -1,10 +1,13 @@
 # SSD / férias readiness — runbook operacional
 
-**Estado:** readiness parcial **PASS** · tip docs `94b479a` · **cifra secrets = único blocker de viagem**  
+**Estado:** readiness parcial **PASS** · tip docs `3aa2583` · **ainda NÃO em MODO FÉRIAS** · **cifra `TVDE_SECRETS` pendente**  
+**Modelo canónico:** [`MODO_FERIAS_2026.md`](MODO_FERIAS_2026.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md)  
 **Envs (templates):** [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md)
 
-Objectivo: levar o projecto numa SSD e usar no portátil nas férias **sem** depender da memória da máquina fixa, **sem** perder secrets, **sem** partir `main`.
+Objectivo: kit SSD + portátil para férias **sem** depender só da memória do PC fixo, **sem** perder secrets, **sem** partir `main`.
+
+**Nota:** a SSD deve ser **actualizada de novo a 13/14 Agosto** (último pull) imediatamente antes da viagem — o clone actual é preparação, não o kit final.
 
 ---
 
@@ -17,18 +20,20 @@ Objectivo: levar o projecto numa SSD e usar no portátil nas férias **sem** dep
 | ✓ | SSD clone limpo + secrets **fora** do repo | #530 |
 | ✓ | Portátil Maria João (`claud`) smoke **leve** PASS (Git/Node/`npm.cmd`/FE) | #531 |
 | ✓ | Guião DEMO MANEL 2 Setembro | #532 · [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md) |
+| ✓ | Checklist risco operacional | #533 |
 | ✓ | B2 groundwork OFF (sem activar) | #525–#527 |
-| ✓ | `main` tip referência docs | `94b479a` |
+| ✓ | `main` tip referência docs | `3aa2583` |
 
-### Ainda falta (antes de viajar)
+### Ainda falta (antes de viajar / gatilho 13–14 ago)
 
 | # | Acção | OK? |
 |---|--------|-----|
-| 1 | **Cifrar** pasta `TVDE_SECRETS` na SSD (H: ou D:) — BitLocker / 7z / VeraCrypt | ☐ |
+| 1 | **Cifrar** pasta `TVDE_SECRETS` na SSD (H: ou D:) — **PENDENTE** · BitLocker / 7z / VeraCrypt | ☐ |
 | 2 | Confirmar 2.º sítio seguro da password do envelope (não no chat) | ☐ |
-| 3 | PC principal: `git pull` + tree limpa (§ validação abaixo) | ☐ |
-| 4 | SSD/portátil: `git pull` → tip ≥ `94b479a` | ☐ |
-| 5 | Anotar tip SHA num papel / password manager | ☐ |
+| 3 | **Dia 13/14:** PC principal `git pull` + tree limpa | ☐ |
+| 4 | **Dia 13/14:** SSD `git pull` → tip do dia (= `origin/main`) | ☐ |
+| 5 | Confirmar SSD lê no portátil MJ | ☐ |
+| 6 | Anotar tip SHA final · só então **MODO FÉRIAS ON** ([`MODO_FERIAS_2026.md`](MODO_FERIAS_2026.md)) | ☐ |
 
 ### Validação mínima — PC principal
 
@@ -39,7 +44,7 @@ git pull --ff-only origin main
 git status
 git rev-parse HEAD
 git rev-parse origin/main
-# Esperado: limpo · HEAD = origin/main · tip ≥ 94b479a
+# Esperado: limpo · HEAD = origin/main · tip do dia (ex. ≥ 3aa2583)
 ```
 
 Opcional: `GET /health` na API Render → OK (prod).
@@ -55,7 +60,8 @@ git log -1 --oneline
 # NÃO instalar Docker/backend · NÃO alterar Execution Policy
 ```
 
-Prod no browser = caminho principal de emergência. FE local só até proxy (sem `:8000` = esperado).
+Prod no browser = caminho principal de emergência. FE local só até proxy (sem `:8000` = esperado).  
+Operação em férias (branches/push/pós): ver [`MODO_FERIAS_2026.md`](MODO_FERIAS_2026.md).
 
 ### Se o PC principal falhar
 

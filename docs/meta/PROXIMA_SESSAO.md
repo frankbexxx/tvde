@@ -8,50 +8,56 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-05** — tip `94b479a` · fecho pré-férias)
+## Contexto actual (**2026-08-05** — tip `3aa2583` · **pré-férias** · MODO FÉRIAS **OFF**)
+
+### Modo operacional
+
+| Fase | Estado |
+|------|--------|
+| **Agora** | **Pré-férias** — PC principal activo |
+| **MODO FÉRIAS** | **OFF** até gatilho 13/14 ago |
+| **Modelo** | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) |
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `94b479a` (#532 guião DEMO MANEL 2) |
+| **`main`** | `3aa2583` (#533 checklist pré-férias) |
 | **origin/main** | alinhado |
-| **prod build** | ≥ `c4690ea` Recusar; tip docs `94b479a` |
-| **working tree** | sync docs fecho pré-férias por commit |
-| **API prod (Render)** | Recusar live ≥ **`c4690ea`**; #504/#507 já aplicados |
+| **prod build** | ≥ `c4690ea` Recusar |
+| **working tree** | sync docs MODO FÉRIAS por commit |
+| **API prod (Render)** | Live; #504/#507 aplicados |
 | **CI** | verde em `main` |
 
-### Calendário (férias / demos)
+### Calendário
 
 | Item | Estado |
 |------|--------|
-| **DEMO MANEL 1** | **COMPLETA** — testes reais carro/telefone; não cobriu tudo; sem prints; o que deveria funcionar, funcionou |
-| **DEMO MANEL 2** | **Setembro** — alargada (guião + smoke pré-demo) |
-| Semana 03–07 ago | 5 dias úteis — acertos com código |
-| Semana 10–13 ago | só correções/estabilização + portátil/SSD |
-| Férias | **14–31 agosto** |
+| Até ~13 ago | PC principal = máquina normal |
+| **13/14 ago** | Gatilho: refresh SSD + cifrar `TVDE_SECRETS` + confirmar MJ → **MODO FÉRIAS ON** |
+| Férias | **14–31 agosto** — portátil MJ activo · GitHub verdade · SSD backup cifrado |
+| **DEMO MANEL 1** | **COMPLETA** |
+| **DEMO MANEL 2** | **Setembro** — guião [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md) |
 
-### Foco (1 carril) — pós fecho B2 groundwork
+### Foco (1 carril) — pré-férias
 
-1. ~~Partner mapa live~~ — smoke **PASS** (polish residual não blocker)  
-2. ~~ActiveTrip F5 restore~~ — smoke **PASS** (sem PR código)  
-3. ~~Driver Recusar oferta~~ — **PASS** (#521–#523 · tip `c4690ea`)  
-4. ~~B2 groundwork pré-férias~~ — **PASS** (#525–#528; flag OFF; zero writers)  
-5. **SSD/férias** — clone + MJ leve **PASS** · guião Manel 2 **PASS** (#532) · falta **cifrar secrets** (blocker viagem)  
-6. **DEMO MANEL 2** — Setembro · guião [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md)  
+1. Operação normal no PC (sem abrir frentes grandes)  
+2. Kit viagem: **cifrar `TVDE_SECRETS` (pendente)** · no 13/14 **actualizar SSD**  
+3. Em férias: branches pequenas + push · docs/FE leve · prod no browser  
+4. Pós-férias: reconciliar branches no PC · smoke · fechar modo  
 
-**Fora agora / férias:** Docker/backend no portátil MJ · B2 activo · Stripe live · PF3D ON · docs reais · redispatch imediato · Bugbot/agents · limpar software da Maria João.
+**Fora:** B2 ON · Stripe live · PF3D · Docker no portátil MJ · limpar apps da Maria João (VPN/Office/…).
 
-### Fecho pré-férias — risco operacional
+### Pré-férias — risco / kit
 
-| Feito | Falta |
-|-------|--------|
-| SSD clone · secrets fora repo (#530) | **Cifrar `TVDE_SECRETS`** |
-| Portátil MJ smoke leve (#531) | `git pull` SSD/portátil → tip ≥ `94b479a` |
-| Guião Manel 2 (#532) | Smoke pré-demo Manel 2 (Setembro) |
+| Feito | Falta (antes viagem) |
+|-------|----------------------|
+| SSD clone + secrets fora repo (#530) | **Cifrar `TVDE_SECRETS`** (pendente) |
+| Portátil MJ smoke leve (#531) | Refresh SSD **13/14** + tip alinhado |
+| Guião Manel 2 (#532) · checklist (#533) | Entrada oficial MODO FÉRIAS |
 
-Checklist executável + comandos + «NÃO fazer»: [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) (secção *Checklist final pré-férias*).  
-Se PC principal falhar: **GitHub + prod Render + SSD/docs** — sem stack local no portátil MJ.
+Canónico: [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) · detalhe SSD: [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md).  
+Se PC falhar: **GitHub + prod + SSD** — sem backend local no MJ.
 
 ### SSD / férias — checkpoints
 
@@ -80,7 +86,7 @@ Se PC principal falhar: **GitHub + prod Render + SSD/docs** — sem stack local 
 
 **Papel do portátil (emergência leve):** consultar repo · deps/build/dev frontend até proxy · aceder **produção** no browser · pequenos ajustes. Stack completa = PC fixo ou prod.
 
-**Próximo humano:** **cifrar `TVDE_SECRETS`** · `git pull` PC + SSD · férias = prod + guião Manel 2. Sem secrets em docs/chat.
+**Próximo humano:** até 13 = PC normal · **13/14** = refresh SSD + **cifrar `TVDE_SECRETS` (pendente)** → MODO FÉRIAS. Sem secrets em docs/chat.
 
 ### Driver Recusar oferta — bloco fechado (**PASS** 2026-08-03)
 
@@ -283,7 +289,7 @@ Se PC principal falhar: **GitHub + prod Render + SSD/docs** — sem stack local 
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `94b479a`. **Manel 1 completa.** **B2 OFF.** **SSD+MJ leve PASS.** **Guião Manel 2 pronto.** Blocker viagem: **cifrar `TVDE_SECRETS`**. Férias = prod + docs; sem B2/Stripe/PF3D/Docker MJ.
+**Frase de fecho:** Tip `3aa2583`. **Pré-férias (MODO FÉRIAS OFF).** PC activo até 13/14. Kit: SSD refresh + **cifrar `TVDE_SECRETS` (pendente)**. Em férias: portátil MJ + GitHub + branches. Manel 2 Setembro. Sem B2/Stripe/PF3D/Docker MJ.
 
 ### Decisão produto (mantém-se + B2)
 
@@ -295,11 +301,12 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 | PR / tip | O quê |
 |----------|-------|
-| **#532** · `94b479a` | Guião DEMO MANEL 2 Setembro (1 página) |
+| **MODO FÉRIAS doc** | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) — ainda **OFF** |
+| **#533** · `3aa2583` | Checklist final pré-férias / risco operacional |
+| **#532** · `94b479a` | Guião DEMO MANEL 2 Setembro |
 | **#531** · `c819a25` | Checkpoint portátil Maria João smoke leve |
 | **#530** · `c276458` | Checkpoint SSD clone + secrets fora repo |
 | **#529** · `939b8a4` | Runbook SSD/férias readiness |
-| **Fecho pré-férias** | Checklist final no runbook SSD · cifra = blocker |
 | **#527** · `1671c9f` | B2-SPIKE-BE-1 — `TripStatus.queued` + unique partial index · zero writers |
 | **#526** | B2-CONFIG — flags OFF + defaults 12 min · zero consumers |
 | **#525** | B2 decisões produto V1 (docs) |
@@ -358,11 +365,11 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 
 ### O que fazer a seguir (ordem — 1 carril)
 
-1. **Cifrar `TVDE_SECRETS`** + validar PC/SSD (`SSD_FERIAS_READINESS` checklist final)  
-2. Férias: prod Render + docs + guião Manel 2 · emergência leve no portátil MJ  
-3. **Setembro:** smoke pré-demo + **DEMO MANEL 2**  
-4. **Pós-férias:** B2-SPIKE-BE-2 → BE-3 → MATCH-ETA → UI (flag OFF)  
-5. **Não** activar B2 · Stripe live · PF3D ON · Docker no portátil MJ  
+1. Até 13: PC normal · ver [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md)  
+2. **13/14:** refresh SSD + **cifrar `TVDE_SECRETS` (pendente)** + confirmar MJ → MODO FÉRIAS ON  
+3. Em férias: branches + push · docs/FE leve · prod · registo operacional curto  
+4. **Setembro:** smoke + **DEMO MANEL 2**  
+5. Pós-férias: reconciliar no PC · depois B2-BE-2+ (flag OFF) · **não** B2/Stripe/PF3D ON em férias  
 
 
 **Ambiente:** `scripts/windows/Open-TVDE-Dev-WT.bat`. Baseline: Pax `+351912345678` · Driver `+351911111111` · Admin SA `+351924075365` · Partner `+351955555502` (password própria) · Admin baseline `+351900000000` (password própria). Pytest: launcher seguro / BD local.
@@ -373,6 +380,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 |------|------|
 | PR review checklist (manual) | [`PR_REVIEW_CHECKLIST.md`](PR_REVIEW_CHECKLIST.md) |
 | Demo 4 papéis (prod) | [`DEMO_4_PAPEIS.md`](../ops/DEMO_4_PAPEIS.md) |
+| MODO FÉRIAS 2026 | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) |
 | SSD / férias readiness | [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) |
 | DEMO MANEL 2 guião | [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md) |
 | Roadmap pós DEMO smoke (rascunho) | [`ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](../ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) |
