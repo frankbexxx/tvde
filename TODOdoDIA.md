@@ -16,20 +16,20 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÓXIMA SESSÃO** (**2026-08-05** — tip `c276458` · portátil MJ smoke leve PASS)
+## Painel — **PRÓXIMA SESSÃO** (**2026-08-05** — tip `94b479a` · fecho pré-férias)
 
-**`main` / `origin/main`:** `c276458` · alinhado · #530 checkpoint SSD · #529 runbook.
+**`main` / `origin/main`:** `94b479a` · alinhado · #532 guião Manel 2 · #531 portátil MJ · #530 SSD.
 
-**Calendário:** semana 03–07 ago = groundwork B2 **feito** · semana 10–13 ago = estabilização + portátil/SSD · férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (alargada).
+**Calendário:** férias **14–31 ago** · **DEMO MANEL 2 = Setembro** (guião pronto).
 
-**Objectivo imediato:** **1 carril** — cifrar secrets na SSD **antes da viagem** · polish Partner mapa opcional · Manel 2. **Não** Docker/backend no portátil MJ · **não** B2-BE-2/BE-3 · **não** MATCH-ETA/UI · **não** activar flag · **não** PF3D ON · **não** Stripe live · **não** docs reais.
+**Objectivo imediato:** **1 carril** — **cifrar `TVDE_SECRETS`** (único blocker viagem) · checklist em [`SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md). Em férias: prod + docs; **não** B2/Stripe/PF3D/Docker no portátil MJ.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · SSD: [`docs/ops/SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · B2: [`docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md`](docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) · Demo: [`docs/ops/DEMO_4_PAPEIS.md`](docs/ops/DEMO_4_PAPEIS.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · SSD: [`docs/ops/SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · Manel 2: [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md) · Review: [`docs/meta/PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **S-DEMO-MANEL-1** | Demo Manel 1 (carro/telefone real) | Concluído | **COMPLETA** — o que deveria funcionar, funcionou; sem cobertura total / sem prints |
-| **O-DEMO-MANEL-2** | Demo Manel 2 (alargada) | Por iniciar | **Setembro** — guião + smoke pré-demo |
+| **O-DEMO-MANEL-2** | Demo Manel 2 (alargada) | Em curso | Guião #532 · [`DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md) · smoke pré-demo = Setembro |
 | **PR-517** / **S-PARTNER-517** | Partner labels + smoke | Concluído | `78fbd29` · PASS |
 | **PR-518** | Docs smoke Partner #517 | Concluído | `aadc57d` |
 | **PR-519** | Driver nav labels por fase | Concluído | `eb3c929` — recolha/destino |
@@ -50,7 +50,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **B2-SPIKE-BE-3** | Accept→queued + promote + PI | Por iniciar | **Pós-férias** — atrás de flag OFF |
 | **B2-MATCH-ETA** | Matching janela ETA 12 min | Por iniciar | **Pós-férias** |
 | **B2-UI-MIN** | Driver current+next · Pax msg/cancel | Por iniciar | **Pós-férias** |
-| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Clone SSD **PASS** · smoke portátil MJ (**leve**) **PASS** 2026-08-05 · **sem** Docker/backend · **cifra secrets pendente** antes viagem |
+| **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Clone+MJ **PASS** · checklist final no runbook · **cifra secrets = blocker viagem** |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
 | **PF3D-GATES** | Compliance gates | Concluído | OFF em prod |
@@ -59,7 +59,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **R-GIT-1** | Limpeza branches locais | Por iniciar | Não apagar ainda |
 | **CI-MAINT-1** | Warning Actions Node 20 | Por iniciar | Baixa prioridade |
 
-**Próximo (humano):** (1) cifrar pasta secrets na SSD (letra H: ou D: conforme PC) **antes da viagem** · (2) no portátil MJ: `git pull` se tip ainda for `939b8a4` · (3) emergência = docs + frontend build/dev + **prod no browser** — sem stack local completa. Manel 2 Setembro. **Não** B2/Stripe/PF3D.
+**Próximo (humano):** (1) **cifrar `TVDE_SECRETS` antes da viagem** (ainda pendente) · (2) `git pull` PC + SSD/portátil · (3) férias = prod + guião Manel 2. **Não** B2/Stripe/PF3D/Docker MJ.
 
 **Regra:** **1 carril** por sessão · review humana ([`PR_REVIEW_CHECKLIST.md`](docs/meta/PR_REVIEW_CHECKLIST.md)).
 

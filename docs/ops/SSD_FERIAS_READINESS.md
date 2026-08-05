@@ -1,10 +1,81 @@
 # SSD / férias readiness — runbook operacional
 
-**Estado:** clone + smoke portátil **leve** PASS · tip docs `c276458` · **cifra secrets pendente**  
-**Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)  
+**Estado:** readiness parcial **PASS** · tip docs `94b479a` · **cifra secrets = único blocker de viagem**  
+**Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md)  
 **Envs (templates):** [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md)
 
 Objectivo: levar o projecto numa SSD e usar no portátil nas férias **sem** depender da memória da máquina fixa, **sem** perder secrets, **sem** partir `main`.
+
+---
+
+## Checklist final pré-férias (executável)
+
+### Já feito
+
+| # | Item | Ref |
+|---|------|-----|
+| ✓ | SSD clone limpo + secrets **fora** do repo | #530 |
+| ✓ | Portátil Maria João (`claud`) smoke **leve** PASS (Git/Node/`npm.cmd`/FE) | #531 |
+| ✓ | Guião DEMO MANEL 2 Setembro | #532 · [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md) |
+| ✓ | B2 groundwork OFF (sem activar) | #525–#527 |
+| ✓ | `main` tip referência docs | `94b479a` |
+
+### Ainda falta (antes de viajar)
+
+| # | Acção | OK? |
+|---|--------|-----|
+| 1 | **Cifrar** pasta `TVDE_SECRETS` na SSD (H: ou D:) — BitLocker / 7z / VeraCrypt | ☐ |
+| 2 | Confirmar 2.º sítio seguro da password do envelope (não no chat) | ☐ |
+| 3 | PC principal: `git pull` + tree limpa (§ validação abaixo) | ☐ |
+| 4 | SSD/portátil: `git pull` → tip ≥ `94b479a` | ☐ |
+| 5 | Anotar tip SHA num papel / password manager | ☐ |
+
+### Validação mínima — PC principal
+
+```powershell
+git checkout main
+git fetch origin
+git pull --ff-only origin main
+git status
+git rev-parse HEAD
+git rev-parse origin/main
+# Esperado: limpo · HEAD = origin/main · tip ≥ 94b479a
+```
+
+Opcional: `GET /health` na API Render → OK (prod).
+
+### Validação mínima — SSD / portátil MJ
+
+```powershell
+cd D:\TVDE_BACKUP\APP   # ou H:\… conforme letra
+git status
+git pull --ff-only origin main
+git log -1 --oneline
+# Frontend (se precisar): npm.cmd --version · npm.cmd run build
+# NÃO instalar Docker/backend · NÃO alterar Execution Policy
+```
+
+Prod no browser = caminho principal de emergência. FE local só até proxy (sem `:8000` = esperado).
+
+### Se o PC principal falhar
+
+| Continua a funcionar | Não contar com |
+|----------------------|----------------|
+| GitHub + `main` remota | Stack Docker/venv do PC fixo |
+| Prod Render (app + API) | Backend local no portátil MJ |
+| SSD clone + docs + guião Manel 2 | Secrets em plaintext sem cifra |
+| Portátil MJ: FE build/dev leve + prod | Pytest / matching local completo |
+
+### NÃO fazer em férias
+
+- Activar `ENABLE_NEXT_TRIP_CHAINING` / B2 UI / matching chain  
+- Stripe live · PF3D ON · docs reais/OCR  
+- Commit directo em `main` · `git add` de `.env` / dumps / uploads  
+- Colar secrets no chat · mexer envs Render sem necessidade  
+- Instalar Docker/backend no portátil da Maria João  
+- Limpar VPN/Office/OneDrive/Power BI/Autenticação.Gov/Brother  
+- Bugbot / Cloud Agents / automações  
+- Redispatch imediato / features “só porque há tempo”  
 
 ---
 
@@ -26,7 +97,7 @@ Objectivo: levar o projecto numa SSD e usar no portátil nas férias **sem** dep
 | Pessoa | Maria João Claudino · Windows user **`claud`** (abreviatura de Claudino) |
 | SSD neste PC | **D:** · `D:\TVDE_BACKUP\APP` · `D:\TVDE_SECRETS` |
 | Git | 2.55.0 · `git config --global --add safe.directory D:/TVDE_BACKUP/APP` (dubious ownership) |
-| Tip no clone nesse dia | `939b8a4` — fazer `git pull` para tip actual (`c276458`+) |
+| Tip no clone nesse dia | `939b8a4` — fazer `git pull` para tip actual (`94b479a`+) |
 | Node | v24.19.0 · usar **`npm.cmd`** (Execution Policy; **não** alterar) |
 | Frontend | `npm.cmd install` / `run build` / `run dev` **PASS** |
 | Proxy `/api` → `:8000` | `ECONNREFUSED` — **esperado** sem backend local |
@@ -37,10 +108,7 @@ Objectivo: levar o projecto numa SSD e usar no portátil nas férias **sem** dep
 
 ### Próximos passos humanos
 
-1. **Cifrar** `TVDE_SECRETS` na SSD **antes da viagem**.  
-2. No portátil: `git pull --ff-only origin main` · preferir `npm.cmd`.  
-3. **Não** montar backend local no portátil MJ salvo necessidade explícita futura.  
-4. Restauro Windows: «Antes TVDE Git Node» disponível se preciso reverter instalações.
+Ver **Checklist final pré-férias** (topo). Único blocker de viagem: **cifrar `TVDE_SECRETS`**.
 
 Sem valores de secrets neste documento.
 
