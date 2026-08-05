@@ -1,6 +1,6 @@
 # SSD / férias readiness — runbook operacional
 
-**Estado:** execução parcial **2026-08-04** · tip referência `939b8a4`  
+**Estado:** clone + smoke portátil **leve** PASS · tip docs `c276458` · **cifra secrets pendente**  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)  
 **Envs (templates):** [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md)
 
@@ -8,25 +8,39 @@ Objectivo: levar o projecto numa SSD e usar no portátil nas férias **sem** dep
 
 ---
 
-## Checkpoint executado (**2026-08-04**)
+## Checkpoints executados
+
+### 2026-08-04 — SSD (PC origem)
 
 | Item | Resultado |
 |------|-----------|
-| SSD | Disco **H:** |
-| Clone | `H:\TVDE_BACKUP\APP` · branch `main` · tip **`939b8a4`** · `origin/main` alinhado · working tree limpa |
-| Remote | `https://github.com/frankbexxx/tvde.git` |
-| Runbook no clone | Presente |
-| Secrets | Fora do repo: `H:\TVDE_SECRETS\backend.env` · `H:\TVDE_SECRETS\web-app.env.local` |
-| Clone limpo de envs | **Sem** `backend/.env` · **sem** `web-app/.env.local` dentro de `H:\TVDE_BACKUP\APP` |
-| Cifragem | **Pendente** — cifrar pasta `H:\TVDE_SECRETS` **antes da viagem** |
-| Smoke portátil | **Pendente** |
+| SSD | Disco **H:** (noutro PC a letra pode ser **D:**) |
+| Clone | `…\TVDE_BACKUP\APP` · `main` · tip então **`939b8a4`** · limpo |
+| Secrets | Fora do repo: `…\TVDE_SECRETS\` — **sem** `.env` dentro do clone |
+| Cifragem | **Pendente** antes da viagem |
 
-**Próximos passos humanos**
+### 2026-08-05 — Portátil Maria João Claudino (smoke **leve PASS**)
 
-1. Cifrar `H:\TVDE_SECRETS` (BitLocker / ZIP-7z password / VeraCrypt — à escolha).  
-2. No portátil: abrir clone (ou copiar para disco interno) · validar `git status` / tip.  
-3. Restaurar envs **apenas no portátil**: copiar para `backend/.env` e `web-app/.env.local` (não deixar plaintext permanente na SSD sem cifra).  
-4. Smoke local mínimo: Docker `ride_postgres` · venv + alembic · `npm ci` · `/health` · Vite `:5173` (comandos §6).
+| Item | Resultado |
+|------|-----------|
+| Pessoa | Maria João Claudino · Windows user **`claud`** (abreviatura de Claudino) |
+| SSD neste PC | **D:** · `D:\TVDE_BACKUP\APP` · `D:\TVDE_SECRETS` |
+| Git | 2.55.0 · `git config --global --add safe.directory D:/TVDE_BACKUP/APP` (dubious ownership) |
+| Tip no clone nesse dia | `939b8a4` — fazer `git pull` para tip actual (`c276458`+) |
+| Node | v24.19.0 · usar **`npm.cmd`** (Execution Policy; **não** alterar) |
+| Frontend | `npm.cmd install` / `run build` / `run dev` **PASS** |
+| Proxy `/api` → `:8000` | `ECONNREFUSED` — **esperado** sem backend local |
+| Docker / backend local | **Não** instalar (decisão humana) |
+| Software da Maria João | **Não** mexer (VPN, Office, OneDrive, Power BI, Autenticação.Gov, Brother, etc.) |
+
+**Papel validado:** máquina de emergência **leve** — docs/repo · frontend install/build/dev até proxy · **produção no browser** · pequenos ajustes. Stack completa (Docker/Postgres/uvicorn) fica no PC fixo.
+
+### Próximos passos humanos
+
+1. **Cifrar** `TVDE_SECRETS` na SSD **antes da viagem**.  
+2. No portátil: `git pull --ff-only origin main` · preferir `npm.cmd`.  
+3. **Não** montar backend local no portátil MJ salvo necessidade explícita futura.  
+4. Restauro Windows: «Antes TVDE Git Node» disponível se preciso reverter instalações.
 
 Sem valores de secrets neste documento.
 
