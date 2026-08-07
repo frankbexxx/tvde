@@ -22,10 +22,10 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `c22331d` (#534 MODO FÉRIAS docs) |
+| **`main`** | `2fc5155` (#535 limpeza leve MJ) |
 | **origin/main** | alinhado |
 | **prod build** | ≥ `c4690ea` Recusar |
-| **working tree** | sync docs limpeza leve MJ por commit |
+| **working tree** | sync docs inputs Manel TODOs por commit |
 | **API prod (Render)** | Live; #504/#507 aplicados |
 | **CI** | verde em `main` |
 
@@ -41,12 +41,21 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ### Foco (1 carril) — pré-férias
 
-1. Operação normal no PC (sem abrir frentes grandes)  
-2. Kit viagem: **cifrar `TVDE_SECRETS` (pendente)** · no 13/14 **actualizar SSD**  
-3. Em férias: branches pequenas + push · docs/FE leve · prod no browser  
-4. Pós-férias: reconciliar branches no PC · smoke · fechar modo  
+1. Kit viagem: **cifrar `TVDE_SECRETS` (pendente)** · no 13/14 **actualizar SSD**  
+2. Backlog produto Manel capturado: [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) — **só docs**; fechar perguntas com Manel  
+3. Em férias: branches pequenas + push · docs/FE leve · prod  
+4. Pós-férias: reconciliar · depois specs P0/P1 escolhidas (não tudo de uma vez)  
 
-**Fora:** B2 ON · Stripe live · PF3D · Docker/backend no portátil MJ · desinstalar ou mexer VPN/Office/OneDrive/Power BI/Autenticação.Gov/Brother.
+**Fora:** implementar Stripe Connect/live · B2 ON · PF3D ON · Docker/backend no portátil MJ · transformar exemplos de % em requisitos.
+
+### Inputs Manel (2026-08-07) — captura docs
+
+| Item | Estado |
+|------|--------|
+| Doc | [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) |
+| Conteúdo | Plataformas pagamento · arquitectura pay · app Motorista PDF · P0–P3 · perguntas Q1–Q10 |
+| Natureza | Inputs / backlog — **não** decisões fechadas · taxas **a verificar** |
+| Próximo | Revisar com Manel/Francisco · **não** activar Stripe live nesta fase |
 
 ### Pré-férias — risco / kit
 
@@ -398,6 +407,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | MODO FÉRIAS 2026 | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) |
 | SSD / férias readiness | [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) |
 | DEMO MANEL 2 guião | [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md) |
+| Inputs Manel TODOs | [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) |
 | Roadmap pós DEMO smoke (rascunho) | [`ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](../ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) |
 | NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
 | NAV-0 contrato 4 apps | [`AUDIT_NAV_4APPS_2026-07-28.md`](../ux/AUDIT_NAV_4APPS_2026-07-28.md) |

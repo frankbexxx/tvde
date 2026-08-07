@@ -16,17 +16,17 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÉ-FÉRIAS** (**2026-08-07** — tip `c22331d` · MODO FÉRIAS ainda **OFF**)
+## Painel — **PRÉ-FÉRIAS** (**2026-08-07** — tip `2fc5155` · MODO FÉRIAS ainda **OFF**)
 
 **Modo:** **pré-férias** — PC principal = máquina activa. **MODO FÉRIAS** só a **13/14 ago** (após refresh SSD + cifrar secrets). Modelo: [`MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md).
 
-**`main` / `origin/main`:** `c22331d` · alinhado · #534 MODO FÉRIAS · #533 checklist · #532 Manel 2 · #531 MJ · #530 SSD.
+**`main` / `origin/main`:** `2fc5155` · alinhado · #535 limpeza MJ · #534 MODO FÉRIAS · #533–#530 kit SSD.
 
 **Calendário:** até 13 ago = PC normal · **13/14** = gatilho férias · férias **14–31 ago** · **DEMO MANEL 2 = Setembro**.
 
-**Objectivo imediato:** operação normal no PC · **cifrar `TVDE_SECRETS` (pendente)** · dia 13/14 **actualizar SSD** + confirmar leitura no portátil MJ. Em férias: branches + push GitHub · sem B2/Stripe/PF3D/Docker MJ.
+**Objectivo imediato:** kit viagem (**cifrar `TVDE_SECRETS` pendente** · refresh SSD 13/14) · capturar inputs Manel em backlog produto (sem implementar). Em férias: branches + push · sem B2/Stripe live/PF3D/Docker MJ.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Modo férias: [`docs/ops/MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md) · SSD: [`docs/ops/SSD_FERIAS_READINESS.md`](docs/ops/SSD_FERIAS_READINESS.md) · Manel 2: [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md)
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Modo férias: [`docs/ops/MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md) · Inputs Manel: [`docs/product/MANEL_INPUTS_TODOS_2026-08-07.md`](docs/product/MANEL_INPUTS_TODOS_2026-08-07.md) · Manel 2: [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -55,6 +55,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **O-SSD-FERIAS** | Portátil + SSD / readiness férias | Em curso | Clone+MJ **PASS** · limpeza leve MJ **PASS** 2026-08-07 · **cifra `TVDE_SECRETS` pendente** · refresh SSD **13/14** |
 | **O-MJ-LIGHT-CLEAN** | Limpeza leve portátil MJ | Concluído | Startup reduzido · WPS tasks off · Chrome Memory Saver · ~3.4 GB RAM livre · nada desinstalado · críticos preservados |
 | **O-MODO-FERIAS** | Entrada oficial MODO FÉRIAS | Por iniciar | Gatilho 13/14: SSD actualizada + secrets cifrados + main alinhada PC/SSD |
+| **X-MANEL-INPUTS** | Backlog inputs Manel (pagamentos + app Driver) | Em curso | Docs [`MANEL_INPUTS_TODOS_2026-08-07.md`](docs/product/MANEL_INPUTS_TODOS_2026-08-07.md) · P0–P3 · perguntas abertas · **sem** implementação |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
 | **PF3D-GATES** | Compliance gates | Concluído | OFF em prod |
