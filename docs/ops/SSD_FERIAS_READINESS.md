@@ -1,6 +1,6 @@
 # SSD / férias readiness — runbook operacional
 
-**Estado:** readiness parcial **PASS** · tip docs `3aa2583` · **ainda NÃO em MODO FÉRIAS** · **cifra `TVDE_SECRETS` pendente**  
+**Estado:** readiness parcial **PASS** · tip docs `c22331d` · **ainda NÃO em MODO FÉRIAS** · **cifra `TVDE_SECRETS` pendente** · limpeza leve MJ **PASS** 2026-08-07  
 **Modelo canónico:** [`MODO_FERIAS_2026.md`](MODO_FERIAS_2026.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md)  
 **Envs (templates):** [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) · [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md)
@@ -21,8 +21,10 @@ Objectivo: kit SSD + portátil para férias **sem** depender só da memória do 
 | ✓ | Portátil Maria João (`claud`) smoke **leve** PASS (Git/Node/`npm.cmd`/FE) | #531 |
 | ✓ | Guião DEMO MANEL 2 Setembro | #532 · [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md) |
 | ✓ | Checklist risco operacional | #533 |
+| ✓ | Modelo MODO FÉRIAS (ainda OFF) | #534 |
+| ✓ | Limpeza leve portátil MJ (RAM ~3.4 GB livre; nada desinstalado) | 2026-08-07 |
 | ✓ | B2 groundwork OFF (sem activar) | #525–#527 |
-| ✓ | `main` tip referência docs | `3aa2583` |
+| ✓ | `main` tip referência docs | `c22331d` |
 
 ### Ainda falta (antes de viajar / gatilho 13–14 ago)
 
@@ -108,9 +110,19 @@ Operação em férias (branches/push/pós): ver [`MODO_FERIAS_2026.md`](MODO_FER
 | Frontend | `npm.cmd install` / `run build` / `run dev` **PASS** |
 | Proxy `/api` → `:8000` | `ECONNREFUSED` — **esperado** sem backend local |
 | Docker / backend local | **Não** instalar (decisão humana) |
-| Software da Maria João | **Não** mexer (VPN, Office, OneDrive, Power BI, Autenticação.Gov, Brother, etc.) |
+| Software da Maria João | Críticos **preservados** (VPN, Office, OneDrive, Power BI, Autenticação.Gov, Brother) |
 
-**Papel validado:** máquina de emergência **leve** — docs/repo · frontend install/build/dev até proxy · **produção no browser** · pequenos ajustes. Stack completa (Docker/Postgres/uvicorn) fica no PC fixo.
+### 2026-08-07 — Limpeza leve portátil MJ (**PASS**)
+
+| Item | Resultado |
+|------|-----------|
+| RAM pós-restart | ~**3.43 GB** livres / 8.22 GB (antes ~0.7–1.2 GB) |
+| Feito | Startup reduzido · Chrome Memory Saver · WPS scheduled tasks off (`WpsExternal_claud_*`, `WpsUpdateTask_claud`) |
+| Não feito | Desinstalar · Docker · backend · mexer McAfee `\McAfee\WPS\` · apagar dados Chrome |
+| Residual opcional | PhoneExperienceHost (~178 MB) via Definições |
+| Decisão | Fechada — portátil mais apto como máquina leve/emergência |
+
+**Papel validado:** emergência / férias = máquina activa **leve** · GitHub = verdade · docs/repo · FE até proxy · **prod no browser**. Stack completa = PC fixo.
 
 ### Próximos passos humanos
 

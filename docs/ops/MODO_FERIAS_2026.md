@@ -1,7 +1,7 @@
 # MODO FÉRIAS 2026 — operação segura
 
 **Estado actual: ainda NÃO estamos em MODO FÉRIAS.**  
-**Tip `main` referência:** `3aa2583` (actualizar após pull)  
+**Tip `main` referência:** `c22331d` (actualizar após pull)  
 **Calendário:** férias **14–31 agosto** · entrada oficial **13/14 ago** (após gatilho abaixo)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)  
 **SSD detalhe:** [`SSD_FERIAS_READINESS.md`](SSD_FERIAS_READINESS.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md)
@@ -49,7 +49,7 @@ Só então: **MODO FÉRIAS = ON** (registo no painel/handoff nesse dia).
 | 2 | PRs mergeados / tree limpa no PC | ☐ |
 | 3 | Dia 13/14: refresh SSD + cifra secrets + smoke leitura no portátil | ☐ |
 | 4 | Anotar tip SHA final num papel / password manager | ☐ |
-| 5 | Limpeza **leve** no portátil MJ se útil — **sem** tocar VPN / Office / OneDrive / Power BI / Autenticação.Gov / Brother | ☐ |
+| 5 | Limpeza **leve** no portátil MJ | ✓ **2026-08-07** — ver §9 |
 | 6 | Guião Manel 2 à mão (Setembro) | ☐ |
 
 ---
@@ -183,11 +183,22 @@ git branch -a
 | Item | Nota |
 |------|------|
 | User Windows | `claud` (abreviatura de Claudino) |
-| Papel | Leve / emergência · em férias = máquina activa de trabalho leve |
+| Papel | Leve / emergência · em férias = máquina activa de trabalho leve · **GitHub = fonte da verdade** (não fonte única) |
 | Validado | Git · Node · `npm.cmd` · install/build/dev FE (#531) |
-| Sem | Docker · backend local |
+| Sem | Docker · backend local · limpeza profunda · desinstalações |
 | Prod | Browser → Render = caminho principal |
-| Limpeza | Leve OK antes da viagem · **não** tocar VPN/Office/OneDrive/Power BI/Autenticação.Gov/Brother |
+
+### Limpeza leve (**2026-08-07**) — concluída
+
+| Item | Resultado |
+|------|-----------|
+| RAM | Antes ~0.7–1.2 GB livre → depois ~**3.43 GB** / 8.22 GB (pós-restart) |
+| Startup | Apps de arranque reduzidas (Windows Startup Apps) |
+| Chrome | Memory Saver / Poupança de memória **ON** · sem apagar dados/perfis |
+| WPS | Instalado · tasks `WpsExternal_claud_interval/startup` + `WpsUpdateTask_claud` **desactivadas** · **não** mexer `\McAfee\WPS\` |
+| Phone | CrossDeviceService off pós-restart · PhoneExperienceHost ainda ~178 MB (opcional Definições) |
+| Preservado | VPN/OpenVPN · OneDrive · Office/M365 · Power BI · Brother · Autenticação.Gov/pteid · browsers |
+| Decisão | Fechada · sem Docker · sem backend · sem limpeza profunda |
 
 ---
 
