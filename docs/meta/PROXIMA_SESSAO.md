@@ -8,7 +8,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-05** — tip `3aa2583` · **pré-férias** · MODO FÉRIAS **OFF**)
+## Contexto actual (**2026-08-07** — tip `c22331d` · **pré-férias** · MODO FÉRIAS **OFF**)
 
 ### Modo operacional
 
@@ -22,10 +22,10 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `3aa2583` (#533 checklist pré-férias) |
+| **`main`** | `c22331d` (#534 MODO FÉRIAS docs) |
 | **origin/main** | alinhado |
 | **prod build** | ≥ `c4690ea` Recusar |
-| **working tree** | sync docs MODO FÉRIAS por commit |
+| **working tree** | sync docs limpeza leve MJ por commit |
 | **API prod (Render)** | Live; #504/#507 aplicados |
 | **CI** | verde em `main` |
 
@@ -46,7 +46,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 3. Em férias: branches pequenas + push · docs/FE leve · prod no browser  
 4. Pós-férias: reconciliar branches no PC · smoke · fechar modo  
 
-**Fora:** B2 ON · Stripe live · PF3D · Docker no portátil MJ · limpar apps da Maria João (VPN/Office/…).
+**Fora:** B2 ON · Stripe live · PF3D · Docker/backend no portátil MJ · desinstalar ou mexer VPN/Office/OneDrive/Power BI/Autenticação.Gov/Brother.
 
 ### Pré-férias — risco / kit
 
@@ -54,7 +54,8 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 |-------|----------------------|
 | SSD clone + secrets fora repo (#530) | **Cifrar `TVDE_SECRETS`** (pendente) |
 | Portátil MJ smoke leve (#531) | Refresh SSD **13/14** + tip alinhado |
-| Guião Manel 2 (#532) · checklist (#533) | Entrada oficial MODO FÉRIAS |
+| Guião Manel 2 (#532) · checklist (#533) · MODO FÉRIAS doc (#534) | Entrada oficial MODO FÉRIAS |
+| Limpeza leve portátil MJ (**2026-08-07**) | Opcional: PhoneExperienceHost via Definições |
 
 Canónico: [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) · detalhe SSD: [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md).  
 Se PC falhar: **GitHub + prod + SSD** — sem backend local no MJ.
@@ -82,9 +83,23 @@ Se PC falhar: **GitHub + prod + SSD** — sem backend local no MJ.
 | Node / npm | Node **v24.19.0** · usar **`npm.cmd`** (PowerShell Execution Policy bloqueia `npm`; **não** alterar policy) |
 | Frontend | `npm.cmd install` **PASS** · `npm.cmd run build` **PASS** · `npm.cmd run dev` **PASS** |
 | Proxy Vite | `ECONNREFUSED 127.0.0.1:8000` — **esperado** (backend local **não** corre) |
-| Decisão | **Sem** Docker · **sem** backend local · **sem** limpar VPN/Office/OneDrive/Power BI/Autenticação.Gov/Brother |
+| Decisão | **Sem** Docker · **sem** backend local · críticos da Maria João **preservados** |
 
-**Papel do portátil (emergência leve):** consultar repo · deps/build/dev frontend até proxy · aceder **produção** no browser · pequenos ajustes. Stack completa = PC fixo ou prod.
+#### C) Limpeza leve portátil MJ (**2026-08-07**) — **PASS**
+
+| Item | Resultado |
+|------|-----------|
+| Objectivo | Performance leve para férias — **não** workstation · **nada desinstalado** |
+| Antes | ~0.7–1.2 GB RAM livre (8 GB) |
+| Depois (pós-restart) | ~**3.43 GB** livres / 8.22 GB |
+| Startup Apps | Redução de arranque |
+| Chrome | Memory Saver / Poupança de memória **ON** · sem fechar à força · sem apagar dados/perfis |
+| WPS | Continua instalado · tasks `WpsExternal_claud_*` + `WpsUpdateTask_claud` **off** · **não** mexer `\McAfee\WPS\` |
+| Phone/CrossDevice | CrossDeviceService sumiu pós-restart · PhoneExperienceHost ~178 MB (opcional depois via Definições) |
+| Preservado | VPN/OpenVPN · OneDrive · Office/M365 · Power BI · Brother · Autenticação.Gov/pteid · browsers |
+| Decisão | Limpeza leve **fechada** · sem Docker · sem backend · sem limpeza profunda |
+
+**Papel do portátil:** emergência / em férias = máquina activa **leve** · GitHub = fonte da verdade · não fonte única. Stack completa = PC fixo ou prod.
 
 **Próximo humano:** até 13 = PC normal · **13/14** = refresh SSD + **cifrar `TVDE_SECRETS` (pendente)** → MODO FÉRIAS. Sem secrets em docs/chat.
 
@@ -289,7 +304,7 @@ Se PC falhar: **GitHub + prod + SSD** — sem backend local no MJ.
 | **PF3D-3 ON** | Bloqueado — atribuição real + smoke ON controlado só depois |
 | **Render env / DB / migrations** | Intactos nesta documentação (#504 backfill + P-504-PWD já aplicados) |
 
-**Frase de fecho:** Tip `3aa2583`. **Pré-férias (MODO FÉRIAS OFF).** PC activo até 13/14. Kit: SSD refresh + **cifrar `TVDE_SECRETS` (pendente)**. Em férias: portátil MJ + GitHub + branches. Manel 2 Setembro. Sem B2/Stripe/PF3D/Docker MJ.
+**Frase de fecho:** Tip `c22331d`. **Pré-férias (MODO FÉRIAS OFF).** Limpeza leve MJ **PASS** (~3.4 GB RAM livre). Kit viagem: SSD refresh 13/14 + **cifrar `TVDE_SECRETS` (pendente)**. Em férias: portátil MJ + GitHub + branches. Sem B2/Stripe/PF3D/Docker MJ.
 
 ### Decisão produto (mantém-se + B2)
 
