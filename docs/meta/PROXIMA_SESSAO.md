@@ -8,7 +8,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-10** — tip `22b133d` · **pré-férias** · MODO FÉRIAS **OFF**)
+## Contexto actual (**2026-08-10** — tip `ea815a8` · **pré-férias** · MODO FÉRIAS **OFF**)
 
 ### Modo operacional
 
@@ -17,16 +17,16 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **Agora** | **Pré-férias** — PC principal activo |
 | **MODO FÉRIAS** | **OFF** até gatilho 13/14 ago |
 | **Modelo** | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) |
-| **Até Setembro** | Quase só docs / marca / intenções / fontes legais brutas — biblioteca [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| **Até Setembro** | Docs / marca / intenções / legal bruto / hipóteses negócio — biblioteca [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `22b133d` (#538 biblioteca Setembro) |
+| **`main`** | `ea815a8` (#539 DL 84/2026 fonte legal) |
 | **origin/main** | alinhado |
 | **prod build** | ≥ `c4690ea` Recusar |
-| **working tree** | sync docs fonte legal DL 84/2026 por commit |
+| **working tree** | sync docs negócio Manel (custos/preços) por commit |
 | **API prod (Render)** | Live; #504/#507 aplicados |
 | **CI** | verde em `main` |
 
@@ -43,22 +43,23 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 ### Foco (1 carril) — pré-férias / rumo Setembro
 
 1. Kit viagem: **cifrar `TVDE_SECRETS` (pendente)** · no 13/14 **actualizar SSD**  
-2. Biblioteca Setembro + fonte legal bruta DL 84/2026 ([`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md)) — **sem** parecer / **sem** regras automáticas  
+2. Biblioteca Setembro: legal (**LEGAL-TVDE-001**) + negócio (**BUSINESS-MANEL-001** hipóteses) — **sem** parecer / **sem** tarifário fechado / **sem** simulador em código  
 3. Em férias: branches pequenas + push · docs/marca leve · prod no browser  
-4. Pós-férias: reconciliar · escolher **1× P0 + 1× P1** (ex. LEGAL-TVDE-001 leitura ou demo/marca)  
+4. Pós-férias: reconciliar · escolher P0 (ex. leitura DL · ou modelo económico em folha)  
 
-**Fora:** Stripe Connect/live · B2 ON · PF3D ON · Docker/backend no portátil MJ · interpretar DL como parecer · implementar conformidade automática · trocar logos em prod sem decisão.
+**Fora:** Stripe Connect/live · B2 ON · PF3D ON · Docker/backend no portátil MJ · publicar campanha 15% · fechar tarifário · lógica automática de comissões.
 
-### Biblioteca Setembro + Inputs Manel + Legal
+### Biblioteca Setembro + Inputs Manel + Legal + Negócio
 
 | Item | Estado |
 |------|--------|
 | Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
-| Fonte legal | [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) · **LEGAL-TVDE-001** DL 84/2026 · PDF em `docs/legal/sources/` |
+| Negócio | **BUSINESS-MANEL-001** · [`docs/business/`](../business/) · custos · preços/comissões · GTM/simulador · DOCX em `sources/` |
+| Fonte legal | [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) · **LEGAL-TVDE-001** DL 84/2026 |
 | Inputs detalhe | [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) · resumo [`MANEL_RESUMO_NAO_TECNICO_2026-08-07.md`](../product/MANEL_RESUMO_NAO_TECNICO_2026-08-07.md) |
-| Natureza | Intenções / backlog — **não** decisões fechadas · PDF **não** interpretado |
+| Natureza | Intenções / hipóteses — **não** decisões fechadas · números **a validar** |
 | Marca (local) | Shortlist 16 em `image/_SHORTLIST_FINAL_6` · pranchas `_temp` · sem vencedor |
-| Próximo | Priorizar conversas · leitura jurídica Setembro · **não** activar Stripe live / B2 |
+| Próximo | Validar hipóteses com Manel/financeiro · **não** activar Stripe live / B2 |
 
 ### Pré-férias — risco / kit
 
@@ -413,6 +414,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | Inputs Manel TODOs | [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) |
 | Biblioteca Setembro 2026 | [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
 | Fontes legais (brutas) | [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) |
+| Negócio Manel (hipóteses) | [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · preços · GTM/simulador |
 | Resumo não técnico Manel | [`MANEL_RESUMO_NAO_TECNICO_2026-08-07.md`](../product/MANEL_RESUMO_NAO_TECNICO_2026-08-07.md) |
 | Roadmap pós DEMO smoke (rascunho) | [`ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](../ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) |
 | NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |
