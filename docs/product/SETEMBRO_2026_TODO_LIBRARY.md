@@ -2,7 +2,7 @@
 
 **Tipo:** biblioteca de intenções, temas, riscos e decisões  
 **Estado:** captura viva — **não** sprint fechado · **não** promessa ao Manel · **não** implementação imediata  
-**Tip `main` (contexto):** `22b133d` (actualizar após pull)  
+**Tip `main` (contexto):** `ea815a8` (actualizar após pull)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)
 
 Relacionado (não substituído por este ficheiro):
@@ -12,6 +12,7 @@ Relacionado (não substituído por este ficheiro):
 - [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md)
 - [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) · [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md)
 - Fontes legais: [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md)
+- Negócio / custos: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](../business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](../business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
 
 ---
 
@@ -44,6 +45,20 @@ Formato de cada item: **ID** · Origem · Resumo · Porque interessa · Estado a
 | **Prioridade Setembro** | P0 |
 | **Precisa decisão de** | Francisco + Manel + apoio jurídico/contabilístico/regulatório |
 | **Não fazer agora** | Não implementar regras automáticas · não prometer conformidade · não interpretar como parecer jurídico |
+
+### BUSINESS-MANEL-001 — Custos, comissões, tarifário e simulador económico
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Origem** | DOCX Manel/IA sobre custos de operação, preços e simulador económico · [`sources/quais-os-custos-operacao-app-depois-construida.docx`](../business/sources/quais-os-custos-operacao-app-depois-construida.docx) |
+| **Resumo** | Consolidar hipóteses de custos mensais, comissões, tarifário, margem por viagem, mercados iniciais e simulador financeiro de 36 meses. |
+| **Porque interessa** | Definir se a Vamo Lá consegue ser mais barata para passageiros, pagar melhor a motoristas e ainda operar com margem positiva. |
+| **Estado actual** | Fonte recebida; 3 docs derivados criados; números ainda **não** validados. |
+| **Prioridade Setembro** | P0 |
+| **Precisa decisão de** | Francisco + Manel + contabilista/financeiro + eventual apoio PSP/pagamentos |
+| **Não fazer agora** | Não fechar tarifário · não prometer rendimentos · não publicar campanha · não implementar lógica automática de comissões |
+
+Docs derivados: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](../business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](../business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
 
 ### SEP-IP-01 — Propriedade intelectual da app
 
@@ -399,6 +414,7 @@ Formato de cada item: **ID** · Origem · Resumo · Porque interessa · Estado a
 | Área | IDs | Foco sugerido |
 |------|-----|---------------|
 | Jurídico / PI | LEGAL-TVDE-001 · SEP-IP-01…04 | DL 84/2026 (P0 leitura) · titularidade · logos · marca |
+| Negócio / preços | BUSINESS-MANEL-001 | Custos · comissões · tarifário · simulador 36m (hipóteses) |
 | Pagamentos | SEP-PAY-01…05 | Validar Connect path · % · payouts · MB WAY |
 | Motorista | SEP-DRV-01…03 | Líquido + nav + menu/rendimentos |
 | Passageiro | SEP-PAX-01…02 | Estabilidade demo · clareza pagamento |
