@@ -8,7 +8,7 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 
 ---
 
-## Contexto actual (**2026-08-10** — tip `cd50a6e` · **pré-férias** · MODO FÉRIAS **OFF**)
+## Contexto actual (**2026-08-10** — tip `22b133d` · **pré-férias** · MODO FÉRIAS **OFF**)
 
 ### Modo operacional
 
@@ -17,16 +17,16 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 | **Agora** | **Pré-férias** — PC principal activo |
 | **MODO FÉRIAS** | **OFF** até gatilho 13/14 ago |
 | **Modelo** | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) |
-| **Até Setembro** | Quase só docs / marca / intenções — biblioteca [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| **Até Setembro** | Quase só docs / marca / intenções / fontes legais brutas — biblioteca [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
 
 ### Checkpoint Git
 
 | Item | Estado |
 |------|--------|
-| **`main`** | `cd50a6e` (#537 resumo não técnico Manel) |
+| **`main`** | `22b133d` (#538 biblioteca Setembro) |
 | **origin/main** | alinhado |
 | **prod build** | ≥ `c4690ea` Recusar |
-| **working tree** | sync docs biblioteca Setembro por commit |
+| **working tree** | sync docs fonte legal DL 84/2026 por commit |
 | **API prod (Render)** | Live; #504/#507 aplicados |
 | **CI** | verde em `main` |
 
@@ -43,21 +43,22 @@ Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA
 ### Foco (1 carril) — pré-férias / rumo Setembro
 
 1. Kit viagem: **cifrar `TVDE_SECRETS` (pendente)** · no 13/14 **actualizar SSD**  
-2. Biblioteca Setembro: [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) — intenções IP / pay / Driver / marca / demo · **sem** implementar  
+2. Biblioteca Setembro + fonte legal bruta DL 84/2026 ([`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md)) — **sem** parecer / **sem** regras automáticas  
 3. Em férias: branches pequenas + push · docs/marca leve · prod no browser  
-4. Pós-férias: reconciliar · escolher **1× P0 + 1× P1** da biblioteca (não tudo de uma vez)  
+4. Pós-férias: reconciliar · escolher **1× P0 + 1× P1** (ex. LEGAL-TVDE-001 leitura ou demo/marca)  
 
-**Fora:** Stripe Connect/live · B2 ON · PF3D ON · Docker/backend no portátil MJ · transformar % exemplo em requisitos · trocar logos em prod sem decisão.
+**Fora:** Stripe Connect/live · B2 ON · PF3D ON · Docker/backend no portátil MJ · interpretar DL como parecer · implementar conformidade automática · trocar logos em prod sem decisão.
 
-### Biblioteca Setembro + Inputs Manel
+### Biblioteca Setembro + Inputs Manel + Legal
 
 | Item | Estado |
 |------|--------|
 | Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| Fonte legal | [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) · **LEGAL-TVDE-001** DL 84/2026 · PDF em `docs/legal/sources/` |
 | Inputs detalhe | [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) · resumo [`MANEL_RESUMO_NAO_TECNICO_2026-08-07.md`](../product/MANEL_RESUMO_NAO_TECNICO_2026-08-07.md) |
-| Natureza | Intenções / backlog — **não** decisões fechadas · taxas **a verificar** |
+| Natureza | Intenções / backlog — **não** decisões fechadas · PDF **não** interpretado |
 | Marca (local) | Shortlist 16 em `image/_SHORTLIST_FINAL_6` · pranchas `_temp` · sem vencedor |
-| Próximo | Priorizar conversas · **não** activar Stripe live / B2 nesta fase |
+| Próximo | Priorizar conversas · leitura jurídica Setembro · **não** activar Stripe live / B2 |
 
 ### Pré-férias — risco / kit
 
@@ -411,6 +412,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | DEMO MANEL 2 guião | [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md) |
 | Inputs Manel TODOs | [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) |
 | Biblioteca Setembro 2026 | [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| Fontes legais (brutas) | [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) |
 | Resumo não técnico Manel | [`MANEL_RESUMO_NAO_TECNICO_2026-08-07.md`](../product/MANEL_RESUMO_NAO_TECNICO_2026-08-07.md) |
 | Roadmap pós DEMO smoke (rascunho) | [`ROADMAP_POS_DEMO_SMOKE_2026-07-30.md`](../ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) |
 | NAV-3A Admin IA / query | [`AUDIT_ADMIN_NAV_IA_2026-07-28.md`](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) |

@@ -2,7 +2,7 @@
 
 **Tipo:** biblioteca de intenções, temas, riscos e decisões  
 **Estado:** captura viva — **não** sprint fechado · **não** promessa ao Manel · **não** implementação imediata  
-**Tip `main` (contexto):** `cd50a6e` (actualizar após pull)  
+**Tip `main` (contexto):** `22b133d` (actualizar após pull)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)
 
 Relacionado (não substituído por este ficheiro):
@@ -11,6 +11,7 @@ Relacionado (não substituído por este ficheiro):
 - [`MANEL_RESUMO_NAO_TECNICO_2026-08-07.md`](MANEL_RESUMO_NAO_TECNICO_2026-08-07.md)
 - [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md)
 - [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) · [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md)
+- Fontes legais: [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md)
 
 ---
 
@@ -31,6 +32,18 @@ Formato de cada item: **ID** · Origem · Resumo · Porque interessa · Estado a
 ---
 
 ## 2. Jurídico / propriedade intelectual
+
+### LEGAL-TVDE-001 — Decreto-Lei n.º 84/2026 (tempo de trabalho / transporte rodoviário)
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Origem** | Documento legal recebido / Decreto-Lei n.º 84/2026, de 13 de abril · PDF em [`docs/legal/sources/`](../legal/sources/decreto-lei-84-2026-tvde-transporte-rodoviario.pdf) · índice [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) |
+| **Resumo** | Analisar em Setembro obrigações legais aplicáveis à operação TVDE/plataforma, especialmente tempos de trabalho/condução, pausas, repousos, registos, responsabilidades, fiscalização, documentos e contraordenações. |
+| **Porque interessa** | Perceber o que a app, admin, parceiro/frota e motorista têm de suportar para ajudar a operar em conformidade. |
+| **Estado actual** | PDF guardado; ainda **não** analisado artigo a artigo. |
+| **Prioridade Setembro** | P0 |
+| **Precisa decisão de** | Francisco + Manel + apoio jurídico/contabilístico/regulatório |
+| **Não fazer agora** | Não implementar regras automáticas · não prometer conformidade · não interpretar como parecer jurídico |
 
 ### SEP-IP-01 — Propriedade intelectual da app
 
@@ -385,7 +398,7 @@ Formato de cada item: **ID** · Origem · Resumo · Porque interessa · Estado a
 
 | Área | IDs | Foco sugerido |
 |------|-----|---------------|
-| Jurídico / PI | SEP-IP-01…04 | Titularidade + origem logos + (depois) marca |
+| Jurídico / PI | LEGAL-TVDE-001 · SEP-IP-01…04 | DL 84/2026 (P0 leitura) · titularidade · logos · marca |
 | Pagamentos | SEP-PAY-01…05 | Validar Connect path · % · payouts · MB WAY |
 | Motorista | SEP-DRV-01…03 | Líquido + nav + menu/rendimentos |
 | Passageiro | SEP-PAX-01…02 | Estabilidade demo · clareza pagamento |

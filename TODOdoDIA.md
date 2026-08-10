@@ -16,17 +16,17 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÉ-FÉRIAS** (**2026-08-10** — tip `cd50a6e` · MODO FÉRIAS ainda **OFF**)
+## Painel — **PRÉ-FÉRIAS** (**2026-08-10** — tip `22b133d` · MODO FÉRIAS ainda **OFF**)
 
 **Modo:** **pré-férias** — PC principal = máquina activa. **MODO FÉRIAS** só a **13/14 ago** (após refresh SSD + cifrar secrets). Modelo: [`MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md).
 
-**`main` / `origin/main`:** `cd50a6e` · alinhado · #537 resumo Manel · #536 inputs TODOs · #535–#530 kit SSD/férias.
+**`main` / `origin/main`:** `22b133d` · alinhado · #538 biblioteca Setembro · #537 resumo Manel · #536 inputs.
 
 **Calendário:** até 13 ago = PC normal · **13/14** = gatilho férias · férias **14–31 ago** · **DEMO MANEL 2 = Setembro**.
 
-**Objectivo imediato:** kit viagem (**cifrar `TVDE_SECRETS` pendente** · refresh SSD 13/14) · biblioteca Setembro (intenções, sem implementar). Em férias: branches + push · docs/marca leve · sem B2/Stripe live/PF3D/Docker MJ.
+**Objectivo imediato:** kit viagem (**cifrar `TVDE_SECRETS` pendente** · refresh SSD 13/14) · biblioteca Setembro + fontes legais brutas (sem implementar / sem parecer). Em férias: branches + push · docs/marca leve · sem B2/Stripe live/PF3D/Docker MJ.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Biblioteca Setembro: [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · Modo férias: [`docs/ops/MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md) · Manel 2: [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md)
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Biblioteca Setembro: [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · Fontes legais: [`docs/legal/LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · Manel 2: [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -57,6 +57,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **O-MODO-FERIAS** | Entrada oficial MODO FÉRIAS | Por iniciar | Gatilho 13/14: SSD actualizada + secrets cifrados + main alinhada PC/SSD |
 | **X-MANEL-INPUTS** | Backlog inputs Manel (pagamentos + app Driver) | Em curso | Docs [`MANEL_INPUTS_TODOS_2026-08-07.md`](docs/product/MANEL_INPUTS_TODOS_2026-08-07.md) · P0–P3 · perguntas abertas · **sem** implementação |
 | **X-SETEMBRO-LIB** | Biblioteca TODOs/intenções Setembro 2026 | Em curso | [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · IP · pay · Driver · marca · demo · **não** sprint fechado |
+| **LEGAL-TVDE-001** | DL 84/2026 — fonte legal bruta | Em curso | PDF em [`docs/legal/sources/`](docs/legal/sources/decreto-lei-84-2026-tvde-transporte-rodoviario.pdf) · índice [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · leitura Setembro P0 · **sem** parecer |
 | **X-BRAND-SHORTLIST** | Shortlist logos / Ideogram (local) | Em curso | `image/_SHORTLIST_FINAL_6` + pranchas `_temp` · **sem** vencedor · **sem** troca em prod |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
