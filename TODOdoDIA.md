@@ -16,15 +16,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **PRÉ-FÉRIAS** (**2026-08-10** — tip `ea815a8` · MODO FÉRIAS ainda **OFF**)
+## Painel — **PRÉ-FÉRIAS** (**2026-08-11** — tip `1cb01c5` · MODO FÉRIAS ainda **OFF**)
 
 **Modo:** **pré-férias** — PC principal = máquina activa. **MODO FÉRIAS** só a **13/14 ago** (após refresh SSD + cifrar secrets). Modelo: [`MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md).
 
-**`main` / `origin/main`:** `ea815a8` · alinhado · #539 DL 84/2026 · #538 biblioteca Setembro · #537 resumo Manel.
+**`main` / `origin/main`:** `1cb01c5` · alinhado · #540 negócio Manel · #539 DL 84/2026 · #538 biblioteca Setembro.
 
 **Calendário:** até 13 ago = PC normal · **13/14** = gatilho férias · férias **14–31 ago** · **DEMO MANEL 2 = Setembro**.
 
-**Objectivo imediato:** kit viagem (**cifrar `TVDE_SECRETS` pendente** · refresh SSD 13/14) · biblioteca Setembro (legal + negócio/hipóteses) · **sem** implementar / **sem** tarifário fechado. Em férias: branches + push · docs/marca leve · sem B2/Stripe live/PF3D/Docker MJ.
+**Objectivo imediato:** kit viagem (**cifrar `TVDE_SECRETS` pendente** · refresh SSD 13/14) · biblioteca Setembro (legal · negócio · **MOBILE-001**) · **sem** implementar / **sem** Capacitor / **sem** lojas. Em férias: branches + push · docs/marca leve · sem B2/Stripe live/PF3D/Docker MJ.
 
 **Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Biblioteca: [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · Negócio: [`docs/business/`](docs/business/) · Legal: [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md)
 
@@ -59,6 +59,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | **X-SETEMBRO-LIB** | Biblioteca TODOs/intenções Setembro 2026 | Em curso | [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · IP · pay · Driver · marca · demo · **não** sprint fechado |
 | **LEGAL-TVDE-001** | DL 84/2026 — fonte legal bruta | Em curso | PDF em [`docs/legal/sources/`](docs/legal/sources/decreto-lei-84-2026-tvde-transporte-rodoviario.pdf) · índice [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · leitura Setembro P0 · **sem** parecer |
 | **BUSINESS-MANEL-001** | Custos / comissões / simulador (hipóteses) | Em curso | DOCX + 3 docs em [`docs/business/`](docs/business/) · P0 Setembro · **não** tarifário aprovado · **sem** campanha |
+| **MOBILE-001** | Android / iOS (PWA/wrapper/Capacitor) | Por iniciar | Pergunta Manel · spike Setembro P0/P1 · **sem** código · **sem** lojas · **sem** app nativa do zero |
 | **X-BRAND-SHORTLIST** | Shortlist logos / Ideogram (local) | Em curso | `image/_SHORTLIST_FINAL_6` + pranchas `_temp` · **sem** vencedor · **sem** troca em prod |
 | **R-PARTNER-REASSIGN-COPY** | Hint reassign `assigned` literal | Por iniciar | Display-only; baixa prioridade |
 | **O-DEMO-4ROLES** / **S-DEMO-4** | Smoke 4 papéis prod | Concluído | PASS 2026-07-30 |
