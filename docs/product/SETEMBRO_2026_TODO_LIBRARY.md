@@ -2,7 +2,7 @@
 
 **Tipo:** biblioteca de intenções, temas, riscos e decisões  
 **Estado:** captura viva — **não** sprint fechado · **não** promessa ao Manel · **não** implementação imediata  
-**Tip `main` (contexto):** `ea815a8` (actualizar após pull)  
+**Tip `main` (contexto):** `1cb01c5` (actualizar após pull)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)
 
 Relacionado (não substituído por este ficheiro):
@@ -59,6 +59,35 @@ Formato de cada item: **ID** · Origem · Resumo · Porque interessa · Estado a
 | **Não fazer agora** | Não fechar tarifário · não prometer rendimentos · não publicar campanha · não implementar lógica automática de comissões |
 
 Docs derivados: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](../business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](../business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
+
+### MOBILE-001 — Passagem da app para Android / iOS
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Tema** | Passagem da app para Android / iOS |
+| **Origem** | Pergunta do Manel: *«Vamos ter problemas a passar a APP para Android e/ou iOS?»* |
+| **Resumo** | Avaliar forma de transformar a web app actual numa app distribuível em Android/iOS, provavelmente via PWA / wrapper mobile / Capacitor, reaproveitando a base actual. |
+| **Porque interessa** | A app não deve ficar presa ao browser; Android/iOS serão importantes para adopção real por passageiros e motoristas. |
+| **Estado actual** | Arquitectura actual **parece** compatível, mas precisa **spike técnico** em Setembro. |
+| **Prioridade Setembro** | P0 / P1 |
+| **Precisa decisão de** | Francisco + Manel + validação técnica mobile |
+| **Não fazer agora** | Não prometer data de publicação nas lojas · não assumir aprovação automática na App Store / Google Play · não iniciar app nativa do zero · **não** mexer em código · **não** configurar lojas agora |
+
+**Notas (intenção — não conclusão técnica fechada):**
+
+- Não parece haver bloqueio estrutural óbvio; **não** é recomeçar do zero.
+- Há trabalho próprio de **mobile packaging** (PWA / wrapper / Capacitor — caminho a escolher no spike).
+- Pontos a validar no spike:
+  - GPS / localização em tempo real
+  - localização em background
+  - notificações push
+  - permissões Android / iOS
+  - abertura de Waze / Google Maps
+  - login persistente
+  - mapas
+  - política de privacidade
+  - TestFlight / Google Play Console
+  - testes em telemóveis reais
 
 ### SEP-IP-01 — Propriedade intelectual da app
 
@@ -415,6 +444,7 @@ Docs derivados: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COS
 |------|-----|---------------|
 | Jurídico / PI | LEGAL-TVDE-001 · SEP-IP-01…04 | DL 84/2026 (P0 leitura) · titularidade · logos · marca |
 | Negócio / preços | BUSINESS-MANEL-001 | Custos · comissões · tarifário · simulador 36m (hipóteses) |
+| Mobile Android/iOS | MOBILE-001 | Spike packaging (PWA/wrapper/Capacitor) · GPS/push/lojas · **sem** código agora |
 | Pagamentos | SEP-PAY-01…05 | Validar Connect path · % · payouts · MB WAY |
 | Motorista | SEP-DRV-01…03 | Líquido + nav + menu/rendimentos |
 | Passageiro | SEP-PAX-01…02 | Estabilidade demo · clareza pagamento |
