@@ -1,0 +1,671 @@
+# ROADMAP FINAL — Entrega TVDE-APP (Setembro 2026+)
+
+**Documento canónico de execução:** CARRIL → ETAPA → PASSOS  
+**Fonte consolidada:** [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) · [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) · painéis/`TODOdoDIA.md` · docs pay/mobile/legal/business/ops  
+**Regra:** itens já implementados / STALE **não** reentram. Não activar Stripe live / B2 / PF3D / Capacitor sem o passo correspondente.
+
+| Fecho já feito | Estado |
+|----------------|--------|
+| Retoma operacional (ETAPA 01 · `S-OPS-01`) | **DONE** 2026-09-01 |
+| Demo Manel 2 (ETAPA 02 · `S-DEM-01`) | **DONE** 2026-09-01 · DEMO PASS prod |
+| 4 papéis · fluxo viagem principal | **VALIDADO** em produção |
+
+**Como usar:** executar um passo → marcar `DONE` → seguinte.  
+**Tipos:** `CONFIRMAR` · `DECISÃO` · `DOCS` · `CONFIG` · `CÓDIGO` · `TESTE` · `EXTERNO`.
+
+**Regra de decisão:** antes de *propor / decidir / escolher / fechar*, ler docs canónicos. Se a decisão **já existir** → passo `CONFIRMAR` (citar doc). `DECISÃO` só quando a documentação **não** resolve.
+
+---
+
+# Índice mestre
+
+| Carril | Etapas |
+|--------|--------|
+| **A** Negócio / Legal / Compliance | A1 Modelo económico · A2 Comissão/tarifário · A3 Requisitos legais TVDE · A4 IP/titularidade · A5 Marca · A6 Gates frota |
+| **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · B5 Métodos PT |
+| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
+| **D** Mobile / Push / Distribuição | **D0 Requisito entrega mobile** · D1 Spike · D2 Device · D3 Push · D4 Landing |
+| **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · E5 Admin stubs |
+| **F** Infra / Segurança / Operação | F1 Restore drill · F2 Staging · F3 Sentry · F4 Higiene mock GPS |
+| **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
+| **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
+
+---
+
+# Dependências críticas
+
+1. **A1 → A2** — hipóteses validadas antes de fechar %/tarifário.  
+2. **A2 → B3/B4/E1** — comissão/beneficiário condicionam split, payouts e líquido.  
+3. **A3 → A6** — A6 só no crítico se A3 gerar obrigação concreta de gates/enforcement.  
+4. **B1** = pagamento real do passageiro; **B3** = split automático; **B4** = payout automático — camadas distintas.  
+5. **B3/B4 no crítico** só se o modelo do piloto/comercial **exigir automatização**; senão processo financeiro manual documentado (Marco 2/3 conforme aplicável).  
+6. **C1 → onboarding utilizadores reais** (Marco 2).  
+7. **D0** decide se D1→D2→D3 entram no crítico; **não** assumir package mobile.  
+8. **B1 + C1 + G1 (+ condicionais D*/B3/B4/A6) → Marcos 2/3**.  
+9. **B5** — MB WAY/SIBS só se decisão MVP; senão → H.  
+10. **H1 (B2)** — produto V1 já decidido; activação **nunca** no crítico sem OK explícito.
+
+---
+
+# Três caminhos críticos (por marco)
+
+Não duplicar etapas — só indicar quais entram em cada marco. Condicionais entre parênteses.
+
+## CAMINHO CRÍTICO — APP TECNICAMENTE CONCLUÍDA (Marco 1)
+
+```
+D0 → A3 → E5 → G3(M1)
+```
+
+**Etapas:** D0 · A3 · E5 · G3 *(verificação M1)* → **4**
+
+*Escopo aprovado em código/fluxos; sem blockers técnicos conhecidos. Não exige live pay, SMS, Connect, package mobile nem gates ON.*
+
+## CAMINHO CRÍTICO — PILOTO REAL (Marco 2)
+
+```
+[M1] → A1 → A2 → C1 → B1 → E3 → G1 → F1 → G3(M2)
+         ↘ (B3) se piloto exigir split automático
+         ↘ (A6) se A3 exigir enforcement no piloto
+         ↘ (D1→D2→D3→G2) se D0 = PACKAGE MOBILE
+```
+
+**Etapas base:** A1 · A2 · C1 · B1 · E3 · G1 · F1 · G3 → **8** (+ M1)  
+**Condicionais:** B3 · A6 · D1 · D2 · D3 · G2
+
+*Utilizadores reais + pagamento conforme modelo do piloto + auth necessária + QA + operação mínima. Processo financeiro **manual** válido no piloto → B3/B4 **não** obrigatórios aqui.*
+
+## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
+
+```
+[M2] → A4 → A5 → E1 → E4 → G3(M3)
+         ↘ B3 → B4   se operação comercial exigir split/payout automático
+         ↘ A6        se A3/negócio exigir compliance activa
+         ↘ D1→D2→D3→D4→G2  se D0 = PACKAGE MOBILE (ou distribuição exigida)
+         ↘ B5        se MVP PT o exigir
+```
+
+**Etapas base:** A4 · A5 · E1 · E4 · G3 → **5** (+ M2)  
+**Condicionais:** B3 · B4 · A6 · D1 · D2 · D3 · D4 · G2 · B5
+
+---
+
+# PODE CORRER EM PARALELO
+
+| Em paralelo | Sem conflito se… |
+|-------------|------------------|
+| **A1–A4** ‖ **C1** ‖ **D0/D1** ‖ **F1** | Sem `STRIPE_MOCK=false` nem gates ON |
+| **A5** ‖ **E2** ‖ **F3** ‖ **C3** | Sem path pay live |
+| **B2** ‖ **E5** ‖ **F4** | Após/com cuidado face a B1 |
+| **H*** | Sem activar flags comerciais |
+
+**Não paralelizar:** B3 com A2 aberto; D3 sem D1 (se D0=package); A6 ON sem A3; live Stripe sem B1 completo.
+
+---
+
+# CARRIL A — Negócio / Legal / Compliance
+
+## A1 — Validar modelo económico
+
+- **Objectivo:** Validar hipóteses custos/comissões/simulador (não inventar números).  
+- **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001`  
+- **Dependências:** —  
+- **Conclusão:** Francisco+Manel(+contabilista) registam aceite / correcções por escrito.  
+- **Docs base (hipóteses, não aprovadas):** [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| A1.1 | Confirmar pacote dos 3 docs business no repo | Pacote de leitura pronto | CONFIRMAR | — |
+| A1.2 | Sessão validação custos mensais vs realidade | Lista: aceite / rejeitado / a rever | DECISÃO | A1.1 |
+| A1.3 | Sessão margem/viagem + GTM 36m | Simulador válido ou a corrigir | DECISÃO | A1.2 |
+| A1.4 | Acta curta no repo (só resultados) | Fecho A1 sem % inventados | DOCS | A1.3 |
+
+## A2 — Fechar comissão e tarifário
+
+- **Objectivo:** Comissão + tarifário piloto aprovados (hoje só hipóteses/exemplos).  
+- **IDs:** `S-BIZ-02` · `SEP-PAY-03` · perguntas Q1/Q3 em [`MANEL_INPUTS_TODOS_2026-08-07.md`](product/MANEL_INPUTS_TODOS_2026-08-07.md)  
+- **Dependências:** A1  
+- **Conclusão:** % + regras + beneficiário documentados.  
+- **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final** — **não** a % de comissão.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| A2.1 | Confirmar hipóteses de comissão no doc pricing Manel (ex. 15% = hipótese) | Ponto de partida explícito | CONFIRMAR | A1 · `MANEL_PRICING_COMMISSION_MODEL_2026-08.md` |
+| A2.2 | Confirmar modelo híbrido estimativa/final | Alinhado a produto actual | CONFIRMAR | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
+| A2.3 | Fechar % comissão piloto (adoptar/alterar hipótese) | % aprovada | DECISÃO | A2.1 |
+| A2.4 | Fechar beneficiário split (motorista vs partner) + cadência payout pretendida | Resposta Q3 | DECISÃO | A2.3 · `MANEL_INPUTS` Q3 |
+| A2.5 | Fechar tarifário mínimo piloto | Tabela/regras aprovadas | DECISÃO | A2.3 |
+| A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 |
+
+## A3 — Validar requisitos legais TVDE aplicáveis
+
+- **Objectivo:** Fonte legal → interpretação/validação → requisitos operacionais → impacto técnico. **Não** assumir que DL 84/2026 implica gates ou suspensão automática.  
+- **IDs:** `S-COMP-04` · `LEGAL-TVDE-001`  
+- **Dependências:** — (apoio jurídico recomendado)  
+- **Conclusão:** Matriz requisito×papel; lista do que a app deve/não deve automatizar; input claro para A6 (obrigatório / não).
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| A3.1 | Confirmar fontes em índice legal + PDF DL 84/2026 | Fontes localizadas | CONFIRMAR | [`LEGAL_SOURCES_INDEX.md`](legal/LEGAL_SOURCES_INDEX.md) |
+| A3.2 | Ler/interpretar com apoio adequado | Notas artigo→tema | DOCS · EXTERNO | A3.1 |
+| A3.3 | Extrair requisitos operacionais (registo / aviso / enforcement) | Matriz requisito × papel | DOCS | A3.2 |
+| A3.4 | Classificar impacto técnico MVP vs fase 2 | Lista impacto app/ops | DOCS | A3.3 |
+| A3.5 | Determinar se A6 (gates ON) é obrigação do piloto/comercial | Sim/Não + condições — **sem** default Sim | DECISÃO | A3.4 |
+| A3.6 | Brief A6 / produto | Input claro; se Não → A6 fora dos críticos | DOCS | A3.5 |
+
+## A4 — Titularidade IP / contas
+
+- **Objectivo:** Inventário titularidade código/design/marca/contas/domínios.  
+- **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02`  
+- **Dependências:** —  
+- **Conclusão:** Inventário assinado por Francisco (e Manel se aplicável).
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| A4.1 | Listar contas críticas (GitHub, Render, Stripe, domínio, MapTiler, …) | Inventário v1 | DOCS | — |
+| A4.2 | Atribuir titular por item | Tabela dono/acesso | DECISÃO | A4.1 |
+| A4.3 | Guardar inventário em `docs/` | Referência estável | DOCS | A4.2 |
+
+## A5 — Decisão de marca (logo)
+
+- **Objectivo:** Escolher logo de produção e planear troca controlada.  
+- **IDs:** `S-BRD-01` · `S-IP-02` (parcial)  
+- **Dependências:** A4 recomendado  
+- **Conclusão:** Vencedor + plano `public/brand` (sem executar sem OK).  
+- **Nota:** shortlist local existe; **sem** vencedor canónico ainda.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| A5.1 | Confirmar existência shortlist local (KEEP / `_temp`) | Material de review | CONFIRMAR | — |
+| A5.2 | Review → shortlist final 2–3 | Candidatos | DECISÃO | A5.1 |
+| A5.3 | Verificar origem/licença candidatos | OK uso | DECISÃO | A5.2 · A4 |
+| A5.4 | Escolher vencedor + brief troca assets | Decisão + checklist | DECISÃO | A5.3 |
+| A5.5 | (Opcional) pesquisa/registo marca | Iniciado ou → H | EXTERNO | A5.4 |
+
+## A6 — Compliance frota (dados → gates)
+
+- **Objectivo:** Dados mínimos; activar gates **só** se A3.5 = Sim.  
+- **IDs:** `S-COMP-01` · `S-COMP-02` · `S-COMP-03` · `S-COMP-05`  
+- **Dependências:** A3  
+- **Conclusão:** Gates ON testados **ou** A6 explicitamente fora do crítico.  
+- **Canónico OFF até decisão:** [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) (código existe; flag OFF; decisões A–E abertas para ON).
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| A6.1 | Confirmar estado PF3D: implementação atrás de flag OFF + smokes OFF PASS | Não reabrir “falta código” | CONFIRMAR | `PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md` |
+| A6.2 | Se A3.5=Não: registar A6 fora dos críticos | Acta | DOCS | A3.5 |
+| A6.3 | Auditoria frota piloto (veículos/docs) | Gaps listados | DOCS | A3.5=Sim |
+| A6.4 | Preencher docs mínimos Partner | Frota piloto completa | EXTERNO | A6.3 |
+| A6.5 | Fechar decisões A–E da matriz PF3D-0 ainda abertas | Acta A–E | DECISÃO | A6.1 · A3 |
+| A6.6 | Activar flag staging→prod + smoke | Gates ON só após PASS | CONFIG · TESTE | A6.4 · A6.5 |
+| A6.7 | UX override/admin (PF3D-4/5) se necessário | OK ou adiado | CÓDIGO | A6.6 |
+| A6.8 | Suspensão automática: só se A3/legal OK | Implementar **ou** fora de escopo | DECISÃO | A3 · A6.6 |
+
+---
+
+# CARRIL B — Pagamentos / Financeiro
+
+**Três camadas (não confundir):**
+
+| Camada | Etapa | Significado |
+|--------|-------|-------------|
+| Pagamento real do passageiro | **B1** | Cobrança PI live na plataforma |
+| Split automático | **B3** | Connect / transferência automática plataforma↔beneficiário |
+| Payout automático | **B4** | Cadência payout ao beneficiário |
+
+Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — documentar; B3/B4 ficam P1 sem bloquear Marco 1 nem necessariamente Marco 2.
+
+## B1 — Stripe live (pagamento passageiro)
+
+- **Objectivo:** Authorize/capture + webhook em prod; mock OFF.  
+- **IDs:** `S-PAY-01` · `S-PAY-06` · `S-PAY-07` · `S-PAX-01`  
+- **Dependências:** A2 recomendado; OK Francisco+parceiro  
+- **Conclusão:** Viagem paga real; `STRIPE_MOCK=false`.  
+- **Política actual piloto:** mock ON — [`ENV_SINGLE_REALITY.md`](env/ENV_SINGLE_REALITY.md) · `O-STRIPE-1`.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| B1.1 | Confirmar política actual: mock em piloto até go-live explícito | Não activar por engano | CONFIRMAR | `ENV_SINGLE_REALITY.md` |
+| B1.2 | Decisão go-live Stripe (conta + responsável) | OK escrito | DECISÃO | A2 · B1.1 |
+| B1.3 | `sk_live_*` + webhook prod no Render | Keys fora do git | CONFIG | B1.2 |
+| B1.4 | Webhook endpoint + signing secret | Eventos 2xx | CONFIG | B1.3 |
+| B1.5 | `STRIPE_MOCK=false` (+ FE alinhado) | Mock OFF | CONFIG | B1.4 |
+| B1.6 | Smoke 1 viagem valor real mínimo | Payment `succeeded` | TESTE | B1.5 |
+| B1.7 | Alinhar auth placeholder / preço vs complete | Comportamento documentado | CÓDIGO | B1.5 |
+| B1.8 | Copy Pax real (ver também E3) | UI sem copy mock | CÓDIGO | B1.5 |
+| B1.9 | Cancel fee / `authorization_expires_at` | Aceite ou ticket explícito | CÓDIGO | B1.6 |
+
+## B2 — Confirm on accept / 3DS
+
+- **Objectivo:** Só activar se política live o exigir **contra** decisão de pricing actual.  
+- **IDs:** `S-PAY-04`  
+- **Dependências:** B1  
+- **Canónico:** [`PRICING_DECISION.md`](PRICING_DECISION.md) — `ENABLE_CONFIRM_ON_ACCEPT` **OFF**; confirmação no accept fora do modelo híbrido.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| B2.1 | Confirmar decisão: confirm-on-accept OFF no modelo híbrido | Default = manter OFF | CONFIRMAR | `PRICING_DECISION.md` |
+| B2.2 | Só se negócio exigir override: decidir activar 3DS/confirm | Acta override | DECISÃO | B1 · B2.1 |
+| B2.3 | Se override: flag + FE `client_secret` | Fluxo completo | CONFIG · CÓDIGO | B2.2 |
+| B2.4 | Se override: smoke 3DS | PASS | TESTE | B2.3 |
+
+## B3 — Stripe Connect + split automático
+
+- **Objectivo:** Split automático conforme A2 — **só crítico se modelo exigir automatização**.  
+- **IDs:** `S-PAY-02` · `SEP-PAY-01`  
+- **Dependências:** B1 · A2  
+- **Alternativa piloto:** liquidação manual/legalmente válida documentada → B3 permanece no roadmap (P1), fora do crítico desse marco.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| B3.1 | Confirmar intent Manel: Connect = caminho MVP **provável** (não fechado) | Input, não activação | CONFIRMAR | `MANEL_INPUTS_TODOS` · `SETEMBRO` SEP-PAY-01 |
+| B3.2 | Decidir: piloto/comercial exige **split automático** agora? | Sim → B3 crítico; Não → processo manual documentado | DECISÃO | A2 · B3.1 |
+| B3.3 | Se Não: documentar processo financeiro temporário (responsável, cadência, prova) | Alternativa válida registada | DOCS | B3.2 |
+| B3.4 | Se Sim: escolher tipo Connect (Express/Custom/…) | Arquitectura | DECISÃO | B3.2 |
+| B3.5 | Se Sim: KYC conta piloto | Conta capaz de receber | EXTERNO | B3.4 |
+| B3.6 | Se Sim: implementar/ligar split | Código alinhado a A2 | CÓDIGO | B3.4 |
+| B3.7 | Se Sim: smoke split 1 viagem | Valores OK | TESTE | B3.5 · B3.6 |
+
+## B4 — Payouts automáticos
+
+- **Objectivo:** Payout automático ao beneficiário A2.  
+- **IDs:** `S-PAY-03` · `S-PRT-01` · `S-DRV-01` (fórmula)  
+- **Dependências:** B3 (se automático) · A2  
+- **Nota:** igual a B3 — manual documentado pode cobrir piloto sem B4 no crítico.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| B4.1 | Confirmar perguntas abertas cadência/beneficiário (Q3) | Estado das respostas | CONFIRMAR | `MANEL_INPUTS` Q3 · A2.4 |
+| B4.2 | Decidir: payout **automático** exigido neste marco? | Sim/Não | DECISÃO | B4.1 · B3.2 |
+| B4.3 | Se Não: estender doc processo manual | Ops coberta | DOCS | B4.2 · B3.3 |
+| B4.4 | Se Sim: implementar/ops payouts | Dinheiro ao beneficiário | CÓDIGO · EXTERNO | B3 · B4.2 |
+| B4.5 | Fórmula líquido motorista (app) — ver E1 | UI/API coerente A2 | CÓDIGO | A2 · B4.1 |
+| B4.6 | Copy Partner alinhada (ver E4) | Sem prometer payout inexistente | CÓDIGO | B4.3 ou B4.4 |
+
+## B5 — Métodos PT (MB WAY / SIBS / Multibanco)
+
+- **Objectivo:** MVP vs fase 2 (Q2 Manel).  
+- **IDs:** `S-PAY-05` · `SEP-PAY-02`  
+- **Dependências:** B1  
+- **Conclusão:** Fora MVP → H **ou** 1 método PT em smoke.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| B5.1 | Confirmar que obrigatoriedade PT está **aberta** (Q2) | Não assumir MVP | CONFIRMAR | `MANEL_INPUTS` Q2 |
+| B5.2 | Decisão: MVP ou fase 2 | Escopo fechado | DECISÃO | B5.1 |
+| B5.3 | Se MVP: contrato/PSP + integração + smoke | Pagamento PT OK | EXTERNO · CÓDIGO · TESTE | B5.2 |
+| B5.4 | Se fase 2: mover para H | Fora críticos | DOCS | B5.2 |
+
+---
+
+# CARRIL C — Autenticação / Comunicação
+
+## C1 — OTP SMS real
+
+- **Objectivo:** OTP por SMS fora de non-prod.  
+- **IDs:** `S-AUTH-01`  
+- **Dependências:** Provider SMS  
+- **Conclusão:** Login OTP em telemóvel real.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| C1.1 | Escolher provider SMS | Conta + pricing OK | DECISÃO · EXTERNO | — |
+| C1.2 | Credenciais no Render | Envio possível | CONFIG | C1.1 |
+| C1.3 | Ligar envio real em prod | Sem path só-log | CÓDIGO · CONFIG | C1.2 |
+| C1.4 | Smoke OTP Passenger + Driver | SMS + login OK | TESTE | C1.3 |
+
+## C2 — SMS transaccionais (oferta/viagem)
+
+- **IDs:** `S-NOTIF-02` · **Dependências:** C1  
+- **Conclusão:** 1–2 eventos **ou** → H.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| C2.1 | Decidir eventos MVP | Lista curta ou adiar | DECISÃO | C1 |
+| C2.2 | Implementar ou mover H | DONE / H | CÓDIGO · DOCS | C2.1 |
+
+## C3 — Google OAuth staging
+
+- **IDs:** `S-AUTH-02`  
+- **Conclusão:** Smoke staging PASS **ou** pós-Marco 3.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| C3.1 | Config URIs Google staging | Console OK | CONFIG | — |
+| C3.2 | Smoke login Google passenger | PASS | TESTE | C3.1 |
+
+---
+
+# CARRIL D — Mobile / Push / Distribuição
+
+## D0 — Definir requisito de entrega mobile
+
+- **Objectivo:** Fixar se a entrega inicial é **WEB/PWA** ou **PACKAGE MOBILE** obrigatório.  
+- **IDs:** `S-MOB-01` (gate) · `MOBILE-001`  
+- **Dependências:** —  
+- **Conclusão:** Uma das duas opções registada. **Não tomar esta decisão neste documento** — só estruturar.  
+- **Efeito:**  
+  - **WEB/PWA** → D1–D4/G2 fora dos críticos; ficam fase distribuição.  
+  - **PACKAGE MOBILE** → D1→D2→D3 (+G2) entram nos críticos dos marcos aplicáveis.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| D0.1 | Confirmar estado: sem Capacitor/stores; só intenção MOBILE-001 | Não assumir package | CONFIRMAR | `SETEMBRO_2026_TODO_LIBRARY` MOBILE-001 |
+| D0.2 | Decidir requisito entrega: WEB/PWA **ou** PACKAGE MOBILE | Acta (pendente até sessão) | DECISÃO | D0.1 |
+| D0.3 | Actualizar quais etapas D*/G2 entram em cada caminho crítico | Secção caminhos alinhada | DOCS | D0.2 |
+
+## D1 — Spike packaging Android/iOS
+
+- **Objectivo:** Escolher PWA/wrapper/Capacitor e provar build.  
+- **IDs:** `S-MOB-01` · `MOBILE-001`  
+- **Dependências:** D0 = PACKAGE **ou** trabalho antecipado paralelo (não crítico se WEB/PWA)  
+- **Conclusão:** Caminho técnico escolhido + spike.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| D1.1 | Comparar PWA vs Capacitor vs wrapper | Matriz | DOCS | D0 |
+| D1.2 | Spike mínimo (1 platform) | Build interno | CÓDIGO | D1.1 |
+| D1.3 | Confirmar/escolher caminho de packaging | Acta técnica | DECISÃO | D1.2 |
+
+## D2 — Validação em device
+
+- **IDs:** `S-MOB-02` · **Dependências:** D1  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| D2.1 | Checklist permissões | Lista | DOCS | D1 |
+| D2.2 | GPS + background (limites OS) | Notas | TESTE | D2.1 |
+| D2.3 | Waze/Maps deep link | OK | TESTE | D2.1 |
+| D2.4 | Login persistente + mapa | OK | TESTE | D2.1 · C1 |
+| D2.5 | Corrigir bloqueadores | Build estável | CÓDIGO | D2.2–D2.4 |
+
+## D3 — Push notifications
+
+- **IDs:** `S-NOTIF-01` · **Dependências:** D1/D2  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| D3.1 | Contas FCM/APNs | Prontas | EXTERNO · CONFIG | D1 |
+| D3.2 | Backend device + send | API push | CÓDIGO | D3.1 |
+| D3.3 | Cliente handlers | Recebe | CÓDIGO | D3.2 |
+| D3.4 | Smoke oferta→push | PASS | TESTE | D3.3 |
+
+## D4 — Landing / URL lojas
+
+- **IDs:** `S-MOB-03` · **Dependências:** D2 / store listing  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| D4.1 | Timing lojas vs internal | Plano | DECISÃO | D2 |
+| D4.2 | URL + página download | Link OK | CONFIG · CÓDIGO | D4.1 |
+
+---
+
+# CARRIL E — Produto final (4 papéis)
+
+*Núcleo 4 papéis VALIDADO — gaps para marcos 2/3.*
+
+## E1 — Driver piloto (líquido + gaps Manel)
+
+- **IDs:** `S-DRV-01` · `S-DRV-03`  
+- **Dependências:** A2; líquido real típico após modelo pay (B4.5 / manual)  
+- **Inputs:** [`MANEL_INPUTS_TODOS_2026-08-07.md`](product/MANEL_INPUTS_TODOS_2026-08-07.md) §4–6 (DRV-*, Q6/Q10)
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| E1.1 | Confirmar lista DRV-* / P0–P1 do input Manel vs app | Gaps mapeados (não redecidir o PDF) | CONFIRMAR | `MANEL_INPUTS_TODOS` |
+| E1.2 | Responder Q6/Q10 (categorias MVP + fórmula líquido) | Respostas | DECISÃO | E1.1 · A2 |
+| E1.3 | Implementar líquido conforme fórmula | UI correcta | CÓDIGO | E1.2 |
+| E1.4 | Fechar gaps P1 seleccionados | Smoke Driver | CÓDIGO · TESTE | E1.2 |
+
+## E2 — Afinação nav Waze/Maps
+
+- **IDs:** `S-DRV-02`  
+- **Canónico nav:** Opção B (manual, sem auto-open) — PR #405 / ops Julho.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| E2.1 | Confirmar Opção B nav já em produção | Não reabrir auto-nav | CONFIRMAR | `FORWARD_PLAN` / #405 |
+| E2.2 | Spec residual NAV-ROUTE-STOPS / nextStop se ainda aberto | Spec 1 página ou → H | DECISÃO · DOCS | E2.1 · `MANEL_INPUTS` DRV-NAV |
+| E2.3 | Implementar residual + smoke | PASS ou adiado H | CÓDIGO · TESTE | E2.2 |
+
+## E3 — Copy pagamento Passenger
+
+- **IDs:** `S-PAX-01` · **Dependências:** B1  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| E3.1 | Review strings vs modelo híbrido + live | Diff | DOCS | B1 · `PRICING_DECISION.md` |
+| E3.2 | Aplicar copy | UI actualizada | CÓDIGO | E3.1 |
+
+## E4 — Copy / receitas Partner
+
+- **IDs:** `S-PRT-01` · **Dependências:** realidade B3/B4 ou processo manual  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| E4.1 | Auditar copy vs payout real/manual | Lista | DOCS | B3.3 ou B4 |
+| E4.2 | Corrigir UI | PASS visual | CÓDIGO | E4.1 |
+
+## E5 — Admin approve/reject stubs
+
+- **IDs:** `S-ADM-01`  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| E5.1 | Decidir: implementar vs remover 501 | Acta | DECISÃO | — |
+| E5.2 | Código conforme | Sem 501 morto | CÓDIGO | E5.1 |
+| E5.3 | Smoke Admin | PASS | TESTE | E5.2 |
+
+---
+
+# CARRIL F — Infra / Segurança / Operação
+
+## F1 — Drill restore Postgres
+
+- **IDs:** `S-OPS-03` · Runbook [`TVDE_BKP_RUNBOOK.md`](ops/TVDE_BKP_RUNBOOK.md)
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| F1.1 | Executar drill | Restore seguro | EXTERNO · TESTE | — |
+| F1.2 | Acta PASS/FAIL | Registo | DOCS | F1.1 |
+
+## F2 — Staging OAuth / smoke staging
+
+- **IDs:** `S-OPS-02`
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| F2.1 | Stack staging viva | URLs OK | CONFIG | — |
+| F2.2 | Smoke curto | PASS | TESTE | F2.1 · C3 |
+
+## F3 — Sentry prod FE/BE
+
+- **IDs:** `S-OPS-04`
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| F3.1 | Verificar DSN prod | CONFIGURADO | CONFIG | — |
+| F3.2 | Evento teste | Visível | TESTE | F3.1 |
+
+## F4 — Higiene mock GPS prod
+
+- **IDs:** `S-HYG-01`
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| F4.1 | Política mock GPS prod | Regra | DECISÃO | — |
+| F4.2 | Restrição | Sem abuso público | CÓDIGO | F4.1 |
+
+---
+
+# CARRIL G — QA / Hardening / Go-live
+
+## G1 — Suite E2E / regression comercial
+
+- **IDs:** `S-QA-01` · **Dependências:** B1 (piloto)
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| G1.1 | Guião comercial (pay conforme modelo piloto) | Checklist | DOCS | B1 |
+| G1.2 | Playwright + smoke humano | PASS | TESTE | G1.1 |
+| G1.3 | Corrigir P0 | Verde | CÓDIGO | G1.2 |
+
+## G2 — Testes em telemóveis reais
+
+- **IDs:** `S-QA-02` · **Dependências:** D2/D3 **se** D0=PACKAGE; senão fora crítico  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| G2.1 | Devices piloto | Lista | DECISÃO | D2 |
+| G2.2 | Matriz viagem+push+GPS | PASS/FAIL | TESTE | G2.1 · D3 |
+| G2.3 | Corrigir P0 device | PASS | CÓDIGO | G2.2 |
+
+## G3 — Verificação dos três marcos
+
+- **Objectivo:** Declarar M1 / M2 / M3 sem “excepção escrita” a fingir conclusão técnica.  
+- **Dependências:** caminhos críticos respectivos  
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. |
+|-------|--------|-------------------|------|------|
+| G3.1 | Checklist **Marco 1** | Todos critérios M1 PASS | TESTE · DOCS | crítico M1 |
+| G3.2 | Checklist **Marco 2** | Todos critérios M2 PASS | TESTE · DOCS | M1 · crítico M2 |
+| G3.3 | Checklist **Marco 3** | Todos critérios M3 PASS | DECISÃO · DOCS | M2 · crítico M3 |
+| G3.4 | Acta (data, tip SHA, marco atingido, IN/OUT) | Documento | DOCS | G3.1–G3.3 |
+| G3.5 | Comunicar Manel/ops | Expectativas alinhadas | DOCS | G3.4 |
+
+---
+
+# CARRIL H — Pós-entrega / Futuro
+
+*Fora dos caminhos críticos dos três marcos (salvo itens movidos explicitamente).*
+
+## H1 — B2 next-trip
+
+- **IDs:** `S-B2-01` · `S-B2-02` · `S-B2-03`  
+- **Canónico produto V1:** [`B2_PRODUCT_DECISIONS_2026-08-04.md`](architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) — Opção B · 1 queued · ETA 12 · PI na promoção · flag OFF · groundwork DONE.
+
+| Passo | Acção | Resultado | Tipo | Dep. |
+|-------|--------|-----------|------|------|
+| H1.1 | Confirmar decisões produto B2 V1 (não reabrir Opção B) | Acta de leitura | CONFIRMAR | `B2_PRODUCT_DECISIONS_2026-08-04.md` |
+| H1.2 | Decidir **quando** activar (se alguma vez) | Sim/Não/quando | DECISÃO | H1.1 · B1 |
+| H1.3 | Lifecycle accept→queued→promote+PI | Flag OFF até OK | CÓDIGO | H1.2 |
+| H1.4 | Matching ETA 12 | OK | CÓDIGO | H1.3 |
+| H1.5 | UI Driver/Pax | OK | CÓDIGO | H1.3 |
+| H1.6 | Flag ON + smoke | PASS | CONFIG · TESTE | H1.5 |
+
+## H2 — Redispatch imediato pós-reject
+
+- **IDs:** `S-MATCH-01`
+
+| Passo | Acção | Resultado | Tipo | Dep. |
+|-------|--------|-----------|------|------|
+| H2.1 | Spec + implementar | Reject→oferta rápida | CÓDIGO | — |
+| H2.2 | Teste | PASS | TESTE | H2.1 |
+
+## H3 — Higiene código / CI
+
+- **IDs:** `S-HYG-02` · `S-HYG-03` · `R-GIT-1` · `CI-MAINT-1`
+
+| Passo | Acção | Resultado | Tipo | Dep. |
+|-------|--------|-----------|------|------|
+| H3.1 | Dead code Driver/DebugMap | Diff limpo | CÓDIGO | — |
+| H3.2 | CI Node warning | Resolvido | CONFIG | — |
+| H3.3 | Branches locais | Higiénico | EXTERNO | — |
+
+## H4 — Admin rastos UX
+
+- **IDs:** `S-ADM-02` · orphan/Agora/reassign
+
+| Passo | Acção | Resultado | Tipo | Dep. |
+|-------|--------|-----------|------|------|
+| H4.1 | Triagem | Lista | DOCS | — |
+| H4.2 | Fixes | PASS | CÓDIGO | H4.1 |
+
+## H5 — Explicitamente futuro
+
+- MB WAY/SIBS se B5.4  
+- Registo marca (SEP-IP-04) adiado  
+- Ideias Uber/Bolt não comprometidas  
+- OCR · app nativa do zero · cosmético mapa Partner  
+
+---
+
+# Três marcos — critérios objectivos
+
+**Regra:** uma “excepção” ou processo manual **não** conta para Marco 1. Coloca-se no marco onde a alternativa é aceite (tipicamente M2/M3).
+
+## MARCO 1 — APP TECNICAMENTE CONCLUÍDA
+
+| # | Critério |
+|---|----------|
+| M1.1 | Fluxo 4 papéis em prod PASS (já: Demo Manel 2) |
+| M1.2 | D0 registado (WEB/PWA **ou** PACKAGE) — escopo de distribuição definido |
+| M1.3 | A3 concluída: matriz legal→requisitos→impacto técnico (sem gates ON por defeito) |
+| M1.4 | E5: sem stubs 501 órfãos (implementados ou removidos) |
+| M1.5 | Decisões produto existentes confirmadas onde aplicável (pricing híbrido, B2 OFF, PF3D OFF, nav Opção B) — sem flags perigosas acidentais (`ENABLE_DEV_TOOLS=false`) |
+| M1.6 | G3.1 assinado |
+
+*Não exige:* SMS prod, Stripe live, Connect, payouts, package/push, gates ON.
+
+## MARCO 2 — APP PRONTA PARA PILOTO REAL
+
+Além de M1:
+
+| # | Critério |
+|---|----------|
+| M2.1 | A1 + A2 fechados (comissões/tarifário/beneficiário para o piloto) |
+| M2.2 | C1 OTP SMS real PASS |
+| M2.3 | B1 Stripe live PASS **conforme modelo do piloto** (mock OFF se o piloto cobrar real) |
+| M2.4 | E3 copy pagamento alinhada |
+| M2.5 | G1 regression/smoke piloto PASS |
+| M2.6 | F1 restore drill PASS (recente) |
+| M2.7 | Se B3.2=Não: processo financeiro **manual** documentado e operável |
+| M2.8 | Se B3.2=Sim: B3 smoke split PASS |
+| M2.9 | Se A3.5=Sim: A6 gates no estado exigido + smoke |
+| M2.10 | Se D0=PACKAGE: D1–D3 (+G2) PASS; se WEB/PWA: browser/PWA suficiente documentado |
+| M2.11 | G3.2 assinado |
+
+## MARCO 3 — APP PRONTA PARA EXPLORAÇÃO COMERCIAL
+
+Além de M2:
+
+| # | Critério |
+|---|----------|
+| M3.1 | A4 inventário IP + A5 logo de produção decidido (troca feita ou calendarizada com OK) |
+| M3.2 | Se operação comercial exige split automático: B3 PASS |
+| M3.3 | Se exige payout automático: B4 PASS; senão processo financeiro comercial documentado |
+| M3.4 | E1 líquido + gaps Driver P1 do piloto comercial; E4 copy Partner honesta |
+| M3.5 | Compliance: A6 no estado que negócio/legal exigir para exploração |
+| M3.6 | Distribuição: se D0/negócio exigem stores/package, D1–D4 + G2 PASS |
+| M3.7 | B5 resolvido (integrado **ou** explicitamente fase 2 em H) |
+| M3.8 | Ops: on-call + canais incidente; G3.3–G3.5 assinados |
+
+---
+
+# PÓS-ENTREGA / BACKLOG FUTURO
+
+Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual, D* se D0=WEB/PWA).
+
+**Não** reabre Demo Manel 2 / retoma como pendência.
+
+---
+
+# Referências rápidas
+
+| Tema | Doc |
+|------|-----|
+| Estado Setembro | [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) |
+| Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| Pricing híbrido | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
+| B2 produto | [`B2_PRODUCT_DECISIONS_2026-08-04.md`](architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) |
+| PF3D | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) |
+| Inputs Manel | [`MANEL_INPUTS_TODOS_2026-08-07.md`](product/MANEL_INPUTS_TODOS_2026-08-07.md) |
+| Negócio hipóteses | [`docs/business/`](business/) |
+| Legal | [`LEGAL_SOURCES_INDEX.md`](legal/LEGAL_SOURCES_INDEX.md) |
+| Stripe / env | [`O_STRIPE_1_RUNBOOK.md`](ops/O_STRIPE_1_RUNBOOK.md) · [`ENV_SINGLE_REALITY.md`](env/ENV_SINGLE_REALITY.md) |
+| Backup | [`TVDE_BKP_RUNBOOK.md`](ops/TVDE_BKP_RUNBOOK.md) |
+
+---
+
+**Governação:** executar pelos caminhos do marco alvo; paralelizar só o permitido; `CONFIRMAR` antes de reabrir; activação de flags comerciais só com `DECISÃO` explícita no passo.
