@@ -189,10 +189,12 @@ export async function getDriverStatus(token: string): Promise<DriverAvailability
 
 export interface DriverDrivingHoursCompliance {
   enabled: boolean
+  enforcement_enabled?: boolean
   active_seconds_today: number
   max_seconds: number
   warning_threshold_seconds: number
   warning: boolean
+  limit_reached?: boolean
   blocked: boolean
   rest_until: string | null
 }

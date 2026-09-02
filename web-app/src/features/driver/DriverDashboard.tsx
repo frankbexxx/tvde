@@ -1586,7 +1586,7 @@ export function DriverDashboard() {
                           </div>
                         </div>
                       )}
-                      {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+                      {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked || drivingCompliance.limit_reached) ? (
                         <div
                           className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                             ? 'bg-destructive/10 border-destructive/35 text-destructive'
@@ -1599,6 +1599,21 @@ export function DriverDashboard() {
                               <p className="font-semibold leading-snug">{t('mapHome.drivingHoursBlockedTitle')}</p>
                               <p className="mt-1 text-foreground/90 leading-snug">
                                 {t('mapHome.drivingHoursBlockedBody')}
+                              </p>
+                              {drivingCompliance.rest_until ? (
+                                <p className="mt-1 text-xs opacity-90">
+                                  {t('mapHome.restUntil')}{' '}
+                                  {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
+                                    timeZone: 'Europe/Lisbon',
+                                  })}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : drivingCompliance.limit_reached ? (
+                            <>
+                              <p className="font-medium leading-snug">{t('mapHome.drivingHoursLimitTitle')}</p>
+                              <p className="mt-1 text-foreground/90 leading-snug">
+                                {t('mapHome.drivingHoursLimitBody')}
                               </p>
                               {drivingCompliance.rest_until ? (
                                 <p className="mt-1 text-xs opacity-90">
@@ -1934,7 +1949,7 @@ export function DriverDashboard() {
                         </div>
                       </div>
                     )}
-                    {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+                    {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked || drivingCompliance.limit_reached) ? (
                       <div
                         className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                           ? 'bg-destructive/10 border-destructive/35 text-destructive'
@@ -1947,6 +1962,21 @@ export function DriverDashboard() {
                             <p className="font-semibold leading-snug">{t('mapHome.drivingHoursBlockedTitle')}</p>
                             <p className="mt-1 text-foreground/90 leading-snug">
                               {t('mapHome.drivingHoursBlockedBodyAlt')}
+                            </p>
+                            {drivingCompliance.rest_until ? (
+                              <p className="mt-1 text-xs opacity-90">
+                                {t('mapHome.restUntil')}{' '}
+                                {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
+                                  timeZone: 'Europe/Lisbon',
+                                })}
+                              </p>
+                            ) : null}
+                          </>
+                        ) : drivingCompliance.limit_reached ? (
+                          <>
+                            <p className="font-medium leading-snug">{t('mapHome.drivingHoursLimitTitle')}</p>
+                            <p className="mt-1 text-foreground/90 leading-snug">
+                              {t('mapHome.drivingHoursLimitBodyAlt')}
                             </p>
                             {drivingCompliance.rest_until ? (
                               <p className="mt-1 text-xs opacity-90">
@@ -2234,7 +2264,7 @@ export function DriverDashboard() {
                 </div>
               )}
 
-              {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked) ? (
+              {drivingCompliance?.enabled && (drivingCompliance.warning || drivingCompliance.blocked || drivingCompliance.limit_reached) ? (
                 <div
                   className={`${BTN_SECONDARY_RADIUS} border px-3 py-2 text-sm ${drivingCompliance.blocked
                     ? 'bg-destructive/10 border-destructive/35 text-destructive'
@@ -2247,6 +2277,21 @@ export function DriverDashboard() {
                       <p className="font-semibold leading-snug">{t('mapHome.drivingHoursBlockedTitle')}</p>
                       <p className="mt-1 text-foreground/90 leading-snug">
                         {t('mapHome.drivingHoursBlockedBody')}
+                      </p>
+                      {drivingCompliance.rest_until ? (
+                        <p className="mt-1 text-xs opacity-90">
+                          {t('mapHome.restUntil')}{' '}
+                          {new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', {
+                            timeZone: 'Europe/Lisbon',
+                          })}
+                        </p>
+                      ) : null}
+                    </>
+                  ) : drivingCompliance.limit_reached ? (
+                    <>
+                      <p className="font-medium leading-snug">{t('mapHome.drivingHoursLimitTitle')}</p>
+                      <p className="mt-1 text-foreground/90 leading-snug">
+                        {t('mapHome.drivingHoursLimitBody')}
                       </p>
                       {drivingCompliance.rest_until ? (
                         <p className="mt-1 text-xs opacity-90">

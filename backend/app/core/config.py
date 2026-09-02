@@ -112,7 +112,12 @@ class Settings(BaseSettings):
     ROTACIONAL_V3_FETCH_TIMEOUT_SECONDS: float = 8.0
 
     # B4: limite diário condução activa + repouso (Europe/Lisbon). Desligar só em diagnóstico.
+    # Quando True: calcula, regista segmentos, avisos e rest_until.
     ENABLE_DRIVING_HOURS_COMPLIANCE: bool = True
+    # A3-D04 / A3.8: bloqueio HTTP de online/accept por driving-hours.
+    # Default False — WARN+RECORD sem impedir operação até parecer jurídico.
+    # True = enforcement clássico (409 driving_hours_blocked).
+    ENABLE_DRIVING_HOURS_ENFORCEMENT: bool = False
 
     # PF3D-3A — vehicle document compliance gates (online / matching / accept).
     # Default OFF: production-safe; enable only for controlled dev/test/smoke.
