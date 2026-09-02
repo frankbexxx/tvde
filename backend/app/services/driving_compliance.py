@@ -87,15 +87,20 @@ def driver_compliance_snapshot(
 ) -> dict:
     """
     Snapshot for UI / guards.
-    blocked_accept: não deve aceitar nova viagem nem ficar online (excepto viagem já aceite).
+
+    - limit_reached: limite diário ou rest_until activo (estado/registo).
+    - blocked_accept: True só se limit_reached **e** ENABLE_DRIVING_HOURS_ENFORCEMENT
+      (A3-D04: default enforcement OFF → WARN+RECORD sem 409).
     """
     if not settings.ENABLE_DRIVING_HOURS_COMPLIANCE:
         return {
             "enabled": False,
+            "enforcement_enabled": False,
             "active_seconds_today": 0,
             "max_seconds": MAX_ACTIVE_DRIVING_SEC,
             "warning_threshold_seconds": WARNING_ACTIVE_DRIVING_SEC,
             "warning": False,
+            "limit_reached": False,
             "blocked_accept": False,
             "rest_until": None,
         }
@@ -109,21 +114,25 @@ def driver_compliance_snapshot(
     rest_until = driver.driving_rest_until if driver else None
 
     active_sec = active_driving_seconds_in_lisbon_day(db, driver_uuid, now)
-    rest_block = rest_until is not None and now < rest_until.astimezone(timezone.utc)
-    daily_block = active_sec >= MAX_ACTIVE_DRIVING_SEC
-    blocked = rest_block or daily_block
+    rest_limit = rest_until is not None and now < rest_until.astimezone(timezone.utc)
+    daily_limit = active_sec >= MAX_ACTIVE_DRIVING_SEC
+    limit_reached = rest_limit or daily_limit
+    enforcement = bool(settings.ENABLE_DRIVING_HOURS_ENFORCEMENT)
+    blocked = limit_reached and enforcement
     warning = (
-        not blocked
+        not limit_reached
         and active_sec >= WARNING_ACTIVE_DRIVING_SEC
         and active_sec < MAX_ACTIVE_DRIVING_SEC
     )
 
     return {
         "enabled": True,
+        "enforcement_enabled": enforcement,
         "active_seconds_today": int(active_sec),
         "max_seconds": MAX_ACTIVE_DRIVING_SEC,
         "warning_threshold_seconds": WARNING_ACTIVE_DRIVING_SEC,
         "warning": warning,
+        "limit_reached": limit_reached,
         "blocked_accept": blocked,
         "rest_until": rest_until,
     }

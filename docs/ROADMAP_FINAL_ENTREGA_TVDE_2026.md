@@ -21,10 +21,10 @@
 
 | Carril | Etapas |
 |--------|--------|
-| **A** Negócio / Legal / Compliance | A1 Modelo económico · A2 Comissão/tarifário · A3 Requisitos legais TVDE · A4 IP/titularidade · A5 Marca · A6 Gates frota |
+| **A** Negócio / Legal / Compliance | A1 · A2 · **A3 PARCIAL** (D01–D08 DONE) · A4 · A5 · A6 *(fora crítico; OFF)* |
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · B5 Métodos PT |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
-| **D** Mobile / Push / Distribuição | **D0 Requisito entrega mobile** · D1 Spike · D2 Device · D3 Push · D4 Landing |
+| **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 Landing |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · E5 Admin stubs |
 | **F** Infra / Segurança / Operação | F1 Restore drill · F2 Staging · F3 Sentry · F4 Higiene mock GPS |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
@@ -40,8 +40,8 @@
 4. **B1** = pagamento real do passageiro; **B3** = split automático; **B4** = payout automático — camadas distintas.  
 5. **B3/B4 no crítico** só se o modelo do piloto/comercial **exigir automatização**; senão processo financeiro manual documentado (Marco 2/3 conforme aplicável).  
 6. **C1 → onboarding utilizadores reais** (Marco 2).  
-7. **D0** decide se D1→D2→D3 entram no crítico; **não** assumir package mobile.  
-8. **B1 + C1 + G1 (+ condicionais D*/B3/B4/A6) → Marcos 2/3**.  
+7. **D0 = HÍBRIDO (DONE)** — WEB/PWA fecha Marco 1; D1→D2→D3(+G2) críticos no Marco 2 com **Android primeiro**; iOS no mesmo carril sem bloquear piloto Android.  
+8. **B1 + C1 + G1 + D1→D2→D3(+G2 Android) (+ condicionais B3/B4/A6) → Marcos 2/3**.  
 9. **B5** — MB WAY/SIBS só se decisão MVP; senão → H.  
 10. **H1 (B2)** — produto V1 já decidido; activação **nunca** no crítico sem OK explícito.
 
@@ -54,26 +54,28 @@ Não duplicar etapas — só indicar quais entram em cada marco. Condicionais en
 ## CAMINHO CRÍTICO — APP TECNICAMENTE CONCLUÍDA (Marco 1)
 
 ```
-D0 → A3 → E5 → G3(M1)
+D0(DONE) → A3(PARCIAL) → E5 → G3(M1)
 ```
 
-**Etapas:** D0 · A3 · E5 · G3 *(verificação M1)* → **4**
+**Etapas:** D0 (**DONE**) · A3 (**PARCIAL** — D01–D08 DONE; A3.8 **DONE**; A3.7/A3.9 pendentes) · E5 · G3 *(verificação M1)*  
 
-*Escopo aprovado em código/fluxos; sem blockers técnicos conhecidos. Não exige live pay, SMS, Connect, package mobile nem gates ON.*
+*WEB/PWA suficiente. **D1/D2/D3/G2 não entram no Marco 1.** A6 **fora** do crítico (A3-D03 OFF). Termos/Privacidade **não** bloqueiam M1 (A3-D07). Não exige live pay, SMS, Connect, package mobile nem gates ON.*
 
+*Critério M1.3:* decisões A3 internas fechadas; parecer externo **não** bloqueia fecho técnico M1 enquanto gates/driving-hours bloqueante forem tratados conforme A3-D03/D04 (**A3.8 DONE** — enforcement OFF).
 ## CAMINHO CRÍTICO — PILOTO REAL (Marco 2)
 
 ```
-[M1] → A1 → A2 → C1 → B1 → E3 → G1 → F1 → G3(M2)
+[M1] → A1 → A2 → C1 → B1 → E3 → G1 → F1
+         → D1 → D2 → D3 → G2   (foco Android; iOS pode seguir depois)
+         → G3(M2)
          ↘ (B3) se piloto exigir split automático
          ↘ (A6) se A3 exigir enforcement no piloto
-         ↘ (D1→D2→D3→G2) se D0 = PACKAGE MOBILE
 ```
 
-**Etapas base:** A1 · A2 · C1 · B1 · E3 · G1 · F1 · G3 → **8** (+ M1)  
-**Condicionais:** B3 · A6 · D1 · D2 · D3 · G2
+**Etapas base:** A1 · A2 · C1 · B1 · E3 · G1 · F1 · **D1 · D2 · D3 · G2** · G3 → **12** (+ M1)  
+**Condicionais:** B3 · A6  
 
-*Utilizadores reais + pagamento conforme modelo do piloto + auth necessária + QA + operação mínima. Processo financeiro **manual** válido no piloto → B3/B4 **não** obrigatórios aqui.*
+*Package mobile **exigido** no piloto (D0 HÍBRIDO). Prioridade **Android**. iOS no carril D sem bloquear início do piloto Android. Processo financeiro **manual** válido no piloto → B3/B4 **não** obrigatórios aqui. D4/stores só se distribuição o exigir.*
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
@@ -81,12 +83,13 @@ D0 → A3 → E5 → G3(M1)
 [M2] → A4 → A5 → E1 → E4 → G3(M3)
          ↘ B3 → B4   se operação comercial exigir split/payout automático
          ↘ A6        se A3/negócio exigir compliance activa
-         ↘ D1→D2→D3→D4→G2  se D0 = PACKAGE MOBILE (ou distribuição exigida)
+         ↘ iOS (D*)  se ainda em falta após Android do M2
+         ↘ D4        conforme necessidade real de distribuição/stores
          ↘ B5        se MVP PT o exigir
 ```
 
 **Etapas base:** A4 · A5 · E1 · E4 · G3 → **5** (+ M2)  
-**Condicionais:** B3 · B4 · A6 · D1 · D2 · D3 · D4 · G2 · B5
+**Condicionais:** B3 · B4 · A6 · D4 · B5 · continuação iOS no carril D
 
 ---
 
@@ -94,12 +97,12 @@ D0 → A3 → E5 → G3(M1)
 
 | Em paralelo | Sem conflito se… |
 |-------------|------------------|
-| **A1–A4** ‖ **C1** ‖ **D0/D1** ‖ **F1** | Sem `STRIPE_MOCK=false` nem gates ON |
-| **A5** ‖ **E2** ‖ **F3** ‖ **C3** | Sem path pay live |
+| **A1–A4** ‖ **C1** ‖ **D1 (Android)** ‖ **F1** | Sem `STRIPE_MOCK=false` nem gates ON |
+| **A5** ‖ **E2** ‖ **F3** ‖ **C3** ‖ **iOS (após/paralelo Android)** | Sem path pay live; iOS não bloqueia Android |
 | **B2** ‖ **E5** ‖ **F4** | Após/com cuidado face a B1 |
 | **H*** | Sem activar flags comerciais |
 
-**Não paralelizar:** B3 com A2 aberto; D3 sem D1 (se D0=package); A6 ON sem A3; live Stripe sem B1 completo.
+**Não paralelizar:** B3 com A2 aberto; D3 sem D1; A6 ON sem A3; live Stripe sem B1 completo.
 
 ---
 
@@ -137,21 +140,28 @@ D0 → A3 → E5 → G3(M1)
 | A2.5 | Fechar tarifário mínimo piloto | Tabela/regras aprovadas | DECISÃO | A2.3 |
 | A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 |
 
-## A3 — Validar requisitos legais TVDE aplicáveis
+## A3 — Validar requisitos legais TVDE aplicáveis — **PARCIAL**
 
 - **Objectivo:** Fonte legal → interpretação/validação → requisitos operacionais → impacto técnico. **Não** assumir que DL 84/2026 implica gates ou suspensão automática.  
 - **IDs:** `S-COMP-04` · `LEGAL-TVDE-001`  
 - **Dependências:** — (apoio jurídico recomendado)  
-- **Conclusão:** Matriz requisito×papel; lista do que a app deve/não deve automatizar; input claro para A6 (obrigatório / não).
+- **Estado:** **PARCIAL** (2026-09-02) — matriz + **A3-D01…D08 DONE** + **A3.8 DONE**; falta validação jurídica externa e arquivo de diplomas oficiais TVDE  
+- **Entrega:** [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md)  
+- **A6:** indeterminado nas fontes + **A3-D03** = gates **OFF** → A6 **fora** do crítico até parecer  
+- **Driving-hours:** **A3-D04** + **A3.8 DONE** — tracking/aviso/registo ON; enforcement bloqueante OFF (`ENABLE_DRIVING_HOURS_ENFORCEMENT=false`); reversível após parecer  
+- **Marco 2:** Termos + Privacidade **bloqueantes** (A3-D07); recibos após A1/A2 + contabilista (A3-D08)
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| A3.1 | Confirmar fontes em índice legal + PDF DL 84/2026 | Fontes localizadas | CONFIRMAR | [`LEGAL_SOURCES_INDEX.md`](legal/LEGAL_SOURCES_INDEX.md) |
-| A3.2 | Ler/interpretar com apoio adequado | Notas artigo→tema | DOCS · EXTERNO | A3.1 |
-| A3.3 | Extrair requisitos operacionais (registo / aviso / enforcement) | Matriz requisito × papel | DOCS | A3.2 |
-| A3.4 | Classificar impacto técnico MVP vs fase 2 | Lista impacto app/ops | DOCS | A3.3 |
-| A3.5 | Determinar se A6 (gates ON) é obrigação do piloto/comercial | Sim/Não + condições — **sem** default Sim | DECISÃO | A3.4 |
-| A3.6 | Brief A6 / produto | Input claro; se Não → A6 fora dos críticos | DOCS | A3.5 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| A3.1 | Confirmar fontes índice + PDF DL 84/2026 | Fontes localizadas | CONFIRMAR | [`LEGAL_SOURCES_INDEX.md`](legal/LEGAL_SOURCES_INDEX.md) | **DONE** |
+| A3.2 | Ler objeto/âmbito DL 84 | Notas Arts. 1.º–2.º | DOCS | A3.1 | **DONE** |
+| A3.3 | Matriz requisitos | Matriz | DOCS | A3.2 | **DONE** |
+| A3.4 | Impacto técnico / ops | Lista; sem inventar features | DOCS | A3.3 | **DONE** |
+| A3.5 | A6 obrigação gates ON? | Indeterminado nas fontes | DECISÃO | A3.4 | **DONE** |
+| A3.6 | Brief A6 + decisões D01–D08 | Acta em `A3_REQUISITOS` §8 | DOCS | A3.5 | **DONE** |
+| A3.7 | Validação jurídica externa (pacote A3-D06) | Parecer mínimo pré-piloto | EXTERNO | A3-D06 | **Por iniciar** |
+| A3.8 | Aplicar A3-D04 no código: driving-hours = tracking/aviso/registo **sem** bloquear online/accept | Comportamento alinhado à decisão; sem claim legal | CÓDIGO · TESTE | A3-D04 | **DONE** (enforcement OFF; warn/record ON; flag reversível) |
+| A3.9 | Arquivar PDFs oficiais TVDE + indexar (`LEGAL-TVDE-00x`) | Fontes no repo | DOCS · EXTERNO | A3-D01 · fonte oficial | **Por iniciar** · **`REQUER PESQUISA/FONTE OFICIAL`** |
 
 ## A4 — Titularidade IP / contas
 
@@ -184,22 +194,23 @@ D0 → A3 → E5 → G3(M1)
 
 ## A6 — Compliance frota (dados → gates)
 
-- **Objectivo:** Dados mínimos; activar gates **só** se A3.5 = Sim.  
+- **Objectivo:** Dados mínimos; activar gates **só** após parecer (A3.7) + decisão explícita.  
 - **IDs:** `S-COMP-01` · `S-COMP-02` · `S-COMP-03` · `S-COMP-05`  
-- **Dependências:** A3  
+- **Dependências:** A3 · validação externa  
 - **Conclusão:** Gates ON testados **ou** A6 explicitamente fora do crítico.  
-- **Canónico OFF até decisão:** [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) (código existe; flag OFF; decisões A–E abertas para ON).
+- **Estado:** **Fora do caminho crítico** — **A3-D03** = OFF até validação jurídica; ver [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) §7–8.  
+- **Canónico OFF:** [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
-| A6.1 | Confirmar estado PF3D: implementação atrás de flag OFF + smokes OFF PASS | Não reabrir “falta código” | CONFIRMAR | `PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md` |
-| A6.2 | Se A3.5=Não: registar A6 fora dos críticos | Acta | DOCS | A3.5 |
-| A6.3 | Auditoria frota piloto (veículos/docs) | Gaps listados | DOCS | A3.5=Sim |
-| A6.4 | Preencher docs mínimos Partner | Frota piloto completa | EXTERNO | A6.3 |
-| A6.5 | Fechar decisões A–E da matriz PF3D-0 ainda abertas | Acta A–E | DECISÃO | A6.1 · A3 |
-| A6.6 | Activar flag staging→prod + smoke | Gates ON só após PASS | CONFIG · TESTE | A6.4 · A6.5 |
+| A6.1 | Confirmar PF3D atrás de flag OFF + smokes OFF PASS | Não reabrir “falta código” | CONFIRMAR | `PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md` |
+| A6.2 | Confirmar A3-D03: A6 fora dos críticos enquanto OFF | Acta | DOCS | A3-D03 |
+| A6.3 | Após parecer A3.7: decidir se gates ON no piloto/comercial | Sim/Não | DECISÃO | A3.7 |
+| A6.4 | Se Sim: auditoria frota + docs mínimos Partner | Frota piloto completa | DOCS · EXTERNO | A6.3 |
+| A6.5 | Se Sim: fechar decisões A–E PF3D-0 ainda abertas | Acta A–E | DECISÃO | A6.1 · A6.3 |
+| A6.6 | Se Sim: activar flag staging→prod + smoke | Gates ON só após PASS | CONFIG · TESTE | A6.4 · A6.5 |
 | A6.7 | UX override/admin (PF3D-4/5) se necessário | OK ou adiado | CÓDIGO | A6.6 |
-| A6.8 | Suspensão automática: só se A3/legal OK | Implementar **ou** fora de escopo | DECISÃO | A3 · A6.6 |
+| A6.8 | Suspensão automática: só se parecer OK | Implementar **ou** fora de escopo | DECISÃO | A3.7 · A6.6 |
 
 ---
 
@@ -338,39 +349,44 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 # CARRIL D — Mobile / Push / Distribuição
 
-## D0 — Definir requisito de entrega mobile
+## D0 — Definir requisito de entrega mobile — **DONE**
 
-- **Objectivo:** Fixar se a entrega inicial é **WEB/PWA** ou **PACKAGE MOBILE** obrigatório.  
+- **Objectivo:** Fixar requisito de entrega mobile por marco.  
 - **IDs:** `S-MOB-01` (gate) · `MOBILE-001`  
 - **Dependências:** —  
-- **Conclusão:** Uma das duas opções registada. **Não tomar esta decisão neste documento** — só estruturar.  
-- **Efeito:**  
-  - **WEB/PWA** → D1–D4/G2 fora dos críticos; ficam fase distribuição.  
-  - **PACKAGE MOBILE** → D1→D2→D3 (+G2) entram nos críticos dos marcos aplicáveis.
+- **Estado:** **DONE** (2026-09-02) — decisão Francisco/Manel  
+- **Decisão registada:** **HÍBRIDO** — WEB/PWA fecha Marco 1; package mobile exigido para piloto/comercial, Android primeiro  
+- **Princípio técnico:** reaproveitar a web-app actual (Capacitor / wrapper equivalente / PWA quando suficiente). **Não** reescrita React Native/native de raiz nesta fase.  
+- **Efeito nos caminhos:**  
+  - **Marco 1:** WEB/PWA; D1/D2/D3/G2 **fora** do crítico.  
+  - **Marco 2:** D1→D2→D3(+G2) **no crítico**, foco **Android**; iOS previsto no carril sem bloquear piloto Android.  
+  - **Marco 3 / D4:** stores/landing conforme necessidade real de distribuição; iOS se ainda em falta.
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| D0.1 | Confirmar estado: sem Capacitor/stores; só intenção MOBILE-001 | Não assumir package | CONFIRMAR | `SETEMBRO_2026_TODO_LIBRARY` MOBILE-001 |
-| D0.2 | Decidir requisito entrega: WEB/PWA **ou** PACKAGE MOBILE | Acta (pendente até sessão) | DECISÃO | D0.1 |
-| D0.3 | Actualizar quais etapas D*/G2 entram em cada caminho crítico | Secção caminhos alinhada | DOCS | D0.2 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| D0.1 | Confirmar estado: sem Capacitor/stores; só intenção MOBILE-001 | Não assumir package | CONFIRMAR | `SETEMBRO_2026_TODO_LIBRARY` MOBILE-001 | **DONE** |
+| D0.2 | Decidir requisito entrega (modelo HÍBRIDO) | Acta Francisco/Manel | DECISÃO | D0.1 | **DONE** |
+| D0.3 | Actualizar caminhos críticos D*/G2 por marco | Secção caminhos alinhada | DOCS | D0.2 | **DONE** |
 
-## D1 — Spike packaging Android/iOS
+## D1 — Spike packaging (Android primeiro)
 
-- **Objectivo:** Escolher PWA/wrapper/Capacitor e provar build.  
+- **Objectivo:** Escolher Capacitor/wrapper/PWA e provar build — **prioridade Android**.  
 - **IDs:** `S-MOB-01` · `MOBILE-001`  
-- **Dependências:** D0 = PACKAGE **ou** trabalho antecipado paralelo (não crítico se WEB/PWA)  
-- **Conclusão:** Caminho técnico escolhido + spike.
+- **Dependências:** D0 **DONE** (HÍBRIDO) — crítico no **Marco 2** (não no M1)  
+- **Conclusão:** Caminho técnico escolhido + spike Android instalável interno.  
+- **Nota iOS:** mesma stack depois; não bloqueia arranque D1 Android.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
-| D1.1 | Comparar PWA vs Capacitor vs wrapper | Matriz | DOCS | D0 |
-| D1.2 | Spike mínimo (1 platform) | Build interno | CÓDIGO | D1.1 |
-| D1.3 | Confirmar/escolher caminho de packaging | Acta técnica | DECISÃO | D1.2 |
+| D1.1 | Comparar Capacitor vs wrapper vs PWA (reuso web-app) | Matriz | DOCS | D0 |
+| D1.2 | Spike mínimo **Android** | Build interno instalável | CÓDIGO | D1.1 |
+| D1.3 | Confirmar caminho de packaging oficial | Acta técnica | DECISÃO | D1.2 |
 
-## D2 — Validação em device
+## D2 — Validação em device (Android primeiro)
 
-- **IDs:** `S-MOB-02` · **Dependências:** D1  
-
+- **IDs:** `S-MOB-02` · **Dependências:** D1 · crítico **Marco 2**  
+- **Foco:** GPS/permissões/background · Waze/Maps/deep links · login/persistência · lifecycle (background/fechada).  
+- **iOS:** mesma checklist depois; não bloqueia PASS Android do piloto.
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
 | D2.1 | Checklist permissões | Lista | DOCS | D1 |
@@ -381,7 +397,7 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 ## D3 — Push notifications
 
-- **IDs:** `S-NOTIF-01` · **Dependências:** D1/D2  
+- **IDs:** `S-NOTIF-01` · **Dependências:** D1/D2 · crítico **Marco 2** (Android primeiro)  
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
@@ -392,7 +408,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 ## D4 — Landing / URL lojas
 
-- **IDs:** `S-MOB-03` · **Dependências:** D2 / store listing  
+- **IDs:** `S-MOB-03` · **Dependências:** necessidade real de distribuição (não automático no M2)  
+- **Nota:** só entra no crítico do Marco 3 se stores/landing forem exigidos para exploração comercial.  
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
@@ -513,7 +530,7 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 ## G2 — Testes em telemóveis reais
 
-- **IDs:** `S-QA-02` · **Dependências:** D2/D3 **se** D0=PACKAGE; senão fora crítico  
+- **IDs:** `S-QA-02` · **Dependências:** D2/D3 · crítico **Marco 2** (matriz **Android** primeiro; iOS depois)  
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
@@ -600,8 +617,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | # | Critério |
 |---|----------|
 | M1.1 | Fluxo 4 papéis em prod PASS (já: Demo Manel 2) |
-| M1.2 | D0 registado (WEB/PWA **ou** PACKAGE) — escopo de distribuição definido |
-| M1.3 | A3 concluída: matriz legal→requisitos→impacto técnico (sem gates ON por defeito) |
+| M1.2 | D0 **DONE** — HÍBRIDO (WEB/PWA fecha M1; package no piloto/comercial, Android primeiro) |
+| M1.3 | A3: matriz + decisões D01–D08 DONE; A3.8 DONE; PARCIAL só por externo/arquivo (A3.7/A3.9); gates OFF; ver [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) |
 | M1.4 | E5: sem stubs 501 órfãos (implementados ou removidos) |
 | M1.5 | Decisões produto existentes confirmadas onde aplicável (pricing híbrido, B2 OFF, PF3D OFF, nav Opção B) — sem flags perigosas acidentais (`ENABLE_DEV_TOOLS=false`) |
 | M1.6 | G3.1 assinado |
@@ -622,10 +639,14 @@ Além de M1:
 | M2.6 | F1 restore drill PASS (recente) |
 | M2.7 | Se B3.2=Não: processo financeiro **manual** documentado e operável |
 | M2.8 | Se B3.2=Sim: B3 smoke split PASS |
-| M2.9 | Se A3.5=Sim: A6 gates no estado exigido + smoke |
-| M2.10 | Se D0=PACKAGE: D1–D3 (+G2) PASS; se WEB/PWA: browser/PWA suficiente documentado |
-| M2.11 | G3.2 assinado |
+| M2.9 | A6 só se parecer + decisão pós-A3.7 exigir gates ON; senão OFF (A3-D03) OK |
+| M2.10 | D1–D3 (+G2) PASS em **Android** (D0 HÍBRIDO); iOS pode estar pendente |
+| M2.11 | **Termos de utilização + Política de Privacidade** publicados/aceites no fluxo (A3-D07) |
+| M2.12 | A3.7 validação jurídica externa mínima (A3-D06) concluída ou riscos residuais **aceitados por escrito** |
+| M2.13 | A3.8 driving-hours alinhado a A3-D04 (sem bloqueio automático) — **DONE** (enforcement OFF; rever após A3.7) |
+| M2.14 | G3.2 assinado |
 
+*Recibos/faturação (A3-D08):* **não** bloqueiam M2 por escolha de emissor nesta fase — fecham-se com contabilista **após A1/A2**; até lá processo provisório pode ser documentado sem hardcode de emissor.
 ## MARCO 3 — APP PRONTA PARA EXPLORAÇÃO COMERCIAL
 
 Além de M2:
@@ -637,7 +658,7 @@ Além de M2:
 | M3.3 | Se exige payout automático: B4 PASS; senão processo financeiro comercial documentado |
 | M3.4 | E1 líquido + gaps Driver P1 do piloto comercial; E4 copy Partner honesta |
 | M3.5 | Compliance: A6 no estado que negócio/legal exigir para exploração |
-| M3.6 | Distribuição: se D0/negócio exigem stores/package, D1–D4 + G2 PASS |
+| M3.6 | Distribuição: D4/stores conforme necessidade real; iOS do carril D concluído se exploração o exigir |
 | M3.7 | B5 resolvido (integrado **ou** explicitamente fase 2 em H) |
 | M3.8 | Ops: on-call + canais incidente; G3.3–G3.5 assinados |
 
@@ -645,7 +666,7 @@ Além de M2:
 
 # PÓS-ENTREGA / BACKLOG FUTURO
 
-Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual, D* se D0=WEB/PWA).
+Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
 
 **Não** reabre Demo Manel 2 / retoma como pendência.
 

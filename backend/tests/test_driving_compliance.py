@@ -109,7 +109,8 @@ def test_active_seconds_sums_segments_today() -> None:
         db.close()
 
 
-def test_rest_until_blocks_even_if_daily_sum_low() -> None:
+def test_rest_until_sets_limit_reached_without_enforcement_by_default() -> None:
+    """A3-D04: rest_until → limit_reached; blocked_accept só com ENFORCEMENT."""
     db = SessionLocal()
     try:
         uid = _make_driver(db)
@@ -118,10 +119,156 @@ def test_rest_until_blocks_even_if_daily_sum_low() -> None:
         driver_row.driving_rest_until = until
         db.commit()
 
+        from app.core.config import settings
+
+        assert settings.ENABLE_DRIVING_HOURS_ENFORCEMENT is False
         snap = driver_compliance_snapshot(db, uid, now_utc=datetime.now(timezone.utc))
-        assert snap["blocked_accept"] is True
+        assert snap["limit_reached"] is True
+        assert snap["blocked_accept"] is False
+        assert snap["enforcement_enabled"] is False
 
         snap2 = driver_compliance_snapshot(db, uid, now_utc=until + timedelta(seconds=1))
+        assert snap2["limit_reached"] is False
         assert snap2["blocked_accept"] is False
     finally:
         db.close()
+
+
+def test_enforcement_on_blocks_accept_when_limit_reached(monkeypatch) -> None:
+    from app.core.config import settings
+    from app.services.driving_compliance import assert_driver_can_accept_by_driving_hours
+    from fastapi import HTTPException
+
+    monkeypatch.setattr(settings, "ENABLE_DRIVING_HOURS_ENFORCEMENT", True)
+    db = SessionLocal()
+    try:
+        uid = _make_driver(db)
+        driver_row = db.execute(select(Driver).where(Driver.user_id == uid)).scalar_one()
+        driver_row.driving_rest_until = datetime.now(timezone.utc) + timedelta(hours=2)
+        db.commit()
+
+        snap = driver_compliance_snapshot(db, uid)
+        assert snap["limit_reached"] is True
+        assert snap["blocked_accept"] is True
+        try:
+            assert_driver_can_accept_by_driving_hours(db, uid)
+            raise AssertionError("expected HTTPException")
+        except HTTPException as exc:
+            assert exc.status_code == 409
+            assert exc.detail == "driving_hours_blocked"
+    finally:
+        db.close()
+
+
+def test_enforcement_off_allows_accept_when_limit_reached(monkeypatch) -> None:
+    from app.core.config import settings
+    from app.services.driving_compliance import assert_driver_can_accept_by_driving_hours
+
+    monkeypatch.setattr(settings, "ENABLE_DRIVING_HOURS_ENFORCEMENT", False)
+    db = SessionLocal()
+    try:
+        uid = _make_driver(db)
+        driver_row = db.execute(select(Driver).where(Driver.user_id == uid)).scalar_one()
+        driver_row.driving_rest_until = datetime.now(timezone.utc) + timedelta(hours=2)
+        db.commit()
+
+        snap = driver_compliance_snapshot(db, uid)
+        assert snap["limit_reached"] is True
+        assert snap["blocked_accept"] is False
+        assert_driver_can_accept_by_driving_hours(db, uid)  # no raise
+    finally:
+        db.close()
+
+
+def test_apply_availability_does_not_force_offline_without_enforcement(monkeypatch) -> None:
+    from app.core.config import settings
+    from app.services.driving_compliance import apply_availability_after_trip_ends_with_compliance
+
+    monkeypatch.setattr(settings, "ENABLE_DRIVING_HOURS_ENFORCEMENT", False)
+    db = SessionLocal()
+    try:
+        uid = _make_driver(db)
+        driver_row = db.execute(select(Driver).where(Driver.user_id == uid)).scalar_one()
+        driver_row.driving_rest_until = datetime.now(timezone.utc) + timedelta(hours=2)
+        driver_row.is_available = False
+        db.commit()
+
+        apply_availability_after_trip_ends_with_compliance(db, str(uid))
+        db.commit()
+        db.refresh(driver_row)
+        assert driver_row.is_available is True
+    finally:
+        db.close()
+
+
+def test_go_online_allows_when_limit_reached_and_enforcement_off(monkeypatch) -> None:
+    """A3.8: POST /online não devolve 409 driving_hours_blocked com enforcement OFF."""
+    import asyncio
+
+    from app.api.deps import UserContext
+    from app.api.routers import driver_status
+    from app.core.config import settings
+    from app.models.enums import Role
+
+    monkeypatch.setattr(settings, "ENABLE_DRIVING_HOURS_ENFORCEMENT", False)
+    monkeypatch.setattr(settings, "ENABLE_VEHICLE_COMPLIANCE_GATES", False)
+    db = SessionLocal()
+    try:
+        uid = _make_driver(db)
+        driver_row = db.execute(select(Driver).where(Driver.user_id == uid)).scalar_one()
+        driver_row.driving_rest_until = datetime.now(timezone.utc) + timedelta(hours=2)
+        driver_row.is_available = False
+        db.commit()
+
+        snap = driver_compliance_snapshot(db, uid)
+        assert snap["limit_reached"] is True
+        assert snap["blocked_accept"] is False
+
+        user = UserContext(user_id=str(uid), role=Role.driver)
+        result = asyncio.run(driver_status.go_online(user=user, db=db))
+        assert result["is_available"] is True
+        db.refresh(driver_row)
+        assert driver_row.is_available is True
+    finally:
+        db.close()
+
+
+def test_go_online_blocks_when_enforcement_on(monkeypatch) -> None:
+    import asyncio
+
+    from app.api.deps import UserContext
+    from app.api.routers import driver_status
+    from app.core.config import settings
+    from app.models.enums import Role
+    from fastapi import HTTPException
+
+    monkeypatch.setattr(settings, "ENABLE_DRIVING_HOURS_ENFORCEMENT", True)
+    monkeypatch.setattr(settings, "ENABLE_VEHICLE_COMPLIANCE_GATES", False)
+    db = SessionLocal()
+    try:
+        uid = _make_driver(db)
+        driver_row = db.execute(select(Driver).where(Driver.user_id == uid)).scalar_one()
+        driver_row.driving_rest_until = datetime.now(timezone.utc) + timedelta(hours=2)
+        driver_row.is_available = False
+        db.commit()
+
+        user = UserContext(user_id=str(uid), role=Role.driver)
+        try:
+            asyncio.run(driver_status.go_online(user=user, db=db))
+            raise AssertionError("expected HTTPException")
+        except HTTPException as exc:
+            assert exc.status_code == 409
+            assert exc.detail == "driving_hours_blocked"
+        db.refresh(driver_row)
+        assert driver_row.is_available is False
+    finally:
+        db.close()
+
+
+def test_vehicle_compliance_gates_flag_unchanged_by_a38() -> None:
+    """A3.8 não relaxa PF3D: ENABLE_VEHICLE_COMPLIANCE_GATES permanece default OFF."""
+    from app.core.config import settings
+
+    assert settings.ENABLE_VEHICLE_COMPLIANCE_GATES is False
+    assert settings.ENABLE_DRIVING_HOURS_COMPLIANCE is True
+    assert settings.ENABLE_DRIVING_HOURS_ENFORCEMENT is False
