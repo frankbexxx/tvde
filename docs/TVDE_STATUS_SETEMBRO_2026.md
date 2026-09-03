@@ -1,13 +1,15 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-**Data:** 2026-09-01  
-**Tip `main`:** `b1e2b7d` (`origin/main` alinhada · working tree limpa)  
-**Modo:** retoma pós-férias · análise **READ-ONLY** (sem implementação nesta entrega)  
-**Fonte de verdade:** código actual do repositório (`backend/`, `web-app/src/`, workflows, testes)  
+**Data:** 2026-09-03 (actualização executiva G3/M1) · base analítica 2026-09-01  
+**Tip `main`:** `e556a3b` (`origin/main` alinhada)  
+**Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03)  
+**Modo:** pós-M1 · próximo caminho crítico = **Marco 2 (piloto real)**  
+**Fonte de verdade:** código actual do repositório (`backend/`, `web-app/src/`, workflows, testes) + roadmap canónico  
 **Docs antigos (Maio e anteriores):** só pistas — confrontados com código; itens já implementados marcados **STALE / JÁ RESOLVIDO** e **excluídos** da lista de trabalho
 
 Relacionado (contexto Setembro, não substitui este relatório):
 
+- [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) — canónico de execução + marcos
 - [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
 - [`TODOdoDIA.md`](../TODOdoDIA.md)
 - [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](ops/DEMO_MANEL_2_SETEMBRO.md)
@@ -18,11 +20,11 @@ Relacionado (contexto Setembro, não substitui este relatório):
 
 | Área | Estado | Nota curta |
 |------|--------|------------|
-| **Geral** | **PARCIAL** | Quatro papéis demonstráveis em produção; dinheiro real, compliance ON, mobile stores e B2 ainda fora |
+| **Geral** | **M1 DONE** / **PARCIAL** comercial | Quatro papéis OK em prod; **M1 técnico fechado**; dinheiro real, SMS, mobile package, Connect = **M2+** |
 | **Passenger** | **OK** | Pedido → viagem → rating → histórico; pagamento UI depende de flags/`client_secret` |
-| **Driver** | **OK** | Online/ofertas/ciclo completo/zonas/docs/inbox/earnings; gates docs OFF por defeito |
+| **Driver** | **OK** | Online/ofertas/ciclo completo/zonas/docs/inbox/earnings; gates docs OFF; driving-hours warn+record (A3.8) |
 | **Partner/Frota** | **OK** | Frota, mapa, veículos/docs, trips/export, mensagens, métricas |
-| **Admin** | **OK** | Agora / trips / people / fleet / system; stubs 501 approve/reject sem UI |
+| **Admin** | **OK** | Agora / trips / people / fleet / system; **approve/reject drivers implementado (E5)** |
 | **Backend/API** | **OK** | FastAPI com routers auth/passenger/driver/partner/admin/matching/cron/webhooks |
 | **Autenticação** | **PARCIAL** | OTP + password + Google (passenger, se env); **OTP sem SMS real** (log/print / OTP fixo em non-prod) |
 | **Pagamentos** | **PARCIAL** / **BLOQUEADOR** comercial | Authorize/capture + webhook + reconcile; **mock em política de piloto**; **sem Stripe Connect/split/payouts** |
@@ -30,7 +32,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Localização/mapas** | **OK** | MapLibre/MapTiler, geocode, OSRM, driver-location; mock GPS via `?demo=1&sim=1` |
 | **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI (backend / frontend / web-e2e); staging OAuth e restore drills manuais |
 | **Testes/CI** | **OK** | ~74 testes backend + e2e Playwright (flows 4 papéis, partner, admin); skips sobretudo env |
-| **Docs/operação** | **PARCIAL** | Biblioteca Setembro + runbooks ricos; painel TODOdoDIA desactualizado vs tip `b1e2b7d` |
+| **Docs/operação** | **PARCIAL** | Biblioteca Setembro + runbooks; tip `e556a3b` · M1 DONE no roadmap |
 
 ---
 
@@ -39,7 +41,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 ### Método
 
 Pesquisado em código/testes/scripts/workflows/docs vivos: `TODO`/`FIXME`/`HACK`/`501`/`NotImplemented`/flags OFF/mocks/stubs/skip/`queued`/Connect/PF3D/B2.  
-**Quase zero** `TODO`/`FIXME` literais em `backend/**/*.py` e `web-app/src/**` — a dívida está em **flags**, **stubs 501**, **schema inerte**, **política ops** e **biblioteca Setembro**.
+**Quase zero** `TODO`/`FIXME` literais em `backend/**/*.py` e `web-app/src/**` — a dívida está em **flags**, **schema inerte (B2)**, **política ops** e **biblioteca Setembro**. Stubs Admin `501` approve/reject = **STALE** (E5 DONE #544).
 
 ### Exemplos STALE / JÁ RESOLVIDO (não entram na lista final)
 
@@ -114,7 +116,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | **S-DRV-03** | Driver | Gaps menu/rendimentos/historial/categorias vs PDF Manel | P1 — Necessário para fechar produto | Manel Q6 |
 | **S-PAX-01** | Passenger | Copy/clareza pagamento real vs mock na demo comercial | P1 — Necessário para fechar produto | S-PAY-01 |
 | **S-PRT-01** | Partner/Frota | Payouts/receitas Partner ainda não Stripe (copy honesta) | P1 — Necessário para fechar produto | S-PAY-03 |
-| **S-ADM-01** | Admin | `POST …/drivers/{id}/approve\|reject` → **501** (stubs) | P2 — Melhoria importante | Remover ou implementar |
+| **S-ADM-01** | Admin | `POST …/drivers/{id}/approve\|reject` | **DONE** (E5 · #544) | — |
 | **S-ADM-02** | Admin | Rastos R-ADMIN-ORPHAN / R-AGORA-SNAP / reassign copy | P3 — Pós-MVP | — |
 
 ### Negócio / marca / IP / demo
@@ -148,26 +150,27 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | Tema | Resultado |
 |------|-----------|
-| Funcionalidades incompletas | B2 (só schema); Connect; SMS; push; MB WAY; approve/reject 501 |
+| Funcionalidades incompletas | B2 (só schema); Connect; SMS; push; MB WAY |
 | Mocks/placeholders expostos | `STRIPE_MOCK` política piloto; `pi_mock_*`; GPS `?demo&sim`; OTP fixo non-prod |
-| Código morto a remover | Ramos bottom-nav legacy; DebugMapPage; 501 sem UI — limpeza P3/P2 |
+| Código morto a remover | Ramos bottom-nav legacy; DebugMapPage — limpeza P3 |
 | Gaps FE/BE | UI pagamento depende de flags; Partner revenue sem payout real; B2 sem UI |
 | Stripe | Authorize/capture/webhook OK em código; **live + Connect pendentes** |
 | Persistência estados | ActiveTrip restore Pax/Driver **OK** (código + smoke) |
-| Admin | Operacional OK; stubs 501; não é dispatcher do dia |
+| Admin | Operacional OK; approve/reject drivers **DONE** (E5); não é dispatcher do dia |
 | Partner/Frota | Operacional OK; compliance gates OFF |
 | Docs/KYC | Superfícies existem; gates OFF; OCR fora de scope |
 | Notificações | Inbox Partner↔Driver **OK**; **push/SMS real PENDENTE** |
-| Segurança | Auth JWT/OTP; Google parcial; compliance driving hours ON por default |
+| Segurança | Auth JWT/OTP; Google parcial; driving-hours compliance ON + enforcement OFF (A3.8) |
 | Observabilidade | Sentry FE condicional; health Admin |
 | Backups/restore | Runbook `TVDE_BKP_RUNBOOK.md` — execução humana recorrente |
 | Staging/produção | Prod Render live; staging OAuth/smoke ainda pendente |
 | E2E | Playwright presente (flows principais) |
-| Mobile | Sem Capacitor/stores — só item biblioteca |
-| Deploy | CI verde histórico em PRs docs; deploy Render existente |
+| Mobile | Sem Capacitor/stores — D0 HÍBRIDO; package = M2 |
+| Deploy | CI verde em merges M1 (#543/#544); deploy Render existente |
 | Dados/config prod | Secrets fora repo; Stripe live não ligado |
-| Docs ops | Ricos; alinhar tip painel pós-retoma |
-| Preparação comercial | Bloqueada por live pay + SMS + mobile + validação negócio/legal |
+| Docs ops | Ricos; tip alinhado `e556a3b` / M1 DONE |
+| Preparação comercial / piloto real | **M2** — live pay + SMS + mobile Android + validação negócio/legal |
+| **Marco 1 técnico** | **DONE** (G3.1 2026-09-03) |
 
 ---
 
@@ -273,8 +276,8 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 - **Depende de:** ETAPA 05 (PI) · decisão Francisco
 
 ### ETAPA 14 — Hardening Admin / matching / higiene
-- **Objectivo:** Remover 501 ou implementar; redispatch; limpar mocks arriscados e dead code.
-- **IDs:** S-ADM-01 · S-ADM-02 · S-MATCH-01 · S-HYG-01 · S-HYG-02 · S-AUTH-02
+- **Objectivo:** Redispatch; limpar mocks arriscados e dead code (S-ADM-01 approve/reject = **DONE** E5).
+- **IDs:** S-ADM-02 · S-MATCH-01 · S-HYG-01 · S-HYG-02 · S-AUTH-02
 - **Depende de:** Núcleo comercial (ETAPAS 05–06)
 
 ### ETAPA 15 — Infra, backup, staging, QA comercial
@@ -307,4 +310,4 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 
 ---
 
-**Frase:** O produto dos quatro papéis está maduro para demo; o caminho até “terminado para operação” é sobretudo **dinheiro real, auth SMS, mobile/push, compliance e validação económico-legal** — não reescrever as apps.
+**Frase:** **M1 técnico DONE.** O produto dos quatro papéis está maduro em WEB/PWA; o caminho até piloto/operação real (**M2**) é sobretudo **dinheiro real, auth SMS, mobile/push Android, compliance/validação económico-legal** — não reescrever as apps.
