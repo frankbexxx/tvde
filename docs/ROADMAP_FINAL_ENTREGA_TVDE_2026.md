@@ -25,7 +25,7 @@
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · B5 Métodos PT |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 Landing |
-| **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · E5 Admin stubs |
+| **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
 | **F** Infra / Segurança / Operação | F1 Restore drill · F2 Staging · F3 Sentry · F4 Higiene mock GPS |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
 | **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
@@ -54,10 +54,10 @@ Não duplicar etapas — só indicar quais entram em cada marco. Condicionais en
 ## CAMINHO CRÍTICO — APP TECNICAMENTE CONCLUÍDA (Marco 1)
 
 ```
-D0(DONE) → A3(PARCIAL) → E5 → G3(M1)
+D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1)
 ```
 
-**Etapas:** D0 (**DONE**) · A3 (**PARCIAL** — D01–D08 DONE; A3.8 **DONE**; A3.7/A3.9 pendentes) · E5 · G3 *(verificação M1)*  
+**Etapas:** D0 (**DONE**) · A3 (**PARCIAL** — D01–D08 DONE; A3.8 **DONE**; A3.7/A3.9 pendentes) · E5 (**DONE**) · G3 *(verificação M1)*  
 
 *WEB/PWA suficiente. **D1/D2/D3/G2 não entram no Marco 1.** A6 **fora** do crítico (A3-D03 OFF). Termos/Privacidade **não** bloqueiam M1 (A3-D07). Não exige live pay, SMS, Connect, package mobile nem gates ON.*
 
@@ -166,7 +166,7 @@ D0(DONE) → A3(PARCIAL) → E5 → G3(M1)
 ## A4 — Titularidade IP / contas
 
 - **Objectivo:** Inventário titularidade código/design/marca/contas/domínios.  
-- **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02`  
+- **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02` · *reminder* [`SEP-IP-05`](product/SETEMBRO_2026_TODO_LIBRARY.md) (OXS/VAMULÁ housekeeping — **não agora**)  
 - **Dependências:** —  
 - **Conclusão:** Inventário assinado por Francisco (e Manel se aplicável).
 
@@ -464,15 +464,23 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | E4.1 | Auditar copy vs payout real/manual | Lista | DOCS | B3.3 ou B4 |
 | E4.2 | Corrigir UI | PASS visual | CÓDIGO | E4.1 |
 
-## E5 — Admin approve/reject stubs
+## E5 — Admin approve/reject stubs — **DONE**
 
 - **IDs:** `S-ADM-01`  
+- **Estado:** **DONE** (2026-09-03) — E5.1 = **A implementar**  
+- **Comportamento:** `POST /admin/drivers/{id}/approve|reject`  
+  - `pending|rejected → approved` · `pending|approved → rejected`  
+  - estado actual repetido = **idempotente** (sem audit extra)  
+  - transição impossível → `409` · inexistente → `404` · não-admin → `403`  
+  - audit `admin.driver_approve` / `admin.driver_reject` só com mudança real  
+- **Fora de âmbito:** sem UI Admin nova; Partner frota/docs inalterados; PF3D inalterado  
+- **Nota:** FE Admin **não** chama estes endpoints (API operacional + fecho de stubs 501)
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| E5.1 | Decidir: implementar vs remover 501 | Acta | DECISÃO | — |
-| E5.2 | Código conforme | Sem 501 morto | CÓDIGO | E5.1 |
-| E5.3 | Smoke Admin | PASS | TESTE | E5.2 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| E5.1 | Decidir: implementar vs remover 501 | Acta = **A implementar** | DECISÃO | — | **DONE** |
+| E5.2 | Código conforme | Sem 501 nestas rotas | CÓDIGO | E5.1 | **DONE** |
+| E5.3 | Testes Admin approve/reject | PASS | TESTE | E5.2 | **DONE** |
 
 ---
 
@@ -619,7 +627,7 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | M1.1 | Fluxo 4 papéis em prod PASS (já: Demo Manel 2) |
 | M1.2 | D0 **DONE** — HÍBRIDO (WEB/PWA fecha M1; package no piloto/comercial, Android primeiro) |
 | M1.3 | A3: matriz + decisões D01–D08 DONE; A3.8 DONE; PARCIAL só por externo/arquivo (A3.7/A3.9); gates OFF; ver [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) |
-| M1.4 | E5: sem stubs 501 órfãos (implementados ou removidos) |
+| M1.4 | E5 **DONE**: `POST /admin/drivers/{id}/approve|reject` implementados (sem 501); ver secção E5 |
 | M1.5 | Decisões produto existentes confirmadas onde aplicável (pricing híbrido, B2 OFF, PF3D OFF, nav Opção B) — sem flags perigosas acidentais (`ENABLE_DEV_TOOLS=false`) |
 | M1.6 | G3.1 assinado |
 
