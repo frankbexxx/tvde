@@ -77,6 +77,7 @@ from app.services.partners_admin import (
     unassign_driver_from_partner,
 )
 from app.services.admin_audit import record_admin_action
+from app.services.admin_driver_status import set_driver_status_admin
 from app.services.admin_payment_reconciliation import (
     close_completed_processing_without_pi,
     close_mock_processing_payments,
@@ -1174,22 +1175,32 @@ async def system_health(
 async def approve_driver(
     driver_id: str,
     user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
 ) -> DriverStatusResponse:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented",
+    """Aprova motorista: pending|rejected → approved (idempotente se já approved)."""
+    driver = set_driver_status_admin(
+        db,
+        driver_id=driver_id,
+        target=DriverStatus.approved,
+        actor_user_id=user.user_id,
     )
+    return DriverStatusResponse(driver_id=str(driver.user_id), status=driver.status)
 
 
 @router.post("/drivers/{driver_id}/reject", response_model=DriverStatusResponse)
 async def reject_driver(
     driver_id: str,
     user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
 ) -> DriverStatusResponse:
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented",
+    """Rejeita motorista: pending|approved → rejected (idempotente se já rejected)."""
+    driver = set_driver_status_admin(
+        db,
+        driver_id=driver_id,
+        target=DriverStatus.rejected,
+        actor_user_id=user.user_id,
     )
+    return DriverStatusResponse(driver_id=str(driver.user_id), status=driver.status)
 
 
 @router.get("/trips/active", response_model=List[TripActiveItem])
