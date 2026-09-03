@@ -9,6 +9,7 @@
 | Retoma operacional (ETAPA 01 · `S-OPS-01`) | **DONE** 2026-09-01 |
 | Demo Manel 2 (ETAPA 02 · `S-DEM-01`) | **DONE** 2026-09-01 · DEMO PASS prod |
 | 4 papéis · fluxo viagem principal | **VALIDADO** em produção |
+| **M1 — APP TECNICAMENTE CONCLUÍDA** | **DONE** 2026-09-03 · G3.1 PASS · tip `e556a3b` |
 
 **Como usar:** executar um passo → marcar `DONE` → seguinte.  
 **Tipos:** `CONFIRMAR` · `DECISÃO` · `DOCS` · `CONFIG` · `CÓDIGO` · `TESTE` · `EXTERNO`.
@@ -51,17 +52,19 @@
 
 Não duplicar etapas — só indicar quais entram em cada marco. Condicionais entre parênteses.
 
-## CAMINHO CRÍTICO — APP TECNICAMENTE CONCLUÍDA (Marco 1)
+## CAMINHO CRÍTICO — APP TECNICAMENTE CONCLUÍDA (Marco 1) — **DONE**
 
 ```
-D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1)
+D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 ```
 
-**Etapas:** D0 (**DONE**) · A3 (**PARCIAL** — D01–D08 DONE; A3.8 **DONE**; A3.7/A3.9 pendentes) · E5 (**DONE**) · G3 *(verificação M1)*  
+**Etapas:** D0 (**DONE**) · A3 (**PARCIAL** — suficiente para M1; A3.7/A3.9 → M2) · E5 (**DONE**) · G3.1 (**DONE** 2026-09-03)  
 
 *WEB/PWA suficiente. **D1/D2/D3/G2 não entram no Marco 1.** A6 **fora** do crítico (A3-D03 OFF). Termos/Privacidade **não** bloqueiam M1 (A3-D07). Não exige live pay, SMS, Connect, package mobile nem gates ON.*
 
 *Critério M1.3:* decisões A3 internas fechadas; parecer externo **não** bloqueia fecho técnico M1 enquanto gates/driving-hours bloqueante forem tratados conforme A3-D03/D04 (**A3.8 DONE** — enforcement OFF).
+
+**Acta G3.1 (2026-09-03):** tip `e556a3b` · `main` = `origin/main` · zero `501` backend · CI recente PASS (#543/#544) · Demo Manel 2 PASS · flags default seguras (B2/PF3D/enforcement OFF; `ENABLE_DEV_TOOLS=false`).
 ## CAMINHO CRÍTICO — PILOTO REAL (Marco 2)
 
 ```
@@ -551,13 +554,13 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 - **Objectivo:** Declarar M1 / M2 / M3 sem “excepção escrita” a fingir conclusão técnica.  
 - **Dependências:** caminhos críticos respectivos  
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| G3.1 | Checklist **Marco 1** | Todos critérios M1 PASS | TESTE · DOCS | crítico M1 |
-| G3.2 | Checklist **Marco 2** | Todos critérios M2 PASS | TESTE · DOCS | M1 · crítico M2 |
-| G3.3 | Checklist **Marco 3** | Todos critérios M3 PASS | DECISÃO · DOCS | M2 · crítico M3 |
-| G3.4 | Acta (data, tip SHA, marco atingido, IN/OUT) | Documento | DOCS | G3.1–G3.3 |
-| G3.5 | Comunicar Manel/ops | Expectativas alinhadas | DOCS | G3.4 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| G3.1 | Checklist **Marco 1** | Todos critérios M1 PASS | TESTE · DOCS | crítico M1 | **DONE** 2026-09-03 · tip `e556a3b` |
+| G3.2 | Checklist **Marco 2** | Todos critérios M2 PASS | TESTE · DOCS | M1 · crítico M2 | Por iniciar |
+| G3.3 | Checklist **Marco 3** | Todos critérios M3 PASS | DECISÃO · DOCS | M2 · crítico M3 | Por iniciar |
+| G3.4 | Acta (data, tip SHA, marco atingido, IN/OUT) | Documento | DOCS | G3.1–G3.3 | **PARCIAL** — acta M1 em caminho crítico M1 acima; M2/M3 TBD |
+| G3.5 | Comunicar Manel/ops | Expectativas alinhadas | DOCS | G3.4 | Por iniciar (M1) |
 
 ---
 
@@ -620,16 +623,16 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 **Regra:** uma “excepção” ou processo manual **não** conta para Marco 1. Coloca-se no marco onde a alternativa é aceite (tipicamente M2/M3).
 
-## MARCO 1 — APP TECNICAMENTE CONCLUÍDA
+## MARCO 1 — APP TECNICAMENTE CONCLUÍDA — **DONE** (2026-09-03)
 
-| # | Critério |
-|---|----------|
-| M1.1 | Fluxo 4 papéis em prod PASS (já: Demo Manel 2) |
-| M1.2 | D0 **DONE** — HÍBRIDO (WEB/PWA fecha M1; package no piloto/comercial, Android primeiro) |
-| M1.3 | A3: matriz + decisões D01–D08 DONE; A3.8 DONE; PARCIAL só por externo/arquivo (A3.7/A3.9); gates OFF; ver [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) |
-| M1.4 | E5 **DONE**: `POST /admin/drivers/{id}/approve|reject` implementados (sem 501); ver secção E5 |
-| M1.5 | Decisões produto existentes confirmadas onde aplicável (pricing híbrido, B2 OFF, PF3D OFF, nav Opção B) — sem flags perigosas acidentais (`ENABLE_DEV_TOOLS=false`) |
-| M1.6 | G3.1 assinado |
+| # | Critério | Estado |
+|---|----------|--------|
+| M1.1 | Fluxo 4 papéis em prod PASS (já: Demo Manel 2) | **PASS** |
+| M1.2 | D0 **DONE** — HÍBRIDO (WEB/PWA fecha M1; package no piloto/comercial, Android primeiro) | **PASS** |
+| M1.3 | A3: matriz + decisões D01–D08 DONE; A3.8 DONE; PARCIAL só por externo/arquivo (A3.7/A3.9); gates OFF; ver [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) | **PASS** |
+| M1.4 | E5 **DONE**: `POST /admin/drivers/{id}/approve|reject` implementados (sem 501); ver secção E5 | **PASS** |
+| M1.5 | Decisões produto existentes confirmadas onde aplicável (pricing híbrido, B2 OFF, PF3D OFF, nav Opção B) — sem flags perigosas acidentais (`ENABLE_DEV_TOOLS=false`) | **PASS** |
+| M1.6 | G3.1 assinado | **PASS** |
 
 *Não exige:* SMS prod, Stripe live, Connect, payouts, package/push, gates ON.
 
