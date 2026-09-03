@@ -22,7 +22,7 @@
 
 | Carril | Etapas |
 |--------|--------|
-| **A** Negócio / Legal / Compliance | A1 · A2 · **A3 PARCIAL** (D01–D08 DONE) · A4 · A5 · A6 *(fora crítico; OFF)* |
+| **A** Negócio / Legal / Compliance | **A1 PARCIAL** (A1.1 DONE) · A2 · **A3 PARCIAL** (D01–D08 DONE) · A4 · A5 · A6 *(fora crítico; OFF)* |
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · B5 Métodos PT |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 Landing |
@@ -71,14 +71,14 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 [M1] → A1 → A2 → C1 → B1 → E3 → G1 → F1
          → D1 → D2 → D3 → G2   (foco Android; iOS pode seguir depois)
          → G3(M2)
-         ↘ (B3) se piloto exigir split automático
+         ↘ (B3)/(B4) **fora crítico M2** nesta fase (**A1-D05/D06**)
          ↘ (A6) se A3 exigir enforcement no piloto
 ```
 
 **Etapas base:** A1 · A2 · C1 · B1 · E3 · G1 · F1 · **D1 · D2 · D3 · G2** · G3 → **12** (+ M1)  
-**Condicionais:** B3 · A6  
+**Condicionais:** B3 · B4 *(adiados pós A1-D05/D06)* · A6  
 
-*Package mobile **exigido** no piloto (D0 HÍBRIDO). Prioridade **Android**. iOS no carril D sem bloquear início do piloto Android. Processo financeiro **manual** válido no piloto → B3/B4 **não** obrigatórios aqui. D4/stores só se distribuição o exigir.*
+*Package mobile **exigido** no piloto (D0 HÍBRIDO). Prioridade **Android**. iOS no carril D sem bloquear início do piloto Android. Processo financeiro **manual semanal ao Partner** (**A1-D03…D06**) → **B3/B4 fora** do crítico M2 nesta fase. D4/stores só se distribuição o exigir.*
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
@@ -111,20 +111,22 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 
 # CARRIL A — Negócio / Legal / Compliance
 
-## A1 — Validar modelo económico
+## A1 — Validar modelo económico — **PARCIAL**
 
 - **Objectivo:** Validar hipóteses custos/comissões/simulador (não inventar números).  
 - **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001`  
 - **Dependências:** —  
-- **Conclusão:** Francisco+Manel(+contabilista) registam aceite / correcções por escrito.  
+- **Estado:** **PARCIAL** (2026-09-03) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 EM CURSO** (fixo vs variável; Manel ≠ orçamento) · A1.3–A1.4 abertos · código pricing/cancel ainda legado  
+- **Entrega levantamento:** [`A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md)  
+- **Conclusão (quando fechado):** Francisco+Manel(+contabilista) registam aceite / correcções por escrito.  
 - **Docs base (hipóteses, não aprovadas):** [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| A1.1 | Confirmar pacote dos 3 docs business no repo | Pacote de leitura pronto | CONFIRMAR | — |
-| A1.2 | Sessão validação custos mensais vs realidade | Lista: aceite / rejeitado / a rever | DECISÃO | A1.1 |
-| A1.3 | Sessão margem/viagem + GTM 36m | Simulador válido ou a corrigir | DECISÃO | A1.2 |
-| A1.4 | Acta curta no repo (só resultados) | Fecho A1 sem % inventados | DOCS | A1.3 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| A1.1 | Confirmar pacote dos 3 docs business + levantamento matriz | Matriz em `A1_MODELO_ECONOMICO…` | CONFIRMAR · DOCS | — | **DONE** |
+| A1.2 | Modelo custos: fixos vs variáveis; validar rubricas vs realidade (sem baseline 1–2,5 k€) | Lista rubricas + valores reais / `A CONFIRMAR` | DECISÃO · DOCS | A1.1 · **A1-D10** | **EM CURSO** |
+| A1.3 | Sessão margem/viagem + GTM 36m | Simulador válido ou a corrigir | DECISÃO | A1.2 | Por iniciar |
+| A1.4 | Acta curta no repo (só resultados) | Fecho A1 sem % inventados | DOCS | A1.3 | Por iniciar |
 
 ## A2 — Fechar comissão e tarifário
 
@@ -138,9 +140,9 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 |-------|--------|-------------------|------|------|
 | A2.1 | Confirmar hipóteses de comissão no doc pricing Manel (ex. 15% = hipótese) | Ponto de partida explícito | CONFIRMAR | A1 · `MANEL_PRICING_COMMISSION_MODEL_2026-08.md` |
 | A2.2 | Confirmar modelo híbrido estimativa/final | Alinhado a produto actual | CONFIRMAR | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
-| A2.3 | Fechar % comissão piloto (adoptar/alterar hipótese) | % aprovada | DECISÃO | A2.1 |
-| A2.4 | Fechar beneficiário split (motorista vs partner) + cadência payout pretendida | Resposta Q3 | DECISÃO | A2.3 · `MANEL_INPUTS` Q3 |
-| A2.5 | Fechar tarifário mínimo piloto | Tabela/regras aprovadas | DECISÃO | A2.3 |
+| A2.3 | Fechar % comissão piloto (adoptar/alterar hipótese) | % aprovada — **pré-fechado A1-D01 = 15%** (confirmar/publicar em A2) | DECISÃO | A2.1 |
+| A2.4 | Fechar beneficiário split (motorista vs partner) + cadência payout pretendida | **Pré-fechado:** Partner (**A1-D03**) · cadência **semanal** (**A1-D04**) — confirmar/publicar em A2 | DECISÃO | A2.3 · `MANEL_INPUTS` Q3 |
+| A2.5 | Fechar tarifário mínimo piloto | Tabela = grelha Manel (**A1-D07**) — publicar + alinhar código | DECISÃO · CÓDIGO | A2.3 · A1-D07 |
 | A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 |
 
 ## A3 — Validar requisitos legais TVDE aplicáveis — **PARCIAL**
@@ -268,13 +270,14 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 - **Objectivo:** Split automático conforme A2 — **só crítico se modelo exigir automatização**.  
 - **IDs:** `S-PAY-02` · `SEP-PAY-01`  
 - **Dependências:** B1 · A2  
-- **Alternativa piloto:** liquidação manual/legalmente válida documentada → B3 permanece no roadmap (P1), fora do crítico desse marco.
+- **Alternativa piloto:** liquidação manual semanal ao Partner (**A1-D03…D05**) → **B3 fora do crítico M2** nesta fase.  
+- **A1-D05:** Connect/split **não** é requisito do piloto; só depois se operação o exigir.
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| B3.1 | Confirmar intent Manel: Connect = caminho MVP **provável** (não fechado) | Input, não activação | CONFIRMAR | `MANEL_INPUTS_TODOS` · `SETEMBRO` SEP-PAY-01 |
-| B3.2 | Decidir: piloto/comercial exige **split automático** agora? | Sim → B3 crítico; Não → processo manual documentado | DECISÃO | A2 · B3.1 |
-| B3.3 | Se Não: documentar processo financeiro temporário (responsável, cadência, prova) | Alternativa válida registada | DOCS | B3.2 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| B3.1 | Confirmar intent Manel: Connect = caminho MVP **provável** (não fechado) | Input, não activação | CONFIRMAR | `MANEL_INPUTS_TODOS` · `SETEMBRO` SEP-PAY-01 | — |
+| B3.2 | Decidir: piloto/comercial exige **split automático** agora? | Sim → B3 crítico; Não → processo manual | DECISÃO | A2 · B3.1 | **DONE** piloto = **Não** (**A1-D05**) |
+| B3.3 | Se Não: documentar processo financeiro temporário (responsável, cadência, prova) | Alternativa válida — ver **A1-D04** | DOCS | B3.2 · A1-D04 | **PARCIAL** (cadência DONE; dia da semana TBD) |
 | B3.4 | Se Sim: escolher tipo Connect (Express/Custom/…) | Arquitectura | DECISÃO | B3.2 |
 | B3.5 | Se Sim: KYC conta piloto | Conta capaz de receber | EXTERNO | B3.4 |
 | B3.6 | Se Sim: implementar/ligar split | Código alinhado a A2 | CÓDIGO | B3.4 |
@@ -285,16 +288,16 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 - **Objectivo:** Payout automático ao beneficiário A2.  
 - **IDs:** `S-PAY-03` · `S-PRT-01` · `S-DRV-01` (fórmula)  
 - **Dependências:** B3 (se automático) · A2  
-- **Nota:** igual a B3 — manual documentado pode cobrir piloto sem B4 no crítico.
+- **Nota:** **A1-D06** — payouts automáticos **não** são requisito do piloto; B4 fora do crítico M2 nesta fase (liquidação manual D04).
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| B4.1 | Confirmar perguntas abertas cadência/beneficiário (Q3) | Estado das respostas | CONFIRMAR | `MANEL_INPUTS` Q3 · A2.4 |
-| B4.2 | Decidir: payout **automático** exigido neste marco? | Sim/Não | DECISÃO | B4.1 · B3.2 |
-| B4.3 | Se Não: estender doc processo manual | Ops coberta | DOCS | B4.2 · B3.3 |
-| B4.4 | Se Sim: implementar/ops payouts | Dinheiro ao beneficiário | CÓDIGO · EXTERNO | B3 · B4.2 |
-| B4.5 | Fórmula líquido motorista (app) — ver E1 | UI/API coerente A2 | CÓDIGO | A2 · B4.1 |
-| B4.6 | Copy Partner alinhada (ver E4) | Sem prometer payout inexistente | CÓDIGO | B4.3 ou B4.4 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| B4.1 | Confirmar perguntas abertas cadência/beneficiário (Q3) | Estado das respostas | CONFIRMAR | `MANEL_INPUTS` Q3 · A2.4 | **DONE** via A1-D03/D04 |
+| B4.2 | Decidir: payout **automático** exigido neste marco? | Sim/Não | DECISÃO | B4.1 · B3.2 | **DONE** piloto = **Não** (**A1-D06**) |
+| B4.3 | Se Não: estender doc processo manual | Ops coberta — ver **A1-D04** | DOCS | B4.2 · B3.3 | **PARCIAL** |
+| B4.4 | Se Sim: implementar/ops payouts | Dinheiro ao beneficiário | CÓDIGO · EXTERNO | B3 · B4.2 | N/A piloto |
+| B4.5 | Fórmula líquido motorista (app) — ver E1 | UI/API coerente A2 | CÓDIGO | A2 · B4.1 | — |
+| B4.6 | Copy Partner alinhada (ver E4) | Sem prometer payout inexistente | CÓDIGO | B4.3 ou B4.4 | — |
 
 ## B5 — Métodos PT (MB WAY / SIBS / Multibanco)
 
