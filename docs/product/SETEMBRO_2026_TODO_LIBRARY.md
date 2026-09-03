@@ -137,6 +137,19 @@ Docs derivados: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COS
 | **Precisa decisão de** | Francisco · agente de PI / jurídico |
 | **Não fazer agora** | Pedido de registo sem pesquisa · gastar budget sem brief |
 
+### SEP-IP-05 — REMINDER: housekeeping marca/IP (padrão OXS / MarketFlow) — **não executar agora**
+
+| Campo | Conteúdo |
+|-------|----------|
+| **Origem** | Reminder Frank 2026-09-03 · espelhar trabalho feito no projecto OXS / MarketFlow |
+| **Resumo** | Mais tarde: separar claramente **desenvolvimento/software** de **marca comercial**; desenvolvimento / propriedade técnica = **OXS**; aplicação/produto comercial = **VAMULÁ**; **VAMULÁ é marca registada**. Rever README, LICENSE, NOTICE, TRADEMARKS, assets, branding, ownership e documentação pública; definir direitos sobre código, design, nome, logótipo e restantes activos; auditoria final de housekeeping de marca/IP semelhante à do OXS. |
+| **Porque interessa** | Evitar ambiguidade OXS vs VAMULÁ em docs públicas e activos; alinhamento com A4/A5 e SEP-IP-01…04 |
+| **Estado actual** | **REMINDER apenas** — capturado; **sem** execução, **sem** alteração de código/branding, **sem** novas decisões nesta captura |
+| **Prioridade Setembro** | P2 (após E5 / quando houver janela docs-IP; **não** bloqueia Marco 1) |
+| **Precisa decisão de** | Francisco (quando for a altura) · alinhamento A4/A5 |
+| **IDs relacionados** | Roadmap **A4** · **A5** · SEP-IP-01…04 · SEP-BRD-* |
+| **Não fazer agora** | Alterar código · alterar branding · README/LICENSE/NOTICE/TRADEMARKS · auditoria completa · commit isolado só por este reminder · tomar novas decisões de titularidade |
+
 ---
 
 ## 3. Pagamentos / Stripe / SIBS / MB WAY
@@ -442,7 +455,7 @@ Docs derivados: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COS
 
 | Área | IDs | Foco sugerido |
 |------|-----|---------------|
-| Jurídico / PI | LEGAL-TVDE-001 · SEP-IP-01…04 | DL 84/2026 (P0 leitura) · titularidade · logos · marca |
+| Jurídico / PI | LEGAL-TVDE-001 · SEP-IP-01…05 | DL 84/2026 · titularidade · logos · marca · **SEP-IP-05 reminder OXS/VAMULÁ (não agora)** |
 | Negócio / preços | BUSINESS-MANEL-001 | Custos · comissões · tarifário · simulador 36m (hipóteses) |
 | Mobile Android/iOS | MOBILE-001 | Spike packaging (PWA/wrapper/Capacitor) · GPS/push/lojas · **sem** código agora |
 | Pagamentos | SEP-PAY-01…05 | Validar Connect path · % · payouts · MB WAY |
