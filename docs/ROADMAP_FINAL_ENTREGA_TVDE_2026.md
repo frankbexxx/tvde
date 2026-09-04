@@ -105,7 +105,30 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 
 Registo de tempos · retenção actividade 2 anos · retenção reclamações 2 anos · hard-cap comissão 25% sem IVA · breakdown legal preço/comissão · fatura electrónica · reporting mensal AMT · apuramento contribuição AMT 5% · contratos de adesão operadores · disponibilização contrato ao motorista · Livro de Reclamações / RAL · processos comunicação IMT/AMT.
 
-*Matriz:* [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md).
+*Matriz:* [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md). **Prioridades legais individuais da matriz mantêm-se**; abaixo = ordem **prática** de implementação.
+
+### Ordem operacional M2 — setembro 2026
+
+Agrupamento por dependências reais (não altera IDs L-xx da matriz).
+
+| Bloco | Conteúdo (matriz) | Natureza |
+|-------|-------------------|----------|
+| **M2-L0** | L-26 — licença IMT do **gestor da plataforma** | Administrativo/legal; **paralelo** ao desenvolvimento; pouco dependente de código |
+| **M2-L1** | L-01…L-03 — validação IMT operador / motorista / veículo | Fundação: fonte oficial de elegibilidade; depende canal/spec IMT |
+| **M2-L2** | L-04…L-06 — bloqueio operador / motorista / veículo | Enforcement; **depende de M2-L1** (não fechar sem fonte oficial) |
+| **M2-L3** | L-10 (+ L-07…L-09) — enforcement **10 h / 24 h** | **Fundação 2026-09-04:** rolling 24h + audits; 11h fixas removidas; segmentos arriving+ongoing **provisórios**; enforcement ainda **OFF**; falta enforcement efectivo + parecer (o que conta) + cross-platform |
+| **M2-L4** | L-19…L-22 — emergência (Pax/Driver + chamada autoridades + localização) | Subsistema relativamente autónomo |
+
+**Ordem de execução:**
+
+1. **M2-L0** avança em paralelo.  
+2. **M2-L1** discovery / contacto IMT.  
+3. Se **M2-L1** ficar bloqueado externamente → avançar **M2-L3**.  
+4. Quando fonte IMT definida → implementar **M2-L1**, depois **M2-L2**.  
+5. Implementar **M2-L4**.  
+6. Continuar **NECESSÁRIOS M2**.
+
+*Pendentes finos (L3):* definição de tempo de operação · viagem no limite · **enforcement ON** · cross-platform · detalhes IMT. **Feito na fundação:** rolling 24h · remoção 11h fixas · audits de transição · política segmentos provisória documentada.
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 

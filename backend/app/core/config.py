@@ -111,12 +111,12 @@ class Settings(BaseSettings):
     ROTACIONAL_V3_FETCH_URL: str = ""
     ROTACIONAL_V3_FETCH_TIMEOUT_SECONDS: float = 8.0
 
-    # B4: limite diário condução activa + repouso (Europe/Lisbon). Desligar só em diagnóstico.
-    # Quando True: calcula, regista segmentos, avisos e rest_until.
+    # M2-L3: rolling 24h (UTC); segments arriving+ongoing (provisional policy).
+    # When True: calculate, register segments, warnings; no auto fixed 11h rest.
     ENABLE_DRIVING_HOURS_COMPLIANCE: bool = True
-    # A3-D04 / A3.8: bloqueio HTTP de online/accept por driving-hours.
-    # Default False — WARN+RECORD sem impedir operação até parecer jurídico.
-    # True = enforcement clássico (409 driving_hours_blocked).
+    # A3-D04-REV1 / M2-L3: HTTP block on online/accept when limit reached.
+    # Default False — WARN+RECORD; enforcement M2 still pending.
+    # True = 409 driving_hours_blocked.
     ENABLE_DRIVING_HOURS_ENFORCEMENT: bool = False
 
     # PF3D-3A — vehicle document compliance gates (online / matching / accept).

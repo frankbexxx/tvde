@@ -152,7 +152,7 @@ class AdminGovernanceReasonBody(BaseModel):
 
 
 class AdminDrivingRestOverrideBody(AdminGovernanceReasonBody):
-    """Override de repouso TVDE (`Driver.driving_rest_until`); `rest_until` null limpa."""
+    """LEGACY: override manual de ``Driver.driving_rest_until`` (não é regra legal 11h)."""
 
     rest_until: datetime | None = None
 
@@ -1531,7 +1531,13 @@ async def admin_driving_rest_override(
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> AdminDrivingRestOverrideResponse:
-    """Define ou limpa `driving_rest_until` (override após decisão 4 — só backoffice, auditável)."""
+    """LEGACY — define/limpa ``driving_rest_until`` (override excepcional, auditável).
+
+    Não implementa descanso legal fixo de 11h (removido da policy TVDE).
+    O campo legado **não** influencia ``limit_reached`` nem elegibilidade 10h/24h.
+    Preferir elegibilidade pelo cálculo rolling 24h; este endpoint é deprecated
+    para novos fluxos de compliance.
+    """
     try:
         driver_uuid = uuid.UUID(driver_id.strip())
     except ValueError:
@@ -1558,6 +1564,8 @@ async def admin_driving_rest_override(
             "governance_reason": body.governance_reason.strip()[:500],
             "before": prev.isoformat() if prev else None,
             "after": driver.driving_rest_until.isoformat() if driver.driving_rest_until else None,
+            "legacy_manual_rest_override": True,
+            "note": "deprecated_fixed_11h_rest_removed_from_tvde_policy",
         },
     )
     db.commit()

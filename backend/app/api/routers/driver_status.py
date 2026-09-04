@@ -40,7 +40,7 @@ async def get_driving_hours_compliance(
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> DrivingHoursComplianceResponse:
-    """Tempo de condução activa hoje (Europe/Lisbon) e estado de aviso/limite/bloqueio."""
+    """Tempo de condução activa na janela móvel 24h (UTC) + aviso/limite/bloqueio."""
     snap = driver_compliance_snapshot(db, user.user_id)
     return DrivingHoursComplianceResponse(
         enabled=snap["enabled"],
@@ -52,6 +52,9 @@ async def get_driving_hours_compliance(
         limit_reached=snap["limit_reached"],
         blocked=snap["blocked_accept"],
         rest_until=snap["rest_until"],
+        legacy_rest_active=bool(snap.get("legacy_rest_active")),
+        window_seconds=int(snap.get("window_seconds") or 86400),
+        counted_policy=snap.get("counted_policy"),
     )
 
 

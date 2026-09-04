@@ -85,7 +85,10 @@ class Driver(Base):
     driving_rest_until: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
-        comment="UTC: block new accepts until this time (rest after daily driving limit).",
+        comment=(
+            "LEGACY UTC rest-until. No longer auto-set after 10h (fixed 11h removed). "
+            "Informational / historical only — does not affect limit_reached or eligibility."
+        ),
     )
     cancellation_count: Mapped[int] = mapped_column(
         Integer,
