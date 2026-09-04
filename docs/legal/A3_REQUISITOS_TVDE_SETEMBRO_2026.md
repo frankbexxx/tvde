@@ -206,9 +206,9 @@ A6 entra no **caminho crítico M2** (implementação). Flag permanece OFF até g
 
 Ver §7. Estado: **`DECIDIDO — IMPLEMENTAÇÃO PENDENTE`**.
 
-### 8c. **A3-D04-REV1** — driving-hours (2026-09-04)
+### 8c. **A3-D04-REV1** — driving-hours (2026-09-04; impl. base 2026-09-04)
 
-**Estado:** `DECIDIDO — IMPLEMENTAÇÃO PENDENTE`
+**Estado:** `DECIDIDO — IMPLEMENTAÇÃO PARCIAL (fundação M2-L3)`
 
 | Ponto | Decisão |
 |-------|---------|
@@ -218,17 +218,25 @@ Ver §7. Estado: **`DECIDIDO — IMPLEMENTAÇÃO PENDENTE`**.
 | WARN + RECORD | **Não** suficiente para M2 |
 | M2 | Exige **enforcement efectivo** |
 
-**Arquitectura decidida (produto):**
+**Implementado na fundação (2026-09-04):**
 
-- preparar cálculo compatível com **janela móvel de 24 h**;
-- **não** manter dia civil como regra **final**;
-- guardar estados temporais granulares: online · offline · disponível/espera · aceitação · deslocação para recolha · início de viagem · fim de viagem · pausa;
-- quando limite **já atingido:** não elegível para nova atribuição · não aceitar nova viagem · não iniciar nova viagem.
+- cálculo **rolling 24h** UTC `[now−24h, now]` — **dia civil Europe/Lisbon removido** do cálculo final;
+- segmentos contados = **arriving + ongoing** apenas — marca **`TEMPORARY_POLICY_PENDING_LEGAL_CONFIRMATION`** (não é definição legal final);
+- descanso automático fixo **11h removido** da policy TVDE (não exigido pela lei; não reintroduzir);
+- `driving_rest_until` = **legado** (dados antigos / override admin deprecated ainda influenciam `limit_reached`);
+- `ENABLE_DRIVING_HOURS_ENFORCEMENT` continua **OFF**;
+- audits de transição: `warning_reached` · `limit_reached` · `limit_cleared` · `legacy_rest_detected`;
+- **cross-platform** continua pendente (IMT).
+
+**Arquitectura decidida (produto — restante):**
+
+- guardar estados temporais granulares (online · espera · pausa…) quando parecer fechar o que conta;
+- quando limite **já atingido** e enforcement ON: não elegível para nova atribuição · não aceitar · não iniciar nova viagem.
 
 **Política prudente provisória:** viagem regularmente iniciada **antes** de atingir o limite pode terminar em segurança; após conclusão, impedir nova operação.  
 Marca: **`SUJEITA A PARECER JURÍDICO`**.
 
-**Não decidido ainda:** exactamente que estados contam para as 10 h.
+**Não decidido ainda:** exactamente que estados contam para as 10 h (além da política provisória arriving+ongoing).
 
 ### 8d. Cross-platform
 
@@ -297,7 +305,7 @@ Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MAT
 | Item | Estado |
 |------|--------|
 | A3-D01…D08 | **DONE** (histórico) |
-| A3-D03-REV1 / A3-D04-REV1 | **DECIDIDO — IMPLEMENTAÇÃO PENDENTE** |
+| A3-D03-REV1 / A3-D04-REV1 | **DECIDIDO** — A3-D04 fundação rolling 24h **parcial**; enforcement M2 ainda pendente |
 | A3.8 (código WARN+RECORD) | **DONE** como implementação da decisão **antiga**; meta M2 = REV1 |
 | A3.9 Arquivo PDFs P0 | **EM CURSO** / parcial (índice; PDFs em falta) |
 | A6 no crítico M2 | **Sim** (implementação); flag OFF até pronto |

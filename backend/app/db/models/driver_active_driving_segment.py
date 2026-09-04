@@ -19,6 +19,9 @@ class DriverActiveDrivingSegment(Base):
     """
     Tempo em condução activa (arriving + ongoing) por viagem.
     Um segmento abre em accepted→arriving e fecha ao sair de arriving/ongoing.
+
+    Counted under TEMPORARY_POLICY_PENDING_LEGAL_CONFIRMATION (provisional).
+    Aggregated in a rolling 24h UTC window (not civil day).
     """
 
     __tablename__ = "driver_active_driving_segments"
