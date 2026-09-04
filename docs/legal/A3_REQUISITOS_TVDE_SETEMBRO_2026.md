@@ -1,119 +1,112 @@
 # A3 — Requisitos legais TVDE aplicáveis (Setembro 2026)
 
-**Tipo:** matriz operacional a partir de fontes **já no repo** — **não** é parecer jurídico  
-**Data análise:** 2026-09-02 · **Decisões A3-D01…D08:** 2026-09-02 (**DONE**)  
-**IDs:** `S-COMP-04` · `LEGAL-TVDE-001` · roadmap etapa **A3**  
-**Estado:** **PARCIAL** — decisões internas de produto/operação **fechadas**; validação jurídica externa e arquivo de diplomas TVDE clássicos **pendentes**
+**Tipo:** matriz operacional + decisões de produto — **não** é parecer jurídico  
+**Data análise inicial:** 2026-09-02 · **Decisões A3-D01…D08:** 2026-09-02 (**DONE**)  
+**Revisão legal:** 2026-09-04 — source pack DR/IMT/AMT/EUR-Lex + matriz de impacto  
+**IDs:** `S-COMP-04` · `LEGAL-TVDE-001…` · roadmap etapa **A3**  
+**Estado:** **PARCIAL** — decisões internas **revistas** (D03-REV1 · D04-REV1); PDFs oficiais P0 ainda a arquivar; implementação M2 pendente  
+
+**Referências novas (2026-09-04):**
+
+- [`LEGAL_SOURCES_INDEX.md`](LEGAL_SOURCES_INDEX.md) — inventário P0/P1/`PENDENTE REGULAMENTAÇÃO`
+- [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
+- [`research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md`](research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md) *(auxiliar — não fonte normativa)*
 
 ---
 
-## 1. Resumo executivo
+## 0. Revisão 2026-09-04 — o que mudou
 
-| Ponto | Conclusão |
-|-------|-----------|
-| Fonte legal bruta no repo | **Só** o DL n.º **84/2026** ([`LEGAL_SOURCES_INDEX.md`](LEGAL_SOURCES_INDEX.md)) |
-| O que o DL 84/2026 regula | Tacógrafo; tempos de condução/pausas/repouso (Reg. 561/2006); organização do tempo de trabalho de **trabalhadores móveis** / condutores independentes **no âmbito** desse regime; destacamento; contraordenações |
-| O que o DL 84/2026 **não** é | Diploma de **licenciamento de plataforma TVDE**, nem checklist de documentos de viatura/motorista TVDE, nem PF3D |
-| Menção a TVDE no PDF | Associações TVDE foram **ouvidas** (consulta) — **não** cria, por si, obrigações de app/plataforma |
-| Aplicabilidade a motoristas/veículos TVDE ligeiros | **`INCERTO / VALIDAR`** — Art. 2.º DL 84 · **A3-D06** = validação externa **agora** |
-| Lei TVDE “clássica” | **Não arquivada** · **A3-D01** = arquivar fontes oficiais (sem inventar) · **`REQUER PESQUISA/FONTE OFICIAL`** |
-| Titular vs plataforma (**A3-D02**) | Partner/entidade operacional Manel = titular/licenciado da operação TVDE; TVDE-APP = plataforma tecnológica (*terminologia exacta → validação jurídica*) |
-| Documentos (**A3-D05**) | Partner/Frota = fonte de verdade operacional — **não reabrir** |
-| A6 / gates viatura (**A3-D03**) | `ENABLE_VEHICLE_COMPLIANCE_GATES` **OFF** até validação jurídica; A6 **fora** do crítico |
-| Driving-hours (**A3-D04** / **A3.8**) | Tracking/avisos/registos **ON**; enforcement bloqueante **OFF** (`ENABLE_DRIVING_HOURS_ENFORCEMENT=false`); rever após parecer jurídico |
-| Termos + Privacidade (**A3-D07**) | **Bloqueantes Marco 2**; **não** bloqueiam Marco 1 |
-| Recibos/faturação (**A3-D08**) | Após A1/A2 + contabilista; **sem** escolher emissor agora |
-| Automatização na app | Obrigação legal **≠** obrigação de a app bloquear/suspender automaticamente |
+A nova validação jurídica (research + confirmação em fontes oficiais + source pack) **revê conclusões de produto** de 2026-09-02.  
+**Não apaga** o histórico das decisões A3-D01…D08; marca-as como **revistas por nova base legal de setembro de 2026**.
 
-**Princípio seguido:** não converter hipóteses, checklists ou desejos de produto em obrigação `SIM`.
+### Base legal principal (após revisão)
+
+| Diploma / artigo | Papel para a Vamulá |
+|------------------|---------------------|
+| **Lei n.º 45/2018** na redacção/republicação da **Lei n.º 59/2026** | Regime TVDE aplicável desde **01-09-2026** |
+| **Art. 13.º** | Limite **10 h / 24 h**; registo; mecanismos de garantia |
+| **Art. 14.º** | Bloqueio perante incumprimento **conhecido / devido** |
+| **Art. 17.º-A** | Capacidade tecnológica da plataforma |
+| **Art. 20.º** | Validação através da **plataforma IMT** |
+| **Art. 20.º-A** | Partilha / comunicação de dados IMT |
+
+### Conclusões antigas que deixam de ser a posição actual
+
+| Conclusão antiga (2026-09-02) | Posição actual (2026-09-04) |
+|-------------------------------|-----------------------------|
+| Gates viatura podem permanecer OFF por **ausência de base legal** | Base legal de bloqueio/validação **identificada**; flag OFF = **só** implementação incompleta (**A3-D03-REV1**) |
+| **WARN + RECORD** suficiente para driving-hours no piloto real | **Insuficiente** para M2; M2 exige **enforcement** (**A3-D04-REV1**) |
+| DL 84/2026 / Reg. 561/2006 como questão **central** dos tempos TVDE | **Complementares**; limite TVDE próprio = **art. 13.º** Lei 45/2018 |
+
+### M1
+
+**M1 permanece DONE.** A nova validação legal altera requisitos para **M2 / operação TVDE real**, mas **não invalida** o marco M1 técnico concluído.
 
 ---
 
-## 1b. Lacuna de fontes — o que falta arquivar (A3-D01)
+## 1. Resumo executivo (posição actual)
 
-**No repo hoje:** apenas `LEGAL-TVDE-001` (DL 84/2026).  
-**Não há** em `docs/legal/sources/` nem no índice qualquer diploma TVDE de licenciamento/operação com **número oficial** citado de forma normativa.
+| Ponto | Conclusão actual |
+|-------|------------------|
+| Fonte legal principal | Lei **45/2018** (republicada via **59/2026**) — PDFs P0 ainda `A ARQUIVAR` no índice |
+| DL 84/2026 no repo | `LEGAL-TVDE-001` — complementar (tacógrafo / tempo móvel); **não** substitui art. 13.º TVDE |
+| Titular vs plataforma (**A3-D02**) | Partner/entidade operacional Manel = titular/licenciado da operação TVDE; TVDE-APP = plataforma tecnológica (*terminologia exacta → validação jurídica*) — **inalterado** |
+| Documentos ops (**A3-D05**) | Partner/Frota = fonte de verdade **operacional** interna — **não reabrir**; **não** substitui validação IMT |
+| A6 / gates (**A3-D03-REV1**) | Requisito **real M2**; flag OFF **temporária** (implementação pendente) — ver §7–8 |
+| Driving-hours (**A3-D04-REV1**) | **10 h / 24 h** + registo + **enforcement M2**; A3.8 WARN+RECORD = estado **código actual**, não meta M2 |
+| Validação IMT | **Requisito M2** (operador / motorista / veículo) — mecanismo técnico exacto depende IMT |
+| Termos + Privacidade (**A3-D07**) | Bloqueantes Marco 2 |
+| Recibos/faturação (**A3-D08**) | Após A1/A2 + contabilista |
+| Impacto A1 | Considerar contribuição AMT **5%** sobre taxas de intermediação (base IVA a confirmar) — **sem** alterar A1-D01 (15%) |
 
-| O que falta | Estado |
-|-------------|--------|
-| Diploma(s) oficiais que regem **licença operador TVDE**, veículos, motoristas, seguros e deveres de informação ao passageiro em Portugal | **`REQUER PESQUISA/FONTE OFICIAL`** — Diário da República / IMT / advogado **antes** de arquivar; **não** inventar números de lei; **não** usar blogs |
-| PDFs oficiais + entradas em [`LEGAL_SOURCES_INDEX.md`](LEGAL_SOURCES_INDEX.md) (ex. `LEGAL-TVDE-002`…) | Pendente após identificação oficial |
-| RGPD: texto consolidado opcional no repo | Útil; não substitui política/DPA (A3-D06/D07) |
+**Princípio:** obrigação legal ≠ implementação já pronta; flag OFF ≠ decisão de produto de manter OFF em M2.
 
-*[`PARCEIRO_TVDE_CHECKLIST.md`](PARCEIRO_TVDE_CHECKLIST.md) e auditorias antigas mencionam IMT/licença em linguagem operacional — **não** contam como fonte normativa arquivada.*
+---
+
+## 1b. Fontes — inventário (A3-D01 em curso)
+
+| Estado | Detalhe |
+|--------|---------|
+| **No repo** | DL 84/2026 (`LEGAL-TVDE-001`) |
+| **Identificadas / a arquivar (P0)** | Lei 59/2026 · Lei 45/2018 consolidada · IMT TVDE / licenciamento / certificação · AMT formulário · RGPD — ver [`LEGAL_SOURCES_INDEX.md`](LEGAL_SOURCES_INDEX.md) |
+| **P1** | Portarias 293/2018 · 344/2024/1 · Reg. 561/2006 · Lei 58/2019 |
+| **PENDENTE REGULAMENTAÇÃO** | Formação/exame · língua portuguesa · dístico/QR · operacionalização IMT |
 
 ---
 
 ## 2. Fontes usadas
 
-| ID / doc | Natureza | Uso nesta A3 |
-|----------|----------|--------------|
-| [`LEGAL_SOURCES_INDEX.md`](LEGAL_SOURCES_INDEX.md) | Índice | Inventário oficial do repo |
-| [`sources/decreto-lei-84-2026-tvde-transporte-rodoviario.pdf`](sources/decreto-lei-84-2026-tvde-transporte-rodoviario.pdf) | Diploma bruto | Objeto, âmbito (Arts. 1.º–2.º), temas sociais/tacógrafo/registos |
-| [`PARCEIRO_TVDE_CHECKLIST.md`](PARCEIRO_TVDE_CHECKLIST.md) | Checklist **conversa** (não parecer) | Temas típicos — **INCERTO** até validação jurídica |
-| [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | Decisão/arquitectura produto | Gates **OFF** |
-| [`PRICING_DECISION.md`](../PRICING_DECISION.md) | Decisão produto | Estimativa vs preço final |
-| [`MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md`](../product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) | Backlog produto/[Legal] | Itens a validar |
-| Código driving hours | Implementação produto | **A3.8 DONE** — WARN+RECORD; bloqueio só se `ENABLE_DRIVING_HOURS_ENFORCEMENT=true` |
-
-**Não usados como verdade normativa:** auditorias Maio, roadmaps antigos, benchmarks Uber/Bolt, blogs.
+| ID / doc | Natureza | Uso |
+|----------|----------|-----|
+| [`LEGAL_SOURCES_INDEX.md`](LEGAL_SOURCES_INDEX.md) | Índice | Inventário P0/P1 + pendentes |
+| [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md) | Matriz gap | BLOCKERS / NECESSÁRIOS M2 |
+| Research + source pack 2026-09-04 | Auxiliar / catálogo | **Não** fonte normativa primária |
+| [`sources/decreto-lei-84-2026-….pdf`](sources/decreto-lei-84-2026-tvde-transporte-rodoviario.pdf) | Diploma bruto | Complementar tempos/tacógrafo |
+| [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | Arquitectura produto | Base técnica A6 — **insuficiente** sozinha |
+| Código driving hours | Implementação | A3.8 = WARN+RECORD; meta M2 = **A3-D04-REV1** |
 
 ---
 
-## 3. Matriz de requisitos
+## 3. Matriz de requisitos (histórico 2026-09-02)
 
-*(Inalterada na classificação; decisões de produto em §8 não transformam `INCERTO` em `SIM` sem parecer.)*
+*Mantida como registo da análise inicial com base só no DL 84 no repo. **Não** é a posição de produto actual para M2 — ver §0, §7–8 e matriz de impacto 2026-09-04.*
 
-Legenda **Obrigatório?** → `SIM` · `NÃO` · `INCERTO / VALIDAR`  
-Legenda **Impacto na APP** → `APP TEM DE IMPEDIR` · `APP TEM DE AVISAR` · `APP TEM DE REGISTAR` · `APP TEM DE MOSTRAR` · `PODE SER PROCESSO OPERACIONAL/HUMANO` · `SEM IMPACTO TÉCNICO` · `INCERTO`
-
-| ID | Requisito | Quem afecta | Obrigatório? | Operação necessária | Impacto na APP | Fonte |
-|----|-----------|-------------|--------------|---------------------|----------------|-------|
-| R01 | Licenciamento da **plataforma** digital perante autoridades | Plataforma | **INCERTO / VALIDAR** | Esclarecer título próprio vs só operador TVDE | `INCERTO` · ops: A3-D02 (plataforma ≠ titular) | Checklist §1–2 |
-| R02 | Licença / autorização **operador TVDE** (parceiro) | Partner/Frota | **INCERTO / VALIDAR** | Manter licença válida; comunicações IMT | `PODE SER PROCESSO OPERACIONAL/HUMANO` | Checklist §2 · A3-D02 |
-| R03 | Capacidade / idoneidade do **motorista** TVDE | Driver · Partner | **INCERTO / VALIDAR** | Processo documental e aprovação | `INCERTO` (gates OFF) | Checklist §2 |
-| R04 | **Veículo** licenciado / autorizado TVDE | Partner · Driver | **INCERTO / VALIDAR** | Frota controlada pelo operador | `INCERTO` | Checklist §2 |
-| R05 | **Documentação** motorista/veículo | Partner · Driver | **INCERTO / VALIDAR** | Inventário/validade pelo operador | `PODE SER PROCESSO` · app `AVISAR` (PF3C) · A3-D05 | Checklist · A3-D05 |
-| R06 | **Seguros** adequados | Partner · Plataforma (contrato) | **INCERTO / VALIDAR** | Apólices e sinistros | `PODE SER PROCESSO OPERACIONAL/HUMANO` | Checklist §3 |
-| R07 | Validade documental **com bloqueio automático** na app | Partner · Driver · Plataforma | **INCERTO / VALIDAR** | Enforcement humano até parecer | Gates **OFF** (A3-D03) | PF3D · A3-D03 |
-| R08 | Tempos/limites condução DL 84 / Reg. 561 | Driver · Partner · Plataforma? | **INCERTO / VALIDAR** | Confirmar âmbito Art. 2.º | Decisão produto A3-D04: `REGISTAR`/`AVISAR` sem `IMPEDIR` até parecer | DL 84 · A3-D04 |
-| R09 | **Tacógrafo** | Partner · Driver | **INCERTO / VALIDAR** | Só se no regime tacógrafo | `SEM IMPACTO TÉCNICO` tipicamente | DL 84 |
-| R10 | Informação empregador→trabalhador móvel | Partner (se empregador) | **INCERTO / VALIDAR** | Se vínculo no âmbito | `PODE SER PROCESSO` | DL 84 Art. 18.º |
-| R11 | Registo tempos de trabalho + conservação | Partner (empregador) | **INCERTO / VALIDAR** | Registos (Art. 19.º se aplicável) | App pode `REGISTAR`; suporte legal = INCERTO | DL 84 Art. 19.º |
-| R12 | Identificação motorista/veículo ao passageiro | Plataforma · Passenger | **INCERTO / VALIDAR** | Copy/UX se lei exigir | `INCERTO` | Sem diploma TVDE no repo |
-| R13 | Informação prévia preço / tarifário | Plataforma · Passenger | **INCERTO / VALIDAR** | Transparência | Produto: [`PRICING_DECISION.md`](../PRICING_DECISION.md) | Sem diploma TVDE |
-| R14 | Pagamentos, faturas/recibos, IVA | Plataforma · Partner · Passenger | **INCERTO / VALIDAR** | Após A1/A2 + contabilista | A3-D08 — sem emissor agora | Checklist §6 · A3-D08 |
-| R15 | Cancelamentos | Plataforma · Passenger · Driver | **INCERTO / VALIDAR** | Política | `INCERTO` | Sem diploma no repo |
-| R16 | Registos obrigatórios operação TVDE | Plataforma · Partner | **INCERTO / VALIDAR** | Após diploma TVDE arquivado | `INCERTO` | A3-D01 pendente |
-| R17 | Conservação de dados (prazos) | Plataforma · Partner | **INCERTO / VALIDAR** | Política retenção | `INCERTO` | Checklist · A3-D06 |
-| R18 | Informação / cooperação autoridades | Partner · Plataforma | **INCERTO / VALIDAR** | Processo de resposta | `PODE SER PROCESSO` | Checklist |
-| R19 | Reclamações / suporte | Plataforma · Partner | **INCERTO / VALIDAR** | Canal e SLAs | `INCERTO` | Sem fonte no índice |
-| R20 | **RGPD** (enquadramento ao tratar dados) | Todos | **SIM** *(enquadramento)* | Responsável, bases, direitos, DPA | `REGISTAR` + processo; textos = A3-D06/D07 | RGPD UE · Checklist §5 |
-| R21 | Suspensão/bloqueio automático por docs | Driver · Partner · Plataforma | **INCERTO / VALIDAR** | Não activar | OFF / A3-D03 | PF3D |
-| R22 | Auditoria/logs técnicos | Plataforma · Admin | **INCERTO / VALIDAR** | Logs ops | App já regista | Sem diploma específico |
-| R23 | Requisitos DL 84 **para a app** como plataforma digital | Plataforma | **NÃO** *(texto analisado)* | Reavaliar se âmbito Art. 2.º for Sim | `SEM IMPACTO TÉCNICO` enquanto INCERTO | DL 84 Arts. 1.º–2.º |
-
-### Contagens (matriz)
-
-| Classificação | N.º |
-|---------------|-----|
-| **SIM** | **1** (R20) |
-| **NÃO** | **1** (R23) |
-| **INCERTO / VALIDAR** | **21** |
+*(Classificações `INCERTO` da análise 02-09 não foram reescritas linha a linha; a revisão legal aponta arts. 13.º/14.º/17.º-A/20.º/20.º-A como base principal.)*
 
 ---
 
-## 4. Impacto técnico (app)
+## 4. Impacto técnico (app) — facto vs meta M2
 
-| Tema | Estado técnico actual (facto) | Decisão / próximo |
-|------|-------------------------------|-------------------|
-| PF3D / `ENABLE_VEHICLE_COMPLIANCE_GATES` | **OFF** | **A3-D03** — manter OFF; **não** alterar flags nesta tarefa |
-| Gate docs motorista (FE) | Existe | Sem bloqueio legal fechado; Partner = verdade (A3-D05) |
-| Driving hours | `ENABLE_DRIVING_HOURS_COMPLIANCE=true`; `ENABLE_DRIVING_HOURS_ENFORCEMENT=false` | **A3.8 DONE** — aviso/registo sem bloqueio online/accept; enforcement reversível por flag |
-| Partner docs / PF3C | Alertas sem hard-block | Alinhado a A3-D03/D05 |
-| RGPD / Termos | Superfícies de dados; textos incompletos | **A3-D07** bloqueante **Marco 2** |
+| Tema | Estado técnico **actual** (facto) | Meta / decisão produto M2 |
+|------|-----------------------------------|---------------------------|
+| PF3D / `ENABLE_VEHICLE_COMPLIANCE_GATES` | **OFF** | **ON efectivo** obrigatório em M2 (**A3-D03-REV1**); OFF agora = implementação pendente |
+| Gate docs motorista (FE) | Existe | Insuficiente sem IMT + bloqueio BE |
+| Driving hours | Compliance ON · Enforcement **OFF** | Enforcement **efectivo** M2 (**A3-D04-REV1**); janela móvel 24 h |
+| Integração IMT | **Ausente** | Requisito M2 (consulta/validação) |
+| Emergência / RAL / fatura / AMT | **Ausente** / parcial | Ver blockers e necessários M2 |
+| RGPD / Termos | Textos incompletos | **A3-D07** bloqueante M2 |
 
-**Não fazer nesta tarefa:** activar PF3D; mexer Render; commit.
+**Não fazer nesta tarefa documental:** activar flags; implementar IMT; alterar código.
 
 ---
 
@@ -121,70 +114,181 @@ Legenda **Impacto na APP** → `APP TEM DE IMPEDIR` · `APP TEM DE AVISAR` · `A
 
 | Quem | Acção |
 |------|--------|
-| **Partner (Manel)** | Titular/licenciado operação TVDE (A3-D02); docs/seguros/licença como processo humano |
-| **Plataforma (TVDE-APP)** | Software; não se apresenta como titular da licença TVDE sem validação jurídica da terminologia |
-| **Advogado** | Pacote A3-D06 **agora** (ver §9) |
-| **Contabilista** | Recibos/IVA **depois** A1/A2 (A3-D08) |
-| **Produto/eng** | Gates OFF; A3.8 driving-hours warn-only; Termos/Privacidade antes do piloto M2 |
+| **Partner (Manel)** | Titular/licenciado (A3-D02); docs internos + conformidade IMT |
+| **Plataforma (Vamulá / TVDE-APP)** | Gestor de plataforma electrónica — licença IMT própria (**BLOCKER M2**); validação/bloqueio; 10 h/24 h; emergência |
+| **Advogado / IMT** | Detalhes API, “devesse ter conhecimento”, estados que contam para 10 h, fallback IMT down |
+| **Contabilista** | Recibos (A3-D08); base IVA da contribuição AMT 5% |
+| **Produto/eng** | Implementar blockers M2; **não** declarar conformidade global cross-platform sem fonte IMT |
 
 ---
 
-## 6. Pontos incertos (resumo) — ainda jurídicos
+## 6. Pontos ainda **NÃO** decididos
 
-1. Aplicabilidade DL 84 / Reg. 561 a esta operação TVDE.  
-2. Texto vinculativo da lei TVDE clássica (**REQUER PESQUISA/FONTE OFICIAL** + arquivo A3-D01).  
-3. Terminologia exacta titular/plataforma (A3-D02 → parecer).  
-4. Se enforcement documental automático será exigido após parecer.  
-5. Pormenores RGPD (retenção, responsável, DPA).  
-6. Emissor fiscal de recibos (A3-D08 → pós A1/A2).
+Classificação: **`DEPENDE PARECER / IMT / REGULAMENTAÇÃO`**
 
----
-
-## 7. A6 — Gates de compliance
-
-### Pergunta (análise)
-Obrigações nas fontes do repo suficientes para gates ON? → **AINDA NÃO É POSSÍVEL DETERMINAR** (inalterado).
-
-### Decisão de produto (**A3-D03**)
-
-Manter `ENABLE_VEHICLE_COMPLIANCE_GATES` **OFF** até validação jurídica suficiente.
-
-| Mecanismo | Análise legal (fontes repo) | Decisão actual |
-|-----------|----------------------------|----------------|
-| `ENABLE_VEHICLE_COMPLIANCE_GATES` ON | Indeterminado | **OFF** (A3-D03) |
-| Gate documental Driver (bloqueio) | Indeterminado | Sem activar |
-| Suspensão automática | Indeterminado | Sem activar |
-| Bloqueio de veículo | Indeterminado | Sem activar |
-| Override Admin | Não obrigatório no DL 84 | N/A enquanto gates OFF |
-
-**Implicação roadmap:** A6 **fora** do caminho crítico até parecer (A3.7) + decisão explícita posterior.
+1. Definição exacta de “tempo de operação” para as 10 h (quais estados contam).  
+2. Regra final para viagem iniciada perto do limite *(política provisória abaixo = `SUJEITA A PARECER JURÍDICO`)*.  
+3. Periodicidade da revalidação IMT.  
+4. Fallback quando IMT está indisponível.  
+5. Acesso aos tempos **cross-platform**.  
+6. Detalhes de integração/API IMT (não assumir API pública, webhook, frequência, cache, SLA, consulta pré-viagem).  
+7. Significado operacional exacto de “devesse ter conhecimento”.  
+8. Base IVA da contribuição AMT **5%**.  
+9. Regulamentação nova (formação / língua / dístico).  
+10. Política de cache/retry IMT.
 
 ---
 
-## 8. DECISÕES A3-D01…D08 — **DONE**
+## 7. A6 — Gates de compliance (**A3-D03-REV1**)
 
-| ID | Decisão | Estado |
-|----|---------|--------|
-| **A3-D01** | **SIM** — arquivar já no repo as fontes legais-base TVDE aplicáveis e indexá-las como fonte primária. **Não inventar diplomas.** Localizar/confirmar fontes **oficiais** antes de arquivar. | **DONE** *(intenção)* · execução arquivo = **`REQUER PESQUISA/FONTE OFICIAL`** |
-| **A3-D02** | Partner/entidade operacional Manel = **titular/licenciado** da operação TVDE; TVDE-APP = **plataforma tecnológica**. Terminologia exacta sujeita a validação jurídica. | **DONE** |
-| **A3-D03** | Manter `ENABLE_VEHICLE_COMPLIANCE_GATES` **OFF** até validação jurídica suficiente. | **DONE** |
-| **A3-D04** | Manter funcionalidade e registos driving-hours; **sem** bloquear automaticamente disponibilidade/aceitação enquanto aplicabilidade jurídica ao modelo TVDE não estiver confirmada. Objectivo: tracking/avisos/registos; não impedir Driver só com esta regra. **Código alinhado em A3.8.** | **DONE** *(docs + código A3.8)* |
-| **A3-D05** | Partner/Frota continua fonte de verdade operacional dos documentos. **Não reabrir.** | **DONE** |
-| **A3-D06** | **SIM** — validação jurídica externa **agora** (pacote mínimo antes do piloto real): enquadramento TVDE; DL 84 / Reg. 561 quando aplicável; licenças/docs/seguros; RGPD mínimo; impacto de eventual enforcement automático. | **DONE** *(decisão)* · execução parecer = pendente |
-| **A3-D07** | Termos de utilização + Política de Privacidade = **bloqueantes Marco 2**; **não** bloqueiam Marco 1. | **DONE** |
-| **A3-D08** | Recibos/faturação: validar com contabilista **depois** de A1/A2. **Não** escolher emissor nesta fase. | **DONE** |
+### Histórico (**A3-D03** · 2026-09-02) — **REVISTO**
+
+> Manter `ENABLE_VEHICLE_COMPLIANCE_GATES` **OFF** até validação jurídica suficiente. A6 fora do caminho crítico.
+
+*Motivo antigo:* ausência de base legal clara no repo (só DL 84).  
+*Estado:* **revisto por nova base legal de setembro de 2026.**
+
+### Decisão nova — **A3-D03-REV1** (2026-09-04)
+
+**Estado:** `DECIDIDO — IMPLEMENTAÇÃO PENDENTE`
+
+- A6 / vehicle compliance passa a **requisito real para M2**.
+- A plataforma deve aceitar/activar apenas entidades **conformes**.
+- Veículo (e operador/motorista) não conforme **conhecido/devido** não pode permanecer operacional.
+- PF3D existente = base técnica útil, **não suficiente** (falta IMT + bloqueio operacional real).
+- `ENABLE_VEHICLE_COMPLIANCE_GATES` continua **OFF AGORA** apenas porque a implementação final **ainda não está pronta**.
+- **Não** confundir flag OFF temporária com decisão de produto de manter OFF em M2.
+- Para M2, **gates efectivos serão obrigatórios**.
+
+### Validação IMT (requisito M2)
+
+| Entidade | Validar pelo menos |
+|----------|-------------------|
+| **Operador** | Licença |
+| **Motorista** | Habilitação de condução · certificado TVDE **ou** certificado motorista de táxi · estado/registo aplicável |
+| **Veículo** | Registo · matrícula · idade · inspeção · seguro TVDE |
+
+A lei confirma **consulta IMT**. O mecanismo técnico exacto **depende do IMT** — não assumir API/webhook/frequência/cache/SLA/consulta antes de cada viagem.
+
+### Bloqueio / override
+
+Entidade bloqueada **não pode:** ficar disponível · matching · atribuição · aceitar viagem · iniciar **nova** viagem.  
+Aplicável a: Partner/operador · motorista · veículo.
+
+| Admin pode | Admin **não** pode |
+|------------|---------------------|
+| Rever falso positivo · corrigir erro interno · pedir nova validação · reactivar após validação oficial **positiva** | Override que permita operação com estado oficial conhecido **inválido / expirado / revogado / suspenso** |
+
+Não apagar histórico de bloqueios/reactivações.
+
+### Implicação roadmap
+
+A6 entra no **caminho crítico M2** (implementação). Flag permanece OFF até gates + IMT/processo estarem prontos.
 
 ---
 
-## 9. Validações externas ainda pendentes
+## 8. Decisões A3 — acta
 
-1. **Pesquisa/fonte oficial** + arquivo diplomas TVDE (A3-D01).  
-2. Parecer: aplicabilidade **DL 84/2026 / Reg. 561** ao modelo.  
-3. Parecer: enquadramento **licenças / documentação / seguros** TVDE.  
-4. Parecer: **RGPD** mínimo (responsável, DPA, retenção) + alinhamento Termos/Privacidade (A3-D07).  
-5. Parecer: impacto de **enforcement automático** (gates/suspensão).  
-6. Validação terminologia **titular vs plataforma** (A3-D02).  
-7. **Contabilista** (recibos/IVA) — **após A1/A2** (A3-D08).
+### 8a. Histórico A3-D01…D08 (2026-09-02) — preservado
+
+| ID | Decisão original | Estado |
+|----|------------------|--------|
+| **A3-D01** | Arquivar fontes legais-base TVDE oficiais; não inventar diplomas | **DONE** *(intenção)* · execução arquivo = **EM CURSO** (índice P0/P1 2026-09-04) |
+| **A3-D02** | Partner = titular/licenciado; TVDE-APP = plataforma tecnológica | **DONE** |
+| **A3-D03** | Gates OFF até validação jurídica | **DONE** → **revisto** por **A3-D03-REV1** |
+| **A3-D04** | Tracking/avisos/registos; sem bloqueio automático até aplicabilidade confirmada; A3.8 WARN+RECORD | **DONE** → **revisto** por **A3-D04-REV1** |
+| **A3-D05** | Partner/Frota fonte de verdade operacional docs — não reabrir | **DONE** *(ops interna; não substitui IMT)* |
+| **A3-D06** | Validação jurídica externa agora | **DONE** *(decisão)* · execução parecer fino ainda parcial |
+| **A3-D07** | Termos + Privacidade bloqueantes M2 | **DONE** |
+| **A3-D08** | Recibos após A1/A2 + contabilista | **DONE** |
+
+### 8b. **A3-D03-REV1** — vehicle compliance
+
+Ver §7. Estado: **`DECIDIDO — IMPLEMENTAÇÃO PENDENTE`**.
+
+### 8c. **A3-D04-REV1** — driving-hours (2026-09-04)
+
+**Estado:** `DECIDIDO — IMPLEMENTAÇÃO PENDENTE`
+
+| Ponto | Decisão |
+|-------|---------|
+| Limite material | **10 horas** por motorista em cada período de **24 horas** |
+| Âmbito | Abrange **todas as plataformas** (obrigação legal confirmada) |
+| Plataforma | Deve ter **mecanismos que garantam** o limite + **registo auditável** |
+| WARN + RECORD | **Não** suficiente para M2 |
+| M2 | Exige **enforcement efectivo** |
+
+**Arquitectura decidida (produto):**
+
+- preparar cálculo compatível com **janela móvel de 24 h**;
+- **não** manter dia civil como regra **final**;
+- guardar estados temporais granulares: online · offline · disponível/espera · aceitação · deslocação para recolha · início de viagem · fim de viagem · pausa;
+- quando limite **já atingido:** não elegível para nova atribuição · não aceitar nova viagem · não iniciar nova viagem.
+
+**Política prudente provisória:** viagem regularmente iniciada **antes** de atingir o limite pode terminar em segurança; após conclusão, impedir nova operação.  
+Marca: **`SUJEITA A PARECER JURÍDICO`**.
+
+**Não decidido ainda:** exactamente que estados contam para as 10 h.
+
+### 8d. Cross-platform
+
+| Ponto | Estado |
+|-------|--------|
+| Obrigação legal cross-platform | **Confirmada** |
+| Mecanismo técnico | **Não** confirmado |
+| Integração dados outras plataformas no repo | **Ausente** |
+| Spec pública IMT localizada | **Não** |
+
+**Estado:** `DEPENDENTE DE IMT / REGULAMENTAÇÃO / PARECER`
+
+**Regra de produto:** Vamulá deve contabilizar correctamente os **seus** tempos; usar informação cross-platform oficial **quando** disponibilizada; **não** declarar que garante o total global sem fonte suficiente.
+
+### 8e. Nota A1 (económico)
+
+A1 deve considerar como custo/regra operacional:
+
+- contribuição AMT = **5%** sobre taxas de intermediação cobradas;
+- base exacta relativamente a **IVA** ainda requer confirmação AMT/jurídica.
+
+**Não** alterar **A1-D01** (comissão piloto **15%**). **Não** alterar pricing nesta tarefa.
+
+---
+
+## 9. BLOCKERS e NECESSÁRIOS M2 (confirmados)
+
+Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md).
+
+### BLOCKERS M2 (12)
+
+1. Validação IMT operador  
+2. Validação IMT motorista  
+3. Validação IMT veículo  
+4. Bloqueio operador  
+5. Bloqueio motorista  
+6. Bloqueio veículo  
+7. Enforcement 10 h / 24 h  
+8. Emergência passageiro  
+9. Emergência motorista  
+10. Chamada em tempo real às autoridades  
+11. Partilha de localização em emergência  
+12. Licença IMT do gestor da plataforma  
+
+### NECESSÁRIOS M2 (12)
+
+1. Registo de tempos  
+2. Retenção actividade **2 anos**  
+3. Retenção reclamações **2 anos**  
+4. Hard-cap comissão **25%** sem IVA  
+5. Breakdown legal de preço/comissão  
+6. Fatura electrónica  
+7. Reporting mensal AMT  
+8. Apuramento contribuição AMT **5%**  
+9. Contratos de adesão operadores  
+10. Disponibilização contrato ao motorista  
+11. Livro de Reclamações / RAL  
+12. Processos de comunicação IMT/AMT  
+
+*Não implementar nesta tarefa documental.*
 
 ---
 
@@ -192,15 +296,14 @@ Manter `ENABLE_VEHICLE_COMPLIANCE_GATES` **OFF** até validação jurídica sufi
 
 | Item | Estado |
 |------|--------|
-| A3.1–A3.6 (matriz + brief A6) | **DONE** |
-| A3-D01…D08 (decisões internas) | **DONE** |
-| A3.7 Validação jurídica externa | **Por iniciar** (autorizada por A3-D06) |
-| A3.8 Aplicar A3-D04 no código (warn/registo sem bloqueio) | **DONE** — enforcement OFF; warning/record ON; flag reversível |
-| A3.9 Arquivar PDFs oficiais + indexar (após fonte oficial) | **Por iniciar** |
-| Etapa A3 global | **PARCIAL** (faltam A3.7 externo + A3.9 arquivo) |
-| A6 no crítico | **Não** até parecer |
-| Próximo Marco 1 | **E5** |
+| A3-D01…D08 | **DONE** (histórico) |
+| A3-D03-REV1 / A3-D04-REV1 | **DECIDIDO — IMPLEMENTAÇÃO PENDENTE** |
+| A3.8 (código WARN+RECORD) | **DONE** como implementação da decisão **antiga**; meta M2 = REV1 |
+| A3.9 Arquivo PDFs P0 | **EM CURSO** / parcial (índice; PDFs em falta) |
+| A6 no crítico M2 | **Sim** (implementação); flag OFF até pronto |
+| M1 | **DONE** (não reabrir) |
+| Etapa A3 global | **PARCIAL** |
 
 ---
 
-**Frase:** Decisões de produto/operação A3 e A3.8 (código) estão fechadas; o que falta para “A3 completo” é **parecer externo** (A3.7) e **fontes oficiais TVDE no repo** (A3.9) — sem activar PF3D.
+**Frase:** Base legal M2 = Lei 45/2018 (59/2026) arts. 13.º/14.º/17.º-A/20.º/20.º-A; A3-D03/D04 **revistos**; M1 intacto; implementação e flags **ainda** não mexidas.

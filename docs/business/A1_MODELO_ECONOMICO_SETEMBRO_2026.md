@@ -158,6 +158,10 @@ Nenhuma A1-D pendente. Trabalho restante = **A1.2** (preencher valores) · **A1.
 
 **Fora de A1-D:** IVA/emissor recibos (`DEPENDENTE CONTABILISTA` · A3-D08); questões jurídicas; mobile; branding; activação técnica Stripe live (B1).
 
+### Nota legal 2026-09-04 (AMT)
+
+A1 deve considerar como custo/regra operacional a **contribuição AMT = 5%** sobre taxas de intermediação cobradas (Lei 45/2018 art. 30.º). A base exacta relativamente a **IVA** requer confirmação AMT/jurídica. **Não** altera **A1-D01** (comissão piloto **15%**). Ver [`A3_REQUISITOS`](../legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) §8e.
+
 ### 6c. A1.2 — Modelo de custos técnicos (**EM CURSO** · dados parcialmente confirmados · 2026-09-03)
 
 **Objectivo:** modelo de custos técnicos com rubricas confirmáveis — **não** inventar preços.  

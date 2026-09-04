@@ -1,15 +1,17 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-**Data:** 2026-09-03 (actualização executiva G3/M1) · base analítica 2026-09-01  
-**Tip `main`:** `e556a3b` (`origin/main` alinhada)  
-**Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03)  
-**Modo:** pós-M1 · próximo caminho crítico = **Marco 2 (piloto real)**  
-**Fonte de verdade:** código actual do repositório (`backend/`, `web-app/src/`, workflows, testes) + roadmap canónico  
+**Data:** 2026-09-04 (revisão legal M2) · actualização executiva G3/M1 2026-09-03 · base analítica 2026-09-01  
+**Tip `main`:** alinhar com `origin/main` na sessão de commit  
+**Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto** pela revisão legal  
+**Modo:** pós-M1 · caminho crítico = **Marco 2 (`READY FOR REAL PILOT`)**  
+**Fonte de verdade:** código actual + roadmap canónico + [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) (rev. 2026-09-04)  
 **Docs antigos (Maio e anteriores):** só pistas — confrontados com código; itens já implementados marcados **STALE / JÁ RESOLVIDO** e **excluídos** da lista de trabalho
 
 Relacionado (contexto Setembro, não substitui este relatório):
 
 - [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) — canónico de execução + marcos
+- [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) — A3-D03-REV1 / A3-D04-REV1
+- [`docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
 - [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
 - [`TODOdoDIA.md`](../TODOdoDIA.md)
 - [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](ops/DEMO_MANEL_2_SETEMBRO.md)
@@ -20,19 +22,20 @@ Relacionado (contexto Setembro, não substitui este relatório):
 
 | Área | Estado | Nota curta |
 |------|--------|------------|
-| **Geral** | **M1 DONE** / **PARCIAL** comercial | Quatro papéis OK em prod; **M1 técnico fechado**; dinheiro real, SMS, mobile package, Connect = **M2+** |
-| **Passenger** | **OK** | Pedido → viagem → rating → histórico; pagamento UI depende de flags/`client_secret` |
-| **Driver** | **OK** | Online/ofertas/ciclo completo/zonas/docs/inbox/earnings; gates docs OFF; driving-hours warn+record (A3.8) |
-| **Partner/Frota** | **OK** | Frota, mapa, veículos/docs, trips/export, mensagens, métricas |
-| **Admin** | **OK** | Agora / trips / people / fleet / system; **approve/reject drivers implementado (E5)** |
-| **Backend/API** | **OK** | FastAPI com routers auth/passenger/driver/partner/admin/matching/cron/webhooks |
-| **Autenticação** | **PARCIAL** | OTP + password + Google (passenger, se env); **OTP sem SMS real** (log/print / OTP fixo em non-prod) |
-| **Pagamentos** | **PARCIAL** / **BLOQUEADOR** comercial | Authorize/capture + webhook + reconcile; **mock em política de piloto**; **sem Stripe Connect/split/payouts** |
-| **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer + TTL + redispatch OK; B2 = schema `queued` + flags, **zero writers** |
-| **Localização/mapas** | **OK** | MapLibre/MapTiler, geocode, OSRM, driver-location; mock GPS via `?demo=1&sim=1` |
-| **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI (backend / frontend / web-e2e); staging OAuth e restore drills manuais |
-| **Testes/CI** | **OK** | ~74 testes backend + e2e Playwright (flows 4 papéis, partner, admin); skips sobretudo env |
-| **Docs/operação** | **PARCIAL** | Biblioteca Setembro + runbooks; tip `e556a3b` · M1 DONE no roadmap |
+| **Geral** | **M1 DONE** / **M2 PARCIAL** | Quatro papéis OK em WEB/PWA; M2 exige blockers legais + live pay + SMS + mobile |
+| **Passenger** | **OK** (M1) | Pedido → viagem → rating; emergência / RAL / fatura = **gaps M2** |
+| **Driver** | **OK** (M1) · **GAP M2** | Ciclo completo; docs FE; driving-hours **WARN+RECORD** (A3.8) — M2 exige **enforcement** (A3-D04-REV1) |
+| **Partner/Frota** | **OK** (M1) · **GAP M2** | Frota/docs; **sem** validação IMT; PF3D gates **OFF** (implementação pendente, A3-D03-REV1) |
+| **Admin** | **OK** (M1) | Approve/reject E5; override ilegal contra estado oficial = **proibido** (decisão A3) |
+| **Backend/API** | **OK** | FastAPI 4 papéis; **sem** cliente IMT |
+| **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
+| **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05) |
+| **Compliance legal** | **PARCIAL** | Base Lei 45/2018 (59/2026) identificada; **12 BLOCKERS M2** documentados; código ainda não alinhado |
+| **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
+| **Localização/mapas** | **OK** | Tracking existe; **não** ligado a emergência/autoridades |
+| **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI |
+| **Testes/CI** | **OK** | Backend + e2e |
+| **Docs/operação** | **PARCIAL** | A3-REV + matriz legal 2026-09-04; PDFs P0 ainda a arquivar |
 
 ---
 
@@ -50,7 +53,7 @@ Pesquisado em código/testes/scripts/workflows/docs vivos: `TODO`/`FIXME`/`HACK`
 | Gaps genéricos de “falta driver reject / ActiveTrip F5 / Partner mapa” (docs Maio–Jul) | Implementados e smoke PASS (`c4690ea`, Partner mapa, restore) |
 | “Partner reports future” como ausência total de KPIs | Partner tem métricas + export CSV |
 | Inventários Maio de shells/nav incompletos | Inventário UX actual marca bottom nav / earnings / inbox / docs APIs como implementados |
-| PF3D “não existe código” | Código de gates existe; produto deliberadamente **OFF** |
+| PF3D “não existe código” | Código de gates existe; produto deliberadamente **OFF** *(até 2026-09-04: OFF = falta base legal; **agora:** OFF = implementação pendente — **A3-D03-REV1** exige gates M2)* |
 | B2 “não há decisões” | Decisões + schema feitos (#525–#527); falta lifecycle/UI |
 
 ---
@@ -87,7 +90,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | **S-COMP-01** | Partner/Frota | `ENABLE_VEHICLE_COMPLIANCE_GATES=False` — activar só após dados reais (assign veículos/docs) | P1 — Necessário para fechar produto | Auditoria frota + decisão |
 | **S-COMP-02** | Partner/Frota | PF3D-4 UX rica + PF3D-5 admin override (docs) | P2 — Melhoria importante | S-COMP-01 |
 | **S-COMP-03** | Driver | Gate documentos motorista OFF (localStorage) — política produto | P2 — Melhoria importante | Decisão ops |
-| **S-COMP-04** | Segurança/Compliance | Leitura operacional DL 84/2026 (**LEGAL-TVDE-001**) → requisitos app | P0 — Bloqueador | Apoio jurídico |
+| **S-COMP-04** | Segurança/Compliance | Requisitos Lei 45/2018 (59/2026) + matriz impacto 2026-09-04 → blockers M2 | P0 — Bloqueador | A3-REV · IMT |
 | **S-COMP-05** | Segurança/Compliance | Suspensão automática por docs — **só** após validação legal | P2 — Melhoria importante | S-COMP-04 |
 
 ### Matching / B2
@@ -157,10 +160,10 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | Stripe | Authorize/capture/webhook OK em código; **live + Connect pendentes** |
 | Persistência estados | ActiveTrip restore Pax/Driver **OK** (código + smoke) |
 | Admin | Operacional OK; approve/reject drivers **DONE** (E5); não é dispatcher do dia |
-| Partner/Frota | Operacional OK; compliance gates OFF |
+| Partner/Frota | Operacional OK; PF3D OFF *(implementação pendente — A3-D03-REV1 exige gates M2)* |
 | Docs/KYC | Superfícies existem; gates OFF; OCR fora de scope |
 | Notificações | Inbox Partner↔Driver **OK**; **push/SMS real PENDENTE** |
-| Segurança | Auth JWT/OTP; Google parcial; driving-hours compliance ON + enforcement OFF (A3.8) |
+| Segurança | Auth JWT/OTP; Google parcial; driving-hours compliance ON + enforcement OFF (A3.8) — **meta M2 = A3-D04-REV1** |
 | Observabilidade | Sentry FE condicional; health Admin |
 | Backups/restore | Runbook `TVDE_BKP_RUNBOOK.md` — execução humana recorrente |
 | Staging/produção | Prod Render live; staging OAuth/smoke ainda pendente |
@@ -305,9 +308,10 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 ## 8. Nota de retoma
 
 - Backup SSD pré-férias: **não** comparado nesta análise (conforme pedido).  
-- Não activar B2 / PF3D / Stripe live / Capacitor **só** porque estão nesta lista — cada um exige decisão explícita.  
-- **ETAPA 01** e **ETAPA 02** concluídas (2026-09-01). Ordem das etapas seguintes inalterada.
+- Não activar B2 / Stripe live / Capacitor **só** porque estão nesta lista — cada um exige decisão explícita.  
+- **Excepção documental 2026-09-04:** PF3D/gates e enforcement 10h/24h são **obrigatórios para M2** (A3-D03-REV1 / A3-D04-REV1); flag OFF actual = **implementação pendente**, não “produto decide OFF”.  
+- **ETAPA 01** e **ETAPA 02** concluídas (2026-09-01). **M1 DONE** — não reabrir.
 
 ---
 
-**Frase:** **M1 técnico DONE.** O produto dos quatro papéis está maduro em WEB/PWA; o caminho até piloto/operação real (**M2**) é sobretudo **dinheiro real, auth SMS, mobile/push Android, compliance/validação económico-legal** — não reescrever as apps.
+**Frase:** **M1 técnico DONE** (não reaberto). M2 = piloto real (`READY FOR REAL PILOT`) com **12 blockers legais** (IMT, bloqueio, 10h/24h, emergência, licença plataforma) + live pay + SMS + mobile — sem reescrever as apps.
