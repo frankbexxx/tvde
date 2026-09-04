@@ -54,6 +54,8 @@ import {
 } from './passengerTripPollEquals'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
+import { EmergencySosButton, EmergencySosPanel } from '../emergency/EmergencySosPanel'
+import { isPassengerEmergencyStatus } from '../emergency/emergencyShare'
 import { PassengerPaymentConfirmCard } from './PassengerPaymentConfirmCard'
 import {
   getPassengerBannerState,
@@ -104,6 +106,7 @@ export function PassengerDashboard() {
   const [createTakingLong, setCreateTakingLong] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [passengerCancelOpen, setPassengerCancelOpen] = useState(false)
+  const [emergencySosOpen, setEmergencySosOpen] = useState(false)
   const [passengerMenuOpen, setPassengerMenuOpen] = useState(false)
   const [passengerMenuScreen, setPassengerMenuScreen] = useState<PassengerMenuScreen>('root')
   const [passengerMenuRootHighlight, setPassengerMenuRootHighlight] = useState<string | null>(null)
@@ -1445,6 +1448,11 @@ export function PassengerDashboard() {
                         trackingHint={driverTrackingHint}
                         pollHint={tripPollFootnote}
                       />
+                      {isPassengerEmergencyStatus(activeTrip.status) && token && activeTripId ? (
+                        <div className="flex justify-end">
+                          <EmergencySosButton onClick={() => setEmergencySosOpen(true)} />
+                        </div>
+                      ) : null}
                       {activeTrip.payment_status === 'processing' &&
                         typeof activeTrip.payment_intent_client_secret === 'string' &&
                         activeTrip.payment_intent_client_secret.length > 0 ? (
@@ -1489,6 +1497,16 @@ export function PassengerDashboard() {
           Não foi possível actualizar o histórico. Voltamos a tentar — verifica a ligação se o aviso persistir.
         </div>
       )}
+
+      {token && activeTripId ? (
+        <EmergencySosPanel
+          tripId={activeTripId}
+          token={token}
+          open={emergencySosOpen}
+          onClose={() => setEmergencySosOpen(false)}
+          roleHint="passenger"
+        />
+      ) : null}
     </ScreenContainer>
   )
 }

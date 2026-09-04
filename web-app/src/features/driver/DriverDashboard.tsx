@@ -88,6 +88,8 @@ import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { uploadDriverDocument, fetchDriverMessages } from '../../api/driverMessages'
 import { ActiveTripActions } from './ActiveTripActions'
+import { EmergencySosButton, EmergencySosPanel } from '../emergency/EmergencySosPanel'
+import { isDriverEmergencyStatus } from '../emergency/emergencyShare'
 import { DriverInboxPanel } from './DriverInboxPanel'
 import { FilePickerButton } from '../../components/forms/FilePickerButton'
 import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
@@ -470,6 +472,7 @@ export function DriverDashboard() {
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
+  const [emergencySosOpen, setEmergencySosOpen] = useState(false)
   /** P25: última informação conhecida se o poll falhar logo após aceitar. */
   const [acceptedDetailFallback, setAcceptedDetailFallback] = useState<TripDetailResponse | null>(null)
   const [dismissedOfferTripIds, setDismissedOfferTripIds] = useState<Set<string>>(() =>
@@ -586,6 +589,14 @@ export function DriverDashboard() {
     token,
     Boolean(activeTripId && token)
   )
+
+  const driverEmergencyStatus =
+    driverStatusOverride ??
+    driverActiveTripPoll.poll?.trip?.status ??
+    acceptedDetailFallback?.status
+
+  const showDriverEmergencySos =
+    Boolean(activeTripId && token && isDriverEmergencyStatus(driverEmergencyStatus))
 
   const compliancePollEnabled = Boolean(token && sessionRole === 'driver')
   const { data: drivingCompliance } = usePolling(
@@ -1325,6 +1336,11 @@ export function DriverDashboard() {
           onTripNotFound={onActiveTripNotFound}
           onDismissCompletedTrip={clearDriverActiveTripUi}
         />
+        {showDriverEmergencySos ? (
+          <div className="flex justify-end">
+            <EmergencySosButton onClick={() => setEmergencySosOpen(true)} />
+          </div>
+        ) : null}
         <ActiveTripActions
           tripId={activeTripId}
           token={token}
@@ -2603,6 +2619,16 @@ export function DriverDashboard() {
             </div>
           </div>
         )}
+
+        {token && activeTripId ? (
+          <EmergencySosPanel
+            tripId={activeTripId}
+            token={token}
+            open={emergencySosOpen}
+            onClose={() => setEmergencySosOpen(false)}
+            roleHint="driver"
+          />
+        ) : null}
       </ScreenContainer>
     </div>
   )

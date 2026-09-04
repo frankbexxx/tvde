@@ -28,6 +28,7 @@ from app.api.routers import (
     driver_trips,
     driver_zones,
     drivers,
+    emergency,
     health,
     logs,
     matching,
@@ -156,6 +157,7 @@ if settings.dev_tools_router_enabled():
 app.include_router(auth.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
+app.include_router(emergency.router)
 app.include_router(driver_zones.router)
 app.include_router(driver_offers.router)
 app.include_router(driver_status.router)
