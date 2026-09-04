@@ -592,7 +592,7 @@ export function DriverDashboard() {
 
   const driverEmergencyStatus =
     driverStatusOverride ??
-    driverActiveTripPoll.trip?.status ??
+    driverActiveTripPoll.poll?.trip?.status ??
     acceptedDetailFallback?.status
 
   const showDriverEmergencySos =
