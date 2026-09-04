@@ -113,22 +113,31 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 
 | Bloco | Conteúdo (matriz) | Natureza |
 |-------|-------------------|----------|
-| **M2-L0** | L-26 — licença IMT do **gestor da plataforma** | Administrativo/legal; **paralelo** ao desenvolvimento; pouco dependente de código |
-| **M2-L1** | L-01…L-03 — validação IMT operador / motorista / veículo | Fundação: fonte oficial de elegibilidade; depende canal/spec IMT |
-| **M2-L2** | L-04…L-06 — bloqueio operador / motorista / veículo | Enforcement; **depende de M2-L1** (não fechar sem fonte oficial) |
-| **M2-L3** | L-10 (+ L-07…L-09) — enforcement **10 h / 24 h** | **Fundação 2026-09-04:** rolling 24h + audits; 11h fixas removidas; segmentos arriving+ongoing **provisórios**; enforcement ainda **OFF**; falta enforcement efectivo + parecer (o que conta) + cross-platform |
-| **M2-L4** | L-19…L-22 — emergência (Pax/Driver + chamada autoridades + localização) | **Foundation 2026-09-04:** SOS PAX+DRV · `tel:112` · snapshot autenticado · share/clipboard · audits; sem PSAP/SMS/suporte humano; **PARCIAL** até validação legal |
+| **M2-L0** | L-26 — licença IMT do **gestor da plataforma** | **`PRATICAMENTE FECHADO — PENDENTE CONSOLIDAÇÃO DOCUMENTAL`** (2026-09-04): marca **VAMULÁ** INPI · titular **Ventos Férteis, Lda** · licença IMT Operador de Plataforma Electrónica TVDE observada em documento físico; falta no repo NIPC/sede/nº/data/validade/acto oficial (Manel) |
+| **M2-L1** | L-01…L-03 — validação IMT operador / motorista / veículo | **`PENDENTE DEPENDÊNCIA EXTERNA`**: discovery técnico DONE; sem client/API IMT inventado; falta spec/canal oficial |
+| **M2-L2** | L-04…L-06 — bloqueio operador / motorista / veículo | **`PENDENTE DEPENDÊNCIA EXTERNA`** (depende M2-L1) |
+| **M2-L3** | L-10 (+ L-07…L-09) — enforcement **10 h / 24 h** | **`FOUNDATION IMPLEMENTADA / ENFORCEMENT PENDENTE`** — PR [#548](https://github.com/frankbexxx/tvde/pull/548) · merge `c8d2c35` · rolling 24h · sem 11h fixas · `driving_rest_until` legacy isolado · arriving+ongoing provisório · **ENFORCEMENT OFF** · 31 tests |
+| **M2-L4** | L-19…L-22 — emergência | **`FOUNDATION IMPLEMENTADA` / L-19…22 `PARCIAL`** — PR [#549](https://github.com/frankbexxx/tvde/pull/549) · merge `717270a` · SOS PAX+DRV · `tel:112` · snapshot · share/clipboard · audits · smoke mobile PASS · validação legal pendente |
 
 **Ordem de execução:**
 
-1. **M2-L0** avança em paralelo.  
-2. **M2-L1** discovery / contacto IMT.  
-3. Se **M2-L1** ficar bloqueado externamente → avançar **M2-L3**.  
-4. Quando fonte IMT definida → implementar **M2-L1**, depois **M2-L2**.  
-5. Implementar **M2-L4**.  
-6. Continuar **NECESSÁRIOS M2**.
+1. **M2-L0** — fechar formalmente quando docs Manel entrarem no repo.  
+2. **M2-L1** discovery / contacto IMT (bloqueado externamente).  
+3. Se **M2-L1** bloqueado → avançar L3/L4 (já feito foundation 2026-09-04).  
+4. Quando fonte IMT definida → **M2-L1**, depois **M2-L2**.  
+5. **M2-L4** foundation DONE — parecer se foundation basta.  
+6. Continuar **NECESSÁRIOS M2** (retenção, AMT, …).
 
-*Pendentes finos (L3):* definição de tempo de operação · viagem no limite · **enforcement ON** · cross-platform · detalhes IMT. **Feito na fundação:** rolling 24h · remoção 11h fixas · audits de transição · política segmentos provisória documentada.
+### Sessão 2026-09-04 (fecho)
+
+| | |
+|--|--|
+| **`main`** | Alinhada com `origin/main` (pós-merge #548 + #549) |
+| **Driving-hours** | Foundation merged; enforcement deliberadamente OFF |
+| **Emergency** | Foundation merged; smoke PAX/DRV + `tel:112` telefone real PASS |
+| **Próximas frentes** | (1) fechar L0 com docs Manel · (2) parecer/decisão legal L3 · (3) retention/audit · (4) AMT/reporting · (5) L1/L2 quando houver documentação IMT |
+
+*Pendentes finos (L3):* definição de “operar” · estados que contam · viagem no limite · **enforcement ON** · cross-platform. *Tweak L4 não bloqueante:* origem/destino legíveis (morada) no painel SOS.
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
