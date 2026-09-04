@@ -22,7 +22,7 @@
 
 | Carril | Etapas |
 |--------|--------|
-| **A** Negócio / Legal / Compliance | **A1 PARCIAL** (A1.1 DONE) · A2 · **A3 PARCIAL** (D01–D08 DONE) · A4 · A5 · A6 *(fora crítico; OFF)* |
+| **A** Negócio / Legal / Compliance | **A1 PARCIAL** · A2 · **A3 PARCIAL** (D01–D08 + **D03-REV1/D04-REV1**) · A4 · A5 · **A6 no crítico M2** *(flag OFF = implementação pendente)* |
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · B5 Métodos PT |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 Landing |
@@ -60,25 +60,52 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 
 **Etapas:** D0 (**DONE**) · A3 (**PARCIAL** — suficiente para M1; A3.7/A3.9 → M2) · E5 (**DONE**) · G3.1 (**DONE** 2026-09-03)  
 
-*WEB/PWA suficiente. **D1/D2/D3/G2 não entram no Marco 1.** A6 **fora** do crítico (A3-D03 OFF). Termos/Privacidade **não** bloqueiam M1 (A3-D07). Não exige live pay, SMS, Connect, package mobile nem gates ON.*
+*WEB/PWA suficiente. **D1/D2/D3/G2 não entram no Marco 1.** Termos/Privacidade **não** bloqueiam M1 (A3-D07). Não exige live pay, SMS, Connect, package mobile nem gates ON.*
 
-*Critério M1.3:* decisões A3 internas fechadas; parecer externo **não** bloqueia fecho técnico M1 enquanto gates/driving-hours bloqueante forem tratados conforme A3-D03/D04 (**A3.8 DONE** — enforcement OFF).
+*Critério M1.3 (histórico):* decisões A3-D01…D08 + A3.8 WARN+RECORD fecharam M1 técnico. **A3-D03-REV1 / A3-D04-REV1 (2026-09-04) alteram requisitos de M2, não reabrem M1.**
 
-**Acta G3.1 (2026-09-03):** tip `e556a3b` · `main` = `origin/main` · zero `501` backend · CI recente PASS (#543/#544) · Demo Manel 2 PASS · flags default seguras (B2/PF3D/enforcement OFF; `ENABLE_DEV_TOOLS=false`).
-## CAMINHO CRÍTICO — PILOTO REAL (Marco 2)
+**Acta G3.1 (2026-09-03):** tip `e556a3b` · Demo Manel 2 PASS · flags default seguras.  
+**Nota legal 2026-09-04:** M1 permanece **DONE**. A nova validação (Lei 45/2018 via 59/2026) altera M2 / operação TVDE real — ver [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md).
+
+## CAMINHO CRÍTICO — PILOTO REAL (Marco 2) — **READY FOR REAL PILOT**
 
 ```
 [M1] → A1 → A2 → C1 → B1 → E3 → G1 → F1
          → D1 → D2 → D3 → G2   (foco Android; iOS pode seguir depois)
+         → A3-REV / A6 (IMT + gates + 10h/24h + emergência)  ← crítico M2
          → G3(M2)
          ↘ (B3)/(B4) **fora crítico M2** nesta fase (**A1-D05/D06**)
-         ↘ (A6) se A3 exigir enforcement no piloto
 ```
 
-**Etapas base:** A1 · A2 · C1 · B1 · E3 · G1 · F1 · **D1 · D2 · D3 · G2** · G3 → **12** (+ M1)  
-**Condicionais:** B3 · B4 *(adiados pós A1-D05/D06)* · A6  
+**Definição `READY FOR REAL PILOT`:** operação tecnicamente funcional · requisitos legais **bloqueantes** implementados ou operacionalmente satisfeitos · integração/processo **IMT** disponível · **enforcement** efectivo de compliance · **emergência** disponível · pagamentos reais · autenticação real · package mobile necessário · condições legais/contratuais mínimas concluídas.
 
-*Package mobile **exigido** no piloto (D0 HÍBRIDO). Prioridade **Android**. iOS no carril D sem bloquear início do piloto Android. Processo financeiro **manual semanal ao Partner** (**A1-D03…D06**) → **B3/B4 fora** do crítico M2 nesta fase. D4/stores só se distribuição o exigir.*
+**Etapas base:** A1 · A2 · C1 · B1 · E3 · G1 · F1 · **D1 · D2 · D3 · G2** · **A6 / compliance legal** · G3 (+ M1)  
+**Condicionais:** B3 · B4 *(adiados pós A1-D05/D06)*  
+
+*Package mobile **exigido**. Prioridade **Android**. Processo financeiro **manual semanal ao Partner** (**A1-D03…D06**) → **B3/B4 fora** do crítico M2 nesta fase. **A6 no crítico M2** (A3-D03-REV1); flag OFF = implementação pendente, **não** decisão de produto.*
+
+### BLOCKERS M2 legais (concretos — 12)
+
+| # | Blocker |
+|---|---------|
+| 1 | Validação IMT operador |
+| 2 | Validação IMT motorista |
+| 3 | Validação IMT veículo |
+| 4 | Bloqueio operador |
+| 5 | Bloqueio motorista |
+| 6 | Bloqueio veículo |
+| 7 | Enforcement 10 h / 24 h |
+| 8 | Emergência passageiro |
+| 9 | Emergência motorista |
+| 10 | Chamada em tempo real às autoridades |
+| 11 | Partilha de localização em emergência |
+| 12 | Licença IMT do gestor da plataforma |
+
+### NECESSÁRIOS M2 legais (12)
+
+Registo de tempos · retenção actividade 2 anos · retenção reclamações 2 anos · hard-cap comissão 25% sem IVA · breakdown legal preço/comissão · fatura electrónica · reporting mensal AMT · apuramento contribuição AMT 5% · contratos de adesão operadores · disponibilização contrato ao motorista · Livro de Reclamações / RAL · processos comunicação IMT/AMT.
+
+*Matriz:* [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md).
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
@@ -105,7 +132,7 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 | **B2** ‖ **E5** ‖ **F4** | Após/com cuidado face a B1 |
 | **H*** | Sem activar flags comerciais |
 
-**Não paralelizar:** B3 com A2 aberto; D3 sem D1; A6 ON sem A3; live Stripe sem B1 completo.
+**Não paralelizar:** B3 com A2 aberto; D3 sem D1; A6 ON sem A3-D03-REV1 / IMT-processo; live Stripe sem B1 completo.
 
 ---
 
@@ -118,6 +145,7 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 - **Dependências:** —  
 - **Estado:** **PARCIAL** (2026-09-03) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 EM CURSO** (fixo vs variável; Manel ≠ orçamento) · A1.3–A1.4 abertos · código pricing/cancel ainda legado  
 - **Entrega levantamento:** [`A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md)  
+- **Nota legal 2026-09-04:** considerar contribuição AMT **5%** sobre taxas de intermediação (base IVA a confirmar AMT/jurídico). **Não** altera **A1-D01** (comissão piloto **15%**).  
 - **Conclusão (quando fechado):** Francisco+Manel(+contabilista) registam aceite / correcções por escrito.  
 - **Docs base (hipóteses, não aprovadas):** [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
 
@@ -147,14 +175,14 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 
 ## A3 — Validar requisitos legais TVDE aplicáveis — **PARCIAL**
 
-- **Objectivo:** Fonte legal → interpretação/validação → requisitos operacionais → impacto técnico. **Não** assumir que DL 84/2026 implica gates ou suspensão automática.  
-- **IDs:** `S-COMP-04` · `LEGAL-TVDE-001`  
-- **Dependências:** — (apoio jurídico recomendado)  
-- **Estado:** **PARCIAL** (2026-09-02) — matriz + **A3-D01…D08 DONE** + **A3.8 DONE**; falta validação jurídica externa e arquivo de diplomas oficiais TVDE  
-- **Entrega:** [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md)  
-- **A6:** indeterminado nas fontes + **A3-D03** = gates **OFF** → A6 **fora** do crítico até parecer  
-- **Driving-hours:** **A3-D04** + **A3.8 DONE** — tracking/aviso/registo ON; enforcement bloqueante OFF (`ENABLE_DRIVING_HOURS_ENFORCEMENT=false`); reversível após parecer  
-- **Marco 2:** Termos + Privacidade **bloqueantes** (A3-D07); recibos após A1/A2 + contabilista (A3-D08)
+- **Objectivo:** Fonte legal → requisitos operacionais → impacto técnico M2. Base principal = **Lei 45/2018** (republicação **59/2026**) arts. **13.º / 14.º / 17.º-A / 20.º / 20.º-A**. DL 84 / Reg. 561 = **complementares**, não o centro dos tempos TVDE.  
+- **IDs:** `S-COMP-04` · `LEGAL-TVDE-001…`  
+- **Dependências:** — (IMT / parecer fino para detalhes)  
+- **Estado:** **PARCIAL** (rev. **2026-09-04**) — **A3-D01…D08 DONE** · **A3-D03-REV1 / A3-D04-REV1 DECIDIDO — IMPLEMENTAÇÃO PENDENTE** · A3.8 WARN+RECORD = código actual · falta arquivo PDFs P0 + implementação M2  
+- **Entrega:** [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) · matriz [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)  
+- **A6:** **no crítico M2** (**A3-D03-REV1**); flag OFF = implementação pendente  
+- **Driving-hours:** **A3-D04-REV1** — M2 exige enforcement 10 h/24 h; WARN+RECORD **não** basta  
+- **Marco 2:** Termos + Privacidade (A3-D07) + blockers legais listados no caminho M2
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
@@ -162,11 +190,12 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 | A3.2 | Ler objeto/âmbito DL 84 | Notas Arts. 1.º–2.º | DOCS | A3.1 | **DONE** |
 | A3.3 | Matriz requisitos | Matriz | DOCS | A3.2 | **DONE** |
 | A3.4 | Impacto técnico / ops | Lista; sem inventar features | DOCS | A3.3 | **DONE** |
-| A3.5 | A6 obrigação gates ON? | Indeterminado nas fontes | DECISÃO | A3.4 | **DONE** |
+| A3.5 | A6 obrigação gates ON? | Indeterminado nas fontes *(histórico)* | DECISÃO | A3.4 | **DONE** → **REV1** |
 | A3.6 | Brief A6 + decisões D01–D08 | Acta em `A3_REQUISITOS` §8 | DOCS | A3.5 | **DONE** |
-| A3.7 | Validação jurídica externa (pacote A3-D06) | Parecer mínimo pré-piloto | EXTERNO | A3-D06 | **Por iniciar** |
-| A3.8 | Aplicar A3-D04 no código: driving-hours = tracking/aviso/registo **sem** bloquear online/accept | Comportamento alinhado à decisão; sem claim legal | CÓDIGO · TESTE | A3-D04 | **DONE** (enforcement OFF; warn/record ON; flag reversível) |
-| A3.9 | Arquivar PDFs oficiais TVDE + indexar (`LEGAL-TVDE-00x`) | Fontes no repo | DOCS · EXTERNO | A3-D01 · fonte oficial | **Por iniciar** · **`REQUER PESQUISA/FONTE OFICIAL`** |
+| A3.7 | Validação jurídica externa (pacote A3-D06) | Parecer / source pack / matriz | EXTERNO · DOCS | A3-D06 | **PARCIAL** (2026-09-04 — base legal identificada; detalhes IMT/parecer fino abertos) |
+| A3.8 | Código A3-D04 antigo: WARN+RECORD sem bloqueio | Alinhado à decisão **antiga** | CÓDIGO · TESTE | A3-D04 | **DONE** *(meta M2 = A3-D04-REV1 — implementação pendente)* |
+| A3.9 | Arquivar PDFs oficiais TVDE P0 + indexar | Fontes no repo | DOCS · EXTERNO | A3-D01 | **EM CURSO** (índice; PDFs P0 em falta) |
+| A3.10 | Acta **A3-D03-REV1** / **A3-D04-REV1** + blockers M2 | Decisões produto M2 | DOCS | A3.7 | **DONE** 2026-09-04 |
 
 ## A4 — Titularidade IP / contas
 
@@ -197,25 +226,26 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 | A5.4 | Escolher vencedor + brief troca assets | Decisão + checklist | DECISÃO | A5.3 |
 | A5.5 | (Opcional) pesquisa/registo marca | Iniciado ou → H | EXTERNO | A5.4 |
 
-## A6 — Compliance frota (dados → gates)
+## A6 — Compliance frota / IMT / bloqueio (dados → gates) — **CRÍTICO M2**
 
-- **Objectivo:** Dados mínimos; activar gates **só** após parecer (A3.7) + decisão explícita.  
+- **Objectivo:** Validação IMT + bloqueio operacional real (operador/motorista/veículo) + gates efectivos para M2.  
 - **IDs:** `S-COMP-01` · `S-COMP-02` · `S-COMP-03` · `S-COMP-05`  
-- **Dependências:** A3 · validação externa  
-- **Conclusão:** Gates ON testados **ou** A6 explicitamente fora do crítico.  
-- **Estado:** **Fora do caminho crítico** — **A3-D03** = OFF até validação jurídica; ver [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) §7–8.  
-- **Canónico OFF:** [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md).
+- **Dependências:** **A3-D03-REV1** · IMT / regulamentação para mecanismo exacto  
+- **Conclusão M2:** gates efectivos **obrigatórios**; PF3D = base útil, **não** suficiente.  
+- **Estado:** **No caminho crítico M2** — flag `ENABLE_VEHICLE_COMPLIANCE_GATES` **OFF agora** só por implementação pendente (**não** decisão de produto). Ver [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) §7.  
+- **Canónico:** [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) · matriz legal 2026-09-04.
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| A6.1 | Confirmar PF3D atrás de flag OFF + smokes OFF PASS | Não reabrir “falta código” | CONFIRMAR | `PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md` |
-| A6.2 | Confirmar A3-D03: A6 fora dos críticos enquanto OFF | Acta | DOCS | A3-D03 |
-| A6.3 | Após parecer A3.7: decidir se gates ON no piloto/comercial | Sim/Não | DECISÃO | A3.7 |
-| A6.4 | Se Sim: auditoria frota + docs mínimos Partner | Frota piloto completa | DOCS · EXTERNO | A6.3 |
-| A6.5 | Se Sim: fechar decisões A–E PF3D-0 ainda abertas | Acta A–E | DECISÃO | A6.1 · A6.3 |
-| A6.6 | Se Sim: activar flag staging→prod + smoke | Gates ON só após PASS | CONFIG · TESTE | A6.4 · A6.5 |
-| A6.7 | UX override/admin (PF3D-4/5) se necessário | OK ou adiado | CÓDIGO | A6.6 |
-| A6.8 | Suspensão automática: só se parecer OK | Implementar **ou** fora de escopo | DECISÃO | A3.7 · A6.6 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| A6.1 | Confirmar PF3D atrás de flag OFF + smokes OFF PASS | Não reabrir “falta código” | CONFIRMAR | `PF3D_…` | Por confirmar |
+| A6.2 | Acta **A3-D03-REV1**: A6 crítico M2; OFF = implementação pendente | Acta | DOCS | A3-D03-REV1 | **DONE** |
+| A6.3 | Desenhar validação IMT (operador/motorista/veículo) sem inventar API | Spec + gaps IMT | DOCS · EXTERNO | A6.2 | Por iniciar |
+| A6.4 | Auditoria frota + docs mínimos Partner | Frota piloto completa | DOCS · EXTERNO | A6.2 | Por iniciar |
+| A6.5 | Fechar decisões A–E PF3D-0 ainda abertas | Acta A–E | DECISÃO | A6.1 | Por iniciar |
+| A6.6 | Implementar bloqueio operacional real (disponível/matching/accept/start) | Entidade bloqueada inoperante | CÓDIGO | A6.3 · A6.5 | Por iniciar |
+| A6.7 | Activar flag staging→prod + smoke **só** quando gates+IMT/processo prontos | Gates ON após PASS | CONFIG · TESTE | A6.4 · A6.6 | Por iniciar |
+| A6.8 | UX Admin: rever falso positivo / revalidar; **sem** override contra estado oficial inválido | Override seguro | CÓDIGO | A6.6 | Por iniciar |
+| A6.9 | Enforcement 10 h/24 h (**A3-D04-REV1**) — janela móvel + estados granulares | Bloqueio efectivo M2 | CÓDIGO · TESTE | A3-D04-REV1 | Por iniciar |
 
 ---
 
@@ -632,16 +662,16 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 |---|----------|--------|
 | M1.1 | Fluxo 4 papéis em prod PASS (já: Demo Manel 2) | **PASS** |
 | M1.2 | D0 **DONE** — HÍBRIDO (WEB/PWA fecha M1; package no piloto/comercial, Android primeiro) | **PASS** |
-| M1.3 | A3: matriz + decisões D01–D08 DONE; A3.8 DONE; PARCIAL só por externo/arquivo (A3.7/A3.9); gates OFF; ver [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) | **PASS** |
+| M1.3 | A3: matriz + D01–D08 DONE; A3.8 WARN+RECORD DONE *(decisão M1)*; PARCIAL externo/arquivo — ver [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md). **REV1 2026-09-04 não reabre M1.** | **PASS** |
 | M1.4 | E5 **DONE**: `POST /admin/drivers/{id}/approve|reject` implementados (sem 501); ver secção E5 | **PASS** |
 | M1.5 | Decisões produto existentes confirmadas onde aplicável (pricing híbrido, B2 OFF, PF3D OFF, nav Opção B) — sem flags perigosas acidentais (`ENABLE_DEV_TOOLS=false`) | **PASS** |
 | M1.6 | G3.1 assinado | **PASS** |
 
 *Não exige:* SMS prod, Stripe live, Connect, payouts, package/push, gates ON.
 
-## MARCO 2 — APP PRONTA PARA PILOTO REAL
+## MARCO 2 — APP PRONTA PARA PILOTO REAL (`READY FOR REAL PILOT`)
 
-Além de M1:
+Além de M1 — **não** marcar M2 “bloqueado” genericamente; fechar blockers **concretos** (secção caminho M2 + abaixo).
 
 | # | Critério |
 |---|----------|
@@ -653,14 +683,18 @@ Além de M1:
 | M2.6 | F1 restore drill PASS (recente) |
 | M2.7 | Se B3.2=Não: processo financeiro **manual** documentado e operável |
 | M2.8 | Se B3.2=Sim: B3 smoke split PASS |
-| M2.9 | A6 só se parecer + decisão pós-A3.7 exigir gates ON; senão OFF (A3-D03) OK |
+| M2.9 | **A6 / compliance:** validação IMT + bloqueio efectivo operador/motorista/veículo (**A3-D03-REV1**) — flag OFF **não** conta como PASS |
 | M2.10 | D1–D3 (+G2) PASS em **Android** (D0 HÍBRIDO); iOS pode estar pendente |
 | M2.11 | **Termos de utilização + Política de Privacidade** publicados/aceites no fluxo (A3-D07) |
-| M2.12 | A3.7 validação jurídica externa mínima (A3-D06) concluída ou riscos residuais **aceitados por escrito** |
-| M2.13 | A3.8 driving-hours alinhado a A3-D04 (sem bloqueio automático) — **DONE** (enforcement OFF; rever após A3.7) |
-| M2.14 | G3.2 assinado |
+| M2.12 | Base legal M2 documentada (source pack / A3-REV); riscos residuais IMT/parecer **aceites por escrito** onde aplicável |
+| M2.13 | Driving-hours: **enforcement 10 h/24 h** alinhado a **A3-D04-REV1** (WARN+RECORD sozinho = **não** PASS M2) |
+| M2.14 | Emergência passageiro + motorista (chamada autoridades + partilha localização) |
+| M2.15 | Licença IMT do gestor da plataforma (processo / evidência) |
+| M2.16 | NECESSÁRIOS M2 legais mínimos operáveis (retenção 2 anos, hard-cap 25%, breakdown, fatura/AMT/contratos/RAL — ver lista) ou plano escrito aceite |
+| M2.17 | G3.2 assinado |
 
-*Recibos/faturação (A3-D08):* **não** bloqueiam M2 por escolha de emissor nesta fase — fecham-se com contabilista **após A1/A2**; até lá processo provisório pode ser documentado sem hardcode de emissor.
+*Recibos/faturação (A3-D08):* escolha de emissor com contabilista **após A1/A2**; fatura electrónica continua **NECESSÁRIO M2**.  
+*Pendentes finos:* definição exacta dos estados 10 h · viagem no limite · revalidação/fallback IMT · cross-platform · “devesse ter conhecimento” · IVA da contribuição 5% · portarias execução — `DEPENDE PARECER / IMT / REGULAMENTAÇÃO`.
 ## MARCO 3 — APP PRONTA PARA EXPLORAÇÃO COMERCIAL
 
 Além de M2:

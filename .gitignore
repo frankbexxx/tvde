@@ -49,6 +49,10 @@ tmp/
 temp/
 _temp/
 
+# Word locks + DOCX research Perplexity (não normativo — nunca commit)
+~$*
+docs/legal/research/docx/
+
 # Ficheiros temporários para commit/PR (usados em heredocs no PowerShell)
 .commit_msg_tmp.txt
 .pr_body_tmp.md
