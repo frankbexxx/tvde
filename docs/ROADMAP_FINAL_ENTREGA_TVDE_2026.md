@@ -117,7 +117,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L1** | L-01…L-03 — validação IMT operador / motorista / veículo | Fundação: fonte oficial de elegibilidade; depende canal/spec IMT |
 | **M2-L2** | L-04…L-06 — bloqueio operador / motorista / veículo | Enforcement; **depende de M2-L1** (não fechar sem fonte oficial) |
 | **M2-L3** | L-10 (+ L-07…L-09) — enforcement **10 h / 24 h** | **Fundação 2026-09-04:** rolling 24h + audits; 11h fixas removidas; segmentos arriving+ongoing **provisórios**; enforcement ainda **OFF**; falta enforcement efectivo + parecer (o que conta) + cross-platform |
-| **M2-L4** | L-19…L-22 — emergência (Pax/Driver + chamada autoridades + localização) | Subsistema relativamente autónomo |
+| **M2-L4** | L-19…L-22 — emergência (Pax/Driver + chamada autoridades + localização) | **Foundation 2026-09-04:** SOS PAX+DRV · `tel:112` · snapshot autenticado · share/clipboard · audits; sem PSAP/SMS/suporte humano; **PARCIAL** até validação legal |
 
 **Ordem de execução:**
 

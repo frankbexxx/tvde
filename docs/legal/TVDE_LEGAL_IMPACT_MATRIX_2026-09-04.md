@@ -37,10 +37,10 @@
 | **L-16** | **Fatura electrónica** pós-viagem (elementos art. 15.º n.º 8) | Art. 15.º n.º 8 · A3-D08 | `AUSENTE` | `GAP LEGAL/PROCESSO` | `NECESSÁRIO M2` | Sem emissor; A3-D08 adia escolha para pós A1/A2 + contabilista |
 | **L-17** | **Reporting mensal AMT** (viagens, faturação, taxa) | Art. 30.º n.ºs 3–4 · AMT formulário | `AUSENTE` | `GAP LEGAL/PROCESSO` | `NECESSÁRIO M2` | Sem export alinhado ao Modelo Formulário TVDE |
 | **L-18** | **Contribuição 5%** sobre taxas de intermediação | Art. 30.º n.º 2 | `AUSENTE` | `GAP LEGAL/PROCESSO` | `NECESSÁRIO M2` | Processo financeiro externo; app deve permitir apuramento |
-| **L-19** | Serviço de **emergência passageiro** (chamada tempo real + localização) | Art. 19.º n.º 1 al. j); 17.º-A | `AUSENTE` | `GAP FUNCIONAL` | `BLOCKER M2` | Sem fluxo emergência integrado |
-| **L-20** | Serviço de **emergência motorista** (idem) | Art. 19.º / 17.º-A | `AUSENTE` | `GAP FUNCIONAL` | `BLOCKER M2` | Idem |
-| **L-21** | Chamada em tempo real às **autoridades** | Art. 19.º n.º 1 al. j) | `AUSENTE` | `GAP INTEGRAÇÃO` | `BLOCKER M2` | Sem integração/processo técnico documentado |
-| **L-22** | **Partilha de localização** no fluxo de emergência | Art. 19.º; 17.º-A | `PARCIAL` | `GAP FUNCIONAL` | `BLOCKER M2` | Tracking viagem existe; **não** ligado a emergência/autoridades |
+| **L-19** | Serviço de **emergência passageiro** (chamada tempo real + localização) | Art. 19.º n.º 1 al. j); 17.º-A | `PARCIAL` | `GAP FUNCIONAL` | `BLOCKER M2` | **Foundation 2026-09-04:** SOS + `tel:112` + snapshot + share; **PENDENTE VALIDAÇÃO LEGAL** se exigir mais que foundation |
+| **L-20** | Serviço de **emergência motorista** (idem) | Art. 19.º / 17.º-A | `PARCIAL` | `GAP FUNCIONAL` | `BLOCKER M2` | Idem foundation Driver |
+| **L-21** | Chamada em tempo real às **autoridades** | Art. 19.º n.º 1 al. j) | `PARCIAL` | `GAP INTEGRAÇÃO` | `BLOCKER M2` | **IMPLEMENTADO** via `tel:112` (explícito); sem PSAP/API automática |
+| **L-22** | **Partilha de localização** no fluxo de emergência | Art. 19.º; 17.º-A | `PARCIAL` | `GAP FUNCIONAL` | `BLOCKER M2` | Share nativo/clipboard + snapshot localização; sem URL pública/token |
 | **L-23** | **Contratos de adesão** operadores + comunicação AMT | Arts. 5.º, 20.º n.ºs 8–9 | `AUSENTE` | `GAP LEGAL/PROCESSO` | `NECESSÁRIO M2` | Sem versionamento/aceitação/envio AMT na app |
 | **L-24** | Disponibilizar contrato do operador ao **motorista** na inscrição | Art. 20.º n.º 10 | `AUSENTE` | `GAP COPY/UX` | `NECESSÁRIO M2` | Sem prova de disponibilização |
 | **L-25** | **Reclamações** (Livro Electrónico) + informação **RAL** | Art. 19.º n.ºs 2–3 | `AUSENTE` | `GAP COPY/UX` | `NECESSÁRIO M2` | Sem UI/processo canónico |
