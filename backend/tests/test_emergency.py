@@ -60,7 +60,8 @@ def _make_driver(db: Session, *, with_vehicle: bool = False) -> tuple[User, Driv
     db.add(d)
     db.flush()
     if with_vehicle:
-        plate = f"AA-{uuid.uuid4().hex[:2].upper()}-00"
+        # High entropy: 2 hex chars → only 256 plates and collides under shared CI DB.
+        plate = f"EM-{uuid.uuid4().hex[:8].upper()}"
         v = Vehicle(
             partner_id=DEFAULT_PARTNER_UUID,
             plate=plate,

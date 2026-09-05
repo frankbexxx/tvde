@@ -3,13 +3,15 @@
 **Tipo:** matriz operacional + decisões de produto — **não** é parecer jurídico  
 **Data análise inicial:** 2026-09-02 · **Decisões A3-D01…D08:** 2026-09-02 (**DONE**)  
 **Revisão legal:** 2026-09-04 — source pack DR/IMT/AMT/EUR-Lex + matriz de impacto  
+**Actualização:** 2026-09-05 — **M2-L0 / L-26 fechados** (licença plataforma confirmada por lista oficial IMT)  
 **IDs:** `S-COMP-04` · `LEGAL-TVDE-001…` · roadmap etapa **A3**  
-**Estado:** **PARCIAL** — decisões internas **revistas** (D03-REV1 · D04-REV1); PDFs oficiais P0 ainda a arquivar; implementação M2 pendente  
+**Estado:** **PARCIAL** — decisões internas **revistas** (D03-REV1 · D04-REV1); M2-L0 **FECHADO**; implementação M2 restante pendente  
 
-**Referências novas (2026-09-04):**
+**Referências novas (2026-09-04 / 2026-09-05):**
 
 - [`LEGAL_SOURCES_INDEX.md`](LEGAL_SOURCES_INDEX.md) — inventário P0/P1/`PENDENTE REGULAMENTAÇÃO`
 - [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
+- [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) — licença plataforma / entidade
 - [`research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md`](research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md) *(auxiliar — não fonte normativa)*
 
 ---
@@ -115,7 +117,7 @@ A nova validação jurídica (research + confirmação em fontes oficiais + sour
 | Quem | Acção |
 |------|--------|
 | **Partner (Manel)** | Titular/licenciado (A3-D02); docs internos + conformidade IMT |
-| **Plataforma (Vamulá / TVDE-APP)** | Gestor de plataforma electrónica — licença IMT própria (**BLOCKER M2**); validação/bloqueio; 10 h/24 h; emergência |
+| **Plataforma (Vamulá / TVDE-APP)** | Gestor de plataforma electrónica — licença IMT **confirmada** (**M2-L0 / L-26 FECHADO**, 2026-09-05: Ventos Férteis · **354/2026** · **06/01/2026**); validação/bloqueio **técnico** IMT (L1/L2) e 10 h / emergência **continuam** no caminho M2 |
 | **Advogado / IMT** | Detalhes API, “devesse ter conhecimento”, estados que contam para 10 h, fallback IMT down |
 | **Contabilista** | Recibos (A3-D08); base IVA da contribuição AMT 5% |
 | **Produto/eng** | Implementar blockers M2; **não** declarar conformidade global cross-platform sem fonte IMT |
@@ -266,7 +268,7 @@ A1 deve considerar como custo/regra operacional:
 
 Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md).
 
-### BLOCKERS M2 (12)
+### BLOCKERS M2 (11)
 
 1. Validação IMT operador  
 2. Validação IMT motorista  
@@ -279,24 +281,32 @@ Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MAT
 9. Emergência motorista  
 10. Chamada em tempo real às autoridades  
 11. Partilha de localização em emergência  
-12. Licença IMT do gestor da plataforma  
 
-### NECESSÁRIOS M2 (12)
+### FECHADO (ex-BLOCKER) — 2026-09-05
 
-1. Registo de tempos  
-2. Retenção actividade **2 anos**  
-3. Retenção reclamações **2 anos**  
-4. Hard-cap comissão **25%** sem IVA  
-5. Breakdown legal de preço/comissão  
-6. Fatura electrónica  
-7. Reporting mensal AMT  
-8. Apuramento contribuição AMT **5%**  
-9. Contratos de adesão operadores  
-10. Disponibilização contrato ao motorista  
-11. Livro de Reclamações / RAL  
-12. Processos de comunicação IMT/AMT  
+| Item | Estado | Nota |
+|------|--------|------|
+| Licença IMT do gestor da plataforma (**L-26 / M2-L0**) | **`FECHADO — LICENCIAMENTO CONFIRMADO POR FONTE OFICIAL IMT`** | Ventos Férteis, Lda. · NIPC **516344439** · VAMULÁ · licença **354/2026** · **06/01/2026** · [`registo oficial`](VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) |
 
-*Não implementar nesta tarefa documental.*
+**Separação obrigatória:** licença **administrativa** da plataforma **≠** integração técnica / validação IMT de operador·motorista·veículo (**M2-L1 / M2-L2**). Estes últimos **permanecem** blockers e `PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT`.
+
+### NECESSÁRIOS M2 (13)
+
+1. Registo de tempos (**L-09**)  
+2. Retenção actividade **2 anos** (**L-11**)  
+3. Retenção reclamações **2 anos** (**L-12**)  
+4. Hard-cap comissão **25%** sem IVA (**L-13**)  
+5. Demonstração de cálculo / breakdown legal de preço (**L-14**)  
+6. Mostrar taxa de intermediação (**L-15**)  
+7. Fatura electrónica (**L-16**)  
+8. Reporting mensal AMT (**L-17**)  
+9. Apuramento contribuição AMT **5%** (**L-18**)  
+10. Contratos de adesão operadores (**L-23**)  
+11. Disponibilização contrato ao motorista (**L-24**)  
+12. Livro de Reclamações / RAL (**L-25**)  
+13. Processos de comunicação IMT/AMT (**L-29**)  
+
+*Alinhado à matriz (contagem por ID L-xx com Impacto `NECESSÁRIO M2`). Não fundir L-14 e L-15.*
 
 ---
 
@@ -307,11 +317,12 @@ Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MAT
 | A3-D01…D08 | **DONE** (histórico) |
 | A3-D03-REV1 / A3-D04-REV1 | **DECIDIDO** — A3-D04 fundação rolling 24h **parcial**; enforcement M2 ainda pendente |
 | A3.8 (código WARN+RECORD) | **DONE** como implementação da decisão **antiga**; meta M2 = REV1 |
-| A3.9 Arquivo PDFs P0 | **EM CURSO** / parcial (índice; PDFs em falta) |
+| A3.9 Arquivo PDFs P0 | **EM CURSO** / parcial (índice; lista IMT plataformas **arquivada**; PDF síntese INPI marca **não** arquivado) |
+| M2-L0 / L-26 | **FECHADO** (2026-09-05) — licença plataforma confirmada; **≠** L1/L2 |
 | A6 no crítico M2 | **Sim** (implementação); flag OFF até pronto |
 | M1 | **DONE** (não reabrir) |
 | Etapa A3 global | **PARCIAL** |
 
 ---
 
-**Frase:** Base legal M2 = Lei 45/2018 (59/2026) arts. 13.º/14.º/17.º-A/20.º/20.º-A; A3-D03/D04 **revistos**; M1 intacto; implementação e flags **ainda** não mexidas.
+**Frase:** Base legal M2 = Lei 45/2018 (59/2026) arts. 13.º/14.º/17.º-A/20.º/20.º-A; **L-26/M2-L0 fechados** (lista IMT oficial); A3-D03/D04 **revistos**; M1 intacto; integração técnica IMT e enforcement **ainda** pendentes.

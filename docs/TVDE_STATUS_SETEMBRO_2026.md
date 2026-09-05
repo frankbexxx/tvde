@@ -1,10 +1,10 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-**Data:** 2026-09-04 (revisão legal M2) · actualização executiva G3/M1 2026-09-03 · base analítica 2026-09-01  
-**Tip `main`:** alinhar com `origin/main` na sessão de commit  
-**Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto** pela revisão legal  
+**Data:** 2026-09-05 (fecho M2-L0 oficial) · 2026-09-04 foundations L3/L4 · G3/M1 2026-09-03  
+**Tip `main`:** local pode estar ahead de `origin/main` (docs L0); foundations #548/#549 em `main`  
+**Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto**  
 **Modo:** pós-M1 · caminho crítico = **Marco 2 (`READY FOR REAL PILOT`)**  
-**Fonte de verdade:** código actual + roadmap canónico + [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) (rev. 2026-09-04)  
+**Fonte de verdade:** código + roadmap + matriz + [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md)  
 **Docs antigos (Maio e anteriores):** só pistas — confrontados com código; itens já implementados marcados **STALE / JÁ RESOLVIDO** e **excluídos** da lista de trabalho
 
 Relacionado (contexto Setembro, não substitui este relatório):
@@ -22,20 +22,20 @@ Relacionado (contexto Setembro, não substitui este relatório):
 
 | Área | Estado | Nota curta |
 |------|--------|------------|
-| **Geral** | **M1 DONE** / **M2 PARCIAL** | Quatro papéis OK em WEB/PWA; M2 exige blockers legais + live pay + SMS + mobile |
-| **Passenger** | **OK** (M1) | Pedido → viagem → rating; emergência / RAL / fatura = **gaps M2** |
-| **Driver** | **OK** (M1) · **GAP M2** | Ciclo completo; docs FE; driving-hours **WARN+RECORD** (A3.8) — M2 exige **enforcement** (A3-D04-REV1) |
-| **Partner/Frota** | **OK** (M1) · **GAP M2** | Frota/docs; **sem** validação IMT; PF3D gates **OFF** (implementação pendente, A3-D03-REV1) |
-| **Admin** | **OK** (M1) | Approve/reject E5; override ilegal contra estado oficial = **proibido** (decisão A3) |
-| **Backend/API** | **OK** | FastAPI 4 papéis; **sem** cliente IMT |
+| **Geral** | **M1 DONE** / **M2 PARCIAL** | L0 **FECHADO** (IMT oficial); foundations L3+L4; L1/L2 integração IMT pendente |
+| **Passenger** | **OK** (M1) · **GAP M2** | SOS foundation (#549); RAL / fatura = gaps |
+| **Driver** | **OK** (M1) · **GAP M2** | SOS foundation; driving-hours **foundation rolling 24h** (#548) · **enforcement OFF** |
+| **Partner/Frota** | **OK** (M1) · **GAP M2** | Sem validação IMT técnica; PF3D gates **OFF** (A3-D03-REV1) |
+| **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
+| **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05) |
-| **Compliance legal** | **PARCIAL** | Base Lei 45/2018 (59/2026) identificada; **12 BLOCKERS M2** documentados; código ainda não alinhado |
+| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS** (L-26 fechado); L3/L4 foundation; L1/L2 externos |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
-| **Localização/mapas** | **OK** | Tracking existe; **não** ligado a emergência/autoridades |
+| **Localização/mapas** | **OK** | Tracking + SOS partilha `DriverLocation` (#549) |
 | **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI |
-| **Testes/CI** | **OK** | Backend + e2e |
-| **Docs/operação** | **PARCIAL** | A3-REV + matriz legal 2026-09-04; PDFs P0 ainda a arquivar |
+| **Testes/CI** | **OK** | #548 / #549 verdes + smoke SOS mobile |
+| **Docs/operação** | **PARCIAL** | Sessão 2026-09-04 consolidada no roadmap/matriz |
 
 ---
 
@@ -163,7 +163,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | Partner/Frota | Operacional OK; PF3D OFF *(implementação pendente — A3-D03-REV1 exige gates M2)* |
 | Docs/KYC | Superfícies existem; gates OFF; OCR fora de scope |
 | Notificações | Inbox Partner↔Driver **OK**; **push/SMS real PENDENTE** |
-| Segurança | Auth JWT/OTP; Google parcial; driving-hours compliance ON + enforcement OFF (A3.8) — **meta M2 = A3-D04-REV1** |
+| Segurança | Auth JWT/OTP; driving-hours compliance ON + **enforcement OFF** (#548 foundation); emergency SOS foundation (#549) |
 | Observabilidade | Sentry FE condicional; health Admin |
 | Backups/restore | Runbook `TVDE_BKP_RUNBOOK.md` — execução humana recorrente |
 | Staging/produção | Prod Render live; staging OAuth/smoke ainda pendente |
@@ -312,6 +312,16 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 - **Excepção documental 2026-09-04:** PF3D/gates e enforcement 10h/24h são **obrigatórios para M2** (A3-D03-REV1 / A3-D04-REV1); flag OFF actual = **implementação pendente**, não “produto decide OFF”.  
 - **ETAPA 01** e **ETAPA 02** concluídas (2026-09-01). **M1 DONE** — não reabrir.
 
+### Fecho sessão 2026-09-04
+
+| Bloco | Estado |
+|-------|--------|
+| **M2-L0** | `FECHADO — LICENCIAMENTO CONFIRMADO POR FONTE OFICIAL IMT` — Ventos Férteis · Vamulá · **354/2026** · **06/01/2026** · [`registo oficial`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) |
+| **M2-L1 / L2** | `PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT` (L0 **não** equivale a integração técnica) |
+| **M2-L3** | `FOUNDATION IMPLEMENTADA / ENFORCEMENT PENDENTE` — [#548](https://github.com/frankbexxx/tvde/pull/548) → `c8d2c35` |
+| **M2-L4** | Foundation merged — [#549](https://github.com/frankbexxx/tvde/pull/549) → `717270a`; L-19…22 **PARCIAL**; smoke PAX/DRV + `tel:112` mobile **PASS** |
+| **Próximo** | Parecer L3 · retention/AMT · L1/L2 quando houver canal técnico IMT |
+
 ---
 
-**Frase:** **M1 técnico DONE** (não reaberto). M2 = piloto real (`READY FOR REAL PILOT`) com **12 blockers legais** (IMT, bloqueio, 10h/24h, emergência, licença plataforma) + live pay + SMS + mobile — sem reescrever as apps.
+**Frase:** **M1 técnico DONE**. M2: **L0 fechado** (IMT oficial); foundations **driving-hours** + **emergency**; L1/L2 integração IMT pendente; enforcement 10h/24h e PF3D gates **continuam OFF** até decisão explícita.
