@@ -60,6 +60,9 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
             .values(
                 status=TripStatus.requested,
                 driver_id=None,
+                partner_id=None,
+                vehicle_id=None,
+                vehicle_plate=None,
                 updated_at=func.now(),
             )
             .returning(Trip.id)

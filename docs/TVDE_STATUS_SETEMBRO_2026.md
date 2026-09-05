@@ -30,7 +30,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05) |
-| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS** (L-26 fechado); L3/L4 foundation; L1/L2 externos |
+| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 foundation activity retention; L-26 fechado; L1/L2 externos |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
 | **Localização/mapas** | **OK** | Tracking + SOS partilha `DriverLocation` (#549) |
 | **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI |
@@ -320,7 +320,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 | **M2-L1 / L2** | `PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT` (L0 **não** equivale a integração técnica) |
 | **M2-L3** | `FOUNDATION IMPLEMENTADA / ENFORCEMENT PENDENTE` — [#548](https://github.com/frankbexxx/tvde/pull/548) → `c8d2c35` |
 | **M2-L4** | Foundation merged — [#549](https://github.com/frankbexxx/tvde/pull/549) → `717270a`; L-19…22 **PARCIAL**; smoke PAX/DRV + `tel:112` mobile **PASS** |
-| **Próximo** | Parecer L3 · retention/AMT · L1/L2 quando houver canal técnico IMT |
+| **Próximo** | Parecer L3 · complaints/AMT · L1/L2 quando houver canal técnico IMT · RetentionPolicy granular (L-11 ainda PARCIAL) |
 
 ---
 

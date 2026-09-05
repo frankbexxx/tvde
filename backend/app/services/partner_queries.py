@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import cast, or_, select
+from sqlalchemy import and_, cast, or_, select
 from sqlalchemy.types import String
 from sqlalchemy.orm import Session, joinedload
 
@@ -49,16 +49,19 @@ def list_drivers_for_partner_enriched(db: Session, partner_id: str) -> list[Driv
 
 def list_trips_for_partner(db: Session, partner_id: str) -> list[Trip]:
     """
-    Trips whose assigned driver currently belongs to this partner (JOIN Trip → Driver, filter partner_id).
-
-    Trips are attributed by the driver's partner_id at query time — not historical fleet ownership.
-    Reassigning a driver does not rewrite past trip rows; reporting reflects current tenant mapping only.
+    Trips historically attributed to this partner (`trips.partner_id`), with
+    legacy fallback to the driver's *current* partner when partner_id is null.
     """
     pid = uuid.UUID(partner_id)
     stmt = (
         select(Trip)
-        .join(Driver, Trip.driver_id == Driver.user_id)
-        .where(Driver.partner_id == pid)
+        .outerjoin(Driver, Trip.driver_id == Driver.user_id)
+        .where(
+            or_(
+                Trip.partner_id == pid,
+                and_(Trip.partner_id.is_(None), Driver.partner_id == pid),
+            )
+        )
         .order_by(Trip.created_at.desc())
     )
     return list(db.execute(stmt).scalars().all())
@@ -89,8 +92,14 @@ def get_trip_for_partner(
     pid = uuid.UUID(partner_id)
     return db.execute(
         select(Trip)
-        .join(Driver, Trip.driver_id == Driver.user_id)
-        .where(Trip.id == trip_id, Driver.partner_id == pid)
+        .outerjoin(Driver, Trip.driver_id == Driver.user_id)
+        .where(
+            Trip.id == trip_id,
+            or_(
+                Trip.partner_id == pid,
+                and_(Trip.partner_id.is_(None), Driver.partner_id == pid),
+            ),
+        )
     ).scalar_one_or_none()
 
 
@@ -153,9 +162,14 @@ def list_trips_for_partner_filtered(
     pid = uuid.UUID(partner_id)
     stmt = (
         select(Trip)
-        .join(Driver, Trip.driver_id == Driver.user_id)
-        .join(User, Driver.user_id == User.id)
-        .where(Driver.partner_id == pid)
+        .outerjoin(Driver, Trip.driver_id == Driver.user_id)
+        .outerjoin(User, Driver.user_id == User.id)
+        .where(
+            or_(
+                Trip.partner_id == pid,
+                and_(Trip.partner_id.is_(None), Driver.partner_id == pid),
+            )
+        )
     )
 
     if driver_id:

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.db.models.driver import Driver
 from app.db.models.trip import Trip
 from app.models.enums import DriverStatus, TripStatus
+from app.services.activity_retention import stamp_trip_activity_context
 from app.utils.logging import log_event
 
 
@@ -88,6 +89,7 @@ def partner_reassign_trip_driver(
             detail="same_driver",
         )
     t.driver_id = new_driver_user_id
+    stamp_trip_activity_context(db, t, new_d)
     db.commit()
     db.refresh(t)
     log_event(
