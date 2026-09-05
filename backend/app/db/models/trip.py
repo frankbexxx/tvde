@@ -15,9 +15,11 @@ from app.models.enums import TripStatus
 if TYPE_CHECKING:
     from app.db.models.driver import Driver
     from app.db.models.driver_active_driving_segment import DriverActiveDrivingSegment
+    from app.db.models.partner import Partner
     from app.db.models.payment import Payment
     from app.db.models.trip_offer import TripOffer
     from app.db.models.user import User
+    from app.db.models.vehicle import Vehicle
 
 
 class Trip(Base):
@@ -40,6 +42,23 @@ class Trip(Base):
         ForeignKey("drivers.user_id", ondelete="SET NULL"),
         nullable=True,
         comment="Assigned driver identifier (nullable until accepted).",
+    )
+    partner_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("partners.id", ondelete="RESTRICT"),
+        nullable=True,
+        comment="Partner/operator at assignment (historical; M2 activity retention).",
+    )
+    vehicle_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("vehicles.id", ondelete="RESTRICT"),
+        nullable=True,
+        comment="Vehicle at assignment (historical; M2 activity retention).",
+    )
+    vehicle_plate: Mapped[Optional[str]] = mapped_column(
+        String(32),
+        nullable=True,
+        comment="Plate snapshot at assignment (survives later plate edits).",
     )
     status: Mapped[TripStatus] = mapped_column(
         Enum(TripStatus, name="trip_status_enum"),
@@ -153,6 +172,12 @@ class Trip(Base):
         back_populates="trips",
         foreign_keys=[driver_id],
     )
+    partner: Mapped[Optional["Partner"]] = relationship(
+        foreign_keys=[partner_id],
+    )
+    vehicle: Mapped[Optional["Vehicle"]] = relationship(
+        foreign_keys=[vehicle_id],
+    )
     payment: Mapped[Optional["Payment"]] = relationship(
         back_populates="trip",
         uselist=False,
@@ -168,3 +193,5 @@ class Trip(Base):
 Index("ix_trips_status", Trip.status)
 Index("ix_trips_passenger_id", Trip.passenger_id)
 Index("ix_trips_driver_id", Trip.driver_id)
+Index("ix_trips_partner_id", Trip.partner_id)
+Index("ix_trips_vehicle_id", Trip.vehicle_id)

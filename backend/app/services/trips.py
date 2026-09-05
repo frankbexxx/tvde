@@ -38,6 +38,7 @@ from app.services.driving_compliance import (
 from app.services.vehicle_compliance_gate import (
     assert_driver_vehicle_compliance_for_accept,
 )
+from app.services.activity_retention import stamp_trip_activity_context
 from app.services.stripe_service import (
     cancel_payment_intent,
     capture_payment_intent,
@@ -792,6 +793,7 @@ def accept_trip(
     old_status = trip.status
     trip.driver_id = uuid.UUID(driver_id) if driver_id else None
     trip.status = TripStatus.accepted
+    stamp_trip_activity_context(db, trip, driver)
     driver.is_available = False
 
     # STEP 5: Single atomic commit.
@@ -965,6 +967,7 @@ def accept_offer(
 
     trip.driver_id = uuid.UUID(driver_id) if driver_id else None
     trip.status = TripStatus.accepted
+    stamp_trip_activity_context(db, trip, driver)
     driver.is_available = False
 
     db.commit()

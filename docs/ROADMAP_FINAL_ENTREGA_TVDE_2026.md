@@ -136,9 +136,9 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
 | **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
 | **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) parecer/decisão legal L3 · (2) retention/audit · (3) AMT/reporting · (4) L1/L2 quando houver documentação/canal técnico IMT |
+| **Próximas frentes** | (1) parecer/decisão legal L3 · (2) complaints/RAL (L-12) · (3) AMT/reporting · (4) L1/L2 quando houver documentação/canal técnico IMT · (5) RetentionPolicy granular |
 
-*Pendentes finos (L3):* definição de “operar” · estados que contam · viagem no limite · **enforcement ON** · cross-platform. *Tweak L4 não bloqueante:* origem/destino legíveis (morada) no painel SOS.
+*Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (complaints/GPS/docs/IMT).
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
