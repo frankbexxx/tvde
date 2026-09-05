@@ -79,7 +79,7 @@ O modelo usa `TripStatus`: `requested`, `assigned`, `accepted`, `arriving`, `ong
 
 # 3. LIMPEZA DE ESTADO
 
-- **Cron:** `run_cleanup` remove `audit_events` mais antigos que `AUDIT_EVENTS_RETENTION_DAYS` (default 90).
+- **Cron:** `run_cleanup` remove `audit_events` mais antigos que `AUDIT_EVENTS_RETENTION_DAYS` (default **730**, M2 provisório). Política granular por categoria continua pendente.
 
 ---
 

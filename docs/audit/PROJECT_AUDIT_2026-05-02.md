@@ -79,7 +79,7 @@ Tabelas principais (via `backend/app/db/models/`):
 - `trip_offers` — multi-offer dispatch top N motoristas
 - `payments` — Stripe PaymentIntent + commission/payout (UNIQUE `stripe_payment_intent_id`)
 - `stripe_webhook_events` — dedup por `evt_*`
-- `audit_event` — auditoria persistente (retenção 90 dias)
+- `audit_event` — auditoria persistente (retenção default **730** dias M2 provisório; ver `AUDIT_EVENTS_RETENTION_DAYS`)
 - `interaction_log` — telemetria de UX
 - `otp` — códigos OTP com `expires_at`
 - `driver_zone_day_budget` + `driver_zone_session` — regra «2 mudanças de zona/dia» (v1)
