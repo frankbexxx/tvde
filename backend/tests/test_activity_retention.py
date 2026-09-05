@@ -5,8 +5,6 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
-
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.driver_active_driving_segment import DriverActiveDrivingSegment
