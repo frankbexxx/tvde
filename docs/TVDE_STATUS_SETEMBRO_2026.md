@@ -1,10 +1,10 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-**Data:** 2026-09-04 (fecho sessão M2-L0…L4) · revisão legal M2 manhã · G3/M1 2026-09-03  
-**Tip `main`:** `717270a` (`feat(safety): add emergency SOS foundation (#549)`) — alinhada com `origin/main`  
+**Data:** 2026-09-05 (fecho M2-L0 oficial) · 2026-09-04 foundations L3/L4 · G3/M1 2026-09-03  
+**Tip `main`:** local pode estar ahead de `origin/main` (docs L0); foundations #548/#549 em `main`  
 **Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto**  
 **Modo:** pós-M1 · caminho crítico = **Marco 2 (`READY FOR REAL PILOT`)**  
-**Fonte de verdade:** código + roadmap canónico + [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) + matriz legal  
+**Fonte de verdade:** código + roadmap + matriz + [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md)  
 **Docs antigos (Maio e anteriores):** só pistas — confrontados com código; itens já implementados marcados **STALE / JÁ RESOLVIDO** e **excluídos** da lista de trabalho
 
 Relacionado (contexto Setembro, não substitui este relatório):
@@ -22,15 +22,15 @@ Relacionado (contexto Setembro, não substitui este relatório):
 
 | Área | Estado | Nota curta |
 |------|--------|------------|
-| **Geral** | **M1 DONE** / **M2 PARCIAL** | Foundations L3+L4 merged 2026-09-04; L0 quase fechado; L1/L2 esperam IMT |
+| **Geral** | **M1 DONE** / **M2 PARCIAL** | L0 **FECHADO** (IMT oficial); foundations L3+L4; L1/L2 integração IMT pendente |
 | **Passenger** | **OK** (M1) · **GAP M2** | SOS foundation (#549); RAL / fatura = gaps |
 | **Driver** | **OK** (M1) · **GAP M2** | SOS foundation; driving-hours **foundation rolling 24h** (#548) · **enforcement OFF** |
-| **Partner/Frota** | **OK** (M1) · **GAP M2** | Sem validação IMT; PF3D gates **OFF** (A3-D03-REV1) |
+| **Partner/Frota** | **OK** (M1) · **GAP M2** | Sem validação IMT técnica; PF3D gates **OFF** (A3-D03-REV1) |
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05) |
-| **Compliance legal** | **PARCIAL** | 12 BLOCKERS; L3/L4 foundation DONE; L0 quase; L1/L2 externos |
+| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS** (L-26 fechado); L3/L4 foundation; L1/L2 externos |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
 | **Localização/mapas** | **OK** | Tracking + SOS partilha `DriverLocation` (#549) |
 | **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI |
@@ -316,12 +316,12 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 
 | Bloco | Estado |
 |-------|--------|
-| **M2-L0** | `PRATICAMENTE FECHADO — PENDENTE CONSOLIDAÇÃO DOCUMENTAL` (VAMULÁ / Ventos Férteis / licença IMT observada; falta pack formal Manel no repo) |
-| **M2-L1 / L2** | `PENDENTE DEPENDÊNCIA EXTERNA` (discovery DONE; sem API IMT inventada) |
+| **M2-L0** | `FECHADO — LICENCIAMENTO CONFIRMADO POR FONTE OFICIAL IMT` — Ventos Férteis · Vamulá · **354/2026** · **06/01/2026** · [`registo oficial`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) |
+| **M2-L1 / L2** | `PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT` (L0 **não** equivale a integração técnica) |
 | **M2-L3** | `FOUNDATION IMPLEMENTADA / ENFORCEMENT PENDENTE` — [#548](https://github.com/frankbexxx/tvde/pull/548) → `c8d2c35` |
 | **M2-L4** | Foundation merged — [#549](https://github.com/frankbexxx/tvde/pull/549) → `717270a`; L-19…22 **PARCIAL**; smoke PAX/DRV + `tel:112` mobile **PASS** |
-| **Próximo** | Docs L0 · parecer L3 · retention/AMT · IMT quando houver canal |
+| **Próximo** | Parecer L3 · retention/AMT · L1/L2 quando houver canal técnico IMT |
 
 ---
 
-**Frase:** **M1 técnico DONE**. M2: foundations **driving-hours** + **emergency** em `main`; L0 quase; L1/L2 IMT externos; enforcement 10h/24h e PF3D gates **continuam OFF** até decisão explícita.
+**Frase:** **M1 técnico DONE**. M2: **L0 fechado** (IMT oficial); foundations **driving-hours** + **emergency**; L1/L2 integração IMT pendente; enforcement 10h/24h e PF3D gates **continuam OFF** até decisão explícita.

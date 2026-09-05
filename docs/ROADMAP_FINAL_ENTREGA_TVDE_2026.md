@@ -84,7 +84,7 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 
 *Package mobile **exigido**. Prioridade **Android**. Processo financeiro **manual semanal ao Partner** (**A1-D03…D06**) → **B3/B4 fora** do crítico M2 nesta fase. **A6 no crítico M2** (A3-D03-REV1); flag OFF = implementação pendente, **não** decisão de produto.*
 
-### BLOCKERS M2 legais (concretos — 12)
+### BLOCKERS M2 legais (concretos — 11)
 
 | # | Blocker |
 |---|---------|
@@ -99,11 +99,12 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 | 9 | Emergência motorista |
 | 10 | Chamada em tempo real às autoridades |
 | 11 | Partilha de localização em emergência |
-| 12 | Licença IMT do gestor da plataforma |
 
-### NECESSÁRIOS M2 legais (12)
+*Ex-blocker **L-26** (licença gestor plataforma): **FECHADO** 2026-09-05 — ver M2-L0 / [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md).*
 
-Registo de tempos · retenção actividade 2 anos · retenção reclamações 2 anos · hard-cap comissão 25% sem IVA · breakdown legal preço/comissão · fatura electrónica · reporting mensal AMT · apuramento contribuição AMT 5% · contratos de adesão operadores · disponibilização contrato ao motorista · Livro de Reclamações / RAL · processos comunicação IMT/AMT.
+### NECESSÁRIOS M2 legais (13)
+
+Registo de tempos (**L-09**) · retenção actividade 2 anos (**L-11**) · retenção reclamações 2 anos (**L-12**) · hard-cap comissão 25% sem IVA (**L-13**) · demonstração de cálculo / breakdown (**L-14**) · taxa de intermediação (**L-15**) · fatura electrónica (**L-16**) · reporting mensal AMT (**L-17**) · apuramento contribuição AMT 5% (**L-18**) · contratos de adesão operadores (**L-23**) · disponibilização contrato ao motorista (**L-24**) · Livro de Reclamações / RAL (**L-25**) · processos comunicação IMT/AMT (**L-29**).
 
 *Matriz:* [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md). **Prioridades legais individuais da matriz mantêm-se**; abaixo = ordem **prática** de implementação.
 
@@ -113,29 +114,29 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 
 | Bloco | Conteúdo (matriz) | Natureza |
 |-------|-------------------|----------|
-| **M2-L0** | L-26 — licença IMT do **gestor da plataforma** | **`PRATICAMENTE FECHADO — PENDENTE CONSOLIDAÇÃO DOCUMENTAL`** (2026-09-04): marca **VAMULÁ** INPI · titular **Ventos Férteis, Lda** · licença IMT Operador de Plataforma Electrónica TVDE observada em documento físico; falta no repo NIPC/sede/nº/data/validade/acto oficial (Manel) |
-| **M2-L1** | L-01…L-03 — validação IMT operador / motorista / veículo | **`PENDENTE DEPENDÊNCIA EXTERNA`**: discovery técnico DONE; sem client/API IMT inventado; falta spec/canal oficial |
-| **M2-L2** | L-04…L-06 — bloqueio operador / motorista / veículo | **`PENDENTE DEPENDÊNCIA EXTERNA`** (depende M2-L1) |
+| **M2-L0** | L-26 — licença IMT do **gestor da plataforma** | **`FECHADO — LICENCIAMENTO CONFIRMADO POR FONTE OFICIAL IMT`** (2026-09-05): **Ventos Férteis, Lda.** · NIPC **516344439** · **Vamulá** · licença **354/2026** · **06/01/2026** · lista IMT arquivada · registo [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) |
+| **M2-L1** | L-01…L-03 — validação IMT operador / motorista / veículo | **`PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT`**: discovery técnico DONE; sem client/API IMT; **licença administrativa da plataforma (L0) ≠ integração técnica** |
+| **M2-L2** | L-04…L-06 — bloqueio operador / motorista / veículo | **`PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT`** (depende M2-L1) |
 | **M2-L3** | L-10 (+ L-07…L-09) — enforcement **10 h / 24 h** | **`FOUNDATION IMPLEMENTADA / ENFORCEMENT PENDENTE`** — PR [#548](https://github.com/frankbexxx/tvde/pull/548) · merge `c8d2c35` · rolling 24h · sem 11h fixas · `driving_rest_until` legacy isolado · arriving+ongoing provisório · **ENFORCEMENT OFF** · 31 tests |
 | **M2-L4** | L-19…L-22 — emergência | **`FOUNDATION IMPLEMENTADA` / L-19…22 `PARCIAL`** — PR [#549](https://github.com/frankbexxx/tvde/pull/549) · merge `717270a` · SOS PAX+DRV · `tel:112` · snapshot · share/clipboard · audits · smoke mobile PASS · validação legal pendente |
 
 **Ordem de execução:**
 
-1. **M2-L0** — fechar formalmente quando docs Manel entrarem no repo.  
-2. **M2-L1** discovery / contacto IMT (bloqueado externamente).  
-3. Se **M2-L1** bloqueado → avançar L3/L4 (já feito foundation 2026-09-04).  
-4. Quando fonte IMT definida → **M2-L1**, depois **M2-L2**.  
+1. **M2-L0** — **FECHADO** (fonte oficial IMT 2026-09-05).  
+2. **M2-L1** discovery / contacto IMT (bloqueado externamente — **independente** de L0).  
+3. Se **M2-L1** bloqueado → L3/L4 foundation já feita (2026-09-04).  
+4. Quando fonte técnica IMT definida → **M2-L1**, depois **M2-L2**.  
 5. **M2-L4** foundation DONE — parecer se foundation basta.  
 6. Continuar **NECESSÁRIOS M2** (retenção, AMT, …).
 
-### Sessão 2026-09-04 (fecho)
+### Sessão 2026-09-04 (fecho foundations) + 2026-09-05 (fecho L0)
 
 | | |
 |--|--|
-| **`main`** | Alinhada com `origin/main` (pós-merge #548 + #549) |
-| **Driving-hours** | Foundation merged; enforcement deliberadamente OFF |
-| **Emergency** | Foundation merged; smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) fechar L0 com docs Manel · (2) parecer/decisão legal L3 · (3) retention/audit · (4) AMT/reporting · (5) L1/L2 quando houver documentação IMT |
+| **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
+| **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
+| **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
+| **Próximas frentes** | (1) parecer/decisão legal L3 · (2) retention/audit · (3) AMT/reporting · (4) L1/L2 quando houver documentação/canal técnico IMT |
 
 *Pendentes finos (L3):* definição de “operar” · estados que contam · viagem no limite · **enforcement ON** · cross-platform. *Tweak L4 não bloqueante:* origem/destino legíveis (morada) no painel SOS.
 

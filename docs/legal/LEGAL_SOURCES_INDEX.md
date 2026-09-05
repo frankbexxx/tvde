@@ -2,15 +2,16 @@
 
 **Tipo:** inventário de fontes legais **brutas** arquivadas / referenciadas no repo  
 **Uso:** referência para leitura jurídica/operacional futura — **não** é parecer nem checklist de conformidade  
-**Actualização:** 2026-09-04 — URLs oficiais exactos (DR / IMT / AMT / EUR-Lex) + arquivo P0 parcial  
-**Handoff:** [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) · research auxiliar [`research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md`](research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md) · matriz [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
+**Actualização:** 2026-09-05 — lista IMT plataformas licenciadas + registo VAMULÁ/Ventos Férteis; 2026-09-04 — URLs DR / IMT / AMT / EUR-Lex  
+**Handoff:** [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) · research auxiliar [`research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md`](research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md) · matriz [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md) · registo entidade [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md)
 
 **Regras:**
 
 - Não tratar DOCX / research IA como fonte normativa.
 - Research: **`RESEARCH AUXILIAR — NÃO NORMATIVO`**.
 - Não duplicar PDFs já no repo.
-- Só origem oficial (DR / IMT / AMT / EUR-Lex).
+- Só origem oficial (DR / IMT / AMT / INPI / EUR-Lex).
+- Não rotular como “DR” fontes que não sejam Diário da República.
 
 Relacionado (produto/ops, não substituído): [`PARCEIRO_TVDE_CHECKLIST.md`](PARCEIRO_TVDE_CHECKLIST.md)
 
@@ -25,6 +26,7 @@ Relacionado (produto/ops, não substituído): [`PARCEIRO_TVDE_CHECKLIST.md`](PAR
 | **LEGAL-TVDE-007** | AMT — Modelo do Formulário TVDE | [`sources/amt-modelo-formulario-tvde.pdf`](sources/amt-modelo-formulario-tvde.pdf) | Contribuição 5% / reporte art. 30.º | `JÁ NO REPO` |
 | **LEGAL-TVDE-008** | Regulamento (UE) **2016/679** — RGPD | [`sources/regulamento-ue-2016-679-rgpd.pdf`](sources/regulamento-ue-2016-679-rgpd.pdf) | Proteção de dados | `JÁ NO REPO` |
 | **LEGAL-TVDE-005a** | IMT — Modelo 30 (pedido licenciamento actividade TVDE) | [`sources/imt-modelo-30-licenciamento-tvde.pdf`](sources/imt-modelo-30-licenciamento-tvde.pdf) | Formulário institucional | `JÁ NO REPO` |
+| **LEGAL-TVDE-005c** | IMT — operadores de plataformas electrónicas TVDE **licenciados** (lista 14.05.2026) | [`sources/imt-operadores-plataformas-tvde-licenciados-2026-05-14.pdf`](sources/imt-operadores-plataformas-tvde-licenciados-2026-05-14.pdf) | Licença plataforma · M2-L0 / L-26 | `JÁ NO REPO` |
 
 *Nota Modelo 30:* o mesmo formulário pode servir pedidos TVDE distintos — **não** inferir equivalência automática entre gestor de plataforma e operador TVDE.
 
@@ -38,7 +40,9 @@ Relacionado (produto/ops, não substituído): [`PARCEIRO_TVDE_CHECKLIST.md`](PAR
 | **LEGAL-TVDE-003** | Lei n.º **45/2018** — página **consolidada** + PDF **original** 2018 | Consolidada: https://diariodarepublica.pt/dr/legislacao-consolidada/lei/2018-116041777 | Original: https://files.diariodarepublica.pt/1s/2018/08/15300/0398303996.pdf | — *(download automatizado do original falhou 2026-09-04 — portal DR devolve HTML)* | `A ARQUIVAR` *(PDF original)* | **Não** rotular PDF 2018 como “consolidado”. Ler sempre **com** Lei 59/2026. Consolidada online pode **não** reflectir integralmente 59/2026 em 04-09-2026. |
 | **LEGAL-TVDE-004** | IMT — TVDE (plataforma partilha / comunicação dados) | https://www.imt-ip.pt/rodoviario/infraestruturas-rodoviarias/tvde/ | — (sem PDF estável) | — | `JÁ NO REPO` *(URL)* | Só página institucional |
 | **LEGAL-TVDE-005** | IMT — licenciamento **gestor de plataforma** | https://www.imt-ip.pt/rodoviario/infraestruturas-rodoviarias/tvde/licenciamento-de-operador-de-plataformas-eletronicas/ | Modelo 30: https://www.imt-ip.pt/wp-content/uploads/2025/04/Mod_30IMT-PEDIDO-de-LICENCIAMENTO-da-ATIVIDADE-TVDE.pdf | [`imt-modelo-30-licenciamento-tvde.pdf`](sources/imt-modelo-30-licenciamento-tvde.pdf) | `JÁ NO REPO` | Separar de operador TVDE |
+| **LEGAL-TVDE-005c** | IMT — **lista** operadores de plataformas electrónicas TVDE licenciados | https://www.imt-ip.pt/rodoviario/infraestruturas-rodoviarias/tvde/licenciamento-de-operador-de-plataformas-eletronicas/ | https://www.imt-ip.pt/wp-content/uploads/2026/08/OperadoresPlataformaEletronicaTVDE-licenciados_14.05.2026-2.pdf | [`imt-operadores-plataformas-tvde-licenciados-2026-05-14.pdf`](sources/imt-operadores-plataformas-tvde-licenciados-2026-05-14.pdf) | `JÁ NO REPO` | Lista **14.05.2026**; inclui **Ventos Férteis / Vamulá / 354/2026 / 06.01.2026** · ver [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) |
 | **LEGAL-TVDE-005b** | IMT — licenciamento **operador TVDE** | https://www.imt-ip.pt/rodoviario/infraestruturas-rodoviarias/tvde/licenciamento-de-operadores-de-tvde/ | — (não duplicar Modelo 30) | — | `JÁ NO REPO` *(URL)* | Registo separado no índice |
+| **LEGAL-TVDE-013** | INPI — marca nacional **VAMULÁ** n.º **734136** (titular Ventos Férteis, Lda.; classe 39) | https://servicosonline.inpi.pt/pesquisas/main/marcas.jsp?lang=PT | — (síntese PDF **não** descarregável de forma estável nesta sessão) | — | `A ARQUIVAR` *(PDF)* · URL `JÁ NO REPO` | Portal institucional: https://inpi.justica.gov.pt/ · **não** é DR |
 | **LEGAL-TVDE-006** | IMT — certificação motoristas TVDE | https://www.imt-ip.pt/rodoviario/infraestruturas-rodoviarias/tvde/certificacao-de-motoristas-tvde/ | — | — | `JÁ NO REPO` *(URL)* | Página institucional |
 | **LEGAL-TVDE-007** | AMT — Modelo do Formulário TVDE | (PDF directo) | https://www.amt-autoridade.pt/media/1803/modelo-do-formulario_tvde.pdf | [`amt-modelo-formulario-tvde.pdf`](sources/amt-modelo-formulario-tvde.pdf) | `JÁ NO REPO` | Art. 30.º |
 | **LEGAL-TVDE-008** | RGPD — Regulamento (UE) 2016/679 | https://eur-lex.europa.eu/eli/reg/2016/679/oj | https://eur-lex.europa.eu/legal-content/PT/TXT/PDF/?uri=CELEX:32016R0679 | [`regulamento-ue-2016-679-rgpd.pdf`](sources/regulamento-ue-2016-679-rgpd.pdf) | `JÁ NO REPO` | PDF PT oficial EUR-Lex |
