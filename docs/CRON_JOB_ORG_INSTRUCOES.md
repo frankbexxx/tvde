@@ -75,7 +75,7 @@ A cada execução, o endpoint `/cron/jobs` executa:
    - Trips em `requested` com todas as ofertas expiradas recebem novas ofertas para outros motoristas
 
 3. **Cleanup**
-   - Apaga `audit_events` mais antigos que `AUDIT_EVENTS_RETENTION_DAYS` (default 90)
+   - Apaga `audit_events` mais antigos que `AUDIT_EVENTS_RETENTION_DAYS` (default **730** — M2 provisório ≈ 2 anos; política por categoria pendente)
 
 ---
 

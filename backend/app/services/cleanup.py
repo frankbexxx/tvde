@@ -19,9 +19,10 @@ def run_cleanup(db: Session) -> dict[str, int]:
     """
     Delete old audit_events. Returns counts of deleted rows.
     """
-    retention_days = getattr(settings, "AUDIT_EVENTS_RETENTION_DAYS", 90)
+    retention_days = getattr(settings, "AUDIT_EVENTS_RETENTION_DAYS", 730)
     cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
 
+    # Strict <: events exactly at cutoff are kept (deterministic boundary).
     result = db.execute(delete(AuditEvent).where(AuditEvent.occurred_at < cutoff))
     deleted = (result.rowcount if hasattr(result, "rowcount") else 0) or 0
     if deleted > 0:

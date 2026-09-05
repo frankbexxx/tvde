@@ -423,7 +423,7 @@ Content-Type: application/json
 ### O que foi feito
 
 - Endpoint `GET /cron/jobs?secret=<CRON_SECRET>` para cron-job.org
-- Executa: trip timeouts, offer expiry + redispatch, **cleanup** (audit_events > 90 dias)
+- Executa: trip timeouts, offer expiry + redispatch, **cleanup** (audit_events > **730** dias por default M2)
 - Config: `CRON_SECRET`, `AUDIT_EVENTS_RETENTION_DAYS`
 
 ### Código principal
@@ -459,7 +459,7 @@ async def run_scheduled_jobs(
 
 ```python
 def run_cleanup(db: Session) -> dict[str, int]:
-    retention_days = getattr(settings, "AUDIT_EVENTS_RETENTION_DAYS", 90)
+    retention_days = getattr(settings, "AUDIT_EVENTS_RETENTION_DAYS", 730)
     cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
     result = db.execute(delete(AuditEvent).where(AuditEvent.occurred_at < cutoff))
     deleted = result.rowcount or 0
@@ -762,7 +762,7 @@ Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger)
 | Variável                      | Descrição                                                                                        |
 | ----------------------------- | ------------------------------------------------------------------------------------------------ |
 | `CRON_SECRET`                 | Secret para `/cron/jobs`                                                                         |
-| `AUDIT_EVENTS_RETENTION_DAYS` | Dias de retenção (default 90)                                                                    |
+| `AUDIT_EVENTS_RETENTION_DAYS` | Dias de retenção (default **730**, M2 provisório ≈ 2 anos)                                                                    |
 | `GEO_RADIUS_KM`               | Raio de matching (default 50)                                                                    |
 | `OFFER_TOP_N`                 | Número de ofertas por trip (default 5)                                                           |
 | `OFFER_TIMEOUT_SECONDS`       | Timeout da oferta (default 15)                                                                   |
