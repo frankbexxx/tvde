@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TripDetailResponse } from '../../api/trips'
 import { formatPickup, formatDestination } from '../../utils/format'
@@ -5,6 +6,8 @@ import { CancellationReasonMuted } from '../../components/trips/CancellationReas
 import { historyStatusDotColor } from '../../constants/tripStatus'
 import { MENU_SURFACE } from '../../components/layout/infoBoxTemplate'
 import { formatDateTime } from '../../i18n/format'
+import { ComplaintReportForm } from '../complaints/ComplaintReportForm'
+import { useAuth } from '../../context/AuthContext'
 
 type PassengerHistoryDetailPanelProps = {
   detail: TripDetailResponse | null
@@ -32,6 +35,9 @@ export function PassengerHistoryDetailPanel({
   error,
 }: PassengerHistoryDetailPanelProps) {
   const { t } = useTranslation('passenger')
+  const { t: tc } = useTranslation('complaints')
+  const { token } = useAuth()
+  const [reportOpen, setReportOpen] = useState(false)
 
   if (loading && !detail) {
     return <p className="text-sm text-muted-foreground">{t('historyDetail.loading')}</p>
@@ -49,6 +55,9 @@ export function PassengerHistoryDetailPanel({
       : detail.estimated_price != null
         ? `~${detail.estimated_price} €`
         : '—'
+
+  const canReport =
+    Boolean(token) && (detail.status === 'completed' || detail.status === 'cancelled')
 
   return (
     <div className={`space-y-3 ${MENU_SURFACE} p-3`} data-testid="passenger-history-detail">
@@ -91,6 +100,27 @@ export function PassengerHistoryDetailPanel({
         {t('historyDetail.tripId', { id: detail.trip_id })}
       </p>
       <CancellationReasonMuted reason={detail.cancellation_reason} />
+      {canReport ? (
+        <div className="pt-1 border-t border-border/50">
+          {reportOpen && token ? (
+            <ComplaintReportForm
+              token={token}
+              tripId={detail.trip_id}
+              tripLabel={detail.trip_id}
+              onClose={() => setReportOpen(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              className="text-sm font-medium text-foreground underline"
+              data-testid="passenger-complaint-entry"
+              onClick={() => setReportOpen(true)}
+            >
+              {tc('entry.report')}
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   )
 }

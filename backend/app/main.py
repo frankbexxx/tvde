@@ -20,6 +20,7 @@ from app.api.routers import (
     admin,
     admin_ws,
     auth,
+    complaints,
     cron,
     debug_routes,
     dev_tools,
@@ -157,6 +158,7 @@ if settings.dev_tools_router_enabled():
 app.include_router(auth.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
+app.include_router(complaints.router)
 app.include_router(emergency.router)
 app.include_router(driver_zones.router)
 app.include_router(driver_offers.router)

@@ -2104,3 +2104,75 @@ async def admin_close_mock_processing(
         request_id=rid,
     )
     return {**out, "request_id": rid}
+
+
+# --- L-12 Complaints (admin) -------------------------------------------------
+
+from app.schemas.complaints import (  # noqa: E402
+    ComplaintAdminItem,
+    ComplaintAdminListItem,
+    ComplaintAdminUpdateRequest,
+)
+from app.services import complaints as complaints_svc  # noqa: E402
+
+
+@router.get("/complaints", response_model=list[ComplaintAdminListItem])
+async def admin_list_complaints(
+    status_filter: str | None = Query(None, alias="status"),
+    category: str | None = Query(None),
+    public_reference: str | None = Query(None),
+    trip_id: str | None = Query(None),
+    submitted_from: datetime | None = Query(None),
+    submitted_to: datetime | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> list[ComplaintAdminListItem]:
+    tid = None
+    if trip_id:
+        try:
+            tid = uuid.UUID(trip_id.strip())
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="invalid_trip_id") from exc
+    rows = complaints_svc.list_admin_complaints(
+        db,
+        status_filter=status_filter,
+        category=category,
+        public_reference=public_reference,
+        trip_id=tid,
+        submitted_from=submitted_from,
+        submitted_to=submitted_to,
+        limit=limit,
+        offset=offset,
+    )
+    return [complaints_svc.to_admin_list_item(c) for c in rows]
+
+
+@router.get("/complaints/{public_reference}", response_model=ComplaintAdminItem)
+async def admin_get_complaint(
+    public_reference: str,
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> ComplaintAdminItem:
+    complaint = complaints_svc.get_complaint_by_public_reference(db, public_reference)
+    return complaints_svc.to_admin_item(db, complaint, include_history=True)
+
+
+@router.patch("/complaints/{public_reference}", response_model=ComplaintAdminItem)
+async def admin_update_complaint(
+    public_reference: str,
+    body: ComplaintAdminUpdateRequest,
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> ComplaintAdminItem:
+    complaint = complaints_svc.update_admin_complaint(
+        db,
+        admin_user_id=admin_ctx.user_id,
+        public_reference=public_reference,
+        new_status=body.status,
+        assigned_to=body.assigned_to,
+        clear_assigned_to=body.clear_assigned_to,
+        resolution=body.resolution,
+    )
+    return complaints_svc.to_admin_item(db, complaint, include_history=True)

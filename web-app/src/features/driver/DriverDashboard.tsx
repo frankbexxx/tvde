@@ -86,6 +86,7 @@ import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
+import { ComplaintReportForm } from '../complaints/ComplaintReportForm'
 import { uploadDriverDocument, fetchDriverMessages } from '../../api/driverMessages'
 import { ActiveTripActions } from './ActiveTripActions'
 import { EmergencySosButton, EmergencySosPanel } from '../emergency/EmergencySosPanel'
@@ -2896,6 +2897,74 @@ function DriverHistoryTripMoney({ trip }: { trip: TripHistoryItem }) {
   )
 }
 
+function DriverHistoryTripDetailBody({
+  trip,
+  token,
+  statusLabel,
+}: {
+  trip: TripHistoryItem
+  token: string | null
+  statusLabel: string
+}) {
+  const { t } = useTranslation('driver')
+  const { t: tc } = useTranslation('complaints')
+  const [reportOpen, setReportOpen] = useState(false)
+  const canReport =
+    Boolean(token) && (trip.status === 'completed' || trip.status === 'cancelled')
+
+  return (
+    <div className="space-y-2 text-sm">
+      <p className="text-foreground/85">
+        <span className="font-medium text-foreground">{t('opsMenu.tripDetail.id')}</span> #
+        {trip.trip_id}
+      </p>
+      <p className="text-foreground/85">
+        <span className="font-medium text-foreground">{t('opsMenu.tripDetail.status')}</span>{' '}
+        {statusLabel}
+      </p>
+      <p className="text-foreground/85">
+        <span className="font-medium text-foreground">{t('opsMenu.tripDetail.pickup')}</span>{' '}
+        {formatPickup(trip.origin_lat, trip.origin_lng)}
+      </p>
+      <p className="text-foreground/85">
+        <span className="font-medium text-foreground">{t('opsMenu.tripDetail.destination')}</span>{' '}
+        {formatDestination(trip.destination_lat, trip.destination_lng)}
+      </p>
+      <p className="text-foreground/85">
+        <span className="font-medium text-foreground">{t('opsMenu.tripDetail.date')}</span>{' '}
+        {trip.completed_at
+          ? formatDriverHistoryWhen(trip.completed_at)
+          : t('opsMenu.tripDetail.noCompletionDate')}
+      </p>
+      <div className="space-y-1 text-foreground/85">
+        <DriverHistoryTripMoney trip={trip} />
+      </div>
+      <CancellationReasonMuted reason={trip.cancellation_reason} className="text-sm" />
+      {canReport ? (
+        <div className="pt-2 border-t border-border/50">
+          {reportOpen && token ? (
+            <ComplaintReportForm
+              token={token}
+              tripId={trip.trip_id}
+              tripLabel={trip.trip_id}
+              onClose={() => setReportOpen(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              className="text-sm font-medium text-foreground underline"
+              data-testid="driver-complaint-entry"
+              onClick={() => setReportOpen(true)}
+            >
+              {tc('entry.report')}
+            </button>
+          )}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function zoneArrivedErrorMessage(t: TFunction<'driver'>, detail: string): string {
   if (detail === 'driver_location_required_for_zone_arrived') {
     return t('opsMenu.zones.errors.locationRequired')
@@ -4214,34 +4283,11 @@ function DriverOperationsMenu({
             <DialogDescription>{t('opsMenu.tripDetail.description')}</DialogDescription>
           </DialogHeader>
           {historyDetailTrip ? (
-            <div className="space-y-2 text-sm">
-              <p className="text-foreground/85">
-                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.id')}</span> #
-                {historyDetailTrip.trip_id}
-              </p>
-              <p className="text-foreground/85">
-                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.status')}</span>{' '}
-                {passengerTripStatusLabel(historyDetailTrip.status)}
-              </p>
-              <p className="text-foreground/85">
-                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.pickup')}</span>{' '}
-                {formatPickup(historyDetailTrip.origin_lat, historyDetailTrip.origin_lng)}
-              </p>
-              <p className="text-foreground/85">
-                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.destination')}</span>{' '}
-                {formatDestination(historyDetailTrip.destination_lat, historyDetailTrip.destination_lng)}
-              </p>
-              <p className="text-foreground/85">
-                <span className="font-medium text-foreground">{t('opsMenu.tripDetail.date')}</span>{' '}
-                {historyDetailTrip.completed_at
-                  ? formatDriverHistoryWhen(historyDetailTrip.completed_at)
-                  : t('opsMenu.tripDetail.noCompletionDate')}
-              </p>
-              <div className="space-y-1 text-foreground/85">
-                <DriverHistoryTripMoney trip={historyDetailTrip} />
-              </div>
-              <CancellationReasonMuted reason={historyDetailTrip.cancellation_reason} className="text-sm" />
-            </div>
+            <DriverHistoryTripDetailBody
+              trip={historyDetailTrip}
+              token={token}
+              statusLabel={passengerTripStatusLabel(historyDetailTrip.status)}
+            />
           ) : null}
         </DialogContent>
       </Dialog>

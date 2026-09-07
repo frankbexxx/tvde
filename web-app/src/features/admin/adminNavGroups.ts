@@ -15,7 +15,7 @@ export type AdminNavGroup = {
  */
 export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
   { id: 'agora', tabs: ['agora'], defaultTab: 'agora' },
-  { id: 'trips', tabs: ['trips'], defaultTab: 'trips' },
+  { id: 'trips', tabs: ['trips', 'complaints'], defaultTab: 'trips' },
   { id: 'people', tabs: ['pending', 'users', 'docs'], defaultTab: 'pending' },
   { id: 'fleet', tabs: ['frota'], defaultTab: 'frota' },
   { id: 'system', tabs: ['health', 'ops', 'metrics', 'dados'], defaultTab: 'health' },
@@ -24,6 +24,7 @@ export const ADMIN_NAV_GROUPS: readonly AdminNavGroup[] = [
 const TAB_TO_GROUP: Record<AdminDashboardTab, AdminNavGroupId> = {
   agora: 'agora',
   trips: 'trips',
+  complaints: 'trips',
   pending: 'people',
   users: 'people',
   docs: 'people',

@@ -1,4 +1,5 @@
 from app.db.models.audit_event import AuditEvent
+from app.db.models.complaint import Complaint, ComplaintHistory
 from app.db.models.driver import Driver
 from app.db.models.driver_active_driving_segment import DriverActiveDrivingSegment
 from app.db.models.driver_zone_custom import DriverZoneCustom
@@ -34,6 +35,8 @@ __all__ = [
     "TripOffer",
     "OtpCode",
     "AuditEvent",
+    "Complaint",
+    "ComplaintHistory",
     "InteractionLog",
     "StripeWebhookEvent",
     "RotacionalExternalCache",

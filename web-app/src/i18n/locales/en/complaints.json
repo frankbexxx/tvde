@@ -1,0 +1,46 @@
+{
+  "form": {
+    "title": "Report a problem / File a complaint",
+    "category": "Category",
+    "description": "Description",
+    "tripRef": "Trip: {{ref}}",
+    "submit": "Submit complaint",
+    "submitting": "Submitting…",
+    "cancel": "Cancel",
+    "done": "Close",
+    "success": "Complaint registered. Keep this reference:",
+    "successHint": "You can check the status in your complaints.",
+    "error": "Could not submit the complaint."
+  },
+  "categories": {
+    "trip_service": "Trip service",
+    "payment_price": "Payment / price",
+    "driver_vehicle": "Driver / vehicle",
+    "safety": "Safety",
+    "account_app": "Account / app",
+    "other": "Other"
+  },
+  "entry": {
+    "report": "Report a problem / File a complaint"
+  },
+  "list": {
+    "title": "My complaints",
+    "empty": "No complaints yet.",
+    "status": "Status",
+    "resolution": "Resolution"
+  },
+  "admin": {
+    "title": "Complaints",
+    "filters": "Filters",
+    "status": "Status",
+    "category": "Category",
+    "all": "All",
+    "open": "Open",
+    "assignHint": "Assignee (admin UUID, optional)",
+    "resolution": "Resolution",
+    "save": "Save",
+    "timeline": "Procedure",
+    "noSelection": "Select a complaint.",
+    "error": "Failed to load or update."
+  }
+}

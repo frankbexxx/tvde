@@ -59,6 +59,7 @@ import { AdminTabPending } from './tabs/AdminTabPending'
 import { AdminTabFrota } from './tabs/AdminTabFrota'
 import { AdminTabDados } from './tabs/AdminTabDados'
 import { AdminTabTrips } from './tabs/AdminTabTrips'
+import { AdminTabComplaints } from './tabs/AdminTabComplaints'
 import { AdminTabMetrics } from './tabs/AdminTabMetrics'
 import { AdminTabOps } from './tabs/AdminTabOps'
 import { AdminTabHealth } from './tabs/AdminTabHealth'
@@ -1004,6 +1005,8 @@ export function AdminDashboard() {
           fetchTripAuditTrail={fetchTripAuditTrail}
         />
       )}
+
+      {tab === 'complaints' && <AdminTabComplaints />}
 
       {tab === 'metrics' && (
         <AdminTabMetrics
