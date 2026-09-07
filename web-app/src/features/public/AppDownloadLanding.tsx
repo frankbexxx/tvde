@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { LanguageSelector } from '../settings/LanguageSelector'
+import { LegalConsumerRights } from '../../components/legal/LegalConsumerRights'
 
 /**
  * Ponto de entrada para QR / materiais impressos: mesmo domínio que a app,
@@ -29,6 +30,7 @@ export function AppDownloadLanding() {
         {t('login')}
       </Link>
       <p className="text-xs text-muted-foreground max-w-xs">{t('landingStoreHint')}</p>
+      <LegalConsumerRights compact surface="public" className="max-w-sm mt-2" />
     </div>
   )
 }

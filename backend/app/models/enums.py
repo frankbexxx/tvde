@@ -66,11 +66,15 @@ class ComplaintCategory(str, Enum):
 
 class ComplaintSource(str, Enum):
     in_app = "in_app"
+    livro_reclamacoes = "livro_reclamacoes"
+    ral = "ral"
+    other = "other"
 
 
 class ComplaintComplainantRole(str, Enum):
     passenger = "passenger"
     driver = "driver"
+    external = "external"
 
 
 class ComplaintHistoryEventType(str, Enum):

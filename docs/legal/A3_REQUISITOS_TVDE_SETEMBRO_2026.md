@@ -303,7 +303,7 @@ Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MAT
 9. Apuramento contribuição AMT **5%** (**L-18**)  
 10. Contratos de adesão operadores (**L-23**)  
 11. Disponibilização contrato ao motorista (**L-24**)  
-12. Livro de Reclamações / RAL (**L-25**)  
+12. Livro de Reclamações / RAL (**L-25**) — foundation técnica **PARCIAL** 2026-09-07; registo portal LRE externo ainda pendente · ver [`L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md`](L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md)  
 13. Processos de comunicação IMT/AMT (**L-29**)  
 
 *Alinhado à matriz (contagem por ID L-xx com Impacto `NECESSÁRIO M2`). Não fundir L-14 e L-15.*

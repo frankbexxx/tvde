@@ -488,3 +488,169 @@ def test_admin_list_filter(client: TestClient) -> None:
     finally:
         _clear_auth()
         db.close()
+
+# --- L-25 external / LRE / RAL ---
+
+def test_admin_create_external_livro_reclamacoes(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        admin = _make_admin(db)
+        submitted = datetime(2026, 1, 15, 10, 0, tzinfo=timezone.utc)
+        _auth(admin, Role.admin)
+        r = client.post(
+            "/admin/complaints/external",
+            json={
+                "source": "livro_reclamacoes",
+                "category": "trip_service",
+                "description": "LRE imported complaint.",
+                "submitted_at": submitted.isoformat(),
+                "external_reference": "LRE-2026-001",
+                "complainant_name": "Ana Externa",
+                "complainant_email": "ana@example.com",
+                "complainant_phone": "+351910000001",
+                "external_response_due_at": datetime(2026, 2, 5, 17, 0, tzinfo=timezone.utc).isoformat(),
+            },
+        )
+        assert r.status_code == 201, r.text
+        body = r.json()
+        assert body["source"] == "livro_reclamacoes"
+        assert body["external_reference"] == "LRE-2026-001"
+        assert body["complainant_user_id"] is None
+        assert body["complainant_role"] == "external"
+        assert body["complainant_name"] == "Ana Externa"
+        assert body["public_reference"].startswith("CMP-")
+        assert body["status"] == "received"
+        assert body["external_response_due_at"] is not None
+        retention = datetime.fromisoformat(body["retention_until"].replace("Z", "+00:00"))
+        assert retention == compute_retention_until(submitted)
+
+        complaint = db.execute(
+            select(Complaint).where(Complaint.public_reference == body["public_reference"])
+        ).scalar_one()
+        assert complaint.complainant_user_id is None
+        hist = db.execute(
+            select(ComplaintHistory).where(ComplaintHistory.complaint_id == complaint.id)
+        ).scalars().all()
+        assert any(h.event_type == ComplaintHistoryEventType.received.value for h in hist)
+
+        audits = db.execute(
+            select(AuditEvent).where(
+                AuditEvent.entity_id == str(complaint.id),
+                AuditEvent.event_type == "complaint.received",
+            )
+        ).scalars().all()
+        assert audits
+        blob = " ".join(str(a.payload) for a in audits)
+        assert "Ana Externa" not in blob
+        assert "ana@example.com" not in blob
+        assert "LRE imported complaint" not in blob
+        assert "livro_reclamacoes" in blob
+        assert "LRE-2026-001" in blob
+    finally:
+        _clear_auth()
+        db.close()
+
+
+def test_admin_create_external_ral_without_user(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        admin = _make_admin(db)
+        _auth(admin, Role.admin)
+        r = client.post(
+            "/admin/complaints/external",
+            json={
+                "source": "ral",
+                "category": "other",
+                "description": "RAL case note.",
+                "submitted_at": datetime(2025, 6, 1, tzinfo=timezone.utc).isoformat(),
+            },
+        )
+        assert r.status_code == 201, r.text
+        body = r.json()
+        assert body["source"] == "ral"
+        assert body["complainant_user_id"] is None
+        assert body["external_reference"] is None
+        assert body["external_response_due_at"] is None
+    finally:
+        _clear_auth()
+        db.close()
+
+
+def test_duplicate_external_reference(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        admin = _make_admin(db)
+        _auth(admin, Role.admin)
+        payload = {
+            "source": "livro_reclamacoes",
+            "category": "other",
+            "description": "First.",
+            "submitted_at": datetime(2026, 3, 1, tzinfo=timezone.utc).isoformat(),
+            "external_reference": "LRE-DUP-99",
+        }
+        assert client.post("/admin/complaints/external", json=payload).status_code == 201
+        r2 = client.post(
+            "/admin/complaints/external",
+            json={**payload, "description": "Second."},
+        )
+        assert r2.status_code == 409
+        assert r2.json()["detail"] == "duplicate_external_reference"
+    finally:
+        _clear_auth()
+        db.close()
+
+
+def test_user_cannot_create_external_source(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        pax = _make_passenger(db)
+        _auth(pax, Role.passenger)
+        # User API has no source field; posting external path is admin-only.
+        r = client.post(
+            "/admin/complaints/external",
+            json={
+                "source": "livro_reclamacoes",
+                "category": "other",
+                "description": "Nope.",
+                "submitted_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+        assert r.status_code == 403
+        # in_app rejected on admin external endpoint
+        admin = _make_admin(db)
+        _auth(admin, Role.admin)
+        r2 = client.post(
+            "/admin/complaints/external",
+            json={
+                "source": "in_app",
+                "category": "other",
+                "description": "Not allowed.",
+                "submitted_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+        assert r2.status_code == 422
+    finally:
+        _clear_auth()
+        db.close()
+
+
+def test_external_null_references_not_unique_conflict(client: TestClient) -> None:
+    db = SessionLocal()
+    try:
+        admin = _make_admin(db)
+        _auth(admin, Role.admin)
+        base = {
+            "source": "other",
+            "category": "other",
+            "description": "No ext ref A.",
+            "submitted_at": datetime(2026, 4, 1, tzinfo=timezone.utc).isoformat(),
+        }
+        assert client.post("/admin/complaints/external", json=base).status_code == 201
+        r2 = client.post(
+            "/admin/complaints/external",
+            json={**base, "description": "No ext ref B."},
+        )
+        assert r2.status_code == 201, r2.text
+    finally:
+        _clear_auth()
+        db.close()

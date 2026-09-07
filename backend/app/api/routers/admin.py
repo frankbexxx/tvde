@@ -2109,11 +2109,38 @@ async def admin_close_mock_processing(
 # --- L-12 Complaints (admin) -------------------------------------------------
 
 from app.schemas.complaints import (  # noqa: E402
+    ComplaintAdminExternalCreateRequest,
     ComplaintAdminItem,
     ComplaintAdminListItem,
     ComplaintAdminUpdateRequest,
 )
 from app.services import complaints as complaints_svc  # noqa: E402
+
+
+@router.post(
+    "/complaints/external",
+    response_model=ComplaintAdminItem,
+    status_code=status.HTTP_201_CREATED,
+)
+async def admin_create_external_complaint(
+    body: ComplaintAdminExternalCreateRequest,
+    user: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> ComplaintAdminItem:
+    complaint = complaints_svc.create_external_complaint(
+        db,
+        admin_user_id=user.user_id,
+        source=body.source,
+        category=body.category,
+        description=body.description,
+        submitted_at=body.submitted_at,
+        external_reference=body.external_reference,
+        complainant_name=body.complainant_name,
+        complainant_email=body.complainant_email,
+        complainant_phone=body.complainant_phone,
+        external_response_due_at=body.external_response_due_at,
+    )
+    return complaints_svc.to_admin_item(db, complaint, include_history=True)
 
 
 @router.get("/complaints", response_model=list[ComplaintAdminListItem])

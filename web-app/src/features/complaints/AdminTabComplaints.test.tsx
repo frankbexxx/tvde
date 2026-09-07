@@ -9,6 +9,7 @@ vi.mock('../../context/AuthContext', () => ({
 const listAdminComplaints = vi.fn()
 const getAdminComplaint = vi.fn()
 const updateAdminComplaint = vi.fn()
+const createAdminExternalComplaint = vi.fn()
 
 vi.mock('../../api/complaints', async () => {
   const actual = await vi.importActual<typeof import('../../api/complaints')>('../../api/complaints')
@@ -17,6 +18,7 @@ vi.mock('../../api/complaints', async () => {
     listAdminComplaints: (...args: unknown[]) => listAdminComplaints(...args),
     getAdminComplaint: (...args: unknown[]) => getAdminComplaint(...args),
     updateAdminComplaint: (...args: unknown[]) => updateAdminComplaint(...args),
+    createAdminExternalComplaint: (...args: unknown[]) => createAdminExternalComplaint(...args),
   }
 })
 
@@ -29,6 +31,7 @@ describe('AdminTabComplaints', () => {
         complainant_role: 'passenger',
         category: 'other',
         status: 'received',
+        source: 'in_app',
         submitted_at: new Date().toISOString(),
       },
     ])
@@ -73,6 +76,22 @@ describe('AdminTabComplaints', () => {
         { event_type: 'resolved', occurred_at: new Date().toISOString() },
       ],
     })
+    createAdminExternalComplaint.mockResolvedValue({
+      id: '2',
+      public_reference: 'CMP-2026-LRE00001',
+      complainant_role: 'external',
+      complainant_user_id: null,
+      category: 'trip_service',
+      description: 'LRE case',
+      source: 'livro_reclamacoes',
+      external_reference: 'LRE-99',
+      status: 'received',
+      submitted_at: new Date().toISOString(),
+      retention_until: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      history: [{ event_type: 'received', occurred_at: new Date().toISOString() }],
+    })
   })
 
   it('lists and resolves a complaint', async () => {
@@ -82,13 +101,10 @@ describe('AdminTabComplaints', () => {
     })
     fireEvent.click(screen.getByTestId('admin-complaint-row-CMP-2026-ABCDEF01'))
     await waitFor(() => {
-      expect(screen.getByTestId('admin-complaint-history')).toBeInTheDocument()
+      expect(screen.getByTestId('admin-complaint-detail-source')).toHaveTextContent('in_app')
     })
     fireEvent.change(screen.getByTestId('admin-complaint-next-status'), {
       target: { value: 'resolved' },
-    })
-    await waitFor(() => {
-      expect(screen.getByTestId('admin-complaint-resolution')).toBeInTheDocument()
     })
     fireEvent.change(screen.getByTestId('admin-complaint-resolution'), {
       target: { value: 'Fixed' },
@@ -96,6 +112,38 @@ describe('AdminTabComplaints', () => {
     fireEvent.click(screen.getByTestId('admin-complaint-save'))
     await waitFor(() => {
       expect(updateAdminComplaint).toHaveBeenCalled()
+    })
+  })
+
+  it('creates an external LRE complaint', async () => {
+    render(<AdminTabComplaints />)
+    fireEvent.click(screen.getByTestId('admin-complaint-import-toggle'))
+    expect(screen.getByTestId('admin-complaint-external-form')).toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('admin-complaint-ext-source'), {
+      target: { value: 'livro_reclamacoes' },
+    })
+    fireEvent.change(screen.getByTestId('admin-complaint-ext-reference'), {
+      target: { value: 'LRE-99' },
+    })
+    fireEvent.change(screen.getByTestId('admin-complaint-ext-description'), {
+      target: { value: 'LRE case' },
+    })
+    fireEvent.click(screen.getByTestId('admin-complaint-ext-submit'))
+    await waitFor(() => {
+      expect(createAdminExternalComplaint).toHaveBeenCalledWith(
+        'admin-tok',
+        expect.objectContaining({
+          source: 'livro_reclamacoes',
+          external_reference: 'LRE-99',
+          description: 'LRE case',
+        })
+      )
+    })
+    await waitFor(() => {
+      expect(screen.getByTestId('admin-complaint-detail-source')).toHaveTextContent(
+        'livro_reclamacoes'
+      )
+      expect(screen.getByTestId('admin-complaint-detail-source')).toHaveTextContent('LRE-99')
     })
   })
 })
