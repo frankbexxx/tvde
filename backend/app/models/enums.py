@@ -45,3 +45,38 @@ class OfferStatus(str, Enum):
     accepted = "accepted"
     rejected = "rejected"
     expired = "expired"
+
+
+class ComplaintStatus(str, Enum):
+    received = "received"
+    under_review = "under_review"
+    awaiting_info = "awaiting_info"
+    resolved = "resolved"
+    closed = "closed"
+
+
+class ComplaintCategory(str, Enum):
+    trip_service = "trip_service"
+    payment_price = "payment_price"
+    driver_vehicle = "driver_vehicle"
+    safety = "safety"
+    account_app = "account_app"
+    other = "other"
+
+
+class ComplaintSource(str, Enum):
+    in_app = "in_app"
+
+
+class ComplaintComplainantRole(str, Enum):
+    passenger = "passenger"
+    driver = "driver"
+
+
+class ComplaintHistoryEventType(str, Enum):
+    received = "received"
+    status_changed = "status_changed"
+    resolved = "resolved"
+    reopened = "reopened"
+    closed = "closed"
+    assignment_changed = "assignment_changed"

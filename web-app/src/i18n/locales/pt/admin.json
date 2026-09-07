@@ -16,6 +16,7 @@
     "frota": "Frota",
     "dados": "Dados",
     "trips": "Viagens",
+    "complaints": "Reclamações",
     "metrics": "Métricas",
     "ops": "Operações",
     "health": "Saúde"
@@ -28,6 +29,7 @@
     "frota": "Frota (parceiros)",
     "dados": "Dados (visibilidade)",
     "trips": "Viagens",
+    "complaints": "Reclamações",
     "metrics": "Métricas",
     "ops": "Operações",
     "health": "Saúde do sistema"

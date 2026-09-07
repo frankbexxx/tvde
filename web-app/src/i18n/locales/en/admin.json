@@ -16,6 +16,7 @@
     "frota": "Fleet",
     "dados": "Data",
     "trips": "Trips",
+    "complaints": "Complaints",
     "metrics": "Metrics",
     "ops": "Operations",
     "health": "Health"
@@ -28,6 +29,7 @@
     "frota": "Fleet (partners)",
     "dados": "Data (visibility)",
     "trips": "Trips",
+    "complaints": "Complaints",
     "metrics": "Metrics",
     "ops": "Operations",
     "health": "System health"

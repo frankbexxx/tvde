@@ -1,0 +1,46 @@
+{
+  "form": {
+    "title": "Reportar problema / Fazer reclamação",
+    "category": "Categoria",
+    "description": "Descrição",
+    "tripRef": "Viagem: {{ref}}",
+    "submit": "Enviar reclamação",
+    "submitting": "A enviar…",
+    "cancel": "Cancelar",
+    "done": "Fechar",
+    "success": "Reclamação registada. Guarde a referência:",
+    "successHint": "Pode consultar o estado nas suas reclamações.",
+    "error": "Não foi possível enviar a reclamação."
+  },
+  "categories": {
+    "trip_service": "Serviço da viagem",
+    "payment_price": "Pagamento / preço",
+    "driver_vehicle": "Motorista / viatura",
+    "safety": "Segurança",
+    "account_app": "Conta / aplicação",
+    "other": "Outro"
+  },
+  "entry": {
+    "report": "Reportar problema / Fazer reclamação"
+  },
+  "list": {
+    "title": "As minhas reclamações",
+    "empty": "Ainda não tem reclamações.",
+    "status": "Estado",
+    "resolution": "Resolução"
+  },
+  "admin": {
+    "title": "Reclamações",
+    "filters": "Filtros",
+    "status": "Estado",
+    "category": "Categoria",
+    "all": "Todos",
+    "open": "Abrir",
+    "assignHint": "Atribuição (UUID admin, opcional)",
+    "resolution": "Resolução",
+    "save": "Guardar",
+    "timeline": "Procedimento",
+    "noSelection": "Seleccione uma reclamação.",
+    "error": "Erro ao carregar ou actualizar."
+  }
+}

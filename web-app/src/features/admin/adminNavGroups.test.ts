@@ -18,6 +18,7 @@ describe('adminNavGroups', () => {
   it('maps singleton groups', () => {
     expect(groupForTab('agora')).toBe('agora')
     expect(groupForTab('trips')).toBe('trips')
+    expect(groupForTab('complaints')).toBe('trips')
     expect(groupForTab('frota')).toBe('fleet')
   })
 
@@ -30,6 +31,7 @@ describe('adminNavGroups', () => {
     expect(defaultTabForGroup('people')).toBe('pending')
     expect(defaultTabForGroup('system')).toBe('health')
     expect(tabsForGroup('people')).toEqual(['pending', 'users', 'docs'])
+    expect(tabsForGroup('trips')).toEqual(['trips', 'complaints'])
     expect(tabsForGroup('system')).toEqual(['health', 'ops', 'metrics', 'dados'])
   })
 })

@@ -6,6 +6,7 @@ export const ADMIN_DASHBOARD_TAB_IDS = [
   'frota',
   'dados',
   'trips',
+  'complaints',
   'metrics',
   'ops',
   'health',
