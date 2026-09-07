@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../../context/AuthContext'
 import {
+  ADMIN_EXTERNAL_SOURCES,
   COMPLAINT_CATEGORIES,
+  createAdminExternalComplaint,
   getAdminComplaint,
   listAdminComplaints,
   updateAdminComplaint,
   type ComplaintAdminItem,
   type ComplaintAdminListItem,
+  type ComplaintCategory,
+  type ComplaintSource,
   type ComplaintStatus,
 } from '../../../api/complaints'
 
@@ -18,6 +22,30 @@ const STATUSES: ComplaintStatus[] = [
   'resolved',
   'closed',
 ]
+
+type ExternalForm = {
+  source: Exclude<ComplaintSource, 'in_app'>
+  category: ComplaintCategory
+  description: string
+  submitted_at: string
+  external_reference: string
+  complainant_name: string
+  complainant_email: string
+  complainant_phone: string
+  external_response_due_at: string
+}
+
+const emptyExternalForm = (): ExternalForm => ({
+  source: 'livro_reclamacoes',
+  category: 'other',
+  description: '',
+  submitted_at: new Date().toISOString().slice(0, 16),
+  external_reference: '',
+  complainant_name: '',
+  complainant_email: '',
+  complainant_phone: '',
+  external_response_due_at: '',
+})
 
 export function AdminTabComplaints() {
   const { t } = useTranslation('complaints')
@@ -30,6 +58,9 @@ export function AdminTabComplaints() {
   const [nextStatus, setNextStatus] = useState<ComplaintStatus | ''>('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [extForm, setExtForm] = useState<ExternalForm>(emptyExternalForm)
+  const [creating, setCreating] = useState(false)
 
   const refresh = useCallback(async () => {
     if (!token) return
@@ -93,6 +124,45 @@ export function AdminTabComplaints() {
     }
   }
 
+  async function createExternal() {
+    if (!token) return
+    setCreating(true)
+    setError(null)
+    try {
+      const submitted = new Date(extForm.submitted_at)
+      if (Number.isNaN(submitted.getTime())) {
+        setError(t('admin.error'))
+        return
+      }
+      const due = extForm.external_response_due_at.trim()
+        ? new Date(extForm.external_response_due_at)
+        : null
+      if (due && Number.isNaN(due.getTime())) {
+        setError(t('admin.error'))
+        return
+      }
+      const created = await createAdminExternalComplaint(token, {
+        source: extForm.source,
+        category: extForm.category,
+        description: extForm.description.trim(),
+        submitted_at: submitted.toISOString(),
+        external_reference: extForm.external_reference.trim() || null,
+        complainant_name: extForm.complainant_name.trim() || null,
+        complainant_email: extForm.complainant_email.trim() || null,
+        complainant_phone: extForm.complainant_phone.trim() || null,
+        external_response_due_at: due ? due.toISOString() : null,
+      })
+      setShowImport(false)
+      setExtForm(emptyExternalForm())
+      setSelected(created)
+      await refresh()
+    } catch {
+      setError(t('admin.error'))
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const showActiveResolution =
     selected &&
     (selected.status === 'resolved' ||
@@ -101,7 +171,160 @@ export function AdminTabComplaints() {
 
   return (
     <section className="space-y-4" data-testid="admin-tab-complaints">
-      <h2 className="text-lg font-semibold text-foreground">{t('admin.title')}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold text-foreground">{t('admin.title')}</h2>
+        <button
+          type="button"
+          className="rounded-md border border-border px-3 py-1.5 text-sm"
+          onClick={() => setShowImport((v) => !v)}
+          data-testid="admin-complaint-import-toggle"
+        >
+          {t('admin.newExternal')}
+        </button>
+      </div>
+
+      {showImport ? (
+        <div
+          className="rounded-lg border border-border/60 p-3 space-y-2"
+          data-testid="admin-complaint-external-form"
+        >
+          <p className="text-sm font-medium">{t('admin.newExternal')}</p>
+          <label className="block text-xs space-y-1">
+            <span className="text-muted-foreground">{t('admin.source')}</span>
+            <select
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={extForm.source}
+              onChange={(e) =>
+                setExtForm((f) => ({
+                  ...f,
+                  source: e.target.value as Exclude<ComplaintSource, 'in_app'>,
+                }))
+              }
+              data-testid="admin-complaint-ext-source"
+            >
+              {ADMIN_EXTERNAL_SOURCES.map((s) => (
+                <option key={s} value={s}>
+                  {t(`sources.${s}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-xs space-y-1">
+            <span className="text-muted-foreground">{t('admin.externalReference')}</span>
+            <input
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={extForm.external_reference}
+              onChange={(e) =>
+                setExtForm((f) => ({ ...f, external_reference: e.target.value }))
+              }
+              data-testid="admin-complaint-ext-reference"
+            />
+          </label>
+          <label className="block text-xs space-y-1">
+            <span className="text-muted-foreground">{t('admin.submittedAt')}</span>
+            <input
+              type="datetime-local"
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={extForm.submitted_at}
+              onChange={(e) =>
+                setExtForm((f) => ({ ...f, submitted_at: e.target.value }))
+              }
+              data-testid="admin-complaint-ext-submitted"
+            />
+          </label>
+          <label className="block text-xs space-y-1">
+            <span className="text-muted-foreground">{t('admin.category')}</span>
+            <select
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={extForm.category}
+              onChange={(e) =>
+                setExtForm((f) => ({
+                  ...f,
+                  category: e.target.value as ComplaintCategory,
+                }))
+              }
+              data-testid="admin-complaint-ext-category"
+            >
+              {COMPLAINT_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {t(`categories.${c}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-xs space-y-1">
+            <span className="text-muted-foreground">{t('form.description')}</span>
+            <textarea
+              className="w-full min-h-[72px] rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={extForm.description}
+              onChange={(e) =>
+                setExtForm((f) => ({ ...f, description: e.target.value }))
+              }
+              data-testid="admin-complaint-ext-description"
+            />
+          </label>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <label className="block text-xs space-y-1">
+              <span className="text-muted-foreground">{t('admin.complainantName')}</span>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                value={extForm.complainant_name}
+                onChange={(e) =>
+                  setExtForm((f) => ({ ...f, complainant_name: e.target.value }))
+                }
+                data-testid="admin-complaint-ext-name"
+              />
+            </label>
+            <label className="block text-xs space-y-1">
+              <span className="text-muted-foreground">{t('admin.complainantEmail')}</span>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                value={extForm.complainant_email}
+                onChange={(e) =>
+                  setExtForm((f) => ({ ...f, complainant_email: e.target.value }))
+                }
+                data-testid="admin-complaint-ext-email"
+              />
+            </label>
+            <label className="block text-xs space-y-1">
+              <span className="text-muted-foreground">{t('admin.complainantPhone')}</span>
+              <input
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                value={extForm.complainant_phone}
+                onChange={(e) =>
+                  setExtForm((f) => ({ ...f, complainant_phone: e.target.value }))
+                }
+                data-testid="admin-complaint-ext-phone"
+              />
+            </label>
+          </div>
+          <label className="block text-xs space-y-1">
+            <span className="text-muted-foreground">{t('admin.dueAt')}</span>
+            <input
+              type="datetime-local"
+              className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              value={extForm.external_response_due_at}
+              onChange={(e) =>
+                setExtForm((f) => ({
+                  ...f,
+                  external_response_due_at: e.target.value,
+                }))
+              }
+              data-testid="admin-complaint-ext-due"
+            />
+          </label>
+          <button
+            type="button"
+            className="rounded-md bg-foreground px-3 py-1.5 text-sm text-background disabled:opacity-50"
+            disabled={creating || !extForm.description.trim()}
+            onClick={() => void createExternal()}
+            data-testid="admin-complaint-ext-submit"
+          >
+            {creating ? t('form.submitting') : t('admin.createExternal')}
+          </button>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-2 items-end">
         <label className="text-xs space-y-1">
           <span className="text-muted-foreground">{t('admin.status')}</span>
@@ -157,7 +380,8 @@ export function AdminTabComplaints() {
               >
                 <div className="font-mono text-xs font-semibold">{row.public_reference}</div>
                 <div className="text-xs text-muted-foreground">
-                  {row.status} · {row.category} · {row.complainant_role}
+                  {row.status} · {row.category} · {row.source}
+                  {row.external_reference ? ` · ${row.external_reference}` : ''}
                 </div>
               </button>
             </li>
@@ -172,9 +396,22 @@ export function AdminTabComplaints() {
           ) : (
             <>
               <p className="font-mono text-sm font-semibold">{selected.public_reference}</p>
-              <p className="text-xs text-muted-foreground">
-                {selected.status} · {selected.category}
+              <p className="text-xs text-muted-foreground" data-testid="admin-complaint-detail-source">
+                {selected.source}
+                {selected.external_reference
+                  ? ` · ${selected.external_reference}`
+                  : ''}{' '}
+                · {selected.status} · {selected.category}
               </p>
+              {selected.complainant_name ||
+              selected.complainant_email ||
+              selected.complainant_phone ? (
+                <p className="text-xs text-muted-foreground">
+                  {[selected.complainant_name, selected.complainant_email, selected.complainant_phone]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              ) : null}
               <p className="text-sm whitespace-pre-wrap">{selected.description}</p>
               <label className="block text-xs space-y-1">
                 <span className="text-muted-foreground">{t('admin.status')}</span>

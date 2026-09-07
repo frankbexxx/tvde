@@ -20,6 +20,12 @@
     "account_app": "Conta / aplicação",
     "other": "Outro"
   },
+  "sources": {
+    "in_app": "App VAMULÁ",
+    "livro_reclamacoes": "Livro de Reclamações (LRE)",
+    "ral": "RAL",
+    "other": "Outro (externo)"
+  },
   "entry": {
     "report": "Reportar problema / Fazer reclamação"
   },
@@ -34,6 +40,15 @@
     "filters": "Filtros",
     "status": "Estado",
     "category": "Categoria",
+    "source": "Origem",
+    "externalReference": "Referência externa",
+    "submittedAt": "Data da reclamação (externa)",
+    "dueAt": "Prazo resposta externa (opcional)",
+    "complainantName": "Nome",
+    "complainantEmail": "Email",
+    "complainantPhone": "Telefone",
+    "newExternal": "Nova reclamação externa",
+    "createExternal": "Importar",
     "all": "Todos",
     "open": "Abrir",
     "assignHint": "Atribuição (UUID admin, opcional)",

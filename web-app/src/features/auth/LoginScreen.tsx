@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { formatLoginError } from '../../i18n/apiErrors'
 import { LanguageSelector } from '../settings/LanguageSelector'
 import { LegalLocaleNotice } from '../../components/legal/LegalLocaleNotice'
+import { LegalConsumerRights } from '../../components/legal/LegalConsumerRights'
 
 interface LoginScreenProps {
   /** BETA: `admin` = fluxo dedicado ao painel (URL `/admin` ou `/admin/login`). */
@@ -214,6 +215,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               {appBuildDisplayLine}
             </p>
             <p className="mt-1.5 text-[0.7rem] text-muted-foreground/75 leading-snug">{t('appVersionSupport')}</p>
+            <LegalConsumerRights compact surface="public" className="mt-3" />
             <LegalLocaleNotice className="mt-3 text-[0.7rem] text-muted-foreground/80 leading-snug" />
           </footer>
         </div>

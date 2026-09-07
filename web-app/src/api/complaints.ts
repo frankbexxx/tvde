@@ -1,4 +1,4 @@
-/** L-12 Complaints API (passenger / driver / admin). */
+/** L-12 / L-25 Complaints API (passenger / driver / admin). */
 import { apiFetch } from './client'
 
 export type ComplaintCategory =
@@ -15,6 +15,12 @@ export type ComplaintStatus =
   | 'awaiting_info'
   | 'resolved'
   | 'closed'
+
+export type ComplaintSource =
+  | 'in_app'
+  | 'livro_reclamacoes'
+  | 'ral'
+  | 'other'
 
 export type ComplaintUserItem = {
   public_reference: string
@@ -41,15 +47,21 @@ export type ComplaintAdminListItem = {
   complainant_role: string
   category: string
   status: string
+  source: string
+  external_reference?: string | null
   submitted_at: string
   trip_id?: string | null
   assigned_to?: string | null
 }
 
 export type ComplaintAdminItem = ComplaintAdminListItem & {
-  complainant_user_id: string
+  complainant_user_id?: string | null
   description: string
-  source: string
+  external_response_due_at?: string | null
+  external_responded_at?: string | null
+  complainant_name?: string | null
+  complainant_email?: string | null
+  complainant_phone?: string | null
   resolution?: string | null
   resolved_at?: string | null
   closed_at?: string | null
@@ -59,12 +71,30 @@ export type ComplaintAdminItem = ComplaintAdminListItem & {
   history: ComplaintHistoryItem[]
 }
 
+export type ComplaintAdminExternalCreateBody = {
+  source: Exclude<ComplaintSource, 'in_app'>
+  category: ComplaintCategory
+  description: string
+  submitted_at: string
+  external_reference?: string | null
+  complainant_name?: string | null
+  complainant_email?: string | null
+  complainant_phone?: string | null
+  external_response_due_at?: string | null
+}
+
 export const COMPLAINT_CATEGORIES: ComplaintCategory[] = [
   'trip_service',
   'payment_price',
   'driver_vehicle',
   'safety',
   'account_app',
+  'other',
+]
+
+export const ADMIN_EXTERNAL_SOURCES: Exclude<ComplaintSource, 'in_app'>[] = [
+  'livro_reclamacoes',
+  'ral',
   'other',
 ]
 
@@ -136,4 +166,15 @@ export async function updateAdminComplaint(
       body: JSON.stringify(body),
     }
   )
+}
+
+export async function createAdminExternalComplaint(
+  token: string,
+  body: ComplaintAdminExternalCreateBody
+): Promise<ComplaintAdminItem> {
+  return apiFetch<ComplaintAdminItem>('/admin/complaints/external', {
+    method: 'POST',
+    token,
+    body: JSON.stringify(body),
+  })
 }

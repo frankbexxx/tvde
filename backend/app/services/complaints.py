@@ -39,6 +39,14 @@ ACTIVE_RESOLUTION_STATUSES = frozenset(
     {ComplaintStatus.resolved.value, ComplaintStatus.closed.value}
 )
 
+ADMIN_EXTERNAL_SOURCE_VALUES = frozenset(
+    {
+        ComplaintSource.livro_reclamacoes.value,
+        ComplaintSource.ral.value,
+        ComplaintSource.other.value,
+    }
+)
+
 # from_status -> allowed to_status
 ALLOWED_TRANSITIONS: dict[str, frozenset[str]] = {
     ComplaintStatus.received.value: frozenset(
@@ -221,6 +229,12 @@ def to_admin_item(db: Session, complaint: Complaint, *, include_history: bool = 
         category=complaint.category,
         description=complaint.description,
         source=complaint.source,
+        external_reference=complaint.external_reference,
+        external_response_due_at=complaint.external_response_due_at,
+        external_responded_at=complaint.external_responded_at,
+        complainant_name=complaint.complainant_name,
+        complainant_email=complaint.complainant_email,
+        complainant_phone=complaint.complainant_phone,
         submitted_at=complaint.submitted_at,
         status=complaint.status,
         assigned_to=complaint.assigned_to,
@@ -242,9 +256,18 @@ def to_admin_list_item(complaint: Complaint) -> ComplaintAdminListItem:
         complainant_role=complaint.complainant_role,
         category=complaint.category,
         status=complaint.status,
+        source=complaint.source,
+        external_reference=complaint.external_reference,
         submitted_at=complaint.submitted_at,
         trip_id=complaint.trip_id,
         assigned_to=complaint.assigned_to,
+    )
+
+
+def _is_duplicate_external_reference_error(exc: IntegrityError) -> bool:
+    msg = str(getattr(exc, "orig", exc)).lower()
+    return "uq_complaints_source_external_reference" in msg or (
+        "external_reference" in msg and "unique" in msg
     )
 
 
@@ -323,6 +346,116 @@ def create_complaint(
         complaint=complaint,
         actor_user_id=str(uid),
         actor_role=role.value,
+        payload_extra={"source": complaint.source},
+    )
+    db.commit()
+    db.refresh(complaint)
+    return complaint
+
+
+def create_external_complaint(
+    db: Session,
+    *,
+    admin_user_id: str,
+    source: ComplaintSource,
+    category: ComplaintCategory,
+    description: str,
+    submitted_at: datetime,
+    external_reference: str | None = None,
+    complainant_name: str | None = None,
+    complainant_email: str | None = None,
+    complainant_phone: str | None = None,
+    external_response_due_at: datetime | None = None,
+) -> Complaint:
+    """Admin import of LRE / RAL / other external complaints (no app user required)."""
+    if source.value not in ADMIN_EXTERNAL_SOURCE_VALUES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_external_source",
+        )
+
+    text = (description or "").strip()
+    if not text or len(text) > DESCRIPTION_MAX:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_description")
+
+    admin_uid = _parse_uuid(admin_user_id, detail="user_not_found")
+    if submitted_at.tzinfo is None:
+        submitted_at = submitted_at.replace(tzinfo=timezone.utc)
+
+    ext_ref = (external_reference or "").strip() or None
+    name = (complainant_name or "").strip() or None
+    email = (complainant_email or "").strip() or None
+    phone = (complainant_phone or "").strip() or None
+    retention_until = compute_retention_until(submitted_at)
+
+    complaint: Complaint | None = None
+    last_error: Exception | None = None
+    for _ in range(PUBLIC_REF_MAX_ATTEMPTS):
+        candidate = Complaint(
+            id=uuid.uuid4(),
+            public_reference=generate_public_reference(when=submitted_at),
+            complainant_role=ComplaintComplainantRole.external.value,
+            complainant_user_id=None,
+            trip_id=None,
+            category=category.value,
+            description=text,
+            source=source.value,
+            external_reference=ext_ref,
+            external_response_due_at=external_response_due_at,
+            complainant_name=name,
+            complainant_email=email,
+            complainant_phone=phone,
+            submitted_at=submitted_at,
+            status=ComplaintStatus.received.value,
+            retention_until=retention_until,
+        )
+        try:
+            with db.begin_nested():
+                db.add(candidate)
+                db.flush()
+            complaint = candidate
+            break
+        except IntegrityError as exc:
+            if _is_duplicate_external_reference_error(exc):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="duplicate_external_reference",
+                ) from exc
+            last_error = exc
+            continue
+
+    if complaint is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="public_reference_generation_failed",
+        ) from last_error
+
+    _append_history(
+        db,
+        complaint=complaint,
+        event_type=ComplaintHistoryEventType.received,
+        actor_user_id=admin_uid,
+        from_status=None,
+        to_status=ComplaintStatus.received.value,
+        occurred_at=submitted_at,
+        metadata={
+            "source": complaint.source,
+            "external_reference": complaint.external_reference,
+            "imported": True,
+        },
+    )
+    # Operational audit: no description / contact PII
+    _record_operational_audit(
+        db,
+        event_type="complaint.received",
+        complaint=complaint,
+        actor_user_id=str(admin_uid),
+        actor_role=Role.admin.value,
+        payload_extra={
+            "source": complaint.source,
+            "external_reference": complaint.external_reference,
+            "imported": True,
+        },
     )
     db.commit()
     db.refresh(complaint)

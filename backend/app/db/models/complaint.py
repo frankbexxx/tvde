@@ -1,4 +1,7 @@
-"""L-12 Complaint foundation — case state + canonical procedure history."""
+"""L-12 Complaint foundation — case state + canonical procedure history.
+
+L-25: external / LRE / RAL import fields (nullable contact snapshots).
+"""
 
 from __future__ import annotations
 
@@ -6,7 +9,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,9 +17,18 @@ from app.db.base import Base
 
 
 class Complaint(Base):
-    """Canonical current state of a platform complaint (L-12)."""
+    """Canonical current state of a platform complaint (L-12 / L-25)."""
 
     __tablename__ = "complaints"
+    __table_args__ = (
+        Index(
+            "uq_complaints_source_external_reference",
+            "source",
+            "external_reference",
+            unique=True,
+            postgresql_where=text("external_reference IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -33,14 +45,14 @@ class Complaint(Base):
     complainant_role: Mapped[str] = mapped_column(
         String(16),
         nullable=False,
-        comment="passenger | driver",
+        comment="passenger | driver | external",
     )
-    complainant_user_id: Mapped[uuid.UUID] = mapped_column(
+    complainant_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
         index=True,
-        comment="User who submitted the complaint.",
+        comment="User who submitted (nullable for external/LRE import).",
     )
     trip_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
@@ -63,7 +75,37 @@ class Complaint(Base):
         String(32),
         nullable=False,
         default="in_app",
-        comment="Origin channel; V1 in_app.",
+        comment="Origin channel: in_app | livro_reclamacoes | ral | other.",
+    )
+    external_reference: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        nullable=True,
+        comment="Official external reference (e.g. LRE) when available.",
+    )
+    external_response_due_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Admin-set external response deadline (no auto business-day calc).",
+    )
+    external_responded_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="When external response was recorded (operational).",
+    )
+    complainant_name: Mapped[Optional[str]] = mapped_column(
+        String(200),
+        nullable=True,
+        comment="External complainant name snapshot.",
+    )
+    complainant_email: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+        comment="External complainant email snapshot.",
+    )
+    complainant_phone: Mapped[Optional[str]] = mapped_column(
+        String(32),
+        nullable=True,
+        comment="External complainant phone snapshot.",
     )
     submitted_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -158,4 +200,8 @@ class ComplaintHistory(Base):
     )
 
 
-Index("ix_complaint_history_complaint_occurred", ComplaintHistory.complaint_id, ComplaintHistory.occurred_at)
+Index(
+    "ix_complaint_history_complaint_occurred",
+    ComplaintHistory.complaint_id,
+    ComplaintHistory.occurred_at,
+)

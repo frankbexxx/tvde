@@ -20,6 +20,12 @@
     "account_app": "Account / app",
     "other": "Other"
   },
+  "sources": {
+    "in_app": "VAMULÁ app",
+    "livro_reclamacoes": "Complaints book (LRE)",
+    "ral": "ADR / RAL",
+    "other": "Other (external)"
+  },
   "entry": {
     "report": "Report a problem / File a complaint"
   },
@@ -34,6 +40,15 @@
     "filters": "Filters",
     "status": "Status",
     "category": "Category",
+    "source": "Source",
+    "externalReference": "External reference",
+    "submittedAt": "External complaint date",
+    "dueAt": "External response due (optional)",
+    "complainantName": "Name",
+    "complainantEmail": "Email",
+    "complainantPhone": "Phone",
+    "newExternal": "New external complaint",
+    "createExternal": "Import",
     "all": "All",
     "open": "Open",
     "assignHint": "Assignee (admin UUID, optional)",
