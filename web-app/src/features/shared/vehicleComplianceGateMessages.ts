@@ -1,6 +1,7 @@
-/** PF3D-3B — map vehicle compliance gate HTTP `detail` codes to user-facing copy. */
+/** Map vehicle operational / compliance gate HTTP `detail` codes to user-facing i18n keys. */
 
 export const VEHICLE_COMPLIANCE_BLOCKED_CODES = [
+  'vehicle_inactive',
   'no_active_vehicle',
   'vehicle_documents_blocked',
   'unknown_vehicle_compliance',
@@ -33,18 +34,21 @@ export function isVehicleComplianceSoftCode(detail: string | null | undefined): 
 }
 
 const DRIVER_I18N_KEYS: Record<VehicleComplianceBlockedCode, string> = {
+  vehicle_inactive: 'availability.vehicleInactive',
   no_active_vehicle: 'availability.noActiveVehicle',
   vehicle_documents_blocked: 'availability.vehicleDocumentsBlocked',
   unknown_vehicle_compliance: 'availability.unknownVehicleCompliance',
 }
 
 const PARTNER_I18N_KEYS: Record<VehicleComplianceBlockedCode, string> = {
+  vehicle_inactive: 'driverDetail.cannotOnlineVehicleInactive',
   no_active_vehicle: 'driverDetail.cannotOnlineNoActiveVehicle',
   vehicle_documents_blocked: 'driverDetail.cannotOnlineVehicleDocumentsBlocked',
   unknown_vehicle_compliance: 'driverDetail.cannotOnlineUnknownVehicleCompliance',
 }
 
 const ACCEPT_I18N_KEYS: Record<VehicleComplianceBlockedCode, string> = {
+  vehicle_inactive: 'actions.acceptBlockedVehicleInactive',
   no_active_vehicle: 'actions.acceptBlockedNoActiveVehicle',
   vehicle_documents_blocked: 'actions.acceptBlockedVehicleDocuments',
   unknown_vehicle_compliance: 'actions.acceptBlockedUnknownVehicleCompliance',

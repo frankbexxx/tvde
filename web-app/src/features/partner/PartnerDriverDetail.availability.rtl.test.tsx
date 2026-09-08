@@ -198,7 +198,7 @@ describe('PartnerDriverDetail availability controls', () => {
     fireEvent.click(screen.getByTestId('partner-driver-availability-online'))
     await waitFor(() => {
       expect(screen.getByTestId('partner-driver-availability-error')).toHaveTextContent(
-        'Não é possível colocar online: o motorista não tem viatura activa atribuída.'
+        /Não existe um veículo activo associado ao motorista/i
       )
     })
     expect(screen.getByTestId('partner-driver-availability-error')).not.toHaveTextContent(
@@ -212,6 +212,26 @@ describe('PartnerDriverDetail availability controls', () => {
     )
   })
 
+  it('PATCH 409 vehicle_inactive: mensagem PT + CTA viaturas', async () => {
+    api.patchPartnerDriverAvailability.mockRejectedValue({
+      detail: 'vehicle_inactive',
+    })
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-driver-availability-online')).toBeEnabled()
+    })
+    fireEvent.click(screen.getByTestId('partner-driver-availability-online'))
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-driver-availability-error')).toHaveTextContent(
+        /veículo associado está inactivo/i
+      )
+    })
+    expect(screen.getByTestId('partner-driver-availability-error')).not.toHaveTextContent(
+      'vehicle_inactive'
+    )
+    expect(screen.getByTestId('partner-driver-availability-vehicles-cta')).toBeInTheDocument()
+  })
+
   it('PATCH 409 vehicle_documents_blocked: mensagem PT sem snake_case', async () => {
     api.patchPartnerDriverAvailability.mockRejectedValue({
       detail: 'vehicle_documents_blocked',
@@ -223,13 +243,32 @@ describe('PartnerDriverDetail availability controls', () => {
     fireEvent.click(screen.getByTestId('partner-driver-availability-online'))
     await waitFor(() => {
       expect(screen.getByTestId('partner-driver-availability-error')).toHaveTextContent(
-        /documentos em falta|expirados|rejeitados/i
+        /documentação em falta|caducada|rejeitada/i
       )
     })
     expect(screen.getByTestId('partner-driver-availability-error')).not.toHaveTextContent(
       'vehicle_documents_blocked'
     )
     expect(screen.getByTestId('partner-driver-availability-vehicles-cta')).toBeInTheDocument()
+  })
+
+  it('PATCH 409 unknown_vehicle_compliance: mensagem PT sem snake_case', async () => {
+    api.patchPartnerDriverAvailability.mockRejectedValue({
+      detail: 'unknown_vehicle_compliance',
+    })
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-driver-availability-online')).toBeEnabled()
+    })
+    fireEvent.click(screen.getByTestId('partner-driver-availability-online'))
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-driver-availability-error')).toHaveTextContent(
+        /situação documental do veículo/i
+      )
+    })
+    expect(screen.getByTestId('partner-driver-availability-error')).not.toHaveTextContent(
+      'unknown_vehicle_compliance'
+    )
   })
 
   it('PATCH 409 código desconhecido: fallback raw detail sem CTA', async () => {

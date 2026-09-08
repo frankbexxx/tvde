@@ -300,9 +300,15 @@ describe('formatDriverAvailabilityError', () => {
     expect(msg).toMatch(/condução/i)
   })
 
+  it('PF3D vehicle_inactive mostra mensagem amigável PT', () => {
+    const msg = formatDriverAvailabilityError({ status: 409, detail: 'vehicle_inactive' })
+    expect(msg).toMatch(/inactivo/i)
+    expect(msg).not.toContain('vehicle_inactive')
+  })
+
   it('PF3D no_active_vehicle mostra mensagem amigável PT', () => {
     const msg = formatDriverAvailabilityError({ status: 409, detail: 'no_active_vehicle' })
-    expect(msg).toMatch(/viatura activa/i)
+    expect(msg).toMatch(/veículo activo|associar um veículo/i)
     expect(msg).not.toContain('no_active_vehicle')
   })
 
@@ -311,7 +317,7 @@ describe('formatDriverAvailabilityError', () => {
       status: 409,
       detail: 'vehicle_documents_blocked',
     })
-    expect(msg).toMatch(/documentos/i)
+    expect(msg).toMatch(/documentação|documentos/i)
     expect(msg).not.toContain('vehicle_documents_blocked')
   })
 
@@ -320,7 +326,7 @@ describe('formatDriverAvailabilityError', () => {
       status: 409,
       detail: 'unknown_vehicle_compliance',
     })
-    expect(msg).toMatch(/validar/i)
+    expect(msg).toMatch(/situação documental|confirmar/i)
     expect(msg).not.toContain('unknown_vehicle_compliance')
   })
 

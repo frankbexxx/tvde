@@ -137,7 +137,7 @@ Listagem de candidatos — **não** implementar nesta fase:
 | **PF3D-3A** | Gates atrás de `ENABLE_VEHICLE_COMPLIANCE_GATES` default **false** | Só se flag ON | **PASS** código (#467 + #468) · smoke **OFF** [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
 | **PF3D-3B** | Mensagens / observabilidade (i18n + CTA + logs) — **sem** activar flag | Não | **PASS** código (#486) · smoke **OFF** [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](./PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) · DIAG [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | **PF3D-3** | Ligar gates globalmente / ON em prod | **Sim** | **Bloqueado** — DATA-1E (muitos `no_active_vehicle`) + preferir 3B antes de ON |
-| **PF3D-4** | FE mensagens ricas Driver / Partner / Admin (além do mínimo 3B) | UX | Pendente — 3B é a fatia mínima |
+| **PF3D-4** | FE mensagens ricas Driver / Partner / Admin (além do mínimo 3B) | UX | **Parcial** — códigos bloqueantes (`vehicle_inactive` + compliance) mapeados PT/EN Driver/Partner (G-KYC-P0-04 FE); UX rica/Admin still pending |
 | **PF3D-5** | Override Admin / Partner — só se necessário | Controlo ops | Pendente |
 
 ---
