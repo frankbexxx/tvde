@@ -42,6 +42,8 @@ import {
   unassignDriverFromPartner,
   listPartners,
   listDrivers,
+  approveAdminDriver,
+  rejectAdminDriver,
   getReconcilePaymentsPreview,
   postReconcilePaymentsStripeSync,
   postReconcilePaymentsCloseNoPi,
@@ -204,6 +206,8 @@ export function AdminDashboard() {
 
   const [partners, setPartners] = useState<Array<{ id: string; name: string; created_at: string }>>([])
   const [driversList, setDriversList] = useState<Array<{ user_id: string; partner_id: string; status: string }>>([])
+  const [driverStatusLoading, setDriverStatusLoading] = useState<string | null>(null)
+  const [driverStatusFeedback, setDriverStatusFeedback] = useState<string | null>(null)
   const [dataLoading, setDataLoading] = useState(false)
   const [dataSearch, setDataSearch] = useState('')
 
@@ -614,6 +618,45 @@ export function AdminDashboard() {
     }
   }
 
+  const handleApproveDriver = async (driverUserId: string) => {
+    if (!token || !driverUserId.trim() || driverStatusLoading) return
+    if (!window.confirm('Confirmar aprovação deste motorista?')) return
+    setDriverStatusLoading(driverUserId)
+    setDriverStatusFeedback(null)
+    try {
+      const r = await approveAdminDriver(driverUserId, token)
+      setDriversList((prev) =>
+        prev.map((d) => (d.user_id === r.driver_id ? { ...d, status: r.status } : d))
+      )
+      setDriverStatusFeedback(`Motorista aprovado (${r.status}).`)
+      setError(null)
+    } catch (err) {
+      setError(adminErrDetail(err, 'Erro ao aprovar motorista'))
+    } finally {
+      setDriverStatusLoading(null)
+    }
+  }
+
+  const handleRejectDriver = async (driverUserId: string) => {
+    if (!token || !driverUserId.trim() || driverStatusLoading) return
+    if (!window.confirm('Confirmar rejeição deste motorista?')) return
+    setDriverStatusLoading(driverUserId)
+    setDriverStatusFeedback(null)
+    try {
+      const r = await rejectAdminDriver(driverUserId, token)
+      setDriversList((prev) =>
+        prev.map((d) => (d.user_id === r.driver_id ? { ...d, status: r.status } : d))
+      )
+      setDriverStatusFeedback(`Motorista rejeitado (${r.status}).`)
+      setError(null)
+    } catch (err) {
+      setError(adminErrDetail(err, 'Erro ao rejeitar motorista'))
+    } finally {
+      setDriverStatusLoading(null)
+    }
+  }
+
+
   /** NAV-3D.2: clear banner + re-fetch data for the active tab (no ops mutations). */
   const retryDashboardLoad = useCallback(() => {
     setError(null)
@@ -964,8 +1007,12 @@ export function AdminDashboard() {
           copy={copy}
           dataLoading={dataLoading}
           dataSearch={dataSearch}
+          driverStatusFeedback={driverStatusFeedback}
+          driverStatusLoading={driverStatusLoading}
           driversList={driversList}
           fetchDataVisibility={fetchDataVisibility}
+          handleApproveDriver={handleApproveDriver}
+          handleRejectDriver={handleRejectDriver}
           partners={partners}
           setDataSearch={setDataSearch}
           users={users}
