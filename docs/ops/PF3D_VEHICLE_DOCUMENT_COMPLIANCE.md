@@ -83,7 +83,7 @@ Fechar **antes** de PF3D-3 (gates). Helper (PF3D-1) e API read-only (PF3D-2) pod
 |--|--|
 | **Pergunta** | `set_partner_driver_availability` (force online) ignora compliance? |
 | **Proposta** | **Sim, respeitar** os mesmos gates backend — senão vira bypass |
-| **Estado** | **Aberta** |
+| **Estado** | **Fechado em código** (Partner force-online + Admin recover-driver); flag continua **OFF** |
 
 ### D. Partner reassign valida docs / viatura?
 
