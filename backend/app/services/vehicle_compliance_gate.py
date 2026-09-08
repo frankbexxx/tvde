@@ -27,6 +27,10 @@ from app.services.vehicle_document_compliance import (
     COMPLIANCE_WARNING,
     vehicle_compliance_status,
 )
+from app.services.vehicle_operational import (
+    CODE_VEHICLE_INACTIVE,
+    evaluate_driver_vehicle_operational,
+)
 from app.utils.logging import log_event
 
 # Stable gate codes (logging / HTTP detail mapping).
@@ -203,6 +207,32 @@ def batch_evaluate_driver_vehicle_compliance_gates(
             summary_provided=True,
         )
     return out
+
+
+def evaluate_driver_new_trip_ops_eligibility(
+    db: Session,
+    driver: Driver,
+) -> DriverVehicleComplianceGateResult:
+    """Shared eligibility for list_available / matching / accept vehicle gates.
+
+    Order matches accept: inactive vehicle (always on) then document compliance
+    (flagged). When compliance flag is OFF, operational fail still blocks;
+    otherwise returns the compliance gate result (allowed when flag OFF).
+    """
+    op_ok, op_code, op_vid = evaluate_driver_vehicle_operational(db, driver)
+    if not op_ok:
+        return DriverVehicleComplianceGateResult(
+            allowed=False,
+            code=op_code or CODE_VEHICLE_INACTIVE,
+            vehicle_id=op_vid,
+            compliance_status=None,
+        )
+    return evaluate_driver_vehicle_compliance_gate(db, driver)
+
+
+def driver_eligible_for_new_trip_ops(db: Session, driver: Driver) -> bool:
+    """True when the driver may see/receive/accept new trip operations."""
+    return evaluate_driver_new_trip_ops_eligibility(db, driver).allowed
 
 
 def assert_driver_vehicle_compliance_for_accept(

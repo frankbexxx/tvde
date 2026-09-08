@@ -37,10 +37,10 @@ from app.services.driving_compliance import (
 )
 from app.services.vehicle_compliance_gate import (
     assert_driver_vehicle_compliance_for_accept,
+    driver_eligible_for_new_trip_ops,
 )
 from app.services.vehicle_operational import (
     assert_driver_vehicle_operational_for_new_ops,
-    driver_vehicle_allows_new_ops,
 )
 from app.services.activity_retention import stamp_trip_activity_context
 from app.services.stripe_service import (
@@ -1168,8 +1168,9 @@ def list_available_trips(
         )
         return []
 
-    # G-KYC-P0-03: inactive assigned vehicle → no new-ops eligibility (offers/list).
-    if not driver_vehicle_allows_new_ops(db, driver):
+    # G-KYC-P0-03 + P0-04: same vehicle eligibility as accept/matching
+    # (inactive always; document compliance when flag ON). Read-only filter.
+    if not driver_eligible_for_new_trip_ops(db, driver):
         return []
 
     driver_categories = decode_driver_categories_csv(getattr(driver, "vehicle_categories", None))

@@ -29,7 +29,7 @@ Roadmap relacionado: PF3D-0 chama FE mensagens **PF3D-4**. **PF3D-3B** = fatia m
 | Gate helper | `vehicle_compliance_gate.py` — `evaluate_driver_vehicle_compliance_gate` |
 | Status puro | `vehicle_compliance_status` (PF3D-1) |
 | Partner read-only | PF3D-2 `vehicle_compliance` + PF3C `document_summary` / alertas Home |
-| Wiring (só se ON) | Driver `go_online` · Partner force-online · matching soft-filter · accept · **Admin recover-driver** |
+| Wiring (só se ON) | Driver `go_online` · Partner force-online · matching soft-filter · accept · **Admin recover-driver** · **`list_available_trips`** |
 | Não gated | `start_trip` · assign viatura |
 | Admin recover-driver | **Respeita** gate quando ON (mesmo helper que force-online); flag OFF = comportamento pré-gate |
 
