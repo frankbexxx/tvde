@@ -29,9 +29,9 @@ Roadmap relacionado: PF3D-0 chama FE mensagens **PF3D-4**. **PF3D-3B** = fatia m
 | Gate helper | `vehicle_compliance_gate.py` — `evaluate_driver_vehicle_compliance_gate` |
 | Status puro | `vehicle_compliance_status` (PF3D-1) |
 | Partner read-only | PF3D-2 `vehicle_compliance` + PF3C `document_summary` / alertas Home |
-| Wiring (só se ON) | Driver `go_online` · Partner force-online · matching soft-filter · accept |
+| Wiring (só se ON) | Driver `go_online` · Partner force-online · matching soft-filter · accept · **Admin recover-driver** |
 | Não gated | `start_trip` · assign viatura |
-| Admin recover-driver | **Bypass** compliance |
+| Admin recover-driver | **Respeita** gate quando ON (mesmo helper que force-online); flag OFF = comportamento pré-gate |
 
 ---
 
@@ -58,7 +58,7 @@ HTTP `detail` = **só o code** (reasons internas não vão na resposta).
 | Partner force-online | Copy amigável só para `driver_has_active_trip`; compliance = raw |
 | Sem CTA directo | Erro de gate **não** liga a Frota / Viaturas / documentos |
 | Matching skip | Só `log_event("vehicle_compliance_filtered")` — Driver não sabe |
-| Admin | Sem mapeamento FE; recover **bypassa** gate |
+| Admin | Sem mapeamento FE rico; recover **respeita** gate quando ON (códigos HTTP canónicos) |
 | Warning vs blocked | Backend distingue; UI Driver **não** explica warning (nunca 409) |
 | PF3C ≠ gate UX | Alertas frota ajudam docs; **não** partilham códigos HTTP de gate |
 

@@ -80,6 +80,13 @@ from app.services.partners_admin import (
 )
 from app.services.admin_audit import record_admin_action
 from app.services.admin_driver_status import set_driver_status_admin
+from app.services.vehicle_compliance_gate import (
+    evaluate_driver_vehicle_compliance_gate,
+)
+from app.services.vehicle_operational import (
+    CODE_VEHICLE_INACTIVE,
+    evaluate_driver_vehicle_operational,
+)
 from app.services.admin_payment_reconciliation import (
     close_completed_processing_without_pi,
     close_mock_processing_payments,
@@ -1517,6 +1524,34 @@ async def recover_driver(
     )
     if has_active:
         raise HTTPException(status_code=409, detail="driver_has_active_trip")
+
+    # Same operational + compliance gates as go_online / partner force-online.
+    # Fail before mutating is_available or recording success audit.
+    op_ok, op_code, op_vid = evaluate_driver_vehicle_operational(db, driver)
+    if not op_ok:
+        log_event(
+            "vehicle_operational_blocked",
+            surface="admin_recover_driver",
+            driver_id=str(driver.user_id),
+            code=op_code,
+            vehicle_id=op_vid,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=CODE_VEHICLE_INACTIVE,
+        )
+    gate = evaluate_driver_vehicle_compliance_gate(db, driver)
+    if not gate.allowed:
+        log_event(
+            "vehicle_compliance_gate_blocked",
+            surface="admin_recover_driver",
+            driver_id=str(driver.user_id),
+            code=gate.code,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=gate.code,
+        )
 
     driver.is_available = True
     record_admin_action(
