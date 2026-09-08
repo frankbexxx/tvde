@@ -38,6 +38,10 @@ from app.services.driving_compliance import (
 from app.services.vehicle_compliance_gate import (
     assert_driver_vehicle_compliance_for_accept,
 )
+from app.services.vehicle_operational import (
+    assert_driver_vehicle_operational_for_new_ops,
+    driver_vehicle_allows_new_ops,
+)
 from app.services.activity_retention import stamp_trip_activity_context
 from app.services.stripe_service import (
     cancel_payment_intent,
@@ -723,6 +727,9 @@ def accept_trip(
             detail="forbidden",
         )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
+    assert_driver_vehicle_operational_for_new_ops(
+        db, driver, surface="accept_trip", trip_id=str(trip.id)
+    )
     assert_driver_vehicle_compliance_for_accept(
         db, driver, surface="accept_trip", trip_id=str(trip.id)
     )
@@ -887,6 +894,9 @@ def accept_offer(
             detail="forbidden",
         )
     assert_driver_can_accept_by_driving_hours(db, driver_id)
+    assert_driver_vehicle_operational_for_new_ops(
+        db, driver, surface="accept_offer", trip_id=str(trip.id)
+    )
     assert_driver_vehicle_compliance_for_accept(
         db, driver, surface="accept_offer", trip_id=str(trip.id)
     )
@@ -1156,6 +1166,10 @@ def list_available_trips(
                 "is_available": getattr(driver, "is_available", None),
             },
         )
+        return []
+
+    # G-KYC-P0-03: inactive assigned vehicle → no new-ops eligibility (offers/list).
+    if not driver_vehicle_allows_new_ops(db, driver):
         return []
 
     driver_categories = decode_driver_categories_csv(getattr(driver, "vehicle_categories", None))
