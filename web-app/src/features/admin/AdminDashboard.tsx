@@ -4,16 +4,11 @@ import { ErrorBanner } from '../../components/feedback/ErrorBanner'
 import { isBackofficeStaffRole, useAuth } from '../../context/AuthContext'
 import {
   adminErrDetail,
-  approvedDriverDocs,
   countHealthSignalRows,
-  docsApprovedCount,
-  emptyDriverDocs,
   promptGovernanceReason,
   sessionJwtIsSuperAdmin,
 } from './adminDashboardHelpers'
 import {
-  ADMIN_DRIVER_DOCS_REGISTRY_KEY,
-  DRIVER_DOC_STATUSES,
   OPS_STUCK_PAYMENTS_PAGE_SIZE,
 } from './adminConstants'
 import {
@@ -48,13 +43,6 @@ import {
   postReconcilePaymentsStripeSync,
   postReconcilePaymentsCloseNoPi,
 } from '../../api/admin'
-import {
-  driverDocumentLabel,
-  driverDocumentStatusLabel,
-  REQUIRED_DRIVER_DOCUMENTS,
-  type DriverDocumentStatus,
-  type DriverDocumentsState,
-} from '../../services/driverDocuments'
 import { AdminTabAgora } from './tabs/AdminTabAgora'
 import { AdminTabDocs } from './tabs/AdminTabDocs'
 import { AdminTabPending } from './tabs/AdminTabPending'
@@ -159,7 +147,6 @@ export function AdminDashboard() {
     fetchUsers,
     fetchUsersMore,
     filteredSortedUsers,
-    driverUsers,
     startEdit,
     cancelEdit,
     handleSaveUserName,
@@ -172,8 +159,6 @@ export function AdminDashboard() {
     handlePromote,
     handleDemote,
   } = useAdminUsersDirectory({ token, tab, setError, setLoading, invalidateUserAudit })
-  const [driverDocsRegistry, setDriverDocsRegistry] = useState<Record<string, DriverDocumentsState['docs']>>({})
-  const [docsStatusFilter, setDocsStatusFilter] = useState<'all' | DriverDocumentStatus>('all')
 
   const canPostPaymentOpsNote = useMemo(
     () => isBackofficeStaffRole(parseJwtPayload(token ?? '')?.role ?? ''),
@@ -572,7 +557,7 @@ export function AdminDashboard() {
     if (tab === 'pending') {
       void fetchPending()
     }
-    if (tab === 'users' || tab === 'docs') {
+    if (tab === 'users') {
       void fetchUsers()
     }
     if (tab === 'trips') {
@@ -669,7 +654,7 @@ export function AdminDashboard() {
       void fetchPending()
       return
     }
-    if (tab === 'users' || tab === 'docs') {
+    if (tab === 'users') {
       void fetchUsers()
       return
     }
@@ -731,61 +716,6 @@ export function AdminDashboard() {
       setError(adminErrDetail(err, 'Erro ao aprovar'))
     }
   }
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(ADMIN_DRIVER_DOCS_REGISTRY_KEY)
-      if (!raw) return
-      const parsed = JSON.parse(raw) as Record<string, Partial<DriverDocumentsState['docs']>>
-      const next: Record<string, DriverDocumentsState['docs']> = {}
-      for (const [userId, docs] of Object.entries(parsed)) {
-        next[userId] = {
-          carta_tvde: docs.carta_tvde ?? 'missing',
-          certificado_motorista_tvde: docs.certificado_motorista_tvde ?? 'missing',
-          seguro_responsabilidade_civil: docs.seguro_responsabilidade_civil ?? 'missing',
-          inspecao_viatura: docs.inspecao_viatura ?? 'missing',
-          cartao_cidadao: docs.cartao_cidadao ?? 'missing',
-          registo_criminal: docs.registo_criminal ?? 'missing',
-        }
-      }
-      setDriverDocsRegistry(next)
-    } catch {
-      /* ignore */
-    }
-  }, [])
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(ADMIN_DRIVER_DOCS_REGISTRY_KEY, JSON.stringify(driverDocsRegistry))
-    } catch {
-      /* ignore */
-    }
-  }, [driverDocsRegistry])
-
-  const docsRowsData = useMemo(() => {
-    const totals = DRIVER_DOC_STATUSES.reduce(
-      (acc, st) => {
-        acc[st] = 0
-        return acc
-      },
-      {} as Record<DriverDocumentStatus, number>
-    )
-    const rows = driverUsers
-      .slice(0, 20)
-      .map((u) => {
-        const docs = driverDocsRegistry[u.id] ?? emptyDriverDocs()
-        const approved = docsApprovedCount(docs)
-        const missing = REQUIRED_DRIVER_DOCUMENTS.filter((k) => docs[k] !== 'approved')
-        return { user: u, docs, approved, missing }
-      })
-      .sort((a, b) => a.approved - b.approved || (a.user.name || a.user.phone).localeCompare(b.user.name || b.user.phone))
-    for (const row of rows) {
-      for (const doc of REQUIRED_DRIVER_DOCUMENTS) {
-        totals[row.docs[doc]] += 1
-      }
-    }
-    return { rows, totals }
-  }, [driverUsers, driverDocsRegistry])
 
   const selectedTripInActiveList = useMemo(
     () => Boolean(selectedTripId && activeTrips.some((t) => t.trip_id === selectedTripId)),
@@ -947,22 +877,7 @@ export function AdminDashboard() {
         />
       )}
 
-      {tab === 'docs' && (
-        <AdminTabDocs
-          DRIVER_DOC_STATUSES={DRIVER_DOC_STATUSES}
-          REQUIRED_DRIVER_DOCUMENTS={REQUIRED_DRIVER_DOCUMENTS}
-          approvedDriverDocs={approvedDriverDocs}
-          docsRowsData={docsRowsData}
-          docsStatusFilter={docsStatusFilter}
-          driverDocumentLabel={driverDocumentLabel}
-          driverDocumentStatusLabel={driverDocumentStatusLabel}
-          driverUsers={driverUsers}
-          emptyDriverDocs={emptyDriverDocs}
-          setDocsStatusFilter={setDocsStatusFilter}
-          setDriverDocsRegistry={setDriverDocsRegistry}
-          syncAdminUrl={syncAdminUrl}
-        />
-      )}
+      {tab === 'docs' && <AdminTabDocs />}
 
       {tab === 'pending' && (
         <AdminTabPending
