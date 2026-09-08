@@ -9,6 +9,18 @@ import { parseJwtPayload } from '../../utils/jwt'
 
 const SINGLE_TRIP_PAYMENT_RECONCILE_STATUSES = ['completed', 'cancelled', 'failed'] as const
 
+/** Acções UI para approve/reject (E5): só quando a transição muda o estado. */
+export function driverStatusActionVisibility(status: string): {
+  canApprove: boolean
+  canReject: boolean
+} {
+  const s = status.trim().toLowerCase()
+  return {
+    canApprove: s === 'pending' || s === 'rejected',
+    canReject: s === 'pending' || s === 'approved',
+  }
+}
+
 export function emptyDriverDocs(): DriverDocumentsState['docs'] {
   return {
     carta_tvde: 'missing',

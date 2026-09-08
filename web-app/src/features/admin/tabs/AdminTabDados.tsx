@@ -1,6 +1,7 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../../components/feedback/EmptyState'
+import { driverStatusActionVisibility } from '../adminDashboardHelpers'
 import type { AdminUser } from '../useAdminUsersDirectory'
 
 type AdminPartnerRow = { id: string; name: string; created_at: string }
@@ -10,8 +11,12 @@ export type AdminTabDadosProps = {
   copy: (value: string) => Promise<void>
   dataLoading: boolean
   dataSearch: string
+  driverStatusFeedback: string | null
+  driverStatusLoading: string | null
   driversList: AdminDriverRow[]
   fetchDataVisibility: () => Promise<void>
+  handleApproveDriver: (driverUserId: string) => void | Promise<void>
+  handleRejectDriver: (driverUserId: string) => void | Promise<void>
   partners: AdminPartnerRow[]
   setDataSearch: Dispatch<SetStateAction<string>>
   users: AdminUser[]
@@ -23,8 +28,12 @@ export function AdminTabDados(props: AdminTabDadosProps) {
     copy,
     dataLoading,
     dataSearch,
+    driverStatusFeedback,
+    driverStatusLoading,
     driversList,
     fetchDataVisibility,
+    handleApproveDriver,
+    handleRejectDriver,
     partners,
     setDataSearch,
     users,
@@ -139,6 +148,18 @@ export function AdminTabDados(props: AdminTabDadosProps) {
 
         <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
           <h3 className="font-medium text-foreground">Drivers</h3>
+          <p className="text-xs text-foreground/75">
+            Aprovar ou rejeitar perfil motorista (pending / rejected / approved). Sem motivo no reject —
+            o backend não aceita reason nesta rota.
+          </p>
+          {driverStatusFeedback ? (
+            <p
+              data-testid="admin-driver-status-ok"
+              className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg"
+            >
+              {driverStatusFeedback}
+            </p>
+          ) : null}
           {driversList.length === 0 ? (
             <EmptyState title="Sem motoristas." />
           ) : (
@@ -154,35 +175,71 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                   )
                 })
                 .slice(0, 200)
-                .map((d) => (
-                  <li key={d.user_id} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground">status: {d.status}</p>
-                        <p className="text-xs text-muted-foreground">partner_id</p>
-                        <p className="text-xs font-mono text-foreground/90 break-all">{d.partner_id}</p>
-                        <p className="text-xs text-muted-foreground mt-2">user_id</p>
-                        <p className="text-xs font-mono text-foreground/90 break-all">{d.user_id}</p>
+                .map((d) => {
+                  const { canApprove, canReject } = driverStatusActionVisibility(d.status)
+                  const rowBusy = driverStatusLoading === d.user_id
+                  const anyBusy = driverStatusLoading !== null
+                  return (
+                    <li
+                      key={d.user_id}
+                      data-testid={`admin-driver-row-${d.user_id}`}
+                      className="rounded-xl border border-border bg-background/30 p-3 text-sm"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p
+                            data-testid={`admin-driver-status-${d.user_id}`}
+                            className="text-xs text-muted-foreground"
+                          >
+                            status: {d.status}
+                          </p>
+                          <p className="text-xs text-muted-foreground">partner_id</p>
+                          <p className="text-xs font-mono text-foreground/90 break-all">{d.partner_id}</p>
+                          <p className="text-xs text-muted-foreground mt-2">user_id</p>
+                          <p className="text-xs font-mono text-foreground/90 break-all">{d.user_id}</p>
+                        </div>
+                        <div className="flex flex-col gap-1 shrink-0">
+                          {canApprove ? (
+                            <button
+                              type="button"
+                              data-testid={`admin-driver-approve-${d.user_id}`}
+                              disabled={anyBusy}
+                              onClick={() => void handleApproveDriver(d.user_id)}
+                              className="inline-flex items-center justify-center min-h-9 px-2 py-1 bg-success text-success-foreground text-xs font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+                            >
+                              {rowBusy ? 'A aprovar…' : 'Aprovar'}
+                            </button>
+                          ) : null}
+                          {canReject ? (
+                            <button
+                              type="button"
+                              data-testid={`admin-driver-reject-${d.user_id}`}
+                              disabled={anyBusy}
+                              onClick={() => void handleRejectDriver(d.user_id)}
+                              className="inline-flex items-center justify-center min-h-9 px-2 py-1 bg-destructive text-destructive-foreground text-xs font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
+                            >
+                              {rowBusy ? 'A rejeitar…' : 'Rejeitar'}
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            onClick={() => void copy(d.user_id)}
+                            className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
+                          >
+                            Copiar user
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void copy(d.partner_id)}
+                            className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
+                          >
+                            Copiar frota
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <button
-                          type="button"
-                          onClick={() => void copy(d.user_id)}
-                          className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
-                        >
-                          Copiar user
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void copy(d.partner_id)}
-                          className="px-2 py-1 bg-card border border-border text-foreground/80 text-xs rounded-lg hover:bg-muted/40"
-                        >
-                          Copiar frota
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  )
+                })}
             </ul>
           )}
         </div>

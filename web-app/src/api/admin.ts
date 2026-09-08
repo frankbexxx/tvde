@@ -401,6 +401,35 @@ export async function listDrivers(token: string): Promise<AdminDriverListItem[]>
   return apiFetch<AdminDriverListItem[]>('/admin/drivers', { token })
 }
 
+export interface AdminDriverStatusResponse {
+  driver_id: string
+  status: string
+}
+
+/** POST /admin/drivers/{id}/approve — Role.admin; sem body. */
+export async function approveAdminDriver(
+  driverUserId: string,
+  token: string
+): Promise<AdminDriverStatusResponse> {
+  const did = driverUserId.trim()
+  return apiFetch<AdminDriverStatusResponse>(
+    `/admin/drivers/${encodeURIComponent(did)}/approve`,
+    { method: 'POST', token }
+  )
+}
+
+/** POST /admin/drivers/{id}/reject — Role.admin; sem body/motivo. */
+export async function rejectAdminDriver(
+  driverUserId: string,
+  token: string
+): Promise<AdminDriverStatusResponse> {
+  const did = driverUserId.trim()
+  return apiFetch<AdminDriverStatusResponse>(
+    `/admin/drivers/${encodeURIComponent(did)}/reject`,
+    { method: 'POST', token }
+  )
+}
+
 export async function assignDriverToPartner(
   driverUserId: string,
   partnerId: string,
