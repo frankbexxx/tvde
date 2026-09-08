@@ -401,6 +401,61 @@ export async function listDrivers(token: string): Promise<AdminDriverListItem[]>
   return apiFetch<AdminDriverListItem[]>('/admin/drivers', { token })
 }
 
+export interface AdminKycDocItem {
+  doc_key: string
+  stored_status: string
+  expires_at: string | null
+  computed_status: string | null
+  is_expired: boolean
+  is_expiring_soon: boolean
+  has_file: boolean
+}
+
+export interface AdminKycDriverRow {
+  user_id: string
+  driver_name: string | null
+  driver_phone: string | null
+  partner_id: string
+  partner_name: string | null
+  driver_status: string
+  documents: AdminKycDocItem[]
+}
+
+export interface AdminKycVehicleRow {
+  vehicle_id: string
+  plate: string
+  partner_id: string
+  partner_name: string | null
+  status: string
+  assigned_driver_user_id: string | null
+  assigned_driver_name: string | null
+  documents: AdminKycDocItem[]
+  worst_document_status: string | null
+}
+
+export interface AdminKycAlertsSummary {
+  drivers_with_expired_docs: number
+  drivers_with_pending_or_rejected_docs: number
+  vehicles_with_expired_docs: number
+  vehicles_with_expiring_soon_docs: number
+  vehicles_inactive: number
+}
+
+export interface AdminKycSupervisionResponse {
+  subject: string
+  alerts: AdminKycAlertsSummary
+  partners: Array<{ id: string; name: string }>
+  drivers: AdminKycDriverRow[]
+  vehicles: AdminKycVehicleRow[]
+}
+
+/** GET /admin/kyc-supervision — read-only KYC snapshot (admin / super_admin). */
+export async function getAdminKycSupervision(
+  token: string
+): Promise<AdminKycSupervisionResponse> {
+  return apiFetch<AdminKycSupervisionResponse>('/admin/kyc-supervision', { token })
+}
+
 export interface AdminDriverStatusResponse {
   driver_id: string
   status: string

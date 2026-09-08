@@ -28,6 +28,8 @@ from app.db.models.trip import Trip
 from app.db.models.partner import Partner
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.schemas.driver import DriverStatusResponse
+from app.schemas.admin_kyc import AdminKycSupervisionResponse
+from app.services.admin_kyc_supervision import build_admin_kyc_supervision
 from app.schemas.system_health import (
     AdminMetricsResponse,
     RecoverDriverResponse,
@@ -604,6 +606,15 @@ async def admin_list_drivers(
         )
         for d in rows
     ]
+
+
+@router.get("/kyc-supervision", response_model=AdminKycSupervisionResponse)
+async def admin_kyc_supervision(
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> AdminKycSupervisionResponse:
+    """Read-only KYC snapshot (drivers + vehicles). No mutations / no second approval."""
+    return build_admin_kyc_supervision(db)
 
 
 def _is_admin_phone(phone: str) -> bool:
