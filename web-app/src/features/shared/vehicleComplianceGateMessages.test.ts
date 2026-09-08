@@ -8,7 +8,8 @@ import {
 } from './vehicleComplianceGateMessages'
 
 describe('vehicleComplianceGateMessages', () => {
-  it('recognises blocked PF3D codes', () => {
+  it('recognises blocked operational + compliance codes', () => {
+    expect(isVehicleComplianceBlockedCode('vehicle_inactive')).toBe(true)
     expect(isVehicleComplianceBlockedCode('no_active_vehicle')).toBe(true)
     expect(isVehicleComplianceBlockedCode('vehicle_documents_blocked')).toBe(true)
     expect(isVehicleComplianceBlockedCode('unknown_vehicle_compliance')).toBe(true)
@@ -24,6 +25,9 @@ describe('vehicleComplianceGateMessages', () => {
   })
 
   it('maps driver availability i18n keys', () => {
+    expect(driverAvailabilityComplianceI18nKey('vehicle_inactive')).toBe(
+      'availability.vehicleInactive'
+    )
     expect(driverAvailabilityComplianceI18nKey('no_active_vehicle')).toBe(
       'availability.noActiveVehicle'
     )
@@ -37,6 +41,9 @@ describe('vehicleComplianceGateMessages', () => {
   })
 
   it('maps partner force-online i18n keys', () => {
+    expect(partnerForceOnlineComplianceI18nKey('vehicle_inactive')).toBe(
+      'driverDetail.cannotOnlineVehicleInactive'
+    )
     expect(partnerForceOnlineComplianceI18nKey('no_active_vehicle')).toBe(
       'driverDetail.cannotOnlineNoActiveVehicle'
     )
@@ -47,6 +54,9 @@ describe('vehicleComplianceGateMessages', () => {
   })
 
   it('maps accept i18n keys', () => {
+    expect(driverAcceptComplianceI18nKey('vehicle_inactive')).toBe(
+      'actions.acceptBlockedVehicleInactive'
+    )
     expect(driverAcceptComplianceI18nKey('no_active_vehicle')).toBe(
       'actions.acceptBlockedNoActiveVehicle'
     )

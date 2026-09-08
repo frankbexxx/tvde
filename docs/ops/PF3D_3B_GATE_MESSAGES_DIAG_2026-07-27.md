@@ -42,6 +42,7 @@ Roadmap relacionado: PF3D-0 chama FE mensagens **PF3D-4**. **PF3D-3B** = fatia m
 | `vehicle_compliance_gates_disabled` | True | Flag OFF |
 | `vehicle_compliance_ok` | True | Compliant |
 | `vehicle_compliance_warning` | True | Soft — **não** 409 (`expiring_soon` / `pending_review`) |
+| `vehicle_inactive` | False | Viatura `status != active` (P0-03, sempre ON) → 409 |
 | `no_active_vehicle` | False | Sem `active_vehicle_id` → 409 / skip matching |
 | `vehicle_documents_blocked` | False | missing / expired / rejected |
 | `unknown_vehicle_compliance` | False | Viatura activa mas summary indisponível |
@@ -58,7 +59,7 @@ HTTP `detail` = **só o code** (reasons internas não vão na resposta).
 | Partner force-online | Copy amigável só para `driver_has_active_trip`; compliance = raw |
 | Sem CTA directo | Erro de gate **não** liga a Frota / Viaturas / documentos |
 | Matching skip | Só `log_event("vehicle_compliance_filtered")` — Driver não sabe |
-| Admin | Sem mapeamento FE rico; recover **respeita** gate quando ON (códigos HTTP canónicos) |
+| Admin | Recover **respeita** gate quando ON; FE Admin sem mapeamento rico (Driver/Partner: códigos bloqueantes mapeados incl. `vehicle_inactive`) |
 | Warning vs blocked | Backend distingue; UI Driver **não** explica warning (nunca 409) |
 | PF3C ≠ gate UX | Alertas frota ajudam docs; **não** partilham códigos HTTP de gate |
 
