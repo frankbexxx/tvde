@@ -15,6 +15,10 @@ from app.services.trips import driver_has_active_assigned_trip
 from app.services.vehicle_compliance_gate import (
     evaluate_driver_vehicle_compliance_gate,
 )
+from app.services.vehicle_operational import (
+    CODE_VEHICLE_INACTIVE,
+    evaluate_driver_vehicle_operational,
+)
 from app.utils.logging import log_event
 
 
@@ -84,6 +88,22 @@ async def go_online(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="driving_hours_blocked",
+        )
+    op_ok, op_code, op_vid = evaluate_driver_vehicle_operational(db, driver)
+    if not op_ok:
+        driver.is_available = False
+        db.commit()
+        db.refresh(driver)
+        log_event(
+            "vehicle_operational_blocked",
+            surface="driver_go_online",
+            driver_id=str(user.user_id),
+            code=op_code,
+            vehicle_id=op_vid,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=CODE_VEHICLE_INACTIVE,
         )
     gate = evaluate_driver_vehicle_compliance_gate(db, driver)
     if not gate.allowed:

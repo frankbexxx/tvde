@@ -20,6 +20,9 @@ from app.services.vehicle_compliance_gate import (
     batch_evaluate_driver_vehicle_compliance_gates,
     vehicle_compliance_gates_enabled,
 )
+from app.services.vehicle_operational import (
+    batch_driver_ids_blocked_by_inactive_vehicle,
+)
 from app.utils.geo import haversine_km
 from app.utils.logging import log_debug_event, log_event
 
@@ -34,6 +37,33 @@ def _driver_matches_trip_category(driver: Driver, trip: Trip) -> bool:
         getattr(driver, "vehicle_categories", None)
     )
     return trip_category in driver_categories
+
+
+def _filter_by_inactive_vehicle(
+    db: Session,
+    trip: Trip,
+    category_matched: list[tuple[Driver, float]],
+) -> list[tuple[Driver, float]]:
+    """G-KYC-P0-03: drop drivers whose assigned vehicle is not ``active``."""
+    if not category_matched:
+        return category_matched
+    blocked = batch_driver_ids_blocked_by_inactive_vehicle(
+        db, [driver for driver, _ in category_matched]
+    )
+    if not blocked:
+        return category_matched
+    out: list[tuple[Driver, float]] = []
+    for driver, dist_km in category_matched:
+        if driver.user_id in blocked:
+            log_event(
+                "vehicle_inactive_filtered",
+                trip_id=str(trip.id),
+                driver_id=str(driver.user_id),
+                reason="vehicle_inactive",
+            )
+            continue
+        out.append((driver, dist_km))
+    return out
 
 
 def _filter_by_vehicle_compliance(
@@ -184,6 +214,9 @@ def create_offers_for_trip(
     for driver, dist_km in candidates:
         if _driver_matches_trip_category(driver, trip):
             category_matched.append((driver, dist_km))
+
+    # G-KYC-P0-03: exclude drivers with inactive assigned vehicle (always on).
+    category_matched = _filter_by_inactive_vehicle(db, trip, category_matched)
 
     # PF3D-3A: soft-filter by vehicle document compliance before top_n (flag OFF = no-op).
     category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
@@ -382,7 +415,8 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         for driver, dist_km in candidates:
             if _driver_matches_trip_category(driver, trip):
                 category_matched.append((driver, dist_km))
-        # Same PF3D-3A soft-filter as create_offers_for_trip (flag OFF = no-op).
+        # G-KYC-P0-03 then PF3D-3A (flag OFF = no-op for docs).
+        category_matched = _filter_by_inactive_vehicle(db, trip, category_matched)
         category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
         selected_redispatch = category_matched[:top_n]
         for driver, dist_km in selected_redispatch:
