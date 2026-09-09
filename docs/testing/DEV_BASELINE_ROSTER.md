@@ -38,17 +38,22 @@ Helper: `app/services/seed_demo_vehicle_compliance.py` (idempotente).
 
 ### Sync NON-WIPE (prod demo — sem wipe)
 
-Para alinhar **apenas** o dataset DEMO acima sem `baseline_reset`:
+O sync PROD usa um **roster próprio de 3 Drivers** (não o baseline local de 4):
 
-- Service: `app/services/sync_demo_vehicle_compliance.py`
+| Phone | Partner | Vehicle |
+|-------|---------|---------|
+| `+351911111111` | test_partner | `11-AA-22` (preservar uploads) |
+| `+351939694569` | test_partner | `33-BB-44` |
+| `+351918304615` | test_partner | `DEMO-TP-02` (criar se em falta) |
+
+`+351911111114` / `DEMO-DF-01` / `DEMO-TP-03` **não** fazem parte do sync PROD.
+
+- Service: `app/services/sync_demo_vehicle_compliance.py` (`PROD_DEMO_VEHICLE_SPECS`)
 - CLI: `backend/scripts/sync_demo_vehicle_compliance.py`
-- Default: **dry-run** (sem writes)
+- Soft: nunca overwrite `file_path`; date-fix só em expiry/status quando permitido
+- Default: **dry-run**
 - Apply: `--apply --confirm SYNC_DEMO_VEHICLE_COMPLIANCE`
-- Remoto: `ALLOW_REMOTE_DEMO_SYNC=YES` (não reutilizar `ALLOW_REMOTE_BASELINE_WIPE`)
-
-Identificadores estáveis dos Drivers: phones E.164
-`+351911111111`, `+351918304615`, `+351939694569`, `+351911111114`
-(com `is_test_account=true`).
+- Remoto: `ALLOW_REMOTE_DEMO_SYNC=YES`
 
 ## Como aplicar (wipe completo + seed)
 
