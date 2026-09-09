@@ -161,7 +161,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | Persistência estados | ActiveTrip restore Pax/Driver **OK** (código + smoke) |
 | Admin | Operacional OK; approve/reject drivers **DONE** (E5); não é dispatcher do dia |
 | Partner/Frota | Operacional OK; PF3D OFF *(implementação pendente — A3-D03-REV1 exige gates M2)* |
-| Docs/KYC | Superfícies existem; gates OFF; OCR fora de scope; **`Vehicle.inactive` bloqueia novas ofertas/accept** (G-KYC-P0-03 **FECHADO**) — trip activa não cancela; **Admin recover** alinha ao gate quando ON; **FE mensagens** Driver/Partner; **`list_available_trips` filtra compliance** (subgap **FECHADO**); **G-KYC-P0-04** ainda aberto — flag OFF + dados prod |
+| Docs/KYC | Superfícies existem; gates OFF; OCR fora de scope; **`Vehicle.inactive` bloqueia novas ofertas/accept** (G-KYC-P0-03 **FECHADO**) — trip activa não cancela; **Admin recover** alinha ao gate quando ON; **FE mensagens** Driver/Partner; **`list_available_trips` filtra compliance**; **baseline DEMO vehicles+docs** (seed local); **G-KYC-P0-04** ainda aberto — flag OFF + re-audit/smoke prod demo |
 | Notificações | Inbox Partner↔Driver **OK**; **push/SMS real PENDENTE** |
 | Segurança | Auth JWT/OTP; driving-hours compliance ON + **enforcement OFF** (#548 foundation); emergency SOS foundation (#549) |
 | Observabilidade | Sentry FE condicional; health Admin |

@@ -5,8 +5,8 @@ from app.services.baseline_reset import BASELINE_USERS, baseline_user_count_expe
 
 
 def test_baseline_roster_size() -> None:
-    assert baseline_user_count_expected() == 10
-    assert len(BASELINE_USERS) == 10
+    assert baseline_user_count_expected() == 11
+    assert len(BASELINE_USERS) == 11
 
 
 def test_baseline_has_required_phones() -> None:
