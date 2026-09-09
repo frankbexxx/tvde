@@ -22,7 +22,7 @@
 
 | Carril | Etapas |
 |--------|--------|
-| **A** Negócio / Legal / Compliance | **A1 PARCIAL** · A2 · **A3 PARCIAL** (D01–D08 + **D03-REV1/D04-REV1**) · A4 · A5 · **A6 no crítico M2** *(flag OFF = implementação pendente)* |
+| **A** Negócio / Legal / Compliance | **A1 PARCIAL** · **A2 PARCIAL** (15% + settlement política DONE; tarifário aberto) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · B5 Métodos PT |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 Landing |
@@ -82,7 +82,7 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 **Etapas base:** A1 · A2 · C1 · B1 · E3 · G1 · F1 · **D1 · D2 · D3 · G2** · **A6 / compliance legal** · G3 (+ M1)  
 **Condicionais:** B3 · B4 *(adiados pós A1-D05/D06)*  
 
-*Package mobile **exigido**. Prioridade **Android**. Processo financeiro **manual semanal ao Partner** (**A1-D03…D06**) → **B3/B4 fora** do crítico M2 nesta fase. **A6 no crítico M2** (A3-D03-REV1); flag OFF = implementação pendente, **não** decisão de produto.*
+*Package mobile **exigido**. Prioridade **Android**. Processo financeiro **manual semanal (segunda-feira) ao Partner** (**A1-D03…D06** + acta 09/09/2026) → **B3/B4 fora** do crítico M2 nesta fase. **A6 no crítico M2** (A3-D03-REV1); **vehicle doc gates ON** em PROD (G-KYC-P0-04 CLOSED); resto A6 (IMT/docs pessoais) ainda aberto.*
 
 ### BLOCKERS M2 legais (concretos — 11)
 
@@ -136,13 +136,15 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
 | **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
 | **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) parecer/decisão legal L3 · (2) registo externo LRE (L-25 operacional) · (3) AMT/reporting · (4) L1/L2 quando houver documentação/canal técnico IMT · (5) RetentionPolicy granular |
+| **Próximas frentes** | (1) parecer/decisão legal L3 · (2) LRE ops **após domínio** (`vamula.pt` — **DEPENDÊNCIA EXTERNA .PT**; **não bloqueador imediato** APP) · (3) AMT/reporting · (4) L1/L2 quando houver canal técnico IMT · (5) RetentionPolicy granular · (6) A2.5 tarifário |
 
 *Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (GPS/docs/IMT).
 
 *Complaints (L-12):* foundation 2026-09-07 — `Complaint` + `ComplaintHistory` (procedimento canónico) · retenção 2 anos civis · APIs + Admin inbox · **PARCIAL** (sem attachments).
 
-*Livro / RAL (L-25):* foundation técnica 2026-09-07 — sources + Admin import externo · links LRE + secção RAL · **PARCIAL** (registo Ventos Férteis no portal LRE ainda pendente; sem API LRE).
+*Livro / RAL (L-25):* foundation técnica 2026-09-07 — sources + Admin import externo · links LRE + secção RAL · **PARCIAL** (registo portal LRE **PENDENTE — após domínio**; **NÃO BLOQUEADOR IMEDIATO** do desenvolvimento APP; sem API LRE). Ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md).
+
+*Domínio / site / email:* `vamula.pt` = alvo · titular Ventos Férteis · **DEPENDÊNCIA EXTERNA — .PT** (recuperação contacto) · site institucional e emails `@vamula.pt` = **PENDENTE DOMÍNIO** · **não** bloqueia APP.
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
@@ -193,22 +195,23 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | A1.3 | Sessão margem/viagem + GTM 36m | Simulador válido ou a corrigir | DECISÃO | A1.2 | Por iniciar |
 | A1.4 | Acta curta no repo (só resultados) | Fecho A1 sem % inventados | DOCS | A1.3 | Por iniciar |
 
-## A2 — Fechar comissão e tarifário
+## A2 — Fechar comissão e tarifário — **PARCIAL**
 
-- **Objectivo:** Comissão + tarifário piloto aprovados (hoje só hipóteses/exemplos).  
+- **Objectivo:** Comissão + tarifário piloto aprovados.  
 - **IDs:** `S-BIZ-02` · `SEP-PAY-03` · perguntas Q1/Q3 em [`MANEL_INPUTS_TODOS_2026-08-07.md`](product/MANEL_INPUTS_TODOS_2026-08-07.md)  
 - **Dependências:** A1  
-- **Conclusão:** % + regras + beneficiário documentados.  
-- **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final** — **não** a % de comissão.
+- **Estado:** **PARCIAL** (2026-09-09) — **% 15% DONE** · settlement política **DONE** · **tarifário ainda ABERTO**  
+- **Acta:** [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
+- **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final** — **não** a tabela de preços.
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| A2.1 | Confirmar hipóteses de comissão no doc pricing Manel (ex. 15% = hipótese) | Ponto de partida explícito | CONFIRMAR | A1 · `MANEL_PRICING_COMMISSION_MODEL_2026-08.md` |
-| A2.2 | Confirmar modelo híbrido estimativa/final | Alinhado a produto actual | CONFIRMAR | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
-| A2.3 | Fechar % comissão piloto (adoptar/alterar hipótese) | % aprovada — **pré-fechado A1-D01 = 15%** (confirmar/publicar em A2) | DECISÃO | A2.1 |
-| A2.4 | Fechar beneficiário split (motorista vs partner) + cadência payout pretendida | **Pré-fechado:** Partner (**A1-D03**) · cadência **semanal** (**A1-D04**) — confirmar/publicar em A2 | DECISÃO | A2.3 · `MANEL_INPUTS` Q3 |
-| A2.5 | Fechar tarifário mínimo piloto | Tabela = grelha Manel (**A1-D07**) — publicar + alinhar código | DECISÃO · CÓDIGO | A2.3 · A1-D07 |
-| A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| A2.1 | Confirmar hipóteses de comissão no doc pricing Manel | Ponto de partida explícito | CONFIRMAR | A1 · `MANEL_PRICING…` | **DONE** |
+| A2.2 | Confirmar modelo híbrido estimativa/final | Alinhado a produto actual | CONFIRMAR | [`PRICING_DECISION.md`](PRICING_DECISION.md) | **DONE** |
+| A2.3 | Fechar % comissão piloto | **15%** confirmado Manel 09/09/2026 | DECISÃO | A2.1 | **DONE** *(política; sem mudança de código nesta acta)* |
+| A2.4 | Beneficiário + cadência payout | Partner (**A1-D03**) · **semanal / segunda-feira / manual** · conta pagamentos: Manel | DECISÃO | A2.3 | **DONE** *(política; impl. técnica settlement **não** concluída)* |
+| A2.5 | Fechar tarifário mínimo piloto | Tabela final = **PENDENTE — decisão comercial posterior** | DECISÃO · CÓDIGO | A2.3 · A1-D07 | **ABERTO** |
+| A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 | **PARCIAL** (acta 09/09 cobre % + settlement; falta tarifário) |
 
 ## A3 — Validar requisitos legais TVDE aplicáveis — **PARCIAL**
 
@@ -217,7 +220,8 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Dependências:** — (IMT / parecer fino para detalhes)  
 - **Estado:** **PARCIAL** (rev. **2026-09-04**) — **A3-D01…D08 DONE** · **A3-D03-REV1 / A3-D04-REV1 DECIDIDO — IMPLEMENTAÇÃO PENDENTE** · A3.8 WARN+RECORD = código actual · falta arquivo PDFs P0 + implementação M2  
 - **Entrega:** [`A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) · matriz [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)  
-- **A6:** **no crítico M2** (**A3-D03-REV1**); flag OFF = implementação pendente  
+- **A6:** **no crítico M2** (**A3-D03-REV1**); vehicle gates **ON** (G-KYC-P0-04); resto implementação IMT/docs pessoais pendente  
+
 - **Driving-hours:** **A3-D04-REV1** — M2 exige enforcement 10 h/24 h; WARN+RECORD **não** basta  
 - **Marco 2:** Termos + Privacidade (A3-D07) + blockers legais listados no caminho M2
 
@@ -239,13 +243,14 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Objectivo:** Inventário titularidade código/design/marca/contas/domínios.  
 - **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02` · *reminder* [`SEP-IP-05`](product/SETEMBRO_2026_TODO_LIBRARY.md) (OXS/VAMULÁ housekeeping — **não agora**)  
 - **Dependências:** —  
+- **Nota domínio (2026-09-09):** alvo **`vamula.pt`** · titular Ventos Férteis · gestão Manel+Francisco · estado **DEPENDÊNCIA EXTERNA — .PT** (recuperação contacto) · emails `@vamula.pt` = **PENDENTE DOMÍNIO** · site institucional = pendente do domínio · **não** bloqueia APP. Ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md).  
 - **Conclusão:** Inventário assinado por Francisco (e Manel se aplicável).
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| A4.1 | Listar contas críticas (GitHub, Render, Stripe, domínio, MapTiler, …) | Inventário v1 | DOCS | — |
-| A4.2 | Atribuir titular por item | Tabela dono/acesso | DECISÃO | A4.1 |
-| A4.3 | Guardar inventário em `docs/` | Referência estável | DOCS | A4.2 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| A4.1 | Listar contas críticas (GitHub, Render, Stripe, domínio, MapTiler, …) | Inventário v1 | DOCS | — | Por iniciar |
+| A4.2 | Atribuir titular por item | Tabela dono/acesso | DECISÃO | A4.1 | Por iniciar *(domínio: decisão parcial na acta 09/09)* |
+| A4.3 | Guardar inventário em `docs/` | Referência estável | DOCS | A4.2 | Por iniciar |
 
 ## A5 — Decisão de marca (logo)
 
@@ -344,7 +349,7 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 |-------|--------|-------------------|------|------|--------|
 | B3.1 | Confirmar intent Manel: Connect = caminho MVP **provável** (não fechado) | Input, não activação | CONFIRMAR | `MANEL_INPUTS_TODOS` · `SETEMBRO` SEP-PAY-01 | — |
 | B3.2 | Decidir: piloto/comercial exige **split automático** agora? | Sim → B3 crítico; Não → processo manual | DECISÃO | A2 · B3.1 | **DONE** piloto = **Não** (**A1-D05**) |
-| B3.3 | Se Não: documentar processo financeiro temporário (responsável, cadência, prova) | Alternativa válida — ver **A1-D04** | DOCS | B3.2 · A1-D04 | **PARCIAL** (cadência DONE; dia da semana TBD) |
+| B3.3 | Se Não: documentar processo financeiro temporário (responsável, cadência, prova) | Alternativa válida — ver **A1-D04** + acta 09/09 | DOCS | B3.2 · A1-D04 | **DONE** *(política: semanal / segunda / manual · Manel)* · automação **não** |
 | B3.4 | Se Sim: escolher tipo Connect (Express/Custom/…) | Arquitectura | DECISÃO | B3.2 |
 | B3.5 | Se Sim: KYC conta piloto | Conta capaz de receber | EXTERNO | B3.4 |
 | B3.6 | Se Sim: implementar/ligar split | Código alinhado a A2 | CÓDIGO | B3.4 |
@@ -361,7 +366,7 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 |-------|--------|-------------------|------|------|--------|
 | B4.1 | Confirmar perguntas abertas cadência/beneficiário (Q3) | Estado das respostas | CONFIRMAR | `MANEL_INPUTS` Q3 · A2.4 | **DONE** via A1-D03/D04 |
 | B4.2 | Decidir: payout **automático** exigido neste marco? | Sim/Não | DECISÃO | B4.1 · B3.2 | **DONE** piloto = **Não** (**A1-D06**) |
-| B4.3 | Se Não: estender doc processo manual | Ops coberta — ver **A1-D04** | DOCS | B4.2 · B3.3 | **PARCIAL** |
+| B4.3 | Se Não: estender doc processo manual | Ops coberta — ver **A1-D04** + acta 09/09 | DOCS | B4.2 · B3.3 | **DONE** *(política)* · payout automático **não** |
 | B4.4 | Se Sim: implementar/ops payouts | Dinheiro ao beneficiário | CÓDIGO · EXTERNO | B3 · B4.2 | N/A piloto |
 | B4.5 | Fórmula líquido motorista (app) — ver E1 | UI/API coerente A2 | CÓDIGO | A2 · B4.1 | — |
 | B4.6 | Copy Partner alinhada (ver E4) | Sem prometer payout inexistente | CÓDIGO | B4.3 ou B4.4 | — |
@@ -720,7 +725,7 @@ Além de M1 — **não** marcar M2 “bloqueado” genericamente; fechar blocker
 | M2.6 | F1 restore drill PASS (recente) |
 | M2.7 | Se B3.2=Não: processo financeiro **manual** documentado e operável |
 | M2.8 | Se B3.2=Sim: B3 smoke split PASS |
-| M2.9 | **A6 / compliance:** validação IMT + bloqueio efectivo operador/motorista/veículo (**A3-D03-REV1**) — flag OFF **não** conta como PASS |
+| M2.9 | **A6 / compliance:** validação IMT + bloqueio efectivo operador/motorista/veículo (**A3-D03-REV1**) — vehicle gates **ON** (G-KYC-P0-04) **não** substitui IMT; enforcement driving-hours OFF **não** conta como PASS |
 | M2.10 | D1–D3 (+G2) PASS em **Android** (D0 HÍBRIDO); iOS pode estar pendente |
 | M2.11 | **Termos de utilização + Política de Privacidade** publicados/aceites no fluxo (A3-D07) |
 | M2.12 | Base legal M2 documentada (source pack / A3-REV); riscos residuais IMT/parecer **aceites por escrito** onde aplicável |

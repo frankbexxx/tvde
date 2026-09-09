@@ -178,41 +178,41 @@ Docs derivados: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COS
 | **Precisa decisão de** | Manel + Francisco |
 | **Não fazer agora** | Integração SIBS · contratos adquirente |
 
-### SEP-PAY-03 — Comissão real (15% / 12% / 20% = exemplos)
+### SEP-PAY-03 — Comissão piloto **15%** (fechada)
 
 | Campo | Conteúdo |
 |-------|----------|
-| **Origem** | Materiais Manel — percentagens citadas como exemplo |
-| **Resumo** | Fechar modelo de comissão da plataforma; valores 15/12/20 **não** são verdade final |
+| **Origem** | Materiais Manel + acta 09/09/2026 |
+| **Resumo** | Comissão plataforma piloto = **15%** (confirmada). 12%/12,5%/20% = exemplos históricos / futuro condicionado — **não** baseline. |
 | **Porque interessa** | Split, preço líquido motorista, narrativa comercial |
-| **Estado actual** | **A decidir** — exemplos apenas |
-| **Prioridade Setembro** | P1 |
-| **Precisa decisão de** | Manel + Francisco + modelo financeiro |
-| **Não fazer agora** | Hardcode de % em código · comunicar % como fechado |
+| **Estado actual** | **DONE** *(decisão)* — ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · A2.3 |
+| **Prioridade Setembro** | — (fechado) |
+| **Precisa decisão de** | — |
+| **Não fazer agora** | Alterar código de pricing só por esta acta · comunicar tiers 12% como baseline |
 
 ### SEP-PAY-04 — Payouts motorista vs parceiro
 
 | Campo | Conteúdo |
 |-------|----------|
-| **Origem** | Arquitectura pagamentos Manel |
-| **Resumo** | Quem recebe (motorista directo vs partner) e cadência (diário / semanal / outro) |
+| **Origem** | Arquitectura pagamentos Manel + acta 09/09/2026 |
+| **Resumo** | Beneficiário piloto = **Partner**; cadência **semanal / segunda-feira / manual**; conta pagamentos: Manel |
 | **Porque interessa** | KYC, fiscalidade, UX de rendimentos |
-| **Estado actual** | Pergunta aberta |
-| **Prioridade Setembro** | P1 |
-| **Precisa decisão de** | Manel + Francisco + jurídico/financeiro |
-| **Não fazer agora** | Payouts reais · onboarding KYC em prod |
+| **Estado actual** | **DONE** *(política)* · automação B3/B4 **fora** crítico M2 |
+| **Prioridade Setembro** | — (política fechada) |
+| **Precisa decisão de** | — |
+| **Não fazer agora** | Payouts reais automáticos · onboarding KYC Connect em prod |
 
 ### SEP-PAY-05 — Documentos e suspensão automática
 
 | Campo | Conteúdo |
 |-------|----------|
-| **Origem** | PDF app Motorista · PF3D / compliance (gates OFF) |
-| **Resumo** | Avisos de validade de documentos; suspensão automática **só** se operacional e legalmente OK |
+| **Origem** | PDF app Motorista · PF3D / compliance |
+| **Resumo** | Avisos de validade de documentos; gates viatura **ON** em PROD (G-KYC-P0-04); resto (IMT/docs pessoais/override) aberto |
 | **Porque interessa** | Piloto seguro vs risco jurídico |
-| **Estado actual** | Gates OFF · política não fechada |
+| **Estado actual** | Vehicle gates **ON** · PF3D-4 UX / IMT ainda abertos |
 | **Prioridade Setembro** | P2 |
 | **Precisa decisão de** | Manel + Francisco + jurídico |
-| **Não fazer agora** | Activar PF3D / bloqueio automático em prod |
+| **Não fazer agora** | Override ilegal Admin · inventar API IMT |
 
 ---
 

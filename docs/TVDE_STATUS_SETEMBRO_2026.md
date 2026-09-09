@@ -1,15 +1,16 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-**Data:** 2026-09-05 (fecho M2-L0 oficial) · 2026-09-04 foundations L3/L4 · G3/M1 2026-09-03  
-**Tip `main`:** local pode estar ahead de `origin/main` (docs L0); foundations #548/#549 em `main`  
+**Data:** 2026-09-09 (decisões operacionais Manel) · 2026-09-05 (fecho M2-L0 oficial) · G3/M1 2026-09-03  
+**Tip `main`:** alinhado a `origin/main` após merges docs/KYC  
 **Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto**  
 **Modo:** pós-M1 · caminho crítico = **Marco 2 (`READY FOR REAL PILOT`)**  
-**Fonte de verdade:** código + roadmap + matriz + [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md)  
+**Fonte de verdade:** código + roadmap + matriz + [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) + [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
 **Docs antigos (Maio e anteriores):** só pistas — confrontados com código; itens já implementados marcados **STALE / JÁ RESOLVIDO** e **excluídos** da lista de trabalho
 
 Relacionado (contexto Setembro, não substitui este relatório):
 
 - [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) — canónico de execução + marcos
+- [`docs/business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) — decisões Manel 09/09/2026
 - [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) — A3-D03-REV1 / A3-D04-REV1
 - [`docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
 - [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
@@ -25,17 +26,18 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Geral** | **M1 DONE** / **M2 PARCIAL** | L0 **FECHADO** (IMT oficial); foundations L3+L4; L1/L2 integração IMT pendente |
 | **Passenger** | **OK** (M1) · **GAP M2** | SOS foundation (#549); RAL / fatura = gaps |
 | **Driver** | **OK** (M1) · **GAP M2** | SOS foundation; driving-hours **foundation rolling 24h** (#548) · **enforcement OFF** |
-| **Partner/Frota** | **OK** (M1) · **GAP M2** | Vehicle doc gates **ON** (G-KYC-P0-04); sem validação IMT técnica completa; docs pessoais / PF3D-4 UX ainda abertos |
+| **Partner/Frota** | **OK** (M1) · **GAP M2** | Vehicle doc gates **ON** (G-KYC-P0-04); settlement política **semanal / segunda / manual**; IMT técnico / PF3D-4 UX / docs pessoais ainda abertos |
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT |
+| **Negócio / marca** | **PARCIAL** | Comissão **15%** confirmada; tarifário **pendente**; domínio `vamula.pt` **bloqueado .PT** (não bloqueia APP); site/email LRE após domínio |
+| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (ops LRE **não bloqueador imediato** da APP; pendente domínio) · L-26 fechado; L1/L2 externos |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05) |
-| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL — foundation técnica validada em produção; pendências externas/operacionais**; L-26 fechado; L1/L2 externos |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
 | **Localização/mapas** | **OK** | Tracking + SOS partilha `DriverLocation` (#549) |
 | **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI |
 | **Testes/CI** | **OK** | #548 / #549 verdes + smoke SOS mobile |
-| **Docs/operação** | **PARCIAL** | Sessão 2026-09-04 consolidada no roadmap/matriz |
+| **Docs/operação** | **PARCIAL** | Acta Manel 09/09 em `docs/business/`; domínio/LRE externos; tarifário ainda aberto |
 
 ---
 
@@ -53,7 +55,7 @@ Pesquisado em código/testes/scripts/workflows/docs vivos: `TODO`/`FIXME`/`HACK`
 | Gaps genéricos de “falta driver reject / ActiveTrip F5 / Partner mapa” (docs Maio–Jul) | Implementados e smoke PASS (`c4690ea`, Partner mapa, restore) |
 | “Partner reports future” como ausência total de KPIs | Partner tem métricas + export CSV |
 | Inventários Maio de shells/nav incompletos | Inventário UX actual marca bottom nav / earnings / inbox / docs APIs como implementados |
-| PF3D “não existe código” | Código de gates existe; produto deliberadamente **OFF** *(até 2026-09-04: OFF = falta base legal; **agora:** OFF = implementação pendente — **A3-D03-REV1** exige gates M2)* |
+| PF3D “não existe código” / “gates OFF eternos” | Código existe; **G-KYC-P0-04 CLOSED** — `ENABLE_VEHICLE_COMPLIANCE_GATES=true` em PROD (2026-09-09) |
 | B2 “não há decisões” | Decisões + schema feitos (#525–#527); falta lifecycle/UI |
 
 ---
@@ -127,7 +129,10 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
 | **S-BIZ-01** | Documentação/Operação | Validar hipóteses custos/comissões/simulador (**BUSINESS-MANEL-001**) | P0 — Bloqueador | Contabilista/financeiro |
-| **S-BIZ-02** | Documentação/Operação | Fechar comissão real (15/12/20 = exemplos) + tarifário | P1 — Necessário para fechar produto | S-BIZ-01 |
+| **S-BIZ-02** | Documentação/Operação | Comissão piloto **15%** **DONE** (09/09/2026); **tarifário final ainda PENDENTE** | P1 — Necessário para fechar produto | [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · S-BIZ-01 |
+| **S-BIZ-03** | Documentação/Operação | Domínio `vamula.pt` · site · emails `@vamula.pt` | P2 — Melhoria importante | **DEPENDÊNCIA EXTERNA — .PT** (não bloqueia APP) |
+| **S-BIZ-04** | Documentação/Operação | Settlement Partner: política **semanal / segunda / manual** (conta pagamentos: Manel) | **DONE** *(política)* · impl. técnica N/A piloto | [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) |
+| **S-BIZ-05** | Documentação/Operação | Apoio inicial digital (email/formulário); horário 09–17 · **sem** telefone público | **DONE** *(política fase inicial)* | idem |
 | **S-BRD-01** | Cross-app | Decisão logo (shortlist local) + troca controlada em `public/brand` | P1 — Necessário para fechar produto | Francisco/Manel |
 | **S-IP-01** | Segurança/Compliance | Titularidade código/design/marca/contas/domínios | P1 — Necessário para fechar produto | Francisco |
 | **S-IP-02** | Segurança/Compliance | Origem/licença logos + pesquisa/registo marca | P2 — Melhoria importante | S-IP-01 |
@@ -300,8 +305,9 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 1. **S-PAY-01 / S-PAY-02** — Sem Stripe live + Connect, não há operação comercial com dinheiro real nem split motorista.  
 2. **S-AUTH-01** — OTP sem SMS real impede onboarding sério fora de ambientes com OTP fixo.  
 3. **S-MOB-01 / S-NOTIF-01** — Sem packaging mobile + push, adopção motorista/passageiro fica presa ao browser.  
-4. **S-BIZ-01 / S-BIZ-02** — Sem validação de comissão/tarifário, Connect e “preço líquido” não fecham.  
-5. **S-COMP-04** (+ eventual **S-COMP-01**) — Obrigações legais/compliance frota condicionam o que a app pode prometer e activar.
+4. **S-BIZ-01 / S-BIZ-02** — Comissão **15%** confirmada; falta validar custos (A1.2) e **fechar tarifário**; Connect e “preço líquido” dependem disso.  
+5. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
+6. **S-BIZ-03** — Domínio/site/email: externo (.PT); **não** bloqueia desenvolvimento APP.  
 
 ---
 
@@ -320,7 +326,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 | **M2-L1 / L2** | `PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT` (L0 **não** equivale a integração técnica) |
 | **M2-L3** | `FOUNDATION IMPLEMENTADA / ENFORCEMENT PENDENTE` — [#548](https://github.com/frankbexxx/tvde/pull/548) → `c8d2c35` |
 | **M2-L4** | Foundation merged — [#549](https://github.com/frankbexxx/tvde/pull/549) → `717270a`; L-19…22 **PARCIAL**; smoke PAX/DRV + `tel:112` mobile **PASS** |
-| **Próximo** | Parecer L3 · L-25 ops externas (O-L25-01…06/09) · AMT · L1/L2 quando houver canal técnico IMT · RetentionPolicy granular (L-11/L-12/L-25 ainda PARCIAL) |
+| **Próximo** | Parecer L3 · L-25 ops (O-L25-01… após domínio — **não bloqueador imediato** APP) · AMT · L1/L2 quando houver canal técnico IMT · RetentionPolicy granular |
 
 ---
 

@@ -3,7 +3,9 @@
 **Data:** 7 de Agosto de 2026  
 **Destinatário:** Manel Perez  
 **Natureza:** documento de alinhamento produto/comercial — **não** é contrato, cronograma rígido nem lista de garantias  
-**Base:** inputs que nos enviou (pagamentos + funcionalidades da app Motorista) + estado actual da plataforma
+**Base:** inputs que nos enviou (pagamentos + funcionalidades da app Motorista) + estado actual da plataforma  
+
+> **Actualização 2026-09-09:** decisões de comissão (**15%**), settlement (**semanal / segunda / manual** ao Partner) e governação operacional estão em [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md). Secções §4–§6 abaixo que ainda digam “% a decidir” / “não fixado” ficam **obsoletas** nesses pontos.
 
 ---
 
@@ -103,7 +105,7 @@ Ficam como **alternativas futuras** ou de escala — não como decisão imediata
 | Capacidade | Fase sugerida |
 |------------|----------------|
 | Autorizar no pedido e cobrar no fim da viagem | Próxima fase (núcleo) |
-| Dividir comissão plataforma / motorista (ou parceiro) | Próxima fase (núcleo) — **% a decidir** |
+| Dividir comissão plataforma / motorista (ou parceiro) | Próxima fase (núcleo) — **% piloto = 15%** (09/09/2026); split automático Connect fora do crítico M2 |
 | Identificação / onboarding de contas pagáveis (KYC) | Próxima fase (núcleo) |
 | Política de cancelamentos / no-show | Próxima fase |
 | Pagamentos periódicos (diário / semanal / outro) | A calibrar consigo |
@@ -112,8 +114,8 @@ Ficam como **alternativas futuras** ou de escala — não como decisão imediata
 
 ### Comissão da plataforma
 
-Nos materiais aparecem exemplos (por exemplo 15%, 12% ou 20%).  
-**Nenhum destes valores está fixado.** A percentagem real, e a quem é paga a parte do motorista (motorista directo vs parceiro), é decisão de negócio a fechar consigo e com o modelo financeiro.
+**Baseline piloto (09/09/2026): 15%.**  
+Valores 12% / 12,5% / 20% nos materiais antigos = exemplos ou futuro condicionado — **não** baseline. Liquidação piloto ao **Partner**, **semanal / segunda-feira / manual**. Ver acta canónica.
 
 ---
 
@@ -136,13 +138,13 @@ Salvo decisão sua em contrário, ficam para mais tarde:
 
 Respostas curtas bastam para desbloquear prioridades:
 
-1. **Comissão:** há um alvo real (ex. 15% / 12% / 20%) ou eram só exemplos?  
+1. **Comissão:** ~~há um alvo real?~~ **→ 15%** (09/09/2026)  
 2. **MB WAY / Multibanco:** obrigatório no primeiro MVP em Portugal, ou pode vir na fase seguinte?  
-3. **Pagamentos ao motorista/parceiro:** diários, semanais, ou outro ritmo? Quem recebe — motorista ou parceiro?  
+3. **Pagamentos ao motorista/parceiro:** ~~ritmo / quem recebe?~~ **→ Partner · semanal · segunda · manual**  
 4. **Documentos:** quem valida (parceiro, administração, automático)?  
 5. **Suspensão por documento caducado:** pode ser automática neste modelo, do ponto de vista operacional e legal?  
 6. **Categorias no MVP:** quais entram no piloto (X, XL, Pet, Comfort, Black, Elétrico, Van — todas ou um subconjunto)?  
-7. **Telefone temporário:** requisito ou nice-to-have?  
+7. **Telefone temporário:** requisito ou nice-to-have? *(telefone público de apoio: **não** previsto na fase inicial)*  
 8. **Destino até 2 vezes/dia:** obrigatório no piloto?  
 9. **GPS próprio:** basta mapa/posição de recurso, ou quer navegação completa dentro da app?  
 10. **Preço líquido do motorista:** o que entra e o que sai da conta (comissão, portagens, gorjetas, promoções)?  

@@ -6,7 +6,7 @@ Este projeto visa construir uma plataforma completa de ride‑sharing para o mer
 
 - **Mercado inicial:** Portugal
 - **Marca:** Própria
-- **Modelo de negócio:** Comissão por contrato (15% inicial, 12,5% após período experimental)
+- **Modelo de negócio:** Comissão piloto **15%** (baseline; ver `A1-D01` / acta Manel 09/09/2026). 12%/12,5% = só futuro condicionado — **não** baseline.
 - **Equipa:** 1 developer (Francisco) + IA (Cursor)
 
 O objetivo do MVP não é copiar todas as funcionalidades da Uber, mas implementar **o ciclo completo de uma viagem paga** , de forma fiável.
