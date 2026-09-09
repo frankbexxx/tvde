@@ -266,21 +266,21 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 ## A6 — Compliance frota / IMT / bloqueio (dados → gates) — **CRÍTICO M2**
 
 - **Objectivo:** Validação IMT + bloqueio operacional real (operador/motorista/veículo) + gates efectivos para M2.  
-- **IDs:** `S-COMP-01` · `S-COMP-02` · `S-COMP-03` · `S-COMP-05`  
+- **IDs:** ~~`S-COMP-01`~~ **DONE (G-KYC-P0-04)** · `S-COMP-02` · `S-COMP-03` · `S-COMP-05`  
 - **Dependências:** **A3-D03-REV1** · IMT / regulamentação para mecanismo exacto  
-- **Conclusão M2:** gates efectivos **obrigatórios**; PF3D = base útil, **não** suficiente.  
-- **Estado:** **No caminho crítico M2** — flag `ENABLE_VEHICLE_COMPLIANCE_GATES` **OFF agora** só por implementação pendente (**não** decisão de produto). Ver [`A3_REQUISITOS`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) §7.  
+- **Conclusão M2:** gates documentais de **viatura** ON em PROD (**G-KYC-P0-04 CLOSED**); IMT + docs pessoais + suspensão automática **ainda** no caminho crítico.  
+- **Estado:** Flag `ENABLE_VEHICLE_COMPLIANCE_GATES=true` em PROD (smoke ON PASS 2026-09-09). Restante A6 (IMT/processo/docs motorista) **aberto**. Ver [`G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md`](ops/G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md).  
 - **Canónico:** [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) · matriz legal 2026-09-04.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
-| A6.1 | Confirmar PF3D atrás de flag OFF + smokes OFF PASS | Não reabrir “falta código” | CONFIRMAR | `PF3D_…` | Por confirmar |
+| A6.1 | Confirmar PF3D atrás de flag OFF + smokes OFF PASS | Não reabrir “falta código” | CONFIRMAR | `PF3D_…` | **DONE** |
 | A6.2 | Acta **A3-D03-REV1**: A6 crítico M2; OFF = implementação pendente | Acta | DOCS | A3-D03-REV1 | **DONE** |
 | A6.3 | Desenhar validação IMT (operador/motorista/veículo) sem inventar API | Spec + gaps IMT | DOCS · EXTERNO | A6.2 | Por iniciar |
 | A6.4 | Auditoria frota + docs mínimos Partner | Frota piloto completa | DOCS · EXTERNO | A6.2 | Por iniciar |
 | A6.5 | Fechar decisões A–E PF3D-0 ainda abertas | Acta A–E | DECISÃO | A6.1 | Por iniciar |
-| A6.6 | Implementar bloqueio operacional real (disponível/matching/accept/start) | Entidade bloqueada inoperante | CÓDIGO | A6.3 · A6.5 | Por iniciar |
-| A6.7 | Activar flag staging→prod + smoke **só** quando gates+IMT/processo prontos | Gates ON após PASS | CONFIG · TESTE | A6.4 · A6.6 | Por iniciar |
+| A6.6 | Implementar bloqueio operacional real (disponível/matching/accept/start) | Entidade bloqueada inoperante | CÓDIGO | A6.3 · A6.5 | **PARCIAL** — gates viatura ON (G-KYC-P0-04); IMT/docs pessoais pendentes |
+| A6.7 | Activar flag staging→prod + smoke **só** quando gates+IMT/processo prontos | Gates ON após PASS | CONFIG · TESTE | A6.4 · A6.6 | **DONE** (gates viatura; IMT ainda aberto) |
 | A6.8 | UX Admin: rever falso positivo / revalidar; **sem** override contra estado oficial inválido | Override seguro | CÓDIGO | A6.6 | Por iniciar |
 | A6.9 | Enforcement 10 h/24 h (**A3-D04-REV1**) — janela móvel + estados granulares | Bloqueio efectivo M2 | CÓDIGO · TESTE | A3-D04-REV1 | Por iniciar |
 

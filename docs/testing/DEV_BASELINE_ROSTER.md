@@ -23,7 +23,7 @@
 - **Default fleet** — UUID fixo `00000000-0000-4000-8000-000000000001` (migração + código).
 - **test_partner** — UUID fixo `a0000002-0000-4000-8000-000000000001` (`BASELINE_PARTNER_FLEET_UUID`).
 
-## Vehicles DEMO + compliance (G-KYC-P0-04 readiness)
+## Vehicles DEMO + compliance (G-KYC-P0-04 **CLOSED**)
 
 O `seed_baseline_users` cria **4** Vehicles DEMO (1 por Driver baseline), com os 4 documentos obrigatórios `approved` e `expires_at=2099-06-30` (dummy — não são documentos legais reais).
 
@@ -47,6 +47,8 @@ O sync PROD usa um **roster próprio de 3 Drivers** (não o baseline local de 4)
 | `+351918304615` | test_partner | `DEMO-TP-02` (criar se em falta) |
 
 `+351911111114` / `DEMO-DF-01` / `DEMO-TP-03` **não** fazem parte do sync PROD.
+
+**PROD (2026-09-09):** roster alinhado · gate `ENABLE_VEHICLE_COMPLIANCE_GATES=true` · smoke ON PASS — [`G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md`](../ops/G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md).
 
 - Service: `app/services/sync_demo_vehicle_compliance.py` (`PROD_DEMO_VEHICLE_SPECS`)
 - CLI: `backend/scripts/sync_demo_vehicle_compliance.py`

@@ -25,7 +25,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Geral** | **M1 DONE** / **M2 PARCIAL** | L0 **FECHADO** (IMT oficial); foundations L3+L4; L1/L2 integração IMT pendente |
 | **Passenger** | **OK** (M1) · **GAP M2** | SOS foundation (#549); RAL / fatura = gaps |
 | **Driver** | **OK** (M1) · **GAP M2** | SOS foundation; driving-hours **foundation rolling 24h** (#548) · **enforcement OFF** |
-| **Partner/Frota** | **OK** (M1) · **GAP M2** | Sem validação IMT técnica; PF3D gates **OFF** (A3-D03-REV1) |
+| **Partner/Frota** | **OK** (M1) · **GAP M2** | Vehicle doc gates **ON** (G-KYC-P0-04); sem validação IMT técnica completa; docs pessoais / PF3D-4 UX ainda abertos |
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
@@ -87,7 +87,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
-| **S-COMP-01** | Partner/Frota | `ENABLE_VEHICLE_COMPLIANCE_GATES=False` — activar só após dados reais (assign veículos/docs) | P1 — Necessário para fechar produto | Auditoria frota + decisão |
+| **S-COMP-01** | Partner/Frota | `ENABLE_VEHICLE_COMPLIANCE_GATES=true` em PROD (G-KYC-P0-04) — smoke ON PASS 2026-09-09 | **DONE** | [`G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md`](ops/G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md) |
 | **S-COMP-02** | Partner/Frota | PF3D-4 UX rica + PF3D-5 admin override (docs) | P2 — Melhoria importante | S-COMP-01 |
 | **S-COMP-03** | Driver | Gate documentos motorista OFF (localStorage) — política produto | P2 — Melhoria importante | Decisão ops |
 | **S-COMP-04** | Segurança/Compliance | Requisitos Lei 45/2018 (59/2026) + matriz impacto 2026-09-04 → blockers M2 | P0 — Bloqueador | A3-REV · IMT |
@@ -160,8 +160,8 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | Stripe | Authorize/capture/webhook OK em código; **live + Connect pendentes** |
 | Persistência estados | ActiveTrip restore Pax/Driver **OK** (código + smoke) |
 | Admin | Operacional OK; approve/reject drivers **DONE** (E5); não é dispatcher do dia |
-| Partner/Frota | Operacional OK; PF3D OFF *(implementação pendente — A3-D03-REV1 exige gates M2)* |
-| Docs/KYC | Superfícies existem; gates OFF; OCR fora de scope; **`Vehicle.inactive` bloqueia novas ofertas/accept** (G-KYC-P0-03 **FECHADO**) — trip activa não cancela; **Admin recover** alinha ao gate quando ON; **FE mensagens** Driver/Partner; **`list_available_trips` filtra compliance**; **baseline DEMO** local 4 Drivers; **sync PROD soft** roster 3 Drivers (`11-AA-22`/`33-BB-44`/`DEMO-TP-02`); **G-KYC-P0-04** ABERTO — demo prod ainda não apply; flag OFF |
+| Partner/Frota | Operacional OK; **vehicle doc gates ON** em PROD (G-KYC-P0-04 **FECHADO**); PF3D-4 UX rica / IMT / docs pessoais ainda abertos |
+| Docs/KYC | Superfícies existem; OCR fora de scope; **`Vehicle.inactive`** (G-KYC-P0-03 **FECHADO**); **`ENABLE_VEHICLE_COMPLIANCE_GATES=true`** (G-KYC-P0-04 **FECHADO** — seed local · sync PROD soft · 3/3 compliant · smoke ON PASS `e9d31238-…`); FE mensagens mínimas Driver/Partner; **ainda abertos:** docs pessoais Driver, PF3D-4 Admin UX, IMT/A6 processo |
 | Notificações | Inbox Partner↔Driver **OK**; **push/SMS real PENDENTE** |
 | Segurança | Auth JWT/OTP; driving-hours compliance ON + **enforcement OFF** (#548 foundation); emergency SOS foundation (#549) |
 | Observabilidade | Sentry FE condicional; health Admin |
@@ -184,10 +184,10 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | Prioridade | Contagem |
 |------------|----------|
 | **P0 — Bloqueador** | **10** |
-| **P1 — Necessário para fechar produto** | **16** |
+| **P1 — Necessário para fechar produto** | **15** |
 | **P2 — Melhoria importante** | **14** |
 | **P3 — Pós-MVP** | **4** |
-| **Total pendências reais** | **44** |
+| **Total pendências reais** | **43** |
 
 ### Por área (subtotais)
 
@@ -195,7 +195,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 |------|----------|
 | Passenger | 2 |
 | Driver | 4 |
-| Partner/Frota | 4 |
+| Partner/Frota | 3 |
 | Admin | 2 |
 | Backend/API | 12 |
 | Infra/DevOps | 5 |
@@ -249,8 +249,8 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 - **Depende de:** ETAPA 05 · decisão Manel
 
 ### ETAPA 08 — Compliance frota (dados → flag)
-- **Objectivo:** Dados mínimos de veículos/docs; só então considerar gates ON.
-- **IDs:** S-COMP-01 · S-COMP-02 · S-COMP-03 · S-COMP-05
+- **Objectivo:** Dados mínimos de veículos/docs; gates documentais viatura ON (G-KYC-P0-04 **DONE**); resto A6/IMT/docs pessoais continua.
+- **IDs:** ~~S-COMP-01~~ **DONE** · S-COMP-02 · S-COMP-03 · S-COMP-05
 - **Depende de:** ETAPA 03 (legal) · decisão produto
 
 ### ETAPA 09 — Spike e packaging mobile

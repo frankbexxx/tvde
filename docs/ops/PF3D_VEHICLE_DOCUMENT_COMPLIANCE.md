@@ -1,7 +1,7 @@
 # PF3D-0 — Vehicle Document Compliance Gates (decisão / arquitectura)
 
-**Estado:** **PF3D-0…2** + **PF3D-3A** + **PF3D-3B** em main (flag OFF) · smokes OFF **PASS** · **PF3D-3 global ainda bloqueado.**
-**`main`:** ≥ `e404bcd` · re-audit: [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) · smoke 3A/OFF: [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) · smoke 3B/OFF: [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](./PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md)
+**Estado:** **PF3D-0…3B** em main · **PF3D-3 / G-KYC-P0-04 ON em PROD** (smoke PASS 2026-09-09) · UX rica Admin (PF3D-4) e IMT/A6 processo **ainda abertos**.  
+**`main`:** ≥ `ce106bb` · smoke ON: [`G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md`](./G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md) · smoke 3A/OFF: [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) · smoke 3B/OFF: [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](./PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md)
 **Pré-condição:** PF3C **PASS** — [`PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md`](./PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md)  
 **Cadeia:** [`PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](./PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md)
@@ -134,9 +134,9 @@ Listagem de candidatos — **não** implementar nesta fase:
 | **PF3D-1** | Backend helper puro: `vehicle_compliance_status` · `vehicle_is_compliant` + pytest — **sem** wiring operacional | Não | **PASS** (#459) |
 | **DATA-1A…1E** | Audit / suggest / apply local / seed docs dummy / re-audit | Não (scripts) | **PASS** — [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
 | **PF3D-2** | API read-only — expor `compliance_status` — **sem** bloqueio | Não | **PASS** (#466) |
-| **PF3D-3A** | Gates atrás de `ENABLE_VEHICLE_COMPLIANCE_GATES` default **false** | Só se flag ON | **PASS** código (#467 + #468) · smoke **OFF** [`PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md`](./PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) |
+| **PF3D-3A** | Gates atrás de `ENABLE_VEHICLE_COMPLIANCE_GATES` (default código **false**) | Só se flag ON | **PASS** código (#467 + #468) · smoke OFF · **PROD ON** [`G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md`](./G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md) |
 | **PF3D-3B** | Mensagens / observabilidade (i18n + CTA + logs) — **sem** activar flag | Não | **PASS** código (#486) · smoke **OFF** [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](./PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) · DIAG [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
-| **PF3D-3** | Ligar gates globalmente / ON em prod | **Sim** | **Bloqueado** — DATA-1E (muitos `no_active_vehicle`) + preferir 3B antes de ON |
+| **PF3D-3** | Ligar gates globalmente / ON em prod | **Sim** | **DONE (G-KYC-P0-04)** — flag ON PROD + smoke PASS 2026-09-09; IMT/docs pessoais/PF3D-4 **não** incluídos |
 | **PF3D-4** | FE mensagens ricas Driver / Partner / Admin (além do mínimo 3B) | UX | **Parcial** — códigos bloqueantes (`vehicle_inactive` + compliance) mapeados PT/EN Driver/Partner (G-KYC-P0-04 FE); UX rica/Admin still pending |
 | **PF3D-5** | Override Admin / Partner — só se necessário | Controlo ops | Pendente |
 
@@ -171,13 +171,10 @@ Listagem de candidatos — **não** implementar nesta fase:
 
 ## 8. Recomendação final
 
-1. **Não ligar PF3D-3 globalmente** — re-audit 1E: ainda **110** `no_active_vehicle` em `test_db`.  
-2. **PF3D-1…3A** feitos; smoke **OFF** PASS — manter flag ausente/`false` em prod.  
-3. Antes de qualquer smoke **ON**: atribuição real de viaturas + docs reais — **não** seed dummy em prod.  
-4. Preferir gates **backend** (espelho driving-hours); FE mensagens mínimas = **PF3D-3B** ([`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md)); UX rica = PF3D-4.  
-5. Set bloqueante mínimo provisório (sujeito a B): `{ rejected, expired, expired_pending, missing }` + (se A) sem `active_vehicle_id`.  
-6. `expiring_soon` e (proposta B) `pending_review` → **alerta apenas** (warning OK operacionalmente).  
-7. Partner Driver Detail scroll / force-online enterrado → UX debt (não blocker) no smoke OFF.
+1. **G-KYC-P0-04 / PF3D-3 ON em PROD:** **FECHADO** (smoke 2026-09-09).  
+2. **Não** confundir com fecho de A6/IMT nem docs pessoais Driver.  
+3. Próximo natural: **PF3D-4** (UX rica Admin) · auditoria frota real · IMT (A6.3+).  
+4. Set bloqueante actual: `{ rejected, expired, expired_pending, missing }` + `no_active_vehicle` com flag ON; `expiring_soon` / `pending_review` → warning (ops permitidas).
 
 ---
 
@@ -187,9 +184,9 @@ Listagem de candidatos — **não** implementar nesta fase:
 |--|------|------|
 | Objectivo | Visibilidade / alertas | Compliance / bloqueios |
 | `document_summary` | Sim | Reutilizar |
-| Matching / online / accept | Intactos | Gates em código; **OFF** por defeito (smoke OFF PASS) |
-| Estado | **PASS** | **PF3D-0…3B/OFF** (este doc + smokes 3A/3B) |
+| Matching / online / accept | Intactos (só alertas) | Gates **ON** em PROD (G-KYC-P0-04) |
+| Estado | **PASS** | **PF3D-3 ON** · PF3D-4/IMT abertos |
 
 ---
 
-*Docs-only. Sem alterações runtime · testes · migrations · workflows · env/secrets · DB.*
+*G-KYC-P0-04 docs close 2026-09-09. Sem alterações runtime nesta tarefa de fecho.*
