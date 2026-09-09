@@ -1,27 +1,14 @@
 #!/usr/bin/env python3
-"""NON-WIPE sync of DEMO vehicle compliance (G-KYC-P0-04).
+"""NON-WIPE sync of PROD DEMO vehicle compliance (G-KYC-P0-04).
 
+PROD roster (3 drivers) is separate from local baseline (4 drivers).
 Default: dry-run (no writes). Apply requires::
 
     --apply --confirm SYNC_DEMO_VEHICLE_COMPLIANCE
 
-Remote DB apply also requires::
+Remote DB also requires::
 
     ALLOW_REMOTE_DEMO_SYNC=YES
-
-Never uses ALLOW_REMOTE_BASELINE_WIPE. Never truncates.
-
-Local dry-run::
-
-    cd backend
-    $env:DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:5432/test_db"
-    python scripts/sync_demo_vehicle_compliance.py
-
-Future prod dry-run (review only — not apply in this task)::
-
-    $env:ALLOW_REMOTE_DEMO_SYNC = "YES"
-    $env:DATABASE_URL = "<prod-external-url>"
-    python scripts/sync_demo_vehicle_compliance.py
 """
 
 from __future__ import annotations
@@ -109,9 +96,9 @@ def _install_readonly_guards(session: Any) -> None:
 
 
 def _print_plan(plan: Any) -> None:
-    print("=== DEMO vehicle compliance sync plan ===")
+    print("=== PROD DEMO vehicle compliance sync plan ===")
     print(f"ok={plan.ok} mode={plan.mode}")
-    print(f"summary={json.dumps(plan.summary, ensure_ascii=False)}")
+    print(f"summary={json.dumps(plan.summary, ensure_ascii=True)}")
     if plan.aborts:
         print("--- ABORTS ---")
         for a in plan.aborts:
@@ -122,10 +109,19 @@ def _print_plan(plan: Any) -> None:
         print(f"  Partner={d.partner_name} ({d.partner_id})")
         print(f"  is_test_account={d.is_test_account} status={d.driver_status}")
         print(f"  active_vehicle_before={d.active_vehicle_id_before}")
-        print(f"  expected_plate={d.expected_plate} expected_vehicle_id={d.expected_vehicle_id}")
+        print(
+            f"  expected_plate={d.expected_plate} "
+            f"expected_vehicle_id={d.expected_vehicle_id}"
+        )
         print(f"  vehicle_action={d.vehicle_action} resolved={d.vehicle_id_resolved}")
-        print(f"  compliance_before={d.compliance_before} → expected={d.compliance_after_expected}")
-        print(f"  docs_before={json.dumps(d.docs_before, ensure_ascii=False)}")
+        print(
+            f"  compliance_before={d.compliance_before} "
+            f"-> expected={d.compliance_after_expected}"
+        )
+        print(f"  docs_before={json.dumps(d.docs_before, ensure_ascii=True)}")
+        print(f"  docs_preserve={d.docs_preserve}")
+        print(f"  docs_create={d.docs_create}")
+        print(f"  docs_date_fix={d.docs_date_fix}")
         print(f"  docs_actions={d.docs_actions}")
         print(f"  actions={d.actions}")
 
