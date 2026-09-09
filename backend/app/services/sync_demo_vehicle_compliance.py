@@ -37,7 +37,7 @@ from app.services.seed_demo_vehicle_compliance import (
 )
 from app.services.vehicle_document_compliance import vehicle_compliance_status
 
-CONFIRM_TOKEN = "SYNC_DEMO_VEHICLE_COMPLIANCE"
+CONFIRM_TOKEN = "SYNC_DEMO_VEHICLE_COMPLIANCE"  # nosec B105  # CLI confirm token, not a password
 REMOTE_ENV = "ALLOW_REMOTE_DEMO_SYNC"
 AUDIT_ACTOR = "system:sync_demo_vehicle_compliance"
 
