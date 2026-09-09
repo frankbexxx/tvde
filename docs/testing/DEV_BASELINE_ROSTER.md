@@ -6,21 +6,35 @@
 
 | Telemóvel | Papel | Nome em ecrã | Notas |
 |-----------|--------|--------------|--------|
-| +351911111111 | driver | test_driver | Frota **Default fleet** (`DEFAULT_PARTNER_UUID`) — incluso no discover «pool default». |
+| +351911111111 | driver | test_driver | Frota **Default fleet** (`DEFAULT_PARTNER_UUID`) — incluso no discover «pool default». Vehicle DEMO `DEMO-DF-01` + docs dummy compliant. |
+| +351911111114 | driver | test_driver_b | Frota **test_partner**. Vehicle DEMO `DEMO-TP-03` + docs dummy compliant. |
 | +351912345678 | passenger | test_passenger | Conta teste. |
 | +351924075365 | super_admin | frank | |
 | +351955555502 | partner | test_partner | Org **`test_partner`** (`BASELINE_PARTNER_FLEET_UUID`). |
 | +351938874006 | passenger | Kenia | Nome real; conta virtual. |
-| +351918304615 | driver | Marly | Frota **test_partner** (não no pool default de discover). |
+| +351918304615 | driver | Marly | Frota **test_partner** (não no pool default de discover). Vehicle DEMO `11-AA-22`. |
 | +351918870365 | passenger | Jeff | |
 | +351967330628 | passenger | Maria João | |
-| +351939694569 | driver | Manel Perez | Frota **test_partner**. |
+| +351939694569 | driver | Manel Perez | Frota **test_partner**. Vehicle DEMO `33-BB-44`. |
 | +351900000000 | admin | dev_admin | Útil para promover outras contas em dev; BETA OTP. |
 
 ## Frotas
 
 - **Default fleet** — UUID fixo `00000000-0000-4000-8000-000000000001` (migração + código).
 - **test_partner** — UUID fixo `a0000002-0000-4000-8000-000000000001` (`BASELINE_PARTNER_FLEET_UUID`).
+
+## Vehicles DEMO + compliance (G-KYC-P0-04 readiness)
+
+O `seed_baseline_users` cria **4** Vehicles DEMO (1 por Driver baseline), com os 4 documentos obrigatórios `approved` e `expires_at=2099-06-30` (dummy — não são documentos legais reais).
+
+| Plate | Partner | Driver |
+|-------|---------|--------|
+| `DEMO-DF-01` | Default fleet | test_driver |
+| `11-AA-22` | test_partner | Marly |
+| `33-BB-44` | test_partner | Manel Perez |
+| `DEMO-TP-03` | test_partner | test_driver_b |
+
+Helper: `app/services/seed_demo_vehicle_compliance.py` (idempotente).
 
 ## Como aplicar (wipe completo + seed)
 
@@ -32,19 +46,20 @@ Com **`ENVIRONMENT` ≠ prod** e **`ENV=dev`** ou **`ENABLE_DEV_TOOLS=true`**:
 POST /dev/baseline-reset
 ```
 
-Sem corpo. Resposta inclui `users` (ids por telefone) e `partners`.
+Sem corpo. Resposta inclui `users` (ids por telefone), `partners` e `demo_vehicle_compliance`.
 
-### Script (local **ou** Render)
-
-Em **produção** o router `/dev/*` **não** é montado. Para igualar a BD alojada, usa o mesmo código via CLI (connection string da variável **`DATABASE_URL`**):
+### Script (local por defeito)
 
 ```powershell
 cd backend
-$env:DATABASE_URL = "<postgres do Render ou local>"
+$env:DATABASE_URL = "postgresql://postgres:postgres@127.0.0.1:5432/test_db"
 python scripts/baseline_reset.py --confirm WIPE_ALL_TVDE_BASELINE
 ```
 
-O flag `--confirm` tem de corresponder **exactamente** para evitar apagamentos acidentais.
+O CLI **recusa** hosts remotos salvo `ALLOW_REMOTE_BASELINE_WIPE=YES` (wipe remoto intencional).  
+O flag `--confirm` tem de corresponder **exactamente**.
+
+**Não** usar este wipe em produção como forma de «só corrigir docs» — ver procedimento separado para demo prod.
 
 ### O que é apagado
 

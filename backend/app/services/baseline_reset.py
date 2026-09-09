@@ -24,9 +24,13 @@ from app.db.models.driver import Driver, DriverLocation
 from app.db.models.partner import Partner
 from app.db.models.user import User
 from app.models.enums import DriverStatus, Role, UserStatus
+from app.services.seed_demo_vehicle_compliance import (
+    ensure_baseline_demo_vehicle_compliance,
+)
 
 BASELINE_USERS: Sequence[tuple[str, Role, str]] = (
     ("+351911111111", Role.driver, "test_driver"),
+    ("+351911111114", Role.driver, "test_driver_b"),
     ("+351912345678", Role.passenger, "test_passenger"),
     ("+351924075365", Role.super_admin, "frank"),
     ("+351955555502", Role.partner, "test_partner"),
@@ -54,6 +58,8 @@ _TRIP_EVENT_TABLES = (
     "driver_zone_customs",
     "driver_locations",
     "drivers",
+    "vehicle_documents",
+    "vehicles",
     "otp_codes",
     "users",
     "partners",
@@ -141,7 +147,11 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
         phone_to_id[phone] = user.id
 
     default_pool_drivers = ("+351911111111",)
-    partner_fleet_drivers = ("+351918304615", "+351939694569")
+    partner_fleet_drivers = (
+        "+351918304615",
+        "+351939694569",
+        "+351911111114",
+    )
 
     for phone in default_pool_drivers:
         uid = phone_to_id[phone]
@@ -173,6 +183,10 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
             DriverLocation(driver_id=uid, lat=lat, lng=lng, timestamp=now),
         )
 
+    db.flush()
+    demo_vehicles = ensure_baseline_demo_vehicle_compliance(
+        db, phone_to_user_id=phone_to_id
+    )
     db.commit()
 
     out_users = {
@@ -185,6 +199,7 @@ def seed_baseline_users(db: Session) -> dict[str, Any]:
             "test_partner_fleet": str(BASELINE_PARTNER_FLEET_UUID),
         },
         "users": out_users,
+        "demo_vehicle_compliance": demo_vehicles,
     }
 
 
@@ -207,5 +222,13 @@ def assert_baseline_state(db: Session) -> None:
         raise RuntimeError(f"baseline users expected {len(BASELINE_USERS)}, got {len(n_users)}")
     if len(n_partners) != 2:
         raise RuntimeError(f"expected 2 partners, got {len(n_partners)}")
-    if len(n_drivers) != 3:
-        raise RuntimeError(f"expected 3 drivers, got {len(n_drivers)}")
+    if len(n_drivers) != 4:
+        raise RuntimeError(f"expected 4 drivers, got {len(n_drivers)}")
+    missing_vehicle = db.execute(
+        select(Driver.user_id).where(Driver.active_vehicle_id.is_(None))
+    ).all()
+    if missing_vehicle:
+        raise RuntimeError(
+            f"expected all baseline drivers to have active_vehicle_id, "
+            f"missing={len(missing_vehicle)}"
+        )
