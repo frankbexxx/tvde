@@ -102,11 +102,13 @@ Cada linha = capacidade a discutir / especificar mais tarde. Prioridade = ordem 
 
 ## 6. Perguntas ao Manel (fechar antes de spec/build)
 
+*Actualização 2026-09-09:* **Q1** → comissão piloto **15%** · **Q3** → Partner · **semanal / segunda-feira / manual** · ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md). Texto das perguntas abaixo mantém-se como histórico do levantamento.
+
 | # | Pergunta |
 |---|----------|
-| Q1 | Comissão real da plataforma: há valor alvo (ex. 15% / 12% / 20%) ou é só exemplo? |
+| Q1 | Comissão real da plataforma: há valor alvo (ex. 15% / 12% / 20%) ou é só exemplo? **→ RESPONDIDA: 15%** |
 | Q2 | **MB WAY** (SIBS) é **obrigatório** no MVP Portugal ou pode ficar em fase 2? |
-| Q3 | Cadência de **payouts**: diário / semanal / outro? Quem recebe (motorista vs partner)? |
+| Q3 | Cadência de **payouts**: diário / semanal / outro? Quem recebe (motorista vs partner)? **→ RESPONDIDA: Partner · semanal · segunda · manual** |
 | Q4 | **Documentos**: quem valida (Partner / Admin / automático)? |
 | Q5 | **Suspensão automática** por documento caducado — pode ser aplicada legalmente neste modelo? |
 | Q6 | **Categorias** exactas do MVP (subconjunto de X/XL/Pet/Comfort/Black/Elétrico/Van)? |
