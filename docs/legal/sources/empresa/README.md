@@ -17,14 +17,32 @@ Documentação societária / fiscal de referência interna. Útil para:
 
 | Ficheiro | Conteúdo principal |
 |---|---|
-| `ventos-ferteis-contrato-sociedade-p1.pdf` | Contrato de sociedade (parte 1) |
-| `ventos-ferteis-contrato-sociedade-p2.pdf` | Contrato de sociedade (parte 2) |
-| `ventos-ferteis-contrato-sociedade-p3.pdf` | Contrato de sociedade (parte 3) |
-| `ventos-ferteis-contrato-sociedade-p4.pdf` | Contrato de sociedade (parte 4) |
-| `ventos-ferteis-auto-noticia-2021-05-26.pdf` | Auto de notícia / rectificação ao contrato (26/05/2021) |
+| `ventos-ferteis-certidao-permanente-2026-05-08.pdf` | **Certidão Permanente actual** (subscrita 08/05/2026 · válida até 08/05/2027) — referência societária actual |
+| `ventos-ferteis-contrato-sociedade-p1.pdf` | Contrato de sociedade (parte 1) — histórico |
+| `ventos-ferteis-contrato-sociedade-p2.pdf` | Contrato de sociedade (parte 2) — histórico |
+| `ventos-ferteis-contrato-sociedade-p3.pdf` | Contrato de sociedade (parte 3) — histórico |
+| `ventos-ferteis-contrato-sociedade-p4.pdf` | Contrato de sociedade (parte 4) — histórico |
+| `ventos-ferteis-auto-noticia-2021-05-26.pdf` | Auto de notícia / rectificação ao contrato (26/05/2021) — histórico |
 | `ventos-ferteis-caes-2026-09-08.jpeg` | Extrato / captura de CAEs (imagem 08/09/2026) |
 
-## Dados societários (conforme documentos)
+## Certidão Permanente (referência actual)
+
+Fonte: `ventos-ferteis-certidao-permanente-2026-05-08.pdf`  
+Usar esta certidão como **referência societária actual**. Os contratos de sociedade e o auto de notícia permanecem como **histórico**.
+
+| Campo | Valor (conforme certidão) |
+|---|---|
+| Firma | VENTOS FÉRTEIS - LDA |
+| NIPC | 516344439 |
+| Natureza jurídica | sociedade por quotas |
+| Sede | Oeiras |
+| Capital social | 400 € |
+| Gerente | Manuel Alexandre Pinto Perez |
+| CAE principal | `52320-R4` — Atividades de serviços de intermediação dos transportes de passageiros |
+| Subscrita | 08/05/2026 |
+| Válida até | 08/05/2027 |
+
+## Dados societários (conforme documentos históricos)
 
 | Campo | Valor |
 |---|---|
