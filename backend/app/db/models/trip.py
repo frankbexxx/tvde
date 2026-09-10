@@ -207,7 +207,15 @@ class Trip(Base):
     cancellation_reason: Mapped[Optional[str]] = mapped_column(
         String(280),
         nullable=True,
-        comment="Reason for cancellation, when cancelled.",
+        comment=(
+            "Cancellation detail / legacy free text. "
+            "When cancellation_reason_code is set, may hold internal detail only."
+        ),
+    )
+    cancellation_reason_code: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+        comment="Structured cancel/attendable reason code (PET-5A.2).",
     )
     cancellation_fee: Mapped[Optional[float]] = mapped_column(
         Numeric(10, 2),

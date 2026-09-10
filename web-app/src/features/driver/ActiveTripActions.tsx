@@ -31,6 +31,11 @@ import {
   TRIP_CANCEL_SELECT_OTHER,
   tripCancelReasonForApi,
 } from '../../constants/tripCancelReasons'
+import {
+  tripInvolvesAnimal,
+  validateAttendableReasonInput,
+} from '../../constants/attendableReasons'
+import { AttendableReasonFields } from '../../components/trips/AttendableReasonFields'
 import { resolveApiErrorDetail } from '../../i18n/apiErrors'
 import type { DriverActiveTripPollState } from './useDriverActiveTripPoll'
 import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
@@ -74,7 +79,10 @@ export function ActiveTripActions({
   onError,
 }: ActiveTripActionsProps) {
   const { t } = useTranslation('driver')
+  const { t: tTrip } = useTranslation('trip')
   const cancelPresets = driverTripCancelPresets()
+  const [attendableCode, setAttendableCode] = useState('')
+  const [attendableDetail, setAttendableDetail] = useState('')
   const internalPoll = useDriverActiveTripPoll(
     sharedPoll ? null : tripId,
     sharedPoll ? null : token,
@@ -96,6 +104,7 @@ export function ActiveTripActions({
     if (rawCoords) lastCoordsRef.current = rawCoords
   }, [rawCoords])
   const coordsSource = rawCoords ?? lastCoordsRef.current
+  const animalTrip = tripInvolvesAnimal(coordsSource)
   const displayStatus = mergeDriverPolledWithOverride(coordsSource?.status, statusOverride, 'accepted')
   const pickupCoords = useMemo(
     () =>
@@ -130,6 +139,8 @@ export function ActiveTripActions({
     setCancelPanelOpen(false)
     setCancelPreset('')
     setCancelOtherDetail('')
+    setAttendableCode('')
+    setAttendableDetail('')
   }, [tripId])
 
   const hasTripContext = Boolean(coordsSource)
@@ -405,40 +416,76 @@ export function ActiveTripActions({
           data-testid="driver-trip-cancel-panel"
         >
           <p className="text-sm font-medium text-foreground">{t('actions.cancelTitle')}</p>
-          <label className="block text-xs text-muted-foreground" htmlFor="driver-cancel-preset">
-            {t('actions.cancelQuick')}
-          </label>
-          <select
-            id="driver-cancel-preset"
-            data-testid="driver-cancel-preset"
-            className={`w-full min-h-[44px] ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 text-sm text-foreground`}
-            value={cancelPreset}
-            onChange={(e) => setCancelPreset(e.target.value)}
-            disabled={loading}
-          >
-            {cancelPresets.map((o) => (
-              <option key={o.value || 'none'} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {cancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
-            <textarea
-              data-testid="driver-cancel-other"
-              className={`w-full min-h-[72px] ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 py-2 text-sm text-foreground`}
-              placeholder={t('actions.cancelOtherPlaceholder')}
-              maxLength={280}
-              value={cancelOtherDetail}
-              onChange={(e) => setCancelOtherDetail(e.target.value)}
+          {animalTrip ? (
+            <AttendableReasonFields
+              code={attendableCode}
+              detail={attendableDetail}
+              onCodeChange={setAttendableCode}
+              onDetailChange={setAttendableDetail}
               disabled={loading}
+              selectTestId="driver-cancel-attendable-code"
+              detailTestId="driver-cancel-attendable-detail"
             />
-          ) : null}
+          ) : (
+            <>
+              <label className="block text-xs text-muted-foreground" htmlFor="driver-cancel-preset">
+                {t('actions.cancelQuick')}
+              </label>
+              <select
+                id="driver-cancel-preset"
+                data-testid="driver-cancel-preset"
+                className={`w-full min-h-[44px] ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 text-sm text-foreground`}
+                value={cancelPreset}
+                onChange={(e) => setCancelPreset(e.target.value)}
+                disabled={loading}
+              >
+                {cancelPresets.map((o) => (
+                  <option key={o.value || 'none'} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              {cancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
+                <textarea
+                  data-testid="driver-cancel-other"
+                  className={`w-full min-h-[72px] ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 py-2 text-sm text-foreground`}
+                  placeholder={t('actions.cancelOtherPlaceholder')}
+                  maxLength={280}
+                  value={cancelOtherDetail}
+                  onChange={(e) => setCancelOtherDetail(e.target.value)}
+                  disabled={loading}
+                />
+              ) : null}
+            </>
+          )}
           <div className="flex flex-col gap-2 sm:flex-row-reverse">
             <button
               type="button"
               data-testid="driver-trip-cancel-confirm"
               onClick={() => {
                 void (async () => {
+                  if (animalTrip) {
+                    const v = validateAttendableReasonInput(attendableCode, attendableDetail)
+                    if (!v.ok) {
+                      sonnerToast.error(tTrip(v.messageKey))
+                      return
+                    }
+                    const ok = await run(
+                      () =>
+                        driverPerformCancel(tripId, token, {
+                          reason_code: v.code,
+                          reason_detail: v.detail,
+                        }),
+                      t('actions.cancelTrip'),
+                      { skipStartGate: true, actionKey: 'cancelTrip' }
+                    )
+                    if (ok) {
+                      setCancelPanelOpen(false)
+                      setAttendableCode('')
+                      setAttendableDetail('')
+                    }
+                    return
+                  }
                   const reason = tripCancelReasonForApi(cancelPreset, cancelOtherDetail)
                   const ok = await run(
                     () => driverPerformCancel(tripId, token, reason),
@@ -464,6 +511,8 @@ export function ActiveTripActions({
                 setCancelPanelOpen(false)
                 setCancelPreset('')
                 setCancelOtherDetail('')
+                setAttendableCode('')
+                setAttendableDetail('')
               }}
               disabled={loading}
               className={`min-h-[44px] flex-1 ${BTN_SECONDARY}`}

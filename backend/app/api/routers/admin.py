@@ -1304,7 +1304,7 @@ async def get_trip_detail_admin(
 ) -> TripDetailResponse:
     """Full trip detail for admin (includes stripe_payment_intent_id). Read-only."""
     trip = get_trip_by_id(db=db, trip_id=trip_id.strip())
-    return trip_to_detail(trip, include_stripe_pi=True)
+    return trip_to_detail(trip, include_stripe_pi=True, include_cancellation_detail=True)
 
 
 @router.post("/trips/{trip_id}/transition", response_model=TripStatusResponse)
@@ -1444,7 +1444,9 @@ async def get_trip_debug(
     )
 
     return {
-        "trip": trip_to_detail(trip, include_stripe_pi=True).model_dump(),
+        "trip": trip_to_detail(
+            trip, include_stripe_pi=True, include_cancellation_detail=True
+        ).model_dump(),
         "payment": (
             {
                 "id": str(trip.payment.id),

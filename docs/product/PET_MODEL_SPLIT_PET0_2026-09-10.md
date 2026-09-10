@@ -1,7 +1,7 @@
 # PET — modelo e roadmap
 
 **Actualização:** 2026-09-10  
-**Estado:** **PET-0 → PET-5A.1** — **feature Pet NÃO concluída** globalmente (falta PET-5A.2+ / 5B / 5C)
+**Estado:** **PET-0 → PET-5A.2** — **feature Pet NÃO concluída** globalmente (falta PET-5B / PET-5C)
 
 ## Decisão de produto
 
@@ -23,54 +23,46 @@ Driver elegível para viagem com animal comum **ou** cão de assistência se:
 
 **Não** exige preferência Driver `pet`.
 
-`pet` preference: **retained as legacy/non-enforcing state** (API/coluna podem existir; UI leave-out; matching ignora).
+`pet` preference: **retained as legacy/non-enforcing state**.
 
-Legacy `vehicle_category=pet`: legível; matching como fare `x`; **sem** reescrita de histórico.
+## Motivo atendível (PET-5A.2)
 
-## Transporte / acondicionamento (PET-5A.1)
+Códigos canónicos (backend source of truth):
 
-- `carrier` e `harness` = meios de acondicionamento/segurança (não obrigação legal específica na copy)
-- Size + transport obrigatórios para animal comum
-- **large + carrier permitido** (removido bloqueio absoluto)
-- Copy neutra: animal deve viajar devidamente acondicionado e em segurança
+- `animal_safety_risk`
+- `animal_hygiene_issue`
+- `animal_health_concern`
+- `inadequate_accommodation`
+- `other_attendable_reason` (free text obrigatório, max 280, uso interno/audit)
 
-## Capacidade (PET-4) — inalterada em PET-5A.1
+### Pré-accept
+Viagens com animal / cão de assistência: reject formal **exige** `reason_code` (+ detail se other).  
+Viagens sem animal: reject legado sem body.
 
-```text
-occupied_pet_seats =
-  1 if pet_occupies_seat and (has_pet or is_assistance_animal)
-  0 otherwise
+### Pós-accept
+Cancel Driver com animal: `reason_code` obrigatório.  
+Cancel normal: presets legacy (`reason` string) mantidos.
 
-required_passenger_capacity = passenger_count + occupied_pet_seats
+### Visibilidade
+- **Passenger:** só label segura (nunca free text do Driver)
+- **Partner/Admin:** code + label + detail interno + `cancelled_by` + flag Pet / cão de assistência
+- Sem fotos/evidência / disputa nesta fase
 
-Vehicle elegível se max_passengers >= required_passenger_capacity
-```
+Campos: `trips.cancellation_reason_code`; `trip_offers.rejection_reason_code` + `rejection_reason_detail`; `cancellation_reason` guarda detail/legacy.
 
-- Gate: `ENABLE_VEHICLE_CAPACITY_GATES` (PROD: **ON** após rollout PET-4)
+## Capacidade (PET-4)
 
-## PET-0 → PET-4 — DONE
+Gate: `ENABLE_VEHICLE_CAPACITY_GATES` (PROD: **ON**)
 
-Fundação · surcharge · Passenger/Driver UX · matching Pet (pré-5A.1) · capacity + PROD rollout PASS
+## PET-0 → PET-5A.2 — DONE
 
-## PET-5A.1 — DONE (esta entrega)
-
-| Item | Estado |
-|------|--------|
-| Remover Pet opt-in do matching | DONE |
-| Driver toggle «Aceito viagens com animais» fora da UI | DONE |
-| `pet` preference legacy/non-enforcing | DONE |
-| Copy «Cão de assistência» / Assistance dog | DONE |
-| Remover bloqueio large+carrier | DONE |
-| Validação passenger sem porte×transporte absoluto | DONE |
-| Capacity / surcharge / Stripe | **não alterados** |
-| Motivo atendível de recusa/cancel | **PET-5A.2** (não nesta PR) |
+Fundação · surcharge · Passenger/Driver UX · matching · capacity · legal copy PET-5A.1 · motivos atendíveis PET-5A.2
 
 ## Etapas restantes
 
 | ID | Item | Notas |
 |----|------|-------|
-| PET-5A.2 | Fluxo recusa/cancel por motivo atendível (animal) | Discovery + reason codes |
-| PET-5B | Reporting Partner/Admin (campos Pet) | |
+| PET-5B | Reporting Partner/Admin Pet (CSV / listagens amplas) | audit mínimo já em 5A.2 |
 | PET-5C | E2E Playwright Pet/capacity | |
 | — | Taxa limpeza/danos | Fora do MVP |
 | — | Upload ID cão de assistência | Fora desta fase |

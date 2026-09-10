@@ -52,8 +52,15 @@ export async function driverPerformComplete(
 export async function driverPerformCancel(
   tripId: string,
   token: string,
-  reason?: string | null
+  opts?: {
+    reason?: string | null
+    reason_code?: string | null
+    reason_detail?: string | null
+  } | string | null
 ): Promise<TripStatusResponse> {
-  const r = reason?.trim()
-  return cancelTripByDriver(tripId, token, r ? { reason: r } : undefined)
+  if (opts == null || typeof opts === 'string') {
+    const r = typeof opts === 'string' ? opts.trim() : ''
+    return cancelTripByDriver(tripId, token, r ? { reason: r } : undefined)
+  }
+  return cancelTripByDriver(tripId, token, opts)
 }

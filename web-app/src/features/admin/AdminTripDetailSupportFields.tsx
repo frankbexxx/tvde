@@ -46,6 +46,17 @@ export function AdminTripDetailSupportFields(props: AdminTripDetailSupportFields
       />
       {cancelledBy ? <DetailRow label="Cancelado por:" value={cancelledBy} /> : null}
       <CancellationReasonMuted reason={d.cancellation_reason} className="text-xs" />
+      {typeof d.cancellation_reason_code === 'string' && d.cancellation_reason_code ? (
+        <DetailRow label="Código motivo:" value={d.cancellation_reason_code} />
+      ) : null}
+      {typeof d.cancellation_reason_detail === 'string' && d.cancellation_reason_detail.trim() ? (
+        <DetailRow label="Detalhe interno:" value={d.cancellation_reason_detail.trim()} />
+      ) : null}
+      {d.is_assistance_animal ? (
+        <DetailRow label="Animal:" value="Cão de assistência" />
+      ) : d.has_pet ? (
+        <DetailRow label="Animal:" value="Animal de companhia" />
+      ) : null}
       <div className="grid gap-1 rounded-lg border border-border/60 bg-muted/20 p-2">
         <p className="text-[11px] font-semibold text-foreground/90">Timestamps</p>
         <DetailRow label="Criada:" value={formatAdminTripTimestamp(d.created_at) ?? '—'} />

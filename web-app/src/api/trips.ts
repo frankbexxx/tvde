@@ -103,6 +103,7 @@ export interface TripHistoryItem {
   driver_payout?: number
   /** Preenchido quando a viagem foi cancelada e há motivo registado. */
   cancellation_reason?: string | null
+  cancellation_reason_code?: string | null
 }
 
 /** Snapshot from GET /trips/:id (accepted | arriving | ongoing) or GET …/driver-location. */
@@ -138,6 +139,9 @@ export interface TripDetailResponse {
   /** Motorista avaliou o passageiro (1–5); só após conclusão. */
   passenger_rating?: number | null
   cancellation_reason?: string | null
+  cancellation_reason_code?: string | null
+  cancellation_reason_detail?: string | null
+  cancelled_by?: string | null
   /** Quando o backend expõe confirmação Stripe (ENABLE_CONFIRM_ON_ACCEPT). */
   payment_intent_client_secret?: string | null
   vehicle_category?: string | null
@@ -291,11 +295,18 @@ export async function acceptTrip(tripId: string, token: string): Promise<TripSta
 
 export async function rejectDriverOffer(
   offerId: string,
-  token: string
+  token: string,
+  opts?: { reason_code?: string | null; reason_detail?: string | null }
 ): Promise<{ status: string }> {
+  const reason_code = opts?.reason_code?.trim()
+  const reason_detail = opts?.reason_detail?.trim()
+  const body: Record<string, string> = {}
+  if (reason_code) body.reason_code = reason_code
+  if (reason_detail) body.reason_detail = reason_detail.slice(0, 280)
   return apiFetch<{ status: string }>(`/driver/offers/${offerId}/reject`, {
     method: 'POST',
     token,
+    body: Object.keys(body).length ? JSON.stringify(body) : undefined,
   })
 }
 
@@ -368,10 +379,19 @@ export async function runTimeoutsAdmin(
 export async function cancelTripByDriver(
   tripId: string,
   token: string,
-  opts?: { reason?: string | null }
+  opts?: {
+    reason?: string | null
+    reason_code?: string | null
+    reason_detail?: string | null
+  }
 ): Promise<TripStatusResponse> {
+  const body: Record<string, string> = {}
   const reason = opts?.reason?.trim()
-  const body = reason ? { reason: reason.slice(0, 280) } : {}
+  const reason_code = opts?.reason_code?.trim()
+  const reason_detail = opts?.reason_detail?.trim()
+  if (reason) body.reason = reason.slice(0, 280)
+  if (reason_code) body.reason_code = reason_code
+  if (reason_detail) body.reason_detail = reason_detail.slice(0, 280)
   return apiFetch<TripStatusResponse>(`/driver/trips/${tripId}/cancel`, {
     method: 'POST',
     body: JSON.stringify(body),

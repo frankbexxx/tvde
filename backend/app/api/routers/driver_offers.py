@@ -2,12 +2,12 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_db, require_role
 from app.models.enums import Role
-from app.schemas.trip import TripOfferItem, TripStatusResponse
+from app.schemas.trip import OfferRejectRequest, TripOfferItem, TripStatusResponse
 from app.services.trips import (
     accept_offer as accept_offer_service,
     list_offers_for_driver,
@@ -64,13 +64,16 @@ async def accept_offer(
 @router.post("/{offer_id}/reject", status_code=200)
 async def reject_offer(
     offer_id: str,
+    payload: OfferRejectRequest | None = Body(None),
     user: UserContext = Depends(require_role(Role.driver)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """Reject an offer."""
+    """Reject an offer. Pet/assistance require structured reason (PET-5A.2)."""
     reject_offer_service(
         db=db,
         driver_id=user.user_id,
         offer_id=offer_id.strip(),
+        reason_code=payload.reason_code if payload else None,
+        reason_detail=payload.reason_detail if payload else None,
     )
     return {"status": "rejected"}

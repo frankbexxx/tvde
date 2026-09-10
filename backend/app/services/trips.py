@@ -415,7 +415,14 @@ def cancel_trip_by_driver(
     driver_id: str,
     trip_id: str,
     reason: str | None = None,
+    reason_code: str | None = None,
+    reason_detail: str | None = None,
 ) -> Trip:
+    from app.services.attendable_reasons import (
+        trip_involves_animal,
+        validate_attendable_reason,
+    )
+
     trip = db.execute(
         select(Trip)
         .where(Trip.id == trip_id)
@@ -437,7 +444,29 @@ def cancel_trip_by_driver(
     old_status = trip.status
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
 
-    trip.cancellation_reason = (reason or "").strip() or None
+    animal = trip_involves_animal(trip)
+    if animal:
+        code, detail = validate_attendable_reason(
+            reason_code=reason_code,
+            reason_detail=reason_detail if reason_detail is not None else reason,
+            required=True,
+        )
+        trip.cancellation_reason_code = code
+        trip.cancellation_reason = detail
+    else:
+        # Legacy / non-animal: keep free-text ``reason``; optional structured fields.
+        if reason_code:
+            code, detail = validate_attendable_reason(
+                reason_code=reason_code,
+                reason_detail=reason_detail if reason_detail is not None else reason,
+                required=False,
+            )
+            trip.cancellation_reason_code = code
+            trip.cancellation_reason = detail or ((reason or "").strip() or None)
+        else:
+            trip.cancellation_reason_code = None
+            trip.cancellation_reason = (reason or "").strip() or None
+
     trip.cancelled_by = "driver"
 
     # Driver penalty: increment cancellation_count
@@ -479,6 +508,11 @@ def cancel_trip_by_driver(
         to_status=trip.status.value,
         payment_id=str(_pc_d.id) if _pc_d else None,
         payment_intent_id=(_pc_d.stripe_payment_intent_id or "") if _pc_d else "",
+        reason_code=getattr(trip, "cancellation_reason_code", None),
+        reason_detail=trip.cancellation_reason,
+        has_pet=bool(getattr(trip, "has_pet", False)),
+        is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
+        cancelled_by="driver",
         **{"from": old_status.value, "to": trip.status.value},
     )
     emit(
@@ -1075,12 +1109,21 @@ def reject_offer(
     db: Session,
     driver_id: str,
     offer_id: str,
+    reason_code: str | None = None,
+    reason_detail: str | None = None,
 ) -> TripOffer:
     """Reject an offer.
 
     Locks offer then trip (same order as accept_offer) so a concurrent accept
     cannot leave the winning offer as rejected after the trip is assigned.
+
+    PET-5A.2: pet / assistance trips require a structured attendable reason.
     """
+    from app.services.attendable_reasons import (
+        trip_involves_animal,
+        validate_attendable_reason,
+    )
+
     offer = db.execute(
         select(TripOffer).where(TripOffer.id == offer_id).with_for_update()
     ).scalar_one_or_none()
@@ -1110,9 +1153,28 @@ def reject_offer(
             detail="offer_already_taken",
         )
 
+    animal = trip_involves_animal(trip)
+    code, detail = validate_attendable_reason(
+        reason_code=reason_code,
+        reason_detail=reason_detail,
+        required=animal,
+    )
+
     offer.status = OfferStatus.rejected
+    offer.rejection_reason_code = code
+    offer.rejection_reason_detail = detail
     db.commit()
     db.refresh(offer)
+    log_event(
+        "offer_rejected",
+        offer_id=str(offer.id),
+        trip_id=str(trip.id),
+        driver_id=str(driver_id),
+        reason_code=code,
+        reason_detail=detail,
+        has_pet=bool(getattr(trip, "has_pet", False)),
+        is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
+    )
     return offer
 
 

@@ -27,6 +27,11 @@ import type {
   TripStatus,
 } from '../../api/trips'
 import { isTimeoutLikeError, withColdStartRetries } from '../../api/client'
+import { resolveApiErrorDetail } from '../../i18n/apiErrors'
+import {
+  tripInvolvesAnimal,
+  validateAttendableReasonInput,
+} from '../../constants/attendableReasons'
 import {
   createDriverZoneSession,
   deleteDriverZoneCustomZone,
@@ -86,6 +91,7 @@ import { Toggle } from '../../components/ui/Toggle'
 import { RequestCard } from '../../components/cards/RequestCard'
 import { TripCard } from '../../components/cards/TripCard'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
+import { AttendableReasonFields } from '../../components/trips/AttendableReasonFields'
 import { ComplaintReportForm } from '../complaints/ComplaintReportForm'
 import { uploadDriverDocument, fetchDriverMessages } from '../../api/driverMessages'
 import { ActiveTripActions } from './ActiveTripActions'
@@ -505,6 +511,11 @@ export function DriverDashboard() {
     setSelectedOfferTripId((prev) => (prev === tripId ? null : prev))
   }, [])
   const [rejectLoadingOfferId, setRejectLoadingOfferId] = useState<string | null>(null)
+  const [rejectReasonPanel, setRejectReasonPanel] = useState<{ offerId: string; tripId: string } | null>(
+    null,
+  )
+  const [rejectReasonCode, setRejectReasonCode] = useState('')
+  const [rejectReasonDetail, setRejectReasonDetail] = useState('')
   const restoreSilencedOffer = useCallback((tripId: string) => {
     clearDismissedOfferTripId(tripId)
     setDismissedOfferTripIds(readDismissedOfferTripIds())
@@ -653,15 +664,22 @@ export function DriverDashboard() {
     4000
   )
   const handleRejectOffer = useCallback(
-    async (offerId: string, tripId: string) => {
+    async (
+      offerId: string,
+      tripId: string,
+      reason?: { reason_code?: string | null; reason_detail?: string | null },
+    ) => {
       if (!token) return
       if (actionLoading != null || rejectLoadingOfferId != null) return
       setError(null)
       setRejectLoadingOfferId(tripId)
       addLog('Clique: RECUSAR oferta', 'action')
       try {
-        await rejectDriverOffer(offerId, token)
+        await rejectDriverOffer(offerId, token, reason)
         setSelectedOfferTripId((prev) => (prev === tripId ? null : prev))
+        setRejectReasonPanel(null)
+        setRejectReasonCode('')
+        setRejectReasonDetail('')
         sonnerToast.success(tTrip('requestCard.rejectSuccess'))
         addLog('Oferta recusada', 'success')
         await refetchAvailable()
@@ -670,7 +688,7 @@ export function DriverDashboard() {
         const msg =
           isTimeoutLikeError(err) || e?.status === 0
             ? 'Sem ligação ou o pedido demorou demasiado. Verifica a rede e tenta de novo.'
-            : tTrip('requestCard.rejectError')
+            : resolveApiErrorDetail(e?.detail) || tTrip('requestCard.rejectError')
         sonnerToast.error(msg)
         setError(msg)
         addLog(`Erro RECUSAR: ${String(e?.detail ?? msg)}`, 'error')
@@ -682,6 +700,19 @@ export function DriverDashboard() {
       }
     },
     [token, actionLoading, rejectLoadingOfferId, addLog, refetchAvailable, tTrip]
+  )
+
+  const beginRejectOffer = useCallback(
+    (offerId: string, tripId: string, trip: { has_pet?: boolean; is_assistance_animal?: boolean; vehicle_category?: string | null }) => {
+      if (tripInvolvesAnimal(trip)) {
+        setRejectReasonPanel({ offerId, tripId })
+        setRejectReasonCode('')
+        setRejectReasonDetail('')
+        return
+      }
+      void handleRejectOffer(offerId, tripId)
+    },
+    [handleRejectOffer],
   )
   const { data: history, refetch: refetchHistory, pollFault: historyPollFault } = usePolling(
     () => getDriverTripHistory(token!),
@@ -1833,7 +1864,7 @@ export function DriverDashboard() {
                               rejectButtonTestId={`driver-reject-${t.trip_id}`}
                               onReject={
                                 t.offer_id
-                                  ? () => void handleRejectOffer(t.offer_id!, t.trip_id)
+                                  ? () => beginRejectOffer(t.offer_id!, t.trip_id, t)
                                   : undefined
                               }
                               rejectLoading={rejectLoadingOfferId === t.trip_id}
@@ -2188,9 +2219,10 @@ export function DriverDashboard() {
                             onReject={
                               selectedAvailableTrip.offer_id
                                 ? () =>
-                                  void handleRejectOffer(
+                                  beginRejectOffer(
                                     selectedAvailableTrip.offer_id!,
-                                    selectedAvailableTrip.trip_id
+                                    selectedAvailableTrip.trip_id,
+                                    selectedAvailableTrip,
                                   )
                                 : undefined
                             }
@@ -2540,7 +2572,7 @@ export function DriverDashboard() {
                                 rejectButtonTestId={`driver-reject-${t.trip_id}`}
                                 onReject={
                                   t.offer_id
-                                    ? () => void handleRejectOffer(t.offer_id!, t.trip_id)
+                                    ? () => beginRejectOffer(t.offer_id!, t.trip_id, t)
                                     : undefined
                                 }
                                 rejectLoading={rejectLoadingOfferId === t.trip_id}
@@ -2645,6 +2677,71 @@ export function DriverDashboard() {
           />
         ) : null}
       </ScreenContainer>
+
+      <Dialog
+        open={Boolean(rejectReasonPanel)}
+        onOpenChange={(next) => {
+          if (!next) {
+            setRejectReasonPanel(null)
+            setRejectReasonCode('')
+            setRejectReasonDetail('')
+          }
+        }}
+      >
+        <DialogContent
+          data-testid="driver-reject-attendable-panel"
+          overlayClassName="z-[70]"
+          className="z-[70] max-w-[min(100vw-1.5rem,420px)]"
+        >
+          <DialogHeader>
+            <DialogTitle>{tTrip('attendableReasons.rejectTitle')}</DialogTitle>
+            <DialogDescription>{tTrip('attendableReasons.title')}</DialogDescription>
+          </DialogHeader>
+          <AttendableReasonFields
+            code={rejectReasonCode}
+            detail={rejectReasonDetail}
+            onCodeChange={setRejectReasonCode}
+            onDetailChange={setRejectReasonDetail}
+            disabled={rejectLoadingOfferId != null}
+            selectTestId="driver-reject-reason-code"
+            detailTestId="driver-reject-reason-detail"
+          />
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row-reverse">
+            <Button
+              type="button"
+              data-testid="driver-reject-reason-confirm"
+              disabled={rejectLoadingOfferId != null}
+              onClick={() => {
+                if (!rejectReasonPanel) return
+                const v = validateAttendableReasonInput(rejectReasonCode, rejectReasonDetail)
+                if (!v.ok) {
+                  sonnerToast.error(tTrip(v.messageKey))
+                  return
+                }
+                void handleRejectOffer(rejectReasonPanel.offerId, rejectReasonPanel.tripId, {
+                  reason_code: v.code,
+                  reason_detail: v.detail,
+                })
+              }}
+            >
+              {tTrip('attendableReasons.rejectConfirm')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              data-testid="driver-reject-reason-back"
+              disabled={rejectLoadingOfferId != null}
+              onClick={() => {
+                setRejectReasonPanel(null)
+                setRejectReasonCode('')
+                setRejectReasonDetail('')
+              }}
+            >
+              {tTrip('attendableReasons.rejectCancel')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -2802,19 +2899,19 @@ function ActiveTripSummary({
         <>
           <DriverPetTripInfo trip={effectiveTrip} className="justify-center" />
           <TripCard
-          pickup={formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)}
-          destination={formatDestination(
-            effectiveTrip.destination_lat,
-            effectiveTrip.destination_lng
-          )}
-          price={effectiveTrip.final_price ?? effectiveTrip.estimated_price ?? 0}
-          estimateFallback="4–6"
-          priceCaption={
-            displayStatus === 'completed' && effectiveTrip.final_price != null
-              ? t('opsMenu.historyMoney.finalPrice')
-              : t('opsMenu.historyMoney.estimate')
-          }
-        />
+            pickup={formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)}
+            destination={formatDestination(
+              effectiveTrip.destination_lat,
+              effectiveTrip.destination_lng
+            )}
+            price={effectiveTrip.final_price ?? effectiveTrip.estimated_price ?? 0}
+            estimateFallback="4–6"
+            priceCaption={
+              displayStatus === 'completed' && effectiveTrip.final_price != null
+                ? t('opsMenu.historyMoney.finalPrice')
+                : t('opsMenu.historyMoney.estimate')
+            }
+          />
         </>
       ) : effectiveTrip && compact ? (
         <div className="space-y-1">

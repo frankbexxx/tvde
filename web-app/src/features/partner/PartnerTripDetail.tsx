@@ -269,10 +269,41 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
             {t('tripDetail.openMap')}
           </a>
         </div>
-        {trip.cancel_reason ? (
-          <p>
-            <span className="text-muted-foreground">{t('tripDetail.cancelReason')}</span>{' '}
-            <span className="text-foreground">{trip.cancel_reason}</span>
+        {trip.cancel_reason || trip.cancel_reason_code || trip.cancel_reason_detail ? (
+          <div className="space-y-1" data-testid="partner-trip-cancel-audit">
+            {trip.cancel_reason ? (
+              <p>
+                <span className="text-muted-foreground">{t('tripDetail.cancelReason')}</span>{' '}
+                <span className="text-foreground">{trip.cancel_reason}</span>
+              </p>
+            ) : null}
+            {trip.cancel_reason_code ? (
+              <p className="text-xs text-muted-foreground">
+                code: <span className="text-foreground font-mono">{trip.cancel_reason_code}</span>
+              </p>
+            ) : null}
+            {trip.cancel_reason_detail ? (
+              <p className="text-xs">
+                <span className="text-muted-foreground">{t('tripDetail.cancelDetail')}</span>{' '}
+                <span className="text-foreground">{trip.cancel_reason_detail}</span>
+              </p>
+            ) : null}
+            {trip.cancelled_by ? (
+              <p className="text-xs text-muted-foreground">
+                {t('tripDetail.cancelledBy')}:{' '}
+                <span className="text-foreground">{trip.cancelled_by}</span>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+        {(trip.has_pet || trip.is_assistance_animal) ? (
+          <p className="text-xs" data-testid="partner-trip-animal-flag">
+            <span className="text-muted-foreground">{t('tripDetail.animal')}</span>{' '}
+            <span className="text-foreground">
+              {trip.is_assistance_animal
+                ? t('tripDetail.assistanceDog')
+                : t('tripDetail.companionAnimal')}
+            </span>
           </p>
         ) : null}
         <hr className="border-border" />

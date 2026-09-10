@@ -114,6 +114,12 @@ export interface PartnerTripRow {
   estimated_price: number
   final_price?: number | null
   cancel_reason?: string | null
+  cancel_reason_code?: string | null
+  cancel_reason_label?: string | null
+  cancel_reason_detail?: string | null
+  cancelled_by?: string | null
+  has_pet?: boolean
+  is_assistance_animal?: boolean
   created_at: string
   started_at: string | null
   completed_at: string | null

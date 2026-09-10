@@ -78,7 +78,26 @@ class TripCreateResponse(BaseModel):
 
 
 class TripCancelRequest(BaseModel):
+    """Cancel body. Legacy ``reason`` kept; PET-5A.2 adds structured codes."""
+
     reason: Optional[str] = Field(None, max_length=280)
+    reason_code: Optional[str] = Field(
+        None,
+        max_length=64,
+        description="Structured attendable/cancel reason code (PET-5A.2).",
+    )
+    reason_detail: Optional[str] = Field(
+        None,
+        max_length=280,
+        description="Internal free text; required for other_attendable_reason.",
+    )
+
+
+class OfferRejectRequest(BaseModel):
+    """Reject offer body. Required for pet/assistance trips (PET-5A.2)."""
+
+    reason_code: Optional[str] = Field(None, max_length=64)
+    reason_detail: Optional[str] = Field(None, max_length=280)
 
 
 class TripRateRequest(BaseModel):
@@ -169,7 +188,14 @@ class TripHistoryItem(BaseModel):
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
     cancellation_reason: Optional[str] = Field(
         default=None,
-        description="Motivo registado quando a viagem foi cancelada (passageiro, motorista ou admin).",
+        description=(
+            "Passenger-safe label when code present; else legacy free text. "
+            "Never exposes driver free-text detail when structured code is set."
+        ),
+    )
+    cancellation_reason_code: Optional[str] = Field(
+        default=None,
+        description="Structured cancel reason code (PET-5A.2).",
     )
 
 
@@ -214,7 +240,18 @@ class TripDetailResponse(BaseModel):
     )
     cancellation_reason: Optional[str] = Field(
         default=None,
-        description="Motivo registado quando a viagem foi cancelada (passageiro, motorista ou admin).",
+        description=(
+            "Passenger-safe label when structured code present; "
+            "legacy free text otherwise. Admin/Partner may also receive detail fields."
+        ),
+    )
+    cancellation_reason_code: Optional[str] = Field(
+        default=None,
+        description="Structured cancel reason code (PET-5A.2).",
+    )
+    cancellation_reason_detail: Optional[str] = Field(
+        default=None,
+        description="Internal free text (Partner/Admin audit). Never for Passenger.",
     )
     cancelled_by: Optional[str] = Field(
         default=None,

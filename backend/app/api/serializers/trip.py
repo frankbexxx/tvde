@@ -8,12 +8,34 @@ from app.models.enums import PaymentStatus
 from app.services.stripe_service import retrieve_payment_intent
 from app.utils.stripe_links import stripe_payment_intent_dashboard_url
 from app.schemas.driver import DriverLocationResponse
+from app.services.attendable_reasons import passenger_safe_label
 from app.schemas.trip import (
     PriceBreakdownSchema,
     TripDetailResponse,
     TripHistoryItem,
     TripStatusResponse,
 )
+
+
+def _passenger_visible_cancellation_reason(trip: Trip) -> str | None:
+    """Never expose driver free-text detail when a structured code is present."""
+    code = getattr(trip, "cancellation_reason_code", None)
+    if code:
+        return passenger_safe_label(code) or code
+    return trip.cancellation_reason
+
+
+def _cancellation_reason_code(trip: Trip) -> str | None:
+    return getattr(trip, "cancellation_reason_code", None) or None
+
+
+def _cancellation_reason_detail_for_ops(trip: Trip) -> str | None:
+    """Internal detail for Partner/Admin when structured cancel was used."""
+    code = _cancellation_reason_code(trip)
+    if not code:
+        return None
+    detail = (trip.cancellation_reason or "").strip() or None
+    return detail
 
 
 def _price_breakdown_schema(trip: Trip) -> PriceBreakdownSchema | None:
@@ -82,7 +104,8 @@ def trip_to_history_item(
         stripe_payment_intent_id=payment.stripe_payment_intent_id
         if payment and include_stripe_pi
         else None,
-        cancellation_reason=trip.cancellation_reason,
+        cancellation_reason=_passenger_visible_cancellation_reason(trip),
+        cancellation_reason_code=_cancellation_reason_code(trip),
     )
 
 
@@ -91,6 +114,7 @@ def trip_to_detail(
     include_stripe_pi: bool = False,
     driver_location: DriverLocationResponse | None = None,
     include_passenger_payment_client_secret: bool = False,
+    include_cancellation_detail: bool = False,
 ) -> TripDetailResponse:
     payment = trip.payment
     client_secret = (
@@ -133,7 +157,17 @@ def trip_to_detail(
         driver_location=driver_location,
         driver_rating=trip.driver_rating,
         passenger_rating=trip.passenger_rating,
-        cancellation_reason=trip.cancellation_reason,
+        cancellation_reason=(
+            trip.cancellation_reason
+            if include_cancellation_detail and not _cancellation_reason_code(trip)
+            else _passenger_visible_cancellation_reason(trip)
+        ),
+        cancellation_reason_code=_cancellation_reason_code(trip),
+        cancellation_reason_detail=(
+            _cancellation_reason_detail_for_ops(trip)
+            if include_cancellation_detail
+            else None
+        ),
         cancelled_by=trip.cancelled_by,
         payment_intent_client_secret=client_secret,
         vehicle_category=trip.vehicle_category,

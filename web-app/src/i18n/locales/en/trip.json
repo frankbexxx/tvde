@@ -44,6 +44,22 @@
     "mistake": "Requested by mistake",
     "other": "Other…"
   },
+  "attendableReasons": {
+    "title": "Attendable reason",
+    "none": "Select a reason…",
+    "animal_safety_risk": "Safety risk",
+    "animal_hygiene_issue": "Hygiene issue",
+    "animal_health_concern": "Animal health concern",
+    "inadequate_accommodation": "Inadequate accommodation",
+    "other_attendable_reason": "Other attendable reason",
+    "detailPlaceholder": "Describe the reason (required, max 280)",
+    "errCodeRequired": "Select an attendable reason.",
+    "errDetailRequired": "Provide reason details.",
+    "errDetailTooLong": "Details cannot exceed 280 characters.",
+    "rejectTitle": "Decline offer with animal",
+    "rejectConfirm": "Confirm decline",
+    "rejectCancel": "Back"
+  },
   "cancelOtherApi": "Other",
   "stateLine": "Status: {{status}}",
   "paymentLine": "Payment: {{status}}",
