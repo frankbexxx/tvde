@@ -1,47 +1,50 @@
-# PET — modelo e roadmap (PET-0)
+# PET — modelo e roadmap
 
-**Data:** 2026-09-10  
-**Estado:** **PET-0 implementado** (fundação estrutural) — **feature Pet NÃO concluída**
+**Actualização:** 2026-09-10  
+**Estado:** **PET-0 + PET-1** (fundação + surcharge/breakdown) — **feature Pet NÃO concluída**
 
 ## Decisão de produto
 
-- Pricing por categoria desde o lançamento: **GO** (`x`) · **Comfort** · **XL**
+- Pricing por categoria desde o lançamento: **GO** (`x`) · **Comfort** · **XL** *(tarifário por categoria = A2.5 / ainda não no código)*
 - **Pet não é categoria tarifária principal**
-- Pet é **atributo adicional** da viagem → `GO+Pet` / `Comfort+Pet` / `XL+Pet` devem ser possíveis
-- Surcharge Pet normal: **€1,50** (aplicação em **PET-1**)
-- Animal de assistência: **€0** surcharge; **sem** exigir opt-in Pet do Driver
+- Pet é **atributo adicional** → `GO+Pet` / `Comfort+Pet` / `XL+Pet`
+- Surcharge Pet normal: **€1,50** flat / viagem
+- Animal de assistência: **€0** surcharge; **sem** opt-in Pet do Driver
+- Comissão piloto **15%** calcula-se sobre o **total** (fare + Pet surcharge) — política actual
 
-## PET-0 (esta entrega)
+## PET-0 — DONE
+
+Separação fare category vs atributos Pet · matching combinado · legacy `vehicle_category=pet` · migration `a9b0c1d2e3f4`
+
+## PET-1 — DONE (esta entrega)
 
 | Item | Estado |
 |------|--------|
-| Separar fare category de atributos Pet | DONE |
-| Colunas Trip `has_pet`, `pet_size`, `pet_transport`, `is_assistance_animal`, `pet_occupies_seat` | DONE |
-| Create normaliza `vehicle_category=pet` → `x` + `has_pet` | DONE |
-| Matching combinado fare + Pet opt-in | DONE |
-| Assistance sem opt-in Pet | DONE |
-| Legacy `vehicle_category=pet` legível sem rewrite | DONE |
-| Surcharge / pricing breakdown | **não** (PET-1) |
+| Surcharge €1,50 / assistência €0 | DONE |
+| Breakdown explícito (base/km/min/pet/tolls/total) | DONE |
+| Snapshot `pet_surcharge_amount` + `pet_surcharge_rule` + `price_breakdown` | DONE |
+| `estimated_price` / `final_price` incluem surcharge | DONE |
+| Comissão sobre total (incl. surcharge) | DONE |
+| Legacy sem snapshot → surcharge 0 (sem retroactivo) | DONE |
+| Portagens / minimum fare por categoria | placeholder 0 / futuro |
 | Passenger / Driver UX | **não** (PET-2 / PET-3) |
-| Capacity enforcement | **não** (PET-4) |
-
-### Legacy
-
-- Histórico com `vehicle_category='pet'` **não** é reescrito
-- Matching legacy: Driver com preferência `pet` continua a servir essas trips
-- Novas trips **não** persistem `vehicle_category='pet'`
 
 ### Código canónico
 
-- `backend/app/services/pet_trip.py`
-- Migration `a9b0c1d2e3f4_trip_pet_attributes`
+- `backend/app/core/pricing.py` — `calculate_fare_breakdown` / `calculate_pet_surcharge`
+- `backend/app/services/pet_trip.py` — `pet_surcharge_for_trip`
+- Migration `b0c1d2e3f4a5_trip_pet_surcharge_snapshot`
+
+### Regra
+
+```text
+pet_surcharge = 0 if assistance else (1.50 if has_pet else 0)
+total = fare_subtotal + pet_surcharge + tolls(0)
+```
 
 ## Etapas restantes
 
-1. **PET-1** — surcharge €1,50 + assistance 0 + breakdown/snapshot pricing  
-2. **PET-2** — Passenger UX (categoria, Pet, porte, transporte, assistance, regras, estimate)  
-3. **PET-3** — Driver UX (offer/active + detalhes Pet)  
-4. **PET-4** — capacity (`passenger_count`, seats, `pet_occupies_seat`)  
-5. **PET-5** — copy legal, Partner/Admin reporting, E2E  
-
-Validação rigorosa “grande exige arnês” no create quando size+transport estão presentes (PET-0); UX completa e bloqueio de pedido sem transporte adequado → PET-2.
+2. **PET-2** — Passenger UX  
+3. **PET-3** — Driver UX  
+4. **PET-4** — capacity  
+5. **PET-5** — legal/copy/reporting/E2E  

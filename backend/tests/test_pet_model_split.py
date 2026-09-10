@@ -60,7 +60,9 @@ def _driver(db: Session, *, categories: str) -> Driver:
 
 
 def test_pet_surcharge_placeholder_constant() -> None:
-    assert PET_SURCHARGE_EUR == 1.50
+    from decimal import Decimal
+
+    assert PET_SURCHARGE_EUR == Decimal("1.50")
 
 
 def test_resolve_default_go_no_pet() -> None:

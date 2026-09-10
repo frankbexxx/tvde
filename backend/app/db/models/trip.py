@@ -16,7 +16,7 @@ from sqlalchemy import (
     String,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -138,6 +138,21 @@ class Trip(Base):
         default=False,
         server_default="false",
         comment="Pet occupies seat/space hint (capacity enforcement later).",
+    )
+    pet_surcharge_amount: Mapped[Optional[float]] = mapped_column(
+        Numeric(10, 2),
+        nullable=True,
+        comment="Snapshotted Pet surcharge EUR (NULL = pre-PET-1).",
+    )
+    pet_surcharge_rule: Mapped[Optional[str]] = mapped_column(
+        String(32),
+        nullable=True,
+        comment="Pet surcharge rule id (e.g. pet_surcharge_v1).",
+    )
+    price_breakdown: Mapped[Optional[dict]] = mapped_column(
+        JSONB,
+        nullable=True,
+        comment="Price breakdown snapshot (base/km/min/pet/tolls/total).",
     )
     distance_km: Mapped[Optional[float]] = mapped_column(
         Numeric(8, 2),
