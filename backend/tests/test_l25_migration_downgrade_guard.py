@@ -59,11 +59,14 @@ def test_downgrade_blocked_when_external_complaint_without_user(
     engine = create_engine(local_db_url)
     SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-    command.upgrade(cfg, REV_L25)
+    # Suite session may already be at head (past L-25). Park on REV_L25 explicitly.
+    command.upgrade(cfg, "head")
+    command.downgrade(cfg, REV_L25)
     assert _current_revision(engine) == REV_L25
 
     db: Session = SessionLocal()
     created_id: uuid.UUID | None = None
+    admin_id: uuid.UUID | None = None
     try:
         # Isolate: remove any prior null-user rows so the probe is the blocker.
         db.execute(
@@ -78,12 +81,13 @@ def test_downgrade_blocked_when_external_complaint_without_user(
         admin = User(
             role=Role.admin,
             name=f"MigAdm {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=f"+3519{uuid.uuid4().hex[:10]}",
             status=UserStatus.active,
         )
         db.add(admin)
         db.commit()
         db.refresh(admin)
+        admin_id = admin.id
 
         complaint = complaints_svc.create_external_complaint(
             db,
@@ -126,6 +130,9 @@ def test_downgrade_blocked_when_external_complaint_without_user(
                 {"id": str(created_id)},
             )
             db.commit()
+        if admin_id is not None:
+            db.execute(text("DELETE FROM users WHERE id = :id"), {"id": str(admin_id)})
+            db.commit()
         db.close()
 
     # Clean path: downgrade/upgrade still works with no null-user rows
@@ -133,3 +140,5 @@ def test_downgrade_blocked_when_external_complaint_without_user(
     assert _current_revision(engine) == REV_L12
     command.upgrade(cfg, REV_L25)
     assert _current_revision(engine) == REV_L25
+    # Restore suite head (PET-0+); leaving at L-25 would break later model tests.
+    command.upgrade(cfg, "head")

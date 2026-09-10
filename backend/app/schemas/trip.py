@@ -14,7 +14,30 @@ class TripCreateRequest(BaseModel):
     destination_lng: float = Field(..., ge=-180.0, le=180.0)
     vehicle_category: Optional[str] = Field(
         default=None,
-        description="Requested vehicle category (x, xl, pet, comfort, black, electric, van).",
+        description=(
+            "Fare category (x=GO, xl, comfort, …). "
+            "Legacy value 'pet' is accepted and normalized to x + has_pet=true."
+        ),
+    )
+    has_pet: bool = Field(
+        default=False,
+        description="Normal Pet attribute (PET-0). Defaults false — old clients unchanged.",
+    )
+    pet_size: Optional[str] = Field(
+        default=None,
+        description="small | medium | large (optional until Passenger UX).",
+    )
+    pet_transport: Optional[str] = Field(
+        default=None,
+        description="carrier | harness (optional until Passenger UX).",
+    )
+    is_assistance_animal: bool = Field(
+        default=False,
+        description="Assistance animal (not Pet product; no Pet driver opt-in).",
+    )
+    pet_occupies_seat: bool = Field(
+        default=False,
+        description="Hint that Pet occupies a seat/space (capacity later).",
     )
 
 
@@ -68,6 +91,11 @@ class TripAvailableItem(BaseModel):
     estimated_price: float
     vehicle_category: Optional[str] = None
     vehicle_categories: Optional[list[str]] = None
+    has_pet: bool = False
+    pet_size: Optional[str] = None
+    pet_transport: Optional[str] = None
+    is_assistance_animal: bool = False
+    pet_occupies_seat: bool = False
     offer_id: Optional[str] = None  # When from multi-offer dispatch
     expires_at: Optional[str] = None  # ISO8601 when from multi-offer dispatch
 
@@ -170,3 +198,12 @@ class TripDetailResponse(BaseModel):
         default=None,
         description="Secret para Stripe.js (só GET /trips/:id como passageiro, com ENABLE_CONFIRM_ON_ACCEPT).",
     )
+    vehicle_category: Optional[str] = Field(
+        default=None,
+        description="Fare category (x=GO, …). Legacy may still show pet.",
+    )
+    has_pet: bool = False
+    pet_size: Optional[str] = None
+    pet_transport: Optional[str] = None
+    is_assistance_animal: bool = False
+    pet_occupies_seat: bool = False

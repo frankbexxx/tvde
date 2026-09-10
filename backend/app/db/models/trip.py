@@ -5,7 +5,17 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, Integer, Numeric, String, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -93,7 +103,41 @@ class Trip(Base):
     vehicle_category: Mapped[Optional[str]] = mapped_column(
         String(24),
         nullable=True,
-        comment="Requested vehicle category (x, xl, pet, comfort, black, electric, van).",
+        comment=(
+            "Fare / matching category (x=GO, xl, comfort, …). "
+            "Legacy rows may still store 'pet'; new trips use has_pet instead."
+        ),
+    )
+    has_pet: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+        comment="Normal Pet attribute (additive); not a fare category.",
+    )
+    pet_size: Mapped[Optional[str]] = mapped_column(
+        String(16),
+        nullable=True,
+        comment="Pet size: small | medium | large.",
+    )
+    pet_transport: Mapped[Optional[str]] = mapped_column(
+        String(16),
+        nullable=True,
+        comment="Pet transport: carrier | harness.",
+    )
+    is_assistance_animal: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+        comment="Assistance animal (separate from Pet; no Pet opt-in / surcharge).",
+    )
+    pet_occupies_seat: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+        comment="Pet occupies seat/space hint (capacity enforcement later).",
     )
     distance_km: Mapped[Optional[float]] = mapped_column(
         Numeric(8, 2),

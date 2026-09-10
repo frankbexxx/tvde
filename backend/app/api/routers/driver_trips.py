@@ -71,6 +71,11 @@ async def list_available_trips(
             estimated_price=float(trip.estimated_price),
             vehicle_category=(trip.vehicle_category or "x"),
             vehicle_categories=[(trip.vehicle_category or "x")],
+            has_pet=bool(getattr(trip, "has_pet", False)),
+            pet_size=getattr(trip, "pet_size", None),
+            pet_transport=getattr(trip, "pet_transport", None),
+            is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
+            pet_occupies_seat=bool(getattr(trip, "pet_occupies_seat", False)),
             offer_id=str(offer.id) if offer else None,
             expires_at=offer.expires_at.isoformat() if offer and offer.expires_at else None,
         )

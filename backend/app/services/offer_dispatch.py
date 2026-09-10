@@ -15,7 +15,7 @@ from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.models.enums import DriverStatus, OfferStatus, TripStatus
-from app.services.driver_preferences import decode_driver_categories_csv
+from app.services.pet_trip import driver_matches_trip_fare_and_pet
 from app.services.vehicle_compliance_gate import (
     batch_evaluate_driver_vehicle_compliance_gates,
     vehicle_compliance_gates_enabled,
@@ -32,11 +32,7 @@ LOCATION_MAX_AGE_SECONDS = getattr(settings, "LOCATION_MAX_AGE_SECONDS", 45)
 
 
 def _driver_matches_trip_category(driver: Driver, trip: Trip) -> bool:
-    trip_category = (trip.vehicle_category or "x").strip().lower()
-    driver_categories = decode_driver_categories_csv(
-        getattr(driver, "vehicle_categories", None)
-    )
-    return trip_category in driver_categories
+    return driver_matches_trip_fare_and_pet(driver, trip)
 
 
 def _filter_by_inactive_vehicle(
