@@ -21,12 +21,12 @@ from app.schemas.trip import TripCreateRequest
 from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import calculate_price
+from app.services.pet_trip import (
+    driver_matches_trip_fare_and_pet,
+    resolve_trip_pet_create,
+)
 from app.utils.geo import haversine_km, haversine_m
 from app.services.offer_dispatch import create_offers_for_trip
-from app.services.driver_preferences import (
-    decode_driver_categories_csv,
-    normalize_driver_categories,
-)
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.driver_zones import maybe_consume_zone_session_on_trip_complete
@@ -128,11 +128,7 @@ def _raise_not_found() -> None:
 
 
 def _assert_driver_matches_trip_category(driver: Driver, trip: Trip) -> None:
-    trip_category = (trip.vehicle_category or "x").strip().lower()
-    driver_categories = decode_driver_categories_csv(
-        getattr(driver, "vehicle_categories", None)
-    )
-    if trip_category not in driver_categories:
+    if not driver_matches_trip_fare_and_pet(driver, trip):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden_vehicle_category",
@@ -177,7 +173,14 @@ async def create_trip(
     payload: TripCreateRequest,
 ) -> tuple[Trip, int]:
     estimated_price, distance_km, duration_min, eta = _estimate_trip(payload)
-    requested_category = normalize_driver_categories([payload.vehicle_category or "x"])[0]
+    pet = resolve_trip_pet_create(
+        vehicle_category=payload.vehicle_category,
+        has_pet=bool(getattr(payload, "has_pet", False)),
+        pet_size=getattr(payload, "pet_size", None),
+        pet_transport=getattr(payload, "pet_transport", None),
+        is_assistance_animal=bool(getattr(payload, "is_assistance_animal", False)),
+        pet_occupies_seat=bool(getattr(payload, "pet_occupies_seat", False)),
+    )
     trip = Trip(
         passenger_id=passenger_id,
         status=TripStatus.requested,
@@ -186,7 +189,12 @@ async def create_trip(
         destination_lat=payload.destination_lat,
         destination_lng=payload.destination_lng,
         estimated_price=estimated_price,
-        vehicle_category=requested_category,
+        vehicle_category=pet.fare_category,
+        has_pet=pet.has_pet,
+        pet_size=pet.pet_size,
+        pet_transport=pet.pet_transport,
+        is_assistance_animal=pet.is_assistance_animal,
+        pet_occupies_seat=pet.pet_occupies_seat,
         distance_km=distance_km,
         duration_min=duration_min,
         final_price=None,
@@ -1173,13 +1181,11 @@ def list_available_trips(
     if not driver_eligible_for_new_trip_ops(db, driver):
         return []
 
-    driver_categories = decode_driver_categories_csv(getattr(driver, "vehicle_categories", None))
     result: list[tuple[Trip, TripOffer | None]] = []
 
     # Multi-offer: pending offers for this driver
     for offer, trip in list_offers_for_driver(db=db, driver_id=driver_id):
-        trip_category = (trip.vehicle_category or "x").strip().lower()
-        if trip_category in driver_categories:
+        if driver_matches_trip_fare_and_pet(driver, trip):
             result.append((trip, offer))
 
     # Legacy: assigned trips (from admin assign or driver_location auto-dispatch)
@@ -1202,13 +1208,11 @@ def list_available_trips(
                 candidates.append((trip, dist_km))
         candidates.sort(key=lambda x: x[1])
         for trip, _ in candidates:
-            trip_category = (trip.vehicle_category or "x").strip().lower()
-            if trip_category in driver_categories:
+            if driver_matches_trip_fare_and_pet(driver, trip):
                 result.append((trip, None))
     else:
         for trip in assigned_trips:
-            trip_category = (trip.vehicle_category or "x").strip().lower()
-            if trip_category in driver_categories:
+            if driver_matches_trip_fare_and_pet(driver, trip):
                 result.append((trip, None))
 
     logger.info(

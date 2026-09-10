@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
-from app.services.driver_preferences import decode_driver_categories_csv
+from app.services.pet_trip import driver_matches_trip_fare_and_pet
 from app.utils.geo import haversine_km
 from app.utils.logging import log_debug_event, log_event, should_log_driver_location
 from app.utils.state_machine import validate_trip_transition
@@ -162,9 +162,6 @@ def upsert_driver_location(
     # originally produced 0 offers. Skipping trips this driver cannot serve
     # prevents one old impossible trip from starving later serviceable trips.
     if driver.status == DriverStatus.approved and getattr(driver, "is_available", True):
-        driver_categories = decode_driver_categories_csv(
-            getattr(driver, "vehicle_categories", None)
-        )
         q = (
             select(Trip)
             .where(Trip.status == TripStatus.requested)
@@ -177,8 +174,7 @@ def upsert_driver_location(
         )
         trip_for_dispatch = None
         for candidate_trip in db.execute(q).scalars():
-            trip_category = (candidate_trip.vehicle_category or "x").strip().lower()
-            if trip_category not in driver_categories:
+            if not driver_matches_trip_fare_and_pet(driver, candidate_trip):
                 continue
             dist_km = haversine_km(
                 lat,

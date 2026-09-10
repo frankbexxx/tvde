@@ -114,6 +114,12 @@ def trip_to_detail(
         cancellation_reason=trip.cancellation_reason,
         cancelled_by=trip.cancelled_by,
         payment_intent_client_secret=client_secret,
+        vehicle_category=trip.vehicle_category,
+        has_pet=bool(getattr(trip, "has_pet", False)),
+        pet_size=getattr(trip, "pet_size", None),
+        pet_transport=getattr(trip, "pet_transport", None),
+        is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
+        pet_occupies_seat=bool(getattr(trip, "pet_occupies_seat", False)),
     )
 
 
