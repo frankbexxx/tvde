@@ -192,5 +192,40 @@
     "created": "Created",
     "completed": "Completed",
     "tripId": "ID {{id}}"
+  },
+  "pet": {
+    "categoryTitle": "Category",
+    "categoryGo": "GO",
+    "categoryComfort": "Comfort",
+    "categoryXl": "XL",
+    "withAnimal": "Travelling with an animal",
+    "assistance": "Assistance animal",
+    "assistanceHint": "No animal surcharge. Does not require a pet-capable driver.",
+    "maxOne": "Maximum 1 animal per trip.",
+    "sizeTitle": "Size",
+    "size": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
+    },
+    "transportTitle": "Transport",
+    "transport": {
+      "carrier": "Carrier",
+      "harness": "Own harness / seat belt"
+    },
+    "largeHarnessOnly": "Large animals require an own harness / seat belt.",
+    "occupiesSeat": "Does the animal take up a seat?",
+    "occupiesSeatShort": "Takes a seat",
+    "surchargeHint": "Estimated animal surcharge: +{{amount}} € (final from estimate).",
+    "surchargeLine": "Animal surcharge: +{{amount}} €",
+    "fareLine": "Trip fare: {{amount}} €",
+    "totalLine": "Estimated total: {{amount}} €",
+    "noSurcharge": "No animal surcharge",
+    "summaryTitle": "Summary",
+    "badgePet": "With animal",
+    "badgeAssistance": "Assistance animal",
+    "errSizeRequired": "Select the animal size.",
+    "errTransportRequired": "Select how the animal travels (carrier or harness).",
+    "errLargeNeedsHarness": "For a large animal you must select an own harness / seat belt."
   }
 }

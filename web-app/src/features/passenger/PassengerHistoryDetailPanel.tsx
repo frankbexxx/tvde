@@ -61,12 +61,27 @@ export function PassengerHistoryDetailPanel({
 
   return (
     <div className={`space-y-3 ${MENU_SURFACE} p-3`} data-testid="passenger-history-detail">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <span
           aria-hidden="true"
           className={`h-2.5 w-2.5 rounded-full shrink-0 ${historyStatusDotColor(detail.status)}`}
         />
         <span className="text-sm font-medium capitalize text-foreground">{detail.status}</span>
+        {detail.is_assistance_animal ? (
+          <span
+            className="text-xs font-medium rounded-md border border-border bg-muted/50 px-2 py-0.5 text-foreground"
+            data-testid="passenger-history-pet-badge"
+          >
+            {t('pet.badgeAssistance')}
+          </span>
+        ) : detail.has_pet ? (
+          <span
+            className="text-xs font-medium rounded-md border border-border bg-muted/50 px-2 py-0.5 text-foreground"
+            data-testid="passenger-history-pet-badge"
+          >
+            {t('pet.badgePet')}
+          </span>
+        ) : null}
       </div>
       <div className="space-y-1 text-sm">
         <p className="text-foreground/90">

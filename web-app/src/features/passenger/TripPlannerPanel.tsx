@@ -14,6 +14,9 @@ import {
   MAP_SHEET_GAP,
   SURFACE_RADIUS,
 } from '../../components/layout/infoBoxTemplate'
+import { PassengerPetBookingPanel } from './PassengerPetBookingPanel'
+import type { PassengerPetBookingState } from './petBooking'
+import { validatePetBooking } from './petBooking'
 
 export type PassengerUIState = 'idle' | 'planning' | 'confirming' | 'searching' | 'in_trip'
 
@@ -66,6 +69,13 @@ export interface TripPlannerPanelProps {
   inTripSuppressPaymentEcho?: boolean
   /** Pagamento, distância e poll já no InfoPanel (PassengerStatusCard). */
   inTripSuppressMetaEcho?: boolean
+  /** PET-2 booking options (category + animal). */
+  petBooking?: PassengerPetBookingState
+  onPetBookingChange?: (next: PassengerPetBookingState) => void
+  /** Last known API pet surcharge after create (authoritative). */
+  lastPetSurcharge?: number | null
+  lastFareSubtotal?: number | null
+  lastEstimatedTotal?: number | null
 }
 
 /**
@@ -99,9 +109,16 @@ function TripPlannerPanelInner({
   inTripSuppressEstadoEcho = false,
   inTripSuppressPaymentEcho = false,
   inTripSuppressMetaEcho = false,
+  petBooking,
+  onPetBookingChange,
+  lastPetSurcharge = null,
+  lastFareSubtotal = null,
+  lastEstimatedTotal = null,
 }: TripPlannerPanelProps) {
   const { t } = useTranslation('passenger')
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
+  const petValidation = petBooking ? validatePetBooking(petBooking) : { ok: true as const }
+  const petBlocksConfirm = Boolean(petBooking && !petValidation.ok)
 
   const formatEta = (durationSec: number): string => {
     const m = Math.max(1, Math.round(durationSec / 60))
@@ -227,6 +244,49 @@ function TripPlannerPanelInner({
               <span>{t('planner.routeUnavailable')}</span>
             )}
           </div>
+          {petBooking && onPetBookingChange ? (
+            <PassengerPetBookingPanel value={petBooking} onChange={onPetBookingChange} />
+          ) : null}
+          {petBooking ? (
+            <div
+              className={`${BTN_SECONDARY_RADIUS} border border-border/80 bg-card/80 px-2.5 py-2 space-y-0.5`}
+              data-testid="passenger-pet-confirm-summary"
+            >
+              <p className="text-xs font-semibold text-foreground/70">{t('pet.summaryTitle')}</p>
+              <p className="text-sm text-foreground">
+                {t(
+                  petBooking.fareCategory === 'x'
+                    ? 'pet.categoryGo'
+                    : petBooking.fareCategory === 'comfort'
+                      ? 'pet.categoryComfort'
+                      : 'pet.categoryXl',
+                )}
+                {petBooking.isAssistanceAnimal
+                  ? ` · ${t('pet.assistance')}`
+                  : petBooking.withAnimal
+                    ? ` · ${t('pet.withAnimal')}`
+                    : ''}
+              </p>
+              {petBooking.withAnimal && !petBooking.isAssistanceAnimal ? (
+                <p className="text-xs text-foreground/80">
+                  {petBooking.petSize ? t(`pet.size.${petBooking.petSize}`) : '—'}
+                  {' · '}
+                  {petBooking.petTransport
+                    ? t(`pet.transport.${petBooking.petTransport}`)
+                    : '—'}
+                  {petBooking.petOccupiesSeat ? ` · ${t('pet.occupiesSeatShort')}` : ''}
+                </p>
+              ) : null}
+              {petBooking.withAnimal && !petBooking.isAssistanceAnimal ? (
+                <p className="text-sm font-medium text-foreground">
+                  {t('pet.surchargeLine', { amount: '1,50' })}
+                </p>
+              ) : null}
+              {petBooking.isAssistanceAnimal ? (
+                <p className="text-sm text-foreground/80">{t('pet.noSurcharge')}</p>
+              ) : null}
+            </div>
+          ) : null}
           <p
             className="text-xs text-foreground/60 leading-snug"
             data-testid="passenger-payment-disclosure-confirming"
@@ -246,7 +306,12 @@ function TripPlannerPanelInner({
             <button
               type="button"
               onClick={onConfirmTrip}
-              disabled={confirmTripPending || routeMetaLoading || Boolean(confirmBlockedReason)}
+              disabled={
+                confirmTripPending ||
+                routeMetaLoading ||
+                Boolean(confirmBlockedReason) ||
+                petBlocksConfirm
+              }
               className={`flex-1 ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-success text-success-foreground px-3 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation`}
             >
               {confirmTripPending ? t('planner.confirming') : t('planner.confirmTrip')}
@@ -274,6 +339,24 @@ function TripPlannerPanelInner({
               ? t('planner.searchingTrip', { id: activeTrip.trip_id.slice(0, 8) })
               : t('planner.searchingSending')}
           </p>
+          {lastEstimatedTotal != null && lastEstimatedTotal > 0 ? (
+            <div
+              className="text-sm text-foreground text-center space-y-0.5"
+              data-testid="passenger-estimate-breakdown"
+            >
+              {lastFareSubtotal != null ? (
+                <p>{t('pet.fareLine', { amount: lastFareSubtotal.toFixed(2) })}</p>
+              ) : null}
+              {lastPetSurcharge != null && lastPetSurcharge > 0 ? (
+                <p>{t('pet.surchargeLine', { amount: lastPetSurcharge.toFixed(2) })}</p>
+              ) : lastPetSurcharge === 0 && (activeTrip?.is_assistance_animal || activeTrip?.has_pet === false) ? (
+                <p className="text-foreground/75">{t('pet.noSurcharge')}</p>
+              ) : null}
+              <p className="font-semibold">
+                {t('pet.totalLine', { amount: lastEstimatedTotal.toFixed(2) })}
+              </p>
+            </div>
+          ) : null}
           <p
             className="text-xs text-foreground/65 text-center max-w-sm px-3 leading-snug"
             data-testid="passenger-payment-disclosure-searching"
