@@ -20,9 +20,16 @@ from app.schemas.realtime import TripStatusChangedEvent
 from app.schemas.trip import TripCreateRequest
 from app.services.payments import _money, _to_decimal
 from app.core.config import settings
-from app.core.pricing import calculate_price
+from app.core.pricing import (
+    PET_SURCHARGE_RULE_V1,
+    calculate_fare_breakdown,
+    calculate_pet_surcharge,
+    calculate_price,
+    money,
+)
 from app.services.pet_trip import (
     driver_matches_trip_fare_and_pet,
+    pet_surcharge_for_trip,
     resolve_trip_pet_create,
 )
 from app.utils.geo import haversine_km, haversine_m
@@ -140,6 +147,8 @@ def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int
     Estimate distance, duration, price, ETA.
     Uses OSRM when OSRM_BASE_URL is set; otherwise Haversine + 2.5 min/km.
     Returns (estimated_price, distance_km, duration_min, eta_minutes).
+
+    Note: estimated_price here is **fare only** (no Pet). Callers add Pet surcharge.
     """
     from app.services.osrm import get_route_distance_duration
 
@@ -161,9 +170,15 @@ def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int
         distance_km = round(distance_km, 2)
         duration_min = round(distance_km * 2.5, 2)  # City avg ~24 km/h
 
-    estimated_price = calculate_price(distance_km, duration_min)
+    estimated_fare = calculate_price(distance_km, duration_min)
     eta_minutes = int(duration_min) + 2  # buffer for pickup
-    return estimated_price, distance_km, duration_min, eta_minutes
+    return estimated_fare, distance_km, duration_min, eta_minutes
+
+
+def _apply_price_snapshot(trip: Trip, breakdown) -> None:
+    trip.pet_surcharge_amount = float(breakdown.pet_surcharge)
+    trip.pet_surcharge_rule = breakdown.pet_surcharge_rule
+    trip.price_breakdown = breakdown.to_json_dict()
 
 
 async def create_trip(
@@ -172,7 +187,7 @@ async def create_trip(
     passenger_id: str,
     payload: TripCreateRequest,
 ) -> tuple[Trip, int]:
-    estimated_price, distance_km, duration_min, eta = _estimate_trip(payload)
+    fare_only, distance_km, duration_min, eta = _estimate_trip(payload)
     pet = resolve_trip_pet_create(
         vehicle_category=payload.vehicle_category,
         has_pet=bool(getattr(payload, "has_pet", False)),
@@ -181,6 +196,16 @@ async def create_trip(
         is_assistance_animal=bool(getattr(payload, "is_assistance_animal", False)),
         pet_occupies_seat=bool(getattr(payload, "pet_occupies_seat", False)),
     )
+    pet_surcharge = calculate_pet_surcharge(
+        has_pet=pet.has_pet,
+        is_assistance_animal=pet.is_assistance_animal,
+    )
+    breakdown = calculate_fare_breakdown(
+        float(distance_km),
+        float(duration_min),
+        pet_surcharge=pet_surcharge,
+        pet_surcharge_rule=PET_SURCHARGE_RULE_V1,
+    )
     trip = Trip(
         passenger_id=passenger_id,
         status=TripStatus.requested,
@@ -188,7 +213,7 @@ async def create_trip(
         origin_lng=payload.origin_lng,
         destination_lat=payload.destination_lat,
         destination_lng=payload.destination_lng,
-        estimated_price=estimated_price,
+        estimated_price=float(breakdown.total),
         vehicle_category=pet.fare_category,
         has_pet=pet.has_pet,
         pet_size=pet.pet_size,
@@ -199,6 +224,9 @@ async def create_trip(
         duration_min=duration_min,
         final_price=None,
     )
+    _apply_price_snapshot(trip, breakdown)
+    # fare_only kept for clarity / future logging (unused)
+    _ = fare_only
     db.add(trip)
     db.flush()
     db.refresh(trip)
@@ -1487,12 +1515,21 @@ def complete_trip(
             detail="trip_metrics_required_before_completion",
         )
 
-    # --- Final price from pricing engine ---
-    final_price = calculate_price(float(distance_km), float(duration_min))
-    # Commission from driver (single source of truth; consistent with accept_trip).
+    # --- Final price: fare from metrics + Pet surcharge (snapshot / attributes) ---
+    pet_surcharge = pet_surcharge_for_trip(trip)
+    breakdown = calculate_fare_breakdown(
+        float(distance_km),
+        float(duration_min),
+        pet_surcharge=pet_surcharge,
+        pet_surcharge_rule=(
+            getattr(trip, "pet_surcharge_rule", None) or PET_SURCHARGE_RULE_V1
+        ),
+    )
+    final_price = float(breakdown.total)
+    # Commission from driver on **total** (fare + Pet surcharge) — current policy.
     commission_rate = _to_decimal(driver.commission_percent) / Decimal("100")
-    commission_amount = _money(Decimal(str(final_price)) * commission_rate)
-    driver_payout = _money(Decimal(str(final_price)) - commission_amount)
+    commission_amount = _money(money(Decimal(str(final_price))) * commission_rate)
+    driver_payout = _money(money(Decimal(str(final_price))) - commission_amount)
 
     log_event(
         "payment_capture_started",
@@ -1520,7 +1557,9 @@ def complete_trip(
         pi_status = intent.status if hasattr(intent, "status") else intent.get("status")
 
         if pi_status != "requires_capture":
-            amount_cents = max(50, int(round(final_price * 100)))
+            amount_cents = max(
+                50, int(money(Decimal(str(final_price))) * Decimal("100"))
+            )
             try:
                 update_payment_intent_amount(
                     payment.stripe_payment_intent_id,
@@ -1567,15 +1606,11 @@ def complete_trip(
                     detail="Payment confirmation failed.",
                 ) from e
         else:
-            amount_cents = (
-                intent.amount if hasattr(intent, "amount") else intent.get("amount", 0)
-            )
-            final_price = round(amount_cents / 100.0, 2)
-            commission_amount = _money(Decimal(str(final_price)) * commission_rate)
-            driver_payout = _money(Decimal(str(final_price)) - commission_amount)
+            # Retry path: PI already authorized — keep our computed total (incl. Pet).
+            # Do NOT replace final_price with placeholder PI amount (known 0.50 risk).
             logger.info(
-                f"complete_trip: Retry — PI already requires_capture, skipping update/confirm "
-                f"trip_id={trip_id}"
+                f"complete_trip: Retry — PI already requires_capture, keeping computed "
+                f"final_price={final_price} trip_id={trip_id}"
             )
 
         try:
@@ -1606,9 +1641,10 @@ def complete_trip(
             ) from e
 
     # --- Only after capture succeeds (or STRIPE_MOCK): update DB and commit ---
-    amount_store = round(float(final_price), 2)
+    amount_store = float(money(Decimal(str(final_price))))
     old_status = trip.status
     trip.final_price = amount_store
+    _apply_price_snapshot(trip, breakdown)
     trip.status = TripStatus.completed
     trip.completed_at = datetime.now(timezone.utc)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)

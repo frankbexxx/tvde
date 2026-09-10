@@ -7,6 +7,19 @@ from app.models.enums import PaymentStatus, TripStatus
 from app.schemas.driver import DriverLocationResponse
 
 
+class PriceBreakdownSchema(BaseModel):
+    """PET-1 explicit price breakdown (EUR)."""
+
+    base_fare: float
+    distance_amount: float
+    duration_amount: float
+    minimum_fare_adjustment: float = 0.0
+    pet_surcharge: float = 0.0
+    tolls_amount: float = 0.0
+    fare_subtotal: float
+    total: float
+    pet_surcharge_rule: str = "pet_surcharge_v1"
+
 class TripCreateRequest(BaseModel):
     origin_lat: float = Field(..., ge=-90.0, le=90.0)
     origin_lng: float = Field(..., ge=-180.0, le=180.0)
@@ -51,6 +64,10 @@ class TripCreateResponse(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    pet_surcharge: float = 0.0
+    price_breakdown: Optional[PriceBreakdownSchema] = None
+    has_pet: bool = False
+    is_assistance_animal: bool = False
 
 
 class TripCancelRequest(BaseModel):
@@ -96,6 +113,7 @@ class TripAvailableItem(BaseModel):
     pet_transport: Optional[str] = None
     is_assistance_animal: bool = False
     pet_occupies_seat: bool = False
+    pet_surcharge: Optional[float] = None
     offer_id: Optional[str] = None  # When from multi-offer dispatch
     expires_at: Optional[str] = None  # ISO8601 when from multi-offer dispatch
 
@@ -207,3 +225,5 @@ class TripDetailResponse(BaseModel):
     pet_transport: Optional[str] = None
     is_assistance_animal: bool = False
     pet_occupies_seat: bool = False
+    pet_surcharge: Optional[float] = None
+    price_breakdown: Optional[PriceBreakdownSchema] = None

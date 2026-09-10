@@ -8,7 +8,29 @@ from app.models.enums import PaymentStatus
 from app.services.stripe_service import retrieve_payment_intent
 from app.utils.stripe_links import stripe_payment_intent_dashboard_url
 from app.schemas.driver import DriverLocationResponse
-from app.schemas.trip import TripDetailResponse, TripHistoryItem, TripStatusResponse
+from app.schemas.trip import (
+    PriceBreakdownSchema,
+    TripDetailResponse,
+    TripHistoryItem,
+    TripStatusResponse,
+)
+
+
+def _price_breakdown_schema(trip: Trip) -> PriceBreakdownSchema | None:
+    raw = getattr(trip, "price_breakdown", None)
+    if not isinstance(raw, dict):
+        return None
+    try:
+        return PriceBreakdownSchema.model_validate(raw)
+    except Exception:
+        return None
+
+
+def _pet_surcharge_value(trip: Trip) -> float | None:
+    snap = getattr(trip, "pet_surcharge_amount", None)
+    if snap is None:
+        return None
+    return float(snap)
 
 
 logger = logging.getLogger(__name__)
@@ -120,6 +142,8 @@ def trip_to_detail(
         pet_transport=getattr(trip, "pet_transport", None),
         is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
         pet_occupies_seat=bool(getattr(trip, "pet_occupies_seat", False)),
+        pet_surcharge=_pet_surcharge_value(trip),
+        price_breakdown=_price_breakdown_schema(trip),
     )
 
 

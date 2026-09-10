@@ -11,6 +11,7 @@ from app.db.models.trip import Trip
 from app.models.enums import Role
 from app.schemas.driver import DriverLocationResponse
 from app.schemas.trip import (
+    PriceBreakdownSchema,
     TripCancelRequest,
     TripCreateRequest,
     TripCreateResponse,
@@ -153,6 +154,14 @@ async def create_trip(
         if payment and payment.driver_payout
         else None,
         stripe_payment_intent_id=None,
+        pet_surcharge=float(trip.pet_surcharge_amount or 0),
+        price_breakdown=(
+            PriceBreakdownSchema.model_validate(trip.price_breakdown)
+            if isinstance(getattr(trip, "price_breakdown", None), dict)
+            else None
+        ),
+        has_pet=bool(trip.has_pet),
+        is_assistance_animal=bool(trip.is_assistance_animal),
     )
 
 

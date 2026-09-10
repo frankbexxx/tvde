@@ -11,10 +11,12 @@ as fare ``x`` + Pet required for matching, without rewriting history.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any
 
 from fastapi import HTTPException, status
 
+from app.core.pricing import calculate_pet_surcharge, money
 from app.db.models.driver import Driver
 from app.db.models.trip import Trip
 from app.services.driver_preferences import (
@@ -23,17 +25,36 @@ from app.services.driver_preferences import (
     normalize_driver_categories,
 )
 
+# Re-export for callers / tests that import surcharge constants from this module.
+from app.core.pricing import PET_SURCHARGE_EUR, PET_SURCHARGE_RULE_V1  # noqa: F401
+
 # Fare / matching categories (Pet is NOT a fare category going forward).
 FARE_CATEGORIES = frozenset(
     {"x", "xl", "comfort", "black", "electric", "van"}
 )
 LEGACY_PET_CATEGORY = "pet"
 
+# Pet surcharge (PET-1) — applied in pricing; matching still uses attributes only.
 PET_SIZES = frozenset({"small", "medium", "large"})
 PET_TRANSPORTS = frozenset({"carrier", "harness"})
 
-# Placeholder for PET-1 (not applied in PET-0 pricing).
-PET_SURCHARGE_EUR = 1.50
+
+def pet_surcharge_for_trip(trip: Trip | Any) -> Decimal:
+    """Resolve Pet surcharge for estimate/complete without double-counting.
+
+    - If ``pet_surcharge_amount`` is snapshotted (incl. 0.00) → use snapshot.
+    - Else (legacy pre-PET-1 rows): **no** retroactive surcharge, even if
+      ``vehicle_category='pet'``.
+    - Assistance → 0; ``has_pet`` → €1.50.
+    """
+    snap = getattr(trip, "pet_surcharge_amount", None)
+    if snap is not None:
+        return money(Decimal(str(snap)))
+
+    return calculate_pet_surcharge(
+        has_pet=bool(getattr(trip, "has_pet", False)),
+        is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
+    )
 
 
 @dataclass(frozen=True)
