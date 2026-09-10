@@ -304,6 +304,7 @@ function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatu
     pet_transport: item.pet_transport,
     is_assistance_animal: item.is_assistance_animal,
     pet_occupies_seat: item.pet_occupies_seat,
+    passenger_count: item.passenger_count ?? 1,
     pet_surcharge: item.pet_surcharge ?? null,
   }
 }
@@ -1242,6 +1243,10 @@ export function DriverDashboard() {
           if (acceptComplianceKey) {
             setError(t(acceptComplianceKey))
             addLog(`409: Compliance viatura (${e.detail})`, 'error')
+            refetchAvailable()
+          } else if (e?.detail === 'vehicle_capacity_insufficient') {
+            setError(t('actions.acceptBlockedCapacity'))
+            addLog('409: Capacidade do veículo insuficiente', 'error')
             refetchAvailable()
           } else {
             setToast('Viagem já foi aceite por outro motorista.')

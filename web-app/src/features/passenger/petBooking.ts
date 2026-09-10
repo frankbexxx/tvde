@@ -9,6 +9,8 @@ export type PetTransport = 'carrier' | 'harness'
 
 export type PassengerPetBookingState = {
   fareCategory: PassengerFareCategory
+  /** Passengers excluding driver (PET-4). */
+  passengerCount: number
   /** Commercial pet (not assistance). */
   withAnimal: boolean
   isAssistanceAnimal: boolean
@@ -19,12 +21,15 @@ export type PassengerPetBookingState = {
 
 export const DEFAULT_PET_BOOKING: PassengerPetBookingState = {
   fareCategory: 'x',
+  passengerCount: 1,
   withAnimal: false,
   isAssistanceAnimal: false,
   petSize: null,
   petTransport: null,
   petOccupiesSeat: false,
 }
+
+export const PASSENGER_COUNT_OPTIONS = [1, 2, 3, 4, 5, 6] as const
 
 /** Product disclosure only — authoritative amount is always server `pet_surcharge`. */
 export const PET_SURCHARGE_EUR_DISCLOSURE = 1.5
@@ -75,6 +80,7 @@ export function validatePetBooking(state: PassengerPetBookingState): PetBookingV
 
 export type TripPetCreateFields = {
   vehicle_category: PassengerFareCategory
+  passenger_count: number
   has_pet?: boolean
   pet_size?: PetSize
   pet_transport?: PetTransport
@@ -86,11 +92,13 @@ export type TripPetCreateFields = {
 export function buildPetCreatePayload(state: PassengerPetBookingState): TripPetCreateFields {
   const base: TripPetCreateFields = {
     vehicle_category: state.fareCategory,
+    passenger_count: state.passengerCount >= 1 ? state.passengerCount : 1,
   }
 
   if (state.isAssistanceAnimal) {
     base.is_assistance_animal = true
     base.has_pet = false
+    base.pet_occupies_seat = state.petOccupiesSeat
     return base
   }
 
@@ -142,7 +150,8 @@ export function applyAssistance(
     withAnimal: false,
     petSize: null,
     petTransport: null,
-    petOccupiesSeat: false,
+    /* PET-4: keep seat flag editable for assistance. */
+    petOccupiesSeat: prev.petOccupiesSeat,
   }
 }
 

@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver, DriverLocation
 from app.services.pet_trip import driver_matches_trip_fare_and_pet
+from app.services.vehicle_capacity import driver_matches_trip_capacity
 from app.utils.geo import haversine_km
 from app.utils.logging import log_debug_event, log_event, should_log_driver_location
 from app.utils.state_machine import validate_trip_transition
@@ -175,6 +176,8 @@ def upsert_driver_location(
         trip_for_dispatch = None
         for candidate_trip in db.execute(q).scalars():
             if not driver_matches_trip_fare_and_pet(driver, candidate_trip):
+                continue
+            if not driver_matches_trip_capacity(db, driver, candidate_trip):
                 continue
             dist_km = haversine_km(
                 lat,

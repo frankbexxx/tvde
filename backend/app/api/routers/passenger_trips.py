@@ -162,6 +162,7 @@ async def create_trip(
         ),
         has_pet=bool(trip.has_pet),
         is_assistance_animal=bool(trip.is_assistance_animal),
+        passenger_count=int(getattr(trip, "passenger_count", None) or 1),
     )
 
 

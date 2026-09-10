@@ -216,6 +216,8 @@
     "largeHarnessOnly": "Large animals require an own harness / seat belt.",
     "occupiesSeat": "Does the animal take up a seat?",
     "occupiesSeatShort": "Takes a seat",
+    "seatExtraHint": "The animal takes 1 extra seat.",
+    "passengersTitle": "Passengers",
     "surchargeHint": "Estimated animal surcharge: +{{amount}} € (final from estimate).",
     "surchargeLine": "Animal surcharge: +{{amount}} €",
     "fareLine": "Trip fare: {{amount}} €",

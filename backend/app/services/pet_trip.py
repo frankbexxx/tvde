@@ -184,14 +184,14 @@ def resolve_trip_pet_create(
     )
 
     if is_assistance_animal:
-        # Assistance is separate from paid Pet.
+        # Assistance is separate from paid Pet; seat occupancy still counts for capacity.
         return ResolvedTripPetCreate(
             fare_category=fare_category if fare_category != LEGACY_PET_CATEGORY else "x",
             has_pet=False,
             pet_size=None,
             pet_transport=None,
             is_assistance_animal=True,
-            pet_occupies_seat=False,
+            pet_occupies_seat=bool(pet_occupies_seat),
         )
 
     if not has_pet:

@@ -64,6 +64,7 @@
     "acceptBlockedNoActiveVehicle": "Não tens um veículo activo associado. Pede ao Partner para associar um veículo antes de aceitar novas viagens.",
     "acceptBlockedVehicleDocuments": "O veículo tem documentação em falta, caducada ou rejeitada. Pede ao Partner para regularizar os documentos antes de aceitar novas viagens.",
     "acceptBlockedUnknownVehicleCompliance": "Não foi possível confirmar a situação documental do veículo. Verifica com o Partner ou tenta novamente.",
+    "acceptBlockedCapacity": "O veículo activo não tem lugares suficientes para esta viagem.",
     "pickupPhase": "recolha",
     "destinationPhase": "destino",
     "openingNav": "A abrir {{app}} ({{phase}})",
@@ -429,6 +430,8 @@
     "occupiesSeat": "Ocupa um lugar",
     "noSurcharge": "Sem suplemento",
     "surchargeLine": "+{{amount}} €",
+    "passengersLine": "{{count}} passageiros",
+    "passengersLineOne": "1 passageiro",
     "size": {
       "small": "Pequeno",
       "medium": "Médio",

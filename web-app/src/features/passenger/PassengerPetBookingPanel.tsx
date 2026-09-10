@@ -7,6 +7,7 @@ import {
   type PassengerPetBookingState,
   type PetSize,
   type PetTransport,
+  PASSENGER_COUNT_OPTIONS,
   PET_SURCHARGE_EUR_DISCLOSURE,
   applyAssistance,
   applyPetSize,
@@ -89,6 +90,24 @@ export function PassengerPetBookingPanel({
         </div>
       </div>
 
+      <div className="space-y-1.5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-foreground/70">
+          {t('pet.passengersTitle')}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {PASSENGER_COUNT_OPTIONS.map((n) => (
+            <Chip
+              key={n}
+              testId={`passenger-count-${n}`}
+              selected={value.passengerCount === n}
+              onClick={() => onChange({ ...value, passengerCount: n })}
+            >
+              {String(n)}
+            </Chip>
+          ))}
+        </div>
+      </div>
+
       <label className="flex min-h-11 items-center gap-3 touch-manipulation">
         <input
           type="checkbox"
@@ -112,9 +131,26 @@ export function PassengerPetBookingPanel({
       </label>
 
       {value.isAssistanceAnimal ? (
-        <p className={`${INFO_BOX_BODY_COMPACT} text-foreground/75`} data-testid="passenger-assistance-hint">
-          {t('pet.assistanceHint')}
-        </p>
+        <div className="space-y-2">
+          <p className={`${INFO_BOX_BODY_COMPACT} text-foreground/75`} data-testid="passenger-assistance-hint">
+            {t('pet.assistanceHint')}
+          </p>
+          <label className="flex min-h-11 items-start gap-3 touch-manipulation">
+            <input
+              type="checkbox"
+              className="mt-1 h-5 w-5 shrink-0 accent-info"
+              data-testid="passenger-assistance-occupies-seat"
+              checked={value.petOccupiesSeat}
+              onChange={(e) => onChange({ ...value, petOccupiesSeat: e.target.checked })}
+            />
+            <span className="text-base text-foreground leading-snug">{t('pet.occupiesSeat')}</span>
+          </label>
+          {value.petOccupiesSeat ? (
+            <p className="text-xs text-foreground/70" data-testid="passenger-pet-seat-hint">
+              {t('pet.seatExtraHint')}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {value.withAnimal && !value.isAssistanceAnimal ? (
@@ -170,6 +206,11 @@ export function PassengerPetBookingPanel({
             />
             <span className="text-base text-foreground leading-snug">{t('pet.occupiesSeat')}</span>
           </label>
+          {value.petOccupiesSeat ? (
+            <p className="text-xs text-foreground/70" data-testid="passenger-pet-seat-hint">
+              {t('pet.seatExtraHint')}
+            </p>
+          ) : null}
 
           {showPriceHints ? (
             <p className="text-sm font-medium text-foreground" data-testid="passenger-pet-surcharge-hint">

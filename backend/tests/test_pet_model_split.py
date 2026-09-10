@@ -111,11 +111,13 @@ def test_resolve_assistance_clears_pet() -> None:
         has_pet=True,
         is_assistance_animal=True,
         pet_size="large",
+        pet_occupies_seat=True,
     )
     assert r.fare_category == "comfort"
     assert r.has_pet is False
     assert r.is_assistance_animal is True
     assert r.pet_size is None
+    assert r.pet_occupies_seat is True
 
 
 def test_resolve_pet_attrs_without_has_pet_rejected() -> None:

@@ -437,6 +437,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
             "plate": plate_display,
             "make": "Toyota",
             "model": "Corolla",
+            "max_passengers": 4,
             "year": 2020,
             "color": "preto",
             "service_categories": ["x"],
@@ -459,6 +460,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
             "plate": f"77-{tag[:2]}-{tag[4:6]}",
             "make": "Mercedes",
             "model": "Vito",
+            "max_passengers": 4,
             "service_categories": ["x", "xl", "van"],
         },
     )
@@ -473,6 +475,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
             "plate": f"88-{tag[2:4]}-{tag[:2]}",
             "make": "Bad",
             "model": "Cat",
+            "max_passengers": 4,
             "service_categories": ["x", "spaceship"],
         },
     )
@@ -494,6 +497,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
             "plate": plate_dup_variant,
             "make": "VW",
             "model": "Golf",
+            "max_passengers": 4,
         },
     )
     assert r_dup.status_code == 409
@@ -503,7 +507,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
     r_b = c.post(
         "/partner/vehicles",
         headers=hb,
-        json={"plate": plate_b, "make": "BMW", "model": "320"},
+        json={"plate": plate_b, "make": "BMW", "model": "320", "max_passengers": 4},
     )
     assert r_b.status_code == 201
     vid_b = r_b.json()["id"]
@@ -559,6 +563,7 @@ def test_partner_vehicles_create_assign_unassign_and_tenant() -> None:
             "plate": plate_a2,
             "make": "Seat",
             "model": "Leon",
+            "max_passengers": 4,
             "service_categories": ["xl"],
         },
     )

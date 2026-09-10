@@ -16,6 +16,7 @@ from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.models.enums import DriverStatus, OfferStatus, TripStatus
 from app.services.pet_trip import driver_matches_trip_fare_and_pet
+from app.services.vehicle_capacity import batch_filter_drivers_by_capacity
 from app.services.vehicle_compliance_gate import (
     batch_evaluate_driver_vehicle_compliance_gates,
     vehicle_compliance_gates_enabled,
@@ -217,6 +218,9 @@ def create_offers_for_trip(
     # PF3D-3A: soft-filter by vehicle document compliance before top_n (flag OFF = no-op).
     category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
 
+    # PET-4: soft-filter by passenger capacity (flag OFF = no-op).
+    category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
+
     selected = category_matched[:top_n]
 
     if not selected:
@@ -411,9 +415,10 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         for driver, dist_km in candidates:
             if _driver_matches_trip_category(driver, trip):
                 category_matched.append((driver, dist_km))
-        # G-KYC-P0-03 then PF3D-3A (flag OFF = no-op for docs).
+        # G-KYC-P0-03 then PF3D-3A (flag OFF = no-op for docs) then PET-4 capacity.
         category_matched = _filter_by_inactive_vehicle(db, trip, category_matched)
         category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
+        category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
         selected_redispatch = category_matched[:top_n]
         for driver, dist_km in selected_redispatch:
             if _has_active_pending_offer(

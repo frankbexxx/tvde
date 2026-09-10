@@ -61,6 +61,14 @@ class Vehicle(Base):
         server_default="active",
         comment="active | inactive",
     )
+    max_passengers: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+        comment=(
+            "Max passengers excluding driver. NULL = unknown/legacy; "
+            "capacity gates block when NULL and flag ON."
+        ),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

@@ -50,7 +50,13 @@ class TripCreateRequest(BaseModel):
     )
     pet_occupies_seat: bool = Field(
         default=False,
-        description="Hint that Pet occupies a seat/space (capacity later).",
+        description="Animal occupies a passenger seat (PET-4 capacity).",
+    )
+    passenger_count: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        description="Passengers excluding driver (PET-4). Default 1 for old clients.",
     )
 
 
@@ -68,6 +74,7 @@ class TripCreateResponse(BaseModel):
     price_breakdown: Optional[PriceBreakdownSchema] = None
     has_pet: bool = False
     is_assistance_animal: bool = False
+    passenger_count: int = 1
 
 
 class TripCancelRequest(BaseModel):
@@ -113,6 +120,7 @@ class TripAvailableItem(BaseModel):
     pet_transport: Optional[str] = None
     is_assistance_animal: bool = False
     pet_occupies_seat: bool = False
+    passenger_count: int = 1
     pet_surcharge: Optional[float] = None
     offer_id: Optional[str] = None  # When from multi-offer dispatch
     expires_at: Optional[str] = None  # ISO8601 when from multi-offer dispatch
@@ -225,5 +233,6 @@ class TripDetailResponse(BaseModel):
     pet_transport: Optional[str] = None
     is_assistance_animal: bool = False
     pet_occupies_seat: bool = False
+    passenger_count: int = 1
     pet_surcharge: Optional[float] = None
     price_breakdown: Optional[PriceBreakdownSchema] = None
