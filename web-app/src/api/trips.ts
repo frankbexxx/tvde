@@ -18,7 +18,25 @@ export interface TripCreateRequest {
   origin_lng: number
   destination_lat: number
   destination_lng: number
+  /** Fare category: x (GO) | comfort | xl */
   vehicle_category?: string
+  has_pet?: boolean
+  pet_size?: string
+  pet_transport?: string
+  is_assistance_animal?: boolean
+  pet_occupies_seat?: boolean
+}
+
+export interface PriceBreakdown {
+  base_fare: number
+  distance_amount: number
+  duration_amount: number
+  minimum_fare_adjustment?: number
+  pet_surcharge?: number
+  tolls_amount?: number
+  fare_subtotal: number
+  total: number
+  pet_surcharge_rule?: string
 }
 
 export interface TripCreateResponse {
@@ -30,6 +48,10 @@ export interface TripCreateResponse {
   final_price?: number
   commission_amount?: number
   driver_payout?: number
+  pet_surcharge?: number
+  price_breakdown?: PriceBreakdown | null
+  has_pet?: boolean
+  is_assistance_animal?: boolean
 }
 
 export interface TripStatusResponse {
@@ -109,6 +131,14 @@ export interface TripDetailResponse {
   cancellation_reason?: string | null
   /** Quando o backend expõe confirmação Stripe (ENABLE_CONFIRM_ON_ACCEPT). */
   payment_intent_client_secret?: string | null
+  vehicle_category?: string | null
+  has_pet?: boolean
+  pet_size?: string | null
+  pet_transport?: string | null
+  is_assistance_animal?: boolean
+  pet_occupies_seat?: boolean
+  pet_surcharge?: number | null
+  price_breakdown?: PriceBreakdown | null
 }
 
 // --- Passenger ---

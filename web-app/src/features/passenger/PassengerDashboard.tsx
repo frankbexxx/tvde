@@ -49,6 +49,12 @@ import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
 import { PassengerTripRatingPanel } from './PassengerTripRatingPanel'
 import {
+  DEFAULT_PET_BOOKING,
+  buildPetCreatePayload,
+  validatePetBooking,
+  type PassengerPetBookingState,
+} from './petBooking'
+import {
   passengerTripPollEquals,
   type PassengerTripPollResult,
 } from './passengerTripPollEquals'
@@ -114,6 +120,10 @@ export function PassengerDashboard() {
   const [historyDetail, setHistoryDetail] = useState<TripDetailResponse | null>(null)
   const [historyDetailLoading, setHistoryDetailLoading] = useState(false)
   const [historyDetailError, setHistoryDetailError] = useState<string | null>(null)
+  const [petBooking, setPetBooking] = useState<PassengerPetBookingState>(DEFAULT_PET_BOOKING)
+  const [lastPetSurcharge, setLastPetSurcharge] = useState<number | null>(null)
+  const [lastFareSubtotal, setLastFareSubtotal] = useState<number | null>(null)
+  const [lastEstimatedTotal, setLastEstimatedTotal] = useState<number | null>(null)
   const passengerMenuOpenRef = useRef(false)
 
   const onPassengerMenuScreenChange = useCallback((screen: PassengerMenuScreen) => {
@@ -546,6 +556,10 @@ export function PassengerDashboard() {
     setPickupCandidate(null)
     setDestinationCandidate(null)
     setPlanningRouteGeoJSON(null)
+    setPetBooking(DEFAULT_PET_BOOKING)
+    setLastPetSurcharge(null)
+    setLastFareSubtotal(null)
+    setLastEstimatedTotal(null)
   }, [])
 
   const onChoosePlanningModeAndScrollToMap = useCallback(() => {
@@ -646,7 +660,14 @@ export function PassengerDashboard() {
       return
     }
 
-    devLog('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation })
+    const petCheck = validatePetBooking(petBooking)
+    if (!petCheck.ok) {
+      toast.warning(t(petCheck.messageKey))
+      return
+    }
+
+    const petPayload = buildPetCreatePayload(petBooking)
+    devLog('[PassengerDashboard] createTrip', { pickupLocation, dropoffLocation, petPayload })
 
     setError(null)
     setCreating(true)
@@ -660,12 +681,23 @@ export function PassengerDashboard() {
           origin_lng: pickupLocation.lng,
           destination_lat: dropoffLocation.lat,
           destination_lng: dropoffLocation.lng,
+          ...petPayload,
         },
         token
       )
       setPassengerPendingTripDetail(tripDetailFromCreateResponse(res, pickupLocation, dropoffLocation))
       setPassengerActiveTripId(res.trip_id)
       setStatus(passengerTripStatusLabel(res.status))
+      const surcharge =
+        res.pet_surcharge ?? res.price_breakdown?.pet_surcharge ?? null
+      const fareSub =
+        res.price_breakdown?.fare_subtotal ??
+        (res.estimated_price != null && surcharge != null
+          ? Math.max(0, res.estimated_price - surcharge)
+          : null)
+      setLastPetSurcharge(surcharge)
+      setLastFareSubtotal(fareSub)
+      setLastEstimatedTotal(res.estimated_price ?? res.price_breakdown?.total ?? null)
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
       toast.success(t('trip.sent'))
@@ -686,6 +718,7 @@ export function PassengerDashboard() {
     dropoffLocation,
     creating,
     pickupDestinationTooClose,
+    petBooking,
     addLog,
     setStatus,
     refetchHistory,
@@ -743,6 +776,12 @@ export function PassengerDashboard() {
     if (!token || !activeTripId || !activeTrip || activeTrip.status !== 'requested' || retrySearchPending) {
       return
     }
+    const petCheck = validatePetBooking(petBooking)
+    if (!petCheck.ok) {
+      toast.warning(t(petCheck.messageKey))
+      return
+    }
+    const petPayload = buildPetCreatePayload(petBooking)
     setRetrySearchPending(true)
     setError(null)
     addLog('Clique: Tentar novamente', 'action')
@@ -754,6 +793,7 @@ export function PassengerDashboard() {
           origin_lng: activeTrip.origin_lng,
           destination_lat: activeTrip.destination_lat,
           destination_lng: activeTrip.destination_lng,
+          ...petPayload,
         },
         token
       )
@@ -766,6 +806,16 @@ export function PassengerDashboard() {
       )
       setPassengerActiveTripId(res.trip_id)
       setStatus(passengerTripStatusLabel(res.status))
+      const surcharge =
+        res.pet_surcharge ?? res.price_breakdown?.pet_surcharge ?? null
+      setLastPetSurcharge(surcharge)
+      setLastFareSubtotal(
+        res.price_breakdown?.fare_subtotal ??
+          (res.estimated_price != null && surcharge != null
+            ? Math.max(0, res.estimated_price - surcharge)
+            : null),
+      )
+      setLastEstimatedTotal(res.estimated_price ?? res.price_breakdown?.total ?? null)
       addLog('Pedido reenviado após tentar novamente', 'success')
       toast.success(t('trip.resent'))
       refetchHistory()
@@ -794,11 +844,13 @@ export function PassengerDashboard() {
     activeTripId,
     activeTrip,
     retrySearchPending,
+    petBooking,
     addLog,
     setPassengerActiveTripId,
     setStatus,
     refetchHistory,
     restorePassengerActiveTrip,
+    setPassengerPendingTripDetail,
     t,
   ])
 
@@ -1421,6 +1473,11 @@ export function PassengerDashboard() {
                     inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
                     inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
                     inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
+                    petBooking={petBooking}
+                    onPetBookingChange={setPetBooking}
+                    lastPetSurcharge={lastPetSurcharge}
+                    lastFareSubtotal={lastFareSubtotal}
+                    lastEstimatedTotal={lastEstimatedTotal}
                   />
                 </MapBottomSheet>
               ) : (activeTripId || creating) && !showPassengerRatingPanel ? (

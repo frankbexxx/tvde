@@ -192,5 +192,40 @@
     "created": "Criada",
     "completed": "Concluída",
     "tripId": "ID {{id}}"
+  },
+  "pet": {
+    "categoryTitle": "Categoria",
+    "categoryGo": "GO",
+    "categoryComfort": "Comfort",
+    "categoryXl": "XL",
+    "withAnimal": "Viajo com animal",
+    "assistance": "Animal de assistência",
+    "assistanceHint": "Sem suplemento animal. Não exige motorista com opção animal.",
+    "maxOne": "Máximo 1 animal por viagem.",
+    "sizeTitle": "Porte",
+    "size": {
+      "small": "Pequeno",
+      "medium": "Médio",
+      "large": "Grande"
+    },
+    "transportTitle": "Transporte",
+    "transport": {
+      "carrier": "Transportadora",
+      "harness": "Arnês / cinto próprio"
+    },
+    "largeHarnessOnly": "Para grande porte é necessário arnês / cinto próprio.",
+    "occupiesSeat": "O animal ocupa um lugar no banco?",
+    "occupiesSeatShort": "Ocupa lugar",
+    "surchargeHint": "Suplemento animal estimado: +{{amount}} € (valor final pela estimativa).",
+    "surchargeLine": "Suplemento animal: +{{amount}} €",
+    "fareLine": "Tarifa da viagem: {{amount}} €",
+    "totalLine": "Total estimado: {{amount}} €",
+    "noSurcharge": "Sem suplemento animal",
+    "summaryTitle": "Resumo",
+    "badgePet": "Com animal",
+    "badgeAssistance": "Animal de assistência",
+    "errSizeRequired": "Indica o porte do animal.",
+    "errTransportRequired": "Indica como o animal viaja (transportadora ou arnês).",
+    "errLargeNeedsHarness": "Para um animal de grande porte é necessário indicar arnês/cinto próprio."
   }
 }

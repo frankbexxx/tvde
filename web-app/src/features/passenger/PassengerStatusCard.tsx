@@ -54,6 +54,11 @@ function buildTripMetaLines(
     const pay = paymentStatusLabel(ps)
     if (pay) lines.push(t('trip:paymentLine', { status: pay }))
   }
+  if (activeTrip.is_assistance_animal) {
+    lines.push(t('pet.badgeAssistance'))
+  } else if (activeTrip.has_pet) {
+    lines.push(t('pet.badgePet'))
+  }
   if (trackingHint?.trim()) lines.push(trackingHint.trim())
   if (pollHint?.trim()) lines.push(pollHint.trim())
   return lines
@@ -64,11 +69,13 @@ function SearchingDriverPhase({
   onRetrySearch,
   retrySearchPending,
   compact = false,
+  animalHint = null,
 }: {
   tripCreatedAtIso: string
   onRetrySearch?: () => void
   retrySearchPending?: boolean
   compact?: boolean
+  animalHint?: string | null
 }) {
   const { t } = useTranslation('passenger')
   const [nowMs, setNowMs] = useState<number | null>(null)
@@ -84,7 +91,10 @@ function SearchingDriverPhase({
       : Math.max(0, (nowMs - new Date(tripCreatedAtIso).getTime()) / 1000)
   const showFallback = elapsedSec >= PASSENGER_SEARCH_FALLBACK_AFTER_SEC
 
-  const meta = !showFallback ? [passengerPaymentDisclosureSearching()] : undefined
+  const metaLines: string[] = []
+  if (!showFallback) metaLines.push(passengerPaymentDisclosureSearching())
+  if (animalHint) metaLines.push(animalHint)
+  const meta = metaLines.length > 0 ? metaLines : undefined
 
   return (
     <InfoPanel
@@ -169,6 +179,13 @@ function PassengerStatusCardInner({
           onRetrySearch={onRetrySearch}
           retrySearchPending={retrySearchPending}
           compact={compact}
+          animalHint={
+            activeTrip.is_assistance_animal
+              ? t('pet.badgeAssistance')
+              : activeTrip.has_pet
+                ? t('pet.badgePet')
+                : null
+          }
         />
       )
 
