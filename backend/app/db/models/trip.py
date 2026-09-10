@@ -130,7 +130,7 @@ class Trip(Base):
         nullable=False,
         default=False,
         server_default="false",
-        comment="Assistance animal (separate from Pet; no Pet opt-in / surcharge).",
+        comment="Assistance dog (legal V1); internal name kept. No Pet surcharge.",
     )
     pet_occupies_seat: Mapped[bool] = mapped_column(
         Boolean,

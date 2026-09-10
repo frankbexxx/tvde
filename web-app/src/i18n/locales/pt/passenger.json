@@ -199,8 +199,8 @@
     "categoryComfort": "Comfort",
     "categoryXl": "XL",
     "withAnimal": "Viajo com animal",
-    "assistance": "Animal de assistência",
-    "assistanceHint": "Sem suplemento animal. Não exige motorista com opção animal.",
+    "assistance": "Cão de assistência",
+    "assistanceHint": "Sem suplemento. Poderá ser solicitada identificação legal do cão quando necessário.",
     "maxOne": "Máximo 1 animal por viagem.",
     "sizeTitle": "Porte",
     "size": {
@@ -213,7 +213,7 @@
       "carrier": "Transportadora",
       "harness": "Arnês / cinto próprio"
     },
-    "largeHarnessOnly": "Para grande porte é necessário arnês / cinto próprio.",
+    "transportSafetyHint": "O animal deve viajar devidamente acondicionado e em condições de segurança.",
     "occupiesSeat": "O animal ocupa um lugar no banco?",
     "occupiesSeatShort": "Ocupa lugar",
     "seatExtraHint": "O animal ocupa 1 lugar adicional.",
@@ -225,9 +225,8 @@
     "noSurcharge": "Sem suplemento animal",
     "summaryTitle": "Resumo",
     "badgePet": "Com animal",
-    "badgeAssistance": "Animal de assistência",
+    "badgeAssistance": "Cão de assistência",
     "errSizeRequired": "Indica o porte do animal.",
-    "errTransportRequired": "Indica como o animal viaja (transportadora ou arnês).",
-    "errLargeNeedsHarness": "Para um animal de grande porte é necessário indicar arnês/cinto próprio."
+    "errTransportRequired": "Indica como o animal viaja (transportadora ou arnês)."
   }
 }

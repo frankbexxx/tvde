@@ -56,8 +56,8 @@ export type PetBookingValidation =
   | { ok: false; messageKey: string }
 
 /**
- * Client-side rules aligned with backend PET-0/1.
- * Large requires harness; size+transport required for commercial pet.
+ * Client-side rules (PET-5A.1): commercial pet needs size + transport;
+ * any size×transport pair allowed (no absolute large+carrier block).
  */
 export function validatePetBooking(state: PassengerPetBookingState): PetBookingValidation {
   if (state.isAssistanceAnimal) {
@@ -71,9 +71,6 @@ export function validatePetBooking(state: PassengerPetBookingState): PetBookingV
   }
   if (!state.petTransport) {
     return { ok: false, messageKey: 'pet.errTransportRequired' }
-  }
-  if (state.petSize === 'large' && state.petTransport !== 'harness') {
-    return { ok: false, messageKey: 'pet.errLargeNeedsHarness' }
   }
   return { ok: true }
 }
@@ -166,18 +163,10 @@ export function applyPetTransport(
   }
 }
 
-/** Large requires harness — coerce carrier → harness when size becomes large. */
+/** Set size without coercing transport (PET-5A.1). */
 export function applyPetSize(
   prev: PassengerPetBookingState,
   size: PetSize,
 ): PassengerPetBookingState {
-  if (size === 'large' && prev.petTransport === 'carrier') {
-    return {
-      ...prev,
-      petSize: size,
-      petTransport: 'harness',
-      petOccupiesSeat: defaultOccupiesSeat('harness'),
-    }
-  }
   return { ...prev, petSize: size }
 }

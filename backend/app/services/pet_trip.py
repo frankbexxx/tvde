@@ -1,11 +1,15 @@
-"""PET-0 — fare category vs Pet attributes (domain helpers).
+"""PET — fare category vs Pet attributes (domain helpers).
 
 ``trip.vehicle_category`` remains the **fare / matching category**
 (``x`` = GO, ``comfort``, ``xl``, …). Pet is an additive attribute
-(``has_pet`` / assistance), not a primary fare category.
+(``has_pet`` / assistance dog), not a primary fare category.
 
 Legacy rows may still store ``vehicle_category='pet'``; helpers treat those
-as fare ``x`` + Pet required for matching, without rewriting history.
+as fare ``x`` for matching without rewriting history.
+
+PET-5A.1: Driver preference ``pet`` is legacy/non-enforcing (not used in matching).
+Legal V1 terminology for assistance is «cão de assistência» / assistance dog;
+internal field ``is_assistance_animal`` is retained for compatibility.
 """
 
 from __future__ import annotations
@@ -99,38 +103,29 @@ def trip_has_pet_request(trip: Trip | Any) -> bool:
 
 
 def trip_requires_pet_driver_opt_in(trip: Trip | Any) -> bool:
-    """Normal Pet requires Driver ``pet`` preference; assistance does not."""
-    if bool(getattr(trip, "is_assistance_animal", False)):
-        return False
-    return trip_has_pet_request(trip)
+    """PET-5A.1: Driver ``pet`` preference is legacy/non-enforcing — always False.
+
+    Retained for callers/tests that still import the helper; matching must not
+    use personal Pet opt-out as an eligibility filter.
+    """
+    return False
 
 
 def driver_accepts_pet(driver: Driver | Any) -> bool:
+    """Legacy read of ``pet`` in Driver preferences (non-enforcing since PET-5A.1)."""
     cats = decode_driver_categories_csv(getattr(driver, "vehicle_categories", None))
     return LEGACY_PET_CATEGORY in cats
 
 
 def driver_matches_trip_fare_and_pet(driver: Driver | Any, trip: Trip | Any) -> bool:
-    """Combined matching: fare category + optional Pet opt-in.
+    """Matching by fare category only (PET-5A.1).
 
-    Legacy ``vehicle_category='pet'`` (has_pet still false): keep old behaviour —
-    Driver must have ``pet`` in preferences (fare check skipped for that legacy
-    exclusive category). New trips use fare category + ``has_pet``.
+    Normal companion animals and assistance dogs do **not** require Driver
+    ``pet`` preference. Legacy ``vehicle_category='pet'`` matches as fare ``x``.
+    Capacity / compliance gates stay elsewhere.
     """
     cats = decode_driver_categories_csv(getattr(driver, "vehicle_categories", None))
-
-    if bool(getattr(trip, "is_assistance_animal", False)):
-        return trip_fare_category(trip) in cats
-
-    if trip_is_legacy_pet_category(trip) and not bool(getattr(trip, "has_pet", False)):
-        return LEGACY_PET_CATEGORY in cats
-
-    fare = trip_fare_category(trip)
-    if fare not in cats:
-        return False
-    if trip_requires_pet_driver_opt_in(trip):
-        return LEGACY_PET_CATEGORY in cats
-    return True
+    return trip_fare_category(trip) in cats
 
 
 def _norm_optional_token(value: str | None, *, allowed: frozenset[str], field: str) -> str | None:
@@ -209,13 +204,8 @@ def resolve_trip_pet_create(
             pet_occupies_seat=False,
         )
 
-    # Normal Pet — size/transport optional in PET-0 (Passenger UX in PET-2),
-    # but when both large + transport are present, enforce harness rule early.
-    if size == "large" and transport is not None and transport != "harness":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="pet_large_requires_harness",
-        )
+    # Normal Pet — size/transport required by Passenger UX; any size×transport
+    # pair is allowed (PET-5A.1: no absolute large+carrier block).
 
     return ResolvedTripPetCreate(
         fare_category=fare_category,

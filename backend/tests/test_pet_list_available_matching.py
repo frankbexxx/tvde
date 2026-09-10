@@ -132,23 +132,24 @@ def _compliance_on(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "ENABLE_VEHICLE_COMPLIANCE_GATES", True, raising=False)
 
 
-def test_list_go_pet_requires_pet_opt_in(db: Session) -> None:
+def test_list_go_pet_without_opt_in(db: Session) -> None:
+    """PET-5A.1: GO + animal listed for fare-compatible drivers regardless of pet pref."""
     without = _driver(db, categories="x", vehicle_id=_compliant_vehicle(db))
     with_pet = _driver(db, categories="x,pet", vehicle_id=_compliant_vehicle(db))
     trip_a = _offer_trip(db, without, vehicle_category="x", has_pet=True)
     trip_b = _offer_trip(db, with_pet, vehicle_category="x", has_pet=True)
-    assert trip_a not in _listed(db, without)
+    assert trip_a in _listed(db, without)
     assert trip_b in _listed(db, with_pet)
 
 
-def test_list_comfort_pet_needs_comfort_and_pet(db: Session) -> None:
+def test_list_comfort_pet_needs_comfort_not_pet_pref(db: Session) -> None:
     comfort_only = _driver(db, categories="comfort", vehicle_id=_compliant_vehicle(db))
     comfort_pet = _driver(db, categories="comfort,pet", vehicle_id=_compliant_vehicle(db))
     x_pet = _driver(db, categories="x,pet", vehicle_id=_compliant_vehicle(db))
     t1 = _offer_trip(db, comfort_only, vehicle_category="comfort", has_pet=True)
     t2 = _offer_trip(db, comfort_pet, vehicle_category="comfort", has_pet=True)
     t3 = _offer_trip(db, x_pet, vehicle_category="comfort", has_pet=True)
-    assert t1 not in _listed(db, comfort_only)
+    assert t1 in _listed(db, comfort_only)
     assert t2 in _listed(db, comfort_pet)
     assert t3 not in _listed(db, x_pet)
 
@@ -158,7 +159,7 @@ def test_list_xl_pet(db: Session) -> None:
     xl_pet = _driver(db, categories="xl,pet", vehicle_id=_compliant_vehicle(db))
     t1 = _offer_trip(db, xl, vehicle_category="xl", has_pet=True)
     t2 = _offer_trip(db, xl_pet, vehicle_category="xl", has_pet=True)
-    assert t1 not in _listed(db, xl)
+    assert t1 in _listed(db, xl)
     assert t2 in _listed(db, xl_pet)
 
 

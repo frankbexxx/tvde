@@ -307,7 +307,7 @@
     },
     "categories": {
       "title": "Categorias de veículo",
-      "intro": "Sincroniza com o servidor e filtra os pedidos que vês na lista. «Aceito viagens com animais» é o opt-in para pedidos com animal (suplemento). Animais de assistência não exigem esta opção. Mantém pelo menos uma categoria activa.",
+      "intro": "Sincroniza com o servidor e filtra os pedidos que vês na lista (categoria tarifária). Mantém pelo menos uma categoria activa. Preferência «pet» legacy, se existir nos dados, não filtra matching.",
       "petAccept": "Aceito viagens com animais",
       "electric": "Elétrico"
     },
@@ -425,7 +425,7 @@
   },
   "pet": {
     "badgePet": "Com animal",
-    "badgeAssistance": "Animal de assistência",
+    "badgeAssistance": "Cão de assistência",
     "badgeLegacy": "Com animal (pedido antigo)",
     "occupiesSeat": "Ocupa um lugar",
     "noSurcharge": "Sem suplemento",

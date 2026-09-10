@@ -1,15 +1,40 @@
 # PET — modelo e roadmap
 
 **Actualização:** 2026-09-10  
-**Estado:** **PET-0 → PET-4** — **feature Pet NÃO concluída** globalmente (falta PET-5)
+**Estado:** **PET-0 → PET-5A.1** — **feature Pet NÃO concluída** globalmente (falta PET-5A.2+ / 5B / 5C)
 
 ## Decisão de produto
 
 - Pricing por categoria: **GO** (`x`) · **Comfort** · **XL** *(tarifário completo = A2.5 / ainda não)*
-- Pet = atributo adicional; surcharge **€1,50**; assistência **€0**
+- Pet = atributo adicional; surcharge **€1,50**; **cão de assistência** **€0**
 - Comissão 15% sobre total (fare + surcharge)
+- Máximo **1 animal comum** por viagem (V1 operacional)
+- Terminologia legal V1: **«Cão de assistência»** / EN **«Assistance dog»**  
+  (campo interno `is_assistance_animal` mantido por compatibilidade)
 
-## Política capacidade (PET-4)
+## Matching (PET-5A.1)
+
+Driver elegível para viagem com animal comum **ou** cão de assistência se:
+
+- fare category compatível
+- vehicle compliance OK
+- capacity suficiente (quando gate ON)
+- restantes gates normais
+
+**Não** exige preferência Driver `pet`.
+
+`pet` preference: **retained as legacy/non-enforcing state** (API/coluna podem existir; UI leave-out; matching ignora).
+
+Legacy `vehicle_category=pet`: legível; matching como fare `x`; **sem** reescrita de histórico.
+
+## Transporte / acondicionamento (PET-5A.1)
+
+- `carrier` e `harness` = meios de acondicionamento/segurança (não obrigação legal específica na copy)
+- Size + transport obrigatórios para animal comum
+- **large + carrier permitido** (removido bloqueio absoluto)
+- Copy neutra: animal deve viajar devidamente acondicionado e em segurança
+
+## Capacidade (PET-4) — inalterada em PET-5A.1
 
 ```text
 occupied_pet_seats =
@@ -21,44 +46,33 @@ required_passenger_capacity = passenger_count + occupied_pet_seats
 Vehicle elegível se max_passengers >= required_passenger_capacity
 ```
 
-- `passenger_count`: passageiros **sem** Driver; default **1**
-- `max_passengers`: no Vehicle real (não inferido da categoria)
-- NULL / unknown capacity com gate ON → **bloqueia**
-- Gate: `ENABLE_VEHICLE_CAPACITY_GATES` (**default OFF**)
+- Gate: `ENABLE_VEHICLE_CAPACITY_GATES` (PROD: **ON** após rollout PET-4)
 
-## PET-0 → PET-3 — DONE
+## PET-0 → PET-4 — DONE
 
-Fundação · surcharge · Passenger UX · Driver UX + matching Pet
+Fundação · surcharge · Passenger/Driver UX · matching Pet (pré-5A.1) · capacity + PROD rollout PASS
 
-## PET-4 — DONE (esta entrega)
+## PET-5A.1 — DONE (esta entrega)
 
 | Item | Estado |
 |------|--------|
-| `trips.passenger_count` | DONE |
-| `vehicles.max_passengers` (nullable legacy) | DONE |
-| Occupancy formula + matching/accept | DONE |
-| Passenger selector 1–6 | DONE |
-| Driver occupancy chips | DONE |
-| Partner create/edit capacity | DONE |
-| Admin KYC read-only capacity | DONE |
-| Feature flag `ENABLE_VEHICLE_CAPACITY_GATES` default OFF | DONE |
-| PROD fill / audit / enable | **pendente (rollout)** |
-
-### Código canónico
-
-- Migration `c1d2e3f4a5b6`
-- `backend/app/services/vehicle_capacity.py`
-- Flag em `app/core/config.py`
-- Tests `backend/tests/test_vehicle_capacity_pet4.py`
-
-### Rollout
-
-1. Deploy com flag **OFF**
-2. Partner preenche `max_passengers` nas viaturas
-3. Readiness audit (como compliance)
-4. Smoke com flag ON em ambiente controlado
-5. Só então PROD ON
+| Remover Pet opt-in do matching | DONE |
+| Driver toggle «Aceito viagens com animais» fora da UI | DONE |
+| `pet` preference legacy/non-enforcing | DONE |
+| Copy «Cão de assistência» / Assistance dog | DONE |
+| Remover bloqueio large+carrier | DONE |
+| Validação passenger sem porte×transporte absoluto | DONE |
+| Capacity / surcharge / Stripe | **não alterados** |
+| Motivo atendível de recusa/cancel | **PET-5A.2** (não nesta PR) |
 
 ## Etapas restantes
 
-5. **PET-5** — legal/copy completa · reporting Partner/Admin · E2E  
+| ID | Item | Notas |
+|----|------|-------|
+| PET-5A.2 | Fluxo recusa/cancel por motivo atendível (animal) | Discovery + reason codes |
+| PET-5B | Reporting Partner/Admin (campos Pet) | |
+| PET-5C | E2E Playwright Pet/capacity | |
+| — | Taxa limpeza/danos | Fora do MVP |
+| — | Upload ID cão de assistência | Fora desta fase |
+
+**Não marcar feature Pet CLOSED.**

@@ -57,7 +57,7 @@ describe('petBooking — Comfort / XL + Pet', () => {
   })
 })
 
-describe('petBooking — large harness / block', () => {
+describe('petBooking — large size × transport (PET-5A.1)', () => {
   it('large + harness permitido', () => {
     let s = applyWithAnimal(DEFAULT_PET_BOOKING, true)
     s = applyPetSize(s, 'large')
@@ -66,24 +66,22 @@ describe('petBooking — large harness / block', () => {
     expect(buildPetCreatePayload(s).pet_transport).toBe('harness')
   })
 
-  it('large + carrier bloqueia submit', () => {
+  it('large + carrier permitido', () => {
     const s = {
       ...DEFAULT_PET_BOOKING,
       withAnimal: true,
       petSize: 'large' as const,
       petTransport: 'carrier' as const,
     }
-    expect(validatePetBooking(s)).toEqual({
-      ok: false,
-      messageKey: 'pet.errLargeNeedsHarness',
-    })
+    expect(validatePetBooking(s)).toEqual({ ok: true })
+    expect(buildPetCreatePayload(s).pet_transport).toBe('carrier')
   })
 
-  it('applyPetSize large coerces carrier → harness', () => {
+  it('applyPetSize large does not coerce carrier', () => {
     let s = applyWithAnimal(DEFAULT_PET_BOOKING, true)
     s = applyPetTransport(s, 'carrier')
     s = applyPetSize(s, 'large')
-    expect(s.petTransport).toBe('harness')
+    expect(s.petTransport).toBe('carrier')
     expect(validatePetBooking(s).ok).toBe(true)
   })
 })

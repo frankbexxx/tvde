@@ -199,8 +199,8 @@
     "categoryComfort": "Comfort",
     "categoryXl": "XL",
     "withAnimal": "Travelling with an animal",
-    "assistance": "Assistance animal",
-    "assistanceHint": "No animal surcharge. Does not require a pet-capable driver.",
+    "assistance": "Assistance dog",
+    "assistanceHint": "No surcharge. Legal identification of the dog may be requested when needed.",
     "maxOne": "Maximum 1 animal per trip.",
     "sizeTitle": "Size",
     "size": {
@@ -213,7 +213,7 @@
       "carrier": "Carrier",
       "harness": "Own harness / seat belt"
     },
-    "largeHarnessOnly": "Large animals require an own harness / seat belt.",
+    "transportSafetyHint": "The animal must travel properly secured and in safe conditions.",
     "occupiesSeat": "Does the animal take up a seat?",
     "occupiesSeatShort": "Takes a seat",
     "seatExtraHint": "The animal takes 1 extra seat.",
@@ -225,9 +225,8 @@
     "noSurcharge": "No animal surcharge",
     "summaryTitle": "Summary",
     "badgePet": "With animal",
-    "badgeAssistance": "Assistance animal",
+    "badgeAssistance": "Assistance dog",
     "errSizeRequired": "Select the animal size.",
-    "errTransportRequired": "Select how the animal travels (carrier or harness).",
-    "errLargeNeedsHarness": "For a large animal you must select an own harness / seat belt."
+    "errTransportRequired": "Select how the animal travels (carrier or harness)."
   }
 }

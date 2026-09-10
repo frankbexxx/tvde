@@ -46,7 +46,7 @@ class TripCreateRequest(BaseModel):
     )
     is_assistance_animal: bool = Field(
         default=False,
-        description="Assistance animal (not Pet product; no Pet driver opt-in).",
+        description="Assistance dog (legal V1); field name kept for API compatibility. No Pet surcharge.",
     )
     pet_occupies_seat: bool = Field(
         default=False,
