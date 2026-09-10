@@ -44,6 +44,22 @@
     "mistake": "Pedido por engano",
     "other": "Outro…"
   },
+  "attendableReasons": {
+    "title": "Motivo atendível",
+    "none": "Seleccionar motivo…",
+    "animal_safety_risk": "Risco para a segurança",
+    "animal_hygiene_issue": "Problema de higiene",
+    "animal_health_concern": "Problema de saúde do animal",
+    "inadequate_accommodation": "Acondicionamento inadequado",
+    "other_attendable_reason": "Outro motivo atendível",
+    "detailPlaceholder": "Descreve o motivo (obrigatório, máx. 280)",
+    "errCodeRequired": "Selecciona um motivo atendível.",
+    "errDetailRequired": "Indica o detalhe do motivo.",
+    "errDetailTooLong": "O detalhe não pode exceder 280 caracteres.",
+    "rejectTitle": "Recusar oferta com animal",
+    "rejectConfirm": "Confirmar recusa",
+    "rejectCancel": "Voltar"
+  },
   "cancelOtherApi": "Outro",
   "stateLine": "Estado: {{status}}",
   "paymentLine": "Pagamento: {{status}}",

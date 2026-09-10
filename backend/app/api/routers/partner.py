@@ -193,6 +193,18 @@ def _driver_item(
 
 
 def _trip_item(t) -> PartnerTripItem:
+    from app.services.attendable_reasons import passenger_safe_label
+
+    code = getattr(t, "cancellation_reason_code", None) or None
+    label = passenger_safe_label(code) if code else None
+    # Legacy cancel_reason field: prefer label when coded; else stored string.
+    # Detail (free text) exposed separately for Partner audit.
+    detail = None
+    if code:
+        detail = (t.cancellation_reason or "").strip() or None
+        cancel_reason_display = label
+    else:
+        cancel_reason_display = t.cancellation_reason
     return PartnerTripItem(
         trip_id=str(t.id),
         status=t.status.value,
@@ -204,7 +216,13 @@ def _trip_item(t) -> PartnerTripItem:
         destination_lng=float(t.destination_lng),
         estimated_price=float(t.estimated_price),
         final_price=float(t.final_price) if t.final_price is not None else None,
-        cancel_reason=t.cancellation_reason,
+        cancel_reason=cancel_reason_display,
+        cancel_reason_code=code,
+        cancel_reason_label=label,
+        cancel_reason_detail=detail,
+        cancelled_by=getattr(t, "cancelled_by", None),
+        has_pet=bool(getattr(t, "has_pet", False)),
+        is_assistance_animal=bool(getattr(t, "is_assistance_animal", False)),
         created_at=t.created_at.isoformat(),
         started_at=t.started_at.isoformat() if t.started_at else None,
         completed_at=t.completed_at.isoformat() if t.completed_at else None,

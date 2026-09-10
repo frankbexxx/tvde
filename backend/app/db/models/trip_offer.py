@@ -7,7 +7,9 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, func
+from typing import Optional
+
+from sqlalchemy import DateTime, Enum, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -53,6 +55,16 @@ class TripOffer(Base):
         DateTime(timezone=True),
         nullable=False,
         comment="When the offer expires.",
+    )
+    rejection_reason_code: Mapped[Optional[str]] = mapped_column(
+        String(64),
+        nullable=True,
+        comment="Structured attendable reject reason (PET-5A.2).",
+    )
+    rejection_reason_detail: Mapped[Optional[str]] = mapped_column(
+        String(280),
+        nullable=True,
+        comment="Internal free text when other_attendable_reason (max 280).",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

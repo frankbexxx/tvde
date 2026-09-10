@@ -293,6 +293,8 @@ async def cancel_trip(
 ) -> TripStatusResponse:
     tid = trip_id.strip()
     reason = (payload.reason if payload else None) or None
+    reason_code = (payload.reason_code if payload else None) or None
+    reason_detail = (payload.reason_detail if payload else None) or None
     prev = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
     previous_state = prev.status.value if prev else None
     t0 = time.perf_counter()
@@ -301,6 +303,8 @@ async def cancel_trip(
         driver_id=user.user_id,
         trip_id=tid,
         reason=reason,
+        reason_code=reason_code,
+        reason_detail=reason_detail,
     )
     latency_ms = int((time.perf_counter() - t0) * 1000)
     payment = trip.payment

@@ -126,6 +126,12 @@ class PartnerTripItem(BaseModel):
     estimated_price: float
     final_price: float | None = None
     cancel_reason: str | None = None
+    cancel_reason_code: str | None = None
+    cancel_reason_label: str | None = None
+    cancel_reason_detail: str | None = None
+    cancelled_by: str | None = None
+    has_pet: bool = False
+    is_assistance_animal: bool = False
     created_at: str
     started_at: str | None = None
     completed_at: str | None = None
