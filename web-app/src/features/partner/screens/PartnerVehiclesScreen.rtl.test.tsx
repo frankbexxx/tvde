@@ -29,6 +29,7 @@ const vehicle: PartnerVehicleRow = {
   model: 'Corolla',
   year: 2020,
   color: 'preto',
+  max_passengers: 4,
   service_categories: ['x'],
   status: 'active',
   created_at: '2026-07-20T00:00:00Z',
@@ -146,6 +147,9 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
     fireEvent.change(screen.getByTestId('partner-vehicle-field-model'), {
       target: { value: 'Corolla' },
     })
+    fireEvent.change(screen.getByTestId('partner-vehicle-field-max-passengers'), {
+      target: { value: '4' },
+    })
     fireEvent.click(screen.getByTestId('partner-vehicle-category-xl'))
     fireEvent.click(screen.getByTestId('partner-vehicle-category-pet'))
 
@@ -158,6 +162,7 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
       expect(api.createPartnerVehicle).toHaveBeenCalledWith(
         expect.objectContaining({
           service_categories: expect.arrayContaining(['x', 'xl', 'pet']),
+          max_passengers: 4,
         })
       )
     })
@@ -179,6 +184,9 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
     fireEvent.change(screen.getByTestId('partner-vehicle-field-model'), {
       target: { value: 'Corolla' },
     })
+    fireEvent.change(screen.getByTestId('partner-vehicle-field-max-passengers'), {
+      target: { value: '4' },
+    })
 
     api.fetchPartnerVehicles.mockResolvedValue([vehicle])
     fireEvent.click(screen.getByTestId('partner-vehicles-create-submit'))
@@ -189,6 +197,7 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
           plate: '12-AB-34',
           make: 'Toyota',
           model: 'Corolla',
+          max_passengers: 4,
         })
       )
     })
@@ -212,7 +221,7 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
     await waitFor(() => {
       expect(api.patchPartnerVehicle).toHaveBeenCalledWith(
         'veh-1',
-        expect.objectContaining({ color: 'branco' })
+        expect.objectContaining({ color: 'branco', max_passengers: 4 })
       )
     })
   })
@@ -273,6 +282,9 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
     })
     fireEvent.change(screen.getByTestId('partner-vehicle-field-model'), {
       target: { value: 'Golf' },
+    })
+    fireEvent.change(screen.getByTestId('partner-vehicle-field-max-passengers'), {
+      target: { value: '4' },
     })
     fireEvent.click(screen.getByTestId('partner-vehicles-create-submit'))
 
