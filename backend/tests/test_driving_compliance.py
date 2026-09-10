@@ -50,7 +50,7 @@ def _make_driver(db: Session) -> uuid.UUID:
     user = User(
         role=Role.driver,
         name=f"Duty {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=f"+3519{uuid.uuid4().hex[:10]}",
         status=UserStatus.active,
     )
     db.add(user)
@@ -72,7 +72,7 @@ def _make_trip(db: Session) -> Trip:
     pax = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=f"+3519{uuid.uuid4().hex[:10]}",
         status=UserStatus.active,
     )
     db.add(pax)
