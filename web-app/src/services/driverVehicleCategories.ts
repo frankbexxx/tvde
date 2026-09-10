@@ -1,6 +1,7 @@
 /**
- * Preferências locais de categorias de veículo ativas para o motorista.
- * Fase 1: persistência local + toggles no menu (sem regras de backend).
+ * Preferências de categorias de veículo do motorista.
+ * Persistência local + sync API (`/driver/preferences/vehicle-categories`).
+ * A chave `pet` é opt-in para pedidos com animal (não categoria tarifária).
  */
 export const DRIVER_VEHICLE_CATEGORIES = [
   'x',
@@ -37,7 +38,7 @@ export function driverVehicleCategoryLabel(category: DriverVehicleCategory): str
     case 'xl':
       return 'XL'
     case 'pet':
-      return 'Pet'
+      return 'Animais'
     case 'comfort':
       return 'Comfort'
     case 'black':

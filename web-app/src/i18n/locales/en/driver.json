@@ -306,7 +306,8 @@
     },
     "categories": {
       "title": "Vehicle categories",
-      "intro": "Syncs with the server and filters requests you see in the list. Keep at least one category active.",
+      "intro": "Syncs with the server and filters requests you see in the list. «Accept trips with animals» is the opt-in for paid animal trips. Assistance animals do not require this option. Keep at least one category active.",
+      "petAccept": "Accept trips with animals",
       "electric": "Electric"
     },
     "docs": {
@@ -420,5 +421,22 @@
     "browse": "Choose file",
     "noFileSelected": "No file selected",
     "fileSelected": "{{name}}"
+  },
+  "pet": {
+    "badgePet": "With animal",
+    "badgeAssistance": "Assistance animal",
+    "badgeLegacy": "With animal (legacy request)",
+    "occupiesSeat": "Takes a seat",
+    "noSurcharge": "No surcharge",
+    "surchargeLine": "+{{amount}} €",
+    "size": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
+    },
+    "transport": {
+      "carrier": "Carrier",
+      "harness": "Own harness / seat belt"
+    }
   }
 }

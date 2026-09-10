@@ -117,4 +117,60 @@ describe('RequestCard (RTL)', () => {
     )
     expect(screen.queryByRole('button', { name: /recusar/i })).not.toBeInTheDocument()
   })
+
+  it('Pet comercial mostra detalhes e suplemento da API', () => {
+    render(
+      <RequestCard
+        pickup="Rua A"
+        estimatedPrice={12}
+        onAccept={() => { }}
+        petTrip={{
+          vehicle_category: 'x',
+          has_pet: true,
+          pet_size: 'medium',
+          pet_transport: 'harness',
+          pet_occupies_seat: true,
+          pet_surcharge: 1.5,
+        }}
+      />,
+    )
+    expect(screen.getByTestId('driver-pet-info')).toHaveAttribute('data-pet-mode', 'commercial')
+    expect(screen.getByTestId('driver-pet-badge-commercial')).toHaveTextContent(/com animal/i)
+    expect(screen.getByTestId('driver-pet-size-medium')).toBeInTheDocument()
+    expect(screen.getByTestId('driver-pet-transport-harness')).toBeInTheDocument()
+    expect(screen.getByTestId('driver-pet-occupies-seat')).toBeInTheDocument()
+    expect(screen.getByTestId('driver-pet-surcharge')).toHaveTextContent(/\+1\.50/)
+  })
+
+  it('assistance mostra copy correcta sem suplemento comercial', () => {
+    render(
+      <RequestCard
+        pickup="Rua A"
+        estimatedPrice={10}
+        onAccept={() => { }}
+        petTrip={{
+          vehicle_category: 'comfort',
+          is_assistance_animal: true,
+          pet_surcharge: 0,
+        }}
+      />,
+    )
+    expect(screen.getByTestId('driver-pet-info')).toHaveAttribute('data-pet-mode', 'assistance')
+    expect(screen.getByTestId('driver-pet-badge-assistance')).toHaveTextContent(/assistência/i)
+    expect(screen.getByTestId('driver-pet-no-surcharge')).toBeInTheDocument()
+    expect(screen.queryByTestId('driver-pet-surcharge')).not.toBeInTheDocument()
+  })
+
+  it('legacy Pet não quebra e mostra badge legado', () => {
+    render(
+      <RequestCard
+        pickup="Rua A"
+        estimatedPrice={10}
+        onAccept={() => { }}
+        petTrip={{ vehicle_category: 'pet', has_pet: false }}
+      />,
+    )
+    expect(screen.getByTestId('driver-pet-info')).toHaveAttribute('data-pet-mode', 'legacy')
+    expect(screen.getByTestId('driver-pet-badge-legacy')).toBeInTheDocument()
+  })
 })

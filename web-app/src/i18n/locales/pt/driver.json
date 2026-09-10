@@ -306,7 +306,8 @@
     },
     "categories": {
       "title": "Categorias de veículo",
-      "intro": "Sincroniza com o servidor e filtra os pedidos que vês na lista. Mantém pelo menos uma categoria activa.",
+      "intro": "Sincroniza com o servidor e filtra os pedidos que vês na lista. «Aceito viagens com animais» é o opt-in para pedidos com animal (suplemento). Animais de assistência não exigem esta opção. Mantém pelo menos uma categoria activa.",
+      "petAccept": "Aceito viagens com animais",
       "electric": "Elétrico"
     },
     "docs": {
@@ -420,5 +421,22 @@
     "browse": "Escolher ficheiro",
     "noFileSelected": "Nenhum ficheiro seleccionado",
     "fileSelected": "{{name}}"
+  },
+  "pet": {
+    "badgePet": "Com animal",
+    "badgeAssistance": "Animal de assistência",
+    "badgeLegacy": "Com animal (pedido antigo)",
+    "occupiesSeat": "Ocupa um lugar",
+    "noSurcharge": "Sem suplemento",
+    "surchargeLine": "+{{amount}} €",
+    "size": {
+      "small": "Pequeno",
+      "medium": "Médio",
+      "large": "Grande"
+    },
+    "transport": {
+      "carrier": "Transportadora",
+      "harness": "Arnês / cinto próprio"
+    }
   }
 }
