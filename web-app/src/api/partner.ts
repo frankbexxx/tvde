@@ -61,6 +61,7 @@ export interface PartnerVehicleRow {
   color: string | null
   service_categories: string[]
   status: string
+  max_passengers?: number | null
   created_at: string
   updated_at: string
   assigned_driver_id: string | null
@@ -79,6 +80,7 @@ export type PartnerVehicleCreateBody = {
   color?: string | null
   service_categories: string[]
   status?: string | null
+  max_passengers: number
 }
 
 export type PartnerVehiclePatchBody = {
@@ -89,6 +91,7 @@ export type PartnerVehiclePatchBody = {
   color?: string | null
   service_categories?: string[]
   status?: string
+  max_passengers?: number | null
 }
 
 export interface PartnerDriverDiscoveryItem {

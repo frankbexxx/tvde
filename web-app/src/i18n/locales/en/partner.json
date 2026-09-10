@@ -366,6 +366,8 @@
     "cancel": "Cancel",
     "refresh": "Refresh",
     "serviceCategories": "Categories",
+    "maxPassengers": "Seats (passengers)",
+    "maxPassengersUnknown": "not set",
     "noDriver": "No driver",
     "assignedTo": "Driver: {{name}}",
     "assignLabel": "Assign driver",
@@ -390,13 +392,15 @@
       "model": "Model",
       "year": "Year (optional)",
       "color": "Color (optional)",
-      "serviceCategories": "Service categories"
+      "serviceCategories": "Service categories",
+      "maxPassengers": "Passenger seats (1–8)"
     },
     "errors": {
       "plateRequired": "Plate is required.",
       "makeRequired": "Make is required.",
       "modelRequired": "Model is required.",
       "yearInvalid": "Invalid year.",
+      "maxPassengersInvalid": "Enter passenger seats between 1 and 8.",
       "categoriesRequired": "Select at least one category.",
       "invalidCategory": "Invalid category.",
       "driverRequired": "Select a driver.",

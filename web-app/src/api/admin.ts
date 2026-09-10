@@ -427,6 +427,7 @@ export interface AdminKycVehicleRow {
   partner_id: string
   partner_name: string | null
   status: string
+  max_passengers?: number | null
   assigned_driver_user_id: string | null
   assigned_driver_name: string | null
   documents: AdminKycDocItem[]

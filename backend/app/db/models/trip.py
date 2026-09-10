@@ -137,7 +137,14 @@ class Trip(Base):
         nullable=False,
         default=False,
         server_default="false",
-        comment="Pet occupies seat/space hint (capacity enforcement later).",
+        comment="Animal occupies a passenger seat (PET-4 capacity).",
+    )
+    passenger_count: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default="1",
+        comment="Passengers excluding driver (PET-4). Default 1 for legacy.",
     )
     pet_surcharge_amount: Mapped[Optional[float]] = mapped_column(
         Numeric(10, 2),

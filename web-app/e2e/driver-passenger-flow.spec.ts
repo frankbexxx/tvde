@@ -163,6 +163,26 @@ function waitForDriverTripPost(page: Page, tripId: string, suffix: 'arriving' | 
 /** Garante coordenadas no browser (Playwright) + última posição no servidor antes de «Iniciar viagem» (gate de proximidade). */
 async function syncDriverNearPickupForStart(page: Page, request: APIRequestContext, driverToken: string) {
   await page.context().setGeolocation({ latitude: TRIP_ORIGIN.lat, longitude: TRIP_ORIGIN.lng })
+  // Após reload, o watch pode ficar em fallback Oeiras (~18 km) — limpar e forçar leitura.
+  await page.evaluate(() => {
+    try {
+      sessionStorage.removeItem('tvde_geolocation_failed')
+      localStorage.removeItem('tvde_demo_location')
+    } catch {
+      /* ignore */
+    }
+    return new Promise<void>((resolve) => {
+      if (!('geolocation' in navigator)) {
+        resolve()
+        return
+      }
+      navigator.geolocation.getCurrentPosition(
+        () => resolve(),
+        () => resolve(),
+        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      )
+    })
+  })
   await refreshDriverLocationNearPickup(request, driverToken)
 }
 
@@ -284,6 +304,8 @@ async function createAuthenticatedContext(
       try {
         localStorage.setItem('tvde_e2e_dev_tokens_json', json)
         localStorage.setItem('tvde_app_route_role', appRole)
+        localStorage.removeItem('tvde_demo_location')
+        sessionStorage.removeItem('tvde_geolocation_failed')
         if (appRole === 'driver') localStorage.removeItem('tvde_driver_offline')
         if (appRole === 'driver') sessionStorage.removeItem('tvde_dismissed_offer_trip_ids')
         if (tripId) sessionStorage.setItem('e2e_passenger_trip_id', tripId)

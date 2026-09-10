@@ -64,6 +64,7 @@
     "acceptBlockedNoActiveVehicle": "You have no active vehicle assigned. Ask your Partner to assign a vehicle before accepting new trips.",
     "acceptBlockedVehicleDocuments": "The vehicle has missing, expired, or rejected documents. Ask your Partner to fix the documents before accepting new trips.",
     "acceptBlockedUnknownVehicleCompliance": "We could not confirm the vehicle's document status. Check with your Partner or try again.",
+    "acceptBlockedCapacity": "The active vehicle does not have enough seats for this trip.",
     "pickupPhase": "pickup",
     "destinationPhase": "destination",
     "openingNav": "Opening {{app}} ({{phase}})",
@@ -429,6 +430,8 @@
     "occupiesSeat": "Takes a seat",
     "noSurcharge": "No surcharge",
     "surchargeLine": "+{{amount}} €",
+    "passengersLine": "{{count}} passengers",
+    "passengersLineOne": "1 passenger",
     "size": {
       "small": "Small",
       "medium": "Medium",

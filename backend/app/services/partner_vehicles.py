@@ -26,6 +26,7 @@ from app.schemas.partner import (
     PartnerVehicleItem,
     PartnerVehiclePatchRequest,
 )
+from app.services.vehicle_capacity import validate_vehicle_max_passengers
 from app.services.driver_preferences import (
     VALID_DRIVER_CATEGORIES,
     decode_driver_categories_csv,
@@ -157,6 +158,7 @@ def vehicle_to_item(
         color=vehicle.color,
         service_categories=decode_driver_categories_csv(vehicle.service_categories),
         status=vehicle.status,
+        max_passengers=getattr(vehicle, "max_passengers", None),
         created_at=_utc_iso(vehicle.created_at),
         updated_at=_utc_iso(vehicle.updated_at),
         assigned_driver_id=driver_id,
@@ -223,6 +225,7 @@ def create_vehicle_for_partner(
 
     status_val = _validate_status(body.status or "active")
     cats_csv = require_vehicle_service_categories_csv(body.service_categories)
+    max_pax = validate_vehicle_max_passengers(body.max_passengers, required=True)
 
     vehicle = Vehicle(
         id=uuid.uuid4(),
@@ -235,6 +238,7 @@ def create_vehicle_for_partner(
         color=body.color.strip() if body.color else None,
         service_categories=cats_csv,
         status=status_val,
+        max_passengers=max_pax,
     )
     db.add(vehicle)
     try:
@@ -301,6 +305,10 @@ def patch_vehicle_for_partner(
         )
     if "status" in data and data["status"] is not None:
         vehicle.status = _validate_status(data["status"])
+    if "max_passengers" in data:
+        vehicle.max_passengers = validate_vehicle_max_passengers(
+            data["max_passengers"], required=True
+        )
 
     try:
         db.commit()

@@ -13,7 +13,10 @@ describe('petBooking — GO normal (sem animal)', () => {
   it('default is GO (x) without pet fields', () => {
     expect(DEFAULT_PET_BOOKING.fareCategory).toBe('x')
     expect(validatePetBooking(DEFAULT_PET_BOOKING)).toEqual({ ok: true })
-    expect(buildPetCreatePayload(DEFAULT_PET_BOOKING)).toEqual({ vehicle_category: 'x' })
+    expect(buildPetCreatePayload(DEFAULT_PET_BOOKING)).toEqual({
+      vehicle_category: 'x',
+      passenger_count: 1,
+    })
   })
 })
 
@@ -25,6 +28,7 @@ describe('petBooking — GO + Pet pequeno carrier', () => {
     expect(validatePetBooking(s).ok).toBe(true)
     expect(buildPetCreatePayload(s)).toEqual({
       vehicle_category: 'x',
+      passenger_count: 1,
       has_pet: true,
       pet_size: 'small',
       pet_transport: 'carrier',
@@ -92,8 +96,10 @@ describe('petBooking — assistance', () => {
     expect(validatePetBooking(s).ok).toBe(true)
     expect(buildPetCreatePayload(s)).toEqual({
       vehicle_category: 'x',
+      passenger_count: 1,
       is_assistance_animal: true,
       has_pet: false,
+      pet_occupies_seat: false,
     })
   })
 

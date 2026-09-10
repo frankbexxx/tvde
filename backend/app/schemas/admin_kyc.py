@@ -33,6 +33,7 @@ class AdminKycVehicleRow(BaseModel):
     partner_id: str
     partner_name: str | None = None
     status: str
+    max_passengers: int | None = None
     assigned_driver_user_id: str | None = None
     assigned_driver_name: str | None = None
     documents: list[AdminKycDocItem] = Field(default_factory=list)

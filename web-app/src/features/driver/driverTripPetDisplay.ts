@@ -5,6 +5,7 @@
 
 export type DriverPetTripFields = {
   vehicle_category?: string | null
+  passenger_count?: number | null
   has_pet?: boolean
   pet_size?: string | null
   pet_transport?: string | null

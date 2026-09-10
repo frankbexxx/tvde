@@ -124,6 +124,10 @@ class Settings(BaseSettings):
     # Default OFF: production-safe; enable only for controlled dev/test/smoke.
     ENABLE_VEHICLE_COMPLIANCE_GATES: bool = False
 
+    # PET-4 — vehicle passenger capacity gates (matching / accept).
+    # Default OFF — fill max_passengers + audit readiness before enabling in prod.
+    ENABLE_VEHICLE_CAPACITY_GATES: bool = False
+
     # B2 next-trip chaining (groundwork only — no runtime consumers yet).
     # Default OFF: zero behaviour change until B2-SPIKE / B2-MATCH wire these up.
     # See docs/architecture/B2_PRODUCT_DECISIONS_2026-08-04.md

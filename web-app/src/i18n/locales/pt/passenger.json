@@ -216,6 +216,8 @@
     "largeHarnessOnly": "Para grande porte é necessário arnês / cinto próprio.",
     "occupiesSeat": "O animal ocupa um lugar no banco?",
     "occupiesSeatShort": "Ocupa lugar",
+    "seatExtraHint": "O animal ocupa 1 lugar adicional.",
+    "passengersTitle": "Passageiros",
     "surchargeHint": "Suplemento animal estimado: +{{amount}} € (valor final pela estimativa).",
     "surchargeLine": "Suplemento animal: +{{amount}} €",
     "fareLine": "Tarifa da viagem: {{amount}} €",

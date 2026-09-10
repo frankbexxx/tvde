@@ -25,6 +25,7 @@ export interface TripCreateRequest {
   pet_transport?: string
   is_assistance_animal?: boolean
   pet_occupies_seat?: boolean
+  passenger_count?: number
 }
 
 export interface PriceBreakdown {
@@ -52,6 +53,7 @@ export interface TripCreateResponse {
   price_breakdown?: PriceBreakdown | null
   has_pet?: boolean
   is_assistance_animal?: boolean
+  passenger_count?: number
 }
 
 export interface TripStatusResponse {
@@ -82,6 +84,7 @@ export interface TripAvailableItem {
   pet_transport?: string | null
   is_assistance_animal?: boolean
   pet_occupies_seat?: boolean
+  passenger_count?: number
   pet_surcharge?: number | null
 }
 
@@ -143,6 +146,7 @@ export interface TripDetailResponse {
   pet_transport?: string | null
   is_assistance_animal?: boolean
   pet_occupies_seat?: boolean
+  passenger_count?: number
   pet_surcharge?: number | null
   price_breakdown?: PriceBreakdown | null
 }

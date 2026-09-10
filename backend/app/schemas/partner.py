@@ -42,6 +42,12 @@ class PartnerVehicleCreateRequest(BaseModel):
     color: str | None = Field(default=None, max_length=40)
     service_categories: list[str] = Field(default_factory=lambda: ["x"])
     status: str | None = Field(default="active", max_length=24)
+    max_passengers: int = Field(
+        ...,
+        ge=1,
+        le=8,
+        description="Max passengers excluding driver (PET-4).",
+    )
 
 
 class PartnerVehiclePatchRequest(BaseModel):
@@ -52,6 +58,7 @@ class PartnerVehiclePatchRequest(BaseModel):
     color: str | None = Field(default=None, max_length=40)
     service_categories: list[str] | None = None
     status: str | None = Field(default=None, max_length=24)
+    max_passengers: int | None = Field(default=None, ge=1, le=8)
 
 
 class PartnerVehicleAssignRequest(BaseModel):
@@ -96,6 +103,7 @@ class PartnerVehicleItem(BaseModel):
     color: str | None = None
     service_categories: list[str]
     status: str
+    max_passengers: int | None = None
     created_at: str
     updated_at: str
     assigned_driver_id: str | None = None

@@ -76,6 +76,7 @@ async def list_available_trips(
             pet_transport=getattr(trip, "pet_transport", None),
             is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
             pet_occupies_seat=bool(getattr(trip, "pet_occupies_seat", False)),
+            passenger_count=int(getattr(trip, "passenger_count", None) or 1),
             pet_surcharge=(
                 float(trip.pet_surcharge_amount)
                 if getattr(trip, "pet_surcharge_amount", None) is not None

@@ -346,6 +346,9 @@ function VehicleKycCard({ row }: { row: AdminKycVehicleRow }) {
         status: {row.status}
         {row.worst_document_status ? ` · worst docs: ${row.worst_document_status}` : ''}
       </p>
+      <p className="text-xs text-muted-foreground" data-testid="admin-kyc-vehicle-max-passengers">
+        Lugares: {row.max_passengers != null ? row.max_passengers : '—'}
+      </p>
       <p className="text-xs text-muted-foreground">
         Partner: {row.partner_name ?? row.partner_id}
       </p>

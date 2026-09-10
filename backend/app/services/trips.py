@@ -32,6 +32,11 @@ from app.services.pet_trip import (
     pet_surcharge_for_trip,
     resolve_trip_pet_create,
 )
+from app.services.vehicle_capacity import (
+    assert_driver_matches_trip_capacity,
+    driver_matches_trip_capacity,
+    resolve_passenger_count,
+)
 from app.utils.geo import haversine_km, haversine_m
 from app.services.offer_dispatch import create_offers_for_trip
 from app.utils.logging import log_debug_event, log_event
@@ -142,6 +147,13 @@ def _assert_driver_matches_trip_category(driver: Driver, trip: Trip) -> None:
         )
 
 
+def _assert_driver_matches_trip_for_accept(
+    db: Session, driver: Driver, trip: Trip, *, surface: str
+) -> None:
+    _assert_driver_matches_trip_category(driver, trip)
+    assert_driver_matches_trip_capacity(db, driver, trip, surface=surface)
+
+
 def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int]:
     """
     Estimate distance, duration, price, ETA.
@@ -188,6 +200,7 @@ async def create_trip(
     payload: TripCreateRequest,
 ) -> tuple[Trip, int]:
     fare_only, distance_km, duration_min, eta = _estimate_trip(payload)
+    passenger_count = resolve_passenger_count(getattr(payload, "passenger_count", None))
     pet = resolve_trip_pet_create(
         vehicle_category=payload.vehicle_category,
         has_pet=bool(getattr(payload, "has_pet", False)),
@@ -220,6 +233,7 @@ async def create_trip(
         pet_transport=pet.pet_transport,
         is_assistance_animal=pet.is_assistance_animal,
         pet_occupies_seat=pet.pet_occupies_seat,
+        passenger_count=passenger_count,
         distance_km=distance_km,
         duration_min=duration_min,
         final_price=None,
@@ -769,7 +783,7 @@ def accept_trip(
     assert_driver_vehicle_compliance_for_accept(
         db, driver, surface="accept_trip", trip_id=str(trip.id)
     )
-    _assert_driver_matches_trip_category(driver, trip)
+    _assert_driver_matches_trip_for_accept(db, driver, trip, surface="accept_trip")
     if not getattr(driver, "is_available", True):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -936,7 +950,7 @@ def accept_offer(
     assert_driver_vehicle_compliance_for_accept(
         db, driver, surface="accept_offer", trip_id=str(trip.id)
     )
-    _assert_driver_matches_trip_category(driver, trip)
+    _assert_driver_matches_trip_for_accept(db, driver, trip, surface="accept_offer")
     if not getattr(driver, "is_available", True):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -1213,7 +1227,9 @@ def list_available_trips(
 
     # Multi-offer: pending offers for this driver
     for offer, trip in list_offers_for_driver(db=db, driver_id=driver_id):
-        if driver_matches_trip_fare_and_pet(driver, trip):
+        if driver_matches_trip_fare_and_pet(driver, trip) and driver_matches_trip_capacity(
+            db, driver, trip
+        ):
             result.append((trip, offer))
 
     # Legacy: assigned trips (from admin assign or driver_location auto-dispatch)
@@ -1236,11 +1252,15 @@ def list_available_trips(
                 candidates.append((trip, dist_km))
         candidates.sort(key=lambda x: x[1])
         for trip, _ in candidates:
-            if driver_matches_trip_fare_and_pet(driver, trip):
+            if driver_matches_trip_fare_and_pet(
+                driver, trip
+            ) and driver_matches_trip_capacity(db, driver, trip):
                 result.append((trip, None))
     else:
         for trip in assigned_trips:
-            if driver_matches_trip_fare_and_pet(driver, trip):
+            if driver_matches_trip_fare_and_pet(
+                driver, trip
+            ) and driver_matches_trip_capacity(db, driver, trip):
                 result.append((trip, None))
 
     logger.info(

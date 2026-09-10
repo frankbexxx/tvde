@@ -261,6 +261,7 @@ function TripPlannerPanelInner({
                       ? 'pet.categoryComfort'
                       : 'pet.categoryXl',
                 )}
+                {` · ${petBooking.passengerCount} ${t('pet.passengersTitle').toLowerCase()}`}
                 {petBooking.isAssistanceAnimal
                   ? ` · ${t('pet.assistance')}`
                   : petBooking.withAnimal

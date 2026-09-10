@@ -142,6 +142,7 @@ def trip_to_detail(
         pet_transport=getattr(trip, "pet_transport", None),
         is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
         pet_occupies_seat=bool(getattr(trip, "pet_occupies_seat", False)),
+        passenger_count=int(getattr(trip, "passenger_count", None) or 1),
         pet_surcharge=_pet_surcharge_value(trip),
         price_breakdown=_price_breakdown_schema(trip),
     )

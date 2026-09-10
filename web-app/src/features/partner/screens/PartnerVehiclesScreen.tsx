@@ -33,6 +33,7 @@ type VehicleFormState = {
   color: string
   service_categories: DriverVehicleCategory[]
   status: string
+  max_passengers: string
 }
 
 const emptyForm = (): VehicleFormState => ({
@@ -43,6 +44,7 @@ const emptyForm = (): VehicleFormState => ({
   color: '',
   service_categories: ['x'],
   status: 'active',
+  max_passengers: '',
 })
 
 function formFromVehicle(v: PartnerVehicleRow): VehicleFormState {
@@ -59,6 +61,7 @@ function formFromVehicle(v: PartnerVehicleRow): VehicleFormState {
     color: v.color ?? '',
     service_categories: cats.length > 0 ? cats : ['x'],
     status: v.status || 'active',
+    max_passengers: v.max_passengers != null ? String(v.max_passengers) : '',
   }
 }
 
@@ -67,6 +70,14 @@ function parseYear(raw: string): number | null {
   if (!t) return null
   const n = Number(t)
   if (!Number.isInteger(n) || n < 1980 || n > 2100) return NaN
+  return n
+}
+
+function parseMaxPassengers(raw: string): number | null {
+  const t = raw.trim()
+  if (!t) return null
+  const n = Number(t)
+  if (!Number.isInteger(n) || n < 1 || n > 8) return NaN
   return n
 }
 
@@ -165,6 +176,8 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
     if (form.service_categories.length === 0) return t('vehicles.errors.categoriesRequired')
     const year = parseYear(form.year)
     if (Number.isNaN(year)) return t('vehicles.errors.yearInvalid')
+    const maxPax = parseMaxPassengers(form.max_passengers)
+    if (maxPax == null || Number.isNaN(maxPax)) return t('vehicles.errors.maxPassengersInvalid')
     return null
   }
 
@@ -177,6 +190,8 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
       return
     }
     const year = parseYear(createForm.year)
+    const maxPassengers = parseMaxPassengers(createForm.max_passengers)
+    if (maxPassengers == null || Number.isNaN(maxPassengers)) return
     setBusy(true)
     try {
       await createPartnerVehicle({
@@ -187,6 +202,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
         color: createForm.color.trim() || null,
         service_categories: createForm.service_categories,
         status: createForm.status || 'active',
+        max_passengers: maxPassengers,
       })
       setCreateForm(emptyForm())
       setShowCreate(false)
@@ -216,6 +232,8 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
       return
     }
     const year = parseYear(editForm.year)
+    const maxPassengers = parseMaxPassengers(editForm.max_passengers)
+    if (maxPassengers == null || Number.isNaN(maxPassengers)) return
     setBusy(true)
     try {
       await patchPartnerVehicle(vehicleId, {
@@ -226,6 +244,7 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
         color: editForm.color.trim() || null,
         service_categories: editForm.service_categories,
         status: editForm.status || 'active',
+        max_passengers: maxPassengers,
       })
       setEditingId(null)
       setSuccess(t('vehicles.updatedOk'))
@@ -400,6 +419,10 @@ export function PartnerVehiclesScreen({ onFleetChanged }: PartnerVehiclesScreenP
                   <p className="text-xs text-muted-foreground" data-testid="partner-vehicle-categories">
                     {t('vehicles.serviceCategories')}: {formatCategories(v.service_categories ?? [])}
                   </p>
+                  <p className="text-xs text-muted-foreground" data-testid="partner-vehicle-max-passengers">
+                    {t('vehicles.maxPassengers')}:{' '}
+                    {v.max_passengers != null ? v.max_passengers : t('vehicles.maxPassengersUnknown')}
+                  </p>
                   <p className="text-xs" data-testid="partner-vehicle-assigned">
                     {v.assigned_driver_id
                       ? t('vehicles.assignedTo', {
@@ -561,6 +584,14 @@ function VehicleFields({
           onChange={(e) => set('color', e.target.value)}
         />
       </div>
+      <input
+        className={fieldClass}
+        data-testid="partner-vehicle-field-max-passengers"
+        placeholder={t('vehicles.fields.maxPassengers')}
+        inputMode="numeric"
+        value={form.max_passengers}
+        onChange={(e) => set('max_passengers', e.target.value)}
+      />
       <div data-testid="partner-vehicle-field-categories">
         <p className="text-xs text-muted-foreground mb-1.5">{t('vehicles.fields.serviceCategories')}</p>
         <div className="grid grid-cols-2 gap-2">

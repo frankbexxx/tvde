@@ -215,6 +215,7 @@ def build_admin_kyc_supervision(
                 partner_id=str(v.partner_id),
                 partner_name=partner_name.get(str(v.partner_id)),
                 status=v.status,
+                max_passengers=getattr(v, "max_passengers", None),
                 assigned_driver_user_id=assigned_uid,
                 assigned_driver_name=assigned_name,
                 documents=items,
