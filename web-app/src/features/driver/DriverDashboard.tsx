@@ -4106,7 +4106,6 @@ function DriverOperationsMenu({
               [
                 ['x', 'X'],
                 ['xl', 'XL'],
-                ['pet', t('opsMenu.categories.petAccept')],
                 ['comfort', 'Comfort'],
                 ['black', 'Black'],
                 ['electric', t('opsMenu.categories.electric')],

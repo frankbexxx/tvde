@@ -178,22 +178,18 @@ export function PassengerPetBookingPanel({
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-foreground/70">{t('pet.transportTitle')}</p>
             <div className="flex flex-col gap-2 sm:flex-row">
-              {(value.petSize === 'large' ? (['harness'] as PetTransport[]) : TRANSPORT_OPTIONS).map(
-                (tr) => (
-                  <Chip
-                    key={tr}
-                    testId={`passenger-pet-transport-${tr}`}
-                    selected={value.petTransport === tr}
-                    onClick={() => onChange(applyPetTransport(value, tr))}
-                  >
-                    {t(`pet.transport.${tr}`)}
-                  </Chip>
-                ),
-              )}
+              {TRANSPORT_OPTIONS.map((tr) => (
+                <Chip
+                  key={tr}
+                  testId={`passenger-pet-transport-${tr}`}
+                  selected={value.petTransport === tr}
+                  onClick={() => onChange(applyPetTransport(value, tr))}
+                >
+                  {t(`pet.transport.${tr}`)}
+                </Chip>
+              ))}
             </div>
-            {value.petSize === 'large' ? (
-              <p className="text-xs text-foreground/70">{t('pet.largeHarnessOnly')}</p>
-            ) : null}
+            <p className="text-xs text-foreground/70">{t('pet.transportSafetyHint')}</p>
           </div>
 
           <label className="flex min-h-11 items-start gap-3 touch-manipulation">

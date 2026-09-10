@@ -42,12 +42,12 @@ describe('PassengerPetBookingPanel', () => {
     expect(screen.queryByTestId('passenger-pet-size-small')).not.toBeInTheDocument()
   })
 
-  it('large só oferece harness', () => {
+  it('large permite carrier e harness (PET-5A.1)', () => {
     render(<Harness />)
     fireEvent.click(screen.getByTestId('passenger-with-animal'))
     fireEvent.click(screen.getByTestId('passenger-pet-size-large'))
     expect(screen.getByTestId('passenger-pet-transport-harness')).toBeInTheDocument()
-    expect(screen.queryByTestId('passenger-pet-transport-carrier')).not.toBeInTheDocument()
+    expect(screen.getByTestId('passenger-pet-transport-carrier')).toBeInTheDocument()
   })
 
   it('onChange recebe comfort', () => {

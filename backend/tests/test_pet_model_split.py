@@ -126,15 +126,17 @@ def test_resolve_pet_attrs_without_has_pet_rejected() -> None:
     assert ei.value.detail == "pet_attributes_require_has_pet"
 
 
-def test_resolve_large_without_harness_rejected() -> None:
-    with pytest.raises(HTTPException) as ei:
-        resolve_trip_pet_create(
-            vehicle_category="x",
-            has_pet=True,
-            pet_size="large",
-            pet_transport="carrier",
-        )
-    assert ei.value.detail == "pet_large_requires_harness"
+def test_resolve_large_with_carrier_ok() -> None:
+    """PET-5A.1: large + carrier allowed (no absolute harness-only rule)."""
+    r = resolve_trip_pet_create(
+        vehicle_category="x",
+        has_pet=True,
+        pet_size="large",
+        pet_transport="carrier",
+    )
+    assert r.has_pet is True
+    assert r.pet_size == "large"
+    assert r.pet_transport == "carrier"
 
 
 def test_resolve_large_with_harness_ok() -> None:
@@ -202,7 +204,8 @@ def test_create_path_legacy_pet_category_not_persisted(db: Session) -> None:
     assert trip.has_pet is True
 
 
-def test_matching_pet_requires_opt_in(db: Session) -> None:
+def test_matching_go_pet_without_opt_in(db: Session) -> None:
+    """PET-5A.1: fare category alone; legacy pet preference non-enforcing."""
     trip = Trip(
         passenger_id=_passenger(db).id,
         status=TripStatus.requested,
@@ -218,9 +221,9 @@ def test_matching_pet_requires_opt_in(db: Session) -> None:
     db.flush()
     only_x = _driver(db, categories="x")
     with_pet = _driver(db, categories="x,pet")
-    assert driver_matches_trip_fare_and_pet(only_x, trip) is False
+    assert driver_matches_trip_fare_and_pet(only_x, trip) is True
     assert driver_matches_trip_fare_and_pet(with_pet, trip) is True
-    assert trip_requires_pet_driver_opt_in(trip) is True
+    assert trip_requires_pet_driver_opt_in(trip) is False
 
 
 def test_matching_assistance_no_pet_opt_in(db: Session) -> None:
@@ -244,7 +247,7 @@ def test_matching_assistance_no_pet_opt_in(db: Session) -> None:
 
 
 def test_matching_legacy_vehicle_category_pet(db: Session) -> None:
-    """Historical rows with vehicle_category=pet still match pet-capable drivers."""
+    """Historical vehicle_category=pet matches as fare x (PET-5A.1)."""
     trip = Trip(
         passenger_id=_passenger(db).id,
         status=TripStatus.requested,
@@ -261,8 +264,8 @@ def test_matching_legacy_vehicle_category_pet(db: Session) -> None:
     assert trip_fare_category(trip) == "x"
     pet_only = _driver(db, categories="pet")
     x_only = _driver(db, categories="x")
-    assert driver_matches_trip_fare_and_pet(pet_only, trip) is True
-    assert driver_matches_trip_fare_and_pet(x_only, trip) is False
+    assert driver_matches_trip_fare_and_pet(pet_only, trip) is False
+    assert driver_matches_trip_fare_and_pet(x_only, trip) is True
 
 
 def test_matching_comfort_plus_pet(db: Session) -> None:
@@ -283,7 +286,7 @@ def test_matching_comfort_plus_pet(db: Session) -> None:
     comfort_only = _driver(db, categories="comfort")
     x_pet = _driver(db, categories="x,pet")
     assert driver_matches_trip_fare_and_pet(comfort_pet, trip) is True
-    assert driver_matches_trip_fare_and_pet(comfort_only, trip) is False
+    assert driver_matches_trip_fare_and_pet(comfort_only, trip) is True
     assert driver_matches_trip_fare_and_pet(x_pet, trip) is False
 
 
@@ -302,4 +305,4 @@ def test_matching_xl_plus_pet(db: Session) -> None:
     db.add(trip)
     db.flush()
     assert driver_matches_trip_fare_and_pet(_driver(db, categories="xl,pet"), trip) is True
-    assert driver_matches_trip_fare_and_pet(_driver(db, categories="xl"), trip) is False
+    assert driver_matches_trip_fare_and_pet(_driver(db, categories="xl"), trip) is True

@@ -1,7 +1,8 @@
 /**
  * Preferências de categorias de veículo do motorista.
  * Persistência local + sync API (`/driver/preferences/vehicle-categories`).
- * A chave `pet` é opt-in para pedidos com animal (não categoria tarifária).
+ * A chave `pet` é legacy/non-enforcing (PET-5A.1): pode existir nos dados
+ * mas já não filtra matching nem deve ser oferecida como opt-out genérico na UI.
  */
 export const DRIVER_VEHICLE_CATEGORIES = [
   'x',

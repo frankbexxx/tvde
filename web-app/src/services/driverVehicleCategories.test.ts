@@ -31,7 +31,7 @@ describe('driverVehicleCategories', () => {
     expect(driverVehicleCategoryLabel('electric')).toBe('Elétrico')
   })
 
-  it('label pet opt-in avoids bare Pet product term', () => {
+  it('label pet legacy avoids bare Pet product term', () => {
     expect(driverVehicleCategoryLabel('pet')).toBe('Animais')
   })
 })
