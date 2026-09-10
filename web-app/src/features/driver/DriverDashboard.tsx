@@ -180,6 +180,8 @@ import {
   driverVehicleCategoryLabel,
   type DriverVehicleCategory,
 } from '../../services/driverVehicleCategories'
+import { DriverPetTripInfo } from './DriverPetTripInfo'
+import { driverFareCategoryForDisplay } from './driverTripPetDisplay'
 import {
   defaultDriverDocumentsState,
   driverDocumentLabel,
@@ -296,6 +298,13 @@ function tripDetailFallbackFromAccept(item: TripAvailableItem, status: TripStatu
     estimated_price: item.estimated_price,
     created_at: now,
     updated_at: now,
+    vehicle_category: item.vehicle_category,
+    has_pet: item.has_pet,
+    pet_size: item.pet_size,
+    pet_transport: item.pet_transport,
+    is_assistance_animal: item.is_assistance_animal,
+    pet_occupies_seat: item.pet_occupies_seat,
+    pet_surcharge: item.pet_surcharge ?? null,
   }
 }
 
@@ -328,6 +337,12 @@ function buildDriverWaitingHint(
   }
   if (parts.length === 0) return null
   return parts.join(' ')
+}
+
+function driverOfferFareLabel(vehicleCategory: string | null | undefined): string | null {
+  const fare = driverFareCategoryForDisplay(vehicleCategory)
+  const one = normalizeDriverVehicleCategory(fare ?? undefined)
+  return one ? driverVehicleCategoryLabel(one) : null
 }
 
 export function DriverDashboard() {
@@ -1803,10 +1818,8 @@ export function DriverDashboard() {
                               pickup={formatPickup(t.origin_lat, t.origin_lng)}
                               destination={formatDestination(t.destination_lat, t.destination_lng)}
                               statusLabel={availableTripLabel}
-                              vehicleCategoryLabel={(() => {
-                                const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
-                                return one ? driverVehicleCategoryLabel(one) : null
-                              })()}
+                              vehicleCategoryLabel={driverOfferFareLabel(t.vehicle_category)}
+                              petTrip={t}
                               estimatedPrice={t.estimated_price}
                               offerId={t.offer_id ?? null}
                               expiresAt={t.expires_at ?? null}
@@ -2156,12 +2169,10 @@ export function DriverDashboard() {
                               selectedAvailableTrip.destination_lng
                             )}
                             statusLabel={availableTripLabel}
-                            vehicleCategoryLabel={(() => {
-                              const one = normalizeDriverVehicleCategory(
-                                selectedAvailableTrip.vehicle_category ?? undefined
-                              )
-                              return one ? driverVehicleCategoryLabel(one) : null
-                            })()}
+                            vehicleCategoryLabel={driverOfferFareLabel(
+                              selectedAvailableTrip.vehicle_category,
+                            )}
+                            petTrip={selectedAvailableTrip}
                             estimatedPrice={selectedAvailableTrip.estimated_price}
                             offerId={selectedAvailableTrip.offer_id ?? null}
                             expiresAt={selectedAvailableTrip.expires_at ?? null}
@@ -2514,10 +2525,8 @@ export function DriverDashboard() {
                                 pickup={formatPickup(t.origin_lat, t.origin_lng)}
                                 destination={formatDestination(t.destination_lat, t.destination_lng)}
                                 statusLabel={availableTripLabel}
-                                vehicleCategoryLabel={(() => {
-                                  const one = normalizeDriverVehicleCategory(t.vehicle_category ?? undefined)
-                                  return one ? driverVehicleCategoryLabel(one) : null
-                                })()}
+                                vehicleCategoryLabel={driverOfferFareLabel(t.vehicle_category)}
+                                petTrip={t}
                                 estimatedPrice={t.estimated_price}
                                 offerId={t.offer_id ?? null}
                                 expiresAt={t.expires_at ?? null}
@@ -2785,7 +2794,9 @@ function ActiveTripSummary({
         </p>
       ) : null}
       {effectiveTrip && !compact ? (
-        <TripCard
+        <>
+          <DriverPetTripInfo trip={effectiveTrip} className="justify-center" />
+          <TripCard
           pickup={formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)}
           destination={formatDestination(
             effectiveTrip.destination_lat,
@@ -2799,13 +2810,17 @@ function ActiveTripSummary({
               : t('opsMenu.historyMoney.estimate')
           }
         />
+        </>
       ) : effectiveTrip && compact ? (
-        <p className={`${INFO_BOX_BODY_COMPACT} text-center leading-snug`}>
-          {formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)} →{' '}
-          {formatDestination(effectiveTrip.destination_lat, effectiveTrip.destination_lng)}
-          {' · '}
-          {(effectiveTrip.final_price ?? effectiveTrip.estimated_price ?? 0).toFixed(2)} €
-        </p>
+        <div className="space-y-1">
+          <DriverPetTripInfo trip={effectiveTrip} className="justify-center" />
+          <p className={`${INFO_BOX_BODY_COMPACT} text-center leading-snug`}>
+            {formatPickup(effectiveTrip.origin_lat, effectiveTrip.origin_lng)} →{' '}
+            {formatDestination(effectiveTrip.destination_lat, effectiveTrip.destination_lng)}
+            {' · '}
+            {(effectiveTrip.final_price ?? effectiveTrip.estimated_price ?? 0).toFixed(2)} €
+          </p>
+        </div>
       ) : null}
     </div>
   )
@@ -4086,7 +4101,7 @@ function DriverOperationsMenu({
               [
                 ['x', 'X'],
                 ['xl', 'XL'],
-                ['pet', 'Pet'],
+                ['pet', t('opsMenu.categories.petAccept')],
                 ['comfort', 'Comfort'],
                 ['black', 'Black'],
                 ['electric', t('opsMenu.categories.electric')],
@@ -4101,7 +4116,7 @@ function DriverOperationsMenu({
                   data-testid={`driver-category-${key}`}
                   aria-pressed={active}
                   onClick={() => onToggleVehicleCategory(key)}
-                  className={`min-h-9 ${INNER_RADIUS} border px-2 text-xs font-semibold touch-manipulation transition-colors ${active
+                  className={`min-h-11 ${INNER_RADIUS} border px-2 py-1.5 text-xs font-semibold leading-snug touch-manipulation transition-colors ${active
                     ? 'border-info bg-info/15 text-foreground'
                     : 'border-border bg-background text-foreground/80 hover:bg-muted/50'
                     }`}

@@ -77,6 +77,12 @@ export interface TripAvailableItem {
   offer_id?: string | null
   /** ISO8601 — presente quando a viagem vem de oferta dispatch. */
   expires_at?: string | null
+  has_pet?: boolean
+  pet_size?: string | null
+  pet_transport?: string | null
+  is_assistance_animal?: boolean
+  pet_occupies_seat?: boolean
+  pet_surcharge?: number | null
 }
 
 export interface TripHistoryItem {

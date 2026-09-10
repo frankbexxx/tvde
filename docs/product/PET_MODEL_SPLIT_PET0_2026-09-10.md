@@ -1,7 +1,7 @@
 # PET — modelo e roadmap
 
 **Actualização:** 2026-09-10  
-**Estado:** **PET-0 + PET-1 + PET-2** (fundação + surcharge/breakdown + Passenger UX) — **feature Pet NÃO concluída** globalmente
+**Estado:** **PET-0 → PET-3** (fundação + surcharge + Passenger UX + Driver UX) — **feature Pet NÃO concluída** globalmente
 
 ## Decisão de produto
 
@@ -28,56 +28,45 @@ Separação fare category vs atributos Pet · matching combinado · legacy `vehi
 
 ## PET-1 — DONE
 
+Surcharge €1,50 / assistência €0 · breakdown · snapshot · commission on total · legacy sem retroactivo
+
+## PET-2 — DONE
+
+Passenger UX: selector GO/Comfort/XL · Viajo com animal · assistência · validação FE · payload · breakdown pós-create · badges active/history
+
+## PET-3 — DONE (esta entrega)
+
+Driver UX + matching combinado validado:
+
 | Item | Estado |
 |------|--------|
-| Surcharge €1,50 / assistência €0 | DONE |
-| Breakdown explícito (base/km/min/pet/tolls/total) | DONE |
-| Snapshot `pet_surcharge_amount` + `pet_surcharge_rule` + `price_breakdown` | DONE |
-| `estimated_price` / `final_price` incluem surcharge | DONE |
-| Comissão sobre total (incl. surcharge) | DONE |
-| Legacy sem snapshot → surcharge 0 (sem retroactivo) | DONE |
+| Preferência existente `pet` (copy «Aceito viagens com animais») | DONE — sem storage/API nova |
+| Offer / available cards: Com animal + porte/transporte/lugar | DONE |
+| Assistance: copy separada + «Sem suplemento» | DONE |
+| Surcharge só Pet normal (valor API `pet_surcharge`) | DONE |
+| Active trip mantém detalhes após accept | DONE |
+| Matching GO/Comfort/XL + Pet + assistance (helpers PET-0) | VALIDADO + testes `list_available_trips` |
+| Legacy `vehicle_category=pet` legível sem inventar size/transport | DONE |
+| Capacity / seats / passenger_count | **não** (PET-4) |
 
-### Código canónico (pricing)
+### Código canónico (Driver)
 
-- `backend/app/core/pricing.py` — `calculate_fare_breakdown` / `calculate_pet_surcharge`
-- `backend/app/services/pet_trip.py` — `pet_surcharge_for_trip`
-- Migration `b0c1d2e3f4a5_trip_pet_surcharge_snapshot`
+- `web-app/src/features/driver/driverTripPetDisplay.ts`
+- `web-app/src/features/driver/DriverPetTripInfo.tsx`
+- `RequestCard` + `DriverDashboard` (offers / available / active)
+- i18n `driver.pet.*` / `opsMenu.categories.petAccept`
+- Backend: `pet_trip.driver_matches_trip_fare_and_pet` (inalterado) + `tests/test_pet_list_available_matching.py`
+
+### Matching (regra)
 
 ```text
-pet_surcharge = 0 if assistance else (1.50 if has_pet else 0)
-total = fare_subtotal + pet_surcharge + tolls(0)
+GO+Pet     → driver: x + pet
+Comfort+Pet→ driver: comfort + pet
+XL+Pet     → driver: xl + pet
+Assistance → driver: fare category only (sem pet opt-in)
 ```
-
-## PET-2 — DONE (esta entrega)
-
-Passenger UX no planner (confirming):
-
-| Item | Estado |
-|------|--------|
-| Selector GO / Comfort / XL (`x` / `comfort` / `xl`) | DONE |
-| `Viajo com animal` + config porte/transporte/lugar | DONE |
-| `Animal de assistência` separado (€0 / copy sem suplemento) | DONE |
-| Validação FE (incl. large → harness) | DONE |
-| Payload create: `vehicle_category`, `has_pet`, `pet_size`, `pet_transport`, `is_assistance_animal`, `pet_occupies_seat` | DONE |
-| Breakdown/surcharge da API após create (não recalcular €1,50 no FE) | DONE |
-| Indicador curto active + histórico | DONE |
-| Copy PT-PT (`Animal`, não “pet” como copy principal) | DONE |
-| Driver UX / capacity / Partner reporting | **não** |
-
-### Código canónico (Passenger)
-
-- `web-app/src/features/passenger/petBooking.ts`
-- `web-app/src/features/passenger/PassengerPetBookingPanel.tsx`
-- `TripPlannerPanel` + `PassengerDashboard` (wire create/retry)
-- i18n `passenger.pet.*` (pt/en)
-
-### Copy / validação (PET-2)
-
-- Erro large sem harness: *Para um animal de grande porte é necessário indicar arnês/cinto próprio.*
-- Disclosure pré-create do suplemento é informativo; valor autoritativo = `pet_surcharge` / `price_breakdown` da API
 
 ## Etapas restantes
 
-3. **PET-3** — Driver UX (opt-in Pet, preferências, oferta com animal)  
 4. **PET-4** — capacity (`passengers + animal <= seats`)  
 5. **PET-5** — legal/copy completa · reporting Partner/Admin · E2E  

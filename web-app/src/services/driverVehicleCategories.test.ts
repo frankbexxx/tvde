@@ -30,5 +30,9 @@ describe('driverVehicleCategories', () => {
   it('label electric uses Portuguese accent', () => {
     expect(driverVehicleCategoryLabel('electric')).toBe('Elétrico')
   })
+
+  it('label pet opt-in avoids bare Pet product term', () => {
+    expect(driverVehicleCategoryLabel('pet')).toBe('Animais')
+  })
 })
 

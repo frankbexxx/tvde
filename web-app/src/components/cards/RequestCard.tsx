@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SlideToAccept } from './SlideToAccept'
 import { INFO_BOX_DRIVER_LARGE, BTN_COMPACT_HEIGHT, BTN_PRIMARY_RADIUS } from '../layout/infoBoxTemplate'
+import { DriverPetTripInfo } from '../../features/driver/DriverPetTripInfo'
+import type { DriverPetTripFields } from '../../features/driver/driverTripPetDisplay'
 
 function offerSecondsRemaining(expiresAt: string | null | undefined): number | null {
   if (!expiresAt) return null
@@ -26,6 +28,8 @@ interface RequestCardProps {
   /** Linha curta acima da recolha (ex.: nova viagem na lista). */
   contextHint?: string
   vehicleCategoryLabel?: string | null
+  /** PET-3: animal / assistência details from trip API. */
+  petTrip?: DriverPetTripFields | null
   onAccept: () => void
   /** When exists `offer_id` on backend, driver can reject offer. */
   offerId?: string | null
@@ -53,6 +57,7 @@ export function RequestCard({
   estimateFallback = '4–6',
   contextHint,
   vehicleCategoryLabel,
+  petTrip = null,
   onAccept,
   offerId,
   onReject,
@@ -170,6 +175,7 @@ export function RequestCard({
           {t('requestCard.category')} <span className="text-foreground">{vehicleCategoryLabel}</span>
         </p>
       ) : null}
+      {petTrip ? <DriverPetTripInfo trip={petTrip} /> : null}
       {expiryLine}
       <div className="space-y-0.5">
         <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">{t('requestCard.pickup')}</p>
