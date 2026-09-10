@@ -228,7 +228,8 @@ def test_partner_csv_appends_prices_keeps_old_columns() -> None:
     )
     assert rex.status_code == 200
     rows = list(csv.reader(io.StringIO(rex.text)))
-    assert rows[0] == [
+    header = rows[0]
+    assert header[:10] == [
         "trip_id",
         "driver_id",
         "passenger_id",
@@ -240,13 +241,19 @@ def test_partner_csv_appends_prices_keeps_old_columns() -> None:
         "estimated_price",
         "final_price",
     ]
+    # PET-5B append-only columns (do not reorder the prefix).
+    assert "passenger_count" in header
+    assert "has_pet" in header
+    assert "cancellation_reason_code" in header
     # No passenger name/phone columns (PII).
-    assert "phone" not in rows[0]
-    assert "name" not in rows[0]
+    assert "phone" not in header
+    assert "name" not in header
     done = next(r for r in rows[1:] if r[0] == ids["trip_done"])
     assert done[3] == "completed"
     assert done[1] == ids["driver_a"]
-    assert done[-2] == "10.00"
-    assert done[-1] == "11.50"
+    ep_i = header.index("estimated_price")
+    fp_i = header.index("final_price")
+    assert done[ep_i] == "10.00"
+    assert done[fp_i] == "11.50"
     # Other partner trip must not appear.
     assert ids["driver_b"] not in {r[1] for r in rows[1:]}
