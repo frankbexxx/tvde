@@ -168,6 +168,11 @@ class TripActiveItem(BaseModel):
     destination_lat: float
     destination_lng: float
     updated_at: Optional[datetime] = None
+    passenger_count: int = 1
+    has_pet: bool = False
+    is_assistance_animal: bool = False
+    pet_surcharge: Optional[float] = None
+    vehicle_category: Optional[str] = None
 
 
 class TripHistoryItem(BaseModel):
@@ -197,6 +202,12 @@ class TripHistoryItem(BaseModel):
         default=None,
         description="Structured cancel reason code (PET-5A.2).",
     )
+    cancelled_by: Optional[str] = None
+    passenger_count: int = 1
+    has_pet: bool = False
+    is_assistance_animal: bool = False
+    pet_surcharge: Optional[float] = None
+    vehicle_category: Optional[str] = None
 
 
 class TripDetailResponse(BaseModel):
@@ -273,3 +284,8 @@ class TripDetailResponse(BaseModel):
     passenger_count: int = 1
     pet_surcharge: Optional[float] = None
     price_breakdown: Optional[PriceBreakdownSchema] = None
+    vehicle_plate: Optional[str] = None
+    offer_rejections: list[dict] = Field(
+        default_factory=list,
+        description="Rejected offers with attendable reasons (Partner/Admin audit).",
+    )

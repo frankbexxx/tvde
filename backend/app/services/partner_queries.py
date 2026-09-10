@@ -56,6 +56,7 @@ def list_trips_for_partner(db: Session, partner_id: str) -> list[Trip]:
     stmt = (
         select(Trip)
         .outerjoin(Driver, Trip.driver_id == Driver.user_id)
+        .options(joinedload(Trip.vehicle))
         .where(
             or_(
                 Trip.partner_id == pid,
@@ -64,7 +65,7 @@ def list_trips_for_partner(db: Session, partner_id: str) -> list[Trip]:
         )
         .order_by(Trip.created_at.desc())
     )
-    return list(db.execute(stmt).scalars().all())
+    return list(db.execute(stmt).unique().scalars().all())
 
 
 def get_driver_for_partner(
@@ -93,6 +94,7 @@ def get_trip_for_partner(
     return db.execute(
         select(Trip)
         .outerjoin(Driver, Trip.driver_id == Driver.user_id)
+        .options(joinedload(Trip.vehicle))
         .where(
             Trip.id == trip_id,
             or_(
@@ -100,7 +102,7 @@ def get_trip_for_partner(
                 and_(Trip.partner_id.is_(None), Driver.partner_id == pid),
             ),
         )
-    ).scalar_one_or_none()
+    ).unique().scalar_one_or_none()
 
 
 _ONGOING_STATUSES = (
@@ -164,6 +166,7 @@ def list_trips_for_partner_filtered(
         select(Trip)
         .outerjoin(Driver, Trip.driver_id == Driver.user_id)
         .outerjoin(User, Driver.user_id == User.id)
+        .options(joinedload(Trip.vehicle))
         .where(
             or_(
                 Trip.partner_id == pid,

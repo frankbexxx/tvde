@@ -19,6 +19,11 @@ export interface TripActiveItem {
   destination_lng: number
   /** ISO timestamp do último update da viagem. Usado no admin para destacar stuck. */
   updated_at?: string | null
+  passenger_count?: number
+  has_pet?: boolean
+  is_assistance_animal?: boolean
+  pet_surcharge?: number | null
+  vehicle_category?: string | null
 }
 
 export interface TripDetailAdmin {

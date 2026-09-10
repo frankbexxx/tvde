@@ -9,6 +9,11 @@ from app.services.stripe_service import retrieve_payment_intent
 from app.utils.stripe_links import stripe_payment_intent_dashboard_url
 from app.schemas.driver import DriverLocationResponse
 from app.services.attendable_reasons import passenger_safe_label
+from app.services.pet_reporting import (
+    pet_surcharge_amount,
+    price_breakdown_schema as _price_breakdown_from_reporting,
+    vehicle_plate,
+)
 from app.schemas.trip import (
     PriceBreakdownSchema,
     TripDetailResponse,
@@ -39,20 +44,11 @@ def _cancellation_reason_detail_for_ops(trip: Trip) -> str | None:
 
 
 def _price_breakdown_schema(trip: Trip) -> PriceBreakdownSchema | None:
-    raw = getattr(trip, "price_breakdown", None)
-    if not isinstance(raw, dict):
-        return None
-    try:
-        return PriceBreakdownSchema.model_validate(raw)
-    except Exception:
-        return None
+    return _price_breakdown_from_reporting(trip)
 
 
 def _pet_surcharge_value(trip: Trip) -> float | None:
-    snap = getattr(trip, "pet_surcharge_amount", None)
-    if snap is None:
-        return None
-    return float(snap)
+    return pet_surcharge_amount(trip)
 
 
 logger = logging.getLogger(__name__)
@@ -106,6 +102,12 @@ def trip_to_history_item(
         else None,
         cancellation_reason=_passenger_visible_cancellation_reason(trip),
         cancellation_reason_code=_cancellation_reason_code(trip),
+        cancelled_by=getattr(trip, "cancelled_by", None),
+        passenger_count=int(getattr(trip, "passenger_count", None) or 1),
+        has_pet=bool(getattr(trip, "has_pet", False)),
+        is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
+        pet_surcharge=_pet_surcharge_value(trip),
+        vehicle_category=getattr(trip, "vehicle_category", None),
     )
 
 
@@ -115,6 +117,8 @@ def trip_to_detail(
     driver_location: DriverLocationResponse | None = None,
     include_passenger_payment_client_secret: bool = False,
     include_cancellation_detail: bool = False,
+    offer_rejections: list[dict] | None = None,
+    include_vehicle_plate: bool = False,
 ) -> TripDetailResponse:
     payment = trip.payment
     client_secret = (
@@ -179,6 +183,8 @@ def trip_to_detail(
         passenger_count=int(getattr(trip, "passenger_count", None) or 1),
         pet_surcharge=_pet_surcharge_value(trip),
         price_breakdown=_price_breakdown_schema(trip),
+        vehicle_plate=vehicle_plate(trip) if include_vehicle_plate else None,
+        offer_rejections=offer_rejections or [],
     )
 
 

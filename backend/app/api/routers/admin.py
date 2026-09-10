@@ -42,6 +42,7 @@ from app.api.serializers import (
     trip_to_history_item,
     trip_to_status_response,
 )
+from app.services.pet_reporting import offer_rejection_rows, pet_surcharge_amount
 from app.schemas.trip import (
     TripActiveItem,
     TripDetailResponse,
@@ -1258,6 +1259,11 @@ async def list_active_trips(
             destination_lat=float(t.destination_lat),
             destination_lng=float(t.destination_lng),
             updated_at=t.updated_at,
+            passenger_count=int(getattr(t, "passenger_count", None) or 1),
+            has_pet=bool(getattr(t, "has_pet", False)),
+            is_assistance_animal=bool(getattr(t, "is_assistance_animal", False)),
+            pet_surcharge=pet_surcharge_amount(t),
+            vehicle_category=getattr(t, "vehicle_category", None),
         )
         for t in trips
     ]
@@ -1304,7 +1310,13 @@ async def get_trip_detail_admin(
 ) -> TripDetailResponse:
     """Full trip detail for admin (includes stripe_payment_intent_id). Read-only."""
     trip = get_trip_by_id(db=db, trip_id=trip_id.strip())
-    return trip_to_detail(trip, include_stripe_pi=True, include_cancellation_detail=True)
+    return trip_to_detail(
+        trip,
+        include_stripe_pi=True,
+        include_cancellation_detail=True,
+        include_vehicle_plate=True,
+        offer_rejections=offer_rejection_rows(db, trip.id),
+    )
 
 
 @router.post("/trips/{trip_id}/transition", response_model=TripStatusResponse)
@@ -1445,7 +1457,11 @@ async def get_trip_debug(
 
     return {
         "trip": trip_to_detail(
-            trip, include_stripe_pi=True, include_cancellation_detail=True
+            trip,
+            include_stripe_pi=True,
+            include_cancellation_detail=True,
+            include_vehicle_plate=True,
+            offer_rejections=offer_rejection_rows(db, trip.id),
         ).model_dump(),
         "payment": (
             {

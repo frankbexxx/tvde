@@ -312,6 +312,19 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
                         <div>
                           <p className="font-medium text-foreground flex flex-wrap items-center gap-2">
                             <span>{t.trip_id.slice(0, 8)}… · {t.status}</span>
+                            <span className="text-[11px] font-normal text-foreground/70">
+                              {t.passenger_count ?? 1} pass.
+                            </span>
+                            {t.is_assistance_animal ? (
+                              <span className="text-[11px] font-semibold text-foreground/80">Cão de assistência</span>
+                            ) : t.has_pet ? (
+                              <span className="text-[11px] font-semibold text-foreground/80">Com animal</span>
+                            ) : null}
+                            {t.pet_surcharge != null && Number(t.pet_surcharge) > 0 ? (
+                              <span className="text-[11px] text-foreground/70">
+                                +{Number(t.pet_surcharge).toFixed(2)} €
+                              </span>
+                            ) : null}
                             {stuckAccepted && (
                               <span
                                 className="inline-flex items-center rounded-full bg-warning/20 border border-warning/50 px-2 py-0.5 text-[11px] font-semibold text-warning"
@@ -523,8 +536,29 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
                   >
                     <div className="flex justify-between items-start gap-2">
                       <div>
-                        <p className="font-medium text-foreground">
-                          {h.trip_id.slice(0, 8)}… · {h.status}
+                        <p className="font-medium text-foreground flex flex-wrap items-center gap-2">
+                          <span>
+                            {h.trip_id.slice(0, 8)}… · {h.status}
+                          </span>
+                          <span className="text-[11px] font-normal text-foreground/70">
+                            {h.passenger_count ?? 1} pass.
+                          </span>
+                          {h.is_assistance_animal ? (
+                            <span className="text-[11px] font-semibold text-foreground/80">Cão de assistência</span>
+                          ) : h.has_pet ? (
+                            <span className="text-[11px] font-semibold text-foreground/80">Com animal</span>
+                          ) : null}
+                          {h.pet_surcharge != null && Number(h.pet_surcharge) > 0 ? (
+                            <span className="text-[11px] text-foreground/70">
+                              +{Number(h.pet_surcharge).toFixed(2)} €
+                            </span>
+                          ) : null}
+                          {h.cancelled_by ? (
+                            <span className="text-[11px] text-foreground/70">cancel: {h.cancelled_by}</span>
+                          ) : null}
+                          {h.cancellation_reason ? (
+                            <span className="text-[11px] text-foreground/70">{h.cancellation_reason}</span>
+                          ) : null}
                         </p>
                         <p className="text-sm text-foreground/75">
                           {h.origin_lat.toFixed(4)}, {h.origin_lng.toFixed(4)} →{' '}

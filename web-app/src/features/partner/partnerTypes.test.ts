@@ -42,7 +42,7 @@ describe('PARTNER-FLEET-1A roster filters', () => {
 })
 
 describe('PARTNER-FLEET-1A CSV columns', () => {
-  it('mantém colunas antigas e acrescenta preços no fim', () => {
+  it('mantém colunas antigas e acrescenta Pet reporting no fim', () => {
     expect(PARTNER_TRIPS_CSV_COLUMNS.slice(0, 8)).toEqual([
       'trip_id',
       'driver_id',
@@ -53,7 +53,11 @@ describe('PARTNER-FLEET-1A CSV columns', () => {
       'completed_at',
       'updated_at',
     ])
-    expect(PARTNER_TRIPS_CSV_COLUMNS.slice(-2)).toEqual(['estimated_price', 'final_price'])
+    expect(PARTNER_TRIPS_CSV_COLUMNS.slice(8, 10)).toEqual(['estimated_price', 'final_price'])
+    expect(PARTNER_TRIPS_CSV_COLUMNS).toContain('passenger_count')
+    expect(PARTNER_TRIPS_CSV_COLUMNS).toContain('has_pet')
+    expect(PARTNER_TRIPS_CSV_COLUMNS).toContain('is_assistance_animal')
+    expect(PARTNER_TRIPS_CSV_COLUMNS).toContain('pet_surcharge_amount')
     expect(PARTNER_TRIPS_CSV_COLUMNS).not.toContain('phone')
     expect(PARTNER_TRIPS_CSV_COLUMNS).not.toContain('passenger_name')
   })

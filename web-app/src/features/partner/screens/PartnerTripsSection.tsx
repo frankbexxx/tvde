@@ -6,6 +6,10 @@ import { formatDateTime } from '../../../i18n/format'
 import { PartnerListSearch } from '../components/PartnerListSearch'
 import { partnerTripStatusLabel } from '../partnerLabels'
 import { filterChipClass, type TripFilter } from '../partnerTypes'
+import {
+  formatPetSurchargeEuro,
+  tripAnimalBadgeKind,
+} from '../../trips/tripPetReporting'
 
 type PartnerTripsSectionProps = {
   filteredTrips: PartnerTripRow[]
@@ -120,20 +124,56 @@ export function PartnerTripsSection({
         </label>
       </div>
       <ul className="space-y-2">
-        {filteredTrips.map((trip) => (
-          <li key={trip.trip_id} className="rounded-xl border border-border bg-card p-3 text-sm">
-            <Link
-              to={`/partner/trips/${encodeURIComponent(trip.trip_id)}`}
-              className="font-medium text-primary hover:underline"
-            >
-              {trip.trip_id.slice(0, 8)}… · {partnerTripStatusLabel(trip.status)}
-            </Link>
-            <p className="text-muted-foreground text-xs mt-1">
-              {t('trips.created')} {formatDateTime(trip.created_at)}
-              {trip.updated_at ? ` · ${t('trips.updated')} ${formatDateTime(trip.updated_at)}` : null}
-            </p>
-          </li>
-        ))}
+        {filteredTrips.map((trip) => {
+          const animal = tripAnimalBadgeKind(trip)
+          const surcharge = formatPetSurchargeEuro(trip.pet_surcharge)
+          return (
+            <li key={trip.trip_id} className="rounded-xl border border-border bg-card p-3 text-sm">
+              <Link
+                to={`/partner/trips/${encodeURIComponent(trip.trip_id)}`}
+                className="font-medium text-primary hover:underline"
+              >
+                {trip.trip_id.slice(0, 8)}… · {partnerTripStatusLabel(trip.status)}
+              </Link>
+              <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
+                <span
+                  className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-foreground/80"
+                  data-testid={`partner-trip-pax-${trip.trip_id}`}
+                >
+                  {t('trips.passengersShort', { count: trip.passenger_count ?? 1 })}
+                </span>
+                {animal === 'assistance' ? (
+                  <span
+                    className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-foreground/80"
+                    data-testid={`partner-trip-animal-${trip.trip_id}`}
+                  >
+                    {t('tripDetail.assistanceDog')}
+                  </span>
+                ) : null}
+                {animal === 'pet' ? (
+                  <span
+                    className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-foreground/80"
+                    data-testid={`partner-trip-animal-${trip.trip_id}`}
+                  >
+                    {t('tripDetail.withAnimal')}
+                  </span>
+                ) : null}
+                {surcharge ? (
+                  <span
+                    className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-foreground/80"
+                    data-testid={`partner-trip-surcharge-${trip.trip_id}`}
+                  >
+                    {t('trips.surchargeShort', { amount: surcharge })}
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-muted-foreground text-xs mt-1">
+                {t('trips.created')} {formatDateTime(trip.created_at)}
+                {trip.updated_at ? ` · ${t('trips.updated')} ${formatDateTime(trip.updated_at)}` : null}
+              </p>
+            </li>
+          )
+        })}
       </ul>
       {!loading && filteredTrips.length === 0 && (
         <EmptyState

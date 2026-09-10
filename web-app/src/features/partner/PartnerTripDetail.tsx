@@ -225,6 +225,87 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
           <span className="text-muted-foreground">{t('tripDetail.price')}</span>{' '}
           <span className="text-foreground font-medium">{price}</span>
         </p>
+        {trip.price_breakdown ? (
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-2 space-y-1 text-xs" data-testid="partner-trip-price-breakdown">
+            <p>
+              <span className="text-muted-foreground">{t('tripDetail.fareSubtotal')}</span>{' '}
+              <span className="text-foreground">
+                {Number(trip.price_breakdown.fare_subtotal ?? 0).toFixed(2)} €
+              </span>
+            </p>
+            <p>
+              <span className="text-muted-foreground">{t('tripDetail.petSurcharge')}</span>{' '}
+              <span className="text-foreground">
+                {trip.is_assistance_animal || Number(trip.price_breakdown.pet_surcharge ?? 0) <= 0
+                  ? t('tripDetail.noSurcharge')
+                  : `${Number(trip.price_breakdown.pet_surcharge).toFixed(2)} €`}
+              </span>
+            </p>
+            <p>
+              <span className="text-muted-foreground">{t('tripDetail.tolls')}</span>{' '}
+              <span className="text-foreground">
+                {Number(trip.price_breakdown.tolls_amount ?? 0).toFixed(2)} €
+              </span>
+            </p>
+            <p>
+              <span className="text-muted-foreground">{t('tripDetail.total')}</span>{' '}
+              <span className="text-foreground font-medium">
+                {Number(trip.price_breakdown.total ?? trip.final_price ?? trip.estimated_price).toFixed(2)} €
+              </span>
+            </p>
+          </div>
+        ) : null}
+        <div className="space-y-1" data-testid="partner-trip-passengers-block">
+          <p className="text-xs font-semibold text-foreground/90">{t('tripDetail.passengersTitle')}</p>
+          <p className="text-foreground text-sm">
+            {t('trips.passengersShort', { count: trip.passenger_count ?? 1 })}
+          </p>
+        </div>
+        {(trip.has_pet || trip.is_assistance_animal || (trip.vehicle_category ?? '').toLowerCase() === 'pet') ? (
+          <div className="space-y-1" data-testid="partner-trip-animal-block">
+            <p className="text-xs font-semibold text-foreground/90">{t('tripDetail.animalTitle')}</p>
+            {trip.is_assistance_animal ? (
+              <>
+                <p className="text-foreground text-sm">{t('tripDetail.assistanceDog')}</p>
+                <p className="text-xs text-muted-foreground">{t('tripDetail.noSurcharge')}</p>
+                {trip.pet_occupies_seat ? (
+                  <p className="text-xs text-foreground">{t('tripDetail.occupiesSeat')}</p>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <p className="text-foreground text-sm">{t('tripDetail.withAnimal')}</p>
+                {trip.pet_size ? (
+                  <p className="text-xs text-foreground">
+                    {t('tripDetail.size')}: {trip.pet_size}
+                  </p>
+                ) : null}
+                {trip.pet_transport ? (
+                  <p className="text-xs text-foreground">
+                    {t('tripDetail.transport')}: {trip.pet_transport}
+                  </p>
+                ) : null}
+                {trip.pet_occupies_seat ? (
+                  <p className="text-xs text-foreground">{t('tripDetail.occupiesSeat')}</p>
+                ) : null}
+                <p className="text-xs text-foreground">
+                  {t('tripDetail.petSurcharge')}:{' '}
+                  {trip.pet_surcharge != null && Number(trip.pet_surcharge) > 0
+                    ? `${Number(trip.pet_surcharge).toFixed(2)} €`
+                    : t('tripDetail.noSurcharge')}
+                </p>
+              </>
+            )}
+          </div>
+        ) : null}
+        {(trip.vehicle_plate || trip.vehicle_category) ? (
+          <p className="text-xs">
+            <span className="text-muted-foreground">{t('tripDetail.vehicle')}</span>{' '}
+            <span className="text-foreground">
+              {[trip.vehicle_plate, trip.vehicle_category].filter(Boolean).join(' · ')}
+            </span>
+          </p>
+        ) : null}
         <p>
           <span className="text-muted-foreground">{t('tripDetail.passenger')}</span>{' '}
           <span className="text-foreground font-mono text-xs">{trip.passenger_id}</span>
@@ -296,15 +377,25 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
             ) : null}
           </div>
         ) : null}
-        {(trip.has_pet || trip.is_assistance_animal) ? (
-          <p className="text-xs" data-testid="partner-trip-animal-flag">
-            <span className="text-muted-foreground">{t('tripDetail.animal')}</span>{' '}
-            <span className="text-foreground">
-              {trip.is_assistance_animal
-                ? t('tripDetail.assistanceDog')
-                : t('tripDetail.companionAnimal')}
-            </span>
-          </p>
+        {trip.offer_rejections && trip.offer_rejections.length > 0 ? (
+          <div className="space-y-1" data-testid="partner-trip-offer-rejections">
+            <p className="text-xs font-semibold text-foreground/90">{t('tripDetail.rejectionsTitle')}</p>
+            {trip.offer_rejections.map((r) => (
+              <div key={r.offer_id} className="rounded-md border border-border/50 bg-muted/15 p-2 text-xs space-y-0.5">
+                <p className="text-foreground">{r.reason_label ?? r.reason_code ?? '—'}</p>
+                {r.reason_code ? (
+                  <p className="text-muted-foreground font-mono">{r.reason_code}</p>
+                ) : null}
+                {r.reason_detail ? (
+                  <p className="text-foreground">{r.reason_detail}</p>
+                ) : null}
+                <p className="text-muted-foreground">
+                  {t('tripDetail.driver')}: <span className="font-mono">{r.driver_id.slice(0, 8)}…</span>
+                  {r.rejected_at ? ` · ${formatDateTime(r.rejected_at)}` : null}
+                </p>
+              </div>
+            ))}
+          </div>
         ) : null}
         <hr className="border-border" />
         <p>
