@@ -120,6 +120,32 @@ export interface PartnerTripRow {
   cancelled_by?: string | null
   has_pet?: boolean
   is_assistance_animal?: boolean
+  passenger_count?: number
+  pet_size?: string | null
+  pet_transport?: string | null
+  pet_occupies_seat?: boolean
+  pet_surcharge?: number | null
+  vehicle_category?: string | null
+  vehicle_plate?: string | null
+  price_breakdown?: {
+    base_fare?: number
+    distance_amount?: number
+    duration_amount?: number
+    minimum_fare_adjustment?: number
+    pet_surcharge?: number
+    tolls_amount?: number
+    fare_subtotal?: number
+    total?: number
+    pet_surcharge_rule?: string
+  } | null
+  offer_rejections?: Array<{
+    offer_id: string
+    driver_id: string
+    reason_code?: string | null
+    reason_label?: string | null
+    reason_detail?: string | null
+    rejected_at?: string | null
+  }>
   created_at: string
   started_at: string | null
   completed_at: string | null
@@ -594,4 +620,16 @@ export const PARTNER_TRIPS_CSV_COLUMNS = [
   'updated_at',
   'estimated_price',
   'final_price',
+  'passenger_count',
+  'has_pet',
+  'is_assistance_animal',
+  'pet_size',
+  'pet_transport',
+  'pet_occupies_seat',
+  'pet_surcharge_amount',
+  'cancellation_reason_code',
+  'cancellation_reason_detail',
+  'cancelled_by',
+  'vehicle_category',
+  'vehicle_plate',
 ] as const

@@ -114,6 +114,17 @@ class PartnerVehicleItem(BaseModel):
     vehicle_compliance: PartnerVehicleCompliance
 
 
+class PartnerOfferRejectionItem(BaseModel):
+    """PET-5B — rejected offer audit on trip detail."""
+
+    offer_id: str
+    driver_id: str
+    reason_code: str | None = None
+    reason_label: str | None = None
+    reason_detail: str | None = None
+    rejected_at: str | None = None
+
+
 class PartnerTripItem(BaseModel):
     trip_id: str
     status: str
@@ -132,6 +143,15 @@ class PartnerTripItem(BaseModel):
     cancelled_by: str | None = None
     has_pet: bool = False
     is_assistance_animal: bool = False
+    passenger_count: int = 1
+    pet_size: str | None = None
+    pet_transport: str | None = None
+    pet_occupies_seat: bool = False
+    pet_surcharge: float | None = None
+    vehicle_category: str | None = None
+    vehicle_plate: str | None = None
+    price_breakdown: dict | None = None
+    offer_rejections: list[PartnerOfferRejectionItem] = []
     created_at: str
     started_at: str | None = None
     completed_at: str | None = None

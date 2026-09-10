@@ -192,19 +192,23 @@ def _driver_item(
     )
 
 
-def _trip_item(t) -> PartnerTripItem:
+def _trip_item(t, *, offer_rejections: list | None = None) -> PartnerTripItem:
+    from app.schemas.partner import PartnerOfferRejectionItem
     from app.services.attendable_reasons import passenger_safe_label
+    from app.services.pet_reporting import pet_surcharge_amount, price_breakdown_schema, vehicle_plate
 
     code = getattr(t, "cancellation_reason_code", None) or None
     label = passenger_safe_label(code) if code else None
-    # Legacy cancel_reason field: prefer label when coded; else stored string.
-    # Detail (free text) exposed separately for Partner audit.
     detail = None
     if code:
         detail = (t.cancellation_reason or "").strip() or None
         cancel_reason_display = label
     else:
         cancel_reason_display = t.cancellation_reason
+    breakdown = price_breakdown_schema(t)
+    rejections = [
+        PartnerOfferRejectionItem(**row) for row in (offer_rejections or [])
+    ]
     return PartnerTripItem(
         trip_id=str(t.id),
         status=t.status.value,
@@ -223,6 +227,15 @@ def _trip_item(t) -> PartnerTripItem:
         cancelled_by=getattr(t, "cancelled_by", None),
         has_pet=bool(getattr(t, "has_pet", False)),
         is_assistance_animal=bool(getattr(t, "is_assistance_animal", False)),
+        passenger_count=int(getattr(t, "passenger_count", None) or 1),
+        pet_size=getattr(t, "pet_size", None),
+        pet_transport=getattr(t, "pet_transport", None),
+        pet_occupies_seat=bool(getattr(t, "pet_occupies_seat", False)),
+        pet_surcharge=pet_surcharge_amount(t),
+        vehicle_category=getattr(t, "vehicle_category", None),
+        vehicle_plate=vehicle_plate(t),
+        price_breakdown=breakdown.model_dump() if breakdown else None,
+        offer_rejections=rejections,
         created_at=t.created_at.isoformat(),
         started_at=t.started_at.isoformat() if t.started_at else None,
         completed_at=t.completed_at.isoformat() if t.completed_at else None,
@@ -929,9 +942,32 @@ async def partner_export_trips_csv(
             "updated_at",
             "estimated_price",
             "final_price",
+            "passenger_count",
+            "has_pet",
+            "is_assistance_animal",
+            "pet_size",
+            "pet_transport",
+            "pet_occupies_seat",
+            "pet_surcharge_amount",
+            "cancellation_reason_code",
+            "cancellation_reason_detail",
+            "cancelled_by",
+            "vehicle_category",
+            "vehicle_plate",
         ]
     )
     for t in trips:
+        code = getattr(t, "cancellation_reason_code", None) or ""
+        detail = ""
+        if code:
+            detail = (t.cancellation_reason or "").strip()
+        else:
+            detail = (t.cancellation_reason or "").strip()
+        surcharge = getattr(t, "pet_surcharge_amount", None)
+        plate = ""
+        vehicle = getattr(t, "vehicle", None)
+        if vehicle is not None and getattr(vehicle, "plate", None):
+            plate = str(vehicle.plate)
         w.writerow(
             [
                 str(t.id),
@@ -944,6 +980,18 @@ async def partner_export_trips_csv(
                 _utc_iso(t.updated_at),
                 f"{float(t.estimated_price):.2f}",
                 f"{float(t.final_price):.2f}" if t.final_price is not None else "",
+                int(getattr(t, "passenger_count", None) or 1),
+                "true" if getattr(t, "has_pet", False) else "false",
+                "true" if getattr(t, "is_assistance_animal", False) else "false",
+                getattr(t, "pet_size", None) or "",
+                getattr(t, "pet_transport", None) or "",
+                "true" if getattr(t, "pet_occupies_seat", False) else "false",
+                f"{float(surcharge):.2f}" if surcharge is not None else "",
+                code,
+                detail,
+                getattr(t, "cancelled_by", None) or "",
+                getattr(t, "vehicle_category", None) or "",
+                plate,
             ]
         )
 
@@ -1013,7 +1061,9 @@ async def partner_get_trip(
     t = get_trip_for_partner(db, partner_id, tid)
     if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
-    return _trip_item(t)
+    from app.services.pet_reporting import offer_rejection_rows
+
+    return _trip_item(t, offer_rejections=offer_rejection_rows(db, t.id))
 
 
 @router.get(

@@ -1931,7 +1931,9 @@ def get_trip_by_id(
     """Get trip by id (admin). Read-only."""
     trip = (
         db.execute(
-            select(Trip).options(joinedload(Trip.payment)).where(Trip.id == trip_id)
+            select(Trip)
+            .options(joinedload(Trip.payment), joinedload(Trip.vehicle))
+            .where(Trip.id == trip_id)
         )
         .unique()
         .scalar_one_or_none()

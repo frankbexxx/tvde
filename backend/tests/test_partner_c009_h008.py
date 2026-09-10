@@ -198,7 +198,7 @@ def test_c010_c011_partner_detail_and_h007_csv() -> None:
     assert rex.status_code == 200
     assert "text/csv" in rex.headers.get("content-type", "")
     rows = list(csv.reader(io.StringIO(rex.text)))
-    assert rows[0] == [
+    assert rows[0][:10] == [
         "trip_id",
         "driver_id",
         "passenger_id",
@@ -210,6 +210,11 @@ def test_c010_c011_partner_detail_and_h007_csv() -> None:
         "estimated_price",
         "final_price",
     ]
+    # PET-5B: append-only Pet/reporting columns after the stable price pair.
+    assert "passenger_count" in rows[0]
+    assert "has_pet" in rows[0]
+    assert "is_assistance_animal" in rows[0]
+    assert "pet_surcharge_amount" in rows[0]
     assert any(r[0] == trip_id for r in rows[1:])
 
 

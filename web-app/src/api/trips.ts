@@ -104,6 +104,12 @@ export interface TripHistoryItem {
   /** Preenchido quando a viagem foi cancelada e há motivo registado. */
   cancellation_reason?: string | null
   cancellation_reason_code?: string | null
+  cancelled_by?: string | null
+  passenger_count?: number
+  has_pet?: boolean
+  is_assistance_animal?: boolean
+  pet_surcharge?: number | null
+  vehicle_category?: string | null
 }
 
 /** Snapshot from GET /trips/:id (accepted | arriving | ongoing) or GET …/driver-location. */
