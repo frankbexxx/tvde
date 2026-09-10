@@ -1,7 +1,7 @@
 # PET — modelo e roadmap
 
 **Actualização:** 2026-09-10  
-**Estado:** **PET-0 → PET-5B** — **feature Pet NÃO concluída** globalmente (falta PET-5C E2E)
+**Estado:** **PET FEATURE = CLOSED** (PET-0 → PET-5C)
 
 ## Decisão de produto
 
@@ -37,16 +37,46 @@ Sem migration (campos já existentes). Sem alterar matching/pricing/capacity/Str
 
 ## Capacidade (PET-4)
 
-Gate: `ENABLE_VEHICLE_CAPACITY_GATES` (PROD: **ON**)
+- Gate: `ENABLE_VEHICLE_CAPACITY_GATES`
+- **PROD:** rollout **PASS** — flag **ON** (`true`)
+- **CI web-e2e:** flag **ON** (espelha PROD; não altera PROD)
+- Seed demo E2E: veículos com `max_passengers=4` (`/dev/seed` → `DEMO-E2E-01`)
 
-## PET-0 → PET-5B — DONE
+## PET-0 → PET-5C — DONE
 
-## Etapas restantes
+| ID | Item | Estado |
+|----|------|--------|
+| PET-0 | Model split (fare vs Pet attribute) | DONE |
+| PET-1 | Surcharge €1,50 / assistência €0 | DONE |
+| PET-2 | Passenger UX | DONE |
+| PET-3 | Driver UX | DONE |
+| PET-4 | Capacity enforcement | DONE (PROD ON) |
+| PET-5A.1 | Legal matching (sem opt-in Pet) | DONE |
+| PET-5A.2 | Motivos atendíveis estruturados | DONE |
+| PET-5B | Partner/Admin reporting | DONE |
+| PET-5C | E2E Playwright (API-first) + closure | DONE |
 
-| ID | Item | Notas |
-|----|------|-------|
-| PET-5C | E2E Playwright Pet/capacity/motivos | |
-| — | Taxa limpeza/danos | Fora do MVP |
-| — | Upload ID cão de assistência | Fora desta fase |
+## PET-5C E2E
 
-**Não marcar feature Pet CLOSED.**
+Suite: `web-app/e2e/pet-feature.spec.ts` (+ helpers `e2e/helpers/petApiFlow.ts`)
+
+- E2E-1 baseline normal
+- E2E-2 GO + animal pequeno + surcharge
+- E2E-3 Comfort + animal ocupa lugar
+- E2E-4 Cão de assistência (€0, sem opt-in)
+- E2E-5 capacity exact (4/4)
+- E2E-6 capacity blocked (5 required → list exclude + accept 409)
+- Attendable reject + cancel (Passenger label segura)
+- Partner/Admin reporting mínimos
+
+Correr targeted: `npm run test:e2e:pet` (API com `ENABLE_VEHICLE_CAPACITY_GATES=true`).
+
+## Fora de scope (não bloqueiam CLOSED)
+
+| Item | Notas |
+|------|-------|
+| Taxa limpeza/danos | Fora do MVP |
+| Upload ID cão de assistência | Fora desta fase |
+| Dispute system / analytics / portagens | Fora |
+
+**PET FEATURE = CLOSED**

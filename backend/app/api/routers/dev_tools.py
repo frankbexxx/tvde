@@ -24,6 +24,7 @@ from app.db.models.user import User
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.schemas.trip import TripCreateRequest
 from app.services.baseline_reset import run_full_baseline_reset, seed_user_auth_fields
+from app.services.seed_demo_vehicle_compliance import ensure_e2e_seed_driver_vehicle
 from app.services.trips import (
     accept_trip as accept_trip_service,
     assign_trip as assign_trip_service,
@@ -187,6 +188,8 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
         driver_profile.is_available = True
         driver_profile.partner_id = BASELINE_PARTNER_FLEET_UUID
 
+    e2e_vehicle = ensure_e2e_seed_driver_vehicle(db, driver_profile)
+
     db.commit()
     db.refresh(passenger)
     db.refresh(admin)
@@ -198,6 +201,8 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
         "admin_id": str(admin.id),
         "driver_id": str(driver_user.id),
         "partner_id": str(partner_user.id),
+        "e2e_vehicle_id": str(e2e_vehicle.id),
+        "e2e_vehicle_max_passengers": e2e_vehicle.max_passengers,
     }
 
 
