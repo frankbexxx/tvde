@@ -45,6 +45,10 @@ PHONE_MARLY = "+351918304615"
 PHONE_MANEL = "+351939694569"
 PHONE_TEST_DRIVER_B = "+351911111114"
 
+# PET-5C / PET-4: demo vehicles must declare capacity so CI can run with
+# ENABLE_VEHICLE_CAPACITY_GATES=true without blocking matching (NULL = block).
+DEMO_VEHICLE_MAX_PASSENGERS = 4
+
 DEMO_VEHICLE_SPECS: tuple[dict[str, Any], ...] = (
     {
         "id": VEHICLE_DEFAULT_FLEET_1,
@@ -53,6 +57,7 @@ DEMO_VEHICLE_SPECS: tuple[dict[str, Any], ...] = (
         "make": "Demo",
         "model": "DefaultFleet1",
         "driver_phone": PHONE_DEFAULT_DRIVER,
+        "max_passengers": DEMO_VEHICLE_MAX_PASSENGERS,
     },
     {
         "id": VEHICLE_TEST_PARTNER_1,
@@ -61,6 +66,7 @@ DEMO_VEHICLE_SPECS: tuple[dict[str, Any], ...] = (
         "make": "Demo",
         "model": "TestPartner1",
         "driver_phone": PHONE_MARLY,
+        "max_passengers": DEMO_VEHICLE_MAX_PASSENGERS,
     },
     {
         "id": VEHICLE_TEST_PARTNER_2,
@@ -69,6 +75,7 @@ DEMO_VEHICLE_SPECS: tuple[dict[str, Any], ...] = (
         "make": "Demo",
         "model": "TestPartner2",
         "driver_phone": PHONE_MANEL,
+        "max_passengers": DEMO_VEHICLE_MAX_PASSENGERS,
     },
     {
         "id": VEHICLE_TEST_PARTNER_3,
@@ -77,8 +84,12 @@ DEMO_VEHICLE_SPECS: tuple[dict[str, Any], ...] = (
         "make": "Demo",
         "model": "TestPartner3",
         "driver_phone": PHONE_TEST_DRIVER_B,
+        "max_passengers": DEMO_VEHICLE_MAX_PASSENGERS,
     },
 )
+
+# Fixed id for /dev/seed E2E driver (partner fleet) — distinct from baseline DEFAULT fleet vehicle.
+VEHICLE_E2E_SEED_DRIVER = uuid.UUID("b0000005-0000-4000-8000-000000000001")
 
 
 def _dummy_metadata(*, plate: str, document_type: str) -> str:
@@ -98,6 +109,7 @@ def _ensure_vehicle(db: Session, spec: dict[str, Any]) -> Vehicle:
     vid: uuid.UUID = spec["id"]
     plate: str = spec["plate"]
     plate_norm = normalize_plate(plate)
+    max_pax = int(spec.get("max_passengers") or DEMO_VEHICLE_MAX_PASSENGERS)
     vehicle = db.get(Vehicle, vid)
     if vehicle is None:
         # Prefer stable id; if plate already exists under another id, reuse that row.
@@ -116,6 +128,7 @@ def _ensure_vehicle(db: Session, spec: dict[str, Any]) -> Vehicle:
                 model=spec["model"],
                 status="active",
                 service_categories="x",
+                max_passengers=max_pax,
             )
             db.add(vehicle)
             db.flush()
@@ -127,6 +140,7 @@ def _ensure_vehicle(db: Session, spec: dict[str, Any]) -> Vehicle:
     vehicle.make = spec["make"]
     vehicle.model = spec["model"]
     vehicle.status = "active"
+    vehicle.max_passengers = max_pax
     if not (vehicle.service_categories or "").strip():
         vehicle.service_categories = "x"
     db.flush()
@@ -233,6 +247,7 @@ def ensure_baseline_demo_vehicle_compliance(
                 "vehicle_id": str(vehicle.id),
                 "plate": vehicle.plate,
                 "partner_id": str(vehicle.partner_id),
+                "max_passengers": str(vehicle.max_passengers or ""),
             }
         )
 
@@ -241,3 +256,30 @@ def ensure_baseline_demo_vehicle_compliance(
         "demo_vehicles": assigned,
         "count": len(assigned),
     }
+
+
+def ensure_e2e_seed_driver_vehicle(db: Session, driver: Driver) -> Vehicle:
+    """Assign a capacity-ready DEMO vehicle to the /dev/seed E2E driver.
+
+    ``/dev/seed`` places ``+351911111111`` on the baseline partner fleet (for
+    Partner panel E2E). That differs from baseline_reset DEFAULT-fleet assignment,
+    so we ensure a dedicated vehicle on the driver's current ``partner_id``.
+    """
+    spec = {
+        "id": VEHICLE_E2E_SEED_DRIVER,
+        "partner_id": driver.partner_id,
+        "plate": "DEMO-E2E-01",
+        "make": "Demo",
+        "model": "E2ESeed",
+        "max_passengers": DEMO_VEHICLE_MAX_PASSENGERS,
+    }
+    vehicle = _ensure_vehicle(db, spec)
+    _ensure_compliant_docs(db, vehicle=vehicle)
+    if driver.partner_id != vehicle.partner_id:
+        raise RuntimeError(
+            f"e2e seed vehicle/partner mismatch: "
+            f"driver.partner={driver.partner_id} vehicle.partner={vehicle.partner_id}"
+        )
+    driver.active_vehicle_id = vehicle.id
+    db.flush()
+    return vehicle

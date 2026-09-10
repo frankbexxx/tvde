@@ -40,6 +40,8 @@ jobs:
       OFFER_TIMEOUT_SECONDS: "1"
       E2E_KEEP_OFFERS_ALIVE: "true"
       E2E_OFFER_TIMEOUT_FLOOR_SECONDS: "120"
+      # PET-5C: mirror PROD capacity gates in CI only (never set on PROD from this workflow).
+      ENABLE_VEHICLE_CAPACITY_GATES: "true"
 
     steps:
       - uses: actions/checkout@v4

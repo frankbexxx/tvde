@@ -51,7 +51,7 @@ export default defineConfig({
     },
     {
       name: 'e2e-api',
-      testMatch: /api-flows\.spec\.ts$/,
+      testMatch: /(api-flows|pet-feature)\.spec\.ts$/,
       dependencies: ['e2e-ui'],
     },
   ],

@@ -62,7 +62,7 @@ async function clickDriverMapOfferMarker(page: Page, tripId: string) {
 
   const marker = page.locator(`[data-testid="driver-map-offer-${tripId}"]`)
   if ((await marker.count()) > 0) {
-    await marker.first().scrollIntoViewIfNeeded().catch(() => {})
+    await marker.first().scrollIntoViewIfNeeded().catch(() => { })
     const box = await marker.first().boundingBox()
     if (box) {
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
@@ -624,6 +624,20 @@ test.describe('Driver + passenger (proximity gate)', () => {
     // Com menu no topo do ecrã, o painel substitui o dashboard — é obrigatório fechar antes de ACEITAR.
     await driverPage.getByTestId('driver-close-menu').click()
     await leaveDriverHomeStep1IfPresent(driverPage)
+    // Após reload do menu de navegação: repor geo mock + posição servidor (histórico de flakiness).
+    await driverPage.context().setGeolocation({
+      latitude: TRIP_ORIGIN.lat,
+      longitude: TRIP_ORIGIN.lng,
+    })
+    await driverPage.evaluate(() => {
+      try {
+        sessionStorage.removeItem('tvde_geolocation_failed')
+        localStorage.removeItem('tvde_demo_location')
+      } catch {
+        /* ignore */
+      }
+    })
+    await refreshDriverLocationNearPickup(request, tokens.driver)
 
     await expect
       .poll(
@@ -641,6 +655,19 @@ test.describe('Driver + passenger (proximity gate)', () => {
     await waitForDriverMapOfferUi(driverPage, tripId)
 
     await acceptDriverTripFromMap(driverPage, tripId)
+    await expect
+      .poll(
+        async () => {
+          const r = await request.get(`${API}/driver/trips/${tripId}`, {
+            headers: { Authorization: `Bearer ${tokens.driver}` },
+          })
+          if (!r.ok()) return null
+          const d = (await r.json()) as { status?: string }
+          return d.status ?? null
+        },
+        { timeout: sec(45), intervals: pollLook }
+      )
+      .toMatch(/^(accepted|arriving)$/)
     // Auto-pickup (default ON) pode abrir Maps na recolha — fechar para isolar Opção B no start.
     for (const p of driverCtx.pages()) {
       if (p !== driverPage) await p.close().catch(() => undefined)
@@ -715,8 +742,11 @@ test.describe('Driver + passenger (proximity gate)', () => {
     const popupOnManual = driverPage.waitForEvent('popup', { timeout: sec(45) })
     await driverPage.getByTestId('driver-open-nav').click()
     const popup = await popupOnManual
-    expect(popup.url()).toContain('google.com/maps')
-    expect(popup.url()).toContain(encodeURIComponent(`${TRIP_DEST.lat},${TRIP_DEST.lng}`))
+    // Google may open consent interstitial wrapping maps URL in continue= (extra encoding).
+    const popupUrl = popup.url()
+    expect(popupUrl).toMatch(/google\.com\/(maps|m\?)/)
+    const destToken = `${TRIP_DEST.lat},${TRIP_DEST.lng}`
+    expect(decodeURIComponent(decodeURIComponent(popupUrl))).toContain(destToken)
     await popup.close().catch(() => undefined)
 
     await passengerCtx.close()
