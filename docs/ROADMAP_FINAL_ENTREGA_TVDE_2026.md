@@ -210,8 +210,8 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | A2.2 | Confirmar modelo híbrido estimativa/final | Alinhado a produto actual | CONFIRMAR | [`PRICING_DECISION.md`](PRICING_DECISION.md) | **DONE** |
 | A2.3 | Fechar % comissão piloto | **15%** confirmado Manel 09/09/2026 | DECISÃO | A2.1 | **DONE** *(política; sem mudança de código nesta acta)* |
 | A2.4 | Beneficiário + cadência payout | Partner (**A1-D03**) · **semanal / segunda-feira / manual** · conta pagamentos: Manel | DECISÃO | A2.3 | **DONE** *(política; impl. técnica settlement **não** concluída)* |
-| A2.5 | Fechar tarifário mínimo piloto | Tabela final = **PENDENTE — decisão comercial posterior** | DECISÃO · CÓDIGO | A2.3 · A1-D07 | **ABERTO** |
-| A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 | **PARCIAL** (acta 09/09 cobre % + settlement; falta tarifário) |
+| A2.5 | Fechar tarifário mínimo piloto | GO/Comfort/XL V1 + mínimos + snapshot | DECISÃO · CÓDIGO | A2.3 · A1-D07 | **IMPLEMENTED** |
+| A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 | **PARCIAL** (acta 09/09 + A2.5 código; falta A1.4) |
 
 ## A3 — Validar requisitos legais TVDE aplicáveis — **PARCIAL**
 

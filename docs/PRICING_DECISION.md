@@ -1,7 +1,7 @@
 # Decisão de pricing — modelo híbrido
 
 **Data:** 2026-03-22 (consolidação A021→A022)  
-**Actualizado:** 2026-09-11 — hardening Stripe placeholder €0,50  
+**Actualizado:** 2026-09-11 — A2.5 tarifário GO/Comfort/XL V1  
 **Estado:** decisão fechada — documento de referência para produto, UX e backend.
 
 ---
@@ -35,6 +35,21 @@
 - **Fail-closed:** se o PI já estiver `requires_capture` com amount ≠ `final_price` (ex.: confirm antecipado a €0,50), **não** capturar — `payment_amount_mismatch` / log `payment_capture_blocked_amount_mismatch`.
 - Webhook `payment_intent.succeeded` e admin reconcile só marcam `succeeded` se amount/currency baterem com `final_price` (ou `payment.total_amount`).
 - **MB WAY:** fase 2 — fluxo próprio (sem manual capture); fora deste hardening.
+
+### Tarifário por categoria (A2.5 · V1)
+
+Fonte canónica: `backend/app/core/tariffs.py` (não `BASE_FARE` env).
+
+| Categoria | Código | Base | €/km | €/min | Mínimo |
+|-----------|--------|-----:|-----:|------:|-------:|
+| GO | `x` | 1,50 | 0,60 | 0,12 | 4,50 |
+| Comfort | `comfort` | 1,90 | 0,85 | 0,15 | 5,50 |
+| XL | `xl` | 3,00 | 1,05 | 0,15 | 6,50 |
+
+- `fare_subtotal = max(raw, minimum)`; `total = fare_subtotal + pet + tolls`.
+- Snapshot de rates em `trip.price_breakdown` (`category`, `tariff_version`, `price_per_km`, …) para o complete não depender de alterações futuras da tabela.
+- Comissão: `(final_price − tolls_amount) × %` — Pet commissionable; portagens **0%** (cálculo automático de tolls = fora desta versão; `tolls_amount=0`).
+- Waiting / surge: OFF.
 
 ---
 

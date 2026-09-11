@@ -8,11 +8,16 @@ from app.schemas.driver import DriverLocationResponse
 
 
 class PriceBreakdownSchema(BaseModel):
-    """PET-1 explicit price breakdown (EUR)."""
+    """PET-1 + A2.5 explicit price breakdown (EUR)."""
 
+    category: str = "x"
+    tariff_version: str = "v1"
     base_fare: float
+    price_per_km: float = 0.0
+    price_per_min: float = 0.0
     distance_amount: float
     duration_amount: float
+    minimum_fare: float = 0.0
     minimum_fare_adjustment: float = 0.0
     pet_surcharge: float = 0.0
     tolls_amount: float = 0.0

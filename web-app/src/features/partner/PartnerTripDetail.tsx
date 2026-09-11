@@ -14,6 +14,7 @@ import { formatDateTime } from '../../i18n/format'
 import { reverseGeocode } from '../../services/geocoding'
 import { partnerTripStatusLabel } from './partnerLabels'
 import { ONGOING_TRIP_STATUSES } from './partnerTypes'
+import { fareCategoryCommercialLabel } from '../trips/fareCategoryLabel'
 
 /** Soft auto-refresh while trip is live (OPS-UX-1B). */
 const LIVE_POLL_MS = 12_000
@@ -228,11 +229,27 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
         {trip.price_breakdown ? (
           <div className="rounded-lg border border-border/60 bg-muted/20 p-2 space-y-1 text-xs" data-testid="partner-trip-price-breakdown">
             <p>
+              <span className="text-muted-foreground">{t('tripDetail.fareCategory')}</span>{' '}
+              <span className="text-foreground">
+                {fareCategoryCommercialLabel(
+                  trip.price_breakdown.category ?? trip.vehicle_category
+                )}
+              </span>
+            </p>
+            <p>
               <span className="text-muted-foreground">{t('tripDetail.fareSubtotal')}</span>{' '}
               <span className="text-foreground">
                 {Number(trip.price_breakdown.fare_subtotal ?? 0).toFixed(2)} €
               </span>
             </p>
+            {Number(trip.price_breakdown.minimum_fare_adjustment ?? 0) > 0 ? (
+              <p>
+                <span className="text-muted-foreground">{t('tripDetail.minimumAdjustment')}</span>{' '}
+                <span className="text-foreground">
+                  +{Number(trip.price_breakdown.minimum_fare_adjustment).toFixed(2)} €
+                </span>
+              </p>
+            ) : null}
             <p>
               <span className="text-muted-foreground">{t('tripDetail.petSurcharge')}</span>{' '}
               <span className="text-foreground">

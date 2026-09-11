@@ -128,9 +128,14 @@ export interface PartnerTripRow {
   vehicle_category?: string | null
   vehicle_plate?: string | null
   price_breakdown?: {
+    category?: string
+    tariff_version?: string
     base_fare?: number
+    price_per_km?: number
+    price_per_min?: number
     distance_amount?: number
     duration_amount?: number
+    minimum_fare?: number
     minimum_fare_adjustment?: number
     pet_surcharge?: number
     tolls_amount?: number

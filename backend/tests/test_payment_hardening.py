@@ -269,7 +269,7 @@ def test_complete_requires_capture_matching_amount_passes(
     # patch retrieve to return amount based on final_price_cents of expected fare.
     from app.core.pricing import calculate_fare_breakdown
 
-    expected = float(calculate_fare_breakdown(3.0, 10.0).total)
+    expected = float(calculate_fare_breakdown(3.0, 10.0, category="x").total)
     expected_cents = final_price_cents(expected)
 
     monkeypatch.setattr(
