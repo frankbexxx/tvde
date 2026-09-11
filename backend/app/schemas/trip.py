@@ -270,7 +270,7 @@ class TripDetailResponse(BaseModel):
     )
     payment_intent_client_secret: Optional[str] = Field(
         default=None,
-        description="Secret para Stripe.js (só GET /trips/:id como passageiro, com ENABLE_CONFIRM_ON_ACCEPT).",
+        description="Secret para Stripe.js (só GET /trips/:id como passageiro; requer confirm_on_accept_effective — nunca em prod/staging live).",
     )
     vehicle_category: Optional[str] = Field(
         default=None,

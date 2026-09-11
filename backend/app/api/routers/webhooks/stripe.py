@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 import stripe
 
@@ -17,6 +17,10 @@ from app.core.config import settings
 from app.db.models.payment import Payment
 from app.db.models.stripe_webhook_event import StripeWebhookEvent
 from app.models.enums import PaymentStatus
+from app.services.payment_amount_guards import (
+    expected_payment_cents,
+    validate_stripe_amount_matches_expected,
+)
 from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
@@ -108,6 +112,7 @@ async def stripe_webhook(
         pi_key = str(payment_intent_id)
         payment = db.execute(
             select(Payment)
+            .options(joinedload(Payment.trip))
             .where(Payment.stripe_payment_intent_id == pi_key)
             .order_by(Payment.id.desc())
             .limit(1)
@@ -150,6 +155,42 @@ async def stripe_webhook(
         # Manual capture: only payment_intent.succeeded fires after capture.
         if event_type == "payment_intent.succeeded":
             if payment.status != PaymentStatus.succeeded:
+                trip = payment.trip
+                expected_cents = expected_payment_cents(
+                    final_price=trip.final_price if trip is not None else None,
+                    payment_total_amount=payment.total_amount,
+                )
+                pay_currency = (payment.currency or "EUR").strip().lower()
+                guard = validate_stripe_amount_matches_expected(
+                    stripe_object=obj,
+                    expected_cents=expected_cents,
+                    expected_currency=pay_currency,
+                )
+                if not guard.ok:
+                    log_event(
+                        "stripe_webhook_succeeded_amount_mismatch",
+                        trip_id=str(payment.trip_id),
+                        payment_id=str(payment.id),
+                        payment_intent_id=str(payment_intent_id),
+                        stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                        reason=guard.reason,
+                        stripe_amount_cents=guard.stripe_amount_cents,
+                        expected_amount_cents=guard.expected_amount_cents,
+                        stripe_currency=guard.stripe_currency or "",
+                        expected_currency=guard.expected_currency,
+                        payment_status=payment.status.value,
+                    )
+                    logger.error(
+                        "webhook: succeeded amount mismatch — leaving payment.processing "
+                        "payment_intent_id=%s reason=%s stripe_cents=%s expected_cents=%s",
+                        payment_intent_id,
+                        guard.reason,
+                        guard.stripe_amount_cents,
+                        guard.expected_amount_cents,
+                    )
+                    # Fail-closed: do not mark succeeded; keep processing for ops review.
+                    return {"status": "ok"}
+
                 status_before_succeeded = payment.status
                 payment.status = PaymentStatus.succeeded
                 db.commit()
@@ -165,6 +206,8 @@ async def stripe_webhook(
                         else str(status_before_succeeded)
                     ),
                     to_status=payment.status.value,
+                    stripe_amount_cents=guard.stripe_amount_cents,
+                    expected_amount_cents=guard.expected_amount_cents,
                 )
                 logger.info(
                     f"webhook: Payment marked as succeeded event_type={event_type}, "

@@ -52,6 +52,7 @@ class Settings(BaseSettings):
 
     # Future: confirm PaymentIntent at accept (frontend 3DS). When True, accept_trip
     # returns payment_intent_client_secret for frontend confirmation. Default False.
+    # Hard-disabled in prod and in staging with real Stripe (see confirm_on_accept_effective).
     ENABLE_CONFIRM_ON_ACCEPT: bool = False
 
     # Geographic radius (km) for driver–trip matching. Drivers see trips within this distance;
@@ -147,6 +148,29 @@ class Settings(BaseSettings):
     def is_production_environment(self) -> bool:
         """A023: prod se ENVIRONMENT ou ENV for prod/production."""
         return self._raw_environment_label() in ("prod", "production")
+
+    def is_staging_environment(self) -> bool:
+        return self._raw_environment_label() in ("staging", "stage")
+
+    def is_stripe_live_deploy(self) -> bool:
+        """Prod always; staging only when STRIPE_MOCK is off (real Stripe)."""
+        if self.is_production_environment():
+            return True
+        if self.is_staging_environment() and not bool(self.STRIPE_MOCK):
+            return True
+        return False
+
+    def confirm_on_accept_forbidden(self) -> bool:
+        """Early PI confirm is unsafe with €0.50 placeholder — blocked on live deploys."""
+        return self.is_stripe_live_deploy()
+
+    def confirm_on_accept_effective(self) -> bool:
+        """True only when flag ON and environment allows early confirm (dev/test/mock staging)."""
+        if not bool(self.ENABLE_CONFIRM_ON_ACCEPT):
+            return False
+        if self.confirm_on_accept_forbidden():
+            return False
+        return True
 
     def is_development_environment(self) -> bool:
         return not self.is_production_environment()

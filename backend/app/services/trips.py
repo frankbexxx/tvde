@@ -55,6 +55,10 @@ from app.services.vehicle_operational import (
     assert_driver_vehicle_operational_for_new_ops,
 )
 from app.services.activity_retention import stamp_trip_activity_context
+from app.services.payment_amount_guards import (
+    final_price_cents,
+    validate_stripe_amount_matches_expected,
+)
 from app.services.stripe_service import (
     cancel_payment_intent,
     capture_payment_intent,
@@ -921,11 +925,20 @@ def accept_trip(
     )
 
     client_secret: str | None = None
-    if settings.ENABLE_CONFIRM_ON_ACCEPT:
+    if settings.confirm_on_accept_effective():
         if getattr(settings, "STRIPE_MOCK", False):
             client_secret = f"{stripe_pi_id}_secret_mock"
         elif intent_obj is not None:
             client_secret = intent_obj.client_secret
+    elif settings.ENABLE_CONFIRM_ON_ACCEPT and settings.confirm_on_accept_forbidden():
+        log_event(
+            "confirm_on_accept_blocked_live",
+            trip_id=str(trip.id),
+            payment_id=str(payment.id),
+            payment_intent_id=stripe_pi_id,
+            environment=settings._raw_environment_label(),
+            stripe_mock=bool(getattr(settings, "STRIPE_MOCK", False)),
+        )
     return trip, client_secret
 
 
@@ -1096,11 +1109,20 @@ def accept_offer(
         )
     )
     client_secret: str | None = None
-    if settings.ENABLE_CONFIRM_ON_ACCEPT:
+    if settings.confirm_on_accept_effective():
         if getattr(settings, "STRIPE_MOCK", False):
             client_secret = f"{stripe_pi_id}_secret_mock"
         elif intent_obj is not None:
             client_secret = intent_obj.client_secret
+    elif settings.ENABLE_CONFIRM_ON_ACCEPT and settings.confirm_on_accept_forbidden():
+        log_event(
+            "confirm_on_accept_blocked_live",
+            trip_id=str(trip.id),
+            payment_id=str(payment.id),
+            payment_intent_id=stripe_pi_id,
+            environment=settings._raw_environment_label(),
+            stripe_mock=bool(getattr(settings, "STRIPE_MOCK", False)),
+        )
     return trip, client_secret
 
 
@@ -1637,11 +1659,103 @@ def complete_trip(
     else:
         intent = retrieve_payment_intent(payment.stripe_payment_intent_id)
         pi_status = intent.status if hasattr(intent, "status") else intent.get("status")
+        amount_cents = final_price_cents(final_price)
+        pay_currency = (payment.currency or "EUR").strip().lower()
 
-        if pi_status != "requires_capture":
-            amount_cents = max(
-                50, int(money(Decimal(str(final_price))) * Decimal("100"))
+        if pi_status == "succeeded":
+            # Capture already done (retry / race). Accept only if Stripe amount matches.
+            guard = validate_stripe_amount_matches_expected(
+                stripe_object=intent,
+                expected_cents=amount_cents,
+                expected_currency=pay_currency,
             )
+            if not guard.ok:
+                log_event(
+                    "payment_capture_blocked_amount_mismatch",
+                    trip_id=str(trip.id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=payment.stripe_payment_intent_id or "",
+                    pi_status=str(pi_status),
+                    reason=guard.reason,
+                    stripe_amount_cents=guard.stripe_amount_cents,
+                    expected_amount_cents=guard.expected_amount_cents,
+                    stripe_currency=guard.stripe_currency or "",
+                    expected_currency=guard.expected_currency,
+                )
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="payment_amount_mismatch",
+                )
+            log_event(
+                "payment_capture_success",
+                trip_id=str(trip.id),
+                payment_id=str(payment.id),
+                payment_intent_id=payment.stripe_payment_intent_id or "",
+                stripe_mock=False,
+                already_succeeded=True,
+            )
+        elif pi_status == "requires_capture":
+            # Fail-closed: never capture placeholder €0.50 (or any wrong auth amount).
+            guard = validate_stripe_amount_matches_expected(
+                stripe_object=intent,
+                expected_cents=amount_cents,
+                expected_currency=pay_currency,
+            )
+            if not guard.ok:
+                log_event(
+                    "payment_capture_blocked_amount_mismatch",
+                    trip_id=str(trip.id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=payment.stripe_payment_intent_id or "",
+                    pi_status=str(pi_status),
+                    reason=guard.reason,
+                    stripe_amount_cents=guard.stripe_amount_cents,
+                    expected_amount_cents=guard.expected_amount_cents,
+                    stripe_currency=guard.stripe_currency or "",
+                    expected_currency=guard.expected_currency,
+                )
+                logger.error(
+                    "complete_trip: capture blocked amount mismatch trip_id=%s "
+                    "reason=%s stripe_cents=%s expected_cents=%s",
+                    trip_id,
+                    guard.reason,
+                    guard.stripe_amount_cents,
+                    guard.expected_amount_cents,
+                )
+                # Leave Payment.processing for ops/retry after PI is fixed externally.
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="payment_amount_mismatch",
+                )
+            try:
+                capture_payment_intent(
+                    payment.stripe_payment_intent_id,
+                    idempotency_key=f"tvde-pi-cap-{payment.stripe_payment_intent_id}",
+                )
+                logger.info(
+                    f"complete_trip: PaymentIntent captured trip_id={trip_id}, "
+                    f"payment_intent_id={payment.stripe_payment_intent_id}"
+                )
+                log_event(
+                    "payment_capture_success",
+                    trip_id=str(trip.id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=payment.stripe_payment_intent_id or "",
+                    stripe_mock=False,
+                )
+            except stripe.error.StripeError as e:
+                logger.error(
+                    f"complete_trip: Stripe capture failed trip_id={trip_id}, "
+                    f"payment_intent_id={payment.stripe_payment_intent_id}, error={str(e)}"
+                )
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Payment capture failed.",
+                ) from e
+        else:
             try:
                 update_payment_intent_amount(
                     payment.stripe_payment_intent_id,
@@ -1687,40 +1801,33 @@ def complete_trip(
                     status_code=status.HTTP_502_BAD_GATEWAY,
                     detail="Payment confirmation failed.",
                 ) from e
-        else:
-            # Retry path: PI already authorized — keep our computed total (incl. Pet).
-            # Do NOT replace final_price with placeholder PI amount (known 0.50 risk).
-            logger.info(
-                f"complete_trip: Retry — PI already requires_capture, keeping computed "
-                f"final_price={final_price} trip_id={trip_id}"
-            )
 
-        try:
-            capture_payment_intent(
-                payment.stripe_payment_intent_id,
-                idempotency_key=f"tvde-pi-cap-{payment.stripe_payment_intent_id}",
-            )
-            logger.info(
-                f"complete_trip: PaymentIntent captured trip_id={trip_id}, "
-                f"payment_intent_id={payment.stripe_payment_intent_id}"
-            )
-            log_event(
-                "payment_capture_success",
-                trip_id=str(trip.id),
-                payment_id=str(payment.id),
-                payment_intent_id=payment.stripe_payment_intent_id or "",
-                stripe_mock=False,
-            )
-        except stripe.error.StripeError as e:
-            logger.error(
-                f"complete_trip: Stripe capture failed trip_id={trip_id}, "
-                f"payment_intent_id={payment.stripe_payment_intent_id}, error={str(e)}"
-            )
-            db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Payment capture failed.",
-            ) from e
+            try:
+                capture_payment_intent(
+                    payment.stripe_payment_intent_id,
+                    idempotency_key=f"tvde-pi-cap-{payment.stripe_payment_intent_id}",
+                )
+                logger.info(
+                    f"complete_trip: PaymentIntent captured trip_id={trip_id}, "
+                    f"payment_intent_id={payment.stripe_payment_intent_id}"
+                )
+                log_event(
+                    "payment_capture_success",
+                    trip_id=str(trip.id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=payment.stripe_payment_intent_id or "",
+                    stripe_mock=False,
+                )
+            except stripe.error.StripeError as e:
+                logger.error(
+                    f"complete_trip: Stripe capture failed trip_id={trip_id}, "
+                    f"payment_intent_id={payment.stripe_payment_intent_id}, error={str(e)}"
+                )
+                db.rollback()
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Payment capture failed.",
+                ) from e
 
     # --- Only after capture succeeds (or STRIPE_MOCK): update DB and commit ---
     amount_store = float(money(Decimal(str(final_price))))
