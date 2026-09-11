@@ -162,14 +162,20 @@ test.describe('PET-5C feature (API-first)', () => {
 
   test('E2E-6 capacity blocked 4 pax + pet seat → ineligible / 409', async ({ request }) => {
     const tokens = await seedReadyDriver(request)
-    const tripRes = await createTripWithRateLimitRetry(request, tokens.passenger, {
-      vehicle_category: 'x',
-      passenger_count: 4,
-      has_pet: true,
-      pet_size: 'large',
-      pet_transport: 'harness',
-      pet_occupies_seat: true,
-    })
+    const tripRes = await createTripWithRateLimitRetry(
+      request,
+      tokens.passenger,
+      {
+        vehicle_category: 'x',
+        passenger_count: 4,
+        has_pet: true,
+        pet_size: 'large',
+        pet_transport: 'harness',
+        pet_occupies_seat: true,
+      },
+      70000,
+      tokens.driver
+    )
     expect(tripRes.ok(), await tripRes.text()).toBeTruthy()
     const { trip_id: tripId } = (await tripRes.json()) as { trip_id: string }
 

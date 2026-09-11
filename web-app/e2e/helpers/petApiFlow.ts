@@ -90,11 +90,16 @@ export async function setDriverCategories(
   expect(res.ok(), `vehicle-categories: ${res.status()} ${await res.text()}`).toBeTruthy()
 }
 
+/** App default LOCATION_MAX_AGE_SECONDS — diagnostic only (not a product change). */
+const LOCATION_MAX_AGE_SECONDS_HINT = 45
+
 export async function createTripWithRateLimitRetry(
   request: APIRequestContext,
   passengerToken: string,
   overrides: TripCreateOverrides = {},
-  timeoutMs = 70000
+  timeoutMs = 70000,
+  /** When set, refresh driver GPS before each create attempt (avoids stale-location zero offers). */
+  driverToken?: string
 ): Promise<APIResponse> {
   let lastDetail = 'trip_retry_failed'
   let lastStatus = 500
@@ -117,6 +122,10 @@ export async function createTripWithRateLimitRetry(
 
   while (Date.now() - startedAt < timeoutMs) {
     attempt += 1
+    // Keep location fresh relative to LOCATION_MAX_AGE before each dispatch attempt.
+    if (driverToken) {
+      await setDriverLocation(request, driverToken)
+    }
     const tripRes = await request.post(`${API}/trips`, {
       headers: authHeaders(passengerToken),
       data,
@@ -159,23 +168,152 @@ export async function listAvailable(
   return (await r.json()) as AvailableRow[]
 }
 
+type SoftFetchResult = {
+  ok: boolean
+  status: number
+  body: unknown
+  error?: string
+}
+
+async function softJsonGet(
+  request: APIRequestContext,
+  url: string,
+  token: string
+): Promise<SoftFetchResult> {
+  try {
+    const r = await request.get(url, { headers: authHeaders(token) })
+    const text = await r.text()
+    let body: unknown = text
+    try {
+      body = text ? JSON.parse(text) : null
+    } catch {
+      /* keep raw text */
+    }
+    return { ok: r.ok(), status: r.status(), body }
+  } catch (e) {
+    return {
+      ok: false,
+      status: 0,
+      body: null,
+      error: e instanceof Error ? e.message : String(e),
+    }
+  }
+}
+
+async function buildWaitForOfferDiagnostics(
+  request: APIRequestContext,
+  driverToken: string,
+  tripId: string,
+  opts: {
+    passengerToken?: string
+    adminToken?: string
+    pollHttpErrors: string[]
+    lastAvailable: AvailableRow[] | null
+  }
+): Promise<string> {
+  const nowMs = Date.now()
+  const tripAsPassenger = opts.passengerToken
+    ? await softJsonGet(request, `${API}/trips/${tripId}`, opts.passengerToken)
+    : null
+  const tripAsAdmin = opts.adminToken
+    ? await softJsonGet(request, `${API}/admin/trips/${tripId}`, opts.adminToken)
+    : null
+  const offers = await softJsonGet(request, `${API}/driver/offers`, driverToken)
+  const locationLast = await softJsonGet(
+    request,
+    `${API}/drivers/location/last`,
+    driverToken
+  )
+  const availableAgain = await softJsonGet(
+    request,
+    `${API}/driver/trips/available`,
+    driverToken
+  )
+
+  let locationAgeSec: number | null = null
+  let locationStaleHint: string | null = null
+  if (
+    locationLast.ok &&
+    locationLast.body &&
+    typeof locationLast.body === 'object' &&
+    locationLast.body !== null &&
+    'timestamp' in locationLast.body
+  ) {
+    const ts = Number((locationLast.body as { timestamp?: unknown }).timestamp)
+    if (Number.isFinite(ts)) {
+      locationAgeSec = Math.round((nowMs - ts) / 1000)
+      locationStaleHint =
+        locationAgeSec > LOCATION_MAX_AGE_SECONDS_HINT
+          ? `stale_vs_default_max_age_${LOCATION_MAX_AGE_SECONDS_HINT}s`
+          : `fresh_vs_default_max_age_${LOCATION_MAX_AGE_SECONDS_HINT}s`
+    }
+  }
+
+  const tripStatus =
+    (tripAsPassenger?.ok &&
+      tripAsPassenger.body &&
+      typeof tripAsPassenger.body === 'object' &&
+      (tripAsPassenger.body as { status?: unknown }).status) ||
+    (tripAsAdmin?.ok &&
+      tripAsAdmin.body &&
+      typeof tripAsAdmin.body === 'object' &&
+      (tripAsAdmin.body as { status?: unknown }).status) ||
+    null
+
+  return [
+    `waitForOffer timeout trip_id=${tripId}`,
+    `trip_status=${String(tripStatus)}`,
+    `passenger_trip_http=${tripAsPassenger ? `${tripAsPassenger.status}` : 'n/a'}`,
+    `admin_trip_http=${tripAsAdmin ? `${tripAsAdmin.status}` : 'n/a'}`,
+    `driver_offers_http=${offers.status} body=${JSON.stringify(offers.body)}`,
+    `listAvailable_last_poll=${JSON.stringify(opts.lastAvailable)}`,
+    `listAvailable_final_http=${availableAgain.status} body=${JSON.stringify(availableAgain.body)}`,
+    `driver_location_last_http=${locationLast.status} body=${JSON.stringify(locationLast.body)}`,
+    `location_age_sec=${locationAgeSec ?? 'n/a'} location_freshness=${locationStaleHint ?? 'n/a'}`,
+    `poll_http_errors=${opts.pollHttpErrors.length ? opts.pollHttpErrors.join(' | ') : 'none'}`,
+  ].join('\n')
+}
+
 export async function waitForOffer(
   request: APIRequestContext,
   driverToken: string,
   tripId: string,
-  timeoutMs = sec(60)
+  timeoutMs = sec(60),
+  diagTokens?: { passengerToken?: string; adminToken?: string }
 ): Promise<AvailableRow> {
   let found: AvailableRow | null = null
-  await expect
-    .poll(
-      async () => {
-        const list = await listAvailable(request, driverToken)
-        found = list.find((row) => row.trip_id === tripId) ?? null
-        return found != null
-      },
-      { timeout: timeoutMs, intervals: pollLook }
-    )
-    .toBe(true)
+  let lastAvailable: AvailableRow[] | null = null
+  const pollHttpErrors: string[] = []
+
+  try {
+    await expect
+      .poll(
+        async () => {
+          try {
+            const list = await listAvailable(request, driverToken)
+            lastAvailable = list
+            found = list.find((row) => row.trip_id === tripId) ?? null
+            return found != null
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e)
+            pollHttpErrors.push(msg.slice(0, 240))
+            throw e
+          }
+        },
+        { timeout: timeoutMs, intervals: pollLook }
+      )
+      .toBe(true)
+  } catch (pollErr) {
+    const diag = await buildWaitForOfferDiagnostics(request, driverToken, tripId, {
+      passengerToken: diagTokens?.passengerToken,
+      adminToken: diagTokens?.adminToken,
+      pollHttpErrors,
+      lastAvailable,
+    })
+    const base = pollErr instanceof Error ? pollErr.message : String(pollErr)
+    throw new Error(`${base}\n--- waitForOffer diagnostics ---\n${diag}`)
+  }
+
   if (!found) throw new Error(`offer not found for trip ${tripId}`)
   return found
 }
@@ -342,10 +480,21 @@ export async function createOfferedTrip(
   tokens: DevTokens,
   overrides: TripCreateOverrides = {}
 ): Promise<{ tripId: string; createBody: Record<string, unknown>; offer: AvailableRow }> {
-  const tripRes = await createTripWithRateLimitRetry(request, tokens.passenger, overrides)
+  // Fresh GPS immediately before create (and again inside each rate-limit retry).
+  await setDriverLocation(request, tokens.driver)
+  const tripRes = await createTripWithRateLimitRetry(
+    request,
+    tokens.passenger,
+    overrides,
+    70000,
+    tokens.driver
+  )
   expect(tripRes.ok(), `create: ${tripRes.status()} ${await tripRes.text()}`).toBeTruthy()
   const createBody = (await tripRes.json()) as Record<string, unknown>
   const tripId = String(createBody.trip_id)
-  const offer = await waitForOffer(request, tokens.driver, tripId)
+  const offer = await waitForOffer(request, tokens.driver, tripId, sec(60), {
+    passengerToken: tokens.passenger,
+    adminToken: tokens.admin,
+  })
   return { tripId, createBody, offer }
 }
