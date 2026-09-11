@@ -305,7 +305,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 1. **S-PAY-01 / S-PAY-02** — Sem Stripe live + Connect, não há operação comercial com dinheiro real nem split motorista.  
 2. **S-AUTH-01** — OTP sem SMS real impede onboarding sério fora de ambientes com OTP fixo.  
 3. **S-MOB-01 / S-NOTIF-01** — Sem packaging mobile + push, adopção motorista/passageiro fica presa ao browser.  
-4. **S-BIZ-01 / S-BIZ-02** — Comissão **15%** confirmada; falta validar custos (A1.2) e **fechar tarifário**; Connect e “preço líquido” dependem disso.  
+4. **S-BIZ-01 / S-BIZ-02** — Comissão **15%** confirmada; A1.2 **READY FOR ECONOMIC MODELLING**; falta **fechar A1.3/A1.4 + tarifário**; Connect e “preço líquido” dependem disso.  
 5. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
 6. **S-BIZ-03** — Domínio/site/email: externo (.PT); **não** bloqueia desenvolvimento APP.  
 

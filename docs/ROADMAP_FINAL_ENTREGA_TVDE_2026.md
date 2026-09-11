@@ -182,17 +182,17 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Objectivo:** Validar hipóteses custos/comissões/simulador (não inventar números).  
 - **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001`  
 - **Dependências:** —  
-- **Estado:** **PARCIAL** (2026-09-03) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 EM CURSO** (fixo vs variável; Manel ≠ orçamento) · A1.3–A1.4 abertos · código pricing/cancel ainda legado  
+- **Estado:** **PARCIAL** (actualizado 2026-09-11) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** (≠ ACCOUNTING FINAL) · **A1.3 EM CURSO** (tabela tickets) · A1.4 aberto · código pricing/cancel ainda legado  
 - **Entrega levantamento:** [`A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md)  
-- **Nota legal 2026-09-04:** considerar contribuição AMT **5%** sobre taxas de intermediação (base IVA a confirmar AMT/jurídico). **Não** altera **A1-D01** (comissão piloto **15%**).  
+- **Nota legal:** CRS/AMT = **5% × taxa de intermediação sem IVA** (com 15% → 0,75% da base); **não** no runtime até IVA fechado. **Não** altera **A1-D01**.  
 - **Conclusão (quando fechado):** Francisco+Manel(+contabilista) registam aceite / correcções por escrito.  
 - **Docs base (hipóteses, não aprovadas):** [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
 | A1.1 | Confirmar pacote dos 3 docs business + levantamento matriz | Matriz em `A1_MODELO_ECONOMICO…` | CONFIRMAR · DOCS | — | **DONE** |
-| A1.2 | Modelo custos: fixos vs variáveis; validar rubricas vs realidade (sem baseline 1–2,5 k€) | Lista rubricas + valores reais / `A CONFIRMAR` | DECISÃO · DOCS | A1.1 · **A1-D10** | **EM CURSO** |
-| A1.3 | Sessão margem/viagem + GTM 36m | Simulador válido ou a corrigir | DECISÃO | A1.2 | Por iniciar |
+| A1.2 | Modelo custos: fixos vs variáveis; validar rubricas vs realidade (sem baseline 1–2,5 k€) | **READY FOR ECONOMIC MODELLING** (≠ accounting final) | DECISÃO · DOCS | A1.1 · **A1-D10** | **DONE** *(modelagem)* |
+| A1.3 | Sessão margem/viagem + GTM 36m | Tabela tickets + rateio fixos | DECISÃO | A1.2 | **EM CURSO** |
 | A1.4 | Acta curta no repo (só resultados) | Fecho A1 sem % inventados | DOCS | A1.3 | Por iniciar |
 
 ## A2 — Fechar comissão e tarifário — **PARCIAL**
