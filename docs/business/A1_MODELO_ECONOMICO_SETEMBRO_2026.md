@@ -1,9 +1,9 @@
 # A1 — Levantamento do modelo económico (Setembro 2026)
 
 **Tipo:** levantamento factual — **não** é tarifário aprovado nem acta de validação  
-**Data:** 2026-09-03  
+**Data:** 2026-09-03 · **Actualizado:** 2026-09-11  
 **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001` · roadmap **A1**  
-**Estado A1 global:** **PARCIAL** — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 EM CURSO** · A1.3–A1.4 abertos  
+**Estado A1 global:** **PARCIAL** — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** *(não ACCOUNTING FINAL)* · **A1.3 EM CURSO** · A1.4 aberto  
 **Regra:** valores sem fonte = **não inventados**. Hipóteses Manel ≠ decisão (exceto **A1-D01…D10** registados).
 
 ---
@@ -35,15 +35,16 @@
 | % comissão piloto | **FECHADO** | **15%** acordado Francisco/Manel; 12% / 12,5% = **só futuro** (rentabilidade elevada e/ou acordos específicos) | **A1-D01** 2026-09-03 | Seed alinhado | Não (baseline) |
 | Share Partner / frota | **FECHADO** *(beneficiário piloto)* | Liquidação piloto ao **Partner/Frota**; `driver_payout` = referência contabilística (**sem** payout directo ao Driver nesta fase) | **A1-D03** 2026-09-03 | Parcial (só calc. Driver) | Cadência = **A1-D04** |
 | Driver líquido (display) | **PARCIAL** | UI mostra `driver_payout` / `commission_amount`; sem portagens/gorjetas/promo na fórmula | `DriverDashboard` · Q10 | Parcial | Fórmula completa = A1-D08 / E1 |
-| Fees Stripe (valor) | **PARCIAL** | Exemplos docs (~1,5%+0,25 € / faixas audit) — **a validar**; **não** modelados no settlement | GTM · audit | Não | Valor = externo (validar pós-B1) |
+| Fees Stripe (valor) | **FECHADO** *(V1 cartão EEE)* | **1,5% + €0,25**/pagamento (cartões EEE standard, Stripe PT); V1 = **cartão**; MB WAY = **fase 2** | Stripe pricing PT 2026-09-11 · §6c | Não (custo ops) | Mix premium/UK/intl a medir em live |
 | Quem absorve Stripe fee | **FECHADO** | Piloto: **plataforma absorve**; Pax paga só `final_price`; sem surcharge; **não** descontar a Driver nem a Partner; fee = custo da margem plataforma (**A1-D09**) | **A1-D09** 2026-09-03 | Não (custo ops) | Rever se 15% insuficiente após B1 |
+| Contribuição AMT (CRS) | **FECHADO** *(regra económica)* · **NÃO no runtime** | **CRS = 5% × taxa de intermediação sem IVA**; com 15% → **0,75% da base** dos 15%; **não** implementar `0,75%×final_price` no código até fechar IVA/base | Lei 45/2018 · §6d · 2026-09-11 | **Não** | Contabilista: IVA prestação · NC/refunds · IRC · arredondamentos AMT |
 | IVA / recibos / emissor | **DEPENDENTE EXTERNO** | A3-D08: após A1/A2 + contabilista; não escolher emissor agora | `A3_REQUISITOS` · A3-D08 | Não | Contabilista (fora A1-D económicos) |
-| Settlement Pax (cobrança) | **PARCIAL** | Auth no accept (placeholder baixo) → update+capture no complete; mock → `succeeded`; live → webhook | `trips.py` · O-STRIPE-1 | Sim (mock); live = B1 | B1 go-live (não A1) |
+| Settlement Pax (cobrança) | **PARCIAL** *(hardening DONE)* | Auth accept placeholder **€0,50** → update+confirm+capture no complete; mismatch amount/currency **fail-closed**; confirm-on-accept **OFF** em live; mock → `succeeded`; live → webhook | `trips.py` · PR **#578** (`9871877`) · `PRICING_DECISION` | Sim (mock+guards); live = B1 | B1 go-live (não A1) |
 | Connect / split automático | **FECHADO** *(requisito piloto)* | **Não** é requisito do piloto; manter D03/D04 manual semanal; B3 **fora** do crítico M2 nesta fase; Connect só depois se operação o exigir | **A1-D05** 2026-09-03 | Não | Pós-piloto / condicional |
 | Payouts automáticos | **FECHADO** *(requisito piloto)* | **Não** são requisito do piloto; manter D03–D05; **B4 fora** do crítico M2 nesta fase; só depois se automatizar liquidação ao Partner | **A1-D06** 2026-09-03 | Não | Pós-piloto / condicional |
 | Liquidação manual no piloto | **FECHADO** | **Semanal** · **segunda-feira** · ao Partner; só `completed`; líquido = Σ`final_price` − 15%; `driver_payout` só referência; **manual** até B3/B4; conta pagamentos: Manel (acta 09/09/2026) | **A1-D04** + [`VAMULA_DECISOES…`](VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) | Processo humano | Relatório mínimo §6a |
-| Custos fixos/variáveis | **PARCIAL** *(A1.2 EM CURSO)* | `MANEL_COSTS…` = **só estimativas de planeamento** (**A1-D10**); **não** orçamento; **não** baseline 1–2,5 k€/mês sem validação rubrica a rubrica. Método A1.2: separar **fixos mensais** vs **variáveis** (usage/tx). Fora do modelo técnico inicial: salários, marketing, contabilista, legal, seguros, suporte humano, aquisição drivers. | **A1-D10** · `MANEL_COSTS…` | Não | Rubricas + facturas reais |
-| Margem plataforma | **PARCIAL** | Exemplos ilustrativos (~0,80–1,20 €/viagem @15%); sem motor de margem | Manel pricing · GTM | Não | Após A1.2–A1.3 |
+| Custos fixos/variáveis | **FECHADO** *(A1.2 modelagem)* · **≠ ACCOUNTING FINAL** | Rubricas técnicas confirmadas §6c; `MANEL_COSTS…` continua **não** orçamento (**A1-D10**). TBD: SMS · email · stores · chargebacks · suporte · legal/seguros · overage mapas | **A1-D10** · §6c 2026-09-11 | Não | Contabilidade formal depois |
+| Margem plataforma | **PARCIAL** *(A1.3 EM CURSO)* | Inputs de simulação por ticket §6f (15% · CRS · Stripe); **sem** rateio de fixos; **sem** GO/Comfort/XL | §6f 2026-09-11 | Não | Fechar A1.3 → A1.4 |
 | Arredondamento | **FECHADO** *(código)* | Fare `round(2)`; money `Decimal` **ROUND_HALF_UP** 0,01; Stripe cents `round(price×100)` min 50 | `pricing.py` · `payments.py` · `trips.py` | Sim | Não |
 | Cancelamento — fee | **FECHADO** *(regra comercial)* | Fee = **3,00 € fixos** (**A1-D08**). Legado código `max(1,50, 20%×estimativa)` deixa de ser baseline. Piloto pré-B1: **registar** fee, **não cobrar**. Cobrança real quando B1 operacional. | **A1-D08** 2026-09-03 | Parcial (ainda fórmula legada no código) | Alinhar código + captura pós-B1 |
 | Preço mínimo / categorias | **FECHADO** *(decisão comercial)* | Piloto = grelha Manel **Go / Comfort / XL** (com mínimos); defaults código **deixam de ser** baseline comercial | **A1-D07** · `MANEL_PRICING…` § categorias | Não (ainda 1 tarifa s/ mínimo) | Código a alinhar |
@@ -53,10 +54,10 @@
 
 ### Contagens (matriz)
 
-| Classificação | Nº *(após A1-D01/D02)* |
+| Classificação | Nº *(após A1.2 fecho modelagem 2026-09-11)* |
 |---------------|------------------------|
-| **FECHADO** | **15** |
-| **PARCIAL** | **5** *(incl. A1.2 custos)* |
+| **FECHADO** | **17** *(incl. Stripe V1 fee · A1.2 modelagem · CRS regra)* |
+| **PARCIAL** | **4** *(incl. A1.3 margem · settlement live · fare/código)* |
 | **ABERTO** | **1** (simulador 36m) |
 | **DEPENDENTE EXTERNO** | **1** (IVA/recibos) |
 
@@ -74,6 +75,7 @@
 - Cancel fee: runtime ainda legado simulado; **baseline comercial = 3,00 € fixos (A1-D08)** — código a alinhar; cobrança real só pós-B1.
 - Stripe Connect / payouts / share Partner: **ausentes**.
 - Mock ON = política piloto documentada.
+- Payment hardening **#578** merged (`9871877`): placeholder €0,50 fail-closed; confirm-on-accept bloqueado em live.
 
 ### Decisão já tomada
 
@@ -90,11 +92,14 @@
 - **A1-D07:** piloto usa **grelha comercial Manel** (Go/Comfort/XL); defaults código deixam de ser baseline; híbrido estimativa→final **mantém-se**; implementação técnica pendente (aguarda mapeamento categorias Manel).  
 - **A1-D08:** fee cancelamento = **3,00 € fixos**; legado 20%/1,50 deixa de ser baseline; piloto pré-B1 = registar sem cobrar; captura real quando B1 operacional.  
 - **A1-D09:** piloto — **plataforma absorve** fee Stripe; Pax só `final_price`; sem surcharge; sem desconto a Driver/Partner; fee = custo operacional da margem; rever se 15% insuficiente após B1 live.  
-- **A1-D10:** valores `MANEL_COSTS…` = **estimativas de planeamento** apenas; **não** orçamento aprovado; **não** usar 1–2,5 k€/mês como baseline oficial sem validação rubrica a rubrica. Método A1.2 = fixos vs variáveis (ver §6c).
+- **A1-D10:** valores `MANEL_COSTS…` = **estimativas de planeamento** apenas; **não** orçamento aprovado; **não** usar 1–2,5 k€/mês como baseline oficial sem validação rubrica a rubrica. Método A1.2 = fixos vs variáveis (ver §6c).  
+- **A1.2 (2026-09-11):** estado **READY FOR ECONOMIC MODELLING** — **não** ACCOUNTING FINAL.  
+- **CRS/AMT (2026-09-11):** regra económica fechada §6d; **não** no runtime.  
+- **Pagamentos V1:** cartão · Stripe EEE **1,5%+€0,25** · plataforma absorve · MB WAY **fase 2**.
 
 ### Ainda em aberto (económico)
 
-- Preencher / confirmar rubricas A1.2 (valores reais) · depois A1.3 (margem/GTM) · acta A1.4.
+- A1.3 (margem/GTM com rateio de fixos opcional) · acta A1.4 · TBD ops (SMS, email, stores, chargebacks, suporte, legal).
 
 ---
 
@@ -105,7 +110,7 @@
 | Comissão nominal actual | **Piloto = 15%** (**A1-D01**). Runtime: `driver.commission_percent` (seed tipicamente 15). |
 | 15% / 12% / outro | **15%** = baseline piloto. **12% / 12,5%** = possibilidades **futuras** apenas (rentabilidade elevada e/ou acordos específicos) — **não** baseline. |
 | Base da comissão | **Bruto** `final_price` (**A1-D02**); fees Stripe não alteram a base. |
-| Quem suporta Stripe fee | **Plataforma** no piloto (**A1-D09**); valor exacto da fee ainda a validar. |
+| Quem suporta Stripe fee | **Plataforma** no piloto (**A1-D09**); V1 cartão EEE = **1,5% + €0,25**. |
 | Driver recebe líquido calculado? | **Sim** no modelo de dados/UI (`driver_payout`); **não** há transferência automática. |
 | Partner tem share próprio? | **Beneficiário piloto = Partner/Frota** (**A1-D03**); sem split automático no código. |
 | Plataforma recebe e liquida? | Cobrança Pax na plataforma; liquidação piloto ao **Partner** (A1-D03); `driver_payout` só referência. |
@@ -154,72 +159,161 @@
 
 ### 6b. Decisões A1-D — lista fechada
 
-Nenhuma A1-D pendente. Trabalho restante = **A1.2** (preencher valores) · **A1.3** · **A1.4**.
+Nenhuma A1-D pendente. Trabalho restante = **A1.3** (margem) · **A1.4** (acta).
+
+**A1.2:** **READY FOR ECONOMIC MODELLING** (2026-09-11) — **não** marcar como ACCOUNTING FINAL.
 
 **Fora de A1-D:** IVA/emissor recibos (`DEPENDENTE CONTABILISTA` · A3-D08); questões jurídicas; mobile; branding; activação técnica Stripe live (B1).
 
-### Nota legal 2026-09-04 (AMT)
+### Nota legal 2026-09-04 (AMT) — actualizada 2026-09-11
 
-A1 deve considerar como custo/regra operacional a **contribuição AMT = 5%** sobre taxas de intermediação cobradas (Lei 45/2018 art. 30.º). A base exacta relativamente a **IVA** requer confirmação AMT/jurídica. **Não** altera **A1-D01** (comissão piloto **15%**). Ver [`A3_REQUISITOS`](../legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) §8e.
+A1 considera a **contribuição AMT (CRS)** como custo/regra operacional. Detalhe económico fechado em **§6d**. **Não** altera **A1-D01** (comissão piloto **15%**). Ver [`A3_REQUISITOS`](../legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) §8e.
 
-### 6c. A1.2 — Modelo de custos técnicos (**EM CURSO** · dados parcialmente confirmados · 2026-09-03)
+### 6c. A1.2 — Modelo de custos técnicos
 
-**Objectivo:** modelo de custos técnicos com rubricas confirmáveis — **não** inventar preços.  
-**Regra de preenchimento:** só valores reais (facturação/config). Sem valor real → `A CONFIRMAR`.  
-**Fora do modelo técnico inicial:** salários · marketing · contabilista · legal · seguros · suporte humano · aquisição de drivers (P&L completo depois).
+**Estado:** **READY FOR ECONOMIC MODELLING** (2026-09-11)  
+**Não é:** ACCOUNTING FINAL  
+**Objectivo:** rubricas técnicas confirmáveis para modelagem — **não** inventar preços.  
+**Fora do modelo técnico inicial / TBD (não bloqueiam A1.3 inicial):** SMS OTP · email profissional/transaccional · stores mobile · chargebacks/fraude reais · suporte humano · seguros/contabilista/legal · overage mapas.
 
-#### Custos confirmados — Render (Agosto 2026, factura real)
+#### Custos fixos técnicos confirmados
 
-| Rubrica | Tipo | Valor actual | Estado |
-|---------|------|-------------:|--------|
-| `tvde-api` (Web Service prod) | Fixo | **$7,00/mês** | ✅ Confirmado |
-| `tvde-db` (PostgreSQL prod) | Fixo | **$6,30/mês** | ✅ Confirmado |
-| `tvde-app` (Static Site prod) | Fixo | **$0,00/mês** | ✅ Confirmado |
-| `tvde-staging-api` | Fixo | **$7,00/mês** | ✅ Confirmado |
-| `tvde-staging-db` | Fixo | **$10,50/mês** | ✅ Confirmado (staging > prod — optimização posterior) |
-| `tvde-staging-app` | Fixo | **$0,00/mês** | ✅ Confirmado |
-| **Total produção** | Fixo | **$13,30/mês** | ✅ |
-| **Total staging** | Fixo | **$17,50/mês** | ✅ |
-| **Total Render actual** | Fixo | **$30,80/mês** | ✅ |
+| Rubrica | Tipo | Valor | Estado |
+|---------|------|------:|--------|
+| Render prod API (`tvde-api`) | Fixo | **$7,00/mês** | ✅ Confirmado |
+| Render prod DB (`tvde-db`) | Fixo | **$6,30/mês** | ✅ Confirmado |
+| Render prod frontend (`tvde-app`) | Fixo | **$0,00/mês** | ✅ Confirmado |
+| Render staging (API+DB+app) | Fixo | **$17,50/mês** | ✅ Confirmado |
+| **Total Render** | Fixo | **$30,80/mês** | ✅ *(prod $13,30 + staging $17,50)* |
+| MapTiler | Fixo potencial | Free **não** serve operação comercial; **Flex $30/mês** USD + overage (**s/ IVA**) | ✅ Confirmado (política comercial) |
+| Cloudflare DNS / Pages | Fixo | **$0** baseline | ✅ Confirmado |
+| cron-job.org | Fixo | **€0** baseline | ✅ Confirmado |
+| Sentry Developer | Fixo | **$0** baseline enquanto suficiente | ✅ Confirmado |
 
-*Nota: staging actualmente mais caro que produção — registar como ponto de optimização; não alterar Render agora.*
+*Nota MapTiler:* custo actual de utilização pode ser $0 em Free, mas **produção comercial TVDE exige Flex (≥ $30/mês)** — usar **$30** como baseline de modelagem de mapas, não $0.
 
-#### Custos confirmados — outros
+#### Pagamentos (V1)
 
-| Rubrica | Tipo | Valor actual | Estado |
-|---------|------|-------------:|--------|
-| MapTiler (tiles + geocoding) | Variável potencial | **$0,00/mês** (plano Free; utilização baixa) | ✅ Confirmado — custo futuro só se upgrade/overage |
-| Stripe / PSP (prod) | Variável | **€0,00 actual** (teste/restricted; `STRIPE_MOCK=true`) | ✅ Confirmado actual — fee futura: **1,5% + €0,25/tx** (EEE baseline; UK 2,5% + €0,25); absorvida plataforma (**A1-D09**); validar em B1 live |
-| SMS / OTP | Variável | **€0,00 actual** (fornecedor não escolhido) | ⏳ A CONFIRMAR — custo futuro pendente escolha fornecedor |
+| Item | Regra | Estado |
+|------|-------|--------|
+| Método V1 | **Cartão** | ✅ |
+| Stripe EEE standard | **1,5% + €0,25** / pagamento | ✅ fonte oficial Stripe PT 2026-09-11 |
+| Absorção fee | **Plataforma** (**A1-D09**) | ✅ |
+| MB WAY | Stripe **suporta**; **não** entra no V1; **fase 2** (incompatível com manual capture + lifecycle `final_price`) | ✅ decisão produto |
+| Connect / payouts | Fora do piloto (**A1-D05/D06**) | ✅ |
 
-#### Custos ainda A CONFIRMAR
+#### Payment hardening (registo)
 
-| Rubrica | Tipo | Notas |
-|---------|------|-------|
-| Monitorização / uptime externo | Fixo/Opt | Além dos logs Render; só se SLA exigir |
-| E-mail transaccional | Variável | Fornecedor e custo não definidos |
-| Push notifications | Variável | Não implementadas em prod |
-| Apple / Google stores | Fixo | Mobile fora do crítico actual |
-| Backups extra / retenção alargada | Fixo/Opt | Render free tier = 7 dias; custo plano superior A CONFIRMAR |
+| Item | Valor |
+|------|-------|
+| PR | [#578](https://github.com/frankbexxx/tvde/pull/578) **MERGED** |
+| `main` | `9871877` |
+| Placeholder €0,50 | Protegido (fail-closed se `requires_capture` com amount ≠ final) |
+| Amount/currency mismatch | Fail-closed em complete · webhook · reconcile |
+| Confirm-on-accept | Desactivado em **prod** e **staging live** |
+| MB WAY | Fase 2 (fora deste hardening) |
 
-#### Sumário A1.2
+#### Custos ainda abertos (TBD)
 
-| Categoria | Total confirmado | Notas |
-|-----------|-----------------|-------|
-| Fixos mensais confirmados (prod) | **~$13,30/mês** | Render prod |
-| Fixos mensais confirmados (staging) | **~$17,50/mês** | Render staging |
-| Variáveis actuais confirmadas | **$0** | MapTiler + Stripe (pré-live) |
-| Variáveis futuras conhecidas | Stripe **1,5% + €0,25/tx** (EEE) | Pós-B1 live; absorvido plataforma |
-| A CONFIRMAR | SMS · e-mail · push · stores · monitorização | Ver tabela acima |
+| Rubrica | Notas |
+|---------|-------|
+| SMS OTP | Fornecedor não escolhido |
+| Email profissional / transaccional | Não definido |
+| Stores mobile | Fora do crítico actual |
+| Chargebacks / fraude reais | Risco variável; fee dispute Stripe tipicamente €20 (EEE) |
+| Suporte humano | Fora do modelo técnico inicial |
+| Seguros / contabilista / legal | P&L completo depois |
+| Overage mapas (MapTiler Flex+) | Se volume > quotas Flex |
+
+Estes **não** impedem análise económica inicial (A1.3).
+
+#### Sumário A1.2 (modelagem)
+
+| Categoria | Total / regra | Notas |
+|-----------|---------------|-------|
+| Fixos Render | **$30,80/mês** | Inclui staging |
+| Mapas (comercial) | **$30/mês** Flex baseline | + IVA se aplicável; + overage TBD |
+| Cloudflare + cron + Sentry | **€0 / $0** baseline | Upgrade se limites |
+| Variável por viagem (V1) | Stripe **1,5%+€0,25** + CRS §6d | Absorvidos na margem plataforma |
+| Estado | **READY FOR ECONOMIC MODELLING** | ≠ ACCOUNTING FINAL |
+
+### 6d. AMT / CRS — regra económica (2026-09-11)
+
+**Regra confirmada:**
+
+```text
+CRS = 5% × taxa de intermediação sem IVA
+```
+
+Com comissão VAMULÁ **15%** sobre a base de comissão (piloto: `final_price` bruto, **A1-D01/D02**):
+
+```text
+CRS = 0,75% da base sobre a qual os 15% são calculados
+```
+
+| Item | Valor |
+|------|-------|
+| Periodicidade | **Mensal** |
+| Regime | **Autoliquidação** |
+| Pagamento | Até **final do mês seguinte** |
+
+**IMPORTANTE — runtime:** **não** implementar ainda `0,75% × final_price` no código. Preservar distinção **preço / base / IVA**. Até o contabilista fechar a base IVA da prestação, o modelo económico usa a regra acima **só em documentação/simulação**.
+
+**Pendentes contabilista:**
+
+- tratamento contabilístico / IRC  
+- notas de crédito / refunds  
+- confirmação concreta do **IVA da prestação**  
+- arredondamentos / instruções AMT  
+
+### 6e. *(reservado — ver §6c Payment hardening)*
+
+### 6f. A1.3 — Inputs de simulação por ticket (**EM CURSO** · 2026-09-11)
+
+**Âmbito:** margem **variável** por viagem — **sem** rateio de custos fixos · **sem** decidir GO/Comfort/XL · **sem** alterar pricing/código.
+
+**Fórmulas (modelagem):**
+
+| Componente | Fórmula |
+|------------|---------|
+| Comissão VAMULÁ | `0,15 × final_price` |
+| CRS | `0,05 × comissão` (= `0,0075 × final_price` **só na simulação**) |
+| Stripe (EEE standard) | `0,015 × final_price + 0,25` |
+| Margem variável | `comissão − CRS − Stripe` |
+| Margem efectiva % | `margem variável / final_price` |
+
+| `final_price` | Comissão 15% | CRS 5%×com. | Stripe 1,5%+€0,25 | Margem variável | Margem % |
+|-------------:|-------------:|-------------:|------------------:|----------------:|---------:|
+| €4,00 | €0,60 | €0,030 | €0,310 | €0,260 | **6,50%** |
+| €5,00 | €0,75 | €0,038 | €0,325 | €0,388 | **7,75%** |
+| €7,50 | €1,125 | €0,056 | €0,363 | €0,706 | **9,42%** |
+| €10,00 | €1,50 | €0,075 | €0,400 | €1,025 | **10,25%** |
+| €15,00 | €2,25 | €0,113 | €0,475 | €1,663 | **11,08%** |
+| €20,00 | €3,00 | €0,150 | €0,550 | €2,300 | **11,50%** |
+| €30,00 | €4,50 | €0,225 | €0,700 | €3,575 | **11,92%** |
+| €50,00 | €7,50 | €0,375 | €1,000 | €6,125 | **12,25%** |
+| €100,00 | €15,00 | €0,750 | €1,750 | €12,500 | **12,50%** |
+
+*Arredondamentos da tabela: 3 casas nos centavos intermédios quando útil; % a 2 casas. Não é regra de arredondamento AMT/contabilidade.*
+
+#### Conclusões A1.3 (preliminares — sem GO/Comfort/XL)
+
+1. A margem variável é **sempre positiva** nestes tickets; o €0,25 fixo Stripe **pesa mais** em viagens curtas (€4–€7,50 → ~6,5–9,4%).  
+2. A partir de ~€10 a margem efectiva estabiliza na ordem dos **~10–12,5%** do `final_price`.  
+3. Assíntota teórica (ticket → ∞): `15% − 0,75% − 1,5% = 12,75%` antes do €0,25; com o fixo, €100 já está a **12,50%**.  
+4. **CRS** (~0,75% do ticket) é material mas secundário face a Stripe+comissão.  
+5. **Fixos** (Render ~$30,80 + MapTiler Flex ~$30) **ainda não** estão rateados — necessários para break-even de volume (próximo passo A1.3).  
+6. **Não** decide categorias nem tarifário.
+
 ---
 
 ## 7. Próximo passo
 
-1. **A1.2 EM CURSO:** confirmar valores reais por rubrica (dashboard Render / MapTiler / Stripe pricing live).  
-2. A1.3 (margem/GTM) após rubricas mínimas confirmadas.  
-3. Acta A1.4.  
-4. Código (tarefas separadas): grelha Manel (D07, após categorias Manel) · fee 3,00 € (D08, sem captura até B1).
+1. **A1.3:** ratear fixos (cenários de volume) · sensibilidade mix cartões premium/UK · **sem** GO/Comfort/XL ainda.  
+2. Acta **A1.4**.  
+3. Contabilista: IVA base CRS · NC/refunds · IRC.  
+4. Código (tarefas separadas, **não** nesta actualização): grelha Manel (D07) · fee cancel 3,00 € (D08) · **não** CRS no runtime até IVA fechado · B1 Stripe live.
 
 ---
 
-**Frase:** A1-D01…D10 DONE; A1.2 **EM CURSO** (fixo vs variável; sem baseline 1–2,5 k€); A1 global **PARCIAL** até fechar valores + A1.3–A1.4.
+**Frase:** A1-D01…D10 DONE; A1.2 **READY FOR ECONOMIC MODELLING** (≠ accounting final); CRS regra económica DONE / runtime **não**; payment hardening **#578** em `main`; A1.3 **EM CURSO** (tabela tickets); A1 global **PARCIAL** até A1.3–A1.4.
