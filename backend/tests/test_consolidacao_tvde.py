@@ -216,12 +216,13 @@ def _insert_payment_for_webhook(
     db.flush()
     trip = Trip(
         passenger_id=passenger.id,
-        status=TripStatus.ongoing,
+        status=TripStatus.completed,
         origin_lat=38.7,
         origin_lng=-9.1,
         destination_lat=38.8,
         destination_lng=-9.2,
         estimated_price=10.0,
+        final_price=10.0,
         distance_km=3.0,
         duration_min=10.0,
     )
@@ -258,6 +259,8 @@ def test_webhook_payment_succeeded(
                 "object": {
                     "id": pay.stripe_payment_intent_id,
                     "object": "payment_intent",
+                    "amount": 1000,
+                    "currency": "eur",
                 }
             },
         }
@@ -331,6 +334,8 @@ def test_webhook_idempotency(
                 "object": {
                     "id": pay.stripe_payment_intent_id,
                     "object": "payment_intent",
+                    "amount": 1000,
+                    "currency": "eur",
                 }
             },
         }
@@ -376,7 +381,14 @@ def test_webhook_twice_same_pi_keeps_single_payment_row(
         event = {
             "id": evt_id,
             "type": "payment_intent.succeeded",
-            "data": {"object": {"id": pi, "object": "payment_intent"}},
+            "data": {
+                "object": {
+                    "id": pi,
+                    "object": "payment_intent",
+                    "amount": 1000,
+                    "currency": "eur",
+                }
+            },
         }
         with patch(
             "app.api.routers.webhooks.stripe.stripe.Webhook.construct_event",

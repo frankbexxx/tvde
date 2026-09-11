@@ -179,6 +179,7 @@ def test_stripe_sync_dry_run_updates_when_succeeded(
             destination_lat=38.8,
             destination_lng=-9.2,
             estimated_price=10.0,
+            final_price=10.0,
         )
         db.add(trip)
         db.flush()
@@ -203,6 +204,8 @@ def test_stripe_sync_dry_run_updates_when_succeeded(
     def fake_retrieve(_pi: str) -> MagicMock:
         m = MagicMock()
         m.status = "succeeded"
+        m.amount = 1000
+        m.currency = "eur"
         return m
 
     monkeypatch.setattr(

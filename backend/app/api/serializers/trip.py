@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 
 def _payment_intent_client_secret_for_passenger_poll(trip: Trip) -> str | None:
     """Expose client_secret for Stripe.js when passenger must confirm authorized PI."""
-    if not settings.ENABLE_CONFIRM_ON_ACCEPT:
+    if not settings.confirm_on_accept_effective():
         return None
     payment = trip.payment
     if not payment or not payment.stripe_payment_intent_id:

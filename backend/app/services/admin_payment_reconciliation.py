@@ -19,6 +19,10 @@ from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.models.enums import PaymentStatus, TripStatus
 from app.services.admin_audit import record_admin_action
+from app.services.payment_amount_guards import (
+    expected_payment_cents,
+    validate_stripe_amount_matches_expected,
+)
 from app.services.stripe_service import retrieve_payment_intent
 
 logger = logging.getLogger(__name__)
@@ -199,6 +203,28 @@ def reconcile_stripe_for_completed_processing(
                     )
                 )
             else:
+                expected_cents = expected_payment_cents(
+                    final_price=trip.final_price,
+                    payment_total_amount=pay.total_amount,
+                )
+                pay_currency = (pay.currency or "EUR").strip().lower()
+                guard = validate_stripe_amount_matches_expected(
+                    stripe_object=intent,
+                    expected_cents=expected_cents,
+                    expected_currency=pay_currency,
+                )
+                if not guard.ok:
+                    items.append(
+                        StripeSyncItemResult(
+                            trip_id=str(trip.id),
+                            payment_id=str(pay.id),
+                            stripe_payment_intent_id=pi_id,
+                            action="blocked_amount_mismatch",
+                            detail=f"amount_mismatch:{guard.reason}",
+                            stripe_status=st_s,
+                        )
+                    )
+                    continue
                 if not dry_run:
                     pay.status = PaymentStatus.succeeded
                     record_admin_action(
@@ -212,6 +238,8 @@ def reconcile_stripe_for_completed_processing(
                             "trip_id": str(trip.id),
                             "stripe_payment_intent_id": pi_id,
                             "stripe_status": st_s,
+                            "stripe_amount_cents": guard.stripe_amount_cents,
+                            "expected_amount_cents": guard.expected_amount_cents,
                         },
                     )
                 items.append(
@@ -590,6 +618,28 @@ def reconcile_single_trip_payment_with_stripe(
         }
 
     if st_s == "succeeded":
+        expected_cents = expected_payment_cents(
+            final_price=trip.final_price,
+            payment_total_amount=pay.total_amount,
+        )
+        pay_currency = (pay.currency or "EUR").strip().lower()
+        guard = validate_stripe_amount_matches_expected(
+            stripe_object=intent,
+            expected_cents=expected_cents,
+            expected_currency=pay_currency,
+        )
+        if not guard.ok:
+            return {
+                **base,
+                "action": "blocked_amount_mismatch",
+                "detail": f"amount_mismatch:{guard.reason}",
+                "stripe_status": st_s,
+                "stripe_amount_cents": guard.stripe_amount_cents,
+                "expected_amount_cents": guard.expected_amount_cents,
+                "stripe_currency": guard.stripe_currency,
+                "expected_currency": guard.expected_currency,
+                "trip_status_after": trip.status.value,
+            }
         if not dry_run:
             pay.status = PaymentStatus.succeeded
             record_admin_action(
@@ -603,6 +653,8 @@ def reconcile_single_trip_payment_with_stripe(
                     "trip_id": str(trip.id),
                     "stripe_payment_intent_id": pi_id,
                     "stripe_status": st_s,
+                    "stripe_amount_cents": guard.stripe_amount_cents,
+                    "expected_amount_cents": guard.expected_amount_cents,
                 },
             )
             db.commit()
@@ -611,6 +663,8 @@ def reconcile_single_trip_payment_with_stripe(
             "action": "dry_run_succeeded" if dry_run else "updated_succeeded",
             "detail": "payment_marked_succeeded",
             "stripe_status": st_s,
+            "stripe_amount_cents": guard.stripe_amount_cents,
+            "expected_amount_cents": guard.expected_amount_cents,
         }
         return {**out, "trip_status_after": trip.status.value}
 
