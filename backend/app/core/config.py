@@ -88,7 +88,9 @@ class Settings(BaseSettings):
     # Trips / driving segments are NOT purged by this cleanup (activity retention).
     AUDIT_EVENTS_RETENTION_DAYS: int = 730
 
-    # Pricing engine: price = BASE_FARE + (distance_km × PRICE_PER_KM) + (duration_min × PRICE_PER_MIN)
+    # DEPRECATED (A2.5): category tariffs live in app.core.tariffs (GO/Comfort/XL).
+    # These env knobs are ignored by calculate_fare_breakdown; kept so old .env files
+    # do not crash Settings. Do not use as a second source of truth.
     BASE_FARE: float = 1.50
     PRICE_PER_KM: float = 0.60
     PRICE_PER_MIN: float = 0.15

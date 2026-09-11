@@ -1,9 +1,9 @@
 # A1 — Levantamento do modelo económico (Setembro 2026)
 
 **Tipo:** levantamento factual — **não** é tarifário aprovado nem acta de validação  
-**Data:** 2026-09-03 · **Actualizado:** 2026-09-11 *(A1.3 rateio de fixos)*  
+**Data:** 2026-09-03 · **Actualizado:** 2026-09-11 *(A2.5 tarifário V1)*  
 **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001` · roadmap **A1**  
-**Estado A1 global:** **PARCIAL** — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** *(não ACCOUNTING FINAL)* · **A1.3 = READY FOR PRICING INPUT** · A1.4 aberto  
+**Estado A1 global:** **PARCIAL** — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** *(não ACCOUNTING FINAL)* · **A1.3 = READY FOR PRICING INPUT** · A1.4 aberto · **A2.5 = IMPLEMENTED** *(código)*  
 **Regra:** valores sem fonte = **não inventados**. Hipóteses Manel ≠ decisão (exceto **A1-D01…D10** registados).
 
 ---
@@ -29,9 +29,9 @@
 | Tema | Estado actual | Valor/regra | Fonte | Implementado? | Decisão necessária? |
 |------|---------------|-------------|-------|---------------|---------------------|
 | Modelo preço (estimativa → final) | **FECHADO** | Estimativa não vinculativa; preço final em `complete_trip` = valor de captura | `PRICING_DECISION.md` | Sim (BE + copy UX) | Não |
-| Fórmula fare runtime | **PARCIAL** *(alinhar a D07)* | Fórmula `base + km×€/km + min×€/min` (+ **mínimo** a implementar); defaults código **1,50/0,60/0,15** = **legado** — baseline comercial = grelha Manel (**A1-D07**) | `pricing.py` · Manel pricing · **A1-D07** | Sim (1 tarifa) | Implementação técnica pendente |
-| Comissão runtime | **PARCIAL** *(%)** / **FECHADO** *(fórmula)* | `commission_amount = final_price × (commission_percent/100)` · piloto **15%** (**A1-D01**) · seed tipicamente 15 | `trips.py` · **A1-D01** | Sim | % piloto = **DONE**; tiers futuros = não baseline |
-| Base da comissão | **FECHADO** | Sobre **preço final bruto**; fees Stripe **não** entram na base (**A1-D02**) | `trips.py` · **A1-D02** | Sim | Não |
+| Fórmula fare runtime | **FECHADO** *(A2.5)* | `raw = base + km×€/km + min×€/min`; `fare_subtotal = max(raw, minimum)`; + Pet + tolls | `tariffs.py` · `pricing.py` · **A2.5** | Sim (GO/Comfort/XL) | A1.4 acta formal |
+| Comissão runtime | **FECHADO** *(%)** / **FECHADO** *(fórmula)* | `commissionable = final_price − tolls_amount`; `commission = commissionable × %` · piloto **15%** (**A1-D01**); Pet **incluido**; portagens **0%** | `trips.py` · **A1-D01** · A2.5 | Sim | Tiers futuros = não baseline |
+| Base da comissão | **FECHADO** | Sobre **fare + Pet** (não tolls); fees Stripe **fora** da base (**A1-D02**) | `trips.py` · **A1-D02** · A2.5 | Sim | Não |
 | % comissão piloto | **FECHADO** | **15%** acordado Francisco/Manel; 12% / 12,5% = **só futuro** (rentabilidade elevada e/ou acordos específicos) | **A1-D01** 2026-09-03 | Seed alinhado | Não (baseline) |
 | Share Partner / frota | **FECHADO** *(beneficiário piloto)* | Liquidação piloto ao **Partner/Frota**; `driver_payout` = referência contabilística (**sem** payout directo ao Driver nesta fase) | **A1-D03** 2026-09-03 | Parcial (só calc. Driver) | Cadência = **A1-D04** |
 | Driver líquido (display) | **PARCIAL** | UI mostra `driver_payout` / `commission_amount`; sem portagens/gorjetas/promo na fórmula | `DriverDashboard` · Q10 | Parcial | Fórmula completa = A1-D08 / E1 |
@@ -47,7 +47,7 @@
 | Margem plataforma | **FECHADO** *(A1.3 modelagem)* · **≠ tarifário** | Margem variável §6f + rateio fixos USD §6g; **READY FOR PRICING INPUT**; sem GO/Comfort/XL | §6f–§6g 2026-09-11 | Não | A1.4 + A2.5 |
 | Arredondamento | **FECHADO** *(código)* | Fare `round(2)`; money `Decimal` **ROUND_HALF_UP** 0,01; Stripe cents `round(price×100)` min 50 | `pricing.py` · `payments.py` · `trips.py` | Sim | Não |
 | Cancelamento — fee | **FECHADO** *(regra comercial)* | Fee = **3,00 € fixos** (**A1-D08**). Legado código `max(1,50, 20%×estimativa)` deixa de ser baseline. Piloto pré-B1: **registar** fee, **não cobrar**. Cobrança real quando B1 operacional. | **A1-D08** 2026-09-03 | Parcial (ainda fórmula legada no código) | Alinhar código + captura pós-B1 |
-| Preço mínimo / categorias | **FECHADO** *(decisão comercial)* | Piloto = grelha Manel **Go / Comfort / XL** (com mínimos); defaults código **deixam de ser** baseline comercial | **A1-D07** · `MANEL_PRICING…` § categorias | Não (ainda 1 tarifa s/ mínimo) | Código a alinhar |
+| Preço mínimo / categorias | **FECHADO** *(A2.5 IMPLEMENTED)* | V1: GO `x` 1,50/0,60/0,12/mín.4,50 · Comfort 1,90/0,85/0,15/mín.5,50 · XL 3,00/1,05/0,15/mín.6,50 · snapshot em `price_breakdown` | `tariffs.py` · **A2.5** | Sim | A1.4 acta |
 | Simulador económico 36m | **ABERTO** | Brief existe; **simulador não construído** | GTM | Não | Ferramenta após validação números |
 | Mock/demo vs real | **FECHADO** *(política actual)* | Piloto: `STRIPE_MOCK=true` típico; payouts reais **não**; comissão calculada na mesma | ENV_SINGLE_REALITY · demo docs | Sim (mock) | Go-live = B1 |
 | Pacote 3 docs business no repo | **FECHADO** | Os 3 ficheiros `MANEL_*` existem e estão referenciados no roadmap | Roadmap A1 · `docs/business/` | N/A (docs) | Não (A1.1) |
@@ -56,8 +56,8 @@
 
 | Classificação | Nº *(após A1.2 fecho modelagem 2026-09-11)* |
 |---------------|------------------------|
-| **FECHADO** | **17** *(incl. Stripe V1 fee · A1.2 modelagem · CRS regra)* |
-| **PARCIAL** | **3** *(settlement live · fare/código · …)* |
+| **FECHADO** | **18** *(incl. A2.5 tarifário · Stripe V1 · A1.2/A1.3)* |
+| **PARCIAL** | **2** *(settlement live · cancel fee código)* |
 | **ABERTO** | **1** (simulador 36m) |
 | **DEPENDENTE EXTERNO** | **1** (IVA/recibos) |
 
@@ -67,15 +67,12 @@
 
 ### Facto actual (código / política técnica)
 
-- Fare runtime ainda: **1,50 + 0,60/km + 0,15/min** (legado até alinhamento A1-D07).  
-- **Baseline comercial piloto (A1-D07):** grelha Manel Go/Comfort/XL — **código ainda não alinhado**.
-- Comissão por motorista na BD; criação Admin/seed usa **15%**.
-- Split: plataforma `commission_amount`, motorista `driver_payout` sobre **final_price**.
-- Híbrido estimativa/final **implementado** e **decidido** (`PRICING_DECISION`).
-- Cancel fee: runtime ainda legado simulado; **baseline comercial = 3,00 € fixos (A1-D08)** — código a alinhar; cobrança real só pós-B1.
-- Stripe Connect / payouts / share Partner: **ausentes**.
-- Mock ON = política piloto documentada.
-- Payment hardening **#578** merged (`9871877`): placeholder €0,50 fail-closed; confirm-on-accept bloqueado em live.
+- Fare runtime **A2.5:** GO / Comfort / XL em `app.core.tariffs` (+ mínimo); snapshot rates em `price_breakdown`.  
+- `BASE_FARE` / `PRICE_PER_*` em settings = **deprecated** (ignorados pelo motor).  
+- Comissão: **15%** sobre `final_price − tolls_amount` (Pet incluído; tolls 0% — tolls ainda sempre 0).  
+- Híbrido estimativa/final **implementado** (`PRICING_DECISION`).  
+- Cancel fee: runtime ainda legado; **baseline comercial = 3,00 € (A1-D08)** — follow-up.  
+- Payment hardening **#578** merged.
 
 ### Decisão já tomada
 
@@ -430,4 +427,4 @@ Sob **H1** (`$60,80` ≈ €60,80):
 
 ---
 
-**Frase:** A1-D01…D10 DONE; A1.2 **READY FOR ECONOMIC MODELLING**; A1.3 **READY FOR PRICING INPUT** (variável + rateio fixos USD excl. Hostinger TBD); A1.4 aberto; A1 global **PARCIAL**.
+**Frase:** A1-D01…D10 DONE; A1.2 **READY FOR ECONOMIC MODELLING**; A1.3 **READY FOR PRICING INPUT**; **A2.5 IMPLEMENTED** (GO/Comfort/XL + mínimos); A1.4 aberto; A1 global **PARCIAL**.

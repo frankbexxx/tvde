@@ -22,15 +22,18 @@ from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import (
     PET_SURCHARGE_RULE_V1,
+    calculate_commission_amount,
     calculate_fare_breakdown,
     calculate_pet_surcharge,
     calculate_price,
     money,
+    resolve_trip_tariff,
 )
 from app.services.pet_trip import (
     driver_matches_trip_fare_and_pet,
     pet_surcharge_for_trip,
     resolve_trip_pet_create,
+    trip_fare_category,
 )
 from app.services.vehicle_capacity import (
     assert_driver_matches_trip_capacity,
@@ -158,13 +161,16 @@ def _assert_driver_matches_trip_for_accept(
     assert_driver_matches_trip_capacity(db, driver, trip, surface=surface)
 
 
-def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int]:
+def _estimate_trip(
+    payload: TripCreateRequest, *, category: str | None = None
+) -> tuple[float, float, float, int]:
     """
     Estimate distance, duration, price, ETA.
     Uses OSRM when OSRM_BASE_URL is set; otherwise Haversine + 2.5 min/km.
     Returns (estimated_price, distance_km, duration_min, eta_minutes).
 
     Note: estimated_price here is **fare only** (no Pet). Callers add Pet surcharge.
+    Fare uses A2.5 category tariff (default GO).
     """
     from app.services.osrm import get_route_distance_duration
 
@@ -186,7 +192,7 @@ def _estimate_trip(payload: TripCreateRequest) -> tuple[float, float, float, int
         distance_km = round(distance_km, 2)
         duration_min = round(distance_km * 2.5, 2)  # City avg ~24 km/h
 
-    estimated_fare = calculate_price(distance_km, duration_min)
+    estimated_fare = calculate_price(distance_km, duration_min, category=category)
     eta_minutes = int(duration_min) + 2  # buffer for pickup
     return estimated_fare, distance_km, duration_min, eta_minutes
 
@@ -203,7 +209,6 @@ async def create_trip(
     passenger_id: str,
     payload: TripCreateRequest,
 ) -> tuple[Trip, int]:
-    fare_only, distance_km, duration_min, eta = _estimate_trip(payload)
     passenger_count = resolve_passenger_count(getattr(payload, "passenger_count", None))
     pet = resolve_trip_pet_create(
         vehicle_category=payload.vehicle_category,
@@ -213,6 +218,9 @@ async def create_trip(
         is_assistance_animal=bool(getattr(payload, "is_assistance_animal", False)),
         pet_occupies_seat=bool(getattr(payload, "pet_occupies_seat", False)),
     )
+    fare_only, distance_km, duration_min, eta = _estimate_trip(
+        payload, category=pet.fare_category
+    )
     pet_surcharge = calculate_pet_surcharge(
         has_pet=pet.has_pet,
         is_assistance_animal=pet.is_assistance_animal,
@@ -220,6 +228,7 @@ async def create_trip(
     breakdown = calculate_fare_breakdown(
         float(distance_km),
         float(duration_min),
+        category=pet.fare_category,
         pet_surcharge=pet_surcharge,
         pet_surcharge_rule=PET_SURCHARGE_RULE_V1,
     )
@@ -1619,20 +1628,38 @@ def complete_trip(
             detail="trip_metrics_required_before_completion",
         )
 
-    # --- Final price: fare from metrics + Pet surcharge (snapshot / attributes) ---
+    # --- Final price: category tariff + metrics + Pet (rates from create snapshot) ---
     pet_surcharge = pet_surcharge_for_trip(trip)
+    fare_cat = trip_fare_category(trip)
+    prior_breakdown = getattr(trip, "price_breakdown", None)
+    if not isinstance(prior_breakdown, dict):
+        prior_breakdown = None
+    trip_tariff = resolve_trip_tariff(
+        category=fare_cat, price_breakdown=prior_breakdown
+    )
+    prior_tolls = Decimal("0.00")
+    if prior_breakdown and prior_breakdown.get("tolls_amount") is not None:
+        try:
+            prior_tolls = money(Decimal(str(prior_breakdown["tolls_amount"])))
+        except (ArithmeticError, TypeError, ValueError):
+            prior_tolls = Decimal("0.00")
     breakdown = calculate_fare_breakdown(
         float(distance_km),
         float(duration_min),
+        category=fare_cat,
+        tariff=trip_tariff,
         pet_surcharge=pet_surcharge,
+        tolls_amount=prior_tolls,
         pet_surcharge_rule=(
             getattr(trip, "pet_surcharge_rule", None) or PET_SURCHARGE_RULE_V1
         ),
     )
     final_price = float(breakdown.total)
-    # Commission from driver on **total** (fare + Pet surcharge) — current policy.
+    # Commission on fare + Pet only; tolls excluded (0% on tolls).
     commission_rate = _to_decimal(driver.commission_percent) / Decimal("100")
-    commission_amount = _money(money(Decimal(str(final_price))) * commission_rate)
+    commission_amount = calculate_commission_amount(
+        final_price, commission_rate, tolls_amount=breakdown.tolls_amount
+    )
     driver_payout = _money(money(Decimal(str(final_price))) - commission_amount)
 
     log_event(

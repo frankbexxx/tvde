@@ -1,6 +1,7 @@
 import type { TripDetailAdmin } from '../../api/admin'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { formatPetSurchargeEuro } from '../trips/tripPetReporting'
+import { fareCategoryCommercialLabel } from '../trips/fareCategoryLabel'
 import {
   adminCancelledByLabel,
   adminPaymentStatusLabel,
@@ -53,9 +54,25 @@ export function AdminTripDetailSupportFields(props: AdminTripDetailSupportFields
       {breakdown ? (
         <div className="rounded-lg border border-border/60 bg-muted/20 p-2 space-y-1" data-testid="admin-trip-price-breakdown">
           <DetailRow
+            label="Tarifa:"
+            value={`${fareCategoryCommercialLabel(
+              typeof breakdown.category === 'string'
+                ? breakdown.category
+                : typeof d.vehicle_category === 'string'
+                  ? d.vehicle_category
+                  : 'x'
+            )}${typeof breakdown.tariff_version === 'string' ? ` (v${breakdown.tariff_version})` : ''}`}
+          />
+          <DetailRow
             label="Subtotal tarifa:"
             value={`${Number(breakdown.fare_subtotal ?? 0).toFixed(2)} €`}
           />
+          {Number(breakdown.minimum_fare_adjustment ?? 0) > 0 ? (
+            <DetailRow
+              label="Ajuste mínimo:"
+              value={`+${Number(breakdown.minimum_fare_adjustment).toFixed(2)} € (mín. ${Number(breakdown.minimum_fare ?? 0).toFixed(2)} €)`}
+            />
+          ) : null}
           <DetailRow
             label="Suplemento animal:"
             value={
@@ -73,7 +90,7 @@ export function AdminTripDetailSupportFields(props: AdminTripDetailSupportFields
       ) : null}
       <DetailRow label="Passageiros:" value={String(d.passenger_count ?? 1)} />
       {typeof d.vehicle_category === 'string' && d.vehicle_category ? (
-        <DetailRow label="Categoria:" value={d.vehicle_category} />
+        <DetailRow label="Categoria:" value={fareCategoryCommercialLabel(d.vehicle_category)} />
       ) : null}
       {typeof d.vehicle_plate === 'string' && d.vehicle_plate ? (
         <DetailRow label="Matrícula:" value={d.vehicle_plate} />

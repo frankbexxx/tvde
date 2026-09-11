@@ -129,7 +129,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
 | **S-BIZ-01** | Documentação/Operação | Validar hipóteses custos/comissões/simulador (**BUSINESS-MANEL-001**) | P0 — Bloqueador | Contabilista/financeiro |
-| **S-BIZ-02** | Documentação/Operação | Comissão piloto **15%** **DONE** (09/09/2026); **tarifário final ainda PENDENTE** | P1 — Necessário para fechar produto | [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · S-BIZ-01 |
+| **S-BIZ-02** | Documentação/Operação | Comissão piloto **15%** **DONE**; tarifário V1 GO/Comfort/XL **IMPLEMENTED** (A2.5); falta acta **A1.4** | P1 — Acta formal | [`VAMULA_DECISOES…`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · A2.5 |
 | **S-BIZ-03** | Documentação/Operação | Domínio `vamula.pt` · site · emails `@vamula.pt` | P2 — Melhoria importante | **DEPENDÊNCIA EXTERNA — .PT** (não bloqueia APP) |
 | **S-BIZ-04** | Documentação/Operação | Settlement Partner: política **semanal / segunda / manual** (conta pagamentos: Manel) | **DONE** *(política)* · impl. técnica N/A piloto | [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) |
 | **S-BIZ-05** | Documentação/Operação | Apoio inicial digital (email/formulário); horário 09–17 · **sem** telefone público | **DONE** *(política fase inicial)* | idem |
@@ -305,7 +305,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 1. **S-PAY-01 / S-PAY-02** — Sem Stripe live + Connect, não há operação comercial com dinheiro real nem split motorista.  
 2. **S-AUTH-01** — OTP sem SMS real impede onboarding sério fora de ambientes com OTP fixo.  
 3. **S-MOB-01 / S-NOTIF-01** — Sem packaging mobile + push, adopção motorista/passageiro fica presa ao browser.  
-4. **S-BIZ-01 / S-BIZ-02** — Comissão **15%** confirmada; A1.2/A1.3 **READY FOR PRICING INPUT**; falta **A1.4 + tarifário**; Connect e “preço líquido” dependem disso.  
+4. **S-BIZ-01 / S-BIZ-02** — Comissão **15%** confirmada; A2.5 tarifário V1 **IMPLEMENTED**; falta **A1.4** acta; Connect e “preço líquido” dependem de ops.  
 5. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
 6. **S-BIZ-03** — Domínio/site/email: externo (.PT); **não** bloqueia desenvolvimento APP.  
 
