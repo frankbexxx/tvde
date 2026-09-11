@@ -50,6 +50,7 @@ Fonte canónica: `backend/app/core/tariffs.py` (não `BASE_FARE` env).
 - Snapshot de rates em `trip.price_breakdown` (`category`, `tariff_version`, `price_per_km`, …) para o complete não depender de alterações futuras da tabela.
 - Comissão: `(final_price − tolls_amount) × %` — Pet commissionable; portagens **0%** (cálculo automático de tolls = fora desta versão; `tolls_amount=0`).
 - Waiting / surge: OFF.
+- **Cancellation fee V1:** **€3,00 fixos** (`CANCELLATION_FEE_EUR` em `pricing.py`) quando o passageiro cancela após `accepted`/`arriving`/`ongoing`. Independente de estimate, categoria, Pet ou portagens. Piloto: regista a fee e **cancela** o PaymentIntent (não cobra).
 
 ---
 

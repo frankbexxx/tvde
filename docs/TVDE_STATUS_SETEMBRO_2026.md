@@ -73,7 +73,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | **S-PAY-03** | Backend/API | Payouts (cadência + beneficiário motorista vs partner) | P1 — Necessário para fechar produto | S-PAY-02 |
 | **S-PAY-04** | Backend/API | `ENABLE_CONFIRM_ON_ACCEPT` / 3DS no accept (hoje default OFF) | P1 — Necessário para fechar produto | S-PAY-01 |
 | **S-PAY-05** | Backend/API | MB WAY / SIBS / Multibanco (PT) — inexistente no código | P1 — Necessário para fechar produto | Decisão Manel · PSP |
-| **S-PAY-06** | Backend/API | Taxa cancelamento ainda **simulada**; `authorization_expires_at` não preenchido | P2 — Melhoria importante | S-PAY-01 |
+| **S-PAY-06** | Backend/API | Cancel fee V1 **€3 fixos** (registada; cobrança real pós-B1); `authorization_expires_at` não preenchido | P2 — Cobrança real / expires | S-PAY-01 |
 | **S-PAY-07** | Passenger | Auth placeholder €0,50 até complete — alinhar com preço real | P2 — Melhoria importante | S-PAY-01 |
 
 ### Autenticação / notificações

@@ -99,9 +99,9 @@ class Settings(BaseSettings):
     # Example: https://router.project-osrm.org
     OSRM_BASE_URL: str | None = None
 
-    # Cancellation: fee when passenger cancels after driver accepted (simulated, variable by distance).
-    # Formula: max(CANCELLATION_FEE_MIN, estimated_price * CANCELLATION_FEE_PERCENT)
-    CANCELLATION_FEE_PERCENT: float = 0.20  # 20% of estimated trip price
+    # DEPRECATED: percent/min formula removed (A1-D08). Fee is CANCELLATION_FEE_EUR in
+    # app.core.pricing (€3.00 fixed). Kept so old .env does not crash Settings.
+    CANCELLATION_FEE_PERCENT: float = 0.20
     CANCELLATION_FEE_MIN: float = 1.50
 
     # A007: When True, detailed runtime logs for real-user testing (trip flow, timestamps).
