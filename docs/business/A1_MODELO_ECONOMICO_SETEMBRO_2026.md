@@ -1,9 +1,9 @@
 # A1 — Levantamento do modelo económico (Setembro 2026)
 
 **Tipo:** levantamento factual — **não** é tarifário aprovado nem acta de validação  
-**Data:** 2026-09-03 · **Actualizado:** 2026-09-11  
+**Data:** 2026-09-03 · **Actualizado:** 2026-09-11 *(A1.3 rateio de fixos)*  
 **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001` · roadmap **A1**  
-**Estado A1 global:** **PARCIAL** — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** *(não ACCOUNTING FINAL)* · **A1.3 EM CURSO** · A1.4 aberto  
+**Estado A1 global:** **PARCIAL** — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** *(não ACCOUNTING FINAL)* · **A1.3 = READY FOR PRICING INPUT** · A1.4 aberto  
 **Regra:** valores sem fonte = **não inventados**. Hipóteses Manel ≠ decisão (exceto **A1-D01…D10** registados).
 
 ---
@@ -44,7 +44,7 @@
 | Payouts automáticos | **FECHADO** *(requisito piloto)* | **Não** são requisito do piloto; manter D03–D05; **B4 fora** do crítico M2 nesta fase; só depois se automatizar liquidação ao Partner | **A1-D06** 2026-09-03 | Não | Pós-piloto / condicional |
 | Liquidação manual no piloto | **FECHADO** | **Semanal** · **segunda-feira** · ao Partner; só `completed`; líquido = Σ`final_price` − 15%; `driver_payout` só referência; **manual** até B3/B4; conta pagamentos: Manel (acta 09/09/2026) | **A1-D04** + [`VAMULA_DECISOES…`](VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) | Processo humano | Relatório mínimo §6a |
 | Custos fixos/variáveis | **FECHADO** *(A1.2 modelagem)* · **≠ ACCOUNTING FINAL** | Rubricas técnicas confirmadas §6c; `MANEL_COSTS…` continua **não** orçamento (**A1-D10**). TBD: SMS · email · stores · chargebacks · suporte · legal/seguros · overage mapas | **A1-D10** · §6c 2026-09-11 | Não | Contabilidade formal depois |
-| Margem plataforma | **PARCIAL** *(A1.3 EM CURSO)* | Inputs de simulação por ticket §6f (15% · CRS · Stripe); **sem** rateio de fixos; **sem** GO/Comfort/XL | §6f 2026-09-11 | Não | Fechar A1.3 → A1.4 |
+| Margem plataforma | **FECHADO** *(A1.3 modelagem)* · **≠ tarifário** | Margem variável §6f + rateio fixos USD §6g; **READY FOR PRICING INPUT**; sem GO/Comfort/XL | §6f–§6g 2026-09-11 | Não | A1.4 + A2.5 |
 | Arredondamento | **FECHADO** *(código)* | Fare `round(2)`; money `Decimal` **ROUND_HALF_UP** 0,01; Stripe cents `round(price×100)` min 50 | `pricing.py` · `payments.py` · `trips.py` | Sim | Não |
 | Cancelamento — fee | **FECHADO** *(regra comercial)* | Fee = **3,00 € fixos** (**A1-D08**). Legado código `max(1,50, 20%×estimativa)` deixa de ser baseline. Piloto pré-B1: **registar** fee, **não cobrar**. Cobrança real quando B1 operacional. | **A1-D08** 2026-09-03 | Parcial (ainda fórmula legada no código) | Alinhar código + captura pós-B1 |
 | Preço mínimo / categorias | **FECHADO** *(decisão comercial)* | Piloto = grelha Manel **Go / Comfort / XL** (com mínimos); defaults código **deixam de ser** baseline comercial | **A1-D07** · `MANEL_PRICING…` § categorias | Não (ainda 1 tarifa s/ mínimo) | Código a alinhar |
@@ -57,7 +57,7 @@
 | Classificação | Nº *(após A1.2 fecho modelagem 2026-09-11)* |
 |---------------|------------------------|
 | **FECHADO** | **17** *(incl. Stripe V1 fee · A1.2 modelagem · CRS regra)* |
-| **PARCIAL** | **4** *(incl. A1.3 margem · settlement live · fare/código)* |
+| **PARCIAL** | **3** *(settlement live · fare/código · …)* |
 | **ABERTO** | **1** (simulador 36m) |
 | **DEPENDENTE EXTERNO** | **1** (IVA/recibos) |
 
@@ -99,7 +99,7 @@
 
 ### Ainda em aberto (económico)
 
-- A1.3 (margem/GTM com rateio de fixos opcional) · acta A1.4 · TBD ops (SMS, email, stores, chargebacks, suporte, legal).
+- Acta A1.4 · input tarifário A2.5 · TBD ops (SMS, email, stores, chargebacks, suporte, legal, Hostinger).
 
 ---
 
@@ -159,9 +159,10 @@
 
 ### 6b. Decisões A1-D — lista fechada
 
-Nenhuma A1-D pendente. Trabalho restante = **A1.3** (margem) · **A1.4** (acta).
+Nenhuma A1-D pendente. Trabalho restante = **A1.4** (acta) · input tarifário A2.5.
 
-**A1.2:** **READY FOR ECONOMIC MODELLING** (2026-09-11) — **não** marcar como ACCOUNTING FINAL.
+**A1.2:** **READY FOR ECONOMIC MODELLING** (2026-09-11) — **não** ACCOUNTING FINAL.  
+**A1.3:** **READY FOR PRICING INPUT** (2026-09-11) — **não** A1.4 CLOSED.
 
 **Fora de A1-D:** IVA/emissor recibos (`DEPENDENTE CONTABILISTA` · A3-D08); questões jurídicas; mobile; branding; activação técnica Stripe live (B1).
 
@@ -189,6 +190,7 @@ A1 considera a **contribuição AMT (CRS)** como custo/regra operacional. Detalh
 | Cloudflare DNS / Pages | Fixo | **$0** baseline | ✅ Confirmado |
 | cron-job.org | Fixo | **€0** baseline | ✅ Confirmado |
 | Sentry Developer | Fixo | **$0** baseline enquanto suficiente | ✅ Confirmado |
+| **Hostinger Premium** (hosting + DNS + email) | Fixo | **TBD — contrato real a inserir** | ⏳ Sem valor lançado no repo (não inventar) |
 
 *Nota MapTiler:* custo actual de utilização pode ser $0 em Free, mas **produção comercial TVDE exige Flex (≥ $30/mês)** — usar **$30** como baseline de modelagem de mapas, não $0.
 
@@ -217,6 +219,7 @@ A1 considera a **contribuição AMT (CRS)** como custo/regra operacional. Detalh
 
 | Rubrica | Notas |
 |---------|-------|
+| Hostinger Premium | Plano / custo total / período / mensal equivalente / IVA / promo vs renovação — **TBD** no repo |
 | SMS OTP | Fornecedor não escolhido |
 | Email profissional / transaccional | Não definido |
 | Stores mobile | Fora do crítico actual |
@@ -268,9 +271,9 @@ CRS = 0,75% da base sobre a qual os 15% são calculados
 
 ### 6e. *(reservado — ver §6c Payment hardening)*
 
-### 6f. A1.3 — Inputs de simulação por ticket (**EM CURSO** · 2026-09-11)
+### 6f. A1.3 — Margem variável por ticket (fechado 2026-09-11)
 
-**Âmbito:** margem **variável** por viagem — **sem** rateio de custos fixos · **sem** decidir GO/Comfort/XL · **sem** alterar pricing/código.
+**Âmbito:** margem **variável** por viagem — **sem** decidir GO/Comfort/XL · **sem** alterar pricing/código. Rateio de fixos → **§6g**.
 
 **Fórmulas (modelagem):**
 
@@ -280,7 +283,7 @@ CRS = 0,75% da base sobre a qual os 15% são calculados
 | CRS | `0,05 × comissão` (= `0,0075 × final_price` **só na simulação**) |
 | Stripe (EEE standard) | `0,015 × final_price + 0,25` |
 | Margem variável | `comissão − CRS − Stripe` |
-| Margem efectiva % | `margem variável / final_price` |
+| Margem efectiva % (só variável) | `margem variável / final_price` |
 
 | `final_price` | Comissão 15% | CRS 5%×com. | Stripe 1,5%+€0,25 | Margem variável | Margem % |
 |-------------:|-------------:|-------------:|------------------:|----------------:|---------:|
@@ -294,26 +297,137 @@ CRS = 0,75% da base sobre a qual os 15% são calculados
 | €50,00 | €7,50 | €0,375 | €1,000 | €6,125 | **12,25%** |
 | €100,00 | €15,00 | €0,750 | €1,750 | €12,500 | **12,50%** |
 
-*Arredondamentos da tabela: 3 casas nos centavos intermédios quando útil; % a 2 casas. Não é regra de arredondamento AMT/contabilidade.*
+*Arredondamentos: centavos intermédios quando útil; % a 2 casas. Não é regra AMT/contabilidade.*
 
-#### Conclusões A1.3 (preliminares — sem GO/Comfort/XL)
+### 6g. A1.3 — Rateio de custos fixos por volume (**READY FOR PRICING INPUT** · 2026-09-11)
 
-1. A margem variável é **sempre positiva** nestes tickets; o €0,25 fixo Stripe **pesa mais** em viagens curtas (€4–€7,50 → ~6,5–9,4%).  
-2. A partir de ~€10 a margem efectiva estabiliza na ordem dos **~10–12,5%** do `final_price`.  
-3. Assíntota teórica (ticket → ∞): `15% − 0,75% − 1,5% = 12,75%` antes do €0,25; com o fixo, €100 já está a **12,50%**.  
-4. **CRS** (~0,75% do ticket) é material mas secundário face a Stripe+comissão.  
-5. **Fixos** (Render ~$30,80 + MapTiler Flex ~$30) **ainda não** estão rateados — necessários para break-even de volume (próximo passo A1.3).  
-6. **Não** decide categorias nem tarifário.
+#### Fixos mensais usados nesta modelagem
+
+| Rubrica | Moeda | Valor / mês | Notas |
+|---------|-------|------------:|-------|
+| Render (prod + staging) | USD | **30,80** | Factura confirmada A1.2 |
+| MapTiler Flex (comercial) | USD | **30,00** | Baseline comercial; IVA/overage à parte |
+| Cloudflare / cron / Sentry | — | **0** | Baseline A1.2 |
+| **Subtotal fixos técnicos conhecidos** | **USD** | **60,80** | **Exclui Hostinger** |
+| Hostinger Premium | — | **TBD** | Contrato real **não** lançado no repo |
+
+**Câmbio:** subtotais em **USD** mantidos separados. **Não** há taxa EUR/USD oficial no repo nem factura EUR destes fornecedores.  
+Para combinar com margens em **EUR**, usa-se apenas a hipótese ilustrativa:
+
+> **H1 (ilustrativa):** `1 USD ≈ 1 EUR` — **só** ordem de grandeza; **não** é taxa contabilística.
+
+Qualquer tabela “após fixos” abaixo está marcada **H1**.
+
+#### Custo fixo por viagem (USD; excl. Hostinger)
+
+| Viagens/mês | Fixo / viagem (USD) | Peso em ticket €5 *(H1)* | Peso €10 *(H1)* | Peso €20 *(H1)* |
+|------------:|--------------------:|-------------------------:|---------------:|---------------:|
+| 500 | **$0,122** | 2,43% | 1,22% | 0,61% |
+| 1.000 | **$0,061** | 1,22% | 0,61% | 0,30% |
+| 2.500 | **$0,024** | 0,49% | 0,24% | 0,12% |
+| 5.000 | **$0,012** | 0,24% | 0,12% | 0,06% |
+| 10.000 | **$0,006** | 0,12% | 0,06% | 0,03% |
+
+*Com Hostinger TBD: o fixo/viagem sobe quando o valor mensal for inserido; até lá usar coluna “excl. Hostinger”.*
+
+#### Margem por ticket com fixos rateados (H1)
+
+Fórmulas: margem variável (§6f) − fixo/viagem ($60,80 / N sob H1).
+
+**500 viagens/mês** (fixo/viagem ≈ $0,122 ≈ €0,122 H1)
+
+| Ticket | Var. | Após fixos | Margem % |
+|-------:|-----:|-----------:|---------:|
+| €5 | €0,388 | €0,266 | **5,32%** |
+| €10 | €1,025 | €0,903 | **9,03%** |
+| €20 | €2,300 | €2,178 | **10,89%** |
+| €30 | €3,575 | €3,453 | **11,51%** |
+| €50 | €6,125 | €6,003 | **12,01%** |
+
+**1.000 viagens/mês** (≈ €0,061 H1)
+
+| Ticket | Var. | Após fixos | Margem % |
+|-------:|-----:|-----------:|---------:|
+| €5 | €0,388 | €0,327 | **6,53%** |
+| €10 | €1,025 | €0,964 | **9,64%** |
+| €20 | €2,300 | €2,239 | **11,20%** |
+| €30 | €3,575 | €3,514 | **11,71%** |
+| €50 | €6,125 | €6,064 | **12,13%** |
+
+**2.500 viagens/mês** (≈ €0,024 H1)
+
+| Ticket | Var. | Após fixos | Margem % |
+|-------:|-----:|-----------:|---------:|
+| €5 | €0,388 | €0,363 | **7,26%** |
+| €10 | €1,025 | €1,001 | **10,01%** |
+| €20 | €2,300 | €2,276 | **11,38%** |
+| €30 | €3,575 | €3,551 | **11,84%** |
+| €50 | €6,125 | €6,101 | **12,20%** |
+
+**5.000 viagens/mês** (≈ €0,012 H1)
+
+| Ticket | Var. | Após fixos | Margem % |
+|-------:|-----:|-----------:|---------:|
+| €5 | €0,388 | €0,375 | **7,51%** |
+| €10 | €1,025 | €1,013 | **10,13%** |
+| €20 | €2,300 | €2,288 | **11,44%** |
+| €30 | €3,575 | €3,563 | **11,88%** |
+| €50 | €6,125 | €6,113 | **12,23%** |
+
+**10.000 viagens/mês** (≈ €0,006 H1)
+
+| Ticket | Var. | Após fixos | Margem % |
+|-------:|-----:|-----------:|---------:|
+| €5 | €0,388 | €0,381 | **7,63%** |
+| €10 | €1,025 | €1,019 | **10,19%** |
+| €20 | €2,300 | €2,294 | **11,47%** |
+| €30 | €3,575 | €3,569 | **11,90%** |
+| €50 | €6,125 | €6,119 | **12,24%** |
+
+#### Break-even técnico dos custos fixos conhecidos
+
+**Não** é break-even empresarial total (exclui Hostinger TBD, SMS, suporte, chargebacks, legal, salários, marketing, …).
+
+```text
+N_be = ceil( fixos_USD_conhecidos / margem_variável_por_viagem )
+```
+
+Sob **H1** (`$60,80` ≈ €60,80):
+
+| Ticket médio | Margem variável / viagem | **N_be** (viagens/mês, ceil) |
+|-------------:|-------------------------:|-----------------------------:|
+| €7,50 | €0,706 | **87** |
+| €10,00 | €1,025 | **60** |
+| €15,00 | €1,663 | **37** |
+| €20,00 | €2,300 | **27** |
+
+#### Impacto Hostinger
+
+- **Estado:** `TBD — contrato real a inserir` (plano Premium · custo total · período · mensal equivalente · IVA · promo vs renovação).  
+- Enquanto TBD: todas as tabelas §6g são **piso inferior** dos fixos (só Render+MapTiler).  
+- Quando existir valor mensal H: somar a `$60,80` e recalcular fixo/viagem e N_be.
+
+#### Conclusões A1.3 (para input de pricing — sem GO/Comfort/XL)
+
+1. **Volume vs fixos:** a partir de ~**1.000–2.500** viagens/mês, o fixo conhecido por viagem cai abaixo de ~**€0,06–€0,02** (H1) e deixa de ser o driver da margem; a **estrutura variável** (Stripe €0,25 + %) domina.  
+2. **Tickets pressionados:** **€5** (e €4/€7,50) — margem variável já baixa pelo €0,25 Stripe; fixos à escala piloto (500/mês) ainda tiram ~1–2 pp.  
+3. **€5 / €7,50:** economicamente **aceitáveis** como tickets baixos se o mix médio for ≥€10 e o volume ≥~1k; **não** ideais como ticket médio exclusivo a 500/mês (margem efectiva ~5–8% H1 após fixos).  
+4. **€10 / €20 típicos:** após fixos, ~**9–10%** (€10) e ~**11–11,5%** (€20) na maioria dos cenários ≥1k — estáveis.  
+5. **Comissão 15%:** **não** há razão económica forte *só* destes fixos técnicos para rever a % — o stress está no **ticket curto + fee Stripe fixa**, não na carga Render/MapTiler. Revisão de 15% só se B1 live + Hostinger + TBD (SMS/suporte) mostrarem margem insuficiente.  
+6. **Não** decide tarifário nem categorias.
+
+**Estado A1.3:** **READY FOR PRICING INPUT** — **não** A1.4 CLOSED.
 
 ---
 
 ## 7. Próximo passo
 
-1. **A1.3:** ratear fixos (cenários de volume) · sensibilidade mix cartões premium/UK · **sem** GO/Comfort/XL ainda.  
-2. Acta **A1.4**.  
-3. Contabilista: IVA base CRS · NC/refunds · IRC.  
-4. Código (tarefas separadas, **não** nesta actualização): grelha Manel (D07) · fee cancel 3,00 € (D08) · **não** CRS no runtime até IVA fechado · B1 Stripe live.
+1. Inserir **Hostinger Premium** real (quando contrato disponível) e recalcular §6g.  
+2. **A2.5 / tarifário** com estes inputs — **sem** fechar A1.4 ainda se quiserem acta formal depois.  
+3. Acta **A1.4** (aceite Francisco+Manel).  
+4. Contabilista: IVA base CRS · NC/refunds · IRC · câmbio factura.  
+5. Código (tarefas separadas): grelha Manel · cancel 3 € · CRS **não** no runtime até IVA.
 
 ---
 
-**Frase:** A1-D01…D10 DONE; A1.2 **READY FOR ECONOMIC MODELLING** (≠ accounting final); CRS regra económica DONE / runtime **não**; payment hardening **#578** em `main`; A1.3 **EM CURSO** (tabela tickets); A1 global **PARCIAL** até A1.3–A1.4.
+**Frase:** A1-D01…D10 DONE; A1.2 **READY FOR ECONOMIC MODELLING**; A1.3 **READY FOR PRICING INPUT** (variável + rateio fixos USD excl. Hostinger TBD); A1.4 aberto; A1 global **PARCIAL**.
