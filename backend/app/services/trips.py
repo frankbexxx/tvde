@@ -21,6 +21,7 @@ from app.schemas.trip import TripCreateRequest
 from app.services.payments import _money, _to_decimal
 from app.core.config import settings
 from app.core.pricing import (
+    CANCELLATION_FEE_EUR,
     PET_SURCHARGE_RULE_V1,
     calculate_commission_amount,
     calculate_fare_breakdown,
@@ -361,12 +362,11 @@ def cancel_trip_by_passenger(
     old_status = trip.status
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
 
-    # Passenger cancel after accept → cancellation fee (simulated, variable by distance via pricing)
+    # Passenger cancel after accept → fixed cancellation fee (A1-D08 / V1).
+    # Piloto: fee is registered on the trip; PaymentIntent is cancelled (not captured).
     fee = 0.0
     if old_status in (TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing):
-        pct = getattr(settings, "CANCELLATION_FEE_PERCENT", 0.20)
-        min_fee = getattr(settings, "CANCELLATION_FEE_MIN", 1.50)
-        fee = max(min_fee, round(float(trip.estimated_price) * pct, 2))
+        fee = float(money(CANCELLATION_FEE_EUR))
 
     trip.cancellation_reason = (reason or "").strip() or None
     trip.cancellation_fee = fee if fee > 0 else None

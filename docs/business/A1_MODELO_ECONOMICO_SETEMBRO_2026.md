@@ -46,7 +46,7 @@
 | Custos fixos/variáveis | **FECHADO** *(A1.2 modelagem)* · **≠ ACCOUNTING FINAL** | Rubricas técnicas confirmadas §6c; `MANEL_COSTS…` continua **não** orçamento (**A1-D10**). TBD: SMS · email · stores · chargebacks · suporte · legal/seguros · overage mapas | **A1-D10** · §6c 2026-09-11 | Não | Contabilidade formal depois |
 | Margem plataforma | **FECHADO** *(A1.3 modelagem)* · **≠ tarifário** | Margem variável §6f + rateio fixos USD §6g; **READY FOR PRICING INPUT**; sem GO/Comfort/XL | §6f–§6g 2026-09-11 | Não | A1.4 + A2.5 |
 | Arredondamento | **FECHADO** *(código)* | Fare `round(2)`; money `Decimal` **ROUND_HALF_UP** 0,01; Stripe cents `round(price×100)` min 50 | `pricing.py` · `payments.py` · `trips.py` | Sim | Não |
-| Cancelamento — fee | **FECHADO** *(regra comercial)* | Fee = **3,00 € fixos** (**A1-D08**). Legado código `max(1,50, 20%×estimativa)` deixa de ser baseline. Piloto pré-B1: **registar** fee, **não cobrar**. Cobrança real quando B1 operacional. | **A1-D08** 2026-09-03 | Parcial (ainda fórmula legada no código) | Alinhar código + captura pós-B1 |
+| Cancelamento — fee | **FECHADO** *(A1-D08 + runtime)* | **Cancellation fee V1 = €3,00 fixos** (`CANCELLATION_FEE_EUR`). Independente de estimate/categoria/Pet/tolls. Piloto pré-B1: **registar**, **não cobrar** (PI cancelado). | **A1-D08** · `pricing.py` | Sim (valor) | Captura real pós-B1 |
 | Preço mínimo / categorias | **FECHADO** *(A2.5 IMPLEMENTED)* | V1: GO `x` 1,50/0,60/0,12/mín.4,50 · Comfort 1,90/0,85/0,15/mín.5,50 · XL 3,00/1,05/0,15/mín.6,50 · snapshot em `price_breakdown` | `tariffs.py` · **A2.5** | Sim | A1.4 acta |
 | Simulador económico 36m | **ABERTO** | Brief existe; **simulador não construído** | GTM | Não | Ferramenta após validação números |
 | Mock/demo vs real | **FECHADO** *(política actual)* | Piloto: `STRIPE_MOCK=true` típico; payouts reais **não**; comissão calculada na mesma | ENV_SINGLE_REALITY · demo docs | Sim (mock) | Go-live = B1 |
@@ -57,7 +57,7 @@
 | Classificação | Nº *(após A1.2 fecho modelagem 2026-09-11)* |
 |---------------|------------------------|
 | **FECHADO** | **18** *(incl. A2.5 tarifário · Stripe V1 · A1.2/A1.3)* |
-| **PARCIAL** | **2** *(settlement live · cancel fee código)* |
+| **PARCIAL** | **1** *(settlement live)* |
 | **ABERTO** | **1** (simulador 36m) |
 | **DEPENDENTE EXTERNO** | **1** (IVA/recibos) |
 
@@ -71,7 +71,7 @@
 - `BASE_FARE` / `PRICE_PER_*` em settings = **deprecated** (ignorados pelo motor).  
 - Comissão: **15%** sobre `final_price − tolls_amount` (Pet incluído; tolls 0% — tolls ainda sempre 0).  
 - Híbrido estimativa/final **implementado** (`PRICING_DECISION`).  
-- Cancel fee: runtime ainda legado; **baseline comercial = 3,00 € (A1-D08)** — follow-up.  
+- Cancel fee V1: **€3,00 fixos** registados no cancel pós-accept; PI cancelado (sem cobrança até B1).  
 - Payment hardening **#578** merged.
 
 ### Decisão já tomada
@@ -129,7 +129,7 @@
 | €/min / tarifa | Código legado **0,15** (única) | Manel Go **0,12** · Comfort **0,15** · XL **0,18** | **A1-D07** = Manel é baseline; código a alinhar |
 | Mínimo viagem | Nenhum | Go **4,50** / Comfort **6** / XL **8** | **A1-D07** — a implementar |
 | Comissão pós-trial / tiers | Seed **15** · **A1-D01 = 15% piloto** | Manel tiers **12%** · `PROJECT.md` **12,5%** | **STALE como baseline** — só futuro condicionado (A1-D01) |
-| Cancel fee | Código legado 20%/min 1,50 | **A1-D08 = 3,00 € fixos** | Baseline comercial DONE; código a alinhar; cobrança pós-B1 |
+| Cancel fee | **€3,00 fixos** (`CANCELLATION_FEE_EUR`) | **A1-D08 = 3,00 € fixos** | Runtime alinhado; cobrança real pós-B1 |
 | Categorias / surge | Uma tarifa | Go/Comfort/XL + multiplicadores | Só docs |
 | Connect | Ausente | PROJECT menciona intenção | Aspiracional |
 

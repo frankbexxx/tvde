@@ -263,7 +263,7 @@ def get_route_distance_duration(origin_lat, origin_lng, dest_lat, dest_lng) -> t
 ### O que foi feito
 
 - `cancellation_reason`, `cancellation_fee`, `cancelled_by` em Trip
-- Fee passageiro: `max(CANCELLATION_FEE_MIN, estimated_price × CANCELLATION_FEE_PERCENT)`
+- Fee passageiro (V1): **€3,00 fixos** (`CANCELLATION_FEE_EUR` em `pricing.py`) — sem % nem mínimo variável.
 - `driver.cancellation_count` quando motorista cancela
 
 ### Código principal
@@ -273,9 +273,8 @@ def get_route_distance_duration(origin_lat, origin_lng, dest_lat, dest_lng) -> t
 ```python
 fee = 0.0
 if old_status in (TripStatus.accepted, TripStatus.arriving, TripStatus.ongoing):
-    pct = getattr(settings, "CANCELLATION_FEE_PERCENT", 0.20)
-    min_fee = getattr(settings, "CANCELLATION_FEE_MIN", 1.50)
-    fee = max(min_fee, round(float(trip.estimated_price) * pct, 2))
+    # Fixed V1 fee when passenger cancels after accept
+    fee = float(money(CANCELLATION_FEE_EUR))  # €3.00
 
 trip.cancellation_reason = (reason or "").strip() or None
 trip.cancellation_fee = fee if fee > 0 else None
@@ -294,7 +293,7 @@ if driver:
 ### Exemplo
 
 - Trip `estimated_price=10.0`, cancel após accept
-- Fee = `max(1.50, 10.0 × 0.20)` = **2.0 €**
+- Fee = **€3,00** fixos (V1), independentemente de `estimated_price`
 
 ---
 
@@ -609,7 +608,7 @@ Verificar `estimated_price` na resposta de `POST /trips` segue fórmula. Com `OS
 
 ```bash
 # Cancel antes de accept → cancellation_fee = null
-# Cancel após accept → cancellation_fee = max(1.50, estimated_price * 0.20)
+# Cancel após accept → cancellation_fee = 3.00 (fixo V1)
 # Cancel pelo motorista → driver.cancellation_count incrementado
 ```
 
@@ -770,8 +769,9 @@ Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger)
 | `PRICE_PER_KM`                | Preço por km (default 0.60)                                                                      |
 | `PRICE_PER_MIN`               | Preço por minuto (default 0.15)                                                                  |
 | `OSRM_BASE_URL`               | URL OSRM (opcional)                                                                              |
-| `CANCELLATION_FEE_PERCENT`    | % do preço estimado (default 0.20)                                                               |
-| `CANCELLATION_FEE_MIN`        | Mínimo em € (default 1.50)                                                                       |
+| `CANCELLATION_FEE_EUR`        | Constante em `pricing.py` — **€3,00** fixos (V1)                                                 |
+| `CANCELLATION_FEE_PERCENT`    | **DEPRECATED** — ignorado                                                                        |
+| `CANCELLATION_FEE_MIN`        | **DEPRECATED** — ignorado                                                                        |
 | `BETA_MODE`                   | Modo BETA (login por telefone, rate limit)                                                       |
 | `ENABLE_DEV_TOOLS`            | Seed, tokens, debug em produção                                                                  |
 | `CORS_ALLOWED_ORIGINS`        | Origens CORS separadas por vírgula (sem `*`). Default: frontend Render + `http://localhost:5173` |

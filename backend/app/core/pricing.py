@@ -30,6 +30,9 @@ COMMISSION_RATE = 0.15  # unused at runtime; commission from driver.commission_p
 PET_SURCHARGE_EUR = Decimal("1.50")
 PET_SURCHARGE_RULE_V1 = "pet_surcharge_v1"
 
+# A1-D08 / Cancel Fee V1 — fixed EUR; not tied to estimate / category / Pet / tolls.
+CANCELLATION_FEE_EUR = Decimal("3.00")
+
 
 def _d(value: float | int | str | Decimal) -> Decimal:
     return value if isinstance(value, Decimal) else Decimal(str(value))
