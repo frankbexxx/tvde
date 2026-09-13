@@ -101,23 +101,29 @@ Telefone público **não** é gap obrigatório nesta fase.
 | Titular | Ventos Férteis, Lda. |
 | Variantes adicionais | **Não** comprar neste momento |
 | Gestão/acesso | Manel + Francisco |
-| Situação | **BLOQUEADO EXTERNAMENTE** |
+| Situação (2026-09-13) | **ACTIVO em produção** — https://vamula.pt (HTTPS OK) |
 
-**Motivo (resumo):** existe registo antigo (2021) no .PT associado ao NIPC da Ventos Férteis, com outro nome/email; Manel não tem actualmente acesso/recordação desse email; foi enviado pedido ao .PT para alteração/recuperação do contacto com documentação legal anexada; **aguarda resposta/autorização do .PT**.
+**Histórico:** em 09/09/2026 o domínio estava bloqueado externamente no .PT (recuperação de contacto). Em 13/09/2026 o site institucional V1 já está publicado no domínio.
 
-**Importante:** isto **NÃO** é bloqueador do desenvolvimento principal da APP.
+**Importante:** emails `@vamula.pt` e LRE continuam pendentes — **não** bloqueiam a APP.
 
 ---
 
 ## 8. Hosting / site institucional
 
-| Campo | Estado |
-|-------|--------|
-| Alojamento | **Ainda NÃO fechado** |
-| Direcção considerada | Site institucional simples/estático |
-| Decisão final de host | **Só depois** de `vamula.pt` estar sob controlo |
+| Campo | Estado (2026-09-13) |
+|-------|---------------------|
+| Alojamento | **Hostinger Premium** |
+| Tipo | Site institucional estático (`site/` no repo) |
+| Deploy | Manual para `public_html/` |
+| Landing V1 | **DEPLOYED / PROD OK** — https://vamula.pt |
+| HTTPS | OK |
+| Smoke desktop/mobile | PASS |
+| `default.php` | Removido |
+| `index.html.bak` | Mantido (backup) |
+| Custo contrato | Ainda **TBD** no modelo económico A1 (não inventar valor) |
 
-Cloudflare / Hostinger / outros = **não** decisão final.
+Fonte de deploy: [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](../ops/VAMULA_LANDING_DEPLOY_2026-09-13.md).
 
 ---
 
@@ -157,15 +163,15 @@ Não fechar L-25 globalmente enquanto O-L25-01… permanecerem pendentes.
 - Sem telefone público na fase inicial
 - Domínio alvo `vamula.pt` (titular Ventos Férteis)
 - G-KYC-P0-04 permanece **CLOSED** (fora desta acta; já fechado)
+- **Landing institucional V1** em https://vamula.pt (**Hostinger Premium** · deploy manual · 2026-09-13)
 
 ### Ainda pendentes
 
-- Tabela de preços final
-- Controlo efectivo de `vamula.pt` (.PT)
-- Hosting do site institucional
+- Tabela de preços final / acta A1.4
 - Emails `@vamula.pt`
-- Registo/ops LRE (após domínio)
-- Validação custos/simulador (A1.2+)
+- Registo/ops LRE
+- Validação custos Hostinger no modelo A1 (valor contratado)
+- Páginas legais no site (Privacidade, Termos, LRE, RAL)
 
 ### Dependências externas
 

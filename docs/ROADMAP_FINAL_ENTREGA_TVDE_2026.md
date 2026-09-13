@@ -144,7 +144,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 
 *Livro / RAL (L-25):* foundation técnica 2026-09-07 — sources + Admin import externo · links LRE + secção RAL · **PARCIAL** (registo portal LRE **PENDENTE — após domínio**; **NÃO BLOQUEADOR IMEDIATO** do desenvolvimento APP; sem API LRE). Ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md).
 
-*Domínio / site / email:* `vamula.pt` = alvo · titular Ventos Férteis · **DEPENDÊNCIA EXTERNA — .PT** (recuperação contacto) · site institucional e emails `@vamula.pt` = **PENDENTE DOMÍNIO** · **não** bloqueia APP.
+*Domínio / site / email:* `vamula.pt` **ACTIVO** — landing institucional V1 **DEPLOYED / PROD OK** (Hostinger Premium · https://vamula.pt · 2026-09-13) · emails `@vamula.pt` e LRE = **PENDENTE** · **não** bloqueia APP. Ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md).
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
@@ -243,7 +243,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Objectivo:** Inventário titularidade código/design/marca/contas/domínios.  
 - **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02` · *reminder* [`SEP-IP-05`](product/SETEMBRO_2026_TODO_LIBRARY.md) (OXS/VAMULÁ housekeeping — **não agora**)  
 - **Dependências:** —  
-- **Nota domínio (2026-09-09):** alvo **`vamula.pt`** · titular Ventos Férteis · gestão Manel+Francisco · estado **DEPENDÊNCIA EXTERNA — .PT** (recuperação contacto) · emails `@vamula.pt` = **PENDENTE DOMÍNIO** · site institucional = pendente do domínio · **não** bloqueia APP. Ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md).  
+- **Nota domínio (2026-09-13):** **`vamula.pt` ACTIVO** · landing V1 **DEPLOYED** (Hostinger) · emails `@vamula.pt` = **PENDENTE** · ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) · **não** bloqueia APP.
 - **Conclusão:** Inventário assinado por Francisco (e Manel se aplicável).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |

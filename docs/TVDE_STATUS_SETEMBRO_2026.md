@@ -29,15 +29,15 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Partner/Frota** | **OK** (M1) · **GAP M2** | Vehicle doc gates **ON** (G-KYC-P0-04); settlement política **semanal / segunda / manual**; IMT técnico / PF3D-4 UX / docs pessoais ainda abertos |
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT |
-| **Negócio / marca** | **PARCIAL** | Comissão **15%** confirmada; tarifário **pendente**; domínio `vamula.pt` **bloqueado .PT** (não bloqueia APP); site/email LRE após domínio |
-| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (ops LRE **não bloqueador imediato** da APP; pendente domínio) · L-26 fechado; L1/L2 externos |
+| **Negócio / marca** | **PARCIAL** | Comissão **15%**; tarifário A2.5 **IMPLEMENTED**; landing **https://vamula.pt** = **DEPLOYED / PROD OK** (Hostinger); emails `@vamula.pt` / LRE ainda pendentes |
+| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (ops LRE pendente; **não bloqueador imediato** APP) · L-26 fechado; L1/L2 externos |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05) |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
 | **Localização/mapas** | **OK** | Tracking + SOS partilha `DriverLocation` (#549) |
 | **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI |
 | **Testes/CI** | **OK** | #548 / #549 verdes + smoke SOS mobile |
-| **Docs/operação** | **PARCIAL** | Acta Manel 09/09 em `docs/business/`; domínio/LRE externos; tarifário ainda aberto |
+| **Docs/operação** | **PARCIAL** | Acta Manel 09/09 + deploy landing 13/09; emails/LRE pendentes; tarifário código DONE · A1.4 aberto |
 
 ---
 
@@ -130,7 +130,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 |----|------|------|------------|-------------|
 | **S-BIZ-01** | Documentação/Operação | Validar hipóteses custos/comissões/simulador (**BUSINESS-MANEL-001**) | P0 — Bloqueador | Contabilista/financeiro |
 | **S-BIZ-02** | Documentação/Operação | Comissão piloto **15%** **DONE**; tarifário V1 GO/Comfort/XL **IMPLEMENTED** (A2.5); falta acta **A1.4** | P1 — Acta formal | [`VAMULA_DECISOES…`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · A2.5 |
-| **S-BIZ-03** | Documentação/Operação | Domínio `vamula.pt` · site · emails `@vamula.pt` | P2 — Melhoria importante | **DEPENDÊNCIA EXTERNA — .PT** (não bloqueia APP) |
+| **S-BIZ-03** | Documentação/Operação | Domínio + landing **https://vamula.pt** = **DEPLOYED**; falta emails `@vamula.pt` + páginas legais | P2 — Melhoria importante | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
 | **S-BIZ-04** | Documentação/Operação | Settlement Partner: política **semanal / segunda / manual** (conta pagamentos: Manel) | **DONE** *(política)* · impl. técnica N/A piloto | [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) |
 | **S-BIZ-05** | Documentação/Operação | Apoio inicial digital (email/formulário); horário 09–17 · **sem** telefone público | **DONE** *(política fase inicial)* | idem |
 | **S-BRD-01** | Cross-app | Decisão logo (shortlist local) + troca controlada em `public/brand` | P1 — Necessário para fechar produto | Francisco/Manel |
@@ -307,7 +307,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 3. **S-MOB-01 / S-NOTIF-01** — Sem packaging mobile + push, adopção motorista/passageiro fica presa ao browser.  
 4. **S-BIZ-01 / S-BIZ-02** — Comissão **15%** confirmada; A2.5 tarifário V1 **IMPLEMENTED**; falta **A1.4** acta; Connect e “preço líquido” dependem de ops.  
 5. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
-6. **S-BIZ-03** — Domínio/site/email: externo (.PT); **não** bloqueia desenvolvimento APP.  
+6. **S-BIZ-03** — Landing **https://vamula.pt** DEPLOYED; emails/LRE/páginas legais ainda pendentes.  
 
 ---
 
