@@ -1,6 +1,6 @@
 # PORTAGENS V1 — Arquitectura (2026-09)
 
-**Estado:** **APROVADA** (decisões humanas 2026-09-14) · **F0 IMPLEMENTED**  
+**Estado:** **APROVADA** (decisões humanas 2026-09-14) · **F0 IMPLEMENTED** · **F1 IMPLEMENTED**  
 **Veredicto HERE:** APROVADO COM RESERVAS PARA V1 — [`HERE_TOLLS_SPIKE_2026-09.md`](HERE_TOLLS_SPIKE_2026-09.md)  
 **Tip `main` de referência:** `70a6293`  
 **Implementação:** **ainda não** — este doc é só arquitectura.
@@ -309,7 +309,7 @@ Não bloqueia implementação técnica.
 | Decisão create fail → 0 | **DONE** |
 | HERE aprovado com reservas | **DONE** |
 | **F0** Settings + flag + HERE client + unit tests | **IMPLEMENTED** |
-| **F1** Wire create (estimated=charged, UX) | Por iniciar |
+| **F1** Wire create (estimated=charged, UX) | **IMPLEMENTED** |
 | **F2** Wire complete (charged imutável + observed) | Por iniciar |
 | Staging / Prod flag ON | Pendente OK explícito |
 
@@ -317,14 +317,20 @@ Não bloqueia implementação técnica.
 
 - Módulo: `backend/app/services/tolls/here.py` (`estimate_tolls`, `TollEstimateResult`)
 - Settings: `ENABLE_HERE_TOLLS=false` · `HERE_API_KEY` opcional
-- Spike `scripts/tolls/here_tolls_spike.py`: **mantido independente** (live benchmark); parser runtime alinhado ao contrato (summary.tolls.total, fare ids únicos, EUR). Divergências aceites: spike tem `avoid[features]`, timeouts mais longos, escrita de relatório MD.
-- **Não** wired a create/complete/payment/FE.
+- Spike independente; parser alinhado ao contrato
 
----
+### F1 — notas de implementação
+
+- `create_trip` chama `estimate_tolls` → `charged = estimated` → `price_breakdown` + `estimated_price`
+- Snapshot sanitizado via `services/tolls/snapshot.py` (sem API key / fare ids / raw payload)
+- Create fail → `tolls_status=zero_fallback`, viagem segue
+- Passenger: linha “Portagens estimadas” se > 0; hint se unavailable
+- Complete: **sem** HERE; preserva toll meta no `_apply_price_snapshot` (prior keys)
+- Flag continua **OFF** por default
 
 ## 19. Próximo passo
 
-**F1** — wire create_trip (estimated=charged, zero_fallback, Pax line). Flag continua OFF por default.  
+**F2** — complete: charged imutável + `observed_tolls_amount` só audit.  
 **Sem** alterar Hostinger / PROD deploy app / tarifário categorias.
 
 ---

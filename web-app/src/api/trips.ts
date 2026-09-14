@@ -43,6 +43,12 @@ export interface PriceBreakdown {
   fare_subtotal: number
   total: number
   pet_surcharge_rule?: string
+  /** PORTAGENS V1 F1 — optional; absent on legacy trips */
+  estimated_tolls_amount?: number | null
+  charged_tolls_amount?: number | null
+  tolls_source?: string | null
+  tolls_status?: string | null
+  tolls_error_code?: string | null
 }
 
 export interface TripCreateResponse {

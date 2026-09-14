@@ -123,6 +123,8 @@ export function PassengerDashboard() {
   const [petBooking, setPetBooking] = useState<PassengerPetBookingState>(DEFAULT_PET_BOOKING)
   const [lastPetSurcharge, setLastPetSurcharge] = useState<number | null>(null)
   const [lastFareSubtotal, setLastFareSubtotal] = useState<number | null>(null)
+  const [lastEstimatedTolls, setLastEstimatedTolls] = useState<number | null>(null)
+  const [lastTollsUnavailable, setLastTollsUnavailable] = useState(false)
   const [lastEstimatedTotal, setLastEstimatedTotal] = useState<number | null>(null)
   const passengerMenuOpenRef = useRef(false)
 
@@ -559,6 +561,8 @@ export function PassengerDashboard() {
     setPetBooking(DEFAULT_PET_BOOKING)
     setLastPetSurcharge(null)
     setLastFareSubtotal(null)
+    setLastEstimatedTolls(null)
+    setLastTollsUnavailable(false)
     setLastEstimatedTotal(null)
   }, [])
 
@@ -697,6 +701,14 @@ export function PassengerDashboard() {
           : null)
       setLastPetSurcharge(surcharge)
       setLastFareSubtotal(fareSub)
+      const tollsAmt =
+        res.price_breakdown?.estimated_tolls_amount ??
+        res.price_breakdown?.charged_tolls_amount ??
+        res.price_breakdown?.tolls_amount ??
+        null
+      const tollStatus = res.price_breakdown?.tolls_status ?? null
+      setLastEstimatedTolls(tollsAmt != null && Number(tollsAmt) > 0 ? Number(tollsAmt) : null)
+      setLastTollsUnavailable(tollStatus === 'zero_fallback' || tollStatus === 'error')
       setLastEstimatedTotal(res.estimated_price ?? res.price_breakdown?.total ?? null)
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
@@ -815,6 +827,14 @@ export function PassengerDashboard() {
             ? Math.max(0, res.estimated_price - surcharge)
             : null),
       )
+      const tollsAmt =
+        res.price_breakdown?.estimated_tolls_amount ??
+        res.price_breakdown?.charged_tolls_amount ??
+        res.price_breakdown?.tolls_amount ??
+        null
+      const tollStatus = res.price_breakdown?.tolls_status ?? null
+      setLastEstimatedTolls(tollsAmt != null && Number(tollsAmt) > 0 ? Number(tollsAmt) : null)
+      setLastTollsUnavailable(tollStatus === 'zero_fallback' || tollStatus === 'error')
       setLastEstimatedTotal(res.estimated_price ?? res.price_breakdown?.total ?? null)
       addLog('Pedido reenviado após tentar novamente', 'success')
       toast.success(t('trip.resent'))
@@ -1478,6 +1498,8 @@ export function PassengerDashboard() {
                     lastPetSurcharge={lastPetSurcharge}
                     lastFareSubtotal={lastFareSubtotal}
                     lastEstimatedTotal={lastEstimatedTotal}
+                    lastEstimatedTolls={lastEstimatedTolls}
+                    lastTollsUnavailable={lastTollsUnavailable}
                   />
                 </MapBottomSheet>
               ) : (activeTripId || creating) && !showPassengerRatingPanel ? (
