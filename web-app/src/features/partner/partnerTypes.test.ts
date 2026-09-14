@@ -61,6 +61,17 @@ describe('PARTNER-FLEET-1A CSV columns', () => {
     expect(PARTNER_TRIPS_CSV_COLUMNS).not.toContain('phone')
     expect(PARTNER_TRIPS_CSV_COLUMNS).not.toContain('passenger_name')
   })
+
+  it('PORTAGENS F3: append-only toll audit columns no fim', () => {
+    expect(PARTNER_TRIPS_CSV_COLUMNS.slice(-6)).toEqual([
+      'estimated_tolls_amount',
+      'charged_tolls_amount',
+      'observed_tolls_amount',
+      'observed_tolls_delta',
+      'tolls_source',
+      'tolls_status',
+    ])
+  })
 })
 
 describe('OPS-UX-1C active trip helpers', () => {

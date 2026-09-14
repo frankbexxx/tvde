@@ -1,6 +1,6 @@
 # PORTAGENS V1 — Arquitectura (2026-09)
 
-**Estado:** **APROVADA** (decisões humanas 2026-09-14) · **F0 IMPLEMENTED** · **F1 IMPLEMENTED** · **F2 IMPLEMENTED**  
+**Estado:** **APROVADA** (decisões humanas 2026-09-14) · **F0 IMPLEMENTED** · **F1 IMPLEMENTED** · **F2 IMPLEMENTED** · **F3 IMPLEMENTED**
 **Veredicto HERE:** APROVADO COM RESERVAS PARA V1 — [`HERE_TOLLS_SPIKE_2026-09.md`](HERE_TOLLS_SPIKE_2026-09.md)  
 **Tip `main` de referência:** pós-F1 `c2d1358` · F2 nesta branch  
 **Implementação:** F0–F2 no código (flag OFF); staging/prod ON pendente OK explícito.
@@ -179,7 +179,10 @@ Sem redesign.
 - `estimated_tolls_amount` / `charged_tolls_amount` (iguais na V1 excepto se se quiser mostrar só charged)  
 - `observed_tolls_amount` + delta (diagnóstico)  
 - `tolls_source`, `tolls_status`  
-- total · commissionable (total − charged tolls)
+- Admin: `tolls_error_code` / `observed_tolls_error_code` quando presente  
+- total · commissionable (total − charged tolls)  
+- CSV Partner export: colunas append-only de audit (estimate/charged/observed/delta/source/status)  
+- **Sem** API key, raw HERE payload, nem request URL na UI
 
 ---
 
@@ -294,8 +297,9 @@ Não bloqueia implementação técnica.
 | **F0** | `Settings` (`HERE_API_KEY`, `ENABLE_HERE_TOLLS`) + client `tolls/here.py` + testes unitários mock |
 | **F1** | Wire **create**: estimated=charged, snapshot, Pax line “Portagens estimadas”, zero_fallback |
 | **F2** | Wire **complete**: charged imutável; observed opcional + delta audit; Partner/Admin mínimo |
-| **F3** | Staging ON + smokes |
-| **F4** | Prod ON (OK explícito) |
+| **F3** | Partner/Admin visibility completa (detail + CSV audit) — sem dashboards complexos |
+| **F4** | Staging ON + smokes |
+| **F5** | Prod ON (OK explícito) |
 
 **Nota:** F1+F2 reflectem cobrança = estimate; observed **não** é billing.
 
@@ -311,6 +315,7 @@ Não bloqueia implementação técnica.
 | **F0** Settings + flag + HERE client + unit tests | **IMPLEMENTED** |
 | **F1** Wire create (estimated=charged, UX) | **IMPLEMENTED** |
 | **F2** Wire complete (charged imutável + observed) | **IMPLEMENTED** |
+| **F3** Partner/Admin visibility + CSV audit | **IMPLEMENTED** |
 | Staging / Prod flag ON | Pendente OK explícito |
 
 ### F0 — notas de implementação
@@ -336,9 +341,19 @@ Não bloqueia implementação técnica.
 - Passenger: **sem** UI observed
 - Flag continua **OFF** por default
 
+### F3 — notas de implementação
+
+- Partner detalhe: estimated / charged / observed / delta / source / status (legacy → “—”)
+- Admin detalhe: mesmo conjunto + `error_code` quando apropriado
+- CSV Partner: append-only `estimated_tolls_amount` … `tolls_status`
+- Helpers FE: `web-app/src/features/trips/tollAuditDisplay.ts` (sanitiza apiKey)
+- Listas gerais: **sem** novas colunas
+- Passenger / Driver: **sem** alterações de UX
+- Flag continua **OFF** por default
+
 ## 19. Próximo passo
 
-Staging ON + smokes (OK explícito) · F3 opcional dashboards.  
+Staging ON + smokes (OK explícito) · F4.  
 **Sem** alterar Hostinger / PROD deploy app / tarifário categorias.
 
 ---

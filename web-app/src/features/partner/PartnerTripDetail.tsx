@@ -15,6 +15,13 @@ import { reverseGeocode } from '../../services/geocoding'
 import { partnerTripStatusLabel } from './partnerLabels'
 import { ONGOING_TRIP_STATUSES } from './partnerTypes'
 import { fareCategoryCommercialLabel } from '../trips/fareCategoryLabel'
+import {
+  chargedTollsDisplay,
+  formatDeltaOrDash,
+  formatEuroOrDash,
+  observedTollsDisplay,
+  sanitizeTollAuditText,
+} from '../trips/tollAuditDisplay'
 
 /** Soft auto-refresh while trip is live (OPS-UX-1B). */
 const LIVE_POLL_MS = 12_000
@@ -258,31 +265,44 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
                   : `${Number(trip.price_breakdown.pet_surcharge).toFixed(2)} €`}
               </span>
             </p>
-            <p>
-              <span className="text-muted-foreground">{t('tripDetail.tolls')}</span>{' '}
-              <span className="text-foreground">
-                {Number(
-                  trip.price_breakdown.tolls_amount ??
-                    trip.price_breakdown.charged_tolls_amount ??
-                    0,
-                ).toFixed(2)}{' '}
-                €
-              </span>
-            </p>
-            {trip.price_breakdown.observed_tolls_amount != null ||
-            trip.price_breakdown.observed_tolls_status ? (
-              <p data-testid="partner-trip-observed-tolls">
-                <span className="text-muted-foreground">{t('tripDetail.tollsObserved')}</span>{' '}
-                <span className="text-foreground">
-                  {trip.price_breakdown.observed_tolls_amount != null
-                    ? `${Number(trip.price_breakdown.observed_tolls_amount).toFixed(2)} €`
-                    : String(trip.price_breakdown.observed_tolls_status)}
-                  {trip.price_breakdown.observed_tolls_delta != null
-                    ? ` (Δ ${Number(trip.price_breakdown.observed_tolls_delta) >= 0 ? '+' : ''}${Number(trip.price_breakdown.observed_tolls_delta).toFixed(2)} €)`
-                    : ''}
+            <div className="space-y-1 border-t border-border/40 pt-1" data-testid="partner-trip-tolls-audit">
+              <p>
+                <span className="text-muted-foreground">{t('tripDetail.tollsEstimated')}</span>{' '}
+                <span className="text-foreground" data-testid="partner-trip-tolls-estimated">
+                  {formatEuroOrDash(trip.price_breakdown.estimated_tolls_amount)}
                 </span>
               </p>
-            ) : null}
+              <p>
+                <span className="text-muted-foreground">{t('tripDetail.tollsCharged')}</span>{' '}
+                <span className="text-foreground" data-testid="partner-trip-tolls-charged">
+                  {chargedTollsDisplay(trip.price_breakdown)}
+                </span>
+              </p>
+              <p data-testid="partner-trip-observed-tolls">
+                <span className="text-muted-foreground">{t('tripDetail.tollsObserved')}</span>{' '}
+                <span className="text-foreground" data-testid="partner-trip-tolls-observed">
+                  {observedTollsDisplay(trip.price_breakdown)}
+                </span>
+              </p>
+              <p>
+                <span className="text-muted-foreground">{t('tripDetail.tollsDelta')}</span>{' '}
+                <span className="text-foreground" data-testid="partner-trip-tolls-delta">
+                  {formatDeltaOrDash(trip.price_breakdown.observed_tolls_delta)}
+                </span>
+              </p>
+              <p>
+                <span className="text-muted-foreground">{t('tripDetail.tollsSource')}</span>{' '}
+                <span className="text-foreground" data-testid="partner-trip-tolls-source">
+                  {sanitizeTollAuditText(trip.price_breakdown.tolls_source)}
+                </span>
+              </p>
+              <p>
+                <span className="text-muted-foreground">{t('tripDetail.tollsStatus')}</span>{' '}
+                <span className="text-foreground" data-testid="partner-trip-tolls-status">
+                  {sanitizeTollAuditText(trip.price_breakdown.tolls_status)}
+                </span>
+              </p>
+            </div>
             <p>
               <span className="text-muted-foreground">{t('tripDetail.total')}</span>{' '}
               <span className="text-foreground font-medium">
