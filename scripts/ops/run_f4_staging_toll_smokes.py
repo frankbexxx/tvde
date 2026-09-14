@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 """PORTAGENS F4 — staging HERE toll smokes (safe output, no secrets).
 
-Run on tvde-staging-api one-off job. Uses TEST_ACCOUNT_PASSWORD from env.
-Calls https://tvde-staging-api.onrender.com (same service). Never prints
-password, JWT, HERE key, or DB URL.
+STAGING ONLY — hardcoded API host is tvde-staging-api; refuses PROD hosts and
+non-staging DATABASE_URL when settings are available.
+
+Run as Render one-off on tvde-staging-api. Password from TEST_ACCOUNT_PASSWORD
+env only. Never prints password, JWT, HERE key, or DB URL.
+
+Complete contract:
+  POST /driver/trips/{id}/complete requires TripCompletionRequest body.
+  Smoke sends {"final_price": 0} so FastAPI accepts the request.
+  Backend ignores payload.final_price (see driver_trips.complete_trip `_ = payload`
+  and TripCompletionRequest docstring). Settlement uses fare breakdown total
+  (F4 evidence: BRISA final_price=18.02, not 0).
 
 Usage:
   python scripts/ops/run_f4_staging_toll_smokes.py
@@ -14,7 +23,6 @@ from __future__ import annotations
 import json
 import sys
 import time
-import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -44,7 +52,13 @@ def _ensure_app_path() -> None:
 
 _ensure_app_path()
 
+# Fixed staging public API — do not retarget to PROD.
 API = "https://tvde-staging-api.onrender.com"
+_PROD_API_DENY = (
+    "tvde-api-fd2z.onrender.com",
+    "://tvde-api.onrender.com",
+    "tvde-api.",
+)
 PHONES = {
     "passenger": "+351912345678",
     "driver": "+351911111111",
@@ -157,6 +171,47 @@ def _sanitize_text(s: str) -> str:
     return s
 
 
+def _clear_active_trips(*, pax_tok: str, drv_tok: str) -> dict[str, Any]:
+    """Best-effort cancel leftover active trips so matching is free."""
+    out: dict[str, Any] = {}
+    code, active = _http_json("GET", "/trips/active", token=pax_tok, timeout=30)
+    out["passenger_active_http"] = code
+    if code == 200 and isinstance(active, dict) and active.get("trip_id"):
+        tid = active["trip_id"]
+        # Empty body: structured reason_code "other" is not a valid attendable code (422).
+        c2, body = _http_json(
+            "POST",
+            f"/trips/{tid}/cancel",
+            token=pax_tok,
+            body={},
+            timeout=30,
+        )
+        out["passenger_cancel"] = {"trip_id": tid, "http": c2}
+    code, dactive = _http_json("GET", "/driver/trips/active", token=drv_tok, timeout=30)
+    out["driver_active_http"] = code
+    if code == 200 and isinstance(dactive, dict) and dactive.get("trip_id"):
+        tid = dactive["trip_id"]
+        c2, body = _http_json(
+            "POST",
+            f"/driver/trips/{tid}/cancel",
+            token=drv_tok,
+            body={},
+            timeout=30,
+        )
+        out["driver_cancel"] = {"trip_id": tid, "http": c2}
+        # If cancel fails, try complete (stuck ongoing after prior smoke).
+        if c2 != 200:
+            c3, body3 = _http_json(
+                "POST",
+                f"/driver/trips/{tid}/complete",
+                token=drv_tok,
+                body={"final_price": 0},
+                timeout=60,
+            )
+            out["driver_complete_fallback"] = {"trip_id": tid, "http": c3}
+    return out
+
+
 def _run_trip(
     *,
     pax_tok: str,
@@ -171,6 +226,7 @@ def _run_trip(
     o_lat, o_lng = route["origin"]
     d_lat, d_lng = route["dest"]
     out: dict[str, Any] = {"route": route["name"], "steps": {}}
+    out["reset"] = _clear_active_trips(pax_tok=pax_tok, drv_tok=drv_tok)
 
     # Refresh driver near origin
     ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
@@ -183,6 +239,7 @@ def _run_trip(
         body={"lat": o_lat, "lng": o_lng, "timestamp": ts_ms},
     )
     out["steps"]["driver_location"] = code
+    time.sleep(1)
 
     t0 = time.time()
     code, created = _http_json(
@@ -220,21 +277,29 @@ def _run_trip(
     elif expect_estimate_gt0 is False:
         out["estimate_eq0"] = (est is None) or float(est) == 0.0
 
-    # Passenger detail — no observed exposure expected in UI fields still in API
+    # Passenger detail — no observed at create
     code, pax_detail = _http_json("GET", f"/trips/{trip_id}", token=pax_tok)
     out["steps"]["passenger_get"] = code
     pax_bd = (pax_detail or {}).get("price_breakdown") or {}
     out["passenger_tolls"] = _toll_fields(pax_bd)
     out["passenger_has_observed_amount"] = pax_bd.get("observed_tolls_amount") is not None
 
-    # Accept / start / complete
-    # Poll available briefly
+    # Keep location fresh during offer window
     accepted = False
-    for _ in range(15):
+    for _ in range(25):
+        ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+        _http_json(
+            "POST",
+            "/drivers/location",
+            token=drv_tok,
+            body={"lat": o_lat, "lng": o_lng, "timestamp": ts_ms},
+        )
         code, avail = _http_json("GET", "/driver/trips/available", token=drv_tok)
         ids = [r.get("trip_id") for r in (avail or [])] if isinstance(avail, list) else []
         if trip_id in ids:
-            code, acc = _http_json("POST", f"/driver/trips/{trip_id}/accept", token=drv_tok)
+            code, acc = _http_json(
+                "POST", f"/driver/trips/{trip_id}/accept", token=drv_tok, body={}
+            )
             out["steps"]["accept"] = code
             accepted = code == 200
             if not accepted:
@@ -250,7 +315,7 @@ def _run_trip(
         (f"/driver/trips/{trip_id}/arriving", "arriving"),
         (f"/driver/trips/{trip_id}/start", "start"),
     ):
-        code, body = _http_json("POST", path, token=drv_tok)
+        code, body = _http_json("POST", path, token=drv_tok, body={})
         out["steps"][key] = code
         if code != 200:
             out["ok"] = False
@@ -258,7 +323,13 @@ def _run_trip(
             return out
 
     t1 = time.time()
-    code, completed = _http_json("POST", f"/driver/trips/{trip_id}/complete", token=drv_tok)
+    # Body required by TripCompletionRequest; final_price is ignored by backend.
+    code, completed = _http_json(
+        "POST",
+        f"/driver/trips/{trip_id}/complete",
+        token=drv_tok,
+        body={"final_price": 0},
+    )
     out["complete_latency_ms"] = int((time.time() - t1) * 1000)
     out["steps"]["complete"] = code
     if code != 200:
@@ -320,11 +391,39 @@ def _run_trip(
     return out
 
 
+def _refuse_non_staging() -> dict[str, Any] | None:
+    """Hard stop if API host or DB URL looks like PROD / non-staging."""
+    api_l = API.lower()
+    if "tvde-staging-api" not in api_l:
+        return {"error": "refused_non_staging_api", "api": API}
+    for needle in _PROD_API_DENY:
+        if needle in api_l and "staging" not in api_l:
+            return {"error": "refused_prod_api_host", "api": API}
+    try:
+        from app.core.config import settings
+
+        db_url = (settings.DATABASE_URL or "").lower()
+        if db_url and "tvde_staging_db" not in db_url:
+            return {
+                "error": "refused_non_staging_database",
+                "hint": "DATABASE_URL must contain tvde_staging_db",
+            }
+    except Exception:
+        pass
+    return None
+
+
 def main() -> int:
     from app.core.config import settings
 
+    refused = _refuse_non_staging()
+    if refused:
+        print(json.dumps(refused))
+        return 2
+
     report: dict[str, Any] = {
         "api": API,
+        "target_hint": "tvde-staging-api",
         "enable_here_tolls": bool(getattr(settings, "ENABLE_HERE_TOLLS", False)),
         "stripe_mock": bool(getattr(settings, "STRIPE_MOCK", False)),
         "here_key_configured": bool(getattr(settings, "HERE_API_KEY", None)),
