@@ -76,6 +76,10 @@ export interface TripPlannerPanelProps {
   lastPetSurcharge?: number | null
   lastFareSubtotal?: number | null
   lastEstimatedTotal?: number | null
+  /** PORTAGENS V1 — estimated tolls from create (>0 to show line). */
+  lastEstimatedTolls?: number | null
+  /** true when create returned tolls_status zero_fallback / error (no fake €0 line). */
+  lastTollsUnavailable?: boolean
 }
 
 /**
@@ -114,6 +118,8 @@ function TripPlannerPanelInner({
   lastPetSurcharge = null,
   lastFareSubtotal = null,
   lastEstimatedTotal = null,
+  lastEstimatedTolls = null,
+  lastTollsUnavailable = false,
 }: TripPlannerPanelProps) {
   const { t } = useTranslation('passenger')
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
@@ -352,6 +358,18 @@ function TripPlannerPanelInner({
                 <p>{t('pet.surchargeLine', { amount: lastPetSurcharge.toFixed(2) })}</p>
               ) : lastPetSurcharge === 0 && (activeTrip?.is_assistance_animal || activeTrip?.has_pet === false) ? (
                 <p className="text-foreground/75">{t('pet.noSurcharge')}</p>
+              ) : null}
+              {lastEstimatedTolls != null && lastEstimatedTolls > 0 ? (
+                <>
+                  <p data-testid="passenger-estimate-tolls">
+                    {t('pet.tollsLine', { amount: lastEstimatedTolls.toFixed(2) })}
+                  </p>
+                  <p className="text-xs text-foreground/70">{t('pet.tollsHint')}</p>
+                </>
+              ) : lastTollsUnavailable ? (
+                <p className="text-xs text-foreground/70" data-testid="passenger-estimate-tolls-unavailable">
+                  {t('pet.tollsUnavailable')}
+                </p>
               ) : null}
               <p className="font-semibold">
                 {t('pet.totalLine', { amount: lastEstimatedTotal.toFixed(2) })}

@@ -198,10 +198,22 @@ def _estimate_trip(
     return estimated_fare, distance_km, duration_min, eta_minutes
 
 
-def _apply_price_snapshot(trip: Trip, breakdown) -> None:
+def _apply_price_snapshot(
+    trip: Trip,
+    breakdown,
+    *,
+    toll_meta: dict | None = None,
+) -> None:
     trip.pet_surcharge_amount = float(breakdown.pet_surcharge)
     trip.pet_surcharge_rule = breakdown.pet_surcharge_rule
-    trip.price_breakdown = breakdown.to_json_dict()
+    prior = trip.price_breakdown if isinstance(trip.price_breakdown, dict) else None
+    from app.services.tolls.snapshot import merge_toll_snapshot
+
+    trip.price_breakdown = merge_toll_snapshot(
+        breakdown.to_json_dict(),
+        prior=prior,
+        toll_meta=toll_meta,
+    )
 
 
 async def create_trip(
@@ -226,11 +238,29 @@ async def create_trip(
         has_pet=pet.has_pet,
         is_assistance_animal=pet.is_assistance_animal,
     )
+
+    # PORTAGENS V1 F1 — HERE estimate at create; charged = estimated; never blocks trip.
+    from app.services.tolls.here import estimate_tolls
+    from app.services.tolls.snapshot import (
+        build_create_toll_snapshot,
+        charged_amount_from_estimate,
+    )
+
+    toll_result = estimate_tolls(
+        float(payload.origin_lat),
+        float(payload.origin_lng),
+        float(payload.destination_lat),
+        float(payload.destination_lng),
+    )
+    tolls_charged = charged_amount_from_estimate(toll_result)
+    toll_meta = build_create_toll_snapshot(toll_result)
+
     breakdown = calculate_fare_breakdown(
         float(distance_km),
         float(duration_min),
         category=pet.fare_category,
         pet_surcharge=pet_surcharge,
+        tolls_amount=tolls_charged,
         pet_surcharge_rule=PET_SURCHARGE_RULE_V1,
     )
     trip = Trip(
@@ -252,7 +282,7 @@ async def create_trip(
         duration_min=duration_min,
         final_price=None,
     )
-    _apply_price_snapshot(trip, breakdown)
+    _apply_price_snapshot(trip, breakdown, toll_meta=toll_meta)
     # fare_only kept for clarity / future logging (unused)
     _ = fare_only
     db.add(trip)
@@ -265,6 +295,15 @@ async def create_trip(
         trip_id=str(trip.id),
         passenger_id=passenger_id,
         created_at=trip.created_at,
+    )
+    log_event(
+        "trip_tolls_estimated",
+        trip_id=str(trip.id),
+        source=toll_meta.get("tolls_source"),
+        status=toll_meta.get("tolls_status"),
+        amount=toll_meta.get("charged_tolls_amount"),
+        latency_ms=toll_meta.get("tolls_latency_ms"),
+        error_code=toll_meta.get("tolls_error_code"),
     )
 
     # Multi-offer dispatch: create offers for top N drivers within radius.

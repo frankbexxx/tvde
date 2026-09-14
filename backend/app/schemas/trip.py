@@ -8,7 +8,7 @@ from app.schemas.driver import DriverLocationResponse
 
 
 class PriceBreakdownSchema(BaseModel):
-    """PET-1 + A2.5 explicit price breakdown (EUR)."""
+    """PET-1 + A2.5 explicit price breakdown (EUR). Toll snapshot fields optional (F1)."""
 
     category: str = "x"
     tariff_version: str = "v1"
@@ -24,6 +24,17 @@ class PriceBreakdownSchema(BaseModel):
     fare_subtotal: float
     total: float
     pet_surcharge_rule: str = "pet_surcharge_v1"
+    # PORTAGENS V1 F1 — optional; absent on legacy trips
+    estimated_tolls_amount: Optional[float] = None
+    charged_tolls_amount: Optional[float] = None
+    tolls_source: Optional[str] = None
+    tolls_status: Optional[str] = None
+    tolls_calculated_at: Optional[str] = None
+    tolls_systems: Optional[list[str]] = None
+    tolls_fares: Optional[list[dict]] = None
+    tolls_http_status: Optional[int] = None
+    tolls_latency_ms: Optional[int] = None
+    tolls_error_code: Optional[str] = None
 
 class TripCreateRequest(BaseModel):
     origin_lat: float = Field(..., ge=-90.0, le=90.0)
