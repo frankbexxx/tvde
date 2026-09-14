@@ -35,6 +35,16 @@ class PriceBreakdownSchema(BaseModel):
     tolls_http_status: Optional[int] = None
     tolls_latency_ms: Optional[int] = None
     tolls_error_code: Optional[str] = None
+    # PORTAGENS V1 F2 — observation only (never billing)
+    observed_tolls_amount: Optional[float] = None
+    observed_tolls_status: Optional[str] = None
+    observed_tolls_calculated_at: Optional[str] = None
+    observed_tolls_systems: Optional[list[str]] = None
+    observed_tolls_fares: Optional[list[dict]] = None
+    observed_tolls_http_status: Optional[int] = None
+    observed_tolls_latency_ms: Optional[int] = None
+    observed_tolls_error_code: Optional[str] = None
+    observed_tolls_delta: Optional[float] = None
 
 class TripCreateRequest(BaseModel):
     origin_lat: float = Field(..., ge=-90.0, le=90.0)

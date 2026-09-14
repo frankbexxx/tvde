@@ -1676,12 +1676,26 @@ def complete_trip(
     trip_tariff = resolve_trip_tariff(
         category=fare_cat, price_breakdown=prior_breakdown
     )
-    prior_tolls = Decimal("0.00")
-    if prior_breakdown and prior_breakdown.get("tolls_amount") is not None:
-        try:
-            prior_tolls = money(Decimal(str(prior_breakdown["tolls_amount"])))
-        except (ArithmeticError, TypeError, ValueError):
-            prior_tolls = Decimal("0.00")
+    from app.services.tolls.here import estimate_tolls
+    from app.services.tolls.snapshot import (
+        build_observed_toll_snapshot,
+        resolve_charged_tolls_from_breakdown,
+    )
+
+    # PORTAGENS V1: billing tolls frozen at create (charged); never use observed.
+    prior_tolls = resolve_charged_tolls_from_breakdown(prior_breakdown)
+
+    # F2 — HERE observation OD→OD for audit/metrics only (flag OFF → no HTTP).
+    toll_observed = estimate_tolls(
+        float(trip.origin_lat),
+        float(trip.origin_lng),
+        float(trip.destination_lat),
+        float(trip.destination_lng),
+    )
+    observed_meta = build_observed_toll_snapshot(
+        toll_observed, charged_tolls_amount=prior_tolls
+    )
+
     breakdown = calculate_fare_breakdown(
         float(distance_km),
         float(duration_min),
@@ -1700,6 +1714,18 @@ def complete_trip(
         final_price, commission_rate, tolls_amount=breakdown.tolls_amount
     )
     driver_payout = _money(money(Decimal(str(final_price))) - commission_amount)
+
+    log_event(
+        "trip_tolls_observed",
+        trip_id=str(trip.id),
+        charged_tolls_amount=float(prior_tolls),
+        observed_tolls_amount=observed_meta.get("observed_tolls_amount"),
+        delta=observed_meta.get("observed_tolls_delta"),
+        source="here",
+        status=observed_meta.get("observed_tolls_status"),
+        latency_ms=observed_meta.get("observed_tolls_latency_ms"),
+        error_code=observed_meta.get("observed_tolls_error_code"),
+    )
 
     log_event(
         "payment_capture_started",
@@ -1899,7 +1925,7 @@ def complete_trip(
     amount_store = float(money(Decimal(str(final_price))))
     old_status = trip.status
     trip.final_price = amount_store
-    _apply_price_snapshot(trip, breakdown)
+    _apply_price_snapshot(trip, breakdown, toll_meta=observed_meta)
     trip.status = TripStatus.completed
     trip.completed_at = datetime.now(timezone.utc)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)

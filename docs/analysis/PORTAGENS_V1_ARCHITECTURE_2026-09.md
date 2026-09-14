@@ -1,9 +1,9 @@
 # PORTAGENS V1 — Arquitectura (2026-09)
 
-**Estado:** **APROVADA** (decisões humanas 2026-09-14) · **F0 IMPLEMENTED** · **F1 IMPLEMENTED**  
+**Estado:** **APROVADA** (decisões humanas 2026-09-14) · **F0 IMPLEMENTED** · **F1 IMPLEMENTED** · **F2 IMPLEMENTED**  
 **Veredicto HERE:** APROVADO COM RESERVAS PARA V1 — [`HERE_TOLLS_SPIKE_2026-09.md`](HERE_TOLLS_SPIKE_2026-09.md)  
-**Tip `main` de referência:** `70a6293`  
-**Implementação:** **ainda não** — este doc é só arquitectura.
+**Tip `main` de referência:** pós-F1 `c2d1358` · F2 nesta branch  
+**Implementação:** F0–F2 no código (flag OFF); staging/prod ON pendente OK explícito.
 
 ### Decisões humanas (binding)
 
@@ -27,7 +27,7 @@
 
 - `tolls_amount` já entra no breakdown e em `final_price`.  
 - Comissão VAMULÁ já exclui tolls (`commissionable = total − tolls`).  
-- Runtime **ainda não** chama HERE.  
+- Runtime HERE: create (estimate/charge) + complete (observed only).  
 - Create = único “estimate” (não há API estimate separada).  
 - Complete usa `distance_km`/`duration_min` do create; PI placeholder €0,50 → update amount no complete.  
 - **Sem** polyline / GPS trace / route replay.  
@@ -310,7 +310,7 @@ Não bloqueia implementação técnica.
 | HERE aprovado com reservas | **DONE** |
 | **F0** Settings + flag + HERE client + unit tests | **IMPLEMENTED** |
 | **F1** Wire create (estimated=charged, UX) | **IMPLEMENTED** |
-| **F2** Wire complete (charged imutável + observed) | Por iniciar |
+| **F2** Wire complete (charged imutável + observed) | **IMPLEMENTED** |
 | Staging / Prod flag ON | Pendente OK explícito |
 
 ### F0 — notas de implementação
@@ -325,12 +325,20 @@ Não bloqueia implementação técnica.
 - Snapshot sanitizado via `services/tolls/snapshot.py` (sem API key / fare ids / raw payload)
 - Create fail → `tolls_status=zero_fallback`, viagem segue
 - Passenger: linha “Portagens estimadas” se > 0; hint se unavailable
-- Complete: **sem** HERE; preserva toll meta no `_apply_price_snapshot` (prior keys)
+- Complete (F1): preservava toll meta no `_apply_price_snapshot` (prior keys)
+- Flag continua **OFF** por default
+
+### F2 — notas de implementação
+
+- `complete_trip` chama HERE OD→OD → `observed_*` + delta; **charged/tolls_amount/final_price/PI inalterados**
+- Evento `trip_tolls_observed` (sem API key)
+- Partner/Admin: charged + observed + delta (mínimo)
+- Passenger: **sem** UI observed
 - Flag continua **OFF** por default
 
 ## 19. Próximo passo
 
-**F2** — complete: charged imutável + `observed_tolls_amount` só audit.  
+Staging ON + smokes (OK explícito) · F3 opcional dashboards.  
 **Sem** alterar Hostinger / PROD deploy app / tarifário categorias.
 
 ---
