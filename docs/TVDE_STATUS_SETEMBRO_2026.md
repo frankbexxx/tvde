@@ -1,9 +1,9 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-**Data:** 2026-09-09 (decisões operacionais Manel) · 2026-09-05 (fecho M2-L0 oficial) · G3/M1 2026-09-03  
-**Tip `main`:** alinhado a `origin/main` após merges docs/KYC  
+**Data:** 2026-09-14 (fecho consolidado pricing + landing + HERE spike) · 2026-09-09 (decisões operacionais Manel) · 2026-09-05 (fecho M2-L0 oficial) · G3/M1 2026-09-03  
+**Tip `main`:** `0df77e6` (merge [#584](https://github.com/frankbexxx/tvde/pull/584) HERE spike; pós-[#586](https://github.com/frankbexxx/tvde/pull/586) landing docs)  
 **Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto**  
-**Modo:** pós-M1 · caminho crítico = **Marco 2 (`READY FOR REAL PILOT`)**  
+**Modo:** pós-M1 · caminho crítico = **Marco 2 (`READY FOR REAL PILOT`)** · **M2/M3 não concluídos**  
 **Fonte de verdade:** código + roadmap + matriz + [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) + [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
 **Docs antigos (Maio e anteriores):** só pistas — confrontados com código; itens já implementados marcados **STALE / JÁ RESOLVIDO** e **excluídos** da lista de trabalho
 
@@ -11,6 +11,8 @@ Relacionado (contexto Setembro, não substitui este relatório):
 
 - [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) — canónico de execução + marcos
 - [`docs/business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) — decisões Manel 09/09/2026
+- [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) — landing PROD OK
+- [`docs/analysis/HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) — HERE · **APROVADO COM RESERVAS PARA V1**
 - [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) — A3-D03-REV1 / A3-D04-REV1
 - [`docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
 - [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
@@ -28,16 +30,17 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Driver** | **OK** (M1) · **GAP M2** | SOS foundation; driving-hours **foundation rolling 24h** (#548) · **enforcement OFF** |
 | **Partner/Frota** | **OK** (M1) · **GAP M2** | Vehicle doc gates **ON** (G-KYC-P0-04); settlement política **semanal / segunda / manual**; IMT técnico / PF3D-4 UX / docs pessoais ainda abertos |
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
-| **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT |
-| **Negócio / marca** | **PARCIAL** | Comissão **15%**; tarifário A2.5 **IMPLEMENTED**; landing **https://vamula.pt** = **DEPLOYED / PROD OK** (Hostinger); emails `@vamula.pt` / LRE ainda pendentes |
+| **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT; pricing A2.5 + cancel €3 no código |
+| **Negócio / marca** | **PARCIAL** | Comissão **15%**; tarifário A2.5 **DONE**; landing **https://vamula.pt** = **DEPLOYED / PROD OK** (Hostinger); emails `@vamula.pt` / LRE ainda pendentes; **A1.4** aberto |
+| **Portagens / HERE** | **VALIDAÇÃO DONE** | **APROVADO COM RESERVAS PARA V1** · live OK · **sem** runtime · próximo = portagens automáticas · fiscal pendente |
 | **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (ops LRE pendente; **não bloqueador imediato** APP) · L-26 fechado; L1/L2 externos |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
-| **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05) |
+| **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05); **MB WAY = fase 2** |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
 | **Localização/mapas** | **OK** | Tracking + SOS partilha `DriverLocation` (#549) |
-| **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI |
-| **Testes/CI** | **OK** | #548 / #549 verdes + smoke SOS mobile |
-| **Docs/operação** | **PARCIAL** | Acta Manel 09/09 + deploy landing 13/09; emails/LRE pendentes; tarifário código DONE · A1.4 aberto |
+| **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI · landing Hostinger **OK** |
+| **Testes/CI** | **OK** | #548 / #549 / #584 / #585 / #586 verdes recentes |
+| **Docs/operação** | **PARCIAL** | Acta Manel 09/09 + deploy landing 13/09 + fecho 14/09; emails/LRE pendentes; A1.4 aberto |
 
 ---
 
@@ -72,8 +75,8 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | **S-PAY-02** | Backend/API | Stripe **Connect** + split comissão/motorista (ou partner) + KYC contas | P0 — Bloqueador | S-PAY-01 · modelo BUSINESS/SEP-PAY |
 | **S-PAY-03** | Backend/API | Payouts (cadência + beneficiário motorista vs partner) | P1 — Necessário para fechar produto | S-PAY-02 |
 | **S-PAY-04** | Backend/API | `ENABLE_CONFIRM_ON_ACCEPT` / 3DS no accept (hoje default OFF) | P1 — Necessário para fechar produto | S-PAY-01 |
-| **S-PAY-05** | Backend/API | MB WAY / SIBS / Multibanco (PT) — inexistente no código | P1 — Necessário para fechar produto | Decisão Manel · PSP |
-| **S-PAY-06** | Backend/API | Cancel fee V1 **€3 fixos** (registada; cobrança real pós-B1); `authorization_expires_at` não preenchido | P2 — Cobrança real / expires | S-PAY-01 |
+| **S-PAY-05** | Backend/API | MB WAY / SIBS / Multibanco (PT) — **fase 2** (decisão 2026-09); fora crítico M2 | P3 — Pós-MVP | Reopen explícito |
+| **S-PAY-06** | Backend/API | Cancel fee V1 **€3 fixos** **DONE** no código; cobrança real pós-B1; `authorization_expires_at` não preenchido | P2 — Cobrança real / expires | S-PAY-01 |
 | **S-PAY-07** | Passenger | Auth placeholder €0,50 até complete — alinhar com preço real | P2 — Melhoria importante | S-PAY-01 |
 
 ### Autenticação / notificações
@@ -128,9 +131,9 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
-| **S-BIZ-01** | Documentação/Operação | Validar hipóteses custos/comissões/simulador (**BUSINESS-MANEL-001**) | P0 — Bloqueador | Contabilista/financeiro |
-| **S-BIZ-02** | Documentação/Operação | Comissão piloto **15%** **DONE**; tarifário V1 GO/Comfort/XL **IMPLEMENTED** (A2.5); falta acta **A1.4** | P1 — Acta formal | [`VAMULA_DECISOES…`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · A2.5 |
-| **S-BIZ-03** | Documentação/Operação | Domínio + landing **https://vamula.pt** = **DEPLOYED**; falta emails `@vamula.pt` + páginas legais | P2 — Melhoria importante | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
+| **S-BIZ-01** | Documentação/Operação | Modelo económico: **A1.2 READY FOR ECONOMIC MODELLING** · **A1.3 READY FOR PRICING INPUT** · **A1.4** formal ainda aberto | P1 — Acta / aceite formal | Francisco + Manel |
+| **S-BIZ-02** | Documentação/Operação | Comissão **15%** **DONE**; tarifário V1 GO/Comfort/XL **DONE** (A2.5); falta acta **A1.4** / A2.6 formal | P1 — Acta formal | [`VAMULA_DECISOES…`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · A2.5 |
+| **S-BIZ-03** | Documentação/Operação | Landing **https://vamula.pt** = **DEPLOYED / PROD OK**; falta emails `@vamula.pt` + páginas legais + LRE | P2 — Melhoria importante | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
 | **S-BIZ-04** | Documentação/Operação | Settlement Partner: política **semanal / segunda / manual** (conta pagamentos: Manel) | **DONE** *(política)* · impl. técnica N/A piloto | [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) |
 | **S-BIZ-05** | Documentação/Operação | Apoio inicial digital (email/formulário); horário 09–17 · **sem** telefone público | **DONE** *(política fase inicial)* | idem |
 | **S-BRD-01** | Cross-app | Decisão logo (shortlist local) + troca controlada em `public/brand` | P1 — Necessário para fechar produto | Francisco/Manel |
@@ -188,11 +191,11 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | Prioridade | Contagem |
 |------------|----------|
-| **P0 — Bloqueador** | **10** |
-| **P1 — Necessário para fechar produto** | **15** |
+| **P0 — Bloqueador** | **9** *(era 10; S-BIZ-01 → P1 após A1.2/A1.3)* |
+| **P1 — Necessário para fechar produto** | **15** *(−S-PAY-05→P3; +S-BIZ-01 de P0)* |
 | **P2 — Melhoria importante** | **14** |
-| **P3 — Pós-MVP** | **4** |
-| **Total pendências reais** | **43** |
+| **P3 — Pós-MVP** | **5** *(era 4; +S-PAY-05 fase 2)* |
+| **Total pendências reais** | **43** *(inalterado; só reclassificação de prioridade)* |
 
 ### Por área (subtotais)
 
@@ -209,7 +212,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | Documentação/Operação | 3 |
 | Cross-app | 6 |
 
-*(Alguns IDs partilham área “Backend” e impacto multi-app — contagem por classificação principal acima.)*
+*(Alguns IDs partilham área “Backend” e impacto multi-app — contagem por classificação principal acima. Totais de prioridade = pendências ainda abertas na §3; IDs **DONE** não entram.)*
 
 ---
 
@@ -305,9 +308,10 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 1. **S-PAY-01 / S-PAY-02** — Sem Stripe live + Connect, não há operação comercial com dinheiro real nem split motorista.  
 2. **S-AUTH-01** — OTP sem SMS real impede onboarding sério fora de ambientes com OTP fixo.  
 3. **S-MOB-01 / S-NOTIF-01** — Sem packaging mobile + push, adopção motorista/passageiro fica presa ao browser.  
-4. **S-BIZ-01 / S-BIZ-02** — Comissão **15%** confirmada; A2.5 tarifário V1 **IMPLEMENTED**; falta **A1.4** acta; Connect e “preço líquido” dependem de ops.  
-5. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
-6. **S-BIZ-03** — Landing **https://vamula.pt** DEPLOYED; emails/LRE/páginas legais ainda pendentes.  
+4. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
+5. **S-BIZ-01 / S-BIZ-02** — A1.2/A1.3 + A2.5 **DONE** no código/política; falta **A1.4** acta formal Francisco+Manel.  
+
+**Próximo bloco técnico recomendado:** **portagens automáticas** (estimate HERE → snapshot → final → reconciliation; comissão 0% já alinhada). Fiscal/legal tolls em paralelo/depois.
 
 ---
 
@@ -326,8 +330,21 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 | **M2-L1 / L2** | `PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT` (L0 **não** equivale a integração técnica) |
 | **M2-L3** | `FOUNDATION IMPLEMENTADA / ENFORCEMENT PENDENTE` — [#548](https://github.com/frankbexxx/tvde/pull/548) → `c8d2c35` |
 | **M2-L4** | Foundation merged — [#549](https://github.com/frankbexxx/tvde/pull/549) → `717270a`; L-19…22 **PARCIAL**; smoke PAX/DRV + `tel:112` mobile **PASS** |
-| **Próximo** | Parecer L3 · L-25 ops (O-L25-01… após domínio — **não bloqueador imediato** APP) · AMT · L1/L2 quando houver canal técnico IMT · RetentionPolicy granular |
+| **Próximo (histórico)** | Parecer L3 · L-25 ops · AMT · L1/L2 · RetentionPolicy |
+
+### Fecho consolidado 2026-09-14
+
+| Bloco | Estado |
+|-------|--------|
+| **A2.5 tarifário V1** | **DONE** — GO/Comfort/XL + mínimos + Pet + comissão 15% + tolls 0% |
+| **Cancel V1** | **DONE** — €3 fixos (cobrança real pós-B1) |
+| **Landing V1** | **DEPLOYED / PROD OK** — https://vamula.pt · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
+| **HERE spike** | Live validation **DONE** · **APROVADO COM RESERVAS PARA V1** · [#584](https://github.com/frankbexxx/tvde/pull/584) |
+| **A1.4** | Ainda **não** fechado formalmente |
+| **MB WAY** | **Fase 2** |
+| **M2 / M3** | **Não** concluídos |
+| **Próximo** | **Portagens automáticas** (impl.) · fiscal/legal tolls pendente |
 
 ---
 
-**Frase:** **M1 técnico DONE**. M2: **L0 fechado** (IMT oficial); foundations **driving-hours** + **emergency**; L1/L2 integração IMT pendente; enforcement 10h/24h e PF3D gates **continuam OFF** até decisão explícita.
+**Frase:** **M1 técnico DONE**. Landing **PROD OK**. Pricing V1 **DONE** (falta A1.4 formal). HERE **aprovado com reservas**. **Próximo técnico:** portagens automáticas. M2: L0 fechado; foundations driving-hours + emergency; L1/L2 IMT + enforcement + Stripe/SMS/mobile **continuam**.

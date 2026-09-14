@@ -1,16 +1,121 @@
 # HERE Tolls Spike — Portugal (2026-09)
 
 **Tipo:** spike técnico isolado (sem runtime app)  
-**Estado:** script pronto · **LIVE RUN PENDING** (`HERE_API_KEY` não estava disponível no ambiente do agente)  
+**Estado final:** **HERE APROVADO COM RESERVAS PARA V1**  
+**Live runs:** 2026-09-14 (2.º run com rotas direccionais das pontes)  
 **API:** HERE Routing v8 `GET https://router.hereapi.com/v8/routes`  
-**Parâmetros planeados:** `transportMode=car` · `return=summary,tolls,polyline` · `currency=EUR` · `tolls[summaries]=total` · compare `avoid[features]=tollRoad`  
-**Script:** [`scripts/tolls/here_tolls_spike.py`](../../scripts/tolls/here_tolls_spike.py)
+**Parâmetros:** `transportMode=car` · `return=summary,tolls,polyline` · `currency=EUR` · `tolls[summaries]=total`  
+**Avoid (subset):** `avoid[features]=tollRoad`  
+**Script:** [`scripts/tolls/here_tolls_spike.py`](../../scripts/tolls/here_tolls_spike.py)  
+**Raw JSON:** `tmp/here-tolls/` (gitignored via `tmp/`)  
+**Merge prep:** [#584](https://github.com/frankbexxx/tvde/pull/584)
 
-Valores oficiais de tarifário PT no repo: **OFFICIAL VALUE NOT VERIFIED** (sem tabela oficial para confronto).
+Valores oficiais de tarifário PT no repo: **OFFICIAL VALUE NOT VERIFIED** (sem tabela oficial completa para confronto sistemático).
 
 ---
 
-## Como correr
+## Decisão
+
+| | |
+|--|--|
+| **Veredicto** | **HERE APROVADO COM RESERVAS PARA V1** |
+| **Integração runtime** | **Ainda não** — próximo bloco = implementação de portagens automáticas |
+| **Fiscal / facturação** | **Pendente** (fora deste spike) |
+| **HTTP** | Todos os pedidos do 2.º live run: **200** |
+
+### Reservas V1
+
+1. Cobertura **não** exaustiva para todas as concessões / corredores PT.  
+2. Dados continuam **best-effort** (sem garantia de paridade com tabela oficial).  
+3. Tratamento **fiscal / facturação** de portagens ainda pendente.  
+4. **Reconciliation** final (estimate → viagem → complete) ainda por desenhar em código.  
+5. **Custo / pricing** real de produção HERE (billing) ainda a confirmar.
+
+---
+
+## Resultados finais (default · EUR)
+
+| Rota | HERE toll € | Sistema(s) | Breakdown fares | Notas |
+|------|------------:|------------|:---------------:|-------|
+| Oeiras → Aeroporto Lisboa | **0,40** | BRISA | SIM | |
+| Lisboa → Cascais | **1,60** | BRISA | SIM | |
+| Lisboa → Setúbal | **2,45** | BRISA | SIM | |
+| Lisboa → Almada (Ponte 25 de Abril) | **0,00** | — | NÃO | sentido isento / sem toll no response |
+| Almada → Lisboa (Ponte 25 de Abril) | **2,25** | LUSOPONTE | SIM | cobrado só neste sentido |
+| Lisboa → Montijo (Ponte Vasco da Gama) | **0,00** | — | NÃO | sentido isento / sem toll no response |
+| Montijo → Lisboa (Ponte Vasco da Gama) | **3,40** | LUSOPONTE | SIM | cobrado só neste sentido |
+| Lisboa → Porto | **25,05** | BRISA | SIM | |
+| Lisboa → Faro | **24,05** | BRISA | SIM | |
+| Lisboa → Évora (A6) | **10,70** | BRISA | SIM | |
+
+### Pontes — tabela direccional
+
+| Ponte | Sentido | HERE € | Concessionária |
+|-------|---------|-------:|----------------|
+| 25 de Abril | Lisboa → Almada | 0,00 | — |
+| 25 de Abril | Almada → Lisboa | 2,25 | LUSOPONTE |
+| Vasco da Gama | Lisboa → Montijo | 0,00 | — |
+| Vasco da Gama | Montijo → Lisboa | 3,40 | LUSOPONTE |
+
+**Implicação produto:** portagens em pontes **não** são simétricas; estimate/final devem usar o **mesmo sentido OD** (e preferência de via) da viagem real.
+
+### BRISA vs LUSOPONTE
+
+| Concessionária | Rotas observadas no spike |
+|----------------|---------------------------|
+| **BRISA** | Oeiras↔Aeroporto, Cascais, Setúbal, Porto, Faro, Évora |
+| **LUSOPONTE** | Almada→Lisboa (25 de Abril), Montijo→Lisboa (Vasco da Gama) |
+
+HERE devolve `tollSystem` / nomes de fare no breakdown — útil para audit; **não** substitui classificação fiscal.
+
+---
+
+## Avoid-tolls (EUR)
+
+Pedidos com `avoid[features]=tollRoad` no subset:
+
+| Rota | Dist default km | Dist avoid km | Dur default min | Dur avoid min | Toll default € | Toll avoid € |
+|------|----------------:|--------------:|----------------:|--------------:|---------------:|-------------:|
+| Oeiras → Aeroporto Lisboa | 24,6 | 25,2 | 44 | 46 | 0,40 | **0,00** |
+| Lisboa → Cascais | 42,0 | 44,7 | 48 | 55 | 1,60 | **0,00** |
+| Lisboa → Setúbal | 54,7 | 56,5 | 51 | 64 | 2,45 | **0,00** |
+
+**Conclusão:** avoid funciona nestes corredores (toll → €0; caminho mais longo). Útil para UX “evitar portagens”, não para pricing do caminho cobrado.
+
+---
+
+## Observações técnicas (live)
+
+- **Moeda:** respostas em **EUR** (`currency=EUR` + fares/summary).  
+- **Fare breakdown:** presente quando `toll > 0` (fares com nome, valor, payment methods, `tollSystem`).  
+- **`route.id` / fare `id`:** **não estáveis** entre requests — válidos só na resposta em que foram emitidos; **não** persistir como chave de reconciliação cross-request.  
+- **Raw:** JSON completo por rota/modo em `tmp/here-tolls/` (local; não commit).  
+- **HTTP:** 200 em todos os pedidos do run de fecho; 0 erros.
+
+---
+
+## Arquitectura recomendada (não implementada)
+
+```
+estimate (HERE Routing + return=tolls)
+    → guardar toll snapshot (€, currency, systems, breakdown, OD, preferências)
+    → viagem (tracking / OD real)
+    → complete: recalcular final (novo pedido HERE — mesmo OD/sentido ou métricas acordadas)
+    → reconciliation (diff estimate vs final; política de aceitação)
+    → tolls_amount separado do fare da viagem
+    → comissão VAMULÁ = 0% sobre portagens
+```
+
+Regras:
+
+1. **Não** reutilizar `route.id` / fare ids entre estimate e complete.  
+2. Snapshot no estimate é a base de transparência ao Pax; final recalcula.  
+3. `tolls_amount` fica fora da base de comissão (já alinhado à fórmula V1).  
+4. Fiscal / LRE / fatura = bloco **separado** (ainda pendente).
+
+---
+
+## Como reproduzir
 
 ```powershell
 $env:HERE_API_KEY = "..."   # nunca commit
@@ -18,86 +123,12 @@ cd C:\dev\APP
 python scripts/tolls/here_tolls_spike.py --write-report
 ```
 
-Raw JSON → `tmp/here-tolls/` (já coberto por `.gitignore` `tmp/`).
-
-Env template: `HERE_API_KEY=` em [`docs/env/templates/backend.env.example`](../env/templates/backend.env.example) (só placeholder).
+Env placeholder: `HERE_API_KEY=` em [`docs/env/templates/backend.env.example`](../env/templates/backend.env.example).
 
 ---
 
-## Tabela benchmark (default)
+## Próximo bloco
 
-| Rota | HERE toll € | Toll detectado? | Breakdown? | Observações |
-|------|------------:|:---------------:|:----------:|-------------|
-| Oeiras → Aeroporto Lisboa | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-| Lisboa → Cascais | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-| Lisboa → Setúbal | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-| Lisboa → Almada (Ponte 25 de Abril) | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-| Lisboa → Montijo (Ponte Vasco da Gama) | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-| Lisboa → Porto | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-| Lisboa → Faro | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-| Lisboa → Évora (A6) | — | PENDING | PENDING | LIVE RUN PENDING · OFFICIAL VALUE NOT VERIFIED |
-
----
-
-## Comparação avoid tolls
-
-Prevista para: Oeiras→Aeroporto · Lisboa→Cascais · Lisboa→Setúbal.
-
-| Rota | Dist default | Dist avoid | Dur default | Dur avoid | Toll default | Toll avoid |
-|------|-------------:|-----------:|------------:|----------:|-------------:|-----------:|
-| *(preencher com `--write-report`)* | — | — | — | — | — | — |
-
----
-
-## Precisão / gaps (checklist pós-run)
-
-- [ ] Tolls ausentes em pontes (25 de Abril / Vasco da Gama)
-- [ ] Currency ≠ EUR
-- [ ] Breakdown incompleto (só total sem fares)
-- [ ] SCUT / antigas SCUT / A22 (Faro)
-- [ ] HTTP 401/403/429
-- [ ] Discrepâncias vs conhecimento local (sem inventar oficiais)
-
----
-
-## Reconciliation futura
-
-**PARCIAL** (avaliação de desenho, sem live data):
-
-| Dado HERE | Útil para estimate→final? |
-|-----------|---------------------------|
-| `routes[].id` | Snapshot da resposta (não estável como “handle” eterno) |
-| `fares[].id` | **Só válido dentro da mesma response** (docs multi-leg) — **não** reutilizar no complete |
-| `summary.tolls.total` + `currency` | Sim para `tolls_amount` |
-| `tollSystem` / fares / paymentMethods | Sim para audit/breakdown |
-| `polyline` | Sim para diagnóstico; não prova percurso real do Driver |
-
-**Falta para V1:** preferência avoid · persistir breakdown no trip · novo request no complete · política de teto estimate/final · (opcional) trace GPS.
-
-Arquitectura possível: estimate = HERE default → guardar € + systems JSON → complete = HERE de novo (mesma OD ou métricas) → `final_tolls` · **não** depender de fare id cross-request.
-
----
-
-## Rate limits / pricing (docs HERE)
-
-- Pedidos com `return=tolls` contam como **transacção adicional** (documentação HERE).
-- Observação empírica de 429/custos: **só após live run**.
-
----
-
-## Recomendação
-
-**PENDING LIVE VALIDATION** — sem `HERE_API_KEY` no ambiente do spike, **não** classificar ainda como:
-
-- HERE APROVADO PARA V1
-- HERE APROVADO COM RESERVAS
-- HERE REJEITADO
-
-**Próximo passo humano:** exportar chave de teste HERE → `python scripts/tolls/here_tolls_spike.py --write-report` → rever tabela → decidir.
-
----
-
-## Runtime / PROD
-
-- Código app (trips/pricing/payment/FE): **não alterado**
-- Produção: **não alterada**
+1. **Implementação** portagens automáticas (estimate → snapshot → final → reconciliation) — **sem** fiscal neste passo.  
+2. Confirmar **billing / custo** HERE em produção.  
+3. Tratamento **legal/fiscal** de tolls (paralelo / após desenho técnico).
