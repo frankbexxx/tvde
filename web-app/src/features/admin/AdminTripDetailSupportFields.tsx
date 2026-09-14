@@ -81,7 +81,25 @@ export function AdminTripDetailSupportFields(props: AdminTripDetailSupportFields
                 : `${Number(breakdown.pet_surcharge).toFixed(2)} €`
             }
           />
-          <DetailRow label="Portagens:" value={`${Number(breakdown.tolls_amount ?? 0).toFixed(2)} €`} />
+          <DetailRow label="Portagens:" value={`${Number(breakdown.tolls_amount ?? breakdown.charged_tolls_amount ?? 0).toFixed(2)} €`} />
+          {breakdown.observed_tolls_amount != null || breakdown.observed_tolls_status ? (
+            <>
+              <DetailRow
+                label="Portagens observadas:"
+                value={
+                  breakdown.observed_tolls_amount != null
+                    ? `${Number(breakdown.observed_tolls_amount).toFixed(2)} €`
+                    : String(breakdown.observed_tolls_status ?? '—')
+                }
+              />
+              {breakdown.observed_tolls_delta != null ? (
+                <DetailRow
+                  label="Delta portagens:"
+                  value={`${Number(breakdown.observed_tolls_delta) >= 0 ? '+' : ''}${Number(breakdown.observed_tolls_delta).toFixed(2)} €`}
+                />
+              ) : null}
+            </>
+          ) : null}
           <DetailRow label="Total:" value={`${Number(breakdown.total ?? d.final_price ?? d.estimated_price).toFixed(2)} €`} />
           {typeof breakdown.pet_surcharge_rule === 'string' ? (
             <DetailRow label="Regra Pet:" value={breakdown.pet_surcharge_rule} />

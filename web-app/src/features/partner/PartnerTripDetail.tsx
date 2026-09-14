@@ -261,9 +261,28 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
             <p>
               <span className="text-muted-foreground">{t('tripDetail.tolls')}</span>{' '}
               <span className="text-foreground">
-                {Number(trip.price_breakdown.tolls_amount ?? 0).toFixed(2)} €
+                {Number(
+                  trip.price_breakdown.tolls_amount ??
+                    trip.price_breakdown.charged_tolls_amount ??
+                    0,
+                ).toFixed(2)}{' '}
+                €
               </span>
             </p>
+            {trip.price_breakdown.observed_tolls_amount != null ||
+            trip.price_breakdown.observed_tolls_status ? (
+              <p data-testid="partner-trip-observed-tolls">
+                <span className="text-muted-foreground">{t('tripDetail.tollsObserved')}</span>{' '}
+                <span className="text-foreground">
+                  {trip.price_breakdown.observed_tolls_amount != null
+                    ? `${Number(trip.price_breakdown.observed_tolls_amount).toFixed(2)} €`
+                    : String(trip.price_breakdown.observed_tolls_status)}
+                  {trip.price_breakdown.observed_tolls_delta != null
+                    ? ` (Δ ${Number(trip.price_breakdown.observed_tolls_delta) >= 0 ? '+' : ''}${Number(trip.price_breakdown.observed_tolls_delta).toFixed(2)} €)`
+                    : ''}
+                </span>
+              </p>
+            ) : null}
             <p>
               <span className="text-muted-foreground">{t('tripDetail.total')}</span>{' '}
               <span className="text-foreground font-medium">

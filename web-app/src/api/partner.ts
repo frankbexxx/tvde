@@ -139,6 +139,13 @@ export interface PartnerTripRow {
     minimum_fare_adjustment?: number
     pet_surcharge?: number
     tolls_amount?: number
+    charged_tolls_amount?: number
+    estimated_tolls_amount?: number
+    observed_tolls_amount?: number | null
+    observed_tolls_status?: string | null
+    observed_tolls_delta?: number | null
+    tolls_source?: string
+    tolls_status?: string
     fare_subtotal?: number
     total?: number
     pet_surcharge_rule?: string

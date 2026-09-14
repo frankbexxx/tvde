@@ -49,6 +49,10 @@ export interface PriceBreakdown {
   tolls_source?: string | null
   tolls_status?: string | null
   tolls_error_code?: string | null
+  /** PORTAGENS V1 F2 — observation only; never billed */
+  observed_tolls_amount?: number | null
+  observed_tolls_status?: string | null
+  observed_tolls_delta?: number | null
 }
 
 export interface TripCreateResponse {
