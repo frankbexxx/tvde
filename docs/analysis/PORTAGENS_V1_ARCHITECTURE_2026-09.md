@@ -298,8 +298,8 @@ Não bloqueia implementação técnica.
 | **F1** | Wire **create**: estimated=charged, snapshot, Pax line “Portagens estimadas”, zero_fallback |
 | **F2** | Wire **complete**: charged imutável; observed opcional + delta audit; Partner/Admin mínimo |
 | **F3** | Partner/Admin visibility completa (detail + CSV audit) — sem dashboards complexos |
-| **F4** | Staging ON + smokes |
-| **F5** | Prod ON (OK explícito) |
+| **F4** | Staging ON + smokes — **STAGING VALIDATED** |
+| **F5** | Prod ON (OK explícito) — **READY FOR PROD REVIEW** |
 
 **Nota:** F1+F2 reflectem cobrança = estimate; observed **não** é billing.
 
@@ -316,7 +316,8 @@ Não bloqueia implementação técnica.
 | **F1** Wire create (estimated=charged, UX) | **IMPLEMENTED** |
 | **F2** Wire complete (charged imutável + observed) | **IMPLEMENTED** |
 | **F3** Partner/Admin visibility + CSV audit | **IMPLEMENTED** |
-| Staging / Prod flag ON | Pendente OK explícito |
+| **F4** Staging ON + HERE smokes | **STAGING VALIDATED** |
+| **F5** Prod flag ON | **READY FOR PROD REVIEW** (OK explícito) |
 
 ### F0 — notas de implementação
 
@@ -351,10 +352,20 @@ Não bloqueia implementação técnica.
 - Passenger / Driver: **sem** alterações de UX
 - Flag continua **OFF** por default
 
+### F4 — STAGING VALIDATED (2026-09)
+
+- Staging: `ENABLE_HERE_TOLLS=true` + `HERE_API_KEY` · contas seed (`scripts/ops/seed_f4_staging_min_accounts.py`) · smokes (`run_f4_staging_toll_smokes.py`)
+- **A** no-toll (Baixa): estimated/charged **€0** · `tolls_status=no_tolls`
+- **B** Oeiras→Airport: **€0.40** BRISA · charged == estimated · observed audit only
+- **C** Almada→Lisboa: **€2.25** LUSOPONTE · Lisboa→Almada: **€0** (assimétrico HERE)
+- Commission **0%** sobre tolls (ex.: Brisa final 18.02 · tolls 0.40 · commissionable 17.62)
+- Passenger: sem observed no create · Partner/Admin GET audit OK · Stripe mock
+- **PROD** intocado · PROD `ENABLE_HERE_TOLLS=false`
+
 ## 19. Próximo passo
 
-Staging ON + smokes (OK explícito) · F4.  
-**Sem** alterar Hostinger / PROD deploy app / tarifário categorias.
+**F5** — Prod ON só com OK explícito (review prod / flag / runbook).  
+**Sem** alterar Hostinger / PROD deploy app / tarifário categorias até esse OK.
 
 ---
 
