@@ -99,6 +99,11 @@ class Settings(BaseSettings):
     # Example: https://router.project-osrm.org
     OSRM_BASE_URL: str | None = None
 
+    # PORTAGENS V1 / HERE Routing v8 tolls (F0 client). Default OFF — no create/complete wire yet.
+    # See docs/analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md
+    ENABLE_HERE_TOLLS: bool = False
+    HERE_API_KEY: str | None = None
+
     # DEPRECATED: percent/min formula removed (A1-D08). Fee is CANCELLATION_FEE_EUR in
     # app.core.pricing (€3.00 fixed). Kept so old .env does not crash Settings.
     CANCELLATION_FEE_PERCENT: float = 0.20
