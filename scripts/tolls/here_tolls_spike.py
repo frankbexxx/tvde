@@ -81,11 +81,25 @@ ROUTES: list[BenchmarkRoute] = [
         (38.6780, -9.1600),
     ),
     BenchmarkRoute(
+        "Almada → Lisboa (Ponte 25 de Abril)",
+        "Almada",
+        "Lisboa (Alcântara)",
+        (38.6780, -9.1600),
+        (38.7030, -9.1750),
+    ),
+    BenchmarkRoute(
         "Lisboa → Montijo (Ponte Vasco da Gama)",
         "Lisboa (Parque das Nações)",
         "Montijo",
         (38.7680, -9.0940),
         (38.7069, -8.9739),
+    ),
+    BenchmarkRoute(
+        "Montijo → Lisboa (Ponte Vasco da Gama)",
+        "Montijo",
+        "Lisboa (Parque das Nações)",
+        (38.7069, -8.9739),
+        (38.7680, -9.0940),
     ),
     BenchmarkRoute(
         "Lisboa → Porto",

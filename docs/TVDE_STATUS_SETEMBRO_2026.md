@@ -12,7 +12,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 - [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) — canónico de execução + marcos
 - [`docs/business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) — decisões Manel 09/09/2026
 - [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) — landing PROD OK
-- [`docs/analysis/HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) — HERE · **LIVE RUN PENDING**
+- [`docs/analysis/HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) — HERE · **APROVADO COM RESERVAS PARA V1**
 - [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) — A3-D03-REV1 / A3-D04-REV1
 - [`docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
 - [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
@@ -32,7 +32,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT; pricing A2.5 + cancel €3 no código |
 | **Negócio / marca** | **PARCIAL** | Comissão **15%**; tarifário A2.5 **DONE**; landing **https://vamula.pt** = **DEPLOYED / PROD OK** (Hostinger); emails `@vamula.pt` / LRE ainda pendentes; **A1.4** aberto |
-| **Portagens / HERE** | **EM CURSO** | Spike [#584](https://github.com/frankbexxx/tvde/pull/584) merged · script pronto · conta HERE criada · **LIVE RUN PENDING** (API key/billing) · **sem** runtime |
+| **Portagens / HERE** | **VALIDAÇÃO DONE** | **APROVADO COM RESERVAS PARA V1** · live OK · **sem** runtime · próximo = portagens automáticas · fiscal pendente |
 | **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (ops LRE pendente; **não bloqueador imediato** APP) · L-26 fechado; L1/L2 externos |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05); **MB WAY = fase 2** |
@@ -311,7 +311,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 4. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
 5. **S-BIZ-01 / S-BIZ-02** — A1.2/A1.3 + A2.5 **DONE** no código/política; falta **A1.4** acta formal Francisco+Manel.  
 
-**Próximo bloco técnico recomendado:** **HERE live validation** (API key/billing → `scripts/tolls/here_tolls_spike.py` → decisão portagens).
+**Próximo bloco técnico recomendado:** **portagens automáticas** (estimate HERE → snapshot → final → reconciliation; comissão 0% já alinhada). Fiscal/legal tolls em paralelo/depois.
 
 ---
 
@@ -339,12 +339,12 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 | **A2.5 tarifário V1** | **DONE** — GO/Comfort/XL + mínimos + Pet + comissão 15% + tolls 0% |
 | **Cancel V1** | **DONE** — €3 fixos (cobrança real pós-B1) |
 | **Landing V1** | **DEPLOYED / PROD OK** — https://vamula.pt · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
-| **HERE spike** | Prep **DONE** · [#584](https://github.com/frankbexxx/tvde/pull/584) · **LIVE RUN PENDING** |
+| **HERE spike** | Live validation **DONE** · **APROVADO COM RESERVAS PARA V1** · [#584](https://github.com/frankbexxx/tvde/pull/584) |
 | **A1.4** | Ainda **não** fechado formalmente |
 | **MB WAY** | **Fase 2** |
 | **M2 / M3** | **Não** concluídos |
-| **Próximo** | **HERE live validation** → portagens automáticas / tratamento legal-fiscal tolls |
+| **Próximo** | **Portagens automáticas** (impl.) · fiscal/legal tolls pendente |
 
 ---
 
-**Frase:** **M1 técnico DONE**. Landing **PROD OK**. Pricing V1 **DONE** (falta A1.4 formal). **Próximo técnico:** HERE live. M2: L0 fechado; foundations driving-hours + emergency; L1/L2 IMT + enforcement + Stripe/SMS/mobile **continuam**.
+**Frase:** **M1 técnico DONE**. Landing **PROD OK**. Pricing V1 **DONE** (falta A1.4 formal). HERE **aprovado com reservas**. **Próximo técnico:** portagens automáticas. M2: L0 fechado; foundations driving-hours + emergency; L1/L2 IMT + enforcement + Stripe/SMS/mobile **continuam**.

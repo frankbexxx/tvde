@@ -12,7 +12,7 @@
 | **M1 — APP TECNICAMENTE CONCLUÍDA** | **DONE** 2026-09-03 · G3.1 PASS · tip `e556a3b` |
 | Tarifário V1 GO/Comfort/XL + mínimos + Pet + cancel €3 (A2.5) | **DONE** 2026-09 · tip pós-#582/#583 |
 | Landing institucional V1 · `vamula.pt` | **DONE** 2026-09-13 · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
-| Spike HERE tolls (script + docs) | **DONE** (prep) · merge [#584](https://github.com/frankbexxx/tvde/pull/584) · **LIVE RUN PENDING** |
+| Spike HERE tolls (script + docs) | **DONE** · live validation **DONE** · [#584](https://github.com/frankbexxx/tvde/pull/584) · **APROVADO COM RESERVAS PARA V1** |
 
 **Como usar:** executar um passo → marcar `DONE` → seguinte.  
 **Tipos:** `CONFIRMAR` · `DECISÃO` · `DOCS` · `CONFIG` · `CÓDIGO` · `TESTE` · `EXTERNO`.
@@ -139,7 +139,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
 | **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
 | **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) **HERE live validation** / portagens · (2) parecer/decisão legal L3 · (3) LRE ops + emails `@vamula.pt` (domínio **ACTIVO**; landing **DEPLOYED**) · (4) AMT/reporting · (5) L1/L2 quando houver canal técnico IMT · (6) RetentionPolicy granular · (7) **A1.4** acta formal |
+| **Próximas frentes** | (1) **portagens automáticas** (impl. estimate→snapshot→final; HERE aprovado c/ reservas) · (2) fiscal/legal tolls · (3) parecer/decisão legal L3 · (4) LRE ops + emails `@vamula.pt` · (5) AMT/reporting · (6) L1/L2 IMT · (7) RetentionPolicy · (8) **A1.4** acta formal |
 
 *Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (GPS/docs/IMT).
 
@@ -208,7 +208,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **V1 preços:** GO €1,50 + €0,60/km + €0,12/min · mín. €4,50 · Comfort €1,90 + €0,85/km + €0,15/min · mín. €5,50 · XL €3,00 + €1,05/km + €0,15/min · mín. €6,50 · Pet +€1,50 · cão assistência €0  
 - **Acta:** [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
 - **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final**.  
-- **Portagens:** estrutura `tolls_amount` + comissão 0% **pronta**; spike HERE [#584](https://github.com/frankbexxx/tvde/pull/584) merged · **LIVE RUN PENDING** (API key/billing) · **sem** integração runtime — ver [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md).
+- **Portagens:** estrutura `tolls_amount` + comissão 0% **pronta**; spike HERE live = **DONE** · **HERE APROVADO COM RESERVAS PARA V1** · **sem** integração runtime ainda — próximo = portagens automáticas · fiscal pendente — ver [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
@@ -777,7 +777,7 @@ Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual). iOS pós-
 | Estado Setembro | [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) |
 | Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) |
 | Pricing híbrido | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
-| HERE tolls spike | [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) · script `scripts/tolls/here_tolls_spike.py` · **LIVE RUN PENDING** |
+| HERE tolls spike | [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) · **APROVADO COM RESERVAS PARA V1** · script `scripts/tolls/here_tolls_spike.py` |
 | Landing deploy | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
 | B2 produto | [`B2_PRODUCT_DECISIONS_2026-08-04.md`](architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) |
 | PF3D | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) |
