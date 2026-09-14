@@ -373,11 +373,43 @@ Não bloqueia implementação técnica.
 - Partner/Admin login smoke: **não** disponível com contas teste PROD (`TEST_ACCOUNT_PASSWORD`) — audit Partner/Admin **não** revalidado nesta corrida (código F3 já em `main`)
 - Flag PROD final: **ON** (`ENABLE_HERE_TOLLS=true`)
 
+### Fecho V1
+
+**HERE Tolls V1 PROD VALIDATED — residual route variance accepted for V1.**
+
+| Fase | Estado |
+|------|--------|
+| F0–F3 | DONE |
+| F4 | STAGING VALIDATED |
+| F5 | PROD VALIDATED · PR [#593](https://github.com/frankbexxx/tvde/pull/593) |
+| PROD flag | `ENABLE_HERE_TOLLS=true` (`tvde-api`) |
+| Billing | charged = estimated · observed audit only · commission exclui tolls |
+| Rollback | `ENABLE_HERE_TOLLS=false` + redeploy |
+
+### P2 — `HERE routing determinism / toll variance` *(não bloqueia)*
+
+**Sintoma:** mesmo OD e mesmo request HERE no código:
+
+| Ambiente | Oeiras→Airport | Systems |
+|----------|----------------|---------|
+| Staging F4 | €0.40 | BRISA |
+| PROD F5 | €2.55 | BRISA + AUTOESTRADAS DO ATLÂNTICO |
+
+Coords iguais · params iguais · fare base TVDE idêntica (€17.62) · billing correcto (não é bug de cobrança).
+
+**Follow-up (futuro, sem mudar V1 agora):**
+
+- Avaliar `routingMode` / `departureTime` / route selection policy
+- Documentação HERE aplicável
+- Impacto na consistência dos estimates entre ambientes/horas
+
+**Fora de scope deste P2:** pricing · billing · política charged=estimate · PROD flag · rewrite da integração actual.
+
 ## 19. Próximo passo
 
-PORTAGENS V1 **PROD ON**. Manter monitorização (deltas, `zero_fallback`, 429).  
-Rollback operacional: `ENABLE_HERE_TOLLS=false` + redeploy `tvde-api`.  
-Opcional: seed/login Partner/Admin PROD para smoke de visibilidade (sem alterar billing).
+PORTAGENS V1 **fechada em PROD**. Monitorização contínua (deltas, `zero_fallback`, 429).  
+Rollback: `ENABLE_HERE_TOLLS=false` + redeploy `tvde-api`.  
+P2 variance de rota: backlog técnico (acima). Fiscal/legal tolls continua separado.
 
 ---
 

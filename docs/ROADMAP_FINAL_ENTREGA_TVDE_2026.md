@@ -13,6 +13,7 @@
 | Tarifário V1 GO/Comfort/XL + mínimos + Pet + cancel €3 (A2.5) | **DONE** 2026-09 · tip pós-#582/#583 |
 | Landing institucional V1 · `vamula.pt` | **DONE** 2026-09-13 · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
 | Spike HERE tolls (script + docs) | **DONE** · live validation **DONE** · [#584](https://github.com/frankbexxx/tvde/pull/584) · **APROVADO COM RESERVAS PARA V1** |
+| PORTAGENS V1 (F0–F5 runtime) | **PROD VALIDATED** · HERE ON · [#592](https://github.com/frankbexxx/tvde/pull/592)/[#593](https://github.com/frankbexxx/tvde/pull/593) · residual route variance accepted · P2 `S-TOLLS-P2` |
 
 **Como usar:** executar um passo → marcar `DONE` → seguinte.  
 **Tipos:** `CONFIRMAR` · `DECISÃO` · `DOCS` · `CONFIG` · `CÓDIGO` · `TESTE` · `EXTERNO`.
@@ -139,7 +140,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
 | **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
 | **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) **portagens automáticas** (impl. estimate→snapshot→final; HERE aprovado c/ reservas) · (2) fiscal/legal tolls · (3) parecer/decisão legal L3 · (4) LRE ops + emails `@vamula.pt` · (5) AMT/reporting · (6) L1/L2 IMT · (7) RetentionPolicy · (8) **A1.4** acta formal |
+| **Próximas frentes** | (1) fiscal/legal tolls · (2) **S-TOLLS-P2** HERE routing determinism (P2) · (3) parecer/decisão legal L3 · (4) LRE ops + emails `@vamula.pt` · (5) AMT/reporting · (6) L1/L2 IMT · (7) RetentionPolicy · (8) **A1.4** acta formal |
 
 *Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (GPS/docs/IMT).
 
@@ -208,7 +209,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **V1 preços:** GO €1,50 + €0,60/km + €0,12/min · mín. €4,50 · Comfort €1,90 + €0,85/km + €0,15/min · mín. €5,50 · XL €3,00 + €1,05/km + €0,15/min · mín. €6,50 · Pet +€1,50 · cão assistência €0  
 - **Acta:** [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
 - **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final**.  
-- **Portagens:** estrutura `tolls_amount` + comissão 0% **pronta**; spike HERE live = **DONE** · **HERE APROVADO COM RESERVAS PARA V1** · **sem** integração runtime ainda — próximo = portagens automáticas · fiscal pendente — ver [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md).
+- **Portagens:** **HERE Tolls V1 PROD VALIDATED** (F0–F5) · charged=estimated · observed audit · comissão 0% sobre tolls · residual route variance **accepted for V1** · P2 `S-TOLLS-P2` determinism · fiscal pendente — ver [`PORTAGENS_V1_ARCHITECTURE_2026-09.md`](analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
