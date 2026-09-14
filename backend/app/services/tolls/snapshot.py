@@ -93,7 +93,6 @@ def merge_toll_snapshot(
 
 __all__ = [
     "TOLL_SNAPSHOT_KEYS",
-    "TollStatus",
     "build_create_toll_snapshot",
     "charged_amount_from_estimate",
     "merge_toll_snapshot",
