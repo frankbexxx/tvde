@@ -1,7 +1,7 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-**Data:** 2026-09-14 (fecho consolidado pricing + landing + HERE spike) · 2026-09-09 (decisões operacionais Manel) · 2026-09-05 (fecho M2-L0 oficial) · G3/M1 2026-09-03  
-**Tip `main`:** `0df77e6` (merge [#584](https://github.com/frankbexxx/tvde/pull/584) HERE spike; pós-[#586](https://github.com/frankbexxx/tvde/pull/586) landing docs)  
+**Data:** 2026-09-14 (PORTAGENS V1 PROD VALIDATED · F5) · 2026-09-14 (fecho consolidado pricing + landing + HERE spike) · 2026-09-09 (decisões operacionais Manel) · 2026-09-05 (fecho M2-L0 oficial) · G3/M1 2026-09-03  
+**Tip `main`:** `1382b35` (merge [#593](https://github.com/frankbexxx/tvde/pull/593) F5 docs; HERE Tolls PROD ON)  
 **Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto**  
 **Modo:** pós-M1 · caminho crítico = **Marco 2 (`READY FOR REAL PILOT`)** · **M2/M3 não concluídos**  
 **Fonte de verdade:** código + roadmap + matriz + [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) + [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
@@ -12,7 +12,8 @@ Relacionado (contexto Setembro, não substitui este relatório):
 - [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) — canónico de execução + marcos
 - [`docs/business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) — decisões Manel 09/09/2026
 - [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) — landing PROD OK
-- [`docs/analysis/HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) — HERE · **APROVADO COM RESERVAS PARA V1**
+- [`docs/analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md`](analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md) — PORTAGENS V1 · **PROD VALIDATED** · P2 route variance
+- [`docs/analysis/HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) — HERE spike · **APROVADO COM RESERVAS PARA V1**
 - [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) — A3-D03-REV1 / A3-D04-REV1
 - [`docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
 - [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
@@ -32,7 +33,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT; pricing A2.5 + cancel €3 no código |
 | **Negócio / marca** | **PARCIAL** | Comissão **15%**; tarifário A2.5 **DONE**; landing **https://vamula.pt** = **DEPLOYED / PROD OK** (Hostinger); emails `@vamula.pt` / LRE ainda pendentes; **A1.4** aberto |
-| **Portagens / HERE** | **VALIDAÇÃO DONE** | **APROVADO COM RESERVAS PARA V1** · live OK · **sem** runtime · próximo = portagens automáticas · fiscal pendente |
+| **Portagens / HERE** | **V1 PROD VALIDATED** | HERE Tolls **ON** (`tvde-api`) · F0–F5 DONE · residual route variance **accepted for V1** · P2 determinism backlog · fiscal pendente |
 | **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (ops LRE pendente; **não bloqueador imediato** APP) · L-26 fechado; L1/L2 externos |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05); **MB WAY = fase 2** |
@@ -126,6 +127,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | **S-PRT-01** | Partner/Frota | Payouts/receitas Partner ainda não Stripe (copy honesta) | P1 — Necessário para fechar produto | S-PAY-03 |
 | **S-ADM-01** | Admin | `POST …/drivers/{id}/approve\|reject` | **DONE** (E5 · #544) | — |
 | **S-ADM-02** | Admin | Rastos R-ADMIN-ORPHAN / R-AGORA-SNAP / reassign copy | P3 — Pós-MVP | — |
+| **S-TOLLS-P2** | Backend/API | HERE routing determinism / toll variance (mesmo OD → €0.40 vs €2.55) | P2 — Melhoria importante | V1 PROD OK · ver [`PORTAGENS_V1…`](analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md) |
 
 ### Negócio / marca / IP / demo
 
@@ -340,11 +342,12 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 | **Cancel V1** | **DONE** — €3 fixos (cobrança real pós-B1) |
 | **Landing V1** | **DEPLOYED / PROD OK** — https://vamula.pt · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
 | **HERE spike** | Live validation **DONE** · **APROVADO COM RESERVAS PARA V1** · [#584](https://github.com/frankbexxx/tvde/pull/584) |
+| **PORTAGENS V1 (F0–F5)** | **PROD VALIDATED** — HERE ON · [#592](https://github.com/frankbexxx/tvde/pull/592)/[#593](https://github.com/frankbexxx/tvde/pull/593) · residual route variance accepted for V1 |
 | **A1.4** | Ainda **não** fechado formalmente |
 | **MB WAY** | **Fase 2** |
 | **M2 / M3** | **Não** concluídos |
-| **Próximo** | **Portagens automáticas** (impl.) · fiscal/legal tolls pendente |
+| **Próximo** | Fiscal/legal tolls · **S-TOLLS-P2** routing determinism (P2) · resto M2 |
 
 ---
 
-**Frase:** **M1 técnico DONE**. Landing **PROD OK**. Pricing V1 **DONE** (falta A1.4 formal). HERE **aprovado com reservas**. **Próximo técnico:** portagens automáticas. M2: L0 fechado; foundations driving-hours + emergency; L1/L2 IMT + enforcement + Stripe/SMS/mobile **continuam**.
+**Frase:** **M1 técnico DONE**. Landing **PROD OK**. Pricing V1 **DONE** (falta A1.4 formal). **HERE Tolls V1 PROD VALIDATED** (residual route variance accepted). **Próximo técnico:** fiscal/legal tolls · P2 routing determinism. M2: L0 fechado; foundations driving-hours + emergency; L1/L2 IMT + enforcement + Stripe/SMS/mobile **continuam**.

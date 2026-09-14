@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **PORTAGENS V1** (**2026-09-14** — tip `1382b35`)
+
+**HERE Tolls V1 PROD VALIDATED — residual route variance accepted for V1.**
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-TOLLS-V1** | PORTAGENS F0–F5 | Concluído | PROD ON · #592/#593 · billing invariants PASS |
+| **S-TOLLS-P2** | HERE routing determinism / toll variance | Por iniciar | P2 · mesmo OD €0.40 vs €2.55 · sem mudar billing/flag agora |
+| **O-TOLLS-FISCAL** | Fiscal/legal tolls | Por iniciar | Fora do runtime V1 |
+
+---
+
 ## Painel — **PRÉ-FÉRIAS** (**2026-08-11** — tip `1cb01c5` · MODO FÉRIAS ainda **OFF**)
 
 **Modo:** **pré-férias** — PC principal = máquina activa. **MODO FÉRIAS** só a **13/14 ago** (após refresh SSD + cifrar secrets). Modelo: [`MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md).
