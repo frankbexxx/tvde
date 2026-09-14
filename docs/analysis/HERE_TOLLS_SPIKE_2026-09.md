@@ -1,7 +1,7 @@
 # HERE Tolls Spike — Portugal (2026-09)
 
 **Tipo:** spike técnico isolado (sem runtime app)  
-**Estado:** script pronto · **LIVE RUN PENDING** (`HERE_API_KEY` não estava disponível no ambiente do agente)  
+**Estado:** script pronto · conta HERE criada · **LIVE RUN PENDING** (API key / billing a finalizar)  
 **API:** HERE Routing v8 `GET https://router.hereapi.com/v8/routes`  
 **Parâmetros planeados:** `transportMode=car` · `return=summary,tolls,polyline` · `currency=EUR` · `tolls[summaries]=total` · compare `avoid[features]=tollRoad`  
 **Script:** [`scripts/tolls/here_tolls_spike.py`](../../scripts/tolls/here_tolls_spike.py)

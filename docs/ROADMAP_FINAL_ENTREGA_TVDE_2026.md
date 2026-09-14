@@ -10,6 +10,9 @@
 | Demo Manel 2 (ETAPA 02 · `S-DEM-01`) | **DONE** 2026-09-01 · DEMO PASS prod |
 | 4 papéis · fluxo viagem principal | **VALIDADO** em produção |
 | **M1 — APP TECNICAMENTE CONCLUÍDA** | **DONE** 2026-09-03 · G3.1 PASS · tip `e556a3b` |
+| Tarifário V1 GO/Comfort/XL + mínimos + Pet + cancel €3 (A2.5) | **DONE** 2026-09 · tip pós-#582/#583 |
+| Landing institucional V1 · `vamula.pt` | **DONE** 2026-09-13 · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
+| Spike HERE tolls (script + docs) | **DONE** (prep) · merge [#584](https://github.com/frankbexxx/tvde/pull/584) · **LIVE RUN PENDING** |
 
 **Como usar:** executar um passo → marcar `DONE` → seguinte.  
 **Tipos:** `CONFIRMAR` · `DECISÃO` · `DOCS` · `CONFIG` · `CÓDIGO` · `TESTE` · `EXTERNO`.
@@ -22,10 +25,10 @@
 
 | Carril | Etapas |
 |--------|--------|
-| **A** Negócio / Legal / Compliance | **A1 PARCIAL** · **A2 PARCIAL** (15% + settlement política DONE; tarifário aberto) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
-| **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · B5 Métodos PT |
+| **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; A1.4 aberto)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; falta A1.4/A2.6 formal) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
+| **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · **B5 fase 2** (MB WAY) |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
-| **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 Landing |
+| **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
 | **F** Infra / Segurança / Operação | F1 Restore drill · F2 Staging · F3 Sentry · F4 Higiene mock GPS |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
@@ -136,7 +139,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
 | **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
 | **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) parecer/decisão legal L3 · (2) LRE ops **após domínio** (`vamula.pt` — **DEPENDÊNCIA EXTERNA .PT**; **não bloqueador imediato** APP) · (3) AMT/reporting · (4) L1/L2 quando houver canal técnico IMT · (5) RetentionPolicy granular · (6) A2.5 tarifário |
+| **Próximas frentes** | (1) **HERE live validation** / portagens · (2) parecer/decisão legal L3 · (3) LRE ops + emails `@vamula.pt` (domínio **ACTIVO**; landing **DEPLOYED**) · (4) AMT/reporting · (5) L1/L2 quando houver canal técnico IMT · (6) RetentionPolicy granular · (7) **A1.4** acta formal |
 
 *Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (GPS/docs/IMT).
 
@@ -171,7 +174,8 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **B2** ‖ **E5** ‖ **F4** | Após/com cuidado face a B1 |
 | **H*** | Sem activar flags comerciais |
 
-**Não paralelizar:** B3 com A2 aberto; D3 sem D1; A6 ON sem A3-D03-REV1 / IMT-processo; live Stripe sem B1 completo.
+**Não paralelizar:** B3 com A2.3/A2.5 abertos; D3 sem D1; A6 ON sem A3-D03-REV1 / IMT-processo; live Stripe sem B1 completo.  
+*(2026-09-14: A2.3 + A2.5 **DONE** — B3 já não bloqueado por tarifário; A1.4 formal continua aberto.)*
 
 ---
 
@@ -182,7 +186,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Objectivo:** Validar hipóteses custos/comissões/simulador (não inventar números).  
 - **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001`  
 - **Dependências:** —  
-- **Estado:** **PARCIAL** (actualizado 2026-09-11) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** (≠ ACCOUNTING FINAL) · **A1.3 = READY FOR PRICING INPUT** · A1.4 aberto · código pricing/cancel ainda legado  
+- **Estado:** **PARCIAL** (actualizado 2026-09-14) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** (≠ ACCOUNTING FINAL) · **A1.3 = READY FOR PRICING INPUT** · **A1.4 ainda NÃO fechado formalmente**  
 - **Entrega levantamento:** [`A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md)  
 - **Nota legal:** CRS/AMT = **5% × taxa de intermediação sem IVA** (com 15% → 0,75% da base); **não** no runtime até IVA fechado. **Não** altera **A1-D01**.  
 - **Conclusão (quando fechado):** Francisco+Manel(+contabilista) registam aceite / correcções por escrito.  
@@ -192,7 +196,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 |-------|--------|-------------------|------|------|--------|
 | A1.1 | Confirmar pacote dos 3 docs business + levantamento matriz | Matriz em `A1_MODELO_ECONOMICO…` | CONFIRMAR · DOCS | — | **DONE** |
 | A1.2 | Modelo custos: fixos vs variáveis; validar rubricas vs realidade (sem baseline 1–2,5 k€) | **READY FOR ECONOMIC MODELLING** (≠ accounting final) | DECISÃO · DOCS | A1.1 · **A1-D10** | **DONE** *(modelagem)* |
-| A1.3 | Sessão margem/viagem + rateio fixos por volume | **READY FOR PRICING INPUT** (Hostinger TBD) | DECISÃO | A1.2 | **DONE** *(modelagem)* |
+| A1.3 | Sessão margem/viagem + rateio fixos por volume | **READY FOR PRICING INPUT** (Hostinger Premium **activo**) | DECISÃO | A1.2 | **DONE** *(modelagem)* |
 | A1.4 | Acta curta no repo (só resultados) | Fecho A1 sem % inventados | DOCS | A1.3 | Por iniciar |
 
 ## A2 — Fechar comissão e tarifário — **PARCIAL**
@@ -200,9 +204,11 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Objectivo:** Comissão + tarifário piloto aprovados.  
 - **IDs:** `S-BIZ-02` · `SEP-PAY-03` · perguntas Q1/Q3 em [`MANEL_INPUTS_TODOS_2026-08-07.md`](product/MANEL_INPUTS_TODOS_2026-08-07.md)  
 - **Dependências:** A1  
-- **Estado:** **PARCIAL** (2026-09-09) — **% 15% DONE** · settlement política **DONE** · **tarifário ainda ABERTO**  
+- **Estado:** **PARCIAL** (2026-09-14) — **% 15% DONE** · settlement política **DONE** · **A2.5 tarifário V1 DONE** · cancel V1 **€3** DONE · waiting/surge **OFF** · comissão sobre `(final − tolls)` · portagens **0%** · **A1.4 / A2.6 formal ainda abertos**  
+- **V1 preços:** GO €1,50 + €0,60/km + €0,12/min · mín. €4,50 · Comfort €1,90 + €0,85/km + €0,15/min · mín. €5,50 · XL €3,00 + €1,05/km + €0,15/min · mín. €6,50 · Pet +€1,50 · cão assistência €0  
 - **Acta:** [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
-- **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final** — **não** a tabela de preços.
+- **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final**.  
+- **Portagens:** estrutura `tolls_amount` + comissão 0% **pronta**; spike HERE [#584](https://github.com/frankbexxx/tvde/pull/584) merged · **LIVE RUN PENDING** (API key/billing) · **sem** integração runtime — ver [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
@@ -210,7 +216,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | A2.2 | Confirmar modelo híbrido estimativa/final | Alinhado a produto actual | CONFIRMAR | [`PRICING_DECISION.md`](PRICING_DECISION.md) | **DONE** |
 | A2.3 | Fechar % comissão piloto | **15%** confirmado Manel 09/09/2026 | DECISÃO | A2.1 | **DONE** *(política; sem mudança de código nesta acta)* |
 | A2.4 | Beneficiário + cadência payout | Partner (**A1-D03**) · **semanal / segunda-feira / manual** · conta pagamentos: Manel | DECISÃO | A2.3 | **DONE** *(política; impl. técnica settlement **não** concluída)* |
-| A2.5 | Fechar tarifário mínimo piloto | GO/Comfort/XL V1 + mínimos + snapshot | DECISÃO · CÓDIGO | A2.3 · A1-D07 | **IMPLEMENTED** |
+| A2.5 | Fechar tarifário mínimo piloto | GO/Comfort/XL V1 + mínimos + Pet + cancel €3 + snapshot | DECISÃO · CÓDIGO | A2.3 · A1-D07 | **DONE** |
 | A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 | **PARCIAL** (acta 09/09 + A2.5 código; falta A1.4) |
 
 ## A3 — Validar requisitos legais TVDE aplicáveis — **PARCIAL**
@@ -371,19 +377,20 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | B4.5 | Fórmula líquido motorista (app) — ver E1 | UI/API coerente A2 | CÓDIGO | A2 · B4.1 | — |
 | B4.6 | Copy Partner alinhada (ver E4) | Sem prometer payout inexistente | CÓDIGO | B4.3 ou B4.4 | — |
 
-## B5 — Métodos PT (MB WAY / SIBS / Multibanco)
+## B5 — Métodos PT (MB WAY / SIBS / Multibanco) — **FASE 2**
 
 - **Objectivo:** MVP vs fase 2 (Q2 Manel).  
 - **IDs:** `S-PAY-05` · `SEP-PAY-02`  
 - **Dependências:** B1  
-- **Conclusão:** Fora MVP → H **ou** 1 método PT em smoke.
+- **Estado (2026-09-14):** decisão **MB WAY = fase 2** · fora do crítico M2 · → H até reopen explícito.  
+- **Conclusão:** Fora MVP → H.
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| B5.1 | Confirmar que obrigatoriedade PT está **aberta** (Q2) | Não assumir MVP | CONFIRMAR | `MANEL_INPUTS` Q2 |
-| B5.2 | Decisão: MVP ou fase 2 | Escopo fechado | DECISÃO | B5.1 |
-| B5.3 | Se MVP: contrato/PSP + integração + smoke | Pagamento PT OK | EXTERNO · CÓDIGO · TESTE | B5.2 |
-| B5.4 | Se fase 2: mover para H | Fora críticos | DOCS | B5.2 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| B5.1 | Confirmar que obrigatoriedade PT está **aberta** (Q2) | Não assumir MVP | CONFIRMAR | `MANEL_INPUTS` Q2 | **DONE** |
+| B5.2 | Decisão: MVP ou fase 2 | Escopo fechado | DECISÃO | B5.1 | **DONE** *(fase 2)* |
+| B5.3 | Se MVP: contrato/PSP + integração + smoke | Pagamento PT OK | EXTERNO · CÓDIGO · TESTE | B5.2 | **N/A** *(fase 2)* |
+| B5.4 | Se fase 2: mover para H | Fora críticos | DOCS | B5.2 | **DONE** |
 
 ---
 
@@ -488,11 +495,12 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 - **IDs:** `S-MOB-03` · **Dependências:** necessidade real de distribuição (não automático no M2)  
 - **Nota:** só entra no crítico do Marco 3 se stores/landing forem exigidos para exploração comercial.  
+- **Landing institucional (≠ stores):** **DONE** 2026-09-13 — `https://vamula.pt` · Hostinger Premium · HTTPS · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) · ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md). Emails `@vamula.pt` / páginas legais públicas / LRE = **PENDENTE**.
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| D4.1 | Timing lojas vs internal | Plano | DECISÃO | D2 |
-| D4.2 | URL + página download | Link OK | CONFIG · CÓDIGO | D4.1 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| D4.1 | Timing lojas vs internal | Plano | DECISÃO | D2 | Por iniciar |
+| D4.2 | URL + página download | Link OK | CONFIG · CÓDIGO | D4.1 | Por iniciar |
 
 ---
 
@@ -769,6 +777,8 @@ Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual). iOS pós-
 | Estado Setembro | [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) |
 | Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) |
 | Pricing híbrido | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
+| HERE tolls spike | [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) · script `scripts/tolls/here_tolls_spike.py` · **LIVE RUN PENDING** |
+| Landing deploy | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
 | B2 produto | [`B2_PRODUCT_DECISIONS_2026-08-04.md`](architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) |
 | PF3D | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) |
 | Inputs Manel | [`MANEL_INPUTS_TODOS_2026-08-07.md`](product/MANEL_INPUTS_TODOS_2026-08-07.md) |
