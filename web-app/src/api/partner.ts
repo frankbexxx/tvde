@@ -644,4 +644,10 @@ export const PARTNER_TRIPS_CSV_COLUMNS = [
   'cancelled_by',
   'vehicle_category',
   'vehicle_plate',
+  'estimated_tolls_amount',
+  'charged_tolls_amount',
+  'observed_tolls_amount',
+  'observed_tolls_delta',
+  'tolls_source',
+  'tolls_status',
 ] as const

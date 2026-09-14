@@ -954,6 +954,12 @@ async def partner_export_trips_csv(
             "cancelled_by",
             "vehicle_category",
             "vehicle_plate",
+            "estimated_tolls_amount",
+            "charged_tolls_amount",
+            "observed_tolls_amount",
+            "observed_tolls_delta",
+            "tolls_source",
+            "tolls_status",
         ]
     )
     for t in trips:
@@ -968,6 +974,33 @@ async def partner_export_trips_csv(
         vehicle = getattr(t, "vehicle", None)
         if vehicle is not None and getattr(vehicle, "plate", None):
             plate = str(vehicle.plate)
+        bd = getattr(t, "price_breakdown", None)
+        if not isinstance(bd, dict):
+            bd = {}
+
+        def _bd_num(key: str) -> str:
+            raw = bd.get(key)
+            if raw is None:
+                return ""
+            try:
+                return f"{float(raw):.2f}"
+            except (TypeError, ValueError):
+                return ""
+
+        def _bd_str(key: str) -> str:
+            raw = bd.get(key)
+            return "" if raw is None else str(raw)
+
+        charged = bd.get("charged_tolls_amount")
+        if charged is None:
+            charged = bd.get("tolls_amount")
+        charged_s = ""
+        if charged is not None:
+            try:
+                charged_s = f"{float(charged):.2f}"
+            except (TypeError, ValueError):
+                charged_s = ""
+
         w.writerow(
             [
                 str(t.id),
@@ -992,6 +1025,12 @@ async def partner_export_trips_csv(
                 getattr(t, "cancelled_by", None) or "",
                 getattr(t, "vehicle_category", None) or "",
                 plate,
+                _bd_num("estimated_tolls_amount"),
+                charged_s,
+                _bd_num("observed_tolls_amount"),
+                _bd_num("observed_tolls_delta"),
+                _bd_str("tolls_source"),
+                _bd_str("tolls_status"),
             ]
         )
 

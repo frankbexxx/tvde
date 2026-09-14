@@ -34,6 +34,8 @@ describe('TripPlannerPanel tolls estimate (F1)', () => {
     )
     expect(screen.getByTestId('passenger-estimate-tolls').textContent).toMatch(/0\.40/)
     expect(screen.getByTestId('passenger-estimate-breakdown').textContent).toMatch(/4\.90/)
+    expect(screen.getByTestId('passenger-estimate-breakdown').textContent).not.toMatch(/observad/i)
+    expect(screen.queryByTestId('passenger-trip-observed-tolls')).toBeNull()
   })
 
   it('does not show fake €0 toll line; shows unavailable hint on zero_fallback', async () => {

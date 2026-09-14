@@ -3,6 +3,14 @@ import { CancellationReasonMuted } from '../../components/trips/CancellationReas
 import { formatPetSurchargeEuro } from '../trips/tripPetReporting'
 import { fareCategoryCommercialLabel } from '../trips/fareCategoryLabel'
 import {
+  chargedTollsDisplay,
+  formatDeltaOrDash,
+  formatEuroOrDash,
+  observedTollsDisplay,
+  sanitizeTollAuditText,
+  type TollAuditBreakdown,
+} from '../trips/tollAuditDisplay'
+import {
   adminCancelledByLabel,
   adminPaymentStatusLabel,
   adminTripStatusLabel,
@@ -81,25 +89,40 @@ export function AdminTripDetailSupportFields(props: AdminTripDetailSupportFields
                 : `${Number(breakdown.pet_surcharge).toFixed(2)} €`
             }
           />
-          <DetailRow label="Portagens:" value={`${Number(breakdown.tolls_amount ?? breakdown.charged_tolls_amount ?? 0).toFixed(2)} €`} />
-          {breakdown.observed_tolls_amount != null || breakdown.observed_tolls_status ? (
-            <>
+          <div className="space-y-1 border-t border-border/40 pt-1" data-testid="admin-trip-tolls-audit">
+            <DetailRow
+              label="Portagens estimadas:"
+              value={formatEuroOrDash(breakdown.estimated_tolls_amount)}
+            />
+            <DetailRow
+              label="Portagens cobradas:"
+              value={chargedTollsDisplay(breakdown as TollAuditBreakdown)}
+            />
+            <DetailRow
+              label="Portagens observadas:"
+              value={observedTollsDisplay(breakdown as TollAuditBreakdown)}
+            />
+            <DetailRow
+              label="Delta observado:"
+              value={formatDeltaOrDash(breakdown.observed_tolls_delta)}
+            />
+            <DetailRow
+              label="Fonte portagens:"
+              value={sanitizeTollAuditText(breakdown.tolls_source)}
+            />
+            <DetailRow
+              label="Status portagens:"
+              value={sanitizeTollAuditText(breakdown.tolls_status)}
+            />
+            {breakdown.tolls_error_code || breakdown.observed_tolls_error_code ? (
               <DetailRow
-                label="Portagens observadas:"
-                value={
-                  breakdown.observed_tolls_amount != null
-                    ? `${Number(breakdown.observed_tolls_amount).toFixed(2)} €`
-                    : String(breakdown.observed_tolls_status ?? '—')
-                }
+                label="Erro portagens:"
+                value={sanitizeTollAuditText(
+                  breakdown.observed_tolls_error_code ?? breakdown.tolls_error_code,
+                )}
               />
-              {breakdown.observed_tolls_delta != null ? (
-                <DetailRow
-                  label="Delta portagens:"
-                  value={`${Number(breakdown.observed_tolls_delta) >= 0 ? '+' : ''}${Number(breakdown.observed_tolls_delta).toFixed(2)} €`}
-                />
-              ) : null}
-            </>
-          ) : null}
+            ) : null}
+          </div>
           <DetailRow label="Total:" value={`${Number(breakdown.total ?? d.final_price ?? d.estimated_price).toFixed(2)} €`} />
           {typeof breakdown.pet_surcharge_rule === 'string' ? (
             <DetailRow label="Regra Pet:" value={breakdown.pet_surcharge_rule} />

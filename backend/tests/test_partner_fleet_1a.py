@@ -255,5 +255,23 @@ def test_partner_csv_appends_prices_keeps_old_columns() -> None:
     fp_i = header.index("final_price")
     assert done[ep_i] == "10.00"
     assert done[fp_i] == "11.50"
+    # PORTAGENS F3: toll audit columns append-only at end.
+    for col in (
+        "estimated_tolls_amount",
+        "charged_tolls_amount",
+        "observed_tolls_amount",
+        "observed_tolls_delta",
+        "tolls_source",
+        "tolls_status",
+    ):
+        assert col in header
+    assert header[-6:] == [
+        "estimated_tolls_amount",
+        "charged_tolls_amount",
+        "observed_tolls_amount",
+        "observed_tolls_delta",
+        "tolls_source",
+        "tolls_status",
+    ]
     # Other partner trip must not appear.
     assert ids["driver_b"] not in {r[1] for r in rows[1:]}

@@ -262,4 +262,59 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     })
     expect(screen.getByText('drv-2')).toBeInTheDocument()
   })
+
+  it('shows toll audit: estimate, charged, observed, delta, source, status', async () => {
+    api.fetchPartnerTrip.mockResolvedValue(
+      baseTrip({
+        price_breakdown: {
+          category: 'x',
+          base_fare: 1.5,
+          distance_amount: 6,
+          duration_amount: 1.8,
+          fare_subtotal: 9.3,
+          pet_surcharge: 0,
+          tolls_amount: 2.4,
+          total: 11.7,
+          estimated_tolls_amount: 2.4,
+          charged_tolls_amount: 2.4,
+          observed_tolls_amount: 3.1,
+          observed_tolls_delta: 0.7,
+          tolls_source: 'here',
+          tolls_status: 'ok',
+        },
+      })
+    )
+    renderDetail()
+    await waitFor(() => expect(screen.getByTestId('partner-trip-tolls-audit')).toBeInTheDocument())
+    expect(screen.getByTestId('partner-trip-tolls-estimated')).toHaveTextContent('2.40 €')
+    expect(screen.getByTestId('partner-trip-tolls-charged')).toHaveTextContent('2.40 €')
+    expect(screen.getByTestId('partner-trip-tolls-observed')).toHaveTextContent('3.10 €')
+    expect(screen.getByTestId('partner-trip-tolls-delta')).toHaveTextContent('+0.70 €')
+    expect(screen.getByTestId('partner-trip-tolls-source')).toHaveTextContent('here')
+    expect(screen.getByTestId('partner-trip-tolls-status')).toHaveTextContent('ok')
+  })
+
+  it('shows em dash for legacy trips without toll snapshot', async () => {
+    api.fetchPartnerTrip.mockResolvedValue(
+      baseTrip({
+        price_breakdown: {
+          category: 'x',
+          base_fare: 1.5,
+          distance_amount: 0,
+          duration_amount: 0,
+          fare_subtotal: 4.5,
+          pet_surcharge: 0,
+          total: 4.5,
+        },
+      })
+    )
+    renderDetail()
+    await waitFor(() => expect(screen.getByTestId('partner-trip-tolls-audit')).toBeInTheDocument())
+    expect(screen.getByTestId('partner-trip-tolls-estimated')).toHaveTextContent('—')
+    expect(screen.getByTestId('partner-trip-tolls-charged')).toHaveTextContent('—')
+    expect(screen.getByTestId('partner-trip-tolls-observed')).toHaveTextContent('—')
+    expect(screen.getByTestId('partner-trip-tolls-delta')).toHaveTextContent('—')
+    expect(screen.getByTestId('partner-trip-tolls-source')).toHaveTextContent('—')
+    expect(screen.getByTestId('partner-trip-tolls-status')).toHaveTextContent('—')
+  })
 })
