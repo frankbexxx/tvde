@@ -299,7 +299,7 @@ Não bloqueia implementação técnica.
 | **F2** | Wire **complete**: charged imutável; observed opcional + delta audit; Partner/Admin mínimo |
 | **F3** | Partner/Admin visibility completa (detail + CSV audit) — sem dashboards complexos |
 | **F4** | Staging ON + smokes — **STAGING VALIDATED** |
-| **F5** | Prod ON (OK explícito) — **READY FOR PROD REVIEW** |
+| **F5** | Prod ON (OK explícito) — **PROD VALIDATED** |
 
 **Nota:** F1+F2 reflectem cobrança = estimate; observed **não** é billing.
 
@@ -317,7 +317,7 @@ Não bloqueia implementação técnica.
 | **F2** Wire complete (charged imutável + observed) | **IMPLEMENTED** |
 | **F3** Partner/Admin visibility + CSV audit | **IMPLEMENTED** |
 | **F4** Staging ON + HERE smokes | **STAGING VALIDATED** |
-| **F5** Prod flag ON | **READY FOR PROD REVIEW** (OK explícito) |
+| **F5** Prod flag ON + smokes | **PROD VALIDATED** (2026-09-14) |
 
 ### F0 — notas de implementação
 
@@ -360,12 +360,24 @@ Não bloqueia implementação técnica.
 - **C** Almada→Lisboa: **€2.25** LUSOPONTE · Lisboa→Almada: **€0** (assimétrico HERE)
 - Commission **0%** sobre tolls (ex.: Brisa final 18.02 · tolls 0.40 · commissionable 17.62)
 - Passenger: sem observed no create · Partner/Admin GET audit OK · Stripe mock
-- **PROD** intocado · PROD `ENABLE_HERE_TOLLS=false`
+- Na altura: PROD ainda OFF
+
+### F5 — PROD VALIDATED (2026-09-14 ~15:40–15:45 UTC)
+
+- Activação: `tvde-api` · `ENABLE_HERE_TOLLS=true` only · deploy `dep-dak1aigjo6nc73b44c0g` **live** · health **200**
+- DB: `ride_db_wypz` · `STRIPE_MOCK=true` inalterado · rollback não usado
+- **A** no-toll: est/chg/obs **€0** · `no_tolls` · trip `a4f2e7ce-…` · payment `succeeded`
+- **B** Oeiras→Airport: est/chg **€2.55** · systems BRISA + AUTOESTRADAS DO ATLÂNTICO · source `here` · status `ok` · observed **€2.55** delta **0** · charged inalterado · trip `eef42c5f-…`
+- Commission: final 20.17 · tolls 2.55 · commissionable **17.62** · tolls_excluded **true**
+- Sem 429 / sem `here_*` error nas viagens · sem apiKey em payloads smoke
+- Partner/Admin login smoke: **não** disponível com contas teste PROD (`TEST_ACCOUNT_PASSWORD`) — audit Partner/Admin **não** revalidado nesta corrida (código F3 já em `main`)
+- Flag PROD final: **ON** (`ENABLE_HERE_TOLLS=true`)
 
 ## 19. Próximo passo
 
-**F5** — Prod ON só com OK explícito (review prod / flag / runbook).  
-**Sem** alterar Hostinger / PROD deploy app / tarifário categorias até esse OK.
+PORTAGENS V1 **PROD ON**. Manter monitorização (deltas, `zero_fallback`, 429).  
+Rollback operacional: `ENABLE_HERE_TOLLS=false` + redeploy `tvde-api`.  
+Opcional: seed/login Partner/Admin PROD para smoke de visibilidade (sem alterar billing).
 
 ---
 
