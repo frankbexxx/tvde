@@ -11,8 +11,8 @@
 
 | Tema | Verdict |
 |---|---|
-| MapLibre | **`MAPLIBRE: CONFIRMED`** |
-| React Router | **`REACT_ROUTER: NEEDS REVIEW`** |
+| MapLibre | **`MAPLIBRE: CONFIRMED`** · upgrade **BLOCKED** (react-map-gl) — ver §1.1 / **S-MAP-P1** |
+| React Router | **`REACT_ROUTER: DONE`** (7.18.4 em `main` · #598) |
 | `ENV=staging` drop-in | **Perigoso sem checklist** (CORS `*`, debug always-on, sem alembic auto) |
 | `BETA_MODE=False` em PROD hoje | **`NEEDS MIGRATION`** (auth FE actual parte) |
 | Python 3.14 Render | **Default da plataforma**, não pin do repo |
@@ -61,6 +61,38 @@ web-app
 - **Não** é patch dentro de 5.x (fix só em 6.4.1+).
 
 ### `MAPLIBRE: CONFIRMED`
+
+### 1.1 Spike 2026-09-16 — upgrade blocked
+
+**Veredicto:** `MapLibre upgrade blocked by react-map-gl incompatibility`
+
+| Campo | Valor |
+|---|---|
+| Tentativa | `maplibre-gl@6.10.0` (≥6.4.1 corrige GHSA-jrc7-96c5-q579) |
+| Wrapper | `react-map-gl@8.1.0` / `@vis.gl/react-maplibre@8.1.0` (peers frouxos `>=1.13` / `>=4`) |
+| Sintoma | `TypeError: Cannot read properties of undefined (reading 'center')` — wrapper lê `map.transform` (removido no MapLibre 6) |
+| Impacto UX | Driver/passenger: **mapa branco** / crash em `<MapView>` |
+| Código em `main` | **Revertido** — permanece **`maplibre-gl@5.19.0`** |
+| Fork/patch wrapper | **Não** nesta fase |
+
+#### Pendência **S-MAP-P1**
+
+| Campo | Valor |
+|---|---|
+| ID | **S-MAP-P1** |
+| Descrição | Reavaliar upgrade MapLibre **≥6.4.1** quando o wrapper React (`react-map-gl` / `@vis.gl/react-maplibre`) **suportar oficialmente** a API MapLibre 6 **sem** `map.transform` |
+| Estado | **OPEN** |
+| Prioridade | **P1 known** |
+| Código imediato | **Nenhum** |
+| Revisit | Releases do wrapper / changelog MapLibre 6 |
+
+#### Mitigação actual (não é risco zero)
+
+- Style MapTiler **controlado** (hosted `basic-v2` + key nossa) — attribution do fornecedor, não de input de utilizador da app
+- Fallback demotiles MapLibre (estilo público conhecido)
+- **Sem** `Popup.setHTML` / `setDOMContent` / `innerHTML` próprio em código nosso
+- Runtime **estável** em produção com **5.19.0**
+- **Não** afirmar risco zero: a lib vulnerável continua no bundle; o vector attribution XSS permanece teoricamente aplicável à versão instalada
 
 ---
 
@@ -325,7 +357,7 @@ Router montado quando `debug_router_enabled()` → em prod **`BETA_MODE`**.
 
 | P1 original | Após review | Acção |
 |---|---|---|
-| MapLibre critical | **P1 confirmado** | Upgrade major planeado + smoke mapas |
+| MapLibre critical | **P1 confirmado · BLOCKED** | **S-MAP-P1** — aguardar wrapper React MapLibre 6; manter 5.19.0 |
 | React Router high | **P1→P2** (rebaixável) | Upgrade 7.18.x + grep Link/navigate; sem pânico RCE SSR |
 | ENV staging = production | **P1 confirmado (decisão)** | Não flip cego; ver checklist §4 |
 | BETA_MODE + debug em prod | **P1 confirmado (política)** | BETA **não** desligar sem migração auth; debug aceitável com JWT ou apertar depois |
@@ -334,7 +366,7 @@ Router montado quando `debug_router_enabled()` → em prod **`BETA_MODE`**.
 
 ### P1s confirmados (manter)
 
-1. MapLibre CVE-2026-85061 / GHSA-jrc7-96c5-q579  
+1. MapLibre CVE-2026-85061 / GHSA-jrc7-96c5-q579 — **S-MAP-P1 OPEN** (upgrade bloqueado por react-map-gl)  
 2. Decisão ENV staging (não mudar sem mitigations)  
 3. BETA_MODE é requisito do produto actual (não “desligar”)  
 4. Pin Python Render ≠ CI  
@@ -359,7 +391,7 @@ Router montado quando `debug_router_enabled()` → em prod **`BETA_MODE`**.
 
 ### Risky
 
-- `maplibre-gl` 5→6 major (+ peers react-map-gl)  
+- `maplibre-gl` 5→6 major — **bloqueado** até wrapper sem `map.transform` (**S-MAP-P1**)  
 - `ENV=staging` sem CORS/alembic/debug redesign  
 - `BETA_MODE=False` em prod  
 - `npm audit fix --force`  
@@ -371,8 +403,8 @@ Router montado quando `debug_router_enabled()` → em prod **`BETA_MODE`**.
 
 1. **docs-only** (este relatório) — merge review  
 2. **`chore(runtime): pin Python 3.12 on Render + CI assert`** — zero feature risk relativo  
-3. **`fix(deps): react-router-dom ≥7.18.2`** — smoke auth/navigation  
-4. **`fix(deps): maplibre-gl ≥6.4.1` (+ peer)** — spike branch + smoke MapTiler/markers  
+3. **`fix(deps): react-router-dom ≥7.18.2`** — **DONE** (#598)  
+4. **`fix(deps): maplibre-gl ≥6.4.1` (+ peer)** — **BLOCKED** → **S-MAP-P1** (revisit quando `@vis.gl/react-maplibre` / `react-map-gl` suportarem MapLibre 6)  
 5. **Decisão produto:** plano de saída de BETA_MODE (auth OTP/password/Google) — **antes** de qualquer flip  
 6. **Decisão infra:** ENV staging real **só** com PR de código que trate staging ≠ development (CORS/debug/alembic)
 
@@ -384,10 +416,12 @@ Router montado quando `debug_router_enabled()` → em prod **`BETA_MODE`**.
 |---|---|
 | production altered | **NÃO** |
 | staging altered | **NÃO** |
-| código app alterado | **NÃO** |
+| código app alterado (review inicial) | **NÃO** |
+| MapLibre spike 2026-09-16 | **BLOCKED** · revertido · **S-MAP-P1 OPEN** |
+| React Router | **DONE** 7.18.4 (#598) |
 | relatório original hygiene | **intocado** |
 | este ficheiro | `docs/analysis/P1_RUNTIME_SECURITY_REVIEW_2026-09.md` |
 
 ---
 
-*Fim — decisões, não cleanup.*
+*Actualizado 2026-09-16 — fecho spike MapLibre + S-MAP-P1.*
