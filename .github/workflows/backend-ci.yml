@@ -35,9 +35,15 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          # Keep in sync with .python-version / backend/.python-version (Render pin).
+          python-version: "3.12.14"
           cache: pip
           cache-dependency-path: backend/requirements.txt
+
+      - name: Assert Python 3.12 line
+        run: |
+          python --version
+          python -c "import sys; v=sys.version_info; print(f'{v.major}.{v.minor}.{v.micro}'); assert v[:2]==(3,12), f'expected Python 3.12.x, got {sys.version}'"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
