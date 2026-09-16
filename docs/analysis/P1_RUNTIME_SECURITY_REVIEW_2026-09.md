@@ -264,12 +264,20 @@ is_development ⇔ NOT is_production   ← staging conta como “development”!
 | Check | Resultado |
 |---|---|
 | Staging version before | `3.14.3 (default)` |
-| Staging version after | _pending deploy_ |
-| Staging build | _pending_ |
-| Staging `/health` | _pending_ |
-| Tests / smokes | _pending_ |
-| Warnings novos | _pending_ |
-| PROD altered | **NÃO** |
+| Staging version after | **`3.12.14`** via `/opt/render/project/src/backend/.python-version` (deploy `dep-dal69qe7bikc73ehkdhg`, commit `f249091`, 2026-09-16) |
+| Staging build | **PASS** (`render deploys create … --wait` → succeeded; wheels `cp312`) |
+| Staging startup | **PASS** — uvicorn up; `[TVDE] config … BETA_MODE=True`; alembic head |
+| Staging `/health` | **200** `{"status":"ok"}` |
+| Staging `/` | **200** `{"status":"ok"}` |
+| Auth smoke | `POST /auth/login` bad creds → **401** `invalid_credentials` (não 5xx) |
+| `/config` | `beta_mode: true` |
+| Local tests (sample) | `test_m1_password_beta` + `test_payment_hardening` → **23 passed**; ruff clean |
+| Warnings novos (UserWarning/Traceback na janela do deploy) | **nenhum** na query Render |
+| PROD altered | **NÃO** (ainda `3.14.3 default` nos logs PROD) |
+
+### `STAGING VALIDATED — READY TO PIN PROD`
+
+**Não mergear / não redeploy PROD sem OK explícito.** Merge a `main` auto-deploya `tvde-api` (branch `main`).
 
 ---
 
