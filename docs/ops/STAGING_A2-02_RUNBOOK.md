@@ -39,7 +39,9 @@ Copiar o bloco de prod e **substituir**:
 - `CORS_ALLOWED_ORIGINS` → URL **publicada** do static staging **+** `http://localhost:5173` se precisares de testar local contra API staging
 - `GOOGLE_OAUTH_*` → template [`docs/env/templates/backend.env.example`](../env/templates/backend.env.example): `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` (secret só na API)
 - Manter `STRIPE_MOCK=true` até haver motivo para o contrário
-- `ENVIRONMENT=production` ou `ENV=production` é aceitável no Render; o que define “staging” é o **nome do serviço + BD + URLs**, não este flag
+- **Estado actual (temporário):** `ENV=production` (ou `ENVIRONMENT=production`) em staging — o código trata isto como deployed-safe (CORS restrito, alembic no startup, `/dev` off)
+- **Futuro (não aplicar nesta fase):** `ENV=staging` / `ENVIRONMENT=staging` **só depois** da semântica deployed estar em `main` (helpers `is_deployed` / `is_staging`). Com o código actual pós-`fix/env-deployed-semantics`, `ENV=staging` deixa de activar CORS `*` nem `/debug` always-on; confirma checklist CORS origins + `ENABLE_DEV_TOOLS=false` antes do flip
+- O que define o stack de staging continua a ser **nome do serviço + BD + URLs**
 
 ### Static (`tvde-staging-app`)
 

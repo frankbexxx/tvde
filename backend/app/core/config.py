@@ -27,14 +27,15 @@ class Settings(BaseSettings):
     )
 
     ENV: str = "dev"
-    # A023: optional override for security policy (CORS, dev routers). Values: dev | prod | production
+    # Optional override for environment policy (CORS, alembic, routers). Takes precedence over ENV.
+    # Known labels: production|prod, staging|stage, development|dev, test.
     ENVIRONMENT: str | None = None
-    # A023: em produção deve ser False. Em dev local, True acelera seed/tokens mesmo com ENV≠dev.
+    # Em produção/staging deve ser False. Em dev local, True acelera seed/tokens.
     ENABLE_DEV_TOOLS: bool = False
     BETA_MODE: bool = False  # When True, rate limit request_trip (5/min per user)
 
-    # CORS: comma-separated origins (no "*"). Em produção (ENVIRONMENT/ENV=prod) é obrigatório ter pelo menos uma.
-    # Em dev, o middleware pode usar "*" sem credentials (ver main.py).
+    # CORS: comma-separated origins (no "*"). Em deployed (prod/staging) é obrigatório ter pelo menos uma.
+    # Em development/test, o middleware pode usar "*" sem credentials (ver main.py).
     CORS_ALLOWED_ORIGINS: str = (
         "https://tvde-app-j51f.onrender.com,http://localhost:5173"
     )
@@ -148,16 +149,39 @@ class Settings(BaseSettings):
     GOOGLE_OAUTH_CLIENT_SECRET: str = ""
 
     def _raw_environment_label(self) -> str:
+        """Single resolution: ENVIRONMENT (if set) else ENV; trimmed + lowercased."""
         if self.ENVIRONMENT is not None and str(self.ENVIRONMENT).strip():
             return str(self.ENVIRONMENT).strip().lower()
-        return self.ENV.strip().lower()
+        return (self.ENV or "").strip().lower()
 
     def is_production_environment(self) -> bool:
-        """A023: prod se ENVIRONMENT ou ENV for prod/production."""
         return self._raw_environment_label() in ("prod", "production")
 
     def is_staging_environment(self) -> bool:
         return self._raw_environment_label() in ("staging", "stage")
+
+    def is_development_environment(self) -> bool:
+        """Explicit local/dev labels only — never `not is_production`."""
+        return self._raw_environment_label() in ("dev", "development")
+
+    def is_test_environment(self) -> bool:
+        return self._raw_environment_label() in ("test",)
+
+    def is_deployed_environment(self) -> bool:
+        """Production, staging, or unknown labels (unknown → conservative deployed-safe)."""
+        if self.is_production_environment() or self.is_staging_environment():
+            return True
+        if self.is_development_environment() or self.is_test_environment():
+            return False
+        return True
+
+    def uses_permissive_cors(self) -> bool:
+        """Wildcard CORS only outside deployed environments."""
+        return not self.is_deployed_environment()
+
+    def should_run_alembic_on_startup(self) -> bool:
+        """Prod + staging (+ unknown) run upgrade_to_head on lifespan startup."""
+        return self.is_deployed_environment()
 
     def is_stripe_live_deploy(self) -> bool:
         """Prod always; staging only when STRIPE_MOCK is off (real Stripe)."""
@@ -179,31 +203,27 @@ class Settings(BaseSettings):
             return False
         return True
 
-    def is_development_environment(self) -> bool:
-        return not self.is_production_environment()
-
     def dev_tools_router_enabled(self) -> bool:
-        """Montar /dev/* só fora de produção; localmente ENV=dev ou ENABLE_DEV_TOOLS."""
-        if self.is_production_environment():
+        """Mount /dev/* only in non-deployed envs with ENV=dev/development or ENABLE_DEV_TOOLS."""
+        if self.is_deployed_environment():
             return False
-        env_l = self.ENV.strip().lower()
-        return self.ENABLE_DEV_TOOLS or env_l in ("dev", "development")
+        return bool(self.ENABLE_DEV_TOOLS) or self.is_development_environment()
 
     def debug_router_enabled(self) -> bool:
-        """Montar /debug/* em dev/staging ou em beta controlado."""
-        if self.is_production_environment():
+        """Deployed: same gate as production (BETA_MODE). Local/test: always on."""
+        if self.is_deployed_environment():
             return bool(self.BETA_MODE)
         return True
 
     def allow_default_password_login(self) -> bool:
-        """Dev: True by default. Production: False unless ALLOW_DEFAULT_PASSWORD_LOGIN=true."""
+        """Dev/test: True by default. Deployed: False unless ALLOW_DEFAULT_PASSWORD_LOGIN=true."""
         if self.ALLOW_DEFAULT_PASSWORD_LOGIN is not None:
             return bool(self.ALLOW_DEFAULT_PASSWORD_LOGIN)
-        return not self.is_production_environment()
+        return not self.is_deployed_environment()
 
     def is_forbidden_default_password(self, password: str) -> bool:
-        """Block DEFAULT_PASSWORD in production even when login is otherwise allowed."""
-        if not self.is_production_environment():
+        """Block DEFAULT_PASSWORD on deployed environments even when login is otherwise allowed."""
+        if not self.is_deployed_environment():
             return False
         return password == self.DEFAULT_PASSWORD
 

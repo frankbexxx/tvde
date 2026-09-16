@@ -57,7 +57,7 @@ def _suppress_console_in_test(event_name: str) -> bool:
     try:
         from app.core.config import settings
 
-        if getattr(settings, "ENV", "") != "test":
+        if not settings.is_test_environment():
             return False
     except Exception:
         return False
@@ -70,7 +70,7 @@ def _log_state_arrow() -> str:
         from app.core.config import settings
     except Exception:
         return "→"
-    if getattr(settings, "ENV", "") == "test":
+    if settings.is_test_environment():
         return "->"
     return "→"
 

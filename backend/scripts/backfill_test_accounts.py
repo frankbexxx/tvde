@@ -153,9 +153,9 @@ def main() -> None:
     if args.confirm != "MARK_EXISTING_AS_TEST":
         raise SystemExit("Invalid --confirm value")
 
-    if settings.is_production_environment() and args.dry_run is False:
+    if settings.is_deployed_environment() and args.dry_run is False:
         if not settings.ADMIN_PHONE:
-            raise SystemExit("Refusing to run in production without ADMIN_PHONE")
+            raise SystemExit("Refusing to run in deployed environment without ADMIN_PHONE")
 
     result = run_backfill(dry_run=args.dry_run, test_phones=args.test_phone)
     mode = "DRY-RUN" if args.dry_run else "APPLIED"

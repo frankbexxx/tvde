@@ -84,12 +84,12 @@ def main() -> None:
         sys.exit(2)
     _assert_database_allowed(database_url)
 
-    if settings.is_production_environment():
+    if settings.is_deployed_environment():
         allow = (os.environ.get("ALLOW_REMOTE_BASELINE_WIPE") or "").strip().upper()
         if allow != "YES":
             print(
-                "Refusing: production environment detected "
-                "(ENV/ENVIRONMENT is prod/production). "
+                "Refusing: deployed environment detected "
+                "(production/staging/unknown). "
                 "Set ALLOW_REMOTE_BASELINE_WIPE=YES only for intentional remote wipe.",
                 file=sys.stderr,
             )

@@ -73,12 +73,17 @@ Obrigatórias sempre:
 Ambiente:
 
 - **`ENVIRONMENT`** (preferível) ou **`ENV`**
-  - “prod” é decidido por `ENVIRONMENT` quando definido; senão por `ENV`
+  - Resolução: `ENVIRONMENT` se definido, senão `ENV` (trim + lowercase)
+  - Labels conhecidos: `production`/`prod`, `staging`/`stage`, `development`/`dev`, `test`
+  - Helpers: `is_production_environment`, `is_staging_environment`, `is_development_environment`, `is_test_environment`, `is_deployed_environment` (prod **ou** staging; labels desconhecidos → deployed-safe)
+  - **Staging NÃO é development** no código (`is_development` é só `dev`/`development`)
+  - **Render staging** pode ainda ter `ENV=production` temporariamente (comportamento deployed-safe idêntico a prod). Flip para `ENV=staging` é passo posterior — ver [`docs/ops/STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md)
 
 CORS:
 
 - **`CORS_ALLOWED_ORIGINS`**
-  - em produção precisa de pelo menos 1 origin (sem `*`)
+  - em **deployed** (prod/staging/unknown) precisa de pelo menos 1 origin (sem `*`)
+  - em development/test o middleware pode usar `*` sem credentials
 
 Stripe:
 
