@@ -14,6 +14,14 @@ from app.services.rotacional_feed import (
 )
 
 
+def _clear_rotacional_external_cache(db: Session) -> None:
+    """Remove singleton cache row so route tests don't see leftover DB state."""
+    row = db.get(RotacionalExternalCache, CACHE_ROW_ID)
+    if row is not None:
+        db.delete(row)
+        db.commit()
+
+
 def test_parse_rotacional_feed_empty():
     assert parse_rotacional_feed_json("") == []
     assert parse_rotacional_feed_json(None) == []
@@ -38,7 +46,11 @@ def test_parse_rotacional_invalid_json(monkeypatch: pytest.MonkeyPatch):
     assert parse_rotacional_feed_json(settings.ROTACIONAL_FEED_JSON) == []
 
 
-def test_rotacional_messages_route(client):
+def test_rotacional_messages_route(
+    client, db: Session, monkeypatch: pytest.MonkeyPatch
+):
+    monkeypatch.setattr(settings, "ROTACIONAL_FEED_JSON", "", raising=False)
+    _clear_rotacional_external_cache(db)
     r = client.get("/rotacional/messages")
     assert r.status_code == 200
     data = r.json()
@@ -58,23 +70,22 @@ def test_rotacional_merge_dedupes_by_text():
 
 
 def test_rotacional_messages_merges_cache(client, db: Session, monkeypatch: pytest.MonkeyPatch):
-    row = db.get(RotacionalExternalCache, CACHE_ROW_ID)
-    if row is None:
-        row = RotacionalExternalCache(
-            id=CACHE_ROW_ID,
-            items_json=json.dumps(
-                [{"text": "Linha do cache externo", "source": "externo"}], ensure_ascii=False
-            ),
-        )
-        db.add(row)
-    else:
-        row.items_json = json.dumps(
+    try:
+        row = db.get(RotacionalExternalCache, CACHE_ROW_ID)
+        payload = json.dumps(
             [{"text": "Linha do cache externo", "source": "externo"}], ensure_ascii=False
         )
-    db.commit()
+        if row is None:
+            row = RotacionalExternalCache(id=CACHE_ROW_ID, items_json=payload)
+            db.add(row)
+        else:
+            row.items_json = payload
+        db.commit()
 
-    monkeypatch.setattr(settings, "ROTACIONAL_FEED_JSON", "", raising=False)
-    r = client.get("/rotacional/messages")
-    assert r.status_code == 200
-    texts = [i["text"] for i in r.json()["items"]]
-    assert "Linha do cache externo" in texts
+        monkeypatch.setattr(settings, "ROTACIONAL_FEED_JSON", "", raising=False)
+        r = client.get("/rotacional/messages")
+        assert r.status_code == 200
+        texts = [i["text"] for i in r.json()["items"]]
+        assert "Linha do cache externo" in texts
+    finally:
+        _clear_rotacional_external_cache(db)
