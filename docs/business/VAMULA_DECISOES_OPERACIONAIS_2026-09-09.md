@@ -101,24 +101,25 @@ Telefone público **não** é gap obrigatório nesta fase.
 | Titular | Ventos Férteis, Lda. |
 | Variantes adicionais | **Não** comprar neste momento |
 | Gestão/acesso | Manel + Francisco |
-| Situação (2026-09-13) | **ACTIVO em produção** — https://vamula.pt (HTTPS OK) |
+| Situação (2026-09-16) | **ACTIVO em produção** — https://vamula.pt (HTTPS OK) · páginas legais **DEPLOYED / VALIDATED** |
 
-**Histórico:** em 09/09/2026 o domínio estava bloqueado externamente no .PT (recuperação de contacto). Em 13/09/2026 o site institucional V1 já está publicado no domínio.
+**Histórico:** em 09/09/2026 o domínio estava bloqueado externamente no .PT (recuperação de contacto). Em 13/09/2026 o site institucional V1 já está publicado no domínio. Em 16/09/2026 as páginas legais públicas foram publicadas e validadas por smoke.
 
-**Importante:** emails `@vamula.pt` e LRE continuam pendentes — **não** bloqueiam a APP.
+**Importante:** LRE link directo continua pendente (credenciais externas) — **não** bloqueia a APP.
 
 ---
 
 ## 8. Hosting / site institucional
 
-| Campo | Estado (2026-09-13) |
+| Campo | Estado (2026-09-16) |
 |-------|---------------------|
 | Alojamento | **Hostinger Premium** |
 | Tipo | Site institucional estático (`site/` no repo) |
 | Deploy | Manual para `public_html/` |
 | Landing V1 | **DEPLOYED / PROD OK** — https://vamula.pt |
+| Páginas legais públicas | **DEPLOYED / VALIDATED** — `/legal/` · `/privacidade/` · `/reclamacoes/` · `/ral/` · PR [#596](https://github.com/frankbexxx/tvde/pull/596) |
 | HTTPS | OK |
-| Smoke desktop/mobile | PASS |
+| Smoke desktop/mobile | PASS (landing 13/09; legais 16/09) |
 | `default.php` | Removido |
 | `index.html.bak` | Mantido (backup) |
 | Custo contrato | Ainda **TBD** no modelo económico A1 (não inventar valor) |
@@ -129,12 +130,15 @@ Fonte de deploy: [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](../ops/VAMULA_
 
 ## 9. Email profissional
 
-| Campo | Estado |
-|-------|--------|
-| Email actual da empresa | `ventosferteis@gmail.com` |
-| Email(s) no domínio VAMULÁ | **PENDENTE DO DOMÍNIO** |
+| Campo | Estado (2026-09-16) |
+|-------|---------------------|
+| Email actual da empresa | `ventosferteis@gmail.com` (legado / fallback) |
+| `geral@vamula.pt` | **ACTIVO** |
+| `legal@vamula.pt` | **ACTIVO** |
+| `suporte@vamula.pt` | **ACTIVO** (alias de `geral@`) |
+| `reclamacoes@vamula.pt` | **ACTIVO** (alias de `legal@`) |
 
-Inclui (quando o domínio estiver sob controlo): email geral, email de reclamações, outros contactos institucionais necessários. **Não** inventar endereços finais aqui.
+Sem telefone público nesta fase.
 
 ---
 
@@ -142,14 +146,16 @@ Inclui (quando o domínio estiver sob controlo): email geral, email de reclamaç
 
 | Campo | Decisão / estado |
 |-------|------------------|
-| Timing | Depois de concluído/desbloqueado o domínio |
+| Timing | Domínio e emails já activos |
 | Responsáveis iniciais | Manel + Francisco |
-| Resposta / prazos | Manel + Francisco |
-| Acesso/credenciais | Disponíveis a ambos |
-| Estado | **PENDENTE — executar após domínio** |
+| Resposta / prazos | Manel + Francisco · 15 dias úteis (página pública) |
+| Acesso/credenciais | **PENDENTE** (externo / contabilista) |
+| Página pública `/reclamacoes/` | **DEPLOYED / VALIDATED** — link LRE **genérico** |
+| Link directo entidade | **PENDENTE** — bloqueado por credenciais externas / contabilista |
+| RAL `/ral/` | **DEPLOYED / VALIDATED** — wording **provisório** (CACCL/CNIACC); sem ODR antiga; revisão jurídica futura |
 
-Obrigatório operacionalmente, mas **NÃO** bloqueia o desenvolvimento actual da APP.  
-Não fechar L-25 globalmente enquanto O-L25-01… permanecerem pendentes.
+Obrigatório operacionalmente fechar o link directo LRE, mas **NÃO** bloqueia o desenvolvimento actual da APP.  
+Não fechar L-25 globalmente enquanto o registo/link directo LRE permanecer pendente.
 
 ---
 
@@ -164,17 +170,19 @@ Não fechar L-25 globalmente enquanto O-L25-01… permanecerem pendentes.
 - Domínio alvo `vamula.pt` (titular Ventos Férteis)
 - G-KYC-P0-04 permanece **CLOSED** (fora desta acta; já fechado)
 - **Landing institucional V1** em https://vamula.pt (**Hostinger Premium** · deploy manual · 2026-09-13)
+- **Páginas legais públicas** = **DEPLOYED / VALIDATED** (2026-09-16 · PR #596)
+- Emails institucionais `@vamula.pt` **activos** (`geral@` · `legal@` · aliases `suporte@` / `reclamacoes@`)
+- Sem banner cookies nesta fase
 
 ### Ainda pendentes
 
 - Tabela de preços final / acta A1.4
-- Emails `@vamula.pt`
-- Registo/ops LRE
+- LRE registo / link **directo** (credenciais externas / contabilista; link genérico já publicado)
+- Revisão jurídica do wording RAL
 - Validação custos Hostinger no modelo A1 (valor contratado)
-- Páginas legais no site (Privacidade, Termos, LRE, RAL)
 
 ### Dependências externas
 
-- **.PT** — recuperação/alteração de contacto do domínio
-- Contabilista (facturação/CAE fino) — Manel
-- Portal LRE — após domínio
+- Contabilista (facturação/CAE fino + credenciais LRE) — Manel
+- Portal LRE — link directo pendente
+- Revisão jurídica RAL (provisório publicado)
