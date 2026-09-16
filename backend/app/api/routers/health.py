@@ -18,7 +18,8 @@ def _db_ping() -> None:
         conn.execute(text("SELECT 1"))
 
 
-@router.api_route("/", methods=["GET", "HEAD"])
+@router.get("/", operation_id="root_get")
+@router.head("/", operation_id="root_head")
 async def root() -> dict:
     """Root — usado por load balancers (ex: Render) para health check.
 
@@ -27,7 +28,8 @@ async def root() -> dict:
     return {"status": "ok"}
 
 
-@router.api_route("/health", methods=["GET", "HEAD"])
+@router.get("/health", operation_id="health_check_get")
+@router.head("/health", operation_id="health_check_head")
 async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
     """Health check. diagnostic=1 adds config hints for simulator/tools.
 

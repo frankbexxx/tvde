@@ -258,6 +258,20 @@ export function AdminDashboard() {
     }
   }, [token, partners.length, driversList.length])
 
+  const fetchDataVisibility = useCallback(async () => {
+    if (!token) return
+    setDataLoading(true)
+    try {
+      const [ps, ds] = await Promise.all([listPartners(token), listDrivers(token)])
+      setPartners(ps)
+      setDriversList(ds)
+    } catch (err) {
+      setError(adminErrDetail(err, 'Erro ao carregar dados'))
+    } finally {
+      setDataLoading(false)
+    }
+  }, [token])
+
   /** ADMIN-POLL-2: async; ok se pelo menos um endpoint responder. */
   const refreshAgora = useCallback(async (): Promise<'ok' | 'error'> => {
     const settled = await Promise.allSettled([
@@ -572,8 +586,6 @@ export function AdminDashboard() {
     if (tab === 'ops') void fetchHealth()
     if (tab === 'dados') void fetchDataVisibility()
     if (tab === 'frota') void ensureDataLoaded()
-    // Tab-driven fetches; fetchDataVisibility / fetchUsage / ensureDataLoaded are stable enough for this pattern.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-running on every render of inline fetch helpers
   }, [
     token,
     tab,
@@ -587,21 +599,9 @@ export function AdminDashboard() {
     fetchUsage,
     fetchHealth,
     fetchAdminAlerts,
+    fetchDataVisibility,
+    ensureDataLoaded,
   ])
-
-  const fetchDataVisibility = async () => {
-    if (!token) return
-    setDataLoading(true)
-    try {
-      const [ps, ds] = await Promise.all([listPartners(token), listDrivers(token)])
-      setPartners(ps)
-      setDriversList(ds)
-    } catch (err) {
-      setError(adminErrDetail(err, 'Erro ao carregar dados'))
-    } finally {
-      setDataLoading(false)
-    }
-  }
 
   const handleApproveDriver = async (driverUserId: string) => {
     if (!token || !driverUserId.trim() || driverStatusLoading) return
@@ -692,6 +692,7 @@ export function AdminDashboard() {
     fetchUsage,
     fetchHealth,
     ensureDataLoaded,
+    fetchDataVisibility,
   ])
 
   const copy = async (value: string) => {
