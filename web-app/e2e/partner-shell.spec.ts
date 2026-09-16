@@ -142,7 +142,7 @@ test.describe('Partner — menu tree v2', () => {
     await sheet.getByRole('button', { name: 'Frota' }).click()
     await sheet.getByTestId('partner-fleet-hub-list').click()
     await expect(sheet.getByTestId('partner-fleet-drivers-section')).toBeVisible()
-    const driverLink = sheet.getByRole('link', { name: driverLinkName })
+    const driverLink = sheet.getByRole('link', { name: driverLinkName, exact: true })
     await expect(driverLink).toBeVisible({ timeout: sec(30) })
     await driverLink.click()
     await expect(sheet).not.toBeVisible({ timeout: sec(30) })
