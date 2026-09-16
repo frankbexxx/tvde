@@ -12,6 +12,7 @@
 | **M1 — APP TECNICAMENTE CONCLUÍDA** | **DONE** 2026-09-03 · G3.1 PASS · tip `e556a3b` |
 | Tarifário V1 GO/Comfort/XL + mínimos + Pet + cancel €3 (A2.5) | **DONE** 2026-09 · tip pós-#582/#583 |
 | Landing institucional V1 · `vamula.pt` | **DONE** 2026-09-13 · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
+| Páginas legais públicas VAMULÁ · `/legal` `/privacidade` `/reclamacoes` `/ral` | **DEPLOYED / VALIDATED** 2026-09-16 · Hostinger · [#596](https://github.com/frankbexxx/tvde/pull/596) · smoke público PASS |
 | Spike HERE tolls (script + docs) | **DONE** · live validation **DONE** · [#584](https://github.com/frankbexxx/tvde/pull/584) · **APROVADO COM RESERVAS PARA V1** |
 | PORTAGENS V1 (F0–F5 runtime) | **PROD VALIDATED** · HERE ON · [#592](https://github.com/frankbexxx/tvde/pull/592)/[#593](https://github.com/frankbexxx/tvde/pull/593) · residual route variance accepted · P2 `S-TOLLS-P2` |
 
@@ -140,15 +141,15 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
 | **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
 | **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) fiscal/legal tolls · (2) **S-TOLLS-P2** HERE routing determinism (P2) · (3) parecer/decisão legal L3 · (4) LRE ops + emails `@vamula.pt` · (5) AMT/reporting · (6) L1/L2 IMT · (7) RetentionPolicy · (8) **A1.4** acta formal |
+| **Próximas frentes** | (1) fiscal/legal tolls · (2) **S-TOLLS-P2** HERE routing determinism (P2) · (3) parecer/decisão legal L3 · (4) LRE registo/link directo (credenciais externas) · (5) AMT/reporting · (6) L1/L2 IMT · (7) RetentionPolicy · (8) **A1.4** acta formal · (9) revisão jurídica wording RAL |
 
 *Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (GPS/docs/IMT).
 
 *Complaints (L-12):* foundation 2026-09-07 — `Complaint` + `ComplaintHistory` (procedimento canónico) · retenção 2 anos civis · APIs + Admin inbox · **PARCIAL** (sem attachments).
 
-*Livro / RAL (L-25):* foundation técnica 2026-09-07 — sources + Admin import externo · links LRE + secção RAL · **PARCIAL** (registo portal LRE **PENDENTE — após domínio**; **NÃO BLOQUEADOR IMEDIATO** do desenvolvimento APP; sem API LRE). Ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md).
+*Livro / RAL (L-25):* foundation técnica 2026-09-07 — sources + Admin import externo · páginas públicas `/reclamacoes` + `/ral` **DEPLOYED / VALIDATED** (2026-09-16) · link LRE **genérico** publicado · RAL wording **provisório** (CACCL/CNIACC; sem ODR antiga) · registo/link directo LRE **PENDENTE** (credenciais externas / contabilista) · **NÃO BLOQUEADOR IMEDIATO** APP · sem API LRE. Ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md).
 
-*Domínio / site / email:* `vamula.pt` **ACTIVO** — landing institucional V1 **DEPLOYED / PROD OK** (Hostinger Premium · https://vamula.pt · 2026-09-13) · emails `@vamula.pt` e LRE = **PENDENTE** · **não** bloqueia APP. Ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md).
+*Domínio / site / email:* `vamula.pt` **ACTIVO** — landing V1 **DEPLOYED / PROD OK** (2026-09-13) · **páginas legais públicas = DEPLOYED / VALIDATED** (2026-09-16 · [#596](https://github.com/frankbexxx/tvde/pull/596)) · emails institucionais **activos** (`geral@` · `legal@` · `suporte@`→geral · `reclamacoes@`→legal) · LRE directo ainda **PENDENTE** · **não** bloqueia APP. Ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md).
 
 ## CAMINHO CRÍTICO — EXPLORAÇÃO COMERCIAL (Marco 3)
 
@@ -250,7 +251,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Objectivo:** Inventário titularidade código/design/marca/contas/domínios.  
 - **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02` · *reminder* [`SEP-IP-05`](product/SETEMBRO_2026_TODO_LIBRARY.md) (OXS/VAMULÁ housekeeping — **não agora**)  
 - **Dependências:** —  
-- **Nota domínio (2026-09-13):** **`vamula.pt` ACTIVO** · landing V1 **DEPLOYED** (Hostinger) · emails `@vamula.pt` = **PENDENTE** · ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) · **não** bloqueia APP.
+- **Nota domínio (2026-09-16):** **`vamula.pt` ACTIVO** · landing V1 **DEPLOYED** · páginas legais **DEPLOYED / VALIDATED** · emails `@vamula.pt` **activos** · LRE directo **PENDENTE** · ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) · **não** bloqueia APP.
 - **Conclusão:** Inventário assinado por Francisco (e Manel se aplicável).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
@@ -496,7 +497,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 - **IDs:** `S-MOB-03` · **Dependências:** necessidade real de distribuição (não automático no M2)  
 - **Nota:** só entra no crítico do Marco 3 se stores/landing forem exigidos para exploração comercial.  
-- **Landing institucional (≠ stores):** **DONE** 2026-09-13 — `https://vamula.pt` · Hostinger Premium · HTTPS · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) · ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md). Emails `@vamula.pt` / páginas legais públicas / LRE = **PENDENTE**.
+- **Landing institucional (≠ stores):** **DONE** 2026-09-13 — `https://vamula.pt` · Hostinger Premium · HTTPS · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586).
+- **Páginas legais públicas:** **DEPLOYED / VALIDATED** 2026-09-16 — `/legal/` · `/privacidade/` · `/reclamacoes/` · `/ral/` · [#596](https://github.com/frankbexxx/tvde/pull/596) · smoke Hostinger PASS · ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md). Emails `@vamula.pt` **activos**. LRE link directo = **PENDENTE**. Sem telefone público · sem banner cookies nesta fase.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|

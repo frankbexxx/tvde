@@ -169,8 +169,8 @@
               <dd>516344439</dd>
             </div>
             <div>
-              <dt>Sede</dt>
-              <dd>Rua Alfredo de Sousa, n.º 3, 3.º B, 2780-177 Oeiras</dd>
+              <dt>Localização</dt>
+              <dd>Oeiras, Portugal</dd>
             </div>
             <div>
               <dt>Marca / plataforma</dt>
@@ -181,6 +181,10 @@
               <dd>n.º 354/2026</dd>
             </div>
           </dl>
+          <p class="note">
+            Dados societários completos, incluindo sede, em
+            <a href="legal/">Informação legal</a>.
+          </p>
         </div>
       </div>
     </section>
@@ -189,10 +193,19 @@
       <div class="shell narrow">
         <p class="eyebrow">Contactos</p>
         <h2 id="contactos-title">Fale connosco</h2>
-        <!-- TODO: substituir por emails @vamula.pt (geral + suporte) -->
         <p class="lead">
-          Os nossos contactos profissionais estarão disponíveis brevemente.
+          Contacte a VAMULÁ pelos canais abaixo. Não disponibilizamos telefone público nesta página.
         </p>
+        <ul class="contact-list">
+          <li>
+            <span class="contact-label">Geral</span>
+            <a class="contact-value" href="mailto:geral@vamula.pt">geral@vamula.pt</a>
+          </li>
+          <li>
+            <span class="contact-label">Suporte</span>
+            <a class="contact-value" href="mailto:suporte@vamula.pt">suporte@vamula.pt</a>
+          </li>
+        </ul>
       </div>
     </section>
   </main>
@@ -205,10 +218,10 @@
       </div>
 
       <nav class="footer-nav" aria-label="Informação legal">
-        <!-- TODO: Política de Privacidade — ligar quando a página existir -->
-        <!-- TODO: Termos e Condições — ligar quando a página existir -->
-        <!-- TODO: Livro de Reclamações — ligar quando a página existir -->
-        <!-- TODO: RAL (Resolução Alternativa de Litígios) — ligar quando a página existir -->
+        <a href="legal/">Informação legal</a>
+        <a href="privacidade/">Privacidade</a>
+        <a href="reclamacoes/">Reclamações</a>
+        <a href="ral/">RAL</a>
         <a href="#contactos">Contactos</a>
       </nav>
 
@@ -216,34 +229,7 @@
     </div>
   </footer>
 
-  <script>
-    (function () {
-      var toggle = document.getElementById("nav-toggle");
-      var nav = document.getElementById("site-nav");
-      if (!toggle || !nav) return;
-
-      function setOpen(open) {
-        toggle.setAttribute("aria-expanded", open ? "true" : "false");
-        toggle.setAttribute("aria-label", open ? "Fechar menu" : "Abrir menu");
-        nav.classList.toggle("is-open", open);
-        document.body.classList.toggle("nav-open", open);
-      }
-
-      toggle.addEventListener("click", function () {
-        setOpen(toggle.getAttribute("aria-expanded") !== "true");
-      });
-
-      nav.querySelectorAll("a").forEach(function (link) {
-        link.addEventListener("click", function () {
-          setOpen(false);
-        });
-      });
-
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") setOpen(false);
-      });
-    })();
-  </script>
+  <script src="nav.js" defer></script>
 </body>
 
 </html>
