@@ -4,7 +4,7 @@
 Run from backend directory:
   python scripts/seed_partner.py
 
-Requires ENV=dev or ENABLE_DEV_TOOLS=true and a reachable DATABASE_URL.
+Requires development environment or ENABLE_DEV_TOOLS=true and a reachable DATABASE_URL.
 """
 
 from __future__ import annotations
@@ -21,10 +21,12 @@ if str(_BACKEND_ROOT) not in sys.path:
 def main() -> None:
     from app.core.config import settings
 
-    env = getattr(settings, "ENV", "")
-    if env != "dev" and not getattr(settings, "ENABLE_DEV_TOOLS", False):
+    if settings.is_deployed_environment() or (
+        not settings.is_development_environment()
+        and not getattr(settings, "ENABLE_DEV_TOOLS", False)
+    ):
         print(
-            "Refused: set ENV=dev or ENABLE_DEV_TOOLS=true to run this seed.",
+            "Refused: set ENV=dev/development (non-deployed) or ENABLE_DEV_TOOLS=true.",
             file=sys.stderr,
         )
         sys.exit(1)

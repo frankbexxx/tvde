@@ -82,21 +82,24 @@ async def lifespan(app: FastAPI):
     _beta = getattr(settings, "BETA_MODE", False)
     print(
         f"[TVDE] config ENV={settings.ENV} ENVIRONMENT={settings.ENVIRONMENT!r} "
-        f"prod={settings.is_production_environment()} dev_tools_mounted={_dev} BETA_MODE={_beta}"
+        f"prod={settings.is_production_environment()} "
+        f"staging={settings.is_staging_environment()} "
+        f"deployed={settings.is_deployed_environment()} "
+        f"dev_tools_mounted={_dev} BETA_MODE={_beta}"
     )
 
-    if settings.is_production_environment():
-        logger.info("[startup] alembic upgrade head (produção)")
+    if settings.should_run_alembic_on_startup():
+        logger.info("[startup] alembic upgrade head (deployed)")
         upgrade_to_head()
         logger.info("[startup] alembic em head")
 
-    _env_low = settings.ENV.strip().lower()
     stripe_mock = bool(getattr(settings, "STRIPE_MOCK", False))
     if not stripe_mock:
-        if _env_low not in ("dev", "development"):
+        if not settings.is_development_environment():
             if not settings.STRIPE_WEBHOOK_SECRET:
                 raise RuntimeError(
-                    "STRIPE_WEBHOOK_SECRET is required when ENV is not dev (and STRIPE_MOCK=false). "
+                    "STRIPE_WEBHOOK_SECRET is required outside development "
+                    "(and STRIPE_MOCK=false). "
                     "Set it in .env or environment variables."
                 )
         elif not settings.STRIPE_WEBHOOK_SECRET:
@@ -122,14 +125,14 @@ def _cors_allowed_origins_list() -> list[str]:
 
 
 def _cors_middleware_params() -> dict:
-    """A023: dev → * sem credentials (Bearer em header). Produção → lista explícita + credentials."""
-    if settings.is_development_environment():
+    """Deployed → lista explícita + credentials. Development/test → * sem credentials."""
+    if settings.uses_permissive_cors():
         return {"allow_origins": ["*"], "allow_credentials": False}
     origins = _cors_allowed_origins_list()
     if not origins:
         raise RuntimeError(
-            "CORS_ALLOWED_ORIGINS must list at least one origin in production "
-            "(comma-separated; no *)."
+            "CORS_ALLOWED_ORIGINS must list at least one origin in deployed "
+            "environments (comma-separated; no *)."
         )
     return {"allow_origins": origins, "allow_credentials": True}
 
