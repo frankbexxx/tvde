@@ -1,20 +1,65 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { PassengerDashboard } from '../features/passenger/PassengerDashboard'
-import { DriverDashboard } from '../features/driver/DriverDashboard'
-import { AdminDashboard } from '../features/admin/AdminDashboard'
-import { PartnerDriverDetail } from '../features/partner/PartnerDriverDetail'
-import { PartnerHome } from '../features/partner/PartnerHome'
-import { PartnerLayout } from '../features/partner/PartnerLayout'
-import { PartnerTripDetail } from '../features/partner/PartnerTripDetail'
 import { GoogleOAuthCallback } from '../features/auth/GoogleOAuthCallback'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { AppDownloadLanding } from '../features/public/AppDownloadLanding'
 import { AppDownloadRedirect } from '../features/public/AppDownloadRedirect'
-import { DebugMapPage } from '../features/debug/DebugMapPage'
 import { AppHeaderBar } from '../components/layout/AppHeaderBar'
 import { isBackofficeStaffRole, useAuth } from '../context/AuthContext'
 import { Spinner } from '../components/ui/Spinner'
+
+const PassengerDashboard = lazy(() =>
+  import('../features/passenger/PassengerDashboard').then((m) => ({
+    default: m.PassengerDashboard,
+  })),
+)
+const DriverDashboard = lazy(() =>
+  import('../features/driver/DriverDashboard').then((m) => ({
+    default: m.DriverDashboard,
+  })),
+)
+const AdminDashboard = lazy(() =>
+  import('../features/admin/AdminDashboard').then((m) => ({
+    default: m.AdminDashboard,
+  })),
+)
+const PartnerLayout = lazy(() =>
+  import('../features/partner/PartnerLayout').then((m) => ({
+    default: m.PartnerLayout,
+  })),
+)
+const PartnerHome = lazy(() =>
+  import('../features/partner/PartnerHome').then((m) => ({
+    default: m.PartnerHome,
+  })),
+)
+const PartnerDriverDetail = lazy(() =>
+  import('../features/partner/PartnerDriverDetail').then((m) => ({
+    default: m.PartnerDriverDetail,
+  })),
+)
+const PartnerTripDetail = lazy(() =>
+  import('../features/partner/PartnerTripDetail').then((m) => ({
+    default: m.PartnerTripDetail,
+  })),
+)
+const DebugMapPage = lazy(() =>
+  import('../features/debug/DebugMapPage').then((m) => ({
+    default: m.DebugMapPage,
+  })),
+)
+
+function RouteChunkFallback() {
+  return (
+    <div className="flex flex-1 min-h-0 items-center justify-center p-4">
+      <Spinner size="lg" />
+    </div>
+  )
+}
+
+function withRouteSuspense(node: ReactNode) {
+  return <Suspense fallback={<RouteChunkFallback />}>{node}</Suspense>
+}
 
 function RootRedirect() {
   const { appRouteRole, sessionRole } = useAuth()
@@ -156,7 +201,7 @@ export function AppRoutes() {
                 path="/passenger"
                 element={
                   <PassengerOnly>
-                    <PassengerDashboard />
+                    {withRouteSuspense(<PassengerDashboard />)}
                   </PassengerOnly>
                 }
               />
@@ -164,7 +209,7 @@ export function AppRoutes() {
                 path="/driver"
                 element={
                   <DriverOnly>
-                    <DriverDashboard />
+                    {withRouteSuspense(<DriverDashboard />)}
                   </DriverOnly>
                 }
               />
@@ -173,7 +218,7 @@ export function AppRoutes() {
                 path="/admin"
                 element={
                   isAdmin ? (
-                    <AdminDashboard />
+                    withRouteSuspense(<AdminDashboard />)
                   ) : (
                     <AdminDeniedRedirect />
                   )
@@ -183,17 +228,27 @@ export function AppRoutes() {
                 path="/partner"
                 element={
                   <PartnerGate>
-                    <PartnerLayout />
+                    {withRouteSuspense(<PartnerLayout />)}
                   </PartnerGate>
                 }
               >
-                <Route index element={<PartnerHome />} />
-                <Route path="drivers/:userId" element={<PartnerDriverDetail />} />
-                <Route path="trips/:tripId" element={<PartnerTripDetail />} />
+                <Route index element={withRouteSuspense(<PartnerHome />)} />
+                <Route
+                  path="drivers/:userId"
+                  element={withRouteSuspense(<PartnerDriverDetail />)}
+                />
+                <Route
+                  path="trips/:tripId"
+                  element={withRouteSuspense(<PartnerTripDetail />)}
+                />
               </Route>
               <Route
                 path="/debug/map"
-                element={import.meta.env.DEV ? <DebugMapPage /> : <Navigate to="/" replace />}
+                element={
+                  import.meta.env.DEV
+                    ? withRouteSuspense(<DebugMapPage />)
+                    : <Navigate to="/" replace />
+                }
               />
             </Routes>
           </div>
