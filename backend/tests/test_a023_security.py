@@ -25,6 +25,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 def _postgres_ok() -> bool:
@@ -52,13 +53,13 @@ def rbac_tokens() -> dict[str, str]:
         passenger = User(
             role=Role.passenger,
             name=f"A023p {suffix}",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         admin = User(
             role=Role.admin,
             name=f"A023a {suffix}",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -247,7 +248,7 @@ def test_debug_trip_logs_forbidden_for_non_owner(
     other_passenger = User(
         role=Role.passenger,
         name="Owner",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(other_passenger)
@@ -284,7 +285,7 @@ def test_debug_trip_logs_ok_for_admin(
     owner = User(
         role=Role.passenger,
         name="Owner2",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(owner)

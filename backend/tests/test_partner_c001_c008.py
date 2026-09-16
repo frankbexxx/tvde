@@ -19,6 +19,7 @@ from app.db.models.vehicle import Vehicle
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 _GOVERNANCE_REASON = "motivo teste integração parceiros SP-F."
 
@@ -94,7 +95,7 @@ def test_c002_assign_driver_partner(admin_ctx_override: str) -> None:
         u = User(
             role=Role.driver,
             name="Drv Assign",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(u)
@@ -148,13 +149,13 @@ def test_c006_assign_blocked_when_active_trip(admin_ctx_override: str) -> None:
         u_d = User(
             role=Role.driver,
             name="D Active",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.passenger,
             name="P",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([u_d, u_p])
@@ -202,19 +203,19 @@ def test_c003_c004_c005_partner_lists_and_metrics() -> None:
         u_d = User(
             role=Role.driver,
             name="Visible Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.passenger,
             name="Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_partner = User(
             role=Role.partner,
             name="Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -303,7 +304,7 @@ def test_c008_full_flow_admin_to_partner_views() -> None:
         admin_u = User(
             role=Role.super_admin,
             name="Flow SuperAdmin",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(admin_u)
@@ -331,19 +332,19 @@ def test_c008_full_flow_admin_to_partner_views() -> None:
         u_d = User(
             role=Role.driver,
             name="Flow Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.passenger,
             name="Flow Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_mgr = User(
             role=Role.partner,
             name="Flow Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=uuid.UUID(fleet_id),
         )

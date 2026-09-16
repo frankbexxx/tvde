@@ -18,6 +18,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 TEST_PWD = "demo1234"
 TRIP_ORIGIN_LAT = 38.7
@@ -55,7 +56,7 @@ def _prod_like_settings(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _unique_phone() -> str:
-    return f"+351{uuid.uuid4().int % 10**9:09d}"
+    return unique_test_phone()
 
 
 def _clear_all_driver_locations() -> None:

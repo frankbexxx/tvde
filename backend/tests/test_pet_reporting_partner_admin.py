@@ -17,13 +17,14 @@ from app.db.models.user import User
 from app.db.models.vehicle import Vehicle
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
 from app.services.pet_reporting import offer_rejection_rows
+from tests.support.unique_phone import unique_test_phone
 
 
 def _seed(db: Session) -> tuple[Trip, Driver]:
     pax = User(
         role=Role.passenger,
         name="PaxRep",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pax)
@@ -31,7 +32,7 @@ def _seed(db: Session) -> tuple[Trip, Driver]:
     du = User(
         role=Role.driver,
         name="DrvRep",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(du)
@@ -160,7 +161,7 @@ def test_assistance_trip_no_commercial_surcharge_in_history(db: Session) -> None
     pax = User(
         role=Role.passenger,
         name="PaxA",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pax)

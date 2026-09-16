@@ -15,6 +15,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 ADMIN_ACTOR_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -34,7 +35,7 @@ def test_admin_block_writes_audit_row(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    phone = unique_test_phone()
     uid = uuid.uuid4()
     db = SessionLocal()
     try:
@@ -83,7 +84,7 @@ def test_admin_audit_trail_lists_admin_events(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    phone = unique_test_phone()
     uid = uuid.uuid4()
     db = SessionLocal()
     try:
@@ -123,7 +124,7 @@ def test_admin_user_patch_audit_before_after_symmetric(
 ) -> None:
     """SP-E: PATCH utilizador regista before/after com os mesmos campos."""
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    phone = unique_test_phone()
     uid = uuid.uuid4()
     db = SessionLocal()
     try:

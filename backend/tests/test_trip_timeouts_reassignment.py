@@ -20,6 +20,7 @@ from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.services import partner_trip_ops, trip_timeouts
 from app.services.partner_trip_ops import partner_reassign_trip_driver
 from app.services.partners_admin import assign_driver_to_partner
+from tests.support.unique_phone import unique_test_phone
 
 
 def _seed_stale_assigned_trip() -> tuple[
@@ -35,19 +36,19 @@ def _seed_stale_assigned_trip() -> tuple[
         passenger = User(
             role=Role.passenger,
             name="Timeout Race Passenger",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         old_driver = User(
             role=Role.driver,
             name="Timeout Race Old Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         new_driver = User(
             role=Role.driver,
             name="Timeout Race New Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all(

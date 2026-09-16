@@ -18,6 +18,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -40,13 +41,13 @@ def _seed_two_tenants(db: Session) -> tuple[str, str, str, str, str]:
     u_a = User(
         role=Role.driver,
         name="Driver A",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     u_b = User(
         role=Role.driver,
         name="Driver B",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add_all([u_a, u_b])
@@ -73,7 +74,7 @@ def _seed_two_tenants(db: Session) -> tuple[str, str, str, str, str]:
     pass_b = User(
         role=Role.passenger,
         name="P B",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pass_b)
@@ -96,14 +97,14 @@ def _seed_two_tenants(db: Session) -> tuple[str, str, str, str, str]:
     partner_user_a = User(
         role=Role.partner,
         name="Partner Admin A",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
         partner_org_id=pid_a,
     )
     partner_user_b = User(
         role=Role.partner,
         name="Partner Admin B",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
         partner_org_id=pid_b,
     )
@@ -175,7 +176,7 @@ def test_partner_endpoint_rejects_driver_token() -> None:
     u = User(
         role=Role.driver,
         name="D",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)

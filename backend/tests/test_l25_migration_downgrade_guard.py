@@ -21,6 +21,7 @@ from app.models.enums import (
     UserStatus,
 )
 from app.services import complaints as complaints_svc
+from tests.support.unique_phone import unique_test_phone
 
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
@@ -81,7 +82,7 @@ def test_downgrade_blocked_when_external_complaint_without_user(
         admin = User(
             role=Role.admin,
             name=f"MigAdm {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().hex[:10]}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(admin)

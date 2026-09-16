@@ -20,6 +20,7 @@ from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.services.partners_admin import partner_metrics
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -45,25 +46,25 @@ def _seed_two_partners_with_drivers() -> dict[str, str]:
         u_da = User(
             role=Role.driver,
             name="Driver A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_db = User(
             role=Role.driver,
             name="Driver B",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_pax = User(
             role=Role.passenger,
             name="Pax 1A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         mgr_a = User(
             role=Role.partner,
             name="Mgr A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid_a,
         )
@@ -160,13 +161,13 @@ def test_partner_available_without_active_trip_has_null_active() -> None:
         u_d = User(
             role=Role.driver,
             name="Idle Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         mgr = User(
             role=Role.partner,
             name="Idle Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )

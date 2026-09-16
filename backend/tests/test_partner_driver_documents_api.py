@@ -15,6 +15,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -34,13 +35,13 @@ def test_partner_cannot_approve_document_without_file() -> None:
         u_d = User(
             role=Role.driver,
             name="Doc Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Doc Partner",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -79,13 +80,13 @@ def test_partner_can_approve_document_after_driver_upload() -> None:
         u_d = User(
             role=Role.driver,
             name="Upload Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Upload Partner",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -141,7 +142,7 @@ def test_driver_upload_sets_pending_review_status() -> None:
         u_d = User(
             role=Role.driver,
             name="Upload Status Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(u_d)

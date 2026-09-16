@@ -21,6 +21,7 @@ from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserSt
 from app.services.driver_location import upsert_driver_location
 from app.services.offer_dispatch import create_offers_for_trip, redispatch_expired_trips
 from app.services.trips import accept_offer, accept_trip
+from tests.support.unique_phone import unique_test_phone
 
 
 def _create_driver(
@@ -33,7 +34,7 @@ def _create_driver(
     user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -64,7 +65,7 @@ def _create_requested_trip(db: Session, *, vehicle_category: str = "x") -> Trip:
     passenger = User(
         role=Role.passenger,
         name="P",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)

@@ -12,11 +12,12 @@ from app.auth.passwords import hash_password, verify_password
 from app.core.config import settings
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 def _unique_beta_phone() -> str:
     """+351 + 9 dígitos (regex BETA); evita colisão em BD partilhada entre corridas de teste."""
-    return f"+351{uuid.uuid4().int % 10**9:09d}"
+    return unique_test_phone()
 
 
 def test_password_hash_roundtrip() -> None:

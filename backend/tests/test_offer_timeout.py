@@ -20,6 +20,7 @@ from app.services.offer_dispatch import (
     expire_stale_offers,
     redispatch_expired_trips,
 )
+from tests.support.unique_phone import unique_test_phone
 
 
 def _make_db() -> Session:
@@ -30,7 +31,7 @@ def _create_driver_with_location(db: Session, lat: float, lng: float) -> str:
     user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -55,7 +56,7 @@ def _create_passenger_and_trip(db: Session) -> tuple[str, str]:
     user = User(
         role=Role.passenger,
         name=f"Passenger {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)

@@ -20,13 +20,14 @@ from app.services.activity_retention import (
 from app.services.cleanup import run_cleanup
 from app.services.partner_queries import list_trips_for_partner
 from app.services.partner_vehicles import normalize_plate
+from tests.support.unique_phone import unique_test_phone
 
 
 def _make_passenger(db) -> User:
     u = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -66,7 +67,7 @@ def _make_driver(
     u = User(
         role=Role.driver,
         name=f"Drv {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)

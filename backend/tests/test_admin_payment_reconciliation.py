@@ -21,6 +21,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, PaymentStatus, Role, TripStatus, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture
@@ -72,13 +73,13 @@ def test_close_no_pi_dry_run(client: TestClient) -> None:
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_u = User(
             role=Role.driver,
             name=f"D {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -150,13 +151,13 @@ def test_stripe_sync_dry_run_updates_when_succeeded(
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_u = User(
             role=Role.driver,
             name=f"D {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -246,13 +247,13 @@ def test_single_trip_reconcile_cancelled_processing_canceled_pi_keeps_trip(
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_u = User(
             role=Role.driver,
             name=f"D {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -336,13 +337,13 @@ def test_single_trip_reconcile_skips_non_terminal_trip(
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_u = User(
             role=Role.driver,
             name=f"D {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -411,13 +412,13 @@ def test_stripe_sync_marks_failed_when_pi_not_found_in_stripe(
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_u = User(
             role=Role.driver,
             name=f"D {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -510,13 +511,13 @@ def test_stripe_sync_dry_run_pi_not_found_reports_without_mutation(
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_u = User(
             role=Role.driver,
             name=f"D {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)

@@ -24,6 +24,7 @@ from app.services import partner_trip_ops, partner_vehicles, partners_admin
 from app.services.partner_trip_ops import partner_reassign_trip_driver
 from app.services.partner_vehicles import assign_vehicle_to_driver, normalize_plate
 from app.services.partners_admin import assign_driver_to_partner
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -50,7 +51,7 @@ def test_vehicle_assignment_cannot_cross_concurrent_fleet_transfer(
         driver_user = User(
             role=Role.driver,
             name="Concurrent Transfer Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all(
@@ -183,19 +184,19 @@ def test_trip_reassignment_cannot_cross_concurrent_fleet_transfer(
         passenger = User(
             role=Role.passenger,
             name="Concurrent Trip Passenger",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         old_driver_user = User(
             role=Role.driver,
             name="Concurrent Old Trip Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         new_driver_user = User(
             role=Role.driver,
             name="Concurrent New Trip Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all(
@@ -344,32 +345,32 @@ def _seed_two_fleets() -> dict[str, str]:
         u_da = User(
             role=Role.driver,
             name="Driver 2A A1",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_da2 = User(
             role=Role.driver,
             name="Driver 2A A2",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_db = User(
             role=Role.driver,
             name="Driver 2A B",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         mgr_a = User(
             role=Role.partner,
             name="Mgr 2A A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid_a,
         )
         mgr_b = User(
             role=Role.partner,
             name="Mgr 2A B",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid_b,
         )

@@ -18,6 +18,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, PaymentStatus, Role, TripStatus, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ def admin_ctx() -> None:
 @pytest.mark.usefixtures("admin_ctx")
 def test_unblock_user_beta(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
-    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    phone = unique_test_phone()
     uid = uuid.uuid4()
     db = SessionLocal()
     try:
@@ -69,13 +70,13 @@ def test_admin_trip_transition_accepted_to_arriving(client: TestClient) -> None:
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_u = User(
             role=Role.driver,
             name=f"D {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -136,7 +137,7 @@ def test_admin_cancel_trip_requires_json_body(client: TestClient) -> None:
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -170,7 +171,7 @@ def test_admin_cancel_trip_with_reason_and_confirmation(client: TestClient) -> N
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)
@@ -212,7 +213,7 @@ def test_admin_payment_ops_note(client: TestClient) -> None:
         passenger = User(
             role=Role.passenger,
             name=f"P {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(passenger)

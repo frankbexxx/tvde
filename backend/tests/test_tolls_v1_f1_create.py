@@ -23,6 +23,7 @@ from app.services.tolls.snapshot import (
     merge_toll_snapshot,
 )
 from app.services.trips import create_trip
+from tests.support.unique_phone import unique_test_phone
 
 
 ORIGIN = (38.6910, -9.3110)
@@ -33,7 +34,7 @@ def _passenger(db: Session) -> str:
     user = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)

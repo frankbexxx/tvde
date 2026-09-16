@@ -29,6 +29,7 @@ from app.services.vehicle_capacity import (
     resolve_passenger_count,
     trip_passenger_count,
 )
+from tests.support.unique_phone import unique_test_phone
 
 
 def test_resolve_passenger_count_defaults_and_bounds() -> None:
@@ -156,7 +157,7 @@ def _driver(db: Session, *, vehicle_id: uuid.UUID, categories: str = "x") -> uui
     user = User(
         role=Role.driver,
         name=f"CapDrv {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -196,7 +197,7 @@ def _offer_trip(
     pax = User(
         role=Role.passenger,
         name="CapPax",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pax)
@@ -292,7 +293,7 @@ def test_accept_recheck_raises_capacity_code(db: Session, capacity_on) -> None:
     pax = User(
         role=Role.passenger,
         name="CapAccept",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pax)

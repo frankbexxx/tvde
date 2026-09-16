@@ -28,6 +28,7 @@ from app.models.enums import (
 )
 from app.services import trips
 from app.services.partner_fleet import set_partner_driver_availability
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -46,13 +47,13 @@ def _seed_offer_accept() -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
         passenger = User(
             role=Role.passenger,
             name="Force Online Race Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Force Online Race Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all(

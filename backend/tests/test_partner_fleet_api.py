@@ -18,6 +18,7 @@ from app.db.models.vehicle import Vehicle
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -37,13 +38,13 @@ def test_partner_patch_driver_status_and_availability() -> None:
         u_d = User(
             role=Role.driver,
             name="Patch Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Patch Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -110,19 +111,19 @@ def test_partner_force_online_blocked_during_active_trip() -> None:
         u_d = User(
             role=Role.driver,
             name="Busy Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_pax = User(
             role=Role.passenger,
             name="Busy Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Busy Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -182,25 +183,25 @@ def test_partner_reassign_trip_driver() -> None:
         u_a = User(
             role=Role.driver,
             name="Driver A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_b = User(
             role=Role.driver,
             name="Driver B",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_pax = User(
             role=Role.passenger,
             name="Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_mgr = User(
             role=Role.partner,
             name="Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -260,13 +261,13 @@ def test_partner_remove_driver_from_fleet() -> None:
         u_d = User(
             role=Role.driver,
             name="Remove Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Remove Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )

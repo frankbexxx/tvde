@@ -16,13 +16,15 @@ from app.db.models.otp import OtpCode
 from app.db.models.user import User
 from app.main import app
 from app.models.enums import Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
+
 
 TEST_PWD = "demo1234"
 ADMIN_ACTOR_ID = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 
 
 def _unique_beta_phone() -> str:
-    return f"+351{uuid.uuid4().int % 10**9:09d}"
+    return unique_test_phone()
 
 
 def _patch_test_password(monkeypatch: pytest.MonkeyPatch) -> None:

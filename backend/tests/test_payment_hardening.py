@@ -29,6 +29,7 @@ from app.services.payment_amount_guards import (
     final_price_cents,
     validate_stripe_amount_matches_expected,
 )
+from tests.support.unique_phone import unique_test_phone
 
 
 def _db() -> Session:
@@ -41,7 +42,7 @@ def _create_ongoing(
     passenger = User(
         role=Role.passenger,
         name=f"Passenger {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)
@@ -49,7 +50,7 @@ def _create_ongoing(
     driver_user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(driver_user)
@@ -533,7 +534,7 @@ def test_cancel_before_complete_keeps_trip_cancelled(
     passenger = User(
         role=Role.passenger,
         name=f"P {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)
@@ -541,7 +542,7 @@ def test_cancel_before_complete_keeps_trip_cancelled(
     driver_user = User(
         role=Role.driver,
         name=f"D {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(driver_user)

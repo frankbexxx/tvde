@@ -19,6 +19,7 @@ from app.db.models.vehicle_document import VehicleDocument
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
 from app.services.partner_vehicle_documents import VEHICLE_DOCUMENT_REQUIRED_TYPES_ORDERED
 from app.services.trips import list_available_trips
+from tests.support.unique_phone import unique_test_phone
 
 
 def _compliant_vehicle(db: Session) -> uuid.UUID:
@@ -52,7 +53,7 @@ def _driver(db: Session, *, categories: str, vehicle_id: uuid.UUID) -> uuid.UUID
     user = User(
         role=Role.driver,
         name=f"PetList {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -91,7 +92,7 @@ def _offer_trip(
     pax = User(
         role=Role.passenger,
         name="PetList Pax",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pax)

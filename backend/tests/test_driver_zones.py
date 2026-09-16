@@ -29,6 +29,7 @@ from app.services.driver_zones import (
     request_zone_session_extension,
     service_date_local_now,
 )
+from tests.support.unique_phone import unique_test_phone
 
 
 def _make_db() -> Session:
@@ -49,7 +50,7 @@ def _create_driver(db: Session) -> str:
     user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -335,7 +336,7 @@ def _create_passenger(db: Session) -> uuid.UUID:
     user = User(
         role=Role.passenger,
         name=f"Passenger {uuid.uuid4()}",
-        phone=f"+3518{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -726,7 +727,7 @@ def test_zone_session_request_extension_and_partner_approve() -> None:
     u_p = User(
         role=Role.partner,
         name="Zone partner mgr",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
         partner_org_id=DEFAULT_PARTNER_UUID,
     )
@@ -805,7 +806,7 @@ def test_partner_approve_extension_wrong_fleet() -> None:
     u_p = User(
         role=Role.partner,
         name="Wrong mgr",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
         partner_org_id=pid_other,
     )
@@ -857,7 +858,7 @@ def test_partner_grant_zone_budget_extra_unlocks_driver_session() -> None:
     u_p = User(
         role=Role.partner,
         name="Zone budget mgr",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
         partner_org_id=DEFAULT_PARTNER_UUID,
     )
@@ -916,7 +917,7 @@ def test_partner_grant_zone_budget_extra_wrong_fleet() -> None:
     u_p = User(
         role=Role.partner,
         name="Other mgr 2",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
         partner_org_id=pid_other,
     )
@@ -953,7 +954,7 @@ def test_partner_grant_zone_budget_extra_ceiling() -> None:
     u_p = User(
         role=Role.partner,
         name="Ceiling mgr",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
         partner_org_id=DEFAULT_PARTNER_UUID,
     )

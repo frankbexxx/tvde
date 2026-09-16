@@ -16,6 +16,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.services.partners_admin import partner_metrics
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -35,7 +36,7 @@ def test_active_drivers_stale_location_not_counted_with_available() -> None:
         u = User(
             role=Role.driver,
             name="Stale loc",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(u)
@@ -74,7 +75,7 @@ def test_active_drivers_no_location_uses_is_available() -> None:
         u = User(
             role=Role.driver,
             name="No loc",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(u)
@@ -106,7 +107,7 @@ def test_partner_token_can_hit_metrics_after_onboarding() -> None:
         mgr = User(
             role=Role.partner,
             name="M",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
