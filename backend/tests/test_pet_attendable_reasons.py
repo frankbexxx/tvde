@@ -22,13 +22,14 @@ from app.services.attendable_reasons import (
     validate_attendable_reason,
 )
 from app.services.trips import cancel_trip_by_driver, reject_offer
+from tests.support.unique_phone import unique_test_phone
 
 
 def _passenger(db: Session) -> User:
     u = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -40,7 +41,7 @@ def _driver(db: Session) -> Driver:
     u = User(
         role=Role.driver,
         name=f"Drv {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)

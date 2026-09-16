@@ -19,6 +19,7 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, PaymentStatus, Role, TripStatus, UserStatus
 from app.services.admin_payment_reconciliation import close_mock_processing_payments
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture
@@ -46,13 +47,13 @@ def _seed_pair(
     passenger = User(
         role=Role.passenger,
         name=f"P {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     driver_u = User(
         role=Role.driver,
         name=f"D {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)
@@ -97,7 +98,7 @@ def _seed_trip_no_payment(db: Session) -> str:
     passenger = User(
         role=Role.passenger,
         name=f"P {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10**8:08d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)

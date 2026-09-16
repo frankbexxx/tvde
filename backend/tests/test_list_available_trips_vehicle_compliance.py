@@ -28,6 +28,7 @@ from app.services.vehicle_compliance_gate import (
     evaluate_driver_new_trip_ops_eligibility,
 )
 from app.services.vehicle_operational import CODE_VEHICLE_INACTIVE
+from tests.support.unique_phone import unique_test_phone
 
 
 def _create_vehicle_with_docs(
@@ -82,7 +83,7 @@ def _create_driver(
     user = User(
         role=Role.driver,
         name=f"ListAvail {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -114,7 +115,7 @@ def _seed_offer_for_driver(db: Session, driver_id: uuid.UUID) -> uuid.UUID:
     pax = User(
         role=Role.passenger,
         name="ListAvail Pax",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pax)

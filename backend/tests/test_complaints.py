@@ -32,6 +32,7 @@ from app.models.enums import (
 from app.services.cleanup import run_cleanup
 from app.services.complaint_retention import add_calendar_years, compute_retention_until
 from app.services.complaints import PUBLIC_REF_MAX_ATTEMPTS, create_complaint, generate_public_reference
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture
@@ -43,7 +44,7 @@ def _make_passenger(db: Session) -> User:
     u = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -55,7 +56,7 @@ def _make_driver(db: Session) -> tuple[User, Driver]:
     u = User(
         role=Role.driver,
         name=f"Drv {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -76,7 +77,7 @@ def _make_admin(db: Session) -> User:
     u = User(
         role=Role.admin,
         name=f"Adm {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)

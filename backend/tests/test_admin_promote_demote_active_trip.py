@@ -38,6 +38,7 @@ from app.models.enums import (
 )
 from app.services import trips
 from app.api.routers import admin as admin_router
+from tests.support.unique_phone import unique_test_phone
 
 SUPER_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 
@@ -78,13 +79,13 @@ def _seed_driver_with_active_trip(
         passenger = User(
             role=Role.passenger,
             name="Promote Race Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Promote Race Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([passenger, driver_user])
@@ -138,13 +139,13 @@ def _seed_offer_accept() -> tuple[uuid.UUID, uuid.UUID]:
         passenger = User(
             role=Role.passenger,
             name="Demote Race Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Demote Race Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([passenger, driver_user])
@@ -389,13 +390,13 @@ def _seed_driver_with_completed_trip() -> tuple[uuid.UUID, uuid.UUID]:
         passenger = User(
             role=Role.passenger,
             name="History Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="History Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([passenger, driver_user])

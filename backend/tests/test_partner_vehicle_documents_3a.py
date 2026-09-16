@@ -22,6 +22,7 @@ from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.services.partner_vehicle_documents import compute_vehicle_document_status
 from app.services.vehicle_document_upload import resolve_vehicle_document_path
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -148,21 +149,21 @@ def _seed() -> dict[str, str]:
         mgr_a = User(
             role=Role.partner,
             name="Mgr 3A A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid_a,
         )
         mgr_b = User(
             role=Role.partner,
             name="Mgr 3A B",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid_b,
         )
         u_d = User(
             role=Role.driver,
             name="Driver 3A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([mgr_a, mgr_b, u_d])

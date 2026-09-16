@@ -18,6 +18,7 @@ from app.db.models.vehicle_document import VehicleDocument
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.services.driver_documents import default_docs_dict, serialize_state
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture
@@ -62,7 +63,7 @@ def test_kyc_supervision_aggregates_driver_and_vehicle(
     u = User(
         role=Role.driver,
         name="KYC Driver",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)

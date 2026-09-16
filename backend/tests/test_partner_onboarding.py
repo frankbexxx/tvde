@@ -14,6 +14,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 _GOVERNANCE_REASON = "motivo teste onboarding gestor frota SP-F."
 
@@ -48,7 +49,7 @@ def test_create_partner_org_admin_success(admin_override: None) -> None:
     finally:
         db.close()
 
-    phone = f"+3519{uuid.uuid4().int % 10_000_000:07d}"
+    phone = unique_test_phone()
     client = TestClient(app)
     r = client.post(
         f"/admin/partners/{pid}/create-admin",
@@ -82,7 +83,7 @@ def test_create_partner_org_admin_duplicate_phone(admin_override: None) -> None:
     try:
         pid = uuid.uuid4()
         db.add(Partner(id=pid, name="Dup Co"))
-        phone = f"+3519{uuid.uuid4().int % 10_000_000:07d}"
+        phone = unique_test_phone()
         db.add(
             User(
                 role=Role.passenger,

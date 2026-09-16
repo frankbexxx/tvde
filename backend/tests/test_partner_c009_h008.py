@@ -21,6 +21,7 @@ from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.services.partners_admin import partner_metrics
+from tests.support.unique_phone import unique_test_phone
 
 _GOVERNANCE_REASON = "motivo teste unassign partner SP-F."
 
@@ -54,19 +55,19 @@ def test_c009_metrics_completed_cancelled_total_drivers() -> None:
         u_d1 = User(
             role=Role.driver,
             name="D1",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_d2 = User(
             role=Role.driver,
             name="D2",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.passenger,
             name="P",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([u_d1, u_d2, u_p])
@@ -130,19 +131,19 @@ def test_c010_c011_partner_detail_and_h007_csv() -> None:
         u_d = User(
             role=Role.driver,
             name="Detail Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.passenger,
             name="Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         mgr = User(
             role=Role.partner,
             name="Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -226,19 +227,19 @@ def test_partner_trips_export_respects_status_filter() -> None:
         u_d = User(
             role=Role.driver,
             name="Export Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.passenger,
             name="Export Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         mgr = User(
             role=Role.partner,
             name="Export Mgr",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid,
         )
@@ -306,7 +307,7 @@ def test_c012_delete_unassign_idempotent(admin_ctx_override: str) -> None:
         u = User(
             role=Role.driver,
             name="Unassign D",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(u)

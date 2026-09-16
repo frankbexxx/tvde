@@ -12,6 +12,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 def _make_db() -> Session:
@@ -22,7 +23,7 @@ def _create_passenger_and_trip(db: Session) -> tuple[str, str]:
     passenger = User(
         role=Role.passenger,
         name=f"Passenger Test {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)
@@ -47,7 +48,7 @@ def _assign_driver_and_location(db: Session, trip_id: str) -> str:
     driver_user = User(
         role=Role.driver,
         name=f"Driver Track {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(driver_user)
@@ -140,7 +141,7 @@ def test_get_driver_location_forbidden_for_other_passenger() -> None:
     other_passenger = User(
         role=Role.passenger,
         name=f"Passenger Other {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(other_passenger)

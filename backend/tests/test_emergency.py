@@ -22,6 +22,7 @@ from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.services.emergency import public_trip_ref
 from app.services.partner_vehicles import normalize_plate
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ def _make_passenger(db: Session) -> User:
     u = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -45,7 +46,7 @@ def _make_driver(db: Session, *, with_vehicle: bool = False) -> tuple[User, Driv
     u = User(
         role=Role.driver,
         name=f"Drv {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -321,7 +322,7 @@ def test_admin_role_forbidden(client: TestClient) -> None:
         admin = User(
             role=Role.admin,
             name="Admin",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(admin)

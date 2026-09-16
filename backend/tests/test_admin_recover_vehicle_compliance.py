@@ -26,6 +26,7 @@ from app.services.vehicle_compliance_gate import (
     CODE_NO_ACTIVE_VEHICLE,
 )
 from app.services.vehicle_operational import CODE_VEHICLE_INACTIVE
+from tests.support.unique_phone import unique_test_phone
 
 _GOVERNANCE = {"governance_reason": "recover stuck driver ops"}
 
@@ -86,7 +87,7 @@ def _create_driver(
     user = User(
         role=Role.driver,
         name=f"Recover Gate {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)

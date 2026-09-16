@@ -26,6 +26,7 @@ from app.models.enums import (
 )
 from app.services import trips
 from app.services.partners_admin import assign_driver_to_partner
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -47,13 +48,13 @@ def _seed_acceptance(
         passenger = User(
             role=Role.passenger,
             name="Acceptance Race Passenger",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Acceptance Race Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all(

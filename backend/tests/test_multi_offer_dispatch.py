@@ -16,6 +16,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, OfferStatus, Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 def _make_db() -> Session:
@@ -28,7 +29,7 @@ def _create_driver_with_location(
     user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -57,7 +58,7 @@ def _create_passenger(db: Session) -> str:
     user = User(
         role=Role.passenger,
         name=f"Passenger {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)

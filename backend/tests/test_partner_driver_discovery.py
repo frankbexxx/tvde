@@ -16,6 +16,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -35,13 +36,13 @@ def test_discover_finds_default_pool_driver() -> None:
         u_d = User(
             role=Role.driver,
             name="Default Pool Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Discover Partner",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=partner_id,
         )
@@ -82,13 +83,13 @@ def test_add_to_fleet_from_default_pool() -> None:
         u_d = User(
             role=Role.driver,
             name="Add Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Add Partner",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=partner_id,
         )
@@ -127,13 +128,13 @@ def test_add_to_fleet_rejects_non_default_pool() -> None:
         u_d = User(
             role=Role.driver,
             name="Other Fleet Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         u_p = User(
             role=Role.partner,
             name="Fleet A Partner",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=partner_a,
         )

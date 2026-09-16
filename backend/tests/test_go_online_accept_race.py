@@ -28,6 +28,7 @@ from app.models.enums import (
     UserStatus,
 )
 from app.services import trips
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -47,13 +48,13 @@ def _seed_offline_driver_with_offer() -> tuple[uuid.UUID, uuid.UUID]:
         passenger = User(
             role=Role.passenger,
             name="Go Online Race Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Go Online Race Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all(

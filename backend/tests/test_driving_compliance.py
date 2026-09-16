@@ -27,6 +27,7 @@ from app.services.driving_compliance import (
     overlap_seconds_utc,
     rolling_24h_bounds_utc,
 )
+from tests.support.unique_phone import unique_test_phone
 
 LISBON = ZoneInfo("Europe/Lisbon")
 
@@ -50,7 +51,7 @@ def _make_driver(db: Session) -> uuid.UUID:
     user = User(
         role=Role.driver,
         name=f"Duty {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().hex[:10]}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -72,7 +73,7 @@ def _make_trip(db: Session) -> Trip:
     pax = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().hex[:10]}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(pax)

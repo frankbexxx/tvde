@@ -19,6 +19,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.utils.state_machine import validate_trip_transition
+from tests.support.unique_phone import unique_test_phone
 
 _APP_ROOT = Path(__file__).resolve().parents[1] / "app"
 
@@ -121,19 +122,19 @@ def _seed_driver_and_passengers(db: Session) -> tuple[uuid.UUID, uuid.UUID, uuid
     p1 = User(
         role=Role.passenger,
         name=f"Queued pax1 {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     p2 = User(
         role=Role.passenger,
         name=f"Queued pax2 {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     driver_user = User(
         role=Role.driver,
         name=f"Queued drv {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add_all([p1, p2, driver_user])
@@ -201,13 +202,13 @@ def test_queued_without_driver_not_constrained_by_partial_index(
         p1 = User(
             role=Role.passenger,
             name=f"Queued null1 {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         p2 = User(
             role=Role.passenger,
             name=f"Queued null2 {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([p1, p2])

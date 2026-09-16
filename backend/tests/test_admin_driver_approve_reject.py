@@ -17,6 +17,7 @@ from app.db.models.user import User
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.services import admin_driver_status
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture
@@ -38,7 +39,7 @@ def _make_driver(db: Session, *, status: DriverStatus) -> uuid.UUID:
     user = User(
         role=Role.driver,
         name=f"E5 {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)

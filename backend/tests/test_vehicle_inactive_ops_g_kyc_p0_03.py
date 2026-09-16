@@ -33,6 +33,7 @@ from app.services.vehicle_operational import (
     assert_driver_vehicle_operational_for_new_ops,
     driver_vehicle_allows_new_ops,
 )
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -55,13 +56,13 @@ def _seed_driver_with_vehicle(
     u = User(
         role=Role.driver,
         name="Inactive Veh Driver",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     pax = User(
         role=Role.passenger,
         name="Inactive Veh Pax",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add_all([u, pax])
@@ -252,7 +253,7 @@ def test_no_vehicle_still_allowed(db: Session) -> None:
     u = User(
         role=Role.driver,
         name="No Veh Driver",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)

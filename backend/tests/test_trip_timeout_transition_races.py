@@ -27,6 +27,7 @@ from app.models.enums import (
     UserStatus,
 )
 from app.services import trip_timeouts, trips
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -63,13 +64,13 @@ def _seed_stale_accepted_trip() -> tuple[uuid.UUID, uuid.UUID]:
         passenger = User(
             role=Role.passenger,
             name="Timeout Arriving Race Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Timeout Arriving Race Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([passenger, driver_user])
@@ -108,13 +109,13 @@ def _seed_stale_ongoing_trip() -> tuple[uuid.UUID, uuid.UUID]:
         passenger = User(
             role=Role.passenger,
             name="Timeout Complete Race Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Timeout Complete Race Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([passenger, driver_user])

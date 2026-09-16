@@ -20,6 +20,7 @@ from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
 from app.utils.geo import haversine_m
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -62,7 +63,7 @@ def _create_passenger(db: Session) -> str:
     u = User(
         role=Role.passenger,
         name=f"P {uuid.uuid4().hex[:8]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -75,7 +76,7 @@ def _create_driver_with_location(db: Session, lat: float, lng: float) -> str:
     u = User(
         role=Role.driver,
         name=f"D {uuid.uuid4().hex[:8]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)

@@ -24,6 +24,7 @@ from app.services.partner_vehicle_documents import (
     empty_vehicle_document_summary,
     summarize_vehicle_documents_rows,
 )
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -265,14 +266,14 @@ def _seed() -> dict[str, str]:
         mgr_a = User(
             role=Role.partner,
             name="Mgr 2A Sum A",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid_a,
         )
         mgr_b = User(
             role=Role.partner,
             name="Mgr 2A Sum B",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=pid_b,
         )

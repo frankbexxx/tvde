@@ -20,6 +20,7 @@ from app.db.session import SessionLocal
 from app.models.enums import DriverStatus, PaymentStatus, Role, TripStatus, UserStatus
 from app.services import trips as trip_service
 from app.services.system_health import get_system_health
+from tests.support.unique_phone import unique_test_phone
 
 
 def _make_db() -> Session:
@@ -32,7 +33,7 @@ def _create_ongoing_trip(
     passenger = User(
         role=Role.passenger,
         name=f"Passenger {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)
@@ -41,7 +42,7 @@ def _create_ongoing_trip(
     driver_user = User(
         role=Role.driver,
         name=f"Driver {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(driver_user)

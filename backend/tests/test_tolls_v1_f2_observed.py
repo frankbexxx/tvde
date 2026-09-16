@@ -24,6 +24,7 @@ from app.services.tolls.snapshot import (
     resolve_charged_tolls_from_breakdown,
 )
 from app.services import trips as trip_service
+from tests.support.unique_phone import unique_test_phone
 
 
 def _ok(amount: Decimal, system: str = "BRISA") -> TollEstimateResult:
@@ -57,7 +58,7 @@ def _ongoing_trip(
     passenger = User(
         role=Role.passenger,
         name=f"Pax {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)
@@ -65,7 +66,7 @@ def _ongoing_trip(
     driver_user = User(
         role=Role.driver,
         name=f"Drv {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(driver_user)

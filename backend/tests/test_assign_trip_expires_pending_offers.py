@@ -24,6 +24,7 @@ from app.models.enums import (
     UserStatus,
 )
 from app.services.trips import accept_trip, assign_trip
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -53,13 +54,13 @@ def test_assign_trip_expires_pending_offers_so_accept_trip_works(
         passenger = User(
             role=Role.passenger,
             name="Assign Offer Pax",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         driver_user = User(
             role=Role.driver,
             name="Assign Offer Driver",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add_all([passenger, driver_user])

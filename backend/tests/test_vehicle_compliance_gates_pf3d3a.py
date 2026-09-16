@@ -40,6 +40,7 @@ from app.services.vehicle_compliance_gate import (
     batch_evaluate_driver_vehicle_compliance_gates,
     evaluate_driver_vehicle_compliance_gate,
 )
+from tests.support.unique_phone import unique_test_phone
 
 
 def _summary(
@@ -245,7 +246,7 @@ def _create_driver(
     user = User(
         role=Role.driver,
         name=f"PF3D3A {uuid.uuid4()}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(user)
@@ -278,7 +279,7 @@ def _create_requested_trip(db: Session) -> Trip:
     passenger = User(
         role=Role.passenger,
         name="PF3D3A P",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(passenger)

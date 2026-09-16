@@ -13,6 +13,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 SUPER_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 ADMIN_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
@@ -44,7 +45,7 @@ def test_delete_user_forbidden_for_plain_admin(
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     uid = uuid.uuid4()
-    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    phone = unique_test_phone()
     db = SessionLocal()
     try:
         u = User(
@@ -74,7 +75,7 @@ def test_delete_user_requires_governance_reason(
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     uid = uuid.uuid4()
-    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    phone = unique_test_phone()
     db = SessionLocal()
     try:
         u = User(
@@ -101,7 +102,7 @@ def test_super_admin_can_delete_user_without_trips(
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     uid = uuid.uuid4()
-    phone = f"+3519{uuid.uuid4().int % 10**8:08d}"
+    phone = unique_test_phone()
     db = SessionLocal()
     try:
         u = User(

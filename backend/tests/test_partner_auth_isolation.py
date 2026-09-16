@@ -15,6 +15,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.main import app
 from app.models.enums import DriverStatus, Role, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -32,7 +33,7 @@ def _partner_token() -> str:
         u = User(
             role=Role.partner,
             name="Iso Partner",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
             partner_org_id=DEFAULT_PARTNER_UUID,
         )
@@ -89,7 +90,7 @@ def test_driver_forbidden_partner_drivers() -> None:
         u = User(
             role=Role.driver,
             name="D",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(u)

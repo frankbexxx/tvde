@@ -18,6 +18,7 @@ from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.db.session import SessionLocal, engine
 from app.models.enums import PaymentStatus, Role, TripStatus, UserStatus
+from tests.support.unique_phone import unique_test_phone
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -35,7 +36,7 @@ def _create_user_trip_payment(
     u = User(
         role=Role.passenger,
         name=f"A025 {uuid.uuid4().hex[:6]}",
-        phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+        phone=unique_test_phone(),
         status=UserStatus.active,
     )
     db.add(u)
@@ -80,7 +81,7 @@ def test_webhook_duplicate_pi_db_constraint() -> None:
         u2 = User(
             role=Role.passenger,
             name=f"A025b {uuid.uuid4().hex[:6]}",
-            phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+            phone=unique_test_phone(),
             status=UserStatus.active,
         )
         db.add(u2)
@@ -123,7 +124,7 @@ def test_multiple_null_payment_intents_allowed() -> None:
             u = User(
                 role=Role.passenger,
                 name=f"A025null {uuid.uuid4().hex[:6]}",
-                phone=f"+3519{uuid.uuid4().int % 10_000_000:07d}",
+                phone=unique_test_phone(),
                 status=UserStatus.active,
             )
             db.add(u)
