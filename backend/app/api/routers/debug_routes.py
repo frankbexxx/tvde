@@ -1,6 +1,7 @@
 """
 Temporary debug routes for map/driver tracking diagnostics.
-Deployed: mount gated by BETA_MODE; endpoints sensíveis exigem development ou ENABLE_DEV_TOOLS.
+Deployed: mount gated by ENABLE_DEBUG_ROUTES (None → BETA_MODE compat);
+endpoints sensíveis exigem development / ENABLE_DEV_TOOLS / debug capability.
 """
 
 import uuid
@@ -32,21 +33,15 @@ def _require_dev() -> None:
         raise HTTPException(status_code=404)
 
 
-def _require_dev_or_beta() -> None:
-    """Deployed: só com BETA_MODE; caso contrário exige development ou ENABLE_DEV_TOOLS."""
-    if settings.is_deployed_environment() and not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="debug_not_available")
-    if not (
-        settings.is_development_environment()
-        or getattr(settings, "ENABLE_DEV_TOOLS", False)
-        or getattr(settings, "BETA_MODE", False)
-    ):
+def _require_debug_access() -> None:
+    """Deployed: ENABLE_DEBUG_ROUTES (ou BETA compat). Local: DEV / ENABLE_DEV_TOOLS / flag."""
+    if not settings.debug_endpoint_access_allowed():
         raise HTTPException(status_code=404, detail="debug_not_available")
 
 
 def _debug_env_guard() -> None:
     """Dependency: ambiente debug antes de exigir JWT."""
-    _require_dev_or_beta()
+    _require_debug_access()
 
 
 def _assert_debug_trip_access(trip: Trip, user: UserContext) -> None:
@@ -103,7 +98,7 @@ async def debug_trip_matching(
     Diagnose why a trip has no driver. Call with passenger token (owner of trip).
     Returns: drivers_with_location, drivers_in_radius, offers_created, root_cause.
     """
-    _require_dev_or_beta()
+    _require_debug_access()
     try:
         tid = uuid.UUID(trip_id.strip())
     except ValueError:
@@ -236,7 +231,7 @@ async def debug_driver_eligibility(
     Diagnose why a driver sees no trips. Call with driver token.
     Returns: has_location, is_available, pending_offers, root_cause.
     """
-    _require_dev_or_beta()
+    _require_debug_access()
     driver_id = str(user.user_id)
     try:
         driver_uuid = uuid.UUID(driver_id)

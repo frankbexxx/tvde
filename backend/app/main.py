@@ -80,12 +80,15 @@ async def lifespan(app: FastAPI):
         print("=======================\n")
     _dev = settings.dev_tools_router_enabled()
     _beta = getattr(settings, "BETA_MODE", False)
+    _debug = settings.debug_router_enabled()
+    _match_fb = settings.beta_matching_fallbacks_enabled()
     print(
         f"[TVDE] config ENV={settings.ENV} ENVIRONMENT={settings.ENVIRONMENT!r} "
         f"prod={settings.is_production_environment()} "
         f"staging={settings.is_staging_environment()} "
         f"deployed={settings.is_deployed_environment()} "
-        f"dev_tools_mounted={_dev} BETA_MODE={_beta}"
+        f"dev_tools_mounted={_dev} BETA_MODE={_beta} "
+        f"debug_routes={_debug} matching_fallbacks={_match_fb}"
     )
 
     if settings.should_run_alembic_on_startup():

@@ -27,9 +27,9 @@ def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
     """
     Ensure a Driver profile exists for the given user_id.
 
-    In BETA/dev environments we are lenient: if a user has a driver token but
-    no Driver row yet, we auto-create an approved driver profile so that
-    tracking and matching work without manual admin intervention.
+    When matching fallbacks are enabled we are lenient: if a user has a driver
+    token but no Driver row yet, we auto-create an approved driver profile so
+    that tracking and matching work without manual admin intervention.
     """
     driver = db.execute(
         select(Driver).where(Driver.user_id == driver_id)
@@ -37,7 +37,7 @@ def _ensure_driver_profile(db: Session, driver_id: str) -> Driver:
     if driver:
         return driver
 
-    if getattr(settings, "BETA_MODE", False):
+    if settings.beta_matching_fallbacks_enabled():
         driver = Driver(
             user_id=driver_id,
             partner_id=DEFAULT_PARTNER_UUID,
@@ -205,12 +205,12 @@ def upsert_driver_location(
                     driver_id=driver_id,
                 )
 
-    # Fallback auto-dispatch for BETA/dev: when multi-offer created 0 offers
+    # Fallback auto-dispatch when matching fallbacks ON: multi-offer created 0 offers
     # (no drivers had locations). Assign oldest requested trip to pool.
     # Trips that already have any TripOffer history (pending/rejected/expired/…)
     # stay requested — cron redispatch handles them (BUG-REJECT-BETA-1).
-    beta_mode = getattr(settings, "BETA_MODE", False)
-    if beta_mode and getattr(driver, "is_available", True):
+    matching_fallbacks = settings.beta_matching_fallbacks_enabled()
+    if matching_fallbacks and getattr(driver, "is_available", True):
         q = (
             select(Trip)
             .where(Trip.status == TripStatus.requested)
@@ -255,7 +255,7 @@ def upsert_driver_location(
                         "previous_status": previous_status.value,
                         "new_status": trip.status.value,
                         "driver_id": str(driver_id),
-                        "beta_mode": beta_mode,
+                        "matching_fallbacks": matching_fallbacks,
                     },
                 )
         else:
@@ -263,7 +263,7 @@ def upsert_driver_location(
                 "upsert_driver_location: no requested trips to assign",
                 extra={
                     "driver_id": str(driver_id),
-                    "beta_mode": beta_mode,
+                    "matching_fallbacks": matching_fallbacks,
                 },
             )
 
@@ -327,11 +327,10 @@ def get_driver_location_for_trip(
             detail="trip_not_found",
         )
 
-    # In closed BETA we relax strict ownership checks to simplify multi-device testing
-    # (different phones for passenger/driver, shared tokens in the web app, etc.).
-    # In non-BETA environments keep the original strict rules.
-    beta_mode = getattr(settings, "BETA_MODE", False)
-    if not beta_mode:
+    # Matching fallbacks ON: relax strict ownership for multi-device testing.
+    # When OFF: keep strict passenger/driver ownership rules.
+    matching_fallbacks = settings.beta_matching_fallbacks_enabled()
+    if not matching_fallbacks:
         if role == Role.passenger:
             if str(trip.passenger_id) != str(user_id):
                 logger.info(
@@ -374,20 +373,20 @@ def get_driver_location_for_trip(
                 detail="forbidden_trip_access",
             )
     else:
-        # BETA: still block clearly unrelated passengers, but allow either the
+        # Fallbacks: still block clearly unrelated passengers, but allow either the
         # real passenger or the assigned driver, regardless of token role.
         if str(trip.passenger_id) != str(user_id) and (
             not trip.driver_id or str(trip.driver_id) != str(user_id)
         ):
             logger.info(
-                "get_driver_location_for_trip: forbidden beta access",
+                "get_driver_location_for_trip: forbidden matching-fallback access",
                 extra={
                     "trip_id": str(trip_id),
                     "user_id": str(user_id),
                     "role": role.value,
                     "trip_passenger_id": str(trip.passenger_id),
                     "trip_driver_id": str(trip.driver_id) if trip.driver_id else None,
-                    "beta_mode": beta_mode,
+                    "matching_fallbacks": matching_fallbacks,
                 },
             )
             raise HTTPException(

@@ -50,6 +50,10 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
 
         out["dev_tools"] = settings.dev_tools_router_enabled()
         out["beta_mode"] = bool(getattr(settings, "BETA_MODE", False))
+        out["enable_debug_routes"] = settings.debug_router_enabled()
+        out["enable_beta_matching_fallbacks"] = (
+            settings.beta_matching_fallbacks_enabled()
+        )
     return out
 
 

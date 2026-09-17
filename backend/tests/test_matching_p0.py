@@ -205,6 +205,7 @@ def test_beta_fallback_promotes_when_zero_offers(
     fallback can still promote the orphan requested trip to the legacy pool.
     """
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_BETA_MATCHING_FALLBACKS", None, raising=False)
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
     db.commit()
@@ -237,6 +238,7 @@ def test_beta_fallback_keeps_requested_when_offer_rejected(
 ) -> None:
     """BUG-REJECT-BETA-1: location ping must not orphan-assign after Recusar."""
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_BETA_MATCHING_FALLBACKS", None, raising=False)
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
     db.commit()
@@ -273,6 +275,7 @@ def test_beta_fallback_keeps_requested_when_only_expired_offers(
 ) -> None:
     """Expired offer history stays requested; cron redispatch owns recovery."""
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_BETA_MATCHING_FALLBACKS", None, raising=False)
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
     db.commit()
@@ -309,6 +312,7 @@ def test_location_redispatch_skips_older_unserviceable_zero_offer_trip(
     db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", False, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_BETA_MATCHING_FALLBACKS", None, raising=False)
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
     for offer in db.execute(select(TripOffer)).scalars().all():
