@@ -463,9 +463,7 @@ async def get_pending_users(
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> List[PendingUserItem]:
-    """BETA: list users with status=pending."""
-    if not getattr(settings, "BETA_MODE", False):
-        return []
+    """List users with status=pending (RBAC admin/super_admin)."""
     users = (
         db.execute(select(User).where(User.status == UserStatus.pending))
         .scalars()
@@ -553,9 +551,7 @@ async def list_users(
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> List[AdminUserItem]:
-    """BETA: list all users for admin management."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """List all users for admin management (RBAC admin/super_admin)."""
     users = (
         db.execute(
             select(User).order_by(User.created_at.desc()).limit(limit).offset(offset)
@@ -639,9 +635,7 @@ async def promote_user_to_driver(
     admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: promote user to driver. SP-F: só `super_admin` + motivo."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Promote user to driver. SP-F: só `super_admin` + motivo."""
     try:
         uid = uuid.UUID(user_id.strip())
     except ValueError:
@@ -710,9 +704,7 @@ async def demote_user_from_driver(
     admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: remove driver role. SP-F: só `super_admin` + motivo."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Remove driver role. SP-F: só `super_admin` + motivo."""
     try:
         uid = uuid.UUID(user_id.strip())
     except ValueError:
@@ -785,9 +777,7 @@ async def update_user(
     admin_user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: update user name (nickname) and/or phone."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Update user name (nickname) and/or phone (RBAC admin/super_admin)."""
     try:
         uid = uuid.UUID(user_id.strip())
     except ValueError:
@@ -856,9 +846,7 @@ async def delete_user(
     admin_user: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: delete user. Só `super_admin` + motivo (SP-F). Falha se tiver viagens como passageiro."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Delete user. Só `super_admin` + motivo (SP-F). Falha se tiver viagens como passageiro."""
     try:
         uid = uuid.UUID(user_id.strip())
     except ValueError:
@@ -924,9 +912,7 @@ async def block_user(
     admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: set user status to blocked (reversible). SP-F: motivo obrigatório."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Set user status to blocked (reversible). SP-F: motivo obrigatório."""
     try:
         uid = uuid.UUID(user_id.strip())
     except ValueError:
@@ -964,9 +950,7 @@ async def unblock_user(
     admin_ctx: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: reativar utilizador bloqueado. SP-F: motivo obrigatório."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Reativar utilizador bloqueado. SP-F: motivo obrigatório."""
     try:
         uid = uuid.UUID(user_id.strip())
     except ValueError:
@@ -1011,9 +995,7 @@ async def bulk_block_users(
     admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: block many users. Só `super_admin` + confirmação + motivo (SP-F)."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Block many users. Só `super_admin` + confirmação + motivo (SP-F)."""
     ids = [x.strip() for x in payload.user_ids if str(x).strip()]
     if not ids:
         raise HTTPException(status_code=400, detail="empty_user_ids")
@@ -1071,9 +1053,7 @@ async def admin_clear_user_password(
     admin_ctx: UserContext = Depends(get_current_super_admin),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: remove password_hash. SP-F: só `super_admin` + confirmação + motivo."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Remove password_hash. SP-F: só `super_admin` + confirmação + motivo."""
     if payload.confirmation.strip() != "LIMPAR_SENHA":
         raise HTTPException(status_code=400, detail="invalid_confirmation")
     try:
@@ -1108,9 +1088,7 @@ async def approve_user(
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> dict:
-    """BETA: set user status=active; if requested_role=driver, create driver_profile."""
-    if not getattr(settings, "BETA_MODE", False):
-        raise HTTPException(status_code=404, detail="Not available")
+    """Set user status=active; if requested_role=driver, create driver_profile."""
     phone = payload.phone.strip()
     u = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not u:
