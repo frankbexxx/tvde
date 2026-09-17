@@ -32,7 +32,14 @@ class Settings(BaseSettings):
     ENVIRONMENT: str | None = None
     # Em produção/staging deve ser False. Em dev local, True acelera seed/tokens.
     ENABLE_DEV_TOOLS: bool = False
-    BETA_MODE: bool = False  # When True, rate limit request_trip (5/min per user)
+    BETA_MODE: bool = False  # OTP/onboarding/demo; legacy compat for unset new flags
+    # Deployed `/debug/*` mount. None = inherit BETA_MODE (preserves current Render).
+    # Set explicitly before flipping BETA off (prefer false in prod).
+    ENABLE_DEBUG_ROUTES: bool | None = None
+    # Auto-driver / auto-assign / GPS ownership relax in driver_location.
+    # None = inherit BETA_MODE (preserves current Render). Prefer explicit true/false
+    # before flipping BETA.
+    ENABLE_BETA_MATCHING_FALLBACKS: bool | None = None
 
     # CORS: comma-separated origins (no "*"). Em deployed (prod/staging) é obrigatório ter pelo menos uma.
     # Em development/test, o middleware pode usar "*" sem credentials (ver main.py).
@@ -209,11 +216,33 @@ class Settings(BaseSettings):
             return False
         return bool(self.ENABLE_DEV_TOOLS) or self.is_development_environment()
 
+    def resolved_enable_debug_routes(self) -> bool:
+        """Effective debug-routes capability (explicit flag or BETA_MODE compat)."""
+        if self.ENABLE_DEBUG_ROUTES is not None:
+            return bool(self.ENABLE_DEBUG_ROUTES)
+        return bool(self.BETA_MODE)
+
     def debug_router_enabled(self) -> bool:
-        """Deployed: same gate as production (BETA_MODE). Local/test: always on."""
+        """Mount `/debug/*`. Deployed: ENABLE_DEBUG_ROUTES (or BETA compat). Local/test: always on."""
         if self.is_deployed_environment():
-            return bool(self.BETA_MODE)
+            return self.resolved_enable_debug_routes()
         return True
+
+    def debug_endpoint_access_allowed(self) -> bool:
+        """Per-endpoint guard (JWT endpoints still require auth separately)."""
+        if self.is_deployed_environment():
+            return self.debug_router_enabled()
+        return (
+            self.is_development_environment()
+            or bool(self.ENABLE_DEV_TOOLS)
+            or self.resolved_enable_debug_routes()
+        )
+
+    def beta_matching_fallbacks_enabled(self) -> bool:
+        """Auto-driver / auto-assign / GPS ownership relax (explicit or BETA compat)."""
+        if self.ENABLE_BETA_MATCHING_FALLBACKS is not None:
+            return bool(self.ENABLE_BETA_MATCHING_FALLBACKS)
+        return bool(self.BETA_MODE)
 
     def allow_default_password_login(self) -> bool:
         """Dev/test: True by default. Deployed: False unless ALLOW_DEFAULT_PASSWORD_LOGIN=true."""

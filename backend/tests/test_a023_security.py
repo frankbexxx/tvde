@@ -219,6 +219,19 @@ def test_debug_routes_blocked_production_without_beta(
 ) -> None:
     monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
     monkeypatch.setattr(settings, "BETA_MODE", False, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_DEBUG_ROUTES", None, raising=False)
+    rid = uuid.uuid4()
+    r = client.get(f"/debug/trip/{rid}/logs")
+    assert r.status_code == 404
+    assert r.json().get("detail") == "debug_not_available"
+
+
+def test_debug_routes_blocked_production_when_flag_false_even_with_beta(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production", raising=False)
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_DEBUG_ROUTES", False, raising=False)
     rid = uuid.uuid4()
     r = client.get(f"/debug/trip/{rid}/logs")
     assert r.status_code == 404

@@ -93,7 +93,7 @@ def test_staging_safety_matrix(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.uses_permissive_cors() is False
     assert settings.should_run_alembic_on_startup() is True
     assert settings.dev_tools_router_enabled() is False
-    assert settings.debug_router_enabled() is True  # BETA_MODE, same as prod policy
+    assert settings.debug_router_enabled() is True  # BETA_MODE compat (unset ENABLE_DEBUG_ROUTES)
     assert settings.allow_default_password_login() is False
     assert settings.is_forbidden_default_password(settings.DEFAULT_PASSWORD) is True
 
