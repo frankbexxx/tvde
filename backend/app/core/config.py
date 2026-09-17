@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str | None = None
     # Em produção/staging deve ser False. Em dev local, True acelera seed/tokens.
     ENABLE_DEV_TOOLS: bool = False
-    BETA_MODE: bool = False  # OTP/onboarding/demo; legacy compat for unset new flags
+    BETA_MODE: bool = False  # Legacy compat only when new capability flags are unset
     # Deployed `/debug/*` mount. None = inherit BETA_MODE (preserves current Render).
     # Set explicitly before flipping BETA off (prefer false in prod).
     ENABLE_DEBUG_ROUTES: bool | None = None
@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     # None = inherit BETA_MODE (preserves current Render). Prefer explicit true/false
     # before flipping BETA.
     ENABLE_BETA_MATCHING_FALLBACKS: bool | None = None
+    # OTP signup: pending + requested_role + approval gate. None = inherit BETA_MODE.
+    # Google signup is always pending (independent of this flag).
+    REQUIRE_PENDING_APPROVAL: bool | None = None
+    # Require Portuguese +351XXXXXXXXX on OTP request and password login.
+    # None = inherit BETA_MODE.
+    ENFORCE_PT_PHONE: bool | None = None
+    # Allow is_test_account + TEST_ACCOUNT_PASSWORD login. None = inherit BETA_MODE.
+    ENABLE_DEMO_USERS: bool | None = None
 
     # CORS: comma-separated origins (no "*"). Em deployed (prod/staging) é obrigatório ter pelo menos uma.
     # Em development/test, o middleware pode usar "*" sem credentials (ver main.py).
@@ -242,6 +250,24 @@ class Settings(BaseSettings):
         """Auto-driver / auto-assign / GPS ownership relax (explicit or BETA compat)."""
         if self.ENABLE_BETA_MATCHING_FALLBACKS is not None:
             return bool(self.ENABLE_BETA_MATCHING_FALLBACKS)
+        return bool(self.BETA_MODE)
+
+    def require_pending_approval(self) -> bool:
+        """OTP signup pending + requested_role + approval (explicit or BETA compat)."""
+        if self.REQUIRE_PENDING_APPROVAL is not None:
+            return bool(self.REQUIRE_PENDING_APPROVAL)
+        return bool(self.BETA_MODE)
+
+    def enforce_pt_phone(self) -> bool:
+        """+351 phone format on OTP request / password login (explicit or BETA compat)."""
+        if self.ENFORCE_PT_PHONE is not None:
+            return bool(self.ENFORCE_PT_PHONE)
+        return bool(self.BETA_MODE)
+
+    def enable_demo_users(self) -> bool:
+        """is_test_account password login allowed (explicit or BETA compat)."""
+        if self.ENABLE_DEMO_USERS is not None:
+            return bool(self.ENABLE_DEMO_USERS)
         return bool(self.BETA_MODE)
 
     def allow_default_password_login(self) -> bool:

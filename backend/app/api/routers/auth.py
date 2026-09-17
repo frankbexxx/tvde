@@ -58,8 +58,8 @@ def _normalize_phone(phone: str) -> str:
     return phone.strip()
 
 
-def _is_beta() -> bool:
-    return getattr(settings, "BETA_MODE", False)
+def _pt_phone_ok(phone: str) -> bool:
+    return bool(BETA_PHONE_REGEX.match(phone))
 
 
 def _google_oauth_configured() -> bool:
@@ -98,12 +98,13 @@ async def request_otp(
 ) -> OtpRequestResponse:
     phone = _normalize_phone(payload.phone)
     check_otp_request_rate_limit(request, phone)
-    if _is_beta():
-        if not BETA_PHONE_REGEX.match(phone):
+    if settings.enforce_pt_phone():
+        if not _pt_phone_ok(phone):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
             )
+    if settings.require_pending_approval():
         if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -168,7 +169,7 @@ async def verify_otp(
                 status=UserStatus.active,
             )
             db.add(user)
-        elif _is_beta():
+        elif settings.require_pending_approval():
             # Partner fleet managers are created only via POST /admin/partners/{id}/create-admin,
             # never through public OTP (Role.partner is intentionally excluded here).
             req_role_raw = (payload.requested_role or "").strip().lower()
@@ -226,7 +227,7 @@ def _verify_login_password(user: User, password: str) -> None:
             detail="invalid_credentials",
         )
     if user.is_test_account:
-        if not _is_beta():
+        if not settings.enable_demo_users():
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="test_account_disabled",
@@ -263,7 +264,7 @@ async def login(
     """Login existente com phone + password (independente de BETA_MODE)."""
     phone = _normalize_phone(payload.phone)
     check_beta_login_rate_limit(request, phone)
-    if not BETA_PHONE_REGEX.match(phone):
+    if settings.enforce_pt_phone() and not _pt_phone_ok(phone):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
@@ -372,6 +373,8 @@ async def google_exchange(
             user.oauth_google_sub = sub
 
     if user is None:
+        # Capacity cap (pilot safety). Independent of REQUIRE_PENDING_APPROVAL —
+        # Google signup is always pending + approve.
         if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
