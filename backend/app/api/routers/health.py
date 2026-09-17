@@ -54,6 +54,9 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
         out["enable_beta_matching_fallbacks"] = (
             settings.beta_matching_fallbacks_enabled()
         )
+        out["require_pending_approval"] = settings.require_pending_approval()
+        out["enforce_pt_phone"] = settings.enforce_pt_phone()
+        out["enable_demo_users"] = settings.enable_demo_users()
     return out
 
 
