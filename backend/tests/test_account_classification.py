@@ -80,8 +80,9 @@ def test_test_account_blocked_without_beta(
     db.commit()
 
     r = client.post("/auth/login", json={"phone": phone, "password": TEST_PWD})
-    # Login BETA endpoint is not mounted when BETA_MODE=false.
-    assert r.status_code == 404
+    # Contas de teste continuam bloqueadas sem BETA; o endpoint /auth/login fica disponível.
+    assert r.status_code == 403
+    assert r.json()["detail"] == "test_account_disabled"
 
 
 def test_test_account_without_hash_rejected(
