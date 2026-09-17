@@ -260,12 +260,7 @@ async def login(
     request: Request,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
-    """BETA: login existing users with phone + password. No OTP required."""
-    if not _is_beta():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
-        )
-
+    """Login existente com phone + password (independente de BETA_MODE)."""
     phone = _normalize_phone(payload.phone)
     check_beta_login_rate_limit(request, phone)
     if not BETA_PHONE_REGEX.match(phone):
@@ -311,12 +306,8 @@ async def google_exchange(
     request: Request,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
-    """BETA + `GOOGLE_OAUTH_*`: troca `code` por JWT (v1 só passageiro)."""
+    """`GOOGLE_OAUTH_*`: troca `code` por JWT (v1 só passageiro). Independente de BETA_MODE."""
     check_google_exchange_rate_limit(request)
-    if not _is_beta():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
-        )
     if not _google_oauth_configured():
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -444,11 +435,7 @@ async def get_my_profile(
     user_ctx: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MeProfileResponse:
-    """BETA: dados mínimos da conta para o ecrã (M1)."""
-    if not _is_beta():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
-        )
+    """Dados mínimos da conta (M1). Independente de BETA_MODE."""
     try:
         uid = uuid.UUID(user_ctx.user_id)
     except ValueError:
@@ -469,11 +456,7 @@ async def patch_my_profile(
     user_ctx: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> MeProfileResponse:
-    """BETA: alterar nome visível (M1). Telefone só via admin."""
-    if not _is_beta():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
-        )
+    """Alterar nome visível (M1). Telefone só via admin. Independente de BETA_MODE."""
     try:
         uid = uuid.UUID(user_ctx.user_id)
     except ValueError:
@@ -497,11 +480,7 @@ async def change_my_password(
     user_ctx: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
-    """Define ou altera a palavra-passe (BETA). Com hash existente, current_password é obrigatório."""
-    if not _is_beta():
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Not available"
-        )
+    """Define ou altera a palavra-passe. Com hash existente, current_password é obrigatório."""
     try:
         uid = uuid.UUID(user_ctx.user_id)
     except ValueError:

@@ -4,7 +4,8 @@ from app.auth import otp as otp_module
 from app.core.config import settings
 
 
-def test_google_exchange_not_beta(client, monkeypatch) -> None:
+def test_google_exchange_without_beta_still_available(client, monkeypatch) -> None:
+    """Phase B1: exchange não faz 404 com BETA_MODE=false; exige OAuth configurado."""
     monkeypatch.setattr(settings, "BETA_MODE", False, raising=False)
     monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "cid", raising=False)
     monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "sec", raising=False)
@@ -15,7 +16,9 @@ def test_google_exchange_not_beta(client, monkeypatch) -> None:
             "redirect_uri": "http://localhost:5173/auth/google/callback",
         },
     )
-    assert r.status_code == 404
+    # Sem code real → falha na troca Google, não 404 por BETA.
+    assert r.status_code == 400
+    assert r.json()["detail"] in ("google_exchange_failed", "google_token_invalid")
 
 
 def test_google_exchange_disabled_without_secrets(client, monkeypatch) -> None:
