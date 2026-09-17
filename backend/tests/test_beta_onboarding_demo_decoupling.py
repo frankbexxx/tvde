@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from app.auth import otp as otp_module
 from app.auth.passwords import hash_password
 from app.core.config import settings
-from app.db.models.otp import OtpCode
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
 from tests.support.unique_phone import unique_test_phone
