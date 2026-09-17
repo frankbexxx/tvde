@@ -115,7 +115,7 @@ export function AppRoutes() {
   const { pathname } = useLocation()
   const {
     isLoading,
-    betaMode,
+    authBootstrapMode,
     isAuthenticated,
     isAdmin,
     loadError,
@@ -150,7 +150,8 @@ export function AppRoutes() {
     )
   }
 
-  if (betaMode && !isAuthenticated) {
+  // LoginScreen: independente de BETA — qualquer bootstrap `login_session` (deployed ou beta).
+  if (authBootstrapMode === 'login_session' && !isAuthenticated) {
     if (pathname === '/dl' || pathname === '/app') {
       return <AppDownloadRedirect />
     }
