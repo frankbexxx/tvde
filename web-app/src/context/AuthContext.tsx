@@ -41,19 +41,23 @@ import {
 } from '../utils/authStorage'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
 import { useActivityLog } from './ActivityLogContext'
+import {
+  isAdminFromSessionRole,
+  resolveAppRouteRoleFromSession,
+  resolveAuthBootstrapMode,
+  type AuthBootstrapMode,
+} from './authBootstrap'
+import { type Role } from './authRoles'
 
-export type Role = 'passenger' | 'driver' | 'admin' | 'super_admin' | 'partner'
-
-/** Conta de gestão: `super_admin` é o escalão máximo mas trata-se como admin em toda a shell. */
-export function isBackofficeStaffRole(role: Role | string | undefined): boolean {
-  return role === 'admin' || role === 'super_admin'
-}
+export type { Role } from './authRoles'
+export { isBackofficeStaffRole } from './authRoles'
 
 interface AuthState {
   token: string | null
   role: Role
   userId: string | null
   isLoading: boolean
+  /** Espelho de `GET /config` → `beta_mode` (UI /auth/me, etc.). */
   betaMode: boolean
   isAuthenticated: boolean
 }
@@ -63,12 +67,17 @@ export type AppRouteRole = 'passenger' | 'driver' | 'partner'
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
   isAdmin: boolean
-  /** True se a sessão é utilizador partner (BETA: betaRole; dev: algum JWT em tokens). */
+  /** True se a sessão é utilizador partner (login: sessionRole; multi-token: JWT partner). */
   isPartnerUser: boolean
   /** Papel do utilizador na BD (derivado do JWT), independente da rota atual. */
   sessionRole: Role
   /** Papel da shell passageiro/motorista/partner (persistido; não usar URL). */
   appRouteRole: AppRouteRole
+  /**
+   * `login_session` = JWT único + LoginScreen (deployed e/ou BETA).
+   * `dev_tokens` = multi-token local/E2E (`/dev/tokens` ou inject).
+   */
+  authBootstrapMode: AuthBootstrapMode
   /** A020: true durante boot + verificação de sessão */
   isLoadingAuth: boolean
   /** A020: copy do ecrã de arranque (boot vs sessão) */
@@ -81,9 +90,9 @@ interface AuthContextValue extends AuthState {
   /** BETA + Google OAuth: troca `code` do redirect e preenche sessão (passageiro). */
   loginGoogle: (code: string, redirectUri: string) => Promise<TokenResponse>
   logout: () => void
-  /** Telemóvel da sessão BETA (ou último gravado); sem API extra. */
+  /** Telemóvel da sessão (ou último gravado); sem API extra. */
   sessionPhone: string | null
-  /** Nome vindo do login BETA (`display_name`); pode ser null em dev/E2E. */
+  /** Nome vindo do login (`display_name`); pode ser null em dev/E2E. */
   sessionDisplayName: string | null
   /** BETA: sincronizar nome/telemóvel a partir de `GET /auth/me` (ex.: após PATCH perfil). */
   refreshSessionProfile: () => Promise<void>
@@ -91,14 +100,34 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+function readE2eInjectTokens(): AuthTokens | null {
+  if (import.meta.env.VITE_E2E !== 'true') return null
+  try {
+    const raw = localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as AuthTokens
+    if (
+      typeof parsed?.passenger === 'string' &&
+      typeof parsed?.driver === 'string' &&
+      typeof parsed?.admin === 'string'
+    ) {
+      return parsed
+    }
+  } catch {
+    /* ignorar JSON inválido */
+  }
+  return null
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { addLog, setStatus } = useActivityLog()
   const { pathname } = useLocation()
   const [tokens, setTokens] = useState<AuthTokens | null>(null)
-  const [betaToken, setBetaToken] = useState<string | null>(null)
-  const [betaRole, setBetaRole] = useState<Role>('passenger')
-  const [betaUserId, setBetaUserId] = useState<string | null>(null)
+  const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(null)
+  const [sessionUserRole, setSessionUserRole] = useState<Role>('passenger')
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null)
   const [betaMode, setBetaMode] = useState(false)
+  const [authBootstrapMode, setAuthBootstrapMode] = useState<AuthBootstrapMode>('login_session')
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [splashPrimary, setSplashPrimary] = useState(() => i18n.t('auth:splashStarting'))
@@ -109,6 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionDisplayName, setSessionDisplayName] = useState<string | null>(() =>
     getStoredSessionDisplayName()
   )
+
+  const loginSessionActive = authBootstrapMode === 'login_session'
 
   const syncAppRouteRole = useCallback((r: AppRouteRole) => {
     setStoredAppRouteRole(r)
@@ -134,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const token = useMemo(() => {
     if (!tokens) {
-      return betaMode && betaToken ? betaToken : null
+      return loginSessionActive && sessionAccessToken ? sessionAccessToken : null
     }
 
     const pickForRoute = (): string | null => {
@@ -154,24 +185,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const picked = pickForRoute()
 
-    if (betaMode && betaToken) {
+    if (loginSessionActive && sessionAccessToken) {
       const singleJwtAcrossRoles =
         tokens.passenger === tokens.driver &&
         (!tokens.admin || tokens.admin === tokens.passenger) &&
         (!tokens.partner || tokens.partner === tokens.passenger)
       if (singleJwtAcrossRoles) {
-        return betaToken
+        return sessionAccessToken
       }
-      return picked ?? betaToken
+      return picked ?? sessionAccessToken
     }
 
     return picked
-  }, [betaMode, betaToken, tokens, tokenPickRole])
+  }, [loginSessionActive, sessionAccessToken, tokens, tokenPickRole])
 
   /** Papel real do utilizador — não derivar de `token` (varia com a rota / tokenPickRole). */
   const isPartnerUser = useMemo(() => {
-    if (betaMode) {
-      return betaRole === 'partner'
+    if (loginSessionActive) {
+      return sessionUserRole === 'partner'
     }
     if (!tokens) return false
     const seen = new Set<string>()
@@ -181,11 +212,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (parseJwtPayload(raw)?.role === 'partner') return true
     }
     return false
-  }, [betaMode, betaRole, tokens])
+  }, [loginSessionActive, sessionUserRole, tokens])
 
   /** Papel persistido (JWT) — usado para UI “Conta” e consistência. */
   const sessionRole = useMemo<Role>(() => {
-    if (betaMode) return betaRole
+    if (loginSessionActive) return sessionUserRole
     // Em dev, pode haver múltiplos tokens; preferir role do token da rota, senão o primeiro disponível.
     const candidates = [
       token,
@@ -207,7 +238,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
     return 'passenger'
-  }, [betaMode, betaRole, token, tokens])
+  }, [loginSessionActive, sessionUserRole, token, tokens])
+
+  const applyLoginSessionFromJwt = useCallback(
+    (tok: string, role: Role, userId: string) => {
+      setSessionAccessToken(tok)
+      setSessionUserRole(role)
+      setSessionUserId(userId)
+      const shell = resolveAppRouteRoleFromSession(role, getRawStoredAppRouteRole())
+      syncAppRouteRole(shell)
+      setTokens({
+        passenger: tok,
+        driver: tok,
+        admin: tok,
+        partner: role === 'partner' ? tok : undefined,
+      })
+    },
+    [syncAppRouteRole]
+  )
+
+  const clearLoginSessionState = useCallback(() => {
+    setSessionAccessToken(null)
+    setSessionUserId(null)
+    setSessionUserRole('passenger')
+    setTokens(null)
+    setAppRouteRoleState('passenger')
+    setSessionPhone(null)
+    setSessionDisplayName(null)
+  }, [])
 
   const loadTokens = useCallback(async () => {
     setIsLoading(true)
@@ -216,77 +274,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus(i18n.t('auth:splashStarting'))
     try {
       const config = await withColdStartRetries((timeoutMs) => getConfig(timeoutMs))
+      const e2eInject = readE2eInjectTokens()
+      const e2eInjectValid = e2eInject != null
 
-      let e2eInjectValid = false
-      if (import.meta.env.VITE_E2E === 'true') {
-        try {
-          const raw = localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)
-          if (raw) {
-            const parsed = JSON.parse(raw) as AuthTokens
-            if (
-              typeof parsed?.passenger === 'string' &&
-              typeof parsed?.driver === 'string' &&
-              typeof parsed?.admin === 'string'
-            ) {
-              e2eInjectValid = true
-            }
-          }
-        } catch {
-          /* ignorar JSON inválido */
-        }
-      }
+      const mode = resolveAuthBootstrapMode({
+        serverBetaMode: Boolean(config.beta_mode),
+        isViteDev: import.meta.env.DEV,
+        isE2E: import.meta.env.VITE_E2E === 'true',
+        e2eInjectValid,
+      })
 
-      /** Servidor pode ter `beta_mode` mas Playwright injecta `tvde_e2e_dev_tokens_json` — usar ramo multi-token. */
-      const useBetaLoginFlow = config.beta_mode && !e2eInjectValid
-      setBetaMode(useBetaLoginFlow)
-      if (useBetaLoginFlow) {
+      setBetaMode(Boolean(config.beta_mode))
+      setAuthBootstrapMode(mode)
+
+      if (mode === 'login_session') {
         setTokens(null)
-        setBetaToken(null)
-        setBetaUserId(null)
+        setSessionAccessToken(null)
+        setSessionUserId(null)
         setSplashPrimary('A verificar sessão…')
         setStatus('A verificar sessão…')
         const tok = getStoredAccessToken()
         if (tok) {
           if (isJwtExpired(tok)) {
             clearAuthStorage()
-            setAppRouteRoleState('passenger')
-            setSessionPhone(null)
-            setSessionDisplayName(null)
+            clearLoginSessionState()
             addLog('Sessão expirada (token)', 'info')
           } else {
             const p = parseJwtPayload(tok)
             if (!p?.sub) {
               clearAuthStorage()
-              setAppRouteRoleState('passenger')
-              setSessionPhone(null)
-              setSessionDisplayName(null)
+              clearLoginSessionState()
             } else {
               const r = (p.role as Role) ?? 'passenger'
-              setBetaToken(tok)
-              setBetaRole(r)
-              setBetaUserId(p.sub)
-              {
-                const savedShell = getRawStoredAppRouteRole()
-                const fromJwt: AppRouteRole =
-                  r === 'driver' ? 'driver' : r === 'partner' ? 'partner' : 'passenger'
-                const shell: AppRouteRole = savedShell ?? fromJwt
-                syncAppRouteRole(shell)
-              }
-              setTokens({
-                passenger: tok,
-                driver: tok,
-                admin: tok,
-                partner: r === 'partner' ? tok : undefined,
-              })
+              applyLoginSessionFromJwt(tok, r, p.sub)
               const ok = await validateAccessToken(tok)
               if (!ok) {
                 clearAuthStorage()
-                setBetaToken(null)
-                setBetaUserId(null)
-                setTokens(null)
-                setAppRouteRoleState('passenger')
-                setSessionPhone(null)
-                setSessionDisplayName(null)
+                clearLoginSessionState()
                 addLog('Sessão inválida no servidor', 'info')
               } else {
                 setSessionPhone(getStoredLastPhone())
@@ -297,26 +321,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
         setStatus('Pronto')
-        addLog('Modo BETA ativo', 'info')
-      } else {
-        let t: AuthTokens | null = null
-        if (import.meta.env.VITE_E2E === 'true') {
-          try {
-            const raw = localStorage.getItem(LS_E2E_DEV_TOKENS_JSON)
-            if (raw) {
-              const parsed = JSON.parse(raw) as AuthTokens
-              if (
-                typeof parsed?.passenger === 'string' &&
-                typeof parsed?.driver === 'string' &&
-                typeof parsed?.admin === 'string'
-              ) {
-                t = parsed
-              }
-            }
-          } catch {
-            /* ignorar JSON inválido */
-          }
+        if (config.beta_mode) {
+          addLog('Modo BETA ativo', 'info')
+        } else {
+          addLog('Sessão por login (BETA off)', 'info')
         }
+      } else {
+        let t: AuthTokens | null = e2eInject
         if (!t) {
           t = await withColdStartRetries((timeoutMs) => getDevTokens(timeoutMs))
           addLog('Tokens carregados', 'success')
@@ -362,9 +373,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logWarn('[Auth/loadTokens]', { status, detail: detailStr || rawDetail })
 
       setTokens(null)
-      setBetaMode(false)
-      setBetaToken(null)
-      setBetaUserId(null)
+      setAuthBootstrapMode('login_session')
+      setSessionAccessToken(null)
+      setSessionUserId(null)
       setSessionPhone(null)
       setSessionDisplayName(null)
 
@@ -382,11 +393,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let logLine: string
 
       if (status === 401) {
-        msg = 'Não autorizado. Inicia sessão (modo BETA) ou verifica o token.'
-        logLine = '401 ao carregar tokens dev'
+        msg = 'Não autorizado. Inicia sessão ou verifica o token.'
+        logLine = '401 ao carregar tokens'
       } else if (status === 404) {
         msg =
-          'Endpoint /dev/tokens indisponível (servidor não está em dev ou dev tools desativados). Usa login BETA ou ativa ENABLE_DEV_TOOLS.'
+          'Endpoint /dev/tokens indisponível. Em ambientes deployed usa o ecrã de login; em local activa ENABLE_DEV_TOOLS ou BETA_MODE.'
         logLine = '404 — dev endpoints não disponíveis'
       } else if (status === 500 && detailStr) {
         msg = detailStr
@@ -405,7 +416,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [addLog, setStatus, syncAppRouteRole])
+  }, [addLog, applyLoginSessionFromJwt, clearLoginSessionState, setStatus])
 
   const login = useCallback(
     async (phone: string, password: string, requestedRole?: string) => {
@@ -413,17 +424,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await loginApi(phone, password, requestedRole)
       const token = res.access_token
       setStoredAccessToken(token)
-      setBetaToken(token)
       const serverRole = res.role as Role
-      setBetaRole(serverRole)
-      setBetaUserId(res.user_id)
+      setSessionAccessToken(token)
+      setSessionUserRole(serverRole)
+      setSessionUserId(res.user_id)
       {
         let shell: AppRouteRole
         if (requestedRole === 'admin') shell = 'passenger'
         else if (requestedRole === 'driver') shell = 'driver'
         else if (requestedRole === 'passenger') shell = 'passenger'
         else if (requestedRole === 'partner' || serverRole === 'partner') shell = 'partner'
-        else shell = serverRole === 'driver' ? 'driver' : 'passenger'
+        else shell = resolveAppRouteRoleFromSession(serverRole, null)
         syncAppRouteRole(shell)
       }
       setTokens({
@@ -432,6 +443,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         admin: token,
         partner: res.role === 'partner' ? token : undefined,
       })
+      setAuthBootstrapMode('login_session')
       setStatus('Pronto')
       setSessionPhone(phone.trim())
       {
@@ -451,10 +463,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await exchangeGoogleCode(code, redirectUri, 'passenger')
       const token = res.access_token
       setStoredAccessToken(token)
-      setBetaToken(token)
       const serverRole = res.role as Role
-      setBetaRole(serverRole)
-      setBetaUserId(res.user_id)
+      setSessionAccessToken(token)
+      setSessionUserRole(serverRole)
+      setSessionUserId(res.user_id)
       syncAppRouteRole('passenger')
       setTokens({
         passenger: token,
@@ -462,6 +474,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         admin: token,
         partner: res.role === 'partner' ? token : undefined,
       })
+      setAuthBootstrapMode('login_session')
       setStatus('Pronto')
       const p = (res.phone ?? '').trim()
       if (p) {
@@ -491,9 +504,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     clearAuthStorage()
     setTokens(null)
-    setBetaToken(null)
-    setBetaRole('passenger')
-    setBetaUserId(null)
+    setSessionAccessToken(null)
+    setSessionUserRole('passenger')
+    setSessionUserId(null)
     setAppRouteRoleState('passenger')
     setSessionPhone(null)
     setSessionDisplayName(null)
@@ -529,15 +542,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('api:401', handle401)
   }, [logout])
 
-  const isAuthenticated = !!(betaMode ? betaToken : tokens)
-  const isAdmin = betaMode ? isBackofficeStaffRole(betaRole) : !!tokens?.admin
+  const isAuthenticated = !!(loginSessionActive ? sessionAccessToken : tokens)
+  const isAdmin = isAdminFromSessionRole(sessionRole)
 
   const value: AuthContextValue = useMemo(
     () => ({
       token,
       // role = “vista” (rota/shell). sessionRole = papel real persistido no token.
       role: uiRole,
-      userId: betaMode ? betaUserId : null,
+      userId: loginSessionActive ? sessionUserId : null,
       isLoading,
       betaMode,
       isAuthenticated,
@@ -546,6 +559,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isPartnerUser,
       sessionRole,
       appRouteRole,
+      authBootstrapMode,
       isLoadingAuth: isLoading,
       splashPrimary,
       loadError,
@@ -562,7 +576,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [
       token,
       uiRole,
-      betaUserId,
+      sessionUserId,
+      loginSessionActive,
       isLoading,
       betaMode,
       isAuthenticated,
@@ -571,6 +586,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isPartnerUser,
       sessionRole,
       appRouteRole,
+      authBootstrapMode,
       splashPrimary,
       loadError,
       setRole,
