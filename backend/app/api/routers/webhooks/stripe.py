@@ -133,6 +133,8 @@ async def stripe_webhook(
             )
             return {"status": "ok"}
 
+        # L-PAY-01: claim delivery + Payment update in ONE transaction.
+        # ACK 2xx only after commit; DB errors → rollback + 5xx so Stripe retries.
         if stripe_event_id:
             ins = (
                 insert(StripeWebhookEvent)
@@ -147,10 +149,8 @@ async def stripe_webhook(
                     stripe_event_id,
                     event_type,
                 )
+                db.rollback()
                 return {"status": "ok"}
-            # Persist idempotency marker immediately. Without this commit, returning 200 would
-            # rollback the insert at request end and break idempotency on re-delivery.
-            db.commit()
 
         # Manual capture: only payment_intent.succeeded fires after capture.
         if event_type == "payment_intent.succeeded":
@@ -189,6 +189,8 @@ async def stripe_webhook(
                         guard.expected_amount_cents,
                     )
                     # Fail-closed: do not mark succeeded; keep processing for ops review.
+                    # Persist delivery marker (if any) so Stripe does not poison-retry forever.
+                    db.commit()
                     return {"status": "ok"}
 
                 status_before_succeeded = payment.status
@@ -229,6 +231,7 @@ async def stripe_webhook(
                     f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
                     f"stripe_event_id={stripe_event_id}"
                 )
+                db.commit()
 
         elif event_type in ("payment_intent.payment_failed", "charge.payment_failed"):
             if payment.status != PaymentStatus.failed:
@@ -269,17 +272,22 @@ async def stripe_webhook(
                     f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
                     f"stripe_event_id={stripe_event_id}"
                 )
+                db.commit()
+        else:
+            # Delivery claimed for an unhandled type with a valid PI — keep marker.
+            if stripe_event_id:
+                db.commit()
 
     except SQLAlchemyError:
         logger.exception(
-            "webhook: DB error (ack 200 to avoid poison retries) event_type=%s "
+            "webhook: DB error (return 5xx for Stripe retry) event_type=%s "
             "payment_intent_id=%s stripe_event_id=%s",
             event_type,
             payment_intent_id,
             stripe_event_id,
         )
         log_event(
-            "stripe_webhook_db_error_ack",
+            "stripe_webhook_db_error_nack",
             event_type=event_type,
             payment_intent_id=str(payment_intent_id),
             stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
@@ -288,5 +296,9 @@ async def stripe_webhook(
             db.rollback()
         except Exception:
             logger.exception("webhook: rollback after DB error failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="webhook_db_error",
+        ) from None
 
     return {"status": "ok"}
