@@ -2,10 +2,12 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
+import { AUTH_LOGOUT_EVENT } from '../constants/events'
 import {
   readPassengerActiveTripIdFromStorage,
   writePassengerActiveTripIdToStorage,
@@ -23,6 +25,16 @@ interface ActiveTripContextValue extends ActiveTripState {
 
 const ActiveTripContext = createContext<ActiveTripContextValue | null>(null)
 
+/** L-FE-02: drop passenger sessionStorage + both React ids (logout / 401). */
+export function clearActiveTripSessionState(
+  setPassenger: (id: string | null) => void,
+  setDriver: (id: string | null) => void
+): void {
+  writePassengerActiveTripIdToStorage(null)
+  setPassenger(null)
+  setDriver(null)
+}
+
 export function ActiveTripProvider({ children }: { children: ReactNode }) {
   const [passengerActiveTripId, setPassengerActiveTripIdState] = useState<string | null>(() =>
     readPassengerActiveTripIdFromStorage()
@@ -36,6 +48,14 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
 
   const setDriverActiveTripId = useCallback((id: string | null) => {
     setDriverActiveTripIdState(id)
+  }, [])
+
+  useEffect(() => {
+    const onLogout = () => {
+      clearActiveTripSessionState(setPassengerActiveTripIdState, setDriverActiveTripIdState)
+    }
+    window.addEventListener(AUTH_LOGOUT_EVENT, onLogout)
+    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, onLogout)
   }, [])
 
   const value = useMemo<ActiveTripContextValue>(

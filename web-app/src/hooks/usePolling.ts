@@ -16,6 +16,8 @@ export type UsePollingOptions<T> = {
  * Hook for polling. Callback is invoked immediately and then every interval.
  * Pass deps to stabilize refetch (e.g. [token]) — avoids re-running on every render.
  * Auto-refetches when tab becomes visible again (after dormancy).
+ *
+ * L-FE-01: no overlapping in-flight polls; stale/late responses are ignored via generation.
  */
 export function usePolling<T>(
   fn: () => Promise<T>,
@@ -41,13 +43,29 @@ export function usePolling<T>(
   const [pollFault, setPollFault] = useState(false)
   const dataRef = useRef<T | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const inFlightRef = useRef(false)
+  const generationRef = useRef(0)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      generationRef.current += 1
+      inFlightRef.current = false
+    }
+  }, [])
 
   const refetch = useCallback(async () => {
+    if (inFlightRef.current) return
+    const generation = ++generationRef.current
+    inFlightRef.current = true
     const background = dataRef.current !== null
     try {
       if (background) setIsRefreshing(true)
-      setIsLoading(true)
+      else setIsLoading(true)
       const result = await fn()
+      if (generation !== generationRef.current || !mountedRef.current) return
       setPollFault(false)
       const prev = dataRef.current
       const next =
@@ -56,11 +74,15 @@ export function usePolling<T>(
       setData(next)
       setLastSuccessAt(Date.now())
     } catch (err) {
+      if (generation !== generationRef.current || !mountedRef.current) return
       logError('Poll error:', err)
       setPollFault(true)
     } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      inFlightRef.current = false
+      if (generation === generationRef.current && mountedRef.current) {
+        setIsLoading(false)
+        setIsRefreshing(false)
+      }
     }
     // deps + equals from caller; fn closes over latest fn from render
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,6 +90,8 @@ export function usePolling<T>(
 
   useEffect(() => {
     if (!enabled) {
+      generationRef.current += 1
+      inFlightRef.current = false
       dataRef.current = null
       setLastSuccessAt(null)
       setIsRefreshing(false)
@@ -76,19 +100,23 @@ export function usePolling<T>(
       setIsLoading(false)
       return
     }
-    refetch()
-    intervalRef.current = setInterval(refetch, intervalMs)
+    void refetch()
+    intervalRef.current = setInterval(() => {
+      void refetch()
+    }, intervalMs)
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
       }
+      generationRef.current += 1
+      inFlightRef.current = false
     }
   }, [enabled, refetch, intervalMs])
 
   useEffect(() => {
     const onVisible = () => {
-      if (enabled) refetch()
+      if (enabled) void refetch()
     }
     window.addEventListener(VISIBILITY_VISIBLE_EVENT, onVisible)
     return () => window.removeEventListener(VISIBILITY_VISIBLE_EVENT, onVisible)
