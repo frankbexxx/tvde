@@ -40,6 +40,8 @@ import {
   setStoredSessionDisplayName,
 } from '../utils/authStorage'
 import { isJwtExpired, parseJwtPayload } from '../utils/jwt'
+import { AUTH_LOGOUT_EVENT } from '../constants/events'
+import { writePassengerActiveTripIdToStorage } from '../features/passenger/passengerActiveTripRecovery'
 import { useActivityLog } from './ActivityLogContext'
 import {
   isAdminFromSessionRole,
@@ -502,6 +504,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setAppRouteRole = syncAppRouteRole
 
   const logout = useCallback(() => {
+    // L-FE-02: drop passenger active-trip sessionStorage before auth wipe
+    writePassengerActiveTripIdToStorage(null)
     clearAuthStorage()
     setTokens(null)
     setSessionAccessToken(null)
@@ -510,6 +514,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAppRouteRoleState('passenger')
     setSessionPhone(null)
     setSessionDisplayName(null)
+    window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT))
   }, [])
 
   const refreshSessionProfile = useCallback(async () => {

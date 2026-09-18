@@ -28,4 +28,11 @@ describe('AuthContext (política de logs e admin)', () => {
     expect(src).toMatch(/resolveAuthBootstrapMode/)
     expect(src).toMatch(/authBootstrapMode === 'login_session'/)
   })
+
+  it('no logout limpa active trip storage e emite AUTH_LOGOUT_EVENT (L-FE-02)', () => {
+    const src = readFileSync(join(dir, 'AuthContext.tsx'), 'utf8')
+    expect(src).toMatch(/writePassengerActiveTripIdToStorage\(null\)/)
+    expect(src).toMatch(/AUTH_LOGOUT_EVENT/)
+    expect(src).toMatch(/dispatchEvent\(new CustomEvent\(AUTH_LOGOUT_EVENT\)\)/)
+  })
 })
