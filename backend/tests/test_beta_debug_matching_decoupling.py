@@ -104,8 +104,13 @@ def test_auto_assign_follows_matching_fallbacks_not_beta(
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", False, raising=False)
     monkeypatch.setattr(settings, "ENABLE_BETA_MATCHING_FALLBACKS", True, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_VEHICLE_CAPACITY_GATES", False, raising=False)
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
+    for orphan in (
+        db.execute(select(Trip).where(Trip.status == TripStatus.requested)).scalars().all()
+    ):
+        orphan.status = TripStatus.cancelled
     db.commit()
 
     passenger = User(
@@ -128,6 +133,7 @@ def test_auto_assign_follows_matching_fallbacks_not_beta(
         status=DriverStatus.approved,
         commission_percent=15,
         is_available=True,
+        vehicle_categories="x",
     )
     db.add(driver)
     trip = Trip(
@@ -138,6 +144,7 @@ def test_auto_assign_follows_matching_fallbacks_not_beta(
         destination_lat=38.8,
         destination_lng=-9.2,
         estimated_price=5.0,
+        vehicle_category="x",
     )
     trip.created_at = datetime.now(timezone.utc) - timedelta(hours=2)
     db.add(trip)
@@ -166,6 +173,7 @@ def test_auto_assign_follows_matching_fallbacks_not_beta(
         destination_lat=38.8,
         destination_lng=-9.2,
         estimated_price=5.0,
+        vehicle_category="x",
     )
     trip2.created_at = datetime.now(timezone.utc) - timedelta(hours=3)
     db.add(trip2)
