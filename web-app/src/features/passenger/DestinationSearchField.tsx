@@ -37,6 +37,7 @@ export function DestinationSearchField({
   const id = useId()
   const listId = `${id}-list`
   const wrapRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!suggestions.length || !onDismissSuggestions) return
@@ -49,12 +50,49 @@ export function DestinationSearchField({
 
   const showList = !disabled && suggestions.length > 0 && query.trim().length >= 2
 
+  // Cap suggestion list when the visual viewport shrinks (mobile keyboard).
+  useEffect(() => {
+    const el = wrapRef.current
+    if (!el || !showList) {
+      el?.style.removeProperty('--dest-suggest-max-h')
+      return
+    }
+    const apply = () => {
+      const vv = window.visualViewport
+      const vh = vv?.height ?? window.innerHeight
+      // Leave room for field + CTA below inside the map sheet.
+      const capped = Math.max(96, Math.min(176, Math.round(vh * 0.28)))
+      el.style.setProperty('--dest-suggest-max-h', `${capped}px`)
+    }
+    apply()
+    const vv = window.visualViewport
+    vv?.addEventListener('resize', apply)
+    vv?.addEventListener('scroll', apply)
+    return () => {
+      vv?.removeEventListener('resize', apply)
+      vv?.removeEventListener('scroll', apply)
+      el.style.removeProperty('--dest-suggest-max-h')
+    }
+  }, [showList])
+
+  const ensureFieldVisible = () => {
+    requestAnimationFrame(() => {
+      wrapRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      const sheet = wrapRef.current?.closest('[data-testid="map-bottom-sheet"]')
+      if (sheet instanceof HTMLElement) {
+        // Keep search near the top of the sheet so CTA under the list stays scrollable.
+        sheet.scrollTop = Math.max(0, sheet.scrollTop - 8)
+      }
+    })
+  }
+
   return (
     <div ref={wrapRef} className="relative space-y-1.5">
       <label htmlFor={id} className="sr-only">
         {resolvedLabel}
       </label>
       <Input
+        ref={inputRef}
         id={id}
         type="search"
         autoComplete="off"
@@ -63,10 +101,12 @@ export function DestinationSearchField({
         value={query}
         disabled={disabled}
         onChange={(e) => onQueryChange(e.target.value)}
+        onFocus={ensureFieldVisible}
         aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
-        className={`h-9 ${BTN_SECONDARY_RADIUS} border-border bg-background text-sm`}
+        // text-base (>=16px) evita zoom iOS/Android; não sobrescrever com text-sm.
+        className={`h-10 ${BTN_SECONDARY_RADIUS} border-border bg-background text-base`}
       />
       {geocodingUnavailable ? (
         <p className="text-xs text-muted-foreground leading-snug">
@@ -82,7 +122,8 @@ export function DestinationSearchField({
         <ul
           id={listId}
           role="listbox"
-          className={`absolute z-30 top-full left-0 right-0 mt-1 max-h-56 overflow-y-auto ${BTN_SECONDARY_RADIUS} border border-border bg-popover text-popover-foreground shadow-lg py-1`}
+          data-testid="destination-suggestions"
+          className={`absolute z-30 top-full left-0 right-0 mt-1 overflow-y-auto overscroll-contain ${BTN_SECONDARY_RADIUS} border border-border bg-popover text-popover-foreground shadow-lg py-1 max-h-[min(11rem,var(--dest-suggest-max-h,28dvh))]`}
         >
           {suggestions.map((s) => (
             <li key={s.id} role="presentation">

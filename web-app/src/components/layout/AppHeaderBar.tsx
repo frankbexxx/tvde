@@ -82,26 +82,15 @@ export function AppHeaderBar({ variant = 'default' }: AppHeaderBarProps) {
   const effectiveHintIndex =
     allHints.length === 0 ? 0 : ((hintIndex % allHints.length) + allHints.length) % allHints.length
   const rotatingHint = allHints[effectiveHintIndex] ?? ''
-  const shouldMarqueeHint = rotatingHint.length > 54
 
-  const hintBlock = shouldMarqueeHint ? (
-    <div
-      className="app-header-marquee min-h-[1.125rem] w-full"
-      title={rotatingHint}
-      aria-live="polite"
-    >
-      <div className="app-header-marquee-track">
-        <span className="app-header-marquee-item">{rotatingHint}</span>
-        <span className="app-header-marquee-item" aria-hidden="true">
-          {rotatingHint}
-        </span>
-      </div>
-    </div>
-  ) : (
+  // Oppo/E2E: marquee + nowrap ellipsis cortavam «Estimativa…» a ~360px.
+  // Wrap em todos os viewports; desktop mantém tipografia xs e o strip.
+  const hintBlock = (
     <p
-      className="text-xs text-foreground/70 min-h-[1.125rem] whitespace-nowrap overflow-hidden text-ellipsis w-full"
+      className="text-xs text-foreground/70 min-h-[1.125rem] w-full leading-snug text-pretty break-words"
       title={rotatingHint}
       aria-live="polite"
+      data-testid="app-header-hint-text"
     >
       {rotatingHint}
     </p>

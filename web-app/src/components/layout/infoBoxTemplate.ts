@@ -15,7 +15,8 @@ export const SHADOW_CARD = 'shadow-card'
 export const MAP_BOTTOM_SHEET = `pointer-events-auto mt-auto w-full shrink-0 overflow-hidden ${SURFACE_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-sheet-bg))] shadow-[var(--shadow-chrome-sheet)]`
 
 /** Sheet sizing — compacto obrigatório (Frank). */
-export const MAP_SHEET_MAX_H_IDLE = 'max-h-[min(38dvh,280px)]'
+/** Idle sheet: room for search + capped suggestions + CTA above keyboard. */
+export const MAP_SHEET_MAX_H_IDLE = 'max-h-[min(48dvh,340px)]'
 export const MAP_SHEET_MAX_H_TRIP = 'max-h-[min(28dvh,220px)]'
 export const MAP_SHEET_MAX_H_WAIT = 'max-h-[min(14dvh,100px)]'
 export const MAP_SHEET_MAX_H_OFFER = 'max-h-[min(28dvh,220px)]'
