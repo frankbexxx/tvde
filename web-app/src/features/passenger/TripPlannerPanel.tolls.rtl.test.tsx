@@ -65,4 +65,28 @@ describe('TripPlannerPanel tolls estimate (F1)', () => {
     expect(screen.queryByTestId('passenger-estimate-tolls')).toBeNull()
     expect(screen.getByTestId('passenger-estimate-tolls-unavailable')).toBeTruthy()
   })
+
+  it('confirming renders sticky CTA', async () => {
+    await i18n.changeLanguage('pt')
+    wrap(
+      <TripPlannerPanel
+        uiState="confirming"
+        hasPickup
+        hasDropoff
+        pickupAddress="Origem"
+        dropoffAddress="Destino"
+        pickupAddressLoading={false}
+        dropoffAddressLoading={false}
+        routeMeta={{ durationSec: 600, distanceM: 3200 }}
+        routeMetaLoading={false}
+        activeTrip={null}
+        onChooseMap={() => undefined}
+        onSetDestinationHint={() => undefined}
+        onReset={() => undefined}
+        onConfirmTrip={() => undefined}
+      />,
+    )
+    expect(screen.getByTestId('passenger-confirm-cta-row')).toBeInTheDocument()
+    expect(screen.getByTestId('passenger-confirm-trip-cta')).toBeInTheDocument()
+  })
 })

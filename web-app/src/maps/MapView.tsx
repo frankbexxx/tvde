@@ -379,10 +379,13 @@ export function MapView({
     )
   }
 
-  const supportOverlay = subduedChrome ? (
+  const supportOverlay = isSubdued ? (
     <div
-      className="pointer-events-none absolute inset-0 z-[1] rounded-2xl bg-background/20 dark:bg-black/25 transition-opacity duration-500 ease-out"
+      className={`pointer-events-none absolute inset-0 z-[1] ${
+        fillContainer ? '' : 'rounded-2xl'
+      } bg-background/20 dark:bg-black/25 transition-opacity duration-500 ease-out`}
       aria-hidden
+      data-testid="map-subdued-overlay"
     />
   ) : null
 

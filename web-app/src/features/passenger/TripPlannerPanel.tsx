@@ -309,34 +309,39 @@ function TripPlannerPanelInner({
               {confirmBlockedReason}
             </div>
           ) : null}
-          <div className="flex flex-row gap-2 pt-1">
-            <button
-              type="button"
-              onClick={onConfirmTrip}
-              disabled={
-                confirmTripPending ||
-                routeMetaLoading ||
-                Boolean(confirmBlockedReason) ||
-                petBlocksConfirm
-              }
-              className={`flex-1 ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-success text-success-foreground px-3 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation`}
-            >
-              {confirmTripPending ? t('planner.confirming') : t('planner.confirmTrip')}
-            </button>
-            {onEditDestination ? (
+          <div
+            className="sticky bottom-0 z-[1] -mx-2 mt-1 border-t border-border/50 bg-[hsl(var(--color-chrome-sheet-bg))] px-2 pt-1.5 pb-0.5"
+            data-testid="passenger-confirm-cta-row"
+          >
+            <div className="flex flex-row gap-2">
               <button
                 type="button"
-                onClick={onEditDestination}
-                disabled={confirmTripPending}
-                className={`${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation`}
+                onClick={onConfirmTrip}
+                disabled={
+                  confirmTripPending ||
+                  routeMetaLoading ||
+                  Boolean(confirmBlockedReason) ||
+                  petBlocksConfirm
+                }
+                className={`flex-1 ${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} bg-success text-success-foreground px-3 text-sm font-semibold shadow-md hover:bg-success/90 transition-opacity disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed touch-manipulation`}
+                data-testid="passenger-confirm-trip-cta"
               >
-                {t('planner.edit')}
+                {confirmTripPending ? t('planner.confirming') : t('planner.confirmTrip')}
               </button>
-            ) : null}
+              {onEditDestination ? (
+                <button
+                  type="button"
+                  onClick={onEditDestination}
+                  disabled={confirmTripPending}
+                  className={`${BTN_COMPACT_HEIGHT} ${BTN_PRIMARY_RADIUS} border border-border bg-muted/40 px-3 text-sm font-semibold text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50 touch-manipulation`}
+                >
+                  {t('planner.edit')}
+                </button>
+              ) : null}
+            </div>
           </div>
         </>
       )}
-
       {uiState === 'searching' && (
         <div className="flex flex-col items-center gap-3 py-2">
           <Spinner size="lg" />
