@@ -373,6 +373,27 @@ async def create_trip(
     return trip, eta
 
 
+_MOCK_PI_PREFIX = "pi_mock_"
+
+
+def fail_mock_processing_payment_on_cancel(payment: Payment | None) -> bool:
+    """
+    On trip cancel (or timeout cancel): mock ``processing`` → ``failed``.
+
+    Same outcome as PAYMENTS-STUCK-1B for cancelled trips. No Stripe calls.
+    Real PIs and non-processing statuses are untouched. Idempotent.
+    """
+    if payment is None:
+        return False
+    if payment.status != PaymentStatus.processing:
+        return False
+    pi_id = (payment.stripe_payment_intent_id or "").strip()
+    if not pi_id.startswith(_MOCK_PI_PREFIX):
+        return False
+    payment.status = PaymentStatus.failed
+    return True
+
+
 def cancel_trip_by_passenger(
     *,
     db: Session,
@@ -414,7 +435,7 @@ def cancel_trip_by_passenger(
     # Cancel PaymentIntent if trip has payment (accepted/arriving/ongoing)
     payment = trip.payment
     pi_id = (payment.stripe_payment_intent_id or "") if payment else ""
-    if payment and pi_id and not pi_id.startswith("pi_mock_"):
+    if payment and pi_id and not pi_id.startswith(_MOCK_PI_PREFIX):
         try:
             intent = retrieve_payment_intent(pi_id)
             pi_status = getattr(intent, "status", None) or intent.get("status", "")
@@ -430,6 +451,7 @@ def cancel_trip_by_passenger(
             logger.warning(f"cancel_trip_by_passenger: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
+    fail_mock_processing_payment_on_cancel(payment)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
@@ -530,7 +552,7 @@ def cancel_trip_by_driver(
 
     payment = trip.payment
     pi_id = (payment.stripe_payment_intent_id or "") if payment else ""
-    if payment and pi_id and not pi_id.startswith("pi_mock_"):
+    if payment and pi_id and not pi_id.startswith(_MOCK_PI_PREFIX):
         try:
             intent = retrieve_payment_intent(pi_id)
             pi_status = getattr(intent, "status", None) or intent.get("status", "")
@@ -546,6 +568,7 @@ def cancel_trip_by_driver(
             logger.warning(f"cancel_trip_by_driver: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
+    fail_mock_processing_payment_on_cancel(payment)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
@@ -621,19 +644,18 @@ def cancel_trip_by_admin(
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
 
     payment = trip.payment
-    if payment and payment.stripe_payment_intent_id:
+    pi_id = (payment.stripe_payment_intent_id or "").strip() if payment else ""
+    if payment and pi_id and not pi_id.startswith(_MOCK_PI_PREFIX):
         try:
-            intent = retrieve_payment_intent(payment.stripe_payment_intent_id)
+            intent = retrieve_payment_intent(pi_id)
             pi_status = getattr(intent, "status", None) or intent.get("status", "")
             if pi_status in (
                 "requires_payment_method",
                 "requires_confirmation",
                 "requires_action",
             ):
-                cancel_payment_intent(payment.stripe_payment_intent_id)
-                logger.info(
-                    f"cancel_trip_by_admin: cancelled PI {payment.stripe_payment_intent_id}"
-                )
+                cancel_payment_intent(pi_id)
+                logger.info(f"cancel_trip_by_admin: cancelled PI {pi_id}")
         except Exception as e:
             logger.warning(f"cancel_trip_by_admin: could not cancel PI: {e}")
 
@@ -643,6 +665,7 @@ def cancel_trip_by_admin(
         cr = cancellation_reason.strip()
         if cr:
             trip.cancellation_reason = cr[:280]
+    fail_mock_processing_payment_on_cancel(payment)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()

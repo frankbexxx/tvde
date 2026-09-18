@@ -10,11 +10,13 @@ from sqlalchemy import update
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
+from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.events.dispatcher import emit
-from app.models.enums import TripStatus
+from app.models.enums import PaymentStatus, TripStatus
 from app.schemas.realtime import TripStatusChangedEvent
 from app.services.trips import (
+    _MOCK_PI_PREFIX,
     _set_driver_available,
     on_trip_status_change_for_driving_compliance,
 )
@@ -25,6 +27,23 @@ logger = logging.getLogger(__name__)
 ASSIGNED_TIMEOUT_MINUTES = 2
 ACCEPTED_TIMEOUT_MINUTES = 10
 ONGOING_TIMEOUT_HOURS = 6
+
+
+def _fail_mock_processing_payments_for_trips(db: Session, trip_ids: list) -> int:
+    """Bulk: cancelled/failed timeout trips → mock processing payments → failed."""
+    if not trip_ids:
+        return 0
+    result = db.execute(
+        update(Payment)
+        .where(
+            Payment.trip_id.in_(trip_ids),
+            Payment.status == PaymentStatus.processing,
+            Payment.stripe_payment_intent_id.like(f"{_MOCK_PI_PREFIX}%"),
+        )
+        .values(status=PaymentStatus.failed)
+        .execution_options(synchronize_session=False)
+    )
+    return int(result.rowcount or 0)
 
 
 def run_trip_timeouts(db: Session) -> dict[str, int]:
@@ -46,6 +65,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
         "assigned_to_requested": 0,
         "accepted_to_cancelled": 0,
         "ongoing_to_failed": 0,
+        "mock_payments_failed": 0,
     }
     pending_events: list[TripStatusChangedEvent] = []
 
@@ -94,6 +114,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
         .returning(Trip.id, Trip.driver_id)
         .execution_options(synchronize_session=False)
     ).all()
+    accepted_trip_ids = [trip_id for trip_id, _ in accepted_stuck]
     for trip_id, driver_id in accepted_stuck:
         _set_driver_available(db, str(driver_id) if driver_id else None)
         counts["accepted_to_cancelled"] += 1
@@ -109,6 +130,9 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
                 timestamp=now,
             )
         )
+    counts["mock_payments_failed"] += _fail_mock_processing_payments_for_trips(
+        db, accepted_trip_ids
+    )
 
     # 3) ongoing > 6 hours → failed, free driver
     # Conditional UPDATE: do not clobber a concurrent ongoing→completed settlement.
@@ -123,6 +147,7 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
         .returning(Trip.id, Trip.driver_id)
         .execution_options(synchronize_session=False)
     ).all()
+    ongoing_trip_ids = [trip_id for trip_id, _ in ongoing_stuck]
     for trip_id, driver_id in ongoing_stuck:
         # Compliance helpers need a Trip instance; load after the conditional write.
         trip = db.get(Trip, trip_id)
@@ -148,14 +173,25 @@ def run_trip_timeouts(db: Session) -> dict[str, int]:
                 timestamp=now,
             )
         )
+    counts["mock_payments_failed"] += _fail_mock_processing_payments_for_trips(
+        db, ongoing_trip_ids
+    )
 
-    if any(c > 0 for c in counts.values()):
+    if any(
+        counts[k] > 0
+        for k in (
+            "assigned_to_requested",
+            "accepted_to_cancelled",
+            "ongoing_to_failed",
+        )
+    ):
         db.commit()
         log_event(
             "trip_timeouts_applied",
             assigned_to_requested=counts["assigned_to_requested"],
             accepted_to_cancelled=counts["accepted_to_cancelled"],
             ongoing_to_failed=counts["ongoing_to_failed"],
+            mock_payments_failed=counts["mock_payments_failed"],
         )
         for ev in pending_events:
             emit(ev)

@@ -585,5 +585,7 @@ def test_cancel_before_complete_keeps_trip_cancelled(
             db=db, passenger_id=str(passenger.id), trip_id=str(trip.id), reason="test"
         )
         assert cancelled.status == TripStatus.cancelled
+        pay = db.execute(select(Payment).where(Payment.trip_id == trip.id)).scalar_one()
+        assert pay.status == PaymentStatus.failed
     finally:
         db.close()
