@@ -202,12 +202,18 @@ def test_beta_fallback_promotes_when_zero_offers(
     """Cold start: requested trip with no TripOffer rows may enter assigned pool.
 
     Driver is far from pickup so location-redispatch creates 0 offers; BETA
-    fallback can still promote the orphan requested trip to the legacy pool.
+    fallback can still promote the orphan requested trip to the legacy pool
+    when ≥1 driver is fare/capacity eligible (gates OFF → no vehicle required).
     """
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     monkeypatch.setattr(settings, "ENABLE_BETA_MATCHING_FALLBACKS", None, raising=False)
+    monkeypatch.setattr(settings, "ENABLE_VEHICLE_CAPACITY_GATES", False, raising=False)
     for loc in db.execute(select(DriverLocation)).scalars().all():
         db.delete(loc)
+    for orphan in (
+        db.execute(select(Trip).where(Trip.status == TripStatus.requested)).scalars().all()
+    ):
+        orphan.status = TripStatus.cancelled
     db.commit()
     # Far from trip origin (38.7, -9.1) so create_offers_for_trip yields [].
     driver_id = _create_driver(db, lat=41.15, lng=-8.61)

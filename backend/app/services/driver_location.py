@@ -157,7 +157,11 @@ def upsert_driver_location(
         )
 
     from app.db.models.trip_offer import TripOffer
-    from app.services.offer_dispatch import create_offers_for_trip, publish_trip_offers
+    from app.services.offer_dispatch import (
+        create_offers_for_trip,
+        has_eligible_driver_for_assigned_pool,
+        publish_trip_offers,
+    )
 
     location_redispatch_offers: list = []
     location_redispatch_trip = None
@@ -211,9 +215,13 @@ def upsert_driver_location(
                 )
 
     # Fallback auto-dispatch when matching fallbacks ON: multi-offer created 0 offers
-    # (no drivers had locations). Assign oldest requested trip to pool.
+    # (no drivers had locations). Promote oldest orphan requested trip that has ≥1
+    # currently eligible driver (fare, capacity, vehicle ops/compliance) to the
+    # legacy assigned pool — never invent offers or set driver_id.
     # Trips that already have any TripOffer history (pending/rejected/expired/…)
     # stay requested — cron redispatch handles them (BUG-REJECT-BETA-1).
+    # Ineligible orphans are skipped (remain requested) so they do not block a
+    # later eligible trip in the same location ping.
     matching_fallbacks = settings.beta_matching_fallbacks_enabled()
     if matching_fallbacks and getattr(driver, "is_available", True):
         q = (
@@ -226,11 +234,10 @@ def upsert_driver_location(
                 .exists()
             )
             .order_by(Trip.created_at.asc())
-            .limit(1)
             .with_for_update(of=Trip)
         )
-        trip = db.execute(q).scalars().first()
-        if trip is not None:
+        promoted = False
+        for trip in db.execute(q).scalars():
             # Re-check under the row lock: a concurrent accept_offer may have
             # already bound this trip (payment + accepted) while we waited.
             if trip.status != TripStatus.requested or trip.driver_id is not None:
@@ -242,28 +249,45 @@ def upsert_driver_location(
                         "driver_id": str(trip.driver_id) if trip.driver_id else None,
                     },
                 )
-            else:
-                previous_status = trip.status
-                validate_trip_transition(
-                    previous_status, TripStatus.assigned, trip_id=str(trip.id)
-                )
-                trip.status = TripStatus.assigned
+                continue
+            if not has_eligible_driver_for_assigned_pool(db, trip):
                 log_event(
-                    "trip_auto_dispatched",
-                    trip_id=trip.id,
+                    "trip_auto_dispatch_skipped_no_eligible",
+                    trip_id=str(trip.id),
                     driver_id=driver_id,
                 )
                 logger.info(
-                    "upsert_driver_location: auto-dispatch trip",
+                    "upsert_driver_location: skip auto-dispatch; no eligible driver",
                     extra={
                         "trip_id": str(trip.id),
-                        "previous_status": previous_status.value,
-                        "new_status": trip.status.value,
                         "driver_id": str(driver_id),
                         "matching_fallbacks": matching_fallbacks,
                     },
                 )
-        else:
+                continue
+            previous_status = trip.status
+            validate_trip_transition(
+                previous_status, TripStatus.assigned, trip_id=str(trip.id)
+            )
+            trip.status = TripStatus.assigned
+            log_event(
+                "trip_auto_dispatched",
+                trip_id=trip.id,
+                driver_id=driver_id,
+            )
+            logger.info(
+                "upsert_driver_location: auto-dispatch trip",
+                extra={
+                    "trip_id": str(trip.id),
+                    "previous_status": previous_status.value,
+                    "new_status": trip.status.value,
+                    "driver_id": str(driver_id),
+                    "matching_fallbacks": matching_fallbacks,
+                },
+            )
+            promoted = True
+            break
+        if not promoted:
             logger.info(
                 "upsert_driver_location: no requested trips to assign",
                 extra={

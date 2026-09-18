@@ -129,6 +129,35 @@ def _has_active_pending_offer(
     return existing is not None
 
 
+def has_eligible_driver_for_assigned_pool(db: Session, trip: Trip) -> bool:
+    """True when ≥1 approved/available driver can serve ``trip`` in the legacy pool.
+
+    Reuses the same soft-filters as ``create_offers_for_trip`` (fare/category+pet,
+    inactive vehicle, compliance, capacity). Does **not** require fresh GPS or
+    radius — the assigned pool exists precisely when location-based multi-offer
+    produced 0 offers (cold start).
+    """
+    drivers = list(
+        db.execute(
+            select(Driver)
+            .where(Driver.status == DriverStatus.approved)
+            .where(Driver.is_available)
+        ).scalars()
+    )
+    if not drivers:
+        return False
+
+    category_matched: list[tuple[Driver, float]] = [
+        (driver, 0.0)
+        for driver in drivers
+        if _driver_matches_trip_category(driver, trip)
+    ]
+    category_matched = _filter_by_inactive_vehicle(db, trip, category_matched)
+    category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
+    category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
+    return bool(category_matched)
+
+
 def create_offers_for_trip(
     *,
     db: Session,
