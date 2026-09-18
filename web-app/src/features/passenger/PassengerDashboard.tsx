@@ -32,7 +32,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { MapActionRow } from '../../components/layout/MapActionRow'
-import { BTN_SECONDARY, BTN_SECONDARY_RADIUS, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_IDLE, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
+import { BTN_SECONDARY, BTN_SECONDARY_RADIUS, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_IDLE, MAP_SHEET_MAX_H_SEARCH, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapStage } from '../../components/layout/MapStage'
@@ -242,6 +242,8 @@ export function PassengerDashboard() {
   const [geoLoading, setGeoLoading] = useState(false)
   const [destinationCandidate, setDestinationCandidate] = useState<GeocodeSuggestion | null>(null)
   const [mapRecenterKey, setMapRecenterKey] = useState(0)
+  /** Mobile: search field focused+typing → expand sheet / hide map CTA. */
+  const [placeSearchUiActive, setPlaceSearchUiActive] = useState(false)
   /** P3: snapshot do POST /trips até o primeiro GET alinhar. */
   const [passengerPendingTripDetail, setPassengerPendingTripDetail] = useState<TripDetailResponse | null>(
     null
@@ -583,10 +585,15 @@ export function PassengerDashboard() {
     setPickupGeoSuggestions([])
   }, [])
 
+  const handlePlaceSearchActiveChange = useCallback((active: boolean) => {
+    setPlaceSearchUiActive(active)
+  }, [])
+
   const handlePickupPick = useCallback((s: GeocodeSuggestion) => {
     setPickupCandidate(s)
     setPickupQuery(s.primary)
     setPickupGeoSuggestions([])
+    setPlaceSearchUiActive(false)
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
     toast.success(t('trip.pickupPreview'))
@@ -607,6 +614,7 @@ export function PassengerDashboard() {
     setDestinationCandidate(s)
     setDestinationQuery(s.primary)
     setGeoSuggestions([])
+    setPlaceSearchUiActive(false)
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
     toast.success(t('trip.dropoffPreview'))
@@ -1399,7 +1407,12 @@ export function PassengerDashboard() {
             }}
             bottomOverlay={
               isTripIdle ? (
-                <MapBottomSheet className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_IDLE}`}>
+                <MapBottomSheet
+                  className={`pointer-events-auto ${MAP_SHEET_CLASS} ${
+                    placeSearchUiActive ? MAP_SHEET_MAX_H_SEARCH : MAP_SHEET_MAX_H_IDLE
+                  }`}
+                  data-search-expanded={placeSearchUiActive ? 'true' : 'false'}
+                >
                   {showPickupSearch && (
                     <>
                       <DestinationSearchField
@@ -1413,8 +1426,9 @@ export function PassengerDashboard() {
                         disabled={creating}
                         geocodingUnavailable={false}
                         onDismissSuggestions={dismissPickupGeoSuggestions}
+                        onSearchActiveChange={handlePlaceSearchActiveChange}
                       />
-                      {pickupCandidate ? (
+                      {!placeSearchUiActive && pickupCandidate ? (
                         <div className={INFO_BOX_PREVIEW}>
                           <p className={INFO_BOX_TITLE_COMPACT}>{t('trip.pickupPreview')}</p>
                           <p className="text-xs text-muted-foreground leading-snug">
@@ -1442,8 +1456,9 @@ export function PassengerDashboard() {
                         disabled={creating}
                         geocodingUnavailable={false}
                         onDismissSuggestions={dismissGeoSuggestions}
+                        onSearchActiveChange={handlePlaceSearchActiveChange}
                       />
-                      {destinationCandidate ? (
+                      {!placeSearchUiActive && destinationCandidate ? (
                         <div className={INFO_BOX_PREVIEW}>
                           <p className={INFO_BOX_TITLE_COMPACT}>{t('trip.dropoffPreview')}</p>
                           <p className="text-xs text-muted-foreground leading-snug">
@@ -1458,6 +1473,7 @@ export function PassengerDashboard() {
                       ) : null}
                     </>
                   )}
+                  {!placeSearchUiActive ? (
                   <TripPlannerPanel
                     embedded
                     uiState={passengerUiState}
@@ -1501,6 +1517,7 @@ export function PassengerDashboard() {
                     lastEstimatedTolls={lastEstimatedTolls}
                     lastTollsUnavailable={lastTollsUnavailable}
                   />
+                  ) : null}
                 </MapBottomSheet>
               ) : (activeTripId || creating) && !showPassengerRatingPanel ? (
                 <MapBottomSheet className={`pointer-events-auto ${MAP_SHEET_CLASS} ${MAP_SHEET_MAX_H_TRIP}`}>

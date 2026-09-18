@@ -14,9 +14,10 @@ export const SHADOW_CARD = 'shadow-card'
 /** Painel inferior sobre mapa — mapa full-bleed por trás. */
 export const MAP_BOTTOM_SHEET = `pointer-events-auto mt-auto w-full shrink-0 overflow-hidden ${SURFACE_RADIUS} border border-[hsl(var(--color-chrome-sheet-border))] bg-[hsl(var(--color-chrome-sheet-bg))] shadow-[var(--shadow-chrome-sheet)]`
 
-/** Sheet sizing — compacto obrigatório (Frank). */
-/** Idle sheet: room for search + capped suggestions + CTA above keyboard. */
-export const MAP_SHEET_MAX_H_IDLE = 'max-h-[min(48dvh,340px)]'
+/** Idle sheet: compact map mode (search + CTA). */
+export const MAP_SHEET_MAX_H_IDLE = 'max-h-[min(42dvh,300px)]'
+/** Search-active sheet: more room for suggestions while keyboard is open. */
+export const MAP_SHEET_MAX_H_SEARCH = 'max-h-[min(72dvh,520px)]'
 export const MAP_SHEET_MAX_H_TRIP = 'max-h-[min(28dvh,220px)]'
 export const MAP_SHEET_MAX_H_WAIT = 'max-h-[min(14dvh,100px)]'
 export const MAP_SHEET_MAX_H_OFFER = 'max-h-[min(28dvh,220px)]'
