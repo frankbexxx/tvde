@@ -7,6 +7,8 @@ import { attachFailureArtifactsIfNeeded, resetFailureArtifactState } from './hel
 import {
   API,
   PET_SURCHARGE_EUR,
+  TRIP_DEST,
+  TRIP_ORIGIN,
   acceptTrip,
   authHeaders,
   cancelTripAsDriver,
@@ -160,13 +162,35 @@ test.describe('PET-5C feature (API-first)', () => {
     })
   })
 
-  test('E2E-6 capacity blocked 4 pax + pet seat → ineligible / 409', async ({ request }) => {
-    const tokens = await seedReadyDriver(request)
+  test('E2E-6 GO 4+pet → 422 category; XL 4+pet → ineligible / 409', async ({
+    request,
+  }) => {
+    const tokens = await seedReadyDriver(request, { categories: ['x', 'xl'] })
+
+    const categoryBlocked = await request.post(`${API}/trips`, {
+      headers: authHeaders(tokens.passenger),
+      data: {
+        origin_lat: TRIP_ORIGIN.lat,
+        origin_lng: TRIP_ORIGIN.lng,
+        destination_lat: TRIP_DEST.lat,
+        destination_lng: TRIP_DEST.lng,
+        vehicle_category: 'x',
+        passenger_count: 4,
+        has_pet: true,
+        pet_size: 'large',
+        pet_transport: 'harness',
+        pet_occupies_seat: true,
+      },
+    })
+    expect(categoryBlocked.status()).toBe(422)
+    expect(await categoryBlocked.text()).toContain('passenger_capacity_exceeds_category')
+
+    // Vehicle capacity gate: XL create allowed; demo vehicle max_passengers=4 < required 5.
     const tripRes = await createTripWithRateLimitRetry(
       request,
       tokens.passenger,
       {
-        vehicle_category: 'x',
+        vehicle_category: 'xl',
         passenger_count: 4,
         has_pet: true,
         pet_size: 'large',

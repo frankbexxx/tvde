@@ -22,11 +22,19 @@ from app.db.models.vehicle import Vehicle
 logger = logging.getLogger(__name__)
 
 CODE_VEHICLE_CAPACITY_INSUFFICIENT = "vehicle_capacity_insufficient"
+CODE_PASSENGER_CAPACITY_EXCEEDS_CATEGORY = "passenger_capacity_exceeds_category"
 
 PASSENGER_COUNT_MIN = 1
 PASSENGER_COUNT_MAX = 8
 VEHICLE_MAX_PASSENGERS_MIN = 1
 VEHICLE_MAX_PASSENGERS_MAX = 8
+
+# Category soft caps on *required seats* at create (not vehicle.max_passengers).
+# XL has no category ceiling — only global 1..8 and matching vehicle capacity.
+CATEGORY_MAX_REQUIRED_SEATS: dict[str, int] = {
+    "x": 4,
+    "comfort": 4,
+}
 
 
 def vehicle_capacity_gates_enabled() -> bool:
@@ -103,6 +111,58 @@ def occupied_pet_seats(trip: Trip | Any) -> int:
 
 def required_passenger_capacity(trip: Trip | Any) -> int:
     return trip_passenger_count(trip) + occupied_pet_seats(trip)
+
+
+def compute_required_seats(
+    passenger_count: int,
+    *,
+    pet_occupies_seat: bool = False,
+    has_pet: bool = False,
+    is_assistance_animal: bool = False,
+) -> int:
+    """required_seats = passenger_count + (1 if pet occupies a seat else 0)."""
+    pet_seats = 0
+    if pet_occupies_seat and (has_pet or is_assistance_animal):
+        pet_seats = 1
+    return int(passenger_count) + pet_seats
+
+
+def normalize_fare_category_for_capacity(raw: str | None) -> str:
+    cat = (raw or "x").strip().lower()
+    if cat == "standard":
+        return "x"
+    if cat == "pet":
+        return "x"
+    return cat or "x"
+
+
+def assert_category_passenger_capacity(
+    *,
+    fare_category: str | None,
+    passenger_count: int,
+    pet_occupies_seat: bool = False,
+    has_pet: bool = False,
+    is_assistance_animal: bool = False,
+) -> None:
+    """Reject GO/Comfort creates when required seats exceed category max (422).
+
+    XL is not capped here (1..8 global + vehicle matching still apply).
+    """
+    cat = normalize_fare_category_for_capacity(fare_category)
+    max_required = CATEGORY_MAX_REQUIRED_SEATS.get(cat)
+    if max_required is None:
+        return
+    required = compute_required_seats(
+        passenger_count,
+        pet_occupies_seat=pet_occupies_seat,
+        has_pet=has_pet,
+        is_assistance_animal=is_assistance_animal,
+    )
+    if required > max_required:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=CODE_PASSENGER_CAPACITY_EXCEEDS_CATEGORY,
+        )
 
 
 def vehicle_max_passengers(vehicle: Vehicle | Any | None) -> int | None:

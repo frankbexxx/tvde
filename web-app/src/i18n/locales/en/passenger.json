@@ -218,6 +218,7 @@
     "occupiesSeatShort": "Takes a seat",
     "seatExtraHint": "The animal takes 1 extra seat.",
     "passengersTitle": "Passengers",
+    "xlCapacityHint": "Final capacity depends on XL vehicles available in the area.",
     "surchargeHint": "Estimated animal surcharge: +{{amount}} € (final from estimate).",
     "surchargeLine": "Animal surcharge: +{{amount}} €",
     "fareLine": "Trip fare: {{amount}} €",
@@ -230,6 +231,7 @@
     "badgePet": "With animal",
     "badgeAssistance": "Assistance dog",
     "errSizeRequired": "Select the animal size.",
-    "errTransportRequired": "Select how the animal travels (carrier or harness)."
+    "errTransportRequired": "Select how the animal travels (carrier or harness).",
+    "errCapacityCategory": "GO and Comfort allow at most 4 seats (passengers + animal on a seat). Choose XL or reduce passengers."
   }
 }

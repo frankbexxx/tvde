@@ -7,12 +7,16 @@ import {
   type PassengerPetBookingState,
   type PetSize,
   type PetTransport,
-  PASSENGER_COUNT_OPTIONS,
   PET_SURCHARGE_EUR_DISCLOSURE,
   applyAssistance,
+  applyFareCategory,
+  applyPassengerCount,
+  applyPetOccupiesSeat,
   applyPetSize,
   applyPetTransport,
   applyWithAnimal,
+  isFareCategoryAvailable,
+  passengerCountOptionsForCategory,
   validatePetBooking,
 } from './petBooking'
 import { BTN_SECONDARY_RADIUS, INFO_BOX_BODY_COMPACT } from '../../components/layout/infoBoxTemplate'
@@ -33,22 +37,28 @@ function Chip({
   onClick,
   children,
   testId,
+  disabled = false,
 }: {
   selected: boolean
   onClick: () => void
   children: React.ReactNode
   testId: string
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
       data-testid={testId}
       aria-pressed={selected}
+      aria-disabled={disabled || undefined}
+      disabled={disabled}
       onClick={onClick}
       className={`min-h-11 min-w-[4.5rem] flex-1 rounded-lg border px-3 py-2 text-base font-medium touch-manipulation transition-colors ${
-        selected
-          ? 'border-info bg-info/15 text-foreground'
-          : 'border-border bg-muted/40 text-foreground/90 hover:bg-muted/60'
+        disabled
+          ? 'cursor-not-allowed border-border/50 bg-muted/20 text-foreground/40'
+          : selected
+            ? 'border-info bg-info/15 text-foreground'
+            : 'border-border bg-muted/40 text-foreground/90 hover:bg-muted/60'
       }`}
     >
       {children}
@@ -63,6 +73,7 @@ export function PassengerPetBookingPanel({
 }: PassengerPetBookingPanelProps) {
   const { t } = useTranslation('passenger')
   const validation = validatePetBooking(value)
+  const countOptions = passengerCountOptionsForCategory(value.fareCategory)
 
   return (
     <div className="space-y-3" data-testid="passenger-pet-booking">
@@ -71,22 +82,26 @@ export function PassengerPetBookingPanel({
           {t('pet.categoryTitle')}
         </p>
         <div className="flex flex-wrap gap-2">
-          {FARE_OPTIONS.map((cat) => (
-            <Chip
-              key={cat}
-              testId={`passenger-fare-${cat}`}
-              selected={value.fareCategory === cat}
-              onClick={() => onChange({ ...value, fareCategory: cat })}
-            >
-              {t(
-                cat === 'x'
-                  ? 'pet.categoryGo'
-                  : cat === 'comfort'
-                    ? 'pet.categoryComfort'
-                    : 'pet.categoryXl',
-              )}
-            </Chip>
-          ))}
+          {FARE_OPTIONS.map((cat) => {
+            const available = isFareCategoryAvailable(cat, value)
+            return (
+              <Chip
+                key={cat}
+                testId={`passenger-fare-${cat}`}
+                selected={value.fareCategory === cat}
+                disabled={!available}
+                onClick={() => onChange(applyFareCategory(value, cat))}
+              >
+                {t(
+                  cat === 'x'
+                    ? 'pet.categoryGo'
+                    : cat === 'comfort'
+                      ? 'pet.categoryComfort'
+                      : 'pet.categoryXl',
+                )}
+              </Chip>
+            )
+          })}
         </div>
       </div>
 
@@ -95,17 +110,22 @@ export function PassengerPetBookingPanel({
           {t('pet.passengersTitle')}
         </p>
         <div className="flex flex-wrap gap-2">
-          {PASSENGER_COUNT_OPTIONS.map((n) => (
+          {countOptions.map((n) => (
             <Chip
               key={n}
               testId={`passenger-count-${n}`}
               selected={value.passengerCount === n}
-              onClick={() => onChange({ ...value, passengerCount: n })}
+              onClick={() => onChange(applyPassengerCount(value, n))}
             >
               {String(n)}
             </Chip>
           ))}
         </div>
+        {value.fareCategory === 'xl' ? (
+          <p className="text-xs text-foreground/70" data-testid="passenger-xl-capacity-hint">
+            {t('pet.xlCapacityHint')}
+          </p>
+        ) : null}
       </div>
 
       <label className="flex min-h-11 items-center gap-3 touch-manipulation">
@@ -141,7 +161,7 @@ export function PassengerPetBookingPanel({
               className="mt-1 h-5 w-5 shrink-0 accent-info"
               data-testid="passenger-assistance-occupies-seat"
               checked={value.petOccupiesSeat}
-              onChange={(e) => onChange({ ...value, petOccupiesSeat: e.target.checked })}
+              onChange={(e) => onChange(applyPetOccupiesSeat(value, e.target.checked))}
             />
             <span className="text-base text-foreground leading-snug">{t('pet.occupiesSeat')}</span>
           </label>
@@ -198,7 +218,7 @@ export function PassengerPetBookingPanel({
               className="mt-1 h-5 w-5 shrink-0 accent-info"
               data-testid="passenger-pet-occupies-seat"
               checked={value.petOccupiesSeat}
-              onChange={(e) => onChange({ ...value, petOccupiesSeat: e.target.checked })}
+              onChange={(e) => onChange(applyPetOccupiesSeat(value, e.target.checked))}
             />
             <span className="text-base text-foreground leading-snug">{t('pet.occupiesSeat')}</span>
           </label>
@@ -224,6 +244,16 @@ export function PassengerPetBookingPanel({
             </p>
           ) : null}
         </div>
+      ) : null}
+
+      {!value.withAnimal && !value.isAssistanceAnimal && !validation.ok ? (
+        <p
+          className="text-sm text-destructive leading-snug"
+          role="alert"
+          data-testid="passenger-pet-validation-error"
+        >
+          {t(validation.messageKey)}
+        </p>
       ) : null}
     </div>
   )
