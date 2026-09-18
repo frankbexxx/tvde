@@ -42,7 +42,7 @@ from app.services.vehicle_capacity import (
     resolve_passenger_count,
 )
 from app.utils.geo import haversine_km, haversine_m
-from app.services.offer_dispatch import create_offers_for_trip
+from app.services.offer_dispatch import create_offers_for_trip, publish_trip_offers
 from app.utils.logging import log_debug_event, log_event
 from app.utils.state_machine import validate_trip_transition
 from app.services.driver_zones import maybe_consume_zone_session_on_trip_complete
@@ -306,13 +306,33 @@ async def create_trip(
         error_code=toll_meta.get("tolls_error_code"),
     )
 
+    # L-TRIP-01: Trip must be durable before dispatch / GPS retries / WS publish.
+    db.commit()
+    db.refresh(trip)
+
     # Multi-offer dispatch: create offers for top N drivers within radius.
     # A006: if 0 offers, retry with 2s wait (driver may send location in parallel).
-    offers = create_offers_for_trip(db=db, trip=trip)
+    # Sleeps run only after commit so the write TX is not held open (~10s).
     max_retries = 5
     retry_wait_sec = 2
-    attempt = 1
-    while len(offers) == 0 and attempt <= max_retries:
+    offers: list = []
+    attempt = 0
+    while True:
+        offers = create_offers_for_trip(db=db, trip=trip)
+        db.commit()
+        if offers:
+            if attempt > 0:
+                log_event(
+                    "dispatch_retry_success",
+                    trip_id=str(trip.id),
+                    attempt=attempt,
+                    offer_count=len(offers),
+                )
+            publish_trip_offers(offers=offers, trip=trip)
+            break
+        if attempt >= max_retries:
+            break
+        attempt += 1
         log_event(
             "dispatch_retry_attempt",
             trip_id=str(trip.id),
@@ -321,21 +341,13 @@ async def create_trip(
         )
         await asyncio.sleep(retry_wait_sec)
         db.expire_all()  # Force fresh read from DB (driver may have sent location)
-        offers = create_offers_for_trip(db=db, trip=trip)
-        if offers:
-            log_event(
-                "dispatch_retry_success",
-                trip_id=str(trip.id),
-                attempt=attempt,
-                offer_count=len(offers),
-            )
-            break
-        attempt += 1
-    if len(offers) == 0 and attempt > 1:
+        trip = db.get(Trip, trip.id) or trip
+
+    if len(offers) == 0 and attempt > 0:
         log_event(
             "dispatch_retry_failed",
             trip_id=str(trip.id),
-            attempts=attempt - 1,
+            attempts=attempt,
         )
 
     if len(offers) == 0:
@@ -361,7 +373,6 @@ async def create_trip(
         },
     )
 
-    db.commit()
     db.refresh(trip)
     emit(
         TripStatusChangedEvent(

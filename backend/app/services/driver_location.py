@@ -157,7 +157,10 @@ def upsert_driver_location(
         )
 
     from app.db.models.trip_offer import TripOffer
-    from app.services.offer_dispatch import create_offers_for_trip
+    from app.services.offer_dispatch import create_offers_for_trip, publish_trip_offers
+
+    location_redispatch_offers: list = []
+    location_redispatch_trip = None
 
     # Re-dispatch when this driver's fresh location can recover a trip that
     # originally produced 0 offers. Skipping trips this driver cannot serve
@@ -192,6 +195,8 @@ def upsert_driver_location(
             db.flush()
             offers = create_offers_for_trip(db=db, trip=trip_for_dispatch)
             if offers:
+                location_redispatch_offers = offers
+                location_redispatch_trip = trip_for_dispatch
                 log_event(
                     "location_redispatch_offers_created",
                     trip_id=str(trip_for_dispatch.id),
@@ -268,6 +273,10 @@ def upsert_driver_location(
             )
 
     db.commit()
+    if location_redispatch_offers and location_redispatch_trip is not None:
+        publish_trip_offers(
+            offers=location_redispatch_offers, trip=location_redispatch_trip
+        )
 
 
 def driver_location_embed_for_trip_detail(
