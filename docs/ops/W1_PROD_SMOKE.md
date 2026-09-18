@@ -39,7 +39,7 @@ curl -sS "https://<API_HOST>/cron/jobs?secret=<CRON_SECRET>"
 curl -sS "https://<API_HOST>/cron/jobs" -H "X-Cron-Secret: <CRON_SECRET>"
 ```
 
-**Esperado:** HTTP **200** e corpo JSON com contagens (`timeouts`, `offers`, `cleanup`, … conforme versão actual da API). **401** = segredo errado; **503** = `CRON_SECRET` não configurado no servidor.
+**Esperado:** HTTP **200** e corpo JSON com `status: "ok"` e contagens (`timeouts`, `offers`, `cleanup`, …). HTTP **500** com `status: "partial_error"` se um sub-job falhou (corpo ainda traz `errors` + contagens). **401** = segredo errado; **503** = `CRON_SECRET` não configurado no servidor.
 
 **Agendador externo:** confirma no cron-job.org (ou outro) que a URL bate **na mesma** base + segredo que testaste com `curl`.
 

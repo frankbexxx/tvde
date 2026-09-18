@@ -36,7 +36,9 @@ https://api-tua-app.onrender.com/cron/jobs?secret=abc123xyz789
 
 ## 3. Verificar que funciona
 
-- O endpoint devolve `200 OK` com JSON, por exemplo:
+- **HTTP 200** — lote totalmente OK (`status: "ok"`).
+- **HTTP 500** — um ou mais sub-jobs falharam (`status: "partial_error"`); o corpo JSON mantém `errors`, contagens e resultados dos jobs que correram. O monitor externo (cron-job.org) trata non-2xx como falha.
+- Exemplo de sucesso:
 
 ```json
 {
@@ -58,6 +60,8 @@ https://api-tua-app.onrender.com/cron/jobs?secret=abc123xyz789
 
 - Se o `secret` estiver errado: `401 Unauthorized`.
 - Se `CRON_SECRET` não estiver definido no servidor: `503 Service Unavailable`.
+
+Nota: `system_health.status == "degraded"` **não** implica HTTP 500 por si — só excepções nos sub-jobs entram em `errors` / `partial_error`.
 
 ---
 
