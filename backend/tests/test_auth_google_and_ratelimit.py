@@ -51,7 +51,7 @@ def test_google_exchange_passenger_role_only(client, monkeypatch) -> None:
     assert r.status_code == 403
 
 
-def test_config_google_flags(client, monkeypatch) -> None:
+def test_config_google_enabled_when_configured_and_beta_true(client, monkeypatch) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "g-id", raising=False)
     monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "g-sec", raising=False)
@@ -61,6 +61,30 @@ def test_config_google_flags(client, monkeypatch) -> None:
     assert body["beta_mode"] is True
     assert body["google_oauth_enabled"] is True
     assert body["google_oauth_client_id"] == "g-id"
+
+
+def test_config_google_enabled_when_configured_and_beta_false(client, monkeypatch) -> None:
+    """PROD flip: UI must still see Google when credentials exist and BETA is off."""
+    monkeypatch.setattr(settings, "BETA_MODE", False, raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "g-id", raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "g-sec", raising=False)
+    r = client.get("/config")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["beta_mode"] is False
+    assert body["google_oauth_enabled"] is True
+    assert body["google_oauth_client_id"] == "g-id"
+
+
+def test_config_google_disabled_when_not_configured(client, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "", raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "", raising=False)
+    r = client.get("/config")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["google_oauth_enabled"] is False
+    assert "google_oauth_client_id" not in body
 
 
 def test_otp_request_rate_limit_per_phone(client, monkeypatch) -> None:
