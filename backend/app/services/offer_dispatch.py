@@ -262,40 +262,66 @@ def create_offers_for_trip(
         db.add(offer)
         offers.append(offer)
 
-    # Publish new_trip_offer to driver WebSocket subscribers (after flush for offer.id)
+    # Persist offer rows (and ids) in this session — callers must commit, then
+    # call publish_trip_offers (L-TRIP-01: never WS-publish before commit).
     db.flush()
+    trip.last_dispatch_at = datetime.now(timezone.utc)
     if offers:
         dists = [d for _, d in selected[: len(offers)]]
         log_debug_event(
-            "offers_sent",
+            "offers_persisted",
             trip_id=str(trip.id),
             count=len(offers),
             min_km=round(min(dists), 2),
             max_km=round(max(dists), 2),
         )
-    from app.realtime.driver_offers_hub import driver_offers_hub
-
-    for offer in offers:
-        driver_offers_hub.publish_new_offer(
-            driver_id=str(offer.driver_id),
-            offer_id=str(offer.id),
-            trip_id=str(trip.id),
-            origin_lat=float(trip.origin_lat),
-            origin_lng=float(trip.origin_lng),
-            destination_lat=float(trip.destination_lat),
-            destination_lng=float(trip.destination_lng),
-            estimated_price=float(trip.estimated_price),
-            expires_at=expires_at,
-        )
-
-    trip.last_dispatch_at = datetime.now(timezone.utc)
-    if offers:
         log_event(
             "offer_dispatch_offers_persisted",
             trip_id=str(trip.id),
             offer_count=len(offers),
         )
     return offers
+
+
+def publish_trip_offers(*, offers: list[TripOffer], trip: Trip) -> None:
+    """
+    Publish ``new_trip_offer`` WS events for already-committed offers.
+
+    Must run only after a successful ``db.commit()``. Failures are logged and
+    do not roll back offers — drivers can still poll HTTP.
+    """
+    if not offers:
+        return
+    from app.realtime.driver_offers_hub import driver_offers_hub
+
+    for offer in offers:
+        try:
+            driver_offers_hub.publish_new_offer(
+                driver_id=str(offer.driver_id),
+                offer_id=str(offer.id),
+                trip_id=str(trip.id),
+                origin_lat=float(trip.origin_lat),
+                origin_lng=float(trip.origin_lng),
+                destination_lat=float(trip.destination_lat),
+                destination_lng=float(trip.destination_lng),
+                estimated_price=float(trip.estimated_price),
+                expires_at=offer.expires_at,
+            )
+        except Exception:
+            logger.exception(
+                "publish_trip_offers: WS publish failed",
+                extra={
+                    "trip_id": str(trip.id),
+                    "offer_id": str(offer.id),
+                    "driver_id": str(offer.driver_id),
+                },
+            )
+            log_event(
+                "offer_ws_publish_failed",
+                trip_id=str(trip.id),
+                offer_id=str(offer.id),
+                driver_id=str(offer.driver_id),
+            )
 
 
 def expire_stale_offers(db: Session, now: datetime | None = None) -> int:
@@ -375,6 +401,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 log_event("redispatch_zero_offers_still_empty", trip_id=str(trip.id))
             # Persist last_dispatch_at even when 0 offers (throttle + diagnostics).
             db.commit()
+            publish_trip_offers(offers=created, trip=trip)
             continue
         all_expired_or_rejected = all(
             o.status in (OfferStatus.expired, OfferStatus.rejected) for o in offers
@@ -452,25 +479,21 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             by_trip[str(t.id)].append(dist_km)
         for tid, dists in by_trip.items():
             log_debug_event(
-                "offers_sent",
+                "offers_persisted",
                 trip_id=tid,
                 count=len(dists),
                 min_km=round(min(dists), 2),
                 max_km=round(max(dists), 2),
             )
-        from app.realtime.driver_offers_hub import driver_offers_hub
-
-        for offer, t, dist_km in new_offers:
-            driver_offers_hub.publish_new_offer(
-                driver_id=str(offer.driver_id),
-                offer_id=str(offer.id),
-                trip_id=str(t.id),
-                origin_lat=float(t.origin_lat),
-                origin_lng=float(t.origin_lng),
-                destination_lat=float(t.destination_lat),
-                destination_lng=float(t.destination_lng),
-                estimated_price=float(t.estimated_price),
-                expires_at=expires_at,
-            )
         db.commit()
+        from collections import defaultdict
+
+        offers_by_trip: dict[str, list[TripOffer]] = defaultdict(list)
+        trip_by_id: dict[str, Trip] = {}
+        for offer, t, _dist_km in new_offers:
+            tid = str(t.id)
+            offers_by_trip[tid].append(offer)
+            trip_by_id[tid] = t
+        for tid, offs in offers_by_trip.items():
+            publish_trip_offers(offers=offs, trip=trip_by_id[tid])
     return zero_offer_new + [o for o, _, _ in new_offers]
