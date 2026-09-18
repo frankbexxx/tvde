@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import type { GeocodeSuggestion } from '@/services/geocoding'
@@ -17,6 +17,11 @@ export interface DestinationSearchFieldProps {
   geocodingUnavailable?: boolean
   /** Fechar lista ao clicar fora. */
   onDismissSuggestions?: () => void
+  /**
+   * Notifica o shell (map sheet) quando o modo pesquisa está activo
+   * (focus + texto / lista) para expandir o painel e esconder o CTA.
+   */
+  onSearchActiveChange?: (active: boolean) => void
 }
 
 export function DestinationSearchField({
@@ -30,6 +35,7 @@ export function DestinationSearchField({
   disabled,
   geocodingUnavailable,
   onDismissSuggestions,
+  onSearchActiveChange,
 }: DestinationSearchFieldProps) {
   const { t } = useTranslation('passenger')
   const resolvedLabel = label ?? t('search.destinationLabel')
@@ -38,6 +44,19 @@ export function DestinationSearchField({
   const listId = `${id}-list`
   const wrapRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [focused, setFocused] = useState(false)
+
+  const showList = !disabled && suggestions.length > 0 && query.trim().length >= 2
+  /** Map mode vs search mode — typing or open suggestions while focused. */
+  const searchActive = !disabled && focused && (query.trim().length > 0 || showList)
+
+  useEffect(() => {
+    onSearchActiveChange?.(searchActive)
+  }, [searchActive, onSearchActiveChange])
+
+  useEffect(() => {
+    return () => onSearchActiveChange?.(false)
+  }, [onSearchActiveChange])
 
   useEffect(() => {
     if (!suggestions.length || !onDismissSuggestions) return
@@ -48,20 +67,18 @@ export function DestinationSearchField({
     return () => document.removeEventListener('mousedown', fn)
   }, [suggestions.length, onDismissSuggestions])
 
-  const showList = !disabled && suggestions.length > 0 && query.trim().length >= 2
-
-  // Cap suggestion list when the visual viewport shrinks (mobile keyboard).
+  // Expand suggestion list against visual viewport (keyboard-aware).
   useEffect(() => {
     const el = wrapRef.current
-    if (!el || !showList) {
+    if (!el || !searchActive) {
       el?.style.removeProperty('--dest-suggest-max-h')
       return
     }
     const apply = () => {
       const vv = window.visualViewport
       const vh = vv?.height ?? window.innerHeight
-      // Leave room for field + CTA below inside the map sheet.
-      const capped = Math.max(96, Math.min(176, Math.round(vh * 0.28)))
+      // Prefer several suggestion rows; CTA may hide while searching.
+      const capped = Math.max(160, Math.min(360, Math.round(vh * 0.48)))
       el.style.setProperty('--dest-suggest-max-h', `${capped}px`)
     }
     apply()
@@ -73,21 +90,28 @@ export function DestinationSearchField({
       vv?.removeEventListener('scroll', apply)
       el.style.removeProperty('--dest-suggest-max-h')
     }
-  }, [showList])
+  }, [searchActive, showList])
 
   const ensureFieldVisible = () => {
     requestAnimationFrame(() => {
-      wrapRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-      const sheet = wrapRef.current?.closest('[data-testid="map-bottom-sheet"]')
-      if (sheet instanceof HTMLElement) {
-        // Keep search near the top of the sheet so CTA under the list stays scrollable.
-        sheet.scrollTop = Math.max(0, sheet.scrollTop - 8)
-      }
+      wrapRef.current?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
     })
   }
 
+  const handleSelect = (s: GeocodeSuggestion) => {
+    onSelect(s)
+    setFocused(false)
+    inputRef.current?.blur()
+    onSearchActiveChange?.(false)
+  }
+
   return (
-    <div ref={wrapRef} className="relative space-y-1.5">
+    <div
+      ref={wrapRef}
+      className="relative space-y-1.5"
+      data-testid="destination-search-field"
+      data-search-active={searchActive ? 'true' : 'false'}
+    >
       <label htmlFor={id} className="sr-only">
         {resolvedLabel}
       </label>
@@ -101,12 +125,21 @@ export function DestinationSearchField({
         value={query}
         disabled={disabled}
         onChange={(e) => onQueryChange(e.target.value)}
-        onFocus={ensureFieldVisible}
+        onFocus={() => {
+          setFocused(true)
+          ensureFieldVisible()
+        }}
+        onBlur={() => {
+          // Allow suggestion mousedown to fire before collapsing.
+          window.setTimeout(() => setFocused(false), 180)
+        }}
         aria-expanded={showList}
         aria-controls={listId}
         aria-autocomplete="list"
-        // text-base (>=16px) evita zoom iOS/Android; não sobrescrever com text-sm.
-        className={`h-10 ${BTN_SECONDARY_RADIUS} border-border bg-background text-base`}
+        data-testid="destination-search-input"
+        // Explicit 16px — Tailwind rem can look <16 on some Android zoom/root setups.
+        style={{ fontSize: 16, WebkitTextSizeAdjust: '100%' }}
+        className={`h-11 min-h-11 ${BTN_SECONDARY_RADIUS} border-border bg-background text-[16px] leading-normal`}
       />
       {geocodingUnavailable ? (
         <p className="text-xs text-muted-foreground leading-snug">
@@ -123,7 +156,11 @@ export function DestinationSearchField({
           id={listId}
           role="listbox"
           data-testid="destination-suggestions"
-          className={`absolute z-30 top-full left-0 right-0 mt-1 overflow-y-auto overscroll-contain ${BTN_SECONDARY_RADIUS} border border-border bg-popover text-popover-foreground shadow-lg py-1 max-h-[min(11rem,var(--dest-suggest-max-h,28dvh))]`}
+          className={
+            searchActive
+              ? `relative z-10 w-full overflow-y-auto overscroll-contain ${BTN_SECONDARY_RADIUS} border border-border bg-popover text-popover-foreground shadow-md py-1 max-h-[var(--dest-suggest-max-h,45dvh)]`
+              : `absolute z-30 top-full left-0 right-0 mt-1 overflow-y-auto overscroll-contain ${BTN_SECONDARY_RADIUS} border border-border bg-popover text-popover-foreground shadow-lg py-1 max-h-[min(11rem,var(--dest-suggest-max-h,28dvh))]`
+          }
         >
           {suggestions.map((s) => (
             <li key={s.id} role="presentation">
@@ -131,7 +168,8 @@ export function DestinationSearchField({
                 type="button"
                 role="option"
                 className="w-full text-left px-3 py-2.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
-                onClick={() => onSelect(s)}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleSelect(s)}
               >
                 <span className="font-medium text-foreground block leading-snug">{s.primary}</span>
                 {s.secondary ? (
