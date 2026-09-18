@@ -95,8 +95,10 @@ async def debug_trip_matching(
     user: UserContext = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
-    Diagnose why a trip has no driver. Call with passenger token (owner of trip).
-    Returns: drivers_with_location, drivers_in_radius, offers_created, root_cause.
+    Diagnose why a trip has no driver.
+
+    Passenger owner: aggregated counts + root_cause only (L-GPS-02 — no fleet GPS).
+    Admin / super_admin: full diagnostic lists (staging/debug only).
     """
     _require_debug_access()
     try:
@@ -106,7 +108,10 @@ async def debug_trip_matching(
     trip = db.execute(select(Trip).where(Trip.id == tid)).scalar_one_or_none()
     if not trip:
         return {"error": "trip_not_found", "trip_id": trip_id}
-    if str(trip.passenger_id) != str(user.user_id):
+
+    is_staff = user.role in (Role.admin, Role.super_admin)
+    is_owner = str(trip.passenger_id) == str(user.user_id)
+    if not is_staff and not is_owner:
         raise HTTPException(status_code=403, detail="forbidden_trip_access")
 
     radius_km = settings.GEO_RADIUS_KM
@@ -122,7 +127,7 @@ async def debug_trip_matching(
         ).all()
     )
 
-    step1 = [
+    step1_full = [
         {
             "driver_id": str(d.user_id),
             "lat": float(loc.lat),
@@ -148,7 +153,7 @@ async def debug_trip_matching(
         .all()
     )
     now = datetime.now(timezone.utc)
-    step3 = [
+    step3_full = [
         {
             "offer_id": str(o.id),
             "driver_id": str(o.driver_id),
@@ -159,34 +164,48 @@ async def debug_trip_matching(
         for o in offers
     ]
 
-    if len(step1) == 0:
+    if len(step1_full) == 0:
         root_cause = "ZERO_OFFERS: 0 drivers with location and is_available=true"
     elif len(candidates) == 0:
-        root_cause = f"ZERO_OFFERS: {len(step1)} drivers with location but 0 within {radius_km}km of trip origin"
-    elif len(step3) == 0:
+        root_cause = f"ZERO_OFFERS: {len(step1_full)} drivers with location but 0 within {radius_km}km of trip origin"
+    elif len(step3_full) == 0:
         root_cause = (
             "ZERO_OFFERS: drivers in radius but no offers in DB (bug or offers expired)"
         )
     else:
         pending = [
-            o for o in step3 if o["status"] == "pending" and not o.get("expired")
+            o for o in step3_full if o["status"] == "pending" and not o.get("expired")
         ]
         root_cause = f"OK: {len(pending)} pending offers"
         if len(pending) == 0:
             root_cause = (
-                f"ZERO_OFFERS: {len(step3)} offers exist but all expired or taken"
+                f"ZERO_OFFERS: {len(step3_full)} offers exist but all expired or taken"
             )
 
-    return {
+    pending_count = sum(
+        1 for o in step3_full if o["status"] == "pending" and not o.get("expired")
+    )
+    base: dict[str, Any] = {
         "trip_id": str(trip.id),
         "trip_status": trip.status.value,
         "origin": {"lat": origin_lat, "lng": origin_lng},
         "radius_km": radius_km,
-        "step_1_drivers_with_location": {"count": len(step1), "list": step1},
-        "step_2_drivers_in_radius": {"count": len(candidates), "list": candidates[:10]},
-        "step_3_offers": {"count": len(step3), "list": step3},
+        "step_1_drivers_with_location": {"count": len(step1_full)},
+        "step_2_drivers_in_radius": {"count": len(candidates)},
+        "step_3_offers": {
+            "count": len(step3_full),
+            "pending_count": pending_count,
+        },
         "root_cause": root_cause,
     }
+    if is_staff:
+        base["step_1_drivers_with_location"]["list"] = step1_full
+        base["step_2_drivers_in_radius"]["list"] = candidates[:10]
+        base["step_3_offers"]["list"] = step3_full
+        base["detail_level"] = "staff"
+    else:
+        base["detail_level"] = "owner_aggregate"
+    return base
 
 
 @router.get("/trip/{trip_id}/logs")

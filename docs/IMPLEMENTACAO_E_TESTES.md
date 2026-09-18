@@ -659,7 +659,7 @@ Quando o passageiro pede viagem e o motorista não vê ofertas, usa os endpoints
 
 | Endpoint                             | Token                       | Descrição                                                      |
 | ------------------------------------ | --------------------------- | -------------------------------------------------------------- |
-| `GET /debug/trip-matching/{trip_id}` | Passageiro (dono da viagem) | Diagnóstico: drivers com localização, no raio, ofertas criadas |
+| `GET /debug/trip-matching/{trip_id}` | Passageiro (dono) = **só contagens + root_cause** (sem lat/lng nem driver_ids de frota); staff = detalhe completo | Diagnóstico matching (L-GPS-02) |
 | `GET /debug/driver-eligibility`      | Motorista                   | Diagnóstico: localização, is_available, ofertas pendentes      |
 
 ### Botões no DevTools (▶ Dev)
@@ -870,7 +870,7 @@ DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/ride_db
 | `test_driver_location.py`       | 4               | POST localização              |
 | `test_driver_tracking.py`       | 4               | GET localização trip          |
 | `test_geo_stability.py`         | 4               | Stale, first send             |
-| `test_matching.py`              | 3               | Matching                      |
+| `test_matching.py`              | 3               | Legacy find-driver removido (404) |
 | `test_multi_offer_dispatch.py`  | 4               | Ofertas, first accept, reject |
 | `test_offer_timeout.py`         | 2               | Expiração, redispatch         |
 | `test_cancellation_rules.py`    | 3               | Cancel, fee                   |

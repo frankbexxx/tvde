@@ -86,13 +86,13 @@ def main() -> None:
   )
   print("   /trips/{trip_id}/driver-location ->", track_resp.status_code, track_resp.text)
 
-  print("6) Matching nearest driver for passenger location...")
+  print("6) Legacy matching endpoint removed (L-GPS-01)...")
   match_resp = requests.post(
     f"{API_BASE}/matching/find-driver",
     headers=_auth_headers(passenger_tokens),
     json={"lat": 38.7223, "lng": -9.1393},
   )
-  print("   /matching/find-driver ->", match_resp.status_code, match_resp.text)
+  print("   /matching/find-driver ->", match_resp.status_code, "(expect 404)")
 
 
 if __name__ == "__main__":
