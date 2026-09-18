@@ -124,3 +124,39 @@ def test_metrics_returns_expected_structure(client: TestClient) -> None:
         "trips_completed_total",
     ):
         assert key in data
+
+
+@pytest.fixture
+def super_admin_auth_override() -> None:
+    async def _fake_super() -> UserContext:
+        return UserContext(user_id=str(uuid.uuid4()), role=Role.super_admin)
+
+    app.dependency_overrides[get_current_user] = _fake_super
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.usefixtures("super_admin_auth_override")
+def test_admin_cron_run_partial_error_stays_http_200(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """L-OBS-01: admin panel keeps 200 + structured body on partial_error (FE apiFetch)."""
+    import app.api.routers.admin as admin_router
+
+    def _boom(_db: object) -> None:
+        raise RuntimeError("admin_timeouts_boom")
+
+    monkeypatch.setattr(admin_router, "run_trip_timeouts", _boom)
+
+    r = client.post(
+        "/admin/cron/run",
+        json={"governance_reason": "teste partial_error admin cron"},
+    )
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["status"] == "partial_error"
+    assert data["error_count"] > 0
+    assert "trip_timeouts" in data["errors"]
+    assert "admin_timeouts_boom" in data["errors"]["trip_timeouts"]
+    assert "timeouts" in data
+    assert "offers" in data

@@ -2,6 +2,7 @@
 
 import time
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -18,7 +19,7 @@ from app.services.trip_timeouts import run_trip_timeouts
 router = APIRouter(prefix="/cron", tags=["cron"])
 
 
-@router.get("/jobs")
+@router.get("/jobs", response_model=None)
 async def run_scheduled_jobs(
     secret: str | None = Query(
         None, description="CRON_SECRET from env (legacy: query string)"
@@ -29,7 +30,7 @@ async def run_scheduled_jobs(
         description="CRON_SECRET from env (preferred: header)",
     ),
     db: Session = Depends(get_db),
-) -> dict:
+) -> dict | JSONResponse:
     """
     Run all scheduled maintenance jobs. Call from cron-job.org.
 
@@ -42,6 +43,11 @@ async def run_scheduled_jobs(
     6. Rotacional v3 — opcional: GET ``ROTACIONAL_V3_FETCH_URL`` e grava cache (no-op se URL vazia)
 
     Response: `system_health` contains counts and `warnings` only — never full diagnostic lists.
+
+    HTTP: 200 when all sub-jobs succeed (`status: ok`); 500 when one or more
+    sub-jobs raised (`status: partial_error`) so external monitors (cron-job.org)
+    treat partial failure as a failed run. Body shape is identical in both cases.
+    ``system_health.status == degraded`` alone does not imply HTTP 500.
 
     Auth:
     - Preferred: Header `X-Cron-Secret: <CRON_SECRET>`
@@ -181,7 +187,7 @@ async def run_scheduled_jobs(
         error_count=len(errors),
     )
 
-    return {
+    body = {
         "status": "ok" if len(errors) == 0 else "partial_error",
         "duration_ms": elapsed_ms,
         "errors": errors,
@@ -213,3 +219,9 @@ async def run_scheduled_jobs(
             "external_items_stored": rotacional_refreshed,
         },
     }
+    if errors:
+        # Non-2xx so cron-job.org / Render Cron mark the run failed (2xx = OK).
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=body
+        )
+    return body

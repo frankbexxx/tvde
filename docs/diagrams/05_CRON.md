@@ -11,7 +11,7 @@ sequenceDiagram
   H->>API: GET /cron/jobs\n(?secret=… ou header X-Cron-Secret)
   API->>API: valida segredo
   API->>DB: jobs / reconciliação\n(conforme implementação)
-  API-->>H: 200 + corpo JSON
+  API-->>H: 200 (ok) ou 500 (partial_error)\n+ corpo JSON
 ```
 
 Índice: [README.md](README.md)
