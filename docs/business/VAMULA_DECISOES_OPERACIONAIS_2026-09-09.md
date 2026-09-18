@@ -176,10 +176,13 @@ Não fechar L-25 globalmente enquanto o registo/link directo LRE permanecer pend
 
 ### Ainda pendentes
 
-- Tabela de preços final / acta A1.4
 - LRE registo / link **directo** (credenciais externas / contabilista; link genérico já publicado)
 - Revisão jurídica do wording RAL
 - Validação custos Hostinger no modelo A1 (valor contratado)
+
+### Fechado depois desta acta
+
+- **A1.4 DECIDIDA / CLOSED** (2026-09-18) — comissão **15% fixa**; tarifas GO/Comfort/XL + mínimos + Pet + cancel + tolls 0% + waiting/surge OFF + MB WAY Fase 2 + margem mínima aceite; variável 20%→15% **não** seleccionada. Ver [`A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](A1_MODELO_ECONOMICO_SETEMBRO_2026.md) §6h.
 
 ### Dependências externas
 

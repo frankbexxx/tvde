@@ -15,6 +15,7 @@
 | Páginas legais públicas VAMULÁ · `/legal` `/privacidade` `/reclamacoes` `/ral` | **DEPLOYED / VALIDATED** 2026-09-16 · Hostinger · [#596](https://github.com/frankbexxx/tvde/pull/596) · smoke público PASS |
 | Spike HERE tolls (script + docs) | **DONE** · live validation **DONE** · [#584](https://github.com/frankbexxx/tvde/pull/584) · **APROVADO COM RESERVAS PARA V1** |
 | PORTAGENS V1 (F0–F5 runtime) | **PROD VALIDATED** · HERE ON · [#592](https://github.com/frankbexxx/tvde/pull/592)/[#593](https://github.com/frankbexxx/tvde/pull/593) · residual route variance accepted · P2 `S-TOLLS-P2` |
+| **A1.4** pricing / comissão | **DECIDIDA / CLOSED** 2026-09-18 · 15% fixa · base exclui portagens · [`A1_MODELO…`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md) §6h |
 
 **Como usar:** executar um passo → marcar `DONE` → seguinte.  
 **Tipos:** `CONFIRMAR` · `DECISÃO` · `DOCS` · `CONFIG` · `CÓDIGO` · `TESTE` · `EXTERNO`.
@@ -27,7 +28,7 @@
 
 | Carril | Etapas |
 |--------|--------|
-| **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; A1.4 aberto)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; falta A1.4/A2.6 formal) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
+| **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · **B5 fase 2** (MB WAY) |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
@@ -141,7 +142,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **M2-L0** | **FECHADO** — Ventos Férteis / VAMULÁ / licença **354/2026** (lista IMT oficial) |
 | **Driving-hours** | Foundation merged (#548); enforcement deliberadamente OFF |
 | **Emergency** | Foundation merged (#549); smoke PAX/DRV + `tel:112` telefone real PASS |
-| **Próximas frentes** | (1) fiscal/legal tolls · (2) **S-TOLLS-P2** HERE routing determinism (P2) · (3) parecer/decisão legal L3 · (4) LRE registo/link directo (credenciais externas) · (5) AMT/reporting · (6) L1/L2 IMT · (7) RetentionPolicy · (8) **A1.4** acta formal · (9) revisão jurídica wording RAL |
+| **Próximas frentes** | (1) fiscal/legal tolls · (2) **S-TOLLS-P2** HERE routing determinism (P2) · (3) parecer/decisão legal L3 · (4) LRE registo/link directo (credenciais externas) · (5) AMT/reporting · (6) L1/L2 IMT · (7) RetentionPolicy · (8) revisão jurídica wording RAL · *(A1.4 CLOSED 2026-09-18)* |
 
 *Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (GPS/docs/IMT).
 
@@ -177,7 +178,8 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | **H*** | Sem activar flags comerciais |
 
 **Não paralelizar:** B3 com A2.3/A2.5 abertos; D3 sem D1; A6 ON sem A3-D03-REV1 / IMT-processo; live Stripe sem B1 completo.  
-*(2026-09-14: A2.3 + A2.5 **DONE** — B3 já não bloqueado por tarifário; A1.4 formal continua aberto.)*
+*(2026-09-18: **A1.4 DECIDIDA / CLOSED** — comissão 15% fixa; A2.3 + A2.5 já DONE; B3 não bloqueado por tarifário.)*
+*(2026-09-14: A2.3 + A2.5 **DONE** — B3 já não bloqueado por tarifário.)*
 
 ---
 
@@ -188,10 +190,10 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **Objectivo:** Validar hipóteses custos/comissões/simulador (não inventar números).  
 - **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001`  
 - **Dependências:** —  
-- **Estado:** **PARCIAL** (actualizado 2026-09-14) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** (≠ ACCOUNTING FINAL) · **A1.3 = READY FOR PRICING INPUT** · **A1.4 ainda NÃO fechado formalmente**  
+- **Estado:** **PARCIAL** (actualizado 2026-09-18) — **A1.1 DONE** · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** (≠ ACCOUNTING FINAL) · **A1.3 = READY FOR PRICING INPUT** · **A1.4 = DECIDIDA / CLOSED** (2026-09-18)  
 - **Entrega levantamento:** [`A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md)  
 - **Nota legal:** CRS/AMT = **5% × taxa de intermediação sem IVA** (com 15% → 0,75% da base); **não** no runtime até IVA fechado. **Não** altera **A1-D01**.  
-- **Conclusão (quando fechado):** Francisco+Manel(+contabilista) registam aceite / correcções por escrito.  
+- **Conclusão (quando fechado):** Francisco+Manel(+contabilista) registam aceite / correcções por escrito. **Pricing/comissão piloto:** aceite em **A1.4** (2026-09-18); accounting/IVA externos continuam abertos.  
 - **Docs base (hipóteses, não aprovadas):** [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
@@ -199,27 +201,27 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 | A1.1 | Confirmar pacote dos 3 docs business + levantamento matriz | Matriz em `A1_MODELO_ECONOMICO…` | CONFIRMAR · DOCS | — | **DONE** |
 | A1.2 | Modelo custos: fixos vs variáveis; validar rubricas vs realidade (sem baseline 1–2,5 k€) | **READY FOR ECONOMIC MODELLING** (≠ accounting final) | DECISÃO · DOCS | A1.1 · **A1-D10** | **DONE** *(modelagem)* |
 | A1.3 | Sessão margem/viagem + rateio fixos por volume | **READY FOR PRICING INPUT** (Hostinger Premium **activo**) | DECISÃO | A1.2 | **DONE** *(modelagem)* |
-| A1.4 | Acta curta no repo (só resultados) | Fecho A1 sem % inventados | DOCS | A1.3 | Por iniciar |
+| A1.4 | Acta curta no repo (só resultados) | Fecho pricing/comissão sem % inventados | DOCS | A1.3 | **DECIDIDA / CLOSED** *(2026-09-18)* |
 
 ## A2 — Fechar comissão e tarifário — **PARCIAL**
 
 - **Objectivo:** Comissão + tarifário piloto aprovados.  
 - **IDs:** `S-BIZ-02` · `SEP-PAY-03` · perguntas Q1/Q3 em [`MANEL_INPUTS_TODOS_2026-08-07.md`](product/MANEL_INPUTS_TODOS_2026-08-07.md)  
 - **Dependências:** A1  
-- **Estado:** **PARCIAL** (2026-09-14) — **% 15% DONE** · settlement política **DONE** · **A2.5 tarifário V1 DONE** · cancel V1 **€3** DONE · waiting/surge **OFF** · comissão sobre `(final − tolls)` · portagens **0%** · **A1.4 / A2.6 formal ainda abertos**  
+- **Estado:** **PARCIAL** (2026-09-18) — **% 15% fixa DONE** · settlement política **DONE** · **A2.5 tarifário V1 DONE** · cancel V1 **€3** DONE · waiting/surge **OFF** · comissão sobre `(final − tolls)` · portagens **0%** · **A1.4 CLOSED** · **A2.6 DONE** (canónico alinhado)  
 - **V1 preços:** GO €1,50 + €0,60/km + €0,12/min · mín. €4,50 · Comfort €1,90 + €0,85/km + €0,15/min · mín. €5,50 · XL €3,00 + €1,05/km + €0,15/min · mín. €6,50 · Pet +€1,50 · cão assistência €0  
-- **Acta:** [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md)  
-- **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final**.  
+- **Acta:** [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · **A1.4** [`A1_MODELO…`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md) §6h  
+- **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final** + tarifário/comissão A1.4.  
 - **Portagens:** **HERE Tolls V1 PROD VALIDATED** (F0–F5) · charged=estimated · observed audit · comissão 0% sobre tolls · residual route variance **accepted for V1** · P2 `S-TOLLS-P2` determinism · fiscal pendente — ver [`PORTAGENS_V1_ARCHITECTURE_2026-09.md`](analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
 | A2.1 | Confirmar hipóteses de comissão no doc pricing Manel | Ponto de partida explícito | CONFIRMAR | A1 · `MANEL_PRICING…` | **DONE** |
 | A2.2 | Confirmar modelo híbrido estimativa/final | Alinhado a produto actual | CONFIRMAR | [`PRICING_DECISION.md`](PRICING_DECISION.md) | **DONE** |
-| A2.3 | Fechar % comissão piloto | **15%** confirmado Manel 09/09/2026 | DECISÃO | A2.1 | **DONE** *(política; sem mudança de código nesta acta)* |
+| A2.3 | Fechar % comissão piloto | **15% fixa** (A1.4); variável 20%→15% **não** seleccionada | DECISÃO | A2.1 | **DONE** |
 | A2.4 | Beneficiário + cadência payout | Partner (**A1-D03**) · **semanal / segunda-feira / manual** · conta pagamentos: Manel | DECISÃO | A2.3 | **DONE** *(política; impl. técnica settlement **não** concluída)* |
 | A2.5 | Fechar tarifário mínimo piloto | GO/Comfort/XL V1 + mínimos + Pet + cancel €3 + snapshot | DECISÃO · CÓDIGO | A2.3 · A1-D07 | **DONE** |
-| A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 | **PARCIAL** (acta 09/09 + A2.5 código; falta A1.4) |
+| A2.6 | Publicar decisão canónica (doc curto) | Referência B3/B4/E1 | DOCS | A2.4 · A2.5 · A1.4 | **DONE** *(2026-09-18 · A1.4 + PRICING_DECISION)* |
 
 ## A3 — Validar requisitos legais TVDE aplicáveis — **PARCIAL**
 

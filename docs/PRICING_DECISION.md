@@ -1,7 +1,7 @@
 # Decisão de pricing — modelo híbrido
 
 **Data:** 2026-03-22 (consolidação A021→A022)  
-**Actualizado:** 2026-09-11 — A2.5 tarifário GO/Comfort/XL V1  
+**Actualizado:** 2026-09-18 — **A1.4 DECIDIDA / CLOSED** (pricing + comissão) · A2.5 tarifário V1  
 **Estado:** decisão fechada — documento de referência para produto, UX e backend.
 
 ---
@@ -36,7 +36,7 @@
 - Webhook `payment_intent.succeeded` e admin reconcile só marcam `succeeded` se amount/currency baterem com `final_price` (ou `payment.total_amount`).
 - **MB WAY:** fase 2 — fluxo próprio (sem manual capture); fora deste hardening.
 
-### Tarifário por categoria (A2.5 · V1)
+### Tarifário por categoria (A2.5 · V1) — aceite **A1.4** (2026-09-18)
 
 Fonte canónica: `backend/app/core/tariffs.py` (não `BASE_FARE` env).
 
@@ -48,9 +48,14 @@ Fonte canónica: `backend/app/core/tariffs.py` (não `BASE_FARE` env).
 
 - `fare_subtotal = max(raw, minimum)`; `total = fare_subtotal + pet + tolls`.
 - Snapshot de rates em `trip.price_breakdown` (`category`, `tariff_version`, `price_per_km`, …) para o complete não depender de alterações futuras da tabela.
-- Comissão: `(final_price − tolls_amount) × %` — Pet commissionable; portagens **0%** (cálculo automático de tolls = fora desta versão; `tolls_amount=0`).
-- Waiting / surge: OFF.
+- **Comissão VAMULÁ:** **15% fixa** (`driver.commission_percent` / seed 15). Base = `(final_price − tolls_amount)` — Pet **incluido**; portagens **0%**. Alternativa variável **20%→15% analisada e NÃO seleccionada**.
+- Margem reduzida em viagens mínimas: **ACEITE**.
+- Waiting / surge: **OFF** na V1.
+- Pet: **+€1,50** (`PET_SURCHARGE_EUR`).
 - **Cancellation fee V1:** **€3,00 fixos** (`CANCELLATION_FEE_EUR` em `pricing.py`) quando o passageiro cancela após `accepted`/`arriving`/`ongoing`. Independente de estimate, categoria, Pet ou portagens. Piloto: regista a fee e **cancela** o PaymentIntent (não cobra).
+- **MB WAY:** apenas **Fase 2** (B5).
+
+**Acta A1.4:** [`A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md) §6h.
 
 ---
 
