@@ -32,7 +32,6 @@ from app.api.routers import (
     emergency,
     health,
     logs,
-    matching,
     partner,
     passenger_trips,
     rotacional,
@@ -171,7 +170,6 @@ app.include_router(driver_offers.router)
 app.include_router(driver_status.router)
 app.include_router(drivers.router)
 app.include_router(drivers.driver_router)
-app.include_router(matching.router)
 app.include_router(admin.router)
 app.include_router(partner.router)
 app.include_router(ws.router)

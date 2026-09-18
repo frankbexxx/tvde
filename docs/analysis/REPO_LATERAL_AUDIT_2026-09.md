@@ -39,8 +39,8 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 | **L-PAY-01** | P0 | Payments | Marcador de idempotência Stripe é `commit`ado *antes* do UPDATE de `Payment`. `SQLAlchemyError` posterior faz ACK `200`. | `backend/app/api/routers/webhooks/stripe.py` L136–153 (`db.commit()` do insert), L156–196 (status), L273–292 (`except` ACK 200) | Evento fica “processado”; PI `succeeded`/`failed` pode nunca chegar à BD | Um só TX: marcador + status; em erro de BD devolver **5xx** |
 | **L-PAY-02** | P1 | Payments / obs | `payment not found` e *amount mismatch* também ACK `200` (fail-closed no mismatch, mas Stripe pára). | `stripe.py` L120–134, L169–192 | Pagamento preso em `processing`; depende de olho humano | Alerta em `stripe_webhook_payment_not_found_ack` / `amount_mismatch`; playbook stuck `processing`; considerar 5xx só no not-found (retry) |
 | **L-TRIP-01** | P1 | Trips / races | `create_offers_for_trip` faz `flush` + WS `publish_new_offer` **antes** do `db.commit()` em `create_trip`. Loop de retry dorme até ~10s com a TX aberta. | `trips.py` L309–364; `offer_dispatch.py` L265–289 | Accept 404 / ofertas fantasma; conexão do pool retida | `commit` (ou nested) **antes** do WS; GPS wait **fora** da write TX |
-| **L-GPS-01** | P1 | Privacy / BOLA | `POST /matching/find-driver` (auth passenger/driver/admin) devolve `driver_id` + lat/lng do mais próximo. Lê **todas** as `driver_locations`. **Zero callers no frontend.** | `matching.py` router L26–49; `services/matching.py` L13–49 | Stalking de frota por qualquer sessão autenticada | Desmontar, staff-only, ou filtrar approved+available e **não** devolver coords a passenger |
-| **L-GPS-02** | P1 | Debug / privacy | `GET /debug/trip-matching/{id}` devolve lista de motoristas disponíveis **com coordenadas** ao dono da trip (não só staff). Router montado quando `debug_router_enabled()`. | `debug_routes.py` L121–194; mount `main.py` L157–158 | Leak de GPS de frota via “debug” JWT-gated | Remover coords de `step_1`; staff-only; ou não montar matching-debug fora de local |
+| **L-GPS-01** | P1 | Privacy / BOLA | `POST /matching/find-driver` — **REMOVED** (`fix/matching-gps-lockdown`) | was `matching.py` | — | **DONE** |
+| **L-GPS-02** | P1 | Debug / privacy | `GET /debug/trip-matching/{id}` — owner recebe só agregados; staff mantém listas | `debug_routes.py` | — | **DONE** (owner aggregate) |
 | **L-PAY-03** | P1 | Payments | Cancel passenger/driver/admin continua e faz `commit` cancelled se `cancel_payment_intent` falhar (log only). | `trips.py` L417–435 (padrão repetido ~L545, ~L633) | Hold Stripe órfão + trip cancelled | Falhar fechado ou `cancel_pending` + retry; não commitir cancel até PI cancelado |
 | **L-AUTH-01** | P1 | Auth | Qualquer login OTP/password com `ADMIN_PHONE` **força** `Role.super_admin` (cria ou sobrescreve). | `auth.py` L158–198 | Comprometer o telemóvel = backoffice completo | Break-glass separado; nunca auto-promote em password login; MFA; auditar mudanças de phone |
 | **L-FE-01** | P1 | Frontend | `usePolling` não tem AbortController nem geração de pedido; interval + visibility podem sobrepor-se; resposta antiga ganha. | `web-app/src/hooks/usePolling.ts` L45–87 | UI de trip/availability stale em rede lenta | Abort ou seq id; ignorar resoluções velhas; não lançar tick se o anterior está in-flight |
@@ -128,9 +128,7 @@ Em produção “estável” isto parece raro; sob latência/GPS atrasado é exa
 
 ### L-GPS-01 / L-GPS-02 — frota visível
 
-`find-driver` é leftover MVP (o matching real é multi-offer em `offer_dispatch`). Continua montado em `main.py` L171. Qualquer passenger autenticado posta lat/lng e recebe o motorista mais próximo **com coordenadas**, sem filtro `approved`/`is_available`.
-
-O debug `trip-matching` é pior em volume (lista completa). Acesso JWT + dono da trip ou staff. Continua a ser GPS de **outros** motoristas.
+**Mitigado** em `fix/matching-gps-lockdown`: `POST /matching/find-driver` **removido**; `GET /debug/trip-matching/{id}` devolve ao dono só contagens/`root_cause` (staff mantém listas com coords).
 
 ### L-PAY-03 / L-AUTH-01 / L-FE-01 / L-FE-02 / L-OBS-01 / L-TEST-01 / L-DOC-01 / L-DOC-02
 
