@@ -45,6 +45,7 @@ import {
   type GeocodeSuggestion,
 } from '../../services/geocoding'
 import { DestinationSearchField } from './DestinationSearchField'
+import { placeSearchShouldFetch } from './placeSearchFetch'
 import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../../hooks/usePassengerDriverLocation'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
 import {
@@ -474,7 +475,12 @@ export function PassengerDashboard() {
 
   useEffect(() => {
     const q = pickupQuery.trim()
-    if (pickupLocation || q.length < 2) {
+    if (
+      !placeSearchShouldFetch({
+        query: q,
+        selectionCommitted: Boolean(pickupCandidate || pickupLocation),
+      })
+    ) {
       setPickupGeoSuggestions([])
       setPickupGeoLoading(false)
       return
@@ -482,7 +488,7 @@ export function PassengerDashboard() {
     let cancelled = false
     const t = window.setTimeout(() => {
       setPickupGeoLoading(true)
-      void forwardGeocodeSearch(q, 5).then((rows) => {
+      void forwardGeocodeSearch(q, 5, passengerLocation).then((rows) => {
         if (!cancelled) setPickupGeoSuggestions(rows)
       }).finally(() => {
         if (!cancelled) setPickupGeoLoading(false)
@@ -492,11 +498,17 @@ export function PassengerDashboard() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [pickupQuery, pickupLocation])
+  }, [pickupQuery, pickupLocation, pickupCandidate, passengerLocation])
 
   useEffect(() => {
     const q = destinationQuery.trim()
-    if (!pickupLocation || q.length < 2) {
+    if (
+      !placeSearchShouldFetch({
+        query: q,
+        selectionCommitted: Boolean(destinationCandidate || dropoffLocation),
+        enabled: Boolean(pickupLocation),
+      })
+    ) {
       setGeoSuggestions([])
       setGeoLoading(false)
       return
@@ -504,7 +516,7 @@ export function PassengerDashboard() {
     let cancelled = false
     const t = window.setTimeout(() => {
       setGeoLoading(true)
-      void forwardGeocodeSearch(q, 5).then((rows) => {
+      void forwardGeocodeSearch(q, 5, pickupLocation).then((rows) => {
         if (!cancelled) setGeoSuggestions(rows)
       }).finally(() => {
         if (!cancelled) setGeoLoading(false)
@@ -514,7 +526,7 @@ export function PassengerDashboard() {
       cancelled = true
       clearTimeout(t)
     }
-  }, [destinationQuery, pickupLocation])
+  }, [destinationQuery, pickupLocation, destinationCandidate, dropoffLocation])
 
   useEffect(() => {
     if (!dropoffLocation) {
@@ -593,15 +605,19 @@ export function PassengerDashboard() {
     setPlaceSearchUiActive(active)
   }, [])
 
+  const suggestionLabel = useCallback((s: GeocodeSuggestion) => {
+    return s.secondary ? `${s.primary}, ${s.secondary}` : s.primary
+  }, [])
+
   const handlePickupPick = useCallback((s: GeocodeSuggestion) => {
     setPickupCandidate(s)
-    setPickupQuery(s.primary)
+    setPickupQuery(suggestionLabel(s))
     setPickupGeoSuggestions([])
     setPlaceSearchUiActive(false)
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
     toast.success(t('trip.pickupPreview'))
-  }, [t])
+  }, [suggestionLabel, t])
 
   const confirmPickupCandidate = useCallback(() => {
     if (!pickupCandidate) return
@@ -616,13 +632,13 @@ export function PassengerDashboard() {
 
   const handleDestinationPick = useCallback((s: GeocodeSuggestion) => {
     setDestinationCandidate(s)
-    setDestinationQuery(s.primary)
+    setDestinationQuery(suggestionLabel(s))
     setGeoSuggestions([])
     setPlaceSearchUiActive(false)
     setIsPlanningMode(true)
     setMapRecenterKey((k) => k + 1)
     toast.success(t('trip.dropoffPreview'))
-  }, [t])
+  }, [suggestionLabel, t])
 
   const confirmDestinationCandidate = useCallback(() => {
     if (!destinationCandidate) return
@@ -1440,6 +1456,7 @@ export function PassengerDashboard() {
                         geocodingUnavailable={false}
                         onDismissSuggestions={dismissPickupGeoSuggestions}
                         onSearchActiveChange={handlePlaceSearchActiveChange}
+                        selectionCommitted={Boolean(pickupCandidate)}
                       />
                       {!placeSearchUiActive && pickupCandidate ? (
                         <div className={INFO_BOX_PREVIEW}>
@@ -1470,6 +1487,7 @@ export function PassengerDashboard() {
                         geocodingUnavailable={false}
                         onDismissSuggestions={dismissGeoSuggestions}
                         onSearchActiveChange={handlePlaceSearchActiveChange}
+                        selectionCommitted={Boolean(destinationCandidate)}
                       />
                       {!placeSearchUiActive && destinationCandidate ? (
                         <div className={INFO_BOX_PREVIEW}>

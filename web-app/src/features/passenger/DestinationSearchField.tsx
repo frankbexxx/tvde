@@ -22,6 +22,11 @@ export interface DestinationSearchFieldProps {
    * (focus + texto / lista) para expandir o painel e esconder o CTA.
    */
   onSearchActiveChange?: (active: boolean) => void
+  /**
+   * Suggestion already chosen (candidate/location set). Suppresses list +
+   * search mode until the user edits the query again.
+   */
+  selectionCommitted?: boolean
 }
 
 export function DestinationSearchField({
@@ -36,6 +41,7 @@ export function DestinationSearchField({
   geocodingUnavailable,
   onDismissSuggestions,
   onSearchActiveChange,
+  selectionCommitted = false,
 }: DestinationSearchFieldProps) {
   const { t } = useTranslation('passenger')
   const resolvedLabel = label ?? t('search.destinationLabel')
@@ -46,9 +52,17 @@ export function DestinationSearchField({
   const inputRef = useRef<HTMLInputElement>(null)
   const [focused, setFocused] = useState(false)
 
-  const showList = !disabled && suggestions.length > 0 && query.trim().length >= 2
+  const showList =
+    !disabled &&
+    !selectionCommitted &&
+    suggestions.length > 0 &&
+    query.trim().length >= 2
   /** Map mode vs search mode — typing or open suggestions while focused. */
-  const searchActive = !disabled && focused && (query.trim().length > 0 || showList)
+  const searchActive =
+    !disabled &&
+    !selectionCommitted &&
+    focused &&
+    (query.trim().length > 0 || showList)
 
   useEffect(() => {
     onSearchActiveChange?.(searchActive)

@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  forwardGeocodeSearch,
   isLikelyInPortugal,
   mapMtilerFeatureToSuggestion,
   mapNominatimItemToSuggestion,
   rankSuggestionForQuery,
   reorderGeocodeSuggestions,
+  resolveGeocodeProximity,
   splitPlaceName,
 } from './geocoding'
 
@@ -143,5 +145,104 @@ describe('ranking helpers', () => {
     ])
     expect(out[0].id).toBe('2')
     expect(out[1].id).toBe('1')
+  })
+})
+
+describe('resolveGeocodeProximity', () => {
+  it('uses provided pickup/GPS coordinates', () => {
+    expect(resolveGeocodeProximity({ lat: 38.69, lng: -9.32 })).toEqual({
+      lat: 38.69,
+      lng: -9.32,
+    })
+  })
+
+  it('falls back to Lisbon metro hint without coordinates', () => {
+    expect(resolveGeocodeProximity(null)).toEqual({ lng: -9.1393, lat: 38.7223 })
+    expect(resolveGeocodeProximity(undefined)).toEqual({ lng: -9.1393, lat: 38.7223 })
+    expect(resolveGeocodeProximity({ lat: Number.NaN, lng: -9 })).toEqual({
+      lng: -9.1393,
+      lat: 38.7223,
+    })
+  })
+})
+
+describe('forwardGeocodeSearch proximity', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('biases provider request toward pickup coordinates', async () => {
+    const urls: string[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        urls.push(url)
+        if (url.includes('maptiler.com')) {
+          return {
+            ok: true,
+            json: async () => ({
+              features: [
+                {
+                  geometry: { coordinates: [-9.32, 38.69] },
+                  place_name: 'Avenida de Moçambique, Oeiras',
+                },
+              ],
+            }),
+          }
+        }
+        return {
+          ok: true,
+          json: async () => [
+            {
+              place_id: 1,
+              lat: '38.69',
+              lon: '-9.32',
+              display_name: 'Avenida de Moçambique, Oeiras',
+            },
+          ],
+        }
+      })
+    )
+
+    const rows = await forwardGeocodeSearch('Avenida de Moçambique', 5, {
+      lat: 38.69,
+      lng: -9.32,
+    })
+    expect(rows.length).toBeGreaterThan(0)
+    expect(
+      urls.some(
+        (u) =>
+          u.includes('proximity=-9.32%2C38.69') ||
+          u.includes('proximity=-9.32,38.69') ||
+          u.includes('viewbox=-10.12')
+      )
+    ).toBe(true)
+  })
+
+  it('still works without proximity argument', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        if (url.includes('maptiler.com')) {
+          return { ok: true, json: async () => ({ features: [] }) }
+        }
+        return {
+          ok: true,
+          json: async () => [
+            {
+              place_id: 2,
+              lat: '38.72',
+              lon: '-9.14',
+              display_name: 'Lisboa, Portugal',
+            },
+          ],
+        }
+      })
+    )
+    const rows = await forwardGeocodeSearch('Lisboa', 3)
+    expect(rows[0]?.primary).toBe('Lisboa')
   })
 })
