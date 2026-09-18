@@ -32,6 +32,27 @@ export type GeocodeSuggestion = {
   secondary: string
 }
 
+/** Optional bias point for forward search (MapTiler `proximity` / Nominatim viewbox). */
+export type GeocodeProximity = { lat: number; lng: number }
+
+/** Resolve bias coords; invalid/missing → Lisbon metro pilot hint. */
+export function resolveGeocodeProximity(
+  proximity?: GeocodeProximity | null
+): { lng: number; lat: number } {
+  if (
+    proximity &&
+    Number.isFinite(proximity.lat) &&
+    Number.isFinite(proximity.lng)
+  ) {
+    return { lng: proximity.lng, lat: proximity.lat }
+  }
+  return LISBON_PROXIMITY
+}
+
+function resolveProximity(proximity?: GeocodeProximity | null): { lng: number; lat: number } {
+  return resolveGeocodeProximity(proximity)
+}
+
 function normalizeForMatch(value: string): string {
   return value
     .toLowerCase()
@@ -190,15 +211,20 @@ function activeGeoLang(): string {
   return geocodingLanguage(loc)
 }
 
-async function maptilerForwardSearch(q: string, limit: number): Promise<GeocodeSuggestion[]> {
+async function maptilerForwardSearch(
+  q: string,
+  limit: number,
+  proximity?: GeocodeProximity | null
+): Promise<GeocodeSuggestion[]> {
   if (!MAPTILER_KEY) return []
   try {
+    const bias = resolveProximity(proximity)
     const params = new URLSearchParams({
       key: MAPTILER_KEY,
       limit: String(limit),
       language: activeGeoLang(),
       country: 'pt',
-      proximity: `${LISBON_PROXIMITY.lng},${LISBON_PROXIMITY.lat}`,
+      proximity: `${bias.lng},${bias.lat}`,
     })
     const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json?${params.toString()}`
     const res = await fetch(url)
@@ -216,8 +242,13 @@ async function maptilerForwardSearch(q: string, limit: number): Promise<GeocodeS
   }
 }
 
-async function nominatimForwardSearch(q: string, limit: number): Promise<GeocodeSuggestion[]> {
+async function nominatimForwardSearch(
+  q: string,
+  limit: number,
+  proximity?: GeocodeProximity | null
+): Promise<GeocodeSuggestion[]> {
   try {
+    const bias = resolveProximity(proximity)
     const params = new URLSearchParams({
       format: 'json',
       q,
@@ -226,10 +257,10 @@ async function nominatimForwardSearch(q: string, limit: number): Promise<Geocode
       'accept-language': activeGeoLang(),
       countrycodes: 'pt',
     })
-    // viewbox (left,top,right,bottom) ~ Lisboa metro, sem bounded para não restringir
+    // viewbox (left,top,right,bottom) centred on proximity — not bounded
     params.set(
       'viewbox',
-      `${LISBON_PROXIMITY.lng - 0.8},${LISBON_PROXIMITY.lat + 0.5},${LISBON_PROXIMITY.lng + 0.8},${LISBON_PROXIMITY.lat - 0.5}`
+      `${bias.lng - 0.8},${bias.lat + 0.5},${bias.lng + 0.8},${bias.lat - 0.5}`
     )
     const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`
     const res = await fetch(url, { headers: { Accept: 'application/json' } })
@@ -249,19 +280,22 @@ async function nominatimForwardSearch(q: string, limit: number): Promise<Geocode
 /**
  * Pesquisa de locais. Usa MapTiler se houver chave; caso contrário,
  * (ou se o MapTiler falhar/devolver vazio) cai para Nominatim.
+ * `proximity` biases results toward a point (pickup / GPS); falls back to
+ * Lisbon metro hint when omitted.
  */
 export async function forwardGeocodeSearch(
   query: string,
-  limit = 5
+  limit = 5,
+  proximity?: GeocodeProximity | null
 ): Promise<GeocodeSuggestion[]> {
   const q = query.trim()
   if (q.length < 2) return []
 
   if (MAPTILER_KEY) {
-    const primary = await maptilerForwardSearch(q, limit)
+    const primary = await maptilerForwardSearch(q, limit, proximity)
     if (primary.length > 0) return reorderGeocodeSuggestions(q, primary)
   }
-  const fallback = await nominatimForwardSearch(q, limit)
+  const fallback = await nominatimForwardSearch(q, limit, proximity)
   return reorderGeocodeSuggestions(q, fallback)
 }
 
