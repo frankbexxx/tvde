@@ -27,6 +27,45 @@ describe('PassengerPetBookingPanel', () => {
     expect(screen.getByTestId('passenger-fare-xl')).toBeInTheDocument()
   })
 
+  it('GO mostra passageiros 1..4', () => {
+    render(<Harness />)
+    expect(screen.getByTestId('passenger-count-1')).toBeInTheDocument()
+    expect(screen.getByTestId('passenger-count-4')).toBeInTheDocument()
+    expect(screen.queryByTestId('passenger-count-5')).not.toBeInTheDocument()
+  })
+
+  it('Comfort mostra 1..4; XL mostra 1..8', () => {
+    render(<Harness />)
+    fireEvent.click(screen.getByTestId('passenger-fare-comfort'))
+    expect(screen.queryByTestId('passenger-count-5')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('passenger-fare-xl'))
+    expect(screen.getByTestId('passenger-count-5')).toBeInTheDocument()
+    expect(screen.getByTestId('passenger-count-8')).toBeInTheDocument()
+    expect(screen.getByTestId('passenger-xl-capacity-hint')).toBeInTheDocument()
+  })
+
+  it('escolher 5 auto-selecciona XL e desactiva GO/Comfort', () => {
+    render(<Harness initial={{ ...DEFAULT_PET_BOOKING, fareCategory: 'xl' }} />)
+    fireEvent.click(screen.getByTestId('passenger-count-5'))
+    expect(screen.getByTestId('passenger-fare-xl')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('passenger-fare-x')).toBeDisabled()
+    expect(screen.getByTestId('passenger-fare-comfort')).toBeDisabled()
+  })
+
+  it('XL 6 → reduzir a 4 → GO disponível e selecciona com count 4', () => {
+    render(
+      <Harness
+        initial={{ ...DEFAULT_PET_BOOKING, fareCategory: 'xl', passengerCount: 6 }}
+      />,
+    )
+    fireEvent.click(screen.getByTestId('passenger-count-4'))
+    expect(screen.getByTestId('passenger-fare-x')).not.toBeDisabled()
+    fireEvent.click(screen.getByTestId('passenger-fare-x'))
+    expect(screen.getByTestId('passenger-fare-x')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('passenger-count-4')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByTestId('passenger-count-5')).not.toBeInTheDocument()
+  })
+
   it('Viajo com animal revela configuração; máximo 1', () => {
     render(<Harness />)
     fireEvent.click(screen.getByTestId('passenger-with-animal'))
@@ -61,5 +100,22 @@ describe('PassengerPetBookingPanel', () => {
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ fareCategory: 'comfort' }),
     )
+  })
+
+  it('GO + 4 + pet seat auto-sobe para XL', () => {
+    render(
+      <Harness
+        initial={{
+          ...DEFAULT_PET_BOOKING,
+          passengerCount: 4,
+          withAnimal: true,
+          petSize: 'small',
+          petTransport: 'carrier',
+          petOccupiesSeat: false,
+        }}
+      />,
+    )
+    fireEvent.click(screen.getByTestId('passenger-pet-occupies-seat'))
+    expect(screen.getByTestId('passenger-fare-xl')).toHaveAttribute('aria-pressed', 'true')
   })
 })

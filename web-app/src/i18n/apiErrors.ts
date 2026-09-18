@@ -13,6 +13,7 @@ const KNOWN_CODES = new Set([
   'rate_limit_login',
   'rate_limit_otp_request',
   'invalid_trip_state_transition',
+  'passenger_capacity_exceeds_category',
 ])
 
 function normalizeDetailCode(detail: unknown): string | null {

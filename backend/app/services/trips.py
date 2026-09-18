@@ -37,6 +37,7 @@ from app.services.pet_trip import (
     trip_fare_category,
 )
 from app.services.vehicle_capacity import (
+    assert_category_passenger_capacity,
     assert_driver_matches_trip_capacity,
     driver_matches_trip_capacity,
     resolve_passenger_count,
@@ -230,6 +231,13 @@ async def create_trip(
         pet_transport=getattr(payload, "pet_transport", None),
         is_assistance_animal=bool(getattr(payload, "is_assistance_animal", False)),
         pet_occupies_seat=bool(getattr(payload, "pet_occupies_seat", False)),
+    )
+    assert_category_passenger_capacity(
+        fare_category=pet.fare_category,
+        passenger_count=passenger_count,
+        pet_occupies_seat=pet.pet_occupies_seat,
+        has_pet=pet.has_pet,
+        is_assistance_animal=pet.is_assistance_animal,
     )
     fare_only, distance_km, duration_min, eta = _estimate_trip(
         payload, category=pet.fare_category

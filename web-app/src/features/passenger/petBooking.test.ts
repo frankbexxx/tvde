@@ -2,10 +2,16 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_PET_BOOKING,
   applyAssistance,
+  applyFareCategory,
+  applyPassengerCount,
+  applyPetOccupiesSeat,
   applyPetSize,
   applyPetTransport,
   applyWithAnimal,
   buildPetCreatePayload,
+  isFareCategoryAvailable,
+  passengerCountOptionsForCategory,
+  requiredSeats,
   validatePetBooking,
 } from './petBooking'
 
@@ -17,6 +23,53 @@ describe('petBooking — GO normal (sem animal)', () => {
       vehicle_category: 'x',
       passenger_count: 1,
     })
+  })
+})
+
+describe('petBooking — category capacity options', () => {
+  it('GO/Comfort 1..4; XL 1..8', () => {
+    expect(passengerCountOptionsForCategory('x')).toEqual([1, 2, 3, 4])
+    expect(passengerCountOptionsForCategory('comfort')).toEqual([1, 2, 3, 4])
+    expect(passengerCountOptionsForCategory('xl')).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
+  })
+
+  it('escolher 5 auto-selecciona XL', () => {
+    const s = applyPassengerCount(DEFAULT_PET_BOOKING, 5)
+    expect(s.fareCategory).toBe('xl')
+    expect(s.passengerCount).toBe(5)
+    expect(isFareCategoryAvailable('x', s)).toBe(false)
+    expect(isFareCategoryAvailable('comfort', s)).toBe(false)
+    expect(isFareCategoryAvailable('xl', s)).toBe(true)
+  })
+
+  it('XL 6 → GO ajusta count para 4', () => {
+    const xl = { ...DEFAULT_PET_BOOKING, fareCategory: 'xl' as const, passengerCount: 6 }
+    const go = applyFareCategory(xl, 'x')
+    expect(go.fareCategory).toBe('x')
+    expect(go.passengerCount).toBe(4)
+    expect(buildPetCreatePayload(go)).toEqual({
+      vehicle_category: 'x',
+      passenger_count: 4,
+    })
+  })
+
+  it('pet seat afecta required e validade GO', () => {
+    const base = {
+      ...DEFAULT_PET_BOOKING,
+      passengerCount: 4,
+      withAnimal: true,
+      petSize: 'small' as const,
+      petTransport: 'carrier' as const,
+      petOccupiesSeat: true,
+    }
+    expect(requiredSeats(base)).toBe(5)
+    expect(validatePetBooking(base).ok).toBe(false)
+    const bumped = applyPetOccupiesSeat(
+      { ...base, petOccupiesSeat: false, fareCategory: 'x' },
+      true,
+    )
+    expect(bumped.fareCategory).toBe('xl')
+    expect(validatePetBooking(bumped).ok).toBe(true)
   })
 })
 

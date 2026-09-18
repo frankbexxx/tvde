@@ -218,6 +218,7 @@
     "occupiesSeatShort": "Ocupa lugar",
     "seatExtraHint": "O animal ocupa 1 lugar adicional.",
     "passengersTitle": "Passageiros",
+    "xlCapacityHint": "A capacidade final depende dos veículos XL disponíveis na zona.",
     "surchargeHint": "Suplemento animal estimado: +{{amount}} € (valor final pela estimativa).",
     "surchargeLine": "Suplemento animal: +{{amount}} €",
     "fareLine": "Tarifa da viagem: {{amount}} €",
@@ -230,6 +231,7 @@
     "badgePet": "Com animal",
     "badgeAssistance": "Cão de assistência",
     "errSizeRequired": "Indica o porte do animal.",
-    "errTransportRequired": "Indica como o animal viaja (transportadora ou arnês)."
+    "errTransportRequired": "Indica como o animal viaja (transportadora ou arnês).",
+    "errCapacityCategory": "Para GO ou Comfort o máximo são 4 lugares (passageiros + animal no banco). Escolhe XL ou reduz passageiros."
   }
 }
