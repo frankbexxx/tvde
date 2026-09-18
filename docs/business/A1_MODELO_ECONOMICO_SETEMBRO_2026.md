@@ -1,10 +1,10 @@
 # A1 — Levantamento do modelo económico (Setembro 2026)
 
 **Tipo:** levantamento factual — **não** é tarifário aprovado nem acta de validação  
-**Data:** 2026-09-03 · **Actualizado:** 2026-09-11 *(A2.5 tarifário V1)*  
+**Data:** 2026-09-03 · **Actualizado:** 2026-09-18 *(A1.4 CLOSED)*  
 **IDs:** `S-BIZ-01` · `BUSINESS-MANEL-001` · roadmap **A1**  
-**Estado A1 global:** **PARCIAL** — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** *(não ACCOUNTING FINAL)* · **A1.3 = READY FOR PRICING INPUT** · A1.4 aberto · **A2.5 = IMPLEMENTED** *(código)*  
-**Regra:** valores sem fonte = **não inventados**. Hipóteses Manel ≠ decisão (exceto **A1-D01…D10** registados).
+**Estado A1 global:** **PARCIAL** *(accounting/IVA externos)* — A1.1 DONE · **A1-D01…D10 DONE** · **A1.2 = READY FOR ECONOMIC MODELLING** · **A1.3 = READY FOR PRICING INPUT** · **A1.4 = DECIDIDA / CLOSED** *(2026-09-18)* · **A2.5 = IMPLEMENTED** *(código alinhado)*  
+**Regra:** valores sem fonte = **não inventados**. Hipóteses Manel ≠ decisão (exceto **A1-D01…D10** e **A1.4** registados).
 
 ---
 
@@ -29,7 +29,7 @@
 | Tema | Estado actual | Valor/regra | Fonte | Implementado? | Decisão necessária? |
 |------|---------------|-------------|-------|---------------|---------------------|
 | Modelo preço (estimativa → final) | **FECHADO** | Estimativa não vinculativa; preço final em `complete_trip` = valor de captura | `PRICING_DECISION.md` | Sim (BE + copy UX) | Não |
-| Fórmula fare runtime | **FECHADO** *(A2.5)* | `raw = base + km×€/km + min×€/min`; `fare_subtotal = max(raw, minimum)`; + Pet + tolls | `tariffs.py` · `pricing.py` · **A2.5** | Sim (GO/Comfort/XL) | A1.4 acta formal |
+| Fórmula fare runtime | **FECHADO** *(A2.5 + A1.4)* | `raw = base + km×€/km + min×€/min`; `fare_subtotal = max(raw, minimum)`; + Pet + tolls | `tariffs.py` · `pricing.py` · **A2.5** · **A1.4** | Sim (GO/Comfort/XL) | — |
 | Comissão runtime | **FECHADO** *(%)** / **FECHADO** *(fórmula)* | `commissionable = final_price − tolls_amount`; `commission = commissionable × %` · piloto **15%** (**A1-D01**); Pet **incluido**; portagens **0%** | `trips.py` · **A1-D01** · A2.5 | Sim | Tiers futuros = não baseline |
 | Base da comissão | **FECHADO** | Sobre **fare + Pet** (não tolls); fees Stripe **fora** da base (**A1-D02**) | `trips.py` · **A1-D02** · A2.5 | Sim | Não |
 | % comissão piloto | **FECHADO** | **15%** acordado Francisco/Manel; 12% / 12,5% = **só futuro** (rentabilidade elevada e/ou acordos específicos) | **A1-D01** 2026-09-03 | Seed alinhado | Não (baseline) |
@@ -44,10 +44,10 @@
 | Payouts automáticos | **FECHADO** *(requisito piloto)* | **Não** são requisito do piloto; manter D03–D05; **B4 fora** do crítico M2 nesta fase; só depois se automatizar liquidação ao Partner | **A1-D06** 2026-09-03 | Não | Pós-piloto / condicional |
 | Liquidação manual no piloto | **FECHADO** | **Semanal** · **segunda-feira** · ao Partner; só `completed`; líquido = Σ`final_price` − 15%; `driver_payout` só referência; **manual** até B3/B4; conta pagamentos: Manel (acta 09/09/2026) | **A1-D04** + [`VAMULA_DECISOES…`](VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) | Processo humano | Relatório mínimo §6a |
 | Custos fixos/variáveis | **FECHADO** *(A1.2 modelagem)* · **≠ ACCOUNTING FINAL** | Rubricas técnicas confirmadas §6c; `MANEL_COSTS…` continua **não** orçamento (**A1-D10**). TBD: SMS · email · stores · chargebacks · suporte · legal/seguros · overage mapas | **A1-D10** · §6c 2026-09-11 | Não | Contabilidade formal depois |
-| Margem plataforma | **FECHADO** *(A1.3 modelagem)* · **≠ tarifário** | Margem variável §6f + rateio fixos USD §6g; **READY FOR PRICING INPUT**; sem GO/Comfort/XL | §6f–§6g 2026-09-11 | Não | A1.4 + A2.5 |
+| Margem plataforma | **FECHADO** *(A1.3 modelagem + A1.4)* | Margem variável §6f + rateio fixos USD §6g; tarifas V1 aceites; **margem reduzida em mínimas = ACEITE** | §6f–§6g · **A1.4** 2026-09-18 | Sim (tarifa) | Hostinger real / IVA |
 | Arredondamento | **FECHADO** *(código)* | Fare `round(2)`; money `Decimal` **ROUND_HALF_UP** 0,01; Stripe cents `round(price×100)` min 50 | `pricing.py` · `payments.py` · `trips.py` | Sim | Não |
 | Cancelamento — fee | **FECHADO** *(A1-D08 + runtime)* | **Cancellation fee V1 = €3,00 fixos** (`CANCELLATION_FEE_EUR`). Independente de estimate/categoria/Pet/tolls. Piloto pré-B1: **registar**, **não cobrar** (PI cancelado). | **A1-D08** · `pricing.py` | Sim (valor) | Captura real pós-B1 |
-| Preço mínimo / categorias | **FECHADO** *(A2.5 IMPLEMENTED)* | V1: GO `x` 1,50/0,60/0,12/mín.4,50 · Comfort 1,90/0,85/0,15/mín.5,50 · XL 3,00/1,05/0,15/mín.6,50 · snapshot em `price_breakdown` | `tariffs.py` · **A2.5** | Sim | A1.4 acta |
+| Preço mínimo / categorias | **FECHADO** *(A2.5 + A1.4)* | V1: GO `x` 1,50/0,60/0,12/mín.4,50 · Comfort 1,90/0,85/0,15/mín.5,50 · XL 3,00/1,05/0,15/mín.6,50 · snapshot em `price_breakdown` | `tariffs.py` · **A2.5** · **A1.4** | Sim | — |
 | Simulador económico 36m | **ABERTO** | Brief existe; **simulador não construído** | GTM | Não | Ferramenta após validação números |
 | Mock/demo vs real | **FECHADO** *(política actual)* | Piloto: `STRIPE_MOCK=true` típico; payouts reais **não**; comissão calculada na mesma | ENV_SINGLE_REALITY · demo docs | Sim (mock) | Go-live = B1 |
 | Pacote 3 docs business no repo | **FECHADO** | Os 3 ficheiros `MANEL_*` existem e estão referenciados no roadmap | Roadmap A1 · `docs/business/` | N/A (docs) | Não (A1.1) |
@@ -96,7 +96,7 @@
 
 ### Ainda em aberto (económico)
 
-- Acta A1.4 · input tarifário A2.5 · TBD ops (SMS, email, stores, chargebacks, suporte, legal, Hostinger).
+- **A1.4 CLOSED** 2026-09-18 · A2.5 já no código · TBD ops (SMS, email, stores, chargebacks, suporte, legal, Hostinger).
 
 ---
 
@@ -114,11 +114,11 @@
 | Settlement manual aceite no piloto? | **Sim** — **semanal / segunda-feira / manual** ao Partner (**A1-D04** + acta 09/09/2026). |
 | Connect necessário no piloto? | **Não** (**A1-D05**). |
 | Payouts automáticos no piloto? | **Não** (**A1-D06**). |
-| Preço mínimo? | **Sim** na grelha Manel (**A1-D07**); código ainda **sem** mínimo. |
+| Preço mínimo? | **Sim** — GO €4,50 / Comfort €5,50 / XL €6,50 (**A1.4** · `tariffs.py`). |
 | Arredondamentos? | **Sim** — 2 casas / HALF_UP. |
-| Cancelamentos geram fee? | **Regra comercial = 3,00 € fixos (A1-D08)**. Código ainda legado; pré-B1: registar sem cobrar. |
+| Cancelamentos geram fee? | **€3,00 fixos (A1-D08 / A1.4)** — `CANCELLATION_FEE_EUR`; piloto: registar; cobrança real pós-B1. |
 | Simulador? | Brief GTM; **não existe** ferramenta. |
-| Hardcoded divergente? | Código legado vs grelha Manel (**A1-D07** a implementar); ver §5. |
+| Hardcoded divergente? | **Não** no tarifário V1 / comissão 15% / Pet / cancel / tolls 0% — alinhado a **A1.4** (2026-09-18). |
 
 ---
 
@@ -156,10 +156,10 @@
 
 ### 6b. Decisões A1-D — lista fechada
 
-Nenhuma A1-D pendente. Trabalho restante = **A1.4** (acta) · input tarifário A2.5.
+Nenhuma A1-D pendente. **A1.4 = DECIDIDA / CLOSED** (2026-09-18). A2.5 já implementado e aceite sob A1.4.
 
 **A1.2:** **READY FOR ECONOMIC MODELLING** (2026-09-11) — **não** ACCOUNTING FINAL.  
-**A1.3:** **READY FOR PRICING INPUT** (2026-09-11) — **não** A1.4 CLOSED.
+**A1.3:** **READY FOR PRICING INPUT** (2026-09-11) — input consumido por A2.5 + fecho **A1.4**.
 
 **Fora de A1-D:** IVA/emissor recibos (`DEPENDENTE CONTABILISTA` · A3-D08); questões jurídicas; mobile; branding; activação técnica Stripe live (B1).
 
@@ -413,18 +413,52 @@ Sob **H1** (`$60,80` ≈ €60,80):
 5. **Comissão 15%:** **não** há razão económica forte *só* destes fixos técnicos para rever a % — o stress está no **ticket curto + fee Stripe fixa**, não na carga Render/MapTiler. Revisão de 15% só se B1 live + Hostinger + TBD (SMS/suporte) mostrarem margem insuficiente.  
 6. **Não** decide tarifário nem categorias.
 
-**Estado A1.3:** **READY FOR PRICING INPUT** — **não** A1.4 CLOSED.
+**Estado A1.3:** **READY FOR PRICING INPUT** — consumido por A2.5; fecho formal = **A1.4 CLOSED** (2026-09-18).
+
+---
+
+## 6h. A1.4 — Acta de pricing / comissão — **DECIDIDA / CLOSED** (2026-09-18)
+
+**Tipo:** decisão humana final (Francisco) · alinhamento com código A2.5 já em `main`  
+**Estado:** **DECIDIDA / CLOSED** · **2026-09-18**  
+**Modelo final seleccionado:** comissão **fixa 15%** · base comissionável **exclui portagens**.
+
+### Decisões aceites
+
+| Tema | Decisão |
+|------|---------|
+| Comissão VAMULÁ | **15% fixa** |
+| Tarifas GO / Comfort / XL | **ACEITES** (grelha A2.5 em `tariffs.py`) |
+| Mínimos | **€4,50 / €5,50 / €6,50** ACEITES |
+| Pet | **+€1,50** ACEITE (`PET_SURCHARGE_EUR`) |
+| Cancelamento | **€3,00** ACEITE (`CANCELLATION_FEE_EUR`) |
+| Portagens | **0%** comissão (`commissionable = total − tolls`) |
+| Waiting | **OFF** na V1 |
+| Surge | **OFF** na V1 |
+| MB WAY | **apenas Fase 2** |
+| Margem reduzida em viagens mínimas | **ACEITE** |
+
+### Alternativa rejeitada
+
+A alternativa de comissão **variável 20% → 15%** foi **analisada e NÃO seleccionada**.
+
+### Código vs decisão (2026-09-18)
+
+Sem divergência material: `tariffs.py` · `pricing.py` · seed/`commission_percent` 15% · Pet · cancel · tolls fora da base — alinhados. **Sem alteração de pricing code** nesta acta.
+
+### Referências
+
+- [`PRICING_DECISION.md`](../PRICING_DECISION.md) · [`tariffs.py`](../../backend/app/core/tariffs.py) · [`pricing.py`](../../backend/app/core/pricing.py)
 
 ---
 
 ## 7. Próximo passo
 
 1. Inserir **Hostinger Premium** real (quando contrato disponível) e recalcular §6g.  
-2. **A2.5 / tarifário** com estes inputs — **sem** fechar A1.4 ainda se quiserem acta formal depois.  
-3. Acta **A1.4** (aceite Francisco+Manel).  
-4. Contabilista: IVA base CRS · NC/refunds · IRC · câmbio factura.  
-5. Código (tarefas separadas): grelha Manel · cancel 3 € · CRS **não** no runtime até IVA.
+2. Contabilista: IVA base CRS · NC/refunds · IRC · câmbio factura.  
+3. CRS **não** no runtime até IVA fechado.  
+4. Settlement técnico Partner (processo humano A1-D04 já decidido).
 
 ---
 
-**Frase:** A1-D01…D10 DONE; A1.2 **READY FOR ECONOMIC MODELLING**; A1.3 **READY FOR PRICING INPUT**; **A2.5 IMPLEMENTED** (GO/Comfort/XL + mínimos); A1.4 aberto; A1 global **PARCIAL**.
+**Frase:** A1-D01…D10 DONE; A1.2 **READY FOR ECONOMIC MODELLING**; A1.3 **READY FOR PRICING INPUT**; **A2.5 IMPLEMENTED**; **A1.4 DECIDIDA / CLOSED (2026-09-18)**; A1 global **PARCIAL** (accounting/IVA externos).
