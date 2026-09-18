@@ -32,7 +32,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { MapActionRow } from '../../components/layout/MapActionRow'
-import { BTN_SECONDARY, BTN_SECONDARY_RADIUS, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_IDLE, MAP_SHEET_MAX_H_SEARCH, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
+import { BTN_SECONDARY, BTN_SECONDARY_RADIUS, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapStage } from '../../components/layout/MapStage'
@@ -47,6 +47,10 @@ import {
 import { DestinationSearchField } from './DestinationSearchField'
 import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../../hooks/usePassengerDriverLocation'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
+import {
+  passengerSheetMaxHClass,
+  resolvePassengerSheetMode,
+} from './passengerSheetLayout'
 import { PassengerTripRatingPanel } from './PassengerTripRatingPanel'
 import {
   DEFAULT_PET_BOOKING,
@@ -1113,6 +1117,16 @@ export function PassengerDashboard() {
 
   const passengerMapStageShowMap = showMapOnScreen || Boolean(activeTrip)
 
+  const passengerSheetMode = useMemo(
+    () =>
+      resolvePassengerSheetMode({
+        placeSearchActive: placeSearchUiActive,
+        uiState: passengerUiState,
+      }),
+    [placeSearchUiActive, passengerUiState],
+  )
+  const passengerSheetMaxH = passengerSheetMaxHClass(passengerSheetMode)
+
   /** A021: um foco por ecrã — header, mapa e painel coordenam peso visual */
   const a021Layout = useMemo(() => {
     switch (passengerUiState) {
@@ -1397,7 +1411,7 @@ export function PassengerDashboard() {
               route: routeForMap,
               tripPickup: tripMapLegs.pickup,
               tripDropoff: tripMapLegs.dropoff,
-              mapVisualWeight: 'emphasized',
+              mapVisualWeight: a021Layout.map,
               pickupSelection: isPickupPlanningMode ? pickupPreviewLocation : null,
               dropoffSelection: isPickupPlanningMode ? dropoffPreviewLocation : null,
               onPlanningMapClick: isPickupPlanningMode ? handlePlanningMapClick : undefined,
@@ -1408,10 +1422,9 @@ export function PassengerDashboard() {
             bottomOverlay={
               isTripIdle ? (
                 <MapBottomSheet
-                  className={`pointer-events-auto ${MAP_SHEET_CLASS} ${
-                    placeSearchUiActive ? MAP_SHEET_MAX_H_SEARCH : MAP_SHEET_MAX_H_IDLE
-                  }`}
+                  className={`pointer-events-auto ${MAP_SHEET_CLASS} ${passengerSheetMaxH}`}
                   data-search-expanded={placeSearchUiActive ? 'true' : 'false'}
+                  data-sheet-mode={passengerSheetMode}
                 >
                   {showPickupSearch && (
                     <>

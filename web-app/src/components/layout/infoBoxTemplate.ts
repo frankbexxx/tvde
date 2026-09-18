@@ -18,6 +18,11 @@ export const MAP_BOTTOM_SHEET = `pointer-events-auto mt-auto w-full shrink-0 ove
 export const MAP_SHEET_MAX_H_IDLE = 'max-h-[min(42dvh,300px)]'
 /** Search-active sheet: more room for suggestions while keyboard is open. */
 export const MAP_SHEET_MAX_H_SEARCH = 'max-h-[min(72dvh,520px)]'
+/**
+ * Confirming sheet (pickup+dropoff set): planner-primary, map as context.
+ * ~78dvh leaves a strip of map visible; px cap avoids oversized tablets.
+ */
+export const MAP_SHEET_MAX_H_CONFIRM = 'max-h-[min(78dvh,640px)]'
 export const MAP_SHEET_MAX_H_TRIP = 'max-h-[min(28dvh,220px)]'
 export const MAP_SHEET_MAX_H_WAIT = 'max-h-[min(14dvh,100px)]'
 export const MAP_SHEET_MAX_H_OFFER = 'max-h-[min(28dvh,220px)]'
