@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -250,12 +251,12 @@ def test_webhook_retry_after_midflight_failure_succeeds(
 def test_webhook_amount_mismatch_keeps_processing_and_persists_marker(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """L-PAY-02 behaviour preserved: fail-closed + ACK 200; marker committed."""
+    """L-PAY-02 accepted design: fail-closed + ACK 200; marker committed; never succeeded."""
     db = _db()
     try:
         pay = _insert_payment(db, total=12.0)
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
-        evt_id = f"evt_lpay01_mismatch_{uuid.uuid4().hex}"
+        evt_id = f"evt_lpay02_mismatch_{uuid.uuid4().hex}"
         event = {
             "id": evt_id,
             "type": "payment_intent.succeeded",
@@ -270,8 +271,51 @@ def test_webhook_amount_mismatch_keeps_processing_and_persists_marker(
         }
         r = _post_webhook(client, event)
         assert r.status_code == 200
+        assert r.json() == {"status": "ok"}
         db.refresh(pay)
         assert pay.status == PaymentStatus.processing
+        assert pay.status != PaymentStatus.succeeded
         assert _marker_exists(db, evt_id)
+    finally:
+        db.close()
+
+
+def test_webhook_payment_not_found_acks_without_marker(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """L-PAY-02 accepted design: unknown PI → ACK 200, no marker, anti-retry for orphans."""
+    db = _db()
+    try:
+        monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
+        orphan_pi = f"pi_lpay02_orphan_{uuid.uuid4().hex}"
+        evt_id = f"evt_lpay02_not_found_{uuid.uuid4().hex}"
+        event = {
+            "id": evt_id,
+            "type": "payment_intent.succeeded",
+            "data": {
+                "object": {
+                    "id": orphan_pi,
+                    "object": "payment_intent",
+                    "amount": 1000,
+                    "currency": "eur",
+                }
+            },
+        }
+        with patch("app.api.routers.webhooks.stripe.log_event") as mock_log:
+            r = _post_webhook(client, event)
+        assert r.status_code == 200
+        assert r.json() == {"status": "ok"}
+        assert not _marker_exists(db, evt_id)
+        mock_log.assert_any_call(
+            "stripe_webhook_payment_not_found_ack",
+            event_type="payment_intent.succeeded",
+            payment_intent_id=orphan_pi,
+            stripe_event_id=evt_id,
+        )
+        # No local Payment was created/mutated for the orphan PI.
+        found = db.execute(
+            select(Payment).where(Payment.stripe_payment_intent_id == orphan_pi)
+        ).scalar_one_or_none()
+        assert found is None
     finally:
         db.close()

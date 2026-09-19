@@ -34,8 +34,10 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 |----|------|--------|-------|
 | **PR-628** | L-PAY-03 cancel manual fail-closed | Concluído | passenger/driver/admin |
 | **PR-629** | Timeout Stripe cancel fail-closed | Concluído | `1b58627` · per-trip; batch continua; cron HTTP intacto |
+| **L-PAY-02** | Webhook ACK 200 not-found / amount-mismatch | Concluído | **ACCEPTED DESIGN** · HTTP intacto · ver `O-PAY-WEBHOOK-ANOMALY` |
 | **R-PAY-ORPHAN-PI** | Reconciliação activa de PI aberto órfão | Por iniciar | Reconcile observa terminal; **não** cancela PIs abertos hoje |
 | **O-CRON-TIMEOUT-PARTIAL** | `timeout_payment_cancel_failed > 0` → cron `partial_error`? | Por iniciar | Decisão explícita · muda HTTP semantics do `/cron/jobs` |
+| **O-PAY-WEBHOOK-ANOMALY** | Alerta/runbook `stripe_webhook_payment_not_found_ack` + `stripe_webhook_succeeded_amount_mismatch` | Por iniciar | Runbook em `docs/ops/O_STRIPE_1_RUNBOOK.md` §11 · **sem** mudar ACK 200 · orphan sem Payment = revisão manual |
 
 ---
 
