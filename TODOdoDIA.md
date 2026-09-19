@@ -21,7 +21,7 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **PR-630** | Remover promoção runtime `ADMIN_PHONE`→`super_admin` | Concluído | `9faa5c5` · roles só da DB no login |
-| **PR-ADMIN-PHONE-GUARDS** | Remover protecção admin por telefone | Em curso | Branch `fix/remove-admin-phone-admin-guards` · staff só por role |
+| **PR-632** | Remover protecção admin por telefone | Concluído | `ab7809a` · staff só por role |
 | **R-AUTH-SUPERADMIN-BOOTSTRAP** | Bootstrap/recovery explícito e auditável de `super_admin` | Por iniciar | Se DB ficar sem super_admin · **não** reintroduzir auto-promote no login |
 
 ---
