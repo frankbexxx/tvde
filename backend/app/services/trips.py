@@ -395,6 +395,7 @@ async def create_trip(
 _MOCK_PI_PREFIX = "pi_mock_"
 
 # Stripe PaymentIntent statuses we actively cancel before confirming trip cancel.
+# Shared by manual cancel (#628) and trip timeouts — do not diverge these sets.
 _STRIPE_PI_CANCELABLE = frozenset(
     {
         "requires_payment_method",
@@ -403,13 +404,20 @@ _STRIPE_PI_CANCELABLE = frozenset(
         "requires_capture",
     }
 )
-# Already terminal — local trip cancel may proceed without Stripe cancel.
+# Already terminal — local trip cancel/timeout may proceed without Stripe cancel.
+# Terminal statuses treated here: canceled, succeeded.
 _STRIPE_PI_TERMINAL = frozenset(
     {
         "canceled",
         "succeeded",
     }
 )
+
+# Outcomes of ``cancel_real_payment_intent_if_needed`` (no DB side effects).
+PI_CANCEL_NOT_APPLICABLE = "not_applicable"  # mock / missing PI
+PI_CANCEL_ALREADY_TERMINAL = "already_terminal"
+PI_CANCEL_CANCELED = "canceled"
+PI_CANCEL_FAILED = "failed"
 
 
 def fail_mock_processing_payment_on_cancel(payment: Payment | None) -> bool:
@@ -430,25 +438,28 @@ def fail_mock_processing_payment_on_cancel(payment: Payment | None) -> bool:
     return True
 
 
-def _ensure_real_payment_intent_canceled(
-    *,
-    db: Session,
+def cancel_real_payment_intent_if_needed(
     payment: Payment | None,
+    *,
     action: str,
-) -> None:
+) -> str:
     """
-    L-PAY-03: before local trip cancel, release a real cancelable PaymentIntent.
+    Shared L-PAY-03 Stripe cancel semantics (manual cancel + timeouts).
 
-    - mock / missing PI: no-op
-    - Stripe terminal (``canceled``, ``succeeded``): no-op (local cancel allowed)
-    - cancelable statuses: must ``cancel_payment_intent`` succeed
-    - retrieve/cancel failure or unexpected open status: ``db.rollback()`` + HTTP 502
+    No DB mutations. Caller decides fail-closed behaviour (HTTP 502 vs skip trip).
+
+    Returns one of:
+    - ``PI_CANCEL_NOT_APPLICABLE`` — no payment, missing PI, or ``pi_mock_*``
+    - ``PI_CANCEL_ALREADY_TERMINAL`` — PI status in ``_STRIPE_PI_TERMINAL``
+      (``canceled``, ``succeeded``); local transition allowed, no cancel call
+    - ``PI_CANCEL_CANCELED`` — cancelable status and ``cancel_payment_intent`` OK
+    - ``PI_CANCEL_FAILED`` — retrieve/cancel error or unexpected non-terminal status
     """
     if payment is None:
-        return
+        return PI_CANCEL_NOT_APPLICABLE
     pi_id = (payment.stripe_payment_intent_id or "").strip()
     if not pi_id or pi_id.startswith(_MOCK_PI_PREFIX):
-        return
+        return PI_CANCEL_NOT_APPLICABLE
 
     try:
         intent = retrieve_payment_intent(pi_id)
@@ -458,23 +469,19 @@ def _ensure_real_payment_intent_canceled(
         pi_status_s = str(pi_status or "")
     except Exception as e:
         logger.error("%s: Stripe retrieve PI failed pi=%s error=%s", action, pi_id, e)
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Payment cancellation failed.",
-        ) from e
+        return PI_CANCEL_FAILED
 
     if pi_status_s in _STRIPE_PI_TERMINAL:
         logger.info(
             "%s: PI already terminal pi=%s status=%s", action, pi_id, pi_status_s
         )
-        return
+        return PI_CANCEL_ALREADY_TERMINAL
 
     if pi_status_s in _STRIPE_PI_CANCELABLE:
         try:
             cancel_payment_intent(pi_id)
             logger.info("%s: cancelled PI %s (was %s)", action, pi_id, pi_status_s)
-            return
+            return PI_CANCEL_CANCELED
         except Exception as e:
             logger.error(
                 "%s: Stripe cancel PI failed pi=%s status=%s error=%s",
@@ -483,11 +490,7 @@ def _ensure_real_payment_intent_canceled(
                 pi_status_s,
                 e,
             )
-            db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Payment cancellation failed.",
-            ) from e
+            return PI_CANCEL_FAILED
 
     logger.error(
         "%s: refusing trip cancel; unexpected PI status=%s pi=%s",
@@ -495,11 +498,27 @@ def _ensure_real_payment_intent_canceled(
         pi_status_s,
         pi_id,
     )
-    db.rollback()
-    raise HTTPException(
-        status_code=status.HTTP_502_BAD_GATEWAY,
-        detail="Payment cancellation failed.",
-    )
+    return PI_CANCEL_FAILED
+
+
+def _ensure_real_payment_intent_canceled(
+    *,
+    db: Session,
+    payment: Payment | None,
+    action: str,
+) -> None:
+    """
+    L-PAY-03 (manual cancel): before local trip cancel, release a real cancelable PI.
+
+    On Stripe failure: ``db.rollback()`` + HTTP 502 (fail-closed for the request).
+    """
+    outcome = cancel_real_payment_intent_if_needed(payment, action=action)
+    if outcome == PI_CANCEL_FAILED:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Payment cancellation failed.",
+        )
 
 
 def cancel_trip_by_passenger(
