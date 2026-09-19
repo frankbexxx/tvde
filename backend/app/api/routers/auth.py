@@ -156,20 +156,9 @@ async def verify_otp(
 
     otp.consumed_at = now
 
-    admin_phone = getattr(settings, "ADMIN_PHONE", None)
-    is_admin_phone = bool(admin_phone and _normalize_phone(admin_phone) == phone)
-
     user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not user:
-        if is_admin_phone:
-            user = User(
-                role=Role.super_admin,
-                name=phone,
-                phone=phone,
-                status=UserStatus.active,
-            )
-            db.add(user)
-        elif settings.require_pending_approval():
+        if settings.require_pending_approval():
             # Partner fleet managers are created only via POST /admin/partners/{id}/create-admin,
             # never through public OTP (Role.partner is intentionally excluded here).
             req_role_raw = (payload.requested_role or "").strip().lower()
@@ -192,11 +181,6 @@ async def verify_otp(
                 status=UserStatus.active,
             )
             db.add(user)
-
-    # Telefone = ADMIN_PHONE: sessão super_admin (novo ou existente; corrige passenger/admin legado).
-    if is_admin_phone:
-        user.role = Role.super_admin
-        user.status = UserStatus.active
 
     if user.status == UserStatus.pending:
         # The pending account is the durable signup request shown in the admin queue.
@@ -288,13 +272,6 @@ async def login(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="blocked",
         )
-
-    admin_phone_login = getattr(settings, "ADMIN_PHONE", None)
-    if admin_phone_login and _normalize_phone(admin_phone_login) == phone:
-        user.role = Role.super_admin
-        user.status = UserStatus.active
-        db.commit()
-        db.refresh(user)
 
     token_data = create_access_token(subject=str(user.id), role=user.role.value)
 

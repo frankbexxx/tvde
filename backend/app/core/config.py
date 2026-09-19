@@ -55,10 +55,9 @@ class Settings(BaseSettings):
         "https://tvde-app-j51f.onrender.com,http://localhost:5173"
     )
 
-    # BETA mode for 15-20 real users (presential tests)
-    ADMIN_PHONE: str | None = (
-        None  # e.g. +351924075365 — auto super_admin backoffice, no approval
-    )
+    # Owner/operator phone: seed protection + admin mutation guards. Does NOT grant
+    # privileges at login (L-AUTH-01) — roles come only from the DB.
+    ADMIN_PHONE: str | None = None
     MAX_BETA_USERS: int = 30
     DEFAULT_PASSWORD: str = "123456"  # Legacy; not used for login after test-account MVP
     # When False in production, accounts without password_hash cannot use DEFAULT_PASSWORD.
