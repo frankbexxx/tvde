@@ -76,8 +76,6 @@ curl -sS -w "\nHTTP %{http_code}\n" \
   -H "X-Cron-Secret: <CRON_SECRET>"
 ```
 
-(`?secret=` ainda funciona como legado — evitar em setups novos.)
-
 **Esperado:** HTTP **200** + `status: "ok"`; ou HTTP **500** + `status: "partial_error"` / `errors` se um sub-job falhou. Ver [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
 
 ### 4.2 Validar efeitos

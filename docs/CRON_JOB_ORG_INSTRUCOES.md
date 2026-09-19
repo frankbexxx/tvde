@@ -42,8 +42,8 @@ https://api-tua-app.onrender.com/cron/jobs
 
 | Método | Uso |
 |--------|-----|
-| **Header `X-Cron-Secret`** | **Preferido** — evita secret em access logs / Referer |
-| Query `?secret=<CRON_SECRET>` | **Legado** — ainda aceite pelo código; não usar em setups novos |
+| **Header `X-Cron-Secret`** | **Obrigatório** |
+| Query `?secret=` | **Não aceite** — não autentica |
 
 4. Guarda o cronjob.
 
@@ -157,8 +157,8 @@ Não há scheduler in-process na API: o host externo é obrigatório em produç�
 ## 6. Segurança
 
 - **Nunca** partilhes o `CRON_SECRET` publicamente.
-- Preferir **header** `X-Cron-Secret` (não colocar o secret na URL).
-- Secret errado → **401**; não configurado → **503**.
+- Preferir **header** `X-Cron-Secret` (nunca colocar o secret na URL; `?secret=` não autentica).
+- Secret errado / em falta no header → **401**; não configurado no servidor → **503**.
 
 ---
 

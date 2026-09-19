@@ -1,7 +1,8 @@
 """Cron endpoint for scheduled jobs (cron-job.org). No JWT required; uses CRON_SECRET."""
 
+import hmac
 import time
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -21,13 +22,10 @@ router = APIRouter(prefix="/cron", tags=["cron"])
 
 @router.get("/jobs", response_model=None)
 async def run_scheduled_jobs(
-    secret: str | None = Query(
-        None, description="CRON_SECRET from env (legacy: query string)"
-    ),
     x_cron_secret: str | None = Header(
         None,
         alias="X-Cron-Secret",
-        description="CRON_SECRET from env (preferred: header)",
+        description="CRON_SECRET from env (required)",
     ),
     db: Session = Depends(get_db),
 ) -> dict | JSONResponse:
@@ -49,9 +47,7 @@ async def run_scheduled_jobs(
     treat partial failure as a failed run. Body shape is identical in both cases.
     ``system_health.status == degraded`` alone does not imply HTTP 500.
 
-    Auth:
-    - Preferred: Header `X-Cron-Secret: <CRON_SECRET>`
-    - Legacy:    Query `?secret=<CRON_SECRET>`
+    Auth: Header ``X-Cron-Secret: <CRON_SECRET>`` only (query ``?secret=`` is not accepted).
     """
     cron_secret = getattr(settings, "CRON_SECRET", None)
     if not cron_secret:
@@ -59,8 +55,14 @@ async def run_scheduled_jobs(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="CRON_SECRET not configured",
         )
-    provided = x_cron_secret or secret
-    if not provided or provided != cron_secret:
+    provided = x_cron_secret or ""
+    expected = str(cron_secret)
+    try:
+        secret_ok = hmac.compare_digest(provided, expected)
+    except (TypeError, ValueError):
+        # Unequal length / type quirks on older Python → treat as invalid.
+        secret_ok = False
+    if not secret_ok:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_secret",

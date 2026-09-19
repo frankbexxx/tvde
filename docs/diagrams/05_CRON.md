@@ -1,6 +1,6 @@
 # Diagrama — cron e jobs agregados
 
-O host externo (ex.: [cron-job.org](https://cron-job.org) ou Render Cron) chama a API com o header **`X-Cron-Secret`** alinhado a `CRON_SECRET`. Query `?secret=` é legado.
+O host externo (ex.: [cron-job.org](https://cron-job.org) ou Render Cron) chama a API com o header **`X-Cron-Secret`** alinhado a `CRON_SECRET`. Query `?secret=` **não** autentica.
 
 Documentação operacional: [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md), smoke curto [`docs/ops/W1_PROD_SMOKE.md`](../ops/W1_PROD_SMOKE.md).
 
@@ -10,7 +10,7 @@ sequenceDiagram
   participant API as FastAPI\nGET /cron/jobs
   participant DB as PostgreSQL
 
-  H->>API: GET /cron/jobs\nHeader X-Cron-Secret\n(?secret= legado)
+  H->>API: GET /cron/jobs\nHeader X-Cron-Secret
   API->>API: valida segredo\n(401 / 503 se inválido)
   API->>DB: 7 sub-jobs isolados\n(timeouts, offers, redispatch,\ncleanup, health, zones, rotacional)
   alt todos OK
