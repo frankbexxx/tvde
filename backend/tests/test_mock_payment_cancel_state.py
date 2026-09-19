@@ -176,6 +176,184 @@ def test_passenger_cancel_real_pi_keeps_processing_and_cancels_stripe(
         db.close()
 
 
+def test_passenger_cancel_stripe_cancel_failure_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """L-PAY-03: Stripe cancel failure must not mark trip cancelled."""
+    from fastapi import HTTPException
+
+    db = _db()
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    pi_id = f"pi_real_{uuid.uuid4().hex[:24]}"
+    passenger_id, driver_id, trip_id, payment_id = _accepted_trip_with_payment(
+        db, pi_id=pi_id
+    )
+    emit = MagicMock()
+    log_ev = MagicMock()
+    monkeypatch.setattr(trip_service, "emit", emit)
+    monkeypatch.setattr(trip_service, "log_event", log_ev)
+    monkeypatch.setattr(
+        trip_service,
+        "retrieve_payment_intent",
+        MagicMock(return_value=SimpleNamespace(status="requires_capture", id=pi_id)),
+    )
+    monkeypatch.setattr(
+        trip_service,
+        "cancel_payment_intent",
+        MagicMock(side_effect=RuntimeError("stripe_timeout")),
+    )
+    try:
+        with pytest.raises(HTTPException) as ei:
+            trip_service.cancel_trip_by_passenger(
+                db=db, passenger_id=passenger_id, trip_id=trip_id, reason="abort"
+            )
+        assert ei.value.status_code == 502
+        assert ei.value.detail == "Payment cancellation failed."
+        trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one()
+        pay = db.execute(select(Payment).where(Payment.id == payment_id)).scalar_one()
+        drv = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one()
+        assert trip.status == TripStatus.accepted
+        assert pay.status == PaymentStatus.processing
+        assert drv.is_available is False
+        emit.assert_not_called()
+        assert not any(
+            c.args and c.args[0] == "trip_state_change" for c in log_ev.call_args_list
+        )
+    finally:
+        db.close()
+
+
+def test_driver_cancel_stripe_cancel_failure_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fastapi import HTTPException
+
+    db = _db()
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    pi_id = f"pi_real_{uuid.uuid4().hex[:24]}"
+    _p, driver_id, trip_id, _payment_id = _accepted_trip_with_payment(db, pi_id=pi_id)
+    monkeypatch.setattr(
+        trip_service,
+        "retrieve_payment_intent",
+        MagicMock(return_value=SimpleNamespace(status="requires_capture", id=pi_id)),
+    )
+    monkeypatch.setattr(
+        trip_service,
+        "cancel_payment_intent",
+        MagicMock(side_effect=RuntimeError("stripe_down")),
+    )
+    try:
+        before = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one()
+        count_before = before.cancellation_count or 0
+        with pytest.raises(HTTPException) as ei:
+            trip_service.cancel_trip_by_driver(
+                db=db, driver_id=driver_id, trip_id=trip_id, reason="emergency"
+            )
+        assert ei.value.status_code == 502
+        trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one()
+        drv = db.execute(select(Driver).where(Driver.user_id == driver_id)).scalar_one()
+        assert trip.status == TripStatus.accepted
+        assert (drv.cancellation_count or 0) == count_before
+        assert drv.is_available is False
+    finally:
+        db.close()
+
+
+def test_admin_cancel_requires_capture_and_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fastapi import HTTPException
+
+    db = _db()
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    pi_id = f"pi_real_{uuid.uuid4().hex[:24]}"
+    _p, _d, trip_id, payment_id = _accepted_trip_with_payment(db, pi_id=pi_id)
+    retrieve = MagicMock(
+        return_value=SimpleNamespace(status="requires_capture", id=pi_id)
+    )
+    cancel_pi = MagicMock(return_value=SimpleNamespace(status="canceled", id=pi_id))
+    monkeypatch.setattr(trip_service, "retrieve_payment_intent", retrieve)
+    monkeypatch.setattr(trip_service, "cancel_payment_intent", cancel_pi)
+    try:
+        cancelled = trip_service.cancel_trip_by_admin(
+            db=db, trip_id=trip_id, cancellation_reason="ops"
+        )
+        assert cancelled.status == TripStatus.cancelled
+        cancel_pi.assert_called_once_with(pi_id)
+    finally:
+        db.close()
+
+    db2 = _db()
+    pi_id2 = f"pi_real_{uuid.uuid4().hex[:24]}"
+    _p2, _d2, trip_id2, _pay2 = _accepted_trip_with_payment(db2, pi_id=pi_id2)
+    monkeypatch.setattr(
+        trip_service,
+        "retrieve_payment_intent",
+        MagicMock(return_value=SimpleNamespace(status="requires_capture", id=pi_id2)),
+    )
+    monkeypatch.setattr(
+        trip_service,
+        "cancel_payment_intent",
+        MagicMock(side_effect=RuntimeError("boom")),
+    )
+    try:
+        with pytest.raises(HTTPException) as ei:
+            trip_service.cancel_trip_by_admin(db=db2, trip_id=trip_id2)
+        assert ei.value.status_code == 502
+        trip = db2.execute(select(Trip).where(Trip.id == trip_id2)).scalar_one()
+        assert trip.status == TripStatus.accepted
+    finally:
+        db2.close()
+
+
+def test_passenger_cancel_terminal_canceled_pi_allows_local_cancel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = _db()
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    pi_id = f"pi_real_{uuid.uuid4().hex[:24]}"
+    passenger_id, _d, trip_id, payment_id = _accepted_trip_with_payment(db, pi_id=pi_id)
+    retrieve = MagicMock(return_value=SimpleNamespace(status="canceled", id=pi_id))
+    cancel_pi = MagicMock(side_effect=AssertionError("must not cancel terminal PI"))
+    monkeypatch.setattr(trip_service, "retrieve_payment_intent", retrieve)
+    monkeypatch.setattr(trip_service, "cancel_payment_intent", cancel_pi)
+    try:
+        cancelled = trip_service.cancel_trip_by_passenger(
+            db=db, passenger_id=passenger_id, trip_id=trip_id, reason="already_canceled"
+        )
+        assert cancelled.status == TripStatus.cancelled
+        pay = db.execute(select(Payment).where(Payment.id == payment_id)).scalar_one()
+        assert pay.status == PaymentStatus.processing
+        cancel_pi.assert_not_called()
+    finally:
+        db.close()
+
+
+def test_passenger_cancel_terminal_succeeded_pi_allows_local_cancel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = _db()
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    pi_id = f"pi_real_{uuid.uuid4().hex[:24]}"
+    passenger_id, _d, trip_id, payment_id = _accepted_trip_with_payment(
+        db, pi_id=pi_id, payment_status=PaymentStatus.succeeded
+    )
+    retrieve = MagicMock(return_value=SimpleNamespace(status="succeeded", id=pi_id))
+    cancel_pi = MagicMock(side_effect=AssertionError("must not cancel succeeded PI"))
+    monkeypatch.setattr(trip_service, "retrieve_payment_intent", retrieve)
+    monkeypatch.setattr(trip_service, "cancel_payment_intent", cancel_pi)
+    try:
+        cancelled = trip_service.cancel_trip_by_passenger(
+            db=db, passenger_id=passenger_id, trip_id=trip_id, reason="late"
+        )
+        assert cancelled.status == TripStatus.cancelled
+        pay = db.execute(select(Payment).where(Payment.id == payment_id)).scalar_one()
+        assert pay.status == PaymentStatus.succeeded
+        cancel_pi.assert_not_called()
+    finally:
+        db.close()
+
+
 def test_passenger_cancel_does_not_alter_succeeded_mock_payment(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
