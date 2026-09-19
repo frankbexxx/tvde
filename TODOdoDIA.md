@@ -16,12 +16,25 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
-## Painel — **AUTH / L-AUTH-01** (**2026-09-19**)
+## Painel — **AUTH / L-AUTH-01** (**2026-09-19** — tip `9faa5c5`)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **PR-L-AUTH-01** | Remover promoção runtime `ADMIN_PHONE`→`super_admin` | Em curso | Branch `fix/remove-admin-phone-runtime-promotion` |
+| **PR-630** | Remover promoção runtime `ADMIN_PHONE`→`super_admin` | Concluído | `9faa5c5` · roles só da DB no login |
 | **R-AUTH-SUPERADMIN-BOOTSTRAP** | Bootstrap/recovery explícito e auditável de `super_admin` | Por iniciar | Se DB ficar sem super_admin · **não** reintroduzir auto-promote no login |
+
+---
+
+## Painel — **PAYMENTS FAIL-CLOSED** (**2026-09-19** — tip `1b58627`)
+
+Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transição local. Follow-ups **fora** dessas PRs.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **PR-628** | L-PAY-03 cancel manual fail-closed | Concluído | passenger/driver/admin |
+| **PR-629** | Timeout Stripe cancel fail-closed | Concluído | `1b58627` · per-trip; batch continua; cron HTTP intacto |
+| **R-PAY-ORPHAN-PI** | Reconciliação activa de PI aberto órfão | Por iniciar | Reconcile observa terminal; **não** cancela PIs abertos hoje |
+| **O-CRON-TIMEOUT-PARTIAL** | `timeout_payment_cancel_failed > 0` → cron `partial_error`? | Por iniciar | Decisão explícita · muda HTTP semantics do `/cron/jobs` |
 
 ---
 
