@@ -621,13 +621,6 @@ async def admin_kyc_supervision(
     return build_admin_kyc_supervision(db)
 
 
-def _is_admin_phone(phone: str) -> bool:
-    admin_phone = getattr(settings, "ADMIN_PHONE", None)
-    if not admin_phone:
-        return False
-    return admin_phone.strip() == phone.strip()
-
-
 @router.post("/users/{user_id}/promote-driver")
 async def promote_user_to_driver(
     user_id: str,
@@ -643,8 +636,6 @@ async def promote_user_to_driver(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone):
-        raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
     # Lock Driver before any availability write so a concurrent accept cannot
@@ -712,8 +703,6 @@ async def demote_user_from_driver(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone):
-        raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
     # Lock Driver before the active-trip check/delete. Trip.driver_id is
@@ -785,8 +774,6 @@ async def update_user(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone):
-        raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
     if payload.phone is not None:
@@ -854,8 +841,6 @@ async def delete_user(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone):
-        raise HTTPException(status_code=400, detail="cannot_delete_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_delete_staff_role")
     has_passenger_trips = (
@@ -920,8 +905,6 @@ async def block_user(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone):
-        raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_block_staff_role")
     before_status = u.status.value if u.status else None
@@ -958,8 +941,6 @@ async def unblock_user(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone):
-        raise HTTPException(status_code=400, detail="cannot_modify_admin")
     if _is_protected_staff_account(u):
         raise HTTPException(status_code=400, detail="cannot_unblock_staff_role")
     if u.status != UserStatus.blocked:
@@ -1018,7 +999,7 @@ async def bulk_block_users(
         if not u:
             skipped += 1
             continue
-        if _is_admin_phone(u.phone) or _is_protected_staff_account(u):
+        if _is_protected_staff_account(u):
             skipped += 1
             continue
         u.status = UserStatus.blocked
@@ -1063,8 +1044,8 @@ async def admin_clear_user_password(
     u = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
     if not u:
         raise HTTPException(status_code=404, detail="user_not_found")
-    if _is_admin_phone(u.phone) or _is_protected_staff_account(u):
-        raise HTTPException(status_code=400, detail="cannot_modify_admin")
+    if _is_protected_staff_account(u):
+        raise HTTPException(status_code=400, detail="cannot_modify_staff_role")
     had_password = u.password_hash is not None
     u.password_hash = None
     record_admin_action(
