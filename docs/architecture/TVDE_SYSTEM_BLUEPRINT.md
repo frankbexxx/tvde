@@ -1,3 +1,10 @@
+> **REFERENCE / SUPERSEDED AS CURRENT ARCHITECTURE**
+>
+> Documento **aspiracional / de referência** (datado **2026-03-12**). **Não** é runbook.
+> Features e componentes aqui descritos podem nunca ter sido implementados ou já terem sido substituídos.
+> Para estado operacional actual: código + [`README.md`](README.md) nesta pasta +
+> [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) · [`diagrams/`](../diagrams/) · [`TODOdoDIA.md`](../../TODOdoDIA.md).
+
 # TVDE Platform — System Blueprint
 Date: 2026-03-12
 

@@ -47,7 +47,7 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 | **L-FE-02** | P1 | Frontend / auth | `logout` limpa localStorage de auth, **não** o `sessionStorage` do active trip nem o estado React do `ActiveTripProvider` (fica montado). | `AuthContext.tsx` L491–499; `ActiveTripContext.tsx` L27–35; `passengerActiveTripRecovery.ts` | Tab partilhada / próximo passenger revive trip id até reconcile | No logout: `setPassengerActiveTripId(null)` + clear da key |
 | **L-OBS-01** | P1 | Cron / ops | Sub-jobs isolados (bom) mas HTTP **200** com `status: "partial_error"`. Monitores que só vêem código HTTP ficam cegos. | `cron.py` L69–185, return L184–186 | Timeouts/redispatch mortos sem alerta | Non-2xx se `errors`; ou alerta no JSON `error_count` |
 | **L-TEST-01** | P1 → **CLOSED / ACCEPTED DEBT** | Tests | Fixture `db` só faz `session.close()`; commits persistem; HTTP usa sessões próprias. CI Postgres efémero + suite serial + `unique_test_phone`/plates mitigam. | `conftest.py`; `BACKEND_PYTEST_SAFE.md` § isolamento | Residual flake mitigado | Médio prazo: `T-DB-ISOLATION` (TX + `get_db` override). Nome DB local: `T-TEST-DB-NAME-GUARD` |
-| **L-DOC-01** | P1 | Docs | `ARCHITECTURE_STATUS.md` / blueprint **2026-03-12** ainda no índice: auto-dispatch, dashboards velhos, e `DATABASE_URL` local = URL Render (**mesma BD**). | `docs/architecture/ARCHITECTURE_STATUS.md` L1–40; `DOCS_INDEX.md` | Implementar o mundo errado; apontar pytest/dev à BD de prod | Stamp SUPERSEDED; índice aponta a uma “current truth” curta |
+| **L-DOC-01** | P1 → **CLOSED** | Docs | ~~`ARCHITECTURE_STATUS` / blueprint Março como “actual”; BD local = Render.~~ **Mitigado:** banners SUPERSEDED; índice aponta fontes operacionais (`ENV_*`, pytest safe, diagrams). | `ARCHITECTURE_STATUS.md` / `TVDE_SYSTEM_BLUEPRINT.md` banners; `DOCS_INDEX.md`; `architecture/README.md` | Histórico preservado | Fechado (docs-only) |
 | **L-DOC-02** | P1 | Docs / cron | Runbook ensina `?secret=` na URL, TTL de oferta “>15 s” (código default **60**), e só jobs 1–3 (faltam health/zones/rotacional). | `docs/CRON_JOB_ORG_INSTRUCOES.md` §2–4; `cron.py` docstring; `OFFER_TIMEOUT_SECONDS=60` | Secret em logs/Referer; ops a monitorizar o contrato errado | Header-only; reescrever §3–4 a partir de `cron.py` |
 | **L-SEC-09** | P2 | Cron | `CRON_SECRET` aceite em query `?secret=` (legado no código, não só no doc). Compare com `!=`. | `cron.py` L21–60 | Leak em access logs; timing teórico | Header-only; `hmac.compare_digest`; rodar se já esteve em query |
 | **L-SEC-10** | P2 | WebSocket | Token JWT aceite em `?token=` (além de `Authorization`). | `ws.py` `_extract_token` L17–21; `admin_ws.py` equivalente | JWT em logs/histórico de proxy | Preferir header / `Sec-WebSocket-Protocol`; deprecar query |
@@ -139,7 +139,8 @@ Detalhe já na tabela. Notas curtas:
 - Polling: `cleanup` só faz `clearInterval`; in-flight `fn()` continua e chama `setState`.
 - Logout: `ActiveTripProvider` está acima do auth na árvore; o estado sobrevive ao logout.
 - Pytest / **L-TEST-01**: **CLOSED / ACCEPTED TECHNICAL DEBT** (2026-09-19). Host guard ≠ per-test isolation. Ver `BACKEND_PYTEST_SAFE.md` § isolamento; follow-ups `T-DB-ISOLATION`, `T-TEST-DB-NAME-GUARD`.
-- Docs Março: o parágrafo “BD local = External URL da Render” é o finding mais perigoso do lado docs (humano a seguir o runbook).
+- Docs Março / **L-DOC-01**: **CLOSED** — banners SUPERSEDED em `ARCHITECTURE_STATUS` + blueprint; índice com “Current operational sources”; entry-point `architecture/README.md`. Corpos históricos intactos.
+- Docs Março (conteúdo): o parágrafo “BD local = External URL da Render” permanece **só** no snapshot SUPERSEDED — **não** usar para operações.
 
 ### L-TEST-01 — isolamento BD de testes — **CLOSED / ACCEPTED DEBT**
 
@@ -239,9 +240,9 @@ Não inventar CVEs Python sem output do audit.
 
 | Doc | Drift | Gravidade |
 |-----|--------|-----------|
-| `ARCHITECTURE_STATUS.md` + blueprint 2026-03-12 | Matching/dispatch/UI/Render service names; **BD local = prod** | P1 (L-DOC-01) |
+| `ARCHITECTURE_STATUS.md` + blueprint 2026-03-12 | Matching/dispatch/UI; **BD local = prod** (texto histórico) | **CLOSED** (L-DOC-01) — SUPERSEDED + índice corrigido |
 | `CRON_JOB_ORG_INSTRUCOES.md` | Query secret; 15s vs 60s; jobs 4–6 em falta | P1 (L-DOC-02) |
-| `DOCS_INDEX.md` | Omite `docs/env/` e `STACK_TECNOLOGICO.md`; smokes Julho como “operação” | P2 |
+| `DOCS_INDEX.md` | ~~Omite `docs/env/`.~~ Env + pytest safe + architecture README adicionados (L-DOC-01); smokes Julho ainda listados sob ops | P2 residual |
 | `ENV_VARS_VERIFICATION.md` | Sem HERE, capacity/vehicle gates, driving hours, rotacional v3, next-trip | P2 |
 | `GUIA_TESTES.md` | Python 3.10+ / Node 18+ vs CI 3.12.14 / Node 22 | P2 |
 | `STACK_TECNOLOGICO.md` | Sem Sentry, HERE, OSRM, Playwright, Alembic, Postgres 15 | P2 |
@@ -303,7 +304,7 @@ PRs **pequenos e reversíveis**. Ordem sugerida (não abrir nesta sessão):
 | 4 | `fix/fe-logout-and-polling-abort` | Clear trip storage no logout; seq/abort no `usePolling` | L-FE-02, L-FE-01 (L-FE-05 no mesmo ficheiro se barato) |
 | 5 | `fix/cron-partial-error-and-runbook` | HTTP não-2xx se `errors`; runbook header-only + jobs 1–6 + TTL 60s | L-OBS-01, L-DOC-02, L-SEC-09 |
 
-**A seguir (não no top 5):** `T-DB-ISOLATION` / `T-TEST-DB-NAME-GUARD` (L-TEST-01 aceite como dívida), SUPERSEDED da arquitectura Março (L-DOC-01, docs-only), cancel vs PI (L-PAY-03 mitigado #628), `ADMIN_PHONE` (L-AUTH-01 mitigado #630/#632).
+**A seguir (não no top 5):** `T-DB-ISOLATION` / `T-TEST-DB-NAME-GUARD` (L-TEST-01 aceite como dívida), L-DOC-01 **CLOSED** (SUPERSEDED Março), cancel vs PI (L-PAY-03 mitigado #628), `ADMIN_PHONE` (L-AUTH-01 mitigado #630/#632).
 
 ---
 

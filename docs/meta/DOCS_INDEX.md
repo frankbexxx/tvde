@@ -6,6 +6,23 @@
 
 ---
 
+## Current operational sources
+
+Fontes **activas** para local / CI / Render / pytest (não usar snapshots Março 2026 como runbook):
+
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [ENV_SINGLE_REALITY.md](../env/ENV_SINGLE_REALITY.md) | Env local · CI · Render; hosts; Stripe mock |
+| [ENV_VARS_VERIFICATION.md](../env/ENV_VARS_VERIFICATION.md) | Cruzamento `.env` local vs Render |
+| [BACKEND_PYTEST_SAFE.md](../testing/BACKEND_PYTEST_SAFE.md) | Pytest só BD local; isolamento vs CI fresh |
+| [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md) | Deploy Render |
+| [diagrams/](../diagrams/) | Fluxos actuais (Mermaid) |
+| [architecture/README.md](../architecture/README.md) | Entry-point arquitectura (histórico vs actual) |
+| [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo |
+| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto |
+
+---
+
 ## Operação e handoff
 
 | Ficheiro | Propósito |
@@ -53,9 +70,10 @@
 
 | Ficheiro | Propósito |
 | -------- | --------- |
+| [architecture/README.md](../architecture/README.md) | Entry-point — actual vs histórico |
 | [TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico + A023–A035 |
-| [TVDE_SYSTEM_BLUEPRINT.md](../architecture/TVDE_SYSTEM_BLUEPRINT.md) | Blueprint sistema |
-| [ARCHITECTURE_STATUS.md](../architecture/ARCHITECTURE_STATUS.md) | Estado técnico actual |
+| [TVDE_SYSTEM_BLUEPRINT.md](../architecture/TVDE_SYSTEM_BLUEPRINT.md) | **Reference / historical design** (SUPERSEDED as current arch) |
+| [ARCHITECTURE_STATUS.md](../architecture/ARCHITECTURE_STATUS.md) | **Historical architecture snapshot** (2026-03-12; SUPERSEDED) |
 | [I18N.md](../architecture/I18N.md) | i18n PT/EN web-app |
 | [I18N_NICHOS_EN.md](../architecture/I18N_NICHOS_EN.md) | Workflow nichos EN (screenshots) |
 
@@ -80,6 +98,7 @@
 
 | Ficheiro | Propósito |
 | -------- | --------- |
+| [BACKEND_PYTEST_SAFE.md](../testing/BACKEND_PYTEST_SAFE.md) | Pytest BD local segura (TEST-DB-GUARD) |
 | [GUIA_TESTES.md](../testing/GUIA_TESTES.md) | Manual testes passo a passo |
 | [DEV_BASELINE_ROSTER.md](../testing/DEV_BASELINE_ROSTER.md) | Users baseline dev/Render |
 | [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md) | Teste em campo |
