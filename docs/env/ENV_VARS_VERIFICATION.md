@@ -50,7 +50,7 @@ Mudar qualquer `VITE_*` no Render → **novo build** do static.
 | `ENFORCE_PT_PHONE` | Opcional | Opcional | `None` herda BETA. `+351` em OTP request / password login. |
 | `ENABLE_DEMO_USERS` | Opcional | Opcional | `None` herda BETA. Login `is_test_account` + `TEST_ACCOUNT_PASSWORD`. |
 | `CORS_ALLOWED_ORIGINS` | **SIM** se testar front sem proxy / espelhar prod | **SIM** em produção | Origens exactas; vírgulas; sem `*`. |
-| `ADMIN_PHONE` | Opcional | Opcional | Fluxo BETA super_admin. |
+| `ADMIN_PHONE` | Opcional | Opcional | Owner phone: seed protection + admin mutation guards. **Does not** grant `super_admin` (or any role) at OTP/password login — roles come from the DB only (L-AUTH-01). |
 | `MAX_BETA_USERS` | Opcional | Opcional | Default `30` no código. |
 | `DEFAULT_PASSWORD` | Opcional | Opcional | Default no código `123456`. |
 | `CRON_SECRET` | **SIM** se usar cron protegido | Idem | |

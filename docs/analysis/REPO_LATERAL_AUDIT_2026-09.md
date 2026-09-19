@@ -42,7 +42,7 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 | **L-GPS-01** | P1 | Privacy / BOLA | `POST /matching/find-driver` — **REMOVED** (`fix/matching-gps-lockdown`) | was `matching.py` | — | **DONE** |
 | **L-GPS-02** | P1 | Debug / privacy | `GET /debug/trip-matching/{id}` — owner recebe só agregados; staff mantém listas | `debug_routes.py` | — | **DONE** (owner aggregate) |
 | **L-PAY-03** | P1 | Payments | Cancel passenger/driver/admin continua e faz `commit` cancelled se `cancel_payment_intent` falhar (log only). | `trips.py` L417–435 (padrão repetido ~L545, ~L633) | Hold Stripe órfão + trip cancelled | Falhar fechado ou `cancel_pending` + retry; não commitir cancel até PI cancelado |
-| **L-AUTH-01** | P1 | Auth | Qualquer login OTP/password com `ADMIN_PHONE` **força** `Role.super_admin` (cria ou sobrescreve). | `auth.py` L158–198 | Comprometer o telemóvel = backoffice completo | Break-glass separado; nunca auto-promote em password login; MFA; auditar mudanças de phone |
+| **L-AUTH-01** | P1 | Auth | ~~Login OTP/password com `ADMIN_PHONE` forçava `super_admin`.~~ **Mitigado:** runtime promotion removida; roles só da DB. Residual: `ADMIN_PHONE` ainda em seed/guards. | `auth.py` | — | Follow-up: `R-AUTH-SUPERADMIN-BOOTSTRAP` |
 | **L-FE-01** | P1 | Frontend | `usePolling` não tem AbortController nem geração de pedido; interval + visibility podem sobrepor-se; resposta antiga ganha. | `web-app/src/hooks/usePolling.ts` L45–87 | UI de trip/availability stale em rede lenta | Abort ou seq id; ignorar resoluções velhas; não lançar tick se o anterior está in-flight |
 | **L-FE-02** | P1 | Frontend / auth | `logout` limpa localStorage de auth, **não** o `sessionStorage` do active trip nem o estado React do `ActiveTripProvider` (fica montado). | `AuthContext.tsx` L491–499; `ActiveTripContext.tsx` L27–35; `passengerActiveTripRecovery.ts` | Tab partilhada / próximo passenger revive trip id até reconcile | No logout: `setPassengerActiveTripId(null)` + clear da key |
 | **L-OBS-01** | P1 | Cron / ops | Sub-jobs isolados (bom) mas HTTP **200** com `status: "partial_error"`. Monitores que só vêem código HTTP ficam cegos. | `cron.py` L69–185, return L184–186 | Timeouts/redispatch mortos sem alerta | Non-2xx se `errors`; ou alerta no JSON `error_count` |
@@ -135,7 +135,7 @@ Em produção “estável” isto parece raro; sob latência/GPS atrasado é exa
 Detalhe já na tabela. Notas curtas:
 
 - Cancel vs PI: o trip fica `cancelled` e o hold pode continuar capturável no Stripe até expiry — suporte doloroso, não necessariamente charge imediato.
-- `ADMIN_PHONE`: break-glass útil *e* single point of failure. Não é um bypass anónimo.
+- `ADMIN_PHONE`: já **não** promove no login (L-AUTH-01 mitigado). Continua em seed/guards; bootstrap formal = `R-AUTH-SUPERADMIN-BOOTSTRAP`.
 - Polling: `cleanup` só faz `clearInterval`; in-flight `fn()` continua e chama `setState`.
 - Logout: `ActiveTripProvider` está acima do auth na árvore; o estado sobrevive ao logout.
 - Pytest: `BACKEND_PYTEST_SAFE.md` cobre **host remoto**, não isolamento entre testes.

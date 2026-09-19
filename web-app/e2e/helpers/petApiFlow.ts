@@ -93,14 +93,25 @@ export async function setDriverCategories(
 /** App default LOCATION_MAX_AGE_SECONDS — diagnostic only (not a product change). */
 const LOCATION_MAX_AGE_SECONDS_HINT = 45
 
-export async function createTripWithRateLimitRetry(
+export type TripCreateAttemptResult = {
+  ok: boolean
+  status: number
+  body: string
+  json: () => unknown
+}
+
+/**
+ * POST /trips with retries on passenger trip rate-limit (429).
+ * Returns the first non-429 response (success or business error such as 422).
+ */
+export async function createTripResponseWithRateLimitRetry(
   request: APIRequestContext,
   passengerToken: string,
   overrides: TripCreateOverrides = {},
   timeoutMs = 70000,
   /** When set, refresh driver GPS before each create attempt (avoids stale-location zero offers). */
   driverToken?: string
-): Promise<APIResponse> {
+): Promise<TripCreateAttemptResult> {
   let lastDetail = 'trip_retry_failed'
   let lastStatus = 500
   const startedAt = Date.now()
@@ -130,18 +141,51 @@ export async function createTripWithRateLimitRetry(
       headers: authHeaders(passengerToken),
       data,
     })
-    if (tripRes.ok()) return tripRes
-
     const detail = await tripRes.text()
     lastDetail = detail
     lastStatus = tripRes.status()
-    const isRateLimited = tripRes.status() === 429 || detail.includes('rate_limit_exceeded')
-    if (!isRateLimited) break
+    const isRateLimited =
+      tripRes.status() === 429 || detail.includes('rate_limit_exceeded')
+    if (!isRateLimited) {
+      return {
+        ok: tripRes.ok(),
+        status: tripRes.status(),
+        body: detail,
+        json: () => JSON.parse(detail || 'null'),
+      }
+    }
 
     await new Promise((resolve) => setTimeout(resolve, Math.min(2000 + attempt * 400, 5000)))
   }
 
   throw new Error(`create trip failed (${lastStatus}): ${lastDetail}`)
+}
+
+export async function createTripWithRateLimitRetry(
+  request: APIRequestContext,
+  passengerToken: string,
+  overrides: TripCreateOverrides = {},
+  timeoutMs = 70000,
+  /** When set, refresh driver GPS before each create attempt (avoids stale-location zero offers). */
+  driverToken?: string
+): Promise<APIResponse> {
+  const result = await createTripResponseWithRateLimitRetry(
+    request,
+    passengerToken,
+    overrides,
+    timeoutMs,
+    driverToken
+  )
+  if (result.ok) {
+    // Callers historically expect an APIResponse; recreate a thin compatible object.
+    return {
+      ok: () => true,
+      status: () => result.status,
+      text: async () => result.body,
+      json: async () => result.json(),
+    } as APIResponse
+  }
+  throw new Error(`create trip failed (${result.status}): ${result.body}`)
 }
 
 export type AvailableRow = {

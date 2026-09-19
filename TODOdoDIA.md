@@ -16,6 +16,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **AUTH / L-AUTH-01** (**2026-09-19**)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **PR-L-AUTH-01** | Remover promoção runtime `ADMIN_PHONE`→`super_admin` | Em curso | Branch `fix/remove-admin-phone-runtime-promotion` |
+| **R-AUTH-SUPERADMIN-BOOTSTRAP** | Bootstrap/recovery explícito e auditável de `super_admin` | Por iniciar | Se DB ficar sem super_admin · **não** reintroduzir auto-promote no login |
+
+---
+
 ## Painel — **PORTAGENS V1** (**2026-09-14** — tip `1382b35`)
 
 **HERE Tolls V1 PROD VALIDATED — residual route variance accepted for V1.**
