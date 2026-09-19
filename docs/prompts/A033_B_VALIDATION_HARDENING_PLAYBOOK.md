@@ -68,20 +68,26 @@ No Stripe: **Send test event** (ou evento real em modo controlado).
 
 ### 4.1 Teste manual
 
+**Preferido:**
+
 ```bash
-curl "https://<api>/cron/jobs?secret=<CRON_SECRET>"
+curl -sS -w "\nHTTP %{http_code}\n" \
+  "https://<api>/cron/jobs" \
+  -H "X-Cron-Secret: <CRON_SECRET>"
 ```
 
-**Esperado:** resposta OK (ex. 200); logs com execução (timeouts, expiry, cleanup conforme implementação).
+(`?secret=` ainda funciona como legado — evitar em setups novos.)
+
+**Esperado:** HTTP **200** + `status: "ok"`; ou HTTP **500** + `status: "partial_error"` / `errors` se um sub-job falhou. Ver [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
 
 ### 4.2 Validar efeitos
 
-- Ofertas expiram como esperado?
+- Ofertas expiram como esperado? (TTL default **60** s = `OFFER_TIMEOUT_SECONDS`)
 - Estados de viagem / redispatch coerentes?
 
 ### 4.3 Agendamento
 
-Garantir job externo: **cron-job.org**, **GitHub Actions** (scheduled), **Render cron**, etc. — frequência sugerida 30–60 s (ver `PROXIMA_SESSAO` Seção F).
+Garantir job externo: **cron-job.org**, **Render Cron**, etc. — URL **sem** secret + header `X-Cron-Secret`; frequência tipicamente **1 min** (ver runbook). Non-2xx = falha no monitor.
 
 ---
 

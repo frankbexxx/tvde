@@ -2,6 +2,8 @@
 
 Checklist **curta** para fechar a onda **W1** do [`TODOdoDIA.md`](../../TODOdoDIA.md) (cron + webhook + env). Não substitui o playbook completo **[A033-B](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md)** — usa-o para contexto e red flags.
 
+Runbook cron detalhado: [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
+
 ---
 
 ## 1. Pré-requisitos
@@ -27,21 +29,32 @@ Checklist **curta** para fechar a onda **W1** do [`TODOdoDIA.md`](../../TODOdoDI
 
 Equivalente ao **A033 Fase 4** e a [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
 
-**Query string (exemplo de forma, substituir host e segredo):**
+**Preferido — header:**
+
+```bash
+curl -sS -w "\nHTTP %{http_code}\n" \
+  "https://<API_HOST>/cron/jobs" \
+  -H "X-Cron-Secret: <CRON_SECRET>"
+```
+
+**Legado — query** (ainda aceite; evitar em setups novos / logs):
 
 ```bash
 curl -sS "https://<API_HOST>/cron/jobs?secret=<CRON_SECRET>"
 ```
 
-**Ou header** (preferível em logs sem query visível em alguns proxies):
+**Esperado:**
 
-```bash
-curl -sS "https://<API_HOST>/cron/jobs" -H "X-Cron-Secret: <CRON_SECRET>"
-```
+| HTTP | Significado |
+|------|-------------|
+| **200** | Lote OK — `status: "ok"`, contagens (`timeouts`, `offers`, `cleanup`, `system_health`, `driver_zones`, `rotacional`, …) |
+| **500** | Partial failure — `status: "partial_error"` + `errors` (corpo completo preservado) |
+| **401** | Segredo errado |
+| **503** | `CRON_SECRET` não configurado no servidor |
 
-**Esperado:** HTTP **200** e corpo JSON com `status: "ok"` e contagens (`timeouts`, `offers`, `cleanup`, …). HTTP **500** com `status: "partial_error"` se um sub-job falhou (corpo ainda traz `errors` + contagens). **401** = segredo errado; **503** = `CRON_SECRET` não configurado no servidor.
+**Agendador externo:** no cron-job.org, URL **sem** secret + header `X-Cron-Secret`. Non-2xx = falha (activar onFailure se quiseres alerta). Sem retry imediato garantido — só o schedule seguinte.
 
-**Agendador externo:** confirma no cron-job.org (ou outro) que a URL bate **na mesma** base + segredo que testaste com `curl`.
+**Admin:** `POST /admin/cron/run` (super_admin) corre o mesmo lote mas responde **sempre 200** com body estruturado — a UI lê `error_count` / `errors`.
 
 ---
 
@@ -55,8 +68,8 @@ curl -sS "https://<API_HOST>/cron/jobs" -H "X-Cron-Secret: <CRON_SECRET>"
 
 ## 5. Fecho W1 (critério «feito»)
 
-- [x] `curl` / pedido HTTP ao cron com **200** e JSON coerente.
-- [x] Agendador externo a bater o mesmo endpoint (frequência + evidência **200**).
+- [x] `curl` / pedido HTTP ao cron com **200** e `status: "ok"` (ou investigar **500**/`partial_error` se aparecer).
+- [x] Agendador externo a bater o mesmo endpoint com **header** `X-Cron-Secret` (frequência + evidência de execução).
 - [x] Webhook Stripe (gate técnico): Fase A local test mode — [`O_STRIPE_1_RUNBOOK.md`](O_STRIPE_1_RUNBOOK.md) (2026-07-13). Endpoint prod com `STRIPE_MOCK=true` permanece opcional até conta live do parceiro.
 
 *Registo no repo:* secção **Fecho do dia** em [`TODOdoDIA.md`](../../TODOdoDIA.md) quando fechares a onda (sem colar segredos nem URLs com `secret=`).*

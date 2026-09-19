@@ -36,19 +36,31 @@ Eliminar dependência de:
 
 Usar endpoint existente:
 
-`GET /cron/jobs?secret=<CRON_SECRET>`
+`GET /cron/jobs` com header **`X-Cron-Secret: <CRON_SECRET>`** (preferido).  
+Query `?secret=` é legado.
 
-## Jobs executados (código atual)
+Runbook actualizado: [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
+
+## Jobs executados (código atual — ordem)
 
 1. `run_trip_timeouts` — timeouts de estado de viagem  
-2. `expire_stale_offers` — ofertas expiradas  
+2. `expire_stale_offers` — ofertas expiradas (`OFFER_TIMEOUT_SECONDS`, default **60**)  
 3. `redispatch_expired_trips` — nova ronda de ofertas quando todas expiraram  
-4. `run_cleanup` — remoção de `audit_events` antigos (retenção configurável)
+4. `run_cleanup` — remoção de `audit_events` antigos (retenção configurável)  
+5. `run_system_health_check` — snapshot read-only (logs na transição a degraded)  
+6. `expire_open_zone_sessions_past_deadline` — zonas de motorista  
+7. `refresh_rotacional_external_cache` — no-op se `ROTACIONAL_V3_FETCH_URL` vazia  
+
+## HTTP
+
+- **200** — lote OK (`status: ok`)
+- **500** — `partial_error` (sub-jobs isolados; body com `errors`)
+- `POST /admin/cron/run` — mesmo lote, **sempre 200** + body (UI admin)
 
 ## Frequência
 
-- ideal: **30 s**
-- aceitável: **60 s**
+- ideal: **1 min**
+- aceitável: **2 min**
 
 ## Regra
 
