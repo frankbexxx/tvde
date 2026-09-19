@@ -268,11 +268,33 @@ Sem Stripe API · `STRIPE_MOCK` intocado · sem reconcile lote.
 
 ---
 
-## 11. Próximos passos (fora deste gate)
+## 11. Webhook anomalies (L-PAY-02 — ACCEPTED DESIGN)
+
+HTTP semantics **intencionais** (não mudar sem decisão explícita):
+
+| Evento estruturado | ACK | Marker | Efeito local |
+|--------------------|-----|--------|--------------|
+| `stripe_webhook_payment_not_found_ack` | 200 | não | Nenhum Payment local para aquele `pi_` |
+| `stripe_webhook_succeeded_amount_mismatch` | 200 | sim | Payment fica `processing` (não `succeeded`) |
+
+Follow-up operacional: **`O-PAY-WEBHOOK-ANOMALY`** (alerta/volume; **sem** novo sistema de alertas obrigatório nesta fase).
+
+### Runbook humano
+
+1. **Stripe Dashboard** — abrir o PaymentIntent (`pi_…`); confirmar estado (`succeeded` / `canceled` / …) e amount/currency.
+2. **BD local** — procurar `Payment` por `stripe_payment_intent_id` e a `Trip` associada (`status`, `final_price`, `total_amount`).
+3. **Se existir Payment local** — usar reconciliação admin (`reconcile` single/batch para `completed`+`processing`). Amount mismatch pode aparecer como `blocked_amount_mismatch` até revisão manual.
+4. **Órfão sem Payment local** — revisão manual (PI de teste, env errado, cleanup); **não** esperar retry Stripe após o ACK 200.
+5. **Não** forçar 5xx no webhook para “desbloquear” estes casos sem decisão de produto (risco de retry storm em órfãos permanentes).
+
+---
+
+## 12. Próximos passos (fora deste gate)
 
 | Item | Quando |
 |------|--------|
 | **O-SECURITY** | **PASS** 2026-07-19 — password SA rodada via `/auth/me/password` (sem env) |
+| **O-PAY-WEBHOOK-ANOMALY** | Alerta/monitor nos eventos §11 (ops; sem mudar HTTP) |
 | Webhook endpoint **produção** com `STRIPE_MOCK=true` | Smoke opcional (Send test event → 200) |
 | `STRIPE_MOCK=false` + `sk_live_*` em prod | Futuro — conta Stripe do parceiro + docs |
 | Fase B staging | [`STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) |

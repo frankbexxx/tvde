@@ -36,8 +36,8 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 
 | ID | Priority | Area | Finding | Evidence | Risk | Suggested next step |
 |---|---|---|---|---|---|---|
-| **L-PAY-01** | P0 | Payments | Marcador de idempotência Stripe é `commit`ado *antes* do UPDATE de `Payment`. `SQLAlchemyError` posterior faz ACK `200`. | `backend/app/api/routers/webhooks/stripe.py` L136–153 (`db.commit()` do insert), L156–196 (status), L273–292 (`except` ACK 200) | Evento fica “processado”; PI `succeeded`/`failed` pode nunca chegar à BD | Um só TX: marcador + status; em erro de BD devolver **5xx** |
-| **L-PAY-02** | P1 | Payments / obs | `payment not found` e *amount mismatch* também ACK `200` (fail-closed no mismatch, mas Stripe pára). | `stripe.py` L120–134, L169–192 | Pagamento preso em `processing`; depende de olho humano | Alerta em `stripe_webhook_payment_not_found_ack` / `amount_mismatch`; playbook stuck `processing`; considerar 5xx só no not-found (retry) |
+| **L-PAY-01** | P0 → **CLOSED** | Payments | ~~Marcador commitado antes do UPDATE; DB error ACK 200.~~ **Mitigado:** um só TX marcador+status; `SQLAlchemyError` → rollback + **500** (`stripe_webhook_db_error_nack`). | `stripe.py` (TX única + 5xx); `test_stripe_webhook_idempotency_tx.py` | — | Fechado (hardening) |
+| **L-PAY-02** | P1 → **CLOSED / ACCEPTED DESIGN** | Payments / obs | ACK `200` em *payment not found* (sem marker) e *amount mismatch* (marker + fica `processing`). Intencional: fail-closed + anti-retry orphan. | `stripe.py`; testes L-PAY-02 em `test_stripe_webhook_idempotency_tx.py` | Residual: race rara not-found perde retry Stripe | Ops: `O-PAY-WEBHOOK-ANOMALY` (alerta/runbook; sem mudar HTTP) |
 | **L-TRIP-01** | P1 | Trips / races | `create_offers_for_trip` faz `flush` + WS `publish_new_offer` **antes** do `db.commit()` em `create_trip`. Loop de retry dorme até ~10s com a TX aberta. | `trips.py` L309–364; `offer_dispatch.py` L265–289 | Accept 404 / ofertas fantasma; conexão do pool retida | `commit` (ou nested) **antes** do WS; GPS wait **fora** da write TX |
 | **L-GPS-01** | P1 | Privacy / BOLA | `POST /matching/find-driver` — **REMOVED** (`fix/matching-gps-lockdown`) | was `matching.py` | — | **DONE** |
 | **L-GPS-02** | P1 | Debug / privacy | `GET /debug/trip-matching/{id}` — owner recebe só agregados; staff mantém listas | `debug_routes.py` | — | **DONE** (owner aggregate) |
@@ -99,24 +99,24 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 
 ## P0/P1 detail
 
-### L-PAY-01 — webhook idempotente demais
+### L-PAY-01 — webhook idempotente demais — **CLOSED (mitigado)**
 
-O insert em `stripe_webhook_events` usa `ON CONFLICT DO NOTHING`. Se `rowcount != 0`, o código **faz `db.commit()` imediatamente** (comentário: senão o 200 faria rollback e partiria a idempotência). O UPDATE de `payment.status` é **outra** transação. Se essa falhar:
+**Estado actual (pós-hardening):** insert do marcador `StripeWebhookEvent` + UPDATE de `Payment.status` partilham **uma transação**. Em `SQLAlchemyError`: `rollback` + HTTP **500** + `stripe_webhook_db_error_nack` para o Stripe retentar. Cobertura em `test_stripe_webhook_idempotency_tx.py` (mid-flight failure + retry).
 
-1. O evento já está marcado.
-2. O `except SQLAlchemyError` regista `stripe_webhook_db_error_ack` e **mesmo assim** devolve `{"status":"ok"}`.
-3. Stripe trata como sucesso e **não retenta**.
+*(Texto original da auditoria descrevia ACK 200 após falha de BD — **stale**; já não aplica.)*
 
-Isto é o contrário do padrão “ACK só depois de persistir o efeito”. A intenção anti-poison-queue é compreensível; o resultado é **pagamento preso para sempre** sem retry automático.
+### L-PAY-02 — ACK 200 em not-found / mismatch — **CLOSED / ACCEPTED DESIGN**
 
-**Não coberto** pelos testes de idempotência happy-path em `test_consolidacao_tvde.py`.
+Decisão de produto (2026-09-19): **KEEP ACK 200** para ambos; **não** mudar HTTP semantics nesta fase.
 
-### L-PAY-02 — ACK 200 em not-found / mismatch
+| Caso | HTTP | Marker | Payment | Intenção |
+|------|------|--------|---------|----------|
+| Amount mismatch | 200 | sim | fica `processing` (nunca `succeeded`) | Fail-closed; evita poison-retry |
+| Payment not found | 200 | **não** | n/a | Anti-retry em PI órfão permanente |
 
-- PI ainda não existe na BD (corrida create PI vs webhook) → 200, sem retry.
-- Amount mismatch → fail-closed (não marca `succeeded`) — correcto — mas também 200.
+**Risco residual documentado:** evento legítimo *transitório* (race create row vs webhook) pode perder retry Stripe. No fluxo normal o Payment é criado no accept **antes** do capture, portanto a race é considerada **rara**. Blanket 5xx em not-found criaria retry storm em órfãos permanentes.
 
-Precisa de alerta + reconciliação admin (`admin_payment_reconciliation.py` existe; o buraco é **observabilidade de volume**, não ausência total de ferramenta).
+**Ops:** follow-up `O-PAY-WEBHOOK-ANOMALY` — alerta/runbook para `stripe_webhook_payment_not_found_ack` e `stripe_webhook_succeeded_amount_mismatch` (ver [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) § webhook anomalies). Reconciliação admin já existe quando há Payment local.
 
 ### L-TRIP-01 — ofertas na WS antes de serem duráveis
 
@@ -281,7 +281,7 @@ PRs **pequenos e reversíveis**. Ordem sugerida (não abrir nesta sessão):
 
 | # | Branch sugerida | Scope | IDs |
 |---|-----------------|-------|-----|
-| 1 | `fix/stripe-webhook-idempotency-tx` | Um TX marcador+status; 5xx em erro de BD; teste de falha a meio | L-PAY-01 (e alerta L-PAY-02 se couber) |
+| 1 | `fix/stripe-webhook-idempotency-tx` | Um TX marcador+status; 5xx em erro de BD; teste de falha a meio | **DONE** L-PAY-01; L-PAY-02 closed as ACCEPTED DESIGN (ACK 200 + ops) |
 | 2 | `fix/create-trip-commit-before-ws` | Commit antes de `publish_new_offer`; sleep de GPS fora da write TX | L-TRIP-01 |
 | 3 | `fix/matching-gps-lockdown` | Desmontar ou staff-only `find-driver`; strip coords em debug matching | L-GPS-01, L-GPS-02 |
 | 4 | `fix/fe-logout-and-polling-abort` | Clear trip storage no logout; seq/abort no `usePolling` | L-FE-02, L-FE-01 (L-FE-05 no mesmo ficheiro se barato) |
