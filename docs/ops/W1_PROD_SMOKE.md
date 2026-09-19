@@ -37,11 +37,7 @@ curl -sS -w "\nHTTP %{http_code}\n" \
   -H "X-Cron-Secret: <CRON_SECRET>"
 ```
 
-**Legado — query** (ainda aceite; evitar em setups novos / logs):
-
-```bash
-curl -sS "https://<API_HOST>/cron/jobs?secret=<CRON_SECRET>"
-```
+(`?secret=` **não** autentica — só o header.)
 
 **Esperado:**
 

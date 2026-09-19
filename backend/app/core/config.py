@@ -97,7 +97,7 @@ class Settings(BaseSettings):
     # B1 (alpha 2026-04-25): descido de 10→5 para reduzir o gap se a oferta expirar.
     REDISPATCH_MIN_INTERVAL_SECONDS: int = 5
 
-    # Secret for cron-job.org (no JWT). GET /cron/jobs?secret=<CRON_SECRET>
+    # Secret for cron-job.org (no JWT). GET /cron/jobs + header X-Cron-Secret
     CRON_SECRET: str | None = None
 
     # Cleanup: delete audit_events older than N days (M2 provisional: 2 years).

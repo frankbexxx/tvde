@@ -1,4 +1,4 @@
-"""A026 / L-OBS-01 — GET /cron/jobs: auth, success 200, partial_error → HTTP 500."""
+"""A026 / L-OBS-01 / L-SEC-09 — GET /cron/jobs: header-only auth, partial_error → HTTP 500."""
 
 from __future__ import annotations
 
@@ -29,12 +29,40 @@ def client() -> TestClient:
 def test_cron_jobs_requires_secret_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "CRON_SECRET", None, raising=False)
     c = TestClient(app)
-    r = c.get("/cron/jobs?secret=x")
+    r = c.get("/cron/jobs", headers={"X-Cron-Secret": "x"})
     assert r.status_code == 503
     assert r.json()["detail"] == "CRON_SECRET not configured"
 
 
-def test_cron_jobs_rejects_invalid_secret(
+def test_cron_jobs_missing_header_401(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "CRON_SECRET", "good_secret", raising=False)
+    r = client.get("/cron/jobs")
+    assert r.status_code == 401
+    assert r.json()["detail"] == "invalid_secret"
+
+
+def test_cron_jobs_rejects_invalid_header(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "CRON_SECRET", "good_secret", raising=False)
+    r = client.get("/cron/jobs", headers={"X-Cron-Secret": "wrong"})
+    assert r.status_code == 401
+    assert r.json()["detail"] == "invalid_secret"
+
+
+def test_cron_jobs_query_secret_alone_rejected(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """L-SEC-09: ?secret= must not authenticate."""
+    monkeypatch.setattr(settings, "CRON_SECRET", "good_secret", raising=False)
+    r = client.get("/cron/jobs?secret=good_secret")
+    assert r.status_code == 401
+    assert r.json()["detail"] == "invalid_secret"
+
+
+def test_cron_jobs_invalid_query_alone_rejected(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(settings, "CRON_SECRET", "good_secret", raising=False)
@@ -43,10 +71,33 @@ def test_cron_jobs_rejects_invalid_secret(
     assert r.json()["detail"] == "invalid_secret"
 
 
+def test_cron_jobs_valid_header_ignores_wrong_query(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "CRON_SECRET", "header_ok", raising=False)
+    r = client.get(
+        "/cron/jobs?secret=wrong_query",
+        headers={"X-Cron-Secret": "header_ok"},
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] == "ok"
+
+
+def test_cron_jobs_wrong_header_ignores_valid_query(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings, "CRON_SECRET", "real_secret", raising=False)
+    r = client.get(
+        "/cron/jobs?secret=real_secret",
+        headers={"X-Cron-Secret": "wrong_header"},
+    )
+    assert r.status_code == 401
+    assert r.json()["detail"] == "invalid_secret"
+
+
 def test_cron_jobs_accepts_x_cron_secret_header(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """RFC R3: preferir header em vez de ?secret= (evita leak em logs)."""
     monkeypatch.setattr(settings, "CRON_SECRET", "header_secret_r3", raising=False)
     r = client.get(
         "/cron/jobs",
@@ -59,10 +110,13 @@ def test_cron_jobs_accepts_x_cron_secret_header(
 def test_cron_jobs_ok_and_double_call_idempotent(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Duas chamadas seguidas: ambas 200; serviços já são idempotentes (0 alterações se nada preso)."""
+    """Duas chamadas seguidas: ambas 200; serviços já são idempotentes."""
     monkeypatch.setattr(settings, "CRON_SECRET", "test_cron_secret_a026", raising=False)
     for _ in range(2):
-        r = client.get("/cron/jobs?secret=test_cron_secret_a026")
+        r = client.get(
+            "/cron/jobs",
+            headers={"X-Cron-Secret": "test_cron_secret_a026"},
+        )
         assert r.status_code == 200, r.text
         body = r.json()
         assert body["status"] == "ok"
@@ -103,7 +157,6 @@ def test_cron_jobs_partial_error_returns_http_500(
     assert "driver_zones" in body
     assert "rotacional" in body
     assert "duration_ms" in body
-    # Failures are isolated: other keys remain (zeroed for the failed job).
     assert body["timeouts"]["assigned_to_requested"] == 0
 
 

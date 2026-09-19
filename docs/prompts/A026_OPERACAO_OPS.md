@@ -36,8 +36,8 @@ Eliminar dependência de:
 
 Usar endpoint existente:
 
-`GET /cron/jobs` com header **`X-Cron-Secret: <CRON_SECRET>`** (preferido).  
-Query `?secret=` é legado.
+`GET /cron/jobs` com header **`X-Cron-Secret: <CRON_SECRET>`** (obrigatório).  
+Query `?secret=` não autentica.
 
 Runbook actualizado: [`docs/CRON_JOB_ORG_INSTRUCOES.md`](../CRON_JOB_ORG_INSTRUCOES.md).
 
