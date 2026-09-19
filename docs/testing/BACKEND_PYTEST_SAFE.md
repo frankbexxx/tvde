@@ -16,6 +16,8 @@
 
 A mensagem mostra o **hostname**, nunca a password.
 
+**Limite do guard (L-TEST-01 / `T-TEST-DB-NAME-GUARD`):** só valida o **host**. Ainda é possível apontar acidentalmente para **outra BD local** (ex. `ride_db` em vez de `test_db`). Follow-up: exigir nome de DB de testes esperado salvo override explícito — **não** implementado ainda.
+
 ---
 
 ## Forma recomendada (Windows)
@@ -53,6 +55,40 @@ pytest tests/ -v --tb=short
 ## CI
 
 `backend-ci` já define `DATABASE_URL=…@localhost:5432/test_db` — o guard aceita e a pipeline mantém-se.
+
+Postgres do job é **efémero** (serviço limpo no início de cada run). Isso **não** equivale a isolamento por teste.
+
+---
+
+## Isolamento entre testes (L-TEST-01 — ACCEPTED DEBT)
+
+**Estado (2026-09-19):** aceite como dívida de infra de testes a médio prazo. **Não** há fixture transaccional global nesta fase.
+
+| Facto | Implicação |
+|-------|------------|
+| Fixture `db` só faz `session.close()` | Sem rollback / truncate / recreate por teste |
+| `commit()` nos testes e nos handlers HTTP | Dados **persistem** durante a suite |
+| `TestClient` / `get_db()` | Sessões **independentes** da fixture `db` |
+| CI | Postgres novo por **job**; suite corre **serial** (sem pytest-xdist) |
+| Local | `test_db` **acumula** entre runs se não for resetida |
+
+**CI fresh DB ≠ per-test isolation.** Um job começa limpo; dentro do job, testes partilham estado.
+
+### Mitigações obrigatórias (enquanto `T-DB-ISOLATION` estiver aberto)
+
+- **`unique_test_phone()`** (`tests/support/unique_phone.py`) — obrigatório para novos users; evita colisões em `ix_users_phone` na mesma Postgres
+- **Plates / PI / event ids** com alta entropia (`uuid`) — mesmo motivo
+- Helpers como **`_isolate_drivers`** (ex. matching pool tests) — **workaround** que mute estado global residual; **não** são a arquitectura final
+- **`run_full_baseline_reset`** — reescreve a BD partilhada a meio da suite (seed/demo); excepção consciente, não modelo geral
+
+### Target futuro (`T-DB-ISOLATION`)
+
+1. Fixture transaccional central (outer transaction por teste)
+2. Override de `get_db` para a mesma connection
+3. Sessões da app ligadas a essa connection (savepoints sob `commit()` da app)
+4. Marker/excepção para baseline reset e testes especiais
+
+**Não** usar truncate / recreate-schema como primeira opção.
 
 ---
 

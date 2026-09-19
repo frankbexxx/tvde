@@ -12,7 +12,19 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 **Estado (fixo):** Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A
 
-**Prefixos:** **A-** auditoria/gates · **X-** EXTRA produto · **TW-** tweaks UX · **G-** screenshot matrix · **R-** rasto técnico · **O-** opcional · **S-** smokes prod · **F-** fixes pós-smoke
+**Prefixos:** **A-** auditoria/gates · **X-** EXTRA produto · **TW-** tweaks UX · **G-** screenshot matrix · **R-** rasto técnico · **O-** opcional · **S-** smokes prod · **F-** fixes pós-smoke · **T-** test infra
+
+---
+
+## Painel — **TEST INFRA / L-TEST-01** (**2026-09-19**)
+
+L-TEST-01 fechado como dívida aceite. **Sem** fixture TX global nesta fase. Ver [`BACKEND_PYTEST_SAFE.md`](docs/testing/BACKEND_PYTEST_SAFE.md) § isolamento.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **L-TEST-01** | Isolamento BD por teste | Concluído | **ACCEPTED DEBT** · CI fresh ≠ per-test isolation · commits persistem · uniqueness obrigatória |
+| **T-DB-ISOLATION** | Fixture TX + override `get_db` (mesma connection) | Por iniciar | Médio prazo · markers p/ baseline/reset · **não** truncate/recreate como 1.ª opção |
+| **T-TEST-DB-NAME-GUARD** | Exigir nome DB de testes (`test_db` ou config) | Por iniciar | Guard actual só host local · evita `ride_db` acidental |
 
 ---
 

@@ -46,7 +46,7 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 | **L-FE-01** | P1 | Frontend | `usePolling` não tem AbortController nem geração de pedido; interval + visibility podem sobrepor-se; resposta antiga ganha. | `web-app/src/hooks/usePolling.ts` L45–87 | UI de trip/availability stale em rede lenta | Abort ou seq id; ignorar resoluções velhas; não lançar tick se o anterior está in-flight |
 | **L-FE-02** | P1 | Frontend / auth | `logout` limpa localStorage de auth, **não** o `sessionStorage` do active trip nem o estado React do `ActiveTripProvider` (fica montado). | `AuthContext.tsx` L491–499; `ActiveTripContext.tsx` L27–35; `passengerActiveTripRecovery.ts` | Tab partilhada / próximo passenger revive trip id até reconcile | No logout: `setPassengerActiveTripId(null)` + clear da key |
 | **L-OBS-01** | P1 | Cron / ops | Sub-jobs isolados (bom) mas HTTP **200** com `status: "partial_error"`. Monitores que só vêem código HTTP ficam cegos. | `cron.py` L69–185, return L184–186 | Timeouts/redispatch mortos sem alerta | Non-2xx se `errors`; ou alerta no JSON `error_count` |
-| **L-TEST-01** | P1 | Tests | Fixture `db` só faz `session.close()`. Sem rollback/truncate. Muitos testes `commit()` contra a mesma Postgres. Guard impede Render; **não** impede poluição local/CI. | `backend/tests/conftest.py` L38–44 | Ordem-dependência, falsos verdes/vermelhos | TX por teste ou truncate; documentar reset em `BACKEND_PYTEST_SAFE.md` |
+| **L-TEST-01** | P1 → **CLOSED / ACCEPTED DEBT** | Tests | Fixture `db` só faz `session.close()`; commits persistem; HTTP usa sessões próprias. CI Postgres efémero + suite serial + `unique_test_phone`/plates mitigam. | `conftest.py`; `BACKEND_PYTEST_SAFE.md` § isolamento | Residual flake mitigado | Médio prazo: `T-DB-ISOLATION` (TX + `get_db` override). Nome DB local: `T-TEST-DB-NAME-GUARD` |
 | **L-DOC-01** | P1 | Docs | `ARCHITECTURE_STATUS.md` / blueprint **2026-03-12** ainda no índice: auto-dispatch, dashboards velhos, e `DATABASE_URL` local = URL Render (**mesma BD**). | `docs/architecture/ARCHITECTURE_STATUS.md` L1–40; `DOCS_INDEX.md` | Implementar o mundo errado; apontar pytest/dev à BD de prod | Stamp SUPERSEDED; índice aponta a uma “current truth” curta |
 | **L-DOC-02** | P1 | Docs / cron | Runbook ensina `?secret=` na URL, TTL de oferta “>15 s” (código default **60**), e só jobs 1–3 (faltam health/zones/rotacional). | `docs/CRON_JOB_ORG_INSTRUCOES.md` §2–4; `cron.py` docstring; `OFFER_TIMEOUT_SECONDS=60` | Secret em logs/Referer; ops a monitorizar o contrato errado | Header-only; reescrever §3–4 a partir de `cron.py` |
 | **L-SEC-09** | P2 | Cron | `CRON_SECRET` aceite em query `?secret=` (legado no código, não só no doc). Compare com `!=`. | `cron.py` L21–60 | Leak em access logs; timing teórico | Header-only; `hmac.compare_digest`; rodar se já esteve em query |
@@ -138,8 +138,24 @@ Detalhe já na tabela. Notas curtas:
 - `ADMIN_PHONE`: já **não** promove no login (#630) nem protege mutações admin por telefone (protecção = role staff). Residual seed/backfill = `is_owner_phone`; bootstrap formal = `R-AUTH-SUPERADMIN-BOOTSTRAP`.
 - Polling: `cleanup` só faz `clearInterval`; in-flight `fn()` continua e chama `setState`.
 - Logout: `ActiveTripProvider` está acima do auth na árvore; o estado sobrevive ao logout.
-- Pytest: `BACKEND_PYTEST_SAFE.md` cobre **host remoto**, não isolamento entre testes.
+- Pytest / **L-TEST-01**: **CLOSED / ACCEPTED TECHNICAL DEBT** (2026-09-19). Host guard ≠ per-test isolation. Ver `BACKEND_PYTEST_SAFE.md` § isolamento; follow-ups `T-DB-ISOLATION`, `T-TEST-DB-NAME-GUARD`.
 - Docs Março: o parágrafo “BD local = External URL da Render” é o finding mais perigoso do lado docs (humano a seguir o runbook).
+
+### L-TEST-01 — isolamento BD de testes — **CLOSED / ACCEPTED DEBT**
+
+Decisão: **não** implementar agora fixture transaccional global.
+
+| Facto auditado | Nota |
+|----------------|------|
+| Sem truncate/rollback por teste | `db` fixture = `close()` only |
+| Commits persistem na suite | Inclui handlers via `get_db()` (sessão distinta) |
+| CI | Postgres **efémero por job**; pytest **serial** (sem xdist) |
+| Mitigações | `unique_test_phone`, plates UUID, workarounds (`_isolate_drivers`), `run_full_baseline_reset` |
+| Risco | **REAL** mas **mitigado**; CI limpo ≠ isolamento por teste |
+
+**Target médio prazo (`T-DB-ISOLATION`):** outer TX por teste + override `get_db` + mesma connection; markers para baseline/reset. **Não** truncate/recreate como 1.ª opção.
+
+**Safety separado (`T-TEST-DB-NAME-GUARD`):** guard actual só bloqueia hosts remotos; ainda permite outra DB **local** errada.
 
 ---
 
@@ -173,7 +189,7 @@ Admin UI **não** está CSS-hidden para passengers quando `isAdmin` é falso: ta
 
 | Tema | Estado |
 |------|--------|
-| Isolamento BD | **Fraco** (L-TEST-01) — único P1 de testes |
+| Isolamento BD | **ACCEPTED DEBT** (L-TEST-01 closed) — residual mitigado; `T-DB-ISOLATION` |
 | Corridas | sleeps reais (L-TEST-02) |
 | CI ≠ default prod | capacity gates ON só no E2E (L-TEST-03) |
 | Ordem E2E | intencional e frágil (L-TEST-04) |
@@ -287,7 +303,7 @@ PRs **pequenos e reversíveis**. Ordem sugerida (não abrir nesta sessão):
 | 4 | `fix/fe-logout-and-polling-abort` | Clear trip storage no logout; seq/abort no `usePolling` | L-FE-02, L-FE-01 (L-FE-05 no mesmo ficheiro se barato) |
 | 5 | `fix/cron-partial-error-and-runbook` | HTTP não-2xx se `errors`; runbook header-only + jobs 1–6 + TTL 60s | L-OBS-01, L-DOC-02, L-SEC-09 |
 
-**A seguir (não no top 5):** pytest isolation (L-TEST-01 — PR maior), SUPERSEDED da arquitectura Março (L-DOC-01, docs-only), cancel vs PI (L-PAY-03), `ADMIN_PHONE` (L-AUTH-01, precisa decisão de produto).
+**A seguir (não no top 5):** `T-DB-ISOLATION` / `T-TEST-DB-NAME-GUARD` (L-TEST-01 aceite como dívida), SUPERSEDED da arquitectura Março (L-DOC-01, docs-only), cancel vs PI (L-PAY-03 mitigado #628), `ADMIN_PHONE` (L-AUTH-01 mitigado #630/#632).
 
 ---
 
