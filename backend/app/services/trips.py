@@ -394,6 +394,23 @@ async def create_trip(
 
 _MOCK_PI_PREFIX = "pi_mock_"
 
+# Stripe PaymentIntent statuses we actively cancel before confirming trip cancel.
+_STRIPE_PI_CANCELABLE = frozenset(
+    {
+        "requires_payment_method",
+        "requires_confirmation",
+        "requires_action",
+        "requires_capture",
+    }
+)
+# Already terminal — local trip cancel may proceed without Stripe cancel.
+_STRIPE_PI_TERMINAL = frozenset(
+    {
+        "canceled",
+        "succeeded",
+    }
+)
+
 
 def fail_mock_processing_payment_on_cancel(payment: Payment | None) -> bool:
     """
@@ -411,6 +428,78 @@ def fail_mock_processing_payment_on_cancel(payment: Payment | None) -> bool:
         return False
     payment.status = PaymentStatus.failed
     return True
+
+
+def _ensure_real_payment_intent_canceled(
+    *,
+    db: Session,
+    payment: Payment | None,
+    action: str,
+) -> None:
+    """
+    L-PAY-03: before local trip cancel, release a real cancelable PaymentIntent.
+
+    - mock / missing PI: no-op
+    - Stripe terminal (``canceled``, ``succeeded``): no-op (local cancel allowed)
+    - cancelable statuses: must ``cancel_payment_intent`` succeed
+    - retrieve/cancel failure or unexpected open status: ``db.rollback()`` + HTTP 502
+    """
+    if payment is None:
+        return
+    pi_id = (payment.stripe_payment_intent_id or "").strip()
+    if not pi_id or pi_id.startswith(_MOCK_PI_PREFIX):
+        return
+
+    try:
+        intent = retrieve_payment_intent(pi_id)
+        pi_status = getattr(intent, "status", None) or (
+            intent.get("status") if isinstance(intent, dict) else None
+        )
+        pi_status_s = str(pi_status or "")
+    except Exception as e:
+        logger.error("%s: Stripe retrieve PI failed pi=%s error=%s", action, pi_id, e)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Payment cancellation failed.",
+        ) from e
+
+    if pi_status_s in _STRIPE_PI_TERMINAL:
+        logger.info(
+            "%s: PI already terminal pi=%s status=%s", action, pi_id, pi_status_s
+        )
+        return
+
+    if pi_status_s in _STRIPE_PI_CANCELABLE:
+        try:
+            cancel_payment_intent(pi_id)
+            logger.info("%s: cancelled PI %s (was %s)", action, pi_id, pi_status_s)
+            return
+        except Exception as e:
+            logger.error(
+                "%s: Stripe cancel PI failed pi=%s status=%s error=%s",
+                action,
+                pi_id,
+                pi_status_s,
+                e,
+            )
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Payment cancellation failed.",
+            ) from e
+
+    logger.error(
+        "%s: refusing trip cancel; unexpected PI status=%s pi=%s",
+        action,
+        pi_status_s,
+        pi_id,
+    )
+    db.rollback()
+    raise HTTPException(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        detail="Payment cancellation failed.",
+    )
 
 
 def cancel_trip_by_passenger(
@@ -451,23 +540,10 @@ def cancel_trip_by_passenger(
     trip.cancellation_fee = fee if fee > 0 else None
     trip.cancelled_by = "passenger"
 
-    # Cancel PaymentIntent if trip has payment (accepted/arriving/ongoing)
     payment = trip.payment
-    pi_id = (payment.stripe_payment_intent_id or "") if payment else ""
-    if payment and pi_id and not pi_id.startswith(_MOCK_PI_PREFIX):
-        try:
-            intent = retrieve_payment_intent(pi_id)
-            pi_status = getattr(intent, "status", None) or intent.get("status", "")
-            if pi_status in (
-                "requires_payment_method",
-                "requires_confirmation",
-                "requires_action",
-                "requires_capture",
-            ):
-                cancel_payment_intent(pi_id)
-                logger.info(f"cancel_trip_by_passenger: cancelled PI {pi_id}")
-        except Exception as e:
-            logger.warning(f"cancel_trip_by_passenger: could not cancel PI: {e}")
+    _ensure_real_payment_intent_canceled(
+        db=db, payment=payment, action="cancel_trip_by_passenger"
+    )
 
     trip.status = TripStatus.cancelled
     fail_mock_processing_payment_on_cancel(payment)
@@ -562,29 +638,17 @@ def cancel_trip_by_driver(
 
     trip.cancelled_by = "driver"
 
-    # Driver penalty: increment cancellation_count
+    payment = trip.payment
+    _ensure_real_payment_intent_canceled(
+        db=db, payment=payment, action="cancel_trip_by_driver"
+    )
+
+    # Driver penalty: increment cancellation_count (only after Stripe release succeeds)
     driver = db.execute(
         select(Driver).where(Driver.user_id == driver_id)
     ).scalar_one_or_none()
     if driver:
         driver.cancellation_count = (driver.cancellation_count or 0) + 1
-
-    payment = trip.payment
-    pi_id = (payment.stripe_payment_intent_id or "") if payment else ""
-    if payment and pi_id and not pi_id.startswith(_MOCK_PI_PREFIX):
-        try:
-            intent = retrieve_payment_intent(pi_id)
-            pi_status = getattr(intent, "status", None) or intent.get("status", "")
-            if pi_status in (
-                "requires_payment_method",
-                "requires_confirmation",
-                "requires_action",
-                "requires_capture",
-            ):
-                cancel_payment_intent(pi_id)
-                logger.info(f"cancel_trip_by_driver: cancelled PI {pi_id}")
-        except Exception as e:
-            logger.warning(f"cancel_trip_by_driver: could not cancel PI: {e}")
 
     trip.status = TripStatus.cancelled
     fail_mock_processing_payment_on_cancel(payment)
@@ -663,20 +727,9 @@ def cancel_trip_by_admin(
     validate_trip_transition(old_status, TripStatus.cancelled, trip_id=str(trip.id))
 
     payment = trip.payment
-    pi_id = (payment.stripe_payment_intent_id or "").strip() if payment else ""
-    if payment and pi_id and not pi_id.startswith(_MOCK_PI_PREFIX):
-        try:
-            intent = retrieve_payment_intent(pi_id)
-            pi_status = getattr(intent, "status", None) or intent.get("status", "")
-            if pi_status in (
-                "requires_payment_method",
-                "requires_confirmation",
-                "requires_action",
-            ):
-                cancel_payment_intent(pi_id)
-                logger.info(f"cancel_trip_by_admin: cancelled PI {pi_id}")
-        except Exception as e:
-            logger.warning(f"cancel_trip_by_admin: could not cancel PI: {e}")
+    _ensure_real_payment_intent_canceled(
+        db=db, payment=payment, action="cancel_trip_by_admin"
+    )
 
     trip.status = TripStatus.cancelled
     trip.cancelled_by = "admin"
