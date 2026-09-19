@@ -1,3 +1,16 @@
+> **HISTORICAL / SUPERSEDED — DO NOT USE FOR OPERATIONS**
+>
+> Snapshot de **2026-03-12**. **Não** representa a arquitectura operacional actual.
+> **Não** uses comandos, env ou padrões deste ficheiro para local / staging / prod
+> (em especial: `DATABASE_URL` local = External URL Render / “mesma BD”, auto-dispatch/pool antigo).
+>
+> Fontes actuais:
+> - [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md)
+> - [`docs/env/ENV_VARS_VERIFICATION.md`](../env/ENV_VARS_VERIFICATION.md)
+> - [`docs/testing/BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md)
+> - [`docs/diagrams/`](../diagrams/)
+> - [`docs/architecture/README.md`](README.md) · ops em [`docs/ops/`](../ops/) · [`TODOdoDIA.md`](../../TODOdoDIA.md)
+
 # TVDE — Estado Técnico Atual (2026‑03‑12)
 
 ## 1. Arquitetura

@@ -16,6 +16,17 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **DOCS / L-DOC-01** (**2026-09-19**)
+
+Março 2026 architecture docs marcados SUPERSEDED; índice aponta fontes operacionais. **Sem** reescrita dos corpos históricos.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **L-DOC-01** | Arquitectura Março como “actual” + BD local=Render | Concluído | Banners + `DOCS_INDEX` + `architecture/README.md` |
+| **L-DOC-02** | Cron runbook `?secret=` / TTL 15s | N/A | Spot-check: `CRON_JOB_ORG_INSTRUCOES.md` já header-only + TTL 60 — revalidar noutro ticket se necessário |
+
+---
+
 ## Painel — **TEST INFRA / L-TEST-01** (**2026-09-19**)
 
 L-TEST-01 fechado como dívida aceite. **Sem** fixture TX global nesta fase. Ver [`BACKEND_PYTEST_SAFE.md`](docs/testing/BACKEND_PYTEST_SAFE.md) § isolamento.
