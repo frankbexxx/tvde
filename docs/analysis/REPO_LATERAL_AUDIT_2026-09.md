@@ -60,7 +60,7 @@ Os findings P0/P1 de runtime/segurança/docs operacionais foram **resolvidos em 
 | CLOSED / ACCEPTED DESIGN | 1 (L-PAY-02) |
 | CLOSED / ACCEPTED DEBT | 1 (L-TEST-01) |
 
-**P2/P3:** **não recontados** nesta reconciliação. Explicitamente: **L-SEC-09** e **L-SEC-19** → **CLOSED**; **L-DOC-03** parcialmente aliviado (env no índice via L-DOC-01). Restante P2/P3 requer nova revisão.
+**P2/P3:** **não recontados** nesta reconciliação. Explicitamente: **L-SEC-09** e **L-SEC-19** → **CLOSED**; **L-SEC-16** → **CLOSED** (driver upload alinhado a viaturas); **L-DOC-03** parcialmente aliviado (env no índice via L-DOC-01). Restante P2/P3 requer nova revisão.
 
 Follow-ups **não** contam como findings OPEN: `O-PAY-WEBHOOK-ANOMALY`, `R-PAY-ORPHAN-PI`, `O-CRON-TIMEOUT-PARTIAL`, `R-AUTH-SUPERADMIN-BOOTSTRAP`, `T-DB-ISOLATION`, `T-TEST-DB-NAME-GUARD`, `R-DOC-CRON-STALE-EXAMPLES`.
 
@@ -90,7 +90,7 @@ Follow-ups **não** contam como findings OPEN: `O-PAY-WEBHOOK-ANOMALY`, `R-PAY-O
 | **L-SEC-13** | P2 | Sessions | Change password não invalida JWTs existentes (TTL ~60 min, sem denylist/`jti`). | `auth.py` `change_my_password`; `security.py` | Token roubado sobrevive à troca de password | `token_version` ou TTL curto + refresh |
 | **L-SEC-14** | P2 | SQL | Listagens sem paginação: partner trips, admin partners/drivers/pending, matching full table, redispatch N+1. | `partner_queries.py` L50–68; `admin.py` L470–472, L592, L608 | DoS memória/CPU em admin/partner | Caps + paginação; SQL agg no redispatch |
 | **L-SEC-15** | P2 | TX | `log_interaction` faz `db.commit()` na Session do pedido. | `interaction_logging.py` L25–45 | Commit de estado sujo alheio / rollback confuso | Session própria ou nested; nunca commit da session do caller |
-| **L-SEC-16** | P2 | Uploads | Upload de docs do *driver* tem size limit, **sem** allowlist MIME/ext (os de viatura têm). | `driver_document_upload.py` L31–54 vs `vehicle_document_upload.py` L18–43 | Ficheiro arbitrário no disco | Alinhar allowlists; servir com Content-Type seguro |
+| **L-SEC-16** | P2 → **CLOSED** | Uploads | ~~Upload driver sem allowlist MIME/ext.~~ **Mitigado:** mesma política que viaturas (`.pdf/.jpg/.jpeg/.png` + MIME); download com Content-Type allowlist + `attachment`. Legacy fora da allowlist: **não** apagado; leitura com `application/octet-stream`. | PR desta sessão; `driver_document_upload.py`; `test_driver_document_upload_allowlist.py` | — | Fechado |
 | **L-SEC-17** | P2 | OTP | OTP é hasheado e persistido; **não há SMS/email**. `print` só com `ENABLE_DEV_TOOLS`. API pública ainda existe. | `auth.py` `request_otp` L113–127 | Path morto, ou códigos só via logs/DB | Desmontar OTP em deployed, ou ligar canal real com rate limit |
 | **L-ARCH-01** | P2 | Architecture | God modules: `DriverDashboard.tsx` **4412** linhas; `admin.py` **2269**; `trips.py` **2142**; `PassengerDashboard.tsx` **1591**; `partner.py` **1503**. | `scripts/audit/scan_repo_health.py` | Regressões, reviews impossíveis | Split por domínio (map/offers/availability; admin tabs já existem no FE mas o router BE não) |
 | **L-FE-03** | P2 | Auth restore | Restore prefere `tvde_app_route_role` gravado sobre o role do JWT (`savedShell ?? fromJwt`). | `AuthContext.tsx` L268–273 | Bounce `/driver` → guard → `/passenger` | Preferir JWT quando conflitua |

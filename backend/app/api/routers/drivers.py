@@ -33,6 +33,7 @@ from app.services.driver_documents import (
 )
 from app.services.driver_document_expiry_suggest import suggest_expiry_iso_from_text
 from app.services.driver_document_upload import (
+    file_response_for_driver_document,
     resolve_driver_document_path,
     save_driver_document_file,
 )
@@ -318,4 +319,4 @@ async def download_my_document(
 ) -> FileResponse:
     uid = uuid.UUID(str(user.user_id))
     path = resolve_driver_document_path(db, driver_user_id=uid, doc_key=doc_key)
-    return FileResponse(path, filename=path.name)
+    return file_response_for_driver_document(path)
