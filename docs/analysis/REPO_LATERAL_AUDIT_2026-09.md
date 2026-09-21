@@ -1,9 +1,10 @@
 # REPO LATERAL AUDIT — 2026-09-17
 
-**HEAD:** `48b70a3` (`main` = `origin/main`)  
-**Modo:** READ-ONLY funcional (excepto este relatório + `scripts/audit/*` AUDIT-ONLY)  
+**HEAD (auditoria original):** `48b70a3`  
+**Reconciliado com `main`:** `98ed421` (2026-09-21) — docs-only status pass  
+**Modo original:** READ-ONLY funcional (excepto este relatório + `scripts/audit/*` AUDIT-ONLY)  
 **Working tree no início:** limpa  
-**Não feito:** runtime, Render, secrets, DB/schema, migrations, fixes, commit, PR  
+**Não feito (na sessão original):** runtime, Render, secrets, DB/schema, migrations, fixes, commit, PR  
 **Fora de âmbito (não reaberto como finding novo):** MapLibre 5→6 / `S-MAP-P1`, `ENV=staging` semantics, route-level code splitting, flaky phone UUID, rotacional cache flake, dead Radix stubs, React Router 7.18.4, Python 3.12 pin, `BETA_MODE=true` IN PRODUCTION
 
 Relatórios anteriores cruzados: [`REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md`](./REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md), [`P1_RUNTIME_SECURITY_REVIEW_2026-09.md`](./P1_RUNTIME_SECURITY_REVIEW_2026-09.md).
@@ -12,15 +13,34 @@ Relatórios anteriores cruzados: [`REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md`](./REP
 
 ## Executive summary
 
-O repo está **operacionalmente estável** e a higiene recente tapou muita superfície cosmética. Esta passagem lateral encontrou **dívida real** que as auditorias de higiene/deps não cobriram: sobretudo **pagamentos (webhook idempotente a mais cedo)**, **dispatch que publica ofertas antes de `commit`**, **GPS de frota exposto num endpoint MVP ainda montado**, e **testes backend que escrevem numa Postgres partilhada sem teardown**.
+### Auditoria original (2026-09-17)
 
-Não há P0 de “a app está caída”. Há **um P0 de integridade de pagamento**: se o UPDATE do `Payment` falhar *depois* do marcador Stripe ser persistido, a API responde `200` e o Stripe **não volta a tentar**.
+Passagem lateral sobre dívida real: webhook Stripe idempotente a mais cedo, dispatch WS antes de `commit`, GPS de frota exposto, testes BD sem isolamento por teste, docs Março perigosas, cron HTTP cego a `partial_error`, etc.
 
-O frontend, em `BETA_MODE` actual, usa o papel do JWT para admin. Os riscos FE vivos hoje são **polling sem abort** e **logout que não limpa o trip id em `sessionStorage`**. O gate `isAdmin = !!tokens.admin` só dispara se `BETA_MODE` for desligado — fica registado como latente, sem abrir esse trabalho.
+### Estado reconciliado (2026-09-21 @ `98ed421`)
 
-Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo (auto-dispatch, pool `assigned`+`driver_id=NULL`, “BD local = Render”) que **já não é o código**.
+**OPEN P0 = 0 · OPEN P1 = 0** entre os findings originais desta auditoria.
+
+Os findings P0/P1 de runtime/segurança/docs operacionais foram **resolvidos em código/docs** ou **fechados como ACCEPTED DESIGN / ACCEPTED DEBT**. Trabalho restante = **follow-ups** registados + **revalidação P2/P3** (não recontada aqui).
+
+| Tema original | Estado actual |
+|---|---|
+| Webhook P0 (ACK após falha BD) | **CLOSED** (#606) |
+| ACK not-found / amount-mismatch | **CLOSED / ACCEPTED DESIGN** (#634) |
+| Cancel vs PI / timeouts | **CLOSED** (#628 / #629) |
+| Dispatch WS pré-commit | **CLOSED** (#616) |
+| GPS find-driver / debug coords | **CLOSED** (#617) |
+| `ADMIN_PHONE` promote / guards | **CLOSED** (#630 / #632) |
+| Polling stale / logout trip | **CLOSED** (#618) |
+| Cron `partial_error` → 200 | **CLOSED** (#625) |
+| Cron `?secret=` / `!=` | **CLOSED** (#627); L-SEC-09 / L-SEC-19 |
+| Docs Março “actual” / BD local=Render | **CLOSED** (#636) |
+| Cron runbook canónico | **CLOSED** (#626); residual housekeeping noutros docs |
+| Isolamento pytest | **CLOSED / ACCEPTED DEBT** (#635) |
 
 ### Contagens
+
+#### Original audit (2026-09-17)
 
 | Prioridade | Count | Significado nesta auditoria |
 |---|---:|---|
@@ -30,26 +50,40 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 | **P3** | **15** | Housekeeping real, sem urgência de piloto |
 | **Total** | **58** | Sem cosmético artificial; sem itens da lista de exclusão |
 
+#### Current reconciled state (2026-09-21)
+
+| Métrica | Count |
+|---|---:|
+| **OPEN P0** (findings originais) | **0** |
+| **OPEN P1** (findings originais) | **0** |
+| CLOSED (P0/P1 originais) | 11 (+ L-DOC-02 núcleo) |
+| CLOSED / ACCEPTED DESIGN | 1 (L-PAY-02) |
+| CLOSED / ACCEPTED DEBT | 1 (L-TEST-01) |
+
+**P2/P3:** **não recontados** nesta reconciliação. Explicitamente: **L-SEC-09** e **L-SEC-19** → **CLOSED**; **L-DOC-03** parcialmente aliviado (env no índice via L-DOC-01). Restante P2/P3 requer nova revisão.
+
+Follow-ups **não** contam como findings OPEN: `O-PAY-WEBHOOK-ANOMALY`, `R-PAY-ORPHAN-PI`, `O-CRON-TIMEOUT-PARTIAL`, `R-AUTH-SUPERADMIN-BOOTSTRAP`, `T-DB-ISOLATION`, `T-TEST-DB-NAME-GUARD`, `R-DOC-CRON-STALE-EXAMPLES`.
+
 ---
 
 ## Findings table
 
 | ID | Priority | Area | Finding | Evidence | Risk | Suggested next step |
 |---|---|---|---|---|---|---|
-| **L-PAY-01** | P0 → **CLOSED** | Payments | ~~Marcador commitado antes do UPDATE; DB error ACK 200.~~ **Mitigado:** um só TX marcador+status; `SQLAlchemyError` → rollback + **500** (`stripe_webhook_db_error_nack`). | `stripe.py` (TX única + 5xx); `test_stripe_webhook_idempotency_tx.py` | — | Fechado (hardening) |
-| **L-PAY-02** | P1 → **CLOSED / ACCEPTED DESIGN** | Payments / obs | ACK `200` em *payment not found* (sem marker) e *amount mismatch* (marker + fica `processing`). Intencional: fail-closed + anti-retry orphan. | `stripe.py`; testes L-PAY-02 em `test_stripe_webhook_idempotency_tx.py` | Residual: race rara not-found perde retry Stripe | Ops: `O-PAY-WEBHOOK-ANOMALY` (alerta/runbook; sem mudar HTTP) |
-| **L-TRIP-01** | P1 | Trips / races | `create_offers_for_trip` faz `flush` + WS `publish_new_offer` **antes** do `db.commit()` em `create_trip`. Loop de retry dorme até ~10s com a TX aberta. | `trips.py` L309–364; `offer_dispatch.py` L265–289 | Accept 404 / ofertas fantasma; conexão do pool retida | `commit` (ou nested) **antes** do WS; GPS wait **fora** da write TX |
-| **L-GPS-01** | P1 | Privacy / BOLA | `POST /matching/find-driver` — **REMOVED** (`fix/matching-gps-lockdown`) | was `matching.py` | — | **DONE** |
-| **L-GPS-02** | P1 | Debug / privacy | `GET /debug/trip-matching/{id}` — owner recebe só agregados; staff mantém listas | `debug_routes.py` | — | **DONE** (owner aggregate) |
-| **L-PAY-03** | P1 | Payments | Cancel passenger/driver/admin continua e faz `commit` cancelled se `cancel_payment_intent` falhar (log only). | `trips.py` L417–435 (padrão repetido ~L545, ~L633) | Hold Stripe órfão + trip cancelled | Falhar fechado ou `cancel_pending` + retry; não commitir cancel até PI cancelado |
-| **L-AUTH-01** | P1 | Auth | ~~Login OTP/password com `ADMIN_PHONE` forçava `super_admin`.~~ **Mitigado (#630):** runtime promotion removida. ~~Guards admin por phone.~~ **Mitigado (follow-up):** protecção admin só por role staff. Residual: seed/backfill `is_owner_phone`. | `auth.py` / `admin.py` | — | `R-AUTH-SUPERADMIN-BOOTSTRAP` |
-| **L-FE-01** | P1 | Frontend | `usePolling` não tem AbortController nem geração de pedido; interval + visibility podem sobrepor-se; resposta antiga ganha. | `web-app/src/hooks/usePolling.ts` L45–87 | UI de trip/availability stale em rede lenta | Abort ou seq id; ignorar resoluções velhas; não lançar tick se o anterior está in-flight |
-| **L-FE-02** | P1 | Frontend / auth | `logout` limpa localStorage de auth, **não** o `sessionStorage` do active trip nem o estado React do `ActiveTripProvider` (fica montado). | `AuthContext.tsx` L491–499; `ActiveTripContext.tsx` L27–35; `passengerActiveTripRecovery.ts` | Tab partilhada / próximo passenger revive trip id até reconcile | No logout: `setPassengerActiveTripId(null)` + clear da key |
-| **L-OBS-01** | P1 | Cron / ops | Sub-jobs isolados (bom) mas HTTP **200** com `status: "partial_error"`. Monitores que só vêem código HTTP ficam cegos. | `cron.py` L69–185, return L184–186 | Timeouts/redispatch mortos sem alerta | Non-2xx se `errors`; ou alerta no JSON `error_count` |
-| **L-TEST-01** | P1 → **CLOSED / ACCEPTED DEBT** | Tests | Fixture `db` só faz `session.close()`; commits persistem; HTTP usa sessões próprias. CI Postgres efémero + suite serial + `unique_test_phone`/plates mitigam. | `conftest.py`; `BACKEND_PYTEST_SAFE.md` § isolamento | Residual flake mitigado | Médio prazo: `T-DB-ISOLATION` (TX + `get_db` override). Nome DB local: `T-TEST-DB-NAME-GUARD` |
-| **L-DOC-01** | P1 → **CLOSED** | Docs | ~~`ARCHITECTURE_STATUS` / blueprint Março como “actual”; BD local = Render.~~ **Mitigado:** banners SUPERSEDED; índice aponta fontes operacionais (`ENV_*`, pytest safe, diagrams). | `ARCHITECTURE_STATUS.md` / `TVDE_SYSTEM_BLUEPRINT.md` banners; `DOCS_INDEX.md`; `architecture/README.md` | Histórico preservado | Fechado (docs-only) |
-| **L-DOC-02** | P1 | Docs / cron | Runbook ensina `?secret=` na URL, TTL de oferta “>15 s” (código default **60**), e só jobs 1–3 (faltam health/zones/rotacional). | `docs/CRON_JOB_ORG_INSTRUCOES.md` §2–4; `cron.py` docstring; `OFFER_TIMEOUT_SECONDS=60` | Secret em logs/Referer; ops a monitorizar o contrato errado | Header-only; reescrever §3–4 a partir de `cron.py` |
-| **L-SEC-09** | P2 | Cron | `CRON_SECRET` aceite em query `?secret=` (legado no código, não só no doc). Compare com `!=`. | `cron.py` L21–60 | Leak em access logs; timing teórico | Header-only; `hmac.compare_digest`; rodar se já esteve em query |
+| **L-PAY-01** | P0 → **CLOSED** | Payments | ~~Marcador commitado antes do UPDATE; DB error ACK 200.~~ **Mitigado:** um só TX marcador+status; `SQLAlchemyError` → rollback + **500**. | #606; `stripe.py`; `test_stripe_webhook_idempotency_tx.py` | — | Fechado |
+| **L-PAY-02** | P1 → **CLOSED / ACCEPTED DESIGN** | Payments / obs | ACK `200` not-found / amount-mismatch intencional (fail-closed + anti-retry). | #634; `stripe.py`; testes L-PAY-02 | Residual race rara not-found | `O-PAY-WEBHOOK-ANOMALY` |
+| **L-TRIP-01** | P1 → **CLOSED** | Trips / races | ~~WS publish antes de commit.~~ **Mitigado:** commit trip → offers → `publish_trip_offers`; sleeps fora da write TX. | #616; `trips.py`; `offer_dispatch.py` | — | Fechado |
+| **L-GPS-01** | P1 → **CLOSED** | Privacy / BOLA | `POST /matching/find-driver` **REMOVED** | #617 | — | Fechado |
+| **L-GPS-02** | P1 → **CLOSED** | Debug / privacy | Owner debug matching = agregados only | #617; `debug_routes.py` | — | Fechado |
+| **L-PAY-03** | P1 → **CLOSED** | Payments | ~~Cancel commit se PI cancel falhava.~~ **Mitigado:** fail-closed (502); timeouts #629. | #628 / #629 | PI órfão noutros paths | `R-PAY-ORPHAN-PI` |
+| **L-AUTH-01** | P1 → **CLOSED** | Auth | ~~`ADMIN_PHONE` promote + guards phone.~~ Roles DB; admin por staff role. | #630 / #632 | Bootstrap super_admin | `R-AUTH-SUPERADMIN-BOOTSTRAP` |
+| **L-FE-01** | P1 → **CLOSED** | Frontend | ~~Poll overlap / stale response.~~ Generation + no overlapping in-flight. | #618; `usePolling.ts` | AbortController opcional | Fechado |
+| **L-FE-02** | P1 → **CLOSED** | Frontend / auth | ~~Logout sem limpar active trip.~~ Clear storage + `AUTH_LOGOUT_EVENT`. | #618; `AuthContext` / `ActiveTripContext` | — | Fechado |
+| **L-OBS-01** | P1 → **CLOSED** | Cron / ops | ~~HTTP 200 com `partial_error`.~~ Agora HTTP **500**. | #625; `cron.py` | Critério timeout-payment ≠ HTTP | `O-CRON-TIMEOUT-PARTIAL` |
+| **L-TEST-01** | P1 → **CLOSED / ACCEPTED DEBT** | Tests | Sem isolamento TX por teste; commits persistem; mitigado uniqueness + CI efémero. | #635; `BACKEND_PYTEST_SAFE.md` | Residual flake | `T-DB-ISOLATION` · `T-TEST-DB-NAME-GUARD` |
+| **L-DOC-01** | P1 → **CLOSED** | Docs | Março SUPERSEDED; índice aponta fontes operacionais. | #636 | Histórico preservado | Fechado |
+| **L-DOC-02** | P1 → **CLOSED** + housekeeping residual | Docs / cron | Núcleo: runbook canónico + código (#626/#627). Residual: exemplos `?secret=`/15s em `IMPLEMENTACAO_E_TESTES` / A022. | #626 / #627; `CRON_JOB_ORG_INSTRUCOES.md` | Docs secundários stale | `R-DOC-CRON-STALE-EXAMPLES` — **não** reabrir L-DOC-02 |
+| **L-SEC-09** | P2 → **CLOSED** | Cron | ~~Query `?secret=` aceite.~~ Header-only. | #627; `cron.py` | — | Fechado |
 | **L-SEC-10** | P2 | WebSocket | Token JWT aceite em `?token=` (além de `Authorization`). | `ws.py` `_extract_token` L17–21; `admin_ws.py` equivalente | JWT em logs/histórico de proxy | Preferir header / `Sec-WebSocket-Protocol`; deprecar query |
 | **L-SEC-11** | P2 | Rate limit | Limites OTP/login/`request_trip` são **por processo em memória**. Multi-worker multiplica capacidade. OTP *request* ainda chaveia IP via `X-Forwarded-For`. | `auth_rate_limit.py`; `api/rate_limit.py` | Brute-force / spam de trips entre instâncias | Store partilhado; OTP request por telefone (já feito no *verify*) |
 | **L-SEC-12** | P2 | OTP | Verify sem `FOR UPDATE`; 12 tentativas/min/telefone; 6 dígitos / 5 min — não é brute-force trivial, mas não há lockout/queima. Frontend **não** chama OTP (API viva). | `auth.py` L130–156; `otp.py`; knip/grep FE sem `requestOtp` | Consume duplo; superfície latente quando houver SMS | Lock da row; queimar após N falhas; não expor se o produto é password |
@@ -78,8 +112,8 @@ Docs de arquitectura de Março 2026 ainda estão no índice e descrevem um mundo
 | **L-DATA-02** | P2 | Money | Colunas `Numeric(10,2)` mapeadas `Mapped[float]`; muita conta com `float(...)`. Guards de cêntimos existem no webhook. | `payment.py`, `trip.py` | Drift de cêntimos em paths novos | Não acrescentar fare math em float; alinhar a Decimal |
 | **L-DATA-03** | P2 | Cascade | `Payment.trip_id` `ON DELETE CASCADE`. | `payment.py` L44–48 | Hard-delete de trip apaga histórico financeiro | Política: nunca hard-delete trips |
 | **L-DATA-04** | P2 | Schema drift | `driver_amount` legado + `driver_payout` nullable; `vehicle_category` ainda admite `'pet'` vs `has_pet`. Statuses de viatura/docs em string livre. | `payment.py` L60–68; `trip.py` comments; `vehicle.py` | Relatórios no campo errado; matching em rows velhas | Inventário SQL; um módulo canónico de enums |
-| **L-DOC-03** | P2 | Docs | Índice omite `docs/env/` e `STACK_TECNOLOGICO.md`; `ENV_VARS_VERIFICATION.md` sem HERE/capacity/driving hours/next-trip; `GUIA_TESTES.md` Python “3.10+”; Stripe runbook head `b5c6d7e8f9a0` (real **`d2e3f4a5b6c7`**); `TODO_FUTURO.md` B.2 diz que `log_event` **não** leva `request_id` — **falso** (`logging.py` L275–278); comentário `ENABLE_HERE_TOLLS` “no wire yet” vs Portagens V1 em prod. | vários paths em Docs drift | Setup/ops errados | Resync pontual (não reescrever tudo) |
-| **L-SEC-19** | P3 | Cron | Secret comparado com `!=`. | `cron.py` L57 | Timing leak teórico | `hmac.compare_digest` |
+| **L-DOC-03** | P2 | Docs | Drift residual (STACK, GUIA Python, ENV_VARS gaps, etc.). Índice já inclui `docs/env/` (L-DOC-01). | vários paths | Setup/ops errados | Resync pontual; **parcialmente aliviado** |
+| **L-SEC-19** | P3 → **CLOSED** | Cron | ~~Secret `!=`.~~ **`hmac.compare_digest`**. | #627; `cron.py` | — | Fechado |
 | **L-SEC-20** | P3 | Emergency | Record falha → `{ok:true, recorded:false}`. | `emergency.py` L53–67 | SOS sem rasto | Métrica; não esconder 5xx a ops |
 | **L-SEC-21** | P3 | Logs | `POST /logs/lifecycle` auth opcional; anónimo escreve `interaction_logs`. | `logs.py` L17–41 | Preenchimento barato da BD | Auth obrigatória ou rate-limit |
 | **L-SEC-22** | P3 | Info | `/health?diagnostic=1` expõe `dev_tools`/`beta_mode`. | `health.py` L48–52 | Recon menor | Gate diagnostic a staff |
@@ -118,29 +152,29 @@ Decisão de produto (2026-09-19): **KEEP ACK 200** para ambos; **não** mudar HT
 
 **Ops:** follow-up `O-PAY-WEBHOOK-ANOMALY` — alerta/runbook para `stripe_webhook_payment_not_found_ack` e `stripe_webhook_succeeded_amount_mismatch` (ver [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) § webhook anomalies). Reconciliação admin já existe quando há Payment local.
 
-### L-TRIP-01 — ofertas na WS antes de serem duráveis
+### L-TRIP-01 — ofertas na WS antes de serem duráveis — **CLOSED** (#616)
 
-Postgres: outra sessão **não** vê o `flush` sem `commit`. O hub WS é in-process. O motorista recebe `new_trip_offer` e o `accept` vai a **outro** request/session → oferta inexistente até ao `commit` no fim de `create_trip`.
+**Mitigado:** `create_trip` faz `db.commit()` da trip **antes** do loop de ofertas / sleeps; `publish_trip_offers` só após commit das offers. Comentários L-TRIP-01 em `trips.py` / `offer_dispatch.py`.
 
-Janela normal: milissegundos (logs + commit). Janela má: **até ~10s** se 0 ofertas (5× `asyncio.sleep(2)` com a mesma Session). Também prende uma conexão do pool.
+*(Texto original descrevia flush+WS pré-commit e TX aberta ~10s — **stale**.)*
 
-Em produção “estável” isto parece raro; sob latência/GPS atrasado é exactamente o retry loop.
+### L-GPS-01 / L-GPS-02 — frota visível — **CLOSED** (#617)
 
-### L-GPS-01 / L-GPS-02 — frota visível
+`POST /matching/find-driver` **removido**; `GET /debug/trip-matching/{id}` — owner = agregados/`root_cause` only.
 
-**Mitigado** em `fix/matching-gps-lockdown`: `POST /matching/find-driver` **removido**; `GET /debug/trip-matching/{id}` devolve ao dono só contagens/`root_cause` (staff mantém listas com coords).
+### L-PAY-03 / L-AUTH-01 / L-FE-01 / L-FE-02 / L-OBS-01 / L-DOC-02 — **CLOSED**
 
-### L-PAY-03 / L-AUTH-01 / L-FE-01 / L-FE-02 / L-OBS-01 / L-TEST-01 / L-DOC-01 / L-DOC-02
+| ID | PR | Nota residual |
+|----|-----|---------------|
+| L-PAY-03 | #628 (+ #629) | `R-PAY-ORPHAN-PI` |
+| L-AUTH-01 | #630 / #632 | `R-AUTH-SUPERADMIN-BOOTSTRAP` |
+| L-FE-01 | #618 | generation / no overlap; AbortController opcional |
+| L-FE-02 | #618 | storage + `AUTH_LOGOUT_EVENT` |
+| L-OBS-01 | #625 | `O-CRON-TIMEOUT-PARTIAL` (outro critério) |
+| L-DOC-02 | #626 / #627 | núcleo OK; `R-DOC-CRON-STALE-EXAMPLES` |
 
-Detalhe já na tabela. Notas curtas:
-
-- Cancel vs PI: o trip fica `cancelled` e o hold pode continuar capturável no Stripe até expiry — suporte doloroso, não necessariamente charge imediato.
-- `ADMIN_PHONE`: já **não** promove no login (#630) nem protege mutações admin por telefone (protecção = role staff). Residual seed/backfill = `is_owner_phone`; bootstrap formal = `R-AUTH-SUPERADMIN-BOOTSTRAP`.
-- Polling: `cleanup` só faz `clearInterval`; in-flight `fn()` continua e chama `setState`.
-- Logout: `ActiveTripProvider` está acima do auth na árvore; o estado sobrevive ao logout.
-- Pytest / **L-TEST-01**: **CLOSED / ACCEPTED TECHNICAL DEBT** (2026-09-19). Host guard ≠ per-test isolation. Ver `BACKEND_PYTEST_SAFE.md` § isolamento; follow-ups `T-DB-ISOLATION`, `T-TEST-DB-NAME-GUARD`.
-- Docs Março / **L-DOC-01**: **CLOSED** — banners SUPERSEDED em `ARCHITECTURE_STATUS` + blueprint; índice com “Current operational sources”; entry-point `architecture/README.md`. Corpos históricos intactos.
-- Docs Março (conteúdo): o parágrafo “BD local = External URL da Render” permanece **só** no snapshot SUPERSEDED — **não** usar para operações.
+- Pytest / **L-TEST-01**: **CLOSED / ACCEPTED DEBT** (#635).
+- Docs Março / **L-DOC-01**: **CLOSED** (#636).
 
 ### L-TEST-01 — isolamento BD de testes — **CLOSED / ACCEPTED DEBT**
 
@@ -180,7 +214,7 @@ Decisão: **não** implementar agora fixture transaccional global.
 
 ## P3 / housekeeping
 
-Comparação constante do cron secret, SOS `recorded:false`, lifecycle logs anónimos, `/health?diagnostic=1`, geocode sem abort, flags driver mortas, gate de docs no localStorage, `refresh_token` morto, `isAdmin` latente fora de BETA, locale-en fora do Playwright, mypy estreito, `max_passengers` NULL, índice composto, `simulateRoute.ts`/`testRoutes.ts` (higiene ainda aberta), nanoid/postcss no `npm audit --omit=dev`.
+SOS `recorded:false`, lifecycle logs anónimos, `/health?diagnostic=1`, geocode sem abort, flags driver mortas, gate de docs no localStorage, `refresh_token` morto, `isAdmin` latente fora de BETA, locale-en fora do Playwright, mypy estreito, `max_passengers` NULL, índice composto, `simulateRoute.ts`/`testRoutes.ts` (higiene ainda aberta), nanoid/postcss no `npm audit --omit=dev`. *(Cron secret compare / query auth: CLOSED via L-SEC-09/19.)*
 
 Admin UI **não** está CSS-hidden para passengers quando `isAdmin` é falso: tabs `tab === 'x' &&`. O risco é `isAdmin` errado (L-FE-14), não “mounted but hidden”.
 
@@ -241,7 +275,7 @@ Não inventar CVEs Python sem output do audit.
 | Doc | Drift | Gravidade |
 |-----|--------|-----------|
 | `ARCHITECTURE_STATUS.md` + blueprint 2026-03-12 | Matching/dispatch/UI; **BD local = prod** (texto histórico) | **CLOSED** (L-DOC-01) — SUPERSEDED + índice corrigido |
-| `CRON_JOB_ORG_INSTRUCOES.md` | Query secret; 15s vs 60s; jobs 4–6 em falta | P1 (L-DOC-02) |
+| `CRON_JOB_ORG_INSTRUCOES.md` | ~~Query secret; 15s; jobs incompletos.~~ **CLOSED** (L-DOC-02 / #626) | Housekeeping: exemplos stale noutros docs |
 | `DOCS_INDEX.md` | ~~Omite `docs/env/`.~~ Env + pytest safe + architecture README adicionados (L-DOC-01); smokes Julho ainda listados sob ops | P2 residual |
 | `ENV_VARS_VERIFICATION.md` | Sem HERE, capacity/vehicle gates, driving hours, rotacional v3, next-trip | P2 |
 | `GUIA_TESTES.md` | Python 3.10+ / Node 18+ vs CI 3.12.14 / Node 22 | P2 |
@@ -294,17 +328,17 @@ knip / depcheck / npm audit corridos via `npx` one-shot.
 
 ## Suggested PR sequence
 
-PRs **pequenos e reversíveis**. Ordem sugerida (não abrir nesta sessão):
+Sequência original da auditoria — **toda DONE** em `main` (não é trabalho futuro):
 
-| # | Branch sugerida | Scope | IDs |
-|---|-----------------|-------|-----|
-| 1 | `fix/stripe-webhook-idempotency-tx` | Um TX marcador+status; 5xx em erro de BD; teste de falha a meio | **DONE** L-PAY-01; L-PAY-02 closed as ACCEPTED DESIGN (ACK 200 + ops) |
-| 2 | `fix/create-trip-commit-before-ws` | Commit antes de `publish_new_offer`; sleep de GPS fora da write TX | L-TRIP-01 |
-| 3 | `fix/matching-gps-lockdown` | Desmontar ou staff-only `find-driver`; strip coords em debug matching | L-GPS-01, L-GPS-02 |
-| 4 | `fix/fe-logout-and-polling-abort` | Clear trip storage no logout; seq/abort no `usePolling` | L-FE-02, L-FE-01 (L-FE-05 no mesmo ficheiro se barato) |
-| 5 | `fix/cron-partial-error-and-runbook` | HTTP não-2xx se `errors`; runbook header-only + jobs 1–6 + TTL 60s | L-OBS-01, L-DOC-02, L-SEC-09 |
+| # | Branch | Scope | IDs | Estado |
+|---|--------|-------|-----|--------|
+| 1 | `fix/stripe-webhook-idempotency-tx` | TX marcador+status; 5xx BD | L-PAY-01 (+ aceitação L-PAY-02) | **DONE** #606 / #634 |
+| 2 | `fix/create-trip-commit-before-ws` | Commit antes de WS; sleep fora TX | L-TRIP-01 | **DONE** #616 |
+| 3 | `fix/matching-gps-lockdown` | Remover find-driver; owner aggregate | L-GPS-01, L-GPS-02 | **DONE** #617 |
+| 4 | `fix/fe-polling-logout-state` | Poll generation; clear trip on logout | L-FE-01, L-FE-02 | **DONE** #618 |
+| 5 | cron partial / auth / runbook | HTTP 500 partial; header-only; runbook | L-OBS-01, L-DOC-02, L-SEC-09, L-SEC-19 | **DONE** #625 / #626 / #627 |
 
-**A seguir (não no top 5):** `T-DB-ISOLATION` / `T-TEST-DB-NAME-GUARD` (L-TEST-01 aceite como dívida), L-DOC-01 **CLOSED** (SUPERSEDED Março), cancel vs PI (L-PAY-03 mitigado #628), `ADMIN_PHONE` (L-AUTH-01 mitigado #630/#632).
+**Trabalho restante (follow-ups / P2–P3):** ver executive summary reconciliado — **não** reabrir P0/P1 CLOSED.
 
 ---
 
@@ -323,4 +357,4 @@ PRs **pequenos e reversíveis**. Ordem sugerida (não abrir nesta sessão):
 
 ---
 
-*Fim da auditoria. Sem commit.*
+*Auditoria original: 2026-09-17 sem commit de fixes. Status reconciliado com `main` `98ed421` em 2026-09-21 (docs-only).*
