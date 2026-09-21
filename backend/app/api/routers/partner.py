@@ -122,7 +122,10 @@ from app.services.partner_messages import (
     mark_partner_message_read,
     _utc_iso as message_utc_iso,
 )
-from app.services.driver_document_upload import resolve_driver_document_path
+from app.services.driver_document_upload import (
+    file_response_for_driver_document,
+    resolve_driver_document_path,
+)
 from app.services.partners_admin import partner_metrics, partner_remove_driver_from_fleet
 from app.utils.logging import log_event
 
@@ -1500,4 +1503,4 @@ async def partner_download_driver_document(
         doc_key=doc_key,
         partner_id=uuid.UUID(partner_id),
     )
-    return FileResponse(path, filename=path.name)
+    return file_response_for_driver_document(path)
