@@ -1,8 +1,8 @@
 # Diagrama — tempo real (HTTP + WebSocket)
 
-A **web-app** usa sobretudo **polling HTTP** (`usePolling`, intervalos da ordem dos **segundos** — ex.: ~4s no passageiro). O **backend** expõe **WebSockets** para subscrições por `trip_id`, por motorista (ofertas) e admin; o cliente pode passar a consumi-los sem mudar a API.
+A **web-app** usa sobretudo **polling HTTP** (`usePolling`, intervalos da ordem dos **segundos** — ex.: ~4s no passageiro) — **é o mecanismo actual em PROD**. O **backend** expõe **WebSockets** para subscrições por `trip_id`, por motorista (ofertas) e admin; o frontend **não** os consome hoje.
 
-Rotas WS: `backend/app/api/routers/ws.py` (`/ws/trips/{trip_id}`, `/ws/driver/offers`), `admin_ws.py` (`/ws/admin/trips`). Auth: header `Authorization: Bearer` ou query `?token=`.
+Rotas WS: `backend/app/api/routers/ws.py` (`/ws/trips/{trip_id}`, `/ws/driver/offers`), `admin_ws.py` (`/ws/admin/trips`). Auth WS: **apenas** header `Authorization: Bearer <jwt>` (L-SEC-10 — sem `?token=`). Clientes browser-native WebSocket não enviam esse header; activar WS no frontend exige um mecanismo próprio (fora deste diagrama) **antes** de ligar o cliente.
 
 ```mermaid
 flowchart LR
@@ -43,7 +43,6 @@ sequenceDiagram
 sequenceDiagram
   participant UI as DriverDashboard
   participant API as FastAPI
-  participant Hub as driver_offers_hub
   participant DB as PostgreSQL
 
   loop polling listas / viagem atribuída
@@ -52,12 +51,7 @@ sequenceDiagram
     API-->>UI: estado
   end
 
-  par opcional no cliente
-    UI->>API: WebSocket /ws/driver/offers\nBearer ou ?token=
-    API->>Hub: subscribe(driver_id)
-    Note over Hub: offer_dispatch publica\nnew_trip_offer ao hub
-    Hub-->>UI: mensagem JSON\n(ex.: new_trip_offer)
-  end
+  Note over UI,API: Canal WS /ws/driver/offers existe no BE\n(auth Bearer only) mas a web-app PROD\nnão o abre — só polling HTTP.
 ```
 
 ## Admin — WS de viagens

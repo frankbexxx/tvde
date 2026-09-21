@@ -614,16 +614,25 @@ Verificar `estimated_price` na resposta de `POST /trips` segue fórmula. Com `OS
 
 ### 6. B001 — WebSocket new_trip_offer
 
-1. Conectar motorista a `ws://localhost:8000/ws/driver/offers` com token JWT
+1. Conectar motorista a `ws://localhost:8000/ws/driver/offers` com JWT via header `Authorization: Bearer <token>` (L-SEC-10 — **sem** `?token=`). Clientes que controlam headers (ex.: `websockets` em Python, `ws` em Node). Browser-native `WebSocket` **não** envia Authorization; a web-app PROD usa **polling HTTP**, não este canal.
 2. Criar trip como passageiro
 3. Verificar JSON com `event: "new_trip_offer"`
 
-```javascript
-const ws = new WebSocket("ws://localhost:8000/ws/driver/offers?token=JWT");
-ws.onmessage = (e) => {
-  const data = JSON.parse(e.data);
-  console.log(data.event, data.offer_id, data.trip_id);
-};
+```python
+# Exemplo não-browser (Bearer only). Não usar ?token=.
+import asyncio
+import websockets
+
+async def main(jwt: str) -> None:
+    headers = [("Authorization", f"Bearer {jwt}")]
+    async with websockets.connect(
+        "ws://localhost:8000/ws/driver/offers",
+        additional_headers=headers,
+    ) as ws:
+        msg = await ws.recv()
+        print(msg)
+
+# asyncio.run(main("<jwt>"))
 ```
 
 ### 7. C001 — Rating

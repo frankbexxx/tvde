@@ -46,9 +46,21 @@ class _QP:
 
 
 class _FakeWS:
-    def __init__(self, token: str) -> None:
+    """Minimal WS stand-in. Auth via Authorization Bearer only (L-SEC-10)."""
+
+    def __init__(
+        self,
+        token: str | None = None,
+        *,
+        query_token: str | None = None,
+    ) -> None:
         self.headers: dict[str, str] = {}
-        self.query_params = _QP({"token": token})
+        if token is not None:
+            self.headers["Authorization"] = f"Bearer {token}"
+        qp: dict[str, str] = {}
+        if query_token is not None:
+            qp["token"] = query_token
+        self.query_params = _QP(qp)
 
 
 def _seed_user(

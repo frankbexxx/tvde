@@ -60,7 +60,7 @@ Os findings P0/P1 de runtime/segurança/docs operacionais foram **resolvidos em 
 | CLOSED / ACCEPTED DESIGN | 1 (L-PAY-02) |
 | CLOSED / ACCEPTED DEBT | 1 (L-TEST-01) |
 
-**P2/P3:** **não recontados** nesta reconciliação. Explicitamente: **L-SEC-09** e **L-SEC-19** → **CLOSED**; **L-SEC-16** → **CLOSED** (driver upload alinhado a viaturas); **L-SEC-15** → **CLOSED** (interaction log Session própria); **L-SEC-13** → **CLOSED** (`token_version`); **L-DOC-03** parcialmente aliviado (env no índice via L-DOC-01). Restante P2/P3 requer nova revisão.
+**P2/P3:** **não recontados** nesta reconciliação. Explicitamente: **L-SEC-09** e **L-SEC-19** → **CLOSED**; **L-SEC-16** → **CLOSED** (driver upload alinhado a viaturas); **L-SEC-15** → **CLOSED** (interaction log Session própria); **L-SEC-13** → **CLOSED** (`token_version`); **L-SEC-10** → **CLOSED** (WS Bearer-only, sem `?token=`); **L-DOC-03** parcialmente aliviado (env no índice via L-DOC-01). Restante P2/P3 requer nova revisão.
 
 Follow-ups **não** contam como findings OPEN: `O-PAY-WEBHOOK-ANOMALY`, `R-PAY-ORPHAN-PI`, `O-CRON-TIMEOUT-PARTIAL`, `R-AUTH-SUPERADMIN-BOOTSTRAP`, `T-DB-ISOLATION`, `T-TEST-DB-NAME-GUARD`, `R-DOC-CRON-STALE-EXAMPLES`.
 
@@ -84,7 +84,7 @@ Follow-ups **não** contam como findings OPEN: `O-PAY-WEBHOOK-ANOMALY`, `R-PAY-O
 | **L-DOC-01** | P1 → **CLOSED** | Docs | Março SUPERSEDED; índice aponta fontes operacionais. | #636 | Histórico preservado | Fechado |
 | **L-DOC-02** | P1 → **CLOSED** + housekeeping residual | Docs / cron | Núcleo: runbook canónico + código (#626/#627). Residual: exemplos `?secret=`/15s em `IMPLEMENTACAO_E_TESTES` / A022. | #626 / #627; `CRON_JOB_ORG_INSTRUCOES.md` | Docs secundários stale | `R-DOC-CRON-STALE-EXAMPLES` — **não** reabrir L-DOC-02 |
 | **L-SEC-09** | P2 → **CLOSED** | Cron | ~~Query `?secret=` aceite.~~ Header-only. | #627; `cron.py` | — | Fechado |
-| **L-SEC-10** | P2 | WebSocket | Token JWT aceite em `?token=` (além de `Authorization`). | `ws.py` `_extract_token` L17–21; `admin_ws.py` equivalente | JWT em logs/histórico de proxy | Preferir header / `Sec-WebSocket-Protocol`; deprecar query |
+| **L-SEC-10** | P2 → **CLOSED** | WebSocket | ~~Token JWT aceite em `?token=` (além de `Authorization`).~~ **Mitigado:** fallback query removido; auth WS **apenas** `Authorization: Bearer`. FE PROD não usa WS (polling HTTP). | #643; `ws.py` / `admin_ws.py`; `test_l_sec_10_ws_bearer_only.py` | — | Fechado |
 | **L-SEC-11** | P2 | Rate limit | Limites OTP/login/`request_trip` são **por processo em memória**. Multi-worker multiplica capacidade. OTP *request* ainda chaveia IP via `X-Forwarded-For`. | `auth_rate_limit.py`; `api/rate_limit.py` | Brute-force / spam de trips entre instâncias | Store partilhado; OTP request por telefone (já feito no *verify*) |
 | **L-SEC-12** | P2 | OTP | Verify sem `FOR UPDATE`; 12 tentativas/min/telefone; 6 dígitos / 5 min — não é brute-force trivial, mas não há lockout/queima. Frontend **não** chama OTP (API viva). | `auth.py` L130–156; `otp.py`; knip/grep FE sem `requestOtp` | Consume duplo; superfície latente quando houver SMS | Lock da row; queimar após N falhas; não expor se o produto é password |
 | **L-SEC-13** | P2 → **CLOSED** | Sessions | ~~Change password não invalida JWTs.~~ **Mitigado:** `users.token_version` + claim JWT; bump em `/auth/me/password`; HTTP/WS rejeitam mismatch. Legacy sem claim ≡ 0. FE faz logout pós-change. | #642; migration `e3f4a5b6c7d8`; `security.py` / `deps.py` / `ws.py`; `test_l_sec_13_token_version.py` | — | Fechado |
@@ -196,7 +196,7 @@ Decisão: **não** implementar agora fixture transaccional global.
 
 ## P2 detail
 
-**Segurança:** limites in-process, secret/token em query string, JWT após password change, listas sem cap, `log_interaction` a fazer commit na session do request, upload driver sem allowlist, OTP API sem canal de entrega.
+**Segurança:** limites in-process, JWT após password change (CLOSED L-SEC-13), WS query-token (CLOSED L-SEC-10), listas sem cap, `log_interaction` commit (CLOSED L-SEC-15), upload driver allowlist (CLOSED L-SEC-16), OTP API sem canal de entrega. Cron query secret CLOSED (L-SEC-09/19).
 
 **Arquitectura:** os cinco ficheiros >1500 linhas são o custo real de evolução (não “lines of code vanity”). `trips.py` mistura create/cancel/accept/complete/Stripe. `complete_trip` continua um procedimento enorme com lock `FOR UPDATE` (positivo: locks nas transições críticas *existem*).
 
