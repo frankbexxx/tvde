@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List
 
@@ -379,6 +380,10 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
     For trips with status=requested where all offers are expired,
     create new offers (excluding drivers who already had offers).
     Returns list of new offers created.
+
+    L-SEC-14B: TripOffer rows for all requested trips are loaded in one bulk
+    query (``trip_id IN (...)``), not one query per trip. Driver-pool scans
+    and per-candidate pending checks remain per-trip/candidate.
     """
     now = datetime.now(timezone.utc)
     # First expire stale offers
@@ -390,14 +395,21 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         .scalars()
         .all()
     )
+    # Bulk-load offers once (skip empty IN). Before L-SEC-14B this was 1 query/trip.
+    offers_by_trip_id: dict = defaultdict(list)
+    if all_requested:
+        trip_ids = [trip.id for trip in all_requested]
+        for offer in (
+            db.execute(select(TripOffer).where(TripOffer.trip_id.in_(trip_ids)))
+            .scalars()
+            .all()
+        ):
+            offers_by_trip_id[offer.trip_id].append(offer)
+
     new_offers: list[tuple[TripOffer, Trip, float]] = []
     zero_offer_new: list[TripOffer] = []
     for trip in all_requested:
-        offers = list(
-            db.execute(select(TripOffer).where(TripOffer.trip_id == trip.id))
-            .scalars()
-            .all()
-        )
+        offers = offers_by_trip_id.get(trip.id, [])
         if not offers:
             log_event("redispatch_zero_offers_attempt", trip_id=str(trip.id))
             min_iv = getattr(settings, "REDISPATCH_MIN_INTERVAL_SECONDS", 10)
@@ -501,8 +513,6 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
             )
     if new_offers:
         db.flush()
-        from collections import defaultdict
-
         by_trip: dict[str, list[float]] = defaultdict(list)
         for _offer, t, dist_km in new_offers:
             by_trip[str(t.id)].append(dist_km)
@@ -515,8 +525,6 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
                 max_km=round(max(dists), 2),
             )
         db.commit()
-        from collections import defaultdict
-
         offers_by_trip: dict[str, list[TripOffer]] = defaultdict(list)
         trip_by_id: dict[str, Trip] = {}
         for offer, t, _dist_km in new_offers:
