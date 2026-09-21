@@ -59,6 +59,18 @@ Guia passo a passo para colocar a TVDE no Render e preparar a validação humana
 | **Build Command** | `pip install -r requirements.txt` |
 | **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
 
+### L-SEC-11 — single worker / single instance (obrigatório enquanto ACCEPTED DEBT)
+
+Os rate limits de **OTP request/verify**, **login**, **Google exchange** e **trip create** vivem **em memória por processo**. Enquanto **L-SEC-11** estiver **ACCEPTED DEBT** (sem store partilhado):
+
+| Regra | Valor |
+|-------|--------|
+| Instâncias `tvde-api` | **1** (`numInstances=1`; sem autoscaling horizontal) |
+| Workers uvicorn | **1** (start command **sem** `--workers`; `WEB_CONCURRENCY=1`) |
+| Scale-out | **Proibido** até existir rate-limit store partilhado |
+
+O startup em ambiente deployed **falha** se `WEB_CONCURRENCY>1` ou `--workers>1` (ver `app/core/in_memory_rate_limit_guard.py`). A app **não** detecta o número de instâncias Render — isso é invariante de ops.
+
 4. **Environment Variables** — adiciona:
 
 | Key | Value |
