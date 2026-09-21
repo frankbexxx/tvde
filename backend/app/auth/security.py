@@ -5,7 +5,7 @@ import jwt
 
 from app.core.config import settings
 
-TOKEN_VERSION_CLAIM = "token_version"
+TOKEN_VERSION_CLAIM = "token_version"  # nosec B105  # JWT claim name, not a password
 
 
 def create_access_token(
