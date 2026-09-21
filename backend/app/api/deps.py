@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from jwt.exceptions import InvalidTokenError
 
-from app.auth.security import decode_access_token
+from app.auth.security import decode_access_token, token_version_matches
 from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.models.enums import Role, UserStatus
@@ -73,6 +73,13 @@ async def get_current_user(
         .scalar_one_or_none()
     )
     if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_token",
+        )
+    if not token_version_matches(
+        payload=payload, user_token_version=user.token_version
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_token",
@@ -186,6 +193,10 @@ async def get_optional_user(
             .scalar_one_or_none()
         )
         if not user or user.status != UserStatus.active:
+            return None
+        if not token_version_matches(
+            payload=payload, user_token_version=user.token_version
+        ):
             return None
         partner_scope: str | None = None
         if user.role == Role.driver and user.driver_profile is not None:

@@ -18,7 +18,7 @@ function errDetail(err: unknown, fallback: string): string {
 /** M1: conta mínima no ecrã (BETA) — nome, telefone só leitura, alterar palavra-passe. */
 export function BetaAccountPanel() {
   const { t } = useTranslation('common')
-  const { token, refreshSessionProfile } = useAuth()
+  const { token, refreshSessionProfile, logout } = useAuth()
   const [profile, setProfile] = useState<MeProfileResponse | null>(null)
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [nameDraft, setNameDraft] = useState('')
@@ -89,8 +89,9 @@ export function BetaAccountPanel() {
       setCurrentPw('')
       setNewPw('')
       setConfirmPw('')
-      await load()
-      toast.success(t('betaAccount.passwordUpdated'))
+      // L-SEC-13: backend bumps token_version — this JWT is revoked; force re-login.
+      toast.success(t('betaAccount.passwordUpdatedReLogin'))
+      logout()
     } catch (e) {
       const msg = errDetail(e, t('error'))
       setPwErr(msg)
