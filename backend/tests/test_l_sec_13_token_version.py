@@ -23,8 +23,7 @@ from app.auth.security import (
 )
 from app.core.config import settings
 from app.db.models.user import User
-from app.db.session import SessionLocal, engine
-from app.main import app
+from app.db.session import engine
 from app.models.enums import Role, UserStatus
 from tests.support.unique_phone import unique_test_phone
 
