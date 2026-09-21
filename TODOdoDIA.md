@@ -38,7 +38,7 @@ P0/P1 originais desta auditoria: **OPEN = 0**. Follow-ups **não** reabrem findi
 | **L-SEC-09** | Cron header-only auth | Concluído | #627 |
 | **L-SEC-10** | Remover JWT `?token=` em WebSockets | Concluído | #643 · Bearer-only · CLOSED |
 | **L-SEC-14A** | Partner trip list cap (500) | Concluído | #644 · CLOSED |
-| **L-SEC-14B** | Redispatch offers bulk load | Concluído | #TBD · CLOSED |
+| **L-SEC-14B** | Redispatch offers bulk load | Concluído | #645 · CLOSED |
 | **L-SEC-14C** | Admin lists / matching pool piloto | N/A | **ACCEPTED DEBT** · revisit com escala |
 | **L-SEC-13** | JWT invalidate after password change | Concluído | #642 · `token_version` · CLOSED |
 | **L-SEC-15** | Interaction log own Session | Concluído | #640 · CLOSED |
