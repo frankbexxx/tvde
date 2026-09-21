@@ -59,6 +59,7 @@
     "passwordMismatch": "Confirmation does not match the new password.",
     "currentRequired": "Enter your current password.",
     "passwordUpdated": "Password updated.",
+    "passwordUpdatedReLogin": "Password updated. Please sign in again.",
     "updating": "Updating…",
     "updatePassword": "Update password",
     "loading": "Loading account data…"

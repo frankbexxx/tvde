@@ -198,7 +198,11 @@ async def verify_otp(
     db.commit()
     db.refresh(user)
 
-    token_data = create_access_token(subject=str(user.id), role=user.role.value)
+    token_data = create_access_token(
+        subject=str(user.id),
+        role=user.role.value,
+        token_version=int(user.token_version),
+    )
 
     return _token_response(user, token_data)
 
@@ -273,7 +277,11 @@ async def login(
             detail="blocked",
         )
 
-    token_data = create_access_token(subject=str(user.id), role=user.role.value)
+    token_data = create_access_token(
+        subject=str(user.id),
+        role=user.role.value,
+        token_version=int(user.token_version),
+    )
 
     return _token_response(user, token_data)
 
@@ -397,7 +405,11 @@ async def google_exchange(
             detail="blocked",
         )
 
-    token_data = create_access_token(subject=str(user.id), role=user.role.value)
+    token_data = create_access_token(
+        subject=str(user.id),
+        role=user.role.value,
+        token_version=int(user.token_version),
+    )
     return _token_response(user, token_data)
 
 
@@ -482,5 +494,6 @@ async def change_my_password(
                 detail="invalid_current_password",
             )
     user.password_hash = hash_password(payload.new_password)
+    user.token_version = int(user.token_version or 0) + 1
     db.commit()
     return {"status": "ok"}

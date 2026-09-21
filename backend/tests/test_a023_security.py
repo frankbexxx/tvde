@@ -93,6 +93,7 @@ def test_create_access_token_includes_exp_and_sub() -> None:
     assert payload["sub"] == "user-uuid-1"
     assert payload["role"] == "passenger"
     assert "exp" in payload
+    assert payload["token_version"] == 0
 
 
 def test_decode_rejects_expired_token() -> None:

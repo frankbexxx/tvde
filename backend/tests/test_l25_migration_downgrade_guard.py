@@ -13,12 +13,9 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.models.complaint import Complaint, ComplaintHistory
-from app.db.models.user import User
 from app.models.enums import (
     ComplaintCategory,
     ComplaintSource,
-    Role,
-    UserStatus,
 )
 from app.services import complaints as complaints_svc
 from tests.support.unique_phone import unique_test_phone
@@ -79,20 +76,24 @@ def test_downgrade_blocked_when_external_complaint_without_user(
         db.execute(text("DELETE FROM complaints WHERE complainant_user_id IS NULL"))
         db.commit()
 
-        admin = User(
-            role=Role.admin,
-            name=f"MigAdm {uuid.uuid4().hex[:6]}",
-            phone=unique_test_phone(),
-            status=UserStatus.active,
+        # Raw insert: ORM User maps columns from migrations after L-25 (e.g. token_version).
+        admin_id = uuid.uuid4()
+        db.execute(
+            text(
+                "INSERT INTO users (id, role, name, phone, status, is_test_account) "
+                "VALUES (:id, 'admin', :name, :phone, 'active', false)"
+            ),
+            {
+                "id": str(admin_id),
+                "name": f"MigAdm {uuid.uuid4().hex[:6]}",
+                "phone": unique_test_phone(),
+            },
         )
-        db.add(admin)
         db.commit()
-        db.refresh(admin)
-        admin_id = admin.id
 
         complaint = complaints_svc.create_external_complaint(
             db,
-            admin_user_id=str(admin.id),
+            admin_user_id=str(admin_id),
             source=ComplaintSource.livro_reclamacoes,
             category=ComplaintCategory.other,
             description="Downgrade guard probe — do not delete for assertion.",
@@ -121,20 +122,29 @@ def test_downgrade_blocked_when_external_complaint_without_user(
         ).scalars().all()
         assert hist
     finally:
-        if created_id is not None:
-            db.execute(
-                text("DELETE FROM complaint_history WHERE complaint_id = :id"),
-                {"id": str(created_id)},
-            )
-            db.execute(
-                text("DELETE FROM complaints WHERE id = :id"),
-                {"id": str(created_id)},
-            )
-            db.commit()
-        if admin_id is not None:
-            db.execute(text("DELETE FROM users WHERE id = :id"), {"id": str(admin_id)})
-            db.commit()
-        db.close()
+        try:
+            db.rollback()
+            if created_id is not None:
+                db.execute(
+                    text("DELETE FROM complaint_history WHERE complaint_id = :id"),
+                    {"id": str(created_id)},
+                )
+                db.execute(
+                    text("DELETE FROM complaints WHERE id = :id"),
+                    {"id": str(created_id)},
+                )
+                db.commit()
+            if admin_id is not None:
+                db.execute(
+                    text("DELETE FROM users WHERE id = :id"), {"id": str(admin_id)}
+                )
+                db.commit()
+        except Exception:
+            db.rollback()
+        finally:
+            db.close()
+            # Always restore suite head even if the body failed mid-revision.
+            command.upgrade(cfg, "head")
 
     # Clean path: downgrade/upgrade still works with no null-user rows
     command.downgrade(cfg, REV_L12)

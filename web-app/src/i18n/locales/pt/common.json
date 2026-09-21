@@ -59,6 +59,7 @@
     "passwordMismatch": "A confirmação não coincide com a nova palavra-passe.",
     "currentRequired": "Indica a palavra-passe actual.",
     "passwordUpdated": "Palavra-passe actualizada.",
+    "passwordUpdatedReLogin": "Palavra-passe actualizada. Volte a entrar com a nova palavra-passe.",
     "updating": "A actualizar…",
     "updatePassword": "Actualizar palavra-passe",
     "loading": "A carregar dados da conta…"

@@ -235,7 +235,11 @@ async def dev_seed_simulator(
         return user
 
     def make_token(user: User) -> str:
-        data = create_access_token(subject=str(user.id), role=user.role.value)
+        data = create_access_token(
+            subject=str(user.id),
+            role=user.role.value,
+            token_version=int(user.token_version or 0),
+        )
         return data["token"]
 
     passenger_tokens = []
@@ -288,7 +292,11 @@ async def dev_tokens(db: Session = Depends(get_db)) -> dict:
     partner = get_user_by_phone("+351955555502")
 
     def make_token(user: User) -> str:
-        data = create_access_token(subject=str(user.id), role=user.role.value)
+        data = create_access_token(
+            subject=str(user.id),
+            role=user.role.value,
+            token_version=int(user.token_version or 0),
+        )
         return data["token"]
 
     return {

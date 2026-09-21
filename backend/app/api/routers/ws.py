@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, status
 from sqlalchemy import select
 
-from app.auth.security import decode_access_token
+from app.auth.security import decode_access_token, token_version_matches
 from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.db.session import SessionLocal
@@ -37,6 +37,10 @@ async def _authorize(websocket: WebSocket, trip_id: str) -> bool:
     with SessionLocal() as db:
         user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if not user or user.status != UserStatus.active:
+            return False
+        if not token_version_matches(
+            payload=payload, user_token_version=user.token_version
+        ):
             return False
 
         trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one_or_none()
@@ -79,6 +83,10 @@ async def _authorize_driver(websocket: WebSocket) -> str | None:
     with SessionLocal() as db:
         user = db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if not user or user.status != UserStatus.active:
+            return None
+        if not token_version_matches(
+            payload=payload, user_token_version=user.token_version
+        ):
             return None
         if user.role != Role.driver:
             return None
