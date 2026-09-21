@@ -37,6 +37,9 @@ P0/P1 originais desta auditoria: **OPEN = 0**. Follow-ups **não** reabrem findi
 | **L-DOC-02** | Cron runbook canónico | Concluído | #626 / #627 · residual `R-DOC-CRON-STALE-EXAMPLES` |
 | **L-SEC-09** | Cron header-only auth | Concluído | #627 |
 | **L-SEC-10** | Remover JWT `?token=` em WebSockets | Concluído | #643 · Bearer-only · CLOSED |
+| **L-SEC-14A** | Partner trip list cap (500) | Concluído | #TBD · CLOSED |
+| **L-SEC-14B** | Redispatch N+1 / requested trips | Por iniciar | Separado · não nesta PR |
+| **L-SEC-14C** | Admin lists / matching pool piloto | N/A | **ACCEPTED DEBT** · revisit com escala |
 | **L-SEC-13** | JWT invalidate after password change | Concluído | #642 · `token_version` · CLOSED |
 | **L-SEC-15** | Interaction log own Session | Concluído | #640 · CLOSED |
 | **L-SEC-16** | Driver document upload allowlist | Concluído | #638 · alinhado a viaturas · CLOSED |
