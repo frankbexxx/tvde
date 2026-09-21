@@ -42,6 +42,9 @@ from app.middleware import RequestIDMiddleware
 
 import app.db.models  # noqa: F401
 from app.core.config import settings
+from app.core.in_memory_rate_limit_guard import (
+    assert_single_worker_for_in_memory_rate_limits,
+)
 from app.db.migrations_runner import upgrade_to_head
 
 logger = logging.getLogger(__name__)
@@ -67,6 +70,10 @@ def custom_openapi() -> dict:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("[startup] begin")
+    # L-SEC-11: in-memory rate limits are process-local — block deployed multi-worker.
+    assert_single_worker_for_in_memory_rate_limits(
+        is_deployed=settings.is_deployed_environment(),
+    )
     # Startup — log config for diagnostics (no secrets)
     _debug_logs = getattr(settings, "DEBUG_RUNTIME_LOGS", False)
     if settings.is_development_environment() or _debug_logs:
