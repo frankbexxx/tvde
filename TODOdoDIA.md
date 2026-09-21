@@ -36,6 +36,7 @@ P0/P1 originais desta auditoria: **OPEN = 0**. Follow-ups **não** reabrem findi
 | **L-DOC-01** | Arch Março SUPERSEDED | Concluído | #636 |
 | **L-DOC-02** | Cron runbook canónico | Concluído | #626 / #627 · residual `R-DOC-CRON-STALE-EXAMPLES` |
 | **L-SEC-09** | Cron header-only auth | Concluído | #627 |
+| **L-SEC-15** | Interaction log own Session | Smoke pendente | Branch `fix/l-sec-15-interaction-log-own-session` · CLOSED no audit após merge |
 | **L-SEC-16** | Driver document upload allowlist | Concluído | #638 · alinhado a viaturas · CLOSED |
 | **L-SEC-19** | `compare_digest` cron secret | Concluído | #627 |
 | **O-PAY-WEBHOOK-ANOMALY** | Alerta webhook anomalies | Por iniciar | Não muda ACK 200 |
