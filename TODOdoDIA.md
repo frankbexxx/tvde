@@ -16,6 +16,37 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **LATERAL AUDIT RECONCILE** (**2026-09-21** — tip `98ed421`)
+
+P0/P1 originais desta auditoria: **OPEN = 0**. Follow-ups **não** reabrem findings.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **L-PAY-01** | Webhook TX + 5xx BD | Concluído | #606 |
+| **L-PAY-02** | ACK 200 not-found / mismatch | Concluído | **ACCEPTED DESIGN** · #634 · `O-PAY-WEBHOOK-ANOMALY` |
+| **L-PAY-03** | Cancel fail-closed | Concluído | #628 · `R-PAY-ORPHAN-PI` |
+| **L-TRIP-01** | Commit antes de WS offers | Concluído | #616 |
+| **L-GPS-01** | Remover find-driver | Concluído | #617 |
+| **L-GPS-02** | Debug matching owner aggregate | Concluído | #617 |
+| **L-AUTH-01** | ADMIN_PHONE promote/guards | Concluído | #630 / #632 · `R-AUTH-SUPERADMIN-BOOTSTRAP` |
+| **L-FE-01** | Polling stale / overlap | Concluído | #618 |
+| **L-FE-02** | Logout limpa active trip | Concluído | #618 |
+| **L-OBS-01** | Cron partial_error → 500 | Concluído | #625 · `O-CRON-TIMEOUT-PARTIAL` |
+| **L-TEST-01** | Isolamento BD testes | Concluído | **ACCEPTED DEBT** · #635 · `T-DB-ISOLATION` / `T-TEST-DB-NAME-GUARD` |
+| **L-DOC-01** | Arch Março SUPERSEDED | Concluído | #636 |
+| **L-DOC-02** | Cron runbook canónico | Concluído | #626 / #627 · residual `R-DOC-CRON-STALE-EXAMPLES` |
+| **L-SEC-09** | Cron header-only auth | Concluído | #627 |
+| **L-SEC-19** | `compare_digest` cron secret | Concluído | #627 |
+| **O-PAY-WEBHOOK-ANOMALY** | Alerta webhook anomalies | Por iniciar | Não muda ACK 200 |
+| **R-PAY-ORPHAN-PI** | Reconcile PI aberto órfão | Por iniciar | — |
+| **O-CRON-TIMEOUT-PARTIAL** | timeout_payment_cancel_failed → partial? | Por iniciar | Decisão HTTP cron |
+| **R-AUTH-SUPERADMIN-BOOTSTRAP** | Bootstrap super_admin auditável | Por iniciar | Sem auto-promote login |
+| **T-DB-ISOLATION** | Fixture TX + get_db override | Por iniciar | Médio prazo |
+| **T-TEST-DB-NAME-GUARD** | Exigir nome DB `test_db` | Por iniciar | — |
+| **R-DOC-CRON-STALE-EXAMPLES** | Limpar `?secret=` / 15s em IMPLEMENTACAO / A022 | Por iniciar | **Não** reabrir L-DOC-02 |
+
+---
+
 ## Painel — **DOCS / L-DOC-01** (**2026-09-19**)
 
 Março 2026 architecture docs marcados SUPERSEDED; índice aponta fontes operacionais. **Sem** reescrita dos corpos históricos.
@@ -23,7 +54,7 @@ Março 2026 architecture docs marcados SUPERSEDED; índice aponta fontes operaci
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **L-DOC-01** | Arquitectura Março como “actual” + BD local=Render | Concluído | Banners + `DOCS_INDEX` + `architecture/README.md` |
-| **L-DOC-02** | Cron runbook `?secret=` / TTL 15s | N/A | Spot-check: `CRON_JOB_ORG_INSTRUCOES.md` já header-only + TTL 60 — revalidar noutro ticket se necessário |
+| **L-DOC-02** | Cron runbook canónico | Concluído | #626/#627 · ver `R-DOC-CRON-STALE-EXAMPLES` |
 
 ---
 
