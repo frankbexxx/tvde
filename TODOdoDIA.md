@@ -36,7 +36,7 @@ P0/P1 originais desta auditoria: **OPEN = 0**. Follow-ups **não** reabrem findi
 | **L-DOC-01** | Arch Março SUPERSEDED | Concluído | #636 |
 | **L-DOC-02** | Cron runbook canónico | Concluído | #626 / #627 · residual `R-DOC-CRON-STALE-EXAMPLES` |
 | **L-SEC-09** | Cron header-only auth | Concluído | #627 |
-| **L-SEC-13** | JWT invalidate after password change | Concluído | #PR · `token_version` · CLOSED |
+| **L-SEC-13** | JWT invalidate after password change | Concluído | #642 · `token_version` · CLOSED |
 | **L-SEC-15** | Interaction log own Session | Concluído | #640 · CLOSED |
 | **L-SEC-16** | Driver document upload allowlist | Concluído | #638 · alinhado a viaturas · CLOSED |
 | **L-SEC-19** | `compare_digest` cron secret | Concluído | #627 |
