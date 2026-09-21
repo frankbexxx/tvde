@@ -18,7 +18,7 @@ def _extract_token(websocket: WebSocket) -> str | None:
     auth = websocket.headers.get("Authorization")
     if auth and auth.lower().startswith("bearer "):
         return auth.split(" ", 1)[1].strip()
-    return websocket.query_params.get("token")
+    return None
 
 
 async def _authorize_admin(websocket: WebSocket) -> bool:
