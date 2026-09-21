@@ -293,14 +293,14 @@
       "summaryTitle": "Summary",
       "summarySubtitle": "Trip totals and indicators",
       "listTitle": "List (filters)",
-      "listSubtitle": "Search, status, and date range",
+      "listSubtitle": "Up to 500 newest trips; filters apply to the loaded set",
       "exportTitle": "Export CSV",
-      "exportSubtitle": "Download filtered trips"
+      "exportSubtitle": "Full or filtered history"
     },
     "filterCompleted": "Completed",
     "filterUntil": "Until",
-    "exportHint": "CSV export (UTF-8) aligned with active filters in trip lists.",
-    "summaryTotal": "Total:",
+    "exportHint": "The workspace list shows up to 500 recent trips. CSV export downloads full or filtered history (not limited to that list).",
+    "summaryTotal": "Total (loaded):",
     "summaryOngoing": "Ongoing:",
     "summaryRatio": "Completed / Cancelled / Failed:",
     "recentUpdates": "Recent updates",
@@ -331,11 +331,11 @@
       "assigned": "Awaiting accept"
     },
     "exportScreen": {
-      "filtersActive": "Active filters: {{filtered}} of {{total}} trips.",
-      "noFilters": "No filters — exports all {{total}} trips.",
+      "filtersActive": "Workspace filters: {{filtered}} of {{total}} loaded trips (max 500 recent).",
+      "noFilters": "No workspace filters — CSV exports full history (not limited to the {{total}} loaded in the list).",
       "exportFiltered": "Export {{count}} trips (filters)",
       "exportDefault": "Export trips (CSV)",
-      "exportAll": "Export all ({{total}})"
+      "exportAll": "Export full history"
     }
   },
   "reports": {

@@ -14,6 +14,10 @@ from app.db.models.trip import Trip
 from app.models.enums import TripStatus
 
 
+# Workspace list cap (L-SEC-14A). Export uses limit=None / filtered path (unbounded).
+PARTNER_TRIP_LIST_LIMIT = 500
+
+
 def list_drivers_for_partner(db: Session, partner_id: str) -> list[Driver]:
     pid = uuid.UUID(partner_id)
     return list(
@@ -47,10 +51,15 @@ def list_drivers_for_partner_enriched(db: Session, partner_id: str) -> list[Driv
     )
 
 
-def list_trips_for_partner(db: Session, partner_id: str) -> list[Trip]:
+def list_trips_for_partner(
+    db: Session, partner_id: str, *, limit: int | None = PARTNER_TRIP_LIST_LIMIT
+) -> list[Trip]:
     """
     Trips historically attributed to this partner (`trips.partner_id`), with
     legacy fallback to the driver's *current* partner when partner_id is null.
+
+    Workspace list defaults to the newest ``PARTNER_TRIP_LIST_LIMIT`` rows
+    (L-SEC-14A). Pass ``limit=None`` for unbounded reads (CSV export).
     """
     pid = uuid.UUID(partner_id)
     stmt = (
@@ -65,6 +74,8 @@ def list_trips_for_partner(db: Session, partner_id: str) -> list[Trip]:
         )
         .order_by(Trip.created_at.desc())
     )
+    if limit is not None:
+        stmt = stmt.limit(limit)
     return list(db.execute(stmt).unique().scalars().all())
 
 

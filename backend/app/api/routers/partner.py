@@ -872,6 +872,10 @@ async def partner_list_trips(
     ctx: UserContext = Depends(get_current_partner),
     db: Session = Depends(get_db),
 ) -> list[PartnerTripItem]:
+    """Newest trips for the partner workspace (capped; see L-SEC-14A).
+
+    Full/filtered history: ``GET /partner/trips/export``.
+    """
     partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
@@ -894,7 +898,11 @@ async def partner_export_trips_csv(
     to_date: str | None = Query(None, alias="to"),
     q: str | None = Query(None),
 ):
-    """Must be registered before /trips/{trip_id} so 'export' is not parsed as UUID."""
+    """Must be registered before /trips/{trip_id} so 'export' is not parsed as UUID.
+
+    Workspace ``GET /partner/trips`` is capped (newest 500). This export path
+    remains the filtered/full historical download (no list cap).
+    """
     partner_id = _require_partner_id(ctx)
     log_event(
         "partner_api_access",
@@ -928,7 +936,8 @@ async def partner_export_trips_csv(
             search=q,
         )
     else:
-        trips = list_trips_for_partner(db, partner_id)
+        # Full historical export — do not apply workspace list cap (L-SEC-14A).
+        trips = list_trips_for_partner(db, partner_id, limit=None)
 
     buf = io.StringIO()
     w = csv.writer(buf)

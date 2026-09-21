@@ -293,14 +293,14 @@
       "summaryTitle": "Resumo",
       "summarySubtitle": "Totais e indicadores de viagens",
       "listTitle": "Lista (filtros)",
-      "listSubtitle": "Pesquisa, estado e intervalo de datas",
+      "listSubtitle": "Até 500 viagens mais recentes; filtros no conjunto carregado",
       "exportTitle": "Exportar CSV",
-      "exportSubtitle": "Descarregar viagens filtradas"
+      "exportSubtitle": "Histórico completo ou filtrado"
     },
     "filterCompleted": "Concluídas",
     "filterUntil": "Até",
-    "exportHint": "Exportação CSV (UTF-8) alinhada com os filtros activos nas listas de viagens.",
-    "summaryTotal": "Total:",
+    "exportHint": "A lista do workspace mostra até 500 viagens recentes. O CSV exporta histórico completo ou filtrado (não limitado a essa lista).",
+    "summaryTotal": "Total (carregado):",
     "summaryOngoing": "Em curso:",
     "summaryRatio": "Concluídas / Canceladas / Falhadas:",
     "recentUpdates": "Últimas atualizações",
@@ -331,11 +331,11 @@
       "assigned": "Por aceitar"
     },
     "exportScreen": {
-      "filtersActive": "Filtros ativos: {{filtered}} de {{total}} viagens.",
-      "noFilters": "Sem filtros — exporta todas as {{total}} viagens.",
+      "filtersActive": "Filtros do workspace: {{filtered}} de {{total}} viagens carregadas (máx. 500 recentes).",
+      "noFilters": "Sem filtros do workspace — o CSV exporta o histórico completo (não limitado às {{total}} carregadas na lista).",
       "exportFiltered": "Exportar {{count}} viagens (filtros)",
       "exportDefault": "Exportar viagens (CSV)",
-      "exportAll": "Exportar todas ({{total}})"
+      "exportAll": "Exportar histórico completo"
     }
   },
   "reports": {
