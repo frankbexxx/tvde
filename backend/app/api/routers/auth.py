@@ -90,12 +90,22 @@ def _token_response(user: User, token_data: dict) -> TokenResponse:
     )
 
 
+def _reject_otp_when_deployed() -> None:
+    """OTP code stays for a future SMS track. Deployed has no delivery channel."""
+    if settings.is_deployed_environment():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="otp_auth_unavailable",
+        )
+
+
 @router.post("/otp/request", response_model=OtpRequestResponse)
 async def request_otp(
     payload: OtpRequest,
     request: Request,
     db: Session = Depends(get_db),
 ) -> OtpRequestResponse:
+    _reject_otp_when_deployed()
     phone = _normalize_phone(payload.phone)
     check_otp_request_rate_limit(request, phone)
     if settings.enforce_pt_phone():
@@ -134,6 +144,7 @@ async def verify_otp(
     request: Request,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
+    _reject_otp_when_deployed()
     now = datetime.now(timezone.utc)
     phone = _normalize_phone(payload.phone)
     check_otp_verify_rate_limit(request, phone)

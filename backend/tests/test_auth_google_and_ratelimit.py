@@ -146,7 +146,8 @@ def test_dev_tools_fixed_otp_disabled_in_production(client, monkeypatch, capsys)
     assert otp_module.generate_otp_code() == "100000"
 
     r = client.post("/auth/otp/request", json={"phone": "+351934999666"})
-    assert r.status_code == 200
+    assert r.status_code == 503
+    assert r.json()["detail"] == "otp_auth_unavailable"
     captured = capsys.readouterr()
     assert "[OTP]" not in captured.out
     assert "100000" not in captured.out
