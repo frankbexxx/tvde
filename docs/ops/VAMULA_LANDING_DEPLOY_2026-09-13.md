@@ -25,7 +25,7 @@
 | `/` (landing) | **VALIDATED** | Sem morada completa; `Oeiras, Portugal`; emails `geral@` + `suporte@`; links legais |
 | `/legal/` | **VALIDATED** | Sede completa; `legal@vamula.pt`; licença IMT **354/2026** |
 | `/privacidade/` | **VALIDATED** | Sem morada completa; link para `/legal/`; `legal@vamula.pt` |
-| `/reclamacoes/` | **VALIDATED** | `reclamacoes@vamula.pt`; link LRE **genérico**; prazo 15 dias úteis |
+| `/reclamacoes/` | **VALIDATED** | `reclamacoes@vamula.pt`; link LRE **directo** (2026-09-22); prazo 15 dias úteis |
 | `/ral/` | **VALIDATED** | CACCL + CNIACC; wording **provisório** (revisão jurídica futura); **sem** ODR antiga |
 
 **Política desta fase:** sem telefone público · sem banner cookies.
@@ -41,7 +41,6 @@
 
 ## Ainda pendente (site / ops)
 
-- LRE: registo / link **directo** da entidade — bloqueado por credenciais externas / contabilista (link genérico já publicado)
 - Revisão jurídica do wording RAL (provisório)
 - Banner cookies (fase posterior)
 - Formulário / tracking (fora de scope V1)
