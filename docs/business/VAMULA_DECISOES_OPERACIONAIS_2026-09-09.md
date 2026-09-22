@@ -147,8 +147,8 @@ Sem telefone público nesta fase.
 | Campo | Decisão / estado |
 |-------|------------------|
 | Timing | Domínio e emails já activos |
-| Responsáveis iniciais | Manel + Francisco |
-| Resposta / prazos | Manel + Francisco · 15 dias úteis (página pública) |
+| Gestor de Reclamações (O-L25-05) | **CONCLUÍDO** 2026-09-22 — titular **Manel Perez** (operação) · substituto **Francisco Bexiga** (supervisão/backup) · substituto assume na ausência do titular |
+| Resposta / prazos | 15 dias úteis (página pública) · sem SLA adicional · ambos controlam o prazo |
 | Acesso/credenciais | Registo backoffice **activo** (evidência 2026-09-22) |
 | Página pública `/reclamacoes/` | Link **directo** da loja VAMULÁ |
 | Link directo entidade | **CONFIGURADO** 2026-09-22 — `https://livroreclamacoes.pt/inicio/qrcode_operator?economicoperator=43122981&store=43187609` |
@@ -156,7 +156,7 @@ Sem telefone público nesta fase.
 | Canal AMT (O-L25-06) | **CONCLUÍDO** 2026-09-22 — sector Táxis/TVDE activo · entidade reguladora AMT · screenshot em `docs/legal/sources/lre/` |
 | RAL `/ral/` | **DEPLOYED / VALIDATED** — wording **provisório** (CACCL/CNIACC); sem ODR antiga; revisão jurídica futura |
 
-O registo, o link directo LRE e o canal AMT (O-L25-06) estão fechados. **L-25 global continua PARCIAL** enquanto O-L25-02…05 e O-L25-09 estiverem abertos.
+O registo, o link directo LRE, o canal AMT (O-L25-06) e o gestor de reclamações (O-L25-05) estão fechados. **L-25 global continua PARCIAL** enquanto O-L25-02, O-L25-03, O-L25-04 e O-L25-09 estiverem abertos. O-L25-09 já não depende da nomeação do gestor.
 
 ---
 
