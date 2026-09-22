@@ -405,6 +405,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 - **Objectivo:** OTP por SMS fora de non-prod.  
 - **IDs:** `S-AUTH-01`  
 - **Dependências:** Provider SMS  
+- **Estado actual:** não implementado. Em deployed, `POST /auth/otp/request` e `/verify` respondem `503 otp_auth_unavailable`. O código OTP mantém-se para este carril.  
+- **Antes de reactivar OTP em deployed:** resolver **L-SEC-12** e implementar/testar entrega SMS real.  
 - **Conclusão:** Login OTP em telemóvel real.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |

@@ -84,7 +84,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
-| **S-AUTH-01** | Backend/API | OTP **sem envio SMS** (só log/OTP fixo non-prod) — provider + envio real | P0 — Bloqueador | Conta SMS / provider |
+| **S-AUTH-01** | Backend/API | OTP **sem envio SMS**. Deployed: `503 otp_auth_unavailable` até SMS real + **L-SEC-12**. Non-prod: código fixo/log. Provider ainda por escolher | P0 — Bloqueador | Conta SMS / provider · L-SEC-12 |
 | **S-AUTH-02** | Backend/API | Google OAuth: só passenger + envs vazios por defeito; staging A2-02 | P2 — Melhoria importante | Credenciais staging/prod |
 | **S-NOTIF-01** | Cross-app | Push notifications (FCM/APNs) — **sem** implementação no backend | P0 — Bloqueador | MOBILE / contas push |
 | **S-NOTIF-02** | Cross-app | SMS transaccionais (oferta/viagem) além de OTP | P2 — Melhoria importante | S-AUTH-01 |
@@ -242,6 +242,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 - **Objectivo:** Passageiro/motorista recebem OTP real fora de non-prod.
 - **IDs:** S-AUTH-01
 - **Depende de:** ETAPA 01
+- **Nota:** SMS **não** está implementado. Deployed bloqueia OTP (`503`) até entrega real testada e **L-SEC-12** resolvido.
 
 ### ETAPA 05 — Pagamentos live (sem Connect ainda)
 - **Objectivo:** Cobrança real authorize/capture + webhook em prod; copy passageiro alinhada.
