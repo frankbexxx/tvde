@@ -38,7 +38,7 @@
 | O-L25-03 | Marca no registo | Por iniciar | VAMULÁ + Ventos Férteis · IMT 354/2026 · INPI 734136 |
 | O-L25-04 | Email notificações | Por iniciar | Inbox partilhada · monitorização · backup · não email pessoal isolado |
 | O-L25-05 | Gestor de Reclamações | Por iniciar | Titular + substituto · quem consulta/cria/responde/controla prazo |
-| O-L25-06 | Canal AMT | Por iniciar | Confirmar no registo LRE · evidência oficial |
+| O-L25-06 | Canal AMT | Concluído | 2026-09-22 · sector Táxis/TVDE activo · entidade reguladora AMT · `docs/legal/sources/lre/vamula-lre-amt-sector-association-2026-09-22.png` |
 | O-L25-07 | RAL | Concluído | CACCL + CNIACC + copy prudente |
 | O-L25-08 | Livro físico | Concluído | NÃO APLICÁVEL sem estabelecimento presencial |
 | O-L25-09 | Processo 15 DU humano | Por iniciar | LRE → import VAMULÁ → due manual → responder → fechar |
@@ -74,7 +74,7 @@ Marcar **`L-25 = FECHADO`** apenas quando estiverem concluídos:
 - O-L25-06  
 - O-L25-09  
 
-O-L25-07 e O-L25-08 já estão concluídos.
+O-L25-01, O-L25-06, O-L25-07 e O-L25-08 já estão concluídos. O-L25-02, O-L25-03, O-L25-04, O-L25-05 e O-L25-09 continuam por iniciar.
 
 ## Superfícies na app
 

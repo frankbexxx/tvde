@@ -153,9 +153,10 @@ Sem telefone público nesta fase.
 | Página pública `/reclamacoes/` | Link **directo** da loja VAMULÁ |
 | Link directo entidade | **CONFIGURADO** 2026-09-22 — `https://livroreclamacoes.pt/inicio/qrcode_operator?economicoperator=43122981&store=43187609` |
 | Evidência | `docs/legal/sources/lre/vamula-lre-qrcode-2026-09-22.pdf` |
+| Canal AMT (O-L25-06) | **CONCLUÍDO** 2026-09-22 — sector Táxis/TVDE activo · entidade reguladora AMT · screenshot em `docs/legal/sources/lre/` |
 | RAL `/ral/` | **DEPLOYED / VALIDATED** — wording **provisório** (CACCL/CNIACC); sem ODR antiga; revisão jurídica futura |
 
-O registo e o link directo LRE estão fechados. **L-25 global continua PARCIAL** enquanto O-L25-02…06 e O-L25-09 estiverem abertos.
+O registo, o link directo LRE e o canal AMT (O-L25-06) estão fechados. **L-25 global continua PARCIAL** enquanto O-L25-02…05 e O-L25-09 estiverem abertos.
 
 ---
 
