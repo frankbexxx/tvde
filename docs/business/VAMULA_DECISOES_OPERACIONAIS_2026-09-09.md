@@ -105,7 +105,7 @@ Telefone público **não** é gap obrigatório nesta fase.
 
 **Histórico:** em 09/09/2026 o domínio estava bloqueado externamente no .PT (recuperação de contacto). Em 13/09/2026 o site institucional V1 já está publicado no domínio. Em 16/09/2026 as páginas legais públicas foram publicadas e validadas por smoke.
 
-**Importante:** LRE link directo continua pendente (credenciais externas) — **não** bloqueia a APP.
+**Importante:** LRE link directo **configurado** 2026-09-22 — **não** bloqueia a APP.
 
 ---
 
@@ -149,13 +149,13 @@ Sem telefone público nesta fase.
 | Timing | Domínio e emails já activos |
 | Responsáveis iniciais | Manel + Francisco |
 | Resposta / prazos | Manel + Francisco · 15 dias úteis (página pública) |
-| Acesso/credenciais | **PENDENTE** (externo / contabilista) |
-| Página pública `/reclamacoes/` | **DEPLOYED / VALIDATED** — link LRE **genérico** |
-| Link directo entidade | **PENDENTE** — bloqueado por credenciais externas / contabilista |
+| Acesso/credenciais | Registo backoffice **activo** (evidência 2026-09-22) |
+| Página pública `/reclamacoes/` | Link **directo** da loja VAMULÁ |
+| Link directo entidade | **CONFIGURADO** 2026-09-22 — `https://livroreclamacoes.pt/inicio/qrcode_operator?economicoperator=43122981&store=43187609` |
+| Evidência | `docs/legal/sources/lre/vamula-lre-qrcode-2026-09-22.pdf` |
 | RAL `/ral/` | **DEPLOYED / VALIDATED** — wording **provisório** (CACCL/CNIACC); sem ODR antiga; revisão jurídica futura |
 
-Obrigatório operacionalmente fechar o link directo LRE, mas **NÃO** bloqueia o desenvolvimento actual da APP.  
-Não fechar L-25 globalmente enquanto o registo/link directo LRE permanecer pendente.
+O registo e o link directo LRE estão fechados. **L-25 global continua PARCIAL** enquanto O-L25-02…06 e O-L25-09 estiverem abertos.
 
 ---
 
@@ -176,7 +176,6 @@ Não fechar L-25 globalmente enquanto o registo/link directo LRE permanecer pend
 
 ### Ainda pendentes
 
-- LRE registo / link **directo** (credenciais externas / contabilista; link genérico já publicado)
 - Revisão jurídica do wording RAL
 - Validação custos Hostinger no modelo A1 (valor contratado)
 
@@ -186,6 +185,5 @@ Não fechar L-25 globalmente enquanto o registo/link directo LRE permanecer pend
 
 ### Dependências externas
 
-- Contabilista (facturação/CAE fino + credenciais LRE) — Manel
-- Portal LRE — link directo pendente
+- Contabilista (facturação/CAE fino) — Manel
 - Revisão jurídica RAL (provisório publicado)

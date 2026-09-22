@@ -32,16 +32,16 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Partner/Frota** | **OK** (M1) · **GAP M2** | Vehicle doc gates **ON** (G-KYC-P0-04); settlement política **semanal / segunda / manual**; IMT técnico / PF3D-4 UX / docs pessoais ainda abertos |
 | **Admin** | **OK** (M1) | Approve/reject E5; override ilegal = **proibido** |
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT; pricing A2.5 + cancel €3 no código |
-| **Negócio / marca** | **PARCIAL** | Comissão **15% fixa**; tarifário A2.5 **DONE**; **A1.4 DECIDIDA / CLOSED** (2026-09-18); landing **https://vamula.pt** = **DEPLOYED / PROD OK**; páginas legais públicas = **DEPLOYED / VALIDATED**; emails `@vamula.pt` **activos**; LRE link directo **PENDENTE** |
+| **Negócio / marca** | **PARCIAL** | Comissão **15% fixa**; tarifário A2.5 **DONE**; **A1.4 DECIDIDA / CLOSED** (2026-09-18); landing **https://vamula.pt** = **DEPLOYED / PROD OK**; páginas legais públicas = **DEPLOYED / VALIDATED**; emails `@vamula.pt` **activos**; LRE link directo **CONFIGURADO** 2026-09-22 |
 | **Portagens / HERE** | **V1 PROD VALIDATED** | HERE Tolls **ON** (`tvde-api`) · F0–F5 DONE · residual route variance **accepted for V1** · P2 determinism backlog · fiscal pendente |
-| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (páginas públicas OK; LRE directo pendente; RAL wording provisório; **não bloqueador imediato** APP) · L-26 fechado; L1/L2 externos |
+| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (páginas públicas OK; LRE directo configurado 2026-09-22; RAL wording provisório; ops O-L25-02…06/09 abertos; **não bloqueador imediato** APP) · L-26 fechado; L1/L2 externos |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05); **MB WAY = fase 2** |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
 | **Localização/mapas** | **OK** | Tracking + SOS partilha `DriverLocation` (#549) |
 | **Infra/deploy** | **OK** / **PARCIAL** ops | Render + CI · landing Hostinger **OK** |
 | **Testes/CI** | **OK** | #548 / #549 / #584 / #585 / #586 verdes recentes |
-| **Docs/operação** | **PARCIAL** | Acta Manel 09/09 + **A1.4 CLOSED** 18/09 + deploy landing 13/09 + legais 16/09 **VALIDATED**; LRE directo pendente |
+| **Docs/operação** | **PARCIAL** | Acta Manel 09/09 + **A1.4 CLOSED** 18/09 + deploy landing 13/09 + legais 16/09 **VALIDATED**; LRE directo **CONFIGURADO** 2026-09-22 |
 
 ---
 
@@ -135,7 +135,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 |----|------|------|------------|-------------|
 | **S-BIZ-01** | Documentação/Operação | Modelo económico: **A1.2 READY FOR ECONOMIC MODELLING** · **A1.3 READY FOR PRICING INPUT** · **A1.4 DECIDIDA / CLOSED** (2026-09-18) | P2 — Accounting/IVA externos | [`A1_MODELO…`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md) §6h |
 | **S-BIZ-02** | Documentação/Operação | Comissão **15% fixa** **DONE**; tarifário V1 **DONE** (A2.5); **A1.4 CLOSED**; A2.6 canónico alinhado | P2 — residual docs | [`PRICING_DECISION.md`](PRICING_DECISION.md) · A2.5 |
-| **S-BIZ-03** | Documentação/Operação | Landing + páginas legais públicas = **DEPLOYED / VALIDATED**; emails `@vamula.pt` **activos**; falta LRE link directo (credenciais externas) | P2 — Melhoria importante | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
+| **S-BIZ-03** | Documentação/Operação | Landing + páginas legais públicas = **DEPLOYED / VALIDATED**; emails `@vamula.pt` **activos**; LRE link directo **CONFIGURADO** 2026-09-22 | P2 — Melhoria importante | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
 | **S-BIZ-04** | Documentação/Operação | Settlement Partner: política **semanal / segunda / manual** (conta pagamentos: Manel) | **DONE** *(política)* · impl. técnica N/A piloto | [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) |
 | **S-BIZ-05** | Documentação/Operação | Apoio inicial digital (email/formulário); horário 09–17 · **sem** telefone público | **DONE** *(política fase inicial)* | idem |
 | **S-BRD-01** | Cross-app | Decisão logo (shortlist local) + troca controlada em `public/brand` | P1 — Necessário para fechar produto | Francisco/Manel |
@@ -348,8 +348,8 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 | **A1.4** | **DECIDIDA / CLOSED** 2026-09-18 — 15% fixa · tarifas/mínimos/Pet/cancel aceites · tolls 0% · waiting/surge OFF · MB WAY Fase 2 · margem mínimas aceite · variável 20%→15% **não** seleccionada |
 | **MB WAY** | **Fase 2** |
 | **M2 / M3** | **Não** concluídos |
-| **Próximo** | Fiscal/legal tolls · **S-TOLLS-P2** · LRE directo · revisão jurídica RAL · resto M2 |
+| **Próximo** | Fiscal/legal tolls · **S-TOLLS-P2** · revisão jurídica RAL · resto M2 |
 
 ---
 
-**Frase:** **M1 técnico DONE**. Landing **PROD OK**. Páginas legais públicas **DEPLOYED / VALIDATED**. Emails institucionais **activos**. Pricing V1 **DONE** · **A1.4 DECIDIDA / CLOSED** (2026-09-18). **HERE Tolls V1 PROD VALIDATED**. **Pendentes site:** LRE link directo · revisão jurídica RAL. **Próximo técnico:** fiscal/legal tolls · P2 routing determinism. M2: L0 fechado; foundations driving-hours + emergency; L1/L2 IMT + enforcement + Stripe/SMS/mobile **continuam**.
+**Frase:** **M1 técnico DONE**. Landing **PROD OK**. Páginas legais públicas **DEPLOYED / VALIDATED**. Emails institucionais **activos**. Pricing V1 **DONE** · **A1.4 DECIDIDA / CLOSED** (2026-09-18). **HERE Tolls V1 PROD VALIDATED**. **LRE directo CONFIGURADO** 2026-09-22. **Pendente site:** revisão jurídica RAL. **Próximo técnico:** fiscal/legal tolls · P2 routing determinism. M2: L0 fechado; foundations driving-hours + emergency; L1/L2 IMT + enforcement + Stripe/SMS/mobile **continuam**.

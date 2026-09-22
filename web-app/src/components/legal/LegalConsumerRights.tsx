@@ -1,6 +1,7 @@
 /** Official LRE / RAL consumer-rights links (L-25). No embedded browser. */
 
-export const LRE_URL = 'https://www.livroreclamacoes.pt/'
+export const LRE_URL =
+  'https://livroreclamacoes.pt/inicio/qrcode_operator?economicoperator=43122981&store=43187609'
 export const CACCL_URL = 'https://www.centroarbitragemlisboa.pt/'
 export const CNIACC_URL = 'https://www.cniacc.pt/'
 export const CONSUMIDOR_GOV_URL = 'https://www.consumidor.gov.pt/'

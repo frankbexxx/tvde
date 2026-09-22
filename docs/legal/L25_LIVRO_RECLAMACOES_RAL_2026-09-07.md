@@ -25,7 +25,7 @@
 
 | Tema | Decisão |
 |------|---------|
-| LRE | Obrigatório; link oficial `https://www.livroreclamacoes.pt/` suficiente (sem API/webhook) |
+| LRE | Obrigatório; link directo oficial da loja VAMULÁ (sem API/webhook): `https://livroreclamacoes.pt/inicio/qrcode_operator?economicoperator=43122981&store=43187609` · evidência `docs/legal/sources/lre/` · validado 2026-09-22 |
 | Livro físico | **NÃO APLICÁVEL** enquanto a VAMULÁ não mantiver estabelecimento com atendimento presencial ao público. Se futuramente existir atendimento presencial, **reavaliar** obrigação. |
 | RAL | Publicar CACCL + CNIACC com formulação prudente («conforme competência aplicável»). Não afirmar adesão nem competência universal. |
 
@@ -33,7 +33,7 @@
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| O-L25-01 | Registo LRE Ventos Férteis | Por iniciar | NIPC 516344439 · VAMULÁ · AMT · guardar confirmação/data/ID/evidência |
+| O-L25-01 | Registo LRE Ventos Férteis | Concluído | 2026-09-22 · NIPC 516344439 · VAMULÁ · sector TVDE · loja activa · PDF `docs/legal/sources/lre/vamula-lre-qrcode-2026-09-22.pdf` · link directo no site e na app |
 | O-L25-02 | CAE correcto | Por iniciar | Só contabilista/docs oficiais — não inventar |
 | O-L25-03 | Marca no registo | Por iniciar | VAMULÁ + Ventos Férteis · IMT 354/2026 · INPI 734136 |
 | O-L25-04 | Email notificações | Por iniciar | Inbox partilhada · monitorização · backup · não email pessoal isolado |
