@@ -14,6 +14,7 @@
 | HTTPS | OK |
 | Smoke landing desktop / mobile | **PASS** (2026-09-13) |
 | Smoke páginas legais (público) | **PASS** (2026-09-16) — home + `/legal/` + `/privacidade/` + `/reclamacoes/` + `/ral/` · CSS/JS/logo 200 · nova versão detectada · cache não bloqueante |
+| Smoke LRE directo (Hostinger) | **PASS** (2026-09-22) — upload manual pós [#647](https://github.com/frankbexxx/tvde/pull/647) · `/reclamacoes/` · `/legal/` · `/privacidade/` · `/ral/` · footer da home (após refresh/cache) · link abre o fluxo oficial VAMULÁ / VENTOS FÉRTEIS - LDA |
 | `default.php` | Removido |
 | `index.html.bak` | Mantido em `public_html` (backup do teste anterior) |
 | Upload Hostinger | **Manual por Francisco** (não automatizado no Cursor) |
@@ -44,5 +45,6 @@
 - Revisão jurídica do wording RAL (provisório)
 - Banner cookies (fase posterior)
 - Formulário / tracking (fora de scope V1)
+- Suporte LRE sobre o email pessoal `frankbexxx@gmail.com` — pendência **separada**; não faz parte do smoke de 2026-09-22; **L-25 global continua PARCIAL** (O-L25-04 e restantes itens abertos)
 
 **Relacionado:** acta [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) §7–10 · status [`TVDE_STATUS_SETEMBRO_2026.md`](../TVDE_STATUS_SETEMBRO_2026.md) · roadmap [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md).
