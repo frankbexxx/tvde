@@ -13,8 +13,9 @@ for category pricing (kept in config only as documented GO-shaped legacy env).
 
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Any, Mapping
 
 from app.core.tariffs import (
@@ -26,6 +27,43 @@ from app.core.tariffs import (
 )
 
 COMMISSION_RATE = 0.15  # unused at runtime; commission from driver.commission_percent
+
+# L-13: configured percent must sit in this closed interval. Never clamp.
+COMMISSION_PERCENT_MIN = Decimal("0")
+COMMISSION_PERCENT_MAX = Decimal("25")
+
+
+class CommissionPercentInvalid(ValueError):
+    """Configured commission percent is missing, non-finite, or outside 0–25%."""
+
+
+def commission_percent_decimal(value: Any) -> Decimal:
+    """Return the configured percent when it is finite and within 0–25 inclusive.
+
+    Does not quantize and does not clamp an out-of-range value to 25%.
+    """
+    if value is None or isinstance(value, bool):
+        raise CommissionPercentInvalid("commission_percent_out_of_range")
+    try:
+        if isinstance(value, Decimal):
+            dec = value
+        elif isinstance(value, int):
+            dec = Decimal(value)
+        elif isinstance(value, float):
+            if not math.isfinite(value):
+                raise CommissionPercentInvalid("commission_percent_out_of_range")
+            dec = Decimal(str(value))
+        elif isinstance(value, str):
+            dec = Decimal(value.strip())
+        else:
+            raise CommissionPercentInvalid("commission_percent_out_of_range")
+    except (InvalidOperation, ValueError) as exc:
+        raise CommissionPercentInvalid("commission_percent_out_of_range") from exc
+    if not dec.is_finite():
+        raise CommissionPercentInvalid("commission_percent_out_of_range")
+    if dec < COMMISSION_PERCENT_MIN or dec > COMMISSION_PERCENT_MAX:
+        raise CommissionPercentInvalid("commission_percent_out_of_range")
+    return dec
 
 PET_SURCHARGE_EUR = Decimal("1.50")
 PET_SURCHARGE_RULE_V1 = "pet_surcharge_v1"
