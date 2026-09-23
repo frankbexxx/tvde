@@ -340,6 +340,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 | Bloco | Estado |
 |-------|--------|
 | **A2.5 tarifário V1** | **DONE** — GO/Comfort/XL + mínimos + Pet + comissão 15% + tolls 0% |
+| **L-13 comissão ≤ 25%** | **PARCIAL** — guard 0–25% em accept/complete antes da captura; sem cap silencioso; base IVA **por validar**; não CLOSED |
 | **Cancel V1** | **DONE** — €3 fixos (cobrança real pós-B1) |
 | **Landing V1** | **DEPLOYED / PROD OK** — https://vamula.pt · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
 | **Páginas legais públicas** | **DEPLOYED / VALIDATED** 2026-09-16 — `/legal/` `/privacidade/` `/reclamacoes/` `/ral/` · [#596](https://github.com/frankbexxx/tvde/pull/596) · smoke Hostinger PASS |

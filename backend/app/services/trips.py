@@ -18,15 +18,17 @@ from app.events.dispatcher import emit
 from app.models.enums import DriverStatus, OfferStatus, PaymentStatus, TripStatus
 from app.schemas.realtime import TripStatusChangedEvent
 from app.schemas.trip import TripCreateRequest
-from app.services.payments import _money, _to_decimal
+from app.services.payments import _money
 from app.core.config import settings
 from app.core.pricing import (
     CANCELLATION_FEE_EUR,
     PET_SURCHARGE_RULE_V1,
+    CommissionPercentInvalid,
     calculate_commission_amount,
     calculate_fare_breakdown,
     calculate_pet_surcharge,
     calculate_price,
+    commission_percent_decimal,
     money,
     resolve_trip_tariff,
 )
@@ -74,6 +76,25 @@ from app.services.stripe_service import (
 )
 
 logger = logging.getLogger(__name__)
+
+COMMISSION_PERCENT_OUT_OF_RANGE = "commission_percent_out_of_range"
+
+
+def _require_commission_percent(db: Session, raw: object) -> Decimal:
+    """Reject a configured percent outside 0–25% before any payment side effect.
+
+    Rolls back the current transaction (row locks) and leaves persisted rows
+    unchanged. Does not clamp the stored percent.
+    """
+    try:
+        return commission_percent_decimal(raw)
+    except CommissionPercentInvalid:
+        db.rollback()
+        logger.warning("commission_percent_rejected")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=COMMISSION_PERCENT_OUT_OF_RANGE,
+        ) from None
 
 
 ACTIVE_TRIP_BLOCKS_DRIVER_AVAILABILITY: frozenset[TripStatus] = frozenset(
@@ -976,6 +997,7 @@ def accept_trip(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
+    commission_percent = _require_commission_percent(db, driver.commission_percent)
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     assert_driver_vehicle_operational_for_new_ops(
         db, driver, surface="accept_trip", trip_id=str(trip.id)
@@ -994,7 +1016,7 @@ def accept_trip(
     # Stripe requires amount >= 50 cents for EUR.
     amount_cents = 50
     total_amount = _money(Decimal("0.50"))
-    commission_rate = _to_decimal(driver.commission_percent) / Decimal("100")
+    commission_rate = commission_percent / Decimal("100")
     commission_amount = _money(total_amount * commission_rate)
     driver_amount = _money(total_amount - commission_amount)
 
@@ -1152,6 +1174,7 @@ def accept_offer(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
+    commission_percent = _require_commission_percent(db, driver.commission_percent)
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     assert_driver_vehicle_operational_for_new_ops(
         db, driver, surface="accept_offer", trip_id=str(trip.id)
@@ -1198,7 +1221,7 @@ def accept_offer(
     # Same payment + trip update logic as accept_trip
     amount_cents = 50
     total_amount = _money(Decimal("0.50"))
-    commission_rate = _to_decimal(driver.commission_percent) / Decimal("100")
+    commission_rate = commission_percent / Decimal("100")
     commission_amount = _money(total_amount * commission_rate)
     driver_amount = _money(total_amount - commission_amount)
 
@@ -1763,6 +1786,7 @@ def complete_trip(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Driver not found for trip.",
         )
+    commission_percent = _require_commission_percent(db, driver.commission_percent)
 
     # --- Distance / duration required (A022: no synthetic fallback) ---
     distance_km = trip.distance_km
@@ -1823,7 +1847,7 @@ def complete_trip(
     )
     final_price = float(breakdown.total)
     # Commission on fare + Pet only; tolls excluded (0% on tolls).
-    commission_rate = _to_decimal(driver.commission_percent) / Decimal("100")
+    commission_rate = commission_percent / Decimal("100")
     commission_amount = calculate_commission_amount(
         final_price, commission_rate, tolls_amount=breakdown.tolls_amount
     )

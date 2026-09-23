@@ -295,7 +295,7 @@ Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MAT
 1. Registo de tempos (**L-09**)  
 2. Retenção actividade **2 anos** (**L-11**)  
 3. Retenção reclamações **2 anos** (**L-12**)  
-4. Hard-cap comissão **25%** sem IVA (**L-13**)  
+4. Hard-cap comissão **25%** sem IVA (**L-13**) — guard 0–25% implementado; base IVA **por validar**; não CLOSED  
 5. Demonstração de cálculo / breakdown legal de preço (**L-14**)  
 6. Mostrar taxa de intermediação (**L-15**)  
 7. Fatura electrónica (**L-16**)  

@@ -110,7 +110,7 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 
 ### NECESSÁRIOS M2 legais (13)
 
-Registo de tempos (**L-09**) · retenção actividade 2 anos (**L-11**) · retenção reclamações 2 anos (**L-12**) · hard-cap comissão 25% sem IVA (**L-13**) · demonstração de cálculo / breakdown (**L-14**) · taxa de intermediação (**L-15**) · fatura electrónica (**L-16**) · reporting mensal AMT (**L-17**) · apuramento contribuição AMT 5% (**L-18**) · contratos de adesão operadores (**L-23**) · disponibilização contrato ao motorista (**L-24**) · Livro de Reclamações / RAL (**L-25**) · processos comunicação IMT/AMT (**L-29**).
+Registo de tempos (**L-09**) · retenção actividade 2 anos (**L-11**) · retenção reclamações 2 anos (**L-12**) · hard-cap comissão 25% sem IVA (**L-13** — guard 0–25% implementado; base IVA por validar; não CLOSED) · demonstração de cálculo / breakdown (**L-14**) · taxa de intermediação (**L-15**) · fatura electrónica (**L-16**) · reporting mensal AMT (**L-17**) · apuramento contribuição AMT 5% (**L-18**) · contratos de adesão operadores (**L-23**) · disponibilização contrato ao motorista (**L-24**) · Livro de Reclamações / RAL (**L-25**) · processos comunicação IMT/AMT (**L-29**).
 
 *Matriz:* [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md). **Prioridades legais individuais da matriz mantêm-se**; abaixo = ordem **prática** de implementação.
 
