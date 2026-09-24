@@ -154,6 +154,7 @@ export function tripDetailFromCreateResponse(
     created_at: now,
     updated_at: now,
     payment_status: res.payment_status,
+    intermediation_rate_percent: res.intermediation_rate_percent ?? null,
     has_pet: res.has_pet,
     is_assistance_animal: res.is_assistance_animal,
     pet_surcharge: res.pet_surcharge ?? null,

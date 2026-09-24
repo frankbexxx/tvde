@@ -13,6 +13,7 @@ import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tr
 import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
+import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
 import { BTN_SECONDARY, INFO_BOX_PASSENGER } from '../../components/layout/infoBoxTemplate'
 
 const ESTIMATE_FALLBACK = '4–6'
@@ -28,17 +29,20 @@ function tripCardFooter(
   t: TFunction<'passenger'>,
 ) {
   return (
-    <TripCard
-      pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
-      destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
-      price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
-      estimateFallback={ESTIMATE_FALLBACK}
-      priceCaption={priceCaption}
-      driverName={
-        activeTrip.status === 'assigned' ? undefined : t('statusCard.driverName')
-      }
-      vehicleLabel={activeTrip.status === 'assigned' ? undefined : t('statusCard.vehicleLabel')}
-    />
+    <>
+      <TripCard
+        pickup={formatPickup(activeTrip.origin_lat, activeTrip.origin_lng)}
+        destination={formatDestination(activeTrip.destination_lat, activeTrip.destination_lng)}
+        price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
+        estimateFallback={ESTIMATE_FALLBACK}
+        priceCaption={priceCaption}
+        driverName={
+          activeTrip.status === 'assigned' ? undefined : t('statusCard.driverName')
+        }
+        vehicleLabel={activeTrip.status === 'assigned' ? undefined : t('statusCard.vehicleLabel')}
+      />
+      <PassengerIntermediationRateLine rate={activeTrip.intermediation_rate_percent} />
+    </>
   )
 }
 

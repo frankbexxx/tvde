@@ -96,6 +96,7 @@ class TripCreateResponse(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    intermediation_rate_percent: Optional[float] = None
     pet_surcharge: float = 0.0
     price_breakdown: Optional[PriceBreakdownSchema] = None
     has_pet: bool = False
@@ -138,6 +139,7 @@ class TripStatusResponse(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    intermediation_rate_percent: Optional[float] = None
     payment_intent_client_secret: Optional[str] = None  # When ENABLE_CONFIRM_ON_ACCEPT
 
 
@@ -217,6 +219,7 @@ class TripHistoryItem(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    intermediation_rate_percent: Optional[float] = None
     cancellation_reason: Optional[str] = Field(
         default=None,
         description=(
@@ -259,6 +262,7 @@ class TripDetailResponse(BaseModel):
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
+    intermediation_rate_percent: Optional[float] = None
     stripe_dashboard_url: Optional[str] = Field(
         default=None,
         description="Link para o pagamento no dashboard Stripe (só admin, se PI real).",

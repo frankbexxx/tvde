@@ -4,6 +4,7 @@ import { Spinner } from '../../components/ui/Spinner'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
+import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
 import {
   BTN_COMPACT_HEIGHT,
   BTN_PRIMARY_RADIUS,
@@ -80,6 +81,8 @@ export interface TripPlannerPanelProps {
   lastEstimatedTolls?: number | null
   /** true when create returned tolls_status zero_fallback / error (no fake €0 line). */
   lastTollsUnavailable?: boolean
+  /** Snapshot from create. Omit the line when null. */
+  lastIntermediationRate?: number | null
 }
 
 /**
@@ -120,6 +123,7 @@ function TripPlannerPanelInner({
   lastEstimatedTotal = null,
   lastEstimatedTolls = null,
   lastTollsUnavailable = false,
+  lastIntermediationRate = null,
 }: TripPlannerPanelProps) {
   const { t } = useTranslation('passenger')
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
@@ -379,6 +383,7 @@ function TripPlannerPanelInner({
               <p className="font-semibold">
                 {t('pet.totalLine', { amount: lastEstimatedTotal.toFixed(2) })}
               </p>
+              <PassengerIntermediationRateLine rate={lastIntermediationRate} />
             </div>
           ) : null}
           <p

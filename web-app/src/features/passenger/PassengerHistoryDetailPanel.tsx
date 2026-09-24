@@ -7,6 +7,7 @@ import { historyStatusDotColor } from '../../constants/tripStatus'
 import { MENU_SURFACE } from '../../components/layout/infoBoxTemplate'
 import { formatDateTime } from '../../i18n/format'
 import { ComplaintReportForm } from '../complaints/ComplaintReportForm'
+import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
 import { useAuth } from '../../context/AuthContext'
 
 type PassengerHistoryDetailPanelProps = {
@@ -97,6 +98,7 @@ export function PassengerHistoryDetailPanel({
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.price')}</dt>
           <dd className="font-semibold tabular-nums text-foreground">{price}</dd>
+          <PassengerIntermediationRateLine rate={detail.intermediation_rate_percent} />
         </div>
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.payment')}</dt>

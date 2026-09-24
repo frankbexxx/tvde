@@ -30,7 +30,7 @@
 |------|---------------|-------------|-------|---------------|---------------------|
 | Modelo preço (estimativa → final) | **FECHADO** | Estimativa não vinculativa; preço final em `complete_trip` = valor de captura | `PRICING_DECISION.md` | Sim (BE + copy UX) | Não |
 | Fórmula fare runtime | **FECHADO** *(A2.5 + A1.4)* | `raw = base + km×€/km + min×€/min`; `fare_subtotal = max(raw, minimum)`; + Pet + tolls | `tariffs.py` · `pricing.py` · **A2.5** · **A1.4** | Sim (GO/Comfort/XL) | — |
-| Comissão runtime | **FECHADO** *(%)** / **FECHADO** *(fórmula)* | `commissionable = final_price − tolls_amount`; `commission = commissionable × %` · piloto **15%** (**A1-D01**); Pet **incluido**; portagens **0%** | `trips.py` · **A1-D01** · A2.5 | Sim | Tiers futuros = não baseline |
+| Comissão runtime | **FECHADO** *(%)** / **FECHADO** *(fórmula)* | `commissionable = final_price − tolls_amount`; `commission = commissionable × %` · piloto **15%** gravado na viagem (`intermediation_rate_percent`); trips `NULL` usam `driver.commission_percent`; Pet **incluido**; portagens **0%** | `trips.py` · **A1-D01** · A2.5 | Sim | Tiers futuros = não baseline |
 | Base da comissão | **FECHADO** | Sobre **fare + Pet** (não tolls); fees Stripe **fora** da base (**A1-D02**) | `trips.py` · **A1-D02** · A2.5 | Sim | Não |
 | % comissão piloto | **FECHADO** | **15%** acordado Francisco/Manel; 12% / 12,5% = **só futuro** (rentabilidade elevada e/ou acordos específicos) | **A1-D01** 2026-09-03 | Seed alinhado | Não (baseline) |
 | Share Partner / frota | **FECHADO** *(beneficiário piloto)* | Liquidação piloto ao **Partner/Frota**; `driver_payout` = referência contabilística (**sem** payout directo ao Driver nesta fase) | **A1-D03** 2026-09-03 | Parcial (só calc. Driver) | Cadência = **A1-D04** |
@@ -104,7 +104,7 @@
 
 | Pergunta | Achado |
 |----------|--------|
-| Comissão nominal actual | **Piloto = 15%** (**A1-D01**). Runtime: `driver.commission_percent` (seed tipicamente 15). |
+| Comissão nominal actual | **Piloto = 15%** (**A1-D01**). Viagem nova: snapshot `intermediation_rate_percent`. Legacy `NULL`: `driver.commission_percent`. |
 | 15% / 12% / outro | **15%** = baseline piloto. **12% / 12,5%** = possibilidades **futuras** apenas (rentabilidade elevada e/ou acordos específicos) — **não** baseline. |
 | Base da comissão | **Bruto** `final_price` (**A1-D02**); fees Stripe não alteram a base. |
 | Quem suporta Stripe fee | **Plataforma** no piloto (**A1-D09**); V1 cartão EEE = **1,5% + €0,25**. |

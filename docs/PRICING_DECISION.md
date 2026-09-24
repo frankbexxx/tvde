@@ -48,7 +48,7 @@ Fonte canónica: `backend/app/core/tariffs.py` (não `BASE_FARE` env).
 
 - `fare_subtotal = max(raw, minimum)`; `total = fare_subtotal + pet + tolls`.
 - Snapshot de rates em `trip.price_breakdown` (`category`, `tariff_version`, `price_per_km`, …) para o complete não depender de alterações futuras da tabela.
-- **Comissão VAMULÁ:** **15% fixa** (`driver.commission_percent` / seed 15). Base = `(final_price − tolls_amount)` — Pet **incluido**; portagens **0%**. Alternativa variável **20%→15% analisada e NÃO seleccionada**.
+- **Comissão VAMULÁ:** **15% fixa** por viagem nova (`trips.intermediation_rate_percent`, constante `TRIP_INTERMEDIATION_RATE_PERCENT`). O settlement dessa viagem usa o snapshot, não `driver.commission_percent`. Trips antigas com o campo `NULL` mantêm a percentagem do motorista e não são recalculadas. `driver.commission_percent` permanece na ficha do motorista. Base = `(final_price − tolls_amount)` — Pet **incluido**; portagens **0%**. Alternativa variável **20%→15% analisada e NÃO seleccionada**.
 - Margem reduzida em viagens mínimas: **ACEITE**.
 - Waiting / surge: **OFF** na V1.
 - Pet: **+€1,50** (`PET_SURCHARGE_EUR`).

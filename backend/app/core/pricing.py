@@ -26,7 +26,10 @@ from app.core.tariffs import (
     tariff_from_snapshot,
 )
 
-COMMISSION_RATE = 0.15  # unused at runtime; commission from driver.commission_percent
+# A1-D01: commercial rate written onto each new trip. Settlement reads the snapshot.
+TRIP_INTERMEDIATION_RATE_PERCENT = Decimal("15")
+# Unused at runtime. New trips persist TRIP_INTERMEDIATION_RATE_PERCENT.
+COMMISSION_RATE = float(TRIP_INTERMEDIATION_RATE_PERCENT) / 100
 
 # L-13: configured percent must sit in this closed interval. Never clamp.
 COMMISSION_PERCENT_MIN = Decimal("0")
@@ -64,6 +67,16 @@ def commission_percent_decimal(value: Any) -> Decimal:
     if dec < COMMISSION_PERCENT_MIN or dec > COMMISSION_PERCENT_MAX:
         raise CommissionPercentInvalid("commission_percent_out_of_range")
     return dec
+
+
+def effective_intermediation_percent(snapshot: Any, driver_percent: Any) -> Decimal:
+    """Rate that settles this trip.
+
+    A persisted trip snapshot wins. NULL means a legacy trip and falls back to
+    ``driver.commission_percent``. The result is always checked against 0–25%.
+    """
+    raw = driver_percent if snapshot is None else snapshot
+    return commission_percent_decimal(raw)
 
 PET_SURCHARGE_EUR = Decimal("1.50")
 PET_SURCHARGE_RULE_V1 = "pet_surcharge_v1"
