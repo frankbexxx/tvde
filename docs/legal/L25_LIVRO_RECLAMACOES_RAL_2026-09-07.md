@@ -1,6 +1,6 @@
 # L-25 — Livro de Reclamações / RAL (checklist operacional)
 
-**Estado L-25:** `PARCIAL — foundation técnica validada em produção; pendências externas/operacionais`  
+**Estado L-25:** `FECHADO — checklist operacional concluído em 2026-09-24`  
 **Data:** 2026-09-07  
 **Não é:** parecer jurídico · prova de registo no portal LRE
 
@@ -36,7 +36,7 @@
 | O-L25-01 | Registo LRE Ventos Férteis | Concluído | 2026-09-22 · NIPC 516344439 · VAMULÁ · sector TVDE · loja activa · PDF `docs/legal/sources/lre/vamula-lre-qrcode-2026-09-22.pdf` · link directo no site e na app |
 | O-L25-02 | CAE correcto | SUPERSEDED | 2026-09-22 · o LRE deixou de exigir CAE no registo do operador; a actividade associa-se só pelo Setor de Atividade · sector Táxis/TVDE + AMT já comprovados em O-L25-06 · `52320-R4` permanece na documentação societária e não é pendência LRE · screenshot do aviso do portal não arquivado (opcional) |
 | O-L25-03 | Marca no registo | Concluído | 2026-09-22 · LRE `docs/legal/sources/lre/vamula-lre-qrcode-2026-09-22.pdf` (VENTOS FÉRTEIS - LDA · VAMULÁ · NIPC 516344439) · IMT `docs/legal/sources/imt-operadores-plataformas-tvde-licenciados-2026-05-14.pdf` (Vamulá · 354/2026 · 06/01/2026) · INPI 734136 · titular Ventos Férteis, Lda. · classe 39 · PDF de síntese INPI continua opcional e não bloqueia |
-| O-L25-04 | Email notificações | Por iniciar | Inbox partilhada · monitorização · backup · não email pessoal isolado |
+| O-L25-04 | Email notificações | Concluído | 2026-09-24 · loja LRE: notificações de reclamações `legal@vamula.pt` (recebe notificações activo) · sugestões/elogios `geral@vamula.pt` · caixa real `legal@` · aliases `reclamacoes@` e `manel@` entregam em `legal@` · smoke manual: os três endereços chegaram a `legal@` · Francisco abriu `legal@` e viu os testes · Manel titular, Francisco substituto · leitura pelo menos diária em dias úteis · reclamações seguem O-L25-09 · `frankbexxx@gmail.com` é assunto pessoal separado (o LRE confirmou que já não está ligado à VAMULÁ/Ventos Férteis) e não pertence a este item |
 | O-L25-05 | Gestor de Reclamações | Concluído | 2026-09-22 · titular **Manel Perez** · substituto **Francisco Bexiga** · ambos consultam, respondem e controlam o prazo · substituto assume na ausência do titular |
 | O-L25-06 | Canal AMT | Concluído | 2026-09-22 · sector Táxis/TVDE activo · entidade reguladora AMT · `docs/legal/sources/lre/vamula-lre-amt-sector-association-2026-09-22.png` |
 | O-L25-07 | RAL | Concluído | CACCL + CNIACC + copy prudente |
@@ -104,7 +104,7 @@ Marcar **`L-25 = FECHADO`** apenas quando estiverem concluídos:
 - O-L25-06  
 - O-L25-09  
 
-O-L25-02 está **SUPERSEDED** e não bloqueia o fecho. O-L25-01, O-L25-03, O-L25-05, O-L25-06, O-L25-07, O-L25-08 e O-L25-09 já estão concluídos. O-L25-04 continua por iniciar. **L-25 global continua PARCIAL** enquanto O-L25-04 estiver aberto.
+O-L25-02 está **SUPERSEDED** e não bloqueia o fecho. O-L25-01, O-L25-03, O-L25-04, O-L25-05, O-L25-06, O-L25-07, O-L25-08 e O-L25-09 estão concluídos. **L-25 = FECHADO** em 2026-09-24. Não reabrem este fecho: a revisão jurídica futura do wording RAL (O-L25-07 já concluído com copy prudente) e a ausência de writer de `external_responded_at` na API.
 
 ## Superfícies na app
 

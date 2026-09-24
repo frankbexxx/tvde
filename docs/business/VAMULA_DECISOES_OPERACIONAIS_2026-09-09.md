@@ -137,6 +137,8 @@ Fonte de deploy: [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](../ops/VAMULA_
 | `legal@vamula.pt` | **ACTIVO** |
 | `suporte@vamula.pt` | **ACTIVO** (alias de `geral@`) |
 | `reclamacoes@vamula.pt` | **ACTIVO** (alias de `legal@`) |
+| `manel@vamula.pt` | **ACTIVO** (alias de `legal@`) · confirmado 2026-09-24 |
+| `francisco@vamula.pt` | **ACTIVO** (alias de `geral@`) · confirmado 2026-09-24 |
 
 Sem telefone público nesta fase.
 
@@ -156,7 +158,7 @@ Sem telefone público nesta fase.
 | Canal AMT (O-L25-06) | **CONCLUÍDO** 2026-09-22 — sector Táxis/TVDE activo · entidade reguladora AMT · screenshot em `docs/legal/sources/lre/` |
 | RAL `/ral/` | **DEPLOYED / VALIDATED** — wording **provisório** (CACCL/CNIACC); sem ODR antiga; revisão jurídica futura |
 
-O registo, o link directo LRE, o canal AMT (O-L25-06), o gestor de reclamações (O-L25-05) e a marca no registo (O-L25-03) estão fechados. O-L25-02 está **SUPERSEDED**: o LRE já não exige CAE; o sector Táxis/TVDE com AMT cobre a classificação. O CAE `52320-R4` fica na documentação societária e esta acta não conclui se está fiscalmente correcto. O-L25-09 está **CONCLUÍDO** (2026-09-24): acesso LRE do titular confirmado e dry-run interno na API Admin de STAGING, sem reclamação real no LRE. **L-25 global continua PARCIAL** enquanto O-L25-04 estiver aberto.
+O registo, o link directo LRE, o canal AMT (O-L25-06), o gestor de reclamações (O-L25-05) e a marca no registo (O-L25-03) estão fechados. O-L25-02 está **SUPERSEDED**: o LRE já não exige CAE; o sector Táxis/TVDE com AMT cobre a classificação. O CAE `52320-R4` fica na documentação societária e esta acta não conclui se está fiscalmente correcto. O-L25-09 está **CONCLUÍDO** (2026-09-24): acesso LRE do titular confirmado e dry-run interno na API Admin de STAGING, sem reclamação real no LRE. O-L25-04 está **CONCLUÍDO** (2026-09-24): notificações LRE em `legal@vamula.pt`, sugestões/elogios em `geral@vamula.pt`, aliases `reclamacoes@` e `manel@` testados até `legal@`, Francisco com acesso de backup, leitura pelo menos diária em dias úteis. **L-25 = FECHADO**. O endereço pessoal antigo é assunto separado e não pertence a este fecho.
 
 ---
 
@@ -172,7 +174,7 @@ O registo, o link directo LRE, o canal AMT (O-L25-06), o gestor de reclamações
 - G-KYC-P0-04 permanece **CLOSED** (fora desta acta; já fechado)
 - **Landing institucional V1** em https://vamula.pt (**Hostinger Premium** · deploy manual · 2026-09-13)
 - **Páginas legais públicas** = **DEPLOYED / VALIDATED** (2026-09-16 · PR #596)
-- Emails institucionais `@vamula.pt` **activos** (`geral@` · `legal@` · aliases `suporte@` / `reclamacoes@`)
+- Emails institucionais `@vamula.pt` **activos** (`geral@` · `legal@` · aliases `suporte@` / `reclamacoes@` / `manel@` / `francisco@`)
 - Sem banner cookies nesta fase
 
 ### Ainda pendentes

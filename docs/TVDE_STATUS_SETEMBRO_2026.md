@@ -34,7 +34,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 | **Backend/API** | **OK** | FastAPI; emergency snapshot; **sem** cliente IMT; pricing A2.5 + cancel €3 no código |
 | **Negócio / marca** | **PARCIAL** | Comissão **15% fixa**; tarifário A2.5 **DONE**; **A1.4 DECIDIDA / CLOSED** (2026-09-18); landing **https://vamula.pt** = **DEPLOYED / PROD OK**; páginas legais públicas = **DEPLOYED / VALIDATED**; emails `@vamula.pt` **activos**; LRE link directo **CONFIGURADO** 2026-09-22 |
 | **Portagens / HERE** | **V1 PROD VALIDATED** | HERE Tolls **ON** (`tvde-api`) · F0–F5 DONE · residual route variance **accepted for V1** · P2 determinism backlog · fiscal pendente |
-| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **13 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = PARCIAL** (páginas públicas OK; LRE directo configurado 2026-09-22; RAL wording provisório; ops O-L25-02 CAE SUPERSEDED; O-L25-03 marca CONCLUÍDO 2026-09-22; O-L25-05 gestor CONCLUÍDO; O-L25-06 canal AMT CONCLUÍDO; O-L25-09 dry-run CONCLUÍDO 2026-09-24; aberto O-L25-04; **não bloqueador imediato** APP) · L-26 fechado; L1/L2 externos |
+| **Compliance legal** | **PARCIAL** | **11 BLOCKERS** · **12 NECESSÁRIOS**; L-11 · **L-12** · **L-25 = FECHADO** (2026-09-24; O-L25-04 `legal@vamula.pt` + aliases + smoke + backup Francisco; wording RAL provisório não reabre) · L-26 fechado; L1/L2 externos |
 | **Autenticação** | **PARCIAL** | OTP sem SMS real → C1 M2 |
 | **Pagamentos** | **PARCIAL** | Mock piloto; B1 M2; sem Connect (A1-D05); **MB WAY = fase 2** |
 | **Matching/dispatch** | **OK** matching · **PENDENTE** B2 | Multi-offer OK; B2 writers zero |
