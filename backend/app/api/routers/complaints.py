@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import uuid
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.models.enums import Role
-from app.schemas.complaints import ComplaintCreateRequest, ComplaintUserItem
+from app.schemas.complaints import (
+    ComplaintAttachmentItem,
+    ComplaintCreateRequest,
+    ComplaintUserItem,
+)
+from app.services import complaint_attachments as attachment_svc
 from app.services import complaints as complaints_svc
 
 router = APIRouter(prefix="/complaints", tags=["complaints"])
@@ -55,3 +63,75 @@ async def get_my_complaint(
         db, user_id=user.user_id, public_reference=public_reference
     )
     return complaints_svc.to_user_item(complaint)
+
+
+def _attachment_item(row) -> ComplaintAttachmentItem:
+    return ComplaintAttachmentItem(
+        id=row.id,
+        original_file_name=row.original_file_name,
+        mime_type=row.mime_type,
+        size_bytes=row.size_bytes,
+        created_at=row.created_at,
+        uploaded_by_user_id=row.uploaded_by_user_id,
+    )
+
+
+@router.get(
+    "/{public_reference}/attachments",
+    response_model=list[ComplaintAttachmentItem],
+)
+async def list_my_complaint_attachments(
+    public_reference: str,
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[ComplaintAttachmentItem]:
+    attachment_svc.assert_author_role(user.role)
+    complaint = attachment_svc.complaint_for_author(
+        db, user_id=user.user_id, public_reference=public_reference
+    )
+    return [_attachment_item(row) for row in attachment_svc.list_attachments(db, complaint)]
+
+
+@router.post(
+    "/{public_reference}/attachments",
+    response_model=ComplaintAttachmentItem,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_my_complaint_attachment(
+    public_reference: str,
+    file: UploadFile = File(...),
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ComplaintAttachmentItem:
+    attachment_svc.assert_author_role(user.role)
+    complaint = attachment_svc.complaint_for_author(
+        db, user_id=user.user_id, public_reference=public_reference
+    )
+    row = attachment_svc.add_attachment(
+        db,
+        complaint=complaint,
+        actor_user_id=user.user_id,
+        actor_role=user.role.value,
+        upload=file,
+    )
+    return _attachment_item(row)
+
+
+@router.get(
+    "/{public_reference}/attachments/{attachment_id}",
+    response_class=FileResponse,
+)
+async def download_my_complaint_attachment(
+    public_reference: str,
+    attachment_id: uuid.UUID,
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> FileResponse:
+    attachment_svc.assert_author_role(user.role)
+    complaint = attachment_svc.complaint_for_author(
+        db, user_id=user.user_id, public_reference=public_reference
+    )
+    row, path = attachment_svc.get_attachment_file(
+        db, complaint=complaint, attachment_id=attachment_id
+    )
+    return attachment_svc.file_response(row, path)

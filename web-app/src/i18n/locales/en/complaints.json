@@ -10,7 +10,16 @@
     "done": "Close",
     "success": "Complaint registered. Keep this reference:",
     "successHint": "You can check the status in your complaints.",
-    "error": "Could not submit the complaint."
+    "error": "Could not submit the complaint.",
+    "attachments": "Attachments",
+    "attachmentsHint": "Up to 5 files. PDF, JPG, JPEG or PNG. 5 MB each. No delete in this version.",
+    "attachmentsEmpty": "No attachments.",
+    "attachmentsAdd": "Add attachment",
+    "attachmentsClosed": "Closed complaint: new attachments are not allowed.",
+    "attachmentsType": "File type is not allowed.",
+    "attachmentsSize": "Each file must be 5 MB or smaller.",
+    "attachmentsCount": "Maximum of 5 attachments.",
+    "attachmentsDownload": "Download"
   },
   "categories": {
     "trip_service": "Trip service",
@@ -56,6 +65,7 @@
     "save": "Save",
     "timeline": "Procedure",
     "noSelection": "Select a complaint.",
-    "error": "Failed to load or update."
+    "error": "Failed to load or update.",
+    "attachmentsAfterCreate": "Attachments for an external complaint are added on the detail, after it is created."
   }
 }

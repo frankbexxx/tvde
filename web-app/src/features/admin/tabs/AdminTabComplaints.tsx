@@ -14,6 +14,7 @@ import {
   type ComplaintSource,
   type ComplaintStatus,
 } from '../../../api/complaints'
+import { ComplaintAttachmentsPanel } from '../../complaints/ComplaintAttachmentsPanel'
 
 const STATUSES: ComplaintStatus[] = [
   'received',
@@ -452,6 +453,15 @@ export function AdminTabComplaints() {
               >
                 {t('admin.save')}
               </button>
+              {token ? (
+                <ComplaintAttachmentsPanel
+                  token={token}
+                  publicReference={selected.public_reference}
+                  status={selected.status}
+                  mode="admin"
+                />
+              ) : null}
+              <p className="text-xs text-muted-foreground">{t('admin.attachmentsAfterCreate')}</p>
               <div>
                 <p className="text-xs font-semibold mb-1">{t('admin.timeline')}</p>
                 <ol className="space-y-1 text-[11px] text-muted-foreground" data-testid="admin-complaint-history">

@@ -15,6 +15,9 @@ vi.mock('../../api/complaints', async () => {
   const actual = await vi.importActual<typeof import('../../api/complaints')>('../../api/complaints')
   return {
     ...actual,
+    listAdminComplaintAttachments: vi.fn(async () => []),
+    uploadAdminComplaintAttachment: vi.fn(),
+    downloadComplaintAttachment: vi.fn(),
     listAdminComplaints: (...args: unknown[]) => listAdminComplaints(...args),
     getAdminComplaint: (...args: unknown[]) => getAdminComplaint(...args),
     updateAdminComplaint: (...args: unknown[]) => updateAdminComplaint(...args),

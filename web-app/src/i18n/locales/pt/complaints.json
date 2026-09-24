@@ -10,7 +10,16 @@
     "done": "Fechar",
     "success": "Reclamação registada. Guarde a referência:",
     "successHint": "Pode consultar o estado nas suas reclamações.",
-    "error": "Não foi possível enviar a reclamação."
+    "error": "Não foi possível enviar a reclamação.",
+    "attachments": "Anexos",
+    "attachmentsHint": "Até 5 ficheiros. PDF, JPG, JPEG ou PNG. Máximo 5 MB cada. Sem apagar nesta versão.",
+    "attachmentsEmpty": "Sem anexos.",
+    "attachmentsAdd": "Adicionar anexo",
+    "attachmentsClosed": "Reclamação fechada: não é possível adicionar anexos.",
+    "attachmentsType": "Tipo de ficheiro não aceite.",
+    "attachmentsSize": "Cada ficheiro pode ter no máximo 5 MB.",
+    "attachmentsCount": "Máximo de 5 anexos.",
+    "attachmentsDownload": "Descarregar"
   },
   "categories": {
     "trip_service": "Serviço da viagem",
@@ -56,6 +65,7 @@
     "save": "Guardar",
     "timeline": "Procedimento",
     "noSelection": "Seleccione uma reclamação.",
-    "error": "Erro ao carregar ou actualizar."
+    "error": "Erro ao carregar ou actualizar.",
+    "attachmentsAfterCreate": "Os anexos de uma reclamação externa adicionam-se no detalhe, depois de criar."
   }
 }

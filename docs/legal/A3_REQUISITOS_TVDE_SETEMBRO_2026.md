@@ -290,21 +290,21 @@ Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MAT
 
 **Separação obrigatória:** licença **administrativa** da plataforma **≠** integração técnica / validação IMT de operador·motorista·veículo (**M2-L1 / M2-L2**). Estes últimos **permanecem** blockers e `PENDENTE DEPENDÊNCIA EXTERNA / INTEGRAÇÃO IMT`.
 
-### NECESSÁRIOS M2 (13)
+### NECESSÁRIOS M2 (11)
 
 1. Registo de tempos (**L-09**)  
 2. Retenção actividade **2 anos** (**L-11**)  
-3. Retenção reclamações **2 anos** (**L-12**)  
-4. Hard-cap comissão **25%** sem IVA (**L-13**) — guard 0–25% implementado; base IVA **por validar**; não CLOSED  
-5. Demonstração de cálculo / breakdown legal de preço (**L-14**) — **IMPLEMENTADO NA APP / PARCIAL**: fórmula do snapshot após o create, na viagem activa e no histórico; sem cálculo no frontend; confirmação pré-POST, factura **L-16** e base IVA **L-13** fora; não CLOSED  
-6. Mostrar taxa de intermediação (**L-15**) — **IMPLEMENTADO NA APP / PARCIAL GLOBAL**: snapshot 15% na viagem, settlement alinhado, passageiro vê a taxa; factura **L-16** e base IVA **L-13** fora; a fórmula **L-14** é linha distinta; não CLOSED  
-7. Fatura electrónica (**L-16**)  
-8. Reporting mensal AMT (**L-17**)  
-9. Apuramento contribuição AMT **5%** (**L-18**)  
-10. Contratos de adesão operadores (**L-23**)  
-11. Disponibilização contrato ao motorista (**L-24**)  
-12. Livro de Reclamações / RAL (**L-25**) — foundation técnica **PARCIAL** 2026-09-07; registo LRE + link directo **CONFIGURADO** 2026-09-22 · ver [`L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md`](L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md)  
-13. Processos de comunicação IMT/AMT (**L-29**)  
+3. Hard-cap comissão **25%** sem IVA (**L-13**) — guard 0–25% implementado; base IVA **por validar**; não CLOSED  
+4. Demonstração de cálculo / breakdown legal de preço (**L-14**) — **IMPLEMENTADO NA APP / PARCIAL**: fórmula do snapshot após o create, na viagem activa e no histórico; sem cálculo no frontend; confirmação pré-POST, factura **L-16** e base IVA **L-13** fora; não CLOSED  
+5. Mostrar taxa de intermediação (**L-15**) — **IMPLEMENTADO NA APP / PARCIAL GLOBAL**: snapshot 15% na viagem, settlement alinhado, passageiro vê a taxa; factura **L-16** e base IVA **L-13** fora; a fórmula **L-14** é linha distinta; não CLOSED  
+6. Fatura electrónica (**L-16**)  
+7. Reporting mensal AMT (**L-17**)  
+8. Apuramento contribuição AMT **5%** (**L-18**)  
+9. Contratos de adesão operadores (**L-23**)  
+10. Disponibilização contrato ao motorista (**L-24**)  
+11. Processos de comunicação IMT/AMT (**L-29**)  
+
+**Fora desta lista (FECHADO 2026-09-24):** **L-12** retenção 2 anos + anexos (delete, antivírus, object storage e purge físico não reabrem). **L-25** Livro de Reclamações / RAL — ver [`L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md`](L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md).
 
 *Alinhado à matriz (contagem por ID L-xx com Impacto `NECESSÁRIO M2`). Não fundir L-14 e L-15.*
 

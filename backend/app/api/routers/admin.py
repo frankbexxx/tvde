@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import case, func, select
@@ -2136,7 +2136,9 @@ from app.schemas.complaints import (  # noqa: E402
     ComplaintAdminItem,
     ComplaintAdminListItem,
     ComplaintAdminUpdateRequest,
+    ComplaintAttachmentItem,
 )
+from app.services import complaint_attachments as attachment_svc  # noqa: E402
 from app.services import complaints as complaints_svc  # noqa: E402
 
 
@@ -2226,3 +2228,63 @@ async def admin_update_complaint(
         resolution=body.resolution,
     )
     return complaints_svc.to_admin_item(db, complaint, include_history=True)
+
+
+def _admin_attachment_item(row) -> ComplaintAttachmentItem:
+    return ComplaintAttachmentItem(
+        id=row.id,
+        original_file_name=row.original_file_name,
+        mime_type=row.mime_type,
+        size_bytes=row.size_bytes,
+        created_at=row.created_at,
+        uploaded_by_user_id=row.uploaded_by_user_id,
+    )
+
+
+@router.get(
+    "/complaints/{public_reference}/attachments",
+    response_model=list[ComplaintAttachmentItem],
+)
+async def admin_list_complaint_attachments(
+    public_reference: str,
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> list[ComplaintAttachmentItem]:
+    complaint = attachment_svc.complaint_for_admin(db, public_reference)
+    return [_admin_attachment_item(row) for row in attachment_svc.list_attachments(db, complaint)]
+
+
+@router.post(
+    "/complaints/{public_reference}/attachments",
+    response_model=ComplaintAttachmentItem,
+    status_code=status.HTTP_201_CREATED,
+)
+async def admin_upload_complaint_attachment(
+    public_reference: str,
+    file: UploadFile = File(...),
+    admin_ctx: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+) -> ComplaintAttachmentItem:
+    complaint = attachment_svc.complaint_for_admin(db, public_reference)
+    row = attachment_svc.add_attachment(
+        db,
+        complaint=complaint,
+        actor_user_id=admin_ctx.user_id,
+        actor_role=admin_ctx.role.value,
+        upload=file,
+    )
+    return _admin_attachment_item(row)
+
+
+@router.get("/complaints/{public_reference}/attachments/{attachment_id}")
+async def admin_download_complaint_attachment(
+    public_reference: str,
+    attachment_id: uuid.UUID,
+    _admin: UserContext = Depends(require_role(Role.admin)),
+    db: Session = Depends(get_db),
+):
+    complaint = attachment_svc.complaint_for_admin(db, public_reference)
+    row, path = attachment_svc.get_attachment_file(
+        db, complaint=complaint, attachment_id=attachment_id
+    )
+    return attachment_svc.file_response(row, path)

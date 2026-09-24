@@ -110,7 +110,7 @@ D0(DONE) → A3(PARCIAL) → E5(DONE) → G3(M1) DONE
 
 ### NECESSÁRIOS M2 legais (13)
 
-Registo de tempos (**L-09**) · retenção actividade 2 anos (**L-11**) · retenção reclamações 2 anos (**L-12**) · hard-cap comissão 25% sem IVA (**L-13** — guard 0–25% implementado; base IVA por validar; não CLOSED) · demonstração de cálculo / breakdown (**L-14** — fórmula do snapshot após o create, na viagem activa e no histórico; pré-POST, L-16 e base IVA L-13 fora; não CLOSED) · taxa de intermediação (**L-15** — snapshot 15% na viagem e na UI do passageiro; factura L-16 fora; não CLOSED) · fatura electrónica (**L-16**) · reporting mensal AMT (**L-17**) · apuramento contribuição AMT 5% (**L-18**) · contratos de adesão operadores (**L-23**) · disponibilização contrato ao motorista (**L-24**) · Livro de Reclamações / RAL (**L-25**) · processos comunicação IMT/AMT (**L-29**).
+Registo de tempos (**L-09**) · retenção actividade 2 anos (**L-11**) · retenção reclamações 2 anos (**L-12** — FECHADO 2026-09-24, anexos incluídos) · hard-cap comissão 25% sem IVA (**L-13** — guard 0–25% implementado; base IVA por validar; não CLOSED) · demonstração de cálculo / breakdown (**L-14** — fórmula do snapshot após o create, na viagem activa e no histórico; pré-POST, L-16 e base IVA L-13 fora; não CLOSED) · taxa de intermediação (**L-15** — snapshot 15% na viagem e na UI do passageiro; factura L-16 fora; não CLOSED) · fatura electrónica (**L-16**) · reporting mensal AMT (**L-17**) · apuramento contribuição AMT 5% (**L-18**) · contratos de adesão operadores (**L-23**) · disponibilização contrato ao motorista (**L-24**) · Livro de Reclamações / RAL (**L-25**) · processos comunicação IMT/AMT (**L-29**).
 
 *Matriz:* [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md). **Prioridades legais individuais da matriz mantêm-se**; abaixo = ordem **prática** de implementação.
 
@@ -146,7 +146,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 
 *Activity retention (L-11):* foundation 2026-09-05 — Trip preserva partner/vehicle/plate históricos; AuditEvent 730d; **não** resolvido (GPS/docs/IMT).
 
-*Complaints (L-12):* foundation 2026-09-07 — `Complaint` + `ComplaintHistory` (procedimento canónico) · retenção 2 anos civis · APIs + Admin inbox · **PARCIAL** (sem attachments).
+*Complaints (L-12):* **FECHADO 2026-09-24**. Retenção 2 anos civis (já existia) + `complaint_attachments`. Implementado: máx. 5 ficheiros, PDF/JPEG/PNG, 5 MB, autor e Admin até `closed`, download autenticado, storage `UPLOAD_DIR` (disco persistente), history `attachment_added`. Criação continua JSON; o upload é o passo seguinte. Import externo: anexos no detalhe, depois de criar. Não implementado e não reabre o fecho: delete, antivírus, object storage, purge automático. Um purge futuro da complaint remove a row e o ficheiro físico. Complaints antigas ficam sem anexos, sem migração de dados.
 
 *Livro / RAL (L-25):* foundation técnica 2026-09-07 — sources + Admin import externo · páginas públicas `/reclamacoes` + `/ral` **DEPLOYED / VALIDATED** (2026-09-16) · link LRE **directo** configurado **2026-09-22** (loja VAMULÁ; PDF em `docs/legal/sources/lre/`) · RAL wording **provisório** (CACCL/CNIACC; sem ODR antiga) · L-25 global **FECHADO** 2026-09-24 (O-L25-04 email `legal@vamula.pt`, aliases e smoke de recepção; O-L25-09 dry-run CONCLUÍDO; wording RAL provisório não reabre) · **NÃO BLOQUEADOR IMEDIATO** APP · sem API LRE. Ver [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md).
 
