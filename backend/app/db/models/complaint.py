@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, Text, func, text
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, String, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -178,7 +178,7 @@ class ComplaintHistory(Base):
     event_type: Mapped[str] = mapped_column(
         String(32),
         nullable=False,
-        comment="received|status_changed|resolved|reopened|closed|assignment_changed",
+        comment="received|status_changed|resolved|reopened|closed|assignment_changed|attachment_added",
     )
     from_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     to_status: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
@@ -205,3 +205,43 @@ Index(
     ComplaintHistory.complaint_id,
     ComplaintHistory.occurred_at,
 )
+
+
+class ComplaintAttachment(Base):
+    """File attached to a complaint. Retention follows the parent complaint.
+
+    A future complaint purge must delete this row and the file under UPLOAD_DIR.
+    There is no separate retention clock and no delete in V1.
+    """
+
+    __tablename__ = "complaint_attachments"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    complaint_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("complaints.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    uploaded_by_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    original_file_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    stored_path: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        comment="Relative path under UPLOAD_DIR. UUID name, never the original filename.",
+    )
+    mime_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )

@@ -51,6 +51,15 @@ class ComplaintUserItem(BaseModel):
     resolution: Optional[str] = None
 
 
+class ComplaintAttachmentItem(BaseModel):
+    id: uuid.UUID
+    original_file_name: str
+    mime_type: str
+    size_bytes: int
+    created_at: datetime
+    uploaded_by_user_id: Optional[uuid.UUID] = None
+
+
 class ComplaintHistoryItem(BaseModel):
     event_type: str
     from_status: Optional[str] = None

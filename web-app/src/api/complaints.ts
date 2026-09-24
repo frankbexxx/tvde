@@ -1,5 +1,5 @@
 /** L-12 / L-25 Complaints API (passenger / driver / admin). */
-import { apiFetch } from './client'
+import { API_BASE, apiFetch } from './client'
 
 export type ComplaintCategory =
   | 'trip_service'
@@ -166,6 +166,98 @@ export async function updateAdminComplaint(
       body: JSON.stringify(body),
     }
   )
+}
+
+export type ComplaintAttachmentItem = {
+  id: string
+  original_file_name: string
+  mime_type: string
+  size_bytes: number
+  created_at: string
+  uploaded_by_user_id?: string | null
+}
+
+async function uploadAttachment(
+  token: string,
+  path: string,
+  file: File
+): Promise<ComplaintAttachmentItem> {
+  const body = new FormData()
+  body.append('file', file)
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+  })
+  if (!res.ok) {
+    const payload = await res.json().catch(() => ({}))
+    throw { status: res.status, detail: payload.detail ?? res.statusText }
+  }
+  return res.json() as Promise<ComplaintAttachmentItem>
+}
+
+export async function listMyComplaintAttachments(
+  token: string,
+  publicReference: string
+): Promise<ComplaintAttachmentItem[]> {
+  return apiFetch<ComplaintAttachmentItem[]>(
+    `/complaints/${encodeURIComponent(publicReference)}/attachments`,
+    { token }
+  )
+}
+
+export async function uploadMyComplaintAttachment(
+  token: string,
+  publicReference: string,
+  file: File
+): Promise<ComplaintAttachmentItem> {
+  return uploadAttachment(
+    token,
+    `/complaints/${encodeURIComponent(publicReference)}/attachments`,
+    file
+  )
+}
+
+export async function listAdminComplaintAttachments(
+  token: string,
+  publicReference: string
+): Promise<ComplaintAttachmentItem[]> {
+  return apiFetch<ComplaintAttachmentItem[]>(
+    `/admin/complaints/${encodeURIComponent(publicReference)}/attachments`,
+    { token }
+  )
+}
+
+export async function uploadAdminComplaintAttachment(
+  token: string,
+  publicReference: string,
+  file: File
+): Promise<ComplaintAttachmentItem> {
+  return uploadAttachment(
+    token,
+    `/admin/complaints/${encodeURIComponent(publicReference)}/attachments`,
+    file
+  )
+}
+
+export async function downloadComplaintAttachment(
+  token: string,
+  path: string,
+  filename: string
+): Promise<void> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    throw { status: res.status, detail: 'download_failed' }
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 export async function createAdminExternalComplaint(

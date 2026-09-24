@@ -6,6 +6,14 @@ vi.mock('../../api/complaints', async () => {
   const actual = await vi.importActual<typeof import('../../api/complaints')>('../../api/complaints')
   return {
     ...actual,
+    listMyComplaintAttachments: vi.fn(async () => []),
+    uploadMyComplaintAttachment: vi.fn(async () => ({
+      id: 'att-1',
+      original_file_name: 'note.pdf',
+      mime_type: 'application/pdf',
+      size_bytes: 12,
+      created_at: new Date().toISOString(),
+    })),
     createComplaint: vi.fn(async () => ({
       public_reference: 'CMP-2026-TESTREF1',
       category: 'trip_service',

@@ -6,6 +6,8 @@ import {
   type ComplaintCategory,
   type ComplaintUserItem,
 } from '../../api/complaints'
+import { ComplaintAttachmentsPanel } from './ComplaintAttachmentsPanel'
+import { validateAttachmentChoice } from './complaintAttachmentLimits'
 
 type ComplaintReportFormProps = {
   token: string
@@ -28,6 +30,7 @@ export function ComplaintReportForm({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [created, setCreated] = useState<ComplaintUserItem | null>(null)
+  const [files, setFiles] = useState<File[]>([])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -56,6 +59,13 @@ export function ComplaintReportForm({
           {created.public_reference}
         </p>
         <p className="text-xs text-muted-foreground">{t('form.successHint')}</p>
+        <ComplaintAttachmentsPanel
+          token={token}
+          publicReference={created.public_reference}
+          status={created.status}
+          mode="user"
+          pendingFiles={files}
+        />
         <button
           type="button"
           className="text-sm underline text-foreground"
@@ -102,6 +112,42 @@ export function ComplaintReportForm({
           data-testid="complaint-description"
         />
       </label>
+      <div>
+        <p className="text-xs text-muted-foreground">{t('form.attachmentsHint')}</p>
+        <ul data-testid="complaint-attachment-picks">
+          {files.map((file) => (
+            <li key={`${file.name}-${file.size}`}>{file.name}</li>
+          ))}
+        </ul>
+        <label className="text-xs">
+          {t('form.attachmentsAdd')}
+          <input
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            data-testid="complaint-attachment-input"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ''
+              if (!file) return
+              const reason = validateAttachmentChoice(file, files.length)
+              if (reason === 'type') {
+                setError(t('form.attachmentsType'))
+                return
+              }
+              if (reason === 'size') {
+                setError(t('form.attachmentsSize'))
+                return
+              }
+              if (reason === 'count') {
+                setError(t('form.attachmentsCount'))
+                return
+              }
+              setError(null)
+              setFiles((prev) => [...prev, file])
+            }}
+          />
+        </label>
+      </div>
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
       <div className="flex gap-2">
         <button

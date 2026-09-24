@@ -84,3 +84,4 @@ class ComplaintHistoryEventType(str, Enum):
     reopened = "reopened"
     closed = "closed"
     assignment_changed = "assignment_changed"
+    attachment_added = "attachment_added"
