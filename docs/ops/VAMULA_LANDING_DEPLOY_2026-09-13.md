@@ -45,6 +45,6 @@
 - Revisão jurídica do wording RAL (provisório)
 - Banner cookies (fase posterior)
 - Formulário / tracking (fora de scope V1)
-- Suporte LRE sobre o email pessoal `frankbexxx@gmail.com` — pendência **separada**; não faz parte do smoke de 2026-09-22; **L-25 global continua PARCIAL** (O-L25-04 e restantes itens abertos)
+- Suporte LRE sobre o email pessoal `frankbexxx@gmail.com` — pendência **separada**; não faz parte do smoke de 2026-09-22; **L-25 global continua PARCIAL** (aberto O-L25-04)
 
 **Relacionado:** acta [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) §7–10 · status [`TVDE_STATUS_SETEMBRO_2026.md`](../TVDE_STATUS_SETEMBRO_2026.md) · roadmap [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md).

@@ -156,7 +156,7 @@ Sem telefone público nesta fase.
 | Canal AMT (O-L25-06) | **CONCLUÍDO** 2026-09-22 — sector Táxis/TVDE activo · entidade reguladora AMT · screenshot em `docs/legal/sources/lre/` |
 | RAL `/ral/` | **DEPLOYED / VALIDATED** — wording **provisório** (CACCL/CNIACC); sem ODR antiga; revisão jurídica futura |
 
-O registo, o link directo LRE, o canal AMT (O-L25-06), o gestor de reclamações (O-L25-05) e a marca no registo (O-L25-03) estão fechados. O-L25-02 está **SUPERSEDED**: o LRE já não exige CAE; o sector Táxis/TVDE com AMT cobre a classificação. O CAE `52320-R4` fica na documentação societária e esta acta não conclui se está fiscalmente correcto. **L-25 global continua PARCIAL** enquanto O-L25-04 e O-L25-09 estiverem abertos. O-L25-09 já não depende da nomeação do gestor.
+O registo, o link directo LRE, o canal AMT (O-L25-06), o gestor de reclamações (O-L25-05) e a marca no registo (O-L25-03) estão fechados. O-L25-02 está **SUPERSEDED**: o LRE já não exige CAE; o sector Táxis/TVDE com AMT cobre a classificação. O CAE `52320-R4` fica na documentação societária e esta acta não conclui se está fiscalmente correcto. O-L25-09 está **CONCLUÍDO** (2026-09-24): acesso LRE do titular confirmado e dry-run interno na API Admin de STAGING, sem reclamação real no LRE. **L-25 global continua PARCIAL** enquanto O-L25-04 estiver aberto.
 
 ---
 

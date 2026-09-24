@@ -41,7 +41,7 @@
 | O-L25-06 | Canal AMT | Concluído | 2026-09-22 · sector Táxis/TVDE activo · entidade reguladora AMT · `docs/legal/sources/lre/vamula-lre-amt-sector-association-2026-09-22.png` |
 | O-L25-07 | RAL | Concluído | CACCL + CNIACC + copy prudente |
 | O-L25-08 | Livro físico | Concluído | NÃO APLICÁVEL sem estabelecimento presencial |
-| O-L25-09 | Processo 15 DU humano | Por iniciar | Já não bloqueado pela falta de gestor (O-L25-05 concluído). Pronto para validar o processo humano de 15 dias úteis: LRE → import VAMULÁ → due manual → responder → fechar |
+| O-L25-09 | Processo 15 DU humano | Concluído | 2026-09-24 · dry-run interno em STAGING `tvde-staging-api` · sem reclamação real no LRE · `CMP-2026-82CD8B85` / `SIMULACAO-OL25-09-20260924` · `received` → `under_review` → `resolved` → `closed` · Admin existente atribuído · duplicado 409 · retenção `submitted_at + 2 anos civis` · histórico e audit de estado preservados · `external_responded_at` sem writer (não escrito na BD) · resposta oficial no LRE continua fora da app |
 
 ## Gestor de Reclamações (O-L25-05)
 
@@ -74,7 +74,7 @@ Partner/Manel é a gestão operacional primária. Admin/VAMULÁ/Francisco é sup
 
 ## Procedimento O-L25-09 (15 dias úteis — humano)
 
-O-L25-09 **não** está fechado. A nomeação do titular e do substituto deixa de ser bloqueio. Falta validar este processo humano.
+O-L25-09 está **CONCLUÍDO** em 2026-09-24. O acesso do titular ao LRE foi confirmado manualmente (Manel Perez, utilizador próprio, área `Consulta & Tratamento -> Reclamações`). O processo interno foi demonstrado na API Admin de STAGING, com dados fictícios e sem reclamação real no LRE: `CMP-2026-82CD8B85`, referência `SIMULACAO-OL25-09-20260924`. O campo `external_responded_at` existe no modelo e não tem writer na API; não foi escrito na base de dados. A resposta oficial continua no LRE, fora da app.
 
 1. Reclamação chega por LRE  
 2. Gestor recebe notificação  
@@ -104,7 +104,7 @@ Marcar **`L-25 = FECHADO`** apenas quando estiverem concluídos:
 - O-L25-06  
 - O-L25-09  
 
-O-L25-02 está **SUPERSEDED** e não bloqueia o fecho. O-L25-01, O-L25-03, O-L25-05, O-L25-06, O-L25-07 e O-L25-08 já estão concluídos. O-L25-04 e O-L25-09 continuam por iniciar.
+O-L25-02 está **SUPERSEDED** e não bloqueia o fecho. O-L25-01, O-L25-03, O-L25-05, O-L25-06, O-L25-07, O-L25-08 e O-L25-09 já estão concluídos. O-L25-04 continua por iniciar. **L-25 global continua PARCIAL** enquanto O-L25-04 estiver aberto.
 
 ## Superfícies na app
 
