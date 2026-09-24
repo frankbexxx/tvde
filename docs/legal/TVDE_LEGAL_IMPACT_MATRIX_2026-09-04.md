@@ -43,7 +43,7 @@
 | **L-22** | **Partilha de localização** no fluxo de emergência | Art. 19.º; 17.º-A | `PARCIAL` | `GAP FUNCIONAL` | `BLOCKER M2` | Share nativo/clipboard + snapshot localização; sem URL pública/token |
 | **L-23** | **Contratos de adesão** operadores + comunicação AMT | Arts. 5.º, 20.º n.ºs 8–9 | `AUSENTE` | `GAP LEGAL/PROCESSO` | `NECESSÁRIO M2` | Sem versionamento/aceitação/envio AMT na app |
 | **L-24** | Disponibilizar contrato do operador ao **motorista** na inscrição | Art. 20.º n.º 10 | `AUSENTE` | `GAP COPY/UX` | `NECESSÁRIO M2` | Sem prova de disponibilização |
-| **L-25** | **Reclamações** (Livro Electrónico) + informação **RAL** | Art. 19.º n.ºs 2–3 | `PARCIAL` | `GAP OPERACIONAL EXTERNO` | `NECESSÁRIO M2` | **`PARCIAL — foundation técnica OK; link directo LRE CONFIGURADO 2026-09-22 (loja VAMULÁ); O-L25-02 CAE SUPERSEDED (sector + AMT em O-L25-06; CAE societário fora do LRE); O-L25-03 marca CONCLUÍDO (PDF LRE + lista IMT 354/2026 + INPI 734136; síntese INPI opcional); O-L25-05 gestor CONCLUÍDO; canal AMT O-L25-06 CONCLUÍDO; O-L25-09 dry-run CONCLUÍDO 2026-09-24; L-25 global ainda aberto em O-L25-04; NÃO BLOQUEADOR IMEDIATO do desenvolvimento APP`** · acta [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · [`L25_…`](L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md) · O-L25-01/03/05/06/07/08/09 concluídos · O-L25-02 superseded · fecho global só após O-L25-04 |
+| **L-25** | **Reclamações** (Livro Electrónico) + informação **RAL** | Art. 19.º n.ºs 2–3 | `IMPLEMENTADO` | `SEM GAP` | `FECHADO` | **`FECHADO 2026-09-24`**: checklist operacional concluído · O-L25-04 email de notificações `legal@vamula.pt`, aliases `reclamacoes@`/`manel@`, smoke de recepção e backup do Francisco · O-L25-09 dry-run STAGING · O-L25-02 SUPERSEDED · wording RAL provisório e `external_responded_at` sem writer **não reabrem** o fecho · acta [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · [`L25_…`](L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md) |
 | **L-26** | **Licença gestor de plataforma** IMT antes de intermediação | Art. 17.º n.º 1 | `IMPLEMENTADO` | `SEM GAP` | `FECHADO` *(ex-BLOCKER)* | **M2-L0 2026-09-05:** Ventos Férteis · **354/2026** · **06/01/2026** · lista IMT arquivada · [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) — **≠** integração técnica L1/L2 |
 | **L-27** | Requisitos de **capacidade tecnológica** da plataforma | Art. 17.º n.º 4; 17.º-A | `PARCIAL` | `GAP LEGAL/PROCESSO` | `DEPENDE PARECER` | App existe; checklist 17.º-A incompleto vs lei |
 | **L-28** | **Marca registada** (requisito de licenciamento) | Art. 17.º n.º 4 | `IMPLEMENTADO` | `SEM GAP` | `DEPENDE PARECER` *(só se surgirem obrigações extra)* | **VAMULÁ** marca nacional **734136** · titular Ventos Férteis · classe 39 · portal INPI (PDF síntese **NÃO ARQUIVADO**) |
@@ -94,9 +94,9 @@
 | Classificação Impacto M2 | Nº (aprox.) |
 |--------------------------|-------------|
 | `BLOCKER M2` | **11** (L-01…L-06, L-10, L-19…L-22) — **L-26 removido** 2026-09-05 |
-| `NECESSÁRIO M2` | **13** (L-09, L-11…L-18, L-23…L-25, L-29) |
+| `NECESSÁRIO M2` | **12** (L-09, L-11…L-18, L-23, L-24, L-29) — **L-25 removido** 2026-09-24 |
 | `DEPENDE PARECER` | **5** (L-07, L-08, L-27, L-28, L-30) |
-| `FECHADO` *(ex-blocker)* | **1** (L-26) |
+| `FECHADO` | **2** (L-26 ex-blocker; L-25 operacional 2026-09-24) |
 | `PODE SER PÓS-PILOTO` | **0** nesta lista obrigatória |
 
 *Nota:* “BLOCKER M2” = bloqueia **go-live TVDE licenciado / intermediação em conformidade**; não reabre M1 técnico já fechado.
