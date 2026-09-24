@@ -341,7 +341,8 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 |-------|--------|
 | **A2.5 tarifário V1** | **DONE** — GO/Comfort/XL + mínimos + Pet + comissão 15% + tolls 0% |
 | **L-13 comissão ≤ 25%** | **PARCIAL** — guard 0–25% em accept/complete antes da captura; sem cap silencioso; base IVA **por validar**; não CLOSED |
-| **L-15 taxa de intermediação** | **IMPLEMENTADO NA APP / PARCIAL GLOBAL** — novas viagens congelam 15% e o settlement usa o snapshot; passageiro vê a mesma taxa; legacy `NULL` inalterado; factura L-16, fórmula L-14 e base IVA L-13 fora; não CLOSED |
+| **L-14 fórmula do preço** | **IMPLEMENTADO NA APP / PARCIAL** — passageiro vê base, €/km, €/min, mínimo e ajuste ao mínimo a partir de `price_breakdown`, após o create, na viagem activa e no histórico; sem cálculo no frontend; pré-POST, L-16 e base IVA L-13 fora; não CLOSED |
+| **L-15 taxa de intermediação** | **IMPLEMENTADO NA APP / PARCIAL GLOBAL** — novas viagens congelam 15% e o settlement usa o snapshot; passageiro vê a mesma taxa; legacy `NULL` inalterado; factura L-16 e base IVA L-13 fora; fórmula L-14 é linha distinta; não CLOSED |
 | **Cancel V1** | **DONE** — €3 fixos (cobrança real pós-B1) |
 | **Landing V1** | **DEPLOYED / PROD OK** — https://vamula.pt · Hostinger · [#585](https://github.com/frankbexxx/tvde/pull/585)/[#586](https://github.com/frankbexxx/tvde/pull/586) |
 | **Páginas legais públicas** | **DEPLOYED / VALIDATED** 2026-09-16 — `/legal/` `/privacidade/` `/reclamacoes/` `/ral/` · [#596](https://github.com/frankbexxx/tvde/pull/596) · smoke Hostinger PASS |

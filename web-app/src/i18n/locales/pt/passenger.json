@@ -236,5 +236,10 @@
   },
   "intermediation": {
     "rateLine": "Taxa de intermediação VAMULÁ: {{rate}}%"
+  },
+  "priceFormula": {
+    "baseLine": "Base {{base}} € + {{perKm}} €/km + {{perMin}} €/min",
+    "minimumLine": "Mínimo da categoria: {{minimum}} €",
+    "adjustmentLine": "Ajuste ao mínimo: {{adjustment}} €"
   }
 }

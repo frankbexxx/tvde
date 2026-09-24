@@ -14,6 +14,7 @@ import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
 import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
+import { PriceFormulaBreakdown } from './PriceFormulaBreakdown'
 import { BTN_SECONDARY, INFO_BOX_PASSENGER } from '../../components/layout/infoBoxTemplate'
 
 const ESTIMATE_FALLBACK = '4–6'
@@ -41,6 +42,7 @@ function tripCardFooter(
         }
         vehicleLabel={activeTrip.status === 'assigned' ? undefined : t('statusCard.vehicleLabel')}
       />
+      <PriceFormulaBreakdown breakdown={activeTrip.price_breakdown} />
       <PassengerIntermediationRateLine rate={activeTrip.intermediation_rate_percent} />
     </>
   )
