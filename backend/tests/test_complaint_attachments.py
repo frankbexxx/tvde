@@ -220,9 +220,11 @@ def test_history_and_audit_omit_complaint_text(client: TestClient, upload_dir) -
         audits = db.execute(
             select(AuditEvent).where(AuditEvent.event_type == "complaint.attachment_added")
         ).scalars().all()
-        assert audits
-        payload = audits[-1].payload
-        assert payload.get("attachment_id") == attachment_id
+        payload = next(
+            (a.payload for a in audits if (a.payload or {}).get("attachment_id") == attachment_id),
+            None,
+        )
+        assert payload is not None
         assert "description" not in payload
         assert "Secret complaint text" not in str(payload)
     finally:

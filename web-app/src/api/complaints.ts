@@ -177,10 +177,6 @@ export type ComplaintAttachmentItem = {
   uploaded_by_user_id?: string | null
 }
 
-const ATTACHMENT_ACCEPT = '.pdf,.jpg,.jpeg,.png'
-
-export { ATTACHMENT_ACCEPT }
-
 async function uploadAttachment(
   token: string,
   path: string,

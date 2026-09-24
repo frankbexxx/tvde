@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  ATTACHMENT_ACCEPT,
   downloadComplaintAttachment,
   listAdminComplaintAttachments,
   listMyComplaintAttachments,
@@ -9,22 +8,9 @@ import {
   uploadMyComplaintAttachment,
   type ComplaintAttachmentItem,
 } from '../../api/complaints'
+import { ATTACHMENT_ACCEPT, validateAttachmentChoice } from './complaintAttachmentLimits'
 
 const EMPTY_FILES: File[] = []
-const MAX_FILES = 5
-const MAX_BYTES = 5 * 1024 * 1024
-const ALLOWED = new Set(['pdf', 'jpg', 'jpeg', 'png'])
-
-export function validateAttachmentChoice(
-  file: File,
-  already: number
-): 'type' | 'size' | 'count' | null {
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
-  if (!ALLOWED.has(ext)) return 'type'
-  if (file.size > MAX_BYTES) return 'size'
-  if (already >= MAX_FILES) return 'count'
-  return null
-}
 
 type Props = {
   token: string

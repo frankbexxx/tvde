@@ -1,7 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import '../../i18n'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { ComplaintAttachmentsPanel, validateAttachmentChoice } from './ComplaintAttachmentsPanel'
+import { ComplaintAttachmentsPanel } from './ComplaintAttachmentsPanel'
+import { validateAttachmentChoice } from './complaintAttachmentLimits'
 
 const listMy = vi.fn()
 const uploadMy = vi.fn()

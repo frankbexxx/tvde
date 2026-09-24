@@ -6,7 +6,8 @@ import {
   type ComplaintCategory,
   type ComplaintUserItem,
 } from '../../api/complaints'
-import { ComplaintAttachmentsPanel, validateAttachmentChoice } from './ComplaintAttachmentsPanel'
+import { ComplaintAttachmentsPanel } from './ComplaintAttachmentsPanel'
+import { validateAttachmentChoice } from './complaintAttachmentLimits'
 
 type ComplaintReportFormProps = {
   token: string
