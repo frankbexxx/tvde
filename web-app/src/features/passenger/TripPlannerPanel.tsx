@@ -1,10 +1,11 @@
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Spinner } from '../../components/ui/Spinner'
-import type { TripDetailResponse } from '../../api/trips'
+import type { PriceBreakdown, TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
 import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
+import { PriceFormulaBreakdown } from './PriceFormulaBreakdown'
 import {
   BTN_COMPACT_HEIGHT,
   BTN_PRIMARY_RADIUS,
@@ -83,6 +84,8 @@ export interface TripPlannerPanelProps {
   lastTollsUnavailable?: boolean
   /** Snapshot from create. Omit the line when null. */
   lastIntermediationRate?: number | null
+  /** Create snapshot. Omit the formula when absent or incomplete. */
+  lastPriceBreakdown?: PriceBreakdown | null
 }
 
 /**
@@ -124,6 +127,7 @@ function TripPlannerPanelInner({
   lastEstimatedTolls = null,
   lastTollsUnavailable = false,
   lastIntermediationRate = null,
+  lastPriceBreakdown = null,
 }: TripPlannerPanelProps) {
   const { t } = useTranslation('passenger')
   const isSubdued = visualWeight === 'subdued' || emphasis === 'subdued'
@@ -360,6 +364,7 @@ function TripPlannerPanelInner({
               className="text-sm text-foreground text-center space-y-0.5"
               data-testid="passenger-estimate-breakdown"
             >
+              <PriceFormulaBreakdown breakdown={lastPriceBreakdown} />
               {lastFareSubtotal != null ? (
                 <p>{t('pet.fareLine', { amount: lastFareSubtotal.toFixed(2) })}</p>
               ) : null}

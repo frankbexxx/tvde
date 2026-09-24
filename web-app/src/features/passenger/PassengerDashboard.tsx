@@ -16,7 +16,7 @@ import {
   shouldBootstrapPassengerActiveTrip,
   shouldClearPassengerLocalTripOnActiveMiss,
 } from './passengerActiveTripRecovery'
-import type { TripDetailResponse } from '../../api/trips'
+import type { PriceBreakdown, TripDetailResponse } from '../../api/trips'
 import { usePolling } from '../../hooks/usePolling'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
@@ -130,6 +130,7 @@ export function PassengerDashboard() {
   const [lastFareSubtotal, setLastFareSubtotal] = useState<number | null>(null)
   const [lastEstimatedTolls, setLastEstimatedTolls] = useState<number | null>(null)
   const [lastIntermediationRate, setLastIntermediationRate] = useState<number | null>(null)
+  const [lastPriceBreakdown, setLastPriceBreakdown] = useState<PriceBreakdown | null>(null)
   const [lastTollsUnavailable, setLastTollsUnavailable] = useState(false)
   const [lastEstimatedTotal, setLastEstimatedTotal] = useState<number | null>(null)
   const passengerMenuOpenRef = useRef(false)
@@ -583,6 +584,7 @@ export function PassengerDashboard() {
     setLastEstimatedTolls(null)
     setLastTollsUnavailable(false)
     setLastEstimatedTotal(null)
+    setLastPriceBreakdown(null)
   }, [])
 
   const onChoosePlanningModeAndScrollToMap = useCallback(() => {
@@ -744,6 +746,7 @@ export function PassengerDashboard() {
           ? Number(res.intermediation_rate_percent)
           : null,
       )
+      setLastPriceBreakdown(res.price_breakdown ?? null)
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
       toast.success(t('trip.sent'))
@@ -875,6 +878,7 @@ export function PassengerDashboard() {
           ? Number(res.intermediation_rate_percent)
           : null,
       )
+      setLastPriceBreakdown(res.price_breakdown ?? null)
       addLog('Pedido reenviado após tentar novamente', 'success')
       toast.success(t('trip.resent'))
       refetchHistory()
@@ -1559,6 +1563,7 @@ export function PassengerDashboard() {
                     lastEstimatedTolls={lastEstimatedTolls}
                     lastTollsUnavailable={lastTollsUnavailable}
                     lastIntermediationRate={lastIntermediationRate}
+                    lastPriceBreakdown={lastPriceBreakdown}
                   />
                   ) : null}
                 </MapBottomSheet>
