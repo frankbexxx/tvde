@@ -47,6 +47,14 @@ def _price_breakdown_schema(trip: Trip) -> PriceBreakdownSchema | None:
     return _price_breakdown_from_reporting(trip)
 
 
+def intermediation_rate_percent_api(trip: Trip) -> float | None:
+    """Passenger-visible snapshot. NULL stays null — do not invent 15% for legacy trips."""
+    raw = getattr(trip, "intermediation_rate_percent", None)
+    if raw is None:
+        return None
+    return float(raw)
+
+
 def _pet_surcharge_value(trip: Trip) -> float | None:
     return pet_surcharge_amount(trip)
 
@@ -100,6 +108,7 @@ def trip_to_history_item(
         stripe_payment_intent_id=payment.stripe_payment_intent_id
         if payment and include_stripe_pi
         else None,
+        intermediation_rate_percent=intermediation_rate_percent_api(trip),
         cancellation_reason=_passenger_visible_cancellation_reason(trip),
         cancellation_reason_code=_cancellation_reason_code(trip),
         cancelled_by=getattr(trip, "cancelled_by", None),
@@ -153,6 +162,7 @@ def trip_to_detail(
         stripe_payment_intent_id=payment.stripe_payment_intent_id
         if payment and include_stripe_pi
         else None,
+        intermediation_rate_percent=intermediation_rate_percent_api(trip),
         stripe_dashboard_url=(
             stripe_payment_intent_dashboard_url(payment.stripe_payment_intent_id)
             if payment and include_stripe_pi
@@ -206,5 +216,6 @@ def trip_to_status_response(
         stripe_payment_intent_id=payment.stripe_payment_intent_id
         if payment and include_stripe_pi
         else None,
+        intermediation_rate_percent=intermediation_rate_percent_api(trip),
         payment_intent_client_secret=payment_intent_client_secret,
     )

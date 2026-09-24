@@ -21,6 +21,7 @@ from app.schemas.trip import (
     TripStatusResponse,
 )
 from app.api.serializers import (
+    intermediation_rate_percent_api,
     trip_to_detail,
     trip_to_history_item,
     trip_to_status_response,
@@ -154,6 +155,7 @@ async def create_trip(
         if payment and payment.driver_payout
         else None,
         stripe_payment_intent_id=None,
+        intermediation_rate_percent=intermediation_rate_percent_api(trip),
         pet_surcharge=float(trip.pet_surcharge_amount or 0),
         price_breakdown=(
             PriceBreakdownSchema.model_validate(trip.price_breakdown)
@@ -222,4 +224,5 @@ async def cancel_trip(
         if payment and payment.driver_payout
         else None,
         stripe_payment_intent_id=None,
+        intermediation_rate_percent=intermediation_rate_percent_api(trip),
     )

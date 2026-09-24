@@ -233,5 +233,8 @@
     "errSizeRequired": "Indica o porte do animal.",
     "errTransportRequired": "Indica como o animal viaja (transportadora ou arnês).",
     "errCapacityCategory": "Para GO ou Comfort o máximo são 4 lugares (passageiros + animal no banco). Escolhe XL ou reduz passageiros."
+  },
+  "intermediation": {
+    "rateLine": "Taxa de intermediação VAMULÁ: {{rate}}%"
   }
 }

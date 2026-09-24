@@ -297,7 +297,7 @@ Fonte alinhada: [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MAT
 3. Retenção reclamações **2 anos** (**L-12**)  
 4. Hard-cap comissão **25%** sem IVA (**L-13**) — guard 0–25% implementado; base IVA **por validar**; não CLOSED  
 5. Demonstração de cálculo / breakdown legal de preço (**L-14**)  
-6. Mostrar taxa de intermediação (**L-15**)  
+6. Mostrar taxa de intermediação (**L-15**) — **IMPLEMENTADO NA APP / PARCIAL GLOBAL**: snapshot 15% na viagem, settlement alinhado, passageiro vê a taxa; factura **L-16**, fórmula **L-14** e base IVA **L-13** fora; não CLOSED  
 7. Fatura electrónica (**L-16**)  
 8. Reporting mensal AMT (**L-17**)  
 9. Apuramento contribuição AMT **5%** (**L-18**)  

@@ -233,5 +233,8 @@
     "errSizeRequired": "Select the animal size.",
     "errTransportRequired": "Select how the animal travels (carrier or harness).",
     "errCapacityCategory": "GO and Comfort allow at most 4 seats (passengers + animal on a seat). Choose XL or reduce passengers."
+  },
+  "intermediation": {
+    "rateLine": "VAMULÁ intermediation rate: {{rate}}%"
   }
 }

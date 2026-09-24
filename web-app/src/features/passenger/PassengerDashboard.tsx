@@ -129,6 +129,7 @@ export function PassengerDashboard() {
   const [lastPetSurcharge, setLastPetSurcharge] = useState<number | null>(null)
   const [lastFareSubtotal, setLastFareSubtotal] = useState<number | null>(null)
   const [lastEstimatedTolls, setLastEstimatedTolls] = useState<number | null>(null)
+  const [lastIntermediationRate, setLastIntermediationRate] = useState<number | null>(null)
   const [lastTollsUnavailable, setLastTollsUnavailable] = useState(false)
   const [lastEstimatedTotal, setLastEstimatedTotal] = useState<number | null>(null)
   const passengerMenuOpenRef = useRef(false)
@@ -738,6 +739,11 @@ export function PassengerDashboard() {
       setLastEstimatedTolls(tollsAmt != null && Number(tollsAmt) > 0 ? Number(tollsAmt) : null)
       setLastTollsUnavailable(tollStatus === 'zero_fallback' || tollStatus === 'error')
       setLastEstimatedTotal(res.estimated_price ?? res.price_breakdown?.total ?? null)
+      setLastIntermediationRate(
+        res.intermediation_rate_percent != null && Number.isFinite(Number(res.intermediation_rate_percent))
+          ? Number(res.intermediation_rate_percent)
+          : null,
+      )
       const est = res.estimated_price != null && res.estimated_price > 0 ? `${res.estimated_price}` : ESTIMATE_MOCK
       addLog(`Viagem criada (${res.status}) — estimativa ${est} €`, 'success')
       toast.success(t('trip.sent'))
@@ -864,6 +870,11 @@ export function PassengerDashboard() {
       setLastEstimatedTolls(tollsAmt != null && Number(tollsAmt) > 0 ? Number(tollsAmt) : null)
       setLastTollsUnavailable(tollStatus === 'zero_fallback' || tollStatus === 'error')
       setLastEstimatedTotal(res.estimated_price ?? res.price_breakdown?.total ?? null)
+      setLastIntermediationRate(
+        res.intermediation_rate_percent != null && Number.isFinite(Number(res.intermediation_rate_percent))
+          ? Number(res.intermediation_rate_percent)
+          : null,
+      )
       addLog('Pedido reenviado após tentar novamente', 'success')
       toast.success(t('trip.resent'))
       refetchHistory()
@@ -1547,6 +1558,7 @@ export function PassengerDashboard() {
                     lastEstimatedTotal={lastEstimatedTotal}
                     lastEstimatedTolls={lastEstimatedTolls}
                     lastTollsUnavailable={lastTollsUnavailable}
+                    lastIntermediationRate={lastIntermediationRate}
                   />
                   ) : null}
                 </MapBottomSheet>

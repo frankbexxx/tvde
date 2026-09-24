@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import (
@@ -160,6 +161,14 @@ class Trip(Base):
         JSONB,
         nullable=True,
         comment="Price breakdown snapshot (base/km/min/pet/tolls/total).",
+    )
+    intermediation_rate_percent: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(5, 2),
+        nullable=True,
+        comment=(
+            "Frozen intermediation rate for this trip. "
+            "NULL = legacy; settlement uses driver.commission_percent."
+        ),
     )
     distance_km: Mapped[Optional[float]] = mapped_column(
         Numeric(8, 2),

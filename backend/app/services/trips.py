@@ -23,12 +23,13 @@ from app.core.config import settings
 from app.core.pricing import (
     CANCELLATION_FEE_EUR,
     PET_SURCHARGE_RULE_V1,
+    TRIP_INTERMEDIATION_RATE_PERCENT,
     CommissionPercentInvalid,
     calculate_commission_amount,
     calculate_fare_breakdown,
     calculate_pet_surcharge,
     calculate_price,
-    commission_percent_decimal,
+    effective_intermediation_percent,
     money,
     resolve_trip_tariff,
 )
@@ -80,14 +81,18 @@ logger = logging.getLogger(__name__)
 COMMISSION_PERCENT_OUT_OF_RANGE = "commission_percent_out_of_range"
 
 
-def _require_commission_percent(db: Session, raw: object) -> Decimal:
-    """Reject a configured percent outside 0–25% before any payment side effect.
+def _require_trip_intermediation_percent(db: Session, trip: Trip, driver: Driver) -> Decimal:
+    """Resolve and validate the rate used for this trip before any payment side effect.
 
-    Rolls back the current transaction (row locks) and leaves persisted rows
-    unchanged. Does not clamp the stored percent.
+    Snapshot on the trip wins. NULL falls back to the driver column (legacy).
+    Rolls back the current transaction and leaves persisted rows unchanged.
+    Does not clamp an out-of-range percent.
     """
     try:
-        return commission_percent_decimal(raw)
+        return effective_intermediation_percent(
+            trip.intermediation_rate_percent,
+            driver.commission_percent,
+        )
     except CommissionPercentInvalid:
         db.rollback()
         logger.warning("commission_percent_rejected")
@@ -310,6 +315,7 @@ async def create_trip(
         distance_km=distance_km,
         duration_min=duration_min,
         final_price=None,
+        intermediation_rate_percent=TRIP_INTERMEDIATION_RATE_PERCENT,
     )
     _apply_price_snapshot(trip, breakdown, toll_meta=toll_meta)
     # fare_only kept for clarity / future logging (unused)
@@ -997,7 +1003,7 @@ def accept_trip(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
-    commission_percent = _require_commission_percent(db, driver.commission_percent)
+    commission_percent = _require_trip_intermediation_percent(db, trip, driver)
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     assert_driver_vehicle_operational_for_new_ops(
         db, driver, surface="accept_trip", trip_id=str(trip.id)
@@ -1174,7 +1180,7 @@ def accept_offer(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
-    commission_percent = _require_commission_percent(db, driver.commission_percent)
+    commission_percent = _require_trip_intermediation_percent(db, trip, driver)
     assert_driver_can_accept_by_driving_hours(db, driver_id)
     assert_driver_vehicle_operational_for_new_ops(
         db, driver, surface="accept_offer", trip_id=str(trip.id)
@@ -1777,7 +1783,7 @@ def complete_trip(
             detail="PaymentIntent ID not found.",
         )
 
-    # Load driver for commission_percent (single source of truth).
+    # Load driver for the legacy NULL-snapshot fallback. New trips use the snapshot.
     driver = db.execute(
         select(Driver).where(Driver.user_id == trip.driver_id)
     ).scalar_one_or_none()
@@ -1786,7 +1792,7 @@ def complete_trip(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Driver not found for trip.",
         )
-    commission_percent = _require_commission_percent(db, driver.commission_percent)
+    commission_percent = _require_trip_intermediation_percent(db, trip, driver)
 
     # --- Distance / duration required (A022: no synthetic fallback) ---
     distance_km = trip.distance_km

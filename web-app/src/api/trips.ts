@@ -64,6 +64,7 @@ export interface TripCreateResponse {
   final_price?: number
   commission_amount?: number
   driver_payout?: number
+  intermediation_rate_percent?: number | null
   pet_surcharge?: number
   price_breakdown?: PriceBreakdown | null
   has_pet?: boolean
@@ -78,6 +79,7 @@ export interface TripStatusResponse {
   final_price?: number
   commission_amount?: number
   driver_payout?: number
+  intermediation_rate_percent?: number | null
 }
 
 export interface TripAvailableItem {
@@ -116,6 +118,7 @@ export interface TripHistoryItem {
   payment_status?: PaymentStatus
   commission_amount?: number
   driver_payout?: number
+  intermediation_rate_percent?: number | null
   /** Preenchido quando a viagem foi cancelada e há motivo registado. */
   cancellation_reason?: string | null
   cancellation_reason_code?: string | null
@@ -154,6 +157,7 @@ export interface TripDetailResponse {
   payment_status?: PaymentStatus
   commission_amount?: number
   driver_payout?: number
+  intermediation_rate_percent?: number | null
   driver_location?: DriverLocationSnapshot | null
   /** Passageiro avaliou o motorista (1–5); só após conclusão. */
   driver_rating?: number | null
