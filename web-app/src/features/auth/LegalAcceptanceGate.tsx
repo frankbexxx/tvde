@@ -9,48 +9,65 @@ import { LEGAL_PRIVACY_URL, LEGAL_TERMS_URL } from './legalLinks'
 
 export function LegalAcceptanceBoundary({ children }: { children: ReactNode }) {
   const { token, authBootstrapMode, isAuthenticated } = useAuth()
-  const [required, setRequired] = useState<boolean | null>(null)
-  const [termsUrl, setTermsUrl] = useState(LEGAL_TERMS_URL)
-  const [privacyUrl, setPrivacyUrl] = useState(LEGAL_PRIVACY_URL)
+  const shouldCheck = authBootstrapMode === 'login_session' && isAuthenticated && !!token
+  const [snapshot, setSnapshot] = useState<{
+    token: string
+    required: boolean
+    termsUrl: string
+    privacyUrl: string
+  } | null>(null)
 
   useEffect(() => {
-    if (authBootstrapMode !== 'login_session' || !isAuthenticated || !token) {
-      setRequired(false)
-      return
-    }
+    if (!shouldCheck || !token) return
     let alive = true
     void getLegalAcceptance(token)
       .then((status) => {
         if (!alive) return
-        setRequired(status.required)
-        if (status.terms_url) setTermsUrl(status.terms_url)
-        if (status.privacy_url) setPrivacyUrl(status.privacy_url)
+        setSnapshot({
+          token,
+          required: status.required,
+          termsUrl: status.terms_url || LEGAL_TERMS_URL,
+          privacyUrl: status.privacy_url || LEGAL_PRIVACY_URL,
+        })
       })
       .catch(() => {
-        if (alive) setRequired(true)
+        if (!alive) return
+        setSnapshot({
+          token,
+          required: true,
+          termsUrl: LEGAL_TERMS_URL,
+          privacyUrl: LEGAL_PRIVACY_URL,
+        })
       })
     return () => {
       alive = false
     }
-  }, [authBootstrapMode, isAuthenticated, token])
+  }, [shouldCheck, token])
 
-  if (authBootstrapMode !== 'login_session' || !isAuthenticated) return <>{children}</>
-  if (required === null) {
+  if (!shouldCheck || !token) return <>{children}</>
+  const current = snapshot?.token === token ? snapshot : null
+  if (!current) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-background">
         <Spinner size="lg" />
       </div>
     )
   }
-  if (!required) return <>{children}</>
-  if (!token) return <>{children}</>
+  if (!current.required) return <>{children}</>
 
   return (
     <LegalAcceptanceGate
       token={token}
-      termsUrl={termsUrl}
-      privacyUrl={privacyUrl}
-      onAccepted={() => setRequired(false)}
+      termsUrl={current.termsUrl}
+      privacyUrl={current.privacyUrl}
+      onAccepted={() =>
+        setSnapshot({
+          token,
+          required: false,
+          termsUrl: current.termsUrl,
+          privacyUrl: current.privacyUrl,
+        })
+      }
     />
   )
 }
