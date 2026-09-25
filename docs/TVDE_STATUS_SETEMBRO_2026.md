@@ -243,6 +243,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 - **IDs:** S-AUTH-01
 - **Depende de:** ETAPA 01
 - **Nota:** SMS **não** está implementado. **L-SEC-12 = CLOSED**. Deployed continua a bloquear OTP (`503`) até provider SMS + smoke.
+- **M2.11 = CLOSED** (2026-09-25): aceitação versionada de Termos e Privacidade no registo Google, no OTP non-prod, e gate de reaceitação no login e na sessão restaurada. OTP em PROD continua `503`. Sem backfill.
 
 ### ETAPA 05 — Pagamentos live (sem Connect ainda)
 - **Objectivo:** Cobrança real authorize/capture + webhook em prod; copy passageiro alinhada.

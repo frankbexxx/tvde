@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
-import { getConfig } from '../../api/auth'
-import { LS_LAST_PHONE } from '../../utils/authStorage'
+import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
+import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
+import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
+import { LS_LAST_PHONE, setStoredAccessToken } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 import { appBuildDisplayLine } from '../../lib/appBuildMeta'
 import { BTN_PRIMARY_RADIUS, BTN_SECONDARY_RADIUS, SURFACE_RADIUS } from '../../components/layout/infoBoxTemplate'
@@ -31,6 +33,10 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleClientId, setGoogleClientId] = useState<string | null>(null)
+  const [acceptLegal, setAcceptLegal] = useState(false)
+  const [otpEnabled, setOtpEnabled] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
 
   useEffect(() => {
     void getConfig()
@@ -38,6 +44,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         if (c.google_oauth_enabled && c.google_oauth_client_id?.trim()) {
           setGoogleClientId(c.google_oauth_client_id.trim())
         }
+        setOtpEnabled(c.otp_signup_enabled === true)
       })
       .catch(() => setGoogleClientId(null))
   }, [])
@@ -71,8 +78,43 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     }
   }
 
+  const sendOtp = async () => {
+    setError(null)
+    setLoading(true)
+    try {
+      await requestOtp(phone.trim(), requestedRole === 'driver' ? 'driver' : 'passenger')
+      setOtpSent(true)
+    } catch (err: unknown) {
+      setError(formatLoginError(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const confirmOtp = async () => {
+    if (!acceptLegal) return
+    setError(null)
+    setLoading(true)
+    try {
+      const res = await verifyOtp(
+        phone.trim(),
+        otpCode.trim(),
+        true,
+        requestedRole === 'driver' ? 'driver' : 'passenger',
+      )
+      setStoredAccessToken(res.access_token)
+      localStorage.setItem(LS_LAST_PHONE, phone.trim())
+      window.location.assign(requestedRole === 'driver' ? '/driver' : '/passenger')
+    } catch (err: unknown) {
+      setError(formatLoginError(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const startGoogleLogin = () => {
     if (!googleClientId) return
+    sessionStorage.setItem(LEGAL_ACCEPT_REGISTER_KEY, acceptLegal ? '1' : '0')
     const redirectUri = `${window.location.origin}/auth/google/callback`
     const u = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     u.searchParams.set('client_id', googleClientId)
@@ -147,6 +189,45 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
             </Link>
           </div>
           <p className="text-sm text-muted-foreground mb-4">{t('phoneHint')}</p>
+          <div className="mb-4 flex flex-col gap-2">
+            <LegalAcceptanceCheckbox checked={acceptLegal} onChange={setAcceptLegal} />
+            <p className="text-xs text-muted-foreground">{t('legalAcceptNewAccount')}</p>
+          </div>
+          {otpEnabled && (
+            <div className="mb-4 flex flex-col gap-2" data-testid="otp-signup">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => void sendOtp()}
+                className={`w-full min-h-[44px] py-2.5 ${BTN_SECONDARY_RADIUS} border border-input bg-background text-foreground font-medium`}
+              >
+                {t('otpRequest')}
+              </button>
+              {otpSent && (
+                <>
+                  <label htmlFor="otp-code" className="text-sm font-medium text-foreground">
+                    {t('otpCode')}
+                  </label>
+                  <input
+                    id="otp-code"
+                    data-testid="otp-code"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    className={`w-full px-3 py-2 border border-input ${BTN_SECONDARY_RADIUS} bg-background`}
+                  />
+                  <button
+                    type="button"
+                    data-testid="otp-verify"
+                    disabled={loading || !acceptLegal || otpCode.trim().length < 4}
+                    onClick={() => void confirmOtp()}
+                    className={`w-full min-h-[44px] py-2.5 ${BTN_PRIMARY_RADIUS} bg-primary text-primary-foreground font-medium disabled:opacity-50`}
+                  >
+                    {t('otpVerify')}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
           {requestedRole === 'passenger' && googleClientId && (
             <div className="mb-4">
               <button

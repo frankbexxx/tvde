@@ -92,17 +92,24 @@ Continuar apenas com a PWA instalada no Android.
 **Quando faz sentido**
 - se redefinirmos explicitamente o M2 para aceitar PWA como entrega móvel.
 
-### Decisão recomendada a estudar
+### Decisão tomada — 2026-09-25
 
-**Capacitor como candidato principal**, porque preserva o investimento actual na web-app e deixa caminho para push/GPS sem uma reescrita.
+**DECIDIDO: Capacitor.**
+
+- usar Capacitor;
+- manter React/Vite como base;
+- não fazer rewrite native;
+- Capacitor é o veículo Android do piloto.
+
+Objectivos seguintes, ainda por implementar: package Android, permissões, GPS/background conforme necessário, push, testes em device real, Play Store depois.
 
 ### Quem decide
 
-Francisco + Manel.
+Francisco + Manel. Decisão fechada.
 
 ### Próxima acção
 
-Pedir ao Cursor uma matriz curta, READ-ONLY, comparando o repo actual com os requisitos de Capacitor, wrapper e PWA, sem implementar.
+Bootstrap Capacitor numa PR inicial, depois de auditoria READ-ONLY. Não instalar nesta acta.
 
 ---
 
@@ -230,17 +237,23 @@ No registo para novos utilizadores; mecanismo de reaceitação no login quando a
 - timestamp;
 - origem/fluxo da aceitação.
 
-### Decisão recomendada a estudar
+### Decisão tomada — 2026-09-25
 
-**Opção C**, porque evita criar uma solução descartável.
+**DECIDIDO: Opção C, registo + reaceitação versionada.**
+
+- novos utilizadores aceitam Termos e Privacidade no registo;
+- contas existentes não são forçadas a aceitar em todos os logins;
+- pedir reaceitação no login apenas quando não existe aceitação registada, ou quando a versão dos Termos mudou, ou quando a versão da Política de Privacidade mudou;
+- guardar utilizador, versão dos Termos, versão da Privacidade, timestamp e contexto/origem;
+- não mostrar aceitação duplicada.
 
 ### Quem decide
 
-Francisco.
+Francisco. Decisão fechada.
 
 ### Próxima acção
 
-Fechar a política e só depois pedir implementação ao Cursor.
+**M2.11 = CLOSED.** Registo (Google e OTP non-prod), gate no login e na sessão restaurada, versionamento e testes estão no mesmo fluxo. OTP em PROD continua desligado (`503`). Sem backfill.
 
 ---
 
@@ -679,9 +692,9 @@ Não bloqueia piloto.
 
 | ID | Decisão | Quem | Quando | Estado |
 |---|---|---|---|---|
-| S-MOB-01 | Capacitor / wrapper / PWA | Francisco + Manel | Agora | PENDENTE |
+| S-MOB-01 | Capacitor / wrapper / PWA | Francisco + Manel | Agora | DECIDIDO: CAPACITOR |
 | S-AUTH-01 | Provider SMS | Francisco | Agora | PENDENTE |
-| M2.11 | Momento e versão da aceitação | Francisco | Agora | PENDENTE |
+| M2.11 | Momento e versão da aceitação | Francisco | Agora | CLOSED: REGISTO + REACEITAÇÃO VERSIONADA |
 | S-COMP-03 | Docs pessoais bloqueiam online? | Francisco + Manel | Agora | PENDENTE |
 | S-HYG-01 | GPS simulado em PROD | Francisco | Agora | PENDENTE |
 | Uploads | Estratégia de backup dos ficheiros | Francisco | Agora | PENDENTE |

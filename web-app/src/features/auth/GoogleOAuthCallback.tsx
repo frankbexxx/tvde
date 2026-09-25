@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { Spinner } from '../../components/ui/Spinner'
 import type { ApiError } from '../../api/client'
 
@@ -10,6 +11,9 @@ function formatErr(err: unknown): string {
     if (typeof d === 'string') {
       if (d === 'pending_approval') return 'Aguardar aprovação do administrador.'
       if (d === 'google_oauth_disabled') return 'Login Google não está configurado neste servidor.'
+      if (d === 'legal_acceptance_required') {
+        return 'Para criar conta, aceita os Termos e a Política de Privacidade e tenta outra vez.'
+      }
       if (d === 'google_email_not_verified') return 'O Google não devolveu um email verificado.'
       if (d === 'google_only_passenger_role') return 'Esta conta não é passageiro; usa o login com telemóvel.'
       if (d === 'google_account_conflict') return 'Conflito de conta Google. Fala com o suporte.'
@@ -34,7 +38,8 @@ export function GoogleOAuthCallback() {
     const redirectUri = `${window.location.origin}/auth/google/callback`
     void (async () => {
       try {
-        await loginGoogle(code, redirectUri)
+        const acceptLegal = sessionStorage.getItem(LEGAL_ACCEPT_REGISTER_KEY) === '1'
+        await loginGoogle(code, redirectUri, acceptLegal)
         if (alive) navigate('/passenger', { replace: true })
       } catch (e: unknown) {
         if (alive) setFetchErr(formatErr(e))

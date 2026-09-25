@@ -43,7 +43,10 @@ def test_valid_otp_consumes_once(
     phone = unique_test_phone()
     _request_known_code(client, monkeypatch, phone)
 
-    verified = client.post("/auth/otp/verify", json={"phone": phone, "code": "100000"})
+    verified = client.post(
+        "/auth/otp/verify",
+        json={"phone": phone, "code": "100000", "accept_legal": True},
+    )
 
     assert verified.status_code == 200, verified.text
     assert verified.json()["access_token"]
@@ -99,7 +102,7 @@ def test_second_verify_fails_and_issues_no_jwt(
     _non_prod(monkeypatch)
     phone = unique_test_phone()
     _request_known_code(client, monkeypatch, phone)
-    body = {"phone": phone, "code": "100000"}
+    body = {"phone": phone, "code": "100000", "accept_legal": True}
 
     first = client.post("/auth/otp/verify", json=body)
     second = client.post("/auth/otp/verify", json=body)
@@ -133,7 +136,8 @@ def test_concurrent_verify_one_winner(
     def verify() -> tuple[int, dict]:
         with TestClient(app) as local:
             response = local.post(
-                "/auth/otp/verify", json={"phone": phone, "code": "100000"}
+                "/auth/otp/verify",
+                json={"phone": phone, "code": "100000", "accept_legal": True},
             )
             return response.status_code, response.json()
 

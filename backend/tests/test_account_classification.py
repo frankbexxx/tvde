@@ -196,7 +196,7 @@ def test_otp_verify_persists_pending_beta_user_for_admin_approval(
 
     verified = client.post(
         "/auth/otp/verify",
-        json={"phone": phone, "code": "123456", "requested_role": "driver"},
+        json={"phone": phone, "code": "123456", "requested_role": "driver", "accept_legal": True},
     )
     assert verified.status_code == 403
     assert verified.json()["detail"] == "pending_approval"
@@ -227,7 +227,12 @@ def test_pending_beta_users_do_not_consume_otp_request_capacity(
 
     verified = client.post(
         "/auth/otp/verify",
-        json={"phone": pending_phone, "code": "123456", "requested_role": "driver"},
+        json={
+            "phone": pending_phone,
+            "code": "123456",
+            "requested_role": "driver",
+            "accept_legal": True,
+        },
     )
     assert verified.status_code == 403
     assert verified.json()["detail"] == "pending_approval"

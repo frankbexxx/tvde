@@ -203,7 +203,7 @@ def test_new_otp_user_admin_phone_follows_normal_onboarding(
     assert client.post("/auth/otp/request", json={"phone": phone}).status_code == 200
     r = client.post(
         "/auth/otp/verify",
-        json={"phone": phone, "code": code, "requested_role": "driver"},
+        json={"phone": phone, "code": code, "requested_role": "driver", "accept_legal": True},
     )
     assert r.status_code == 403
     assert r.json()["detail"] == "pending_approval"

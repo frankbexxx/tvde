@@ -1,6 +1,7 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { GoogleOAuthCallback } from '../features/auth/GoogleOAuthCallback'
+import { LegalAcceptanceBoundary } from '../features/auth/LegalAcceptanceGate'
 import { LoginScreen } from '../features/auth/LoginScreen'
 import { AppDownloadLanding } from '../features/public/AppDownloadLanding'
 import { AppDownloadRedirect } from '../features/public/AppDownloadRedirect'
@@ -177,6 +178,7 @@ export function AppRoutes() {
     : 'min-h-dvh bg-background flex flex-col w-full max-w-md md:max-w-5xl mx-auto'
 
   return (
+    <LegalAcceptanceBoundary>
     <div className={appShellClass}>
       <AppHeaderBar
         variant={
@@ -256,5 +258,6 @@ export function AppRoutes() {
         </main>
       </div>
     </div>
+    </LegalAcceptanceBoundary>
   )
 }

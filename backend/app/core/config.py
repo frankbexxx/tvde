@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     OTP_SECRET: str
     OTP_EXPIRATION_MINUTES: int = 5
 
+    # Public legal pages validated 2026-09-16. Bump these strings to require re-acceptance.
+    CURRENT_TERMS_VERSION: str = "2026-09-16"
+    CURRENT_PRIVACY_VERSION: str = "2026-09-16"
+    LEGAL_TERMS_URL: str = "https://vamula.pt/legal/"
+    LEGAL_PRIVACY_URL: str = "https://vamula.pt/privacidade/"
+
     # Stripe key is required only when STRIPE_MOCK=false. In mock mode we skip Stripe API calls.
     STRIPE_SECRET_KEY: str | None = None
     STRIPE_WEBHOOK_SECRET: str | None = None
