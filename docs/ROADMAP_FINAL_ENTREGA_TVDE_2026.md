@@ -470,12 +470,13 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
 | D1.1 | Comparar Capacitor vs wrapper vs PWA (reuso web-app) | Matriz | DOCS | D0 |
-| D1.2 | Spike mínimo **Android** | APK debug Capacitor no Oppo — **BOOTSTRAP + DEVICE SMOKE PASS**; S-MOB-02 (mapa, GPS, Waze, uploads) ainda aberto | CÓDIGO | D1.1 |
+| D1.2 | Spike mínimo **Android** | APK debug Capacitor no Oppo — **BOOTSTRAP + DEVICE SMOKE PASS**. S-MOB-02 **PARTIAL**: viewport, GPS foreground e mapa PASS; Waze/uploads/background ainda abertos | CÓDIGO | D1.1 |
 | D1.3 | Confirmar caminho de packaging oficial | Acta técnica | DECISÃO | D1.2 |
 
 ## D2 — Validação em device (Android primeiro)
 
 - **IDs:** `S-MOB-02` · **Dependências:** D1 · crítico **Marco 2**  
+- **Estado 2026-09-25:** **PARTIAL**. No Oppo: login utilizável em retrato; localização foreground com «Enquanto uso a app»; mapa visível (MapTiler 403 em `https://localhost`, fallback raster). Ainda aberto: GPS background, push, OAuth Capacitor, Waze/Maps, file picker, Play Store.  
 - **Foco:** GPS/permissões/background · Waze/Maps/deep links · login/persistência · lifecycle (background/fechada).  
 - **iOS:** mesma checklist depois; não bloqueia PASS Android do piloto.
 | Passo | Acção | Resultado esperado | Tipo | Dep. |

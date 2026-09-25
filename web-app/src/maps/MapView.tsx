@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import maplibregl from 'maplibre-gl'
+import maplibregl, { setWorkerUrl, type StyleSpecification } from 'maplibre-gl'
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-csp-worker?url'
+
+// Android WebView does not start the default blob: worker, so the style never finishes loading.
+setWorkerUrl(maplibreWorkerUrl)
 import Map from 'react-map-gl/maplibre'
 import type { MapLayerMouseEvent, MapRef } from 'react-map-gl/maplibre'
 import { Marker } from 'react-map-gl/maplibre'
@@ -79,11 +83,24 @@ export interface MapViewProps {
 const OEIRAS_CENTER: LatLng = { lat: 38.6973, lng: -9.30836 }
 
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
-const DEFAULT_MAP_STYLE = 'https://demotiles.maplibre.org/style.json'
 // basic-v2 has fewer sprites than streets-v2, avoids "image could not be loaded" errors
 const MAPTILER_STYLE = MAPTILER_KEY
   ? `https://api.maptiler.com/maps/basic-v2/style.json?key=${MAPTILER_KEY}`
-  : DEFAULT_MAP_STYLE
+  : null
+
+/** Raster fallback when MapTiler rejects the WebView origin (403) or the vector worker never requests tiles. */
+const RASTER_FALLBACK_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '© OpenStreetMap',
+    },
+  },
+  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+}
 
 export function MapView({
   passengerLocation,
@@ -115,7 +132,9 @@ export function MapView({
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapStyleFallbackRef = useRef(false)
   const prevDriverRef = useRef<LatLng | null>(null)
-  const [mapStyleUrl, setMapStyleUrl] = useState(MAPTILER_STYLE)
+  const [mapStyleUrl, setMapStyleUrl] = useState<string | StyleSpecification>(
+    MAPTILER_STYLE ?? RASTER_FALLBACK_STYLE,
+  )
   const mapAnchor = useMemo(
     () => tripPickup ?? passengerLocation ?? null,
     // Só lat/lng: o passageiro pode passar literais `{ lat, lng }` novos a cada render com as mesmas coordenadas;
@@ -159,19 +178,19 @@ export function MapView({
 
   useEffect(() => {
     mapStyleFallbackRef.current = false
-    setMapStyleUrl(MAPTILER_STYLE)
+    setMapStyleUrl(MAPTILER_STYLE ?? RASTER_FALLBACK_STYLE)
   }, [])
 
   const handleMapError = useCallback(() => {
-    if (mapStyleFallbackRef.current || mapStyleUrl === DEFAULT_MAP_STYLE) return
+    if (mapStyleFallbackRef.current) return
     mapStyleFallbackRef.current = true
-    devLog('[MapView] MapTiler/style failed — falling back to demotiles')
-    setMapStyleUrl(DEFAULT_MAP_STYLE)
-  }, [mapStyleUrl])
+    devLog('[MapView] MapTiler/style failed — falling back to raster tiles')
+    setMapStyleUrl(RASTER_FALLBACK_STYLE)
+  }, [])
 
-  // fillContainer: MapLibre precisa de resize quando o pai flex muda de tamanho (senão tiles cinzentos).
+  // MapLibre fica com tiles vazios se o contentor muda de tamanho (flex, teclado, rotação).
   useEffect(() => {
-    if (!showMap || !fillContainer) return
+    if (!showMap) return
     const el = mapContainerRef.current
     if (!el) return
 
@@ -184,7 +203,7 @@ export function MapView({
     return () => {
       observer.disconnect()
     }
-  }, [showMap, fillContainer, resizeMap])
+  }, [showMap, resizeMap])
 
   // Fetch OSRM route when endpoints change (debounced by key)
   useEffect(() => {

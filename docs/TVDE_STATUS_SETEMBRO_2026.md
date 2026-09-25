@@ -113,7 +113,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
 | **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). Push, OAuth nativo, GPS background e Play Store continuam abertos | P1 — Necessário para fechar produto | S-MOB-02 |
-| **S-MOB-02** | Cross-app | Validar GPS background, push, permissões, Waze/Maps, login, lojas | P1 — Necessário para fechar produto | S-MOB-01 |
+| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-25). PASS: login em retrato, geolocalização foreground, mapa. Aberto: GPS background, push, OAuth Capacitor, Waze/Maps, file picker, Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
 | **S-MOB-03** | Cross-app | `VITE_APP_DOWNLOAD_URL` / landing stores | P2 — Melhoria importante | S-MOB-02 |
 
 ### Produto Driver / Passenger / Partner / Admin

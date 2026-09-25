@@ -109,7 +109,9 @@ Francisco + Manel. Decisão fechada.
 
 ### Próxima acção
 
-**S-MOB-01 = BOOTSTRAP + DEVICE SMOKE PASS.** `appId` `pt.vamula.app`. APK debug no Oppo Reno 13 5G: app abre, `/config` responde, login de teste entra. A API PROD passou a incluir `https://localhost` em `CORS_ALLOWED_ORIGINS`, junto de `https://tvde-app-j51f.onrender.com` e `http://localhost:5173`. Google OAuth nativo, push, GPS background e Play Store continuam abertos. S-MOB-02 continua aberto. MapLibre, geolocation foreground, Waze/Maps e file picker ficam para S-MOB-02.
+**S-MOB-01 = BOOTSTRAP + DEVICE SMOKE PASS.** `appId` `pt.vamula.app`. APK debug no Oppo Reno 13 5G: app abre, `/config` responde, login de teste entra. A API PROD passou a incluir `https://localhost` em `CORS_ALLOWED_ORIGINS`, junto de `https://tvde-app-j51f.onrender.com` e `http://localhost:5173`.
+
+**S-MOB-02 = PARTIAL** (2026-09-25). No mesmo Oppo: o login cabe em retrato, a localização foreground obtém posição, e o mapa desenha ruas. Google OAuth nativo, push, GPS background, Waze/Maps, file picker e Play Store continuam abertos.
 
 ---
 
