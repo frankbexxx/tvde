@@ -5,6 +5,8 @@ import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { isCapacitorNative } from './capacitorPlatform'
+import { createOauthNonce, GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
+import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in'
 import { LS_LAST_PHONE, setStoredAccessToken } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 import { appBuildDisplayLine } from '../../lib/appBuildMeta'
@@ -23,7 +25,7 @@ interface LoginScreenProps {
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const { t } = useTranslation('auth')
   const { t: tc } = useTranslation('common')
-  const { login } = useAuth()
+  const { login, loginGoogleIdToken } = useAuth()
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const [phone, setPhone] = useState(() => {
@@ -116,8 +118,14 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const googleOnCapacitor = isCapacitorNative()
 
   const startGoogleLogin = () => {
-    if (!googleClientId || googleOnCapacitor) return
+    if (!googleClientId) return
     sessionStorage.setItem(LEGAL_ACCEPT_REGISTER_KEY, acceptLegal ? '1' : '0')
+    if (googleOnCapacitor) {
+      void startNativeGoogle(googleClientId)
+      return
+    }
+    const state = createOauthNonce()
+    sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, state)
     const redirectUri = `${window.location.origin}/auth/google/callback`
     const u = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     u.searchParams.set('client_id', googleClientId)
@@ -126,7 +134,28 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     u.searchParams.set('scope', 'openid email profile')
     u.searchParams.set('access_type', 'online')
     u.searchParams.set('prompt', 'select_account')
+    u.searchParams.set('state', state)
     window.location.assign(u.toString())
+  }
+
+  const startNativeGoogle = async (clientId: string) => {
+    setError(null)
+    setLoading(true)
+    try {
+      const nonce = createOauthNonce()
+      await GoogleSignIn.initialize({ clientId })
+      const result = await GoogleSignIn.signIn({ nonce })
+      if (!result.idToken) {
+        setError(t('googleCapacitorFailed'))
+        return
+      }
+      await loginGoogleIdToken(result.idToken, nonce, acceptLegal)
+      window.location.assign('/passenger')
+    } catch {
+      setError(t('googleCapacitorFailed'))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -231,22 +260,19 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               )}
             </div>
           )}
-          {requestedRole === 'passenger' && googleClientId && !googleOnCapacitor && (
+          {requestedRole === 'passenger' && googleClientId && (
             <div className="mb-4">
               <button
                 type="button"
+                data-testid="google-sign-in"
                 onClick={startGoogleLogin}
-                className={`w-full min-h-[44px] py-2.5 ${BTN_SECONDARY_RADIUS} border border-input bg-background text-foreground font-medium hover:bg-muted/80 transition-colors`}
+                disabled={loading}
+                className={`w-full min-h-[44px] py-2.5 ${BTN_SECONDARY_RADIUS} border border-input bg-background text-foreground font-medium hover:bg-muted/80 transition-colors disabled:opacity-50`}
               >
                 {t('continueGoogle')}
               </button>
               <p className="text-xs text-muted-foreground mt-2 text-center">{t('passengerGoogleOnly')}</p>
             </div>
-          )}
-          {requestedRole === 'passenger' && googleOnCapacitor && (
-            <p className="mb-4 text-xs text-muted-foreground text-center" data-testid="google-capacitor-pending">
-              {t('googleCapacitorPending')}
-            </p>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

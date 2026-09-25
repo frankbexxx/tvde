@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import logging
+import os
 from typing import Any
 
 import httpx
@@ -15,6 +18,32 @@ logger = logging.getLogger(__name__)
 
 # Well-known Google OAuth2 token endpoint (not a credential).
 _GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"  # nosec B105
+
+_DEFAULT_REDIRECT_URIS = frozenset(
+    {
+        "http://localhost:5173/auth/google/callback",
+        "http://127.0.0.1:5173/auth/google/callback",
+        "https://tvde-app-j51f.onrender.com/auth/google/callback",
+    }
+)
+
+
+def allowed_google_redirect_uris() -> frozenset[str]:
+    """Redirects fixos. O cliente não pode escolher um URI arbitrário."""
+    extra = os.getenv("GOOGLE_OAUTH_REDIRECT_URIS", "")
+    found: set[str] = set(_DEFAULT_REDIRECT_URIS)
+    for part in extra.split(","):
+        item = part.strip()
+        if item:
+            found.add(item)
+    return frozenset(found)
+
+
+def assert_allowed_google_redirect(redirect_uri: str) -> str:
+    uri = redirect_uri.strip()
+    if uri not in allowed_google_redirect_uris():
+        raise RuntimeError("google_redirect_not_allowed")
+    return uri
 
 
 async def exchange_code_for_id_token(*, code: str, redirect_uri: str) -> dict[str, Any]:
@@ -63,3 +92,21 @@ def verify_id_token_claims(id_token_jwt: str) -> dict[str, Any]:
     if not isinstance(info, dict):
         raise RuntimeError("google_invalid_token")
     return info
+
+
+def assert_id_token_nonce(claims: dict[str, Any], nonce: str) -> None:
+    """O id_token tem de estar ligado ao nonce que a app acabou de gerar.
+
+    O Credential Manager no Android guarda o SHA-256 desse nonce, não o valor
+    cru. Comparar o claim com o nonce enviado deixaria passar quem só copiasse
+    o hash que já vem dentro do token.
+    """
+    expected = nonce.strip()
+    got = str(claims.get("nonce") or "")
+    if not expected or not got:
+        raise RuntimeError("google_nonce_mismatch")
+    digest = hashlib.sha256(expected.encode("utf-8")).digest()
+    hex_digest = digest.hex()
+    b64_digest = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+    if got != hex_digest and got != b64_digest:
+        raise RuntimeError("google_nonce_mismatch")

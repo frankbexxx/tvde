@@ -48,6 +48,15 @@ class GoogleExchangeRequest(BaseModel):
     accept_legal: bool = False
 
 
+class GoogleIdTokenRequest(BaseModel):
+    """id_token do login nativo. Sem redirect e sem client secret."""
+
+    id_token: str = Field(..., min_length=20, max_length=8192)
+    nonce: str = Field(..., min_length=16, max_length=128)
+    requested_role: str | None = Field(default="passenger")
+    accept_legal: bool = False
+
+
 class LegalAcceptanceRequest(BaseModel):
     """Gate pós-login. O cliente não escolhe versões nem outro utilizador."""
 

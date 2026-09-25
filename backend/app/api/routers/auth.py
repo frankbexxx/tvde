@@ -18,6 +18,8 @@ from app.api.auth_rate_limit import (
 from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
 from app.auth.google_oauth import (
+    assert_allowed_google_redirect,
+    assert_id_token_nonce,
     exchange_code_for_id_token,
     verify_id_token_claims,
 )
@@ -41,6 +43,7 @@ from app.services.legal_acceptance import (
 )
 from app.schemas.auth import (
     GoogleExchangeRequest,
+    GoogleIdTokenRequest,
     LegalAcceptanceRequest,
     LoginRequest,
     MeProfilePatchRequest,
@@ -359,60 +362,17 @@ async def login(
     return _token_response(user, token_data)
 
 
-@router.post("/google/exchange", response_model=TokenResponse)
-async def google_exchange(
-    payload: GoogleExchangeRequest,
-    request: Request,
-    db: Session = Depends(get_db),
+def _session_from_google_claims(
+    db: Session,
+    claims: dict,
+    *,
+    accept_legal: bool,
 ) -> TokenResponse:
-    """`GOOGLE_OAUTH_*`: troca `code` por JWT (v1 só passageiro). Independente de BETA_MODE."""
-    check_google_exchange_rate_limit(request)
-    if not _google_oauth_configured():
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="google_oauth_disabled",
-        )
-
-    req_role = (payload.requested_role or "passenger").strip().lower()
-    if req_role != "passenger":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="google_login_passenger_only",
-        )
-
-    try:
-        tok_pack = await exchange_code_for_id_token(
-            code=payload.code.strip(),
-            redirect_uri=payload.redirect_uri.strip(),
-        )
-        claims = await anyio.to_thread.run_sync(
-            verify_id_token_claims, tok_pack["id_token"]
-        )
-    except RuntimeError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="google_exchange_failed",
-        ) from None
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="google_token_invalid",
-        ) from None
-
+    name = str(claims.get("name") or "").strip()[:120]
     sub = str(claims.get("sub") or "").strip()
     email = str(claims.get("email") or "").strip().lower()
-    verified = bool(claims.get("email_verified"))
-    if not sub:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="google_invalid_sub"
-        )
-    if not email or not verified:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="google_email_not_verified",
-        )
-
-    name = str(claims.get("name") or email.split("@", 1)[0]).strip()[:120]
+    if not name:
+        name = email.split("@", 1)[0][:120]
 
     user = db.execute(
         select(User).where(User.oauth_google_sub == sub)
@@ -431,23 +391,20 @@ async def google_exchange(
             user.oauth_google_sub = sub
 
     if user is None:
-        if not payload.accept_legal:
+        if not accept_legal:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="legal_acceptance_required",
             )
-        # Capacity cap (pilot safety). Independent of REQUIRE_PENDING_APPROVAL —
-        # Google signup is always pending + approve.
         if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="BETA cheio",
             )
-        phone_syn = _synthetic_phone_google_sub(sub)
         user = User(
             role=Role.passenger,
             name=name,
-            phone=phone_syn,
+            phone=_synthetic_phone_google_sub(sub),
             email=email,
             oauth_google_sub=sub,
             status=UserStatus.pending,
@@ -491,6 +448,110 @@ async def google_exchange(
         token_version=int(user.token_version),
     )
     return _token_response(user, token_data)
+
+
+@router.post("/google/exchange", response_model=TokenResponse)
+async def google_exchange(
+    payload: GoogleExchangeRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """`GOOGLE_OAUTH_*`: troca `code` por JWT (v1 só passageiro). Independente de BETA_MODE."""
+    check_google_exchange_rate_limit(request)
+    if not _google_oauth_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="google_oauth_disabled",
+        )
+
+    req_role = (payload.requested_role or "passenger").strip().lower()
+    if req_role != "passenger":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="google_login_passenger_only",
+        )
+
+    try:
+        redirect_uri = assert_allowed_google_redirect(payload.redirect_uri)
+        tok_pack = await exchange_code_for_id_token(
+            code=payload.code.strip(),
+            redirect_uri=redirect_uri,
+        )
+        claims = await anyio.to_thread.run_sync(
+            verify_id_token_claims, tok_pack["id_token"]
+        )
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_exchange_failed",
+        ) from None
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_token_invalid",
+        ) from None
+
+    sub = str(claims.get("sub") or "").strip()
+    email = str(claims.get("email") or "").strip().lower()
+    verified = bool(claims.get("email_verified"))
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="google_invalid_sub"
+        )
+    if not email or not verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_email_not_verified",
+        )
+
+    return _session_from_google_claims(
+        db, claims, accept_legal=payload.accept_legal
+    )
+
+
+@router.post("/google/id-token", response_model=TokenResponse)
+async def google_id_token(
+    payload: GoogleIdTokenRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """Login nativo: valida o id_token da Google. Não aceita redirect do cliente."""
+    check_google_exchange_rate_limit(request)
+    if not _google_oauth_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="google_oauth_disabled",
+        )
+    req_role = (payload.requested_role or "passenger").strip().lower()
+    if req_role != "passenger":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="google_login_passenger_only",
+        )
+    try:
+        claims = await anyio.to_thread.run_sync(
+            verify_id_token_claims, payload.id_token.strip()
+        )
+        assert_id_token_nonce(claims, payload.nonce)
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_token_invalid",
+        ) from None
+    sub = str(claims.get("sub") or "").strip()
+    email = str(claims.get("email") or "").strip().lower()
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="google_invalid_sub"
+        )
+    if not email or not bool(claims.get("email_verified")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_email_not_verified",
+        )
+    return _session_from_google_claims(
+        db, claims, accept_legal=payload.accept_legal
+    )
 
 
 def _me_profile_from_user(u: User) -> MeProfileResponse:
