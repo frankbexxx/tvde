@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
+import { GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
 import { Spinner } from '../../components/ui/Spinner'
 import type { ApiError } from '../../api/client'
 
@@ -31,15 +32,19 @@ export function GoogleOAuthCallback() {
 
   const oauthErr = search.get('error')
   const code = search.get('code')
+  const state = search.get('state')
+  const expectedState = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY)
+  const stateOk = !!state && state === expectedState
 
   useEffect(() => {
-    if (oauthErr || !code) return
+    if (oauthErr || !code || !stateOk) return
     let alive = true
     const redirectUri = `${window.location.origin}/auth/google/callback`
     void (async () => {
       try {
         const acceptLegal = sessionStorage.getItem(LEGAL_ACCEPT_REGISTER_KEY) === '1'
         await loginGoogle(code, redirectUri, acceptLegal)
+        sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
         if (alive) navigate('/passenger', { replace: true })
       } catch (e: unknown) {
         if (alive) setFetchErr(formatErr(e))
@@ -48,7 +53,7 @@ export function GoogleOAuthCallback() {
     return () => {
       alive = false
     }
-  }, [oauthErr, code, navigate, loginGoogle])
+  }, [oauthErr, code, stateOk, navigate, loginGoogle])
 
   if (oauthErr) {
     return (
@@ -67,11 +72,11 @@ export function GoogleOAuthCallback() {
     )
   }
 
-  if (!code) {
+  if (!code || !stateOk) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-background px-4">
         <p className="text-destructive text-center text-sm max-w-sm">
-          Código de autorização em falta.
+          {code ? 'O pedido Google não corresponde a esta sessão.' : 'Código de autorização em falta.'}
         </p>
         <button
           type="button"

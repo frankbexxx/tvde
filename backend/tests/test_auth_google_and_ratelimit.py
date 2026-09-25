@@ -151,3 +151,70 @@ def test_dev_tools_fixed_otp_disabled_in_production(client, monkeypatch, capsys)
     captured = capsys.readouterr()
     assert "[OTP]" not in captured.out
     assert "100000" not in captured.out
+
+
+def test_google_exchange_rejects_unknown_redirect(client, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "cid", raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "sec", raising=False)
+    r = client.post(
+        "/auth/google/exchange",
+        json={
+            "code": "dummy",
+            "redirect_uri": "https://evil.example/auth/google/callback",
+        },
+    )
+    assert r.status_code == 400
+    assert r.json()["detail"] == "google_exchange_failed"
+
+
+def test_google_id_token_rejects_nonce_mismatch(client, monkeypatch) -> None:
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "cid", raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "sec", raising=False)
+
+    def _claims(_token: str) -> dict:
+        return {
+            "sub": "sub-1",
+            "email": "a@b.c",
+            "email_verified": True,
+            "nonce": "other-nonce-value",
+        }
+
+    monkeypatch.setattr("app.api.routers.auth.verify_id_token_claims", _claims)
+    r = client.post(
+        "/auth/google/id-token",
+        json={
+            "id_token": "header.payload.signature-not-logged",
+            "nonce": "0123456789abcdef0123456789abcdef",
+        },
+    )
+    assert r.status_code == 400
+    assert r.json()["detail"] == "google_token_invalid"
+    assert "header.payload" not in r.text
+
+
+def test_google_id_token_accepts_sha256_nonce(client, monkeypatch) -> None:
+    import hashlib
+
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "cid", raising=False)
+    monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "sec", raising=False)
+    nonce = "0123456789abcdef0123456789abcdef"
+    hashed = hashlib.sha256(nonce.encode("utf-8")).hexdigest()
+
+    def _claims(_token: str) -> dict:
+        return {
+            "sub": "sub-1",
+            "email": "a@b.c",
+            "email_verified": True,
+            "nonce": hashed,
+        }
+
+    monkeypatch.setattr("app.api.routers.auth.verify_id_token_claims", _claims)
+    r = client.post(
+        "/auth/google/id-token",
+        json={
+            "id_token": "header.payload.signature-not-logged",
+            "nonce": nonce,
+        },
+    )
+    assert r.status_code != 400 or r.json().get("detail") != "google_token_invalid"
+    assert "header.payload" not in r.text

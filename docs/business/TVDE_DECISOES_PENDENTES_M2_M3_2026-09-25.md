@@ -111,7 +111,7 @@ Francisco + Manel. Decisão fechada.
 
 **S-MOB-01 = BOOTSTRAP + DEVICE SMOKE PASS.** `appId` `pt.vamula.app`. APK debug no Oppo Reno 13 5G: app abre, `/config` responde, login de teste entra. A API PROD passou a incluir `https://localhost` em `CORS_ALLOWED_ORIGINS`, junto de `https://tvde-app-j51f.onrender.com` e `http://localhost:5173`.
 
-**S-MOB-02 = PARTIAL** (2026-09-25). No mesmo Oppo: o login cabe em retrato, a localização foreground obtém posição, e o mapa desenha ruas. Google OAuth nativo, push, GPS background, Waze/Maps, file picker e Play Store continuam abertos.
+**S-MOB-02 = PARTIAL** (2026-09-25). No mesmo Oppo: o login cabe em retrato, a localização foreground obtém posição, e o mapa desenha ruas. OAuth Capacitor = **PARTIAL / WAITING EXTERNAL CONFIG**. Abordagem: plugin `@capawesome/capacitor-google-sign-in` (Credential Manager), sem custom scheme. O fluxo web (authorization code + redirect allowlist + `state`) mantém-se. No Oppo o botão abre «Selecione uma conta» para a app VAMULÁ e o ecrã volta à app sem loop; a selecção falha com `[16] Account reauth failed` e o backend não recebe id token. Configuração manual em falta, no mesmo projecto Google do cliente web já usado por `GET /config`: cliente OAuth **Android**, package `pt.vamula.app`, SHA-1 de debug `EC:02:84:8C:1E:AE:1D:AE:8C:D5:87:74:77:83:F7:76:19:71:30:A1`, SHA-256 `07:95:6C:38:52:24:12:C0:54:F8:73:52:44:91:A3:A6:87:53:DE:94:CC:92:52:F9:77:AC:A5:33:F7:BA:FC:30` se a consola o pedir. Não passar o client id Android ao plugin. O SHA da Play Store não é este. Push, GPS background, Waze/Maps, file picker e Play Store continuam abertos.
 
 ---
 

@@ -63,6 +63,22 @@ export async function login(
   })
 }
 
+export async function exchangeGoogleIdToken(
+  idToken: string,
+  nonce: string,
+  acceptLegal = false,
+): Promise<TokenResponse> {
+  return apiFetch<TokenResponse>('/auth/google/id-token', {
+    method: 'POST',
+    body: JSON.stringify({
+      id_token: idToken,
+      nonce,
+      requested_role: 'passenger',
+      accept_legal: acceptLegal,
+    }),
+  })
+}
+
 export async function exchangeGoogleCode(
   code: string,
   redirect_uri: string,
