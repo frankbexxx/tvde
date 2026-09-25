@@ -5,7 +5,8 @@ from typing import Optional
 
 import anyio
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from app.api.auth_rate_limit import (
@@ -99,6 +100,22 @@ def _reject_otp_when_deployed() -> None:
         )
 
 
+def claim_unconsumed_otp(db: Session, otp_id: uuid.UUID, now: datetime) -> bool:
+    """Mark one OTP consumed. A concurrent verify updates zero rows and loses."""
+    result = db.execute(
+        update(OtpCode)
+        .where(
+            OtpCode.id == otp_id,
+            OtpCode.consumed_at.is_(None),
+            OtpCode.expires_at > now,
+        )
+        .values(consumed_at=now)
+    )
+    if not isinstance(result, CursorResult):
+        return False
+    return int(result.rowcount or 0) == 1
+
+
 @router.post("/otp/request", response_model=OtpRequestResponse)
 async def request_otp(
     payload: OtpRequest,
@@ -165,7 +182,11 @@ async def verify_otp(
             detail="invalid_otp",
         )
 
-    otp.consumed_at = now
+    if not claim_unconsumed_otp(db, otp.id, now):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_otp",
+        )
 
     user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
     if not user:
