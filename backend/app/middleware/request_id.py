@@ -4,6 +4,8 @@ import uuid
 from contextvars import ContextVar
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.sentry import tag_request_id
+
 
 request_id_ctx: ContextVar[str | None] = ContextVar("request_id", default=None)
 
@@ -15,6 +17,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
         token = request_id_ctx.set(request_id)
+        tag_request_id(request_id)
         try:
             response = await call_next(request)
         finally:

@@ -15,9 +15,17 @@ from app.services.driver_zones import expire_open_zone_sessions_past_deadline
 from app.services.offer_dispatch import expire_stale_offers, redispatch_expired_trips
 from app.services.rotacional_external import refresh_rotacional_external_cache
 from app.services.trip_timeouts import run_trip_timeouts
+from app.sentry import capture_handled_exception
 
 
 router = APIRouter(prefix="/cron", tags=["cron"])
+
+
+def _record_job_error(errors: dict[str, str], job: str, exc: Exception) -> None:
+    """Log the job failure and capture it once. Does not re-raise."""
+    errors[job] = str(exc)
+    log_event("cron_job_error", job=job, error=str(exc))
+    capture_handled_exception(exc, cron_job=job)
 
 
 @router.get("/jobs", response_model=None)
@@ -90,16 +98,14 @@ async def run_scheduled_jobs(
             "accepted_to_cancelled": 0,
             "ongoing_to_failed": 0,
         }
-        errors["trip_timeouts"] = str(e)
-        log_event("cron_job_error", job="trip_timeouts", error=str(e))
+        _record_job_error(errors, "trip_timeouts", e)
 
     try:
         expired = expire_stale_offers(db)
         log_event("cron_job_ok", job="expire_stale_offers", offers_expired=expired)
     except Exception as e:
         expired = 0
-        errors["expire_stale_offers"] = str(e)
-        log_event("cron_job_error", job="expire_stale_offers", error=str(e))
+        _record_job_error(errors, "expire_stale_offers", e)
 
     try:
         new_offers = redispatch_expired_trips(db)
@@ -110,8 +116,7 @@ async def run_scheduled_jobs(
         )
     except Exception as e:
         new_offers = []
-        errors["redispatch_expired_trips"] = str(e)
-        log_event("cron_job_error", job="redispatch_expired_trips", error=str(e))
+        _record_job_error(errors, "redispatch_expired_trips", e)
 
     try:
         cleanup = run_cleanup(db)
@@ -122,8 +127,7 @@ async def run_scheduled_jobs(
         )
     except Exception as e:
         cleanup = {"audit_events_deleted": 0}
-        errors["cleanup"] = str(e)
-        log_event("cron_job_error", job="cleanup", error=str(e))
+        _record_job_error(errors, "cleanup", e)
 
     try:
         system_health = run_system_health_check(db)
@@ -134,8 +138,7 @@ async def run_scheduled_jobs(
         )
     except Exception as e:
         system_health = {"status": "error", "warnings": [str(e)]}
-        errors["system_health_check"] = str(e)
-        log_event("cron_job_error", job="system_health_check", error=str(e))
+        _record_job_error(errors, "system_health_check", e)
 
     try:
         zone_sessions_expired = expire_open_zone_sessions_past_deadline(db)
@@ -146,8 +149,7 @@ async def run_scheduled_jobs(
         )
     except Exception as e:
         zone_sessions_expired = 0
-        errors["expire_driver_zone_sessions"] = str(e)
-        log_event("cron_job_error", job="expire_driver_zone_sessions", error=str(e))
+        _record_job_error(errors, "expire_driver_zone_sessions", e)
 
     rotacional_refreshed = 0
     try:
@@ -162,8 +164,7 @@ async def run_scheduled_jobs(
             items_stored=rotacional_refreshed,
         )
     except Exception as e:
-        errors["rotacional_external_refresh"] = str(e)
-        log_event("cron_job_error", job="rotacional_external_refresh", error=str(e))
+        _record_job_error(errors, "rotacional_external_refresh", e)
 
     elapsed_ms = int(round((time.monotonic() - started) * 1000))
     log_event(

@@ -602,11 +602,16 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 ## F3 — Sentry prod FE/BE
 
 - **IDs:** `S-OPS-04`
+- **Estado 2026-09-25:** **PARTIAL / CODE READY**. Não CLOSED.
+  - F3.1 DSN PROD: API e app **PRESENTE**. Staging API e app **AUSENTE** (não configurado nesta PR).
+  - Código: tag `request_id`; cron chama `capture_exception` uma vez por job falhado e mantém HTTP 500 `partial_error`; ErrorBoundary global; API 5xx no frontend. Traces e replays a 0. Releases por configurar (P2).
+  - F3.2 evento de teste real em PROD: **pendente**. Não foi enviado nesta PR.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
 | F3.1 | Verificar DSN prod | CONFIGURADO | CONFIG | — |
 | F3.2 | Evento teste | Visível | TESTE | F3.1 |
+| F3.3 | Correlação mínima de erros | `request_id` em FE, logs e BE | CÓDIGO | — |
 
 ## F4 — Higiene mock GPS prod
 

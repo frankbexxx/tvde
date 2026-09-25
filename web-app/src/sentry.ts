@@ -43,10 +43,69 @@ if (enabled) {
       const err = hint.originalException as { name?: string; message?: string } | undefined
       if (err?.name === 'AbortError') return null
       if (typeof err?.message === 'string' && /aborted|cancelled/i.test(err.message)) return null
-      return event
+      return scrubSentryEvent(event)
     },
   })
 }
 
 export { Sentry }
 export const sentryEnabled = enabled
+
+const REQUEST_ID_RE = /^[A-Za-z0-9._:-]{1,80}$/
+
+/** HTTP 5xx only. 4xx, timeouts and network failures stay out. */
+export function shouldReportApiStatus(status: number): boolean {
+  return status >= 500 && status <= 599
+}
+
+/**
+ * Report a caught API 5xx. Sends status, path without query, and request id.
+ * Does not send the response body or detail.
+ */
+export function reportApiServerError(
+  status: number,
+  requestId: string | undefined,
+  path: string,
+): void {
+  if (!shouldReportApiStatus(status)) return
+  const rid = requestId && REQUEST_ID_RE.test(requestId) ? requestId : undefined
+  const pathname = path.split('?')[0] || path
+  Sentry.withScope((scope) => {
+    scope.setTag('http_status', String(status))
+    scope.setFingerprint(['api-server-error', String(status), pathname])
+    if (rid) scope.setTag('request_id', rid)
+    scope.setContext('api_error', {
+      status,
+      path: pathname,
+      request_id: rid ?? null,
+    })
+    const error = new Error('API server error')
+    error.name = 'ApiServerError'
+    Sentry.captureException(error)
+  })
+}
+
+export function scrubSentryEvent<T extends { request?: { headers?: Record<string, string>; data?: unknown; cookies?: unknown } }>(
+  event: T,
+): T {
+  const request = event.request
+  if (!request) return event
+  if (request.headers) {
+    const headers = { ...request.headers }
+    for (const key of Object.keys(headers)) {
+      const lower = key.toLowerCase()
+      if (
+        lower === 'authorization' ||
+        lower === 'cookie' ||
+        lower === 'set-cookie' ||
+        lower === 'x-cron-secret'
+      ) {
+        delete headers[key]
+      }
+    }
+    request.headers = headers
+  }
+  delete request.data
+  delete request.cookies
+  return event
+}
