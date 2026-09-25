@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
 import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
+import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
+import { readGoogleOnboarding } from './googleOnboarding'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { isCapacitorNative } from './capacitorPlatform'
@@ -25,7 +27,7 @@ interface LoginScreenProps {
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const { t } = useTranslation('auth')
   const { t: tc } = useTranslation('common')
-  const { login, loginGoogleIdToken } = useAuth()
+  const { login, loginGoogleIdToken, completeGoogleOnboarding } = useAuth()
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const [phone, setPhone] = useState(() => {
@@ -40,6 +42,12 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const [otpEnabled, setOtpEnabled] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [otpSent, setOtpSent] = useState(false)
+  const [googleDraft, setGoogleDraft] = useState<{
+    idToken: string
+    nonce: string
+    name: string
+    email: string
+  } | null>(null)
 
   useEffect(() => {
     void getConfig()
@@ -149,13 +157,43 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         setError(t('googleCapacitorFailed'))
         return
       }
-      await loginGoogleIdToken(result.idToken, backendNonce, acceptLegal)
+      const idToken = result.idToken
+      try {
+        await loginGoogleIdToken(idToken, backendNonce, acceptLegal)
+      } catch (err: unknown) {
+        const onboard = readGoogleOnboarding(err)
+        if (onboard) {
+          setGoogleDraft({
+            idToken,
+            nonce: backendNonce,
+            name: onboard.name,
+            email: onboard.email,
+          })
+          return
+        }
+        setError(t('googleCapacitorFailed'))
+        return
+      }
       window.location.assign('/passenger')
     } catch {
       setError(t('googleCapacitorFailed'))
     } finally {
       setLoading(false)
     }
+  }
+
+  if (googleDraft) {
+    return (
+      <GooglePassengerOnboarding
+        email={googleDraft.email}
+        suggestedName={googleDraft.name}
+        idToken={googleDraft.idToken}
+        nonce={googleDraft.nonce}
+        onComplete={completeGoogleOnboarding}
+        onDone={() => window.location.assign('/passenger')}
+        onRestart={() => setGoogleDraft(null)}
+      />
+    )
   }
 
   return (

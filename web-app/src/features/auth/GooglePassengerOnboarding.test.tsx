@@ -1,0 +1,163 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { LoginScreen } from './LoginScreen'
+import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
+import { readGoogleOnboarding } from './googleOnboarding'
+
+const loginGoogleIdToken = vi.fn()
+const completeGoogleOnboarding = vi.fn()
+const signIn = vi.fn()
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'pt' } }),
+  initReactI18next: { type: '3rdParty', init: () => undefined },
+}))
+
+vi.mock('./capacitorPlatform', () => ({
+  isCapacitorNative: () => true,
+}))
+
+vi.mock('../../api/auth', () => ({
+  getConfig: async () => ({
+    google_oauth_enabled: true,
+    google_oauth_client_id: 'cid.apps.googleusercontent.com',
+    otp_signup_enabled: false,
+  }),
+  requestOtp: vi.fn(),
+  verifyOtp: vi.fn(),
+}))
+
+vi.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({ login: vi.fn(), loginGoogleIdToken, completeGoogleOnboarding }),
+  isBackofficeStaffRole: () => false,
+}))
+
+vi.mock('../settings/LanguageSelector', () => ({
+  LanguageSelector: () => null,
+}))
+
+vi.mock('../../design-system/components/brand/BrandStripe', () => ({
+  BrandStripe: () => null,
+}))
+
+vi.mock('../../components/legal/LegalLocaleNotice', () => ({
+  LegalLocaleNotice: () => null,
+}))
+
+vi.mock('../../components/legal/LegalConsumerRights', () => ({
+  LegalConsumerRights: () => null,
+}))
+
+vi.mock('@capawesome/capacitor-google-sign-in', () => ({
+  GoogleSignIn: {
+    initialize: vi.fn(async () => undefined),
+    signIn: (...args: unknown[]) => signIn(...args),
+  },
+}))
+
+const onboardingError = {
+  status: 403,
+  detail: {
+    code: 'google_onboarding_required',
+    name: 'Ana Example',
+    email: 'ana@example.com',
+  },
+}
+
+describe('Google passenger onboarding', () => {
+  beforeEach(() => {
+    loginGoogleIdToken.mockReset()
+    completeGoogleOnboarding.mockReset()
+    signIn.mockReset()
+    signIn.mockResolvedValue({ idToken: 'header.payload.signature' })
+    vi.stubGlobal('location', { ...window.location, assign: vi.fn() })
+  })
+
+  it('reads the onboarding contract and ignores a plain pending_approval', () => {
+    expect(readGoogleOnboarding(onboardingError)).toEqual({
+      name: 'Ana Example',
+      email: 'ana@example.com',
+      idToken: null,
+    })
+    expect(readGoogleOnboarding({ status: 403, detail: 'pending_approval' })).toBeNull()
+  })
+
+  it('opens the screen from a native Google response and submits the same id token', async () => {
+    loginGoogleIdToken.mockRejectedValue(onboardingError)
+    completeGoogleOnboarding.mockResolvedValue({ access_token: 'app-session', role: 'passenger' })
+
+    render(
+      <MemoryRouter>
+        <LoginScreen requestedRole="passenger" />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByTestId('google-sign-in'))
+
+    const email = await screen.findByTestId('google-onboarding-email')
+    expect(email).toHaveAttribute('readonly')
+    expect(email).toHaveValue('ana@example.com')
+    expect(screen.getByTestId('google-onboarding-name')).toHaveValue('Ana Example')
+
+    const submit = screen.getByTestId('google-onboarding-submit')
+    expect(submit).toBeDisabled()
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '912345678' },
+    })
+    expect(submit).toBeDisabled()
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    expect(submit).toBeEnabled()
+
+    fireEvent.click(submit)
+    await waitFor(() => expect(completeGoogleOnboarding).toHaveBeenCalledTimes(1))
+    expect(completeGoogleOnboarding).toHaveBeenCalledWith({
+      idToken: 'header.payload.signature',
+      nonce: expect.stringMatching(/^[0-9a-f]{32}$/),
+      name: 'Ana Example',
+      phone: '+351912345678',
+      acceptLegal: true,
+    })
+    await waitFor(() => expect(window.location.assign).toHaveBeenCalledWith('/passenger'))
+    expect(localStorage.getItem('google_id_token')).toBeNull()
+  })
+
+  it('shows the duplicate-phone message and does not open the shell', async () => {
+    const onComplete = vi.fn().mockRejectedValue({ status: 409, detail: 'phone_already_used' })
+    const onDone = vi.fn()
+    render(
+      <GooglePassengerOnboarding
+        email="ana@example.com"
+        suggestedName="Ana Example"
+        idToken="header.payload.signature"
+        nonce="abc"
+        onComplete={onComplete}
+        onDone={onDone}
+        onRestart={vi.fn()}
+      />,
+    )
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '+351912345678' },
+    })
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    expect(await screen.findByText('googleOnboardingPhoneTaken')).toBeInTheDocument()
+    expect(onDone).not.toHaveBeenCalled()
+  })
+
+  it('asks for a fresh Google login when the id token is gone', () => {
+    const onComplete = vi.fn()
+    render(
+      <GooglePassengerOnboarding
+        email="ana@example.com"
+        suggestedName="Ana Example"
+        idToken=""
+        onComplete={onComplete}
+        onDone={vi.fn()}
+        onRestart={vi.fn()}
+      />,
+    )
+    expect(screen.getByTestId('google-onboarding-restart')).toBeInTheDocument()
+    expect(screen.queryByTestId('google-onboarding-submit')).not.toBeInTheDocument()
+    expect(onComplete).not.toHaveBeenCalled()
+  })
+})

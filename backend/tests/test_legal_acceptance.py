@@ -185,7 +185,7 @@ def test_deployed_otp_stays_unavailable(
     assert res.status_code == 503
 
 
-def test_google_new_account_requires_acceptance_and_records_source(
+def test_google_new_account_defers_acceptance_until_onboarding(
     client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     email = f"m211-{unique_test_phone()[1:]}@example.com"
@@ -213,25 +213,23 @@ def test_google_new_account_requires_acceptance_and_records_source(
         "redirect_uri": "http://localhost:5173/auth/google/callback",
         "accept_legal": False,
     }
-    denied = client.post("/auth/google/exchange", json=body)
-    assert denied.status_code == 400
-    assert denied.json()["detail"] == "legal_acceptance_required"
-    db.expire_all()
-    assert (
-        db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none()
-        is None
-    )
-
-    created = client.post("/auth/google/exchange", json={**body, "accept_legal": True})
+    created = client.post("/auth/google/exchange", json=body)
     assert created.status_code == 403
-    assert created.json()["detail"] == "pending_approval"
+    detail = created.json()["detail"]
+    assert detail["code"] == "google_onboarding_required"
+    assert detail["email"] == email
+    assert detail["name"] == "Nova Conta"
+    assert "access_token" not in created.json()
     db.expire_all()
     user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one()
-    acceptance = db.execute(
-        select(UserLegalAcceptance).where(UserLegalAcceptance.user_id == user.id)
+    assert user.status == UserStatus.pending
+    assert user.role == Role.passenger
+    acceptance_count = db.execute(
+        select(func.count())
+        .select_from(UserLegalAcceptance)
+        .where(UserLegalAcceptance.user_id == user.id)
     ).scalar_one()
-    assert acceptance.source == LegalAcceptanceSource.register_google.value
-    assert acceptance.terms_version == settings.CURRENT_TERMS_VERSION
+    assert acceptance_count == 0
 
 
 def test_google_existing_user_does_not_need_register_acceptance(

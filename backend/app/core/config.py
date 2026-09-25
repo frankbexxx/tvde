@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # before flipping BETA.
     ENABLE_BETA_MATCHING_FALLBACKS: bool | None = None
     # OTP signup: pending + requested_role + approval gate. None = inherit BETA_MODE.
-    # Google signup is always pending (independent of this flag).
+    # Google passengers finish onboarding in the app. This flag does not approve them.
     REQUIRE_PENDING_APPROVAL: bool | None = None
     # Require Portuguese +351XXXXXXXXX on OTP request and password login.
     # None = inherit BETA_MODE.

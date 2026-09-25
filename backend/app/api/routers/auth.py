@@ -7,6 +7,7 @@ import anyio
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func, select, update
 from sqlalchemy.engine import CursorResult
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.auth_rate_limit import (
@@ -44,6 +45,7 @@ from app.services.legal_acceptance import (
 from app.schemas.auth import (
     GoogleExchangeRequest,
     GoogleIdTokenRequest,
+    GoogleOnboardingRequest,
     LegalAcceptanceRequest,
     LoginRequest,
     MeProfilePatchRequest,
@@ -362,11 +364,59 @@ async def login(
     return _token_response(user, token_data)
 
 
+def _is_google_passenger_onboarding(user: User) -> bool:
+    """Passageiro Google ainda sem telefone real nem sessão. Não é fila de Admin."""
+    return (
+        user.role == Role.passenger
+        and user.status == UserStatus.pending
+        and user.requested_role == "passenger"
+        and bool((user.oauth_google_sub or "").strip())
+    )
+
+
+def _raise_google_onboarding_required(
+    user: User,
+    email: str,
+    *,
+    id_token: str | None = None,
+) -> None:
+    detail: dict[str, str] = {
+        "code": "google_onboarding_required",
+        "name": (user.name or "").strip()[:120],
+        "email": email,
+    }
+    # O redirect web consome o authorization code. O id_token fica só na
+    # resposta deste passo para a página o reenviar em memória. O login
+    # nativo já o tem e não o recebe aqui.
+    if id_token:
+        detail["id_token"] = id_token
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=detail,
+    )
+
+
+def _normalize_onboarding_phone(phone: str) -> str:
+    compact = re.sub(r"[\s\-()]", "", (phone or "").strip())
+    if compact.startswith("00351"):
+        compact = "+" + compact[2:]
+    elif compact.startswith("351") and not compact.startswith("+"):
+        compact = "+" + compact
+    elif re.fullmatch(r"\d{9}", compact):
+        compact = "+351" + compact
+    if not BETA_PHONE_REGEX.fullmatch(compact):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_phone_format",
+        )
+    return compact
+
+
 def _session_from_google_claims(
     db: Session,
     claims: dict,
     *,
-    accept_legal: bool,
+    echo_id_token: str | None = None,
 ) -> TokenResponse:
     name = str(claims.get("name") or "").strip()[:120]
     sub = str(claims.get("sub") or "").strip()
@@ -379,23 +429,44 @@ def _session_from_google_claims(
     ).scalar_one_or_none()
 
     if user is None:
-        user = db.execute(
+        by_email = db.execute(
             select(User).where(func.lower(User.email) == email)
         ).scalar_one_or_none()
-        if user is not None:
-            if user.oauth_google_sub and user.oauth_google_sub != sub:
+        if by_email is not None:
+            if by_email.oauth_google_sub and by_email.oauth_google_sub != sub:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="google_account_conflict",
                 )
-            user.oauth_google_sub = sub
+            if by_email.role != Role.passenger:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="google_only_passenger_role",
+                )
+            if by_email.status == UserStatus.blocked:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="blocked",
+                )
+            if by_email.status == UserStatus.pending:
+                # OTP / fila Admin. Não ligar o Google nem abrir onboarding.
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="pending_approval",
+                )
+            if by_email.status != UserStatus.active:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="blocked",
+                )
+            by_email.oauth_google_sub = sub
+            if not by_email.email:
+                by_email.email = email
+            db.commit()
+            db.refresh(by_email)
+            user = by_email
 
     if user is None:
-        if not accept_legal:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="legal_acceptance_required",
-            )
         if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -411,27 +482,33 @@ def _session_from_google_claims(
             requested_role="passenger",
         )
         db.add(user)
-        db.flush()
-        record_acceptance(db, user.id, LegalAcceptanceSource.register_google)
         db.commit()
         db.refresh(user)
-    else:
-        if user.role != Role.passenger:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="google_only_passenger_role",
-            )
-        if not user.email:
-            user.email = email
-        elif user.email.lower() != email:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="google_email_mismatch",
-            )
-        db.commit()
-        db.refresh(user)
+        _raise_google_onboarding_required(user, email, id_token=echo_id_token)
 
+    if user.role != Role.passenger:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="google_only_passenger_role",
+        )
+    if not user.email:
+        user.email = email
+    elif user.email.lower() != email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="google_email_mismatch",
+        )
+    if user.status == UserStatus.blocked:
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="blocked",
+        )
+    if _is_google_passenger_onboarding(user):
+        db.commit()
+        _raise_google_onboarding_required(user, email, id_token=echo_id_token)
     if user.status == UserStatus.pending:
+        db.commit()
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="pending_approval",
@@ -442,6 +519,112 @@ def _session_from_google_claims(
             detail="blocked",
         )
 
+    db.commit()
+    db.refresh(user)
+    token_data = create_access_token(
+        subject=str(user.id),
+        role=user.role.value,
+        token_version=int(user.token_version),
+    )
+    return _token_response(user, token_data)
+
+
+def _complete_google_passenger_onboarding(
+    db: Session,
+    claims: dict,
+    *,
+    name: str,
+    phone: str,
+    accept_legal: bool,
+) -> TokenResponse:
+    sub = str(claims.get("sub") or "").strip()
+    email = str(claims.get("email") or "").strip().lower()
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="google_invalid_sub"
+        )
+    if not email or not bool(claims.get("email_verified")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_email_not_verified",
+        )
+    if not accept_legal:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="legal_acceptance_required",
+        )
+    cleaned_name = name.strip()[:120]
+    if not cleaned_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_name",
+        )
+    normalized_phone = _normalize_onboarding_phone(phone)
+
+    user = db.execute(
+        select(User).where(User.oauth_google_sub == sub)
+    ).scalar_one_or_none()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="google_onboarding_not_found",
+        )
+    if user.role != Role.passenger:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="google_only_passenger_role",
+        )
+    if user.email and user.email.lower() != email:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="google_email_mismatch",
+        )
+    if user.status == UserStatus.blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="blocked",
+        )
+    if user.requested_role == "driver" or not _is_google_passenger_onboarding(user):
+        if user.status == UserStatus.pending:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="pending_approval",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="google_onboarding_not_pending",
+        )
+
+    taken = db.execute(
+        select(User.id).where(User.phone == normalized_phone, User.id != user.id).limit(1)
+    ).first()
+    if taken:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="phone_already_used",
+        )
+    if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="BETA cheio",
+        )
+
+    user.name = cleaned_name
+    user.phone = normalized_phone
+    if not user.email:
+        user.email = email
+    user.status = UserStatus.active
+    user.requested_role = None
+    record_acceptance(db, user.id, LegalAcceptanceSource.register_google)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="phone_already_used",
+        ) from None
+    db.refresh(user)
     token_data = create_access_token(
         subject=str(user.id),
         role=user.role.value,
@@ -505,7 +688,7 @@ async def google_exchange(
         )
 
     return _session_from_google_claims(
-        db, claims, accept_legal=payload.accept_legal
+        db, claims, echo_id_token=tok_pack["id_token"]
     )
 
 
@@ -549,8 +732,41 @@ async def google_id_token(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="google_email_not_verified",
         )
-    return _session_from_google_claims(
-        db, claims, accept_legal=payload.accept_legal
+    return _session_from_google_claims(db, claims)
+
+
+@router.post("/google/onboarding", response_model=TokenResponse)
+async def google_onboarding(
+    payload: GoogleOnboardingRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """Conclui o passageiro Google. Revalida o id_token. Não emite JWT antes disso."""
+    check_google_exchange_rate_limit(request)
+    if not _google_oauth_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="google_oauth_disabled",
+        )
+    try:
+        claims = await anyio.to_thread.run_sync(
+            verify_id_token_claims, payload.id_token.strip()
+        )
+        raw_nonce = (payload.nonce or "").strip()
+        claim_nonce = str(claims.get("nonce") or "")
+        if raw_nonce or claim_nonce:
+            assert_id_token_nonce(claims, raw_nonce)
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_token_invalid",
+        ) from None
+    return _complete_google_passenger_onboarding(
+        db,
+        claims,
+        name=payload.name,
+        phone=payload.phone,
+        accept_legal=payload.accept_legal,
     )
 
 
