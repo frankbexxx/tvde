@@ -2,6 +2,7 @@
  * API client with base URL from env, token injection, 401 handling, and timeout.
  * Token: AuthContext + localStorage access_token (A020).
  */
+import { reportApiServerError } from '../sentry'
 import { getStoredAccessToken } from '../utils/authStorage'
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? '/api'
@@ -76,6 +77,9 @@ export async function apiFetch<T>(
     const requestId = res.headers.get('X-Request-ID') ?? undefined
     const body = await res.json().catch(() => ({}))
     const detail = body.detail ?? body.message ?? res.statusText
+    if (res.status >= 500) {
+      reportApiServerError(res.status, requestId, path)
+    }
     throw { status: res.status, detail, request_id: requestId } as ApiError
   }
   if (res.status === 204 || res.headers.get('content-length') === '0') {

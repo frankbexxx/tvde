@@ -150,7 +150,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | **S-OPS-01** | Infra/DevOps | Checklist ops pós-férias: secrets, SSD, `main` tip, prod health | P0 — Bloqueador | Humano |
 | **S-OPS-02** | Infra/DevOps | Staging OAuth / smoke staging (TVDE-STG / A2-02) | P2 — Melhoria importante | Envs staging |
 | **S-OPS-03** | Infra/DevOps | Drill restore backup Postgres — PASS 2026-09-25 (acta no runbook §9; uploads/Persistent Disk fora deste restore) | P1 — Necessário para fechar produto | Render |
-| **S-OPS-04** | Infra/DevOps | Observabilidade: confirmar Sentry prod FE/BE cobertos | P2 — Melhoria importante | — |
+| **S-OPS-04** | Infra/DevOps | Observabilidade Sentry — **PARTIAL / CODE READY** (2026-09-25). PROD FE+BE activos; `request_id` no evento; cron e API 5xx capturados; ErrorBoundary. Pendente: evento de teste real em PROD, DSN staging, releases (P2). Traces e replays continuam a 0 | P2 — Melhoria importante | Evento teste PROD |
 | **S-QA-01** | Testes/QA | Suite E2E/regression smoke comercial pré-piloto | P1 — Necessário para fechar produto | S-PAY-01 opcional |
 | **S-QA-02** | Testes/QA | Testes em telemóveis reais (pós packaging) | P1 — Necessário para fechar produto | S-MOB-02 |
 | **S-HYG-01** | Cross-app | Remover/limitar mock GPS prod `?demo=1&sim=1` se risco comercial | P2 — Melhoria importante | — |
@@ -297,7 +297,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 
 ### ETAPA 15 — Infra, backup, staging, QA comercial
 - **Objectivo:** Restore drill, staging smoke, E2E comercial, observabilidade.
-- **IDs:** S-OPS-02 · S-OPS-03 (drill PASS 2026-09-25) · S-OPS-04 · S-QA-01 · S-HYG-03
+- **IDs:** S-OPS-02 · S-OPS-03 (drill PASS 2026-09-25) · S-OPS-04 (**PARTIAL / CODE READY** 2026-09-25; evento teste PROD, staging e releases ainda abertos) · S-QA-01 · S-HYG-03
 - **Depende de:** ETAPAS 05–11 (quanto mais cedo melhor para S-OPS-03)
 
 ### ETAPA FINAL — Pronto para operação comercial
