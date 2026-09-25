@@ -130,8 +130,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center p-4 bg-background">
-      <div className={`w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
+    <div className="box-border flex min-h-dvh flex-col overflow-y-auto bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className={`m-auto w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
         <BrandStripe />
         <div className="p-6">
           <div className="flex flex-wrap items-end justify-between gap-2 mb-4" data-testid="login-brand">
@@ -258,8 +258,9 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                onFocus={(e) => e.currentTarget.scrollIntoView({ block: 'center' })}
                 placeholder="+351912345678"
-                className={`w-full px-3 py-2 border border-input ${BTN_SECONDARY_RADIUS} bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent`}
+                className={`w-full scroll-mb-24 px-3 py-2 border border-input ${BTN_SECONDARY_RADIUS} bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent`}
                 required
               />
             </div>
@@ -272,7 +273,8 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-3 py-2 border border-input ${BTN_SECONDARY_RADIUS} bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent`}
+                onFocus={(e) => e.currentTarget.scrollIntoView({ block: 'center' })}
+                className={`w-full scroll-mb-24 px-3 py-2 border border-input ${BTN_SECONDARY_RADIUS} bg-background text-base focus:ring-2 focus:ring-ring focus:border-transparent`}
                 required
               />
             </div>
