@@ -470,7 +470,7 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
 | D1.1 | Comparar Capacitor vs wrapper vs PWA (reuso web-app) | Matriz | DOCS | D0 |
-| D1.2 | Spike mínimo **Android** | APK debug Capacitor (`pt.vamula.app`) — **PARTIAL / BOOTSTRAP DONE**; device/S-MOB-02 ainda aberto | CÓDIGO | D1.1 |
+| D1.2 | Spike mínimo **Android** | APK debug Capacitor no Oppo — **BOOTSTRAP + DEVICE SMOKE PASS**; S-MOB-02 (mapa, GPS, Waze, uploads) ainda aberto | CÓDIGO | D1.1 |
 | D1.3 | Confirmar caminho de packaging oficial | Acta técnica | DECISÃO | D1.2 |
 
 ## D2 — Validação em device (Android primeiro)
