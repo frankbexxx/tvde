@@ -252,3 +252,82 @@ Execução manual (Frank). Sem alteração de código nem de dados de produção
 - Restore de validação numa BD Render nova (cloud path)
 - Rotina periódica de export manual ou backup para S3 ([Render guide](https://render.com/docs/backup-postgresql-to-s3))
 - Fechar **O-STRIPE-1** para completar **TVDE-PROD**
+
+---
+
+## 9. Registo de execução — 2026-09-25
+
+Drill S-OPS-03 / M2.6. Leitura de produção com `pg_dump`; restore só numa base PostgreSQL 18 local isolada. Sem escrita em produção, sem base Render temporária e sem alteração de configuração Render.
+
+### Backup / PITR (leitura)
+
+| Campo | Resultado |
+|-------|-----------|
+| Instância | `tvde-db` |
+| Plano | Basic-256mb |
+| Versão API | 18 |
+| PITR | `recoveryStatus` AVAILABLE |
+| Início da janela recuperável | 2026-09-22T03:06:50Z |
+| Lista `/backup` | vazia nesta leitura |
+
+### `pg_dump`
+
+| Campo | Resultado |
+|-------|-----------|
+| Estado | OK (exit 0) |
+| Ferramenta | Docker `postgres:18` |
+| Origem | PROD (URL não registada) |
+| Ficheiro | `tvde-prod_2026-09-25_0901.dump` (apagado após o drill) |
+| Tamanho | 231 277 bytes |
+| Formato | custom, `--no-owner`, `--no-privileges` |
+| `pg_restore --list` | OK (exit 0, 261 entradas, sem erro fatal) |
+
+### Restore local
+
+| Campo | Resultado |
+|-------|-----------|
+| Estado | OK (exit 0, sem erro fatal) |
+| Destino | PostgreSQL 18 local isolado, `localhost:5433/tvde_restore` |
+| Flags | `--clean --if-exists --no-owner --no-privileges` |
+| `SELECT version()` | PostgreSQL 18.4 (servidor local) |
+| Produção | intacta (`/health` 200, sem deploy, sem alteração Render) |
+
+### Schema
+
+| Check | Resultado |
+|-------|-----------|
+| `alembic_version` | `d6e7f8a9b0c1` PASS |
+| `complaints` | PASS |
+| `complaint_history` | PASS |
+| `complaint_attachments` | PASS |
+| `trips.intermediation_rate_percent` | PASS |
+| `trips.partner_id` | PASS |
+| `trips.vehicle_id` | PASS |
+| `trips.vehicle_plate` | PASS |
+| FK `complaint_attachments.complaint_id` → `complaints` | RESTRICT PASS |
+
+### Contagens
+
+| Métrica | Valor |
+|---------|-------|
+| users | 18 |
+| drivers | 4 |
+| trips | 187 |
+| trip_offers | 139 |
+| complaints | 3 |
+| complaint_attachments | 0 |
+
+### Uploads
+
+DB restore PASS does not restore Persistent Disk files.
+
+Este drill não restaura documentos de motorista, documentos de veículo nem ficheiros de anexos de reclamação.
+
+### Limpeza
+
+- Variável de URL de produção removida da sessão
+- Contentor `tvde-restore-test` removido
+- Dump local apagado
+- Nenhum secret nem dump no repositório
+
+**Estado:** **S-OPS-03 / M2.6 = PASS**

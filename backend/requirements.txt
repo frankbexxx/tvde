@@ -2,7 +2,8 @@
 fastapi>=0.115,<0.136.3
 uvicorn[standard]
 
-sqlalchemy>=2.0
+# 2.1.0 remove sqlalchemy.ext.mypy.plugin (mypy.ini). Último backend-ci verde: 2.0.54.
+sqlalchemy>=2.0.54,<2.1
 psycopg2-binary
 alembic>=1.13
 

@@ -588,6 +588,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | F1.1 | Executar drill | Restore seguro | EXTERNO · TESTE | — |
 | F1.2 | Acta PASS/FAIL | Registo | DOCS | F1.1 |
 
+**Estado 2026-09-25:** F1.1 e F1.2 **PASS**. S-OPS-03 / M2.6 = PASS. Acta em [`TVDE_BKP_RUNBOOK.md`](ops/TVDE_BKP_RUNBOOK.md) §9. O restore da base não restaura ficheiros do Persistent Disk.
+
 ## F2 — Staging OAuth / smoke staging
 
 - **IDs:** `S-OPS-02`
@@ -737,7 +739,7 @@ Além de M1 — **não** marcar M2 “bloqueado” genericamente; fechar blocker
 | M2.3 | B1 Stripe live PASS **conforme modelo do piloto** (mock OFF se o piloto cobrar real) |
 | M2.4 | E3 copy pagamento alinhada |
 | M2.5 | G1 regression/smoke piloto PASS |
-| M2.6 | F1 restore drill PASS (recente) |
+| M2.6 | F1 restore drill PASS (2026-09-25) |
 | M2.7 | Se B3.2=Não: processo financeiro **manual** documentado e operável |
 | M2.8 | Se B3.2=Sim: B3 smoke split PASS |
 | M2.9 | **A6 / compliance:** validação IMT + bloqueio efectivo operador/motorista/veículo (**A3-D03-REV1**) — vehicle gates **ON** (G-KYC-P0-04) **não** substitui IMT; enforcement driving-hours OFF **não** conta como PASS |
