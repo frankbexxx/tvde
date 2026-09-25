@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     # CORS: comma-separated origins (no "*"). Em deployed (prod/staging) é obrigatório ter pelo menos uma.
     # Em development/test, o middleware pode usar "*" sem credentials (ver main.py).
     CORS_ALLOWED_ORIGINS: str = (
-        "https://tvde-app-j51f.onrender.com,http://localhost:5173"
+        "https://tvde-app-j51f.onrender.com,http://localhost:5173,https://localhost"
     )
 
     # Owner/operator phone: seed protection + admin mutation guards. Does NOT grant

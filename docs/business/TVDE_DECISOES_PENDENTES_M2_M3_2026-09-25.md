@@ -109,7 +109,7 @@ Francisco + Manel. Decisão fechada.
 
 ### Próxima acção
 
-Bootstrap Capacitor numa PR inicial, depois de auditoria READ-ONLY. Não instalar nesta acta.
+**S-MOB-01 = PARTIAL / BOOTSTRAP DONE.** `appId` definitivo `pt.vamula.app`. Capacitor 8.5.2, projecto Android e APK debug. WebView `https://localhost`. API Android via `vite build --mode android` (`VITE_API_URL` absoluto). Em produção, `CORS_ALLOWED_ORIGINS` tem de incluir `https://localhost` (o default do código já inclui; um env Render que o substitua precisa da mesma origem). Google OAuth nativo, push, GPS background e Play Store continuam abertos. S-MOB-02 continua aberto.
 
 ---
 
@@ -692,7 +692,7 @@ Não bloqueia piloto.
 
 | ID | Decisão | Quem | Quando | Estado |
 |---|---|---|---|---|
-| S-MOB-01 | Capacitor / wrapper / PWA | Francisco + Manel | Agora | DECIDIDO: CAPACITOR |
+| S-MOB-01 | Capacitor / wrapper / PWA | Francisco + Manel | Agora | PARTIAL / BOOTSTRAP DONE (`pt.vamula.app`) |
 | S-AUTH-01 | Provider SMS | Francisco | Agora | PENDENTE |
 | M2.11 | Momento e versão da aceitação | Francisco | Agora | CLOSED: REGISTO + REACEITAÇÃO VERSIONADA |
 | S-COMP-03 | Docs pessoais bloqueiam online? | Francisco + Manel | Agora | PENDENTE |

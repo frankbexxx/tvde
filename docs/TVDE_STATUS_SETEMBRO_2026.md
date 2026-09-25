@@ -112,7 +112,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
-| **S-MOB-01** | Cross-app | Spike packaging Android/iOS (PWA/wrapper/Capacitor) — **MOBILE-001** | P0 — Bloqueador | Decisão caminho |
+| **S-MOB-01** | Cross-app | Capacitor Android bootstrap — **PARTIAL / BOOTSTRAP DONE** (`pt.vamula.app`). Push, OAuth nativo, GPS background e Play Store continuam abertos | P0 — Bloqueador | S-MOB-02 |
 | **S-MOB-02** | Cross-app | Validar GPS background, push, permissões, Waze/Maps, login, lojas | P1 — Necessário para fechar produto | S-MOB-01 |
 | **S-MOB-03** | Cross-app | `VITE_APP_DOWNLOAD_URL` / landing stores | P2 — Melhoria importante | S-MOB-02 |
 
