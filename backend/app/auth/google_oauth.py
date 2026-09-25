@@ -116,14 +116,15 @@ def _log_nonce_mismatch(
     hash_match_base64url: bool,
 ) -> None:
     """Temporário. Só booleans, comprimento e classe. Sem token, nonce, email ou sub."""
-    # O logger deste módulo não chega ao stdout do Render. O logger "tvde" sim.
-    logging.getLogger("tvde").info(
-        "google_nonce_mismatch nonce_present=%s nonce_length=%s nonce_format=%s hash_match_hex=%s hash_match_base64url=%s",
-        bool(got),
-        len(got),
-        _nonce_format_class(got, expected),
-        hash_match_hex,
-        hash_match_base64url,
+    # print: no Render só o stdout do processo aparece de forma fiável.
+    print(
+        "google_nonce_mismatch "
+        f"nonce_present={bool(got)} "
+        f"nonce_length={len(got)} "
+        f"nonce_format={_nonce_format_class(got, expected)} "
+        f"hash_match_hex={hash_match_hex} "
+        f"hash_match_base64url={hash_match_base64url}",
+        flush=True,
     )
 
 
