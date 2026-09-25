@@ -113,7 +113,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
 | **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). Push, OAuth nativo, GPS background e Play Store continuam abertos | P1 — Necessário para fechar produto | S-MOB-02 |
-| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-25). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor = **PARTIAL / WAITING EXTERNAL CONFIG** (botão abre o selector Google; o device devolve `[16] Account reauth failed` sem id token). Aberto: GPS background, push, Waze/Maps, file picker, Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
+| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-25). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor: o nonce alinha (a app passa SHA-256 hex ao plugin e o raw ao backend); no Oppo o POST deixou de ser `400` e a conta nova ficou em `pending_approval`, sem sessão nem shell. Aberto: GPS background, push, Waze/Maps, file picker, Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
 | **S-MOB-03** | Cross-app | `VITE_APP_DOWNLOAD_URL` / landing stores | P2 — Melhoria importante | S-MOB-02 |
 
 ### Produto Driver / Passenger / Partner / Admin

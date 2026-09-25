@@ -97,9 +97,10 @@ def verify_id_token_claims(id_token_jwt: str) -> dict[str, Any]:
 def assert_id_token_nonce(claims: dict[str, Any], nonce: str) -> None:
     """O id_token tem de estar ligado ao nonce que a app acabou de gerar.
 
-    O Credential Manager no Android guarda o SHA-256 desse nonce, não o valor
-    cru. Comparar o claim com o nonce enviado deixaria passar quem só copiasse
-    o hash que já vem dentro do token.
+    O Credential Manager no Android ecoa o nonce que recebe. A app passa
+    SHA-256(rawNonce) ao plugin e envia o raw ao backend. Comparar o claim
+    com o nonce enviado deixaria passar quem só copiasse o hash que já vem
+    dentro do token.
     """
     expected = nonce.strip()
     got = str(claims.get("nonce") or "")

@@ -5,7 +5,7 @@ import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { isCapacitorNative } from './capacitorPlatform'
-import { createOauthNonce, GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
+import { createOauthNonce, GOOGLE_OAUTH_STATE_KEY, nativeGoogleNonce } from './googleOauthState'
 import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in'
 import { LS_LAST_PHONE, setStoredAccessToken } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
@@ -142,14 +142,14 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     setError(null)
     setLoading(true)
     try {
-      const nonce = createOauthNonce()
+      const { pluginNonce, backendNonce } = await nativeGoogleNonce()
       await GoogleSignIn.initialize({ clientId })
-      const result = await GoogleSignIn.signIn({ nonce })
+      const result = await GoogleSignIn.signIn({ nonce: pluginNonce })
       if (!result.idToken) {
         setError(t('googleCapacitorFailed'))
         return
       }
-      await loginGoogleIdToken(result.idToken, nonce, acceptLegal)
+      await loginGoogleIdToken(result.idToken, backendNonce, acceptLegal)
       window.location.assign('/passenger')
     } catch {
       setError(t('googleCapacitorFailed'))
