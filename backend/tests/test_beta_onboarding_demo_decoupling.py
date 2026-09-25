@@ -59,7 +59,7 @@ def test_otp_pending_when_flag_true_even_if_beta_false(
 
     ver = client.post(
         "/auth/otp/verify",
-        json={"phone": phone, "code": "100000", "requested_role": "driver"},
+        json={"phone": phone, "code": "100000", "requested_role": "driver", "accept_legal": True},
     )
     assert ver.status_code == 403
     assert ver.json()["detail"] == "pending_approval"
@@ -83,7 +83,7 @@ def test_otp_active_when_flag_false(
     assert client.post("/auth/otp/request", json={"phone": phone}).status_code == 200
     ver = client.post(
         "/auth/otp/verify",
-        json={"phone": phone, "code": "100000", "requested_role": "driver"},
+        json={"phone": phone, "code": "100000", "requested_role": "driver", "accept_legal": True},
     )
     assert ver.status_code == 200, ver.text
     body = ver.json()
@@ -106,7 +106,12 @@ def test_otp_compat_beta_true_unset_flags_pending(
     assert client.post("/auth/otp/request", json={"phone": phone}).status_code == 200
     ver = client.post(
         "/auth/otp/verify",
-        json={"phone": phone, "code": "100000", "requested_role": "passenger"},
+        json={
+            "phone": phone,
+            "code": "100000",
+            "requested_role": "passenger",
+            "accept_legal": True,
+        },
     )
     assert ver.status_code == 403
     assert ver.json()["detail"] == "pending_approval"
@@ -243,7 +248,7 @@ def test_pilot_target_beta_false_with_explicit_flags(
     assert client.post("/auth/otp/request", json={"phone": phone}).status_code == 200
     ver = client.post(
         "/auth/otp/verify",
-        json={"phone": phone, "code": "100000", "requested_role": "driver"},
+        json={"phone": phone, "code": "100000", "requested_role": "driver", "accept_legal": True},
     )
     assert ver.status_code == 403
     u = db.execute(select(User).where(User.phone == phone)).scalar_one()

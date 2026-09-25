@@ -94,7 +94,7 @@ def test_non_deployed_otp_verify_still_issues_token(
 
     verified = client.post(
         "/auth/otp/verify",
-        json={"phone": phone, "code": "100000"},
+        json={"phone": phone, "code": "100000", "accept_legal": True},
     )
 
     assert verified.status_code == 200, verified.text

@@ -22,6 +22,7 @@ class OtpVerifyRequest(BaseModel):
         None,
         description="BETA: passenger or driver (só usado ao criar novo utilizador pendente).",
     )
+    accept_legal: bool = False
 
 
 class LoginRequest(BaseModel):
@@ -44,6 +45,13 @@ class GoogleExchangeRequest(BaseModel):
         default="passenger",
         description="v1: apenas passenger.",
     )
+    accept_legal: bool = False
+
+
+class LegalAcceptanceRequest(BaseModel):
+    """Gate pós-login. O cliente não escolhe versões nem outro utilizador."""
+
+    source: str = Field(..., min_length=1, max_length=32)
 
 
 class TokenResponse(BaseModel):

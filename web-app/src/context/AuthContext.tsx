@@ -90,7 +90,7 @@ interface AuthContextValue extends AuthState {
   loadTokens: () => Promise<void>
   login: (phone: string, password: string, requestedRole?: string) => Promise<TokenResponse>
   /** BETA + Google OAuth: troca `code` do redirect e preenche sessão (passageiro). */
-  loginGoogle: (code: string, redirectUri: string) => Promise<TokenResponse>
+  loginGoogle: (code: string, redirectUri: string, acceptLegal?: boolean) => Promise<TokenResponse>
   logout: () => void
   /** Telemóvel da sessão (ou último gravado); sem API extra. */
   sessionPhone: string | null
@@ -460,9 +460,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const loginGoogle = useCallback(
-    async (code: string, redirectUri: string) => {
+    async (code: string, redirectUri: string, acceptLegal = false) => {
       setStatus('A entrar com Google...')
-      const res = await exchangeGoogleCode(code, redirectUri, 'passenger')
+      const res = await exchangeGoogleCode(code, redirectUri, 'passenger', acceptLegal)
       const token = res.access_token
       setStoredAccessToken(token)
       const serverRole = res.role as Role

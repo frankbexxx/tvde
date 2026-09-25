@@ -744,7 +744,7 @@ Além de M1 — **não** marcar M2 “bloqueado” genericamente; fechar blocker
 | M2.8 | Se B3.2=Sim: B3 smoke split PASS |
 | M2.9 | **A6 / compliance:** validação IMT + bloqueio efectivo operador/motorista/veículo (**A3-D03-REV1**) — vehicle gates **ON** (G-KYC-P0-04) **não** substitui IMT; enforcement driving-hours OFF **não** conta como PASS |
 | M2.10 | D1–D3 (+G2) PASS em **Android** (D0 HÍBRIDO); iOS pode estar pendente |
-| M2.11 | **Termos de utilização + Política de Privacidade** publicados/aceites no fluxo (A3-D07) |
+| M2.11 | **Termos de utilização + Política de Privacidade** publicados/aceites no fluxo (A3-D07) — **CLOSED** 2026-09-25 (registo + gate versionado; OTP PROD continua off) |
 | M2.12 | Base legal M2 documentada (source pack / A3-REV); riscos residuais IMT/parecer **aceites por escrito** onde aplicável |
 | M2.13 | Driving-hours: **enforcement 10 h/24 h** alinhado a **A3-D04-REV1** (WARN+RECORD sozinho = **não** PASS M2) |
 | M2.14 | Emergência passageiro + motorista (chamada autoridades + partilha localização) |

@@ -74,6 +74,9 @@ async def config() -> dict[str, str | bool]:
     out: dict[str, str | bool] = {
         "beta_mode": beta,
         "google_oauth_enabled": google_ready,
+        "otp_signup_enabled": not settings.is_deployed_environment(),
+        "legal_terms_url": settings.LEGAL_TERMS_URL,
+        "legal_privacy_url": settings.LEGAL_PRIVACY_URL,
     }
     if google_ready:
         out["google_oauth_client_id"] = g_id

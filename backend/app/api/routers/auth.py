@@ -33,8 +33,15 @@ from app.db.models.otp import OtpCode
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
 from app.services.beta_capacity import active_beta_user_count
+from app.db.models.user_legal_acceptance import LegalAcceptanceSource
+from app.services.legal_acceptance import (
+    LOGIN_REACCEPT,
+    record_acceptance,
+    status_payload,
+)
 from app.schemas.auth import (
     GoogleExchangeRequest,
+    LegalAcceptanceRequest,
     LoginRequest,
     MeProfilePatchRequest,
     MeProfileResponse,
@@ -182,14 +189,21 @@ async def verify_otp(
             detail="invalid_otp",
         )
 
+    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+    creating = user is None
+    if creating and not payload.accept_legal:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="legal_acceptance_required",
+        )
+
     if not claim_unconsumed_otp(db, otp.id, now):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_otp",
         )
 
-    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
-    if not user:
+    if creating:
         if settings.require_pending_approval():
             # Partner fleet managers are created only via POST /admin/partners/{id}/create-admin,
             # never through public OTP (Role.partner is intentionally excluded here).
@@ -213,6 +227,8 @@ async def verify_otp(
                 status=UserStatus.active,
             )
             db.add(user)
+        db.flush()
+        record_acceptance(db, user.id, LegalAcceptanceSource.register_otp)
 
     if user.status == UserStatus.pending:
         # The pending account is the durable signup request shown in the admin queue.
@@ -273,6 +289,31 @@ def _verify_login_password(user: User, password: str) -> None:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_credentials",
         )
+
+
+@router.get("/legal-acceptance")
+def get_legal_acceptance(
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str | bool]:
+    return status_payload(db, uuid.UUID(user.user_id))
+
+
+@router.post("/legal-acceptance")
+def post_legal_acceptance(
+    payload: LegalAcceptanceRequest,
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str | bool]:
+    if payload.source != LOGIN_REACCEPT.value:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="invalid_legal_acceptance_source",
+        )
+    uid = uuid.UUID(user.user_id)
+    record_acceptance(db, uid, LOGIN_REACCEPT)
+    db.commit()
+    return status_payload(db, uid)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -390,6 +431,11 @@ async def google_exchange(
             user.oauth_google_sub = sub
 
     if user is None:
+        if not payload.accept_legal:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="legal_acceptance_required",
+            )
         # Capacity cap (pilot safety). Independent of REQUIRE_PENDING_APPROVAL —
         # Google signup is always pending + approve.
         if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
@@ -408,6 +454,8 @@ async def google_exchange(
             requested_role="passenger",
         )
         db.add(user)
+        db.flush()
+        record_acceptance(db, user.id, LegalAcceptanceSource.register_google)
         db.commit()
         db.refresh(user)
     else:
