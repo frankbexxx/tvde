@@ -6,6 +6,7 @@ import base64
 import hashlib
 import logging
 import os
+import re
 from typing import Any
 
 import httpx
@@ -94,6 +95,37 @@ def verify_id_token_claims(id_token_jwt: str) -> dict[str, Any]:
     return info
 
 
+def _nonce_format_class(got: str, expected: str) -> str:
+    """Classe do claim, sem devolver o valor."""
+    if not got:
+        return "empty"
+    if expected and got == expected:
+        return "raw_match"
+    if re.fullmatch(r"[0-9a-fA-F]{64}", got):
+        return "hex64"
+    if re.fullmatch(r"[A-Za-z0-9_-]{43}", got):
+        return "base64url"
+    return "other"
+
+
+def _log_nonce_mismatch(
+    got: str,
+    expected: str,
+    *,
+    hash_match_hex: bool,
+    hash_match_base64url: bool,
+) -> None:
+    """Temporário. Só booleans, comprimento e classe. Sem token, nonce, email ou sub."""
+    logger.warning(
+        "google_nonce_mismatch nonce_present=%s nonce_length=%s nonce_format=%s hash_match_hex=%s hash_match_base64url=%s",
+        bool(got),
+        len(got),
+        _nonce_format_class(got, expected),
+        hash_match_hex,
+        hash_match_base64url,
+    )
+
+
 def assert_id_token_nonce(claims: dict[str, Any], nonce: str) -> None:
     """O id_token tem de estar ligado ao nonce que a app acabou de gerar.
 
@@ -103,10 +135,18 @@ def assert_id_token_nonce(claims: dict[str, Any], nonce: str) -> None:
     """
     expected = nonce.strip()
     got = str(claims.get("nonce") or "")
-    if not expected or not got:
-        raise RuntimeError("google_nonce_mismatch")
-    digest = hashlib.sha256(expected.encode("utf-8")).digest()
-    hex_digest = digest.hex()
-    b64_digest = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
-    if got != hex_digest and got != b64_digest:
+    digest = hashlib.sha256(expected.encode("utf-8")).digest() if expected else b""
+    hex_digest = digest.hex() if expected else ""
+    b64_digest = (
+        base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=") if expected else ""
+    )
+    hash_match_hex = bool(expected) and got == hex_digest
+    hash_match_base64url = bool(expected) and got == b64_digest
+    if not expected or not got or not (hash_match_hex or hash_match_base64url):
+        _log_nonce_mismatch(
+            got,
+            expected,
+            hash_match_hex=hash_match_hex,
+            hash_match_base64url=hash_match_base64url,
+        )
         raise RuntimeError("google_nonce_mismatch")
