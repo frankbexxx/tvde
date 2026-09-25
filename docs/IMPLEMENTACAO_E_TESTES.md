@@ -783,7 +783,7 @@ Todas as operações admin estão na web-app (gestão no telemóvel sem Swagger)
 | `CANCELLATION_FEE_MIN`        | **DEPRECATED** — ignorado                                                                        |
 | `BETA_MODE`                   | Modo BETA (login por telefone, rate limit)                                                       |
 | `ENABLE_DEV_TOOLS`            | Seed, tokens, debug em produção                                                                  |
-| `CORS_ALLOWED_ORIGINS`        | Origens CORS separadas por vírgula (sem `*`). Default: frontend Render + `http://localhost:5173` |
+| `CORS_ALLOWED_ORIGINS`        | Origens CORS separadas por vírgula (sem `*`). Default: frontend Render + `http://localhost:5173` + `https://localhost` (WebView Capacitor) |
 
 ### Frontend (Render tvde-app)
 

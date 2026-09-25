@@ -109,7 +109,7 @@ Francisco + Manel. Decisão fechada.
 
 ### Próxima acção
 
-Bootstrap Capacitor numa PR inicial, depois de auditoria READ-ONLY. Não instalar nesta acta.
+**S-MOB-01 = BOOTSTRAP + DEVICE SMOKE PASS.** `appId` `pt.vamula.app`. APK debug no Oppo Reno 13 5G: app abre, `/config` responde, login de teste entra. A API PROD passou a incluir `https://localhost` em `CORS_ALLOWED_ORIGINS`, junto de `https://tvde-app-j51f.onrender.com` e `http://localhost:5173`. Google OAuth nativo, push, GPS background e Play Store continuam abertos. S-MOB-02 continua aberto. MapLibre, geolocation foreground, Waze/Maps e file picker ficam para S-MOB-02.
 
 ---
 
@@ -692,7 +692,7 @@ Não bloqueia piloto.
 
 | ID | Decisão | Quem | Quando | Estado |
 |---|---|---|---|---|
-| S-MOB-01 | Capacitor / wrapper / PWA | Francisco + Manel | Agora | DECIDIDO: CAPACITOR |
+| S-MOB-01 | Capacitor / wrapper / PWA | Francisco + Manel | Agora | BOOTSTRAP + DEVICE SMOKE PASS (`pt.vamula.app`) |
 | S-AUTH-01 | Provider SMS | Francisco | Agora | PENDENTE |
 | M2.11 | Momento e versão da aceitação | Francisco | Agora | CLOSED: REGISTO + REACEITAÇÃO VERSIONADA |
 | S-COMP-03 | Docs pessoais bloqueiam online? | Francisco + Manel | Agora | PENDENTE |

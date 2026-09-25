@@ -4,6 +4,7 @@ import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthCon
 import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
+import { isCapacitorNative } from './capacitorPlatform'
 import { LS_LAST_PHONE, setStoredAccessToken } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
 import { appBuildDisplayLine } from '../../lib/appBuildMeta'
@@ -112,8 +113,10 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     }
   }
 
+  const googleOnCapacitor = isCapacitorNative()
+
   const startGoogleLogin = () => {
-    if (!googleClientId) return
+    if (!googleClientId || googleOnCapacitor) return
     sessionStorage.setItem(LEGAL_ACCEPT_REGISTER_KEY, acceptLegal ? '1' : '0')
     const redirectUri = `${window.location.origin}/auth/google/callback`
     const u = new URL('https://accounts.google.com/o/oauth2/v2/auth')
@@ -228,7 +231,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               )}
             </div>
           )}
-          {requestedRole === 'passenger' && googleClientId && (
+          {requestedRole === 'passenger' && googleClientId && !googleOnCapacitor && (
             <div className="mb-4">
               <button
                 type="button"
@@ -239,6 +242,11 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               </button>
               <p className="text-xs text-muted-foreground mt-2 text-center">{t('passengerGoogleOnly')}</p>
             </div>
+          )}
+          {requestedRole === 'passenger' && googleOnCapacitor && (
+            <p className="mb-4 text-xs text-muted-foreground text-center" data-testid="google-capacitor-pending">
+              {t('googleCapacitorPending')}
+            </p>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
