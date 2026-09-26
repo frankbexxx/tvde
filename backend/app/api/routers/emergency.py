@@ -7,8 +7,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import UserContext, get_db, require_role
-from app.models.enums import Role
+from app.api.deps import UserContext, get_current_user, get_db
 from app.schemas.emergency import (
     EmergencyEventRequest,
     EmergencyEventResponse,
@@ -27,7 +26,7 @@ router = APIRouter(prefix="/emergency", tags=["emergency"])
 )
 async def emergency_snapshot(
     trip_id: str,
-    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
+    user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> EmergencySnapshotResponse:
     """Authenticated emergency snapshot for the caller's own eligible trip."""
@@ -46,7 +45,7 @@ async def emergency_snapshot(
 async def emergency_event(
     trip_id: str,
     body: EmergencyEventRequest,
-    user: UserContext = Depends(require_role(Role.passenger, Role.driver)),
+    user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> EmergencyEventResponse:
     """Record emergency.opened | call_initiated | shared (explicit user action)."""

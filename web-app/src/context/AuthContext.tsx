@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -50,11 +51,14 @@ import {
   isAdminFromSessionRole,
   resolveAppRouteRoleFromSession,
   resolveAuthBootstrapMode,
+  shellsForSessionRole,
+  type AppRouteRole,
   type AuthBootstrapMode,
 } from './authBootstrap'
 import { type Role } from './authRoles'
 
 export type { Role } from './authRoles'
+export type { AppRouteRole } from './authBootstrap'
 export { isBackofficeStaffRole } from './authRoles'
 
 interface AuthState {
@@ -66,8 +70,6 @@ interface AuthState {
   betaMode: boolean
   isAuthenticated: boolean
 }
-
-export type AppRouteRole = 'passenger' | 'driver' | 'partner'
 
 interface AuthContextValue extends AuthState {
   tokens: AuthTokens | null
@@ -162,7 +164,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginSessionActive = authBootstrapMode === 'login_session'
 
-  const syncAppRouteRole = useCallback((r: AppRouteRole) => {
+  const sessionUserRoleRef = useRef(sessionUserRole)
+  sessionUserRoleRef.current = sessionUserRole
+
+  const syncAppRouteRole = useCallback((r: AppRouteRole, forRole?: Role) => {
+    const allowed = shellsForSessionRole(forRole ?? sessionUserRoleRef.current)
+    if (!allowed.includes(r)) return
     setStoredAppRouteRole(r)
     setAppRouteRoleState(r)
   }, [])
@@ -173,6 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (pathname.startsWith('/partner')) return 'partner'
     if (pathname.startsWith('/passenger')) return 'passenger'
     if (pathname.startsWith('/driver')) return 'driver'
+    if (appRouteRole === 'admin') return 'admin'
+    if (appRouteRole === 'partner') return 'partner'
     return appRouteRole === 'driver' ? 'driver' : 'passenger'
   }, [pathname, appRouteRole])
 
@@ -181,6 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (pathname.startsWith('/partner')) return 'partner'
     if (pathname.startsWith('/passenger')) return 'passenger'
     if (pathname.startsWith('/driver')) return 'driver'
+    if (appRouteRole === 'admin') return 'admin'
+    if (appRouteRole === 'partner') return 'partner'
     return appRouteRole === 'driver' ? 'driver' : 'passenger'
   }, [pathname, appRouteRole])
 
@@ -450,13 +461,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSessionUserRole(serverRole)
       setSessionUserId(res.user_id)
       {
-        let shell: AppRouteRole
-        if (requestedRole === 'admin') shell = 'passenger'
-        else if (requestedRole === 'driver') shell = 'driver'
-        else if (requestedRole === 'passenger') shell = 'passenger'
-        else if (requestedRole === 'partner' || serverRole === 'partner') shell = 'partner'
-        else shell = resolveAppRouteRoleFromSession(serverRole, null)
-        syncAppRouteRole(shell)
+        const allowed = shellsForSessionRole(serverRole)
+        const requested = requestedRole as AppRouteRole
+        const shell = allowed.includes(requested)
+          ? requested
+          : resolveAppRouteRoleFromSession(serverRole, null)
+        syncAppRouteRole(shell, serverRole)
       }
       setTokens({
         passenger: token,
@@ -486,7 +496,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSessionAccessToken(token)
       setSessionUserRole(serverRole)
       setSessionUserId(res.user_id)
-      syncAppRouteRole('passenger')
+      syncAppRouteRole('passenger', serverRole)
       setTokens({
         passenger: token,
         driver: token,
@@ -568,7 +578,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setRole = useCallback(
     (r: Role) => {
-      if (r === 'passenger' || r === 'driver' || r === 'partner') syncAppRouteRole(r)
+      if (r === 'passenger' || r === 'driver' || r === 'partner' || r === 'admin' || r === 'super_admin') {
+        syncAppRouteRole(r === 'super_admin' ? 'admin' : r)
+      }
     },
     [syncAppRouteRole]
   )

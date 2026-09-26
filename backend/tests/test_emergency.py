@@ -316,7 +316,7 @@ def test_emergency_audits_opened_call_shared(client: TestClient) -> None:
         db.close()
 
 
-def test_admin_role_forbidden(client: TestClient) -> None:
+def test_admin_role_forbidden_on_someone_elses_trip(client: TestClient) -> None:
     db = SessionLocal()
     try:
         admin = User(
@@ -325,11 +325,19 @@ def test_admin_role_forbidden(client: TestClient) -> None:
             phone=unique_test_phone(),
             status=UserStatus.active,
         )
+        passenger = _make_passenger(db)
         db.add(admin)
         db.commit()
+        trip = _make_trip(db, passenger=passenger, driver=None, status=TripStatus.accepted)
         _auth(admin, Role.admin)
-        r = client.get(f"/emergency/trips/{uuid.uuid4()}/snapshot")
+        r = client.get(f"/emergency/trips/{trip.id}/snapshot")
         assert r.status_code == 403
+        assert r.json()["detail"] == "forbidden_trip_access"
+
+        own = _make_trip(db, passenger=admin, driver=None, status=TripStatus.accepted)
+        own_res = client.get(f"/emergency/trips/{own.id}/snapshot")
+        assert own_res.status_code == 200, own_res.text
+        assert own_res.json()["role_view"] == "passenger"
     finally:
         _clear_auth()
         db.close()

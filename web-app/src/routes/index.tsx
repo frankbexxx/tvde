@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactNode } from 'react'
+import { useEffect, lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { GoogleOAuthCallback } from '../features/auth/GoogleOAuthCallback'
 import { LegalAcceptanceBoundary } from '../features/auth/LegalAcceptanceGate'
@@ -6,7 +6,9 @@ import { LoginScreen } from '../features/auth/LoginScreen'
 import { AppDownloadLanding } from '../features/public/AppDownloadLanding'
 import { AppDownloadRedirect } from '../features/public/AppDownloadRedirect'
 import { AppHeaderBar } from '../components/layout/AppHeaderBar'
-import { isBackofficeStaffRole, useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/AuthContext'
+import type { AppRouteRole } from '../context/authBootstrap'
+import { guardRedirect } from './routeGuard'
 import { Spinner } from '../components/ui/Spinner'
 
 const PassengerDashboard = lazy(() =>
@@ -62,54 +64,45 @@ function withRouteSuspense(node: ReactNode) {
   return <Suspense fallback={<RouteChunkFallback />}>{node}</Suspense>
 }
 
+function ShellSync({ shell, children }: { shell: AppRouteRole; children: ReactNode }) {
+  const { appRouteRole, setAppRouteRole } = useAuth()
+  useEffect(() => {
+    if (appRouteRole !== shell) setAppRouteRole(shell)
+  }, [appRouteRole, setAppRouteRole, shell])
+  return <>{children}</>
+}
+
 function RootRedirect() {
-  const { appRouteRole, sessionRole } = useAuth()
+  const { appRouteRole } = useAuth()
   const { search } = useLocation()
-  if (isBackofficeStaffRole(sessionRole)) return <Navigate to={`/admin${search}`} replace />
-  if (sessionRole === 'partner') return <Navigate to="/partner" replace />
+  if (appRouteRole === 'admin') return <Navigate to={`/admin${search}`} replace />
   if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
-  return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
+  if (appRouteRole === 'driver') return <Navigate to="/driver" replace />
+  return <Navigate to="/passenger" replace />
 }
 
 function PassengerOnly({ children }: { children: ReactNode }) {
-  const { appRouteRole, sessionRole } = useAuth()
-  if (isBackofficeStaffRole(sessionRole)) {
-    return <Navigate to="/admin" replace />
-  }
-  if (appRouteRole === 'partner' && sessionRole === 'partner') {
-    return <Navigate to="/partner" replace />
-  }
-  /** Só enviar para /driver se o JWT for mesmo de motorista (evita 403 e loop com DriverOnly). */
-  if (appRouteRole === 'driver' && sessionRole === 'driver') {
-    return <Navigate to="/driver" replace />
-  }
-  return <>{children}</>
+  return <ShellSync shell="passenger">{children}</ShellSync>
 }
 
 function DriverOnly({ children }: { children: ReactNode }) {
-  const { appRouteRole, sessionRole } = useAuth()
-  if (appRouteRole === 'passenger') return <Navigate to="/passenger" replace />
-  /** Em BETA o mesmo token preenche passenger/driver/admin; só motoristas podem usar estas APIs. */
-  if (sessionRole !== 'driver') {
-    if (isBackofficeStaffRole(sessionRole)) return <Navigate to="/admin" replace />
-    if (sessionRole === 'partner') return <Navigate to="/partner" replace />
-    return <Navigate to="/passenger" replace />
-  }
-  return <>{children}</>
+  const { sessionRole } = useAuth()
+  const redirect = guardRedirect('driver', sessionRole)
+  if (redirect) return <Navigate to={redirect} replace />
+  return <ShellSync shell="driver">{children}</ShellSync>
 }
 
 function AdminDeniedRedirect() {
-  const { appRouteRole, sessionRole } = useAuth()
-  if (sessionRole === 'partner') return <Navigate to="/partner" replace />
-  if (appRouteRole === 'partner') return <Navigate to="/partner" replace />
-  return <Navigate to={appRouteRole === 'driver' ? '/driver' : '/passenger'} replace />
+  const { sessionRole } = useAuth()
+  return <Navigate to={guardRedirect('admin', sessionRole) ?? '/passenger'} replace />
 }
 
 function PartnerGate({ children }: { children: React.ReactNode }) {
-  const { isPartnerUser, token } = useAuth()
+  const { sessionRole, token } = useAuth()
   if (!token) return <Navigate to="/passenger" replace />
-  if (!isPartnerUser) return <Navigate to="/passenger" replace />
-  return <>{children}</>
+  const redirect = guardRedirect('partner', sessionRole)
+  if (redirect) return <Navigate to={redirect} replace />
+  return <ShellSync shell="partner">{children}</ShellSync>
 }
 
 export function AppRoutes() {
@@ -221,7 +214,7 @@ export function AppRoutes() {
                 path="/admin"
                 element={
                   isAdmin ? (
-                    withRouteSuspense(<AdminDashboard />)
+                    <ShellSync shell="admin">{withRouteSuspense(<AdminDashboard />)}</ShellSync>
                   ) : (
                     <AdminDeniedRedirect />
                   )

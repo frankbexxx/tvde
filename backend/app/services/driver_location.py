@@ -363,44 +363,26 @@ def get_driver_location_for_trip(
     # Matching fallbacks ON: relax strict ownership for multi-device testing.
     # When OFF: keep strict passenger/driver ownership rules.
     matching_fallbacks = settings.beta_matching_fallbacks_enabled()
+    is_passenger_owner = str(trip.passenger_id) == str(user_id)
+    is_assigned_driver = (
+        role == Role.driver
+        and trip.driver_id is not None
+        and str(trip.driver_id) == str(user_id)
+    )
     if not matching_fallbacks:
-        if role == Role.passenger:
-            if str(trip.passenger_id) != str(user_id):
-                logger.info(
-                    "get_driver_location_for_trip: forbidden passenger access",
-                    extra={
-                        "trip_id": str(trip_id),
-                        "user_id": str(user_id),
-                        "role": role.value,
-                        "trip_passenger_id": str(trip.passenger_id),
-                        "trip_driver_id": (
-                            str(trip.driver_id) if trip.driver_id else None
-                        ),
-                    },
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="forbidden_trip_access",
-                )
-        elif role == Role.driver:
-            if not trip.driver_id or str(trip.driver_id) != str(user_id):
-                logger.info(
-                    "get_driver_location_for_trip: forbidden driver access",
-                    extra={
-                        "trip_id": str(trip_id),
-                        "user_id": str(user_id),
-                        "role": role.value,
-                        "trip_passenger_id": str(trip.passenger_id),
-                        "trip_driver_id": (
-                            str(trip.driver_id) if trip.driver_id else None
-                        ),
-                    },
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="forbidden_trip_access",
-                )
-        else:
+        if not is_passenger_owner and not is_assigned_driver:
+            logger.info(
+                "get_driver_location_for_trip: forbidden access",
+                extra={
+                    "trip_id": str(trip_id),
+                    "user_id": str(user_id),
+                    "role": role.value,
+                    "trip_passenger_id": str(trip.passenger_id),
+                    "trip_driver_id": (
+                        str(trip.driver_id) if trip.driver_id else None
+                    ),
+                },
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="forbidden_trip_access",

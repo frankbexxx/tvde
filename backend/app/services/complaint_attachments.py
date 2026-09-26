@@ -237,5 +237,5 @@ def complaint_for_admin(db: Session, public_reference: str) -> Complaint:
 
 
 def assert_author_role(role: Role) -> None:
-    if role not in (Role.passenger, Role.driver):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden_role")
+    """O autor já foi autenticado. O papel elevado também pode anexar à própria queixa."""
+    _ = role

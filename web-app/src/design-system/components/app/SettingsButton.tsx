@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -17,6 +16,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { AppAppearanceSettings } from "@/features/settings/AppAppearanceSettings"
+import { ContextSwitch } from "@/features/settings/ContextSwitch"
 import { useTranslation } from "react-i18next"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useAuth } from "@/context/AuthContext"
@@ -34,7 +34,6 @@ type ConfigView = "main" | "logs"
 
 export function SettingsButton() {
   const { t } = useTranslation("settings")
-  const { t: tc } = useTranslation("common")
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<ConfigView>("main")
   const isMobile = useMediaQuery("(max-width: 639px)")
@@ -49,8 +48,7 @@ export function SettingsButton() {
       window.removeEventListener(DRIVER_OPEN_ACTIVITY_LOG_EVENT, onOpenActivity)
     }
   }, [])
-  const { appRouteRole, setAppRouteRole, isAdmin, sessionRole } = useAuth()
-  const navigate = useNavigate()
+  const { appRouteRole } = useAuth()
   const { passengerActiveTripId } = useActiveTrip()
   const { notifyAfterDevMutation } = useDevToolsCallbacks()
 
@@ -66,44 +64,10 @@ export function SettingsButton() {
     <div className="mt-4 flex flex-col gap-4">
       <p className="text-xs text-muted-foreground leading-snug">{t("accountHint")}</p>
       <AppAppearanceSettings />
-      <div>
-        <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">{t("appMode")}</p>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant={appRouteRole === "passenger" ? "default" : "outline"}
-            className="flex-1 font-medium"
-            onClick={() => {
-              setAppRouteRole("passenger")
-              navigate("/passenger", { replace: true })
-              setOpen(false)
-            }}
-          >
-            {tc("rolePassenger")}
-          </Button>
-          <Button
-            type="button"
-            variant={appRouteRole === "driver" ? "default" : "outline"}
-            className="flex-1 font-medium"
-            disabled={sessionRole !== "driver"}
-            title={sessionRole !== "driver" ? t("driverRoleRequired") : undefined}
-            onClick={() => {
-              setAppRouteRole("driver")
-              navigate("/driver", { replace: true })
-              setOpen(false)
-            }}
-          >
-            {tc("roleDriver")}
-          </Button>
+        <div>
+          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">{t("appMode")}</p>
+          <ContextSwitch onChosen={() => setOpen(false)} />
         </div>
-      </div>
-      {isAdmin ? (
-        <Button type="button" variant="outline" className="w-full font-medium" asChild>
-          <Link to="/admin" onClick={() => setOpen(false)}>
-            {t("adminPanel")}
-          </Link>
-        </Button>
-      ) : null}
       <Button
         type="button"
         variant="outline"
@@ -151,6 +115,7 @@ export function SettingsButton() {
       variant="ghost"
       size="icon"
       aria-label={t("settingsAria")}
+      data-testid="open-settings"
       className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
     >
       <SettingsIcon />

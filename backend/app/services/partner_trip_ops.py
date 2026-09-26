@@ -88,6 +88,11 @@ def partner_reassign_trip_driver(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="same_driver",
         )
+    if new_driver_user_id == t.passenger_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="cannot_accept_own_trip",
+        )
     t.driver_id = new_driver_user_id
     stamp_trip_activity_context(db, t, new_d)
     db.commit()

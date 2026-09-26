@@ -3,6 +3,7 @@ import {
   isAdminFromSessionRole,
   resolveAppRouteRoleFromSession,
   resolveAuthBootstrapMode,
+  shellsForSessionRole,
 } from './authBootstrap'
 import { isBackofficeStaffRole } from './authRoles'
 
@@ -93,24 +94,40 @@ describe('isAdminFromSessionRole / isBackofficeStaffRole', () => {
   })
 })
 
+describe('shellsForSessionRole', () => {
+  it('cada papel vê só os contextos permitidos', () => {
+    expect(shellsForSessionRole('passenger')).toEqual(['passenger'])
+    expect(shellsForSessionRole('driver')).toEqual(['passenger', 'driver'])
+    expect(shellsForSessionRole('partner')).toEqual(['passenger', 'partner'])
+    expect(shellsForSessionRole('admin')).toEqual(['passenger', 'admin'])
+    expect(shellsForSessionRole('super_admin')).toEqual(['passenger', 'admin'])
+  })
+})
+
 describe('resolveAppRouteRoleFromSession', () => {
-  it('partner JWT → shell partner (ignora saved driver)', () => {
+  it('partner JWT → shell partner por omissão; permite saved passenger', () => {
     expect(resolveAppRouteRoleFromSession('partner', 'driver')).toBe('partner')
+    expect(resolveAppRouteRoleFromSession('partner', null)).toBe('partner')
+    expect(resolveAppRouteRoleFromSession('partner', 'passenger')).toBe('passenger')
   })
 
   it('driver JWT → shell driver por omissão; permite saved passenger', () => {
     expect(resolveAppRouteRoleFromSession('driver', null)).toBe('driver')
     expect(resolveAppRouteRoleFromSession('driver', 'passenger')).toBe('passenger')
+    expect(resolveAppRouteRoleFromSession('driver', 'admin')).toBe('driver')
   })
 
-  it('passenger JWT → shell passenger (não herda driver/partner)', () => {
+  it('passenger JWT → shell passenger (não herda driver/partner/admin)', () => {
     expect(resolveAppRouteRoleFromSession('passenger', 'driver')).toBe('passenger')
     expect(resolveAppRouteRoleFromSession('passenger', 'partner')).toBe('passenger')
+    expect(resolveAppRouteRoleFromSession('passenger', 'admin')).toBe('passenger')
   })
 
-  it('admin/super_admin → passenger ou saved driver', () => {
-    expect(resolveAppRouteRoleFromSession('admin', null)).toBe('passenger')
-    expect(resolveAppRouteRoleFromSession('super_admin', 'driver')).toBe('driver')
-    expect(resolveAppRouteRoleFromSession('admin', 'partner')).toBe('passenger')
+  it('admin/super_admin → admin por omissão; passenger gravado mantém-se', () => {
+    expect(resolveAppRouteRoleFromSession('admin', null)).toBe('admin')
+    expect(resolveAppRouteRoleFromSession('super_admin', null)).toBe('admin')
+    expect(resolveAppRouteRoleFromSession('admin', 'passenger')).toBe('passenger')
+    expect(resolveAppRouteRoleFromSession('super_admin', 'driver')).toBe('admin')
+    expect(resolveAppRouteRoleFromSession('admin', 'partner')).toBe('admin')
   })
 })

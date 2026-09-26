@@ -16,6 +16,8 @@
   "rolePassenger": "Passageiro",
   "roleDriver": "Motorista",
   "rolePartner": "Parceiro",
+  "roleAdmin": "Admin",
+  "roleSuperAdmin": "Admin / Superadmin",
   "roleStaff": "Staff",
   "unexpectedError": "Resposta de erro inesperada.",
   "appCrashTitle": "Ocorreu um erro inesperado.",

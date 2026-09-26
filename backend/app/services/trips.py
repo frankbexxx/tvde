@@ -928,6 +928,15 @@ def rate_trip_as_driver(
     )
 
 
+def _refuse_self_passenger_driver(trip: Trip, driver_id: str) -> None:
+    """Defesa: o passageiro da viagem não a conduz."""
+    if str(trip.passenger_id) == str(driver_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="cannot_accept_own_trip",
+        )
+
+
 def accept_trip(
     *,
     db: Session,
@@ -954,6 +963,7 @@ def accept_trip(
     ).scalar_one_or_none()
     if not trip:
         _raise_not_found()
+    _refuse_self_passenger_driver(trip, driver_id)
     if trip.status != TripStatus.assigned:
         log_event(
             "trip_state_guard_blocked",
@@ -1157,6 +1167,7 @@ def accept_offer(
     ).scalar_one_or_none()
     if not trip:
         _raise_not_found()
+    _refuse_self_passenger_driver(trip, driver_id)
     if trip.status != TripStatus.requested:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -1406,7 +1417,11 @@ def list_offers_for_driver(
         .where(TripOffer.expires_at > now)
         .where(Trip.status == TripStatus.requested)
     ).all()
-    return [(r[0], r[1]) for r in rows]
+    return [
+        (offer, trip)
+        for offer, trip in rows
+        if str(trip.passenger_id) != str(driver_id)
+    ]
 
 
 def assign_trip(
@@ -1517,6 +1532,8 @@ def list_available_trips(
     if driver_loc is not None:
         candidates: list[tuple[Trip, float]] = []
         for trip in assigned_trips:
+            if str(trip.passenger_id) == str(driver_id):
+                continue
             dist_km = haversine_km(
                 float(driver_loc.lat),
                 float(driver_loc.lng),
@@ -1533,6 +1550,8 @@ def list_available_trips(
                 result.append((trip, None))
     else:
         for trip in assigned_trips:
+            if str(trip.passenger_id) == str(driver_id):
+                continue
             if driver_matches_trip_fare_and_pet(
                 driver, trip
             ) and driver_matches_trip_capacity(db, driver, trip):

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ErrorBanner } from '../../components/feedback/ErrorBanner'
+import { AppRouteModeSwitch } from '../settings/AppRouteModeSwitch'
 import { isBackofficeStaffRole, useAuth } from '../../context/AuthContext'
 import {
   adminErrDetail,
@@ -767,6 +768,9 @@ export function AdminDashboard() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
+      <div className="mb-4">
+        <AppRouteModeSwitch />
+      </div>
       <nav
         className="flex flex-wrap gap-2 mb-2 pb-1"
         aria-label={t('groupsAria')}

@@ -33,23 +33,26 @@ export function resolveAuthBootstrapMode(env: AuthBootstrapEnv): AuthBootstrapMo
   return 'dev_tokens'
 }
 
+export function shellsForSessionRole(sessionRole: Role | string | undefined): AppRouteRole[] {
+  if (sessionRole === 'driver') return ['passenger', 'driver']
+  if (sessionRole === 'partner') return ['passenger', 'partner']
+  if (isBackofficeStaffRole(sessionRole)) return ['passenger', 'admin']
+  return ['passenger']
+}
+
 /**
- * Shell passageiro/motorista/partner a partir do papel real do JWT.
- * O valor em `tvde_app_route_role` só se aplica quando é compatível com o role.
+ * Shell a partir do papel real do JWT.
+ * O valor gravado só se aplica quando esse papel o permite. Não altera `User.role`.
  */
 export function resolveAppRouteRoleFromSession(
   sessionRole: Role | string | undefined,
   savedShell: AppRouteRole | null
 ): AppRouteRole {
-  const r = sessionRole ?? 'passenger'
-  if (r === 'partner') return 'partner'
-  if (r === 'driver') {
-    return savedShell === 'passenger' ? 'passenger' : 'driver'
-  }
-  if (isBackofficeStaffRole(r)) {
-    return savedShell === 'driver' ? 'driver' : 'passenger'
-  }
-  // passenger (e desconhecidos): nunca herdar driver/partner de sessão anterior
+  const allowed = shellsForSessionRole(sessionRole)
+  if (savedShell && allowed.includes(savedShell)) return savedShell
+  if (sessionRole === 'driver') return 'driver'
+  if (sessionRole === 'partner') return 'partner'
+  if (isBackofficeStaffRole(sessionRole)) return 'admin'
   return 'passenger'
 }
 

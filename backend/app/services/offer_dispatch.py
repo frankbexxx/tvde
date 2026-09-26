@@ -159,6 +159,24 @@ def has_eligible_driver_for_assigned_pool(db: Session, trip: Trip) -> bool:
     return bool(category_matched)
 
 
+def _without_trip_passenger(
+    trip: Trip, ranked: list[tuple[Driver, float]]
+) -> list[tuple[Driver, float]]:
+    """O passageiro da viagem não recebe oferta, mesmo que também seja motorista."""
+    passenger_id = str(trip.passenger_id)
+    kept: list[tuple[Driver, float]] = []
+    for driver, dist_km in ranked:
+        if str(driver.user_id) == passenger_id:
+            log_event(
+                "offer_dispatch_skip_self_passenger",
+                trip_id=str(trip.id),
+                driver_id=passenger_id,
+            )
+            continue
+        kept.append((driver, dist_km))
+    return kept
+
+
 def create_offers_for_trip(
     *,
     db: Session,
@@ -250,6 +268,7 @@ def create_offers_for_trip(
 
     # PET-4: soft-filter by passenger capacity (flag OFF = no-op).
     category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
+    category_matched = _without_trip_passenger(trip, category_matched)
 
     selected = category_matched[:top_n]
 
@@ -487,6 +506,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         category_matched = _filter_by_inactive_vehicle(db, trip, category_matched)
         category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
         category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
+        category_matched = _without_trip_passenger(trip, category_matched)
         selected_redispatch = category_matched[:top_n]
         for driver, dist_km in selected_redispatch:
             if _has_active_pending_offer(
