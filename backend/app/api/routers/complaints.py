@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
-from app.models.enums import Role
 from app.schemas.complaints import (
     ComplaintAttachmentItem,
     ComplaintCreateRequest,
@@ -27,8 +26,6 @@ async def create_complaint(
     user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ComplaintUserItem:
-    if user.role not in (Role.passenger, Role.driver):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden_role")
     complaint = complaints_svc.create_complaint(
         db,
         user_id=user.user_id,
@@ -45,8 +42,6 @@ async def list_my_complaints(
     user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> list[ComplaintUserItem]:
-    if user.role not in (Role.passenger, Role.driver):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden_role")
     rows = complaints_svc.list_own_complaints(db, user_id=user.user_id)
     return [complaints_svc.to_user_item(c) for c in rows]
 
@@ -57,8 +52,6 @@ async def get_my_complaint(
     user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> ComplaintUserItem:
-    if user.role not in (Role.passenger, Role.driver):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden_role")
     complaint = complaints_svc.get_own_complaint(
         db, user_id=user.user_id, public_reference=public_reference
     )

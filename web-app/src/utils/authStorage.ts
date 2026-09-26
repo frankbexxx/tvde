@@ -1,6 +1,6 @@
 /** Chaves alinhadas com A020 (sem cookies). */
 
-/** Papel da app (UI): passageiro, motorista ou partner — definido no login, não pela URL. */
+/** Papel da app (UI): contexto de navegação, não o `User.role`. */
 export const LS_APP_ROUTE_ROLE = 'tvde_app_route_role'
 /** Último telemóvel usado no login BETA (sincronizado com LoginScreen). */
 export const LS_LAST_PHONE = 'tvde_last_phone'
@@ -32,12 +32,12 @@ export function setStoredAccessToken(token: string): void {
   localStorage.removeItem(LS_TOKEN_LEGACY)
 }
 
-export type AppRouteRoleStored = 'passenger' | 'driver' | 'partner'
+export type AppRouteRoleStored = 'passenger' | 'driver' | 'partner' | 'admin'
 
 /** Valor em `localStorage` sem fallback (null = nunca gravado). */
 export function getRawStoredAppRouteRole(): AppRouteRoleStored | null {
   const r = localStorage.getItem(LS_APP_ROUTE_ROLE)
-  return r === 'driver' || r === 'passenger' || r === 'partner' ? r : null
+  return r === 'driver' || r === 'passenger' || r === 'partner' || r === 'admin' ? r : null
 }
 
 export function getStoredAppRouteRole(): AppRouteRoleStored {

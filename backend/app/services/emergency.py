@@ -69,12 +69,6 @@ def get_emergency_snapshot(
     trip_id: str,
 ) -> EmergencySnapshotResponse:
     """Return a safe emergency snapshot for the caller's own eligible trip."""
-    if role not in (Role.passenger, Role.driver):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="forbidden_role",
-        )
-
     trip_uuid = _parse_trip_id(trip_id)
     trip = db.execute(select(Trip).where(Trip.id == trip_uuid)).scalar_one_or_none()
     if trip is None:
@@ -84,28 +78,31 @@ def get_emergency_snapshot(
         )
 
     uid = str(user_id)
-    if role == Role.passenger:
-        if str(trip.passenger_id) != uid:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="forbidden_trip_access",
-            )
+    if str(trip.passenger_id) == uid:
+        view = Role.passenger
+    elif (
+        role == Role.driver
+        and trip.driver_id is not None
+        and str(trip.driver_id) == uid
+    ):
+        view = Role.driver
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="forbidden_trip_access",
+        )
+
+    if view == Role.passenger:
         if trip.status not in PASSENGER_ELIGIBLE:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="trip_not_eligible_for_emergency",
             )
-    else:
-        if not trip.driver_id or str(trip.driver_id) != uid:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="forbidden_trip_access",
-            )
-        if trip.status not in DRIVER_ELIGIBLE:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="trip_not_eligible_for_emergency",
-            )
+    elif trip.status not in DRIVER_ELIGIBLE:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="trip_not_eligible_for_emergency",
+        )
 
     vehicle_plate: str | None = None
     driver_display_name: str | None = None
@@ -120,7 +117,7 @@ def get_emergency_snapshot(
         if driver and driver.active_vehicle is not None:
             vehicle_plate = driver.active_vehicle.plate
 
-        if role == Role.passenger:
+        if view == Role.passenger:
             driver_user = db.execute(
                 select(User).where(User.id == trip.driver_id)
             ).scalar_one_or_none()
@@ -153,9 +150,9 @@ def get_emergency_snapshot(
         destination_lat=float(trip.destination_lat),
         destination_lng=float(trip.destination_lng),
         vehicle_plate=vehicle_plate,
-        driver_display_name=driver_display_name if role == Role.passenger else None,
+        driver_display_name=driver_display_name if view == Role.passenger else None,
         location=location,
-        role_view=role.value,
+        role_view=view.value,
     )
 
 

@@ -16,6 +16,8 @@
   "rolePassenger": "Passenger",
   "roleDriver": "Driver",
   "rolePartner": "Partner",
+  "roleAdmin": "Admin",
+  "roleSuperAdmin": "Admin / Superadmin",
   "roleStaff": "Staff",
   "unexpectedError": "Unexpected error response.",
   "appCrashTitle": "Something unexpected went wrong.",

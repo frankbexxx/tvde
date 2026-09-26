@@ -165,7 +165,7 @@ def _assert_trip_ownership(
     if trip is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="trip_not_found")
     uid = str(user_id)
-    if role == Role.passenger:
+    if role == Role.passenger or str(trip.passenger_id) == uid:
         if str(trip.passenger_id) != uid:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -280,22 +280,20 @@ def create_complaint(
     description: str,
     trip_id: uuid.UUID | None = None,
 ) -> Complaint:
-    if role not in (Role.passenger, Role.driver):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden_role")
-
     text = (description or "").strip()
     if not text or len(text) > DESCRIPTION_MAX:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_description")
 
     uid = _parse_uuid(user_id, detail="user_not_found")
-    if trip_id is not None:
-        _assert_trip_ownership(db, trip_id=trip_id, user_id=uid, role=role)
-
     complainant_role = (
-        ComplaintComplainantRole.passenger
-        if role == Role.passenger
-        else ComplaintComplainantRole.driver
+        ComplaintComplainantRole.driver if role == Role.driver else ComplaintComplainantRole.passenger
     )
+    if trip_id is not None:
+        trip = _assert_trip_ownership(db, trip_id=trip_id, user_id=uid, role=role)
+        if str(trip.passenger_id) == str(uid):
+            complainant_role = ComplaintComplainantRole.passenger
+        else:
+            complainant_role = ComplaintComplainantRole.driver
     submitted_at = _now()
     retention_until = compute_retention_until(submitted_at)
 
