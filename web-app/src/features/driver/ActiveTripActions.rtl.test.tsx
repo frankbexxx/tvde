@@ -34,7 +34,7 @@ vi.mock('./useDriverActiveTripPoll', () => ({
 }))
 
 vi.mock('../../utils/openDriverExternalNav', () => ({
-  openDriverExternalNav: vi.fn(() => true),
+  openDriverExternalNav: vi.fn(async () => true),
   driverNavAppLabel: vi.fn(() => 'Waze'),
 }))
 

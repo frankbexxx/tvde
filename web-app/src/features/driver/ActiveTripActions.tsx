@@ -172,14 +172,22 @@ export function ActiveTripActions({
   const openNavForPhase = useCallback(() => {
     const target =
       displayStatus === 'ongoing' ? destinationCoords : pickupCoords
-    if (!target) return
-    openDriverExternalNav(target.lat, target.lng)
     const phaseLabel =
       displayStatus === 'ongoing' ? t('actions.destinationPhase') : t('actions.pickupPhase')
-    sonnerToast.message(
-      t('actions.openingNav', { app: driverNavAppLabel(), phase: phaseLabel }),
-      { duration: 3000 }
-    )
+    if (!target) {
+      sonnerToast.error(t('actions.navCoordsMissing'))
+      return
+    }
+    void Promise.resolve(openDriverExternalNav(target.lat, target.lng)).then((opened) => {
+      if (!opened) {
+        sonnerToast.error(t('actions.navOpenFailed'))
+        return
+      }
+      sonnerToast.message(
+        t('actions.openingNav', { app: driverNavAppLabel(), phase: phaseLabel }),
+        { duration: 3000 }
+      )
+    })
   }, [destinationCoords, displayStatus, pickupCoords, t])
 
   const run = async (

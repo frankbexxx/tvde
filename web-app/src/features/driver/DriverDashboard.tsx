@@ -99,6 +99,7 @@ import { EmergencySosButton, EmergencySosPanel } from '../emergency/EmergencySos
 import { isDriverEmergencyStatus } from '../emergency/emergencyShare'
 import { DriverInboxPanel } from './DriverInboxPanel'
 import { FilePickerButton } from '../../components/forms/FilePickerButton'
+import { DRIVER_DOC_ACCEPT, validateDriverDocumentFile } from './driverDocumentFile'
 import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
 import {
   isDriverOfferExpired,
@@ -1230,17 +1231,24 @@ export function DriverDashboard() {
           },
         }
         if (getDriverNavAutoPickupOnAccept()) {
-          openDriverExternalNav(
-            availableForFallback.origin_lat,
-            availableForFallback.origin_lng
-          )
-          sonnerToast.message(
-            t('actions.openingNav', {
-              app: driverNavAppLabel(),
-              phase: t('actions.pickupPhase'),
-            }),
-            { duration: 3000 }
-          )
+          void Promise.resolve(
+            openDriverExternalNav(
+              availableForFallback.origin_lat,
+              availableForFallback.origin_lng
+            )
+          ).then((opened) => {
+            if (!opened) {
+              sonnerToast.error(t('actions.navOpenFailed'))
+              return
+            }
+            sonnerToast.message(
+              t('actions.openingNav', {
+                app: driverNavAppLabel(),
+                phase: t('actions.pickupPhase'),
+              }),
+              { duration: 3000 }
+            )
+          })
         }
       }
       // Fase 1 mock: MOCK_DRIVER_START → pickup (só DEV + mock, após ACEITAR).
@@ -4320,11 +4328,20 @@ function DriverOperationsMenu({
                           : t('opsMenu.docs.uploadLabelReplace')}
                       </p>
                       <FilePickerButton
-                        accept=".pdf,image/*"
+                        accept={DRIVER_DOC_ACCEPT}
                         className="mt-1"
                         disabled={!token}
                         onFileSelected={(file) => {
                           if (!token) return
+                          const invalid = validateDriverDocumentFile(file)
+                          if (invalid === 'type') {
+                            sonnerToast.error(t('opsMenu.docs.invalidFileType'))
+                            return
+                          }
+                          if (invalid === 'size') {
+                            sonnerToast.error(t('opsMenu.docs.fileTooLarge'))
+                            return
+                          }
                           void uploadDriverDocument(token, doc, file)
                             .then((server) => {
                               sonnerToast.success(t('opsMenu.docs.uploadSuccess'))
