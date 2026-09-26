@@ -63,6 +63,25 @@ export async function login(
   })
 }
 
+export async function linkGoogleAccount(body: {
+  idToken: string
+  nonce?: string
+  phone: string
+  password: string
+  acceptLegal: boolean
+}): Promise<TokenResponse> {
+  return apiFetch<TokenResponse>('/auth/google/link', {
+    method: 'POST',
+    body: JSON.stringify({
+      id_token: body.idToken,
+      nonce: body.nonce,
+      phone: body.phone,
+      password: body.password,
+      accept_legal: body.acceptLegal,
+    }),
+  })
+}
+
 export async function completeGoogleOnboarding(body: {
   idToken: string
   nonce?: string

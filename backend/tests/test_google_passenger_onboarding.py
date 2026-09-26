@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.auth.passwords import hash_password
 from app.api.deps import UserContext, get_current_user
 from app.api.routers import auth as auth_module
 from app.core.config import settings
@@ -214,8 +215,11 @@ def test_onboarding_rejects_duplicate_phone_invalid_name_and_missing_acceptance(
 
     clash = _complete(client, phone=taken)
     assert clash.status_code == 409
-    assert clash.json()["detail"] == "phone_already_used"
+    assert clash.json()["detail"]["code"] == "existing_account_link_conflict"
+    assert "proof" not in clash.json()["detail"]
     assert "Outra" not in clash.text
+    assert "admin" not in clash.text.lower()
+    assert "super_admin" not in clash.text
 
     db.expire_all()
     user = db.execute(select(User).where(User.oauth_google_sub == sub)).scalar_one()
@@ -359,3 +363,279 @@ def test_admin_queue_hides_google_onboarding_and_keeps_drivers(
     assert approved.json()["detail"] == "google_onboarding_not_admin_approvable"
     db.refresh(google_user)
     assert google_user.status == UserStatus.pending
+
+
+def _link(client: TestClient, *, phone: str, password: str, accept_legal: bool = True) -> object:
+    return client.post(
+        "/auth/google/link",
+        json={
+            "id_token": "header.payload.signature-not-logged",
+            "nonce": RAW_NONCE,
+            "phone": phone,
+            "password": password,
+            "accept_legal": accept_legal,
+        },
+    )
+
+
+@pytest.mark.parametrize("role", [Role.admin, Role.super_admin])
+def test_privileged_email_match_requires_password_before_link(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch, role: Role
+) -> None:
+    sub, email = _ids()
+    phone = unique_test_phone()
+    staff = User(
+        role=role,
+        name="Staff",
+        phone=phone,
+        email=email,
+        status=UserStatus.active,
+        password_hash=hash_password("staff-password-1"),
+    )
+    db.add(staff)
+    db.commit()
+    staff_id = staff.id
+    _patch_claims(monkeypatch, _claims(sub, email, name="Staff"))
+    logged = _login(client, sub=sub, email=email)
+    assert logged.status_code == 409, logged.text
+    detail = logged.json()["detail"]
+    assert detail == {"code": "existing_account_link_required", "proof": "password"}
+    assert "access_token" not in logged.text
+    assert email not in logged.text
+    assert "super_admin" not in logged.text
+    assert "admin" not in logged.text
+    db.expire_all()
+    staff = db.get(User, staff_id)
+    assert staff is not None
+    assert staff.oauth_google_sub is None
+    assert staff.role == role
+    assert staff.phone == phone
+    assert db.execute(select(User).where(User.oauth_google_sub == sub)).scalar_one_or_none() is None
+
+    wrong = _link(client, phone=phone, password="not-the-password")
+    assert wrong.status_code == 401
+    assert wrong.json()["detail"] == "invalid_credentials"
+    db.expire_all()
+    staff = db.get(User, staff_id)
+    assert staff is not None
+    assert staff.oauth_google_sub is None
+    assert staff.role == role
+
+    linked = _link(client, phone=phone, password="staff-password-1")
+    assert linked.status_code == 200, linked.text
+    assert linked.json()["role"] == role.value
+    assert linked.json()["access_token"]
+    db.expire_all()
+    staff = db.get(User, staff_id)
+    assert staff is not None
+    assert staff.role == role
+    assert staff.phone == phone
+    assert staff.email == email
+    assert staff.oauth_google_sub == sub
+    holders = db.execute(select(User).where(User.oauth_google_sub == sub)).scalars().all()
+    assert [row.id for row in holders] == [staff.id]
+
+    again = _login(client, sub=sub, email=email)
+    assert again.status_code == 200, again.text
+    assert again.json()["role"] == role.value
+    assert again.json()["access_token"]
+
+
+@pytest.mark.parametrize("role", [Role.passenger, Role.driver, Role.partner])
+def test_verified_email_still_autolinks_non_privileged_roles(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch, role: Role
+) -> None:
+    sub, email = _ids()
+    phone = unique_test_phone()
+    user = User(
+        role=role,
+        name="Conta",
+        phone=phone,
+        email=email,
+        status=UserStatus.active,
+        password_hash=hash_password("staff-password-1"),
+    )
+    db.add(user)
+    db.commit()
+    user_id = user.id
+    _patch_claims(monkeypatch, _claims(sub, email, name="Conta"))
+    logged = _login(client, sub=sub, email=email)
+    assert logged.status_code == 200, logged.text
+    assert logged.json()["role"] == role.value
+    assert logged.json()["access_token"]
+    db.expire_all()
+    rows = db.execute(select(User).where(User.email == email)).scalars().all()
+    assert len(rows) == 1
+    assert rows[0].id == user_id
+    assert rows[0].role == role
+    assert rows[0].phone == phone
+    assert rows[0].oauth_google_sub == sub
+
+
+def test_blocked_or_demo_privileged_email_is_not_linked(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sub, email = _ids()
+    blocked = User(
+        role=Role.admin,
+        name="Blocked",
+        phone=unique_test_phone(),
+        email=email,
+        status=UserStatus.blocked,
+        password_hash=hash_password("staff-password-1"),
+    )
+    db.add(blocked)
+    db.commit()
+    blocked_id = blocked.id
+    _patch_claims(monkeypatch, _claims(sub, email))
+    refused = _login(client, sub=sub, email=email)
+    assert refused.status_code == 403
+    assert refused.json()["detail"] == "blocked"
+    db.expire_all()
+    blocked = db.get(User, blocked_id)
+    assert blocked is not None
+    assert blocked.oauth_google_sub is None
+
+    demo_sub, demo_email = _ids()
+    demo = User(
+        role=Role.super_admin,
+        name="Demo",
+        phone=unique_test_phone(),
+        email=demo_email,
+        status=UserStatus.active,
+        is_test_account=True,
+        password_hash=hash_password("staff-password-1"),
+    )
+    db.add(demo)
+    db.commit()
+    demo_id = demo.id
+    _patch_claims(monkeypatch, _claims(demo_sub, demo_email))
+    clash = _login(client, sub=demo_sub, email=demo_email)
+    assert clash.status_code == 409
+    assert clash.json()["detail"] == {"code": "existing_account_link_conflict"}
+    forced = _link(client, phone=demo.phone, password="staff-password-1")
+    assert forced.status_code == 409
+    assert forced.json()["detail"]["code"] == "existing_account_link_conflict"
+    db.expire_all()
+    demo = db.get(User, demo_id)
+    assert demo is not None
+    assert demo.oauth_google_sub is None
+    assert demo.role == Role.super_admin
+
+
+def test_existing_phone_links_with_password_and_keeps_role(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sub, email = _ids()
+    phone = unique_test_phone()
+    staff = User(
+        role=Role.super_admin,
+        name="Staff",
+        phone=phone,
+        status=UserStatus.active,
+        password_hash=hash_password("staff-password-1"),
+    )
+    db.add(staff)
+    db.commit()
+    staff_id = staff.id
+    _patch_claims(monkeypatch, _claims(sub, email))
+    assert _login(client, sub=sub, email=email).status_code == 403
+
+    clash = _complete(client, phone=phone)
+    assert clash.status_code == 409
+    detail = clash.json()["detail"]
+    assert detail == {"code": "existing_account_link_required", "proof": "password"}
+    assert "super_admin" not in clash.text
+    assert email not in clash.text
+
+    db.expire_all()
+    staff = db.get(User, staff_id)
+    assert staff is not None
+    assert staff.role == Role.super_admin
+    assert staff.oauth_google_sub is None
+    pending = db.execute(select(User).where(User.oauth_google_sub == sub)).scalar_one()
+    assert pending.status == UserStatus.pending
+    assert pending.phone != phone
+
+    wrong = _link(client, phone=phone, password="not-the-password")
+    assert wrong.status_code == 401
+    assert wrong.json()["detail"] == "invalid_credentials"
+    db.expire_all()
+    staff = db.get(User, staff_id)
+    assert staff is not None
+    assert staff.oauth_google_sub is None
+    assert staff.role == Role.super_admin
+
+    linked = _link(client, phone=phone, password="staff-password-1")
+    assert linked.status_code == 200, linked.text
+    assert linked.json()["role"] == "super_admin"
+    assert linked.json()["access_token"]
+    db.expire_all()
+    staff = db.get(User, staff_id)
+    assert staff is not None
+    assert staff.role == Role.super_admin
+    assert staff.phone == phone
+    assert staff.email == email
+    assert staff.oauth_google_sub == sub
+    holders = db.execute(select(User).where(User.oauth_google_sub == sub)).scalars().all()
+    assert [row.id for row in holders] == [staff.id]
+    again = _login(client, sub=sub, email=email)
+    assert again.status_code == 200, again.text
+    assert again.json()["role"] == "super_admin"
+
+
+def test_conflicting_email_or_sub_is_not_merged(
+    client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sub, email = _ids()
+    other_sub, other_email = _ids()
+    phone = unique_test_phone()
+    staff = User(
+        role=Role.admin,
+        name="Staff",
+        phone=phone,
+        email=other_email,
+        status=UserStatus.active,
+        password_hash=hash_password("staff-password-1"),
+    )
+    db.add(staff)
+    db.commit()
+    staff_id = staff.id
+    _patch_claims(monkeypatch, _claims(sub, email))
+    assert _login(client, sub=sub, email=email).status_code == 403
+    clash = _complete(client, phone=phone)
+    assert clash.status_code == 409
+    assert clash.json()["detail"] == {"code": "existing_account_link_conflict"}
+    forced = _link(client, phone=phone, password="staff-password-1")
+    assert forced.status_code == 409
+    assert forced.json()["detail"]["code"] == "existing_account_link_conflict"
+    db.expire_all()
+    staff = db.get(User, staff_id)
+    assert staff is not None
+    assert staff.role == Role.admin
+    assert staff.email == other_email
+    assert staff.oauth_google_sub is None
+    pending = db.execute(select(User).where(User.oauth_google_sub == sub)).scalar_one()
+    assert pending.id != staff.id
+    assert pending.phone != phone
+
+    taken_sub_phone = unique_test_phone()
+    occupied = User(
+        role=Role.driver,
+        name="Driver",
+        phone=taken_sub_phone,
+        status=UserStatus.active,
+        oauth_google_sub=other_sub,
+        password_hash=hash_password("staff-password-1"),
+    )
+    db.add(occupied)
+    db.commit()
+    occupied_id = occupied.id
+    sub_clash = _complete(client, phone=taken_sub_phone)
+    assert sub_clash.status_code == 409
+    assert sub_clash.json()["detail"]["code"] == "existing_account_link_conflict"
+    db.expire_all()
+    occupied = db.get(User, occupied_id)
+    assert occupied is not None
+    assert occupied.oauth_google_sub == other_sub
+    assert occupied.role == Role.driver

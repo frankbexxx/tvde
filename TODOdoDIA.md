@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **GOOGLE IDENTITY LINKING** (**2026-09-26**)
+
+Passageiro é capacidade base. `User.role` continua o papel elevado. Esta fase não abre a vista Passageiro a Admin ou Partner.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **GOOG-LINK** | Ligar Google à conta existente | Concluído | **CLOSED** · email auto-link só em passenger/driver/partner · admin/super_admin pede palavra-passe na primeira vez |
+| **GOOG-MULTI** | Vista Passageiro para Admin/Partner | Por iniciar | Fase 2 · não marcar CLOSED |
+| **GOOG-SMOKE-B** | Conta Passageiro extra do smoke PROD | Por iniciar | Não limpar agora · um `oauth_google_sub` por pessoa, só depois do linking testado |
+
+---
+
 ## Painel — **GOOGLE PASSENGER ONBOARDING** (**2026-09-25** — branch `feat/google-passenger-onboarding`)
 
 Smoke Oppo CPH2689 contra a API de staging. PROD não foi alterada.

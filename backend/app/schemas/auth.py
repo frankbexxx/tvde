@@ -67,6 +67,16 @@ class GoogleOnboardingRequest(BaseModel):
     accept_legal: bool = False
 
 
+class GoogleLinkRequest(BaseModel):
+    """Liga um Google já em onboarding à conta do telefone, depois da palavra-passe."""
+
+    id_token: str = Field(..., min_length=20, max_length=8192)
+    nonce: str | None = Field(default=None, max_length=128)
+    phone: str = Field(..., min_length=9, max_length=32)
+    password: str = Field(..., min_length=1, max_length=128)
+    accept_legal: bool = False
+
+
 class LegalAcceptanceRequest(BaseModel):
     """Gate pós-login. O cliente não escolhe versões nem outro utilizador."""
 

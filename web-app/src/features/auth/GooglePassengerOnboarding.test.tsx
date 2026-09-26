@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { LoginScreen } from './LoginScreen'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
 import { readGoogleOnboarding } from './googleOnboarding'
+import ptAuth from '../../i18n/locales/pt/auth.json'
+import enAuth from '../../i18n/locales/en/auth.json'
 
 const loginGoogleIdToken = vi.fn()
 const completeGoogleOnboarding = vi.fn()
@@ -29,7 +31,12 @@ vi.mock('../../api/auth', () => ({
 }))
 
 vi.mock('../../context/AuthContext', () => ({
-  useAuth: () => ({ login: vi.fn(), loginGoogleIdToken, completeGoogleOnboarding }),
+  useAuth: () => ({
+    login: vi.fn(),
+    loginGoogleIdToken,
+    completeGoogleOnboarding,
+    linkGoogleAccount: vi.fn(),
+  }),
   isBackofficeStaffRole: () => false,
 }))
 
@@ -131,6 +138,7 @@ describe('Google passenger onboarding', () => {
         idToken="header.payload.signature"
         nonce="abc"
         onComplete={onComplete}
+        onLink={vi.fn()}
         onDone={onDone}
         onRestart={vi.fn()}
       />,
@@ -152,6 +160,7 @@ describe('Google passenger onboarding', () => {
         suggestedName="Ana Example"
         idToken=""
         onComplete={onComplete}
+        onLink={vi.fn()}
         onDone={vi.fn()}
         onRestart={vi.fn()}
       />,
@@ -159,5 +168,117 @@ describe('Google passenger onboarding', () => {
     expect(screen.getByTestId('google-onboarding-restart')).toBeInTheDocument()
     expect(screen.queryByTestId('google-onboarding-submit')).not.toBeInTheDocument()
     expect(onComplete).not.toHaveBeenCalled()
+  })
+
+  it('asks for the existing account password without naming its role', async () => {
+    const onComplete = vi.fn().mockRejectedValue({
+      status: 409,
+      detail: { code: 'existing_account_link_required', proof: 'password' },
+    })
+    const onLink = vi.fn().mockResolvedValue({ access_token: 'app-session', role: 'super_admin' })
+    const onDone = vi.fn()
+    render(
+      <GooglePassengerOnboarding
+        email="ana@example.com"
+        suggestedName="Ana Example"
+        idToken="header.payload.signature"
+        nonce="abc"
+        onComplete={onComplete}
+        onLink={onLink}
+        onDone={onDone}
+        onRestart={vi.fn()}
+      />,
+    )
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '+351912345678' },
+    })
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    expect(await screen.findByTestId('google-onboarding-password')).toBeInTheDocument()
+    expect(screen.getByText('googleOnboardingLinkBody')).toBeInTheDocument()
+    expect(screen.queryByText(/super_admin|admin/i)).not.toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('google-onboarding-password'), {
+      target: { value: 'secret-pass' },
+    })
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    await waitFor(() => expect(onLink).toHaveBeenCalledTimes(1))
+    expect(onLink).toHaveBeenCalledWith({
+      idToken: 'header.payload.signature',
+      nonce: 'abc',
+      phone: '+351912345678',
+      password: 'secret-pass',
+      acceptLegal: true,
+    })
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1))
+    expect(onComplete).toHaveBeenCalledTimes(1)
+  })
+
+  it('opens the password step immediately when the login already requires it', async () => {
+    const onComplete = vi.fn()
+    const onLink = vi.fn().mockResolvedValue({ access_token: 'app-session', role: 'passenger' })
+    const onDone = vi.fn()
+    render(
+      <GooglePassengerOnboarding
+        email="ana@example.com"
+        suggestedName="Ana Example"
+        idToken="header.payload.signature"
+        nonce="abc"
+        onComplete={onComplete}
+        onLink={onLink}
+        onDone={onDone}
+        onRestart={vi.fn()}
+        initialLinkRequired
+      />,
+    )
+    expect(screen.getByTestId('google-onboarding-password')).toBeInTheDocument()
+    expect(screen.getByText('googleOnboardingLinkBody')).toBeInTheDocument()
+    expect(screen.queryByText(/super_admin|superuser|privilegiad/i)).not.toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '+351912345678' },
+    })
+    fireEvent.change(screen.getByTestId('google-onboarding-password'), {
+      target: { value: 'secret-pass' },
+    })
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    await waitFor(() => expect(onLink).toHaveBeenCalledTimes(1))
+    expect(onComplete).not.toHaveBeenCalled()
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1))
+  })
+
+  it('stays on the password step when the password is wrong', async () => {
+    const onLink = vi.fn().mockRejectedValue({ status: 401, detail: 'invalid_credentials' })
+    const onDone = vi.fn()
+    render(
+      <GooglePassengerOnboarding
+        email="ana@example.com"
+        suggestedName="Ana Example"
+        idToken="header.payload.signature"
+        onComplete={vi.fn()}
+        onLink={onLink}
+        onDone={onDone}
+        onRestart={vi.fn()}
+        initialLinkRequired
+      />,
+    )
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '+351912345678' },
+    })
+    fireEvent.change(screen.getByTestId('google-onboarding-password'), {
+      target: { value: 'wrong' },
+    })
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    expect(await screen.findByText('googleOnboardingLinkPasswordInvalid')).toBeInTheDocument()
+    expect(screen.queryByText(/super_admin|superuser|privilegiad/i)).not.toBeInTheDocument()
+    expect(onDone).not.toHaveBeenCalled()
+  })
+
+  it('keeps the password prompt neutral in both locales', () => {
+    expect(ptAuth.googleOnboardingLinkBody).toBe('Confirma a palavra-passe desta conta para continuar.')
+    expect(enAuth.googleOnboardingLinkBody).toBe("Confirm this account's password to continue.")
+    for (const text of [ptAuth.googleOnboardingLinkBody, enAuth.googleOnboardingLinkBody]) {
+      expect(text).not.toMatch(/admin|superuser|super_admin|privilegi/i)
+    }
   })
 })
