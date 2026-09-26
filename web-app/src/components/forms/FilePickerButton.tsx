@@ -34,11 +34,10 @@ export function FilePickerButton({
         className="sr-only"
         onChange={(e) => {
           const file = e.target.files?.[0]
+          e.target.value = ''
           if (!file) return
           setSelectedName(file.name)
           onFileSelected(file)
-          e.target.value = ''
-          setSelectedName(null)
         }}
       />
       <button
@@ -49,7 +48,7 @@ export function FilePickerButton({
       >
         {browseLabel ?? t('documents.browse')}
       </button>
-      <p className="text-[11px] text-muted-foreground truncate" aria-live="polite">
+      <p className="text-[11px] text-muted-foreground truncate" aria-live="polite" data-testid="file-picker-name">
         {selectedName
           ? t('documents.fileSelected', { name: selectedName })
           : (noFileLabel ?? t('documents.noFileSelected'))}

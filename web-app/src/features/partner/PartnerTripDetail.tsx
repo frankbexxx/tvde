@@ -15,6 +15,8 @@ import { reverseGeocode } from '../../services/geocoding'
 import { partnerTripStatusLabel } from './partnerLabels'
 import { ONGOING_TRIP_STATUSES } from './partnerTypes'
 import { fareCategoryCommercialLabel } from '../trips/fareCategoryLabel'
+import { googleMapsSearchUrl } from '../../utils/externalNavigation'
+import { openExternalUrl } from '../../utils/openExternalApp'
 import {
   chargedTollsDisplay,
   formatDeltaOrDash,
@@ -26,8 +28,8 @@ import {
 /** Soft auto-refresh while trip is live (OPS-UX-1B). */
 const LIVE_POLL_MS = 12_000
 
-function mapsUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+function mapsUrl(lat: number, lng: number): string | null {
+  return googleMapsSearchUrl(lat, lng)
 }
 
 function isLiveTripStatus(status: string): boolean {
@@ -382,14 +384,22 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
             {trip.origin_lat.toFixed(5)}, {trip.origin_lng.toFixed(5)}
           </p>
           {originLabel ? <p className="text-foreground/90">{originLabel}</p> : null}
-          <a
-            href={mapsUrl(trip.origin_lat, trip.origin_lng)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-primary underline"
-          >
-            {t('tripDetail.openMap')}
-          </a>
+          {mapsUrl(trip.origin_lat, trip.origin_lng) ? (
+            <a
+              href={mapsUrl(trip.origin_lat, trip.origin_lng) ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary underline"
+              onClick={(e) => {
+                const url = mapsUrl(trip.origin_lat, trip.origin_lng)
+                if (!url) return
+                e.preventDefault()
+                void openExternalUrl(url)
+              }}
+            >
+              {t('tripDetail.openMap')}
+            </a>
+          ) : null}
         </div>
         <div className="space-y-1">
           <p className="text-muted-foreground">{t('tripDetail.destination')}</p>
@@ -397,14 +407,22 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
             {trip.destination_lat.toFixed(5)}, {trip.destination_lng.toFixed(5)}
           </p>
           {destLabel ? <p className="text-foreground/90">{destLabel}</p> : null}
-          <a
-            href={mapsUrl(trip.destination_lat, trip.destination_lng)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-primary underline"
-          >
-            {t('tripDetail.openMap')}
-          </a>
+          {mapsUrl(trip.destination_lat, trip.destination_lng) ? (
+            <a
+              href={mapsUrl(trip.destination_lat, trip.destination_lng) ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary underline"
+              onClick={(e) => {
+                const url = mapsUrl(trip.destination_lat, trip.destination_lng)
+                if (!url) return
+                e.preventDefault()
+                void openExternalUrl(url)
+              }}
+            >
+              {t('tripDetail.openMap')}
+            </a>
+          ) : null}
         </div>
         {trip.cancel_reason || trip.cancel_reason_code || trip.cancel_reason_detail ? (
           <div className="space-y-1" data-testid="partner-trip-cancel-audit">

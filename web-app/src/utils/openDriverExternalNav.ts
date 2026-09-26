@@ -1,5 +1,12 @@
 import { getDriverNavApp } from '../services/driverNavPreference'
-import { googleMapsDirectionsUrl, wazeNavigateUrl } from './externalNavigation'
+import {
+  googleMapsAppUrl,
+  googleMapsDirectionsUrl,
+  isValidNavCoordinate,
+  wazeAppUrl,
+  wazeNavigateUrl,
+} from './externalNavigation'
+import { canOpenExternalUrl, isNativePlatform, openExternalUrl } from './openExternalApp'
 
 export type DriverNavPhase = 'pickup' | 'destination'
 
@@ -9,12 +16,21 @@ export function driverNavAppLabel(): string {
 }
 
 /**
- * Abre a app de navegação preferida (Definições) num separador novo.
- * TW-04 / G12–G19: sem botões Waze/Maps no ecrã de viagem.
+ * Abre a app preferida (Definições) fora da TVDE.
+ * No Android tenta o deep link da app e, se não existir, o URL HTTPS.
+ * TW-04: sem botões Waze/Maps separados no ecrã de viagem.
  */
-export function openDriverExternalNav(lat: number, lng: number): boolean {
+export async function openDriverExternalNav(lat: number, lng: number): Promise<boolean> {
+  if (!isValidNavCoordinate(lat, lng)) return false
   const app = getDriverNavApp()
-  const url = app === 'waze' ? wazeNavigateUrl(lat, lng) : googleMapsDirectionsUrl(lat, lng)
-  const opened = window.open(url, '_blank', 'noopener,noreferrer')
-  return opened != null
+  const httpsUrl = app === 'waze' ? wazeNavigateUrl(lat, lng) : googleMapsDirectionsUrl(lat, lng)
+  if (!isNativePlatform()) {
+    return openExternalUrl(httpsUrl)
+  }
+  const appUrl = app === 'waze' ? wazeAppUrl(lat, lng) : googleMapsAppUrl(lat, lng)
+  if (await canOpenExternalUrl(appUrl)) {
+    const opened = await openExternalUrl(appUrl)
+    if (opened) return true
+  }
+  return openExternalUrl(httpsUrl)
 }
