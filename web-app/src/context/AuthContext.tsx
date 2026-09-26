@@ -19,6 +19,7 @@ import i18n from '../i18n'
 import { validateAccessToken } from '../api/session'
 import {
   completeGoogleOnboarding as completeGoogleOnboardingApi,
+  linkGoogleAccount as linkGoogleAccountApi,
   exchangeGoogleCode,
   exchangeGoogleIdToken,
   getConfig,
@@ -100,6 +101,13 @@ interface AuthContextValue extends AuthState {
     nonce?: string
     name: string
     phone: string
+    acceptLegal: boolean
+  }) => Promise<TokenResponse>
+  linkGoogleAccount: (body: {
+    idToken: string
+    nonce?: string
+    phone: string
+    password: string
     acceptLegal: boolean
   }) => Promise<TokenResponse>
   logout: () => void
@@ -541,6 +549,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applyGoogleSession, setStatus]
   )
 
+  const linkGoogleAccount = useCallback(
+    async (body: {
+      idToken: string
+      nonce?: string
+      phone: string
+      password: string
+      acceptLegal: boolean
+    }) => {
+      setStatus('A ligar a conta Google...')
+      const res = await linkGoogleAccountApi(body)
+      applyGoogleSession(res)
+      setStatus('Pronto')
+      return res
+    },
+    [applyGoogleSession, setStatus]
+  )
+
   const setRole = useCallback(
     (r: Role) => {
       if (r === 'passenger' || r === 'driver' || r === 'partner') syncAppRouteRole(r)
@@ -622,6 +647,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginGoogle,
       loginGoogleIdToken,
       completeGoogleOnboarding,
+      linkGoogleAccount,
       logout,
       sessionPhone,
       sessionDisplayName,
@@ -650,6 +676,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginGoogle,
       loginGoogleIdToken,
       completeGoogleOnboarding,
+      linkGoogleAccount,
       logout,
       sessionPhone,
       sessionDisplayName,

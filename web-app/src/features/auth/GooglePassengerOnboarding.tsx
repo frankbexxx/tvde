@@ -13,12 +13,21 @@ export type GoogleOnboardingSubmit = {
   acceptLegal: boolean
 }
 
+export type GoogleLinkSubmit = {
+  idToken: string
+  nonce?: string
+  phone: string
+  password: string
+  acceptLegal: boolean
+}
+
 type GooglePassengerOnboardingProps = {
   email: string
   suggestedName: string
   idToken: string
   nonce?: string
   onComplete: (body: GoogleOnboardingSubmit) => Promise<unknown>
+  onLink: (body: GoogleLinkSubmit) => Promise<unknown>
   onDone: () => void
   onRestart: () => void
 }
@@ -29,12 +38,15 @@ export function GooglePassengerOnboarding({
   idToken,
   nonce,
   onComplete,
+  onLink,
   onDone,
   onRestart,
 }: GooglePassengerOnboardingProps) {
   const { t } = useTranslation('auth')
   const [name, setName] = useState(suggestedName)
   const [phone, setPhone] = useState('+351')
+  const [password, setPassword] = useState('')
+  const [linkRequired, setLinkRequired] = useState(false)
   const [acceptLegal, setAcceptLegal] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -76,17 +88,32 @@ export function GooglePassengerOnboarding({
     setLoading(true)
     setError(null)
     try {
-      await onComplete({
-        idToken,
-        nonce,
-        name: cleanedName,
-        phone: normalizedPhone,
-        acceptLegal: true,
-      })
+      if (linkRequired) {
+        await onLink({
+          idToken,
+          nonce,
+          phone: normalizedPhone,
+          password,
+          acceptLegal: true,
+        })
+      } else {
+        await onComplete({
+          idToken,
+          nonce,
+          name: cleanedName,
+          phone: normalizedPhone,
+          acceptLegal: true,
+        })
+      }
       onDone()
     } catch (err: unknown) {
       const code = apiDetailCode(err)
-      if (code === 'phone_already_used') setError(t('googleOnboardingPhoneTaken'))
+      if (code === 'existing_account_link_required') {
+        setLinkRequired(true)
+        setError(null)
+      } else if (code === 'invalid_credentials') setError(t('googleOnboardingLinkPasswordInvalid'))
+      else if (code === 'existing_account_link_conflict') setError(t('googleOnboardingLinkFailed'))
+      else if (code === 'phone_already_used') setError(t('googleOnboardingPhoneTaken'))
       else if (code === 'invalid_phone_format') setError(t('googleOnboardingPhoneInvalid'))
       else if (code === 'invalid_name') setError(t('googleOnboardingNameInvalid'))
       else if (code === 'legal_acceptance_required') setError(t('legalAcceptNewAccount'))
@@ -98,7 +125,8 @@ export function GooglePassengerOnboarding({
 
   const nameOk = name.trim().length >= 1 && name.trim().length <= 120
   const phoneOk = normalizePtPhone(phone) !== null
-  const canSubmit = nameOk && phoneOk && acceptLegal && !loading
+  const passwordOk = !linkRequired || password.trim().length > 0
+  const canSubmit = nameOk && phoneOk && passwordOk && acceptLegal && !loading
 
   return (
     <div
@@ -162,6 +190,24 @@ export function GooglePassengerOnboarding({
               className="w-full px-3 py-2 border border-input rounded-lg bg-background text-base text-foreground"
             />
           </div>
+          {linkRequired ? (
+            <div>
+              <p className="text-sm text-foreground mb-2">{t('googleOnboardingLinkBody')}</p>
+              <label htmlFor="google-onboarding-password" className="block text-sm font-medium text-foreground mb-1">
+                {t('googleOnboardingLinkPassword')}
+              </label>
+              <input
+                id="google-onboarding-password"
+                data-testid="google-onboarding-password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-lg bg-background text-base text-foreground"
+              />
+            </div>
+          ) : null}
           <LegalAcceptanceCheckbox checked={acceptLegal} onChange={setAcceptLegal} />
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <button
@@ -170,7 +216,7 @@ export function GooglePassengerOnboarding({
             disabled={!canSubmit}
             className={`w-full min-h-[44px] ${BTN_PRIMARY_RADIUS} bg-primary text-primary-foreground font-medium disabled:opacity-50`}
           >
-            {t('googleOnboardingSubmit')}
+            {linkRequired ? t('googleOnboardingLinkSubmit') : t('googleOnboardingSubmit')}
           </button>
         </form>
       </div>

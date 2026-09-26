@@ -27,7 +27,12 @@ vi.mock('../../api/auth', () => ({
 }))
 
 vi.mock('../../context/AuthContext', () => ({
-  useAuth: () => ({ login: vi.fn(), loginGoogleIdToken, completeGoogleOnboarding: vi.fn() }),
+  useAuth: () => ({
+    login: vi.fn(),
+    loginGoogleIdToken,
+    completeGoogleOnboarding: vi.fn(),
+    linkGoogleAccount: vi.fn(),
+  }),
   isBackofficeStaffRole: () => false,
 }))
 

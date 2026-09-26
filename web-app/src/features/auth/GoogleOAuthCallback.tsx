@@ -31,7 +31,7 @@ type HeldOnboarding = GoogleOnboardingPrompt & { idToken: string }
 export function GoogleOAuthCallback() {
   const [search] = useSearchParams()
   const navigate = useNavigate()
-  const { loginGoogle, completeGoogleOnboarding } = useAuth()
+  const { loginGoogle, completeGoogleOnboarding, linkGoogleAccount } = useAuth()
   const [fetchErr, setFetchErr] = useState<string | null>(null)
   const [held, setHeld] = useState<HeldOnboarding | null>(null)
 
@@ -81,6 +81,7 @@ export function GoogleOAuthCallback() {
         suggestedName={held.name}
         idToken={held.idToken}
         onComplete={completeGoogleOnboarding}
+        onLink={linkGoogleAccount}
         onDone={() => navigate('/passenger', { replace: true })}
         onRestart={() => navigate('/passenger', { replace: true })}
       />

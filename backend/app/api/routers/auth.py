@@ -39,12 +39,14 @@ from app.services.beta_capacity import active_beta_user_count
 from app.db.models.user_legal_acceptance import LegalAcceptanceSource
 from app.services.legal_acceptance import (
     LOGIN_REACCEPT,
+    acceptance_required,
     record_acceptance,
     status_payload,
 )
 from app.schemas.auth import (
     GoogleExchangeRequest,
     GoogleIdTokenRequest,
+    GoogleLinkRequest,
     GoogleOnboardingRequest,
     LegalAcceptanceRequest,
     LoginRequest,
@@ -438,11 +440,6 @@ def _session_from_google_claims(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="google_account_conflict",
                 )
-            if by_email.role != Role.passenger:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="google_only_passenger_role",
-                )
             if by_email.status == UserStatus.blocked:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -459,12 +456,18 @@ def _session_from_google_claims(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="blocked",
                 )
-            by_email.oauth_google_sub = sub
+            if by_email.email and by_email.email.lower() != email:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="google_email_mismatch",
+                )
+            # Email Google verificado já gravado nesta conta. É a mesma pessoa.
+            # O role elevado mantém-se. Não se cria outro User.
+            if not by_email.oauth_google_sub:
+                by_email.oauth_google_sub = sub
             if not by_email.email:
                 by_email.email = email
-            db.commit()
-            db.refresh(by_email)
-            user = by_email
+            return _issue_linked_google_session(db, by_email)
 
     if user is None:
         if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
@@ -486,11 +489,6 @@ def _session_from_google_claims(
         db.refresh(user)
         _raise_google_onboarding_required(user, email, id_token=echo_id_token)
 
-    if user.role != Role.passenger:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="google_only_passenger_role",
-        )
     if not user.email:
         user.email = email
     elif user.email.lower() != email:
@@ -527,6 +525,52 @@ def _session_from_google_claims(
         token_version=int(user.token_version),
     )
     return _token_response(user, token_data)
+
+
+def _issue_linked_google_session(db: Session, user: User) -> TokenResponse:
+    """Sessão da conta já existente. Não altera `role` nem o telefone."""
+    if acceptance_required(db, user.id):
+        record_acceptance(db, user.id, LegalAcceptanceSource.register_google)
+    db.commit()
+    db.refresh(user)
+    token_data = create_access_token(
+        subject=str(user.id),
+        role=user.role.value,
+        token_version=int(user.token_version),
+    )
+    return _token_response(user, token_data)
+
+
+def _phone_link_is_provable(owner: User, email: str, sub: str) -> bool:
+    """Palavra-passe da conta do telefone, sem email nem sub em conflito.
+
+    O número digitado no onboarding não prova posse. OTP em produção não
+    está disponível. Contas demo privilegiadas não autenticam por password.
+    """
+    if owner.status != UserStatus.active:
+        return False
+    if owner.is_test_account and owner.role in _PRIVILEGED_TEST_LOGIN_ROLES:
+        return False
+    if not owner.password_hash:
+        return False
+    if owner.oauth_google_sub and owner.oauth_google_sub != sub:
+        return False
+    if owner.email and owner.email.lower() != email:
+        return False
+    return True
+
+
+def _refuse_unproven_phone_owner(owner: User, email: str, sub: str) -> None:
+    """Telefone já usado. Não grava nada e não descreve a conta existente."""
+    if _phone_link_is_provable(owner, email, sub):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "existing_account_link_required", "proof": "password"},
+        )
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"code": "existing_account_link_conflict"},
+    )
 
 
 def _complete_google_passenger_onboarding(
@@ -595,14 +639,11 @@ def _complete_google_passenger_onboarding(
             detail="google_onboarding_not_pending",
         )
 
-    taken = db.execute(
-        select(User.id).where(User.phone == normalized_phone, User.id != user.id).limit(1)
-    ).first()
-    if taken:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="phone_already_used",
-        )
+    owner = db.execute(
+        select(User).where(User.phone == normalized_phone, User.id != user.id)
+    ).scalar_one_or_none()
+    if owner is not None:
+        _refuse_unproven_phone_owner(owner, email, sub)
     if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -766,6 +807,136 @@ async def google_onboarding(
         claims,
         name=payload.name,
         phone=payload.phone,
+        accept_legal=payload.accept_legal,
+    )
+
+
+def _validated_google_claims(id_token: str, nonce: str | None) -> dict:
+    try:
+        claims = verify_id_token_claims(id_token.strip())
+        raw_nonce = (nonce or "").strip()
+        claim_nonce = str(claims.get("nonce") or "")
+        if raw_nonce or claim_nonce:
+            assert_id_token_nonce(claims, raw_nonce)
+    except RuntimeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_token_invalid",
+        ) from None
+    return claims
+
+
+def _link_google_to_phone_owner(
+    db: Session,
+    claims: dict,
+    *,
+    phone: str,
+    password: str,
+    accept_legal: bool,
+) -> TokenResponse:
+    """Move o sub Google para a conta do telefone depois da palavra-passe.
+
+    Não muda o role. Apaga o passageiro pending criado só para o onboarding.
+    """
+    sub = str(claims.get("sub") or "").strip()
+    email = str(claims.get("email") or "").strip().lower()
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="google_invalid_sub"
+        )
+    if not email or not bool(claims.get("email_verified")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_email_not_verified",
+        )
+    if not accept_legal:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="legal_acceptance_required",
+        )
+    normalized_phone = _normalize_onboarding_phone(phone)
+    google_user = db.execute(
+        select(User).where(User.oauth_google_sub == sub)
+    ).scalar_one_or_none()
+    owner = db.execute(
+        select(User).where(User.phone == normalized_phone)
+    ).scalar_one_or_none()
+    if (
+        google_user is None
+        or owner is None
+        or owner.id == google_user.id
+        or not _is_google_passenger_onboarding(google_user)
+        or not _phone_link_is_provable(owner, email, sub)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "existing_account_link_conflict"},
+        )
+    if not verify_password(password, owner.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_credentials",
+        )
+
+    role_before = owner.role
+    phone_before = owner.phone
+    google_user.oauth_google_sub = None
+    google_user.email = None
+    db.flush()
+    owner.oauth_google_sub = sub
+    if not owner.email:
+        owner.email = email
+    elif owner.email.lower() != email:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "existing_account_link_conflict"},
+        )
+    db.delete(google_user)
+    owner.role = role_before
+    owner.phone = phone_before
+    try:
+        if acceptance_required(db, owner.id):
+            record_acceptance(db, owner.id, LegalAcceptanceSource.register_google)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "existing_account_link_conflict"},
+        ) from None
+    db.refresh(owner)
+    token_data = create_access_token(
+        subject=str(owner.id),
+        role=owner.role.value,
+        token_version=int(owner.token_version),
+    )
+    return _token_response(owner, token_data)
+
+
+@router.post("/google/link", response_model=TokenResponse)
+async def google_link_existing_account(
+    payload: GoogleLinkRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> TokenResponse:
+    """Confirma a conta do telefone com palavra-passe e liga o Google a ela."""
+    check_google_exchange_rate_limit(request)
+    if not _google_oauth_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="google_oauth_disabled",
+        )
+    normalized_phone = _normalize_onboarding_phone(payload.phone)
+    check_beta_login_rate_limit(request, normalized_phone)
+    claims = await anyio.to_thread.run_sync(
+        _validated_google_claims, payload.id_token.strip(), payload.nonce
+    )
+    return _link_google_to_phone_owner(
+        db,
+        claims,
+        phone=normalized_phone,
+        password=payload.password,
         accept_legal=payload.accept_legal,
     )
 

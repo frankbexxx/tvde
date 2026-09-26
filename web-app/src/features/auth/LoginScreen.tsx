@@ -27,7 +27,7 @@ interface LoginScreenProps {
 export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const { t } = useTranslation('auth')
   const { t: tc } = useTranslation('common')
-  const { login, loginGoogleIdToken, completeGoogleOnboarding } = useAuth()
+  const { login, loginGoogleIdToken, completeGoogleOnboarding, linkGoogleAccount } = useAuth()
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
   const [phone, setPhone] = useState(() => {
@@ -190,6 +190,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         idToken={googleDraft.idToken}
         nonce={googleDraft.nonce}
         onComplete={completeGoogleOnboarding}
+        onLink={linkGoogleAccount}
         onDone={() => window.location.assign('/passenger')}
         onRestart={() => setGoogleDraft(null)}
       />

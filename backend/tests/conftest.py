@@ -35,6 +35,16 @@ def client() -> TestClient:
     return TestClient(app)
 
 
+@pytest.fixture(autouse=True)
+def _reset_auth_rate_buckets() -> None:
+    """Os limites de auth são em memória e partilhados pelo processo de testes."""
+    from app.api.auth_rate_limit import _buckets
+
+    _buckets.clear()
+    yield
+    _buckets.clear()
+
+
 @pytest.fixture
 def db() -> Session:
     session = SessionLocal()
