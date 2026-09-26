@@ -8,7 +8,7 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import case, func, select
+from sqlalchemy import and_, case, func, not_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import (
@@ -464,8 +464,19 @@ async def get_pending_users(
     db: Session = Depends(get_db),
 ) -> List[PendingUserItem]:
     """List users with status=pending (RBAC admin/super_admin)."""
+    google_passenger_onboarding = and_(
+        User.role == Role.passenger,
+        User.requested_role == "passenger",
+        User.oauth_google_sub.is_not(None),
+        User.oauth_google_sub != "",
+    )
     users = (
-        db.execute(select(User).where(User.status == UserStatus.pending))
+        db.execute(
+            select(User).where(
+                User.status == UserStatus.pending,
+                not_(google_passenger_onboarding),
+            )
+        )
         .scalars()
         .all()
     )
@@ -1076,6 +1087,15 @@ async def approve_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if u.status != UserStatus.pending:
         raise HTTPException(status_code=400, detail="user_not_pending")
+    if (
+        u.role == Role.passenger
+        and u.requested_role == "passenger"
+        and (u.oauth_google_sub or "").strip()
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="google_onboarding_not_admin_approvable",
+        )
     if active_beta_user_count(db) >= settings.MAX_BETA_USERS:
         raise HTTPException(status_code=403, detail="BETA cheio")
     u.status = UserStatus.active

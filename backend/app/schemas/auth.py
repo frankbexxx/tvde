@@ -57,6 +57,16 @@ class GoogleIdTokenRequest(BaseModel):
     accept_legal: bool = False
 
 
+class GoogleOnboardingRequest(BaseModel):
+    """Conclusão do passageiro Google. O `sub` vem do id_token, não do cliente."""
+
+    id_token: str = Field(..., min_length=20, max_length=8192)
+    nonce: str | None = Field(default=None, max_length=128)
+    name: str = Field(..., min_length=1, max_length=120)
+    phone: str = Field(..., min_length=9, max_length=32)
+    accept_legal: bool = False
+
+
 class LegalAcceptanceRequest(BaseModel):
     """Gate pós-login. O cliente não escolhe versões nem outro utilizador."""
 

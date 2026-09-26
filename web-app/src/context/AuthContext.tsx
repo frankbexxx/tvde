@@ -18,6 +18,7 @@ import { warn as logWarn } from '../utils/logger'
 import i18n from '../i18n'
 import { validateAccessToken } from '../api/session'
 import {
+  completeGoogleOnboarding as completeGoogleOnboardingApi,
   exchangeGoogleCode,
   exchangeGoogleIdToken,
   getConfig,
@@ -94,6 +95,13 @@ interface AuthContextValue extends AuthState {
   loginGoogle: (code: string, redirectUri: string, acceptLegal?: boolean) => Promise<TokenResponse>
   /** Android: id_token verificado no servidor. O JWT da app não vai na URL. */
   loginGoogleIdToken: (idToken: string, nonce: string, acceptLegal?: boolean) => Promise<TokenResponse>
+  completeGoogleOnboarding: (body: {
+    idToken: string
+    nonce?: string
+    name: string
+    phone: string
+    acceptLegal: boolean
+  }) => Promise<TokenResponse>
   logout: () => void
   /** Telemóvel da sessão (ou último gravado); sem API extra. */
   sessionPhone: string | null
@@ -516,6 +524,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applyGoogleSession, setStatus]
   )
 
+  const completeGoogleOnboarding = useCallback(
+    async (body: {
+      idToken: string
+      nonce?: string
+      name: string
+      phone: string
+      acceptLegal: boolean
+    }) => {
+      setStatus('A concluir registo...')
+      const res = await completeGoogleOnboardingApi(body)
+      applyGoogleSession(res)
+      setStatus('Pronto')
+      return res
+    },
+    [applyGoogleSession, setStatus]
+  )
+
   const setRole = useCallback(
     (r: Role) => {
       if (r === 'passenger' || r === 'driver' || r === 'partner') syncAppRouteRole(r)
@@ -596,6 +621,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       loginGoogle,
       loginGoogleIdToken,
+      completeGoogleOnboarding,
       logout,
       sessionPhone,
       sessionDisplayName,
@@ -623,6 +649,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       loginGoogle,
       loginGoogleIdToken,
+      completeGoogleOnboarding,
       logout,
       sessionPhone,
       sessionDisplayName,

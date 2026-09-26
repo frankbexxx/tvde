@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
+import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
+import { readGoogleOnboarding, type GoogleOnboardingPrompt } from './googleOnboarding'
 import { Spinner } from '../../components/ui/Spinner'
 import type { ApiError } from '../../api/client'
 
@@ -24,11 +26,14 @@ function formatErr(err: unknown): string {
   return 'Não foi possível concluir o login com Google.'
 }
 
+type HeldOnboarding = GoogleOnboardingPrompt & { idToken: string }
+
 export function GoogleOAuthCallback() {
   const [search] = useSearchParams()
   const navigate = useNavigate()
-  const { loginGoogle } = useAuth()
+  const { loginGoogle, completeGoogleOnboarding } = useAuth()
   const [fetchErr, setFetchErr] = useState<string | null>(null)
+  const [held, setHeld] = useState<HeldOnboarding | null>(null)
 
   const oauthErr = search.get('error')
   const code = search.get('code')
@@ -37,7 +42,7 @@ export function GoogleOAuthCallback() {
   const stateOk = !!state && state === expectedState
 
   useEffect(() => {
-    if (oauthErr || !code || !stateOk) return
+    if (oauthErr || !code || !stateOk || held) return
     let alive = true
     const redirectUri = `${window.location.origin}/auth/google/callback`
     void (async () => {
@@ -45,15 +50,42 @@ export function GoogleOAuthCallback() {
         const acceptLegal = sessionStorage.getItem(LEGAL_ACCEPT_REGISTER_KEY) === '1'
         await loginGoogle(code, redirectUri, acceptLegal)
         sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
+        sessionStorage.removeItem(LEGAL_ACCEPT_REGISTER_KEY)
         if (alive) navigate('/passenger', { replace: true })
       } catch (e: unknown) {
-        if (alive) setFetchErr(formatErr(e))
+        if (!alive) return
+        const onboard = readGoogleOnboarding(e)
+        sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
+        sessionStorage.removeItem(LEGAL_ACCEPT_REGISTER_KEY)
+        window.history.replaceState({}, '', '/auth/google/callback')
+        if (onboard?.idToken) {
+          setHeld({ ...onboard, idToken: onboard.idToken })
+          return
+        }
+        if (onboard) {
+          setFetchErr('google_onboarding_restart')
+          return
+        }
+        setFetchErr(formatErr(e))
       }
     })()
     return () => {
       alive = false
     }
-  }, [oauthErr, code, stateOk, navigate, loginGoogle])
+  }, [oauthErr, code, stateOk, navigate, loginGoogle, held])
+
+  if (held) {
+    return (
+      <GooglePassengerOnboarding
+        email={held.email}
+        suggestedName={held.name}
+        idToken={held.idToken}
+        onComplete={completeGoogleOnboarding}
+        onDone={() => navigate('/passenger', { replace: true })}
+        onRestart={() => navigate('/passenger', { replace: true })}
+      />
+    )
+  }
 
   if (oauthErr) {
     return (
@@ -76,7 +108,11 @@ export function GoogleOAuthCallback() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-background px-4">
         <p className="text-destructive text-center text-sm max-w-sm">
-          {code ? 'O pedido Google não corresponde a esta sessão.' : 'Código de autorização em falta.'}
+          {fetchErr === 'google_onboarding_restart'
+            ? 'A sessão Google expirou. Entra outra vez com Google para continuar o registo.'
+            : code
+              ? 'O pedido Google não corresponde a esta sessão.'
+              : 'Código de autorização em falta.'}
         </p>
         <button
           type="button"

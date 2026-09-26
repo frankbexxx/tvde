@@ -46,7 +46,7 @@ Mudar qualquer `VITE_*` no Render → **novo build** do static.
 | `BETA_MODE` | **SIM** | **SIM** | Compat legado; preferir flags explícitas abaixo antes do flip. |
 | `ENABLE_DEBUG_ROUTES` | Opcional | Opcional | `None` herda BETA. Alvo piloto: prod `false`, staging `true`. |
 | `ENABLE_BETA_MATCHING_FALLBACKS` | Opcional | Opcional | `None` herda BETA. Alvo piloto: `true` temporário. |
-| `REQUIRE_PENDING_APPROVAL` | Opcional | Opcional | `None` herda BETA. OTP signup pending+approve. Google = sempre pending. |
+| `REQUIRE_PENDING_APPROVAL` | Opcional | Opcional | `None` herda BETA. OTP signup pending+approve. Passageiro Google conclui onboarding na app (`google_onboarding_required`), sem aprovação Admin. |
 | `ENFORCE_PT_PHONE` | Opcional | Opcional | `None` herda BETA. `+351` em OTP request / password login. |
 | `ENABLE_DEMO_USERS` | Opcional | Opcional | `None` herda BETA. Login `is_test_account` + `TEST_ACCOUNT_PASSWORD`. |
 | `CORS_ALLOWED_ORIGINS` | **SIM** se testar front sem proxy / espelhar prod | **SIM** em produção | Origens exactas; vírgulas; sem `*`. |

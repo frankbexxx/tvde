@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **GOOGLE PASSENGER ONBOARDING** (**2026-09-25** — branch `feat/google-passenger-onboarding`)
+
+Smoke Oppo CPH2689 contra a API de staging. PROD não foi alterada.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **GOOG-ONB** | Google Passenger Onboarding | Concluído | **CLOSED** · staging `a63993c` · sessão só depois de nome, +351 e termos |
+| **OAUTH-CAP** | OAuth Capacitor | Concluído | **CLOSED** · nonce alinhado · segundo login sem onboarding |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · aberto: push, GPS background, Waze/Maps, file picker, Play Store |
+
+---
+
 ## Painel — **LATERAL AUDIT RECONCILE** (**2026-09-21** — tip `98ed421`)
 
 P0/P1 originais desta auditoria: **OPEN = 0**. Follow-ups **não** reabrem findings.

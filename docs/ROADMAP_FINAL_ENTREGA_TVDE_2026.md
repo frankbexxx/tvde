@@ -470,13 +470,13 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
 | D1.1 | Comparar Capacitor vs wrapper vs PWA (reuso web-app) | Matriz | DOCS | D0 |
-| D1.2 | Spike mínimo **Android** | APK debug Capacitor no Oppo — **BOOTSTRAP + DEVICE SMOKE PASS**. S-MOB-02 **PARTIAL**: viewport, GPS foreground e mapa PASS; Waze/uploads/background ainda abertos | CÓDIGO | D1.1 |
+| D1.2 | Spike mínimo **Android** | APK debug Capacitor no Oppo — **BOOTSTRAP + DEVICE SMOKE PASS**. S-MOB-02 **PARTIAL**: viewport, GPS foreground, mapa e OAuth Capacitor PASS; Google Passenger Onboarding **CLOSED**. Waze/uploads/background ainda abertos | CÓDIGO | D1.1 |
 | D1.3 | Confirmar caminho de packaging oficial | Acta técnica | DECISÃO | D1.2 |
 
 ## D2 — Validação em device (Android primeiro)
 
 - **IDs:** `S-MOB-02` · **Dependências:** D1 · crítico **Marco 2**  
-- **Estado 2026-09-25:** **PARTIAL**. No Oppo: login utilizável em retrato; localização foreground com «Enquanto uso a app»; mapa visível (MapTiler 403 em `https://localhost`, fallback raster). OAuth Capacitor: o Android Credential Manager devolve o nonce fornecido; o cliente passa agora SHA-256(rawNonce) ao Google e o backend valida contra rawNonce. No Oppo o selector abre, o id token chega, e o POST `/auth/google/id-token` deixou de responder `400`. A conta nova ficou `403 pending_approval`, sem sessão nem shell. Ainda aberto: GPS background, push, Waze/Maps, file picker, Play Store.  
+- **Estado 2026-09-25:** **PARTIAL**. No Oppo: login utilizável em retrato; localização foreground com «Enquanto uso a app»; mapa visível (MapTiler 403 em `https://localhost`, fallback raster). OAuth Capacitor **CLOSED**: o Android Credential Manager devolve o nonce fornecido; o cliente passa SHA-256(rawNonce) ao Google e o backend valida contra rawNonce. Google Passenger Onboarding **CLOSED**: o selector abre, a conta nova recebe `google_onboarding_required` (sem sessão), confirma nome, telemóvel +351 e termos, e só então recebe JWT e o PassengerDashboard. Smoke no Oppo contra a API de staging no commit `a63993c`: sessão activa, aceitação legal registada, persistência depois de fechar a app, e um segundo login Google que não volta ao onboarding. PROD ficou no commit anterior. Ainda aberto: GPS background, push, Waze/Maps, file picker, Play Store.  
 - **Foco:** GPS/permissões/background · Waze/Maps/deep links · login/persistência · lifecycle (background/fechada).  
 - **iOS:** mesma checklist depois; não bloqueia PASS Android do piloto.
 | Passo | Acção | Resultado esperado | Tipo | Dep. |

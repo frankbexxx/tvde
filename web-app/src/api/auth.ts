@@ -63,6 +63,25 @@ export async function login(
   })
 }
 
+export async function completeGoogleOnboarding(body: {
+  idToken: string
+  nonce?: string
+  name: string
+  phone: string
+  acceptLegal: boolean
+}): Promise<TokenResponse> {
+  return apiFetch<TokenResponse>('/auth/google/onboarding', {
+    method: 'POST',
+    body: JSON.stringify({
+      id_token: body.idToken,
+      nonce: body.nonce,
+      name: body.name,
+      phone: body.phone,
+      accept_legal: body.acceptLegal,
+    }),
+  })
+}
+
 export async function exchangeGoogleIdToken(
   idToken: string,
   nonce: string,
