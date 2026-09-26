@@ -470,20 +470,20 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
 | D1.1 | Comparar Capacitor vs wrapper vs PWA (reuso web-app) | Matriz | DOCS | D0 |
-| D1.2 | Spike mínimo **Android** | APK debug Capacitor no Oppo — **BOOTSTRAP + DEVICE SMOKE PASS**. S-MOB-02 **PARTIAL**: viewport, GPS foreground, mapa e OAuth Capacitor PASS; Google Passenger Onboarding **CLOSED**. Waze/uploads/background ainda abertos | CÓDIGO | D1.1 |
+| D1.2 | Spike mínimo **Android** | APK debug Capacitor no Oppo — **BOOTSTRAP + DEVICE SMOKE PASS**. S-MOB-02 **PARTIAL**: viewport, GPS foreground, mapa, OAuth Capacitor, Waze/Maps e file picker **CLOSED**. Ainda aberto: GPS background, push, Play Store | CÓDIGO | D1.1 |
 | D1.3 | Confirmar caminho de packaging oficial | Acta técnica | DECISÃO | D1.2 |
 
 ## D2 — Validação em device (Android primeiro)
 
 - **IDs:** `S-MOB-02` · **Dependências:** D1 · crítico **Marco 2**  
-- **Estado 2026-09-25:** **PARTIAL**. No Oppo: login utilizável em retrato; localização foreground com «Enquanto uso a app»; mapa visível (MapTiler 403 em `https://localhost`, fallback raster). OAuth Capacitor **CLOSED**: o Android Credential Manager devolve o nonce fornecido; o cliente passa SHA-256(rawNonce) ao Google e o backend valida contra rawNonce. Google Passenger Onboarding **CLOSED**: o selector abre, a conta nova recebe `google_onboarding_required` (sem sessão), confirma nome, telemóvel +351 e termos, e só então recebe JWT e o PassengerDashboard. Smoke no Oppo contra a API de staging no commit `a63993c`: sessão activa, aceitação legal registada, persistência depois de fechar a app, e um segundo login Google que não volta ao onboarding. PROD ficou no commit anterior. Decisão seguinte: Passageiro é capacidade base e `User.role` continua o papel elevado. A fase 1 liga a identidade Google à conta existente, sem duplicar a pessoa só para ganhar Passageiro. O primeiro linking de admin/super_admin pede a palavra-passe da conta, mesmo com o email Google verificado igual. A capacidade multi-role está **CLOSED**: Passenger is a base capability for any active User e o selector não altera `User.role`. cleanup smoke account continua **OPEN**. Ainda aberto: GPS background, push, Waze/Maps, file picker, Play Store.  
+- **Estado 2026-09-25:** **PARTIAL**. No Oppo: login utilizável em retrato; localização foreground com «Enquanto uso a app»; mapa visível (MapTiler 403 em `https://localhost`, fallback raster). OAuth Capacitor **CLOSED**: o Android Credential Manager devolve o nonce fornecido; o cliente passa SHA-256(rawNonce) ao Google e o backend valida contra rawNonce. Google Passenger Onboarding **CLOSED**: o selector abre, a conta nova recebe `google_onboarding_required` (sem sessão), confirma nome, telemóvel +351 e termos, e só então recebe JWT e o PassengerDashboard. Smoke no Oppo contra a API de staging no commit `a63993c`: sessão activa, aceitação legal registada, persistência depois de fechar a app, e um segundo login Google que não volta ao onboarding. PROD ficou no commit anterior. Decisão seguinte: Passageiro é capacidade base e `User.role` continua o papel elevado. A fase 1 liga a identidade Google à conta existente, sem duplicar a pessoa só para ganhar Passageiro. O primeiro linking de admin/super_admin pede a palavra-passe da conta, mesmo com o email Google verificado igual. A capacidade multi-role está **CLOSED**: Passenger is a base capability for any active User e o selector não altera `User.role`. cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** no Oppo (2026-09-26, PR #669): o Waze abre fora do WebView na recolha e o Google Maps abre fora do WebView no destino; o DocumentsUI aceita o upload de teste. Ainda aberto: GPS background, push, Play Store.  
 - **Foco:** GPS/permissões/background · Waze/Maps/deep links · login/persistência · lifecycle (background/fechada).  
 - **iOS:** mesma checklist depois; não bloqueia PASS Android do piloto.
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
 | D2.1 | Checklist permissões | Lista | DOCS | D1 |
 | D2.2 | GPS + background (limites OS) | Notas | TESTE | D2.1 |
-| D2.3 | Waze/Maps deep link | OK | TESTE | D2.1 |
+| D2.3 | Waze/Maps deep link | **CLOSED** — Oppo 2026-09-26, PR #669 | TESTE | D2.1 |
 | D2.4 | Login persistente + mapa | OK | TESTE | D2.1 · C1 |
 | D2.5 | Corrigir bloqueadores | Build estável | CÓDIGO | D2.2–D2.4 |
 

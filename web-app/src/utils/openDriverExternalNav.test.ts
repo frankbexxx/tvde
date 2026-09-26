@@ -41,8 +41,12 @@ describe('openDriverExternalNav', () => {
     vi.mocked(isNativePlatform).mockReturnValue(true)
     vi.mocked(canOpenExternalUrl).mockResolvedValue(true)
     await expect(openDriverExternalNav(38.7, -9.1)).resolves.toBe(true)
-    expect(canOpenExternalUrl).toHaveBeenCalledWith(expect.stringContaining('waze://'))
-    expect(openExternalUrl).toHaveBeenCalledWith(expect.stringContaining('waze://'))
+    expect(canOpenExternalUrl).toHaveBeenCalledWith(
+      'waze://?ll=' + encodeURIComponent('38.7,-9.1') + '&navigate=yes',
+    )
+    expect(openExternalUrl).toHaveBeenCalledWith(
+      'waze://?ll=' + encodeURIComponent('38.7,-9.1') + '&navigate=yes',
+    )
   })
 
   it('no Android cai no HTTPS se a app Waze não existir', async () => {
@@ -57,7 +61,9 @@ describe('openDriverExternalNav', () => {
     vi.mocked(getDriverNavApp).mockReturnValue('google_maps')
     vi.mocked(canOpenExternalUrl).mockResolvedValue(true)
     await openDriverExternalNav(38.7, -9.1)
-    expect(openExternalUrl).toHaveBeenCalledWith(expect.stringContaining('google.navigation:'))
+    expect(openExternalUrl).toHaveBeenCalledWith(
+      'google.navigation:q=' + encodeURIComponent('38.7,-9.1') + '&mode=d',
+    )
   })
 
   it('no Android cai no HTTPS do Maps se a app não existir', async () => {

@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **S-MOB-02 navegação e ficheiros** (**2026-09-26** — PR #669)
+
+Smoke no Oppo contra a API de produção. Sem merge.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · Waze/Maps **CLOSED** · file picker **CLOSED** · aberto: push, GPS background, Play Store |
+| **S-NAV** | Waze na recolha e Maps no destino | Concluído | **CLOSED** · fora do WebView · PR #669 |
+| **S-FILE** | File picker Android | Concluído | **CLOSED** · DocumentsUI · upload de teste aceite |
+
+---
+
 ## Painel — **GOOGLE IDENTITY LINKING** (**2026-09-26**)
 
 Passageiro é capacidade base. `User.role` continua o papel elevado. Esta fase não abre a vista Passageiro a Admin ou Partner.
@@ -24,7 +36,7 @@ Passageiro é capacidade base. `User.role` continua o papel elevado. Esta fase n
 |----|------|--------|-------|
 | **GOOG-LINK** | Ligar Google à conta existente | Concluído | **CLOSED** · email auto-link só em passenger/driver/partner · admin/super_admin pede palavra-passe na primeira vez |
 | **GOOG-MULTI** | Vista Passageiro para qualquer User activo | Concluído | **CLOSED** · Passenger is a base capability for any active User · o contexto não muda `User.role` |
-| **GOOG-SMOKE-B** | Conta Passageiro extra do smoke PROD | Por iniciar | Não limpar agora · um `oauth_google_sub` por pessoa, só depois do linking testado |
+| **GOOG-SMOKE-B** | Conta Passageiro extra do smoke PROD | Concluído | **CLOSED** · sub só na conta real · conta de smoke bloqueada |
 
 ---
 
@@ -36,7 +48,7 @@ Smoke Oppo CPH2689 contra a API de staging. PROD não foi alterada.
 |----|------|--------|-------|
 | **GOOG-ONB** | Google Passenger Onboarding | Concluído | **CLOSED** · staging `a63993c` · sessão só depois de nome, +351 e termos |
 | **OAUTH-CAP** | OAuth Capacitor | Concluído | **CLOSED** · nonce alinhado · segundo login sem onboarding |
-| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · aberto: push, GPS background, Waze/Maps, file picker, Play Store |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · aberto: push, GPS background, Play Store · Waze/Maps e file picker **CLOSED** em 2026-09-26 |
 
 ---
 

@@ -113,7 +113,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
 | **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). OAuth nativo Capacitor **CLOSED**. Push, GPS background e Play Store continuam abertos | P1 — Necessário para fechar produto | S-MOB-02 |
-| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-25). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED** e Google Passenger Onboarding **CLOSED**. Google identity linking **CLOSED**. Passenger is a base capability for any active User; multi-role **CLOSED** (o contexto Passageiro não muda `User.role`). cleanup smoke account **OPEN**. Aberto: GPS background, push, Waze/Maps, file picker, Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
+| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-26). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED**, Google Passenger Onboarding **CLOSED**, Google identity linking **CLOSED**, multi-role **CLOSED**, cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** (PR #669, Oppo). Aberto: GPS background, push, Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
 | **S-MOB-03** | Cross-app | `VITE_APP_DOWNLOAD_URL` / landing stores | P2 — Melhoria importante | S-MOB-02 |
 
 ### Produto Driver / Passenger / Partner / Admin

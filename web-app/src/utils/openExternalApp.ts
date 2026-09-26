@@ -7,15 +7,16 @@ export function isNativePlatform(): boolean {
 
 async function launcher() {
   const { AppLauncher } = await import('@capacitor/app-launcher')
-  return AppLauncher
+  // O plugin é thenable. Devolvê-lo de uma função async faz o await chamar AppLauncher.then().
+  return { plugin: AppLauncher }
 }
 
 /** Android 11+ só responde se o scheme estiver em `<queries>` no manifest. */
 export async function canOpenExternalUrl(url: string): Promise<boolean> {
   if (!isNativePlatform()) return false
   try {
-    const AppLauncher = await launcher()
-    const { value } = await AppLauncher.canOpenUrl({ url })
+    const { plugin } = await launcher()
+    const { value } = await plugin.canOpenUrl({ url })
     return value
   } catch {
     return false
@@ -29,8 +30,8 @@ export async function canOpenExternalUrl(url: string): Promise<boolean> {
 export async function openExternalUrl(url: string): Promise<boolean> {
   if (isNativePlatform()) {
     try {
-      const AppLauncher = await launcher()
-      const { completed } = await AppLauncher.openUrl({ url })
+      const { plugin } = await launcher()
+      const { completed } = await plugin.openUrl({ url })
       return completed
     } catch {
       return false
