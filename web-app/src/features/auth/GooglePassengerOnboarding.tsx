@@ -30,6 +30,7 @@ type GooglePassengerOnboardingProps = {
   onLink: (body: GoogleLinkSubmit) => Promise<unknown>
   onDone: () => void
   onRestart: () => void
+  initialLinkRequired?: boolean
 }
 
 export function GooglePassengerOnboarding({
@@ -41,12 +42,13 @@ export function GooglePassengerOnboarding({
   onLink,
   onDone,
   onRestart,
+  initialLinkRequired = false,
 }: GooglePassengerOnboardingProps) {
   const { t } = useTranslation('auth')
   const [name, setName] = useState(suggestedName)
   const [phone, setPhone] = useState('+351')
   const [password, setPassword] = useState('')
-  const [linkRequired, setLinkRequired] = useState(false)
+  const [linkRequired, setLinkRequired] = useState(initialLinkRequired)
   const [acceptLegal, setAcceptLegal] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)

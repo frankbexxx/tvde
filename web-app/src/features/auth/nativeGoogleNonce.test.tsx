@@ -5,6 +5,7 @@ import { LoginScreen } from './LoginScreen'
 import { sha256Hex } from './googleOauthState'
 
 const loginGoogleIdToken = vi.fn()
+const linkGoogleAccount = vi.fn()
 const signIn = vi.fn()
 
 vi.mock('react-i18next', () => ({
@@ -31,7 +32,7 @@ vi.mock('../../context/AuthContext', () => ({
     login: vi.fn(),
     loginGoogleIdToken,
     completeGoogleOnboarding: vi.fn(),
-    linkGoogleAccount: vi.fn(),
+    linkGoogleAccount,
   }),
   isBackofficeStaffRole: () => false,
 }))
@@ -62,8 +63,10 @@ vi.mock('@capawesome/capacitor-google-sign-in', () => ({
 describe('native Google nonce wiring', () => {
   beforeEach(() => {
     loginGoogleIdToken.mockReset()
+    linkGoogleAccount.mockReset()
     signIn.mockReset()
     loginGoogleIdToken.mockResolvedValue({ access_token: 'not-logged', role: 'passenger' })
+    linkGoogleAccount.mockResolvedValue({ access_token: 'not-logged', role: 'passenger' })
     signIn.mockResolvedValue({ idToken: 'header.payload.signature' })
     vi.stubGlobal('location', { ...window.location, assign: vi.fn() })
   })
@@ -83,5 +86,37 @@ describe('native Google nonce wiring', () => {
     expect(pluginNonce).toMatch(/^[0-9a-f]{64}$/)
     expect(pluginNonce).not.toBe(backendNonce)
     expect(pluginNonce).toBe(await sha256Hex(backendNonce))
+  })
+
+  it('asks for the account password and then continues the login', async () => {
+    const payload = btoa(JSON.stringify({ email: 'ana@example.com', name: 'Ana Example' }))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '')
+    signIn.mockResolvedValue({ idToken: `e30.${payload}.sig` })
+    loginGoogleIdToken.mockRejectedValue({
+      status: 409,
+      detail: { code: 'existing_account_link_required', proof: 'password' },
+    })
+    render(
+      <MemoryRouter>
+        <LoginScreen requestedRole="passenger" />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByTestId('google-sign-in'))
+    expect(await screen.findByTestId('google-onboarding-password')).toBeInTheDocument()
+    expect(screen.getByText('googleOnboardingLinkBody')).toBeInTheDocument()
+    expect(screen.queryByText(/super_admin|superuser|privilegiad/i)).not.toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '+351912345678' },
+    })
+    fireEvent.change(screen.getByTestId('google-onboarding-password'), {
+      target: { value: 'secret-pass' },
+    })
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    await waitFor(() => expect(linkGoogleAccount).toHaveBeenCalledTimes(1))
+    expect(linkGoogleAccount.mock.calls[0][0].password).toBe('secret-pass')
+    await waitFor(() => expect(window.location.assign).toHaveBeenCalledWith('/passenger'))
   })
 })

@@ -461,7 +461,16 @@ def _session_from_google_claims(
                     status_code=status.HTTP_409_CONFLICT,
                     detail="google_email_mismatch",
                 )
-            # Email Google verificado já gravado nesta conta. É a mesma pessoa.
+            # Admin e super_admin: o primeiro Google pede a palavra-passe,
+            # mesmo com o email verificado igual. Não grava o sub aqui.
+            if by_email.role in (Role.admin, Role.super_admin):
+                if _phone_link_is_provable(by_email, email, sub):
+                    _raise_existing_account_link_required(id_token=echo_id_token)
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={"code": "existing_account_link_conflict"},
+                )
+            # Passageiro, motorista e parceiro: o email verificado chega.
             # O role elevado mantém-se. Não se cria outro User.
             if not by_email.oauth_google_sub:
                 by_email.oauth_google_sub = sub
@@ -560,13 +569,26 @@ def _phone_link_is_provable(owner: User, email: str, sub: str) -> bool:
     return True
 
 
+def _raise_existing_account_link_required(*, id_token: str | None = None) -> None:
+    """Pede a palavra-passe. Não descreve o papel nem o email da conta."""
+    detail: dict[str, str] = {
+        "code": "existing_account_link_required",
+        "proof": "password",
+    }
+    # O redirect web consome o authorization code. O id_token volta só para
+    # esta página o reenviar em memória. O login nativo já o tem.
+    if id_token:
+        detail["id_token"] = id_token
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=detail,
+    )
+
+
 def _refuse_unproven_phone_owner(owner: User, email: str, sub: str) -> None:
     """Telefone já usado. Não grava nada e não descreve a conta existente."""
     if _phone_link_is_provable(owner, email, sub):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={"code": "existing_account_link_required", "proof": "password"},
-        )
+        _raise_existing_account_link_required()
     raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail={"code": "existing_account_link_conflict"},
@@ -826,6 +848,60 @@ def _validated_google_claims(id_token: str, nonce: str | None) -> dict:
     return claims
 
 
+def _link_privileged_email_owner(
+    db: Session,
+    owner: Optional[User],
+    *,
+    sub: str,
+    email: str,
+    password: str,
+) -> TokenResponse:
+    """Primeiro Google de admin ou super_admin cujo email já é desta conta.
+
+    Não há passageiro pending, porque o email é único. A palavra-passe
+    confirma a posse. O role e o telefone não mudam.
+    """
+    if (
+        owner is None
+        or owner.role not in (Role.admin, Role.super_admin)
+        or owner.oauth_google_sub
+        or not owner.email
+        or owner.email.lower() != email
+        or not _phone_link_is_provable(owner, email, sub)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "existing_account_link_conflict"},
+        )
+    if not verify_password(password, owner.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_credentials",
+        )
+    role_before = owner.role
+    phone_before = owner.phone
+    owner.oauth_google_sub = sub
+    owner.role = role_before
+    owner.phone = phone_before
+    try:
+        if acceptance_required(db, owner.id):
+            record_acceptance(db, owner.id, LegalAcceptanceSource.register_google)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": "existing_account_link_conflict"},
+        ) from None
+    db.refresh(owner)
+    token_data = create_access_token(
+        subject=str(owner.id),
+        role=owner.role.value,
+        token_version=int(owner.token_version),
+    )
+    return _token_response(owner, token_data)
+
+
 def _link_google_to_phone_owner(
     db: Session,
     claims: dict,
@@ -861,6 +937,14 @@ def _link_google_to_phone_owner(
     owner = db.execute(
         select(User).where(User.phone == normalized_phone)
     ).scalar_one_or_none()
+    if google_user is None:
+        return _link_privileged_email_owner(
+            db,
+            owner,
+            sub=sub,
+            email=email,
+            password=password,
+        )
     if (
         google_user is None
         or owner is None

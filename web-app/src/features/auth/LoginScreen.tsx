@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
 import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
-import { readGoogleOnboarding } from './googleOnboarding'
+import { googleIdTokenProfile, readExistingAccountLink, readGoogleOnboarding } from './googleOnboarding'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { isCapacitorNative } from './capacitorPlatform'
@@ -47,6 +47,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     nonce: string
     name: string
     email: string
+    initialLinkRequired?: boolean
   } | null>(null)
 
   useEffect(() => {
@@ -171,6 +172,18 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
           })
           return
         }
+        const link = readExistingAccountLink(err)
+        if (link) {
+          const profile = googleIdTokenProfile(idToken)
+          setGoogleDraft({
+            idToken,
+            nonce: backendNonce,
+            name: profile?.name ?? '',
+            email: profile?.email ?? '',
+            initialLinkRequired: true,
+          })
+          return
+        }
         setError(t('googleCapacitorFailed'))
         return
       }
@@ -193,6 +206,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         onLink={linkGoogleAccount}
         onDone={() => window.location.assign('/passenger')}
         onRestart={() => setGoogleDraft(null)}
+        initialLinkRequired={googleDraft.initialLinkRequired}
       />
     )
   }

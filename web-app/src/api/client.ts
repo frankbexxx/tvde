@@ -21,7 +21,14 @@ export const INITIAL_LOAD_TIMEOUT_MS = COLD_START_FIRST_TIMEOUT_MS
 
 export interface ApiError {
   status: number
-  detail: string | { code?: string; name?: string; email?: string; id_token?: string; detail?: string }
+  detail: string | {
+    code?: string
+    name?: string
+    email?: string
+    id_token?: string
+    proof?: string
+    detail?: string
+  }
   request_id?: string
 }
 

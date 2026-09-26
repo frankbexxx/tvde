@@ -4,7 +4,12 @@ import { useAuth } from '../../context/AuthContext'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
-import { readGoogleOnboarding, type GoogleOnboardingPrompt } from './googleOnboarding'
+import {
+  googleIdTokenProfile,
+  readExistingAccountLink,
+  readGoogleOnboarding,
+  type GoogleOnboardingPrompt,
+} from './googleOnboarding'
 import { Spinner } from '../../components/ui/Spinner'
 import type { ApiError } from '../../api/client'
 
@@ -26,7 +31,7 @@ function formatErr(err: unknown): string {
   return 'Não foi possível concluir o login com Google.'
 }
 
-type HeldOnboarding = GoogleOnboardingPrompt & { idToken: string }
+type HeldOnboarding = GoogleOnboardingPrompt & { idToken: string; initialLinkRequired?: boolean }
 
 export function GoogleOAuthCallback() {
   const [search] = useSearchParams()
@@ -55,11 +60,22 @@ export function GoogleOAuthCallback() {
       } catch (e: unknown) {
         if (!alive) return
         const onboard = readGoogleOnboarding(e)
+        const link = readExistingAccountLink(e)
         sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
         sessionStorage.removeItem(LEGAL_ACCEPT_REGISTER_KEY)
         window.history.replaceState({}, '', '/auth/google/callback')
         if (onboard?.idToken) {
           setHeld({ ...onboard, idToken: onboard.idToken })
+          return
+        }
+        if (link?.idToken) {
+          const profile = googleIdTokenProfile(link.idToken)
+          setHeld({
+            idToken: link.idToken,
+            name: profile?.name ?? '',
+            email: profile?.email ?? '',
+            initialLinkRequired: true,
+          })
           return
         }
         if (onboard) {
@@ -84,6 +100,7 @@ export function GoogleOAuthCallback() {
         onLink={linkGoogleAccount}
         onDone={() => navigate('/passenger', { replace: true })}
         onRestart={() => navigate('/passenger', { replace: true })}
+        initialLinkRequired={held.initialLinkRequired}
       />
     )
   }

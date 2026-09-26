@@ -30,6 +30,35 @@ export function normalizePtPhone(input: string): string | null {
   return value
 }
 
+/** Login Google pediu a palavra-passe da conta existente. Não traz o papel. */
+export function readExistingAccountLink(err: unknown): { idToken: string | null } | null {
+  if (err === null || typeof err !== 'object' || !('detail' in err)) return null
+  const detail = (err as ApiError).detail
+  if (detail === null || typeof detail !== 'object' || Array.isArray(detail)) return null
+  if (detail.code !== 'existing_account_link_required' || detail.proof !== 'password') return null
+  const idToken = typeof detail.id_token === 'string' && detail.id_token ? detail.id_token : null
+  return { idToken }
+}
+
+/** Nome e email do id token Google, só para preencher o ecrã. Não valida a assinatura. */
+export function googleIdTokenProfile(idToken: string): { name: string; email: string } | null {
+  const payload = idToken.split('.')[1]
+  if (!payload) return null
+  try {
+    const padded = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const json = JSON.parse(atob(padded.padEnd(padded.length + ((4 - (padded.length % 4)) % 4), '='))) as {
+      name?: unknown
+      email?: unknown
+    }
+    const email = typeof json.email === 'string' ? json.email.trim() : ''
+    if (!email) return null
+    const name = typeof json.name === 'string' ? json.name.trim() : ''
+    return { name, email }
+  } catch {
+    return null
+  }
+}
+
 export function apiDetailCode(err: unknown): string | null {
   if (err === null || typeof err !== 'object' || !('detail' in err)) return null
   const detail = (err as ApiError).detail
