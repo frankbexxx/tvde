@@ -124,6 +124,11 @@ def test_driver_upload_rejects_oversize() -> None:
 
 def test_driver_upload_rejects_before_persist_on_bad_type() -> None:
     driver_id, tok = _seed_driver()
+    before = SessionLocal()
+    try:
+        prior = get_documents_for_driver(before, uuid.UUID(driver_id))["docs"]["carta_tvde"]["status"]
+    finally:
+        before.close()
     c = TestClient(app)
     r = c.post(
         "/driver/documents/carta_tvde/upload",
@@ -135,7 +140,7 @@ def test_driver_upload_rejects_before_persist_on_bad_type() -> None:
     try:
         state = get_documents_for_driver(db, uuid.UUID(driver_id))
         assert state["docs"]["carta_tvde"].get("file_path") is None
-        assert state["docs"]["carta_tvde"]["status"] == "missing"
+        assert state["docs"]["carta_tvde"]["status"] == prior
     finally:
         db.close()
 

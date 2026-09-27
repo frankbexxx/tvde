@@ -8,6 +8,10 @@ from app.api.deps import UserContext, get_db, require_role
 from app.db.models.driver import Driver
 from app.models.enums import Role
 from app.schemas.driving_compliance import DrivingHoursComplianceResponse
+from app.services.driver_documents import (
+    assert_driver_required_documents_for_new_ops,
+    driver_required_documents_approved,
+)
 from app.services.driving_compliance import (
     driver_compliance_snapshot,
 )
@@ -80,6 +84,12 @@ async def go_online(
         raise HTTPException(status_code=404, detail="driver_not_found")
     if driver_has_active_assigned_trip(db=db, driver_user_id=str(user.user_id)):
         return {"status": "online", "is_available": driver.is_available}
+    if not driver_required_documents_approved(driver):
+        if driver.is_available:
+            driver.is_available = False
+            db.commit()
+            db.refresh(driver)
+        assert_driver_required_documents_for_new_ops(driver, surface="driver_go_online")
     snap = driver_compliance_snapshot(db, user.user_id)
     if snap["enabled"] and snap["blocked_accept"]:
         driver.is_available = False
