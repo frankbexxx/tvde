@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "913167349008",
+    "project_id": "tvde-oauth",
+    "storage_bucket": "tvde-oauth.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:913167349008:android:62d75342eb22ec5daba195",
+        "android_client_info": {
+          "package_name": "pt.vamula.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "913167349008-o7194fc5hsb14v48p2u689d08k0eq4tu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4cwQTNCWDvjiP7QTmDxQIlHbb5PibSxk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "913167349008-o7194fc5hsb14v48p2u689d08k0eq4tu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -105,6 +105,11 @@ class Settings(BaseSettings):
     # Secret for cron-job.org (no JWT). GET /cron/jobs + header X-Cron-Secret
     CRON_SECRET: str | None = None
 
+    # FCM HTTP v1. Empty until Firebase is enabled on the existing GCP project.
+    # The service-account JSON stays in the environment, never in the repo.
+    FCM_PROJECT_ID: str | None = None
+    FCM_SERVICE_ACCOUNT_JSON: str | None = None
+
     # Cleanup: delete audit_events older than N days (M2 provisional: 2 years).
     # Trips / driving segments are NOT purged by this cleanup (activity retention).
     AUDIT_EVENTS_RETENTION_DAYS: int = 730

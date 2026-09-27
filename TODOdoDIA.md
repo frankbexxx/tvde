@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Push P1 / foundation** (**2026-09-27**)
+
+Infraestrutura FCM e ciclo de vida do token. Sem ofertas nem estados de viagem.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-NOTIF-P1** | Push P1 / foundation | Concluído | **CLOSED** · registo, logout e novo login no Oppo · canal `Viagens` · sem oferta real |
+| **S-NOTIF-01** | Push global | Em curso | **PARTIAL** · falta oferta real, background, app fechada e toque na notificação |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · aberto: push real, GPS background, Play Store |
+
+---
+
 ## Painel — **S-MOB-02 navegação e ficheiros** (**2026-09-26** — PR #669)
 
 Smoke no Oppo contra a API de produção. Sem merge.

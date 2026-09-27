@@ -493,10 +493,12 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. |
 |-------|--------|-------------------|------|------|
-| D3.1 | Contas FCM/APNs | Prontas | EXTERNO · CONFIG | D1 |
-| D3.2 | Backend device + send | API push | CÓDIGO | D3.1 |
-| D3.3 | Cliente handlers | Recebe | CÓDIGO | D3.2 |
-| D3.4 | Smoke oferta→push | PASS | TESTE | D3.3 |
+| D3.1 | Contas FCM/APNs | Android no projecto `tvde-oauth`: app `pt.vamula.app`, `google-services.json` e credencial no serviço `tvde-api`. APNs por fazer | EXTERNO · CONFIG | D1 |
+| D3.2 | Backend device + send | Push P1: tabela, registo/desregisto e abstracção FCM HTTP v1. Envio de oferta ainda não | CÓDIGO | D3.1 |
+| D3.3 | Cliente handlers | Listeners, permissão Android 13+, canal `Viagens`. Smoke de registo no Oppo PASS. Sem eventos de viagem | CÓDIGO | D3.2 |
+| D3.4 | Smoke oferta→push | Por iniciar | TESTE | D3.3 |
+
+Push P1 / foundation = **CLOSED**. Push global continua **PARTIAL**. S-MOB-02 continua **PARTIAL**.
 
 ## D4 — Landing / URL lojas
 
