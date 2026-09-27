@@ -23,6 +23,7 @@ from app.db.models.user import User
 from app.models.enums import DriverStatus, Role, UserStatus
 from app.schemas.trip import TripCreateRequest
 from app.services.baseline_reset import run_full_baseline_reset, seed_user_auth_fields
+from app.services.driver_documents import approved_driver_documents_blob
 from app.services.seed_demo_vehicle_compliance import ensure_e2e_seed_driver_vehicle
 from app.services.trips import (
     accept_trip as accept_trip_service,
@@ -181,11 +182,13 @@ async def dev_seed(db: Session = Depends(get_db)) -> dict:
             partner_id=BASELINE_PARTNER_FLEET_UUID,
             status=DriverStatus.approved,
             commission_percent=15,
+            documents=approved_driver_documents_blob(),
         )
         db.add(driver_profile)
     else:
         driver_profile.is_available = True
         driver_profile.partner_id = BASELINE_PARTNER_FLEET_UUID
+        driver_profile.documents = approved_driver_documents_blob()
 
     e2e_vehicle = ensure_e2e_seed_driver_vehicle(db, driver_profile)
 
@@ -262,10 +265,12 @@ async def dev_seed_simulator(
                 partner_id=DEFAULT_PARTNER_UUID,
                 status=DriverStatus.approved,
                 commission_percent=15,
+                documents=approved_driver_documents_blob(),
             )
             db.add(driver_profile)
         else:
             driver_profile.is_available = True
+            driver_profile.documents = approved_driver_documents_blob()
         db.refresh(user)
         driver_tokens.append(make_token(user))
 
@@ -407,6 +412,7 @@ async def dev_promote_to_driver(
     ).scalar_one_or_none()
     if driver_profile:
         driver_profile.is_available = True
+        driver_profile.documents = approved_driver_documents_blob()
         user.role = Role.driver
         db.commit()
         return {
@@ -420,6 +426,7 @@ async def dev_promote_to_driver(
         partner_id=DEFAULT_PARTNER_UUID,
         status=DriverStatus.approved,
         commission_percent=15,
+        documents=approved_driver_documents_blob(),
     )
     db.add(driver_profile)
     db.commit()

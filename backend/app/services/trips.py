@@ -55,6 +55,10 @@ from app.services.driving_compliance import (
     on_trip_status_change_for_driving_compliance,
     apply_availability_after_trip_ends_with_compliance,
 )
+from app.services.driver_documents import (
+    assert_driver_required_documents_for_new_ops,
+    driver_required_documents_approved,
+)
 from app.services.vehicle_compliance_gate import (
     assert_driver_vehicle_compliance_for_accept,
     driver_eligible_for_new_trip_ops,
@@ -1021,6 +1025,9 @@ def accept_trip(
     assert_driver_vehicle_compliance_for_accept(
         db, driver, surface="accept_trip", trip_id=str(trip.id)
     )
+    assert_driver_required_documents_for_new_ops(
+        driver, surface="accept_trip", trip_id=str(trip.id)
+    )
     _assert_driver_matches_trip_for_accept(db, driver, trip, surface="accept_trip")
     if not getattr(driver, "is_available", True):
         raise HTTPException(
@@ -1198,6 +1205,9 @@ def accept_offer(
     )
     assert_driver_vehicle_compliance_for_accept(
         db, driver, surface="accept_offer", trip_id=str(trip.id)
+    )
+    assert_driver_required_documents_for_new_ops(
+        driver, surface="accept_offer", trip_id=str(trip.id)
     )
     _assert_driver_matches_trip_for_accept(db, driver, trip, surface="accept_offer")
     if not getattr(driver, "is_available", True):
@@ -1497,6 +1507,8 @@ def list_available_trips(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="forbidden",
         )
+    if not driver_required_documents_approved(driver):
+        return []
     if not getattr(driver, "is_available", True):
         logger.info(
             "list_available_trips: driver not available",

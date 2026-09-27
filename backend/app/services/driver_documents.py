@@ -97,6 +97,55 @@ def serialize_state(state: dict[str, Any]) -> str:
     return json.dumps(state, ensure_ascii=False)
 
 
+DRIVER_DOCUMENTS_INCOMPLETE = "driver_documents_incomplete"
+
+
+def documents_blob_with_status(status: str) -> str:
+    """JSON de teste/operação: todos os documentos obrigatórios no mesmo estado."""
+    state = {"version": 1, "docs": default_docs_dict()}
+    for key in DOC_KEYS:
+        state["docs"][key]["status"] = status
+    return serialize_state(state)
+
+
+def approved_driver_documents_blob() -> str:
+    return documents_blob_with_status("approved")
+
+
+def driver_required_documents_approved(driver: Driver) -> bool:
+    """Mesma regra que `isDriverDocumentsReady`: cada documento obrigatório está `approved`.
+
+    `pending` é lido como `pending_review`. `missing`, `rejected` e `expired` não contam.
+    """
+    parsed = parse_documents_column(driver.documents)
+    docs: dict[str, dict[str, Any]] = parsed["docs"]
+    return all(docs.get(key, {}).get("status") == "approved" for key in DOC_KEYS)
+
+
+def assert_driver_required_documents_for_new_ops(
+    driver: Driver,
+    *,
+    surface: str,
+    trip_id: str | None = None,
+) -> None:
+    """Bloqueia nova disponibilidade ou nova oferta. Não altera a viagem."""
+    if driver_required_documents_approved(driver):
+        return
+    from app.utils.logging import log_event
+
+    fields: dict[str, object] = {
+        "surface": surface,
+        "driver_id": str(driver.user_id),
+    }
+    if trip_id:
+        fields["trip_id"] = trip_id
+    log_event("driver_documents_blocked", **fields)
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=DRIVER_DOCUMENTS_INCOMPLETE,
+    )
+
+
 def _ensure_driver_row(db: Session, user_id: uuid.UUID) -> Driver:
     row = db.get(Driver, user_id)
     if row is None:

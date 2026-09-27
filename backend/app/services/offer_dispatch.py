@@ -16,6 +16,7 @@ from app.db.models.driver import Driver, DriverLocation
 from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.models.enums import DriverStatus, OfferStatus, TripStatus
+from app.services.driver_documents import driver_required_documents_approved
 from app.services.pet_trip import driver_matches_trip_fare_and_pet
 from app.services.vehicle_capacity import batch_filter_drivers_by_capacity
 from app.services.vehicle_compliance_gate import (
@@ -156,7 +157,25 @@ def has_eligible_driver_for_assigned_pool(db: Session, trip: Trip) -> bool:
     category_matched = _filter_by_inactive_vehicle(db, trip, category_matched)
     category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
     category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
+    category_matched = _filter_by_required_documents(trip, category_matched)
     return bool(category_matched)
+
+
+def _filter_by_required_documents(
+    trip: Trip, ranked: list[tuple[Driver, float]]
+) -> list[tuple[Driver, float]]:
+    """Exclui motoristas sem os documentos obrigatórios aprovados, mesmo se is_available."""
+    kept: list[tuple[Driver, float]] = []
+    for driver, dist_km in ranked:
+        if driver_required_documents_approved(driver):
+            kept.append((driver, dist_km))
+            continue
+        log_event(
+            "offer_dispatch_skip_documents",
+            trip_id=str(trip.id),
+            driver_id=str(driver.user_id),
+        )
+    return kept
 
 
 def _without_trip_passenger(
@@ -265,6 +284,7 @@ def create_offers_for_trip(
 
     # PF3D-3A: soft-filter by vehicle document compliance before top_n (flag OFF = no-op).
     category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
+    category_matched = _filter_by_required_documents(trip, category_matched)
 
     # PET-4: soft-filter by passenger capacity (flag OFF = no-op).
     category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
@@ -520,6 +540,7 @@ def redispatch_expired_trips(db: Session) -> List[TripOffer]:
         category_matched = _filter_by_inactive_vehicle(db, trip, category_matched)
         category_matched = _filter_by_vehicle_compliance(db, trip, category_matched)
         category_matched = batch_filter_drivers_by_capacity(db, trip, category_matched)
+        category_matched = _filter_by_required_documents(trip, category_matched)
         category_matched = _without_trip_passenger(trip, category_matched)
         selected_redispatch = category_matched[:top_n]
         for driver, dist_km in selected_redispatch:
