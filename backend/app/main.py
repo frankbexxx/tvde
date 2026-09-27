@@ -34,6 +34,7 @@ from app.api.routers import (
     logs,
     partner,
     passenger_trips,
+    push_tokens,
     rotacional,
     ws,
 )
@@ -168,6 +169,7 @@ if settings.debug_router_enabled():
 if settings.dev_tools_router_enabled():
     app.include_router(dev_tools.router)
 app.include_router(auth.router)
+app.include_router(push_tokens.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
 app.include_router(complaints.router)

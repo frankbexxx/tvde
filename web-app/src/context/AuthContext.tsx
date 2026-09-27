@@ -16,6 +16,7 @@ import {
   type ApiError,
 } from '../api/client'
 import { warn as logWarn } from '../utils/logger'
+import { attachPushIfAlreadyGranted, deactivatePushOnLogout } from '../features/push/pushNotifications'
 import i18n from '../i18n'
 import { validateAccessToken } from '../api/session'
 import {
@@ -588,6 +589,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setAppRouteRole = syncAppRouteRole
 
   const logout = useCallback(() => {
+    deactivatePushOnLogout(token)
     // L-FE-02: drop passenger active-trip sessionStorage before auth wipe
     writePassengerActiveTripIdToStorage(null)
     clearAuthStorage()
@@ -599,7 +601,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionPhone(null)
     setSessionDisplayName(null)
     window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT))
-  }, [])
+  }, [token])
 
   const refreshSessionProfile = useCallback(async () => {
     if (!token || !betaMode) return
@@ -621,6 +623,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setTokenGetter(() => token)
+  }, [token])
+
+  useEffect(() => {
+    if (!token) return
+    void attachPushIfAlreadyGranted()
   }, [token])
 
   useEffect(() => {

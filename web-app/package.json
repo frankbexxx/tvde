@@ -23,6 +23,7 @@
     "@capacitor/android": "^8.5.2",
     "@capacitor/app-launcher": "8.0.1",
     "@capacitor/core": "^8.5.2",
+    "@capacitor/push-notifications": "8.0.1",
     "@capawesome/capacitor-google-sign-in": "^0.1.4",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-slot": "^1.2.4",

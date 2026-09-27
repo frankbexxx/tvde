@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { requestTripNotificationPermission } from '../push/pushNotifications'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
 import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
@@ -722,6 +723,7 @@ export function PassengerDashboard() {
       )
       setPassengerPendingTripDetail(tripDetailFromCreateResponse(res, pickupLocation, dropoffLocation))
       setPassengerActiveTripId(res.trip_id)
+      void requestTripNotificationPermission()
       setStatus(passengerTripStatusLabel(res.status))
       const surcharge =
         res.pet_surcharge ?? res.price_breakdown?.pet_surcharge ?? null
@@ -854,6 +856,7 @@ export function PassengerDashboard() {
         )
       )
       setPassengerActiveTripId(res.trip_id)
+      void requestTripNotificationPermission()
       setStatus(passengerTripStatusLabel(res.status))
       const surcharge =
         res.pet_surcharge ?? res.price_breakdown?.pet_surcharge ?? null

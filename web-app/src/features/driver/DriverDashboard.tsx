@@ -3,6 +3,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Link } from 'react-router-dom'
 import { useAuth, type Role } from '../../context/AuthContext'
+import { requestTripNotificationPermission } from '../push/pushNotifications'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
 import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
@@ -552,6 +553,7 @@ export function DriverDashboard() {
       setError(null)
       try {
         if (checked) {
+          void requestTripNotificationPermission()
           const serverAvailability = await setDriverOnline(token)
           const canGoOnline = !effectiveDocsGate || isDriverDocumentsReady(driverDocuments)
           const nextOffline = offlineFromBackendAvailability(serverAvailability.is_available, canGoOnline)
