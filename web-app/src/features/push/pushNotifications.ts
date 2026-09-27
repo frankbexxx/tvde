@@ -1,11 +1,16 @@
 import { apiFetch } from '../../api/client'
 import { isCapacitorNative } from '../auth/capacitorPlatform'
-import { getStoredAccessToken } from '../../utils/authStorage'
+import { getStoredAccessToken, setStoredAppRouteRole } from '../../utils/authStorage'
 
-/** Canal Android único nesta fase. Ofertas reais entram em P2. */
+/** Canal Android das ofertas de viagem. */
 export const TRIPS_NOTIFICATION_CHANNEL_ID = 'trips'
 
 type PushPermissionState = 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale'
+
+type PushListenerPayload = {
+  value?: string
+  notification?: { data?: Record<string, unknown> }
+}
 
 type PushPlugin = {
   checkPermissions: () => Promise<{ receive: PushPermissionState }>
@@ -20,8 +25,38 @@ type PushPlugin = {
   }) => Promise<void>
   addListener: (
     event: string,
-    handler: (payload: { value?: string }) => void
+    handler: (payload: PushListenerPayload) => void
   ) => Promise<{ remove: () => Promise<void> }>
+}
+
+export type OfferPushRoute = 'driver' | 'ignored'
+
+function pushData(payload: PushListenerPayload | undefined): Record<string, unknown> | undefined {
+  const data = payload?.notification?.data
+  return data && typeof data === 'object' ? data : undefined
+}
+
+/** Foreground: a UI de ofertas já faz polling. Não abre outra notificação. */
+export function noteForegroundOfferPush(
+  data: Record<string, unknown> | undefined
+): 'noted' | 'ignored' {
+  if (data?.event !== 'new_trip_offer') return 'ignored'
+  return 'noted'
+}
+
+/**
+ * Toque na notificação. Sessão válida abre /driver.
+ * Sem sessão, /driver mostra o login já com o papel de motorista.
+ */
+export function applyOfferPushNavigation(
+  data: Record<string, unknown> | undefined
+): OfferPushRoute {
+  if (!data || data.event !== 'new_trip_offer') return 'ignored'
+  setStoredAppRouteRole('driver')
+  if (window.location.pathname !== '/driver') {
+    window.location.assign('/driver')
+  }
+  return 'driver'
 }
 
 let listenersReady = false
@@ -44,7 +79,7 @@ async function publishToken(fcmToken: string): Promise<void> {
   })
 }
 
-/** Listeners de registo. Não trata eventos de viagem (P2/P3). */
+/** Listeners de registo e do toque numa oferta. */
 export async function ensurePushListeners(): Promise<void> {
   if (listenersReady || !isCapacitorNative()) return
   const { push } = await loadPush()
@@ -58,8 +93,20 @@ export async function ensurePushListeners(): Promise<void> {
   await push.addListener('registrationError', () => {
     /* recusa ou falha do plugin não rebenta a UI */
   })
-  await push.addListener('pushNotificationReceived', () => { })
-  await push.addListener('pushNotificationActionPerformed', () => { })
+  await push.addListener('pushNotificationReceived', (payload) => {
+    try {
+      noteForegroundOfferPush(pushData(payload))
+    } catch {
+      /* um payload desconhecido não rebenta a UI */
+    }
+  })
+  await push.addListener('pushNotificationActionPerformed', (payload) => {
+    try {
+      applyOfferPushNavigation(pushData(payload))
+    } catch {
+      /* um payload desconhecido não rebenta a UI */
+    }
+  })
   listenersReady = true
 }
 

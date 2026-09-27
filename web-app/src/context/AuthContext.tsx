@@ -16,7 +16,11 @@ import {
   type ApiError,
 } from '../api/client'
 import { warn as logWarn } from '../utils/logger'
-import { attachPushIfAlreadyGranted, deactivatePushOnLogout } from '../features/push/pushNotifications'
+import {
+  attachPushIfAlreadyGranted,
+  deactivatePushOnLogout,
+  ensurePushListeners,
+} from '../features/push/pushNotifications'
 import i18n from '../i18n'
 import { validateAccessToken } from '../api/session'
 import {
@@ -624,6 +628,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setTokenGetter(() => token)
   }, [token])
+
+  useEffect(() => {
+    void ensurePushListeners()
+  }, [])
 
   useEffect(() => {
     if (!token) return

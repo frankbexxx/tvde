@@ -371,6 +371,20 @@ def publish_trip_offers(*, offers: list[TripOffer], trip: Trip) -> None:
                 offer_id=str(offer.id),
                 driver_id=str(offer.driver_id),
             )
+    try:
+        from app.services.fcm import push_committed_offers
+
+        push_committed_offers(offers, trip)
+    except Exception as exc:
+        logger.warning(
+            "publish_trip_offers: push failed",
+            extra={"trip_id": str(trip.id), "error_type": type(exc).__name__},
+        )
+        log_event(
+            "offer_push_failed",
+            trip_id=str(trip.id),
+            error_type=type(exc).__name__,
+        )
 
 
 def expire_stale_offers(db: Session, now: datetime | None = None) -> int:
