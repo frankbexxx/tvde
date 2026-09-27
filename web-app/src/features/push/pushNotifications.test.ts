@@ -2,18 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const native = vi.hoisted(() => ({ value: false }))
 const push = vi.hoisted(() => {
-  const listeners = new Map<string, (payload: { value?: string }) => void>()
+  const listeners = new Map<string, (payload: Record<string, unknown>) => void>()
   return {
     listeners,
     checkPermissions: vi.fn(async (): Promise<{ receive: string }> => ({ receive: 'granted' })),
     requestPermissions: vi.fn(async (): Promise<{ receive: string }> => ({ receive: 'granted' })),
     register: vi.fn(async () => {}),
     createChannel: vi.fn(async () => {}),
-    addListener: vi.fn(async (event: string, handler: (payload: { value?: string }) => void) => {
+    addListener: vi.fn(async (event: string, handler: (payload: Record<string, unknown>) => void) => {
       listeners.set(event, handler)
       return { remove: async () => {} }
     }),
-    emit(event: string, payload: { value?: string }) {
+    emit(event: string, payload: Record<string, unknown>) {
       listeners.get(event)?.(payload)
     },
   }
@@ -22,6 +22,12 @@ const push = vi.hoisted(() => {
 const api = vi.hoisted(() => ({
   apiFetch: vi.fn(async () => ({})),
   getStoredAccessToken: vi.fn(() => 'session-token'),
+  setStoredAppRouteRole: vi.fn(),
+}))
+
+const nav = vi.hoisted(() => ({
+  pathname: '/passenger',
+  assign: vi.fn(),
 }))
 
 vi.mock('../auth/capacitorPlatform', () => ({
@@ -38,11 +44,14 @@ vi.mock('../../api/client', () => ({
 
 vi.mock('../../utils/authStorage', () => ({
   getStoredAccessToken: api.getStoredAccessToken,
+  setStoredAppRouteRole: api.setStoredAppRouteRole,
 }))
 
 import {
+  applyOfferPushNavigation,
   attachPushIfAlreadyGranted,
   deactivatePushOnLogout,
+  noteForegroundOfferPush,
   requestTripNotificationPermission,
   resetPushRegistrationForTests,
 } from './pushNotifications'
@@ -58,6 +67,10 @@ describe('pushNotifications', () => {
     push.createChannel.mockClear()
     push.addListener.mockClear()
     api.apiFetch.mockClear()
+    api.setStoredAppRouteRole.mockClear()
+    nav.assign.mockClear()
+    nav.pathname = '/passenger'
+    vi.stubGlobal('location', nav)
     api.getStoredAccessToken.mockReturnValue('session-token')
     push.checkPermissions.mockResolvedValue({ receive: 'granted' })
     push.requestPermissions.mockResolvedValue({ receive: 'granted' })
@@ -136,5 +149,38 @@ describe('pushNotifications', () => {
       'pushNotificationReceived',
       'pushNotificationActionPerformed',
     ])
+  })
+
+  it('oferta em foreground não navega', async () => {
+    native.value = true
+    await attachPushIfAlreadyGranted()
+    expect(() =>
+      push.emit('pushNotificationReceived', {
+        notification: { data: { event: 'new_trip_offer', trip_id: 't1', offer_id: 'o1' } },
+      })
+    ).not.toThrow()
+    expect(noteForegroundOfferPush({ event: 'new_trip_offer' })).toBe('noted')
+    expect(nav.assign).not.toHaveBeenCalled()
+  })
+
+  it('toque em new_trip_offer abre /driver', async () => {
+    native.value = true
+    api.getStoredAccessToken.mockReturnValue('session-token')
+    await attachPushIfAlreadyGranted()
+    push.emit('pushNotificationActionPerformed', {
+      notification: { data: { event: 'new_trip_offer', trip_id: 't1', offer_id: 'o1' } },
+    })
+    expect(api.setStoredAppRouteRole).toHaveBeenCalledWith('driver')
+    expect(nav.assign).toHaveBeenCalledWith('/driver')
+    expect(applyOfferPushNavigation({ event: 'new_trip_offer', trip_id: 't1' })).toBe('driver')
+  })
+
+  it('payload desconhecido não rebenta', async () => {
+    native.value = true
+    await attachPushIfAlreadyGranted()
+    expect(() => push.emit('pushNotificationActionPerformed', { notification: { data: { event: 'other' } } })).not.toThrow()
+    expect(() => push.emit('pushNotificationReceived', {})).not.toThrow()
+    expect(applyOfferPushNavigation(undefined)).toBe('ignored')
+    expect(applyOfferPushNavigation({ event: 'nope' })).toBe('ignored')
   })
 })

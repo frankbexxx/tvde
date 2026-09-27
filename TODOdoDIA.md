@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Push P2 / oferta ao motorista** (**2026-09-27** — PR #671)
+
+Smoke no Oppo. App em background e processo fechado sem force-stop. O toque abre `/driver` com o cartão da oferta. Sessão mantida. Sem auto-aceite. Oferta expirada desaparece.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-NOTIF-P2** | Driver Offer Push | Concluído | **CLOSED** · background e processo fechado · cartão Aceitar · sessão · sem auto-aceite · expirada desaparece |
+| **S-NOTIF-01** | Push global | Em curso | **PARTIAL** · falta notificações ao passageiro |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · Push P2 **CLOSED** · aberto: notificações ao passageiro, GPS background, Play Store |
+
+---
+
 ## Painel — **Push P1 / foundation** (**2026-09-27**)
 
 Infraestrutura FCM e ciclo de vida do token. Sem ofertas nem estados de viagem.
@@ -23,8 +35,8 @@ Infraestrutura FCM e ciclo de vida do token. Sem ofertas nem estados de viagem.
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **S-NOTIF-P1** | Push P1 / foundation | Concluído | **CLOSED** · registo, logout e novo login no Oppo · canal `Viagens` · sem oferta real |
-| **S-NOTIF-01** | Push global | Em curso | **PARTIAL** · falta oferta real, background, app fechada e toque na notificação |
-| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · aberto: push real, GPS background, Play Store |
+| **S-NOTIF-01** | Push global | Em curso | **PARTIAL** · oferta ao motorista **CLOSED** em P2 · falta notificações ao passageiro |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · Push P2 **CLOSED** · aberto: notificações ao passageiro, GPS background, Play Store |
 
 ---
 

@@ -1,8 +1,9 @@
-"""FCM HTTP v1. No trip events call this yet. Credentials stay outside the repo."""
+"""FCM HTTP v1. Credentials stay outside the repo."""
 
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -13,14 +14,20 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.user import User
+from app.db.session import SessionLocal
+from app.models.enums import Role
 from app.services.device_push_tokens import (
     TRIPS_CHANNEL_ID,
     active_tokens_for_user,
     deactivate_token_value,
 )
+from app.utils.logging import log_event
+
+logger = logging.getLogger(__name__)
 
 FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
-DRIVER_OFFER_NOTIFICATION_BODY = "Nova oferta de viagem disponível"
+DRIVER_OFFER_NOTIFICATION_TITLE = "Nova oferta de viagem"
+DRIVER_OFFER_NOTIFICATION_BODY = "Tens uma nova oferta disponível."
 
 # Lock-screen copy must not carry these keys even if a caller passes them.
 _FORBIDDEN_DATA_KEYS = frozenset(
@@ -167,8 +174,93 @@ def deliver_user_push(
     results: list[FcmSendResult] = []
     safe = sanitize_data(data)
     for row in tokens:
-        result = sender.send(token=row.token, title=title, body=body, data=safe)
+        try:
+            result = sender.send(token=row.token, title=title, body=body, data=safe)
+        except FcmNotConfigured:
+            raise
+        except Exception as exc:
+            logger.warning(
+                "fcm_send_failed",
+                extra={"error_type": type(exc).__name__},
+            )
+            results.append(FcmSendResult(ok=False, invalid_token=False))
+            continue
         results.append(result)
         if result.invalid_token:
             deactivate_token_value(db, row.token)
     return results
+
+
+def push_committed_offers(
+    offers: list,
+    trip,
+    *,
+    sender: FcmSender | None = None,
+    db: Session | None = None,
+) -> None:
+    """Push after the offer rows exist. Never raises into matching."""
+    if not offers:
+        return
+    if sender is None and (settings.ENV or "") == "test":
+        return
+    own_session = db is None
+    session = db or SessionLocal()
+    try:
+        fcm = sender or FcmHttpV1Sender()
+        passenger_id = str(trip.passenger_id)
+        trip_id = str(trip.id)
+        for offer in offers:
+            driver_id = str(offer.driver_id)
+            offer_id = str(offer.id)
+            if driver_id == passenger_id:
+                log_event(
+                    "offer_push_skip_self",
+                    trip_id=trip_id,
+                    driver_id=driver_id,
+                )
+                continue
+            user = session.get(User, offer.driver_id)
+            if user is None or user.role != Role.driver:
+                log_event(
+                    "offer_push_skip_recipient",
+                    trip_id=trip_id,
+                    offer_id=offer_id,
+                    driver_id=driver_id,
+                )
+                continue
+            data = {
+                "event": "new_trip_offer",
+                "trip_id": trip_id,
+                "offer_id": offer_id,
+            }
+            try:
+                results = deliver_user_push(
+                    session,
+                    user,
+                    title=DRIVER_OFFER_NOTIFICATION_TITLE,
+                    body=DRIVER_OFFER_NOTIFICATION_BODY,
+                    data=data,
+                    sender=fcm,
+                )
+            except FcmNotConfigured:
+                log_event("offer_push_unconfigured", trip_id=trip_id)
+                return
+            except Exception as exc:
+                log_event(
+                    "offer_push_failed",
+                    trip_id=trip_id,
+                    offer_id=offer_id,
+                    error_type=type(exc).__name__,
+                )
+                continue
+            log_event(
+                "offer_push_attempted",
+                trip_id=trip_id,
+                offer_id=offer_id,
+                driver_id=driver_id,
+                token_count=len(results),
+                sent=sum(1 for item in results if item.ok),
+            )
+    finally:
+        if own_session:
+            session.close()
