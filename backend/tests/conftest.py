@@ -19,9 +19,25 @@ import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
+from sqlalchemy import event  # noqa: E402
+
 from app.db.migrations_runner import upgrade_to_head  # noqa: E402
+from app.db.models.driver import Driver  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
+from app.services.driver_documents import approved_driver_documents_blob  # noqa: E402
+
+
+@event.listens_for(Driver, "before_insert")
+def _test_drivers_default_to_approved_documents(mapper, connection, target) -> None:  # noqa: ARG001
+    """Os testes históricos criam motoristas sem coluna de documentos.
+
+    Em produção essa coluna vazia é inelegível. Aqui, omissão significa
+    documentos aprovados, para não mudar o significado dos testes antigos.
+    Quem define `documents` explicitamente mantém esse valor.
+    """
+    if target.documents is None:
+        target.documents = approved_driver_documents_blob()
 
 
 @pytest.fixture(scope="session", autouse=True)
