@@ -22,8 +22,8 @@ Infraestrutura FCM e ciclo de vida do token. Sem ofertas nem estados de viagem.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **S-NOTIF-P1** | Push P1 / foundation | Em curso | **PARTIAL** · migration, lifecycle, listeners, canal `Viagens`, provider FCM · falta `google-services.json` e credencial server-side |
-| **S-NOTIF-01** | Push global | Em curso | **PARTIAL** · falta oferta real ao motorista e smoke com a app em background |
+| **S-NOTIF-P1** | Push P1 / foundation | Concluído | **CLOSED** · registo, logout e novo login no Oppo · canal `Viagens` · sem oferta real |
+| **S-NOTIF-01** | Push global | Em curso | **PARTIAL** · falta oferta real, background, app fechada e toque na notificação |
 | **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · aberto: push real, GPS background, Play Store |
 
 ---

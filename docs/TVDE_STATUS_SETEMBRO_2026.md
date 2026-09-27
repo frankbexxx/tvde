@@ -86,7 +86,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 |----|------|------|------------|-------------|
 | **S-AUTH-01** | Backend/API | OTP **sem envio SMS**. **L-SEC-12 = CLOSED** (consume atómico). Deployed continua `503 otp_auth_unavailable` até provider SMS + smoke. Non-prod: código fixo/log. Provider ainda por escolher | P0 — Bloqueador | Conta SMS / provider |
 | **S-AUTH-02** | Backend/API | Google OAuth: só passenger + envs vazios por defeito; staging A2-02 | P2 — Melhoria importante | Credenciais staging/prod |
-| **S-NOTIF-01** | Cross-app | Push notifications (FCM/APNs) — **PARTIAL**. Push P1 / foundation no código (tabela `device_push_tokens`, registo/desregisto, canal Android `Viagens`, abstracção FCM HTTP v1). **Sem** eventos de viagem. Falta `google-services.json` e credencial server-side. Push global continua **PARTIAL** até oferta real + smoke em background | P0 — Bloqueador | Firebase no projecto `tvde-oauth` |
+| **S-NOTIF-01** | Cross-app | Push notifications (FCM/APNs). **Push P1 / foundation = CLOSED** (2026-09-27, Oppo): tabela, registo/desregisto, canal `Viagens`, FCM HTTP v1, permissão Android. **Sem** oferta real. Push global continua **PARTIAL** até oferta ao motorista, background, app fechada e toque na notificação | P0 — Bloqueador | Oferta real + smoke em background |
 | **S-NOTIF-02** | Cross-app | SMS transaccionais (oferta/viagem) além de OTP | P2 — Melhoria importante | S-AUTH-01 |
 
 ### Compliance / documentos
@@ -112,8 +112,8 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
-| **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). OAuth nativo Capacitor **CLOSED**. Push, GPS background e Play Store continuam abertos | P1 — Necessário para fechar produto | S-MOB-02 |
-| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-27). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED**, Google Passenger Onboarding **CLOSED**, Google identity linking **CLOSED**, multi-role **CLOSED**, cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** (PR #669, Oppo). Push P1 / foundation no código, ainda **PARTIAL** (falta Firebase). Aberto: GPS background, push real, Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
+| **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). OAuth nativo Capacitor **CLOSED**. Push P1 / foundation **CLOSED**. Push real, GPS background e Play Store continuam abertos | P1 — Necessário para fechar produto | S-MOB-02 |
+| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-27). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED**, Google Passenger Onboarding **CLOSED**, Google identity linking **CLOSED**, multi-role **CLOSED**, cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** (PR #669). **Push P1 / foundation = CLOSED**. Aberto: GPS background, push real (oferta, background, app fechada), Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
 | **S-MOB-03** | Cross-app | `VITE_APP_DOWNLOAD_URL` / landing stores | P2 — Melhoria importante | S-MOB-02 |
 
 ### Produto Driver / Passenger / Partner / Admin

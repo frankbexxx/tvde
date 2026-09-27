@@ -27,9 +27,10 @@ type PushPlugin = {
 let listenersReady = false
 let currentPushToken: string | null = null
 
-async function plugin(): Promise<PushPlugin> {
+async function loadPush(): Promise<{ push: PushPlugin }> {
   const mod = await import('@capacitor/push-notifications')
-  return mod.PushNotifications as PushPlugin
+  // O objecto do plugin é thenable. Await directo chama .then(), que no Android não existe.
+  return { push: mod.PushNotifications as PushPlugin }
 }
 
 async function publishToken(fcmToken: string): Promise<void> {
@@ -46,7 +47,7 @@ async function publishToken(fcmToken: string): Promise<void> {
 /** Listeners de registo. Não trata eventos de viagem (P2/P3). */
 export async function ensurePushListeners(): Promise<void> {
   if (listenersReady || !isCapacitorNative()) return
-  const push = await plugin()
+  const { push } = await loadPush()
   await push.addListener('registration', (payload) => {
     const value = payload.value
     if (!value) return
@@ -57,13 +58,13 @@ export async function ensurePushListeners(): Promise<void> {
   await push.addListener('registrationError', () => {
     /* recusa ou falha do plugin não rebenta a UI */
   })
-  await push.addListener('pushNotificationReceived', () => {})
-  await push.addListener('pushNotificationActionPerformed', () => {})
+  await push.addListener('pushNotificationReceived', () => { })
+  await push.addListener('pushNotificationActionPerformed', () => { })
   listenersReady = true
 }
 
 async function registerGranted(): Promise<void> {
-  const push = await plugin()
+  const { push } = await loadPush()
   await ensurePushListeners()
   try {
     await push.createChannel({
@@ -86,7 +87,7 @@ async function registerGranted(): Promise<void> {
 export async function attachPushIfAlreadyGranted(): Promise<'registered' | 'skipped'> {
   if (!isCapacitorNative()) return 'skipped'
   try {
-    const push = await plugin()
+    const { push } = await loadPush()
     const current = await push.checkPermissions()
     if (current.receive !== 'granted') return 'skipped'
     await registerGranted()
@@ -103,7 +104,7 @@ export async function attachPushIfAlreadyGranted(): Promise<'registered' | 'skip
 export async function requestTripNotificationPermission(): Promise<'registered' | 'denied' | 'skipped'> {
   if (!isCapacitorNative()) return 'skipped'
   try {
-    const push = await plugin()
+    const { push } = await loadPush()
     let current = await push.checkPermissions()
     if (current.receive === 'prompt' || current.receive === 'prompt-with-rationale') {
       current = await push.requestPermissions()
