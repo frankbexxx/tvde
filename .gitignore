@@ -7,6 +7,11 @@ web-app/.env
 DEPLOY_SECRETS.md
 *.pem
 *.key
+*.jks
+*.keystore
+*.p12
+*.pfx
+web-app/android/keystore.properties
 *credentials*
 *secrets*.json
 unified_payments.csv

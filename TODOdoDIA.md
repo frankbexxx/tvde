@@ -16,6 +16,31 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Play Internal Testing** (**2026-09-28** — PR #674)
+
+App na Play, Internal Testing activo, build instalada no Oppo pela Play. Smoke dessa build **PASS**. GPS background continua aberto. S-MOB-02 continua **PARTIAL**.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-NOTIF-01** | Push global V1 Android | Concluído | **CLOSED** · APNs por fazer |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · falta preparação de Production e GPS background |
+| **O-PLAY-02** | Internal Testing | Em curso | **INTERNAL TESTING ACTIVE / SMOKE PASS** · `VAMULÁ 1.0 Internal 1` · versionCode 1 · versionName 1.0 · https://play.google.com/apps/internaltest/4701587799723936774 |
+| **O-PLAY-03** | Smoke build Play | Concluído | **PASS** · login Google `frankbexxx@gmail.com` · sessão e contexto Passageiro · sem onboarding · sem segundo telefone |
+
+---
+
+## Painel — **Play Store preflight** (**2026-09-28**)
+
+Signing de release preparado no repo, sem keystore e sem publicação. GPS background continua aberto.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-NOTIF-01** | Push global V1 Android | Concluído | **CLOSED** · APNs por fazer |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · Play Store = READY FOR HUMAN CONSOLE SETUP / INTERNAL TESTING · GPS background aberto |
+| **O-PLAY-01** | Upload key + Play Console | Por iniciar | Chave ainda não criada · sem upload · ver `docs/android/PLAY_STORE_PREFLIGHT.md` |
+
+---
+
 ## Painel — **Push P3 / estados ao passageiro** (**2026-09-28** — PR #673)
 
 Smoke no Oppo. Foreground sem navegação. Background e processo fechado sem force-stop. O toque abre `/passenger`. Sessão mantida. Viagem terminal não volta a activa.

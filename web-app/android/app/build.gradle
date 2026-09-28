@@ -16,10 +16,41 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    def keystoreProperties = new Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+    }
+    def releaseStoreFile = System.getenv("TVDE_UPLOAD_STORE_FILE") ?: keystoreProperties.getProperty("storeFile")
+    def releaseStorePassword = System.getenv("TVDE_UPLOAD_STORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword")
+    def releaseKeyAlias = System.getenv("TVDE_UPLOAD_KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias")
+    def releaseKeyPassword = System.getenv("TVDE_UPLOAD_KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
+    def releaseSigningReady = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+    project.ext.releaseSigningReady = releaseSigningReady
+    signingConfigs {
+        release {
+            if (releaseSigningReady) {
+                def storePath = new File(releaseStoreFile)
+                if (!storePath.isAbsolute()) {
+                    storePath = rootProject.file(releaseStoreFile)
+                }
+                if (!storePath.exists()) {
+                    throw new GradleException("Upload keystore not found. Refusing to sign a release build.")
+                }
+                storeFile storePath
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (releaseSigningReady) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
@@ -51,4 +82,14 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    def releaseTaskNames = ["assembleRelease", "bundleRelease", "packageRelease", "signReleaseBundle"] as Set
+    def wantsAppRelease = taskGraph.allTasks.any { task ->
+        task.project.path == ":app" && releaseTaskNames.contains(task.name)
+    }
+    if (wantsAppRelease && !project.ext.releaseSigningReady) {
+        throw new GradleException("Release signing is not configured. Create gitignored android/keystore.properties or set TVDE_UPLOAD_STORE_FILE, TVDE_UPLOAD_STORE_PASSWORD, TVDE_UPLOAD_KEY_ALIAS and TVDE_UPLOAD_KEY_PASSWORD. Do not commit the keystore or the passwords.")
+    }
 }
