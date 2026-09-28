@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Push P3 / estados ao passageiro** (**2026-09-28** — PR #673)
+
+Smoke no Oppo. Foreground sem navegação. Background e processo fechado sem force-stop. O toque abre `/passenger`. Sessão mantida. Viagem terminal não volta a activa.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-NOTIF-P3** | Passenger Push | Concluído | **CLOSED** · `accepted` `arriving` `ongoing` `completed` `cancelled` `failed` · sem `requested` `assigned` `queued` · `failed` sem `emit` fica de fora |
+| **S-NOTIF-01** | Push global | Concluído | **CLOSED** V1 Android · oferta ao motorista + estados ao passageiro · APNs por fazer |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · aberto só: GPS background, Play Store |
+
+---
+
 ## Painel — **Push P2 / oferta ao motorista** (**2026-09-27** — PR #671)
 
 Smoke no Oppo. App em background e processo fechado sem force-stop. O toque abre `/driver` com o cartão da oferta. Sessão mantida. Sem auto-aceite. Oferta expirada desaparece.

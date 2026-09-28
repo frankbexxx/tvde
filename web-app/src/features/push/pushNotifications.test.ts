@@ -183,4 +183,41 @@ describe('pushNotifications', () => {
     expect(applyOfferPushNavigation(undefined)).toBe('ignored')
     expect(applyOfferPushNavigation({ event: 'nope' })).toBe('ignored')
   })
+
+  it('estado do passageiro em foreground não navega', async () => {
+    native.value = true
+    await attachPushIfAlreadyGranted()
+    push.emit('pushNotificationReceived', {
+      notification: { data: { event: 'trip_status', trip_id: 't1', status: 'accepted' } },
+    })
+    expect(nav.assign).not.toHaveBeenCalled()
+    expect(api.setStoredAppRouteRole).not.toHaveBeenCalled()
+    expect(api.apiFetch).not.toHaveBeenCalled()
+  })
+
+  it('toque num estado activo abre /passenger sem mudar a viagem', async () => {
+    native.value = true
+    nav.pathname = '/driver'
+    await attachPushIfAlreadyGranted()
+    push.emit('pushNotificationActionPerformed', {
+      notification: { data: { event: 'trip_status', trip_id: 't-active', status: 'arriving' } },
+    })
+    expect(api.setStoredAppRouteRole).toHaveBeenCalledWith('passenger')
+    expect(nav.assign).toHaveBeenCalledWith('/passenger')
+    expect(api.apiFetch).not.toHaveBeenCalled()
+  })
+
+  it('toque num estado terminal abre /passenger e guarda o trip_id', async () => {
+    native.value = true
+    nav.pathname = '/driver'
+    sessionStorage.clear()
+    await attachPushIfAlreadyGranted()
+    push.emit('pushNotificationActionPerformed', {
+      notification: { data: { event: 'trip_status', trip_id: 't-done', status: 'cancelled' } },
+    })
+    expect(api.setStoredAppRouteRole).toHaveBeenCalledWith('passenger')
+    expect(nav.assign).toHaveBeenCalledWith('/passenger')
+    expect(sessionStorage.getItem('passenger_status_push')).toContain('t-done')
+    expect(api.apiFetch).not.toHaveBeenCalled()
+  })
 })
