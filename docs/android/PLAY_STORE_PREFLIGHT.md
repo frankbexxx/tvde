@@ -1,8 +1,28 @@
 # Play Store preflight — Android release
 
-Estado: **READY FOR HUMAN CONSOLE SETUP / INTERNAL TESTING**. Não está **CLOSED**. Nada foi publicado. GPS em background continua aberto. S-MOB-02 continua **PARTIAL**.
+Estado: **INTERNAL TESTING ACTIVE / SMOKE PENDING**. Não está **CLOSED**. S-MOB-02 continua **PARTIAL**.
 
-Package `pt.vamula.app`. `versionCode` 1. `versionName` 1.0. `minSdk` 24. `compileSdk` / `targetSdk` 36. O primeiro Internal Testing mantém estes números enquanto a app nunca tiver sido carregada na Play. Daí em diante o `versionCode` aumenta sempre e o `versionName` é a versão visível.
+Package `pt.vamula.app`. `versionCode` 1. `versionName` 1.0. `minSdk` 24. `compileSdk` / `targetSdk` 36. O primeiro Internal Testing usa estes números. Daí em diante o `versionCode` aumenta sempre e o `versionName` é a versão visível.
+
+## Estado em 2026-09-28
+
+A app `VAMULÁ` existe na Play Console, na conta `frankbex.dev@gmail.com`, idioma `pt-PT`, app gratuita. Play App Signing foi aceite. O Internal Testing está activo.
+
+Primeiro lançamento interno: `VAMULÁ 1.0 Internal 1`. A Play Console aceitou o AAB. `versionCode` 1. `versionName` 1.0.
+
+Testers: `frankbex.dev@gmail.com`, `frankbexxx@gmail.com`.
+
+Link: https://play.google.com/apps/internaltest/4701587799723936774
+
+A build foi instalada no Oppo pela Google Play. O APK sideload anterior foi removido. A Play Store mostra a build como proveniente da Play. O nome temporário visível é `pt.vamula.app (unreviewed)`.
+
+Smoke da build Play: **NOT EXECUTED**. Não é PASS. O próximo smoke previsto é abrir a app, login, Google OAuth, localização e push.
+
+Avisos da Play Console, não bloqueantes neste Internal Testing, e por corrigir noutra tarefa: sem ficheiro de desofuscação; sem símbolos nativos de depuração.
+
+Para uma conta pessoal recente da Play, a produção exige um teste fechado com pelo menos 12 testers durante pelo menos 14 dias. Esse teste não foi iniciado.
+
+Ainda aberto em S-MOB-02: o smoke desta build, a preparação restante para Production, e GPS em background.
 
 ## Signing
 
@@ -15,11 +35,22 @@ Origem, por esta ordem:
 
 Sem uma destas configurações completas, as tarefas de release falham. `assembleDebug` não usa esta chave. O keystore, as passwords e o alias secreto não são versionados.
 
-Formato recomendado da upload key: PKCS12, RSA 2048, validade 10000 dias, alias `vamula-upload`, ficheiro fora do repo em `%USERPROFILE%\.android-keys\vamula\vamula-upload.p12`. A criação da chave é manual e só depois de autorização explícita.
+A upload key já foi criada, fora do repositório:
+
+- Caminho: `C:\Users\frank\.android-keys\vamula\vamula-upload.p12`
+- Alias: `vamula-upload`
+- Formato: PKCS12
+- Algoritmo: RSA 2048
+- SHA-1: `B0:77:BD:BA:C2:F3:E9:6E:64:2B:C7:32:C2:F9:4E:5F:E3:A9:DA:CC`
+- SHA-256: `6B:2D:F5:2D:CD:8E:7F:78:9E:91:DC:FF:2F:81:95:EE:67:F4:4B:59:6B:7F:68:50:BD:D0:DC:9C:44:08:61:C1`
+
+O keystore não está no Git. As passwords não estão no Git. `web-app/android/keystore.properties` é local e gitignored.
+
+`assembleRelease` PASS. `bundleRelease` PASS. O APK release e o AAB release ficaram assinados. `jarsigner` verificou o AAB. Package `pt.vamula.app`, `versionCode` 1, `versionName` 1.0. AAB local: `C:\dev\APP\web-app\android\app\build\outputs\bundle\release\app-release.aab`.
 
 ## Play App Signing
 
-Ainda não está activo. É necessário para Internal Testing.
+Play App Signing está aceite na consola.
 
 - **Upload key:** a chave criada por nós. Assina o AAB que enviamos. O fingerprint desta chave é nosso.
 - **App signing key:** a chave que a Google guarda depois de activar Play App Signing. Assina o que os telemóveis instalam. O fingerprint só aparece no Play Console depois do primeiro enrolamento. Não é a nossa chave.
@@ -40,20 +71,13 @@ Não há `ACCESS_BACKGROUND_LOCATION`, SMS, contactos nem armazenamento geral.
 
 O manifesto fundido também traz permissões de bibliotecas já usadas: `USE_BIOMETRIC` e `USE_FINGERPRINT` de `androidx.biometric`, `ACCESS_NETWORK_STATE`, `WAKE_LOCK` e `com.google.android.c2dm.permission.RECEIVE` de Firebase Messaging, e uma permissão `signature` de `androidx.core`. Não foram removidas.
 
-## Play Console — ordem humana
+## Play Console — o que falta
 
-Necessário para Internal Testing:
+Feito para este Internal Testing: app, package, Play App Signing, upload do AAB assinado, faixa interna e os dois testers.
 
-1. Criar a app com package `pt.vamula.app`.
-2. Activar Play App Signing.
-3. Usar a upload key local. Não entregar a chave privada à Google se a consola permitir ficar só com o certificado de upload.
-4. Copiar o SHA-1 da upload key.
-5. No Google Cloud, no client Android de `pt.vamula.app`, adicionar esse SHA-1. Parar antes de apagar o SHA-1 debug.
-6. Depois do primeiro upload, copiar o SHA-1 do certificado de app signing da Google e adicioná-lo ao mesmo client Android.
-7. Criar a faixa Internal Testing e a lista de testers.
-8. Preencher Data Safety com validação humana. O inventário técnico está no relatório da PR; a política publicada é `https://vamula.pt/privacidade/`.
-9. Store listing mínimo que a consola exigir nesta faixa.
-10. Release notes.
-11. Upload do AAB já assinado. Não usar o AAB unsigned gerado na auditoria.
+Ainda por fazer, e não iniciado nesta actualização:
 
-Pode esperar até Production: ficha completa da loja, icon 512, feature graphic, screenshots, descrição curta e longa, categoria final, e o resto do review de produção. GPS em background não faz parte deste preflight.
+1. Smoke da build instalada pela Play: abrir a app, login, Google OAuth, localização e push.
+2. No Google Cloud, no client Android de `pt.vamula.app`, o SHA-1 da upload key e, para a build que a Play instala, o SHA-1 do certificado de app signing da Google. Não apagar o SHA-1 debug.
+3. Data Safety com validação humana. A política publicada é `https://vamula.pt/privacidade/`.
+4. Para Production: ficha completa, icon 512, feature graphic, screenshots, descrição curta e longa, categoria, e o teste fechado de 12 testers durante 14 dias exigido a uma conta pessoal recente. GPS em background continua fora desta frente.

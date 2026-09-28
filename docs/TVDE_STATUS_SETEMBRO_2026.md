@@ -112,8 +112,8 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
-| **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). OAuth nativo Capacitor **CLOSED**. Push P1, P2 e P3 **CLOSED**. Play Store = **READY FOR HUMAN CONSOLE SETUP / INTERNAL TESTING**. Aberto: GPS background e a consola Play | P1 — Necessário para fechar produto | S-MOB-02 |
-| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-28). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED**, Google Passenger Onboarding **CLOSED**, Google identity linking **CLOSED**, multi-role **CLOSED**, cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** (PR #669). **Push P1, P2 e P3 = CLOSED**. Play Store = **READY FOR HUMAN CONSOLE SETUP / INTERNAL TESTING** (signing no repo, sem keystore, sem upload). Aberto: GPS background e a consola Play | P1 — Necessário para fechar produto | GPS background · Play Console |
+| **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). OAuth nativo Capacitor **CLOSED**. Push P1, P2 e P3 **CLOSED**. Play Store = **INTERNAL TESTING ACTIVE / SMOKE PENDING**. Aberto: smoke da build Play, Production e GPS background | P1 — Necessário para fechar produto | S-MOB-02 |
+| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-28). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED**, Google Passenger Onboarding **CLOSED**, Google identity linking **CLOSED**, multi-role **CLOSED**, cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** (PR #669). **Push P1, P2 e P3 = CLOSED**. Play Store = **INTERNAL TESTING ACTIVE / SMOKE PENDING**: `VAMULÁ 1.0 Internal 1` aceite, instalada no Oppo pela Play, smoke **NOT EXECUTED**. Aberto: smoke da build Play, preparação de Production, GPS background | P1 — Necessário para fechar produto | smoke Play · Production · GPS background |
 | **S-MOB-03** | Cross-app | `VITE_APP_DOWNLOAD_URL` / landing stores | P2 — Melhoria importante | S-MOB-02 |
 
 ### Produto Driver / Passenger / Partner / Admin
@@ -311,7 +311,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 
 1. **S-PAY-01 / S-PAY-02** — Sem Stripe live + Connect, não há operação comercial com dinheiro real nem split motorista.  
 2. **S-AUTH-01** — OTP sem SMS real impede onboarding sério fora de ambientes com OTP fixo.  
-3. **S-MOB-01 / S-MOB-02** — Push Android V1 está **CLOSED**. Play Store está **READY FOR HUMAN CONSOLE SETUP / INTERNAL TESTING**, ainda sem publicação. Falta GPS em background e a consola Play; sem isso a adopção fica no APK debug.  
+3. **S-MOB-01 / S-MOB-02** — Push Android V1 está **CLOSED**. Play Store está **INTERNAL TESTING ACTIVE / SMOKE PENDING**. A build interna está instalada no Oppo pela Play e o smoke dessa build ainda não correu. Falta esse smoke, a preparação de Production e GPS em background.  
 4. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
 5. **S-PAY / S-AUTH / S-MOB / S-COMP** — bloqueadores M2 comerciais/compliance (A1.4 pricing **já CLOSED** 2026-09-18).  
 

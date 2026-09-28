@@ -16,6 +16,19 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Play Internal Testing** (**2026-09-28** — PR #674)
+
+App na Play, Internal Testing activo, build instalada no Oppo pela Play. Smoke dessa build ainda não correu. GPS background continua aberto.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **S-NOTIF-01** | Push global V1 Android | Concluído | **CLOSED** · APNs por fazer |
+| **S-MOB-02** | Android no Oppo | Em curso | **PARTIAL** · falta smoke da build Play, preparação de Production, GPS background |
+| **O-PLAY-02** | Internal Testing | Smoke pendente | **INTERNAL TESTING ACTIVE / SMOKE PENDING** · `VAMULÁ 1.0 Internal 1` · versionCode 1 · versionName 1.0 · https://play.google.com/apps/internaltest/4701587799723936774 |
+| **O-PLAY-03** | Smoke build Play | Smoke pendente | **NOT EXECUTED** · abrir app, login, Google OAuth, localização, push · nome visível `pt.vamula.app (unreviewed)` |
+
+---
+
 ## Painel — **Play Store preflight** (**2026-09-28**)
 
 Signing de release preparado no repo, sem keystore e sem publicação. GPS background continua aberto.
