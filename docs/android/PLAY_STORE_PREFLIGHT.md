@@ -1,6 +1,6 @@
 # Play Store preflight — Android release
 
-Estado: **INTERNAL TESTING ACTIVE / SMOKE PENDING**. Não está **CLOSED**. S-MOB-02 continua **PARTIAL**.
+Estado: **INTERNAL TESTING ACTIVE / SMOKE PASS**. Não está **CLOSED**. S-MOB-02 continua **PARTIAL**.
 
 Package `pt.vamula.app`. `versionCode` 1. `versionName` 1.0. `minSdk` 24. `compileSdk` / `targetSdk` 36. O primeiro Internal Testing usa estes números. Daí em diante o `versionCode` aumenta sempre e o `versionName` é a versão visível.
 
@@ -16,13 +16,13 @@ Link: https://play.google.com/apps/internaltest/4701587799723936774
 
 A build foi instalada no Oppo pela Google Play. O APK sideload anterior foi removido. A Play Store mostra a build como proveniente da Play. O nome temporário visível é `pt.vamula.app (unreviewed)`.
 
-Smoke da build Play: **NOT EXECUTED**. Não é PASS. O próximo smoke previsto é abrir a app, login, Google OAuth, localização e push.
+Smoke da build Play: **PASS** (2026-09-28). A app instalada pela Play abriu. O login Google com `frankbexxx@gmail.com` entrou na sessão correcta, no contexto Passageiro, sem onboarding e sem segundo telefone.
 
 Avisos da Play Console, não bloqueantes neste Internal Testing, e por corrigir noutra tarefa: sem ficheiro de desofuscação; sem símbolos nativos de depuração.
 
 Para uma conta pessoal recente da Play, a produção exige um teste fechado com pelo menos 12 testers durante pelo menos 14 dias. Esse teste não foi iniciado.
 
-Ainda aberto em S-MOB-02: o smoke desta build, a preparação restante para Production, e GPS em background.
+Ainda aberto em S-MOB-02: a preparação restante para Production, e GPS em background. S-MOB-02 não fica **CLOSED**.
 
 ## Signing
 
@@ -61,7 +61,9 @@ O login Google no Android precisa do SHA-1 do certificado que realmente assina a
 
 A app nativa inicializa o Google Sign-In com o client id Web devolvido pela API. O `google-services.json` tem o package `pt.vamula.app` e um client OAuth de tipo Web, sem `certificate_hash`. O envio FCM não depende do certificado da app. O que precisa de fingerprint é o client OAuth Android no Google Cloud, no mesmo projecto.
 
-Não substituir `google-services.json` só por causa do release. Acrescentar fingerprints no Cloud Console é acção humana, depois de a upload key existir e, de novo, depois de a Google mostrar o certificado de app signing.
+Não substituir `google-services.json` só por causa do release.
+
+O client OAuth Android da Play foi criado para o package `pt.vamula.app`. O SHA-1 do certificado de App Signing da Play ficou configurado nesse client e foi validado pelo login Google na build instalada pela Play. Não há client secret, password nem credencial neste documento.
 
 ## Permissões declaradas pela app
 
@@ -75,9 +77,9 @@ O manifesto fundido também traz permissões de bibliotecas já usadas: `USE_BIO
 
 Feito para este Internal Testing: app, package, Play App Signing, upload do AAB assinado, faixa interna e os dois testers.
 
-Ainda por fazer, e não iniciado nesta actualização:
+Feito depois do primeiro enrolamento: client OAuth Android de `pt.vamula.app` com o SHA-1 de App Signing da Play, e smoke da build instalada pela Play (**PASS**).
 
-1. Smoke da build instalada pela Play: abrir a app, login, Google OAuth, localização e push.
-2. No Google Cloud, no client Android de `pt.vamula.app`, o SHA-1 da upload key e, para a build que a Play instala, o SHA-1 do certificado de app signing da Google. Não apagar o SHA-1 debug.
-3. Data Safety com validação humana. A política publicada é `https://vamula.pt/privacidade/`.
-4. Para Production: ficha completa, icon 512, feature graphic, screenshots, descrição curta e longa, categoria, e o teste fechado de 12 testers durante 14 dias exigido a uma conta pessoal recente. GPS em background continua fora desta frente.
+Ainda por fazer:
+
+1. Data Safety com validação humana. A política publicada é `https://vamula.pt/privacidade/`.
+2. Para Production: ficha completa, icon 512, feature graphic, screenshots, descrição curta e longa, categoria, e o teste fechado de 12 testers durante 14 dias exigido a uma conta pessoal recente. GPS em background continua fora desta frente.
