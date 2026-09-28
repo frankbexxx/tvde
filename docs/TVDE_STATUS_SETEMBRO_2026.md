@@ -86,7 +86,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 |----|------|------|------------|-------------|
 | **S-AUTH-01** | Backend/API | OTP **sem envio SMS**. **L-SEC-12 = CLOSED** (consume atómico). Deployed continua `503 otp_auth_unavailable` até provider SMS + smoke. Non-prod: código fixo/log. Provider ainda por escolher | P0 — Bloqueador | Conta SMS / provider |
 | **S-AUTH-02** | Backend/API | Google OAuth: só passenger + envs vazios por defeito; staging A2-02 | P2 — Melhoria importante | Credenciais staging/prod |
-| **S-NOTIF-01** | Cross-app | Push notifications (FCM/APNs). **Push P1 / foundation = CLOSED** (2026-09-27, Oppo): tabela, registo/desregisto, canal `Viagens`, FCM HTTP v1, permissão Android. **Push P2 / oferta ao motorista = CLOSED** (2026-09-27, Oppo, PR #671): background e processo fechado, toque abre `/driver` com o cartão, sessão mantida, sem auto-aceite, oferta expirada desaparece. Push global continua **PARTIAL** até notificações ao passageiro | P0 — Bloqueador | Notificações ao passageiro |
+| **S-NOTIF-01** | Cross-app | Push notifications (FCM/APNs). **Push P1 / foundation = CLOSED** (2026-09-27, Oppo). **Push P2 / oferta ao motorista = CLOSED** (2026-09-27, Oppo, PR #671). **Push P3 / estados ao passageiro = CLOSED** (2026-09-28, Oppo, PR #673): `accepted`, `arriving`, `ongoing`, `completed`, `cancelled`, `failed` no dispatcher; sem push em `requested`, `assigned`, `queued`. Foreground não navega. Background e processo fechado abrem `/passenger` com sessão. A reconciliação de pagamento que marca `failed` sem `emit` continua sem push. **Push global V1 = CLOSED**. APNs por fazer | P0 — Bloqueador | APNs |
 | **S-NOTIF-02** | Cross-app | SMS transaccionais (oferta/viagem) além de OTP | P2 — Melhoria importante | S-AUTH-01 |
 
 ### Compliance / documentos
@@ -112,8 +112,8 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 
 | ID | Área | Item | Prioridade | Dependência |
 |----|------|------|------------|-------------|
-| **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). OAuth nativo Capacitor **CLOSED**. Push P1 / foundation **CLOSED**. Push P2 / oferta ao motorista **CLOSED**. Aberto: notificações ao passageiro, GPS background e Play Store | P1 — Necessário para fechar produto | S-MOB-02 |
-| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-27). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED**, Google Passenger Onboarding **CLOSED**, Google identity linking **CLOSED**, multi-role **CLOSED**, cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** (PR #669). **Push P1 / foundation = CLOSED**. **Push P2 / oferta ao motorista = CLOSED** (background, processo fechado, cartão após toque). Aberto: notificações ao passageiro, GPS background, Play Store | P1 — Necessário para fechar produto | S-MOB-01 |
+| **S-MOB-01** | Cross-app | Capacitor Android — **BOOTSTRAP + DEVICE SMOKE PASS** no Oppo (`pt.vamula.app`). OAuth nativo Capacitor **CLOSED**. Push P1, P2 e P3 **CLOSED**. Aberto: GPS background e Play Store | P1 — Necessário para fechar produto | S-MOB-02 |
+| **S-MOB-02** | Cross-app | Android no Oppo — **PARTIAL** (2026-09-28). PASS: login em retrato, geolocalização foreground, mapa. OAuth Capacitor **CLOSED**, Google Passenger Onboarding **CLOSED**, Google identity linking **CLOSED**, multi-role **CLOSED**, cleanup smoke account **CLOSED**. Waze/Maps **CLOSED** e file picker **CLOSED** (PR #669). **Push P1, P2 e P3 = CLOSED**. Aberto apenas: GPS background e Play Store | P1 — Necessário para fechar produto | GPS background · Play Store |
 | **S-MOB-03** | Cross-app | `VITE_APP_DOWNLOAD_URL` / landing stores | P2 — Melhoria importante | S-MOB-02 |
 
 ### Produto Driver / Passenger / Partner / Admin
@@ -311,7 +311,7 @@ Ordem técnica/operacional para chegar a: **TVDE-APP tecnicamente concluída e p
 
 1. **S-PAY-01 / S-PAY-02** — Sem Stripe live + Connect, não há operação comercial com dinheiro real nem split motorista.  
 2. **S-AUTH-01** — OTP sem SMS real impede onboarding sério fora de ambientes com OTP fixo.  
-3. **S-MOB-01 / S-NOTIF-01** — Sem packaging mobile + push, adopção motorista/passageiro fica presa ao browser.  
+3. **S-MOB-01 / S-MOB-02** — Push Android V1 está **CLOSED**. Falta GPS em background e a Play Store; sem isso a adopção fica no APK debug.  
 4. **S-COMP-04** — Obrigações legais/compliance frota (IMT/processo) condicionam o que a app pode prometer além dos gates viatura já ON.  
 5. **S-PAY / S-AUTH / S-MOB / S-COMP** — bloqueadores M2 comerciais/compliance (A1.4 pricing **já CLOSED** 2026-09-18).  
 
