@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { requestTripNotificationPermission } from '../push/pushNotifications'
+import {
+  PASSENGER_STATUS_PUSH_DOM_EVENT,
+  takePassengerTerminalPush,
+} from '../push/passengerStatusPush'
 import { useActivityLog } from '../../context/ActivityLogContext'
 import { useActiveTrip } from '../../context/ActiveTripContext'
 import { useDevToolsCallbacks } from '../../context/DevToolsCallbackContext'
@@ -163,6 +167,20 @@ export function PassengerDashboard() {
     },
     []
   )
+
+  const openTerminalPush = useCallback(() => {
+    const notice = takePassengerTerminalPush()
+    if (!notice) return
+    setPassengerMenuOpen(true)
+    handleHistoryTripSelect(notice.tripId)
+  }, [handleHistoryTripSelect])
+
+  useEffect(() => {
+    if (!token) return
+    openTerminalPush()
+    window.addEventListener(PASSENGER_STATUS_PUSH_DOM_EVENT, openTerminalPush)
+    return () => window.removeEventListener(PASSENGER_STATUS_PUSH_DOM_EVENT, openTerminalPush)
+  }, [token, openTerminalPush])
 
   useEffect(() => {
     if (passengerMenuScreen !== 'history_detail' || !historyDetailTripId || !token) {

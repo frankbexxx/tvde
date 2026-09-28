@@ -1,6 +1,7 @@
 import { apiFetch } from '../../api/client'
 import { isCapacitorNative } from '../auth/capacitorPlatform'
 import { getStoredAccessToken, setStoredAppRouteRole } from '../../utils/authStorage'
+import { applyTripStatusPushNavigation, noteForegroundTripStatusPush } from './passengerStatusPush'
 
 /** Canal Android das ofertas de viagem. */
 export const TRIPS_NOTIFICATION_CHANNEL_ID = 'trips'
@@ -95,14 +96,20 @@ export async function ensurePushListeners(): Promise<void> {
   })
   await push.addListener('pushNotificationReceived', (payload) => {
     try {
-      noteForegroundOfferPush(pushData(payload))
+      const data = pushData(payload)
+      if (noteForegroundOfferPush(data) === 'ignored') {
+        noteForegroundTripStatusPush(data)
+      }
     } catch {
       /* um payload desconhecido não rebenta a UI */
     }
   })
   await push.addListener('pushNotificationActionPerformed', (payload) => {
     try {
-      applyOfferPushNavigation(pushData(payload))
+      const data = pushData(payload)
+      if (applyOfferPushNavigation(data) === 'ignored') {
+        applyTripStatusPushNavigation(data)
+      }
     } catch {
       /* um payload desconhecido não rebenta a UI */
     }

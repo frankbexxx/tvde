@@ -55,4 +55,12 @@ def emit(event: TripStatusChangedEvent) -> None:
             admin_hub.publish(event)
     except Exception:
         logger.exception("Failed to publish realtime event")
-        return
+
+    # Push follows the persisted status event. Payment reconciliation can set
+    # failed without emit; that path does not notify the passenger.
+    try:
+        from app.services.fcm import push_passenger_trip_status
+
+        push_passenger_trip_status(event)
+    except Exception:
+        logger.exception("Failed to push passenger trip status")

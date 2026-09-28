@@ -4,18 +4,23 @@ from __future__ import annotations
 
 import json
 import logging
+import uuid
 from dataclasses import dataclass
 from typing import Protocol
 
 import requests
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.db.models.audit_event import AuditEvent
+from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.db.session import SessionLocal
-from app.models.enums import Role
+from app.models.enums import Role, TripStatus
+from app.schemas.realtime import TripStatusChangedEvent
 from app.services.device_push_tokens import (
     TRIPS_CHANNEL_ID,
     active_tokens_for_user,
@@ -28,6 +33,16 @@ logger = logging.getLogger(__name__)
 FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 DRIVER_OFFER_NOTIFICATION_TITLE = "Nova oferta de viagem"
 DRIVER_OFFER_NOTIFICATION_BODY = "Tens uma nova oferta disponível."
+
+PASSENGER_TRIP_STATUS_EVENT = "trip_status"
+PASSENGER_PUSH_COPY: dict[TripStatus, tuple[str, str]] = {
+    TripStatus.accepted: ("Viagem aceite", "O motorista aceitou a tua viagem."),
+    TripStatus.arriving: ("Motorista a caminho", "O motorista está a ir para o ponto de recolha."),
+    TripStatus.ongoing: ("Viagem a decorrer", "A viagem começou."),
+    TripStatus.completed: ("Viagem concluída", "A viagem terminou."),
+    TripStatus.cancelled: ("Viagem cancelada", "Esta viagem foi cancelada."),
+    TripStatus.failed: ("Viagem interrompida", "Não foi possível concluir a viagem."),
+}
 
 # Lock-screen copy must not carry these keys even if a caller passes them.
 _FORBIDDEN_DATA_KEYS = frozenset(
@@ -261,6 +276,97 @@ def push_committed_offers(
                 token_count=len(results),
                 sent=sum(1 for item in results if item.ok),
             )
+    finally:
+        if own_session:
+            session.close()
+
+
+def _passenger_status_already_notified(db: Session, trip_id: str, status: TripStatus) -> bool:
+    """A second persisted event for the same trip and status is a duplicate."""
+    count = db.execute(
+        select(func.count())
+        .select_from(AuditEvent)
+        .where(
+            AuditEvent.entity_type == "trip",
+            AuditEvent.entity_id == trip_id,
+            AuditEvent.event_type == "trip.status_changed",
+            AuditEvent.payload["status"].astext == status.value,
+        )
+    ).scalar_one()
+    return int(count or 0) > 1
+
+
+def push_passenger_trip_status(
+    event: TripStatusChangedEvent,
+    *,
+    sender: FcmSender | None = None,
+    db: Session | None = None,
+) -> None:
+    """Notify the trip owner after the status event is stored. Never raises."""
+    status = event.status
+    if status not in PASSENGER_PUSH_COPY:
+        return
+    if sender is None and (settings.ENV or "") == "test":
+        return
+    own_session = db is None
+    session = db or SessionLocal()
+    try:
+        if _passenger_status_already_notified(session, event.trip_id, status):
+            log_event(
+                "passenger_push_deduped",
+                trip_id=event.trip_id,
+                status=status.value,
+            )
+            return
+        try:
+            trip_uuid = uuid.UUID(str(event.trip_id))
+        except ValueError:
+            trip_uuid = None
+        trip = session.get(Trip, trip_uuid) if trip_uuid is not None else None
+        if trip is None:
+            log_event("passenger_push_skip_trip", trip_id=event.trip_id, status=status.value)
+            return
+        user = session.get(User, trip.passenger_id)
+        if user is None:
+            log_event(
+                "passenger_push_skip_recipient",
+                trip_id=event.trip_id,
+                status=status.value,
+            )
+            return
+        title, body = PASSENGER_PUSH_COPY[status]
+        data = {
+            "event": PASSENGER_TRIP_STATUS_EVENT,
+            "trip_id": str(trip.id),
+            "status": status.value,
+        }
+        try:
+            results = deliver_user_push(
+                session,
+                user,
+                title=title,
+                body=body,
+                data=data,
+                sender=sender or FcmHttpV1Sender(),
+            )
+        except FcmNotConfigured:
+            log_event("passenger_push_unconfigured", trip_id=str(trip.id), status=status.value)
+            return
+        except Exception as exc:
+            log_event(
+                "passenger_push_failed",
+                trip_id=str(trip.id),
+                status=status.value,
+                error_type=type(exc).__name__,
+            )
+            return
+        log_event(
+            "passenger_push_attempted",
+            trip_id=str(trip.id),
+            status=status.value,
+            token_count=len(results),
+            sent=sum(1 for item in results if item.ok),
+        )
     finally:
         if own_session:
             session.close()
