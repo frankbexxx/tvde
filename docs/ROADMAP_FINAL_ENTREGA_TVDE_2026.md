@@ -30,7 +30,7 @@
 |--------|--------|
 | **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · **B5 fase 2** (MB WAY) |
-| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging |
+| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging · **C4 Fase I CLOSED / Fase II OPEN** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
 | **F** Infra / Segurança / Operação | F1 Restore drill · F2 Staging · F3 Sentry · F4 Higiene mock GPS |
@@ -435,6 +435,21 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 |-------|--------|-------------------|------|------|
 | C3.1 | Config URIs Google staging | Console OK | CONFIG | — |
 | C3.2 | Smoke login Google passenger | PASS | TESTE | C3.1 |
+
+## C4 — Identidades de login (`user_identities`)
+
+Uma pessoa = um `User`. Vários emails / Google vivem em `user_identities`. O telefone principal e `User.role` ficam no `User`.
+
+| Fase | Âmbito | Estado |
+|------|--------|--------|
+| I | Tabela, constraints, índices, backfill idempotente. Auth **não** muda | **CLOSED** 2026-09-29 · revisão `b3c4d5e6f7a8` · [`USER_IDENTITIES.md`](architecture/USER_IDENTITIES.md) |
+| II | Leituras e escritas de login / onboarding / linking passam para `user_identities`, depois de repetir o backfill | **OPEN** |
+| III | Transferir a linha (`UPDATE user_id`). Aqui entra ligar `35ddb821` à conta principal, sem merge automático nesta data | Por iniciar |
+| IV | `BillingProfile` | Por iniciar |
+| V | Documentos / KYC por domínio | Por iniciar |
+| VI | Logout em todos os shells e revogação de sessão | Por iniciar |
+
+A Fase I não fundiu `35ddb821` com `09c539d1`.
 
 ---
 
