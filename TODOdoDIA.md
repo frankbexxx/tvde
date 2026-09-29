@@ -16,6 +16,19 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Identidades de login / Fase II-B** (**2026-09-29**)
+
+A auth Google lê `user_identities`. Google desconhecido pede criar conta ou ligar com palavra-passe. Não há auto-link. `oauth_google_sub` não é lido nem escrito. `35ddb821` não foi transferida. Smoke de produção fica para depois do merge.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A-ID-05** | Fase II-B leitura de identidades | Concluído | **CLOSED** · sem migration · escolha criar/ligar · prova curta · sem auto-link |
+| **A-ID-06** | Fase II-C gestão no perfil | Por iniciar | **OPEN** · listar, revogar e mudar a primária |
+| **A-ID-07** | Fase III transferir identity | Por iniciar | **OPEN** · `35ddb821` continua no próprio User |
+| **S-ID-01** | Smoke prod da II-B | Smoke pendente | Só depois do merge · primeiro leitura, depois um write controlado · não usar `35ddb821` |
+
+---
+
 ## Painel — **Identidades de login / Fase II-A** (**2026-09-29**)
 
 O espelho fica alinhado com `users` em cada escrita de email ou Google. O login, o onboarding e o linking não mudam. `oauth_google_sub` continua a ser a fonte legacy.
@@ -23,7 +36,7 @@ O espelho fica alinhado com `users` em cada escrita de email ou Google. O login,
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-ID-04** | Fase II-A dual-write | Concluído | **CLOSED** · backfill idempotente `c4d5e6f7a8b9` · auth ainda lê `users` · sem mudança de UX |
-| **A-ID-05** | Fase II-B leitura de identidades | Por iniciar | **OPEN** · escolha criar/ligar, prova curta, `oauth_google_sub` deixa de ser lido |
+| **A-ID-05** | Fase II-B leitura de identidades | Concluído | Fechada no painel II-B acima |
 | **A-ID-03** | Conta parcial `35ddb821` | N/A | Continua no próprio User · transferência é Fase III |
 
 ---

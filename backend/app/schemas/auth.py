@@ -67,8 +67,19 @@ class GoogleOnboardingRequest(BaseModel):
     accept_legal: bool = False
 
 
+class ReauthRequest(BaseModel):
+    """Confirma a palavra-passe da sessão actual e devolve uma prova curta."""
+
+    password: str = Field(..., min_length=1, max_length=128)
+
+
+class ReauthResponse(BaseModel):
+    reauth_token: str
+    expires_at: datetime
+
+
 class GoogleLinkRequest(BaseModel):
-    """Liga um Google já em onboarding à conta do telefone, depois da palavra-passe."""
+    """Liga um Google desconhecido à conta do telefone, depois da palavra-passe."""
 
     id_token: str = Field(..., min_length=20, max_length=8192)
     nonce: str | None = Field(default=None, max_length=128)

@@ -3,7 +3,12 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
 import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
-import { googleIdTokenProfile, readExistingAccountLink, readGoogleOnboarding } from './googleOnboarding'
+import {
+  googleIdTokenProfile,
+  readExistingAccountLink,
+  readGoogleAccountChoice,
+  readGoogleOnboarding,
+} from './googleOnboarding'
 import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { isCapacitorNative } from './capacitorPlatform'
@@ -48,6 +53,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     name: string
     email: string
     initialLinkRequired?: boolean
+    initialMode?: 'choice' | 'create' | 'link'
   } | null>(null)
 
   useEffect(() => {
@@ -162,6 +168,17 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       try {
         await loginGoogleIdToken(idToken, backendNonce, acceptLegal)
       } catch (err: unknown) {
+        const choice = readGoogleAccountChoice(err)
+        if (choice) {
+          setGoogleDraft({
+            idToken,
+            nonce: backendNonce,
+            name: choice.name,
+            email: choice.email,
+            initialMode: 'choice',
+          })
+          return
+        }
         const onboard = readGoogleOnboarding(err)
         if (onboard) {
           setGoogleDraft({
@@ -207,6 +224,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         onDone={() => window.location.assign('/passenger')}
         onRestart={() => setGoogleDraft(null)}
         initialLinkRequired={googleDraft.initialLinkRequired}
+        initialMode={googleDraft.initialMode}
       />
     )
   }

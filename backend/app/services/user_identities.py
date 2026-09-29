@@ -1,15 +1,19 @@
-"""Mirror of login identities. Phase II-A still authenticates from `users`."""
+"""Login identities. Google auth reads this table; legacy columns are historical."""
 
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
+from app.db.models.audit_event import AuditEvent
 from app.db.models.user import User
 from app.db.models.user_identity import UserIdentity
+
+ACTIVE_IDENTITY_LIMIT = 5
 
 
 class IdentityBackfillAborted(RuntimeError):
@@ -279,6 +283,7 @@ def _abort_if_legacy_inconsistent(connection: Connection) -> None:
                 JOIN users AS account ON account.id = identity.user_id
                 WHERE identity.revoked_at IS NULL
                   AND identity.provider = 'google'
+                  AND nullif(btrim(account.oauth_google_sub), '') IS NOT NULL
                   AND identity.provider_subject
                       IS DISTINCT FROM nullif(btrim(account.oauth_google_sub), '')
               ) AS incompatible_google_subject,
@@ -355,7 +360,14 @@ def _abort_if_legacy_inconsistent(connection: Connection) -> None:
         "invalid_google_subject": int(row.invalid_google_subject),
         "invalid_email_identity": int(row.invalid_email_identity),
     }
-    if any(counts.values()):
+    # Several active identities are valid after Phase II-B. A frozen
+    # oauth_google_sub no longer has to match every Google identity.
+    blocking = {
+        name: value
+        for name, value in counts.items()
+        if name not in {"multiple_active_identities", "active_without_single_primary"}
+    }
+    if any(blocking.values()):
         detail = " ".join(f"{name}={value}" for name, value in counts.items())
         raise IdentityBackfillAborted(f"user_identities backfill aborted: {detail}")
 
@@ -429,20 +441,178 @@ def _insert_missing_identities(connection: Connection) -> None:
                 SELECT 1
                 FROM user_identities AS identity
                 WHERE identity.user_id = account.id
-                  AND (
-                    (
-                      nullif(btrim(account.oauth_google_sub), '') IS NOT NULL
-                      AND identity.provider = 'google'
-                      AND identity.provider_subject
-                          = nullif(btrim(account.oauth_google_sub), '')
-                    )
-                    OR (
-                      nullif(btrim(account.oauth_google_sub), '') IS NULL
-                      AND identity.provider = 'email'
-                      AND identity.email = nullif(lower(btrim(account.email)), '')
-                    )
-                  )
+                  AND identity.revoked_at IS NULL
             )
             """
         )
     )
+
+
+class IdentityEmailTaken(Exception):
+    """The email belongs to another identity, including a revoked row."""
+
+
+class IdentitySubjectTaken(Exception):
+    """The Google subject belongs to another identity, including a revoked row."""
+
+
+class IdentityLimitReached(Exception):
+    """The account already has the maximum number of active identities."""
+
+
+def record_identity_event(
+    db: Session,
+    *,
+    event_type: str,
+    user_id: uuid.UUID | None,
+    identity_id: uuid.UUID | None,
+    provider: str,
+    result: str,
+) -> None:
+    """Audit without password, token, subject, email, or phone."""
+    db.add(
+        AuditEvent(
+            event_type=event_type,
+            entity_type="user_identity",
+            entity_id=str(identity_id or user_id or "none")[:64],
+            payload={
+                "user_id": str(user_id) if user_id else None,
+                "identity_id": str(identity_id) if identity_id else None,
+                "provider": provider,
+                "result": result,
+            },
+            occurred_at=datetime.now(timezone.utc),
+        )
+    )
+
+
+def email_owned_elsewhere(
+    db: Session,
+    email: str,
+    *,
+    user_id: uuid.UUID,
+    except_identity_id: uuid.UUID | None = None,
+    allow_same_user_email_provider: bool = False,
+) -> bool:
+    """True when this email cannot be written onto the given identity."""
+    normalized = normalize_email(email)
+    if normalized is None:
+        return True
+    existing = lookup_identity_by_email(db, normalized)
+    if existing is not None and existing.id != except_identity_id:
+        promotable = (
+            allow_same_user_email_provider
+            and existing.user_id == user_id
+            and existing.revoked_at is None
+            and existing.provider == "email"
+            and existing.provider_subject is None
+        )
+        if not promotable:
+            return True
+    other_user = db.execute(
+        select(User.id).where(func.lower(User.email) == normalized, User.id != user_id)
+    ).scalar_one_or_none()
+    return other_user is not None
+
+
+def sync_known_google_email(
+    db: Session, user: User, identity: UserIdentity, email: str
+) -> None:
+    """Update a known Google identity when Google returns a new verified email."""
+    normalized = normalize_email(email)
+    if normalized is None:
+        raise IdentityEmailTaken()
+    if identity.email == normalized:
+        identity.is_verified = True
+        return
+    if email_owned_elsewhere(
+        db,
+        normalized,
+        user_id=user.id,
+        except_identity_id=identity.id,
+    ):
+        raise IdentityEmailTaken()
+    identity.email = normalized
+    identity.is_verified = True
+    if identity.is_primary:
+        user.email = normalized
+
+
+def attach_google_identity(
+    db: Session, user: User, *, email: str, subject: str
+) -> UserIdentity:
+    """Link Google to this user. Promotes a same-user email row in place.
+
+    Does not write ``users.oauth_google_sub`` and does not delete users.
+    """
+    normalized_email = normalize_email(email)
+    normalized_subject = normalize_google_subject(subject)
+    if normalized_email is None or normalized_subject is None:
+        raise IdentityEmailTaken()
+    locked = db.execute(
+        select(User).where(User.id == user.id).with_for_update()
+    ).scalar_one()
+    existing_subject = lookup_identity_by_google_subject(db, normalized_subject)
+    if existing_subject is not None and (
+        existing_subject.user_id != locked.id or existing_subject.revoked_at is not None
+    ):
+        raise IdentitySubjectTaken()
+    if existing_subject is not None:
+        sync_known_google_email(db, locked, existing_subject, normalized_email)
+        return existing_subject
+    if email_owned_elsewhere(
+        db,
+        normalized_email,
+        user_id=locked.id,
+        allow_same_user_email_provider=True,
+    ):
+        raise IdentityEmailTaken()
+    promotable = lookup_identity_by_email(db, normalized_email)
+    if (
+        promotable is not None
+        and promotable.user_id == locked.id
+        and promotable.revoked_at is None
+        and promotable.provider == "email"
+        and promotable.provider_subject is None
+    ):
+        promotable.provider = "google"
+        promotable.provider_subject = normalized_subject
+        promotable.is_verified = True
+        promotable.email = normalized_email
+        if promotable.is_primary:
+            locked.email = normalized_email
+        db.flush()
+        return promotable
+    active = count_active_identities(db, locked.id)
+    if active >= ACTIVE_IDENTITY_LIMIT:
+        raise IdentityLimitReached()
+    contact = (locked.email or "").strip().lower()
+    if active == 0 and contact and contact != normalized_email:
+        if email_owned_elsewhere(db, contact, user_id=locked.id):
+            raise IdentityEmailTaken()
+        db.add(
+            UserIdentity(
+                user_id=locked.id,
+                provider="email",
+                email=contact,
+                provider_subject=None,
+                is_primary=True,
+                is_verified=True,
+            )
+        )
+        db.flush()
+        active = 1
+    is_primary = active == 0
+    row = UserIdentity(
+        user_id=locked.id,
+        provider="google",
+        email=normalized_email,
+        provider_subject=normalized_subject,
+        is_primary=is_primary,
+        is_verified=True,
+    )
+    db.add(row)
+    db.flush()
+    if is_primary:
+        locked.email = normalized_email
+    return row

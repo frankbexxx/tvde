@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { LoginScreen } from './LoginScreen'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
-import { readGoogleOnboarding } from './googleOnboarding'
+import { readGoogleAccountChoice, readGoogleOnboarding } from './googleOnboarding'
 import ptAuth from '../../i18n/locales/pt/auth.json'
 import enAuth from '../../i18n/locales/en/auth.json'
 
@@ -272,6 +272,103 @@ describe('Google passenger onboarding', () => {
     expect(await screen.findByText('googleOnboardingLinkPasswordInvalid')).toBeInTheDocument()
     expect(screen.queryByText(/super_admin|superuser|privilegiad/i)).not.toBeInTheDocument()
     expect(onDone).not.toHaveBeenCalled()
+  })
+
+  it('shows create or link and does not open a session before the choice', async () => {
+    loginGoogleIdToken.mockRejectedValue({
+      status: 409,
+      detail: {
+        code: 'google_account_choice_required',
+        name: 'Ana Example',
+        email: 'ana@example.com',
+      },
+    })
+    render(
+      <MemoryRouter>
+        <LoginScreen requestedRole="passenger" />
+      </MemoryRouter>,
+    )
+    fireEvent.click(await screen.findByTestId('google-sign-in'))
+    expect(await screen.findByTestId('google-account-choice')).toBeInTheDocument()
+    expect(screen.getByTestId('google-choice-create')).toHaveTextContent('googleChoiceCreate')
+    expect(screen.getByTestId('google-choice-link')).toHaveTextContent('googleChoiceLink')
+    expect(window.location.assign).not.toHaveBeenCalled()
+    expect(localStorage.getItem('reauth_token')).toBeNull()
+
+    fireEvent.click(screen.getByTestId('google-choice-create'))
+    expect(screen.getByTestId('google-onboarding')).toBeInTheDocument()
+    expect(completeGoogleOnboarding).not.toHaveBeenCalled()
+  })
+
+  it('links an existing account and keeps the session out of a reauth store', async () => {
+    const onLink = vi.fn().mockResolvedValue({ access_token: 'app-session', role: 'passenger' })
+    const onDone = vi.fn()
+    render(
+      <GooglePassengerOnboarding
+        email="ana@example.com"
+        suggestedName="Ana Example"
+        idToken="header.payload.signature"
+        nonce="abc"
+        onComplete={vi.fn()}
+        onLink={onLink}
+        onDone={onDone}
+        onRestart={vi.fn()}
+        initialMode="choice"
+      />,
+    )
+    fireEvent.click(screen.getByTestId('google-choice-link'))
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '+351912345678' },
+    })
+    fireEvent.change(screen.getByTestId('google-onboarding-password'), {
+      target: { value: 'secret-pass' },
+    })
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    await waitFor(() => expect(onLink).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1))
+    expect(localStorage.getItem('reauth_token')).toBeNull()
+  })
+
+  it('reports a conflict and the identity limit without another account', async () => {
+    const onLink = vi
+      .fn()
+      .mockRejectedValueOnce({ status: 409, detail: { code: 'identity_email_taken' } })
+      .mockRejectedValueOnce({ status: 409, detail: { code: 'identity_limit_reached' } })
+    render(
+      <GooglePassengerOnboarding
+        email="ana@example.com"
+        suggestedName="Ana Example"
+        idToken="header.payload.signature"
+        onComplete={vi.fn()}
+        onLink={onLink}
+        onDone={vi.fn()}
+        onRestart={vi.fn()}
+        initialMode="link"
+      />,
+    )
+    fireEvent.change(screen.getByTestId('google-onboarding-phone'), {
+      target: { value: '+351912345678' },
+    })
+    fireEvent.change(screen.getByTestId('google-onboarding-password'), {
+      target: { value: 'secret-pass' },
+    })
+    fireEvent.click(screen.getByTestId('legal-accept-checkbox'))
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    expect(await screen.findByText('googleOnboardingIdentityConflict')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('google-onboarding-submit'))
+    expect(await screen.findByText('googleOnboardingIdentityLimit')).toBeInTheDocument()
+  })
+
+  it('reads the choice contract', () => {
+    expect(
+      readGoogleAccountChoice({
+        status: 409,
+        detail: { code: 'google_account_choice_required', name: 'Ana', email: 'ana@example.com' },
+      }),
+    ).toEqual({ name: 'Ana', email: 'ana@example.com', idToken: null })
+    expect(ptAuth.googleChoiceCreate).toBe('Criar nova conta')
+    expect(ptAuth.googleChoiceLink).toBe('Ligar a uma conta VAMULÁ existente')
   })
 
   it('keeps the password prompt neutral in both locales', () => {

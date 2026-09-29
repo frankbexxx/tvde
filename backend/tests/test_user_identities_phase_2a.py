@@ -277,13 +277,25 @@ def test_separate_accounts_keep_their_own_identities(db: Session) -> None:
         _delete_user(db, staff_id)
 
 
-def test_google_login_still_uses_legacy_column(
+def test_google_login_uses_identity_not_the_legacy_column(
     client: TestClient, db: Session, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     sub, email = _ids()
     user = _add_user(db, email=email, sub=sub)
     user_id = user.id
     try:
+        user.oauth_google_sub = None
+        db.add(
+            UserIdentity(
+                user_id=user_id,
+                provider="google",
+                email=email,
+                provider_subject=sub,
+                is_primary=True,
+                is_verified=True,
+            )
+        )
+        db.commit()
         _patch_claims(monkeypatch, _claims(sub, email))
         logged = _login(client, sub=sub, email=email)
         assert logged.status_code == 200, logged.text
@@ -293,9 +305,10 @@ def test_google_login_still_uses_legacy_column(
         assert payload["role"] == "passenger"
         assert "token_version" in payload
         assert "purpose" not in payload
+        assert "identity_id" not in payload
         assert set(payload) == {"sub", "role", "iat", "exp", "token_version"}
         db.expire_all()
-        assert db.get(User, user_id).oauth_google_sub == sub
+        assert db.get(User, user_id).oauth_google_sub is None
     finally:
         _delete_user(db, user_id)
 
@@ -310,7 +323,8 @@ def test_login_succeeds_when_the_mirror_row_is_missing(
     try:
         _patch_claims(monkeypatch, _claims(sub, email))
         logged = _login(client, sub=sub, email=email)
-        assert logged.status_code == 200, logged.text
+        assert logged.status_code == 409, logged.text
+        assert logged.json()["detail"]["code"] == "google_account_choice_required"
         password_login = client.post(
             "/auth/login",
             json={"phone": phone, "password": "mirror-password-1"},
@@ -328,30 +342,32 @@ def test_new_google_onboarding_mirrors_and_keeps_the_same_user(
     phone = unique_test_phone()
     _patch_claims(monkeypatch, _claims(sub, email, name="Nova Conta"))
     started = _login(client, sub=sub, email=email)
-    assert started.status_code == 403, started.text
-    assert started.json()["detail"]["code"] == "google_onboarding_required"
-    pending = db.execute(select(User).where(User.oauth_google_sub == sub)).scalar_one()
-    pending_id = pending.id
+    assert started.status_code == 409, started.text
+    assert started.json()["detail"]["code"] == "google_account_choice_required"
+    assert db.execute(select(User).where(User.email == email)).scalar_one_or_none() is None
+    finished = _complete(client, phone=phone)
+    assert finished.status_code == 200, finished.text
+    token = decode_access_token(finished.json()["access_token"])
+    created = db.execute(select(User).where(User.phone == phone)).scalar_one()
+    created_id = created.id
     try:
-        mirrored = _rows(db, pending_id)
-        assert len(mirrored) == 1
-        assert mirrored[0].provider == "google"
-        assert mirrored[0].is_primary is True
-        finished = _complete(client, phone=phone)
-        assert finished.status_code == 200, finished.text
-        token = decode_access_token(finished.json()["access_token"])
-        assert token["sub"] == str(pending_id)
+        assert token["sub"] == str(created_id)
         assert token["role"] == "passenger"
         assert "purpose" not in token
         db.expire_all()
-        done = db.get(User, pending_id)
+        done = db.get(User, created_id)
         assert done is not None
         assert done.status == UserStatus.active
         assert done.phone == phone
+        assert done.oauth_google_sub is None
         assert done.role == Role.passenger
-        assert len(_rows(db, pending_id)) == 1
+        rows = _rows(db, created_id)
+        assert len(rows) == 1
+        assert rows[0].provider == "google"
+        assert rows[0].is_primary is True
+        assert rows[0].provider_subject == sub
     finally:
-        _delete_user(db, pending_id)
+        _delete_user(db, created_id)
 
 
 def test_link_moves_legacy_sub_and_does_not_remove_the_existing_account(
@@ -370,18 +386,18 @@ def test_link_moves_legacy_sub_and_does_not_remove_the_existing_account(
     db.commit()
     staff_id = staff.id
     _patch_claims(monkeypatch, _claims(sub, email))
-    assert _login(client, sub=sub, email=email).status_code == 403
-    pending = db.execute(select(User).where(User.oauth_google_sub == sub)).scalar_one()
-    pending_id = pending.id
+    started = _login(client, sub=sub, email=email)
+    assert started.status_code == 409
+    assert started.json()["detail"]["code"] == "google_account_choice_required"
+    assert db.execute(select(User).where(User.email == email)).scalar_one_or_none() is None
     linked = _link(client, phone=phone, password="staff-password-1")
     assert linked.status_code == 200, linked.text
     assert linked.json()["role"] == "super_admin"
     assert linked.json()["user_id"] == str(staff_id)
     db.expire_all()
-    assert db.get(User, pending_id) is None
     staff = db.get(User, staff_id)
     assert staff is not None
-    assert staff.oauth_google_sub == sub
+    assert staff.oauth_google_sub is None
     assert staff.email == email
     assert staff.role == Role.super_admin
     rows = _rows(db, staff_id)
@@ -404,9 +420,12 @@ def test_autolink_promotes_the_existing_email_row(
     try:
         _patch_claims(monkeypatch, _claims(sub, email, name="Conta"))
         logged = _login(client, sub=sub, email=email)
-        assert logged.status_code == 200, logged.text
-        assert logged.json()["role"] == "driver"
-        assert logged.json()["user_id"] == str(user_id)
+        assert logged.status_code == 409, logged.text
+        assert logged.json()["detail"]["code"] == "google_account_choice_required"
+        linked = _link(client, phone=user.phone, password="mirror-password-1")
+        assert linked.status_code == 200, linked.text
+        assert linked.json()["role"] == "driver"
+        assert linked.json()["user_id"] == str(user_id)
         db.expire_all()
         rows = _rows(db, user_id)
         assert len(rows) == 1
@@ -414,7 +433,7 @@ def test_autolink_promotes_the_existing_email_row(
         assert rows[0].provider == "google"
         assert rows[0].provider_subject == sub
         assert rows[0].is_primary is True
-        assert db.get(User, user_id).oauth_google_sub == sub
+        assert db.get(User, user_id).oauth_google_sub is None
     finally:
         _delete_user(db, user_id)
 
@@ -442,10 +461,7 @@ def test_privileged_link_mirrors_without_a_second_row(
         _patch_claims(monkeypatch, _claims(sub, email, name="Staff"))
         refused = _login(client, sub=sub, email=email)
         assert refused.status_code == 409
-        assert refused.json()["detail"] == {
-            "code": "existing_account_link_required",
-            "proof": "password",
-        }
+        assert refused.json()["detail"]["code"] == "google_account_choice_required"
         linked = _link(client, phone=phone, password="staff-password-1")
         assert linked.status_code == 200, linked.text
         db.expire_all()
