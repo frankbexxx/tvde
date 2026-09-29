@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.db.models.driver import Driver
     from app.db.models.partner import Partner
     from app.db.models.trip import Trip
+    from app.db.models.user_identity import UserIdentity
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, Integer, Numeric, String, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -125,6 +126,11 @@ class User(Base):
     passenger_trips: Mapped[List["Trip"]] = relationship(
         back_populates="passenger",
         foreign_keys="Trip.passenger_id",
+    )
+    identities: Mapped[List["UserIdentity"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
 

@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Identidades de login / Fase I** (**2026-09-29**)
+
+`user_identities` existe como espelho. A autenticação continua a ler `users.email` e `users.oauth_google_sub`. A conta parcial `35ddb821` não foi fundida com `09c539d1`.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A-ID-01** | Fase I `user_identities` | Concluído | **CLOSED** · tabela, checks, índices, backfill idempotente · revisão `b3c4d5e6f7a8` · auth ainda lê `users` |
+| **A-ID-02** | Fase II leitura/escrita | Por iniciar | **OPEN** · repetir o backfill antes de mudar login, onboarding e linking |
+| **A-ID-03** | Conta parcial `35ddb821` | N/A | Não ligada, não fundida, não bloqueada, não apagada · fica para a Fase III |
+
+---
+
 ## Painel — **Play Internal Testing** (**2026-09-28** — PR #674)
 
 App na Play, Internal Testing activo, build instalada no Oppo pela Play. Smoke dessa build **PASS**. GPS background continua aberto. S-MOB-02 continua **PARTIAL**.

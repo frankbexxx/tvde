@@ -16,12 +16,14 @@ from app.db.models.trip import Trip
 from app.db.models.trip_offer import TripOffer
 from app.db.models.device_push_token import DevicePushToken
 from app.db.models.user import User
+from app.db.models.user_identity import UserIdentity
 from app.db.models.user_legal_acceptance import UserLegalAcceptance
 from app.db.models.vehicle import Vehicle
 from app.db.models.vehicle_document import VehicleDocument
 
 __all__ = [
     "User",
+    "UserIdentity",
     "DevicePushToken",
     "UserLegalAcceptance",
     "Partner",
