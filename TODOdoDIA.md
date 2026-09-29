@@ -18,14 +18,15 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ## Painel — **Identidades de login / Fase II-B** (**2026-09-29**)
 
-A auth Google lê `user_identities`. Google desconhecido pede criar conta ou ligar com palavra-passe. Não há auto-link. `oauth_google_sub` não é lido nem escrito. `35ddb821` não foi transferida. Smoke de produção fica para depois do merge.
+A auth Google lê `user_identities`. Google desconhecido pede criar conta ou ligar com palavra-passe. Não há auto-link. `oauth_google_sub` não é lido nem escrito. `35ddb821` não foi transferida. `09c539d1` continua intacta. Smoke prod **S-ID-01 CLOSED** (2026-09-29): `vamula.qa@gmail.com` é Google QA ligado à fixture `dev_admin`. Logout no shell Admin é Fase VI e não reabre a II-B.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-ID-05** | Fase II-B leitura de identidades | Concluído | **CLOSED** · sem migration · escolha criar/ligar · prova curta · sem auto-link |
 | **A-ID-06** | Fase II-C gestão no perfil | Por iniciar | **OPEN** · listar, revogar e mudar a primária |
 | **A-ID-07** | Fase III transferir identity | Por iniciar | **OPEN** · `35ddb821` continua no próprio User |
-| **S-ID-01** | Smoke prod da II-B | Smoke pendente | Só depois do merge · primeiro leitura, depois um write controlado · não usar `35ddb821` |
+| **S-ID-01** | Smoke prod da II-B | Concluído | **CLOSED** 2026-09-29 · Google QA sem User novo · link à fixture `dev_admin` · login seguinte na mesma conta · `35ddb821` e `09c539d1` intactas |
+| **A-ID-08** | Fase VI logout / sessões | Por iniciar | **OPEN** · Admin em prod sem botão Sair · não reabre a II-B |
 
 ---
 
