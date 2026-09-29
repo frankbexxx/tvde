@@ -36,6 +36,7 @@ from app.db.models.otp import OtpCode
 from app.db.models.user import User
 from app.models.enums import Role, UserStatus
 from app.services.beta_capacity import active_beta_user_count
+from app.services.user_identities import mirror_legacy_login
 from app.db.models.user_legal_acceptance import LegalAcceptanceSource
 from app.services.legal_acceptance import (
     LOGIN_REACCEPT,
@@ -472,10 +473,15 @@ def _session_from_google_claims(
                 )
             # Passageiro, motorista e parceiro: o email verificado chega.
             # O role elevado mantém-se. Não se cria outro User.
+            changed_login = False
             if not by_email.oauth_google_sub:
                 by_email.oauth_google_sub = sub
+                changed_login = True
             if not by_email.email:
                 by_email.email = email
+                changed_login = True
+            if changed_login:
+                mirror_legacy_login(db, by_email)
             return _issue_linked_google_session(db, by_email)
 
     if user is None:
@@ -494,12 +500,15 @@ def _session_from_google_claims(
             requested_role="passenger",
         )
         db.add(user)
+        db.flush()
+        mirror_legacy_login(db, user)
         db.commit()
         db.refresh(user)
         _raise_google_onboarding_required(user, email, id_token=echo_id_token)
 
     if not user.email:
         user.email = email
+        mirror_legacy_login(db, user)
     elif user.email.lower() != email:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -676,6 +685,7 @@ def _complete_google_passenger_onboarding(
     user.phone = normalized_phone
     if not user.email:
         user.email = email
+        mirror_legacy_login(db, user)
     user.status = UserStatus.active
     user.requested_role = None
     record_acceptance(db, user.id, LegalAcceptanceSource.register_google)
@@ -883,6 +893,7 @@ def _link_privileged_email_owner(
     owner.oauth_google_sub = sub
     owner.role = role_before
     owner.phone = phone_before
+    mirror_legacy_login(db, owner)
     try:
         if acceptance_required(db, owner.id):
             record_acceptance(db, owner.id, LegalAcceptanceSource.register_google)
@@ -976,6 +987,8 @@ def _link_google_to_phone_owner(
             status_code=status.HTTP_409_CONFLICT,
             detail={"code": "existing_account_link_conflict"},
         )
+    mirror_legacy_login(db, google_user)
+    mirror_legacy_login(db, owner)
     db.delete(google_user)
     owner.role = role_before
     owner.phone = phone_before
