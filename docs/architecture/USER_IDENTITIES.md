@@ -1,6 +1,6 @@
-# Identidades de login — Fase I
+# Identidades de login — Fase I e II-A
 
-**Estado:** Fase I **CLOSED** (2026-09-29). Fase II **OPEN**.
+**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **OPEN**.
 
 Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google passam a ter uma tabela própria. Nesta fase essa tabela é só um espelho.
 
@@ -21,14 +21,15 @@ Continuam a ler:
 
 `users.phone`, `users.password_hash`, `users.role` e `users.status` não mudam nesta fase.
 
-Novos registos Google, até à Fase II, escrevem só em `users`. A Fase II volta a correr o mesmo backfill **antes** de passar as leituras e escritas para `user_identities`.
+A Fase II-A repete o backfill no deploy (revisão `c4d5e6f7a8b9`, sem mudança de schema) e espelha na mesma transacção cada escrita actual de `users.email` e `users.oauth_google_sub`. Se o mesmo User já tem uma linha `email` com esse endereço, essa linha passa a `google` em vez de nascer uma segunda. A autenticação continua a ler só `users`. `oauth_google_sub` continua a ser escrito e lido. Não há mudança de ecrã, de JWT, nem de onboarding. A Fase II-B é que passa a ler `user_identities`.
 
 ## Fora desta fase
 
 | Fase | Âmbito | Estado |
 |------|--------|--------|
 | I | Tabela, constraints, índices, backfill, testes | **CLOSED** |
-| II | Login, onboarding e linking passam a ler e a escrever `user_identities` | **OPEN** |
+| II-A | Backfill repetido, dual-write, auth ainda lê `users` | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
+| II-B | Login, onboarding e linking passam a ler `user_identities` | **OPEN** |
 | III | Transferir uma identidade para outro `User` (`UPDATE user_id` da mesma linha) | Por iniciar |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |

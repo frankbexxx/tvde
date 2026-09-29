@@ -16,6 +16,18 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Identidades de login / Fase II-A** (**2026-09-29**)
+
+O espelho fica alinhado com `users` em cada escrita de email ou Google. O login, o onboarding e o linking não mudam. `oauth_google_sub` continua a ser a fonte legacy.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A-ID-04** | Fase II-A dual-write | Concluído | **CLOSED** · backfill idempotente `c4d5e6f7a8b9` · auth ainda lê `users` · sem mudança de UX |
+| **A-ID-05** | Fase II-B leitura de identidades | Por iniciar | **OPEN** · escolha criar/ligar, prova curta, `oauth_google_sub` deixa de ser lido |
+| **A-ID-03** | Conta parcial `35ddb821` | N/A | Continua no próprio User · transferência é Fase III |
+
+---
+
 ## Painel — **Identidades de login / Fase I** (**2026-09-29**)
 
 `user_identities` existe como espelho. A autenticação continua a ler `users.email` e `users.oauth_google_sub`. A conta parcial `35ddb821` não foi fundida com `09c539d1`.
