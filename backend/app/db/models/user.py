@@ -112,7 +112,7 @@ class User(Base):
         nullable=True,
         unique=True,
         index=True,
-        comment="Google OpenID subject (sub) quando a conta tem login Google.",
+        comment="Histórico. A auth Google lê user_identities; não escrever valores novos.",
     )
 
     partner_org: Mapped[Optional["Partner"]] = relationship(

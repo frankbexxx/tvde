@@ -15,6 +15,7 @@ from app.auth.security import create_access_token
 from app.core.config import settings
 from app.db.models.otp import OtpCode
 from app.db.models.user import User
+from app.db.models.user_identity import UserIdentity
 from app.db.models.user_legal_acceptance import LegalAcceptanceSource, UserLegalAcceptance
 from app.models.enums import Role, UserStatus
 from app.services.legal_acceptance import acceptance_required, record_acceptance
@@ -214,22 +215,14 @@ def test_google_new_account_defers_acceptance_until_onboarding(
         "accept_legal": False,
     }
     created = client.post("/auth/google/exchange", json=body)
-    assert created.status_code == 403
+    assert created.status_code == 409
     detail = created.json()["detail"]
-    assert detail["code"] == "google_onboarding_required"
+    assert detail["code"] == "google_account_choice_required"
     assert detail["email"] == email
     assert detail["name"] == "Nova Conta"
     assert "access_token" not in created.json()
     db.expire_all()
-    user = db.execute(select(User).where(func.lower(User.email) == email)).scalar_one()
-    assert user.status == UserStatus.pending
-    assert user.role == Role.passenger
-    acceptance_count = db.execute(
-        select(func.count())
-        .select_from(UserLegalAcceptance)
-        .where(UserLegalAcceptance.user_id == user.id)
-    ).scalar_one()
-    assert acceptance_count == 0
+    assert db.execute(select(User).where(func.lower(User.email) == email)).scalar_one_or_none() is None
 
 
 def test_google_existing_user_does_not_need_register_acceptance(
@@ -237,7 +230,18 @@ def test_google_existing_user_does_not_need_register_acceptance(
 ) -> None:
     email = f"existing-{unique_test_phone()[1:]}@example.com"
     sub = f"existing-{unique_test_phone()[1:]}"
-    user = _user(db, email=email, oauth_google_sub=sub)
+    user = _user(db, email=email, oauth_google_sub=None)
+    db.add(
+        UserIdentity(
+            user_id=user.id,
+            provider="google",
+            email=email,
+            provider_subject=sub,
+            is_primary=True,
+            is_verified=True,
+        )
+    )
+    db.commit()
 
     async def _exchange(**_kwargs: object) -> dict[str, str]:
         return {"id_token": "fake"}

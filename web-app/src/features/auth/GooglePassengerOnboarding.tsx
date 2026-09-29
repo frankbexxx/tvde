@@ -31,6 +31,7 @@ type GooglePassengerOnboardingProps = {
   onDone: () => void
   onRestart: () => void
   initialLinkRequired?: boolean
+  initialMode?: 'choice' | 'create' | 'link'
 }
 
 export function GooglePassengerOnboarding({
@@ -43,12 +44,16 @@ export function GooglePassengerOnboarding({
   onDone,
   onRestart,
   initialLinkRequired = false,
+  initialMode,
 }: GooglePassengerOnboardingProps) {
   const { t } = useTranslation('auth')
   const [name, setName] = useState(suggestedName)
   const [phone, setPhone] = useState('+351')
   const [password, setPassword] = useState('')
-  const [linkRequired, setLinkRequired] = useState(initialLinkRequired)
+  const [mode, setMode] = useState<'choice' | 'create' | 'link'>(
+    initialMode ?? (initialLinkRequired ? 'link' : 'create'),
+  )
+  const linkRequired = mode === 'link'
   const [acceptLegal, setAcceptLegal] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -111,9 +116,14 @@ export function GooglePassengerOnboarding({
     } catch (err: unknown) {
       const code = apiDetailCode(err)
       if (code === 'existing_account_link_required') {
-        setLinkRequired(true)
+        setMode('link')
         setError(null)
       } else if (code === 'invalid_credentials') setError(t('googleOnboardingLinkPasswordInvalid'))
+      else if (code === 'password_required') setError(t('googleOnboardingPasswordRequired'))
+      else if (code === 'identity_limit_reached') setError(t('googleOnboardingIdentityLimit'))
+      else if (code === 'identity_email_taken' || code === 'identity_subject_taken') {
+        setError(t('googleOnboardingIdentityConflict'))
+      }
       else if (code === 'existing_account_link_conflict') setError(t('googleOnboardingLinkFailed'))
       else if (code === 'phone_already_used') setError(t('googleOnboardingPhoneTaken'))
       else if (code === 'invalid_phone_format') setError(t('googleOnboardingPhoneInvalid'))
@@ -123,6 +133,39 @@ export function GooglePassengerOnboarding({
     } finally {
       setLoading(false)
     }
+  }
+
+  if (mode === 'choice') {
+    return (
+      <div
+        className="box-border flex min-h-dvh flex-col bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
+        data-testid="google-account-choice"
+      >
+        <div className={`m-auto w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
+          <BrandStripe />
+          <div className="p-6 flex flex-col gap-4">
+            <h1 className="text-lg font-semibold text-foreground">{t('googleChoiceTitle')}</h1>
+            <p className="text-sm text-muted-foreground">{t('googleChoiceBody')}</p>
+            <button
+              type="button"
+              data-testid="google-choice-create"
+              className={`w-full min-h-[44px] ${BTN_PRIMARY_RADIUS} bg-primary text-primary-foreground font-medium`}
+              onClick={() => setMode('create')}
+            >
+              {t('googleChoiceCreate')}
+            </button>
+            <button
+              type="button"
+              data-testid="google-choice-link"
+              className={`w-full min-h-[44px] ${BTN_PRIMARY_RADIUS} border border-input bg-background text-foreground font-medium`}
+              onClick={() => setMode('link')}
+            >
+              {t('googleChoiceLink')}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const nameOk = name.trim().length >= 1 && name.trim().length <= 120

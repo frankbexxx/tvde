@@ -53,6 +53,11 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_token",
         ) from exc
+    if payload.get("purpose") == "strong_auth":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_token",
+        )
 
     user_id = payload.get("sub")
     if not user_id:

@@ -30,6 +30,19 @@ export function normalizePtPhone(input: string): string | null {
   return value
 }
 
+/** Google válido sem conta VAMULÁ. O cliente escolhe criar ou ligar. */
+export function readGoogleAccountChoice(err: unknown): GoogleOnboardingPrompt | null {
+  if (err === null || typeof err !== 'object' || !('detail' in err)) return null
+  const detail = (err as ApiError).detail
+  if (detail === null || typeof detail !== 'object' || Array.isArray(detail)) return null
+  if (detail.code !== 'google_account_choice_required') return null
+  const email = typeof detail.email === 'string' ? detail.email.trim() : ''
+  if (!email) return null
+  const name = typeof detail.name === 'string' ? detail.name.trim() : ''
+  const idToken = typeof detail.id_token === 'string' && detail.id_token ? detail.id_token : null
+  return { name, email, idToken }
+}
+
 /** Login Google pediu a palavra-passe da conta existente. Não traz o papel. */
 export function readExistingAccountLink(err: unknown): { idToken: string | null } | null {
   if (err === null || typeof err !== 'object' || !('detail' in err)) return null

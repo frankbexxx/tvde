@@ -23,6 +23,7 @@ from app.core.config import settings
 from app.db.models.driver import Driver
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.user import User
+from app.db.models.user_identity import UserIdentity
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.partner import Partner
@@ -467,8 +468,12 @@ async def get_pending_users(
     google_passenger_onboarding = and_(
         User.role == Role.passenger,
         User.requested_role == "passenger",
-        User.oauth_google_sub.is_not(None),
-        User.oauth_google_sub != "",
+        User.id.in_(
+            select(UserIdentity.user_id).where(
+                UserIdentity.provider == "google",
+                UserIdentity.revoked_at.is_(None),
+            )
+        ),
     )
     users = (
         db.execute(
@@ -1087,11 +1092,17 @@ async def approve_user(
         raise HTTPException(status_code=404, detail="user_not_found")
     if u.status != UserStatus.pending:
         raise HTTPException(status_code=400, detail="user_not_pending")
-    if (
-        u.role == Role.passenger
-        and u.requested_role == "passenger"
-        and (u.oauth_google_sub or "").strip()
-    ):
+    has_google_identity = (
+        db.execute(
+            select(UserIdentity.id).where(
+                UserIdentity.user_id == u.id,
+                UserIdentity.provider == "google",
+                UserIdentity.revoked_at.is_(None),
+            )
+        ).scalar_one_or_none()
+        is not None
+    )
+    if u.role == Role.passenger and u.requested_role == "passenger" and has_google_identity:
         raise HTTPException(
             status_code=400,
             detail="google_onboarding_not_admin_approvable",

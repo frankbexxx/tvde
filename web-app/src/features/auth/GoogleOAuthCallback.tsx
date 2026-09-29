@@ -7,6 +7,7 @@ import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
 import {
   googleIdTokenProfile,
   readExistingAccountLink,
+  readGoogleAccountChoice,
   readGoogleOnboarding,
   type GoogleOnboardingPrompt,
 } from './googleOnboarding'
@@ -31,7 +32,11 @@ function formatErr(err: unknown): string {
   return 'Não foi possível concluir o login com Google.'
 }
 
-type HeldOnboarding = GoogleOnboardingPrompt & { idToken: string; initialLinkRequired?: boolean }
+type HeldOnboarding = GoogleOnboardingPrompt & {
+  idToken: string
+  initialLinkRequired?: boolean
+  initialMode?: 'choice' | 'create' | 'link'
+}
 
 export function GoogleOAuthCallback() {
   const [search] = useSearchParams()
@@ -59,11 +64,16 @@ export function GoogleOAuthCallback() {
         if (alive) navigate('/passenger', { replace: true })
       } catch (e: unknown) {
         if (!alive) return
+        const choice = readGoogleAccountChoice(e)
         const onboard = readGoogleOnboarding(e)
         const link = readExistingAccountLink(e)
         sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
         sessionStorage.removeItem(LEGAL_ACCEPT_REGISTER_KEY)
         window.history.replaceState({}, '', '/auth/google/callback')
+        if (choice?.idToken) {
+          setHeld({ ...choice, idToken: choice.idToken, initialMode: 'choice' })
+          return
+        }
         if (onboard?.idToken) {
           setHeld({ ...onboard, idToken: onboard.idToken })
           return
@@ -101,6 +111,7 @@ export function GoogleOAuthCallback() {
         onDone={() => navigate('/passenger', { replace: true })}
         onRestart={() => navigate('/passenger', { replace: true })}
         initialLinkRequired={held.initialLinkRequired}
+        initialMode={held.initialMode}
       />
     )
   }
