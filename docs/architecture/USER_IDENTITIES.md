@@ -1,8 +1,8 @@
-# Identidades de login — Fase I e II-A
+# Identidades de login — Fase I, II-A e II-B
 
-**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **OPEN**.
+**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Fase II-C **OPEN**. Fase III **OPEN**.
 
-Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google passam a ter uma tabela própria. Nesta fase essa tabela é só um espelho.
+Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google vivem em `user_identities`. A autenticação Google lê essa tabela.
 
 ## O que a Fase I fez
 
@@ -10,18 +10,24 @@ Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role`
 - Backfill idempotente a partir de `users.email` e `users.oauth_google_sub`.
 - A conta parcial `35ddb821` recebe apenas a identidade que já lhe pertence. Não foi ligada a `09c539d1`, nem fundida, bloqueada ou apagada.
 
-## O que a autenticação ainda lê
+## O que a autenticação lê
 
-O login, o onboarding Google e o linking **não** consultam `user_identities`.
+Depois de validar o token Google, o login procura `user_identities` por `provider = google` e `provider_subject = sub`.
 
-Continuam a ler:
+- Identity activa: o JWT é o de sempre (`sub` = `user_id`, `role`, `token_version`). Não leva `identity_id`.
+- Conta bloqueada: `403 blocked`. Onboarding Google pendente: `google_onboarding_required`. Outro pending: `pending_approval`.
+- Identity revogada: `identity_revoked`. Não é tratada como Google desconhecido e não cria `User`.
+- Sem identity: `google_account_choice_required`. Não cria `User`. O ecrã oferece criar conta ou ligar uma conta existente com telefone e palavra-passe.
 
-- `users.email`
-- `users.oauth_google_sub`
+Não há auto-link por email, para nenhum papel. Admin e super_admin confirmam a palavra-passe actual no próprio pedido. `POST /auth/reauth` emite uma prova curta (`purpose = strong_auth`, cerca de 10 minutos, ligada ao `iat` do access token). Essa prova não serve de access token e não fica em `localStorage`.
 
-`users.phone`, `users.password_hash`, `users.role` e `users.status` não mudam nesta fase.
+Criar conta só acontece no fim do onboarding: `User` com telefone real, nome, termos e uma identity Google primária. Ligar uma conta promove, no mesmo `identity_id`, a linha `email` do mesmo User quando o email verificado coincide. Email de outro User, linha revogada ou `sub` de outra identity recusam a ligação. O máximo é 5 identities activas (`revoked_at IS NULL`).
 
-A Fase II-A repete o backfill no deploy (revisão `c4d5e6f7a8b9`, sem mudança de schema) e espelha na mesma transacção cada escrita actual de `users.email` e `users.oauth_google_sub`. Se o mesmo User já tem uma linha `email` com esse endereço, essa linha passa a `google` em vez de nascer uma segunda. A autenticação continua a ler só `users`. `oauth_google_sub` continua a ser escrito e lido. Não há mudança de ecrã, de JWT, nem de onboarding. A Fase II-B é que passa a ler `user_identities`.
+`users.oauth_google_sub` fica deprecated, nullable e histórico. A auth não o lê nem escreve. A coluna não foi removida. `users.email` continua a espelhar o email da identity primária activa. `users.phone` e `users.password_hash` não mudam por este corte.
+
+A Fase II-A (revisão `c4d5e6f7a8b9`) sincronizou o espelho antes deste corte. Não há migration nova na II-B. A gestão de identities no perfil fica para a II-C. A conta `35ddb821` não foi transferida: o `sub` dela continua na identity dessa conta. Transferir a linha é a Fase III.
+
+O primeiro write desta fase em produção torna o rollback para o código legacy não equivalente. O smoke de produção começa por leitura (Google conhecido, Google desconhecido sem criar User) e só depois um write controlado. Esse smoke fica para depois do merge.
 
 ## Fora desta fase
 
@@ -29,8 +35,9 @@ A Fase II-A repete o backfill no deploy (revisão `c4d5e6f7a8b9`, sem mudança d
 |------|--------|--------|
 | I | Tabela, constraints, índices, backfill, testes | **CLOSED** |
 | II-A | Backfill repetido, dual-write, auth ainda lê `users` | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
-| II-B | Login, onboarding e linking passam a ler `user_identities` | **OPEN** |
-| III | Transferir uma identidade para outro `User` (`UPDATE user_id` da mesma linha) | Por iniciar |
+| II-B | Login, onboarding e linking lêem `user_identities`. Sem auto-link. Escolha criar/ligar. Prova curta | **CLOSED** 2026-09-29 · sem migration |
+| II-C | Gestão de identities na área de perfil | **OPEN** |
+| III | Transferir uma identidade para outro `User` (`UPDATE user_id` da mesma linha). `35ddb821` não foi transferida | **OPEN** |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
 | VI | Logout visível e revogação de sessão | Por iniciar |
