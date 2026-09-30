@@ -16,16 +16,28 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Identidades de login / Fase III** (**2026-09-30**)
+
+A identity `bf19df73` foi movida para `09c539d1` e ficou não-primária. A origem `35ddb821` existe, ficou `blocked`, sem identities activas e sem email. O destino continua `super_admin` e `active`, com 2 identities activas e a primary original. Nenhum User foi apagado. Continuam 20 Users. O histórico ficou no dono. `oauth_google_sub` não foi alterado. II-C e Fase VI continuam **OPEN**.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A-ID-07** | Fase III transferir identity | Concluído | **CLOSED** 2026-09-30 · PR #680 · transferência PROD HTTP 200 **PASS** · audit **PASS** · smoke Google humano **PASS** (`frankbex.dev@gmail.com` em Passageiro, sem onboarding nem linking) |
+| **A-ID-06** | Fase II-C gestão no perfil | Por iniciar | **OPEN** · listar, revogar e mudar a primária |
+| **A-ID-08** | Fase VI logout / sessões | Por iniciar | **OPEN** · Admin em prod sem botão Sair · não reabre a II-B nem a III |
+
+---
+
 ## Painel — **Identidades de login / Fase II-B** (**2026-09-29**)
 
-A auth Google lê `user_identities`. Google desconhecido pede criar conta ou ligar com palavra-passe. Não há auto-link. `oauth_google_sub` não é lido nem escrito. `35ddb821` não foi transferida. `09c539d1` continua intacta. Smoke prod **S-ID-01 CLOSED** (2026-09-29): `vamula.qa@gmail.com` é Google QA ligado à fixture `dev_admin`. Logout no shell Admin é Fase VI e não reabre a II-B.
+A auth Google lê `user_identities`. Google desconhecido pede criar conta ou ligar com palavra-passe. Não há auto-link. `oauth_google_sub` não é lido nem escrito. Smoke prod **S-ID-01 CLOSED** (2026-09-29): `vamula.qa@gmail.com` é Google QA ligado à fixture `dev_admin`. A transferência de `35ddb821` fechou na Fase III, no painel acima. Logout no shell Admin é Fase VI e não reabre a II-B.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-ID-05** | Fase II-B leitura de identidades | Concluído | **CLOSED** · sem migration · escolha criar/ligar · prova curta · sem auto-link |
 | **A-ID-06** | Fase II-C gestão no perfil | Por iniciar | **OPEN** · listar, revogar e mudar a primária |
-| **A-ID-07** | Fase III transferir identity | Em curso | Implementação pronta · smoke prod por fazer · **OPEN** · `35ddb821` ainda não foi transferida |
-| **S-ID-01** | Smoke prod da II-B | Concluído | **CLOSED** 2026-09-29 · Google QA sem User novo · link à fixture `dev_admin` · login seguinte na mesma conta · `35ddb821` e `09c539d1` intactas |
+| **A-ID-07** | Fase III transferir identity | Concluído | Fechada no painel Fase III acima |
+| **S-ID-01** | Smoke prod da II-B | Concluído | **CLOSED** 2026-09-29 · Google QA sem User novo · link à fixture `dev_admin` · login seguinte na mesma conta · contas intactas à data deste smoke |
 | **A-ID-08** | Fase VI logout / sessões | Por iniciar | **OPEN** · Admin em prod sem botão Sair · não reabre a II-B |
 
 ---
@@ -38,7 +50,7 @@ O espelho fica alinhado com `users` em cada escrita de email ou Google. O login,
 |----|------|--------|-------|
 | **A-ID-04** | Fase II-A dual-write | Concluído | **CLOSED** · backfill idempotente `c4d5e6f7a8b9` · auth ainda lê `users` · sem mudança de UX |
 | **A-ID-05** | Fase II-B leitura de identidades | Concluído | Fechada no painel II-B acima |
-| **A-ID-03** | Conta parcial `35ddb821` | N/A | Continua no próprio User · transferência é Fase III |
+| **A-ID-03** | Conta parcial `35ddb821` | N/A | Na II-A continuava no próprio User · transferência **CLOSED** na Fase III |
 
 ---
 
@@ -50,7 +62,7 @@ O espelho fica alinhado com `users` em cada escrita de email ou Google. O login,
 |----|------|--------|-------|
 | **A-ID-01** | Fase I `user_identities` | Concluído | **CLOSED** · tabela, checks, índices, backfill idempotente · revisão `b3c4d5e6f7a8` · auth ainda lê `users` |
 | **A-ID-02** | Fase II leitura/escrita | Por iniciar | **OPEN** · repetir o backfill antes de mudar login, onboarding e linking |
-| **A-ID-03** | Conta parcial `35ddb821` | N/A | Não ligada, não fundida, não bloqueada, não apagada · fica para a Fase III |
+| **A-ID-03** | Conta parcial `35ddb821` | N/A | Na Fase I não foi ligada nem apagada · estado actual no painel Fase III |
 
 ---
 

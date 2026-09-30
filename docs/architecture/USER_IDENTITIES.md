@@ -1,6 +1,6 @@
-# Identidades de login — Fase I, II-A e II-B
+# Identidades de login — Fase I, II e III
 
-**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase II-C **OPEN**. Fase III: implementação pronta, smoke prod por fazer, **OPEN**. Fase VI **OPEN**.
+**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase III **CLOSED** (2026-09-30): transferência PROD **PASS** e smoke Google humano **PASS**. Fase II-C **OPEN**. Fase VI **OPEN**.
 
 Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google vivem em `user_identities`. A autenticação Google lê essa tabela.
 
@@ -25,7 +25,7 @@ Criar conta só acontece no fim do onboarding: `User` com telefone real, nome, t
 
 `users.oauth_google_sub` fica deprecated, nullable e histórico. A auth não o lê nem escreve. A coluna não foi removida. `users.email` continua a espelhar o email da identity primária activa. `users.phone` e `users.password_hash` não mudam por este corte.
 
-A Fase II-A (revisão `c4d5e6f7a8b9`) sincronizou o espelho antes deste corte. Não há migration nova na II-B. A gestão de identities no perfil fica para a II-C. A conta `35ddb821` não foi transferida: o `sub` dela continua na identity dessa conta. `09c539d1` continua intacta. Transferir a linha é a Fase III.
+A Fase II-A (revisão `c4d5e6f7a8b9`) sincronizou o espelho antes deste corte. Não há migration nova na II-B. A gestão de identities no perfil fica para a II-C. A identity Google de `35ddb821` foi movida para `09c539d1` na Fase III: a mesma linha, não-primária. A origem ficou `blocked` e sem email. `09c539d1` continua `super_admin` e `active`, com a primary original.
 
 O primeiro write desta fase em produção torna o rollback para o código legacy não equivalente.
 
@@ -37,14 +37,16 @@ O primeiro write desta fase em produção torna o rollback para o código legacy
 - A ligação foi para a fixture de QA `dev_admin` (`2481222c-50f6-403f-aa59-8d386f1cd00a`, admin, active). A password dessa fixture foi definida para o smoke e o `token_version` subiu. Os restantes campos ficaram intactos. Não nasceu outro `User` e não houve delete.
 - O login seguinte com `vamula.qa@gmail.com` entrou na mesma conta, sem ecrã de escolha. Os contextos Passageiro e Admin funcionaram.
 - `vamula.qa@gmail.com` fica como Google QA de teste, ligado a `dev_admin`.
-- `35ddb821` e `09c539d1` continuam intactas. `35ddb821` não foi transferida.
+- Neste smoke, `35ddb821` e `09c539d1` continuavam intactas. A transferência foi feita depois, na Fase III.
 - `users.oauth_google_sub` continua deprecated e fora da auth.
 
 No contexto Admin em produção não aparece o botão Sair. O logout fez-se ao mudar para Passageiro. Isto não reabre a Fase II-B. Logout e sessões são a Fase VI.
 
 ## Fase III — transferência de uma identity
 
-Implementação pronta. A transferência de `35ddb821` para `09c539d1` **não foi executada**. O smoke prod fica para depois do deploy. A fase continua **OPEN** até esse smoke. II-C e Fase VI continuam **OPEN**.
+**CLOSED** em 2026-09-30. Transferência PROD **PASS**. Smoke Google humano **PASS**. II-C e Fase VI continuam **OPEN**.
+
+PR #680 está em produção. `POST /admin/identities/transfer` devolveu HTTP 200 uma vez. A identity `bf19df73-aa66-409e-ae41-53b5715a2bb7` passou de `35ddb821-cfe7-4a4d-bbb1-1fc899f8f1d9` para `09c539d1-fd0a-4c02-813a-771c4df454b3`. O `identity_id` manteve-se. A linha ficou activa e não-primária. O destino continua `super_admin` e `active`, com 2 identities activas; a primary original manteve-se e `users.email` do destino não mudou. A origem continua a existir, ficou `blocked`, sem identities activas e com `users.email` a `NULL`. Continuam 20 Users. Nenhum User foi apagado. Viagens, pagamentos, aceitações legais e logs mantiveram o dono. `oauth_google_sub` não foi lido nem escrito. A auditoria registou `identity_transferred` e `source_account_blocked`, sem email, telefone nem subject. `frankbex.dev@gmail.com` entrou na APK directamente em Passageiro, sem onboarding, sem linking e sem User ou identity novos.
 
 `transfer_identity` move a mesma linha de `user_identities` para outro User. Não duplica, não apaga Users e não move histórico. A identity transferida fica não-primária. A primary do destino mantém-se. Se a linha movida era a primary da origem, `users.email` da origem fica `NULL`. O email do destino não muda. A origem fica `blocked` na mesma transacção, para não voltar à fila de pending. Push tokens activos da origem, se existirem, ficam inactivos e continuam nesse User.
 
@@ -62,7 +64,7 @@ Rollback antes do commit desfaz a transacção. Depois de um commit, a operaçã
 | II-A | Backfill repetido, dual-write, auth ainda lê `users` | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
 | II-B | Login, onboarding e linking lêem `user_identities`. Sem auto-link. Escolha criar/ligar. Prova curta | **CLOSED** 2026-09-29 · sem migration |
 | II-C | Gestão de identities na área de perfil | **OPEN** |
-| III | Mover a mesma linha de identity e bloquear a origem. `35ddb821` ainda não foi transferida | Implementação pronta · smoke prod por fazer · **OPEN** |
+| III | Mover a mesma linha de identity e bloquear a origem | **CLOSED** 2026-09-30 · transferência PROD **PASS** · smoke Google humano **PASS** · PR #680 |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
 | VI | Logout visível e revogação de sessão. Em prod o Admin não mostra Sair; não reabre a II-B | **OPEN** |
@@ -83,7 +85,7 @@ Unicidade:
 - `(provider, provider_subject)` quando `provider_subject IS NOT NULL`, incluindo linhas revogadas.
 - no máximo uma primária activa por `user_id` (`is_primary` e `revoked_at IS NULL`).
 
-Um email ou um `sub` revogado continua reservado a essa linha. Outro `User` não o reutiliza. Transferir a linha para outra conta é trabalho da Fase III e não está implementado.
+Um email ou um `sub` revogado continua reservado a essa linha. Outro `User` não o reutiliza. Mover a mesma linha para outra conta é a Fase III, **CLOSED** em 2026-09-30: muda `user_id` e deixa de ser primária.
 
 ## Backfill
 

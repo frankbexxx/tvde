@@ -14,7 +14,7 @@ Começa aqui; **não** uses documentos SUPERSEDED como runbook.
 | [`../diagrams/`](../diagrams/) | Fluxos actuais (pagamentos, cron, auth, …) |
 | [`TVDE_ENGINEERING_ROADMAP.md`](TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (rever datas; cruzar com código) |
 | [`I18N.md`](I18N.md) · [`I18N_NICHOS_EN.md`](I18N_NICHOS_EN.md) | i18n web-app |
-| [`USER_IDENTITIES.md`](USER_IDENTITIES.md) | Identidades de login — Fase I, II-A, II-B e S-ID-01 **CLOSED**; II-C e Fase VI **OPEN**; Fase III implementação pronta, smoke prod por fazer, **OPEN** |
+| [`USER_IDENTITIES.md`](USER_IDENTITIES.md) | Identidades de login — Fase I, II-A, II-B, S-ID-01 e Fase III **CLOSED** (transferência PROD e smoke Google humano **PASS**, 2026-09-30); II-C e Fase VI **OPEN** |
 | [`../../TODOdoDIA.md`](../../TODOdoDIA.md) · [`../meta/PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) | Operação / handoff |
 
 ## Historical / superseded (não operar a partir daqui)
