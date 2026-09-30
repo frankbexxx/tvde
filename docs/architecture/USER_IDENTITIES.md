@@ -1,6 +1,6 @@
 # Identidades de login — Fase I, II-A e II-B
 
-**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Fase II-C **OPEN**. Fase III **OPEN**.
+**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase II-C **OPEN**. Fase III **OPEN**. Fase VI **OPEN**.
 
 Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google vivem em `user_identities`. A autenticação Google lê essa tabela.
 
@@ -25,9 +25,22 @@ Criar conta só acontece no fim do onboarding: `User` com telefone real, nome, t
 
 `users.oauth_google_sub` fica deprecated, nullable e histórico. A auth não o lê nem escreve. A coluna não foi removida. `users.email` continua a espelhar o email da identity primária activa. `users.phone` e `users.password_hash` não mudam por este corte.
 
-A Fase II-A (revisão `c4d5e6f7a8b9`) sincronizou o espelho antes deste corte. Não há migration nova na II-B. A gestão de identities no perfil fica para a II-C. A conta `35ddb821` não foi transferida: o `sub` dela continua na identity dessa conta. Transferir a linha é a Fase III.
+A Fase II-A (revisão `c4d5e6f7a8b9`) sincronizou o espelho antes deste corte. Não há migration nova na II-B. A gestão de identities no perfil fica para a II-C. A conta `35ddb821` não foi transferida: o `sub` dela continua na identity dessa conta. `09c539d1` continua intacta. Transferir a linha é a Fase III.
 
-O primeiro write desta fase em produção torna o rollback para o código legacy não equivalente. O smoke de produção começa por leitura (Google conhecido, Google desconhecido sem criar User) e só depois um write controlado. Esse smoke fica para depois do merge.
+O primeiro write desta fase em produção torna o rollback para o código legacy não equivalente.
+
+## Smoke PROD S-ID-01
+
+**CLOSED** em 2026-09-29.
+
+- Google desconhecido `vamula.qa@gmail.com` mostrou criar conta ou ligar uma conta existente. Não criou `User` nem identity.
+- A ligação foi para a fixture de QA `dev_admin` (`2481222c-50f6-403f-aa59-8d386f1cd00a`, admin, active). A password dessa fixture foi definida para o smoke e o `token_version` subiu. Os restantes campos ficaram intactos. Não nasceu outro `User` e não houve delete.
+- O login seguinte com `vamula.qa@gmail.com` entrou na mesma conta, sem ecrã de escolha. Os contextos Passageiro e Admin funcionaram.
+- `vamula.qa@gmail.com` fica como Google QA de teste, ligado a `dev_admin`.
+- `35ddb821` e `09c539d1` continuam intactas. `35ddb821` não foi transferida.
+- `users.oauth_google_sub` continua deprecated e fora da auth.
+
+No contexto Admin em produção não aparece o botão Sair. O logout fez-se ao mudar para Passageiro. Isto não reabre a Fase II-B. Logout e sessões são a Fase VI.
 
 ## Fora desta fase
 
@@ -40,7 +53,7 @@ O primeiro write desta fase em produção torna o rollback para o código legacy
 | III | Transferir uma identidade para outro `User` (`UPDATE user_id` da mesma linha). `35ddb821` não foi transferida | **OPEN** |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
-| VI | Logout visível e revogação de sessão | Por iniciar |
+| VI | Logout visível e revogação de sessão. Em prod o Admin não mostra Sair; não reabre a II-B | **OPEN** |
 
 `Person` / `Identity` como entidade separada fica fora do MVP.
 
