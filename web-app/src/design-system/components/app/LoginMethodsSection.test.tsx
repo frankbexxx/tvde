@@ -1,6 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LoginMethodsSection } from './LoginMethodsSection'
+
+const { translate } = vi.hoisted(() => ({
+  translate: (key: string) => key,
+}))
 
 const getMeProfile = vi.fn()
 const listMyIdentities = vi.fn()
@@ -12,7 +16,7 @@ const signIn = vi.fn()
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: translate,
     i18n: { language: 'pt' },
   }),
 }))
@@ -40,6 +44,27 @@ vi.mock('@/api/auth', () => ({
     google_oauth_client_id: 'cid.apps.googleusercontent.com',
   }),
 }))
+
+function card(email: string) {
+  const node = screen.getByText(email, { exact: false }).closest('li')
+  if (!node) throw new Error(`missing card for ${email}`)
+  return within(node)
+}
+
+const onlyIdentity = {
+  active_count: 1,
+  limit: 5,
+  identities: [
+    {
+      id: 'only-id',
+      provider: 'google',
+      email: 'only@example.com',
+      is_primary: true,
+      is_verified: true,
+      created_at: '2026-09-30T00:00:00Z',
+    },
+  ],
+}
 
 const identities = {
   active_count: 2,
@@ -84,7 +109,33 @@ describe('LoginMethodsSection', () => {
     expect(screen.queryByText('profilePanel.loginMethods.addGoogle')).not.toBeInTheDocument()
   })
 
-  it('shows the primary badge and changes primary with the typed password', async () => {
+  it('hides revoke on the only primary and explains why', async () => {
+    getMeProfile.mockResolvedValue({ has_custom_password: true })
+    listMyIdentities.mockResolvedValue(onlyIdentity)
+    render(<LoginMethodsSection token="session" onSessionEnded={vi.fn()} />)
+    expect(await screen.findByText('only@example.com', { exact: false })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'profilePanel.loginMethods.revoke' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'profilePanel.loginMethods.makePrimary' })).not.toBeInTheDocument()
+    expect(screen.getByText('profilePanel.loginMethods.revokeOnly')).toBeInTheDocument()
+    expect(screen.queryByText('profilePanel.loginMethods.revokePrimary', { exact: true })).not.toBeInTheDocument()
+  })
+
+  it('offers revoke and make-primary only on the secondary method', async () => {
+    getMeProfile.mockResolvedValue({ has_custom_password: true })
+    listMyIdentities.mockResolvedValue(identities)
+    render(<LoginMethodsSection token="session" onSessionEnded={vi.fn()} />)
+    await screen.findByText('first@example.com', { exact: false })
+    const primary = card('first@example.com')
+    const secondary = card('second@example.com')
+    expect(primary.queryByRole('button', { name: 'profilePanel.loginMethods.revoke' })).not.toBeInTheDocument()
+    expect(primary.queryByRole('button', { name: 'profilePanel.loginMethods.makePrimary' })).not.toBeInTheDocument()
+    expect(primary.getByText('profilePanel.loginMethods.revokePrimary', { exact: false })).toBeInTheDocument()
+    expect(primary.getByText('profilePanel.loginMethods.revokePrimaryNext', { exact: false })).toBeInTheDocument()
+    expect(secondary.getByRole('button', { name: 'profilePanel.loginMethods.revoke' })).toBeInTheDocument()
+    expect(secondary.getByRole('button', { name: 'profilePanel.loginMethods.makePrimary' })).toBeInTheDocument()
+  })
+
+  it('updates revoke and make-primary after the primary changes', async () => {
     getMeProfile.mockResolvedValue({ has_custom_password: true })
     listMyIdentities.mockResolvedValue(identities)
     makeIdentityPrimary.mockResolvedValue({
@@ -92,16 +143,28 @@ describe('LoginMethodsSection', () => {
       identities: identities.identities.map((row) => ({ ...row, is_primary: row.id === 'google-id' })),
     })
     render(<LoginMethodsSection token="session" onSessionEnded={vi.fn()} />)
-    expect(
-      await screen.findByText('profilePanel.loginMethods.primary', { exact: false })
-    ).toBeInTheDocument()
+    await screen.findByText('second@example.com', { exact: false })
     fireEvent.change(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel'), {
       target: { value: 'secret-pass' },
     })
-    fireEvent.click(screen.getByText('profilePanel.loginMethods.makePrimary'))
+    fireEvent.click(card('second@example.com').getByRole('button', { name: 'profilePanel.loginMethods.makePrimary' }))
     await waitFor(() =>
       expect(makeIdentityPrimary).toHaveBeenCalledWith('session', 'google-id', 'secret-pass')
     )
+    await waitFor(() =>
+      expect(
+        card('second@example.com').queryByRole('button', { name: 'profilePanel.loginMethods.revoke' })
+      ).not.toBeInTheDocument()
+    )
+    expect(
+      card('second@example.com').getByText('profilePanel.loginMethods.revokePrimary', { exact: false })
+    ).toBeInTheDocument()
+    expect(
+      card('first@example.com').getByRole('button', { name: 'profilePanel.loginMethods.revoke' })
+    ).toBeInTheDocument()
+    expect(
+      card('first@example.com').getByRole('button', { name: 'profilePanel.loginMethods.makePrimary' })
+    ).toBeInTheDocument()
   })
 
   it('confirms revoke and adds Google through Capacitor without replacing the session', async () => {
@@ -111,13 +174,15 @@ describe('LoginMethodsSection', () => {
     addGoogleIdentity.mockResolvedValue(identities)
     signIn.mockResolvedValue({ idToken: 'google-id-token' })
     render(<LoginMethodsSection token="session" onSessionEnded={vi.fn()} />)
-    await screen.findByText('profilePanel.loginMethods.primary', { exact: false })
+    await screen.findByText('second@example.com', { exact: false })
     fireEvent.change(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel'), {
       target: { value: 'secret-pass' },
     })
-    fireEvent.click(screen.getAllByText('profilePanel.loginMethods.revoke')[0])
+    fireEvent.click(card('second@example.com').getByRole('button', { name: 'profilePanel.loginMethods.revoke' }))
     fireEvent.click(screen.getByText('profilePanel.loginMethods.confirmRevoke'))
-    await waitFor(() => expect(revokeIdentity).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(revokeIdentity).toHaveBeenCalledWith('session', 'google-id', 'secret-pass')
+    )
     fireEvent.change(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel'), {
       target: { value: 'secret-pass' },
     })
