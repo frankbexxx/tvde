@@ -22,7 +22,7 @@ O painel Conta lista os métodos de início de sessão, muda a primary, revoga e
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Listagem visual PROD **PASS** na fixture `dev_admin` · Revogar oculto na primary e na única identity · escrita por fazer · **OPEN** · não usar `09c539d1` nem `35ddb821` |
+| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Conta canónica única · listagem no Passageiro (barra inferior Conta) por confirmar em PROD · **OPEN** · não usar `09c539d1` nem `35ddb821` |
 | **A-ID-08** | Fase VI logout / sessões | Por iniciar | **OPEN** · Admin sem botão Sair · não reabre a II-C |
 
 ---

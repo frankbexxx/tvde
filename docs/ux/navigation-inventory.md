@@ -166,7 +166,7 @@ Tab IDs: `agora`, `docs`, `pending`, `users`, `frota`, `dados`, `trips`, `metric
 |-----|------------|---------|------|------------|--------|----------|------------|
 | Passenger | Bottom Home | Map home | `/passenger` | `PassengerDashboard` | IMPLEMENTED | — | — |
 | Passenger | Bottom History | History list + detail | `/passenger` | `PassengerSideMenu` | IMPLEMENTED | Tap → `history_detail` | — |
-| Passenger | Bottom Account | BETA account | `/passenger` | `BetaAccountPanel` | IMPLEMENTED | BETA APIs | Baixa |
+| Passenger | Bottom Account | Conta canónica | `/passenger` | `AccountPanel` | IMPLEMENTED | Mesma superfície nos quatro papéis | — |
 | Passenger | Menu → Settings | Appearance | `/passenger` | `AppAppearanceSettings` | IMPLEMENTED | Not in bottom nav | Baixa |
 | Passenger | Menu → Share QR | QR screen | `/passenger` | `PassengerSideMenu` | IMPLEMENTED | Not in bottom nav | Baixa |
 | Passenger | Trip flow | Pay / active trip | `/passenger` | dashboard overlays | IMPLEMENTED | Mock/skip/retry states | — |
@@ -229,7 +229,7 @@ Tab IDs: `agora`, `docs`, `pending`, `users`, `frota`, `dados`, `trips`, `metric
 | `DriverMenuScreen` `all` / `account` | REMOVED (W1) |
 | `DRIVER_OPEN_SETTINGS_EVENT` | REMOVED (W1) |
 | `PartnerFleetScreen.tsx`, `PartnerTripsMenuScreen.tsx` | REMOVED / absent (W1) |
-| `ProfileButton` / full `SettingsButton` on P/D/Partner | HIDDEN — compact header; `AppRouteModeSwitch` in menu |
+| `ProfileButton` icon on P/D/Partner header | HIDDEN — compact header. O ícone não é a Conta. A Conta é `AccountPanel` |
 | Driver home step-1 | FLAG_OFF (always false) |
 | `PartnerSideMenu` on detail URLs | IMPLEMENTED — menu fecha ao **entrar** no detalhe; bottom Frota/Caixa abre menu no detalhe sem mudar URL |
 
@@ -242,7 +242,7 @@ Tab IDs: `agora`, `docs`, `pending`, `users`, `frota`, `dados`, `trips`, `metric
 | Router depth | 1 path | 1 path | 1 + 2 deep | 1 + query |
 | Bottom nav | 4 tabs | 4 tabs | 4 tabs | none |
 | Side menu sections | yes | yes | yes | n/a |
-| Header Profile/Settings | hidden | hidden | hidden | visible |
+| Header Profile icon | hidden; Conta na barra inferior | hidden; Conta no menu | hidden; Conta em Perfil | visible; abre `AccountPanel` |
 | Settings entry | menu | menu | menu | header + login |
 | Wayfinding highlight | yes | yes | yes | n/a |
 

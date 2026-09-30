@@ -1,6 +1,6 @@
 # Identidades de login — Fase I, II e III
 
-**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase III **CLOSED** (2026-09-30): transferência PROD **PASS** e smoke Google humano **PASS**. Fase II-C: listagem visual PROD **PASS**; escrita PROD por fazer; **OPEN**. Fase VI **OPEN**.
+**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase III **CLOSED** (2026-09-30): transferência PROD **PASS** e smoke Google humano **PASS**. Fase II-C: Conta canónica única no código; listagem no caminho real do Passageiro por confirmar; **OPEN**. Fase VI **OPEN**.
 
 Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google vivem em `user_identities`. A autenticação Google lê essa tabela.
 
@@ -58,7 +58,7 @@ Rollback antes do commit desfaz a transacção. Depois de um commit, a operaçã
 
 ## Fase II-C — gestão no perfil
 
-Implementação pronta no painel Conta, secção «Métodos de início de sessão». Não há migration. Os testes automatizados passam. A listagem visual em produção, na fixture `dev_admin`, passou: uma identity Google primary e verificada. A escrita em produção ainda não foi feita, por isso a fase continua **OPEN**. A Fase VI continua **OPEN**.
+A Conta visível é uma só, `AccountPanel`. O Passageiro abre-a na barra inferior **Conta**. O Motorista em **Conta (detalhe)**. O Parceiro em **Perfil**. O Admin no ícone do header. A secção «Métodos de início de sessão» está nesse painel. Não há migration. A fase continua **OPEN** até a listagem ser confirmada neste caminho do Passageiro em produção. A Fase VI continua **OPEN**.
 
 O botão Revogar não aparece na identity principal nem quando só há uma identity activa. Nesses casos o painel explica que é preciso outro método, ou que é preciso torná-lo principal primeiro. O backend continua a recusar as duas operações.
 
@@ -77,7 +77,7 @@ Auditoria: `identity_primary_changed`, `identity_revoked`, `identity_google_adde
 | I | Tabela, constraints, índices, backfill, testes | **CLOSED** |
 | II-A | Backfill repetido, dual-write, auth ainda lê `users` | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
 | II-B | Login, onboarding e linking lêem `user_identities`. Sem auto-link. Escolha criar/ligar. Prova curta | **CLOSED** 2026-09-29 · sem migration |
-| II-C | Listar, mudar primary, revogar e adicionar Google no painel Conta | Listagem visual PROD **PASS** · escrita PROD por fazer · **OPEN** |
+| II-C | Listar, mudar primary, revogar e adicionar Google na Conta canónica | Conta única no código · listagem no Passageiro por confirmar · **OPEN** |
 | III | Mover a mesma linha de identity e bloquear a origem | **CLOSED** 2026-09-30 · transferência PROD **PASS** · smoke Google humano **PASS** · PR #680 |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
