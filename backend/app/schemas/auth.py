@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, Field
@@ -76,6 +77,43 @@ class ReauthRequest(BaseModel):
 class ReauthResponse(BaseModel):
     reauth_token: str
     expires_at: datetime
+
+
+class IdentityItemResponse(BaseModel):
+    """Identity activa do próprio User. Sem subject, token ou segredo."""
+
+    id: uuid.UUID
+    provider: str
+    email: str | None
+    is_primary: bool
+    is_verified: bool
+    created_at: datetime
+
+
+class IdentityListResponse(BaseModel):
+    identities: list[IdentityItemResponse]
+    active_count: int
+    limit: int
+
+
+class IdentityMutationResponse(IdentityListResponse):
+    result: str
+
+
+class IdentityStepUpRequest(BaseModel):
+    """Password no pedido, ou prova curta para quem não é staff."""
+
+    password: str | None = Field(default=None, max_length=128)
+    reauth_token: str | None = Field(default=None, max_length=4096)
+
+
+class AddGoogleIdentityRequest(IdentityStepUpRequest):
+    """Google já autenticado, para a sessão actual. Não cria User."""
+
+    id_token: str | None = Field(default=None, max_length=8192)
+    nonce: str | None = Field(default=None, max_length=128)
+    code: str | None = Field(default=None, max_length=2048)
+    redirect_uri: str | None = Field(default=None, max_length=500)
 
 
 class GoogleLinkRequest(BaseModel):

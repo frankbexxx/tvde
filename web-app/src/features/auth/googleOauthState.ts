@@ -1,4 +1,7 @@
 export const GOOGLE_OAUTH_STATE_KEY = 'tvde_google_oauth_state'
+export const GOOGLE_OAUTH_INTENT_KEY = 'tvde_google_oauth_intent'
+export const GOOGLE_OAUTH_RETURN_KEY = 'tvde_google_oauth_return'
+export const ADD_IDENTITY_INTENT = 'add_identity'
 
 /** Nonce/state opaco. Não é um segredo de longa duração. */
 export function createOauthNonce(): string {

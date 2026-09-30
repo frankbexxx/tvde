@@ -16,6 +16,17 @@ Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto e
 
 ---
 
+## Painel — **Identidades de login / Fase II-C** (**2026-09-30**)
+
+O painel Conta lista os métodos de início de sessão, muda a primary, revoga e adiciona Google. Sem password, a única acção é «Definir palavra-passe». Google não serve de step-up. Estas operações não mudam `token_version` nem o logout. Testes automatizados feitos. Smoke prod humano por fazer. Fase VI continua **OPEN**.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Implementação pronta · testes automatizados feitos · **OPEN** até ao smoke prod na fixture `dev_admin` · não usar `09c539d1` |
+| **A-ID-08** | Fase VI logout / sessões | Por iniciar | **OPEN** · Admin sem botão Sair · não reabre a II-C |
+
+---
+
 ## Painel — **Identidades de login / Fase III** (**2026-09-30**)
 
 A identity `bf19df73` foi movida para `09c539d1` e ficou não-primária. A origem `35ddb821` existe, ficou `blocked`, sem identities activas e sem email. O destino continua `super_admin` e `active`, com 2 identities activas e a primary original. Nenhum User foi apagado. Continuam 20 Users. O histórico ficou no dono. `oauth_google_sub` não foi alterado. II-C e Fase VI continuam **OPEN**.
@@ -23,7 +34,7 @@ A identity `bf19df73` foi movida para `09c539d1` e ficou não-primária. A orige
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-ID-07** | Fase III transferir identity | Concluído | **CLOSED** 2026-09-30 · PR #680 · transferência PROD HTTP 200 **PASS** · audit **PASS** · smoke Google humano **PASS** (`frankbex.dev@gmail.com` em Passageiro, sem onboarding nem linking) |
-| **A-ID-06** | Fase II-C gestão no perfil | Por iniciar | **OPEN** · listar, revogar e mudar a primária |
+| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Estado actual no painel Fase II-C |
 | **A-ID-08** | Fase VI logout / sessões | Por iniciar | **OPEN** · Admin em prod sem botão Sair · não reabre a II-B nem a III |
 
 ---
@@ -35,7 +46,7 @@ A auth Google lê `user_identities`. Google desconhecido pede criar conta ou lig
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-ID-05** | Fase II-B leitura de identidades | Concluído | **CLOSED** · sem migration · escolha criar/ligar · prova curta · sem auto-link |
-| **A-ID-06** | Fase II-C gestão no perfil | Por iniciar | **OPEN** · listar, revogar e mudar a primária |
+| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Estado actual no painel Fase II-C |
 | **A-ID-07** | Fase III transferir identity | Concluído | Fechada no painel Fase III acima |
 | **S-ID-01** | Smoke prod da II-B | Concluído | **CLOSED** 2026-09-29 · Google QA sem User novo · link à fixture `dev_admin` · login seguinte na mesma conta · contas intactas à data deste smoke |
 | **A-ID-08** | Fase VI logout / sessões | Por iniciar | **OPEN** · Admin em prod sem botão Sair · não reabre a II-B |
