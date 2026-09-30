@@ -10,8 +10,10 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
 from app.db.models.audit_event import AuditEvent
+from app.db.models.device_push_token import DevicePushToken
 from app.db.models.user import User
 from app.db.models.user_identity import UserIdentity
+from app.models.enums import Role, UserStatus
 
 ACTIVE_IDENTITY_LIMIT = 5
 
@@ -616,3 +618,203 @@ def attach_google_identity(
     if is_primary:
         locked.email = normalized_email
     return row
+
+
+class IdentityTransferError(Exception):
+    """Transfer refused before any durable write. ``code`` is the public reason."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(code)
+
+
+def transfer_identity(
+    db: Session,
+    *,
+    source_user_id: uuid.UUID,
+    destination_user_id: uuid.UUID,
+    identity_id: uuid.UUID,
+    actor_user_id: uuid.UUID,
+) -> uuid.UUID:
+    """Move one identity row onto another user and block the source.
+
+    The identity id does not change. Nothing else on either user moves.
+    ``users.oauth_google_sub`` is not read or written. Commits, or rolls back.
+    """
+    try:
+        _transfer_identity_locked(
+            db,
+            source_user_id=source_user_id,
+            destination_user_id=destination_user_id,
+            identity_id=identity_id,
+            actor_user_id=actor_user_id,
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return identity_id
+
+
+def _transfer_identity_locked(
+    db: Session,
+    *,
+    source_user_id: uuid.UUID,
+    destination_user_id: uuid.UUID,
+    identity_id: uuid.UUID,
+    actor_user_id: uuid.UUID,
+) -> None:
+    if source_user_id == destination_user_id:
+        raise IdentityTransferError("source_destination_same")
+
+    lock_ids = sorted({source_user_id, destination_user_id, actor_user_id})
+    locked = {
+        row.id: row
+        for row in db.execute(
+            select(User).where(User.id.in_(lock_ids)).order_by(User.id).with_for_update()
+        ).scalars()
+    }
+    source = locked.get(source_user_id)
+    destination = locked.get(destination_user_id)
+    actor = locked.get(actor_user_id)
+    if source is None:
+        raise IdentityTransferError("source_not_found")
+    if destination is None:
+        raise IdentityTransferError("destination_not_found")
+    if (
+        actor is None
+        or actor.role != Role.super_admin
+        or actor.status != UserStatus.active
+        or actor.id == source.id
+    ):
+        raise IdentityTransferError("actor_invalid")
+    if source.role in (Role.admin, Role.super_admin):
+        raise IdentityTransferError("source_not_transferable")
+
+    identity = db.execute(
+        select(UserIdentity).where(UserIdentity.id == identity_id).with_for_update()
+    ).scalar_one_or_none()
+    if identity is None:
+        raise IdentityTransferError("identity_not_found")
+    if identity.user_id != source.id:
+        raise IdentityTransferError("identity_owner_mismatch")
+    if identity.revoked_at is not None:
+        raise IdentityTransferError("identity_revoked")
+    if destination.status != UserStatus.active:
+        raise IdentityTransferError("destination_not_active")
+    if count_active_identities(db, destination.id) >= ACTIVE_IDENTITY_LIMIT:
+        raise IdentityTransferError("identity_limit_reached")
+    destination_primary = db.execute(
+        select(UserIdentity.id).where(
+            UserIdentity.user_id == destination.id,
+            UserIdentity.is_primary.is_(True),
+            UserIdentity.revoked_at.is_(None),
+        )
+    ).scalar_one_or_none()
+    if destination_primary is None:
+        raise IdentityTransferError("destination_primary_missing")
+    if _email_conflicts(db, identity, source_user_id=source.id):
+        raise IdentityTransferError("identity_email_taken")
+    if _subject_conflicts(db, identity):
+        raise IdentityTransferError("identity_subject_taken")
+
+    was_primary = identity.is_primary
+    identity.user_id = destination.id
+    identity.is_primary = False
+    if was_primary:
+        source.email = None
+    source.status = UserStatus.blocked
+    _deactivate_source_push_tokens(db, source.id)
+    _record_transfer_event(
+        db,
+        event_type="identity_transferred",
+        source_user_id=source.id,
+        destination_user_id=destination.id,
+        identity_id=identity.id,
+        provider=identity.provider,
+    )
+    _record_transfer_event(
+        db,
+        event_type="source_account_blocked",
+        source_user_id=source.id,
+        destination_user_id=destination.id,
+        identity_id=identity.id,
+        provider=identity.provider,
+    )
+    db.flush()
+
+
+def _email_conflicts(
+    db: Session, identity: UserIdentity, *, source_user_id: uuid.UUID
+) -> bool:
+    email = normalize_email(identity.email)
+    if email is None:
+        return False
+    other_identity = db.execute(
+        select(UserIdentity.id).where(
+            UserIdentity.email == email,
+            UserIdentity.id != identity.id,
+        )
+    ).scalar_one_or_none()
+    if other_identity is not None:
+        return True
+    other_user = db.execute(
+        select(User.id).where(
+            func.lower(User.email) == email,
+            User.id != source_user_id,
+        )
+    ).scalar_one_or_none()
+    return other_user is not None
+
+
+def _subject_conflicts(db: Session, identity: UserIdentity) -> bool:
+    subject = normalize_google_subject(identity.provider_subject)
+    if subject is None:
+        return False
+    other = db.execute(
+        select(UserIdentity.id).where(
+            UserIdentity.provider == identity.provider,
+            UserIdentity.provider_subject == subject,
+            UserIdentity.id != identity.id,
+        )
+    ).scalar_one_or_none()
+    return other is not None
+
+
+def _deactivate_source_push_tokens(db: Session, source_user_id: uuid.UUID) -> None:
+    rows = db.execute(
+        select(DevicePushToken).where(
+            DevicePushToken.user_id == source_user_id,
+            DevicePushToken.active.is_(True),
+        )
+    ).scalars()
+    now = datetime.now(timezone.utc)
+    for row in rows:
+        row.active = False
+        row.last_seen_at = now
+
+
+def _record_transfer_event(
+    db: Session,
+    *,
+    event_type: str,
+    source_user_id: uuid.UUID,
+    destination_user_id: uuid.UUID,
+    identity_id: uuid.UUID,
+    provider: str,
+) -> None:
+    db.add(
+        AuditEvent(
+            event_type=event_type,
+            entity_type="user_identity",
+            entity_id=str(identity_id),
+            payload={
+                "source_user_id": str(source_user_id),
+                "destination_user_id": str(destination_user_id),
+                "identity_id": str(identity_id),
+                "provider": provider,
+                "result": "ok",
+            },
+            occurred_at=datetime.now(timezone.utc),
+        )
+    )
