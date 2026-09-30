@@ -42,6 +42,7 @@
     "name": "Name",
     "phone": "Phone",
     "role": "Role",
+    "profileHeading": "Profile",
     "accountAria": "Account",
     "accountTitle": "Account",
     "accountDescription": "Account details: name, phone, role and sign-in methods.",

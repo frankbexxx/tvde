@@ -170,7 +170,6 @@ import {
 } from '../../components/layout/infoBoxTemplate'
 import { MapView } from '../../maps/MapView'
 import { toast as sonnerToast } from 'sonner'
-import { BetaAccountPanel } from '../account/BetaAccountPanel'
 import { forwardGeocodeSearch } from '../../services/geocoding'
 import {
   getDriverNavApp,
@@ -2671,7 +2670,6 @@ export function DriverDashboard() {
                   </section>
                 )}
 
-                {token && !driverBottomNav ? <BetaAccountPanel /> : null}
               </div>
             </div>
           </div>

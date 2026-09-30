@@ -17,23 +17,15 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { isBackofficeStaffRole, useAuth } from '@/context/AuthContext'
-import { BetaPasswordChangeForm } from './BetaPasswordChangeForm'
-import { LoginMethodsSection } from './LoginMethodsSection'
+import { useAuth } from '@/context/AuthContext'
+import { AccountPanel } from '@/features/account/AccountPanel'
 import { DRIVER_OPEN_ACCOUNT_EVENT } from '@/features/driver/driverShellEvents'
-
-function roleLabel(role: string, t: (key: string) => string): string {
-  if (role === 'driver') return t('roleDriver')
-  if (isBackofficeStaffRole(role)) return t('roleStaff')
-  if (role === 'partner') return t('rolePartner')
-  return t('rolePassenger')
-}
 
 export function ProfileButton() {
   const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 639px)')
-  const { sessionPhone, sessionDisplayName, sessionRole, betaMode, token, logout } = useAuth()
+  const { betaMode, logout } = useAuth()
 
   useEffect(() => {
     const onOpen = () => setOpen(true)
@@ -43,24 +35,7 @@ export function ProfileButton() {
 
   const body = (
     <div className="mt-4 flex flex-col gap-4">
-      {sessionDisplayName?.trim() ? (
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('profilePanel.name')}</p>
-          <p className="text-base font-medium text-foreground break-words">{sessionDisplayName.trim()}</p>
-        </div>
-      ) : null}
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('profilePanel.phone')}</p>
-        <p className="text-base font-medium text-foreground break-all">
-          {sessionPhone ?? '—'}
-        </p>
-      </div>
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('profilePanel.role')}</p>
-        <p className="text-base font-medium text-foreground">{roleLabel(sessionRole, t)}</p>
-      </div>
-      {token ? <LoginMethodsSection token={token} onSessionEnded={logout} /> : null}
-      {betaMode && token ? <BetaPasswordChangeForm token={token} /> : null}
+      <AccountPanel />
       {betaMode ? (
         <Button
           type="button"

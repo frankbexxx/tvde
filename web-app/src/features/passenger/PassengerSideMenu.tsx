@@ -9,7 +9,7 @@ import type { TripHistoryItem } from '../../api/trips'
 import { formatPickup, formatDestination } from '../../utils/format'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { historyStatusDotColor } from '../../constants/tripStatus'
-import { BetaAccountPanel } from '../account/BetaAccountPanel'
+import { AccountPanel } from '../account/AccountPanel'
 import { AppAppearanceSettings } from '../settings/AppAppearanceSettings'
 import { AppRouteModeSwitch } from '../settings/AppRouteModeSwitch'
 import { PassengerHistoryDetailPanel } from './PassengerHistoryDetailPanel'
@@ -198,7 +198,7 @@ export function PassengerSideMenu({
           </div>
         ) : screen === 'account' ? (
           <div className="space-y-3">
-            <BetaAccountPanel />
+            <AccountPanel />
           </div>
         ) : screen === 'history_detail' ? (
           <PassengerHistoryDetailPanel

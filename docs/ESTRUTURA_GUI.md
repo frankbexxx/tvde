@@ -98,8 +98,9 @@ sticky top-0 z-10 bg-background border-b border-border shrink-0
 **Conteúdo (flex justify-between):**
 
 - `h1` "TVDE" (text-lg font-bold)
-- Grupo à direita (`flex`, ícones): `ProfileButton` (Conta) · `SettingsButton` (Configuração)
-  - **Conta:** telemóvel, papel, **Sair** (só em `betaMode`)
+- Em `/admin`, grupo à direita: `ProfileButton` (abre a Conta) · `SettingsButton`
+  - Em `/passenger`, `/driver` e `/partner` o header é compacto e não mostra esse ícone
+  - **Conta:** `AccountPanel` — nome, telefone, papel, palavra-passe e métodos de início de sessão. **Sair** no diálogo do ícone só em `betaMode`
   - **Configuração:** tema, modo da app (Passageiro/Motorista), registo de atividade embutido, atalho Painel admin se `isAdmin`, **DevTools** só se `import.meta.env.DEV`
 
 ### 4.3 Área principal
@@ -186,10 +187,16 @@ w-full md:w-80 shrink-0 bg-white border-t md:border-t-0 md:border-l border-slate
 
 O **logout (Sair)** em BETA não está nas definições: ver **`ProfileButton`** (painel **Conta**).
 
-### 7.1 ProfileButton (Conta)
+### 7.1 Conta canónica (`AccountPanel`)
 
-- **Trigger:** `Button` ghost, ícone de utilizador, `aria-label="Conta"` — ao lado da engrenagem no header.
-- **Painel** (Dialog em mobile, Sheet em desktop): título **Conta**; telemóvel (`sessionPhone`); papel (Passageiro / Motorista / Administrador); se `betaMode`, botão **Sair** (`logout`, variante destrutiva).
+Uma superfície. `ProfileButton` só a abre no header de `/admin` e no **Conta (detalhe)** do Motorista.
+
+- Passageiro: barra inferior **Conta**
+- Motorista: menu → **Perfil** → **Conta (detalhe)**
+- Parceiro: menu → **Perfil**
+- Admin: ícone **Conta** no header
+
+O painel mostra nome editável, telefone só leitura, papel, alterar palavra-passe quando já existe, **Definir palavra-passe** quando não existe, e **Métodos de início de sessão**.
 
 **Mobile (Dialog):** `DialogContent` com largura/altura limitadas; título "Configuração" ou "Registo de atividade".
 

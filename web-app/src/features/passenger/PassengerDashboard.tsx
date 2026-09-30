@@ -82,7 +82,7 @@ import { toast } from 'sonner'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { PassengerSideMenu, type PassengerMenuScreen } from './PassengerSideMenu'
-import { passengerRootHighlightKey } from './passengerMenuNav'
+import { passengerBottomNavTransition, passengerRootHighlightKey } from './passengerMenuNav'
 import { PassengerBottomNav, type PassengerShellTab } from './PassengerBottomNav'
 import {
   passengerTripCancelPresets,
@@ -205,26 +205,15 @@ export function PassengerDashboard() {
   }, [passengerMenuScreen, historyDetailTripId, token])
 
   const handlePassengerBottomNav = useCallback((tab: PassengerShellTab) => {
-    if (tab === 'home') {
-      setPassengerMenuOpen(false)
-      setPassengerMenuScreen('root')
-      setPassengerMenuRootHighlight(null)
+    const next = passengerBottomNavTransition(tab, passengerMenuOpenRef.current)
+    if (next.scrollHome) {
       document.getElementById('passenger-main-scroll')?.scrollTo({ top: 0, behavior: 'smooth' })
-      return
     }
-    if (tab === 'menu') {
-      const nextOpen = !passengerMenuOpenRef.current
-      if (nextOpen) {
-        setPassengerMenuScreen('root')
-        setPassengerMenuRootHighlight(null)
-      }
-      setPassengerMenuOpen(nextOpen)
-      return
+    setPassengerMenuOpen(next.menuOpen)
+    if (next.screen) {
+      setPassengerMenuScreen(next.screen)
+      setPassengerMenuRootHighlight(next.highlight)
     }
-    const screen = tab === 'history' ? 'history' : 'account'
-    setPassengerMenuScreen(screen)
-    setPassengerMenuRootHighlight(passengerRootHighlightKey(screen))
-    setPassengerMenuOpen(true)
   }, [])
   const [passengerCancelPreset, setPassengerCancelPreset] = useState('')
   const [passengerCancelOther, setPassengerCancelOther] = useState('')

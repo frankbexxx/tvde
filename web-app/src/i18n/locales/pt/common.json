@@ -42,6 +42,7 @@
     "name": "Nome",
     "phone": "Telemóvel",
     "role": "Papel",
+    "profileHeading": "Perfil",
     "accountAria": "Conta",
     "accountTitle": "Conta",
     "accountDescription": "Dados da conta: nome, telemóvel, papel e métodos de início de sessão.",
