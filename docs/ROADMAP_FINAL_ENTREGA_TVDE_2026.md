@@ -30,7 +30,7 @@
 |--------|--------|
 | **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
 | **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · **B5 fase 2** (MB WAY) |
-| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging · **C4 Fase I, II-A, II-B, S-ID-01 e Fase III CLOSED / Fase II-C implementação pronta, smoke prod por fazer, OPEN / Fase VI OPEN** |
+| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging · **C4 Fase I, II-A, II-B, S-ID-01 e Fase III CLOSED / Fase II-C listagem visual PROD PASS, escrita por fazer, OPEN / Fase VI OPEN** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
 | **F** Infra / Segurança / Operação | F1 Restore drill · F2 Staging · F3 Sentry · F4 Higiene mock GPS |
@@ -446,7 +446,7 @@ Uma pessoa = um `User`. Vários emails / Google vivem em `user_identities`. O te
 | II-A | Repetir o backfill e dual-write. Auth continua a ler `users`. `oauth_google_sub` continua activo | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
 | II-B | Login Google lê `user_identities`. Sem auto-link. Escolha criar/ligar. `oauth_google_sub` deprecated. Prova curta | **CLOSED** 2026-09-29 · sem migration · [`USER_IDENTITIES.md`](architecture/USER_IDENTITIES.md) |
 | S-ID-01 | Smoke prod: Google desconhecido sem User; link QA à fixture `dev_admin`; login seguinte na mesma conta | **CLOSED** 2026-09-29 |
-| II-C | Listar, mudar primary, revogar e adicionar Google no painel Conta. Sem password, definir password primeiro. Sem Google como step-up | Implementação pronta · testes automatizados feitos · smoke prod humano por fazer · **OPEN** |
+| II-C | Listar, mudar primary, revogar e adicionar Google no painel Conta. Sem password, definir password primeiro. Sem Google como step-up | Listagem visual PROD **PASS** · escrita PROD por fazer · **OPEN** |
 | III | Mover a mesma linha de identity e bloquear a origem. `bf19df73` em `09c539d1`; `35ddb821` `blocked` | **CLOSED** 2026-09-30 · transferência PROD **PASS** · smoke Google humano **PASS** · PR #680 |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |

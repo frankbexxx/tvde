@@ -236,8 +236,11 @@ export function LoginMethodsSection({
             <p className="text-xs text-foreground/80">{t('profilePanel.loginMethods.empty')}</p>
           ) : (
             <ul className="space-y-2">
-              {identities.map((identity) => (
-                <li key={identity.id} className="rounded-lg border border-border/70 p-2 space-y-2">
+              {identities.map((identity) => {
+                const soleActive = identities.length <= 1
+                const canRevoke = !identity.is_primary && !soleActive
+                return (
+                  <li key={identity.id} className="rounded-lg border border-border/70 p-2 space-y-2">
                   <p className="text-sm font-medium">
                     {providerLabel(identity.provider, t)}
                     {identity.email ? ` · ${identity.email}` : ''}
@@ -263,7 +266,7 @@ export function LoginMethodsSection({
                         {t('profilePanel.loginMethods.makePrimary')}
                       </Button>
                     )}
-                    {pendingRevoke === identity.id ? (
+                    {canRevoke && pendingRevoke === identity.id ? (
                       <>
                         <Button
                           type="button"
@@ -285,7 +288,8 @@ export function LoginMethodsSection({
                           {t('profilePanel.loginMethods.cancel')}
                         </Button>
                       </>
-                    ) : (
+                    ) : null}
+                    {canRevoke && pendingRevoke !== identity.id ? (
                       <Button
                         type="button"
                         variant="ghost"
@@ -295,10 +299,18 @@ export function LoginMethodsSection({
                       >
                         {t('profilePanel.loginMethods.revoke')}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
-                </li>
-              ))}
+                  {canRevoke ? null : (
+                    <p className="text-xs text-muted-foreground">
+                      {soleActive
+                        ? t('profilePanel.loginMethods.revokeOnly')
+                        : `${t('profilePanel.loginMethods.revokePrimary')} ${t('profilePanel.loginMethods.revokePrimaryNext')}`}
+                    </p>
+                  )}
+                  </li>
+                )
+              })}
             </ul>
           )}
           <Input
