@@ -81,6 +81,7 @@ from app.services.partners_admin import (
     unassign_driver_from_partner,
 )
 from app.services.admin_audit import record_admin_action
+from app.services.user_identities import IdentityTransferError, transfer_identity
 from app.services.admin_driver_status import set_driver_status_admin
 from app.services.vehicle_compliance_gate import (
     evaluate_driver_vehicle_compliance_gate,
@@ -1077,6 +1078,68 @@ async def admin_clear_user_password(
     )
     db.commit()
     return {"status": "ok", "message": "password_cleared"}
+
+
+class IdentityTransferRequest(BaseModel):
+    """Move one identity row. Does not merge accounts or move history."""
+
+    source_user_id: uuid.UUID
+    destination_user_id: uuid.UUID
+    identity_id: uuid.UUID
+    confirmation: str
+    governance_reason: str = Field(..., min_length=10, max_length=500)
+
+
+_TRANSFER_HTTP = {
+    "source_not_found": status.HTTP_404_NOT_FOUND,
+    "destination_not_found": status.HTTP_404_NOT_FOUND,
+    "identity_not_found": status.HTTP_404_NOT_FOUND,
+    "actor_invalid": status.HTTP_403_FORBIDDEN,
+    "source_not_transferable": status.HTTP_403_FORBIDDEN,
+}
+
+
+@router.post("/identities/transfer")
+async def transfer_user_identity(
+    payload: IdentityTransferRequest,
+    admin_ctx: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Super-admin only. Moves the same identity row and blocks the source."""
+    if payload.confirmation.strip() != "TRANSFERIR_IDENTITY":
+        raise HTTPException(status_code=400, detail="invalid_confirmation")
+    record_admin_action(
+        db,
+        actor_user_id=admin_ctx.user_id,
+        action="identity_transfer",
+        entity_type="user_identity",
+        entity_id=str(payload.identity_id),
+        payload={
+            "source_user_id": str(payload.source_user_id),
+            "destination_user_id": str(payload.destination_user_id),
+            "identity_id": str(payload.identity_id),
+            "governance_reason": payload.governance_reason.strip()[:500],
+        },
+    )
+    try:
+        transfer_identity(
+            db,
+            source_user_id=payload.source_user_id,
+            destination_user_id=payload.destination_user_id,
+            identity_id=payload.identity_id,
+            actor_user_id=uuid.UUID(admin_ctx.user_id),
+        )
+    except IdentityTransferError as exc:
+        raise HTTPException(
+            status_code=_TRANSFER_HTTP.get(exc.code, status.HTTP_409_CONFLICT),
+            detail=exc.code,
+        ) from exc
+    return {
+        "status": "ok",
+        "identity_id": str(payload.identity_id),
+        "source_user_id": str(payload.source_user_id),
+        "destination_user_id": str(payload.destination_user_id),
+    }
 
 
 @router.post("/approve-user")

@@ -1,6 +1,6 @@
 # Identidades de login — Fase I, II-A e II-B
 
-**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase II-C **OPEN**. Fase III **OPEN**. Fase VI **OPEN**.
+**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase II-C **OPEN**. Fase III: implementação pronta, smoke prod por fazer, **OPEN**. Fase VI **OPEN**.
 
 Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google vivem em `user_identities`. A autenticação Google lê essa tabela.
 
@@ -42,6 +42,18 @@ O primeiro write desta fase em produção torna o rollback para o código legacy
 
 No contexto Admin em produção não aparece o botão Sair. O logout fez-se ao mudar para Passageiro. Isto não reabre a Fase II-B. Logout e sessões são a Fase VI.
 
+## Fase III — transferência de uma identity
+
+Implementação pronta. A transferência de `35ddb821` para `09c539d1` **não foi executada**. O smoke prod fica para depois do deploy. A fase continua **OPEN** até esse smoke. II-C e Fase VI continuam **OPEN**.
+
+`transfer_identity` move a mesma linha de `user_identities` para outro User. Não duplica, não apaga Users e não move histórico. A identity transferida fica não-primária. A primary do destino mantém-se. Se a linha movida era a primary da origem, `users.email` da origem fica `NULL`. O email do destino não muda. A origem fica `blocked` na mesma transacção, para não voltar à fila de pending. Push tokens activos da origem, se existirem, ficam inactivos e continuam nesse User.
+
+`users.oauth_google_sub` não é lido nem escrito. Depois de uma transferência pode ficar historicamente incoerente na origem. A auth continua a ignorá-lo.
+
+A acção é `POST /admin/identities/transfer`, só `super_admin`, com `confirmation = TRANSFERIR_IDENTITY` e motivo. O serviço não tem UUIDs de produção. Recusa origem e destino iguais, identity de outro User, identity revogada, destino inactivo, destino sem primary activa, 5 identities activas, email ou subject noutra linha, origem staff, ou actor que não seja super_admin activo.
+
+Rollback antes do commit desfaz a transacção. Depois de um commit, a operação inversa é manual e só se for mesmo preciso: a mesma linha volta à origem com `is_primary = true`, `users.email` da origem volta ao email dessa identity, e o status da origem volta ao valor anterior (`pending` neste caso). Não mexer em `oauth_google_sub`. Tokens desactivados não se reactivam sozinhos. Não executar esta inversa sem necessidade.
+
 ## Fora desta fase
 
 | Fase | Âmbito | Estado |
@@ -50,7 +62,7 @@ No contexto Admin em produção não aparece o botão Sair. O logout fez-se ao m
 | II-A | Backfill repetido, dual-write, auth ainda lê `users` | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
 | II-B | Login, onboarding e linking lêem `user_identities`. Sem auto-link. Escolha criar/ligar. Prova curta | **CLOSED** 2026-09-29 · sem migration |
 | II-C | Gestão de identities na área de perfil | **OPEN** |
-| III | Transferir uma identidade para outro `User` (`UPDATE user_id` da mesma linha). `35ddb821` não foi transferida | **OPEN** |
+| III | Mover a mesma linha de identity e bloquear a origem. `35ddb821` ainda não foi transferida | Implementação pronta · smoke prod por fazer · **OPEN** |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
 | VI | Logout visível e revogação de sessão. Em prod o Admin não mostra Sair; não reabre a II-B | **OPEN** |
