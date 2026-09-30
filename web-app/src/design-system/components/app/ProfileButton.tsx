@@ -19,6 +19,7 @@ import {
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { isBackofficeStaffRole, useAuth } from '@/context/AuthContext'
 import { BetaPasswordChangeForm } from './BetaPasswordChangeForm'
+import { LoginMethodsSection } from './LoginMethodsSection'
 import { DRIVER_OPEN_ACCOUNT_EVENT } from '@/features/driver/driverShellEvents'
 
 function roleLabel(role: string, t: (key: string) => string): string {
@@ -58,6 +59,7 @@ export function ProfileButton() {
         <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('profilePanel.role')}</p>
         <p className="text-base font-medium text-foreground">{roleLabel(sessionRole, t)}</p>
       </div>
+      {token ? <LoginMethodsSection token={token} onSessionEnded={logout} /> : null}
       {betaMode && token ? <BetaPasswordChangeForm token={token} /> : null}
       {betaMode ? (
         <Button

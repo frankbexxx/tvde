@@ -1,6 +1,6 @@
 # Identidades de login — Fase I, II e III
 
-**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase III **CLOSED** (2026-09-30): transferência PROD **PASS** e smoke Google humano **PASS**. Fase II-C **OPEN**. Fase VI **OPEN**.
+**Estado:** Fase I **CLOSED** (2026-09-29). Fase II-A **CLOSED** (2026-09-29). Fase II-B **CLOSED** (2026-09-29). Smoke prod **S-ID-01 CLOSED** (2026-09-29). Fase III **CLOSED** (2026-09-30): transferência PROD **PASS** e smoke Google humano **PASS**. Fase II-C: implementação pronta, testes automatizados feitos, smoke prod humano por fazer, **OPEN**. Fase VI **OPEN**.
 
 Uma pessoa real corresponde a um `User` VAMULÁ. Telefone principal, `User.role` e a capacidade base de Passageiro ficam como estão. Emails e identidades Google vivem em `user_identities`. A autenticação Google lê essa tabela.
 
@@ -25,7 +25,7 @@ Criar conta só acontece no fim do onboarding: `User` com telefone real, nome, t
 
 `users.oauth_google_sub` fica deprecated, nullable e histórico. A auth não o lê nem escreve. A coluna não foi removida. `users.email` continua a espelhar o email da identity primária activa. `users.phone` e `users.password_hash` não mudam por este corte.
 
-A Fase II-A (revisão `c4d5e6f7a8b9`) sincronizou o espelho antes deste corte. Não há migration nova na II-B. A gestão de identities no perfil fica para a II-C. A identity Google de `35ddb821` foi movida para `09c539d1` na Fase III: a mesma linha, não-primária. A origem ficou `blocked` e sem email. `09c539d1` continua `super_admin` e `active`, com a primary original.
+A Fase II-A (revisão `c4d5e6f7a8b9`) sincronizou o espelho antes deste corte. Não há migration nova na II-B. A gestão de identities no perfil é a II-C, ainda **OPEN** até ao smoke prod. A identity Google de `35ddb821` foi movida para `09c539d1` na Fase III: a mesma linha, não-primária. A origem ficou `blocked` e sem email. `09c539d1` continua `super_admin` e `active`, com a primary original.
 
 O primeiro write desta fase em produção torna o rollback para o código legacy não equivalente.
 
@@ -56,6 +56,18 @@ A acção é `POST /admin/identities/transfer`, só `super_admin`, com `confirma
 
 Rollback antes do commit desfaz a transacção. Depois de um commit, a operação inversa é manual e só se for mesmo preciso: a mesma linha volta à origem com `is_primary = true`, `users.email` da origem volta ao email dessa identity, e o status da origem volta ao valor anterior (`pending` neste caso). Não mexer em `oauth_google_sub`. Tokens desactivados não se reactivam sozinhos. Não executar esta inversa sem necessidade.
 
+## Fase II-C — gestão no perfil
+
+Implementação pronta no painel Conta, secção «Métodos de início de sessão». Não há migration. Os testes automatizados passam. O smoke prod humano ainda não foi feito, por isso a fase continua **OPEN**. A Fase VI continua **OPEN**.
+
+Sem password, o painel só oferece «Definir palavra-passe». Google não serve de step-up. Definir password usa `POST /auth/me/password`, que já incrementa `token_version`; a sessão actual deixa de valer. Mudar a primary, revogar e adicionar Google não alteram `token_version`, não terminam sessão e não mexem no logout.
+
+Com password, o pedido leva a password. Staff não pode substituí-la pela prova. Uma password errada responde 403, para o access token continuar válido. A prova de `POST /auth/reauth` vale 10 minutos, fica ligada ao `iat` desse access token e não fica em `localStorage`.
+
+`GET /auth/identities` lista só identities activas: provider, email, primary, verified, `created_at`. Não devolve subject. `POST /auth/identities/{id}/make-primary` troca a primary e espelha `users.email`, ou deixa esse email `NULL` se a nova primary não tiver email. `POST /auth/identities/{id}/revoke` recusa a última identity e a primary actual; a linha fica, com `revoked_at`. `POST /auth/identities/google` valida o `id_token` nativo ou o `code` web e reutiliza `attach_google_identity`. Não cria User, não muda role nem telefone, e não torna a nova linha primary se já existir uma. O redirect web não chama o login nem o onboarding.
+
+Auditoria: `identity_primary_changed`, `identity_revoked`, `identity_google_added`. Sem email, telefone, subject, token ou password.
+
 ## Fora desta fase
 
 | Fase | Âmbito | Estado |
@@ -63,7 +75,7 @@ Rollback antes do commit desfaz a transacção. Depois de um commit, a operaçã
 | I | Tabela, constraints, índices, backfill, testes | **CLOSED** |
 | II-A | Backfill repetido, dual-write, auth ainda lê `users` | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
 | II-B | Login, onboarding e linking lêem `user_identities`. Sem auto-link. Escolha criar/ligar. Prova curta | **CLOSED** 2026-09-29 · sem migration |
-| II-C | Gestão de identities na área de perfil | **OPEN** |
+| II-C | Listar, mudar primary, revogar e adicionar Google no painel Conta | Implementação pronta · testes automatizados feitos · smoke prod humano por fazer · **OPEN** |
 | III | Mover a mesma linha de identity e bloquear a origem | **CLOSED** 2026-09-30 · transferência PROD **PASS** · smoke Google humano **PASS** · PR #680 |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |

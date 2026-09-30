@@ -198,6 +198,73 @@ export async function getMeProfile(
   return apiFetch<MeProfileResponse>('/auth/me', { token, timeoutMs })
 }
 
+export interface LoginIdentity {
+  id: string
+  provider: string
+  email: string | null
+  is_primary: boolean
+  is_verified: boolean
+  created_at: string
+}
+
+export interface IdentityListResponse {
+  identities: LoginIdentity[]
+  active_count: number
+  limit: number
+  result?: string
+}
+
+export async function listMyIdentities(token: string): Promise<IdentityListResponse> {
+  return apiFetch<IdentityListResponse>('/auth/identities', { token })
+}
+
+export async function makeIdentityPrimary(
+  token: string,
+  identityId: string,
+  password: string
+): Promise<IdentityListResponse> {
+  return apiFetch<IdentityListResponse>(`/auth/identities/${identityId}/make-primary`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ password }),
+  })
+}
+
+export async function revokeIdentity(
+  token: string,
+  identityId: string,
+  password: string
+): Promise<IdentityListResponse> {
+  return apiFetch<IdentityListResponse>(`/auth/identities/${identityId}/revoke`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ password }),
+  })
+}
+
+export async function addGoogleIdentity(
+  token: string,
+  body: {
+    password: string
+    idToken?: string
+    nonce?: string
+    code?: string
+    redirectUri?: string
+  }
+): Promise<IdentityListResponse> {
+  return apiFetch<IdentityListResponse>('/auth/identities/google', {
+    method: 'POST',
+    token,
+    body: JSON.stringify({
+      password: body.password,
+      id_token: body.idToken,
+      nonce: body.nonce,
+      code: body.code,
+      redirect_uri: body.redirectUri,
+    }),
+  })
+}
+
 export async function patchMeProfile(token: string, name: string): Promise<MeProfileResponse> {
   return apiFetch<MeProfileResponse>('/auth/me', {
     method: 'PATCH',

@@ -470,19 +470,23 @@ def record_identity_event(
     identity_id: uuid.UUID | None,
     provider: str,
     result: str,
+    from_identity_id: uuid.UUID | None = None,
 ) -> None:
     """Audit without password, token, subject, email, or phone."""
+    payload: dict[str, str | None] = {
+        "user_id": str(user_id) if user_id else None,
+        "identity_id": str(identity_id) if identity_id else None,
+        "provider": provider,
+        "result": result,
+    }
+    if from_identity_id is not None:
+        payload["from_identity_id"] = str(from_identity_id)
     db.add(
         AuditEvent(
             event_type=event_type,
             entity_type="user_identity",
             entity_id=str(identity_id or user_id or "none")[:64],
-            payload={
-                "user_id": str(user_id) if user_id else None,
-                "identity_id": str(identity_id) if identity_id else None,
-                "provider": provider,
-                "result": result,
-            },
+            payload=payload,
             occurred_at=datetime.now(timezone.utc),
         )
     )
@@ -618,6 +622,149 @@ def attach_google_identity(
     if is_primary:
         locked.email = normalized_email
     return row
+
+
+class IdentityManageError(Exception):
+    """Profile identity change refused before commit. ``code`` is the public reason."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(code)
+
+
+def list_login_identities(db: Session, user_id: uuid.UUID) -> list[UserIdentity]:
+    """Active identities of this user. No subject, token, or secret."""
+    return list(
+        db.execute(
+            select(UserIdentity)
+            .where(
+                UserIdentity.user_id == user_id,
+                UserIdentity.revoked_at.is_(None),
+            )
+            .order_by(UserIdentity.is_primary.desc(), UserIdentity.created_at.asc())
+        ).scalars()
+    )
+
+
+def _lock_profile_user(db: Session, user_id: uuid.UUID) -> User:
+    user = db.execute(
+        select(User).where(User.id == user_id).with_for_update()
+    ).scalar_one_or_none()
+    if user is None:
+        raise IdentityManageError("identity_not_found")
+    return user
+
+
+def _locked_identity(db: Session, identity_id: uuid.UUID) -> UserIdentity | None:
+    return db.execute(
+        select(UserIdentity).where(UserIdentity.id == identity_id).with_for_update()
+    ).scalar_one_or_none()
+
+
+def _owned_active(
+    db: Session, user_id: uuid.UUID, identity_id: uuid.UUID
+) -> UserIdentity:
+    row = _locked_identity(db, identity_id)
+    if row is None or row.user_id != user_id or row.revoked_at is not None:
+        raise IdentityManageError("identity_not_found")
+    return row
+
+
+def make_identity_primary(
+    db: Session, user_id: uuid.UUID, identity_id: uuid.UUID
+) -> tuple[UserIdentity, uuid.UUID | None]:
+    """Switch the active primary and mirror ``users.email``. Does not commit."""
+    user = _lock_profile_user(db, user_id)
+    identity = _owned_active(db, user.id, identity_id)
+    if not identity.is_verified:
+        raise IdentityManageError("identity_not_verified")
+    if identity.is_primary:
+        raise IdentityManageError("already_primary")
+    if identity.email:
+        other = db.execute(
+            select(User.id).where(
+                func.lower(User.email) == identity.email,
+                User.id != user.id,
+            )
+        ).scalar_one_or_none()
+        if other is not None:
+            raise IdentityManageError("identity_email_taken")
+    previous = db.execute(
+        select(UserIdentity).where(
+            UserIdentity.user_id == user.id,
+            UserIdentity.is_primary.is_(True),
+            UserIdentity.revoked_at.is_(None),
+            UserIdentity.id != identity.id,
+        )
+    ).scalar_one_or_none()
+    previous_id = previous.id if previous is not None else None
+    if previous is not None:
+        previous.is_primary = False
+        db.flush()
+    identity.is_primary = True
+    user.email = identity.email
+    db.flush()
+    return identity, previous_id
+
+
+def revoke_login_identity(
+    db: Session, user_id: uuid.UUID, identity_id: uuid.UUID
+) -> UserIdentity:
+    """Revoke one active non-primary identity. The row stays. Does not commit."""
+    user = _lock_profile_user(db, user_id)
+    identity = _owned_active(db, user.id, identity_id)
+    active = count_active_identities(db, user.id)
+    if active <= 1:
+        raise IdentityManageError("last_active_identity")
+    if identity.is_primary:
+        raise IdentityManageError("primary_identity")
+    identity.revoked_at = datetime.now(timezone.utc)
+    identity.is_primary = False
+    db.flush()
+    return identity
+
+
+def add_google_login_identity(
+    db: Session, user: User, *, email: str, subject: str
+) -> tuple[UserIdentity, str]:
+    """Attach Google to the signed-in user. Reuses promotion. Does not commit."""
+    normalized_subject = normalize_google_subject(subject)
+    normalized_email = normalize_email(email)
+    existing_subject = (
+        lookup_identity_by_google_subject(db, normalized_subject)
+        if normalized_subject is not None
+        else None
+    )
+    existing_email = (
+        lookup_identity_by_email(db, normalized_email)
+        if normalized_email is not None
+        else None
+    )
+    subject_on_this_user = (
+        existing_subject is not None
+        and existing_subject.user_id == user.id
+        and existing_subject.revoked_at is None
+    )
+    email_row_promotable = (
+        existing_email is not None
+        and existing_email.user_id == user.id
+        and existing_email.revoked_at is None
+        and existing_email.provider == "email"
+        and existing_email.provider_subject is None
+    )
+    try:
+        row = attach_google_identity(db, user, email=email, subject=subject)
+    except IdentityEmailTaken as exc:
+        raise IdentityManageError("identity_email_taken") from exc
+    except IdentitySubjectTaken as exc:
+        raise IdentityManageError("identity_subject_taken") from exc
+    except IdentityLimitReached as exc:
+        raise IdentityManageError("identity_limit_reached") from exc
+    if subject_on_this_user:
+        return row, "already_linked"
+    if email_row_promotable:
+        return row, "promoted"
+    return row, "added"
 
 
 class IdentityTransferError(Exception):

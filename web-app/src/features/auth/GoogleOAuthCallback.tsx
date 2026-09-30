@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
-import { GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
+import { AddGoogleIdentityReturn } from './AddGoogleIdentityReturn'
+import {
+  ADD_IDENTITY_INTENT,
+  GOOGLE_OAUTH_INTENT_KEY,
+  GOOGLE_OAUTH_STATE_KEY,
+} from './googleOauthState'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
 import {
   googleIdTokenProfile,
@@ -50,9 +55,10 @@ export function GoogleOAuthCallback() {
   const state = search.get('state')
   const expectedState = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY)
   const stateOk = !!state && state === expectedState
+  const addingIdentity = sessionStorage.getItem(GOOGLE_OAUTH_INTENT_KEY) === ADD_IDENTITY_INTENT
 
   useEffect(() => {
-    if (oauthErr || !code || !stateOk || held) return
+    if (addingIdentity || oauthErr || !code || !stateOk || held) return
     let alive = true
     const redirectUri = `${window.location.origin}/auth/google/callback`
     void (async () => {
@@ -98,7 +104,16 @@ export function GoogleOAuthCallback() {
     return () => {
       alive = false
     }
-  }, [oauthErr, code, stateOk, navigate, loginGoogle, held])
+  }, [addingIdentity, oauthErr, code, stateOk, navigate, loginGoogle, held])
+
+  if (addingIdentity && code && stateOk) {
+    return (
+      <AddGoogleIdentityReturn
+        code={code}
+        redirectUri={`${window.location.origin}/auth/google/callback`}
+      />
+    )
+  }
 
   if (held) {
     return (

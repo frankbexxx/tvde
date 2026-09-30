@@ -36,6 +36,7 @@ from app.auth.security import (
     create_access_token,
     create_strong_auth_proof,
     decode_access_token,
+    verify_strong_auth_proof,
 )
 from app.db.models.otp import OtpCode
 from app.db.models.user import User
@@ -43,13 +44,19 @@ from app.db.models.user_identity import UserIdentity
 from app.models.enums import Role, UserStatus
 from app.services.beta_capacity import active_beta_user_count
 from app.services.user_identities import (
+    ACTIVE_IDENTITY_LIMIT,
     IdentityEmailTaken,
     IdentityLimitReached,
+    IdentityManageError,
     IdentitySubjectTaken,
+    add_google_login_identity,
     attach_google_identity,
+    list_login_identities,
     lookup_identity_by_email,
     lookup_identity_by_google_subject,
+    make_identity_primary,
     record_identity_event,
+    revoke_login_identity,
     sync_known_google_email,
 )
 from app.db.models.user_legal_acceptance import LegalAcceptanceSource
@@ -66,6 +73,11 @@ from app.schemas.auth import (
     GoogleOnboardingRequest,
     LegalAcceptanceRequest,
     LoginRequest,
+    AddGoogleIdentityRequest,
+    IdentityItemResponse,
+    IdentityListResponse,
+    IdentityMutationResponse,
+    IdentityStepUpRequest,
     MeProfilePatchRequest,
     MeProfileResponse,
     OtpRequest,
@@ -1166,6 +1178,337 @@ def reauth_with_password(
     )
     db.commit()
     return ReauthResponse(reauth_token=proof["token"], expires_at=proof["expires_at"])
+
+
+_MANAGE_HTTP = {
+    "identity_not_found": status.HTTP_404_NOT_FOUND,
+    "already_primary": status.HTTP_409_CONFLICT,
+    "identity_not_verified": status.HTTP_409_CONFLICT,
+    "identity_email_taken": status.HTTP_409_CONFLICT,
+    "identity_subject_taken": status.HTTP_409_CONFLICT,
+    "identity_limit_reached": status.HTTP_409_CONFLICT,
+    "last_active_identity": status.HTTP_409_CONFLICT,
+    "primary_identity": status.HTTP_409_CONFLICT,
+}
+
+
+def _bearer_token(request: Request) -> str:
+    header = request.headers.get("authorization") or ""
+    if not header.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token"
+        )
+    token = header.split(" ", 1)[1].strip()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token"
+        )
+    return token
+
+
+def _account_for_session(db: Session, user_ctx: UserContext) -> User:
+    try:
+        user_id = uuid.UUID(user_ctx.user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_user_id"
+        ) from None
+    account = db.get(User, user_id)
+    if account is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="user_not_found"
+        )
+    return account
+
+
+def _require_identity_step_up(
+    request: Request,
+    user: User,
+    *,
+    password: str | None,
+    reauth_token: str | None,
+) -> None:
+    """Staff confirmam a password no pedido. Os outros podem usar a prova curta.
+
+    403, não 401: o access token continua válido. O cliente trata 401 como fim de sessão.
+    """
+    staff = user.role in (Role.admin, Role.super_admin)
+    supplied = (password or "").strip()
+    proof = (reauth_token or "").strip()
+    if staff:
+        if not supplied:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="password_required"
+            )
+        if user.password_hash is None or not verify_password(
+            supplied, user.password_hash
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="invalid_credentials"
+            )
+        return
+    if proof:
+        try:
+            access_claims = decode_access_token(_bearer_token(request))
+            access_iat = int(access_claims["iat"])
+        except (jwt.InvalidTokenError, TypeError, ValueError, KeyError):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token"
+            ) from None
+        if verify_strong_auth_proof(
+            proof,
+            user_id=str(user.id),
+            token_version=int(user.token_version),
+            access_iat=access_iat,
+        ):
+            return
+        if not supplied:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="strong_auth_required"
+            )
+    if user.password_hash is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="password_required"
+        )
+    if supplied and verify_password(supplied, user.password_hash):
+        return
+    if supplied:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="invalid_credentials"
+        )
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, detail="strong_auth_required"
+    )
+
+
+def _identity_list_response(db: Session, user_id: uuid.UUID) -> IdentityListResponse:
+    rows = list_login_identities(db, user_id)
+    return IdentityListResponse(
+        identities=[
+            IdentityItemResponse(
+                id=row.id,
+                provider=row.provider,
+                email=row.email,
+                is_primary=row.is_primary,
+                is_verified=row.is_verified,
+                created_at=row.created_at,
+            )
+            for row in rows
+        ],
+        active_count=len(rows),
+        limit=ACTIVE_IDENTITY_LIMIT,
+    )
+
+
+def _manage_http(exc: IdentityManageError) -> HTTPException:
+    return HTTPException(
+        status_code=_MANAGE_HTTP.get(exc.code, status.HTTP_409_CONFLICT),
+        detail=exc.code,
+    )
+
+
+async def _claims_for_added_google(payload: AddGoogleIdentityRequest) -> dict:
+    has_token = bool((payload.id_token or "").strip())
+    has_code = bool((payload.code or "").strip())
+    if has_token == has_code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="google_token_invalid"
+        )
+    if has_code:
+        if not (payload.redirect_uri or "").strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="google_token_invalid"
+            )
+        try:
+            redirect_uri = assert_allowed_google_redirect(payload.redirect_uri or "")
+            tok_pack = await exchange_code_for_id_token(
+                code=(payload.code or "").strip(),
+                redirect_uri=redirect_uri,
+            )
+            return await anyio.to_thread.run_sync(
+                verify_id_token_claims, tok_pack["id_token"]
+            )
+        except RuntimeError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="google_exchange_failed",
+            ) from None
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="google_token_invalid",
+            ) from None
+    return _validated_google_claims((payload.id_token or "").strip(), payload.nonce)
+
+
+@router.get("/identities", response_model=IdentityListResponse)
+def list_my_identities(
+    user_ctx: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> IdentityListResponse:
+    """Identities activas do próprio User. Sem strong-auth."""
+    account = _account_for_session(db, user_ctx)
+    return _identity_list_response(db, account.id)
+
+
+@router.post(
+    "/identities/{identity_id}/make-primary",
+    response_model=IdentityMutationResponse,
+)
+def make_my_identity_primary(
+    identity_id: uuid.UUID,
+    payload: IdentityStepUpRequest,
+    request: Request,
+    user_ctx: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> IdentityMutationResponse:
+    """Troca a primary e espelha users.email. Não mexe em token_version."""
+    account = _account_for_session(db, user_ctx)
+    _require_identity_step_up(
+        request,
+        account,
+        password=payload.password,
+        reauth_token=payload.reauth_token,
+    )
+    try:
+        _identity, previous_id = make_identity_primary(db, account.id, identity_id)
+        record_identity_event(
+            db,
+            event_type="identity_primary_changed",
+            user_id=account.id,
+            identity_id=_identity.id,
+            provider=_identity.provider,
+            result="ok",
+            from_identity_id=previous_id,
+        )
+        body = _identity_list_response(db, account.id)
+        db.commit()
+    except IdentityManageError as exc:
+        db.rollback()
+        raise _manage_http(exc) from exc
+    except Exception:
+        db.rollback()
+        raise
+    return IdentityMutationResponse(
+        identities=body.identities,
+        active_count=body.active_count,
+        limit=body.limit,
+        result="ok",
+    )
+
+
+@router.post(
+    "/identities/{identity_id}/revoke",
+    response_model=IdentityMutationResponse,
+)
+def revoke_my_identity(
+    identity_id: uuid.UUID,
+    payload: IdentityStepUpRequest,
+    request: Request,
+    user_ctx: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> IdentityMutationResponse:
+    """Revoga uma identity não-primária. A linha, o email e o subject ficam."""
+    account = _account_for_session(db, user_ctx)
+    _require_identity_step_up(
+        request,
+        account,
+        password=payload.password,
+        reauth_token=payload.reauth_token,
+    )
+    try:
+        revoked = revoke_login_identity(db, account.id, identity_id)
+        record_identity_event(
+            db,
+            event_type="identity_revoked",
+            user_id=account.id,
+            identity_id=revoked.id,
+            provider=revoked.provider,
+            result="ok",
+        )
+        body = _identity_list_response(db, account.id)
+        db.commit()
+    except IdentityManageError as exc:
+        db.rollback()
+        raise _manage_http(exc) from exc
+    except Exception:
+        db.rollback()
+        raise
+    return IdentityMutationResponse(
+        identities=body.identities,
+        active_count=body.active_count,
+        limit=body.limit,
+        result="ok",
+    )
+
+
+@router.post("/identities/google", response_model=IdentityMutationResponse)
+async def add_my_google_identity(
+    payload: AddGoogleIdentityRequest,
+    request: Request,
+    user_ctx: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> IdentityMutationResponse:
+    """Acrescenta Google à sessão actual. Não cria User nem muda a sessão."""
+    check_google_exchange_rate_limit(request)
+    if not _google_oauth_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="google_oauth_disabled",
+        )
+    account = _account_for_session(db, user_ctx)
+    _require_identity_step_up(
+        request,
+        account,
+        password=payload.password,
+        reauth_token=payload.reauth_token,
+    )
+    role_before = account.role
+    phone_before = account.phone
+    version_before = int(account.token_version)
+    legacy_before = account.oauth_google_sub
+    claims = await _claims_for_added_google(payload)
+    sub = str(claims.get("sub") or "").strip()
+    email = str(claims.get("email") or "").strip().lower()
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="google_invalid_sub"
+        )
+    if not email or not bool(claims.get("email_verified")):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="google_email_not_verified",
+        )
+    try:
+        identity, result = add_google_login_identity(
+            db, account, email=email, subject=sub
+        )
+        account.role = role_before
+        account.phone = phone_before
+        account.token_version = version_before
+        account.oauth_google_sub = legacy_before
+        record_identity_event(
+            db,
+            event_type="identity_google_added",
+            user_id=account.id,
+            identity_id=identity.id,
+            provider="google",
+            result=result,
+        )
+        body = _identity_list_response(db, account.id)
+        db.commit()
+    except IdentityManageError as exc:
+        db.rollback()
+        raise _manage_http(exc) from exc
+    except Exception:
+        db.rollback()
+        raise
+    return IdentityMutationResponse(
+        identities=body.identities,
+        active_count=body.active_count,
+        limit=body.limit,
+        result=result,
+    )
 
 
 def _me_profile_from_user(u: User) -> MeProfileResponse:
