@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { PARTNER_TRIPS_CSV_COLUMNS, type PartnerMetrics } from '../../../api/partner'
+import type { PartnerMetrics } from '../../../api/partner'
 import type { PartnerCsvExportUi } from '../partnerCsvExport'
 
 type TripStats = {
@@ -80,7 +80,7 @@ export function PartnerReportsMenuScreen({
         ) : null}
       </ul>
       <p className="text-xs text-muted-foreground">
-        {t('reports.csvColumnsPrefix')} {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}.
+        {t('reports.csvColumnsPrefix')}
       </p>
       {exportError ? (
         <p className="text-sm text-destructive" data-testid="partner-reports-csv-error" role="alert">
