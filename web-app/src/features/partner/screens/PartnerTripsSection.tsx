@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { PARTNER_TRIPS_CSV_COLUMNS, type PartnerDriverRow, type PartnerTripRow } from '../../../api/partner'
+import type { PartnerDriverRow, PartnerTripRow } from '../../../api/partner'
 import { EmptyState } from '../../../components/feedback/EmptyState'
 import { formatDateTime } from '../../../i18n/format'
 import { PartnerListSearch } from '../components/PartnerListSearch'
@@ -73,7 +73,7 @@ export function PartnerTripsSection({
         </button>
       </div>
       <p className="text-xs text-muted-foreground">
-        {t('trips.csvColumnsPrefix')} {PARTNER_TRIPS_CSV_COLUMNS.join(', ')}.
+        {t('trips.csvColumnsPrefix')}
       </p>
       <div className="flex flex-wrap gap-1.5">
         {filterOptions.map(([id, key]) => (
