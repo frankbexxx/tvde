@@ -22,7 +22,7 @@
     "paymentFailed": "Pagamento recusado",
     "paymentFailedSub": "Tenta pedir de novo ou contacta o suporte se o problema continuar.",
     "syncing": "A sincronizar viagem…",
-    "searching": "À procura de motorista",
+    "searching": "À procura de motorista disponível",
     "assigned": "Motorista atribuído",
     "enRoute": "Motorista a caminho",
     "ongoing": "Viagem em curso",
@@ -31,15 +31,15 @@
     "paymentProcessing": "O pagamento pode demorar alguns segundos a aparecer como concluído — mantém esta página aberta."
   },
   "payment": {
-    "mockConfirming": "Pagamento simulado neste ambiente. Não há cobrança nem cartão.",
+    "mockConfirming": "Não há cobrança e não é pedido um cartão neste passo.",
     "cardConfirming": "Pagamento por cartão. A autorização ou confirmação no banco só ocorre quando um motorista aceitar o pedido; confirmar aqui não cobra imediatamente o valor da viagem.",
-    "mockSearching": "Pagamento simulado — não é preciso introduzir cartão neste ambiente.",
+    "mockSearching": "Não é preciso cartão. Nada é cobrado.",
     "cardSearching": "Tens o cartão acessível? Quando houver aceitação, o banco pode pedir confirmação extra (por exemplo 3-D Secure)."
   },
   "planner": {
     "ariaLabel": "Planeamento da viagem",
-    "searchingTitle": "À procura de motorista…",
-    "searchingTrip": "Pedido {{id}}…",
+    "searchingTitle": "À procura de motorista disponível",
+    "searchingTrip": "À procura de motorista disponível",
     "searchingSending": "A enviar o teu pedido…",
     "pickupUndefinedEmbedded": "Recolha por definir",
     "pickupPrompt": "Escreve a recolha em cima ou toca no mapa",
@@ -57,7 +57,7 @@
     "confirmTripTitle": "Confirma a viagem",
     "calculatingRoute": "A calcular percurso…",
     "routeUnavailable": "Percurso estimado indisponível",
-    "paymentMockShort": "Pagamento simulado — sem cobrança",
+    "paymentMockShort": "Confirmar a viagem não cobra já o valor.",
     "confirming": "A confirmar…",
     "confirmTrip": "Confirmar viagem",
     "edit": "Alterar",
@@ -85,10 +85,10 @@
   "statusCard": {
     "submittingTitle": "A enviar pedido…",
     "submittingSubtitle": "Aguarda um momento.",
-    "searchingTitle": "A procurar motorista…",
-    "searchingSubtitle": "Estamos a contactar motoristas na zona. Pode demorar um instante.",
+    "searchingTitle": "À procura de motorista disponível",
+    "searchingSubtitle": "Ainda sem motorista atribuído.",
     "searchingFallbackTitle": "Ainda à procura de motorista",
-    "searchingFallbackSubtitle": "Pode demorar um pouco na zona. Podes esperar mais, ou cancelar e voltar a pedir.",
+    "searchingFallbackSubtitle": "Podes esperar, ou cancelar e voltar a pedir.",
     "retryPending": "A processar…",
     "retry": "Tentar novamente",
     "driverFound": "Motorista encontrado",
@@ -118,12 +118,12 @@
     "unknownStatus": "desconhecido",
     "confirming": "A confirmar…",
     "authorizeCard": "Autorizar cartão",
-    "mockTitle": "Pagamento simulado",
-    "mockBody": "Sem cartão real neste ambiente (DEV).",
-    "mockContinue": "Continuar (simulado)",
+    "mockTitle": "Sem cobrança",
+    "mockBody": "Não é usado um cartão e não é cobrado nenhum valor.",
+    "mockContinue": "Continuar",
     "unavailableTitle": "Cartão indisponível",
-    "unavailableBody": "Pagamento por cartão não está configurado neste build. A viagem pode continuar se o backend não exigir autorização imediata.",
-    "continueWithoutCard": "Continuar sem cartão",
+    "unavailableBody": "O cartão não está disponível aqui. Podes continuar; neste passo não é cobrado nenhum valor.",
+    "continueWithoutCard": "Continuar sem cobrança",
     "authorizeTitle": "Autorizar pagamento",
     "authorizeSubtitle": "Motorista aceitou — confirma o cartão."
   },
@@ -146,7 +146,7 @@
     "skip": "Agora não",
     "submitting": "A enviar…",
     "errorNetwork": "Sem ligação ou o pedido demorou demasiado. Tenta de novo.",
-    "errorForbidden": "Sem permissão para avaliar — em modo BETA, a conta tem de ser de passageiro (não motorista) para esta viagem.",
+    "errorForbidden": "Não foi possível enviar a avaliação. Confirma que esta viagem é da tua conta de passageiro e tenta outra vez.",
     "errorNotFound": "Viagem não encontrada para avaliação. Pede nova viagem e tenta novamente no fim.",
     "errorNotCompleted": "A viagem ainda não está concluída. Aguarda alguns segundos e tenta de novo.",
     "errorGeneric": "Não foi possível enviar a avaliação."
@@ -165,6 +165,9 @@
     "sent": "Pedido enviado — a sincronizar…",
     "cancelled": "Viagem cancelada",
     "resent": "Pedido reenviado"
+  },
+  "sos": {
+    "button": "SOS — Emergência"
   },
   "unreadBadge": "{{count}} mensagem(ns) por ler",
   "sideMenu": {
@@ -191,7 +194,8 @@
     "payment": "Pagamento",
     "created": "Criada",
     "completed": "Concluída",
-    "tripId": "ID {{id}}"
+    "tripId": "Referência {{id}}",
+    "placeOnMap": "Ponto no mapa"
   },
   "pet": {
     "categoryTitle": "Categoria",

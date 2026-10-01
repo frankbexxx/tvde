@@ -11,7 +11,8 @@ export function AppRouteModeSwitch() {
 
   return (
     <div>
-      <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">{t('appMode')}</p>
+      <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">{t('appMode')}</p>
+      <p className="text-xs text-muted-foreground mb-2 leading-snug">{t('appModeHint')}</p>
       <ContextSwitch />
     </div>
   )

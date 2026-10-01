@@ -65,7 +65,8 @@ export function SettingsButton() {
       <p className="text-xs text-muted-foreground leading-snug">{t("accountHint")}</p>
       <AppAppearanceSettings />
         <div>
-          <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">{t("appMode")}</p>
+          <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">{t("appMode")}</p>
+          <p className="text-xs text-muted-foreground mb-2 leading-snug">{t("appModeHint")}</p>
           <ContextSwitch onChosen={() => setOpen(false)} />
         </div>
       <Button

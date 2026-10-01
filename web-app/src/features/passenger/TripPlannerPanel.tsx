@@ -354,11 +354,9 @@ function TripPlannerPanelInner({
         <div className="flex flex-col items-center gap-3 py-2">
           <Spinner size="lg" />
           <p className="text-base font-semibold text-foreground text-center">{t('planner.searchingTitle')}</p>
-          <p className="text-sm text-foreground/75 text-center">
-            {activeTrip
-              ? t('planner.searchingTrip', { id: activeTrip.trip_id.slice(0, 8) })
-              : t('planner.searchingSending')}
-          </p>
+          {activeTrip ? null : (
+            <p className="text-sm text-foreground/75 text-center">{t('planner.searchingSending')}</p>
+          )}
           {lastEstimatedTotal != null && lastEstimatedTotal > 0 ? (
             <div
               className="text-sm text-foreground text-center space-y-0.5"

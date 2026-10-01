@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import '../../i18n'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import {
   buildEmergencyShareText,
