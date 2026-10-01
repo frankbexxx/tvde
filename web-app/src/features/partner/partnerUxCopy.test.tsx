@@ -12,7 +12,7 @@ vi.mock('../../maps/MapView', () => ({
   MapView: () => <div data-testid="partner-map-stub" />,
 }))
 
-const postPartnerMessage = vi.fn(async (_payload: unknown) => undefined)
+const postPartnerMessage = vi.fn<(payload: unknown) => Promise<void>>()
 
 vi.mock('../../api/partner', () => ({
   fetchPartnerInboxMessages: vi.fn(async () => []),
