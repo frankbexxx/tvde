@@ -125,12 +125,12 @@
     "retryLocation": "Try again",
     "docsMissingTitle": "Missing documents",
     "docsMissingBody": "Complete them in Menu → Documents to go available.",
-    "drivingHoursBlockedTitle": "Driving time / rest",
-    "drivingHoursBlockedBody": "You cannot go available or accept new trips until you complete the rest period or the daily limit no longer applies (civil day, Lisbon).",
-    "drivingHoursBlockedBodyAlt": "You cannot go available or accept new trips until the rest period ends or the day's limit (Lisbon reference) no longer blocks you.",
-    "drivingHoursLimitTitle": "Driving time / rest",
-    "drivingHoursLimitBody": "You reached the reference active-driving limit or are in a recorded rest period (civil day, Lisbon). You can still operate; this is a notice — automatic blocking is off until legal validation.",
-    "drivingHoursLimitBodyAlt": "Active-driving / rest limit reached (Lisbon reference). You can still go available and accept; this is informational while automatic enforcement is off.",
+    "drivingHoursBlockedTitle": "You cannot go available",
+    "drivingHoursBlockedBody": "The driving limit or rest period is active. You cannot go available or accept trips. Come back when the rest period ends.",
+    "drivingHoursBlockedBodyAlt": "The driving limit or rest period is active. You cannot go available or accept trips. Come back when the rest period ends.",
+    "drivingHoursLimitTitle": "Driving limit reached",
+    "drivingHoursLimitBody": "You have reached the driving limit. You can still go available and accept trips. Continue, or take a break when you want.",
+    "drivingHoursLimitBodyAlt": "You have reached the driving limit. You can still go available and accept trips. Continue, or take a break when you want.",
     "restUntil": "Rest until:",
     "drivingHoursWarningTitle": "Driving time notice",
     "drivingHoursWarningBody": "Today you have about <strong>{{duration}}</strong> in active trips (reference max <strong>{{max}}</strong> / civil day, Lisbon). Avoid accepting trips if you are near the limit.",
@@ -309,7 +309,7 @@
     },
     "categories": {
       "title": "Vehicle categories",
-      "intro": "Syncs with the server and filters requests you see in the list (fare category). Keep at least one category active. Legacy «pet» preference, if present in data, does not filter matching.",
+      "intro": "Choose the services you want to do. If you turn a category off, those requests stop appearing. Keep at least one on.",
       "petAccept": "Accept trips with animals",
       "electric": "Electric"
     },
@@ -335,7 +335,7 @@
       "gateOn": "On",
       "gateOff": "Off",
       "gateDevHint": "DEV only — in production blocking follows document state on the server.",
-      "gateProdHint": "Required documents are validated on the server before you can go available.",
+      "gateProdHint": "Required documents are reviewed before you can go available.",
       "openAdmin": "Open admin panel"
     },
     "tripDetail": {

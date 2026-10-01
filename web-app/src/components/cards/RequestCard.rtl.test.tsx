@@ -100,7 +100,7 @@ describe('RequestCard (RTL)', () => {
         acceptVariant="slide"
       />
     )
-    fireEvent.click(screen.getByRole('button', { name: /silenciar oferta/i }))
+    fireEvent.click(screen.getByRole('button', { name: /silenciar esta caixa/i }))
     expect(onDismiss).toHaveBeenCalledTimes(1)
     expect(onReject).not.toHaveBeenCalled()
   })
