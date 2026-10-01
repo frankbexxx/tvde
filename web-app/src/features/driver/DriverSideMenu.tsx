@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { useAuth, isBackofficeStaffRole } from '../../context/AuthContext'
-import { parseJwtPayload } from '../../utils/jwt'
 import type { DriverNavApp } from '../../services/driverNavPreference'
 import type { TripHistoryItem } from '../../api/trips'
 import type { DriverDocumentsState, DriverRequiredDocument, DriverDocumentStatus } from '../../services/driverDocuments'
@@ -96,13 +95,7 @@ export function DriverSideMenu(props: {
     activeTripId,
     onRequestGoAvailable,
   } = props
-  const { sessionPhone, sessionRole, token, logout } = useAuth()
-
-  const accountRef = useMemo(() => {
-    const jwtSub = token ? parseJwtPayload(token)?.sub : undefined
-    if (!jwtSub || jwtSub.length === 0) return null
-    return jwtSub.replace(/-/g, '').slice(-8)
-  }, [token])
+  const { sessionPhone, sessionRole, logout } = useAuth()
 
   const title = useMemo(() => driverMenuTitle(screen), [screen])
   const hl = menuRootHighlight
@@ -272,14 +265,6 @@ export function DriverSideMenu(props: {
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('sideMenu.profile.role')}</p>
                 <p className="text-sm font-medium text-foreground">{menuRoleLabel(sessionRole, t)}</p>
               </div>
-              {accountRef ? (
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">{t('sideMenu.profile.account')}</p>
-                  <p className="text-sm font-medium text-foreground tabular-nums">
-                    {t('sideMenu.profile.accountRef', { ref: accountRef })}
-                  </p>
-                </div>
-              ) : null}
             </div>
             <div className="grid grid-cols-1 gap-2">
               <button

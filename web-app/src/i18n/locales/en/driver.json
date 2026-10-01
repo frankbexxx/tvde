@@ -114,7 +114,7 @@
       "role": "Role",
       "account": "Account",
       "accountRef": "Account · {{ref}}",
-      "accountDetail": "Account (details)"
+      "accountDetail": "Account"
     },
     "settings": {
       "intro": "App preferences. Account and session are under <profile>Profile</profile> in the main menu."
