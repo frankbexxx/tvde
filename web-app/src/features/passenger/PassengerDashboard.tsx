@@ -37,7 +37,7 @@ import { useGeolocation } from '../../hooks/useGeolocation'
 import { ScreenContainer } from '../../components/layout/ScreenContainer'
 import { PrimaryActionButton } from '../../components/layout/PrimaryActionButton'
 import { MapActionRow } from '../../components/layout/MapActionRow'
-import { BTN_SECONDARY, BTN_SECONDARY_RADIUS, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
+import { BTN_SECONDARY, BTN_PRIMARY_COMPACT, INFO_BOX_PREVIEW, INFO_BOX_TITLE_COMPACT, MAP_BANNER_STACK, MAP_DISMISS_BTN_ERROR, MAP_HINT_WARNING, MAP_SHEET_CLASS, MAP_SHEET_MAX_H_TRIP, MAP_TOAST_ERROR, MAP_WARNING_BANNER } from '../../components/layout/infoBoxTemplate'
 import { Spinner } from '../../components/ui/Spinner'
 import type { FeatureCollection, LineString } from 'geojson'
 import { MapStage } from '../../components/layout/MapStage'
@@ -70,6 +70,7 @@ import {
 } from './passengerTripPollEquals'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
+import { PassengerCancelPanel } from './PassengerCancelPanel'
 import { EmergencySosButton, EmergencySosPanel } from '../emergency/EmergencySosPanel'
 import { isPassengerEmergencyStatus } from '../emergency/emergencyShare'
 import { PassengerPaymentConfirmCard } from './PassengerPaymentConfirmCard'
@@ -86,7 +87,6 @@ import { passengerBottomNavTransition, passengerRootHighlightKey } from './passe
 import { PassengerBottomNav, type PassengerShellTab } from './PassengerBottomNav'
 import {
   passengerTripCancelPresets,
-  TRIP_CANCEL_SELECT_OTHER,
   tripCancelReasonForApi,
 } from '../../constants/tripCancelReasons'
 import { useDia23LayoutProbe } from '../../hooks/useDia23LayoutProbe'
@@ -1279,64 +1279,23 @@ export function PassengerDashboard() {
 
   const passengerCancelPanelInOverlay =
     passengerCancelOpen && passengerPrimaryAction === 'cancel' ? (
-      <div className="space-y-3 pt-1" data-testid="passenger-cancel-panel">
-        <p className="text-sm font-medium text-foreground">{t('cancelFlow.title')}</p>
-        <label className="block text-xs text-muted-foreground" htmlFor="passenger-cancel-preset">
-          {t('cancelFlow.quickPick')}
-        </label>
-        <select
-          id="passenger-cancel-preset"
-          data-testid="passenger-cancel-preset"
-          className={`w-full min-h-11 ${BTN_SECONDARY_RADIUS} border border-border bg-card px-2 text-sm text-foreground touch-manipulation`}
-          value={passengerCancelPreset}
-          onChange={(e) => setPassengerCancelPreset(e.target.value)}
-          disabled={cancelling}
-        >
-          {cancelPresets.map((o) => (
-            <option key={o.value || 'none'} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        {passengerCancelPreset === TRIP_CANCEL_SELECT_OTHER ? (
-          <textarea
-            data-testid="passenger-cancel-other"
-            className={`w-full min-h-[72px] ${BTN_SECONDARY_RADIUS} border border-border bg-card px-2 py-2 text-sm text-foreground`}
-            placeholder={t('cancelFlow.otherPlaceholder')}
-            maxLength={280}
-            value={passengerCancelOther}
-            onChange={(e) => setPassengerCancelOther(e.target.value)}
-            disabled={cancelling}
-          />
-        ) : null}
-        <MapActionRow testId="passenger-cancel-actions">
-          <PrimaryActionButton
-            className="flex-1 min-w-0"
-            size="compact"
-            variant="danger"
-            loading={cancelling}
-            disabled={cancelling}
-            onClick={() =>
-              void handleCancel(tripCancelReasonForApi(passengerCancelPreset, passengerCancelOther))
-            }
-          >
-            {t('cancelFlow.confirm')}
-          </PrimaryActionButton>
-          <button
-            type="button"
-            data-testid="passenger-cancel-back"
-            className={`flex-1 min-w-0 ${BTN_SECONDARY}`}
-            disabled={cancelling}
-            onClick={() => {
-              setPassengerCancelOpen(false)
-              setPassengerCancelPreset('')
-              setPassengerCancelOther('')
-            }}
-          >
-            {t('common:back')}
-          </button>
-        </MapActionRow>
-      </div>
+      <PassengerCancelPanel
+        status={activeTrip?.status}
+        presets={cancelPresets}
+        preset={passengerCancelPreset}
+        other={passengerCancelOther}
+        cancelling={cancelling}
+        onPreset={setPassengerCancelPreset}
+        onOther={setPassengerCancelOther}
+        onConfirm={() =>
+          void handleCancel(tripCancelReasonForApi(passengerCancelPreset, passengerCancelOther))
+        }
+        onBack={() => {
+          setPassengerCancelOpen(false)
+          setPassengerCancelPreset('')
+          setPassengerCancelOther('')
+        }}
+      />
     ) : null
 
   const passengerTripPrimaryInOverlay =

@@ -234,7 +234,9 @@ export function ActiveTripActions({
       const e = err as { status?: number; detail?: unknown }
       const msg =
         isTimeoutLikeError(err) || e?.status === 0
-          ? t('actions.networkError')
+          ? opts?.actionKey === 'cancelTrip'
+            ? t('actions.cancelUnconfirmed')
+            : t('actions.networkError')
           : resolveApiErrorDetail(e?.detail) || t('actions.error')
       onError(msg)
       setStatus(t('actions.error'))
@@ -424,6 +426,9 @@ export function ActiveTripActions({
           data-testid="driver-trip-cancel-panel"
         >
           <p className="text-sm font-medium text-foreground">{t('actions.cancelTitle')}</p>
+          <p className="text-sm text-foreground leading-snug" data-testid="driver-cancel-effect">
+            {t('actions.cancelEffect')}
+          </p>
           {animalTrip ? (
             <AttendableReasonFields
               code={attendableCode}

@@ -16,6 +16,6 @@
   "timeout": "Servidor lento ou indisponível. Tenta novamente dentro de momentos.",
   "rate_limited": "Muitos pedidos seguidos. Aguarda um pouco e tenta de novo.",
   "create_trip_failed": "Não foi possível pedir a viagem. Verifica a ligação e tenta de novo.",
-  "cancel_failed": "Não foi possível cancelar a viagem. Tenta de novo.",
-  "cancel_network": "Não foi possível cancelar agora — verifica a ligação e tenta de novo."
+  "cancel_failed": "Não foi possível confirmar o cancelamento. Verifica o estado da viagem antes de tentar novamente.",
+  "cancel_network": "Não foi possível confirmar o cancelamento. Verifica o estado da viagem antes de tentar novamente."
 }

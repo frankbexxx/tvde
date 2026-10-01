@@ -76,6 +76,8 @@
     "processingBtn": "Processing…",
     "cancel": "Cancel",
     "cancelTitle": "Cancellation reason",
+    "cancelEffect": "You are about to cancel this trip.",
+    "cancelUnconfirmed": "The cancellation could not be confirmed. Check the trip status before trying again.",
     "cancelQuick": "Quick pick",
     "cancelOtherPlaceholder": "Brief description (optional).",
     "cancelConfirm": "Confirm cancellation",

@@ -131,8 +131,10 @@
   "requestingStatus": "Requesting trip…",
   "cancelFlow": {
     "cancellingStatus": "Cancelling…",
-    "cancelFailedStatus": "Could not cancel",
-    "networkError": "No connection or the server took too long. Check your network and try cancelling again.",
+    "cancelFailedStatus": "Cancellation could not be confirmed",
+    "networkError": "The cancellation could not be confirmed. Check the trip status before trying again.",
+    "noFee": "You can cancel this trip with no fee.",
+    "pilotFee": "The cancellation rule records a fee of €3.00, but during the pilot this amount is not charged.",
     "title": "Cancellation reason",
     "quickPick": "Quick pick",
     "otherPlaceholder": "Brief description (optional).",

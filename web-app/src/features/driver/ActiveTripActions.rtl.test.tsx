@@ -237,10 +237,27 @@ describe('ActiveTripActions (RTL)', () => {
     renderActions(DRIVER_NEAR_PICKUP_0)
     fireEvent.click(screen.getByTestId('driver-trip-cancel-open'))
     expect(screen.getByTestId('driver-trip-cancel-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('driver-cancel-effect')).toHaveTextContent('Vais cancelar esta viagem.')
+    expect(screen.getByTestId('driver-trip-cancel-panel').textContent).not.toMatch(/3,00|3\.00/)
     fireEvent.change(screen.getByTestId('driver-cancel-preset'), { target: { value: 'Imprevisto' } })
     fireEvent.click(screen.getByTestId('driver-trip-cancel-confirm'))
     await waitFor(() => {
       expect(driverTripActions.driverPerformCancel).toHaveBeenCalledWith('tid', 'tok', 'Imprevisto')
     })
+  })
+
+  it('erro de rede no cancelamento não declara o resultado', async () => {
+    pollingCtx.trip = minimalTrip('accepted')
+    const { onError } = renderActions(DRIVER_NEAR_PICKUP_0)
+    vi.mocked(driverTripActions.driverPerformCancel).mockRejectedValueOnce({ status: 0, detail: 'timeout' })
+    fireEvent.click(screen.getByTestId('driver-trip-cancel-open'))
+    fireEvent.click(screen.getByTestId('driver-trip-cancel-confirm'))
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        'Não foi possível confirmar o cancelamento. Verifica o estado da viagem antes de tentar novamente.',
+      )
+    })
+    const msg = String(onError.mock.calls[0]?.[0])
+    expect(msg).not.toMatch(/foi cancelada|continua activa|3,00/)
   })
 })
