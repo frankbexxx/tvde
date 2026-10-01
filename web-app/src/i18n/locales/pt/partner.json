@@ -76,8 +76,8 @@
       "activeDriversGps": "Motoristas ativos (GPS)",
       "totalDrivers": "Total motoristas",
       "completedToday": "Concluídas hoje",
-      "revenueToday": "Receita hoje (€)",
-      "revenueHint": "Soma bruta da app (final ou estimativa); não é payout Stripe."
+      "revenueToday": "Valor das viagens hoje (€)",
+      "revenueHint": "Soma do preço das viagens concluídas hoje. Usa o preço final, ou a estimativa se o preço final ainda não existir."
     }
   },
   "fleet": {
@@ -347,8 +347,8 @@
     "cancelledFailed": "Canceladas / falhadas:",
     "activeDriversGps": "Motoristas activos (GPS):",
     "completedToday": "Concluídas hoje:",
-    "revenueToday": "Receita hoje (€):",
-    "revenueHint": "Soma bruta da app (final ou estimativa); não é payout Stripe.",
+    "revenueToday": "Valor das viagens hoje (€):",
+    "revenueHint": "Soma do preço das viagens concluídas hoje. Usa o preço final, ou a estimativa se o preço final ainda não existir.",
     "downloadCsv": "Descarregar viagens (CSV)",
     "exportingCsv": "A exportar…",
     "csvColumnsPrefix": "O ficheiro CSV usa os mesmos filtros desta página."

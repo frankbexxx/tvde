@@ -76,8 +76,8 @@
       "activeDriversGps": "Active drivers (GPS)",
       "totalDrivers": "Total drivers",
       "completedToday": "Completed today",
-      "revenueToday": "Revenue today (€)",
-      "revenueHint": "App gross sum (final or estimate); not a Stripe payout."
+      "revenueToday": "Value of trips today (€)",
+      "revenueHint": "Sum of the price of trips completed today. Uses the final price, or the estimate if there is no final price yet."
     }
   },
   "fleet": {
@@ -347,8 +347,8 @@
     "cancelledFailed": "Cancelled / failed:",
     "activeDriversGps": "Active drivers (GPS):",
     "completedToday": "Completed today:",
-    "revenueToday": "Revenue today (€):",
-    "revenueHint": "App gross sum (final or estimate); not a Stripe payout.",
+    "revenueToday": "Value of trips today (€):",
+    "revenueHint": "Sum of the price of trips completed today. Uses the final price, or the estimate if there is no final price yet.",
     "downloadCsv": "Download trips (CSV)",
     "exportingCsv": "Exporting…",
     "csvColumnsPrefix": "The CSV file uses the same filters as this page."

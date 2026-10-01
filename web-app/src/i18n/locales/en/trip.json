@@ -72,7 +72,7 @@
     "category": "Category:",
     "pickup": "Pickup",
     "destination": "Destination",
-    "estimate": "Estimate (indicative)",
+    "estimate": "Estimated trip price",
     "reject": "Decline",
     "rejectSuccess": "Offer declined",
     "rejectError": "Could not decline the offer.",
