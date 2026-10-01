@@ -74,6 +74,12 @@ export function humanizeCancelError(errOrDetail: unknown): string {
   return i18n.t('errors:cancel_failed')
 }
 
+function isTechnicalLoginDetail(detail: string): boolean {
+  return /alembic|vite_|migration|token|\bapi\b|beta|enable_dev|undefinedcolumn|password_hash|column|relation/i.test(
+    detail,
+  )
+}
+
 export function formatLoginError(err: unknown): string {
   if (err !== null && typeof err === 'object' && 'status' in err) {
     const e = err as { status?: number; detail?: unknown }
@@ -83,12 +89,10 @@ export function formatLoginError(err: unknown): string {
       const mapped = resolveApiErrorDetail(d.trim())
       if (normalizeDetailCode(d) || d.trim() === 'BETA cheio' || d.includes('cheio')) return mapped
       if (d.toLowerCase() === 'not available') return mapped
-      if (st >= 500) {
-        if (/password_hash|column|undefinedcolumn|relation/i.test(d)) {
-          return i18n.t('auth:dbMismatch')
-        }
-        return i18n.t('auth:serverError', { status: st, detail: d.slice(0, 180) })
+      if (st >= 500 || isTechnicalLoginDetail(d)) {
+        return i18n.t('auth:loginServiceUnavailable')
       }
+      if (/^[a-z0-9_]+$/.test(d.trim())) return i18n.t('auth:loginError')
       return d.length > 280 ? `${d.slice(0, 280)}…` : d
     }
     if (Array.isArray(d)) {
@@ -97,12 +101,14 @@ export function formatLoginError(err: unknown): string {
           ? String((x as { msg?: unknown }).msg)
           : JSON.stringify(x)
       )
-      return parts.join(' · ') || i18n.t('auth:invalidRequest')
+      const joined = parts.join(' · ')
+      if (!joined || isTechnicalLoginDetail(joined)) return i18n.t('auth:loginError')
+      return joined
     }
-    if (st >= 500) return i18n.t('auth:serverErrorMigrations', { status: st })
+    if (st >= 500) return i18n.t('auth:loginServiceUnavailable')
   }
   if (err instanceof Error && err.message) {
-    return i18n.t('auth:connectionFailed', { message: err.message })
+    return i18n.t('auth:loginConnectionFailed')
   }
   return i18n.t('auth:loginError')
 }

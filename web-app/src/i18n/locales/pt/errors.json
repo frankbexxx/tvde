@@ -1,9 +1,9 @@
 {
   "pending_approval": "Aguardar aprovação do administrador.",
-  "beta_full": "BETA cheio. Tenta mais tarde.",
-  "invalid_credentials": "Password incorrecta.",
+  "beta_full": "Neste momento não há lugar para novas contas. Tenta mais tarde.",
+  "invalid_credentials": "Telemóvel ou palavra-passe incorrectos.",
   "blocked": "Conta bloqueada.",
-  "beta_login_unavailable": "Login BETA indisponível neste servidor (modo BETA desligado).",
+  "beta_login_unavailable": "Não é possível entrar neste momento. Tenta mais tarde.",
   "not_authenticated": "Sessão expirada. Inicia sessão novamente.",
   "invalid_token": "Sessão inválida. Inicia sessão novamente.",
   "forbidden": "Sem permissão para esta acção.",

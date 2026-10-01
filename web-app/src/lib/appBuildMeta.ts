@@ -3,4 +3,4 @@ export const appVersion = __APP_VERSION__
 export const appGitShortSha = __APP_GIT_SHA__
 
 /** Uma linha para ecrãs de apoio (login, suporte). */
-export const appBuildDisplayLine = `v${appVersion} · ${appGitShortSha}`
+export const appBuildDisplayLine = `Versão ${appVersion} · build ${appGitShortSha}`

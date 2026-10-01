@@ -1,9 +1,9 @@
 {
   "pending_approval": "Waiting for administrator approval.",
-  "beta_full": "BETA is full. Try again later.",
-  "invalid_credentials": "Incorrect password.",
+  "beta_full": "There is no room for new accounts right now. Try again later.",
+  "invalid_credentials": "Phone or password is incorrect.",
   "blocked": "Account blocked.",
-  "beta_login_unavailable": "BETA login unavailable on this server (BETA mode off).",
+  "beta_login_unavailable": "Sign-in is not available right now. Try again later.",
   "not_authenticated": "Session expired. Please sign in again.",
   "invalid_token": "Invalid session. Please sign in again.",
   "forbidden": "You do not have permission for this action.",
