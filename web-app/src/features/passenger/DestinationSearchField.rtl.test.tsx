@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { useState } from 'react'
+import i18n from '../../i18n'
 import { DestinationSearchField } from './DestinationSearchField'
 import { placeSearchShouldFetch } from './placeSearchFetch'
 import type { GeocodeSuggestion } from '@/services/geocoding'
@@ -238,4 +239,63 @@ describe('DestinationSearchField mobile UX', () => {
       expect(screen.getByTestId('destination-search-input').style.fontSize).toBe('16px')
     })
   }
+
+  it('keeps pickup and destination names visible before and after typing', async () => {
+    await i18n.changeLanguage('pt')
+    const props = {
+      suggestions: [] as never[],
+      loading: false,
+      onQueryChange: () => undefined,
+      onSelect: () => undefined,
+    }
+    const { rerender } = render(
+      <>
+        <DestinationSearchField
+          {...props}
+          query=""
+          label="Recolha da viagem"
+          placeholder="Recolha: rua, localidade, código postal…"
+        />
+        <DestinationSearchField
+          {...props}
+          query=""
+          label="Destino da viagem"
+          placeholder="Destino: rua, localidade, código postal…"
+        />
+      </>
+    )
+    expect(screen.getByLabelText('Recolha da viagem')).toHaveValue('')
+    expect(screen.getByLabelText('Destino da viagem')).toHaveValue('')
+    expect(screen.getByLabelText('Recolha da viagem')).toHaveAttribute(
+      'placeholder',
+      'Recolha: rua, localidade, código postal…'
+    )
+    expect(screen.getByLabelText('Destino da viagem')).toHaveAttribute(
+      'placeholder',
+      'Destino: rua, localidade, código postal…'
+    )
+    expect(screen.getByText('Recolha da viagem').className).not.toMatch(/sr-only/)
+    expect(screen.getByText('Destino da viagem').className).not.toMatch(/sr-only/)
+
+    rerender(
+      <>
+        <DestinationSearchField
+          {...props}
+          query="Rua Augusta"
+          label="Recolha da viagem"
+          placeholder="Recolha: rua, localidade, código postal…"
+        />
+        <DestinationSearchField
+          {...props}
+          query="Aeroporto"
+          label="Destino da viagem"
+          placeholder="Destino: rua, localidade, código postal…"
+        />
+      </>
+    )
+    expect(screen.getByLabelText('Recolha da viagem')).toHaveValue('Rua Augusta')
+    expect(screen.getByLabelText('Destino da viagem')).toHaveValue('Aeroporto')
+    expect(screen.getByText('Recolha da viagem')).toBeVisible()
+    expect(screen.getByText('Destino da viagem')).toBeVisible()
+  })
 })

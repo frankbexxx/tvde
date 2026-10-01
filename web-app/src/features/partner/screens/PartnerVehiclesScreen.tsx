@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ApiError } from '../../../api/client'
 import {
@@ -537,6 +537,8 @@ function VehicleFields({
   t: (key: string) => string
 }) {
   const set = (key: keyof VehicleFormState, value: string) => onChange({ ...form, [key]: value })
+  const fieldId = useId()
+  const idFor = (name: string) => `${fieldId}-${name}`
   const toggleCategory = (key: DriverVehicleCategory) => {
     const active = form.service_categories.includes(key)
     const next = active
@@ -546,52 +548,88 @@ function VehicleFields({
   }
   return (
     <div className="grid gap-2">
-      <input
-        className={fieldClass}
-        data-testid="partner-vehicle-field-plate"
-        placeholder={t('vehicles.fields.plate')}
-        value={form.plate}
-        onChange={(e) => set('plate', e.target.value)}
-      />
-      <input
-        className={fieldClass}
-        data-testid="partner-vehicle-field-make"
-        placeholder={t('vehicles.fields.make')}
-        value={form.make}
-        onChange={(e) => set('make', e.target.value)}
-      />
-      <input
-        className={fieldClass}
-        data-testid="partner-vehicle-field-model"
-        placeholder={t('vehicles.fields.model')}
-        value={form.model}
-        onChange={(e) => set('model', e.target.value)}
-      />
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid gap-1">
+        <label htmlFor={idFor('plate')} className="block text-xs text-muted-foreground">
+          {t('vehicles.fields.plate')}
+        </label>
         <input
+          id={idFor('plate')}
           className={fieldClass}
-          data-testid="partner-vehicle-field-year"
-          placeholder={t('vehicles.fields.year')}
-          inputMode="numeric"
-          value={form.year}
-          onChange={(e) => set('year', e.target.value)}
-        />
-        <input
-          className={fieldClass}
-          data-testid="partner-vehicle-field-color"
-          placeholder={t('vehicles.fields.color')}
-          value={form.color}
-          onChange={(e) => set('color', e.target.value)}
+          data-testid="partner-vehicle-field-plate"
+          placeholder={t('vehicles.fields.plate')}
+          value={form.plate}
+          onChange={(e) => set('plate', e.target.value)}
         />
       </div>
-      <input
-        className={fieldClass}
-        data-testid="partner-vehicle-field-max-passengers"
-        placeholder={t('vehicles.fields.maxPassengers')}
-        inputMode="numeric"
-        value={form.max_passengers}
-        onChange={(e) => set('max_passengers', e.target.value)}
-      />
+      <div className="grid gap-1">
+        <label htmlFor={idFor('make')} className="block text-xs text-muted-foreground">
+          {t('vehicles.fields.make')}
+        </label>
+        <input
+          id={idFor('make')}
+          className={fieldClass}
+          data-testid="partner-vehicle-field-make"
+          placeholder={t('vehicles.fields.make')}
+          value={form.make}
+          onChange={(e) => set('make', e.target.value)}
+        />
+      </div>
+      <div className="grid gap-1">
+        <label htmlFor={idFor('model')} className="block text-xs text-muted-foreground">
+          {t('vehicles.fields.model')}
+        </label>
+        <input
+          id={idFor('model')}
+          className={fieldClass}
+          data-testid="partner-vehicle-field-model"
+          placeholder={t('vehicles.fields.model')}
+          value={form.model}
+          onChange={(e) => set('model', e.target.value)}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-1">
+          <label htmlFor={idFor('year')} className="block text-xs text-muted-foreground">
+            {t('vehicles.fields.year')}
+          </label>
+          <input
+            id={idFor('year')}
+            className={fieldClass}
+            data-testid="partner-vehicle-field-year"
+            placeholder={t('vehicles.fields.year')}
+            inputMode="numeric"
+            value={form.year}
+            onChange={(e) => set('year', e.target.value)}
+          />
+        </div>
+        <div className="grid gap-1">
+          <label htmlFor={idFor('color')} className="block text-xs text-muted-foreground">
+            {t('vehicles.fields.color')}
+          </label>
+          <input
+            id={idFor('color')}
+            className={fieldClass}
+            data-testid="partner-vehicle-field-color"
+            placeholder={t('vehicles.fields.color')}
+            value={form.color}
+            onChange={(e) => set('color', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="grid gap-1">
+        <label htmlFor={idFor('max-passengers')} className="block text-xs text-muted-foreground">
+          {t('vehicles.fields.maxPassengers')}
+        </label>
+        <input
+          id={idFor('max-passengers')}
+          className={fieldClass}
+          data-testid="partner-vehicle-field-max-passengers"
+          placeholder={t('vehicles.fields.maxPassengers')}
+          inputMode="numeric"
+          value={form.max_passengers}
+          onChange={(e) => set('max_passengers', e.target.value)}
+        />
+      </div>
       <div data-testid="partner-vehicle-field-categories">
         <p className="text-xs text-muted-foreground mb-1.5">{t('vehicles.fields.serviceCategories')}</p>
         <div className="grid grid-cols-2 gap-2">

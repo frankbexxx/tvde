@@ -436,4 +436,46 @@ describe('PartnerVehiclesScreen (PARTNER-FLEET-2B)', () => {
       )
     })
   })
+
+  it('mantém o nome visível dos campos da viatura com e sem valor', async () => {
+    api.fetchPartnerVehicles.mockResolvedValue([])
+    render(<PartnerVehiclesScreen />)
+    await waitFor(() => expect(screen.getByTestId('partner-vehicles-empty')).toBeInTheDocument())
+    fireEvent.click(screen.getByTestId('partner-vehicles-toggle-create'))
+
+    const names = [
+      'Matrícula',
+      'Marca',
+      'Modelo',
+      'Ano (opcional)',
+      'Cor (opcional)',
+      'Lugares passageiros (1–8)',
+    ] as const
+    for (const name of names) {
+      const input = screen.getByLabelText(name)
+      expect(input).toHaveValue('')
+      expect(input).toHaveAttribute('placeholder', name)
+      const label = screen.getByText(name)
+      expect(label.tagName).toBe('LABEL')
+      expect(label).toBeVisible()
+    }
+
+    fireEvent.change(screen.getByLabelText('Matrícula'), { target: { value: '12-AB-34' } })
+    fireEvent.change(screen.getByLabelText('Marca'), { target: { value: 'Toyota' } })
+    fireEvent.change(screen.getByLabelText('Modelo'), { target: { value: 'Corolla' } })
+    fireEvent.change(screen.getByLabelText('Ano (opcional)'), { target: { value: '2020' } })
+    fireEvent.change(screen.getByLabelText('Cor (opcional)'), { target: { value: 'preto' } })
+    fireEvent.change(screen.getByLabelText('Lugares passageiros (1–8)'), {
+      target: { value: '4' },
+    })
+
+    expect(screen.getByLabelText('Matrícula')).toHaveValue('12-AB-34')
+    expect(screen.getByText('Matrícula')).toBeVisible()
+    expect(screen.getByLabelText('Marca')).toHaveValue('Toyota')
+    expect(screen.getByText('Marca')).toBeVisible()
+    expect(screen.getByLabelText('Modelo')).toHaveValue('Corolla')
+    expect(screen.getByLabelText('Ano (opcional)')).toHaveValue('2020')
+    expect(screen.getByLabelText('Cor (opcional)')).toHaveValue('preto')
+    expect(screen.getByLabelText('Lugares passageiros (1–8)')).toHaveValue('4')
+  })
 })
