@@ -66,7 +66,7 @@
   "requestCard": {
     "expiresIn": "Expires in {{seconds}}s",
     "expired": "Offer expired",
-    "silenceOfferAria": "Silence offer",
+    "silenceOfferAria": "Hide this box. The offer continues.",
     "silence": "Silence",
     "state": "Status:",
     "category": "Category:",
