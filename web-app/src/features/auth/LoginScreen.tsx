@@ -39,7 +39,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     const last = localStorage.getItem(LS_LAST_PHONE)
     return last || '+351'
   })
-  const [password, setPassword] = useState('123456')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleClientId, setGoogleClientId] = useState<string | null>(null)
@@ -241,7 +241,6 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 alt="V@mulá"
                 className="h-8 w-auto rounded-sm object-contain"
               />
-              <span className="text-sm font-normal text-muted-foreground pb-0.5">{t('betaMode')}</span>
             </div>
             <LanguageSelector variant="compact" />
           </div>
@@ -291,10 +290,10 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               {t('administrator')}
             </Link>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">{t('phoneHint')}</p>
+          <p className="text-sm text-muted-foreground mb-4">{t(`roleHint.${requestedRole}`)}</p>
           <div className="mb-4 flex flex-col gap-2">
             <LegalAcceptanceCheckbox checked={acceptLegal} onChange={setAcceptLegal} />
-            <p className="text-xs text-muted-foreground">{t('legalAcceptNewAccount')}</p>
+            <p className="text-xs text-muted-foreground">{t('legalAcceptToContinue')}</p>
           </div>
           {otpEnabled && (
             <div className="mb-4 flex flex-col gap-2" data-testid="otp-signup">
@@ -396,7 +395,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               {t('appVersionLabel')}
             </p>
             <p
-              className="mt-1.5 font-mono text-xs text-muted-foreground tabular-nums tracking-tight select-all"
+              className="mt-1.5 font-mono text-xs text-muted-foreground tabular-nums tracking-tight select-all break-all"
               data-testid="app-build-label"
               translate="no"
             >
