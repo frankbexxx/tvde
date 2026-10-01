@@ -189,9 +189,16 @@ async function expectCanonicalAccount() {
   expect(view.getByText('qa.identity.profile@example.com', { exact: false })).toBeInTheDocument()
 }
 
+function fakeJwt(sub: string) {
+  const enc = (value: object) =>
+    btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  return `${enc({ alg: 'none' })}.${enc({ sub })}.x`
+}
+
 describe('canonical account reachability', () => {
   beforeEach(() => {
     installMatchMedia()
+    authState.token = 'session'
     authState.sessionRole = 'passenger'
     authState.betaMode = false
     me.has_custom_password = true
@@ -199,11 +206,18 @@ describe('canonical account reachability', () => {
 
   it('passenger bottom nav Conta opens profile, password and login methods', async () => {
     render(<PassengerEntry />)
+    expect(screen.getByTestId('passenger-bottom-nav-account')).toHaveTextContent('Conta')
     fireEvent.click(screen.getByTestId('passenger-bottom-nav-account'))
     await expectCanonicalAccount()
+    const confirm = await screen.findByLabelText('Palavra-passe para confirmar')
+    expect(confirm).toHaveValue('')
+    expect(confirm.tagName).toBe('INPUT')
+    fireEvent.change(confirm, { target: { value: 'segredo' } })
+    expect(screen.getByLabelText('Palavra-passe para confirmar')).toHaveValue('segredo')
+    expect(screen.getByText('Palavra-passe para confirmar')).toBeVisible()
   })
 
-  it('partner menu Perfil opens the same account', async () => {
+  it('partner menu Conta opens the same account', async () => {
     authState.sessionRole = 'partner'
     render(
       <PartnerShellProvider>
@@ -211,15 +225,24 @@ describe('canonical account reachability', () => {
       </PartnerShellProvider>,
     )
     fireEvent.click(screen.getByTestId('partner-open-menu'))
-    fireEvent.click(await screen.findByTestId('partner-menu-profile'))
+    const row = await screen.findByTestId('partner-menu-profile')
+    expect(row).toHaveTextContent('Conta')
+    expect(row).not.toHaveTextContent('Perfil')
+    fireEvent.click(row)
     await expectCanonicalAccount()
   })
 
-  it('driver Conta (detalhe) opens the same account', async () => {
+  it('driver profile summary opens Conta without the short account code', async () => {
     authState.sessionRole = 'driver'
+    authState.token = fakeJwt('eb41db81-b1c0-4dc9-b0cd-7b2b530753d6')
     render(<DriverEntry />)
     fireEvent.click(await screen.findByRole('button', { name: 'Perfil' }))
-    fireEvent.click(await screen.findByTestId('driver-menu-open-account'))
+    const profile = await screen.findByTestId('driver-menu-profile-screen')
+    expect(within(profile).getByText('QA')).toBeInTheDocument()
+    expect(within(profile).getByText('+351900000683')).toBeInTheDocument()
+    expect(within(profile).queryByText(/530753d6/)).not.toBeInTheDocument()
+    expect(within(profile).queryByText('Conta (detalhe)')).not.toBeInTheDocument()
+    fireEvent.click(within(profile).getByRole('button', { name: 'Conta' }))
     await expectCanonicalAccount()
   })
 

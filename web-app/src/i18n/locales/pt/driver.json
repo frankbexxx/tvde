@@ -114,7 +114,7 @@
       "role": "Papel",
       "account": "Conta",
       "accountRef": "Conta · {{ref}}",
-      "accountDetail": "Conta (detalhe)"
+      "accountDetail": "Conta"
     },
     "settings": {
       "intro": "Preferências da app. Conta e sessão estão em <profile>Perfil</profile> no menu principal."

@@ -19,12 +19,12 @@
     "trips_export": "Export trips",
     "reports": "Reports",
     "settings": "Settings",
-    "profile": "Profile",
+    "profile": "Account",
     "inbox": "Inbox",
     "default": "Partner"
   },
   "sideMenu": {
-    "srDescription": "Partner navigation: fleet, trips, reports, inbox, profile and settings.",
+    "srDescription": "Partner navigation: fleet, trips, reports, inbox, account and settings.",
     "defaultName": "Fleet manager",
     "sessionFallback": "Session",
     "roleBadge": "Partner",
@@ -38,7 +38,7 @@
       "trips": "Trips",
       "reports": "Reports",
       "inbox": "Inbox",
-      "profile": "Profile",
+      "profile": "Account",
       "settings": "Settings"
     }
   },
@@ -354,7 +354,7 @@
     "csvColumnsPrefix": "CSV columns:"
   },
   "settingsMenu": {
-    "intro": "Fleet manager preferences. Account and session are under <profile>Profile</profile> in the main menu.",
+    "intro": "Fleet manager preferences. Account and session are under <profile>Account</profile> in the main menu.",
     "refreshView": "Refresh view"
   },
   "profile": {

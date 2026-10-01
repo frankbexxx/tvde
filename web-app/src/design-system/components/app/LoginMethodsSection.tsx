@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in'
 import { Button } from '@/components/ui/button'
@@ -48,6 +48,7 @@ export function LoginMethodsSection({
   onSessionEnded: () => void
 }) {
   const { t } = useTranslation('common')
+  const confirmPasswordId = useId()
   const [hasPassword, setHasPassword] = useState<boolean | null>(null)
   const [identities, setIdentities] = useState<LoginIdentity[]>([])
   const [password, setPassword] = useState('')
@@ -313,13 +314,19 @@ export function LoginMethodsSection({
               })}
             </ul>
           )}
-          <Input
-            type="password"
-            autoComplete="current-password"
-            placeholder={t('profilePanel.loginMethods.confirmLabel')}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
+          <div className="grid gap-1">
+            <label htmlFor={confirmPasswordId} className="block text-xs text-muted-foreground">
+              {t('profilePanel.loginMethods.confirmLabel')}
+            </label>
+            <Input
+              id={confirmPasswordId}
+              type="password"
+              autoComplete="current-password"
+              placeholder={t('profilePanel.loginMethods.confirmLabel')}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </div>
           <Button type="button" className="w-full" disabled={busy} onClick={() => void addGoogle()}>
             {t('profilePanel.loginMethods.addGoogle')}
           </Button>

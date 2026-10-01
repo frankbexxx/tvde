@@ -19,12 +19,12 @@
     "trips_export": "Exportar viagens",
     "reports": "Relatórios",
     "settings": "Definições",
-    "profile": "Perfil",
+    "profile": "Conta",
     "inbox": "Caixa de entrada",
     "default": "Parceiro"
   },
   "sideMenu": {
-    "srDescription": "Navegação do parceiro: frota, viagens, relatórios, caixa, perfil e definições.",
+    "srDescription": "Navegação do parceiro: frota, viagens, relatórios, caixa, conta e definições.",
     "defaultName": "Gestor frota",
     "sessionFallback": "Sessão",
     "roleBadge": "Parceiro",
@@ -38,7 +38,7 @@
       "trips": "Viagens",
       "reports": "Relatórios",
       "inbox": "Caixa de entrada",
-      "profile": "Perfil",
+      "profile": "Conta",
       "settings": "Definições"
     }
   },
@@ -354,7 +354,7 @@
     "csvColumnsPrefix": "Colunas do CSV:"
   },
   "settingsMenu": {
-    "intro": "Preferências do gestor de frota. Conta e sessão estão em <profile>Perfil</profile> no menu principal.",
+    "intro": "Preferências do gestor de frota. Conta e sessão estão em <profile>Conta</profile> no menu principal.",
     "refreshView": "Actualizar vista"
   },
   "profile": {
