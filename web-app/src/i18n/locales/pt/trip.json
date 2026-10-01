@@ -72,7 +72,7 @@
     "category": "Categoria:",
     "pickup": "Recolha",
     "destination": "Destino",
-    "estimate": "Estimativa (indicativa)",
+    "estimate": "Preço estimado da viagem",
     "reject": "Recusar",
     "rejectSuccess": "Oferta recusada",
     "rejectError": "Não foi possível recusar a oferta.",

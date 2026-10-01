@@ -174,22 +174,22 @@
     "defaultName": "Motorista",
     "close": "Fechar",
     "historySectionTitle": "Histórico",
-    "historyDriverShare": "Parte motorista: {{amount}}",
+    "historyDriverShare": "Parte do motorista: {{amount}}",
     "historyMoney": {
-      "finalPrice": "Preço final",
-      "estimate": "Estimativa",
+      "finalPrice": "Preço da viagem",
+      "estimate": "Preço estimado da viagem",
       "priceLine": "{{label}}: {{price}}",
-      "driverPayout": "Parte motorista (payout): {{amount}}",
-      "platformCommission": "Comissão plataforma: {{amount}}"
+      "driverPayout": "Parte do motorista: {{amount}}",
+      "platformCommission": "Comissão da plataforma: {{amount}}"
     },
     "earnings": {
       "title": "Rendimentos",
-      "intro": "Soma do <strong>preço final</strong> das viagens concluídas na semana. A linha «Parte motorista» aparece quando a API envia payout por viagem.",
+      "intro": "Os totais somam o <strong>preço da viagem</strong> das viagens concluídas. A parte do motorista aparece quando esse valor vem em cada viagem.",
       "today": "Hoje",
       "thisMonth": "Este mês",
       "thisWeek": "Semana actual",
       "lastWeek": "Semana anterior",
-      "driverShare": "Parte motorista:",
+      "driverShare": "Parte do motorista:",
       "emptyHint": "Sem viagens concluídas a contar para já — os totais actualizam quando concluíres viagens com data de fim."
     },
     "trips": {
@@ -219,7 +219,7 @@
     },
     "pricing": {
       "summary": "Como funciona a estimativa",
-      "body": "O valor mostrado no pedido é <strong>estimativa</strong>; o passageiro paga o <strong>preço final</strong> no fim da viagem."
+      "body": "O valor no pedido é o <strong>preço estimado da viagem</strong>. No fim, o passageiro paga o <strong>preço da viagem</strong>. A parte do motorista é o que te cabe, depois da comissão da plataforma."
     },
     "zones": {
       "hubTitle": "Mudança de zona (v1)",

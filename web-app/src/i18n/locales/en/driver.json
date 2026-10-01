@@ -174,22 +174,22 @@
     "defaultName": "Driver",
     "close": "Close",
     "historySectionTitle": "History",
-    "historyDriverShare": "Driver share: {{amount}}",
+    "historyDriverShare": "Driver's share: {{amount}}",
     "historyMoney": {
-      "finalPrice": "Final price",
-      "estimate": "Estimate",
+      "finalPrice": "Trip price",
+      "estimate": "Estimated trip price",
       "priceLine": "{{label}}: {{price}}",
-      "driverPayout": "Driver share (payout): {{amount}}",
+      "driverPayout": "Driver's share: {{amount}}",
       "platformCommission": "Platform commission: {{amount}}"
     },
     "earnings": {
       "title": "Earnings",
-      "intro": "Sum of <strong>final price</strong> for trips completed this week. The «Driver share» line appears when the API sends payout per trip.",
+      "intro": "The totals add up the <strong>trip price</strong> of completed trips. The driver's share appears when that amount comes with each trip.",
       "today": "Today",
       "thisMonth": "This month",
       "thisWeek": "This week",
       "lastWeek": "Last week",
-      "driverShare": "Driver share:",
+      "driverShare": "Driver's share:",
       "emptyHint": "No completed trips to count yet — totals update when you complete trips with an end date."
     },
     "trips": {
@@ -219,7 +219,7 @@
     },
     "pricing": {
       "summary": "How the estimate works",
-      "body": "The amount shown on the request is an <strong>estimate</strong>; the passenger pays the <strong>final price</strong> at the end of the trip."
+      "body": "The amount on the request is the <strong>estimated trip price</strong>. At the end, the passenger pays the <strong>trip price</strong>. The driver's share is what you keep, after the platform commission."
     },
     "zones": {
       "hubTitle": "Zone change (v1)",
