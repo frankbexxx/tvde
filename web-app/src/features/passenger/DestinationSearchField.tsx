@@ -126,7 +126,7 @@ export function DestinationSearchField({
       data-testid="destination-search-field"
       data-search-active={searchActive ? 'true' : 'false'}
     >
-      <label htmlFor={id} className="sr-only">
+      <label htmlFor={id} className="block text-xs text-muted-foreground">
         {resolvedLabel}
       </label>
       <Input
