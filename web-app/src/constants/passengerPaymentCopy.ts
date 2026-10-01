@@ -21,10 +21,10 @@ export function passengerPaymentDisclosureSearching(): string {
 
 /** @deprecated Use passengerPaymentDisclosureConfirming() */
 export const PASSENGER_PAYMENT_DISCLOSURE_CONFIRMING = import.meta.env.VITE_STRIPE_MOCK === 'true'
-  ? 'Pagamento simulado neste ambiente. Não há cobrança nem cartão.'
+  ? 'Não há cobrança e não é pedido um cartão neste passo.'
   : 'Pagamento por cartão. A autorização ou confirmação no banco só ocorre quando um motorista aceitar o pedido; confirmar aqui não cobra imediatamente o valor da viagem.'
 
 /** @deprecated Use passengerPaymentDisclosureSearching() */
 export const PASSENGER_PAYMENT_DISCLOSURE_SEARCHING = import.meta.env.VITE_STRIPE_MOCK === 'true'
-  ? 'Pagamento simulado — não é preciso introduzir cartão neste ambiente.'
+  ? 'Não é preciso cartão. Nada é cobrado.'
   : 'Tens o cartão acessível? Quando houver aceitação, o banco pode pedir confirmação extra (por exemplo 3-D Secure).'

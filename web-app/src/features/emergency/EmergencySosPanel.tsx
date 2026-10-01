@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   buildEmergencyShareText,
@@ -195,6 +196,7 @@ export function EmergencySosButton({
   onClick: () => void
   className?: string
 }) {
+  const { t } = useTranslation('passenger')
   return (
     <button
       type="button"
@@ -202,7 +204,7 @@ export function EmergencySosButton({
       className={`rounded-lg border border-red-600/40 bg-red-600/10 px-3 py-2 text-sm font-semibold text-red-700 dark:text-red-400 ${className}`}
       onClick={onClick}
     >
-      SOS
+      {t('sos.button')}
     </button>
   )
 }

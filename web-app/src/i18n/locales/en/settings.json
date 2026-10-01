@@ -5,7 +5,8 @@
   "languageHint": "App interface (passenger, driver and partner). Admin stays in Portuguese.",
   "languagePt": "Português",
   "languageEn": "English",
-  "appMode": "App mode",
+  "appMode": "Screen to open",
+  "appModeHint": "Choose the screen. Your account stays the same.",
   "adminPanel": "Admin panel",
   "accountHint": "Personal data and password: Account icon (profile).",
   "driverRoleRequired": "This account has no driver profile; the driver panel requires a driver JWT.",
@@ -52,8 +53,8 @@
       "description": "Neutral — data and lists first."
     },
     "neon": {
-      "label": "Neon (sandbox)",
-      "description": "Experimental — high contrast, testing only."
+      "label": "Neon",
+      "description": "High contrast and strong colours."
     }
   }
 }

@@ -22,7 +22,7 @@
     "paymentFailed": "Payment declined",
     "paymentFailedSub": "Try requesting again or contact support if the problem continues.",
     "syncing": "Syncing trip…",
-    "searching": "Looking for a driver",
+    "searching": "Looking for an available driver",
     "assigned": "Driver assigned",
     "enRoute": "Driver on the way",
     "ongoing": "Trip in progress",
@@ -31,15 +31,15 @@
     "paymentProcessing": "Payment may take a few seconds to show as completed — keep this page open."
   },
   "payment": {
-    "mockConfirming": "Simulated payment in this environment. No charge or card.",
+    "mockConfirming": "There is no charge and no card at this step.",
     "cardConfirming": "Card payment. Bank authorisation or confirmation only happens when a driver accepts; confirming here does not charge the trip amount immediately.",
-    "mockSearching": "Simulated payment — no card needed in this environment.",
+    "mockSearching": "No card is needed. Nothing is charged.",
     "cardSearching": "Is your card handy? When a driver accepts, your bank may ask for extra confirmation (e.g. 3-D Secure)."
   },
   "planner": {
     "ariaLabel": "Trip planning",
-    "searchingTitle": "Looking for a driver…",
-    "searchingTrip": "Request {{id}}…",
+    "searchingTitle": "Looking for an available driver",
+    "searchingTrip": "Looking for an available driver",
     "searchingSending": "Sending your request…",
     "pickupUndefinedEmbedded": "Pickup not set",
     "pickupPrompt": "Enter pickup above or tap the map",
@@ -57,7 +57,7 @@
     "confirmTripTitle": "Confirm trip",
     "calculatingRoute": "Calculating route…",
     "routeUnavailable": "Estimated route unavailable",
-    "paymentMockShort": "Simulated payment — no charge",
+    "paymentMockShort": "Confirming the trip does not charge the amount yet.",
     "confirming": "Confirming…",
     "confirmTrip": "Confirm trip",
     "edit": "Edit",
@@ -85,10 +85,10 @@
   "statusCard": {
     "submittingTitle": "Sending request…",
     "submittingSubtitle": "Please wait a moment.",
-    "searchingTitle": "Looking for a driver…",
-    "searchingSubtitle": "We are contacting drivers in the area. This may take a moment.",
+    "searchingTitle": "Looking for an available driver",
+    "searchingSubtitle": "No driver assigned yet.",
     "searchingFallbackTitle": "Still looking for a driver",
-    "searchingFallbackSubtitle": "This can take a little longer in the area. You can wait, or cancel and request again.",
+    "searchingFallbackSubtitle": "You can wait, or cancel and request again.",
     "retryPending": "Processing…",
     "retry": "Try again",
     "driverFound": "Driver found",
@@ -118,12 +118,12 @@
     "unknownStatus": "unknown",
     "confirming": "Confirming…",
     "authorizeCard": "Authorise card",
-    "mockTitle": "Simulated payment",
-    "mockBody": "No real card in this environment (DEV).",
-    "mockContinue": "Continue (simulated)",
+    "mockTitle": "No charge",
+    "mockBody": "No card is used and nothing is charged.",
+    "mockContinue": "Continue",
     "unavailableTitle": "Card unavailable",
-    "unavailableBody": "Card payment is not configured in this build. The trip can continue if the backend does not require immediate authorisation.",
-    "continueWithoutCard": "Continue without card",
+    "unavailableBody": "Card payment is not available here. You can continue; nothing is charged at this step.",
+    "continueWithoutCard": "Continue without a charge",
     "authorizeTitle": "Authorise payment",
     "authorizeSubtitle": "Driver accepted — confirm your card."
   },
@@ -146,7 +146,7 @@
     "skip": "Not now",
     "submitting": "Sending…",
     "errorNetwork": "No connection or the request timed out. Try again.",
-    "errorForbidden": "No permission to rate — in BETA mode, the account must be a passenger (not driver) for this trip.",
+    "errorForbidden": "The rating could not be sent. Check that this trip belongs to your passenger account and try again.",
     "errorNotFound": "Trip not found for rating. Request a new trip and try again at the end.",
     "errorNotCompleted": "The trip is not completed yet. Wait a few seconds and try again.",
     "errorGeneric": "Could not submit rating."
@@ -165,6 +165,9 @@
     "sent": "Request sent — syncing…",
     "cancelled": "Trip cancelled",
     "resent": "Request sent again"
+  },
+  "sos": {
+    "button": "SOS — Emergency"
   },
   "unreadBadge": "{{count}} unread message(s)",
   "sideMenu": {
@@ -191,7 +194,8 @@
     "payment": "Payment",
     "created": "Created",
     "completed": "Completed",
-    "tripId": "ID {{id}}"
+    "tripId": "Reference {{id}}",
+    "placeOnMap": "Point on the map"
   },
   "pet": {
     "categoryTitle": "Category",

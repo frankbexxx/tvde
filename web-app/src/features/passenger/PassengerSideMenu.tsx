@@ -7,6 +7,8 @@ import { themeUsesFlagAccent } from '@/design-system/ambianceMeta'
 import { useAuth } from '../../context/AuthContext'
 import type { TripHistoryItem } from '../../api/trips'
 import { formatPickup, formatDestination } from '../../utils/format'
+import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
+import { passengerPlaceLabel } from './passengerPlaceLabel'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { historyStatusDotColor } from '../../constants/tripStatus'
 import { AccountPanel } from '../account/AccountPanel'
@@ -234,14 +236,22 @@ export function PassengerSideMenu({
                             className={`h-2 w-2 rounded-full shrink-0 ${historyStatusDotColor(trip.status)}`}
                           />
                           <span className="truncate">
-                            {formatPickup(trip.origin_lat, trip.origin_lng)} →{' '}
-                            {formatDestination(trip.destination_lat, trip.destination_lng)}
+                            {passengerPlaceLabel(
+                              formatPickup(trip.origin_lat, trip.origin_lng),
+                              t('historyDetail.placeOnMap'),
+                            )}
+                            {' → '}
+                            {passengerPlaceLabel(
+                              formatDestination(trip.destination_lat, trip.destination_lng),
+                              t('historyDetail.placeOnMap'),
+                            )}
                           </span>
                         </span>
                         <span className="font-medium text-foreground shrink-0 text-sm">
                           {trip.final_price != null ? `${trip.final_price} €` : '—'}
                         </span>
                       </div>
+                      <p className="text-xs text-muted-foreground">{passengerTripStatusLabel(trip.status)}</p>
                       <CancellationReasonMuted reason={trip.cancellation_reason} className="mt-0" />
                     </button>
                   </li>

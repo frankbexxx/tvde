@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TripDetailResponse } from '../../api/trips'
 import { formatPickup, formatDestination } from '../../utils/format'
+import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
+import { passengerPlaceLabel } from './passengerPlaceLabel'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { historyStatusDotColor } from '../../constants/tripStatus'
 import { MENU_SURFACE } from '../../components/layout/infoBoxTemplate'
@@ -68,7 +70,7 @@ export function PassengerHistoryDetailPanel({
           aria-hidden="true"
           className={`h-2.5 w-2.5 rounded-full shrink-0 ${historyStatusDotColor(detail.status)}`}
         />
-        <span className="text-sm font-medium capitalize text-foreground">{detail.status}</span>
+        <span className="text-sm font-medium text-foreground">{passengerTripStatusLabel(detail.status)}</span>
         {detail.is_assistance_animal ? (
           <span
             className="text-xs font-medium rounded-md border border-border bg-muted/50 px-2 py-0.5 text-foreground"
@@ -88,11 +90,14 @@ export function PassengerHistoryDetailPanel({
       <div className="space-y-1 text-sm">
         <p className="text-foreground/90">
           <span className="text-muted-foreground">{t('historyDetail.pickup')}</span>{' '}
-          {formatPickup(detail.origin_lat, detail.origin_lng)}
+          {passengerPlaceLabel(formatPickup(detail.origin_lat, detail.origin_lng), t('historyDetail.placeOnMap'))}
         </p>
         <p className="text-foreground/90">
           <span className="text-muted-foreground">{t('historyDetail.destination')}</span>{' '}
-          {formatDestination(detail.destination_lat, detail.destination_lng)}
+          {passengerPlaceLabel(
+            formatDestination(detail.destination_lat, detail.destination_lng),
+            t('historyDetail.placeOnMap'),
+          )}
         </p>
       </div>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
@@ -104,7 +109,9 @@ export function PassengerHistoryDetailPanel({
         </div>
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.payment')}</dt>
-          <dd className="font-medium text-foreground">{detail.payment_status ?? '—'}</dd>
+          <dd className="font-medium text-foreground">
+            {paymentStatusLabel(detail.payment_status) ?? '—'}
+          </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.created')}</dt>
@@ -115,9 +122,6 @@ export function PassengerHistoryDetailPanel({
           <dd className="text-foreground">{formatWhen(detail.completed_at)}</dd>
         </div>
       </dl>
-      <p className="text-[11px] font-mono text-muted-foreground break-all">
-        {t('historyDetail.tripId', { id: detail.trip_id })}
-      </p>
       <CancellationReasonMuted reason={detail.cancellation_reason} />
       {canReport ? (
         <div className="pt-1 border-t border-border/50">
