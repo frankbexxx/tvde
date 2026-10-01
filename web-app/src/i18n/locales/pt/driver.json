@@ -76,6 +76,8 @@
     "processingBtn": "A processar…",
     "cancel": "Cancelar",
     "cancelTitle": "Motivo do cancelamento",
+    "cancelEffect": "Vais cancelar esta viagem.",
+    "cancelUnconfirmed": "Não foi possível confirmar o cancelamento. Verifica o estado da viagem antes de tentar novamente.",
     "cancelQuick": "Escolha rápida",
     "cancelOtherPlaceholder": "Descreve em poucas palavras (opcional).",
     "cancelConfirm": "Confirmar cancelamento",

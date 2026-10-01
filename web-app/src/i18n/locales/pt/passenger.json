@@ -131,8 +131,10 @@
   "requestingStatus": "A pedir viagem…",
   "cancelFlow": {
     "cancellingStatus": "A cancelar…",
-    "cancelFailedStatus": "Não foi possível cancelar",
-    "networkError": "Sem ligação ou o servidor demorou a responder. Verifica a rede e tenta cancelar de novo.",
+    "cancelFailedStatus": "Não foi possível confirmar o cancelamento",
+    "networkError": "Não foi possível confirmar o cancelamento. Verifica o estado da viagem antes de tentar novamente.",
+    "noFee": "Podes cancelar esta viagem sem taxa.",
+    "pilotFee": "A regra de cancelamento regista uma taxa de 3,00 €, mas durante o piloto este valor não é cobrado.",
     "title": "Motivo do cancelamento",
     "quickPick": "Escolha rápida",
     "otherPlaceholder": "Descreve em poucas palavras (opcional).",
