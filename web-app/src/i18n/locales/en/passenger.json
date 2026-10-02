@@ -99,8 +99,7 @@
     "tripCompleted": "Trip completed",
     "estimateCaption": "Estimate (indicative)",
     "finalPriceCaption": "Final price",
-    "driverName": "TVDE driver",
-    "vehicleLabel": "TVDE vehicle"
+    "driverAssigned": "Assigned"
   },
   "tracking": {
     "driverDistance": "Driver {{distance}} from you (estimate).",

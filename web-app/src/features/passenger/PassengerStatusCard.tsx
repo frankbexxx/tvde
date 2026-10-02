@@ -14,6 +14,7 @@ import type { PassengerUxState } from './usePassengerUxState'
 import type { TripDetailResponse } from '../../api/trips'
 import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
 import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
+import { passengerDriverVehicleCopy } from './passengerDriverVehicle'
 import { PassengerPriceDetails } from './PassengerPriceDetails'
 import { PriceFormulaBreakdown } from './PriceFormulaBreakdown'
 import { BTN_SECONDARY, INFO_BOX_PASSENGER } from '../../components/layout/infoBoxTemplate'
@@ -30,6 +31,15 @@ function tripCardFooter(
   priceCaption: string,
   t: TFunction<'passenger'>,
 ) {
+  const identity = passengerDriverVehicleCopy({
+    status: activeTrip.status,
+    driverName: activeTrip.driver_display_name,
+    vehiclePlate: activeTrip.vehicle_plate,
+    vehicleMake: activeTrip.vehicle_make,
+    vehicleModel: activeTrip.vehicle_model,
+    vehicleColor: activeTrip.vehicle_color,
+    assignedFallback: t('statusCard.driverAssigned'),
+  })
   return (
     <>
       <TripCard
@@ -38,10 +48,8 @@ function tripCardFooter(
         price={activeTrip.final_price ?? activeTrip.estimated_price ?? 0}
         estimateFallback={ESTIMATE_FALLBACK}
         priceCaption={priceCaption}
-        driverName={
-          activeTrip.status === 'assigned' ? undefined : t('statusCard.driverName')
-        }
-        vehicleLabel={activeTrip.status === 'assigned' ? undefined : t('statusCard.vehicleLabel')}
+        driverName={identity.driverName ?? undefined}
+        vehicleLabel={identity.vehicleLabel ?? undefined}
       />
       <PassengerPriceDetails>
         <PriceFormulaBreakdown breakdown={activeTrip.price_breakdown} />

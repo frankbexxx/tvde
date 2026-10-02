@@ -142,6 +142,12 @@ export interface TripDetailResponse {
   status: TripStatus
   passenger_id: string
   driver_id?: string
+  /** Present only when the trip payload already includes a passenger-safe name. */
+  driver_display_name?: string | null
+  vehicle_plate?: string | null
+  vehicle_make?: string | null
+  vehicle_model?: string | null
+  vehicle_color?: string | null
   origin_lat: number
   origin_lng: number
   destination_lat: number
