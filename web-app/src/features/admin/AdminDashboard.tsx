@@ -26,6 +26,7 @@ import { useAdminAlertsAndAudit } from './useAdminAlertsAndAudit'
 import { useAdminUsersDirectory } from './useAdminUsersDirectory'
 import { apiFetch } from '../../api/client'
 import { parseJwtPayload } from '../../utils/jwt'
+import { adminSessionRoleLabel } from './adminCopy'
 import {
   recoverDriver,
   postAdminDrivingRestOverride,
@@ -815,15 +816,15 @@ export function AdminDashboard() {
                 ? 'bg-primary text-primary-foreground shadow-sm'
                 : 'bg-card border border-border text-foreground/80 hover:bg-muted/50'
                 }`}
-              title={healthDot ? 'Há anomalias ou avisos na Saúde' : undefined}
+              title={healthDot ? 'Saúde com problema' : undefined}
             >
               <span className="inline-flex items-center gap-1.5">
                 {label}
                 {healthDot ? (
-                  <span
-                    className="h-2 w-2 shrink-0 rounded-full bg-destructive"
-                    aria-hidden
-                  />
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-destructive" aria-hidden />
+                    Com problema
+                  </span>
                 ) : null}
               </span>
             </button>
@@ -833,20 +834,25 @@ export function AdminDashboard() {
 
       {token ? (
         <p className="text-xs text-muted-foreground mb-3 -mt-2" role="status" aria-live="polite">
-          Sessão (JWT):{' '}
-          <span
-            className={`font-mono font-medium ${isSuperAdminSession ? 'text-foreground' : 'text-warning'
-              }`}
-          >
-            {parseJwtPayload(token)?.role ?? '—'}
-          </span>
-          {!isSuperAdminSession ? (
-            <span className="text-muted-foreground">
-              {' '}
-              · Executar timeouts, expirar ofertas, exportar CSV, cron completo e validar .env exigem{' '}
-              <code className="text-foreground/90">super_admin</code>
-            </span>
-          ) : null}
+          {(() => {
+            const sessionRole = adminSessionRoleLabel(parseJwtPayload(token)?.role)
+            return (
+              <>
+                A tua sessão: <span className="font-medium text-foreground">{sessionRole.primary}</span>
+                {sessionRole.technical ? (
+                  <span className="font-mono text-foreground/70"> ({sessionRole.technical})</span>
+                ) : null}
+                {!isSuperAdminSession ? (
+                  <span className="text-muted-foreground">
+                    {' '}
+                    · Tempos limite, ofertas expiradas, exportação, tarefas automáticas e validação do ambiente exigem administrador principal (
+                    <code className="text-foreground/90">super_admin</code>
+                    ).
+                  </span>
+                ) : null}
+              </>
+            )
+          })()}
         </p>
       ) : null}
 

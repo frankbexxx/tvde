@@ -9,6 +9,7 @@ import {
 import { EmptyState } from '../../../components/feedback/EmptyState'
 import { useAuth } from '../../../context/AuthContext'
 import { adminErrDetail } from '../adminDashboardHelpers'
+import { adminDocStatusLabel } from '../adminCopy'
 
 type SubjectFilter = 'all' | 'driver' | 'vehicle'
 type DocStateFilter =
@@ -63,7 +64,7 @@ export function AdminTabDocs() {
       const snap = await getAdminKycSupervision(token)
       setData(snap)
     } catch (err) {
-      setError(adminErrDetail(err, 'Erro ao carregar supervisão KYC'))
+      setError(adminErrDetail(err, 'Não foi possível carregar os documentos.'))
       setData(null)
     } finally {
       setLoading(false)
@@ -126,8 +127,7 @@ export function AdminTabDocs() {
       </div>
 
       <p className="text-sm text-foreground/80">
-        Supervisão read-only dos documentos canónicos (Partner gere KYC). Sem aprovação,
-        upload ou edição neste ecrã.
+        Aqui só vês os documentos. Quem decide é a frota. Neste ecrã não há aprovação, envio nem edição.
       </p>
 
       {error ? (
@@ -146,27 +146,27 @@ export function AdminTabDocs() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2"
         >
           <AlertCard
-            label="Drivers docs expirados"
+            label="Motoristas com documentos expirados"
             value={data.alerts.drivers_with_expired_docs}
             tone="crit"
           />
           <AlertCard
-            label="Drivers pending/rejected"
+            label="Motoristas com documentos por rever ou recusados"
             value={data.alerts.drivers_with_pending_or_rejected_docs}
             tone="warn"
           />
           <AlertCard
-            label="Vehicles docs expirados"
+            label="Veículos com documentos expirados"
             value={data.alerts.vehicles_with_expired_docs}
             tone="crit"
           />
           <AlertCard
-            label="Vehicles a expirar"
+            label="Veículos com documentos a expirar"
             value={data.alerts.vehicles_with_expiring_soon_docs}
             tone="warn"
           />
           <AlertCard
-            label="Vehicles inactive"
+            label="Veículos inactivos"
             value={data.alerts.vehicles_inactive}
             tone="info"
           />
@@ -183,9 +183,9 @@ export function AdminTabDocs() {
               onChange={(e) => setSubjectFilter(e.target.value as SubjectFilter)}
               className="mt-1 w-full px-2 py-2 rounded-xl border border-border bg-background text-sm"
             >
-              <option value="all">Drivers + Vehicles</option>
-              <option value="driver">Só Drivers</option>
-              <option value="vehicle">Só Vehicles</option>
+              <option value="all">Motoristas e veículos</option>
+              <option value="driver">Só motoristas</option>
+              <option value="vehicle">Só veículos</option>
             </select>
           </label>
           <label className="block text-xs text-foreground/80">
@@ -199,14 +199,14 @@ export function AdminTabDocs() {
               <option value="all">Todos</option>
               <option value="expired">Expirado</option>
               <option value="expiring_soon">A expirar</option>
-              <option value="pending_review">Pending</option>
-              <option value="rejected">Rejected</option>
-              <option value="missing">Missing</option>
-              <option value="approved">Approved/valid</option>
+              <option value="pending_review">Por rever</option>
+              <option value="rejected">Recusado</option>
+              <option value="missing">Em falta</option>
+              <option value="approved">Aprovado</option>
             </select>
           </label>
           <label className="block text-xs text-foreground/80">
-            Partner
+            Frota
             <select
               data-testid="admin-kyc-filter-partner"
               value={partnerFilter}
@@ -237,7 +237,7 @@ export function AdminTabDocs() {
 
       {subjectFilter !== 'vehicle' ? (
         <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card space-y-3">
-          <h3 className="font-medium text-foreground">Drivers ({driversFiltered.length})</h3>
+          <h3 className="font-medium text-foreground">Motoristas ({driversFiltered.length})</h3>
           {driversFiltered.length === 0 ? (
             <EmptyState title="Sem motoristas neste filtro." />
           ) : (
@@ -252,7 +252,7 @@ export function AdminTabDocs() {
 
       {subjectFilter !== 'driver' ? (
         <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card space-y-3">
-          <h3 className="font-medium text-foreground">Vehicles ({vehiclesFiltered.length})</h3>
+          <h3 className="font-medium text-foreground">Veículos ({vehiclesFiltered.length})</h3>
           {vehiclesFiltered.length === 0 ? (
             <EmptyState title="Sem veículos neste filtro." />
           ) : (
@@ -299,7 +299,9 @@ function DocBadges({ docs }: { docs: AdminKycDriverRow['documents'] }) {
           data-testid={`admin-kyc-doc-${doc.doc_key}`}
         >
           <span className="font-mono">{doc.doc_key}</span>
-          <span>· {doc.stored_status}</span>
+          <span>
+            · {adminDocStatusLabel(doc.stored_status)} ({doc.stored_status})
+          </span>
           {doc.expires_at ? <span>· expira {formatExpires(doc.expires_at)}</span> : null}
           {doc.is_expired ? (
             <span className="rounded border border-destructive/40 bg-destructive/15 px-1 text-destructive">
@@ -325,10 +327,10 @@ function DriverKycCard({ row }: { row: AdminKycDriverRow }) {
     >
       <p className="font-medium text-foreground">{row.driver_name || row.driver_phone || row.user_id}</p>
       <p className="text-xs text-muted-foreground">
-        {row.driver_phone ?? '—'} · status driver: {row.driver_status}
+        {row.driver_phone ?? '—'} · Estado do motorista: {adminDocStatusLabel(row.driver_status)} ({row.driver_status})
       </p>
       <p className="text-xs text-muted-foreground">
-        Partner: {row.partner_name ?? row.partner_id}
+        Frota: {row.partner_name ?? row.partner_id}
       </p>
       <DocBadges docs={row.documents} />
     </li>
@@ -343,17 +345,19 @@ function VehicleKycCard({ row }: { row: AdminKycVehicleRow }) {
     >
       <p className="font-medium text-foreground">{row.plate}</p>
       <p className="text-xs text-muted-foreground">
-        status: {row.status}
-        {row.worst_document_status ? ` · worst docs: ${row.worst_document_status}` : ''}
+        Estado do veículo: {adminDocStatusLabel(row.status)} ({row.status})
+        {row.worst_document_status
+          ? ` · Pior documento: ${adminDocStatusLabel(row.worst_document_status)} (${row.worst_document_status})`
+          : ''}
       </p>
       <p className="text-xs text-muted-foreground" data-testid="admin-kyc-vehicle-max-passengers">
         Lugares: {row.max_passengers != null ? row.max_passengers : '—'}
       </p>
       <p className="text-xs text-muted-foreground">
-        Partner: {row.partner_name ?? row.partner_id}
+        Frota: {row.partner_name ?? row.partner_id}
       </p>
       <p className="text-xs text-muted-foreground">
-        Driver: {row.assigned_driver_name ?? row.assigned_driver_user_id ?? '—'}
+        Motorista: {row.assigned_driver_name ?? row.assigned_driver_user_id ?? '—'}
       </p>
       <DocBadges docs={row.documents} />
     </li>

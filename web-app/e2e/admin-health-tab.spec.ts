@@ -53,7 +53,12 @@ test.describe('Admin — tab Saúde (system-health UI)', () => {
       timeout: sec(120),
     })
     await expect(page.getByRole('button', { name: 'Atualizar' })).toBeVisible({ timeout: sec(30) })
-    await expect(page.getByText(/Status:\s*(ok|degraded)/)).toBeVisible({ timeout: sec(90) })
+    await expect(page.getByTestId('admin-health-status')).toHaveText(/Operacional|Com problema/, {
+      timeout: sec(90),
+    })
+    await expect(page.getByTestId('admin-health-status')).toHaveText(/Estado técnico:\s*(ok|degraded)/, {
+      timeout: sec(90),
+    })
 
     await ctx.close()
   })
