@@ -2,6 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog'
 import { useAuth } from '../../context/AuthContext'
 import {
   fetchPartnerDriver,
@@ -32,6 +40,12 @@ import { partnerForceOnlineComplianceI18nKey } from '../shared/vehicleCompliance
 import { driverIsOnActiveTrip } from './partnerTypes'
 
 const VEHICLE_DOCUMENT_KEYS: DriverRequiredDocument[] = ['inspecao_viatura']
+
+function driverRemovalWho(driver: PartnerDriverRow, fallbackName: string): string {
+  const name = (driver.user.name ?? '').trim() || fallbackName
+  const phone = (driver.user.phone ?? '').trim()
+  return phone ? `${name} (${phone})` : name
+}
 
 function locationBlock(d: PartnerDriverRow, t: (key: string) => string) {
   const loc = d.last_location
@@ -74,6 +88,9 @@ export function PartnerDriverDetail() {
   const [availabilityError, setAvailabilityError] = useState<string | null>(null)
   const [availabilityVehiclesCta, setAvailabilityVehiclesCta] = useState(false)
   const availabilityFeedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [removeOpen, setRemoveOpen] = useState(false)
+  const removeBusyRef = useRef(false)
+  const removeCancelRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     return () => {
@@ -242,18 +259,25 @@ export function PartnerDriverDetail() {
     return detail ?? t('driverDetail.removeFailed')
   }
 
-  const removeFromFleet = async () => {
-    if (!userId) return
-    if (!window.confirm(t('driverDetail.removeConfirm'))) return
+  const closeRemoveDialog = () => {
+    if (removeBusyRef.current) return
+    setRemoveOpen(false)
+  }
+
+  const confirmRemoveFromFleet = async () => {
+    if (!userId || removeBusyRef.current) return
+    removeBusyRef.current = true
     setBusy('remove')
     setError(null)
     try {
       await removeDriverFromFleet(userId)
+      setRemoveOpen(false)
       navigate('/partner')
     } catch (e: unknown) {
       const err = e as { detail?: string }
       setError(fleetRemoveErrorPt(typeof err?.detail === 'string' ? err.detail : undefined))
     } finally {
+      removeBusyRef.current = false
       setBusy(null)
     }
   }
@@ -800,13 +824,73 @@ export function PartnerDriverDetail() {
         <p className="text-sm font-medium text-foreground">{t('driverDetail.removeFromFleet')}</p>
         <button
           type="button"
+          data-testid="partner-driver-remove-from-fleet"
           disabled={busy !== null}
-          onClick={() => void removeFromFleet()}
-          className="w-full rounded-xl border border-destructive/50 bg-destructive/5 py-2 text-sm font-medium text-destructive disabled:opacity-50"
+          onClick={() => {
+            setError(null)
+            setRemoveOpen(true)
+          }}
+          className="inline-flex w-full items-center justify-center min-h-[44px] touch-manipulation rounded-xl border border-destructive/50 bg-destructive/5 py-2 text-sm font-medium text-destructive disabled:opacity-50"
         >
-          {busy === 'remove' ? '…' : t('driverDetail.removeFromFleetBtn')}
+          {t('driverDetail.removeFromFleetBtn')}
         </button>
       </div>
+
+      <Dialog open={removeOpen} onOpenChange={(open) => { if (!open) closeRemoveDialog() }}>
+        <DialogContent
+          data-testid="partner-driver-remove-dialog"
+          className="max-w-[min(100vw-1.5rem,28rem)]"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault()
+            removeCancelRef.current?.focus()
+          }}
+          onEscapeKeyDown={(event) => {
+            if (removeBusyRef.current) event.preventDefault()
+          }}
+          onPointerDownOutside={(event) => {
+            if (removeBusyRef.current) event.preventDefault()
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{t('driverDetail.removeDialogTitle')}</DialogTitle>
+            <DialogDescription className="text-foreground break-words">
+              {t('driverDetail.removeDialogBody', {
+                who: driverRemovalWho(d, t('driverDetail.defaultDriverName')),
+                vehicle: d.vehicle_plate?.trim()
+                  ? t('driverDetail.removeDialogVehiclePlate', { plate: d.vehicle_plate.trim() })
+                  : t('driverDetail.removeDialogVehicle'),
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          {error ? (
+            <p className="text-sm text-destructive break-words" role="alert" data-testid="partner-driver-remove-error">
+              {error}
+            </p>
+          ) : null}
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              ref={removeCancelRef}
+              type="button"
+              data-testid="partner-driver-remove-cancel"
+              disabled={busy === 'remove'}
+              onClick={closeRemoveDialog}
+              className="inline-flex items-center justify-center min-h-[44px] touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground text-sm font-medium rounded-lg hover:bg-muted/40 disabled:opacity-60"
+            >
+              {t('driverDetail.removeDialogCancel')}
+            </button>
+            <button
+              type="button"
+              data-testid="partner-driver-remove-confirm"
+              disabled={busy === 'remove'}
+              aria-busy={busy === 'remove'}
+              onClick={() => { void confirmRemoveFromFleet() }}
+              className="inline-flex items-center justify-center min-h-[44px] touch-manipulation px-3 py-1.5 bg-destructive text-destructive-foreground text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-60"
+            >
+              {busy === 'remove' ? t('driverDetail.removeDialogConfirming') : t('driverDetail.removeDialogConfirm')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <button
         type="button"
