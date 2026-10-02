@@ -3435,7 +3435,9 @@ function DriverOperationsMenu({
           const best = suggestions[0]
           if (best) {
             target = { lat: best.lat, lng: best.lng }
-            geocodeHint = `Geocode: ${best.primary}${best.secondary ? `, ${best.secondary}` : ''}`
+            geocodeHint = t('opsMenu.zones.etaHint.placeFound', {
+              place: `${best.primary}${best.secondary ? `, ${best.secondary}` : ''}`,
+            })
           }
         }
 
