@@ -63,16 +63,21 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
     setFrotaPartnerId,
     users,
   } = props
+  const selectedFleet = partners.find((partner) => partner.id === frotaPartnerId) ?? null
 
   return (
     <>
+      {frotaOk ? (
         <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg mb-4">
           {frotaOk}
         </p>
-      <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg mb-4">
+      ) : null}
+      {frotaAssignOk ? (
+        <p className="text-sm text-foreground bg-success/15 border border-success/30 px-3 py-2 rounded-lg mb-4">
           {frotaAssignOk}
         </p>
-        <section className="space-y-8">
+      ) : null}
+      <section className="space-y-8">
           <h2 className="text-lg font-semibold text-foreground">{t('headings.frota')}</h2>
           <p className="text-sm text-foreground/75 -mt-4">
             Cria uma organização e depois o gestor que inicia sessão na app no separador Frota — tudo aqui, sem
@@ -94,38 +99,51 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                 setFrotaAssignOk(null)
               }}
               placeholder="Ex.: Frota Lisboa Norte"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+              className="w-full min-h-11 px-3 py-2 rounded-xl border border-border bg-background text-foreground"
             />
             <button
               type="button"
+              data-testid="admin-frota-create-org"
               disabled={!frotaOrgName.trim() || frotaLoading !== null}
               onClick={() => void handleCreateFrotaOrg()}
-              className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
             >
-              {frotaLoading === 'org' ? 'A criar…' : 'Criar Frota'}
+              {frotaLoading === 'org' ? 'A criar…' : 'Criar frota'}
             </button>
           </div>
 
-          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
-            <h3 className="font-medium text-foreground">2. Gestor Frota</h3>
-            <p className="text-sm text-foreground/75">
-              ID da organização (preenche automaticamente após o passo 1, ou cola um UUID existente).
-            </p>
-            <label className="block text-sm text-foreground/80" htmlFor="frota-partner-id">
-              ID da organização (partner_id)
+          <div
+            className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3"
+            data-testid="admin-frota-manager"
+          >
+            <h3 className="font-medium text-foreground">2. Gestor da frota</h3>
+            {partners.length === 0 ? (
+              <p className="text-sm text-foreground/80">Cria primeiro uma frota.</p>
+            ) : selectedFleet ? (
+              <p className="text-sm text-foreground">Frota: {selectedFleet.name}</p>
+            ) : null}
+            <label className="block text-sm text-foreground/80" htmlFor="frota-partner-select">
+              Frota
             </label>
-            <input
-              id="frota-partner-id"
-              type="text"
-              value={frotaPartnerId}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            <select
+              id="frota-partner-select"
+              data-testid="admin-frota-partner-select"
+              value={selectedFleet ? selectedFleet.id : ''}
+              disabled={partners.length === 0 || frotaLoading !== null}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => {
                 setFrotaPartnerId(e.target.value)
                 setFrotaOk(null)
                 setFrotaAssignOk(null)
               }}
-              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground font-mono text-sm"
-            />
+              className="w-full min-h-11 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-sm"
+            >
+              <option value="">— escolher —</option>
+              {partners.map((partner) => (
+                <option key={partner.id} value={partner.id}>
+                  {partner.name}
+                </option>
+              ))}
+            </select>
             <label className="block text-sm text-foreground/80" htmlFor="frota-mgr-name">
               Nome do gestor
             </label>
@@ -139,10 +157,10 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                 setFrotaAssignOk(null)
               }}
               placeholder="Nome completo"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+              className="w-full min-h-11 px-3 py-2 rounded-xl border border-border bg-background text-foreground"
             />
             <label className="block text-sm text-foreground/80" htmlFor="frota-mgr-phone">
-              Telefone (login OTP)
+              Telefone
             </label>
             <input
               id="frota-mgr-phone"
@@ -154,20 +172,21 @@ export function AdminTabFrota(props: AdminTabFrotaProps) {
                 setFrotaAssignOk(null)
               }}
               placeholder="+351…"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground"
+              className="w-full min-h-11 px-3 py-2 rounded-xl border border-border bg-background text-foreground"
             />
             <button
               type="button"
+              data-testid="admin-frota-create-manager"
               disabled={
-                !frotaPartnerId.trim() ||
+                !selectedFleet ||
                 !frotaManagerName.trim() ||
                 !frotaManagerPhone.trim() ||
                 frotaLoading !== null
               }
               onClick={() => void handleCreateFrotaManager()}
-              className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
+              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-xl hover:opacity-90 disabled:opacity-50"
             >
-              {frotaLoading === 'manager' ? 'A criar…' : 'Criar Gestor'}
+              {frotaLoading === 'manager' ? 'A criar…' : 'Criar gestor'}
             </button>
           </div>
 

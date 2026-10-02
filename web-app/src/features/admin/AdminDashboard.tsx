@@ -27,6 +27,7 @@ import { useAdminUsersDirectory } from './useAdminUsersDirectory'
 import { apiFetch } from '../../api/client'
 import { parseJwtPayload } from '../../utils/jwt'
 import { adminSessionRoleLabel } from './adminCopy'
+import { fleetCreatedMessage, rememberCreatedFleet } from './adminFleetSelection'
 import {
   recoverDriver,
   postAdminDrivingRestOverride,
@@ -470,8 +471,9 @@ export function AdminDashboard() {
     setError(null)
     try {
       const r = await createPartner(frotaOrgName, token, gr)
-      setFrotaPartnerId(r.id)
-      setFrotaOk(`Organização “${r.name}” criada. O ID da frota foi preenchido abaixo — usa-o para criar o gestor.`)
+      setPartners((prev) => rememberCreatedFleet(r, prev).partners)
+      setFrotaPartnerId(rememberCreatedFleet(r, []).partnerId)
+      setFrotaOk(fleetCreatedMessage(r.name))
     } catch (err) {
       setError(adminErrDetail(err, 'Erro'))
     } finally {
