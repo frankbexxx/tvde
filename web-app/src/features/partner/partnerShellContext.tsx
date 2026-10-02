@@ -2,6 +2,17 @@ import { createContext, useCallback, useContext, useRef, useState, type ReactNod
 import type { PartnerMenuScreen } from './PartnerSideMenu'
 import { PARTNER_MENU_DEFAULT_BACK, partnerRootHighlightKey } from './partnerMenuNav'
 
+export type PartnerTripsReturnScreen = 'trips' | 'trips_summary' | 'trips_list'
+
+function rememberTripsScreen(
+  screen: PartnerMenuScreen,
+  store: { current: PartnerTripsReturnScreen | null },
+) {
+  if (screen === 'trips' || screen === 'trips_summary' || screen === 'trips_list') {
+    store.current = screen
+  }
+}
+
 export type PartnerShellTab = 'home' | 'fleet' | 'inbox' | 'menu'
 
 type PartnerShellContextValue = {
@@ -15,6 +26,8 @@ type PartnerShellContextValue = {
   goBackMenu: () => void
   openMenu: (screen?: PartnerMenuScreen, backTo?: PartnerMenuScreen) => void
   closeMenu: () => void
+  /** Último ecrã de viagens ainda aberto antes do menu fechar. */
+  tripsReturnScreen: () => PartnerTripsReturnScreen
   inboxUnreadCount: number
   setInboxUnreadCount: (n: number) => void
   menuRootHighlight: string | null
@@ -29,6 +42,7 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
   const [inboxUnreadCount, setInboxUnreadCount] = useState(0)
   const [menuRootHighlight, setMenuRootHighlight] = useState<string | null>(null)
   const menuBackOverridesRef = useRef<Partial<Record<PartnerMenuScreen, PartnerMenuScreen>>>({})
+  const lastTripsScreenRef = useRef<PartnerTripsReturnScreen | null>(null)
 
   const syncHighlight = useCallback((screen: PartnerMenuScreen) => {
     const key = partnerRootHighlightKey(screen)
@@ -39,6 +53,7 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
     if (backTo !== undefined) {
       menuBackOverridesRef.current = { ...menuBackOverridesRef.current, [screen]: backTo }
     }
+    rememberTripsScreen(screen, lastTripsScreenRef)
     syncHighlight(screen)
     setMenuScreen(screen)
   }, [syncHighlight])
@@ -48,6 +63,7 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
       menuBackOverridesRef.current[menuScreen] ??
       PARTNER_MENU_DEFAULT_BACK[menuScreen] ??
       'root'
+    rememberTripsScreen(back, lastTripsScreenRef)
     setMenuScreen(back)
   }, [menuScreen])
 
@@ -55,11 +71,16 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
     if (backTo !== undefined) {
       menuBackOverridesRef.current = { ...menuBackOverridesRef.current, [screen]: backTo }
     }
+    rememberTripsScreen(screen, lastTripsScreenRef)
     if (screen === 'root') setMenuRootHighlight(null)
     else syncHighlight(screen)
     setMenuScreen(screen)
     setMenuOpen(true)
   }, [syncHighlight])
+
+  const tripsReturnScreen = useCallback((): PartnerTripsReturnScreen => {
+    return lastTripsScreenRef.current ?? 'trips'
+  }, [])
 
   const closeMenu = useCallback(() => {
     menuBackOverridesRef.current = {}
@@ -82,6 +103,7 @@ export function PartnerShellProvider({ children }: { children: ReactNode }) {
         goBackMenu,
         openMenu,
         closeMenu,
+        tripsReturnScreen,
         inboxUnreadCount,
         setInboxUnreadCount,
         menuRootHighlight,
@@ -97,4 +119,9 @@ export function usePartnerShell() {
   const ctx = useContext(PartnerShellContext)
   if (!ctx) throw new Error('usePartnerShell must be used within PartnerShellProvider')
   return ctx
+}
+
+// eslint-disable-next-line react-refresh/only-export-components -- hook paired with provider
+export function useOptionalPartnerShell() {
+  return useContext(PartnerShellContext)
 }

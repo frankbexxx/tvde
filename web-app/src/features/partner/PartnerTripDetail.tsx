@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   fetchPartnerDriver,
   fetchPartnerDrivers,
@@ -12,7 +12,9 @@ import {
 import { VISIBILITY_VISIBLE_EVENT } from '../../constants/events'
 import { formatDateTime } from '../../i18n/format'
 import { reverseGeocode } from '../../services/geocoding'
+import { PARTNER_MENU_DEFAULT_BACK } from './partnerMenuNav'
 import { partnerTripStatusLabel } from './partnerLabels'
+import { useOptionalPartnerShell } from './partnerShellContext'
 import { cleanPartnerText, partnerTripHumanTitle } from './partnerTripIdentity'
 import { ONGOING_TRIP_STATUSES } from './partnerTypes'
 import { fareCategoryCommercialLabel } from '../trips/fareCategoryLabel'
@@ -33,6 +35,26 @@ function mapsUrl(lat: number, lng: number): string | null {
   return googleMapsSearchUrl(lat, lng)
 }
 
+function PartnerTripBackButton() {
+  const { t } = useTranslation('partner')
+  const navigate = useNavigate()
+  const shell = useOptionalPartnerShell()
+
+  return (
+    <button
+      type="button"
+      data-testid="partner-trip-back-to-trips"
+      onClick={() => {
+        const screen = shell?.tripsReturnScreen() ?? 'trips'
+        navigate('/partner')
+        shell?.openMenu(screen, PARTNER_MENU_DEFAULT_BACK[screen])
+      }}
+      className="inline-flex min-h-11 items-center rounded-lg px-1 text-sm font-medium text-primary touch-manipulation"
+    >
+      {t('tripDetail.backToTrips')}
+    </button>
+  )
+}
 function isLiveTripStatus(status: string): boolean {
   return ONGOING_TRIP_STATUSES.has(status)
 }
@@ -173,15 +195,18 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
   }
 
   if (loading && !trip) {
-    return <p className="p-4 text-sm text-muted-foreground">{tc('loading')}</p>
+    return (
+      <div className="p-4 space-y-2">
+        <PartnerTripBackButton />
+        <p className="text-sm text-muted-foreground">{tc('loading')}</p>
+      </div>
+    )
   }
   if (!trip || !tripId) {
     return (
       <div className="p-4 space-y-2">
         <p className="text-destructive text-sm">{error ?? t('tripDetail.notFound')}</p>
-        <Link to="/partner" className="text-primary text-sm underline">
-          {tc('back')}
-        </Link>
+        <PartnerTripBackButton />
       </div>
     )
   }
@@ -205,19 +230,19 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
 
   return (
     <div className="p-4 space-y-4 max-w-lg mx-auto w-full">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link to="/partner" className="text-sm text-primary hover:underline">
-          {t('tripDetail.backToFleet')}
-        </Link>
-        <button
-          type="button"
-          disabled={refreshing || busy}
-          onClick={() => void load('soft')}
-          className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
-          data-testid="partner-trip-detail-refresh"
-        >
-          {refreshing ? t('tripDetail.refreshing') : t('tripDetail.refresh')}
-        </button>
+      <div className="space-y-2">
+        <PartnerTripBackButton />
+        <div className="flex justify-end">
+          <button
+            type="button"
+            disabled={refreshing || busy}
+            onClick={() => void load('soft')}
+            className="min-h-11 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-50"
+            data-testid="partner-trip-detail-refresh"
+          >
+            {refreshing ? t('tripDetail.refreshing') : t('tripDetail.refresh')}
+          </button>
+        </div>
       </div>
       {lastFetchedAt != null ? (
         <p className="text-xs text-muted-foreground" data-testid="partner-trip-detail-last-updated">
