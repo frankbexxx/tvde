@@ -155,6 +155,38 @@ export async function verifyOtp(
   })
 }
 
+export async function requestPasswordRecovery(phone: string): Promise<{ status: string }> {
+  return apiFetch('/auth/password/forgot', {
+    method: 'POST',
+    body: JSON.stringify({ phone }),
+  })
+}
+
+export async function verifyPasswordRecovery(
+  phone: string,
+  code: string,
+): Promise<{ reset_token: string }> {
+  return apiFetch('/auth/password/forgot/verify', {
+    method: 'POST',
+    body: JSON.stringify({ phone, code }),
+  })
+}
+
+export async function completePasswordRecovery(
+  resetToken: string,
+  newPassword: string,
+  confirmPassword: string,
+): Promise<{ status: string }> {
+  return apiFetch('/auth/password/forgot/complete', {
+    method: 'POST',
+    body: JSON.stringify({
+      reset_token: resetToken,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    }),
+  })
+}
+
 export async function getLegalAcceptance(token: string): Promise<LegalAcceptanceStatus> {
   return apiFetch<LegalAcceptanceStatus>('/auth/legal-acceptance', { token })
 }

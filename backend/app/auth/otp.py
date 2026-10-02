@@ -24,6 +24,14 @@ def hash_otp_code(phone: str, code: str) -> str:
     ).hexdigest()
 
 
+def hash_reset_otp_code(phone: str, code: str) -> str:
+    """Hash distinto do login OTP. O mesmo código não abre sessão."""
+    message = f"{phone}:password_reset:{code}".encode("utf-8")
+    return hmac.new(
+        settings.OTP_SECRET.encode("utf-8"), message, hashlib.sha256
+    ).hexdigest()
+
+
 def verify_otp_code(phone: str, code: str, code_hash: str) -> bool:
     expected = hash_otp_code(phone, code)
     return hmac.compare_digest(expected, code_hash)

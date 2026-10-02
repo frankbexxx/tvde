@@ -1,4 +1,5 @@
 import re
+import hmac
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -29,9 +30,11 @@ from app.auth.passwords import hash_password, verify_password
 from app.auth.otp import (
     generate_otp_code,
     hash_otp_code,
+    hash_reset_otp_code,
     otp_expiration_time,
     verify_otp_code,
 )
+from app.auth.password_reset import issue_password_reset_proof, read_password_reset_proof
 from app.auth.security import (
     create_access_token,
     create_strong_auth_proof,
@@ -84,6 +87,11 @@ from app.schemas.auth import (
     OtpRequestResponse,
     OtpVerifyRequest,
     PasswordChangeRequest,
+    PasswordRecoveryAccepted,
+    PasswordRecoveryCompleteRequest,
+    PasswordRecoveryRequest,
+    PasswordRecoveryVerifyRequest,
+    PasswordRecoveryVerifyResponse,
     ReauthRequest,
     ReauthResponse,
     TokenResponse,
@@ -1549,6 +1557,154 @@ async def patch_my_profile(
     db.commit()
     db.refresh(user)
     return _me_profile_from_user(user)
+
+
+def _password_recovery_user(db: Session, phone: str) -> User | None:
+    """Conta activa com palavra-passe local. Sem isto, a resposta pública fica igual."""
+    user = db.execute(select(User).where(User.phone == phone)).scalar_one_or_none()
+    if user is None or user.status != UserStatus.active or not user.password_hash:
+        return None
+    if user.is_test_account and user.role in _PRIVILEGED_TEST_LOGIN_ROLES:
+        return None
+    return user
+
+
+@router.post("/password/forgot", response_model=PasswordRecoveryAccepted)
+async def request_password_recovery(
+    payload: PasswordRecoveryRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> PasswordRecoveryAccepted:
+    """Pede um código. A resposta não diz se o telefone existe."""
+    _reject_otp_when_deployed()
+    phone = _normalize_phone(payload.phone)
+    check_otp_request_rate_limit(request, phone)
+    if settings.enforce_pt_phone() and not _pt_phone_ok(phone):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
+        )
+    user = _password_recovery_user(db, phone)
+    if user is not None:
+        code = generate_otp_code()
+        if settings.dev_tools_router_enabled():
+            print(f"[OTP] phone={phone} code={code}")
+        db.add(
+            OtpCode(
+                phone=phone,
+                code_hash=hash_reset_otp_code(phone, code),
+                expires_at=otp_expiration_time(),
+            )
+        )
+        db.commit()
+    return PasswordRecoveryAccepted()
+
+
+@router.post("/password/forgot/verify", response_model=PasswordRecoveryVerifyResponse)
+async def verify_password_recovery(
+    payload: PasswordRecoveryVerifyRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> PasswordRecoveryVerifyResponse:
+    """Valida o código e devolve uma prova só para definir a palavra-passe."""
+    _reject_otp_when_deployed()
+    now = datetime.now(timezone.utc)
+    phone = _normalize_phone(payload.phone)
+    check_otp_verify_rate_limit(request, phone)
+    if settings.enforce_pt_phone() and not _pt_phone_ok(phone):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="BETA: apenas números portugueses (+351XXXXXXXXX)",
+        )
+    otp = db.execute(
+        select(OtpCode)
+        .where(
+            OtpCode.phone == phone,
+            OtpCode.consumed_at.is_(None),
+            OtpCode.expires_at > now,
+        )
+        .order_by(OtpCode.created_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    code_ok = otp is not None and hmac.compare_digest(
+        hash_reset_otp_code(phone, payload.code.strip()),
+        otp.code_hash,
+    )
+    user = _password_recovery_user(db, phone) if code_ok else None
+    if otp is None or not code_ok or user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid_otp",
+        )
+    return PasswordRecoveryVerifyResponse(
+        reset_token=issue_password_reset_proof(
+            otp_id=str(otp.id),
+            user_id=str(user.id),
+            expires_at=otp.expires_at,
+        )
+    )
+
+
+@router.post("/password/forgot/complete", response_model=PasswordRecoveryAccepted)
+async def complete_password_recovery(
+    payload: PasswordRecoveryCompleteRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> PasswordRecoveryAccepted:
+    """Grava a palavra-passe nova. Não abre sessão e não muda o papel."""
+    _reject_otp_when_deployed()
+    now = datetime.now(timezone.utc)
+    parsed = read_password_reset_proof(payload.reset_token, now=now)
+    if parsed is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="reset_proof_invalid",
+        )
+    otp_id, user_id = parsed
+    check_otp_verify_rate_limit(request, user_id)
+    if payload.new_password != payload.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="password_mismatch",
+        )
+    try:
+        otp_uuid = uuid.UUID(otp_id)
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="reset_proof_invalid",
+        ) from None
+    otp = db.get(OtpCode, otp_uuid)
+    user = db.get(User, user_uuid)
+    target = _password_recovery_user(db, user.phone) if user is not None else None
+    if (
+        otp is None
+        or user is None
+        or target is None
+        or target.id != user.id
+        or otp.phone != user.phone
+        or otp.expires_at <= now
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="reset_proof_invalid",
+        )
+    if otp.consumed_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="reset_proof_used",
+        )
+    user.password_hash = hash_password(payload.new_password)
+    user.token_version = int(user.token_version or 0) + 1
+    if not claim_unconsumed_otp(db, otp.id, now):
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="reset_proof_used",
+        )
+    db.commit()
+    return PasswordRecoveryAccepted()
 
 
 @router.post("/me/password")
