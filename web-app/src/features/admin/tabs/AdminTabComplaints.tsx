@@ -36,6 +36,10 @@ type ExternalForm = {
   external_response_due_at: string
 }
 
+function codedLabel(label: string, code: string): string {
+  return `${label} (${code})`
+}
+
 const emptyExternalForm = (): ExternalForm => ({
   source: 'livro_reclamacoes',
   category: 'other',
@@ -169,6 +173,15 @@ export function AdminTabComplaints() {
     (selected.status === 'resolved' ||
       selected.status === 'closed' ||
       nextStatus === 'resolved')
+
+  const statusText = (status: string) =>
+    codedLabel(t(`admin.statuses.${status}`, { defaultValue: status }), status)
+  const categoryText = (category: string) =>
+    codedLabel(t(`categories.${category}`, { defaultValue: category }), category)
+  const sourceText = (source: string) =>
+    codedLabel(t(`sources.${source}`, { defaultValue: source }), source)
+  const eventText = (eventType: string) =>
+    codedLabel(t(`admin.events.${eventType}`, { defaultValue: eventType }), eventType)
 
   return (
     <section className="space-y-4" data-testid="admin-tab-complaints">
@@ -338,7 +351,7 @@ export function AdminTabComplaints() {
             <option value="">{t('admin.all')}</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s}
+                {statusText(s)}
               </option>
             ))}
           </select>
@@ -381,7 +394,7 @@ export function AdminTabComplaints() {
               >
                 <div className="font-mono text-xs font-semibold">{row.public_reference}</div>
                 <div className="text-xs text-muted-foreground">
-                  {row.status} · {row.category} · {row.source}
+                  {statusText(row.status)} · {categoryText(row.category)} · {sourceText(row.source)}
                   {row.external_reference ? ` · ${row.external_reference}` : ''}
                 </div>
               </button>
@@ -398,11 +411,11 @@ export function AdminTabComplaints() {
             <>
               <p className="font-mono text-sm font-semibold">{selected.public_reference}</p>
               <p className="text-xs text-muted-foreground" data-testid="admin-complaint-detail-source">
-                {selected.source}
+                {sourceText(selected.source)}
                 {selected.external_reference
                   ? ` · ${selected.external_reference}`
                   : ''}{' '}
-                · {selected.status} · {selected.category}
+                · {statusText(selected.status)} · {categoryText(selected.category)}
               </p>
               {selected.complainant_name ||
               selected.complainant_email ||
@@ -422,13 +435,14 @@ export function AdminTabComplaints() {
                   onChange={(e) => setNextStatus(e.target.value as ComplaintStatus | '')}
                   data-testid="admin-complaint-next-status"
                 >
-                  <option value="">— {selected.status}</option>
+                  <option value="">— {statusText(selected.status)}</option>
                   {STATUSES.filter((s) => s !== selected.status).map((s) => (
                     <option key={s} value={s}>
-                      {s}
+                      {statusText(s)}
                     </option>
                   ))}
                 </select>
+                <span className="block text-muted-foreground">{t('admin.statusHint')}</span>
               </label>
               {showActiveResolution || nextStatus === 'resolved' ? (
                 <label className="block text-xs space-y-1">
@@ -467,9 +481,9 @@ export function AdminTabComplaints() {
                 <ol className="space-y-1 text-[11px] text-muted-foreground" data-testid="admin-complaint-history">
                   {selected.history.map((h, i) => (
                     <li key={`${h.event_type}-${h.occurred_at}-${i}`}>
-                      {h.occurred_at}: {h.event_type}
+                      {h.occurred_at}: {eventText(h.event_type)}
                       {h.from_status || h.to_status
-                        ? ` (${h.from_status ?? '—'} → ${h.to_status ?? '—'})`
+                        ? ` (${h.from_status ? statusText(h.from_status) : '—'} → ${h.to_status ? statusText(h.to_status) : '—'})`
                         : ''}
                     </li>
                   ))}

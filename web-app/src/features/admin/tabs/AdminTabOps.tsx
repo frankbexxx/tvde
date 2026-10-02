@@ -2,6 +2,7 @@ import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import { OPS_STUCK_PAYMENTS_PAGE_SIZE } from '../adminConstants'
 import { copyAdminClipboard, maskSensitiveEnvDisplay } from '../adminDashboardHelpers'
+import { adminCronResultPrimary, adminCronResultTechnical } from '../adminOpsCopy'
 import { driverIdFromHealthUnavailableRow, tripIdFromHealthRow } from '../healthTripLinks'
 import { stripePaymentIntentDashboardUrls } from '../../../utils/stripeDashboard'
 import type {
@@ -136,7 +137,7 @@ export function AdminTabOps(props: AdminTabOpsProps) {
 
         <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-medium text-foreground">Cron (admin-only)</p>
+            <p className="text-sm font-medium text-foreground">Tarefas automáticas</p>
             <button
               type="button"
               onClick={handleRunCronNow}
@@ -152,21 +153,26 @@ export function AdminTabOps(props: AdminTabOpsProps) {
             </button>
           </div>
           {cronRun ? (
-            <div className="text-sm space-y-1">
-              <p className="text-foreground/80">
-                status={cronRun.status} · duration_ms={cronRun.duration_ms} · error_count={cronRun.error_count} · request_id=
-                {cronRun.request_id || '—'}
-              </p>
-              {cronRun.error_count > 0 ? (
-                <pre className="text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
-                  {JSON.stringify(cronRun.errors, null, 2)}
-                </pre>
-              ) : (
-                <p className="text-foreground/75">Sem erros.</p>
-              )}
+            <div className="text-sm space-y-1" data-testid="admin-cron-result">
+              <p className="text-foreground/80">{adminCronResultPrimary(cronRun)}</p>
+              <details className="text-xs text-foreground/70">
+                <summary className="cursor-pointer">Detalhe técnico</summary>
+                <p className="mt-1 font-mono break-all" data-testid="admin-cron-technical">
+                  {adminCronResultTechnical(cronRun)}
+                </p>
+                {cronRun.error_count > 0 ? (
+                  <pre className="mt-1 text-xs text-foreground bg-surface-raised border border-border p-2 rounded overflow-x-auto">
+                    {JSON.stringify(cronRun.errors, null, 2)}
+                  </pre>
+                ) : (
+                  <p className="mt-1 text-foreground/75">Sem erros.</p>
+                )}
+              </details>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Executa para validar timeouts/offers/cleanup/health.</p>
+            <p className="text-sm text-muted-foreground">
+              Corre tempos limite, ofertas expiradas, limpeza e a verificação de saúde.
+            </p>
           )}
         </div>
 

@@ -63,7 +63,24 @@
     "assignHint": "Atribuição (UUID admin, opcional)",
     "resolution": "Resolução",
     "save": "Guardar",
-    "timeline": "Procedimento",
+    "timeline": "O que aconteceu",
+    "statusHint": "O traço mantém o estado actual. Outra opção, ao guardar, grava o código entre parênteses.",
+    "statuses": {
+      "received": "Recebida",
+      "under_review": "Em análise",
+      "awaiting_info": "À espera de informação",
+      "resolved": "Resolvida",
+      "closed": "Fechada"
+    },
+    "events": {
+      "received": "Recebida",
+      "status_changed": "Estado alterado",
+      "resolved": "Resolvida",
+      "reopened": "Reaberta",
+      "closed": "Fechada",
+      "assignment_changed": "Atribuição alterada",
+      "attachment_added": "Anexo adicionado"
+    },
     "noSelection": "Seleccione uma reclamação.",
     "error": "Erro ao carregar ou actualizar.",
     "attachmentsAfterCreate": "Os anexos de uma reclamação externa adicionam-se no detalhe, depois de criar."

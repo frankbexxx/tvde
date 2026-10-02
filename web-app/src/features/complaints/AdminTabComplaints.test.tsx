@@ -1,3 +1,4 @@
+import '../../i18n'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AdminTabComplaints } from '../admin/tabs/AdminTabComplaints'
@@ -106,15 +107,38 @@ describe('AdminTabComplaints', () => {
     await waitFor(() => {
       expect(screen.getByTestId('admin-complaint-detail-source')).toHaveTextContent('in_app')
     })
+    expect(screen.getByTestId('admin-complaint-row-CMP-2026-ABCDEF01')).toHaveTextContent(
+      'Recebida (received)',
+    )
+    expect(screen.getByTestId('admin-complaint-detail-source')).toHaveTextContent('Recebida (received)')
+    expect(screen.getByTestId('admin-complaint-history')).toHaveTextContent('Recebida (received)')
+    const filter = screen.getByTestId('admin-complaint-filter-status') as HTMLSelectElement
+    expect([...filter.options].find((option) => option.value === 'received')?.textContent).toMatch(
+      /Recebida \(received\)/,
+    )
+    fireEvent.change(filter, { target: { value: 'received' } })
+    await waitFor(() => {
+      expect(listAdminComplaints).toHaveBeenCalledWith(
+        'admin-tok',
+        expect.objectContaining({ status: 'received' }),
+      )
+    })
     fireEvent.change(screen.getByTestId('admin-complaint-next-status'), {
       target: { value: 'resolved' },
     })
     fireEvent.change(screen.getByTestId('admin-complaint-resolution'), {
       target: { value: 'Fixed' },
     })
+    const nextStatus = screen.getByTestId('admin-complaint-next-status') as HTMLSelectElement
+    const resolved = [...nextStatus.options].find((option) => option.value === 'resolved')
+    expect(resolved?.textContent).toMatch(/Resolvida \(resolved\)/)
     fireEvent.click(screen.getByTestId('admin-complaint-save'))
     await waitFor(() => {
-      expect(updateAdminComplaint).toHaveBeenCalled()
+      expect(updateAdminComplaint).toHaveBeenCalledWith(
+        'admin-tok',
+        'CMP-2026-ABCDEF01',
+        expect.objectContaining({ status: 'resolved', resolution: 'Fixed' }),
+      )
     })
   })
 
