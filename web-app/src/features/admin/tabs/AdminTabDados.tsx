@@ -1,6 +1,7 @@
-import type { ChangeEvent, Dispatch, SetStateAction } from 'react'
+import { useMemo, type ChangeEvent, type Dispatch, type SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../../components/feedback/EmptyState'
+import { ADMIN_DRIVER_FLEET_UNKNOWN, adminDriverContext } from '../adminDriverContext'
 import { driverStatusActionVisibility } from '../adminDashboardHelpers'
 import type { AdminUser } from '../useAdminUsersDirectory'
 
@@ -38,6 +39,18 @@ export function AdminTabDados(props: AdminTabDadosProps) {
     setDataSearch,
     users,
   } = props
+
+  const usersById = useMemo(() => {
+    const map = new Map<string, AdminUser>()
+    for (const user of users) map.set(user.id, user)
+    return map
+  }, [users])
+
+  const partnersById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const partner of partners) map.set(partner.id, partner.name)
+    return map
+  }, [partners])
 
   return (
     <>
@@ -168,10 +181,15 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                 .filter((d) => {
                   const q = dataSearch.trim().toLowerCase()
                   if (!q) return true
+                  const person = usersById.get(d.user_id)
+                  const fleetName = partnersById.get(d.partner_id) ?? ''
                   return (
                     d.user_id.toLowerCase().includes(q) ||
                     d.partner_id.toLowerCase().includes(q) ||
-                    d.status.toLowerCase().includes(q)
+                    d.status.toLowerCase().includes(q) ||
+                    (person?.name ?? '').toLowerCase().includes(q) ||
+                    (person?.phone ?? '').toLowerCase().includes(q) ||
+                    fleetName.toLowerCase().includes(q)
                   )
                 })
                 .slice(0, 200)
@@ -179,6 +197,15 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                   const { canApprove, canReject } = driverStatusActionVisibility(d.status)
                   const rowBusy = driverStatusLoading === d.user_id
                   const anyBusy = driverStatusLoading !== null
+                  const person = usersById.get(d.user_id) ?? null
+                  const partnerFound = partnersById.has(d.partner_id)
+                  const context = adminDriverContext({
+                    status: d.status,
+                    user: person,
+                    partnerId: d.partner_id,
+                    partnerFound,
+                    partnerName: partnerFound ? partnersById.get(d.partner_id) : null,
+                  })
                   return (
                     <li
                       key={d.user_id}
@@ -188,13 +215,29 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p
+                            className="font-medium text-foreground break-words"
+                            data-testid={`admin-driver-name-${d.user_id}`}
+                          >
+                            {context.nameLabel}
+                          </p>
+                          {context.phone ? (
+                            <p className="text-muted-foreground break-words">{context.phone}</p>
+                          ) : null}
+                          <p
                             data-testid={`admin-driver-status-${d.user_id}`}
                             className="text-xs text-muted-foreground"
                           >
-                            status: {d.status}
+                            {context.statusLabel}
                           </p>
-                          <p className="text-xs text-muted-foreground">partner_id</p>
-                          <p className="text-xs font-mono text-foreground/90 break-all">{d.partner_id}</p>
+                          <p className="text-sm text-foreground break-words" data-testid={`admin-driver-fleet-${d.user_id}`}>
+                            {context.fleetNamed ? `Frota: ${context.fleetLabel}` : context.fleetLabel}
+                          </p>
+                          {context.fleetNamed || context.fleetLabel === ADMIN_DRIVER_FLEET_UNKNOWN ? (
+                            <>
+                              <p className="text-xs text-muted-foreground mt-2">partner_id</p>
+                              <p className="text-xs font-mono text-foreground/90 break-all">{d.partner_id}</p>
+                            </>
+                          ) : null}
                           <p className="text-xs text-muted-foreground mt-2">user_id</p>
                           <p className="text-xs font-mono text-foreground/90 break-all">{d.user_id}</p>
                         </div>
