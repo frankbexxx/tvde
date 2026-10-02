@@ -51,5 +51,30 @@
       "partner": "Partner",
       "admin": "Administrator"
     }
+  },
+  "accountDelete": {
+    "title": "Delete this account?",
+    "body": "You are deleting the account of {{who}}, with the role {{role}}. The account will no longer exist. This cannot be undone.",
+    "reason": "Reason",
+    "reasonHint": "At least 10 characters. It is kept with this action.",
+    "reasonShort": "The reason needs at least 10 characters.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "confirming": "Deleting…",
+    "error": "Could not delete"
+  },
+  "passwordClear": {
+    "title": "Remove the password?",
+    "body": "You are removing the password from the account of {{who}}. The current password will no longer sign in. No new password is created. Sessions that are already open stay valid.",
+    "help": "Removes the password from this account. The person can no longer sign in with it. No new password is created. Google sign-in, if any, stays as it is.",
+    "unavailable": "Only a principal administrator can remove the password. Your session does not include this action.",
+    "button": "Remove password",
+    "reason": "Reason",
+    "reasonHint": "At least 10 characters. It is kept with this action.",
+    "reasonShort": "The reason needs at least 10 characters.",
+    "cancel": "Cancel",
+    "confirm": "Remove password",
+    "confirming": "Removing…",
+    "error": "Could not remove the password"
   }
 }

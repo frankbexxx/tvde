@@ -51,5 +51,30 @@
       "partner": "Parceiro",
       "admin": "Administrador"
     }
+  },
+  "accountDelete": {
+    "title": "Eliminar esta conta?",
+    "body": "Vais eliminar a conta de {{who}}, com o papel {{role}}. A conta deixa de existir. Esta acção não pode ser desfeita.",
+    "reason": "Motivo",
+    "reasonHint": "Pelo menos 10 caracteres. Fica no registo desta acção.",
+    "reasonShort": "O motivo precisa de pelo menos 10 caracteres.",
+    "cancel": "Cancelar",
+    "confirm": "Eliminar",
+    "confirming": "A eliminar…",
+    "error": "Erro ao eliminar"
+  },
+  "passwordClear": {
+    "title": "Retirar a palavra-passe?",
+    "body": "Vais retirar a palavra-passe da conta de {{who}}. A palavra-passe actual deixa de servir para entrar. Não é criada uma palavra-passe nova. As sessões já abertas continuam válidas.",
+    "help": "Retira a palavra-passe desta conta. A pessoa deixa de entrar com ela. Não fica uma palavra-passe nova. A entrada com Google, se existir, não muda.",
+    "unavailable": "Só um administrador principal pode retirar a palavra-passe. A tua sessão não inclui esta acção.",
+    "button": "Retirar palavra-passe",
+    "reason": "Motivo",
+    "reasonHint": "Pelo menos 10 caracteres. Fica no registo desta acção.",
+    "reasonShort": "O motivo precisa de pelo menos 10 caracteres.",
+    "cancel": "Cancelar",
+    "confirm": "Retirar palavra-passe",
+    "confirming": "A retirar…",
+    "error": "Erro ao retirar a palavra-passe"
   }
 }

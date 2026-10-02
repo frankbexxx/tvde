@@ -186,26 +186,21 @@ export function useAdminUsersDirectory(opts: {
     }
   }
 
-  const handleDelete = async (userId: string) => {
-    if (!token) return
-    const reason = window.prompt(
-      'Motivo da eliminação (mínimo 10 caracteres; fica em auditoria — SP-F). Só super_admin pode eliminar contas.'
-    )
-    if (!reason || reason.trim().length < 10) {
-      setError('Eliminação cancelada: motivo com pelo menos 10 caracteres é obrigatório.')
-      setDeleteConfirmId(null)
-      return
-    }
+  const handleDelete = async (userId: string, governanceReason: string): Promise<true | string> => {
+    if (!token) return 'Erro ao eliminar'
+    const reason = governanceReason.trim()
+    if (reason.length < 10) return 'O motivo precisa de pelo menos 10 caracteres.'
     try {
       await apiFetch(`/admin/users/${userId}`, {
         method: 'DELETE',
         token,
-        body: JSON.stringify({ governance_reason: reason.trim() }),
+        body: JSON.stringify({ governance_reason: reason }),
       })
       setDeleteConfirmId(null)
       invalidateUserAudit(userId)
       await fetchUsers()
       setError(null)
+      return true
     } catch (err) {
       const ae = err as ApiError
       const d = ae?.detail
@@ -216,6 +211,7 @@ export function useAdminUsersDirectory(opts: {
             ? formatAdminApiDetail(d)
             : 'Erro ao eliminar'
       setError(msg)
+      return msg
     }
   }
 
@@ -262,25 +258,27 @@ export function useAdminUsersDirectory(opts: {
     }
   }
 
-  const handleClearUserPassword = async (userId: string) => {
-    if (!token) return
-    const typed = window.prompt(
-      'Repor login BETA (password por defeito). Escreve exactamente: LIMPAR_SENHA'
-    )
-    if (typed?.trim() !== 'LIMPAR_SENHA') return
-    const gr = promptGovernanceReason('Motivo para repor palavra-passe BETA (super_admin; SP-F):')
-    if (!gr) return
+  const handleClearUserPassword = async (
+    userId: string,
+    governanceReason: string,
+  ): Promise<true | string> => {
+    if (!token) return 'Erro ao retirar a palavra-passe'
+    const reason = governanceReason.trim()
+    if (reason.length < 10) return 'O motivo precisa de pelo menos 10 caracteres.'
     try {
       await apiFetch(`/admin/users/${userId}/password/clear`, {
         method: 'POST',
         token,
-        body: JSON.stringify({ confirmation: 'LIMPAR_SENHA', governance_reason: gr }),
+        body: JSON.stringify({ confirmation: 'LIMPAR_SENHA', governance_reason: reason }),
       })
       setError(null)
       invalidateUserAudit(userId)
       await fetchUsers()
+      return true
     } catch (err) {
-      setError(formatAdminApiDetail((err as ApiError).detail))
+      const msg = formatAdminApiDetail((err as ApiError).detail)
+      setError(msg)
+      return msg
     }
   }
 
