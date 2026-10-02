@@ -63,7 +63,24 @@
     "assignHint": "Assignee (admin UUID, optional)",
     "resolution": "Resolution",
     "save": "Save",
-    "timeline": "Procedure",
+    "timeline": "What happened",
+    "statusHint": "The dash keeps the current status. Another option, when you save, stores the code in parentheses.",
+    "statuses": {
+      "received": "Received",
+      "under_review": "Under review",
+      "awaiting_info": "Waiting for information",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "events": {
+      "received": "Received",
+      "status_changed": "Status changed",
+      "resolved": "Resolved",
+      "reopened": "Reopened",
+      "closed": "Closed",
+      "assignment_changed": "Assignment changed",
+      "attachment_added": "Attachment added"
+    },
     "noSelection": "Select a complaint.",
     "error": "Failed to load or update.",
     "attachmentsAfterCreate": "Attachments for an external complaint are added on the detail, after it is created."
