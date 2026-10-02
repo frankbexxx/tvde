@@ -37,5 +37,19 @@
   "kyc": {
     "publicReason": "Motivo para o motorista",
     "internalNote": "Nota interna"
+  },
+  "pendingApprove": {
+    "title": "Aprovar esta conta?",
+    "body": "Vais aprovar o telemóvel {{phone}} como {{role}}. A conta deixa de estar pendente.",
+    "cancel": "Cancelar",
+    "confirm": "Aprovar",
+    "confirming": "A aprovar…",
+    "error": "Erro ao aprovar",
+    "roles": {
+      "passenger": "Passageiro",
+      "driver": "Motorista",
+      "partner": "Parceiro",
+      "admin": "Administrador"
+    }
   }
 }
