@@ -414,6 +414,8 @@ export interface AdminKycDocItem {
   is_expired: boolean
   is_expiring_soon: boolean
   has_file: boolean
+  public_rejection_reason?: string | null
+  partner_note?: string | null
 }
 
 export interface AdminKycDriverRow {

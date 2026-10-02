@@ -12,7 +12,7 @@ import {
 export type ServerDocRow = {
   status?: string
   expires_at?: string | null
-  partner_note?: string | null
+  public_rejection_reason?: string | null
   file_name?: string | null
 }
 
@@ -45,7 +45,7 @@ export function driverDocumentsFromServer(
     if (!row || typeof row !== 'object') continue
     const st = row.status
     if (st && isStatus(st)) docs[k] = st
-    if ('expires_at' in row || 'partner_note' in row || 'file_name' in row) {
+    if ('expires_at' in row || 'public_rejection_reason' in row || 'file_name' in row) {
       docDetails[k] = {
         expiresAt:
           'expires_at' in row
@@ -53,11 +53,9 @@ export function driverDocumentsFromServer(
               ? row.expires_at
               : null
             : null,
-        partnerNote:
-          'partner_note' in row
-            ? typeof row.partner_note === 'string'
-              ? row.partner_note
-              : null
+        publicRejectionReason:
+          'public_rejection_reason' in row && typeof row.public_rejection_reason === 'string'
+            ? row.public_rejection_reason
             : null,
         fileName:
           'file_name' in row
@@ -96,12 +94,10 @@ export function mergeServerDriverDocuments(
             ? row.expires_at
             : null
           : (prevD?.expiresAt ?? null),
-      partnerNote:
-        'partner_note' in row
-          ? typeof row.partner_note === 'string'
-            ? row.partner_note
-            : null
-          : (prevD?.partnerNote ?? null),
+      publicRejectionReason:
+        'public_rejection_reason' in row && typeof row.public_rejection_reason === 'string'
+          ? row.public_rejection_reason
+          : null,
       fileName:
         'file_name' in row
           ? typeof row.file_name === 'string'

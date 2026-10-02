@@ -12,6 +12,7 @@ class DriverDocumentEntryPayload(BaseModel):
     expires_at: str | None = None
     submitted_at: str | None = None
     partner_note: str | None = None
+    public_rejection_reason: str | None = None
     ocr_suggested_expires_at: str | None = None
 
 

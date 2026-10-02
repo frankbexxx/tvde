@@ -33,5 +33,9 @@
     "metrics": "Métricas",
     "ops": "Operações",
     "health": "Saúde do sistema"
+  },
+  "kyc": {
+    "publicReason": "Motivo para o motorista",
+    "internalNote": "Nota interna"
   }
 }

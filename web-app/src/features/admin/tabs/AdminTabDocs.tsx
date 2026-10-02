@@ -290,6 +290,7 @@ function AlertCard(props: {
 }
 
 function DocBadges({ docs }: { docs: AdminKycDriverRow['documents'] }) {
+  const { t } = useTranslation('admin')
   return (
     <ul className="mt-2 space-y-1">
       {docs.map((doc) => (
@@ -311,6 +312,16 @@ function DocBadges({ docs }: { docs: AdminKycDriverRow['documents'] }) {
           {doc.is_expiring_soon ? (
             <span className="rounded border border-warning/40 bg-warning/15 px-1">
               a expirar
+            </span>
+          ) : null}
+          {doc.public_rejection_reason ? (
+            <span className="basis-full text-[11px] text-foreground/80" data-testid={`admin-kyc-public-reason-${doc.doc_key}`}>
+              {t('kyc.publicReason')}: {doc.public_rejection_reason}
+            </span>
+          ) : null}
+          {doc.partner_note ? (
+            <span className="basis-full text-[11px] text-foreground/80" data-testid={`admin-kyc-internal-note-${doc.doc_key}`}>
+              {t('kyc.internalNote')}: {doc.partner_note}
             </span>
           ) : null}
         </li>

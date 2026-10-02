@@ -67,6 +67,8 @@ def _driver_doc_item(doc_key: str, entry: dict) -> AdminKycDocItem:
         (isinstance(entry.get("file_path"), str) and entry["file_path"].strip())
         or (isinstance(entry.get("file_name"), str) and entry["file_name"].strip())
     )
+    public_reason = entry.get("public_rejection_reason")
+    internal_note = entry.get("partner_note")
     return AdminKycDocItem(
         doc_key=doc_key,
         stored_status=stored,
@@ -75,6 +77,8 @@ def _driver_doc_item(doc_key: str, entry: dict) -> AdminKycDocItem:
         is_expired=is_expired,
         is_expiring_soon=is_expiring_soon,
         has_file=has_file,
+        public_rejection_reason=public_reason if isinstance(public_reason, str) else None,
+        partner_note=internal_note if isinstance(internal_note, str) else None,
     )
 
 

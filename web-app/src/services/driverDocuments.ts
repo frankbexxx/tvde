@@ -13,10 +13,10 @@ export const REQUIRED_DRIVER_DOCUMENTS = [
 export type DriverRequiredDocument = (typeof REQUIRED_DRIVER_DOCUMENTS)[number]
 export type DriverDocumentStatus = 'missing' | 'pending_review' | 'approved' | 'rejected' | 'expired'
 
-/** Metadados partilhados com o partner (validade, notas). */
+/** Metadados que o motorista pode ver. A nota interna da frota não entra aqui. */
 export interface DriverDocumentDetails {
   expiresAt: string | null
-  partnerNote: string | null
+  publicRejectionReason: string | null
   fileName?: string | null
 }
 
@@ -55,7 +55,8 @@ function sanitizeDocDetails(
     if (!row || typeof row !== 'object') continue
     out[k] = {
       expiresAt: typeof row.expiresAt === 'string' ? row.expiresAt : null,
-      partnerNote: typeof row.partnerNote === 'string' ? row.partnerNote : null,
+      publicRejectionReason:
+        typeof row.publicRejectionReason === 'string' ? row.publicRejectionReason : null,
       fileName: typeof row.fileName === 'string' ? row.fileName : null,
     }
   }

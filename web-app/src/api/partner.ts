@@ -14,6 +14,9 @@ export interface PartnerDriverRow {
       status?: string
       expires_at?: string | null
       partner_note?: string | null
+      public_rejection_reason?: string | null
+      file_path?: string | null
+      file_name?: string | null
       submitted_at?: string | null
       ocr_suggested_expires_at?: string | null
     }
@@ -566,7 +569,7 @@ export async function patchPartnerDriverDocuments(
   userId: string,
   docs: Record<
     string,
-    { status?: string; expires_at?: string | null; partner_note?: string | null }
+    { status?: string; expires_at?: string | null; partner_note?: string | null; public_rejection_reason?: string | null }
   >
 ): Promise<PartnerDriverRow> {
   return apiFetch<PartnerDriverRow>(`/partner/drivers/${encodeURIComponent(userId)}/documents`, {
