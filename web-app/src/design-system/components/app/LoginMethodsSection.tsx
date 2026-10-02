@@ -43,9 +43,11 @@ function providerLabel(provider: string, t: (key: string) => string): string {
 export function LoginMethodsSection({
   token,
   onSessionEnded,
+  showTitle = true,
 }: {
   token: string
   onSessionEnded: () => void
+  showTitle?: boolean
 }) {
   const { t } = useTranslation('common')
   const confirmPasswordId = useId()
@@ -197,9 +199,11 @@ export function LoginMethodsSection({
 
   return (
     <div className="pt-2 border-t border-border/60 space-y-3">
-      <p className="text-xs text-muted-foreground uppercase tracking-wide">
-        {t('profilePanel.loginMethods.title')}
-      </p>
+      {showTitle ? (
+        <p className="text-xs text-muted-foreground uppercase tracking-wide">
+          {t('profilePanel.loginMethods.title')}
+        </p>
+      ) : null}
       {hasPassword === false && !passwordSaved ? (
         <div className="space-y-2">
           <p className="text-sm font-medium">{t('profilePanel.loginMethods.setPassword')}</p>

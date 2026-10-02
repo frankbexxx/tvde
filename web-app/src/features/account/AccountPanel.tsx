@@ -36,6 +36,7 @@ export function AccountPanel() {
   const [confirmPw, setConfirmPw] = useState('')
   const [savingPw, setSavingPw] = useState(false)
   const [pwErr, setPwErr] = useState<string | null>(null)
+  const [methodsOpen, setMethodsOpen] = useState(false)
 
   const load = useCallback(async () => {
     if (!token) return
@@ -114,6 +115,21 @@ export function AccountPanel() {
   return (
     <section className="space-y-4" data-testid="account-panel">
       <h2 className="text-base font-medium text-foreground">{t('profilePanel.accountTitle')}</h2>
+      <button
+        type="button"
+        className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-card px-3 py-2 text-left text-sm font-medium text-foreground"
+        aria-expanded={methodsOpen}
+        aria-controls="account-login-methods"
+        data-testid="account-login-methods-toggle"
+        onClick={() => setMethodsOpen((open) => !open)}
+      >
+        {t('profilePanel.loginMethods.title')}
+      </button>
+      <div id="account-login-methods" data-testid="account-login-methods">
+        {methodsOpen ? (
+          <LoginMethodsSection token={token} onSessionEnded={logout} showTitle={false} />
+        ) : null}
+      </div>
       {loadErr ? <p className="text-sm text-destructive">{loadErr}</p> : null}
       {profile ? (
         <div className="space-y-4">
@@ -206,7 +222,6 @@ export function AccountPanel() {
       ) : !loadErr ? (
         <p className="text-sm text-muted-foreground">{t('betaAccount.loading')}</p>
       ) : null}
-      <LoginMethodsSection token={token} onSessionEnded={logout} />
     </section>
   )
 }
