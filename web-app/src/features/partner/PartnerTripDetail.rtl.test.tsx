@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import type { PartnerTripRow } from '../../api/partner'
 import { VISIBILITY_VISIBLE_EVENT } from '../../constants/events'
 import i18n from '../../i18n'
+import { reverseGeocode } from '../../services/geocoding'
 import { PartnerTripDetail } from './PartnerTripDetail'
 
 const api = vi.hoisted(() => ({
@@ -95,6 +96,8 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
       last_location: null,
     })
     api.fetchPartnerTrip.mockResolvedValue(baseTrip())
+    vi.mocked(reverseGeocode).mockReset()
+    vi.mocked(reverseGeocode).mockResolvedValue(null as never)
   })
 
   afterEach(() => {
@@ -160,7 +163,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     renderDetail()
     await waitFor(() => {
       expect(screen.getByText('pax-1')).toBeInTheDocument()
-      expect(screen.getByText(/Motorista Teste/)).toBeInTheDocument()
+      expect(screen.getAllByText(/Motorista Teste/).length).toBeGreaterThan(0)
     })
 
     api.fetchPartnerTrip.mockRejectedValueOnce({ status: 404, detail: 'not_found' })
@@ -169,7 +172,7 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     await waitFor(() => {
       expect(screen.getByText('not_found')).toBeInTheDocument()
       expect(screen.queryByText('pax-1')).not.toBeInTheDocument()
-      expect(screen.queryByText(/Motorista Teste/)).not.toBeInTheDocument()
+      expect(screen.queryAllByText(/Motorista Teste/)).toHaveLength(0)
     })
   })
 
@@ -185,15 +188,17 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
 
     fireEvent.click(screen.getByTestId('switch-trip'))
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'trip-2' })).toBeInTheDocument()
+      expect(screen.getByTestId('partner-trip-detail-reference')).toHaveTextContent('trip-2')
     })
 
     await act(async () => {
       firstTrip.resolve(baseTrip({ trip_id: 'trip-1', status: 'assigned' }))
       await firstTrip.promise
     })
-    expect(screen.getByRole('heading', { name: 'trip-2' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'trip-1' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('partner-trip-detail-reference')).toHaveTextContent('trip-2')
+    expect(screen.getByTestId('partner-trip-detail-reference')).not.toHaveTextContent('trip-1')
+    expect(screen.getByRole('heading')).not.toHaveTextContent('trip-1')
+    expect(screen.getByRole('heading')).not.toHaveTextContent('trip-2')
   })
 
   it('mantém a resposta do refresh mais recente quando pedidos terminam fora de ordem', async () => {
@@ -316,5 +321,53 @@ describe('PartnerTripDetail (OPS-UX-1B)', () => {
     expect(screen.getByTestId('partner-trip-tolls-delta')).toHaveTextContent('—')
     expect(screen.getByTestId('partner-trip-tolls-source')).toHaveTextContent('—')
     expect(screen.getByTestId('partner-trip-tolls-status')).toHaveTextContent('—')
+  })
+
+  it('identifica a viagem pelo percurso quando o geocode já existe e mantém o id', async () => {
+    vi.mocked(reverseGeocode).mockImplementation(async (lng: number) => {
+      if (lng === -9.14) return 'Rossio'
+      if (lng === -9.13) return 'Aeroporto'
+      return ''
+    })
+    api.fetchPartnerTrip.mockResolvedValue(
+      baseTrip({ vehicle_plate: '12-AB-34', driver_id: 'drv-1' }),
+    )
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByTestId('partner-trip-detail-title')).toHaveTextContent('Rossio → Aeroporto')
+    })
+    expect(screen.getByTestId('partner-trip-detail-reference')).toHaveTextContent('trip-1')
+    expect(screen.getByTestId('partner-trip-detail-title')).not.toHaveTextContent('trip-1')
+    expect(screen.getByText(/Motorista Teste/)).toBeInTheDocument()
+  })
+
+  it('sem nome usa fallback humano e não põe o id no título', async () => {
+    api.fetchPartnerDriver.mockResolvedValue({
+      user_id: '2481222c-50f6-403f-aa59-8d386f1cd00a',
+      partner_id: 'p1',
+      status: 'approved',
+      is_available: false,
+      user: { name: null, phone: null },
+      last_location: null,
+    })
+    api.fetchPartnerTrip.mockResolvedValue(
+      baseTrip({
+        trip_id: '98af7123-1111-4111-8111-111111111111',
+        driver_id: '2481222c-50f6-403f-aa59-8d386f1cd00a',
+        passenger_id: 'pax-9',
+        vehicle_plate: null,
+      }),
+    )
+    renderDetail('98af7123-1111-4111-8111-111111111111')
+    await waitFor(() => {
+      expect(screen.getByText('Motorista atribuído')).toBeInTheDocument()
+    })
+    const title = screen.getByTestId('partner-trip-detail-title')
+    expect(title).not.toHaveTextContent('98af7123')
+    expect(title).not.toHaveTextContent('2481222c')
+    expect(title.textContent).not.toMatch(/undefined|null/)
+    expect(screen.getByTestId('partner-trip-detail-reference')).toHaveTextContent(
+      '98af7123-1111-4111-8111-111111111111',
+    )
   })
 })

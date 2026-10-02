@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import type { PartnerTripRow } from '../../../api/partner'
+import type { PartnerDriverRow, PartnerTripRow } from '../../../api/partner'
 import { EmptyState } from '../../../components/feedback/EmptyState'
-import { partnerTripStatusLabel } from '../partnerLabels'
+import { PartnerTripLinkLabel } from '../PartnerTripLinkLabel'
 
 type PartnerTripsSummaryScreenProps = {
   tripStats: {
@@ -13,9 +13,14 @@ type PartnerTripsSummaryScreenProps = {
     failed: number
   }
   recentTrips: PartnerTripRow[]
+  drivers?: readonly PartnerDriverRow[]
 }
 
-export function PartnerTripsSummaryScreen({ tripStats, recentTrips }: PartnerTripsSummaryScreenProps) {
+export function PartnerTripsSummaryScreen({
+  tripStats,
+  recentTrips,
+  drivers = [],
+}: PartnerTripsSummaryScreenProps) {
   const { t } = useTranslation('partner')
 
   return (
@@ -44,9 +49,9 @@ export function PartnerTripsSummaryScreen({ tripStats, recentTrips }: PartnerTri
               <li key={trip.trip_id}>
                 <Link
                   to={`/partner/trips/${encodeURIComponent(trip.trip_id)}`}
-                  className="block rounded-lg border border-border/80 bg-card px-3 py-2 text-xs font-medium text-primary hover:underline"
+                  className="block min-w-0 rounded-lg border border-border/80 bg-card px-3 py-2 text-xs text-primary hover:underline"
                 >
-                  {trip.trip_id.slice(0, 8)}… · {partnerTripStatusLabel(trip.status)}
+                  <PartnerTripLinkLabel trip={trip} drivers={drivers} />
                 </Link>
               </li>
             ))}
