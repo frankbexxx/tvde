@@ -8,6 +8,7 @@ import {
   ADMIN_ASSIGN_RECOVERY_LABEL,
   ADMIN_ASSIGN_RECOVERY_TITLE,
   adminPaymentStatusLabel,
+  adminTripStatusLabel,
 } from '../adminTripSupportLabels'
 import { formatRelativeAgo, minutesSince } from '../../../utils/relativeTime'
 import { stripePaymentIntentDashboardUrls } from '../../../utils/stripeDashboard'
@@ -311,7 +312,9 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
                       <div className="flex justify-between items-start gap-2">
                         <div>
                           <p className="font-medium text-foreground flex flex-wrap items-center gap-2">
-                            <span>{t.trip_id.slice(0, 8)}… · {t.status}</span>
+                            <span data-testid={`admin-trip-status-${t.trip_id}`}>
+                              {t.trip_id.slice(0, 8)}… · {adminTripStatusLabel(t.status)}
+                            </span>
                             <span className="text-[11px] font-normal text-foreground/70">
                               {t.passenger_count ?? 1} pass.
                             </span>
@@ -537,8 +540,8 @@ export function AdminTabTrips(props: AdminTabTripsProps) {
                     <div className="flex justify-between items-start gap-2">
                       <div>
                         <p className="font-medium text-foreground flex flex-wrap items-center gap-2">
-                          <span>
-                            {h.trip_id.slice(0, 8)}… · {h.status}
+                          <span data-testid={`admin-trip-status-${h.trip_id}`}>
+                            {h.trip_id.slice(0, 8)}… · {adminTripStatusLabel(h.status)}
                           </span>
                           <span className="text-[11px] font-normal text-foreground/70">
                             {h.passenger_count ?? 1} pass.

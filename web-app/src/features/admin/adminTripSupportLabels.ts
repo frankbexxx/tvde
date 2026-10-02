@@ -1,6 +1,19 @@
 import type { AdminAuditTrailItem } from '../../api/admin'
 import type { PaymentStatus } from '../../api/trips'
-import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
+import { paymentStatusLabel } from '../../constants/tripStatusLabels'
+
+/** Labels de leitura no Admin. Os valores internos da API não mudam. */
+const ADMIN_TRIP_STATUS_LABELS: Record<string, string> = {
+  requested: 'Pedido',
+  assigned: 'Motorista atribuído',
+  accepted: 'Aceite',
+  arriving: 'Motorista a chegar',
+  ongoing: 'Em viagem',
+  completed: 'Concluída',
+  cancelled: 'Cancelada',
+  failed: 'Falhou',
+  queued: 'Em fila',
+}
 
 const CANCELLED_BY_LABELS: Record<string, string> = {
   passenger: 'Passageiro',
@@ -35,7 +48,7 @@ const PAYLOAD_REDACT_KEYS = new Set([
 
 export function adminTripStatusLabel(status: string | null | undefined): string {
   if (!status) return '—'
-  return passengerTripStatusLabel(status)
+  return ADMIN_TRIP_STATUS_LABELS[status] ?? 'Estado desconhecido'
 }
 
 export function adminPaymentStatusLabel(status: PaymentStatus | string | null | undefined): string {
