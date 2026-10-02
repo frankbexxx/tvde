@@ -55,11 +55,11 @@ export function AdminTabMetrics(props: AdminTabMetricsProps) {
               <p className="font-bold text-foreground">{metrics.trips_ongoing}</p>
             </div>
             <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card">
-              <p className="text-foreground/70">Concluídas hoje</p>
+              <p className="text-foreground/70">Viagens concluídas hoje (hora UTC)</p>
               <p className="font-bold text-foreground">{metrics.trips_completed_today}</p>
             </div>
             <div className="bg-card border border-border rounded-2xl px-3 py-2 shadow-card sm:col-span-2">
-              <p className="text-foreground/70">Total criadas / aceites / concluídas</p>
+              <p className="text-foreground/70">Total de viagens criadas, aceites e concluídas</p>
               <p className="font-bold text-foreground">
                 {metrics.trips_created_total} / {metrics.trips_accepted_total} /{' '}
                 {metrics.trips_completed_total}
@@ -103,12 +103,12 @@ export function AdminTabMetrics(props: AdminTabMetricsProps) {
                   <p className="font-medium">Alertas</p>
                   <ul className="list-disc pl-5">
                     {usage.alerts.zero_drivers_available && <li>Zero motoristas disponíveis</li>}
-                    {usage.alerts.zero_trips_today && <li>Zero viagens criadas hoje</li>}
+                    {usage.alerts.zero_trips_today && <li>Nenhuma viagem criada hoje (hora UTC)</li>}
                   </ul>
                 </div>
               )}
               <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Weekly report</p>
+                <p className="text-sm font-medium text-foreground">Relatório semanal</p>
                 {usage.weekly.length === 0 ? (
                   <EmptyState title="Sem dados." />
                 ) : (
@@ -116,9 +116,9 @@ export function AdminTabMetrics(props: AdminTabMetricsProps) {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-left text-foreground/70">
-                          <th className="py-1 pr-2">Semana</th>
-                          <th className="py-1 pr-2">Criadas</th>
-                          <th className="py-1">Concluídas</th>
+                          <th className="py-1 pr-2">Início da semana</th>
+                          <th className="py-1 pr-2">Viagens criadas</th>
+                          <th className="py-1">Viagens concluídas</th>
                         </tr>
                       </thead>
                       <tbody>

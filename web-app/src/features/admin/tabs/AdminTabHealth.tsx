@@ -10,6 +10,7 @@ import {
   PB_TRIPS_ONGOING_LONG,
 } from '../adminHealthAnomalyPlaybooks'
 import { countHealthSignalRows } from '../adminDashboardHelpers'
+import { adminHealthStatusLabel } from '../adminCopy'
 
 import type { SystemHealthResponse } from '../../../api/admin'
 import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
@@ -46,22 +47,26 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
               {countHealthSignalRows(health) + health.warnings.length > 0 ? (
                 <div className="rounded-xl border border-warning/50 bg-warning/10 px-3 py-2 text-sm text-foreground flex flex-wrap items-center justify-between gap-2">
                   <span>
-                    <strong>Há anomalias ou avisos.</strong> Expande «O que é · O que fazer» em cada bloco abaixo.
+                    <strong>Há problemas nesta leitura.</strong> Em cada bloco, abre «O que se passa e o que fazer».
                   </span>
                   <button
                     type="button"
                     onClick={() => syncAdminUrl({ tab: 'ops', tripId: null })}
                     className="shrink-0 inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-medium hover:bg-muted/40"
                   >
-                    Ir para Operações (cron / recuperar)
+                    Ir para Operações
                   </button>
                 </div>
               ) : null}
               <p
                 className={`font-medium ${health.status === 'ok' ? 'text-success' : 'text-warning'
                   }`}
+                data-testid="admin-health-status"
               >
-                Status: {health.status}
+                {adminHealthStatusLabel(health.status).primary}
+                <span className="block text-xs font-normal text-muted-foreground">
+                  Estado técnico: {health.status}
+                </span>
               </p>
               {health.warnings.length > 0 && (
                 <ul className="text-sm text-warning space-y-1">
@@ -72,14 +77,14 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
               )}
               <HealthAnomalyBlock
                 key={healthBlockKey('accepted', health.trips_accepted_too_long)}
-                title="Viagens accepted há muito"
+                title="Viagens aceites há muito tempo"
                 rows={health.trips_accepted_too_long}
                 onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 playbook={PB_TRIPS_ACCEPTED_LONG}
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('ongoing', health.trips_ongoing_too_long)}
-                title="Viagens ongoing há muito"
+                title="Viagens em curso há muito tempo"
                 rows={health.trips_ongoing_too_long}
                 onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 playbook={PB_TRIPS_ONGOING_LONG}
@@ -93,7 +98,7 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
               />
               <HealthAnomalyBlock
                 key={healthBlockKey('stuck_pi', health.stuck_payments)}
-                title="Pagamentos bloqueados (processing)"
+                title="Pagamentos que não avançaram"
                 rows={health.stuck_payments}
                 onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
                 pageSize={25}
@@ -122,11 +127,11 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
                 health.stuck_payments.length === 0 &&
                 (health.missing_payment_records ?? []).length === 0 &&
                 (health.inconsistent_financial_state ?? []).length === 0 && (
-                  <p className="text-foreground/75">Tudo OK.</p>
+                  <p className="text-foreground/75">Nada a assinalar nesta leitura.</p>
                 )}
             </div>
           ) : (
-            <p className="text-foreground/75">Carregar saúde...</p>
+            <p className="text-foreground/75">A carregar a última verificação…</p>
           )}
         </section>
     </>

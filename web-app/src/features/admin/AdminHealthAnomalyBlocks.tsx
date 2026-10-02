@@ -28,7 +28,7 @@ export function HealthAnomalyBlock(props: {
       {playbook ? (
         <details className="rounded-lg border border-info/40 bg-info/10 px-2 py-1.5 text-xs">
           <summary className="cursor-pointer font-medium text-foreground select-none min-h-10 flex items-center py-1">
-            O que é · O que fazer (3 passos)
+            O que se passa e o que fazer
           </summary>
           <p className="mt-2 text-foreground/85 leading-relaxed">{playbook.what}</p>
           <ol className="mt-2 list-decimal pl-4 space-y-1.5 text-foreground/85">
@@ -67,7 +67,7 @@ export function HealthAnomalyBlock(props: {
               setShown(pageSize)
             }}
           >
-            Ordem API
+            Ordem recebida
           </button>
         </div>
       </div>
@@ -88,7 +88,7 @@ export function HealthAnomalyBlock(props: {
                   </button>
                 ) : (
                   <p className="text-xs text-muted-foreground pr-2">
-                    Sem viagem nesta linha (ex.: motorista) — ver JSON ou Operações.
+                    Esta linha não tem viagem. O detalhe técnico está abaixo, ou abre Operações.
                   </p>
                 )}
               </div>

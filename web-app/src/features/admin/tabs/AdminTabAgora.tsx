@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { AdminAlertsResponse, AdminMetricsResponse, SystemHealthResponse, TripActiveItem } from '../../../api/admin'
 import { ErrorBanner } from '../../../components/feedback/ErrorBanner'
 import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
+import { adminHealthStatusLabel } from '../adminCopy'
 
 interface PendingUser {
   phone: string
@@ -97,13 +98,14 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
           </div>
         </div>
         <p className="text-sm text-foreground/70 -mt-1 sm:-mt-2">
-          Actualiza ao abrir esta tab e quando carregas em Atualizar. Usa as tabs abaixo para agir.
+          Actualiza ao abrir esta área e quando carregas em Atualizar. Usa os separadores desta área para agir.
         </p>
 
         {(() => {
           const stuckN = health?.stuck_payments?.length ?? 0
           const signalRows = countHealthSignalRows(health)
-          const hStatus = health?.status ?? '—'
+          const hStatus = health?.status ?? null
+          const healthLabel = adminHealthStatusLabel(hStatus)
           const degraded = hStatus === 'degraded' || signalRows > 0
           const activeN = metrics?.active_trips ?? activeTrips.length
           const pendingN = pending.length
@@ -117,23 +119,29 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
                   }`}
               >
                 <p className="text-sm font-medium text-foreground">
-                  Saúde API: <span className="text-foreground">{hStatus}</span>
+                  Serviço: <span className="text-foreground">{healthLabel.primary}</span>
+                  {healthLabel.technical ? (
+                    <span className="text-muted-foreground font-normal"> · estado técnico: {healthLabel.technical}</span>
+                  ) : null}
                   {signalRows > 0 ? (
-                    <span className="text-warning"> · {signalRows} linha(s) de anomalia</span>
+                    <span className="text-warning">
+                      {' '}
+                      · {signalRows} {signalRows === 1 ? 'problema' : 'problemas'} nesta leitura
+                    </span>
                   ) : (
-                    <span className="text-muted-foreground"> · sem linhas de anomalia</span>
+                    <span className="text-muted-foreground"> · sem problemas nesta leitura</span>
                   )}
                 </p>
                 {stuckN > 0 ? (
                   <p className="text-sm text-destructive mt-1 font-medium">
-                    Pagamentos presos (stuck): {stuckN} — ver Saúde ou Operações.
+                    Pagamentos que não avançaram: {stuckN} — ver Saúde ou Operações.
                   </p>
                 ) : (
-                  <p className="text-xs text-foreground/65 mt-1">Pagamentos presos: 0</p>
+                  <p className="text-xs text-foreground/65 mt-1">Pagamentos que não avançaram: 0</p>
                 )}
                 {signalRows > 0 ? (
                   <p className="text-xs text-foreground/75 mt-2">
-                    Em <strong>Saúde</strong>, cada bloco com linhas inclui «O que é · O que fazer (3 passos)» (SP-D).
+                    Em <strong>Saúde</strong>, cada bloco diz o que se passa e o que fazer a seguir.
                   </p>
                 ) : null}
               </div>
@@ -152,7 +160,7 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
                   onClick={() => syncAdminUrl({ tab: 'pending', tripId: null })}
                   className="rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-card hover:bg-muted/40 transition-colors"
                 >
-                  <p className="text-xs text-foreground/70">Pendentes aprovação</p>
+                  <p className="text-xs text-foreground/70">Pessoas à espera de aprovação</p>
                   <p className="text-2xl font-semibold text-foreground tabular-nums">{pendingN}</p>
                 </button>
                 <button
@@ -160,7 +168,7 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
                   onClick={() => syncAdminUrl({ tab: 'metrics', tripId: null })}
                   className="rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-card hover:bg-muted/40 transition-colors"
                 >
-                  <p className="text-xs text-foreground/70">Motoristas disponíveis</p>
+                  <p className="text-xs text-foreground/70">Motoristas disponíveis agora</p>
                   <p className="text-2xl font-semibold text-foreground tabular-nums">
                     {metrics?.drivers_available ?? '—'}
                   </p>
@@ -170,7 +178,7 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
                   onClick={() => syncAdminUrl({ tab: 'metrics', tripId: null })}
                   className="rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-card hover:bg-muted/40 transition-colors"
                 >
-                  <p className="text-xs text-foreground/70">Em curso (métricas)</p>
+                  <p className="text-xs text-foreground/70">Viagens em curso</p>
                   <p className="text-2xl font-semibold text-foreground tabular-nums">
                     {metrics?.trips_ongoing ?? '—'}
                   </p>
@@ -185,7 +193,7 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
                     ) : null}
                     {adminAlerts.zero_trips_today ? (
                       <p className={adminAlerts.zero_drivers_available ? 'mt-1' : ''}>
-                        Alerta métricas: zero viagens criadas hoje (UTC).
+                        Nenhuma viagem criada hoje (hora UTC).
                       </p>
                     ) : null}
                   </div>
