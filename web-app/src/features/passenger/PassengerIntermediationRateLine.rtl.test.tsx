@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 vi.mock('../../context/AuthContext', () => ({
   useAuth: () => ({ token: null }),
 }))
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '../../i18n'
 import type { TripDetailResponse } from '../../api/trips'
@@ -13,6 +13,10 @@ import { PassengerHistoryDetailPanel } from './PassengerHistoryDetailPanel'
 
 function wrap(ui: React.ReactElement) {
   return render(<I18nextProvider i18n={i18n}>{ui}</I18nextProvider>)
+}
+
+function openPriceDetails() {
+  fireEvent.click(screen.getByTestId('passenger-price-details-toggle'))
 }
 
 function detail(rate: number | null, payout = 99.99): TripDetailResponse {
@@ -55,6 +59,7 @@ describe('passenger intermediation rate', () => {
         lastIntermediationRate={15}
       />,
     )
+    openPriceDetails()
     expect(screen.getByTestId('passenger-intermediation-rate').textContent).toBe(
       'Taxa de intermediação VAMULÁ: 15%',
     )
@@ -83,6 +88,7 @@ describe('passenger intermediation rate', () => {
         lastIntermediationRate={12.5}
       />,
     )
+    openPriceDetails()
     expect(screen.getByTestId('passenger-intermediation-rate').textContent).toBe(
       'Taxa de intermediação VAMULÁ: 12.5%',
     )
@@ -118,6 +124,7 @@ describe('passenger intermediation rate', () => {
     wrap(
       <PassengerStatusCard uxState="TRIP_ONGOING" activeTrip={detail(15, 88.5)} />,
     )
+    openPriceDetails()
     expect(screen.getByTestId('passenger-intermediation-rate').textContent).toBe(
       'VAMULÁ intermediation rate: 15%',
     )
@@ -140,6 +147,7 @@ describe('passenger intermediation rate', () => {
         error={null}
       />,
     )
+    openPriceDetails()
     expect(screen.getByTestId('passenger-intermediation-rate').textContent).toBe(
       'Taxa de intermediação VAMULÁ: 15%',
     )

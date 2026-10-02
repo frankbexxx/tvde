@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '../../i18n'
 import { TripPlannerPanel } from './TripPlannerPanel'
@@ -32,6 +32,9 @@ describe('TripPlannerPanel tolls estimate (F1)', () => {
         lastEstimatedTotal={4.9}
       />,
     )
+    expect(screen.getByTestId('passenger-estimate-total')).toHaveTextContent('Total estimado: 4.90 €')
+    expect(screen.queryByTestId('passenger-estimate-tolls')).toBeNull()
+    fireEvent.click(screen.getByTestId('passenger-price-details-toggle'))
     expect(screen.getByTestId('passenger-estimate-tolls').textContent).toMatch(/0\.40/)
     expect(screen.getByTestId('passenger-estimate-breakdown').textContent).toMatch(/4\.90/)
     expect(screen.getByTestId('passenger-estimate-breakdown').textContent).not.toMatch(/observad/i)
@@ -62,6 +65,7 @@ describe('TripPlannerPanel tolls estimate (F1)', () => {
         lastEstimatedTotal={4.5}
       />,
     )
+    fireEvent.click(screen.getByTestId('passenger-price-details-toggle'))
     expect(screen.queryByTestId('passenger-estimate-tolls')).toBeNull()
     expect(screen.getByTestId('passenger-estimate-tolls-unavailable')).toBeTruthy()
   })

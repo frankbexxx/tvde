@@ -6,7 +6,7 @@ vi.mock('../../context/AuthContext', () => ({
   useAuth: () => ({ token: null }),
 }))
 
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { I18nextProvider } from 'react-i18next'
 import i18n from '../../i18n'
 import type { PriceBreakdown, TripDetailResponse } from '../../api/trips'
@@ -17,6 +17,14 @@ import { PriceFormulaBreakdown } from './PriceFormulaBreakdown'
 
 function wrap(ui: React.ReactElement) {
   return render(<I18nextProvider i18n={i18n}>{ui}</I18nextProvider>)
+}
+
+function openPriceDetails() {
+  const toggle = screen.getByTestId('passenger-price-details-toggle')
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  fireEvent.click(toggle)
+  expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  return toggle
 }
 
 function breakdown(overrides: Partial<PriceBreakdown> = {}): PriceBreakdown {
@@ -181,6 +189,10 @@ describe('passenger price formula', () => {
   it('shows formula, pet, tolls and the intermediation rate as separate lines after create', async () => {
     await i18n.changeLanguage('pt')
     wrap(planner(breakdown({ pet_surcharge: 1.5, tolls_amount: 0.4 }), { pet: 1.5, tolls: 0.4 }))
+    expect(screen.getByTestId('passenger-estimate-total')).toHaveTextContent('Total estimado: 10.00 €')
+    expect(screen.queryByTestId('passenger-price-formula-base')).toBeNull()
+    expect(screen.queryByTestId('passenger-estimate-tolls')).toBeNull()
+    const toggle = openPriceDetails()
     const block = screen.getByTestId('passenger-estimate-breakdown')
     expect(screen.getByTestId('passenger-price-formula-base').textContent).toBe(
       'Base 1.50 € + 0.60 €/km + 0.12 €/min',
@@ -194,11 +206,31 @@ describe('passenger price formula', () => {
     expect(screen.getByTestId('passenger-price-formula').textContent).not.toMatch(/Portagens/)
     expect(screen.getByTestId('passenger-price-formula').textContent).not.toMatch(/Suplemento/)
     expect(block.textContent).not.toMatch(/99\.99/)
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByTestId('passenger-price-formula-base')).toBeNull()
+    expect(screen.getByTestId('passenger-estimate-total')).toHaveTextContent('Total estimado: 10.00 €')
+  })
+
+  it('keeps the adjustment inside the details and omits tolls when they are absent', async () => {
+    await i18n.changeLanguage('pt')
+    wrap(planner(breakdown({ minimum_fare_adjustment: 0.8 })))
+    expect(screen.queryByTestId('passenger-price-formula-adjustment')).toBeNull()
+    expect(screen.queryByTestId('passenger-estimate-tolls')).toBeNull()
+    openPriceDetails()
+    expect(screen.getByTestId('passenger-price-formula-adjustment').textContent).toBe(
+      'Ajuste ao mínimo: 0.80 €',
+    )
+    expect(screen.queryByTestId('passenger-estimate-tolls')).toBeNull()
+    expect(screen.getByTestId('passenger-estimate-total')).toHaveTextContent('Total estimado: 10.00 €')
   })
 
   it('shows the active-trip formula from the snapshot and keeps the rate separate', async () => {
     await i18n.changeLanguage('en')
     wrap(<PassengerStatusCard uxState="TRIP_ONGOING" activeTrip={detail(breakdown())} />)
+    expect(screen.getByText('10.00 €')).toBeTruthy()
+    expect(screen.queryByTestId('passenger-price-formula-base')).toBeNull()
+    openPriceDetails()
     expect(screen.getByTestId('passenger-price-formula-base').textContent).toBe(
       'Base 1.50 € + 0.60 €/km + 0.12 €/min',
     )
@@ -219,6 +251,8 @@ describe('passenger price formula', () => {
       />,
     )
     expect(screen.getByTestId('passenger-history-detail').textContent).toMatch(/18/)
+    expect(screen.queryByTestId('passenger-price-formula-base')).toBeNull()
+    openPriceDetails()
     expect(screen.getByTestId('passenger-price-formula-base').textContent).toBe(
       'Base 1.50 € + 0.60 €/km + 0.12 €/min',
     )

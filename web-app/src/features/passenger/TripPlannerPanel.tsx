@@ -5,6 +5,7 @@ import type { PriceBreakdown, TripDetailResponse } from '../../api/trips'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { passengerPaymentDisclosureSearching } from '../../constants/passengerPaymentCopy'
 import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
+import { PassengerPriceDetails } from './PassengerPriceDetails'
 import { PriceFormulaBreakdown } from './PriceFormulaBreakdown'
 import {
   BTN_COMPACT_HEIGHT,
@@ -362,31 +363,33 @@ function TripPlannerPanelInner({
               className="text-sm text-foreground text-center space-y-0.5"
               data-testid="passenger-estimate-breakdown"
             >
-              <PriceFormulaBreakdown breakdown={lastPriceBreakdown} />
-              {lastFareSubtotal != null ? (
-                <p>{t('pet.fareLine', { amount: lastFareSubtotal.toFixed(2) })}</p>
-              ) : null}
-              {lastPetSurcharge != null && lastPetSurcharge > 0 ? (
-                <p>{t('pet.surchargeLine', { amount: lastPetSurcharge.toFixed(2) })}</p>
-              ) : lastPetSurcharge === 0 && (activeTrip?.is_assistance_animal || activeTrip?.has_pet === false) ? (
-                <p className="text-foreground/75">{t('pet.noSurcharge')}</p>
-              ) : null}
-              {lastEstimatedTolls != null && lastEstimatedTolls > 0 ? (
-                <>
-                  <p data-testid="passenger-estimate-tolls">
-                    {t('pet.tollsLine', { amount: lastEstimatedTolls.toFixed(2) })}
-                  </p>
-                  <p className="text-xs text-foreground/70">{t('pet.tollsHint')}</p>
-                </>
-              ) : lastTollsUnavailable ? (
-                <p className="text-xs text-foreground/70" data-testid="passenger-estimate-tolls-unavailable">
-                  {t('pet.tollsUnavailable')}
-                </p>
-              ) : null}
-              <p className="font-semibold">
+              <p className="text-2xl font-bold tabular-nums text-foreground" data-testid="passenger-estimate-total">
                 {t('pet.totalLine', { amount: lastEstimatedTotal.toFixed(2) })}
               </p>
-              <PassengerIntermediationRateLine rate={lastIntermediationRate} />
+              <PassengerPriceDetails>
+                <PriceFormulaBreakdown breakdown={lastPriceBreakdown} />
+                {lastFareSubtotal != null ? (
+                  <p>{t('pet.fareLine', { amount: lastFareSubtotal.toFixed(2) })}</p>
+                ) : null}
+                {lastPetSurcharge != null && lastPetSurcharge > 0 ? (
+                  <p>{t('pet.surchargeLine', { amount: lastPetSurcharge.toFixed(2) })}</p>
+                ) : lastPetSurcharge === 0 && (activeTrip?.is_assistance_animal || activeTrip?.has_pet === false) ? (
+                  <p className="text-foreground/75">{t('pet.noSurcharge')}</p>
+                ) : null}
+                {lastEstimatedTolls != null && lastEstimatedTolls > 0 ? (
+                  <>
+                    <p data-testid="passenger-estimate-tolls">
+                      {t('pet.tollsLine', { amount: lastEstimatedTolls.toFixed(2) })}
+                    </p>
+                    <p className="text-xs text-foreground/70">{t('pet.tollsHint')}</p>
+                  </>
+                ) : lastTollsUnavailable ? (
+                  <p className="text-xs text-foreground/70" data-testid="passenger-estimate-tolls-unavailable">
+                    {t('pet.tollsUnavailable')}
+                  </p>
+                ) : null}
+                <PassengerIntermediationRateLine rate={lastIntermediationRate} />
+              </PassengerPriceDetails>
             </div>
           ) : null}
           <p

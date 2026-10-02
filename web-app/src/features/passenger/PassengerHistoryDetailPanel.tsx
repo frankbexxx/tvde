@@ -10,6 +10,7 @@ import { MENU_SURFACE } from '../../components/layout/infoBoxTemplate'
 import { formatDateTime } from '../../i18n/format'
 import { ComplaintReportForm } from '../complaints/ComplaintReportForm'
 import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLine'
+import { PassengerPriceDetails } from './PassengerPriceDetails'
 import { PriceFormulaBreakdown } from './PriceFormulaBreakdown'
 import { useAuth } from '../../context/AuthContext'
 
@@ -104,8 +105,10 @@ export function PassengerHistoryDetailPanel({
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.price')}</dt>
           <dd className="font-semibold tabular-nums text-foreground">{price}</dd>
-          <PriceFormulaBreakdown breakdown={detail.price_breakdown} />
-          <PassengerIntermediationRateLine rate={detail.intermediation_rate_percent} />
+          <PassengerPriceDetails>
+            <PriceFormulaBreakdown breakdown={detail.price_breakdown} />
+            <PassengerIntermediationRateLine rate={detail.intermediation_rate_percent} />
+          </PassengerPriceDetails>
         </div>
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.payment')}</dt>
