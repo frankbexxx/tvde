@@ -9,7 +9,7 @@
     "cancel": "Cancel",
     "done": "Close",
     "success": "Complaint registered. Keep this reference:",
-    "successHint": "You can check the status in your complaints.",
+    "successHint": "The status does not appear on another screen.",
     "error": "Could not submit the complaint.",
     "attachments": "Attachments",
     "attachmentsHint": "Up to 5 files. PDF, JPG, JPEG or PNG. 5 MB each. No delete in this version.",
