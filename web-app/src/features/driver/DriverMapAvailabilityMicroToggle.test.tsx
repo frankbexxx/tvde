@@ -62,6 +62,26 @@ describe('DriverMapAvailabilityMicroToggle', () => {
     expect(action).toBeDisabled()
     fireEvent.click(action)
     expect(onGoOnline).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('driver-availability-block')).not.toBeInTheDocument()
+  })
+
+  it('shows the reason and next step when the block has an explanation', () => {
+    render(
+      <DriverMapAvailabilityMicroToggle
+        offline
+        blocked
+        blockReason="Não podes ficar disponível porque há documentos recusados."
+        blockNext="Vai a Documentos, no menu, para resolver o que falta."
+        onGoOnline={vi.fn()}
+        onGoOffline={vi.fn()}
+      />
+    )
+    const action = screen.getByRole('button', { name: 'Ficar disponível' })
+    expect(action).toBeDisabled()
+    const note = screen.getByTestId('driver-availability-block')
+    expect(note).toHaveTextContent('documentos recusados')
+    expect(note).toHaveTextContent('Vai a Documentos, no menu')
+    expect(action).toHaveAttribute('aria-describedby', note.id)
   })
 
   it('keeps the same action available when the state does not change', () => {
