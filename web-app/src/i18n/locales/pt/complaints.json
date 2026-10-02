@@ -9,7 +9,7 @@
     "cancel": "Cancelar",
     "done": "Fechar",
     "success": "Reclamação registada. Guarde a referência:",
-    "successHint": "Pode consultar o estado nas suas reclamações.",
+    "successHint": "O estado não aparece noutro ecrã.",
     "error": "Não foi possível enviar a reclamação.",
     "attachments": "Anexos",
     "attachmentsHint": "Até 5 ficheiros. PDF, JPG, JPEG ou PNG. Máximo 5 MB cada. Sem apagar nesta versão.",

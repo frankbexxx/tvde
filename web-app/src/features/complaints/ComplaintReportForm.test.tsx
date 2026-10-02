@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import '@/i18n'
+import { createComplaint } from '../../api/complaints'
 import { ComplaintReportForm } from './ComplaintReportForm'
 
 vi.mock('../../api/complaints', async () => {
@@ -42,5 +44,13 @@ describe('ComplaintReportForm', () => {
     await waitFor(() => {
       expect(screen.getByTestId('complaint-public-ref')).toHaveTextContent('CMP-2026-TESTREF1')
     })
+    expect(createComplaint).toHaveBeenCalledWith('tok', {
+      category: 'trip_service',
+      description: 'Late pickup',
+      trip_id: 'trip-1',
+    })
+    expect(screen.getByText('Reclamação registada. Guarde a referência:')).toBeInTheDocument()
+    expect(screen.getByText('O estado não aparece noutro ecrã.')).toBeInTheDocument()
+    expect(screen.queryByText(/nas suas reclamações/i)).not.toBeInTheDocument()
   })
 })
