@@ -60,7 +60,8 @@ test.describe('Passenger base capability — admin context', () => {
     await page.getByTestId('context-admin').click()
 
     await expect(page.getByText('Estado agora')).toBeVisible({ timeout: sec(60) })
-    await expect(page.getByText(/Sessão \(JWT\):\s*admin/)).toBeVisible({ timeout: sec(30) })
+    await expect(page.getByText(/A tua sessão:.*Administrador/)).toBeVisible({ timeout: sec(30) })
+    await expect(page.getByText(/\(admin\)/)).toBeVisible({ timeout: sec(30) })
 
     await ctx.close()
   })
