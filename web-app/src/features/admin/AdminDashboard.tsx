@@ -705,8 +705,11 @@ export function AdminDashboard() {
     }
   }
 
-  const handleApprove = async (phone: string) => {
-    if (!token) return
+  const handleApprove = async (phone: string): Promise<boolean> => {
+    if (!token) {
+      setError('Erro ao aprovar')
+      return false
+    }
     try {
       await apiFetch('/admin/approve-user', {
         method: 'POST',
@@ -715,8 +718,10 @@ export function AdminDashboard() {
       })
       setPending((p) => p.filter((u) => u.phone !== phone))
       fetchUsers()
+      return true
     } catch (err) {
       setError(adminErrDetail(err, 'Erro ao aprovar'))
+      return false
     }
   }
 
