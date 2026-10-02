@@ -62,6 +62,7 @@ describe('LoginScreen entry', () => {
     expect(screen.getByTestId('app-build-label')).toHaveTextContent(appBuildDisplayLine)
     expect(appBuildDisplayLine).toBe(`Versão ${appVersion} · build ${appGitShortSha}`)
     expect(screen.getByText(/indica esta versão e este build ao suporte/)).toBeInTheDocument()
+    expect(screen.getByTestId('forgot-password')).toHaveTextContent('Esqueci-me da palavra-passe')
   })
 
   it('mostra Continuar com Google nos quatro papéis', async () => {

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { isBackofficeStaffRole, type Role, useAuth } from '../../context/AuthContext'
 import { getConfig, requestOtp, verifyOtp } from '../../api/auth'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
+import { PasswordRecovery } from './PasswordRecovery'
 import {
   googleIdTokenProfile,
   readExistingAccountLink,
@@ -48,6 +49,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
   const [otpEnabled, setOtpEnabled] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [otpSent, setOtpSent] = useState(false)
+  const [recoveryOpen, setRecoveryOpen] = useState(false)
   const [googleDraft, setGoogleDraft] = useState<{
     idToken: string
     nonce: string
@@ -231,6 +233,19 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
     )
   }
 
+  if (recoveryOpen) {
+    return (
+      <div className="box-border flex min-h-dvh flex-col overflow-y-auto bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className={`m-auto w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
+          <BrandStripe />
+          <div className="p-6">
+            <PasswordRecovery initialPhone={phone} onBack={() => setRecoveryOpen(false)} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="box-border flex min-h-dvh flex-col overflow-y-auto bg-background px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className={`m-auto w-full max-w-sm bg-card ${SURFACE_RADIUS} shadow-card overflow-hidden`}>
@@ -375,6 +390,14 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
                 required
               />
             </div>
+            <button
+              type="button"
+              data-testid="forgot-password"
+              onClick={() => setRecoveryOpen(true)}
+              className="min-h-11 text-sm font-medium text-primary underline-offset-2 hover:underline"
+            >
+              {t('forgotPassword')}
+            </button>
             {error && (
               <p className={`text-sm text-destructive bg-destructive/10 border-l-4 border-destructive px-3 py-2 ${BTN_SECONDARY_RADIUS}`}>
                 {error}

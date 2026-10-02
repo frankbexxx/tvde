@@ -158,6 +158,29 @@ class PasswordChangeRequest(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=128)
 
 
+class PasswordRecoveryRequest(BaseModel):
+    phone: str = Field(..., min_length=9, max_length=32)
+
+
+class PasswordRecoveryAccepted(BaseModel):
+    status: str = "accepted"
+
+
+class PasswordRecoveryVerifyRequest(BaseModel):
+    phone: str = Field(..., min_length=9, max_length=32)
+    code: str = Field(..., min_length=4, max_length=8)
+
+
+class PasswordRecoveryVerifyResponse(BaseModel):
+    reset_token: str
+
+
+class PasswordRecoveryCompleteRequest(BaseModel):
+    reset_token: str = Field(..., min_length=20, max_length=4096)
+    new_password: str = Field(..., min_length=8, max_length=128)
+    confirm_password: str = Field(..., min_length=8, max_length=128)
+
+
 class MeProfileResponse(BaseModel):
     """Perfil mínimo do utilizador autenticado (BETA)."""
 
