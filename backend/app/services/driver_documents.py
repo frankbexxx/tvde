@@ -55,12 +55,20 @@ def _coerce_entry(raw: Any) -> dict[str, Any]:
             st = "pending_review"
         if st in VALID_STATUS:
             out["status"] = st
-    for key in ("expires_at", "submitted_at", "partner_note", "ocr_suggested_expires_at"):
+    for key in (
+        "expires_at",
+        "submitted_at",
+        "partner_note",
+        "public_rejection_reason",
+        "ocr_suggested_expires_at",
+    ):
         v = raw.get(key)
         if v is None:
             continue
-        if key == "partner_note" and isinstance(v, str):
-            out[key] = v[:2000]
+        if key in ("partner_note", "public_rejection_reason") and isinstance(v, str):
+            text = v.strip()[:2000]
+            if text:
+                out[key] = text
         elif isinstance(v, str) and len(v) <= 64:
             out[key] = v
     file_path = raw.get("file_path")
@@ -158,6 +166,16 @@ def get_documents_for_driver(db: Session, user_id: uuid.UUID) -> dict[str, Any]:
     return parse_documents_column(driver.documents)
 
 
+def documents_visible_to_driver(state: dict[str, Any]) -> dict[str, Any]:
+    """O motorista vê o motivo público. A nota interna fica de fora, mesmo vazia."""
+    docs_out: dict[str, Any] = {}
+    for key, entry in (state.get("docs") or {}).items():
+        if not isinstance(entry, dict):
+            continue
+        docs_out[key] = {k: v for k, v in entry.items() if k != "partner_note"}
+    return {"version": int(state.get("version") or 1), "docs": docs_out}
+
+
 def apply_driver_documents_patch(
     db: Session,
     *,
@@ -184,6 +202,7 @@ def apply_driver_documents_patch(
             cur["status"] = payload.status
             if payload.status == "pending_review":
                 cur["submitted_at"] = now
+                cur.pop("public_rejection_reason", None)
         if payload.submitted_at is not None:
             cur["submitted_at"] = payload.submitted_at[:64]
         if payload.ocr_suggested_expires_at is not None:
@@ -223,10 +242,27 @@ def apply_partner_documents_patch(
                         detail="document_file_required",
                     )
             cur["status"] = payload.status
+            if payload.status != "rejected":
+                cur.pop("public_rejection_reason", None)
         if payload.expires_at is not None:
             cur["expires_at"] = payload.expires_at[:64]
         if payload.partner_note is not None:
-            cur["partner_note"] = payload.partner_note[:2000]
+            note = payload.partner_note.strip()[:2000]
+            if note:
+                cur["partner_note"] = note
+            else:
+                cur.pop("partner_note", None)
+        leaving_rejection = (
+            payload.status is not None
+            and payload.status in VALID_STATUS
+            and payload.status != "rejected"
+        )
+        if payload.public_rejection_reason is not None and not leaving_rejection:
+            reason = payload.public_rejection_reason.strip()[:2000]
+            if reason:
+                cur["public_rejection_reason"] = reason
+            else:
+                cur.pop("public_rejection_reason", None)
         if payload.ocr_suggested_expires_at is not None:
             cur["ocr_suggested_expires_at"] = payload.ocr_suggested_expires_at[:64]
         if payload.submitted_at is not None:

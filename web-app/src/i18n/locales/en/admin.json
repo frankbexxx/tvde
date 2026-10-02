@@ -33,5 +33,9 @@
     "metrics": "Metrics",
     "ops": "Operations",
     "health": "System health"
+  },
+  "kyc": {
+    "publicReason": "Reason for the driver",
+    "internalNote": "Internal note"
   }
 }

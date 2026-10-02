@@ -188,6 +188,7 @@ import {
   type DriverVehicleCategory,
 } from '../../services/driverVehicleCategories'
 import { DriverPetTripInfo } from './DriverPetTripInfo'
+import { DriverDocumentRejectionLine } from './DriverDocumentRejectionLine'
 import { driverFareCategoryForDisplay } from './driverTripPetDisplay'
 import {
   defaultDriverDocumentsState,
@@ -4285,7 +4286,6 @@ function DriverOperationsMenu({
                       : 'border-border bg-card text-foreground/85'
               const meta = driverDocuments.docDetails[doc]
               const expLine = formatDriverDocExpiresLine(meta?.expiresAt ?? undefined)
-              const noteLine = meta?.partnerNote?.trim()
               return (
                 <div key={doc} className={MENU_CARD}>
                   <div className="flex items-center justify-between gap-2">
@@ -4297,11 +4297,11 @@ function DriverOperationsMenu({
                   {expLine ? (
                     <p className="mt-1 text-[11px] text-muted-foreground leading-snug">{expLine}</p>
                   ) : null}
-                  {noteLine ? (
-                    <p className="mt-1 text-[11px] text-foreground/80 leading-snug">
-                      <span className="font-medium text-foreground/90">{t('opsMenu.docs.fleetNote')}</span> {noteLine}
-                    </p>
-                  ) : null}
+                  <DriverDocumentRejectionLine
+                    status={status}
+                    publicReason={meta?.publicRejectionReason}
+                    testId={`driver-doc-rejection-${doc}`}
+                  />
                   <div className="mt-2 flex flex-col gap-2">
                     {meta?.fileName || status !== 'missing' ? (
                       <p className="text-[11px] text-foreground/85">

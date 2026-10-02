@@ -30,6 +30,8 @@ const snap: AdminKycSupervisionResponse = {
           is_expired: true,
           is_expiring_soon: false,
           has_file: true,
+          public_rejection_reason: 'Documento ilegível',
+          partner_note: 'nota-so-da-equipa-xyz',
         },
         {
           doc_key: 'registo_criminal',
@@ -156,6 +158,19 @@ describe('AdminTabDocs KYC supervision (RTL)', () => {
     expect(screen.queryByRole('button', { name: /rejeitar/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /upload/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/módulo em implementação/i)).not.toBeInTheDocument()
+  })
+
+  it('mostra o motivo público e a nota interna só nos documentos do motorista', async () => {
+    render(<AdminTabDocs />)
+    await waitFor(() => screen.getByTestId('admin-kyc-public-reason-carta_tvde'))
+    expect(screen.getByTestId('admin-kyc-public-reason-carta_tvde')).toHaveTextContent(
+      'kyc.publicReason: Documento ilegível',
+    )
+    expect(screen.getByTestId('admin-kyc-internal-note-carta_tvde')).toHaveTextContent(
+      'kyc.internalNote: nota-so-da-equipa-xyz',
+    )
+    expect(screen.queryByTestId('admin-kyc-internal-note-vehicle_insurance')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('admin-kyc-public-reason-vehicle_insurance')).not.toBeInTheDocument()
   })
 
   it('erro é tratado', async () => {

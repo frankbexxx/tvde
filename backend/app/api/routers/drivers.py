@@ -29,6 +29,7 @@ from app.services.driver_preferences import (
 )
 from app.services.driver_documents import (
     apply_driver_documents_patch,
+    documents_visible_to_driver,
     get_documents_for_driver,
 )
 from app.services.driver_document_expiry_suggest import suggest_expiry_iso_from_text
@@ -183,7 +184,7 @@ async def get_my_documents(
     db: Session = Depends(get_db),
 ) -> DriverDocumentsStateResponse:
     uid = uuid.UUID(str(user.user_id))
-    data = get_documents_for_driver(db, uid)
+    data = documents_visible_to_driver(get_documents_for_driver(db, uid))
     return DriverDocumentsStateResponse(version=int(data["version"]), docs=data["docs"])
 
 
@@ -198,7 +199,9 @@ async def patch_my_documents(
     db: Session = Depends(get_db),
 ) -> DriverDocumentsStateResponse:
     uid = uuid.UUID(str(user.user_id))
-    state = apply_driver_documents_patch(db, user_id=uid, patch=payload.docs)
+    state = documents_visible_to_driver(
+        apply_driver_documents_patch(db, user_id=uid, patch=payload.docs)
+    )
     return DriverDocumentsStateResponse(version=int(state["version"]), docs=state["docs"])
 
 
@@ -307,7 +310,9 @@ async def upload_my_document(
     db: Session = Depends(get_db),
 ) -> DriverDocumentsStateResponse:
     uid = uuid.UUID(str(user.user_id))
-    state = save_driver_document_file(db, driver_user_id=uid, doc_key=doc_key, upload=file)
+    state = documents_visible_to_driver(
+        save_driver_document_file(db, driver_user_id=uid, doc_key=doc_key, upload=file)
+    )
     return DriverDocumentsStateResponse(version=int(state["version"]), docs=state["docs"])
 
 

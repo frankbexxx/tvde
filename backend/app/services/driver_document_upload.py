@@ -118,6 +118,7 @@ def save_driver_document_file(
     entry["file_name"] = upload.filename or dest.name
     entry["status"] = "pending_review"
     entry["submitted_at"] = _utc_iso_now()
+    entry.pop("public_rejection_reason", None)
     docs[doc_key] = entry
     state["docs"] = docs
     driver.documents = serialize_state(state)

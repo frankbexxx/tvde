@@ -65,6 +65,7 @@ export function PartnerDriverDetail() {
   const [zoneExtensionMinutes, setZoneExtensionMinutes] = useState(30)
   const [draftExpires, setDraftExpires] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
   const [draftNotes, setDraftNotes] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
+  const [draftPublicReasons, setDraftPublicReasons] = useState<Partial<Record<DriverRequiredDocument, string>>>({})
   const [msgTitle, setMsgTitle] = useState('')
   const [msgBody, setMsgBody] = useState('')
   const [msgPriority, setMsgPriority] = useState<'normal' | 'high'>('normal')
@@ -157,14 +158,17 @@ export function PartnerDriverDetail() {
     if (!d?.documents) return
     const e: Partial<Record<DriverRequiredDocument, string>> = {}
     const n: Partial<Record<DriverRequiredDocument, string>> = {}
+    const reasons: Partial<Record<DriverRequiredDocument, string>> = {}
     for (const key of REQUIRED_DRIVER_DOCUMENTS) {
       const row = d.documents![key]
       const exp = row?.expires_at
       e[key] = exp && exp.length >= 10 ? exp.slice(0, 10) : ''
       n[key] = row?.partner_note ?? ''
+      reasons[key] = row?.public_rejection_reason ?? ''
     }
     setDraftExpires(e)
     setDraftNotes(n)
+    setDraftPublicReasons(reasons)
   }, [d?.documents, d?.user_id])
 
   const run = async (label: string, fn: () => Promise<PartnerDriverRow>) => {
@@ -275,7 +279,16 @@ export function PartnerDriverDetail() {
     setBusy('doc')
     setError(null)
     try {
-      const row = await patchPartnerDriverDocuments(userId, { [docKey]: { status } })
+      const note = (draftNotes[docKey] ?? '').trim().slice(0, 2000)
+      const reason = (draftPublicReasons[docKey] ?? '').trim().slice(0, 2000)
+      const row = await patchPartnerDriverDocuments(userId, {
+        [docKey]: {
+          status,
+          ...(status === 'rejected'
+            ? { public_rejection_reason: reason, partner_note: note }
+            : {}),
+        },
+      })
       setD(row)
     } catch (e: unknown) {
       const err = e as { detail?: string }
@@ -291,10 +304,11 @@ export function PartnerDriverDetail() {
     setError(null)
     const expRaw = (draftExpires[docKey] ?? '').trim()
     const expires_at = expRaw ? `${expRaw}T12:00:00.000Z` : null
-    const note = (draftNotes[docKey] ?? '').trim().slice(0, 2000) || null
+    const note = (draftNotes[docKey] ?? '').trim().slice(0, 2000)
+    const reason = (draftPublicReasons[docKey] ?? '').trim().slice(0, 2000)
     try {
       const row = await patchPartnerDriverDocuments(userId, {
-        [docKey]: { expires_at, partner_note: note },
+        [docKey]: { expires_at, partner_note: note, public_rejection_reason: reason },
       })
       setD(row)
     } catch (e: unknown) {
@@ -345,17 +359,34 @@ export function PartnerDriverDetail() {
                 </label>
               </div>
               <label className="block space-y-1 text-[11px] text-muted-foreground">
+                <span>{t('driverDetail.publicReason')}</span>
+                <textarea
+                  value={draftPublicReasons[key] ?? ''}
+                  disabled={busy !== null}
+                  maxLength={2000}
+                  rows={2}
+                  data-testid={`partner-doc-public-reason-${key}`}
+                  onChange={(ev) =>
+                    setDraftPublicReasons((prev) => ({ ...prev, [key]: ev.target.value }))
+                  }
+                  className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                />
+                <span className="block text-[11px] text-muted-foreground">{t('driverDetail.publicReasonHelp')}</span>
+              </label>
+              <label className="block space-y-1 text-[11px] text-muted-foreground">
                 <span>{t('driverDetail.internalNote')}</span>
                 <textarea
                   value={draftNotes[key] ?? ''}
                   disabled={busy !== null}
                   maxLength={2000}
                   rows={2}
+                  data-testid={`partner-doc-internal-note-${key}`}
                   onChange={(ev) =>
                     setDraftNotes((prev) => ({ ...prev, [key]: ev.target.value }))
                   }
                   className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
                 />
+                <span className="block text-[11px] text-muted-foreground">{t('driverDetail.internalNoteHelp')}</span>
               </label>
               {hasFile && userId ? (
                 <a
@@ -405,6 +436,7 @@ export function PartnerDriverDetail() {
                     disabled={busy !== null || (s === 'approved' && !hasFile)}
                     title={s === 'approved' && !hasFile ? t('driverDetail.awaitUpload') : undefined}
                     onClick={() => void runDoc(key, s)}
+                    data-testid={`partner-doc-status-${key}-${s}`}
                     className="min-h-8 rounded-md border border-border px-2 text-[11px] font-medium disabled:opacity-50"
                   >
                     {label}

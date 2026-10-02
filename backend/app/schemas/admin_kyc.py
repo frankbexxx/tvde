@@ -15,6 +15,8 @@ class AdminKycDocItem(BaseModel):
     is_expired: bool = False
     is_expiring_soon: bool = False
     has_file: bool = False
+    public_rejection_reason: str | None = None
+    partner_note: str | None = None
 
 
 class AdminKycDriverRow(BaseModel):

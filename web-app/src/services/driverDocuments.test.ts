@@ -10,7 +10,7 @@ import {
   setDriverDocumentsState,
   type DriverDocumentsState,
 } from './driverDocuments'
-import { driverDocumentsFromServer, mergeServerDriverDocuments } from '../api/driverDocuments'
+import { driverDocumentsFromServer, mergeServerDriverDocuments, type DriverDocumentsApiState } from '../api/driverDocuments'
 
 function stateWith(
   overrides: Partial<DriverDocumentsState['docs']>,
@@ -106,16 +106,24 @@ describe('driverDocuments service', () => {
     expect(driverDocumentsApprovedCount(s)).toBe(0)
   })
 
-  it('mergeServerDriverDocuments copies expires_at e partner_note', () => {
+  it('mergeServerDriverDocuments copia a validade e o motivo público, e ignora a nota interna', () => {
     const prev = stateWith({ carta_tvde: 'approved' })
     const merged = mergeServerDriverDocuments(prev, {
       version: 2,
       docs: {
-        carta_tvde: { status: 'approved', expires_at: '2030-06-01T00:00:00Z', partner_note: 'OK' },
-      },
+        carta_tvde: {
+          status: 'rejected',
+          expires_at: '2030-06-01T00:00:00Z',
+          public_rejection_reason: 'Documento ilegível',
+          partner_note: 'nota-so-da-equipa-xyz',
+        },
+      } as DriverDocumentsApiState['docs'],
     })
     expect(merged.docDetails.carta_tvde?.expiresAt).toBe('2030-06-01T00:00:00Z')
-    expect(merged.docDetails.carta_tvde?.partnerNote).toBe('OK')
+    expect(merged.docDetails.carta_tvde?.publicRejectionReason).toBe('Documento ilegível')
+    expect(JSON.stringify(merged)).not.toContain('nota-so-da-equipa-xyz')
+    expect(JSON.stringify(merged)).not.toContain('partner_note')
+    expect(JSON.stringify(merged)).not.toContain('partnerNote')
   })
 
   it('partnerDocumentsApprovedCount counts approved keys from partner payload', () => {
