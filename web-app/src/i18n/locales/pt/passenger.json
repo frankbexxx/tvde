@@ -99,8 +99,7 @@
     "tripCompleted": "Viagem concluída",
     "estimateCaption": "Estimativa (indicativa)",
     "finalPriceCaption": "Preço final",
-    "driverName": "Motorista TVDE",
-    "vehicleLabel": "Veículo TVDE"
+    "driverAssigned": "Atribuído"
   },
   "tracking": {
     "driverDistance": "Motorista a {{distance}} de ti (estimativa).",

@@ -48,9 +48,9 @@ export function TripCard({
       {driverName && (
         <div className="space-y-0.5">
           <p className="text-xs font-medium uppercase tracking-wide text-foreground/65">Motorista</p>
-          <p className="text-sm font-medium text-foreground">{driverName}</p>
+          <p className="text-sm font-medium text-foreground break-words">{driverName}</p>
           {vehicleLabel && (
-            <p className="text-sm text-foreground/75">{vehicleLabel}</p>
+            <p className="text-sm text-foreground/75 break-words">{vehicleLabel}</p>
           )}
         </div>
       )}
