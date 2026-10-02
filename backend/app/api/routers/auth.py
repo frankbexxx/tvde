@@ -798,19 +798,12 @@ async def google_exchange(
     request: Request,
     db: Session = Depends(get_db),
 ) -> TokenResponse:
-    """`GOOGLE_OAUTH_*`: troca `code` por JWT (v1 só passageiro). Independente de BETA_MODE."""
+    """`GOOGLE_OAUTH_*`: troca `code` por JWT. O papel vem da conta, não do ecrã."""
     check_google_exchange_rate_limit(request)
     if not _google_oauth_configured():
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="google_oauth_disabled",
-        )
-
-    req_role = (payload.requested_role or "passenger").strip().lower()
-    if req_role != "passenger":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="google_login_passenger_only",
         )
 
     try:
@@ -863,12 +856,6 @@ async def google_id_token(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="google_oauth_disabled",
-        )
-    req_role = (payload.requested_role or "passenger").strip().lower()
-    if req_role != "passenger":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="google_login_passenger_only",
         )
     try:
         claims = await anyio.to_thread.run_sync(

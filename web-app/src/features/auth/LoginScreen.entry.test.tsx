@@ -64,21 +64,16 @@ describe('LoginScreen entry', () => {
     expect(screen.getByText(/indica esta versão e este build ao suporte/)).toBeInTheDocument()
   })
 
-  it('mantém o Google só no passageiro, com o texto que já existia', async () => {
-    const { unmount } = render(
-      <MemoryRouter>
-        <LoginScreen requestedRole="passenger" />
-      </MemoryRouter>,
-    )
-    expect(await screen.findByTestId('google-sign-in')).toHaveTextContent('Continuar com Google')
-    expect(screen.getByText('Só para passageiro (v1).')).toBeInTheDocument()
-    unmount()
-
-    render(
-      <MemoryRouter>
-        <LoginScreen requestedRole="driver" />
-      </MemoryRouter>,
-    )
-    expect(screen.queryByTestId('google-sign-in')).not.toBeInTheDocument()
+  it('mostra Continuar com Google nos quatro papéis', async () => {
+    for (const role of roles) {
+      const { unmount } = render(
+        <MemoryRouter>
+          <LoginScreen requestedRole={role} />
+        </MemoryRouter>,
+      )
+      expect(await screen.findByTestId('google-sign-in')).toHaveTextContent('Continuar com Google')
+      expect(screen.queryByText('Só para passageiro (v1).')).not.toBeInTheDocument()
+      unmount()
+    }
   })
 })

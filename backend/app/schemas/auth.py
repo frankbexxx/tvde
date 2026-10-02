@@ -43,8 +43,8 @@ class GoogleExchangeRequest(BaseModel):
     code: str = Field(..., min_length=1, max_length=4096)
     redirect_uri: str = Field(..., min_length=8, max_length=768)
     requested_role: str | None = Field(
-        default="passenger",
-        description="v1: apenas passenger.",
+        default=None,
+        description="Ignorado. O ecrã de login não concede papel.",
     )
     accept_legal: bool = False
 
@@ -54,7 +54,10 @@ class GoogleIdTokenRequest(BaseModel):
 
     id_token: str = Field(..., min_length=20, max_length=8192)
     nonce: str = Field(..., min_length=16, max_length=128)
-    requested_role: str | None = Field(default="passenger")
+    requested_role: str | None = Field(
+        default=None,
+        description="Ignorado. O ecrã de login não concede papel.",
+    )
     accept_legal: bool = False
 
 

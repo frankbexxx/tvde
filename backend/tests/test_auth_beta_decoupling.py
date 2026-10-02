@@ -121,7 +121,7 @@ def test_me_rejects_invalid_jwt_regardless_of_beta(
 
 
 @pytest.mark.parametrize("beta", [True, False])
-def test_google_exchange_available_and_passenger_only(
+def test_google_exchange_ignores_requested_role(
     client: TestClient, monkeypatch: pytest.MonkeyPatch, beta: bool
 ) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", beta, raising=False)
@@ -136,8 +136,11 @@ def test_google_exchange_available_and_passenger_only(
             "requested_role": "driver",
         },
     )
-    assert driver.status_code == 403
-    assert driver.json()["detail"] == "google_login_passenger_only"
+    assert driver.status_code == 400
+    assert driver.json()["detail"] in (
+        "google_exchange_failed",
+        "google_token_invalid",
+    )
 
     passenger = client.post(
         "/auth/google/exchange",

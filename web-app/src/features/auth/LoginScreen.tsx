@@ -13,6 +13,7 @@ import { LegalAcceptanceCheckbox } from './LegalAcceptanceCheckbox'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { isCapacitorNative } from './capacitorPlatform'
 import { createOauthNonce, GOOGLE_OAUTH_STATE_KEY, nativeGoogleNonce } from './googleOauthState'
+import { homePathForSessionRole } from '../../context/authBootstrap'
 import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in'
 import { LS_LAST_PHONE, setStoredAccessToken } from '../../utils/authStorage'
 import { BrandStripe } from '../../design-system/components/brand/BrandStripe'
@@ -166,7 +167,9 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
       }
       const idToken = result.idToken
       try {
-        await loginGoogleIdToken(idToken, backendNonce, acceptLegal)
+        const session = await loginGoogleIdToken(idToken, backendNonce, acceptLegal)
+        window.location.assign(homePathForSessionRole(session.role))
+        return
       } catch (err: unknown) {
         const choice = readGoogleAccountChoice(err)
         if (choice) {
@@ -204,7 +207,6 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         setError(t('googleCapacitorFailed'))
         return
       }
-      window.location.assign('/passenger')
     } catch {
       setError(t('googleCapacitorFailed'))
     } finally {
@@ -221,7 +223,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
         nonce={googleDraft.nonce}
         onComplete={completeGoogleOnboarding}
         onLink={linkGoogleAccount}
-        onDone={() => window.location.assign('/passenger')}
+        onDone={(role) => window.location.assign(homePathForSessionRole(role))}
         onRestart={() => setGoogleDraft(null)}
         initialLinkRequired={googleDraft.initialLinkRequired}
         initialMode={googleDraft.initialMode}
@@ -330,7 +332,7 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               )}
             </div>
           )}
-          {requestedRole === 'passenger' && googleClientId && (
+          {googleClientId && (
             <div className="mb-4">
               <button
                 type="button"
@@ -341,7 +343,6 @@ export function LoginScreen({ requestedRole }: LoginScreenProps) {
               >
                 {t('continueGoogle')}
               </button>
-              <p className="text-xs text-muted-foreground mt-2 text-center">{t('passengerGoogleOnly')}</p>
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">

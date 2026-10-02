@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { homePathForSessionRole } from '../../context/authBootstrap'
 import { useAuth } from '../../context/AuthContext'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { AddGoogleIdentityReturn } from './AddGoogleIdentityReturn'
@@ -29,7 +30,9 @@ function formatErr(err: unknown): string {
         return 'Para criar conta, aceita os Termos e a Política de Privacidade e tenta outra vez.'
       }
       if (d === 'google_email_not_verified') return 'O Google não devolveu um email verificado.'
-      if (d === 'google_only_passenger_role') return 'Esta conta não é passageiro; usa o login com telemóvel.'
+      if (d === 'google_only_passenger_role') {
+        return 'Esta conta já existe. Entra com o telemóvel e a palavra-passe.'
+      }
       if (d === 'google_account_conflict') return 'Conflito de conta Google. Fala com o suporte.'
       return d
     }
@@ -64,10 +67,10 @@ export function GoogleOAuthCallback() {
     void (async () => {
       try {
         const acceptLegal = sessionStorage.getItem(LEGAL_ACCEPT_REGISTER_KEY) === '1'
-        await loginGoogle(code, redirectUri, acceptLegal)
+        const session = await loginGoogle(code, redirectUri, acceptLegal)
         sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
         sessionStorage.removeItem(LEGAL_ACCEPT_REGISTER_KEY)
-        if (alive) navigate('/passenger', { replace: true })
+        if (alive) navigate(homePathForSessionRole(session.role), { replace: true })
       } catch (e: unknown) {
         if (!alive) return
         const choice = readGoogleAccountChoice(e)
@@ -123,7 +126,7 @@ export function GoogleOAuthCallback() {
         idToken={held.idToken}
         onComplete={completeGoogleOnboarding}
         onLink={linkGoogleAccount}
-        onDone={() => navigate('/passenger', { replace: true })}
+        onDone={(role) => navigate(homePathForSessionRole(role), { replace: true })}
         onRestart={() => navigate('/passenger', { replace: true })}
         initialLinkRequired={held.initialLinkRequired}
         initialMode={held.initialMode}

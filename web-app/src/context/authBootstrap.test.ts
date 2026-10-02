@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  homePathForSessionRole,
   isAdminFromSessionRole,
   resolveAppRouteRoleFromSession,
   resolveAuthBootstrapMode,
@@ -129,5 +130,15 @@ describe('resolveAppRouteRoleFromSession', () => {
     expect(resolveAppRouteRoleFromSession('admin', 'passenger')).toBe('passenger')
     expect(resolveAppRouteRoleFromSession('super_admin', 'driver')).toBe('admin')
     expect(resolveAppRouteRoleFromSession('admin', 'partner')).toBe('admin')
+  })
+})
+
+describe('homePathForSessionRole', () => {
+  it('o caminho inicial segue o papel real, não um ecrã pedido', () => {
+    expect(homePathForSessionRole('passenger')).toBe('/passenger')
+    expect(homePathForSessionRole('driver')).toBe('/driver')
+    expect(homePathForSessionRole('partner')).toBe('/partner')
+    expect(homePathForSessionRole('admin')).toBe('/admin')
+    expect(homePathForSessionRole('super_admin')).toBe('/admin')
   })
 })

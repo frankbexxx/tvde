@@ -56,6 +56,14 @@ export function resolveAppRouteRoleFromSession(
   return 'passenger'
 }
 
+export function homePathForSessionRole(sessionRole: Role | string | undefined): string {
+  const shell = resolveAppRouteRoleFromSession(sessionRole, null)
+  if (shell === 'admin') return '/admin'
+  if (shell === 'partner') return '/partner'
+  if (shell === 'driver') return '/driver'
+  return '/passenger'
+}
+
 /** Admin/backoffice apenas por claim de role — nunca por existência de slot `tokens.admin`. */
 export function isAdminFromSessionRole(sessionRole: Role | string | undefined): boolean {
   return isBackofficeStaffRole(sessionRole)
