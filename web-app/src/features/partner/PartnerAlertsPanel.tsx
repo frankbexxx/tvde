@@ -23,7 +23,7 @@ export function PartnerAlertsPanel({ alerts }: { alerts: PartnerAlert[] }) {
           data-testid={`partner-alert-${a.id}`}
         >
           <p className="font-medium text-foreground">{a.title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{a.body}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 break-words">{a.body}</p>
           {a.menuScreen ? (
             <button
               type="button"

@@ -4,7 +4,7 @@ import type { PartnerDriverRow, PartnerTripRow } from '../../../api/partner'
 import { EmptyState } from '../../../components/feedback/EmptyState'
 import { formatDateTime } from '../../../i18n/format'
 import { PartnerListSearch } from '../components/PartnerListSearch'
-import { partnerTripStatusLabel } from '../partnerLabels'
+import { PartnerTripLinkLabel } from '../PartnerTripLinkLabel'
 import { filterChipClass, type TripFilter } from '../partnerTypes'
 import {
   formatPetSurchargeEuro,
@@ -131,9 +131,9 @@ export function PartnerTripsSection({
             <li key={trip.trip_id} className="rounded-xl border border-border bg-card p-3 text-sm">
               <Link
                 to={`/partner/trips/${encodeURIComponent(trip.trip_id)}`}
-                className="font-medium text-primary hover:underline"
+                className="block min-w-0 text-primary hover:underline"
               >
-                {trip.trip_id.slice(0, 8)}… · {partnerTripStatusLabel(trip.status)}
+                <PartnerTripLinkLabel trip={trip} drivers={drivers} />
               </Link>
               <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
                 <span

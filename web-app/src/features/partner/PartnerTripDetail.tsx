@@ -13,6 +13,7 @@ import { VISIBILITY_VISIBLE_EVENT } from '../../constants/events'
 import { formatDateTime } from '../../i18n/format'
 import { reverseGeocode } from '../../services/geocoding'
 import { partnerTripStatusLabel } from './partnerLabels'
+import { cleanPartnerText, partnerTripHumanTitle } from './partnerTripIdentity'
 import { ONGOING_TRIP_STATUSES } from './partnerTypes'
 import { fareCategoryCommercialLabel } from '../trips/fareCategoryLabel'
 import { googleMapsSearchUrl } from '../../utils/externalNavigation'
@@ -193,6 +194,14 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
     trip.final_price != null && trip.final_price > 0
       ? t('tripDetail.priceFinal', { value: trip.final_price.toFixed(2) })
       : t('tripDetail.priceEstimate', { value: trip.estimated_price.toFixed(2) })
+  const driverName = cleanPartnerText(currentDriver?.user.name)
+  const tripTitle = partnerTripHumanTitle({
+    originLabel,
+    destinationLabel: destLabel,
+    driverName,
+    vehiclePlate: trip.vehicle_plate,
+    createdAtLabel: formatDateTime(trip.created_at),
+  })
 
   return (
     <div className="p-4 space-y-4 max-w-lg mx-auto w-full">
@@ -215,9 +224,20 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
           {t('tripDetail.lastUpdated')}: {formatDateTime(new Date(lastFetchedAt))}
         </p>
       ) : null}
-      <h2 className="text-base font-semibold text-foreground font-mono break-all">
-        {trip.trip_id}
-      </h2>
+      <div className="min-w-0">
+        <h2
+          className="text-base font-semibold text-foreground break-words"
+          data-testid="partner-trip-detail-title"
+        >
+          {tripTitle}
+        </h2>
+        <p
+          className="text-xs text-muted-foreground break-all"
+          data-testid="partner-trip-detail-reference"
+        >
+          {t('tripDetail.reference')}: {trip.trip_id}
+        </p>
+      </div>
       {error && (
         <p className="text-sm text-destructive" data-testid="partner-trip-detail-error">
           {error}
@@ -365,18 +385,24 @@ function PartnerTripDetailContent({ tripId }: { tripId: string | undefined }) {
           </p>
         ) : null}
         <p>
-          <span className="text-muted-foreground">{t('tripDetail.passenger')}</span>{' '}
-          <span className="text-foreground font-mono text-xs">{trip.passenger_id}</span>
-        </p>
-        <p>
           <span className="text-muted-foreground">{t('tripDetail.driver')}</span>{' '}
-          <span className="text-foreground font-mono text-xs">{trip.driver_id ?? '—'}</span>
+          <span className="text-foreground break-words">
+            {driverName ?? t('tripDetail.driverAssigned')}
+            {currentDriver?.user.phone ? ` · ${currentDriver.user.phone}` : ''}
+          </span>
         </p>
-        {currentDriver && (
-          <p className="text-foreground">
-            {currentDriver.user.name ?? '—'} · {currentDriver.user.phone ?? ''}
+        <div className="text-xs text-muted-foreground break-all space-y-1" data-testid="partner-trip-detail-ids">
+          <p>
+            <span>{t('tripDetail.passenger')}</span>{' '}
+            <span className="text-foreground">{trip.passenger_id}</span>
           </p>
-        )}
+          {trip.driver_id ? (
+            <p>
+              <span>{t('tripDetail.driver')}</span>{' '}
+              <span className="text-foreground">{trip.driver_id}</span>
+            </p>
+          ) : null}
+        </div>
         <hr className="border-border" />
         <div className="space-y-1">
           <p className="text-muted-foreground">{t('tripDetail.pickup')}</p>

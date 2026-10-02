@@ -372,7 +372,13 @@ export function PartnerWorkspaceProvider({ children }: { children: ReactNode }) 
       return <PartnerTripsHubScreen onNavigate={(leaf) => navigateMenu(leaf)} />
     }
     if (screen === 'trips_summary') {
-      return <PartnerTripsSummaryScreen tripStats={tripStats} recentTrips={recentTrips} />
+      return (
+        <PartnerTripsSummaryScreen
+          tripStats={tripStats}
+          recentTrips={recentTrips}
+          drivers={drivers}
+        />
+      )
     }
     if (screen === 'trips_list') {
       return (

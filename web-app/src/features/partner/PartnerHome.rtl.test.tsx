@@ -175,7 +175,8 @@ describe('PartnerHome document alerts (PF3C-3)', () => {
     workspace.operationalAlertsSource.vehicles = workspace.vehicles
     renderHome()
     expect(screen.getByTestId('partner-alert-vehicle-documents')).toHaveTextContent(
-      /1 viatura com documentos rejeitados/i
+      /A viatura r · VW Polo tem documentos rejeitados/i,
     )
+    expect(screen.getByTestId('partner-alert-vehicle-documents')).not.toHaveTextContent(/em falta/i)
   })
 })

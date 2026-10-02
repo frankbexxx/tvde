@@ -127,7 +127,7 @@ describe('buildPartnerVehicleDocumentAlert i18n', () => {
       [vehicle('m', 'missing', { missing_count: 1 })],
       t
     )
-    expect(one?.body).toMatch(/^1 viatura com documentos em falta$/i)
+    expect(one?.body).toBe('A viatura m · Toyota Yaris tem documentos em falta.')
     expect(one?.title).toMatch(/documentos de viaturas/i)
     expect(one?.ctaLabel).toMatch(/ver viaturas/i)
     expect(one?.menuScreen).toBe('fleet_vehicles')
@@ -139,6 +139,47 @@ describe('buildPartnerVehicleDocumentAlert i18n', () => {
       ],
       t
     )
-    expect(many?.body).toMatch(/^2 viaturas com documentos em falta$/i)
+    expect(many?.body).toBe(
+      '2 viaturas com documentos em falta: m1 · Toyota Yaris, m2 · Toyota Yaris.',
+    )
+  })
+
+  it('matrícula, marca/modelo e cor entram na frase; campos vazios não', async () => {
+    await i18n.changeLanguage('pt')
+    const t = i18n.getFixedT('pt', 'partner')
+    const full = buildPartnerVehicleDocumentAlert(
+      [
+        {
+          ...vehicle('id-1', 'rejected'),
+          plate: '12-AB-34',
+          make: 'Toyota',
+          model: 'Corolla',
+          color: 'azul',
+        },
+      ],
+      t,
+    )
+    expect(full?.body).toBe('A viatura 12-AB-34 · Toyota Corolla · azul tem documentos rejeitados.')
+    expect(full?.menuScreen).toBe('fleet_vehicles')
+
+    const plateOnly = buildPartnerVehicleDocumentAlert(
+      [{ ...vehicle('id-2', 'pending_review'), plate: '34-CD-56', make: '', model: '', color: null }],
+      t,
+    )
+    expect(plateOnly?.body).toBe('A viatura 34-CD-56 tem documentos por rever.')
+    expect(plateOnly?.body).not.toMatch(/undefined|null|· ·/)
+  })
+
+  it('sem matrícula nem marca usa a referência e não o uuid cru', async () => {
+    await i18n.changeLanguage('pt')
+    const t = i18n.getFixedT('pt', 'partner')
+    const id = '2481222c-50f6-403f-aa59-8d386f1cd00a'
+    const alert = buildPartnerVehicleDocumentAlert(
+      [{ ...vehicle(id, 'expired'), plate: ' ', make: '', model: 'null', color: 'undefined' }],
+      t,
+    )
+    expect(alert?.body).toBe(`Viatura · referência ${id} tem um documento expirado.`)
+    expect(alert?.body?.startsWith('Viatura · referência')).toBe(true)
+    expect(alert?.ctaLabel).toMatch(/ver viaturas/i)
   })
 })
