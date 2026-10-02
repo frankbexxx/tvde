@@ -125,4 +125,88 @@ describe('AdminTabTrips support surface (RTL)', () => {
     const btn = screen.getByRole('button', { name: ADMIN_ASSIGN_RECOVERY_LABEL })
     expect(btn).toHaveAttribute('title', ADMIN_ASSIGN_RECOVERY_TITLE)
   })
+
+  it('a lista mostra a label humana e o detalhe usa a mesma palavra', () => {
+    render(<AdminTabTrips {...baseProps()} />)
+    const row = screen.getByTestId('admin-trip-status-trip-req-1')
+    expect(row).toHaveTextContent('Pedido')
+    expect(row).not.toHaveTextContent('requested')
+    const panel = screen.getByTestId('admin-trip-detail-support')
+    expect(panel).toHaveTextContent('Cancelada (cancelled)')
+    expect(panel).not.toHaveTextContent('Viagem cancelada')
+  })
+
+  it('histórico usa as mesmas labels e um estado desconhecido não rebenta', () => {
+    render(
+      <AdminTabTrips
+        {...baseProps({
+          tripsListMode: 'history',
+          tripOrphanFromDeepLink: false,
+          selectedTripId: null,
+          tripDetail: null,
+          historyTrips: [
+            {
+              trip_id: 'trip-done',
+              status: 'completed',
+              origin_lat: 38.7,
+              origin_lng: -9.1,
+              destination_lat: 38.71,
+              destination_lng: -9.12,
+              estimated_price: 4,
+              final_price: 4,
+            },
+            {
+              trip_id: 'trip-stop',
+              status: 'cancelled',
+              origin_lat: 38.7,
+              origin_lng: -9.1,
+              destination_lat: 38.71,
+              destination_lng: -9.12,
+              estimated_price: 4,
+            },
+            {
+              trip_id: 'trip-go',
+              status: 'ongoing',
+              origin_lat: 38.7,
+              origin_lng: -9.1,
+              destination_lat: 38.71,
+              destination_lng: -9.12,
+              estimated_price: 4,
+            },
+          ],
+        })}
+      />,
+    )
+    expect(screen.getByTestId('admin-trip-status-trip-done')).toHaveTextContent('Concluída')
+    expect(screen.getByTestId('admin-trip-status-trip-done')).not.toHaveTextContent('completed')
+    expect(screen.getByTestId('admin-trip-status-trip-stop')).toHaveTextContent('Cancelada')
+    expect(screen.getByTestId('admin-trip-status-trip-go')).toHaveTextContent('Em viagem')
+    expect(screen.getByTestId('admin-trip-status-trip-go')).not.toHaveTextContent('ongoing')
+  })
+
+  it('estado desconhecido na lista activa não rebenta', () => {
+    render(
+      <AdminTabTrips
+        {...baseProps({
+          selectedTripId: null,
+          tripOrphanFromDeepLink: false,
+          tripDetail: null,
+          activeTrips: [
+            {
+              trip_id: 'trip-mystery',
+              status: 'mystery',
+              passenger_id: 'pax-1',
+              driver_id: null,
+              origin_lat: 38.7,
+              origin_lng: -9.1,
+              destination_lat: 38.71,
+              destination_lng: -9.12,
+            },
+          ],
+        })}
+      />,
+    )
+    expect(screen.getByTestId('admin-trip-status-trip-mystery')).toHaveTextContent('Estado desconhecido')
+    expect(screen.getByTestId('admin-trip-status-trip-mystery')).not.toHaveTextContent('mystery')
+  })
 })
