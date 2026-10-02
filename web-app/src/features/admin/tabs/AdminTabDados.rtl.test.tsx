@@ -116,7 +116,7 @@ describe('AdminTabDados driver approve/reject (RTL)', () => {
       'Motorista aprovado (approved).'
     )
     expect(screen.getByTestId('admin-driver-status-drv-pending')).toHaveTextContent(
-      'status: approved'
+      'Aprovado (approved)'
     )
     expect(screen.queryByTestId('admin-driver-approve-drv-pending')).not.toBeInTheDocument()
     expect(screen.getByTestId('admin-driver-reject-drv-pending')).toBeInTheDocument()
