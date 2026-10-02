@@ -183,10 +183,17 @@ function DriverEntry() {
 async function expectCanonicalAccount() {
   const panel = await screen.findByTestId('account-panel')
   const view = within(panel)
-  expect(view.getByText('Perfil')).toBeInTheDocument()
+  const toggle = view.getByRole('button', { name: 'Métodos de início de sessão' })
+  const profile = view.getByText('Perfil')
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  expect(toggle).toHaveAttribute('aria-controls', 'account-login-methods')
+  expect(toggle.compareDocumentPosition(profile) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   expect(view.getByText('Alterar palavra-passe')).toBeInTheDocument()
-  expect(view.getByText('Métodos de início de sessão')).toBeInTheDocument()
-  expect(view.getByText('qa.identity.profile@example.com', { exact: false })).toBeInTheDocument()
+  expect(view.queryByText('qa.identity.profile@example.com')).not.toBeInTheDocument()
+  fireEvent.click(toggle)
+  expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  expect(await view.findByText('qa.identity.profile@example.com', { exact: false })).toBeInTheDocument()
+  expect(view.getByLabelText('Palavra-passe para confirmar')).toBeInTheDocument()
 }
 
 function fakeJwt(sub: string) {
@@ -257,6 +264,7 @@ describe('canonical account reachability', () => {
     me.has_custom_password = false
     render(<PassengerEntry />)
     fireEvent.click(screen.getByTestId('passenger-bottom-nav-account'))
+    fireEvent.click(await screen.findByTestId('account-login-methods-toggle'))
     expect(await screen.findByText('Definir palavra-passe')).toBeInTheDocument()
     expect(screen.queryByText('Alterar palavra-passe')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Revogar' })).not.toBeInTheDocument()
