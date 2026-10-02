@@ -63,7 +63,7 @@ describe('admin copy', () => {
           trips_accepted_total: 8,
           trips_completed_total: 6,
         }}
-        onRefresh={vi.fn(async () => 'ok')}
+        onRefresh={vi.fn(async (): Promise<'ok' | 'error'> => 'ok')}
         pending={[{ phone: '1', requested_role: 'driver' }, { phone: '2', requested_role: 'driver' }]}
         syncAdminUrl={vi.fn()}
       />,
