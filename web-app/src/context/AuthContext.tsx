@@ -501,7 +501,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSessionAccessToken(token)
       setSessionUserRole(serverRole)
       setSessionUserId(res.user_id)
-      syncAppRouteRole('passenger', serverRole)
+      syncAppRouteRole(resolveAppRouteRoleFromSession(serverRole, null), serverRole)
       setTokens({
         passenger: token,
         driver: token,
@@ -528,7 +528,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginGoogle = useCallback(
     async (code: string, redirectUri: string, acceptLegal = false) => {
       setStatus('A entrar com Google...')
-      const res = await exchangeGoogleCode(code, redirectUri, 'passenger', acceptLegal)
+      const res = await exchangeGoogleCode(code, redirectUri, acceptLegal)
       applyGoogleSession(res)
       setStatus('Pronto')
       return res

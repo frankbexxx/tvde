@@ -28,7 +28,7 @@ type GooglePassengerOnboardingProps = {
   nonce?: string
   onComplete: (body: GoogleOnboardingSubmit) => Promise<unknown>
   onLink: (body: GoogleLinkSubmit) => Promise<unknown>
-  onDone: () => void
+  onDone: (role?: string) => void
   onRestart: () => void
   initialLinkRequired?: boolean
   initialMode?: 'choice' | 'create' | 'link'
@@ -95,24 +95,26 @@ export function GooglePassengerOnboarding({
     setLoading(true)
     setError(null)
     try {
-      if (linkRequired) {
-        await onLink({
-          idToken,
-          nonce,
-          phone: normalizedPhone,
-          password,
-          acceptLegal: true,
-        })
-      } else {
-        await onComplete({
-          idToken,
-          nonce,
-          name: cleanedName,
-          phone: normalizedPhone,
-          acceptLegal: true,
-        })
-      }
-      onDone()
+      const session = linkRequired
+        ? await onLink({
+            idToken,
+            nonce,
+            phone: normalizedPhone,
+            password,
+            acceptLegal: true,
+          })
+        : await onComplete({
+            idToken,
+            nonce,
+            name: cleanedName,
+            phone: normalizedPhone,
+            acceptLegal: true,
+          })
+      const role =
+        session !== null && typeof session === 'object' && 'role' in session
+          ? String((session as { role?: unknown }).role ?? '')
+          : undefined
+      onDone(role)
     } catch (err: unknown) {
       const code = apiDetailCode(err)
       if (code === 'existing_account_link_required') {

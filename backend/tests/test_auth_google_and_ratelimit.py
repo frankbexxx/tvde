@@ -36,7 +36,7 @@ def test_google_exchange_disabled_without_secrets(client, monkeypatch) -> None:
     assert r.json()["detail"] == "google_oauth_disabled"
 
 
-def test_google_exchange_passenger_role_only(client, monkeypatch) -> None:
+def test_google_exchange_ignores_requested_role(client, monkeypatch) -> None:
     monkeypatch.setattr(settings, "BETA_MODE", True, raising=False)
     monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "cid", raising=False)
     monkeypatch.setattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "sec", raising=False)
@@ -48,7 +48,8 @@ def test_google_exchange_passenger_role_only(client, monkeypatch) -> None:
             "requested_role": "driver",
         },
     )
-    assert r.status_code == 403
+    assert r.status_code == 400
+    assert r.json()["detail"] in ("google_exchange_failed", "google_token_invalid")
 
 
 def test_config_google_enabled_when_configured_and_beta_true(client, monkeypatch) -> None:

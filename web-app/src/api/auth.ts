@@ -111,7 +111,6 @@ export async function exchangeGoogleIdToken(
     body: JSON.stringify({
       id_token: idToken,
       nonce,
-      requested_role: 'passenger',
       accept_legal: acceptLegal,
     }),
   })
@@ -120,7 +119,6 @@ export async function exchangeGoogleIdToken(
 export async function exchangeGoogleCode(
   code: string,
   redirect_uri: string,
-  requested_role: string = 'passenger',
   acceptLegal = false
 ): Promise<TokenResponse> {
   return apiFetch<TokenResponse>('/auth/google/exchange', {
@@ -128,7 +126,6 @@ export async function exchangeGoogleCode(
     body: JSON.stringify({
       code,
       redirect_uri,
-      requested_role,
       accept_legal: acceptLegal,
     }),
   })
