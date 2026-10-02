@@ -242,6 +242,7 @@
     "loadError": "Erro ao carregar viagem.",
     "notFound": "Viagem não encontrada.",
     "backToFleet": "← Frota",
+    "backToTrips": "Voltar às viagens",
     "status": "Estado:",
     "price": "Preço:",
     "passenger": "Passageiro:",

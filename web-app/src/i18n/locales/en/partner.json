@@ -242,6 +242,7 @@
     "loadError": "Error loading trip.",
     "notFound": "Trip not found.",
     "backToFleet": "← Fleet",
+    "backToTrips": "Back to trips",
     "status": "Status:",
     "price": "Price:",
     "passenger": "Passenger:",
