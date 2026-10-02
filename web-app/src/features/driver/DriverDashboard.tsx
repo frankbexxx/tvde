@@ -212,6 +212,10 @@ import {
 import { DriverBottomNav, type DriverShellTab } from './DriverBottomNav'
 import { DriverMapAvailabilityMicroToggle } from './DriverMapAvailabilityMicroToggle'
 import {
+  blockingDocumentStatuses,
+  driverAvailabilityBlockMessage,
+} from './driverAvailabilityBlock'
+import {
   DRIVER_REMOTE_AVAILABILITY_POLL_MS,
   fetchRemoteAvailabilityOfflineUpdate,
   formatDriverAvailabilityError,
@@ -461,14 +465,23 @@ export function DriverDashboard() {
   const effectiveDocsGate = import.meta.env.DEV ? driverDocsGateEnabled : true
   const docsReady = isDriverDocumentsReady(driverDocuments)
   const docsBlockedOffline = effectiveDocsGate && !docsReady && offline
+  const documentStatuses = blockingDocumentStatuses(driverDocuments)
+  const documentBlock = driverAvailabilityBlockMessage({
+    docsBlocked: docsBlockedOffline,
+    statuses: documentStatuses,
+    hoursBlocked: false,
+    restUntilLabel: null,
+  })
   const driverDocsBlockedHintBox = (
     <div
       className={`${INFO_BOX_MAP_HINT} w-full border-warning/40 bg-warning/15 px-2 py-2 text-center`}
       data-testid="driver-docs-blocked-banner"
     >
-      <p className="text-xs font-medium text-foreground">{t('mapHome.docsMissingTitle')}</p>
+      <p className="text-xs font-medium text-foreground">
+        {documentBlock?.reason ?? t('mapHome.docsMissingTitle')}
+      </p>
       <p className="mt-0.5 text-[11px] leading-snug text-foreground/80">
-        {t('mapHome.docsMissingBody')}
+        {documentBlock?.next ?? t('mapHome.docsMissingBody')}
       </p>
     </div>
   )
@@ -630,6 +643,15 @@ export function DriverDashboard() {
     compliancePollEnabled,
     30_000
   )
+  const hoursBlockedOffline = Boolean(offline && drivingCompliance?.enabled && drivingCompliance.blocked)
+  const availabilityBlock = driverAvailabilityBlockMessage({
+    docsBlocked: docsBlockedOffline,
+    statuses: documentStatuses,
+    hoursBlocked: hoursBlockedOffline,
+    restUntilLabel: drivingCompliance?.rest_until
+      ? new Date(drivingCompliance.rest_until).toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' })
+      : null,
+  })
 
   const inboxPollEnabled = Boolean(token && sessionRole === 'driver')
   const { data: inboxMessages } = usePolling(
@@ -1981,7 +2003,9 @@ export function DriverDashboard() {
                       <DriverMapAvailabilityMicroToggle
                         offline={offline}
                         syncing={availabilitySyncing}
-                        blocked={docsBlockedOffline}
+                        blocked={docsBlockedOffline || hoursBlockedOffline}
+                        blockReason={availabilityBlock?.reason}
+                        blockNext={availabilityBlock?.next}
                         onGoOnline={() => handleDriverAvailabilityChange(true)}
                         onGoOffline={() => handleDriverAvailabilityChange(false)}
                       />
