@@ -240,16 +240,17 @@ function setStoredOffline(offline: boolean) {
 function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void }) {
   const { t } = useTranslation('driver')
   return (
-    <button
-      type="button"
-      data-testid="driver-map-availability-pill"
-      onClick={onGoOffline}
-      aria-label={t('availability.onlineAria')}
-      className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
-    >
-      <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-400/55" aria-hidden />
-      <span className="leading-snug truncate">{t('availability.onlineLabel')}</span>
-    </button>
+    <div className="flex w-full min-h-11 items-center justify-between gap-2 bg-background/90 px-3 py-2">
+      <p className="text-sm font-medium text-foreground">{t('availability.stateOnline')}</p>
+      <button
+        type="button"
+        data-testid="driver-map-availability-pill"
+        onClick={onGoOffline}
+        className="min-h-11 shrink-0 rounded-lg bg-foreground px-3 py-2 text-sm font-semibold text-background touch-manipulation"
+      >
+        {t('availability.goOffline')}
+      </button>
+    </div>
   )
 }
 
@@ -257,20 +258,21 @@ function DriverMapAvailabilityPill({ onGoOffline }: { onGoOffline: () => void })
 function DriverMapOfflinePill({ onGoOnline }: { onGoOnline: () => void }) {
   const { t } = useTranslation('driver')
   return (
-    <button
-      type="button"
-      data-testid="driver-map-offline-pill"
-      onClick={onGoOnline}
-      aria-label={t('availability.offlineAria')}
-      className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-none border-0 bg-background/90 px-3 py-2 text-center text-xs font-semibold text-foreground shadow-none backdrop-blur-sm touch-manipulation hover:bg-background sm:text-sm"
-    >
-      <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/80 ring-2 ring-border" aria-hidden />
-      <span className="leading-snug truncate">{t('availability.offlineLabel')}</span>
-    </button>
+    <div className="flex w-full min-h-11 items-center justify-between gap-2 bg-background/90 px-3 py-2">
+      <p className="text-sm font-medium text-foreground">{t('availability.stateOffline')}</p>
+      <button
+        type="button"
+        data-testid="driver-map-offline-pill"
+        onClick={onGoOnline}
+        className="min-h-11 shrink-0 rounded-lg bg-foreground px-3 py-2 text-sm font-semibold text-background touch-manipulation"
+      >
+        {t('availability.goOnline')}
+      </button>
+    </div>
   )
 }
 
-/** Com `mapTapGoesOnline`, o único CTA táctil no mapa fica o toque no mapa; pill só em mock/demo. */
+/** Barra de disponibilidade nos layouts que não usam o palco do mapa. */
 function DriverShellAvailabilityInner({
   mapTapGoesOnline,
   offline,
@@ -492,7 +494,6 @@ export function DriverDashboard() {
     !activeTripId &&
     !isMockLocationModeEnabled() &&
     !isDemoLocationEnabled()
-  const driverMapTapOnlineHint = mapTapGoesOnline && offline
   const [actionTakingLong, setActionTakingLong] = useState(false)
   /** P3: resposta da última ação até o poll alinhar (evita atraso visual). */
   const [driverStatusOverride, setDriverStatusOverride] = useState<string | null>(null)
@@ -605,12 +606,6 @@ export function DriverDashboard() {
       restoreDriverActiveTrip,
     ]
   )
-
-  /** Toque no mapa: ficar disponível (mesmas regras que a pill). */
-  const onDriverHomeMapInteraction = useCallback(() => {
-    if (!mapTapGoesOnline || !offline) return
-    handleDriverAvailabilityChange(true)
-  }, [mapTapGoesOnline, offline, handleDriverAvailabilityChange])
 
   const pollEnabled = availabilityOperational
 
@@ -1642,7 +1637,6 @@ export function DriverDashboard() {
                     mapVisualWeight={offline && driverBottomNav ? 'subdued' : 'emphasized'}
                     compactHeight={false}
                     tallStage={driverBottomNav && !activeTripId}
-                    onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                   />
                   <div className="pointer-events-none absolute inset-0 z-[5] flex min-h-0 flex-col gap-2 p-2">
                     <div className={`${MAP_BANNER_STACK} pointer-events-auto`}>
@@ -1823,16 +1817,6 @@ export function DriverDashboard() {
                       {driverDocsBlockedHintBox}
                     </div>
                   ) : null}
-                  {driverMapTapOnlineHint ? (
-                    <div
-                      className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
-                      aria-hidden
-                    >
-                      <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                        {t('mapHome.mapTapHintGps')}
-                      </span>
-                    </div>
-                  ) : null}
                 </div>
                 {!offline && !activeTripId ? (
                   pollEnabled && availableLoading && available == null ? (
@@ -1990,14 +1974,14 @@ export function DriverDashboard() {
                   mapVisualWeight: 'emphasized',
                   compactHeight: false,
                   tallStage: false,
-                  onUserMapInteraction: mapTapGoesOnline ? onDriverHomeMapInteraction : undefined,
                 }}
                 floating={
                   <>
                     {driverBottomNav && !activeTripId ? (
                       <DriverMapAvailabilityMicroToggle
                         offline={offline}
-                        mapTapGoesOnline={mapTapGoesOnline}
+                        syncing={availabilitySyncing}
+                        blocked={docsBlockedOffline}
                         onGoOnline={() => handleDriverAvailabilityChange(true)}
                         onGoOffline={() => handleDriverAvailabilityChange(false)}
                       />
@@ -2284,16 +2268,6 @@ export function DriverDashboard() {
                     </MapBottomSheet>
                   ) : null}
                 </div>
-                {driverMapTapOnlineHint ? (
-                  <div
-                    className="pointer-events-none absolute inset-x-0 bottom-[4.75rem] z-[20] flex justify-center px-3"
-                    aria-hidden
-                  >
-                    <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                      {t('mapHome.mapTapHint')}
-                    </span>
-                  </div>
-                ) : null}
                 {driverBottomNav && !activeTripId && !driverMapStageLayout ? (
                   <div className="relative z-10 shrink-0 border-t border-border bg-muted/35">
                     <DriverShellAvailabilityInner
@@ -2517,18 +2491,7 @@ export function DriverDashboard() {
                       }
                       compactHeight={compactDriverSurface}
                       tallStage={driverBottomNav && !activeTripId}
-                      onUserMapInteraction={mapTapGoesOnline ? onDriverHomeMapInteraction : undefined}
                     />
-                    {driverMapTapOnlineHint ? (
-                      <div
-                        className="pointer-events-none absolute inset-x-0 bottom-14 z-[3] flex justify-center px-3"
-                        aria-hidden
-                      >
-                        <span className="rounded-full border border-border bg-background/92 px-3 py-1.5 text-center text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
-                          {t('mapHome.mapTapHintGps')}
-                        </span>
-                      </div>
-                    ) : null}
                     {driverBottomNav && !activeTripId ? (
                       <div className="border-t border-border bg-muted/35">
                         <DriverShellAvailabilityInner

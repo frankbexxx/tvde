@@ -1,57 +1,48 @@
 /**
- * FIX-001 — Disponibilidade no palco mapa: micro on/off por cima dos tiles (acima da nav z-40).
- * Online via map-touch mantém-se; offline também clicável (paridade com menu).
+ * Disponibilidade no palco do mapa: estado e acção separados, um só botão.
+ * O toque no mapa não muda a disponibilidade.
  */
 import { useTranslation } from 'react-i18next'
 
 type DriverMapAvailabilityMicroToggleProps = {
   offline: boolean
-  mapTapGoesOnline: boolean
+  syncing?: boolean
+  blocked?: boolean
   onGoOnline: () => void
   onGoOffline: () => void
 }
 
-function OfflineLabel() {
-  return (
-    <span className="text-[10px] font-semibold uppercase tracking-wide text-destructive" aria-hidden>
-      offline
-    </span>
-  )
-}
-
 export function DriverMapAvailabilityMicroToggle({
   offline,
+  syncing = false,
+  blocked = false,
   onGoOnline,
   onGoOffline,
 }: DriverMapAvailabilityMicroToggleProps) {
   const { t } = useTranslation('driver')
-
-  if (offline) {
-    return (
-      <div className="pointer-events-auto absolute right-3 top-3 z-[30] flex flex-col items-center gap-0.5">
-        <button
-          type="button"
-          data-testid="driver-map-availability-micro-offline-pill"
-          onClick={onGoOnline}
-          aria-label={t('availability.offlineAria')}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-destructive/35 bg-background/90 shadow-md backdrop-blur-sm touch-manipulation hover:bg-background"
-        >
-          <span className="h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-destructive/45" aria-hidden />
-        </button>
-        <OfflineLabel />
-      </div>
-    )
-  }
+  const cannotGoOnline = offline && blocked
+  const action = offline ? t('availability.goOnline') : t('availability.goOffline')
 
   return (
-    <button
-      type="button"
-      data-testid="driver-map-availability-micro-online"
-      onClick={onGoOffline}
-      aria-label={t('availability.onlineAria')}
-      className="pointer-events-auto absolute right-3 top-3 z-[30] flex h-11 w-11 items-center justify-center rounded-full border border-emerald-500/40 bg-background/90 shadow-md backdrop-blur-sm touch-manipulation hover:bg-background"
+    <div
+      className="pointer-events-auto absolute left-3 right-3 top-3 z-[30] flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-background/95 px-3 py-2 shadow-md backdrop-blur-sm"
+      data-testid="driver-map-availability-control"
     >
-      <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-400/55" aria-hidden />
-    </button>
+      <p className="text-sm font-medium text-foreground" data-testid="driver-availability-state">
+        {offline ? t('availability.stateOffline') : t('availability.stateOnline')}
+      </p>
+      <button
+        type="button"
+        data-testid={
+          offline ? 'driver-map-availability-micro-offline-pill' : 'driver-map-availability-micro-online'
+        }
+        disabled={syncing || cannotGoOnline}
+        aria-busy={syncing}
+        onClick={() => (offline ? onGoOnline() : onGoOffline())}
+        className="min-h-11 shrink-0 rounded-lg bg-foreground px-3 py-2 text-sm font-semibold text-background touch-manipulation disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {syncing ? t('availability.updating') : action}
+      </button>
+    </div>
   )
 }
