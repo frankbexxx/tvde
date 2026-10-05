@@ -72,6 +72,7 @@ from app.services.payment_amount_guards import (
     validate_stripe_amount_matches_expected,
 )
 from app.services.stripe_service import (
+    attach_payment_method_to_intent,
     cancel_payment_intent,
     capture_payment_intent,
     confirm_payment_intent,
@@ -2044,21 +2045,57 @@ def complete_trip(
                 ) from e
 
             try:
+                intent_before = retrieve_payment_intent(payment.stripe_payment_intent_id)
+                pm = getattr(intent_before, "payment_method", None) or (
+                    intent_before.get("payment_method")
+                    if isinstance(intent_before, dict)
+                    else None
+                )
+                if not pm:
+                    log_event(
+                        "payment_confirm_blocked_no_payment_method",
+                        trip_id=str(trip.id),
+                        payment_id=str(payment.id),
+                        payment_intent_id=payment.stripe_payment_intent_id or "",
+                    )
+                    db.rollback()
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="payment_method_required",
+                    )
+
                 if settings.dev_tools_router_enabled():
-                    confirm_payment_intent(
+                    confirmed = confirm_payment_intent(
                         payment.stripe_payment_intent_id,
                         payment_method="pm_card_visa",
                         idempotency_key=f"tvde-pi-confirm-{payment.stripe_payment_intent_id}",
                     )
                 else:
-                    confirm_payment_intent(
+                    confirmed = confirm_payment_intent(
                         payment.stripe_payment_intent_id,
                         idempotency_key=f"tvde-pi-confirm-{payment.stripe_payment_intent_id}",
+                    )
+                conf_status = getattr(confirmed, "status", None) or (
+                    confirmed.get("status") if isinstance(confirmed, dict) else None
+                )
+                if conf_status == "requires_action":
+                    log_event(
+                        "payment_confirm_requires_action",
+                        trip_id=str(trip.id),
+                        payment_id=str(payment.id),
+                        payment_intent_id=payment.stripe_payment_intent_id or "",
+                    )
+                    db.rollback()
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="payment_requires_action",
                     )
                 logger.info(
                     f"complete_trip: PaymentIntent confirmed trip_id={trip_id}, "
                     f"payment_intent_id={payment.stripe_payment_intent_id}"
                 )
+            except HTTPException:
+                raise
             except stripe.error.StripeError as e:
                 logger.error(
                     f"complete_trip: Stripe confirm failed trip_id={trip_id}, error={str(e)}"
@@ -2213,6 +2250,91 @@ def get_trip_for_passenger(
     )
     if not trip or str(trip.passenger_id) != str(passenger_id):
         _raise_not_found()
+    return trip
+
+
+def attach_payment_method_for_passenger_trip(
+    *,
+    db: Session,
+    passenger_id: str,
+    trip_id: str,
+    payment_method_id: str,
+) -> Trip:
+    """
+    Attach a Stripe PaymentMethod to the trip's PaymentIntent without confirming.
+
+    Keeps PI updatable so complete can set final amount before confirm+capture.
+    """
+    pm = (payment_method_id or "").strip()
+    if not pm or not pm.startswith("pm_"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="invalid_payment_method",
+        )
+    if getattr(settings, "STRIPE_MOCK", False):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="stripe_mock_no_attach",
+        )
+
+    trip = get_trip_for_passenger(db=db, passenger_id=passenger_id, trip_id=trip_id)
+    payment = trip.payment
+    if not payment or not payment.stripe_payment_intent_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="payment_not_ready",
+        )
+    if payment.status != PaymentStatus.processing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="payment_not_attachable",
+        )
+    pi_id = payment.stripe_payment_intent_id
+    if pi_id.startswith("pi_mock_"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="stripe_mock_no_attach",
+        )
+
+    try:
+        intent = retrieve_payment_intent(pi_id)
+        pi_status = getattr(intent, "status", None) or (
+            intent.get("status") if isinstance(intent, dict) else None
+        )
+        if pi_status not in (
+            "requires_payment_method",
+            "requires_confirmation",
+            "requires_action",
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="payment_intent_not_attachable",
+            )
+        attach_payment_method_to_intent(
+            pi_id,
+            pm,
+            idempotency_key=f"tvde-pi-attach-{pi_id}-{pm}",
+        )
+    except HTTPException:
+        raise
+    except stripe.error.StripeError as e:
+        logger.error(
+            "attach_payment_method failed trip_id=%s pi=%s error=%s",
+            trip_id,
+            pi_id,
+            str(e),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="payment_method_attach_failed",
+        ) from e
+
+    log_event(
+        "payment_method_attached",
+        trip_id=str(trip.id),
+        payment_id=str(payment.id),
+        payment_intent_id=pi_id,
+    )
     return trip
 
 

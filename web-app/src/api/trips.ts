@@ -233,6 +233,19 @@ export async function getTripDetail(tripId: string, token: string): Promise<Trip
   return apiFetch<TripDetailResponse>(`/trips/${tripId}`, { token })
 }
 
+/** POST /trips/:id/payment-method — attach Stripe PaymentMethod (no early confirm). */
+export async function attachTripPaymentMethod(
+  tripId: string,
+  paymentMethodId: string,
+  token: string
+): Promise<TripDetailResponse> {
+  return apiFetch<TripDetailResponse>(`/trips/${encodeURIComponent(tripId)}/payment-method`, {
+    method: 'POST',
+    token,
+    body: JSON.stringify({ payment_method_id: paymentMethodId }),
+  })
+}
+
 // --- Driver ---
 
 export interface DriverAvailabilityMutationResponse {

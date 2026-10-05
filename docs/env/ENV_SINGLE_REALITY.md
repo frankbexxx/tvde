@@ -27,6 +27,7 @@ Em `backend/app/core/config.py` o campo `STRIPE_MOCK` tem default de **implement
 - Só usar Stripe real (test mode) quando for explicitamente testar pagamentos:
   - backend: `STRIPE_MOCK=false` + keys reais de teste
   - web-app: `VITE_STRIPE_MOCK=false` + `VITE_STRIPE_PUBLISHABLE_KEY` (test)
+- Staging readiness (Piloto V1): ver [`docs/runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md). Com mock off, o Passageiro anexa cartão sem confirmar o placeholder €0,50.
 
 ## Templates (copiar para `.env` locais)
 

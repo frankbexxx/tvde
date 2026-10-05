@@ -63,9 +63,13 @@ logger = logging.getLogger(__name__)
 
 
 def _payment_intent_client_secret_for_passenger_poll(trip: Trip) -> str | None:
-    """Expose client_secret for Stripe.js when passenger must confirm authorized PI."""
-    if not settings.confirm_on_accept_effective():
-        return None
+    """
+    Expose client_secret for Stripe.js.
+
+    - Mock: only when confirm_on_accept_effective (dev/UI tests).
+    - Real Stripe (incl. staging test keys): while Payment.processing, so the
+      passenger can attach a card without confirming the €0.50 placeholder.
+    """
     payment = trip.payment
     if not payment or not payment.stripe_payment_intent_id:
         return None
@@ -73,10 +77,19 @@ def _payment_intent_client_secret_for_passenger_poll(trip: Trip) -> str | None:
         return None
     pi_id = payment.stripe_payment_intent_id
     if getattr(settings, "STRIPE_MOCK", False):
+        if not settings.confirm_on_accept_effective():
+            return None
         return f"{pi_id}_secret_mock"
     try:
         pi = retrieve_payment_intent(pi_id)
-        return pi.client_secret
+        pi_status = getattr(pi, "status", None) or (
+            pi.get("status") if isinstance(pi, dict) else None
+        )
+        if pi_status in ("succeeded", "canceled"):
+            return None
+        return getattr(pi, "client_secret", None) or (
+            pi.get("client_secret") if isinstance(pi, dict) else None
+        )
     except Exception as e:
         logger.warning(
             "retrieve_payment_intent failed for passenger poll trip_id=%s: %s",
