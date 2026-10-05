@@ -481,15 +481,20 @@ export async function approveAdminDriver(
   )
 }
 
-/** POST /admin/drivers/{id}/reject — Role.admin; sem body/motivo. */
+/** POST /admin/drivers/{id}/reject — Role.admin; body `{ reason }` (mín. 10 chars). */
 export async function rejectAdminDriver(
   driverUserId: string,
-  token: string
+  token: string,
+  reason: string
 ): Promise<AdminDriverStatusResponse> {
   const did = driverUserId.trim()
   return apiFetch<AdminDriverStatusResponse>(
     `/admin/drivers/${encodeURIComponent(did)}/reject`,
-    { method: 'POST', token }
+    {
+      method: 'POST',
+      token,
+      body: JSON.stringify({ reason: reason.trim() }),
+    }
   )
 }
 

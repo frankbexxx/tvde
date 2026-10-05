@@ -8,6 +8,17 @@ class DriverStatusResponse(BaseModel):
     status: DriverStatus
 
 
+class AdminDriverRejectBody(BaseModel):
+    """Motivo obrigatório ao rejeitar perfil motorista (Admin Dados)."""
+
+    reason: str = Field(
+        ...,
+        min_length=10,
+        max_length=500,
+        description="Motivo da rejeição (explicação útil; fica no registo de auditoria).",
+    )
+
+
 class DriverLocationPayload(BaseModel):
     lat: float = Field(..., ge=-90.0, le=90.0)
     lng: float = Field(..., ge=-180.0, le=180.0)

@@ -63,6 +63,18 @@
     "confirming": "A eliminar…",
     "error": "Erro ao eliminar"
   },
+  "driverReject": {
+    "title": "Rejeitar este motorista?",
+    "body": "Vais rejeitar {{who}}. Estado actual: {{status}}. O perfil deixa de estar aprovado para operar.",
+    "whoFallback": "este motorista",
+    "reason": "Motivo da rejeição",
+    "reasonHint": "Pelo menos 10 caracteres. Explica o motivo de forma clara. Fica no registo desta acção.",
+    "reasonShort": "O motivo precisa de pelo menos 10 caracteres.",
+    "cancel": "Cancelar",
+    "confirm": "Rejeitar",
+    "confirming": "A rejeitar…",
+    "error": "Erro ao rejeitar o motorista"
+  },
   "passwordClear": {
     "title": "Retirar a palavra-passe?",
     "body": "Vais retirar a palavra-passe da conta de {{who}}. A palavra-passe actual deixa de servir para entrar. Não é criada uma palavra-passe nova. As sessões já abertas continuam válidas.",

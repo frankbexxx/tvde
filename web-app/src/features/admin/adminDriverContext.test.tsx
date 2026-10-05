@@ -32,7 +32,7 @@ function props(over: Partial<AdminTabDadosProps> = {}): AdminTabDadosProps {
     ],
     fetchDataVisibility: vi.fn(),
     handleApproveDriver: vi.fn(),
-    handleRejectDriver: vi.fn(),
+    handleRejectDriver: vi.fn(async () => true),
     partners: [
       {
         id: PARTNER_ID,

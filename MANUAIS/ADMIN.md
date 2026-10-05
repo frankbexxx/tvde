@@ -335,7 +335,7 @@ Em **Sistema → Dados** há visibilidade técnica / operacional de motoristas, 
 - lista e estado;  
 - **aprovar** ou **rejeitar** o perfil de motorista (com confirmação).
 
-Atenção: nesta rejeição a interface actual **não** pede motivo ao Admin (diferente do fluxo do Parceiro com motivo público). Usa com cuidado.
+A rejeição pede **Motivo da rejeição** (mínimo 10 caracteres). O motivo fica no registo de auditoria da acção. Isto é distinto do motivo público nos **documentos** geridos pela frota — o Motorista continua a ver sobretudo os motivos de rejeição documental na app dele.
 
 Isto **não** substitui a revisão documental da frota.
 

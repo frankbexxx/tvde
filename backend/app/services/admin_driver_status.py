@@ -51,18 +51,31 @@ def set_driver_status_admin(
     driver_id: str,
     target: DriverStatus,
     actor_user_id: str,
+    reason: str | None = None,
 ) -> Driver:
     """
     Aprova ou rejeita perfil Driver (user_id).
 
     - Idempotente se já no estado alvo (200, sem audit).
     - Transição fora do conjunto E5.1 → 409.
+    - Rejeição exige ``reason`` (mín. 10 chars); fica no payload de auditoria.
     """
     if target not in (DriverStatus.approved, DriverStatus.rejected):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="invalid_target_status",
         )
+
+    reason_clean: str | None = None
+    if target == DriverStatus.rejected:
+        reason_clean = (reason or "").strip()
+        if len(reason_clean) < 10:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="rejection_reason_required",
+            )
+        if len(reason_clean) > 500:
+            reason_clean = reason_clean[:500]
 
     driver_uuid = _parse_driver_user_id(driver_id)
     driver = _load_driver_for_update(db, driver_uuid)
@@ -85,13 +98,17 @@ def set_driver_status_admin(
         # Matching já filtra por approved; Partner flows não são alterados.
         driver.is_available = False
 
+    payload: dict[str, str] = {"before": before, "after": target.value}
+    if reason_clean is not None:
+        payload["reason"] = reason_clean
+
     record_admin_action(
         db,
         actor_user_id=actor_user_id,
         action="driver_approve" if target == DriverStatus.approved else "driver_reject",
         entity_type="driver",
         entity_id=str(driver.user_id),
-        payload={"before": before, "after": target.value},
+        payload=payload,
     )
     db.commit()
     db.refresh(driver)

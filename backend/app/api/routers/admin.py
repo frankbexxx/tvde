@@ -28,7 +28,7 @@ from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.partner import Partner
 from app.models.enums import DriverStatus, Role, TripStatus, UserStatus
-from app.schemas.driver import DriverStatusResponse
+from app.schemas.driver import AdminDriverRejectBody, DriverStatusResponse
 from app.schemas.admin_kyc import AdminKycSupervisionResponse
 from app.services.admin_kyc_supervision import build_admin_kyc_supervision
 from app.schemas.system_health import (
@@ -1262,15 +1262,20 @@ async def approve_driver(
 @router.post("/drivers/{driver_id}/reject", response_model=DriverStatusResponse)
 async def reject_driver(
     driver_id: str,
+    body: AdminDriverRejectBody,
     user: UserContext = Depends(require_role(Role.admin)),
     db: Session = Depends(get_db),
 ) -> DriverStatusResponse:
-    """Rejeita motorista: pending|approved → rejected (idempotente se já rejected)."""
+    """Rejeita motorista: pending|approved → rejected (idempotente se já rejected).
+
+    Exige ``reason`` (motivo da rejeição); fica no registo de auditoria.
+    """
     driver = set_driver_status_admin(
         db,
         driver_id=driver_id,
         target=DriverStatus.rejected,
         actor_user_id=user.user_id,
+        reason=body.reason,
     )
     return DriverStatusResponse(driver_id=str(driver.user_id), status=driver.status)
 

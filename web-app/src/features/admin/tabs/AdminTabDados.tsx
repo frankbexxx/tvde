@@ -1,12 +1,26 @@
-import { useMemo, type ChangeEvent, type Dispatch, type SetStateAction } from 'react'
+import { useMemo, useRef, useState, type ChangeEvent, type Dispatch, type SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EmptyState } from '../../../components/feedback/EmptyState'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../../components/ui/dialog'
 import { ADMIN_DRIVER_FLEET_UNKNOWN, adminDriverContext } from '../adminDriverContext'
 import { driverStatusActionVisibility } from '../adminDashboardHelpers'
 import type { AdminUser } from '../useAdminUsersDirectory'
 
 type AdminPartnerRow = { id: string; name: string; created_at: string }
 type AdminDriverRow = { user_id: string; partner_id: string; status: string }
+
+type RejectConfirm = {
+  userId: string
+  who: string
+  statusLabel: string
+}
 
 export type AdminTabDadosProps = {
   copy: (value: string) => Promise<void>
@@ -17,7 +31,8 @@ export type AdminTabDadosProps = {
   driversList: AdminDriverRow[]
   fetchDataVisibility: () => Promise<void>
   handleApproveDriver: (driverUserId: string) => void | Promise<void>
-  handleRejectDriver: (driverUserId: string) => void | Promise<void>
+  /** Devolve true se a rejeição foi aceite; false mantém o diálogo. */
+  handleRejectDriver: (driverUserId: string, reason: string) => Promise<boolean>
   partners: AdminPartnerRow[]
   setDataSearch: Dispatch<SetStateAction<string>>
   users: AdminUser[]
@@ -40,6 +55,13 @@ export function AdminTabDados(props: AdminTabDadosProps) {
     users,
   } = props
 
+  const [rejectConfirm, setRejectConfirm] = useState<RejectConfirm | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [rejectBusy, setRejectBusy] = useState(false)
+  const [rejectError, setRejectError] = useState<string | null>(null)
+  const rejectBusyRef = useRef(false)
+  const rejectCancelRef = useRef<HTMLButtonElement>(null)
+
   const usersById = useMemo(() => {
     const map = new Map<string, AdminUser>()
     for (const user of users) map.set(user.id, user)
@@ -51,6 +73,59 @@ export function AdminTabDados(props: AdminTabDadosProps) {
     for (const partner of partners) map.set(partner.id, partner.name)
     return map
   }, [partners])
+
+  const openReject = (d: AdminDriverRow) => {
+    const person = usersById.get(d.user_id) ?? null
+    const partnerFound = partnersById.has(d.partner_id)
+    const context = adminDriverContext({
+      status: d.status,
+      user: person,
+      partnerId: d.partner_id,
+      partnerFound,
+      partnerName: partnerFound ? partnersById.get(d.partner_id) : null,
+    })
+    const whoParts = [context.nameLabel, context.phone].filter(Boolean)
+    setRejectConfirm({
+      userId: d.user_id,
+      who: whoParts.length > 0 ? whoParts.join(' · ') : t('driverReject.whoFallback'),
+      statusLabel: context.statusLabel,
+    })
+    setRejectReason('')
+    setRejectError(null)
+  }
+
+  const closeReject = () => {
+    if (rejectBusyRef.current) return
+    setRejectConfirm(null)
+    setRejectReason('')
+    setRejectError(null)
+  }
+
+  const submitReject = async () => {
+    if (!rejectConfirm || rejectBusyRef.current) return
+    const trimmed = rejectReason.trim()
+    if (trimmed.length < 10) {
+      setRejectError(t('driverReject.reasonShort'))
+      return
+    }
+    rejectBusyRef.current = true
+    setRejectBusy(true)
+    setRejectError(null)
+    try {
+      const ok = await handleRejectDriver(rejectConfirm.userId, trimmed)
+      if (ok) {
+        setRejectConfirm(null)
+        setRejectReason('')
+      } else {
+        setRejectError(t('driverReject.error'))
+      }
+    } catch {
+      setRejectError(t('driverReject.error'))
+    } finally {
+      rejectBusyRef.current = false
+      setRejectBusy(false)
+    }
+  }
 
   return (
     <>
@@ -162,8 +237,8 @@ export function AdminTabDados(props: AdminTabDadosProps) {
         <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-card space-y-3">
           <h3 className="font-medium text-foreground">Drivers</h3>
           <p className="text-xs text-foreground/75">
-            Aprovar ou rejeitar perfil motorista (pending / rejected / approved). Sem motivo no reject —
-            o backend não aceita reason nesta rota.
+            Aprovar ou rejeitar perfil motorista (pending / rejected / approved). A rejeição exige um
+            motivo (mínimo 10 caracteres), registado na auditoria.
           </p>
           {driverStatusFeedback ? (
             <p
@@ -196,7 +271,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                 .map((d) => {
                   const { canApprove, canReject } = driverStatusActionVisibility(d.status)
                   const rowBusy = driverStatusLoading === d.user_id
-                  const anyBusy = driverStatusLoading !== null
+                  const anyBusy = driverStatusLoading !== null || rejectBusy
                   const person = usersById.get(d.user_id) ?? null
                   const partnerFound = partnersById.has(d.partner_id)
                   const context = adminDriverContext({
@@ -258,7 +333,7 @@ export function AdminTabDados(props: AdminTabDadosProps) {
                               type="button"
                               data-testid={`admin-driver-reject-${d.user_id}`}
                               disabled={anyBusy}
-                              onClick={() => void handleRejectDriver(d.user_id)}
+                              onClick={() => openReject(d)}
                               className="inline-flex items-center justify-center min-h-9 px-2 py-1 bg-destructive text-destructive-foreground text-xs font-medium rounded-lg hover:opacity-90 disabled:opacity-50"
                             >
                               {rowBusy ? 'A rejeitar…' : 'Rejeitar'}
@@ -287,6 +362,84 @@ export function AdminTabDados(props: AdminTabDadosProps) {
           )}
         </div>
       </section>
+
+      <Dialog
+        open={rejectConfirm !== null}
+        onOpenChange={(open) => {
+          if (!open) closeReject()
+        }}
+      >
+        <DialogContent
+          data-testid="admin-driver-reject-dialog"
+          className="max-w-[min(100vw-1.5rem,28rem)]"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault()
+            rejectCancelRef.current?.focus()
+          }}
+          onEscapeKeyDown={(event) => {
+            if (rejectBusyRef.current) event.preventDefault()
+          }}
+          onPointerDownOutside={(event) => {
+            if (rejectBusyRef.current) event.preventDefault()
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>{t('driverReject.title')}</DialogTitle>
+            <DialogDescription className="text-foreground break-words">
+              {rejectConfirm
+                ? t('driverReject.body', {
+                    who: rejectConfirm.who,
+                    status: rejectConfirm.statusLabel,
+                  })
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          <label className="block text-sm font-medium text-foreground">
+            {t('driverReject.reason')}
+            <textarea
+              value={rejectReason}
+              onChange={(event) => setRejectReason(event.target.value)}
+              data-testid="admin-driver-reject-dialog-reason"
+              disabled={rejectBusy}
+              className="mt-1 w-full min-h-11 px-3 py-2 border border-border rounded-lg text-base bg-background text-foreground"
+            />
+          </label>
+          <p className="text-sm text-foreground/80">{t('driverReject.reasonHint')}</p>
+          {rejectError ? (
+            <p
+              className="text-sm text-destructive"
+              role="alert"
+              data-testid="admin-driver-reject-dialog-error"
+            >
+              {rejectError}
+            </p>
+          ) : null}
+          <DialogFooter className="gap-2 sm:gap-2">
+            <button
+              ref={rejectCancelRef}
+              type="button"
+              data-testid="admin-driver-reject-dialog-cancel"
+              disabled={rejectBusy}
+              onClick={closeReject}
+              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-card border border-border text-foreground text-sm font-medium rounded-lg hover:bg-muted/40 disabled:opacity-60"
+            >
+              {t('driverReject.cancel')}
+            </button>
+            <button
+              type="button"
+              data-testid="admin-driver-reject-dialog-confirm"
+              disabled={rejectBusy}
+              aria-busy={rejectBusy}
+              onClick={() => {
+                void submitReject()
+              }}
+              className="inline-flex items-center justify-center min-h-11 touch-manipulation px-3 py-1.5 bg-destructive text-destructive-foreground text-sm font-medium rounded-lg hover:opacity-90 disabled:opacity-60"
+            >
+              {rejectBusy ? t('driverReject.confirming') : t('driverReject.confirm')}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
