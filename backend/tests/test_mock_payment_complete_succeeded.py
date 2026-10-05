@@ -144,7 +144,10 @@ def test_complete_trip_real_pi_leaves_payment_processing(
     monkeypatch.setattr(
         trip_service,
         "retrieve_payment_intent",
-        lambda _pi_id: SimpleNamespace(status="requires_confirmation"),
+        lambda _pi_id: SimpleNamespace(
+            status="requires_confirmation",
+            payment_method="pm_card_visa",
+        ),
     )
     monkeypatch.setattr(
         trip_service,
@@ -154,7 +157,10 @@ def test_complete_trip_real_pi_leaves_payment_processing(
     monkeypatch.setattr(
         trip_service,
         "confirm_payment_intent",
-        lambda _pi_id, **_kwargs: None,
+        lambda _pi_id, **_kwargs: SimpleNamespace(
+            status="requires_capture",
+            payment_method="pm_card_visa",
+        ),
     )
     monkeypatch.setattr(
         trip_service,

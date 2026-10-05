@@ -187,7 +187,10 @@ def test_complete_trip_production_dev_tools_does_not_use_test_card(
     monkeypatch.setattr(
         trip_service,
         "retrieve_payment_intent",
-        lambda _pi_id: SimpleNamespace(status="requires_confirmation"),
+        lambda _pi_id: SimpleNamespace(
+            status="requires_confirmation",
+            payment_method="pm_card_visa",
+        ),
     )
     monkeypatch.setattr(
         trip_service,
@@ -195,8 +198,12 @@ def test_complete_trip_production_dev_tools_does_not_use_test_card(
         lambda _pi_id, *, amount_cents, idempotency_key: None,
     )
 
-    def fake_confirm(_pi_id: str, **kwargs) -> None:
+    def fake_confirm(_pi_id: str, **kwargs) -> SimpleNamespace:
         confirm_kwargs.append(kwargs)
+        return SimpleNamespace(
+            status="requires_capture",
+            payment_method="pm_card_visa",
+        )
 
     monkeypatch.setattr(trip_service, "confirm_payment_intent", fake_confirm)
     monkeypatch.setattr(
