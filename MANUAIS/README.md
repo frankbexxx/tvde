@@ -10,7 +10,7 @@ Estes ficheiros descrevem **o que a app faz hoje**. Não substituem a documenta�
 |--------|----------|--------|
 | Passageiro | [`PASSAGEIRO.md`](PASSAGEIRO.md) | Existente — reconciliado com a app (Outubro 2026) |
 | Motorista | [`MOTORISTA.md`](MOTORISTA.md) | Existente — reconciliado com a app (Outubro 2026) |
-| Parceiro / Frota | — | Por criar |
+| Parceiro / Frota | [`PARCEIRO_FROTA.md`](PARCEIRO_FROTA.md) | Existente — reconciliado com a app (Outubro 2026) |
 | Admin | — | Por criar |
 | Técnico / Operacional | — | Futuro |
 
