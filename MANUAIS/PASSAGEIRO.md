@@ -297,12 +297,13 @@ Se a viagem ainda estiver a **procurar motorista** ou só com **motorista atribu
 
 - mensagem típica: *Podes cancelar esta viagem sem taxa.*
 
-### Com taxa registada (piloto)
+### Com taxa registada (piloto actual)
 
 Se o motorista já aceitou e a viagem está **a caminho**, **quase a chegar** ou **em curso**:
 
-- a regra regista uma taxa de **3,00 €**;  
-- durante o **piloto**, a app indica que **este valor não é cobrado**.
+No piloto actual, a taxa de **3,00 €** pode ficar registada, mas **não é cobrada**.
+
+Isto não significa que a viagem seja sempre gratuita de cancelar no futuro: se a política financeira mudar, este manual será actualizado.
 
 Depois de confirmar o cancelamento, o estado passa a **Viagem cancelada**.
 
@@ -380,17 +381,19 @@ Na Conta podes gerir os métodos de entrada depois de teres sessão.
 
 # 17. Notificações
 
-A app pode enviar avisos sobre a viagem (por exemplo quando o motorista aceita ou o estado muda), **quando as notificações estiverem activas no dispositivo**.
+As notificações estão disponíveis quando a aplicação está correctamente configurada e o dispositivo tem as permissões activas.
+
+Não assumes que vais receber **sempre** um aviso: acompanha também o estado da viagem no ecrã.
 
 ### Android
 
-Há suporte para notificações no telemóvel Android (quando a app e as permissões estiverem correctamente configuradas).
+Podes receber avisos no telemóvel Android nas condições acima (app configurada e permissões activas).
 
 ### iPhone
 
 [PENDENTE — PUSH IOS]
 
-As notificações no iPhone ainda não estão fechadas. Até lá, não assumes que recebes avisos push no iOS: acompanha a viagem no ecrã da app.
+As notificações no iPhone ainda não estão fechadas. Até lá, acompanha a viagem no ecrã da app.
 
 ---
 

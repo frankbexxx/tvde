@@ -30,3 +30,13 @@ Estes ficheiros descrevem **o que a app faz hoje**. Não substituem a documenta�
 | `[SCREENSHOT — …]` | Local para uma imagem do ecrã (ainda por capturar) |
 
 Quando um placeholder for resolvido na app, o manual correspondente deve ser actualizado na mesma altura.
+
+## Regras editoriais
+
+- Manuais de utilizador usam a marca **VAMULÁ**. `TVDE` fica para documentação técnica, nome do projecto e contexto regulatório quando for preciso.
+- Linguagem **PT-PT**, frases curtas, sem jargão interno.
+- Descrever o **comportamento actual** da app — não prometer o que ainda não existe.
+- O que depende de produção ou está por fazer usa **placeholders** (tabela acima).
+- **Notificações** nunca são apresentadas como garantidas: só quando a app está bem configurada e o dispositivo tem as permissões activas. No iPhone manter `[PENDENTE — PUSH IOS]` enquanto a integração não estiver fechada.
+- Quando o piloto e o comportamento final diferem (por exemplo taxas ou cobranças), o manual diz o que acontece **no piloto actual** e deve ser actualizado se a política mudar.
+- No futuro Manual do Motorista: documentar **horas de condução** como acompanhamento/avisos (o bloqueio automático ainda não está activo); incluir **SOS/emergência** com importância semelhante ao Passageiro, mas só após inspeccionar o fluxo real do Motorista.
