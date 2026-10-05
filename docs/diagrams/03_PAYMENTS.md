@@ -17,13 +17,17 @@ stateDiagram-v2
 ## Fluxo cartão V1 (manual capture)
 
 1. **Accept:** cria PaymentIntent `capture_method=manual`, `payment_method_types=["card"]`, amount **€0,50** (placeholder Stripe EUR). `Payment.status=processing`.
-2. **Complete:** calcula `final_price` → `update` amount → `confirm` → `capture` (quando PI ainda não está `requires_capture`).
-3. **Webhook** `payment_intent.succeeded`: marca `Payment.succeeded` **só** se amount/currency coincidem com `final_price` (ou `total_amount`).
-4. **Fail-closed:** PI em `requires_capture` com amount ≠ final (ex. placeholder ainda €0,50) → **não** capturar; log `payment_capture_blocked_amount_mismatch`; payment permanece `processing` para ops.
+2. **Passageiro (Stripe real / staging test):** a API expõe `payment_intent_client_secret`; o Passageiro **anexa** um PaymentMethod (`POST /trips/{id}/payment-method`) **sem** confirmar o €0,50 — assim o amount ainda pode ser actualizado no complete.
+3. **Complete:** calcula `final_price` → `update` amount → `confirm` (com PM anexado; se `requires_action` → 409 `payment_requires_action` para SCA no cliente) → `capture`. Sem PM → 409 `payment_method_required`.
+4. **Webhook** `payment_intent.succeeded`: marca `Payment.succeeded` **só** se amount/currency coincidem com `final_price` (ou `total_amount`).
+5. **Fail-closed:** PI em `requires_capture` com amount ≠ final (ex. placeholder ainda €0,50) → **não** capturar; log `payment_capture_blocked_amount_mismatch`; payment permanece `processing` para ops.
 
-`ENABLE_CONFIRM_ON_ACCEPT` / `client_secret` antecipado: **desligado em prod e staging live**. Dev/test (e staging com `STRIPE_MOCK=true`) podem usar a flag para testes.
+`ENABLE_CONFIRM_ON_ACCEPT` / confirm antecipado do placeholder: **continua desligado em prod e staging live** (bloqueio de early confirm). A exposição do `client_secret` em Stripe real serve para **attach**, não para confirmar o €0,50.
 
 **MB WAY:** fase 2 — não usa este fluxo de hold; ver discovery A1.2.
+
+**Piloto V1:** refunds manuais no Dashboard — [`docs/runbooks/PILOT_STRIPE_REFUND.md`](../runbooks/PILOT_STRIPE_REFUND.md). Inconsistências: [`docs/runbooks/PILOT_PAYMENT_RECONCILIATION.md`](../runbooks/PILOT_PAYMENT_RECONCILIATION.md).
+
 
 ## Fluxo externo (alto nível)
 

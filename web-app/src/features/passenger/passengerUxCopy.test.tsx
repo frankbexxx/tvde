@@ -85,7 +85,9 @@ describe('passenger UX copy', () => {
     await i18n.changeLanguage('pt')
     wrap(
       <PassengerPaymentConfirmCard
+        tripId="trip-1"
         clientSecret="pi_visual_secret_mock"
+        token="tok"
         onConfirmed={() => undefined}
         onSkip={() => undefined}
       />,

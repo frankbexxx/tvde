@@ -11,6 +11,7 @@ from app.db.models.trip import Trip
 from app.schemas.driver import DriverLocationResponse
 from app.schemas.trip import (
     PriceBreakdownSchema,
+    TripAttachPaymentMethodRequest,
     TripCancelRequest,
     TripCreateRequest,
     TripCreateResponse,
@@ -31,6 +32,7 @@ from app.services.driver_location import (
 )
 from app.services.interaction_logging import log_interaction
 from app.services.trips import (
+    attach_payment_method_for_passenger_trip,
     cancel_trip_by_passenger,
     create_trip as create_trip_service,
     get_current_active_trip_for_passenger,
@@ -164,6 +166,29 @@ async def create_trip(
         has_pet=bool(trip.has_pet),
         is_assistance_animal=bool(trip.is_assistance_animal),
         passenger_count=int(getattr(trip, "passenger_count", None) or 1),
+    )
+
+
+@router.post("/{trip_id}/payment-method", response_model=TripDetailResponse)
+async def attach_trip_payment_method(
+    trip_id: str,
+    payload: TripAttachPaymentMethodRequest,
+    user: UserContext = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> TripDetailResponse:
+    """Attach card PaymentMethod to the trip PaymentIntent (no early confirm)."""
+    trip = attach_payment_method_for_passenger_trip(
+        db=db,
+        passenger_id=user.user_id,
+        trip_id=trip_id.strip(),
+        payment_method_id=payload.payment_method_id,
+    )
+    emb = driver_location_embed_for_trip_detail(db, trip)
+    return trip_to_detail(
+        trip,
+        include_stripe_pi=False,
+        driver_location=emb,
+        include_passenger_payment_client_secret=True,
     )
 
 

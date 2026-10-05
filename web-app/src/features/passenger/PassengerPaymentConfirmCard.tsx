@@ -9,6 +9,7 @@ import {
   useStripe,
 } from '@stripe/react-stripe-js'
 import { toast } from 'sonner'
+import { attachTripPaymentMethod } from '../../api/trips'
 import {
   BTN_COMPACT_HEIGHT,
   BTN_PRIMARY_RADIUS,
@@ -20,16 +21,23 @@ import {
 } from '../../components/layout/infoBoxTemplate'
 
 type PassengerPaymentConfirmCardProps = {
+  tripId: string
   clientSecret: string
+  token: string
   onConfirmed: () => void | Promise<void>
   /** Quando cartão indisponível (mock / sem publishable key) — continuar viagem. */
   onSkip?: () => void | Promise<void>
 }
 
 function ConfirmInner({
+  tripId,
   clientSecret,
+  token,
   onConfirmed,
-}: Pick<PassengerPaymentConfirmCardProps, 'clientSecret' | 'onConfirmed'>) {
+}: Pick<
+  PassengerPaymentConfirmCardProps,
+  'tripId' | 'clientSecret' | 'token' | 'onConfirmed'
+>) {
   const { t } = useTranslation('passenger')
   const stripe = useStripe()
   const elements = useElements()
@@ -43,36 +51,45 @@ function ConfirmInner({
       if (!card) return
       setBusy(true)
       try {
-        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: { card },
+        // Attach PaymentMethod without confirming the €0.50 placeholder.
+        // Confirm+capture happen at trip complete with the final amount (SCA then if needed).
+        const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+          type: 'card',
+          card,
         })
-        if (error) {
-          toast.error(error.message ?? t('paymentConfirm.declined'))
+        if (pmError || !paymentMethod?.id) {
+          toast.error(pmError?.message ?? t('paymentConfirm.declined'))
           return
         }
-        const st = paymentIntent?.status
-        if (
-          st === 'succeeded' ||
-          st === 'requires_capture' ||
-          st === 'processing'
-        ) {
-          toast.success(t('paymentConfirm.cardAuthorized'))
-          await onConfirmed()
-        } else if (st === 'requires_action') {
-          toast.message(t('paymentConfirm.extraAuthRequired'))
-        } else {
-          toast.message(
-            t('paymentConfirm.statusLine', {
-              status: st ?? t('paymentConfirm.unknownStatus'),
-            })
-          )
-          await onConfirmed()
+        await attachTripPaymentMethod(tripId, paymentMethod.id, token)
+
+        // If Stripe already asked for SCA on a prior confirm attempt, finish it.
+        const { error: actionError, paymentIntent } = await stripe.retrievePaymentIntent(
+          clientSecret
+        )
+        if (!actionError && paymentIntent?.status === 'requires_action') {
+          const { error: handleError, paymentIntent: after } =
+            await stripe.confirmCardPayment(clientSecret)
+          if (handleError) {
+            toast.error(handleError.message ?? t('paymentConfirm.extraAuthRequired'))
+            return
+          }
+          const st = after?.status
+          if (st === 'requires_action') {
+            toast.message(t('paymentConfirm.extraAuthRequired'))
+            return
+          }
         }
+
+        toast.success(t('paymentConfirm.cardAuthorized'))
+        await onConfirmed()
+      } catch {
+        toast.error(t('paymentConfirm.attachFailed'))
       } finally {
         setBusy(false)
       }
     },
-    [stripe, elements, clientSecret, onConfirmed, t]
+    [stripe, elements, clientSecret, tripId, token, onConfirmed, t]
   )
 
   return (
@@ -92,9 +109,11 @@ function ConfirmInner({
   )
 }
 
-/** Stripe Elements para confirmar PI quando ENABLE_CONFIRM_ON_ACCEPT + GET devolve client_secret. */
+/** Stripe Elements: guardar cartão no PaymentIntent (sem confirmar o valor placeholder). */
 export function PassengerPaymentConfirmCard({
+  tripId,
   clientSecret,
+  token,
   onConfirmed,
   onSkip,
 }: PassengerPaymentConfirmCardProps) {
@@ -167,7 +186,12 @@ export function PassengerPaymentConfirmCard({
         stripe={stripePromise}
         options={{ clientSecret, locale: i18n.language === 'en' ? 'en' : 'pt' }}
       >
-        <ConfirmInner clientSecret={clientSecret} onConfirmed={onConfirmed} />
+        <ConfirmInner
+          tripId={tripId}
+          clientSecret={clientSecret}
+          token={token}
+          onConfirmed={onConfirmed}
+        />
       </Elements>
     </section>
   )

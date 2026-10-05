@@ -1570,7 +1570,9 @@ export function PassengerDashboard() {
                         typeof activeTrip.payment_intent_client_secret === 'string' &&
                         activeTrip.payment_intent_client_secret.length > 0 ? (
                         <PassengerPaymentConfirmCard
+                          tripId={activeTrip.trip_id}
                           clientSecret={activeTrip.payment_intent_client_secret}
+                          token={token ?? ''}
                           onConfirmed={() => void refetchActiveTrip()}
                           onSkip={() => void refetchActiveTrip()}
                         />

@@ -120,6 +120,12 @@ class TripCancelRequest(BaseModel):
     )
 
 
+class TripAttachPaymentMethodRequest(BaseModel):
+    """Attach Stripe PaymentMethod to the trip PI (no confirm)."""
+
+    payment_method_id: str = Field(..., min_length=3, max_length=128)
+
+
 class OfferRejectRequest(BaseModel):
     """Reject offer body. Required for pet/assistance trips (PET-5A.2)."""
 

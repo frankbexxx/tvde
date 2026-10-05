@@ -183,13 +183,24 @@ def test_complete_unconfirmed_updates_then_captures(
     calls: dict[str, list] = {"update": [], "confirm": [], "capture": []}
 
     def fake_retrieve(_pi: str) -> SimpleNamespace:
-        return SimpleNamespace(status="requires_confirmation", amount=50, currency="eur")
+        return SimpleNamespace(
+            status="requires_confirmation",
+            amount=50,
+            currency="eur",
+            payment_method="pm_card_visa",
+        )
 
     def fake_update(_pi: str, *, amount_cents: int, idempotency_key: str) -> None:
         calls["update"].append(amount_cents)
 
-    def fake_confirm(_pi: str, **_kwargs: object) -> None:
+    def fake_confirm(_pi: str, **_kwargs: object) -> SimpleNamespace:
         calls["confirm"].append(_pi)
+        return SimpleNamespace(
+            status="requires_capture",
+            amount=calls["update"][-1] if calls["update"] else 50,
+            currency="eur",
+            payment_method="pm_card_visa",
+        )
 
     def fake_capture(_pi: str, *, idempotency_key: str) -> None:
         calls["capture"].append(_pi)

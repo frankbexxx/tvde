@@ -98,6 +98,24 @@ def retrieve_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
     return stripe.PaymentIntent.retrieve(payment_intent_id)
 
 
+def attach_payment_method_to_intent(
+    payment_intent_id: str,
+    payment_method_id: str,
+    *,
+    idempotency_key: str | None = None,
+) -> stripe.PaymentIntent:
+    """
+    Attach a PaymentMethod to an unconfirmed PaymentIntent (no confirm).
+
+    Allows amount update at complete before confirm+capture, and SCA at confirm time.
+    """
+    kwargs: dict = {"payment_method": payment_method_id}
+    if idempotency_key:
+        kwargs["idempotency_key"] = idempotency_key
+    _ensure_stripe_ready()
+    return stripe.PaymentIntent.modify(payment_intent_id, **kwargs)
+
+
 def cancel_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
     """Cancel PaymentIntent (e.g. when admin cancels trip before capture)."""
     _ensure_stripe_ready()
