@@ -17,7 +17,7 @@ function baseProps(over: Partial<AdminTabDadosProps> = {}): AdminTabDadosProps {
     ],
     fetchDataVisibility: vi.fn(),
     handleApproveDriver: vi.fn(),
-    handleRejectDriver: vi.fn(),
+    handleRejectDriver: vi.fn(async () => true),
     partners: [],
     setDataSearch: vi.fn(),
     users: [],
@@ -76,13 +76,12 @@ describe('AdminTabDados driver approve/reject (RTL)', () => {
     })
   })
 
-  it('Rejeitar chama handler com driver id', async () => {
-    const handleRejectDriver = vi.fn()
+  it('Rejeitar abre diálogo sem chamar o handler', async () => {
+    const handleRejectDriver = vi.fn(async () => true)
     render(<AdminTabDados {...baseProps({ handleRejectDriver })} />)
     fireEvent.click(screen.getByTestId('admin-driver-reject-drv-pending'))
-    await waitFor(() => {
-      expect(handleRejectDriver).toHaveBeenCalledWith('drv-pending')
-    })
+    expect(await screen.findByTestId('admin-driver-reject-dialog')).toBeInTheDocument()
+    expect(handleRejectDriver).not.toHaveBeenCalled()
   })
 
   it('loading desactiva botões e mostra texto', () => {

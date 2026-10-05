@@ -85,10 +85,20 @@ def test_approve_pending_to_approved(client: TestClient, db: Session) -> None:
     assert _audit_count(db, driver_id=uid, action="driver_approve") == 1
 
 
+_REJECT_REASON = "Documentação incompleta para operar"
+
+
+def _reject(client: TestClient, uid: uuid.UUID, *, reason: str = _REJECT_REASON):
+    return client.post(
+        f"/admin/drivers/{uid}/reject",
+        json={"reason": reason},
+    )
+
+
 @pytest.mark.usefixtures("admin_auth_override")
 def test_reject_pending_to_rejected(client: TestClient, db: Session) -> None:
     uid = _make_driver(db, status=DriverStatus.pending)
-    r = client.post(f"/admin/drivers/{uid}/reject")
+    r = _reject(client, uid)
     assert r.status_code == 200, r.text
     assert r.json()["status"] == "rejected"
     db.expire_all()
@@ -96,6 +106,28 @@ def test_reject_pending_to_rejected(client: TestClient, db: Session) -> None:
     assert row.status == DriverStatus.rejected
     assert row.is_available is False
     assert _audit_count(db, driver_id=uid, action="driver_reject") == 1
+    audit = db.execute(
+        select(AuditEvent).where(
+            AuditEvent.event_type == "admin.driver_reject",
+            AuditEvent.entity_id == str(uid),
+        )
+    ).scalar_one()
+    assert audit.payload.get("reason") == _REJECT_REASON
+
+
+@pytest.mark.usefixtures("admin_auth_override")
+def test_reject_without_reason_422(client: TestClient, db: Session) -> None:
+    uid = _make_driver(db, status=DriverStatus.pending)
+    r = client.post(f"/admin/drivers/{uid}/reject", json={})
+    assert r.status_code == 422
+    r2 = client.post(f"/admin/drivers/{uid}/reject", json={"reason": "curto"})
+    assert r2.status_code == 422
+    db.expire_all()
+    assert (
+        db.execute(select(Driver).where(Driver.user_id == uid)).scalar_one().status
+        == DriverStatus.pending
+    )
+    assert _audit_count(db, driver_id=uid, action="driver_reject") == 0
 
 
 @pytest.mark.usefixtures("admin_auth_override")
@@ -105,7 +137,7 @@ def test_approve_rejected_and_reject_approved(client: TestClient, db: Session) -
     assert r.status_code == 200
     assert r.json()["status"] == "approved"
 
-    r2 = client.post(f"/admin/drivers/{uid}/reject")
+    r2 = _reject(client, uid)
     assert r2.status_code == 200
     assert r2.json()["status"] == "rejected"
     db.expire_all()
@@ -127,8 +159,8 @@ def test_approve_idempotent_no_extra_audit(client: TestClient, db: Session) -> N
 @pytest.mark.usefixtures("admin_auth_override")
 def test_reject_idempotent_no_extra_audit(client: TestClient, db: Session) -> None:
     uid = _make_driver(db, status=DriverStatus.rejected)
-    r1 = client.post(f"/admin/drivers/{uid}/reject")
-    r2 = client.post(f"/admin/drivers/{uid}/reject")
+    r1 = _reject(client, uid)
+    r2 = _reject(client, uid)
     assert r1.status_code == 200 and r2.status_code == 200
     assert _audit_count(db, driver_id=uid, action="driver_reject") == 0
 

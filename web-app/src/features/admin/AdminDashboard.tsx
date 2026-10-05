@@ -626,20 +626,21 @@ export function AdminDashboard() {
     }
   }
 
-  const handleRejectDriver = async (driverUserId: string) => {
-    if (!token || !driverUserId.trim() || driverStatusLoading) return
-    if (!window.confirm('Confirmar rejeição deste motorista?')) return
+  const handleRejectDriver = async (driverUserId: string, reason: string): Promise<boolean> => {
+    if (!token || !driverUserId.trim() || driverStatusLoading) return false
     setDriverStatusLoading(driverUserId)
     setDriverStatusFeedback(null)
     try {
-      const r = await rejectAdminDriver(driverUserId, token)
+      const r = await rejectAdminDriver(driverUserId, token, reason)
       setDriversList((prev) =>
         prev.map((d) => (d.user_id === r.driver_id ? { ...d, status: r.status } : d))
       )
       setDriverStatusFeedback(`Motorista rejeitado (${r.status}).`)
       setError(null)
+      return true
     } catch (err) {
       setError(adminErrDetail(err, 'Erro ao rejeitar motorista'))
+      return false
     } finally {
       setDriverStatusLoading(null)
     }

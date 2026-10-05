@@ -21,12 +21,13 @@ describe('admin driver approve/reject API', () => {
     })
   })
 
-  it('rejectAdminDriver POST /admin/drivers/{id}/reject', async () => {
+  it('rejectAdminDriver POST /admin/drivers/{id}/reject com reason', async () => {
     vi.mocked(apiFetch).mockResolvedValue({ driver_id: 'drv-1', status: 'rejected' })
-    await rejectAdminDriver('drv-1', 'tok')
+    await rejectAdminDriver('drv-1', 'tok', 'Documentação incompleta para operar')
     expect(apiFetch).toHaveBeenCalledWith('/admin/drivers/drv-1/reject', {
       method: 'POST',
       token: 'tok',
+      body: JSON.stringify({ reason: 'Documentação incompleta para operar' }),
     })
   })
 })
