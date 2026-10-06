@@ -51,6 +51,10 @@ import {
 } from '../../services/geocoding'
 import { DestinationSearchField } from './DestinationSearchField'
 import { placeSearchShouldFetch } from './placeSearchFetch'
+import {
+  coordsToMapCandidate,
+  resolvePlanningMapClickTarget,
+} from './passengerPlanningMapClick'
 import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../../hooks/usePassengerDriverLocation'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
 import {
@@ -668,15 +672,54 @@ export function PassengerDashboard() {
     setDestinationCandidate(null)
   }, [])
 
-  /** A019: com pickup+dropoff, novo clique atualiza só o destino */
+  /**
+   * Mapa = mesmo Candidate/preview que texto: seleccionar → preview → confirmar → commit.
+   * Clique no mapa nunca grava pickup/dropoff definitivos.
+   */
   const handlePlanningMapClick = useCallback((coords: { lat: number; lng: number }) => {
-    if (!pickupLocationRef.current) {
-      pickupLocationRef.current = coords
-      setPickupLocation(coords)
-      return
+    setIsPlanningMode(true)
+    setPlaceSearchUiActive(false)
+    const target = resolvePlanningMapClickTarget(Boolean(pickupLocationRef.current))
+    const placeholder = coordsToMapCandidate(coords, 'Local selecionado')
+
+    if (target === 'pickup') {
+      setPickupCandidate(placeholder)
+      setPickupQuery(placeholder.primary)
+      setPickupGeoSuggestions([])
+      setMapRecenterKey((k) => k + 1)
+      toast.success(t('trip.pickupPreview'))
+    } else {
+      // Uncommit destino confirmado (se existir) para voltar ao preview + Confirmar destino
+      setDropoffLocation(null)
+      setDropoffAddress(null)
+      setConfirmRouteMeta(null)
+      setDestinationCandidate(placeholder)
+      setDestinationQuery(placeholder.primary)
+      setGeoSuggestions([])
+      setMapRecenterKey((k) => k + 1)
+      toast.success(t('trip.dropoffPreview'))
     }
-    setDropoffLocation(coords)
-  }, [])
+
+    void reverseGeocode(coords.lng, coords.lat).then((addr) => {
+      const suggestion = coordsToMapCandidate(coords, addr)
+      const label = suggestion.secondary
+        ? `${suggestion.primary}, ${suggestion.secondary}`
+        : suggestion.primary
+      if (target === 'pickup') {
+        setPickupCandidate((prev) => {
+          if (!prev || prev.lat !== coords.lat || prev.lng !== coords.lng) return prev
+          return suggestion
+        })
+        setPickupQuery(label)
+      } else {
+        setDestinationCandidate((prev) => {
+          if (!prev || prev.lat !== coords.lat || prev.lng !== coords.lng) return prev
+          return suggestion
+        })
+        setDestinationQuery(label)
+      }
+    })
+  }, [t])
 
   const pickupDestinationTooClose = useMemo(() => {
     if (!pickupLocation || !dropoffLocation) return false
@@ -1266,12 +1309,12 @@ export function PassengerDashboard() {
     mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [])
 
-  const pickupPreviewLocation = pickupLocation ?? (pickupCandidate
+  const pickupPreviewLocation = pickupCandidate
     ? { lat: pickupCandidate.lat, lng: pickupCandidate.lng }
-    : null)
-  const dropoffPreviewLocation = dropoffLocation ?? (destinationCandidate
+    : pickupLocation
+  const dropoffPreviewLocation = destinationCandidate
     ? { lat: destinationCandidate.lat, lng: destinationCandidate.lng }
-    : null)
+    : dropoffLocation
 
   const passengerBottomNavEl = (
     <PassengerBottomNav active={passengerNavActive} onSelect={handlePassengerBottomNav} />
