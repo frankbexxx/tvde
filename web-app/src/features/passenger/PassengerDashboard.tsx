@@ -71,8 +71,10 @@ import {
 } from './petBooking'
 import {
   passengerTripPollEquals,
+  selectPassengerPollForTrip,
   type PassengerTripPollResult,
 } from './passengerTripPollEquals'
+import { usePassengerSearchFallback } from './usePassengerSearchFallback'
 import { usePassengerUxState } from './usePassengerUxState'
 import { PassengerStatusCard } from './PassengerStatusCard'
 import { PassengerCancelPanel } from './PassengerCancelPanel'
@@ -227,7 +229,6 @@ export function PassengerDashboard() {
   }, [])
   const [passengerCancelPreset, setPassengerCancelPreset] = useState('')
   const [passengerCancelOther, setPassengerCancelOther] = useState('')
-  const [retrySearchPending, setRetrySearchPending] = useState(false)
   const {
     position: passengerLocation,
     usedFallback: geolocationUsedFallback,
@@ -406,20 +407,21 @@ export function PassengerDashboard() {
     return () => {
       cancelled = true
     }
-    // One reconcile per passenger token mount; retry path calls restorePassengerActiveTrip directly.
+    // One reconcile per passenger token mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional once-per-token bootstrap
   }, [token, sessionRole])
 
   const isOnline = useOnlineStatus()
   const fetchPassengerActiveTrip = useCallback((): Promise<PassengerTripPollResult> => {
     if (!activeTripId || !token) {
-      return Promise.resolve({ trip: null, notFound: false })
+      return Promise.resolve({ tripId: activeTripId ?? '', trip: null, notFound: false })
     }
-    return getTripDetail(activeTripId, token)
-      .then((trip) => ({ trip, notFound: false }))
+    const tripId = activeTripId
+    return getTripDetail(tripId, token)
+      .then((trip) => ({ tripId, trip, notFound: false }))
       .catch((e: unknown) => {
         const st = (e as { status?: number })?.status
-        if (st === 404) return { trip: null, notFound: true }
+        if (st === 404) return { tripId, trip: null, notFound: true }
         throw e
       })
   }, [activeTripId, token])
@@ -439,8 +441,10 @@ export function PassengerDashboard() {
     { equals: passengerTripPollEquals }
   )
 
-  const activeTripPolled = activeTripPoll?.trip ?? null
-  const activeTripNotFound = activeTripPoll?.notFound ?? false
+  const { trip: activeTripPolled, notFound: activeTripNotFound } = selectPassengerPollForTrip(
+    activeTripPoll,
+    activeTripId
+  )
 
   const activeTrip = useMemo(
     () => mergePassengerPolledWithPending(activeTripPolled, passengerPendingTripDetail, activeTripId),
@@ -925,103 +929,21 @@ export function PassengerDashboard() {
     ]
   )
 
-  /** P36: cancela o pedido actual e cria um novo com a mesma recolha/destino (re-disparo de dispatch). */
-  const handleRetrySearch = useCallback(async () => {
-    if (!token || !activeTripId || !activeTrip || activeTrip.status !== 'requested' || retrySearchPending) {
-      return
-    }
-    const petCheck = validatePetBooking(petBooking)
-    if (!petCheck.ok) {
-      toast.warning(t(petCheck.messageKey))
-      return
-    }
-    const petPayload = buildPetCreatePayload(petBooking)
-    setRetrySearchPending(true)
-    setError(null)
-    addLog('Clique: Tentar novamente', 'action')
-    try {
-      await cancelTrip(activeTripId, token, { reason: 'retry_dispatch' })
-      const res = await createTrip(
-        {
-          origin_lat: activeTrip.origin_lat,
-          origin_lng: activeTrip.origin_lng,
-          destination_lat: activeTrip.destination_lat,
-          destination_lng: activeTrip.destination_lng,
-          ...petPayload,
-        },
-        token
-      )
-      setPassengerPendingTripDetail(
-        tripDetailFromCreateResponse(
-          res,
-          { lat: activeTrip.origin_lat, lng: activeTrip.origin_lng },
-          { lat: activeTrip.destination_lat, lng: activeTrip.destination_lng }
-        )
-      )
-      setPassengerActiveTripId(res.trip_id)
-      void requestTripNotificationPermission()
-      setStatus(passengerTripStatusLabel(res.status))
-      const surcharge =
-        res.pet_surcharge ?? res.price_breakdown?.pet_surcharge ?? null
-      setLastPetSurcharge(surcharge)
-      setLastFareSubtotal(
-        res.price_breakdown?.fare_subtotal ??
-          (res.estimated_price != null && surcharge != null
-            ? Math.max(0, res.estimated_price - surcharge)
-            : null),
-      )
-      const tollsAmt =
-        res.price_breakdown?.estimated_tolls_amount ??
-        res.price_breakdown?.charged_tolls_amount ??
-        res.price_breakdown?.tolls_amount ??
-        null
-      const tollStatus = res.price_breakdown?.tolls_status ?? null
-      setLastEstimatedTolls(tollsAmt != null && Number(tollsAmt) > 0 ? Number(tollsAmt) : null)
-      setLastTollsUnavailable(tollStatus === 'zero_fallback' || tollStatus === 'error')
-      setLastEstimatedTotal(res.estimated_price ?? res.price_breakdown?.total ?? null)
-      setLastIntermediationRate(
-        res.intermediation_rate_percent != null && Number.isFinite(Number(res.intermediation_rate_percent))
-          ? Number(res.intermediation_rate_percent)
-          : null,
-      )
-      setLastPriceBreakdown(res.price_breakdown ?? null)
-      addLog('Pedido reenviado após tentar novamente', 'success')
-      toast.success(t('trip.resent'))
-      refetchHistory()
-    } catch (err: unknown) {
-      // Harden: cancel+create timeout must not leave UI idle while backend has a trip.
-      const recoveredId = await restorePassengerActiveTrip()
-      if (recoveredId) {
-        addLog('Pedido re-sincronizado após falha ao tentar novamente', 'info')
-        setError(
-          isTimeoutLikeError(err)
-            ? 'Ligação instável — mantivemos o pedido activo. A procurar motorista…'
-            : 'Não concluímos o reenvio, mas há um pedido activo — a sincronizar…'
-        )
-      } else {
-        const msg = isTimeoutLikeError(err)
-          ? 'Sem ligação ou o servidor demorou a responder. Tenta outra vez.'
-          : humanizeCreateTripError(err)
-        setError(msg)
-        addLog(`Erro ao tentar novamente: ${msg}`, 'error')
-      }
-    } finally {
-      setRetrySearchPending(false)
-    }
-  }, [
-    token,
-    activeTripId,
-    activeTrip,
-    retrySearchPending,
-    petBooking,
-    addLog,
-    setPassengerActiveTripId,
-    setStatus,
-    refetchHistory,
-    restorePassengerActiveTrip,
-    setPassengerPendingTripDetail,
-    t,
-  ])
+  const searchFallback = usePassengerSearchFallback({
+    tripId: activeTripId,
+    createdAtIso: activeTrip?.created_at,
+    searching: activeTrip?.status === 'requested',
+  })
+  const { continueWaiting } = searchFallback
+
+  const handleContinueWaiting = useCallback(() => {
+    continueWaiting()
+    addLog('Clique: Continuar à espera', 'action')
+    toast.info(t('statusCard.continueWaitingToast'))
+    void refetchActiveTrip()
+  }, [continueWaiting, addLog, t, refetchActiveTrip])
+
+  const openPassengerCancel = useCallback(() => setPassengerCancelOpen(true), [])
 
   const driverTrackingHint = useMemo(() => {
     if (!activeTrip || !isPassengerDriverTrackingStatus(activeTrip.status)) return null
@@ -1064,12 +986,13 @@ export function PassengerDashboard() {
       toast.success('Viagem concluída')
       setTripCompletedFromLocation(true)
     } else if (activeTrip?.status === 'cancelled') {
-      // During retry (cancel+recreate), do not clear yet — restore may attach the new trip.
-      if (retrySearchPending) return
+      // handleCancel clears the trip and shows its own confirmation.
+      if (cancelling) return
       addLog('Viagem cancelada', 'success')
+      toast.info(t('trip.cancelled'))
       setPassengerActiveTripId(null)
     }
-  }, [activeTrip?.status, retrySearchPending, addLog, setPassengerActiveTripId])
+  }, [activeTrip?.status, cancelling, addLog, setPassengerActiveTripId, t])
 
   /** Mapa da viagem: desde o pedido (requested) até concluída — dia 22 mapa sempre. */
   const showPassengerMap = useMemo(() => {
@@ -1395,7 +1318,7 @@ export function PassengerDashboard() {
     ) : null
 
   const passengerTripPrimaryInOverlay =
-    !passengerCancelOpen && showBottomPrimary && primaryLabel ? (
+    !passengerCancelOpen && showBottomPrimary && primaryLabel && !searchFallback.showFallback ? (
       <MapActionRow testId="passenger-trip-action-stack">
         <PrimaryActionButton
           className="flex-1 min-w-0"
@@ -1692,10 +1615,9 @@ export function PassengerDashboard() {
                         compact
                         uxState={uxState}
                         activeTrip={activeTrip}
-                        onRetrySearch={
-                          activeTrip?.status === 'requested' ? handleRetrySearch : undefined
-                        }
-                        retrySearchPending={retrySearchPending}
+                        searchFallback={searchFallback.showFallback}
+                        onContinueWaiting={handleContinueWaiting}
+                        onCancelTrip={openPassengerCancel}
                         trackingHint={driverTrackingHint}
                         pollHint={tripPollFootnote}
                       />

@@ -61,6 +61,23 @@ describe('mergePassengerPolledWithPending', () => {
     const polled: TripDetailResponse = { ...pending, trip_id: 'other', status: 'ongoing' }
     expect(mergePassengerPolledWithPending(polled, pending, 'other')).toBe(polled)
   })
+
+  it('G4: stale cancelled poll of the previous trip never overrides the new active trip', () => {
+    const newPending = { ...pending, trip_id: 't2' }
+    const staleOld: TripDetailResponse = { ...pending, trip_id: 't1', status: 'cancelled' }
+    const merged = mergePassengerPolledWithPending(staleOld, newPending, 't2')
+    expect(merged).toEqual(newPending)
+    expect(merged?.status).toBe('requested')
+  })
+
+  it('G4: stale poll of another trip without pending yields no active trip data', () => {
+    const staleOld: TripDetailResponse = { ...pending, trip_id: 't1', status: 'cancelled' }
+    expect(mergePassengerPolledWithPending(staleOld, null, 't2')).toBeNull()
+  })
+
+  it('returns null without an active trip id', () => {
+    expect(mergePassengerPolledWithPending(pending, pending, null)).toBeNull()
+  })
 })
 
 describe('tripDetailFromCreateResponse', () => {

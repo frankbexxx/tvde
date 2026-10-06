@@ -126,9 +126,10 @@
     "searchingTitle": "À procura de motorista disponível",
     "searchingSubtitle": "Ainda sem motorista atribuído.",
     "searchingFallbackTitle": "Ainda à procura de motorista",
-    "searchingFallbackSubtitle": "Podes esperar, ou cancelar e voltar a pedir.",
-    "retryPending": "A processar…",
-    "retry": "Tentar novamente",
+    "searchingFallbackSubtitle": "O teu pedido continua activo. Podes continuar à espera ou cancelar a viagem.",
+    "continueWaiting": "Continuar à espera",
+    "continueWaitingToast": "Continuamos à procura de motorista para o teu pedido.",
+    "cancelTrip": "Cancelar viagem",
     "driverFound": "Motorista encontrado",
     "driverLocating": "A obter a posição do motorista…",
     "driverEnRoute": "Motorista a caminho",
@@ -203,8 +204,7 @@
     "dropoffPreview": "Destino em pré-visualização",
     "dropoffConfirmed": "Destino confirmado",
     "sent": "Pedido enviado — a sincronizar…",
-    "cancelled": "Viagem cancelada",
-    "resent": "Pedido reenviado"
+    "cancelled": "Viagem cancelada"
   },
   "sos": {
     "button": "SOS — Emergência"
