@@ -30,6 +30,17 @@ def _db() -> Session:
     return SessionLocal()
 
 
+def _delete_trip(db: Session, trip_id: uuid.UUID | None) -> None:
+    """Remove a trip left by wallet create_trip tests (no persisted offers)."""
+    if trip_id is None:
+        return
+    trip = db.get(Trip, trip_id)
+    if trip is None:
+        return
+    db.delete(trip)
+    db.commit()
+
+
 def _passenger(db: Session) -> User:
     u = User(
         role=Role.passenger,
@@ -452,6 +463,7 @@ def test_create_trip_ok_with_default_pm(monkeypatch: pytest.MonkeyPatch) -> None
     monkeypatch.setattr(trip_service, "create_offers_for_trip", lambda **k: [object()])
     monkeypatch.setattr(trip_service, "publish_trip_offers", lambda **k: None)
     db = _db()
+    trip_id: uuid.UUID | None = None
     try:
         u = _passenger(db)
         cus_id = f"cus_gate_{uuid.uuid4().hex[:12]}"
@@ -489,9 +501,11 @@ def test_create_trip_ok_with_default_pm(monkeypatch: pytest.MonkeyPatch) -> None
                     db=db, passenger_id=str(u.id), payload=payload
                 )
             )
+        trip_id = trip.id
         assert trip.id is not None
         assert trip.status == TripStatus.requested
     finally:
+        _delete_trip(db, trip_id)
         db.close()
 
 
@@ -508,6 +522,7 @@ def test_create_trip_mock_without_pm_still_works(
     monkeypatch.setattr(trip_service, "create_offers_for_trip", lambda **k: [object()])
     monkeypatch.setattr(trip_service, "publish_trip_offers", lambda **k: None)
     db = _db()
+    trip_id: uuid.UUID | None = None
     try:
         u = _passenger(db)
         payload = TripCreateRequest(
@@ -522,8 +537,10 @@ def test_create_trip_mock_without_pm_still_works(
                 db=db, passenger_id=str(u.id), payload=payload
             )
         )
+        trip_id = trip.id
         assert trip.status == TripStatus.requested
     finally:
+        _delete_trip(db, trip_id)
         db.close()
 
 
