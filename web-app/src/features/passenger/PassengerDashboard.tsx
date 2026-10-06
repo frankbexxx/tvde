@@ -89,6 +89,7 @@ import {
   humanizeCreateTripError,
 } from './passengerBanner'
 import { toast } from 'sonner'
+import { PassengerPaymentStatusNotice } from './PassengerPaymentStatusNotice'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { PassengerSideMenu, type PassengerMenuScreen } from './PassengerSideMenu'
@@ -267,6 +268,9 @@ export function PassengerDashboard() {
   const [destinationCandidate, setDestinationCandidate] = useState<GeocodeSuggestion | null>(null)
   const [mapRecenterKey, setMapRecenterKey] = useState(0)
   const [defaultPaymentMethod, setDefaultPaymentMethod] = useState<PassengerPaymentMethod | null>(null)
+  const [paymentMethodStatus, setPaymentMethodStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [paymentRefreshKey, setPaymentRefreshKey] = useState(0)
+  const stripeLive = import.meta.env.VITE_STRIPE_MOCK !== 'true'
   /** Mobile: search field focused+typing → expand sheet / hide map CTA. */
   const [placeSearchUiActive, setPlaceSearchUiActive] = useState(false)
   /** P3: snapshot do POST /trips até o primeiro GET alinhar. */
@@ -296,20 +300,34 @@ export function PassengerDashboard() {
   useEffect(() => {
     if (!token) {
       setDefaultPaymentMethod(null)
+      setPaymentMethodStatus('loading')
       return
     }
     let cancelled = false
     void getDefaultPaymentMethod(token)
       .then((m) => {
-        if (!cancelled) setDefaultPaymentMethod(m)
+        if (cancelled) return
+        setDefaultPaymentMethod(m)
+        setPaymentMethodStatus('ready')
       })
       .catch(() => {
-        if (!cancelled) setDefaultPaymentMethod(null)
+        if (cancelled) return
+        setDefaultPaymentMethod(null)
+        setPaymentMethodStatus('error')
       })
     return () => {
       cancelled = true
     }
-  }, [token, passengerMenuScreen])
+  }, [token, passengerMenuScreen, paymentRefreshKey])
+
+  const retryPaymentMethodStatus = useCallback(() => {
+    setPaymentRefreshKey((k) => k + 1)
+  }, [])
+
+  const openPassengerPayments = useCallback(() => {
+    setPassengerMenuOpen(true)
+    setPassengerMenuScreen('payments')
+  }, [])
 
   /** PASSENGER-REQUEST-TIMEOUT-UX-1: reconcile with GET /trips/active (Driver #398 pattern). */
   const restorePassengerActiveTrip = useCallback(async (): Promise<string | null> => {
@@ -1425,6 +1443,7 @@ export function PassengerDashboard() {
         historyDetailLoading={historyDetailLoading}
         historyDetailError={historyDetailError}
         onHistoryTripSelect={handleHistoryTripSelect}
+        onPaymentMethodsChanged={retryPaymentMethodStatus}
       />
       {showPassengerRatingPanel ? (
         <PassengerTripRatingPanel
@@ -1523,6 +1542,14 @@ export function PassengerDashboard() {
                       </span>
                     </button>
                   ) : null}
+                  {stripeLive && !placeSearchUiActive && passengerUiState !== 'confirming' ? (
+                    <PassengerPaymentStatusNotice
+                      status={paymentMethodStatus}
+                      hasDefault={Boolean(defaultPaymentMethod)}
+                      onAddCard={openPassengerPayments}
+                      onRetry={retryPaymentMethodStatus}
+                    />
+                  ) : null}
                   {showPickupSearch && (
                     <>
                       <DestinationSearchField
@@ -1619,16 +1646,16 @@ export function PassengerDashboard() {
                           ? t('payments.defaultBadge')
                           : null
                     }
-                    onPaymentMethods={() => {
-                      setPassengerMenuOpen(true)
-                      setPassengerMenuScreen('payments')
-                    }}
+                    onPaymentMethods={openPassengerPayments}
                     confirmBlockedReason={
                       pickupDestinationTooClose
                         ? t('planner.confirmTooClose')
-                        : import.meta.env.VITE_STRIPE_MOCK !== 'true' &&
-                            !defaultPaymentMethod
-                          ? t('payments.missingBlocked')
+                        : stripeLive && !defaultPaymentMethod
+                          ? paymentMethodStatus === 'loading'
+                            ? t('payments.checking')
+                            : paymentMethodStatus === 'error'
+                              ? t('payments.statusError')
+                              : t('payments.missingBlocked')
                           : null
                     }
                     visualWeight={a021Layout.panel}

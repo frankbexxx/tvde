@@ -106,7 +106,14 @@
     "lineLabel": "Pagamento",
     "change": "Alterar",
     "addRequired": "Adicionar método de pagamento",
-    "missingBlocked": "Adiciona um método de pagamento antes de confirmar a viagem."
+    "missingBlocked": "Adiciona um método de pagamento antes de confirmar a viagem.",
+    "none": "Sem método de pagamento",
+    "noneHint": "Adiciona um cartão para poderes pedir a viagem.",
+    "checking": "A verificar método de pagamento…",
+    "statusError": "Não foi possível verificar o método de pagamento.",
+    "retry": "Tentar novamente",
+    "opening": "A abrir formulário seguro…",
+    "formLoadFailed": "Não foi possível abrir o formulário do cartão. Tenta novamente."
   },
   "statusCard": {
     "submittingTitle": "A enviar pedido…",

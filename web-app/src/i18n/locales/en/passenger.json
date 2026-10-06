@@ -106,7 +106,14 @@
     "lineLabel": "Payment",
     "change": "Change",
     "addRequired": "Add payment method",
-    "missingBlocked": "Add a payment method before confirming the trip."
+    "missingBlocked": "Add a payment method before confirming the trip.",
+    "none": "No payment method",
+    "noneHint": "Add a card so you can request a trip.",
+    "checking": "Checking payment method…",
+    "statusError": "Could not check your payment method.",
+    "retry": "Try again",
+    "opening": "Opening secure form…",
+    "formLoadFailed": "Could not open the card form. Please try again."
   },
   "statusCard": {
     "submittingTitle": "Sending request…",

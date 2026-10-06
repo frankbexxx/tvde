@@ -51,6 +51,7 @@ export function PassengerSideMenu({
   historyDetailLoading,
   historyDetailError,
   onHistoryTripSelect,
+  onPaymentMethodsChanged,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -64,6 +65,7 @@ export function PassengerSideMenu({
   historyDetailLoading: boolean
   historyDetailError: string | null
   onHistoryTripSelect: (tripId: string) => void
+  onPaymentMethodsChanged?: () => void
 }) {
   const { t } = useTranslation('passenger')
   const { sessionDisplayName, sessionPhone, logout, token } = useAuth()
@@ -213,7 +215,9 @@ export function PassengerSideMenu({
           </div>
         ) : screen === 'payments' ? (
           <div className="space-y-3">
-            {token ? <PassengerPaymentMethodsPanel token={token} /> : null}
+            {token ? (
+              <PassengerPaymentMethodsPanel token={token} onChanged={onPaymentMethodsChanged} />
+            ) : null}
           </div>
         ) : screen === 'history_detail' ? (
           <PassengerHistoryDetailPanel
