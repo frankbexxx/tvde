@@ -27,7 +27,7 @@ from tests.support.unique_phone import unique_test_phone
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 ALEMBIC_INI = BACKEND_ROOT / "alembic.ini"
 REV_BEFORE = "a2b3c4d5e6f7"
-REV_IDENTITIES = "c4d5e6f7a8b9"
+REV_HEAD = "f9a0b1c2d3e4"
 
 
 def _alembic_cfg() -> Config:
@@ -461,6 +461,6 @@ def test_blank_google_sub_aborts_without_insert(db: Session) -> None:
         _delete_user(db, user.id)
 
 
-def test_current_revision_is_user_identities(db: Session) -> None:
+def test_current_revision_is_alembic_head(db: Session) -> None:
     revision = db.execute(text("SELECT version_num FROM alembic_version")).scalar()
-    assert revision == REV_IDENTITIES
+    assert revision == REV_HEAD
