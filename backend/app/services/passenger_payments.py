@@ -19,6 +19,7 @@ from app.services.stripe_service import (
     create_customer,
     create_setup_intent,
     detach_payment_method,
+    retrieve_customer,
     retrieve_payment_method,
     retrieve_setup_intent,
     set_customer_default_payment_method,
@@ -172,7 +173,102 @@ def _serialize(row: PassengerPaymentMethod) -> dict:
     }
 
 
+def _db_default_only(
+    db: Session, user: User
+) -> PassengerPaymentMethod | None:
+    """Cache-only default (used by mock and internal writes)."""
+    return db.execute(
+        select(PassengerPaymentMethod).where(
+            PassengerPaymentMethod.user_id == user.id,
+            PassengerPaymentMethod.is_default.is_(True),
+        )
+    ).scalar_one_or_none()
+
+
+def _stripe_customer_default_pm_id(customer: Any) -> str | None:
+    inv = getattr(customer, "invoice_settings", None)
+    if inv is None and isinstance(customer, dict):
+        inv = customer.get("invoice_settings")
+    if inv is None:
+        return None
+    raw = getattr(inv, "default_payment_method", None)
+    if raw is None and isinstance(inv, dict):
+        raw = inv.get("default_payment_method")
+    return _pm_id_from_obj(raw)
+
+
+def reconcile_default_payment_method_from_stripe(
+    db: Session, user: User
+) -> PassengerPaymentMethod | None:
+    """
+    Live only: Stripe Customer.invoice_settings.default_payment_method is authority.
+    Aligns DB cache (is_default / upsert missing PM metadata). Mock callers must not use this.
+    """
+    cus_id = (user.stripe_customer_id or "").strip()
+    if not cus_id:
+        return None
+
+    try:
+        customer = retrieve_customer(cus_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="stripe_customer_retrieve_failed",
+        ) from e
+
+    stripe_pm_id = _stripe_customer_default_pm_id(customer)
+    if not stripe_pm_id:
+        _clear_defaults(db, user.id)
+        db.commit()
+        return None
+
+    row = db.execute(
+        select(PassengerPaymentMethod).where(
+            PassengerPaymentMethod.user_id == user.id,
+            PassengerPaymentMethod.stripe_payment_method_id == stripe_pm_id,
+        )
+    ).scalar_one_or_none()
+
+    if row is None:
+        try:
+            pm = retrieve_payment_method(stripe_pm_id)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="stripe_payment_method_retrieve_failed",
+            ) from e
+        pm_customer = _customer_id_from_obj(getattr(pm, "customer", None))
+        if pm_customer and pm_customer != cus_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="payment_method_customer_mismatch",
+            )
+        brand, last4, exp_month, exp_year = _card_fields_from_pm(pm)
+        row = PassengerPaymentMethod(
+            user_id=user.id,
+            stripe_payment_method_id=stripe_pm_id,
+            brand=brand,
+            last4=last4,
+            exp_month=exp_month,
+            exp_year=exp_year,
+            is_default=False,
+        )
+        db.add(row)
+        db.flush()
+
+    if not row.is_default:
+        _clear_defaults(db, user.id)
+        row.is_default = True
+        db.add(row)
+
+    db.commit()
+    db.refresh(row)
+    return row
+
+
 def list_payment_methods(db: Session, user: User) -> list[dict]:
+    if not _stripe_mock():
+        reconcile_default_payment_method_from_stripe(db, user)
     rows = db.execute(
         select(PassengerPaymentMethod)
         .where(PassengerPaymentMethod.user_id == user.id)
@@ -187,12 +283,13 @@ def list_payment_methods(db: Session, user: User) -> list[dict]:
 def get_default_payment_method(
     db: Session, user: User
 ) -> PassengerPaymentMethod | None:
-    return db.execute(
-        select(PassengerPaymentMethod).where(
-            PassengerPaymentMethod.user_id == user.id,
-            PassengerPaymentMethod.is_default.is_(True),
-        )
-    ).scalar_one_or_none()
+    """
+    Mock: DB cache only.
+    Live: reconcile from Stripe Customer default, then return aligned cache row.
+    """
+    if _stripe_mock():
+        return _db_default_only(db, user)
+    return reconcile_default_payment_method_from_stripe(db, user)
 
 
 def assert_passenger_ready_for_trip(db: Session, user: User) -> None:
@@ -296,7 +393,7 @@ def register_payment_method_from_setup_intent(
             detail="payment_method_customer_mismatch",
         )
 
-    make_default = get_default_payment_method(db, user) is None
+    make_default = _db_default_only(db, user) is None
     if existing:
         row = existing
         row.brand = brand

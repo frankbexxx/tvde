@@ -84,6 +84,120 @@ def test_ensure_customer_retries_do_not_duplicate(monkeypatch: pytest.MonkeyPatc
         db.close()
 
 
+def test_ensure_customer_live_idempotent_reuse_no_duplicate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """STRIPE_MOCK=false: create once with idempotency key; retries reuse same Customer."""
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    db = _db()
+    try:
+        u = _passenger(db)
+        fake_cus = SimpleNamespace(id=f"cus_live_{uuid.uuid4().hex[:12]}")
+        with patch(
+            "app.services.passenger_payments.create_customer",
+            return_value=fake_cus,
+        ) as create_cus:
+            first = wallet.ensure_stripe_customer(db, u)
+            second = wallet.ensure_stripe_customer(db, u)
+            third = wallet.ensure_stripe_customer(db, u)
+        assert first == second == third == fake_cus.id
+        assert create_cus.call_count == 1
+        kwargs = create_cus.call_args.kwargs
+        assert kwargs.get("idempotency_key") == f"tvde-cus-{u.id}"
+        assert kwargs.get("metadata", {}).get("user_id") == str(u.id)
+        db.refresh(u)
+        assert u.stripe_customer_id == fake_cus.id
+    finally:
+        db.close()
+
+
+def test_live_default_reconciles_from_stripe_customer(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stripe invoice default wins over stale DB is_default."""
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    db = _db()
+    try:
+        u = _passenger(db)
+        cus_id = f"cus_rec_{uuid.uuid4().hex[:12]}"
+        pm_stale = f"pm_stale_{uuid.uuid4().hex[:10]}"
+        pm_auth = f"pm_auth_{uuid.uuid4().hex[:10]}"
+        u.stripe_customer_id = cus_id
+        db.add(u)
+        db.flush()
+        stale = PassengerPaymentMethod(
+            user_id=u.id,
+            stripe_payment_method_id=pm_stale,
+            brand="visa",
+            last4="1111",
+            is_default=True,
+        )
+        auth = PassengerPaymentMethod(
+            user_id=u.id,
+            stripe_payment_method_id=pm_auth,
+            brand="mastercard",
+            last4="4444",
+            is_default=False,
+        )
+        db.add_all([stale, auth])
+        db.commit()
+
+        fake_customer = SimpleNamespace(
+            id=cus_id,
+            invoice_settings=SimpleNamespace(default_payment_method=pm_auth),
+        )
+        with patch(
+            "app.services.passenger_payments.retrieve_customer",
+            return_value=fake_customer,
+        ):
+            default = wallet.get_default_payment_method(db, u)
+        assert default is not None
+        assert default.stripe_payment_method_id == pm_auth
+        db.refresh(stale)
+        db.refresh(auth)
+        assert stale.is_default is False
+        assert auth.is_default is True
+    finally:
+        db.close()
+
+
+def test_live_gate_uses_stripe_default_not_stale_db(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    db = _db()
+    try:
+        u = _passenger(db)
+        cus_id = f"cus_gate_rec_{uuid.uuid4().hex[:12]}"
+        u.stripe_customer_id = cus_id
+        db.add(u)
+        db.flush()
+        db.add(
+            PassengerPaymentMethod(
+                user_id=u.id,
+                stripe_payment_method_id=f"pm_only_db_{uuid.uuid4().hex[:10]}",
+                brand="visa",
+                last4="4242",
+                is_default=True,
+            )
+        )
+        db.commit()
+        fake_customer = SimpleNamespace(
+            id=cus_id,
+            invoice_settings=SimpleNamespace(default_payment_method=None),
+        )
+        with patch(
+            "app.services.passenger_payments.retrieve_customer",
+            return_value=fake_customer,
+        ):
+            with pytest.raises(HTTPException) as ei:
+                wallet.assert_passenger_ready_for_trip(db, u)
+        assert ei.value.status_code == 402
+        assert ei.value.detail == "payment_method_required"
+    finally:
+        db.close()
+
+
 def test_setup_intent_for_correct_customer_no_trip(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -340,13 +454,15 @@ def test_create_trip_ok_with_default_pm(monkeypatch: pytest.MonkeyPatch) -> None
     db = _db()
     try:
         u = _passenger(db)
-        u.stripe_customer_id = f"cus_gate_{uuid.uuid4().hex[:12]}"
+        cus_id = f"cus_gate_{uuid.uuid4().hex[:12]}"
+        pm_id = f"pm_gate_{uuid.uuid4().hex[:10]}"
+        u.stripe_customer_id = cus_id
         db.add(u)
         db.flush()
         db.add(
             PassengerPaymentMethod(
                 user_id=u.id,
-                stripe_payment_method_id=f"pm_gate_{uuid.uuid4().hex[:10]}",
+                stripe_payment_method_id=pm_id,
                 brand="visa",
                 last4="4242",
                 is_default=True,
@@ -360,11 +476,19 @@ def test_create_trip_ok_with_default_pm(monkeypatch: pytest.MonkeyPatch) -> None
             destination_lng=-9.14,
             vehicle_category="x",
         )
-        trip, _ = asyncio.run(
-            trip_service.create_trip(
-                db=db, passenger_id=str(u.id), payload=payload
-            )
+        fake_customer = SimpleNamespace(
+            id=cus_id,
+            invoice_settings=SimpleNamespace(default_payment_method=pm_id),
         )
+        with patch(
+            "app.services.passenger_payments.retrieve_customer",
+            return_value=fake_customer,
+        ):
+            trip, _ = asyncio.run(
+                trip_service.create_trip(
+                    db=db, passenger_id=str(u.id), payload=payload
+                )
+            )
         assert trip.id is not None
         assert trip.status == TripStatus.requested
     finally:
@@ -466,15 +590,23 @@ def test_accept_uses_customer_and_default_pm(
             id=f"pi_live_accept_{uuid.uuid4().hex[:12]}",
             client_secret="sec",
         )
+        fake_customer = SimpleNamespace(
+            id=passenger.stripe_customer_id,
+            invoice_settings=SimpleNamespace(default_payment_method=pm_accept),
+        )
         with patch(
-            "app.services.trips.create_authorization_payment_intent",
-            return_value=fake_pi,
-        ) as create_pi:
-            out, _secret = trip_service.accept_trip(
-                db=db,
-                driver_id=str(driver_user.id),
-                trip_id=str(trip.id),
-            )
+            "app.services.passenger_payments.retrieve_customer",
+            return_value=fake_customer,
+        ):
+            with patch(
+                "app.services.trips.create_authorization_payment_intent",
+                return_value=fake_pi,
+            ) as create_pi:
+                out, _secret = trip_service.accept_trip(
+                    db=db,
+                    driver_id=str(driver_user.id),
+                    trip_id=str(trip.id),
+                )
         kwargs = create_pi.call_args.kwargs
         assert kwargs.get("customer") == passenger.stripe_customer_id
         assert kwargs.get("payment_method") == pm_accept

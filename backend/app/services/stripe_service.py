@@ -65,6 +65,11 @@ def retrieve_payment_method(payment_method_id: str) -> stripe.PaymentMethod:
     return stripe.PaymentMethod.retrieve(payment_method_id)
 
 
+def retrieve_customer(customer_id: str) -> stripe.Customer:
+    _ensure_stripe_ready()
+    return stripe.Customer.retrieve(customer_id)
+
+
 def set_customer_default_payment_method(
     customer_id: str,
     payment_method_id: str,
