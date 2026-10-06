@@ -113,7 +113,12 @@
     "statusError": "Could not check your payment method.",
     "retry": "Try again",
     "opening": "Opening secure form…",
-    "formLoadFailed": "Could not open the card form. Please try again."
+    "formLoadFailed": "Could not open the card form. Please try again.",
+    "cardNumber": "Card number",
+    "cardExpiry": "Expiry (MM/YY)",
+    "cardCvc": "CVC/CVV",
+    "cardName": "Name on card",
+    "optional": "(optional)"
   },
   "statusCard": {
     "submittingTitle": "Sending request…",

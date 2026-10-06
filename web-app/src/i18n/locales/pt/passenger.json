@@ -113,7 +113,12 @@
     "statusError": "Não foi possível verificar o método de pagamento.",
     "retry": "Tentar novamente",
     "opening": "A abrir formulário seguro…",
-    "formLoadFailed": "Não foi possível abrir o formulário do cartão. Tenta novamente."
+    "formLoadFailed": "Não foi possível abrir o formulário do cartão. Tenta novamente.",
+    "cardNumber": "Número do cartão",
+    "cardExpiry": "Validade (MM/AA)",
+    "cardCvc": "CVC/CVV",
+    "cardName": "Nome no cartão",
+    "optional": "(opcional)"
   },
   "statusCard": {
     "submittingTitle": "A enviar pedido…",

@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { loadStripe } from '@stripe/stripe-js'
 import {
-  CardElement,
+  CardCvcElement,
+  CardExpiryElement,
+  CardNumberElement,
   Elements,
   useElements,
   useStripe,
@@ -19,6 +21,7 @@ import {
 } from '../../api/payments'
 import { Spinner } from '../../components/ui/Spinner'
 import { stripeElementsLocale } from './stripeLocale'
+import { cardFieldForErrorCode, type CardField } from './cardFieldErrors'
 import {
   BTN_COMPACT_HEIGHT,
   BTN_PRIMARY_RADIUS,
@@ -32,6 +35,49 @@ import {
 type Props = {
   token: string
   onChanged?: () => void
+}
+
+type StripeFieldChangeEvent = { error?: { message: string } }
+
+const STRIPE_FIELD_OPTIONS = {
+  style: {
+    base: { fontSize: '16px', color: '#111827', '::placeholder': { color: '#9ca3af' } },
+    invalid: { color: '#b91c1c' },
+  },
+}
+
+function CardFieldBox({
+  id,
+  label,
+  error,
+  testId,
+  children,
+}: {
+  id: string
+  label: string
+  error?: string
+  testId: string
+  children: ReactNode
+}) {
+  return (
+    <div className="space-y-1 min-w-0" data-testid={testId}>
+      <label htmlFor={id} className="block text-xs font-semibold text-foreground/80">
+        {label}
+      </label>
+      <div
+        className={`${BTN_SECONDARY_RADIUS} border bg-background px-2.5 py-2.5 ${
+          error ? 'border-destructive' : 'border-border'
+        }`}
+      >
+        {children}
+      </div>
+      {error ? (
+        <p className="text-xs text-destructive leading-snug" role="alert" data-testid={`${testId}-error`}>
+          {error}
+        </p>
+      ) : null}
+    </div>
+  )
 }
 
 function LoadingLine({ label, testId }: { label: string; testId: string }) {
@@ -62,24 +108,50 @@ function AddCardInner({
   const stripe = useStripe()
   const elements = useElements()
   const [busy, setBusy] = useState(false)
-  const [ready, setReady] = useState(false)
+  const [readyFields, setReadyFields] = useState<Record<CardField, boolean>>({
+    number: false,
+    expiry: false,
+    cvc: false,
+  })
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<CardField, string>>>({})
+  const [name, setName] = useState('')
+  const ready = readyFields.number && readyFields.expiry && readyFields.cvc
+
+  const markReady = useCallback((field: CardField) => {
+    setReadyFields((prev) => (prev[field] ? prev : { ...prev, [field]: true }))
+  }, [])
+
+  const onFieldChange = useCallback((field: CardField, ev: StripeFieldChangeEvent) => {
+    setFieldErrors((prev) => ({ ...prev, [field]: ev.error?.message }))
+  }, [])
+
+  const onLoadError = useCallback(() => {
+    onError(t('payments.formLoadFailed'))
+    onCancel()
+  }, [onError, onCancel, t])
 
   const submit = useCallback(
     async (e: FormEvent) => {
       e.preventDefault()
       if (!stripe || !elements) return
-      const card = elements.getElement(CardElement)
+      const card = elements.getElement(CardNumberElement)
       if (!card) return
       onError(null)
       setBusy(true)
       try {
+        const holder = name.trim()
         const { error, setupIntent } = await stripe.confirmCardSetup(clientSecret, {
-          payment_method: { card },
+          payment_method: holder ? { card, billing_details: { name: holder } } : { card },
         })
         if (error) {
           const msg = error.message ?? t('payments.addFailed')
-          onError(msg)
-          toast.error(msg)
+          const field = cardFieldForErrorCode(error.code)
+          if (field) {
+            setFieldErrors((prev) => ({ ...prev, [field]: msg }))
+          } else {
+            onError(msg)
+            toast.error(msg)
+          }
           return
         }
         const sid = setupIntent?.id || setupIntentId
@@ -98,20 +170,53 @@ function AddCardInner({
         setBusy(false)
       }
     },
-    [stripe, elements, clientSecret, setupIntentId, token, onDone, onError, t]
+    [stripe, elements, clientSecret, setupIntentId, token, name, onDone, onError, t]
   )
 
   return (
     <form onSubmit={(ev) => void submit(ev)} className={MAP_SHEET_GAP} data-testid="passenger-add-card-form">
       {!ready ? <LoadingLine label={t('payments.opening')} testId="passenger-add-card-loading" /> : null}
-      <div className={`${BTN_SECONDARY_RADIUS} border border-border bg-background px-2 py-2`}>
-        <CardElement
-          options={{ hidePostalCode: true }}
-          onReady={() => setReady(true)}
-          onLoadError={() => {
-            onError(t('payments.formLoadFailed'))
-            onCancel()
-          }}
+      <CardFieldBox id="card-number" label={t('payments.cardNumber')} error={fieldErrors.number} testId="passenger-card-number">
+        <CardNumberElement
+          id="card-number"
+          options={{ ...STRIPE_FIELD_OPTIONS, showIcon: true }}
+          onReady={() => markReady('number')}
+          onChange={(ev) => onFieldChange('number', ev)}
+          onLoadError={onLoadError}
+        />
+      </CardFieldBox>
+      <div className="grid grid-cols-2 gap-2">
+        <CardFieldBox id="card-expiry" label={t('payments.cardExpiry')} error={fieldErrors.expiry} testId="passenger-card-expiry">
+          <CardExpiryElement
+            id="card-expiry"
+            options={STRIPE_FIELD_OPTIONS}
+            onReady={() => markReady('expiry')}
+            onChange={(ev) => onFieldChange('expiry', ev)}
+          />
+        </CardFieldBox>
+        <CardFieldBox id="card-cvc" label={t('payments.cardCvc')} error={fieldErrors.cvc} testId="passenger-card-cvc">
+          <CardCvcElement
+            id="card-cvc"
+            options={STRIPE_FIELD_OPTIONS}
+            onReady={() => markReady('cvc')}
+            onChange={(ev) => onFieldChange('cvc', ev)}
+          />
+        </CardFieldBox>
+      </div>
+      <div className="space-y-1">
+        <label htmlFor="card-holder-name" className="block text-xs font-semibold text-foreground/80">
+          {t('payments.cardName')}{' '}
+          <span className="font-normal text-foreground/60">{t('payments.optional')}</span>
+        </label>
+        <input
+          id="card-holder-name"
+          type="text"
+          autoComplete="cc-name"
+          value={name}
+          onChange={(ev) => setName(ev.target.value)}
+          disabled={busy}
+          className={`w-full ${BTN_SECONDARY_RADIUS} border border-border bg-background px-2.5 py-2 text-sm text-foreground`}
+          data-testid="passenger-card-name"
         />
       </div>
       <div className="flex gap-2">

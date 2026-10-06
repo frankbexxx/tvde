@@ -5,6 +5,7 @@ import i18n from '../../i18n'
 import { TripPlannerPanel } from './TripPlannerPanel'
 import { PassengerPaymentStatusNotice } from './PassengerPaymentStatusNotice'
 import { stripeElementsLocale } from './stripeLocale'
+import { cardFieldForErrorCode } from './cardFieldErrors'
 
 const api = vi.hoisted(() => ({
   listPaymentMethods: vi.fn(),
@@ -155,6 +156,18 @@ describe('PassengerPaymentMethodsPanel', () => {
     )
     expect(screen.queryByText('Ainda sem cartão guardado.')).toBeNull()
     expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
+  })
+})
+
+describe('cardFieldForErrorCode', () => {
+  it('routes Stripe validation codes to the owning field', () => {
+    expect(cardFieldForErrorCode('incomplete_number')).toBe('number')
+    expect(cardFieldForErrorCode('invalid_number')).toBe('number')
+    expect(cardFieldForErrorCode('invalid_expiry_year_past')).toBe('expiry')
+    expect(cardFieldForErrorCode('incomplete_expiry')).toBe('expiry')
+    expect(cardFieldForErrorCode('incomplete_cvc')).toBe('cvc')
+    expect(cardFieldForErrorCode('card_declined')).toBeNull()
+    expect(cardFieldForErrorCode(undefined)).toBeNull()
   })
 })
 
