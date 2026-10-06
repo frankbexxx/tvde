@@ -1490,9 +1490,14 @@ export function PassengerDashboard() {
                       onClick={resetPlanning}
                       aria-label={t('planner.abandonPlanning')}
                       data-testid="passenger-abandon-planning"
-                      className="absolute right-1.5 top-1.5 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-destructive/45 bg-background/95 text-destructive text-lg font-bold leading-none shadow-sm hover:bg-destructive/10 touch-manipulation"
+                      className="absolute right-1.5 top-1.5 z-20 inline-flex h-9 w-9 items-center justify-center touch-manipulation"
                     >
-                      ×
+                      <span
+                        aria-hidden
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-destructive/45 bg-background/95 text-destructive text-sm font-bold leading-none shadow-sm"
+                      >
+                        ×
+                      </span>
                     </button>
                   ) : null}
                   {showPickupSearch && (
