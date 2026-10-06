@@ -1,8 +1,13 @@
 """Stripe API wrappers - no business logic, only Stripe calls."""
 
+from __future__ import annotations
+
+from typing import Any
+
 import stripe
 
 from app.core.config import settings
+
 
 def _ensure_stripe_ready() -> None:
     # In STRIPE_MOCK mode we must not require any Stripe credentials.
@@ -14,16 +19,86 @@ def _ensure_stripe_ready() -> None:
     stripe.api_key = sk
 
 
+def create_customer(
+    *,
+    email: str | None = None,
+    name: str | None = None,
+    metadata: dict | None = None,
+    idempotency_key: str | None = None,
+) -> stripe.Customer:
+    params: dict[str, Any] = {"metadata": metadata or {}}
+    if email:
+        params["email"] = email
+    if name:
+        params["name"] = name
+    if idempotency_key:
+        params["idempotency_key"] = idempotency_key
+    _ensure_stripe_ready()
+    return stripe.Customer.create(**params)
+
+
+def create_setup_intent(
+    *,
+    customer_id: str,
+    metadata: dict | None = None,
+    idempotency_key: str | None = None,
+) -> stripe.SetupIntent:
+    params: dict[str, Any] = {
+        "customer": customer_id,
+        "usage": "off_session",
+        "payment_method_types": ["card"],
+        "metadata": metadata or {},
+    }
+    if idempotency_key:
+        params["idempotency_key"] = idempotency_key
+    _ensure_stripe_ready()
+    return stripe.SetupIntent.create(**params)
+
+
+def retrieve_setup_intent(setup_intent_id: str) -> stripe.SetupIntent:
+    _ensure_stripe_ready()
+    return stripe.SetupIntent.retrieve(setup_intent_id)
+
+
+def retrieve_payment_method(payment_method_id: str) -> stripe.PaymentMethod:
+    _ensure_stripe_ready()
+    return stripe.PaymentMethod.retrieve(payment_method_id)
+
+
+def retrieve_customer(customer_id: str) -> stripe.Customer:
+    _ensure_stripe_ready()
+    return stripe.Customer.retrieve(customer_id)
+
+
+def set_customer_default_payment_method(
+    customer_id: str,
+    payment_method_id: str,
+) -> stripe.Customer:
+    _ensure_stripe_ready()
+    return stripe.Customer.modify(
+        customer_id,
+        invoice_settings={"default_payment_method": payment_method_id},
+    )
+
+
+def detach_payment_method(payment_method_id: str) -> stripe.PaymentMethod:
+    _ensure_stripe_ready()
+    return stripe.PaymentMethod.detach(payment_method_id)
+
+
 def create_authorization_payment_intent(
     *,
     amount_cents: int,
     currency: str,
     metadata: dict,
     idempotency_key: str | None = None,
+    customer: str | None = None,
+    payment_method: str | None = None,
 ) -> stripe.PaymentIntent:
     """
     Create PaymentIntent without confirming.
     Status: requires_confirmation (amount can be updated before confirm).
+    Optionally bind Customer + PaymentMethod (prepared wallet) without confirming.
     """
     params: dict = {
         "amount": amount_cents,
@@ -33,6 +108,10 @@ def create_authorization_payment_intent(
         "confirm": False,
         "metadata": metadata,
     }
+    if customer:
+        params["customer"] = customer
+    if payment_method:
+        params["payment_method"] = payment_method
     if idempotency_key:
         params["idempotency_key"] = idempotency_key
     _ensure_stripe_ready()

@@ -8,7 +8,7 @@ import {
   shouldClearPassengerLocalTripOnActiveMiss,
   writePassengerActiveTripIdToStorage,
 } from './passengerActiveTripRecovery'
-import { PASSENGER_SEARCH_FALLBACK_AFTER_SEC } from './PassengerStatusCard'
+import { PASSENGER_SEARCH_FALLBACK_AFTER_SEC } from './usePassengerSearchFallback'
 
 describe('passengerActiveTripRecovery', () => {
   beforeEach(() => {

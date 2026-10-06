@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, List, Optional
 if TYPE_CHECKING:
     from app.db.models.driver import Driver
     from app.db.models.partner import Partner
+    from app.db.models.passenger_payment_method import PassengerPaymentMethod
     from app.db.models.trip import Trip
     from app.db.models.user_identity import UserIdentity
 
@@ -114,6 +115,13 @@ class User(Base):
         index=True,
         comment="Histórico. A auth Google lê user_identities; não escrever valores novos.",
     )
+    stripe_customer_id: Mapped[Optional[str]] = mapped_column(
+        String(128),
+        nullable=True,
+        unique=True,
+        index=True,
+        comment="Stripe Customer id (cus_…); lazy-created for passenger wallet.",
+    )
 
     partner_org: Mapped[Optional["Partner"]] = relationship(
         back_populates="users",
@@ -128,6 +136,11 @@ class User(Base):
         foreign_keys="Trip.passenger_id",
     )
     identities: Mapped[List["UserIdentity"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    payment_methods: Mapped[List["PassengerPaymentMethod"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,

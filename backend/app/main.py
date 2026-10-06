@@ -33,6 +33,7 @@ from app.api.routers import (
     health,
     logs,
     partner,
+    passenger_payments,
     passenger_trips,
     push_tokens,
     rotacional,
@@ -98,8 +99,15 @@ async def lifespan(app: FastAPI):
         f"debug_routes={_debug} matching_fallbacks={_match_fb}"
     )
 
-    if settings.should_run_alembic_on_startup():
-        logger.info("[startup] alembic upgrade head (deployed)")
+    from app.db.dev_database import assert_dev_database_is_local
+
+    assert_dev_database_is_local(
+        database_url=settings.DATABASE_URL,
+        is_development=settings.is_development_environment(),
+    )
+    if settings.should_run_alembic_on_startup() or settings.is_development_environment():
+        where = "dev" if settings.is_development_environment() else "deployed"
+        logger.info("[startup] alembic upgrade head (%s)", where)
         upgrade_to_head()
         logger.info("[startup] alembic em head")
 
@@ -170,6 +178,7 @@ if settings.dev_tools_router_enabled():
     app.include_router(dev_tools.router)
 app.include_router(auth.router)
 app.include_router(push_tokens.router)
+app.include_router(passenger_payments.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
 app.include_router(complaints.router)

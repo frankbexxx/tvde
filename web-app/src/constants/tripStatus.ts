@@ -48,13 +48,15 @@ export function mergePassengerPolledWithPending(
   pending: TripDetailResponse | null,
   tripId: string | null
 ): TripDetailResponse | null {
-  if (!tripId) return polled
-  if (!pending || pending.trip_id !== tripId) return polled
-  if (!polled) return pending
-  const pr = tripStateRank(polled.status)
+  if (!tripId) return null
+  // A poll answer for another trip (e.g. the previous one) must never stand in for the active trip.
+  const polledForTrip = polled && polled.trip_id === tripId ? polled : null
+  if (!pending || pending.trip_id !== tripId) return polledForTrip
+  if (!polledForTrip) return pending
+  const pr = tripStateRank(polledForTrip.status)
   const pe = tripStateRank(pending.status)
-  if (pr >= pe) return polled
-  return { ...polled, status: pending.status }
+  if (pr >= pe) return polledForTrip
+  return { ...polledForTrip, status: pending.status }
 }
 
 const PASSENGER_STATUS_KEYS = [

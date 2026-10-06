@@ -5,7 +5,6 @@ import i18n from '../../i18n'
 import type { TripDetailResponse } from '../../api/trips'
 import { EmergencySosButton } from '../emergency/EmergencySosPanel'
 import { PassengerHistoryDetailPanel } from './PassengerHistoryDetailPanel'
-import { PassengerPaymentConfirmCard } from './PassengerPaymentConfirmCard'
 import { TripPlannerPanel } from './TripPlannerPanel'
 import { passengerPlaceLabel } from './passengerPlaceLabel'
 
@@ -81,20 +80,11 @@ describe('passenger UX copy', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
-  it('keeps simulated payment human and clear that nothing is charged', async () => {
+  it('keeps payment prep copy human without lab words', async () => {
     await i18n.changeLanguage('pt')
-    wrap(
-      <PassengerPaymentConfirmCard
-        tripId="trip-1"
-        clientSecret="pi_visual_secret_mock"
-        token="tok"
-        onConfirmed={() => undefined}
-        onSkip={() => undefined}
-      />,
-    )
-    expect(screen.getByText('Sem cobrança')).toBeInTheDocument()
-    expect(screen.getByText('Não é usado um cartão e não é cobrado nenhum valor.')).toBeInTheDocument()
-    expect(document.body.textContent).not.toMatch(/simulado|DEV\b|Stripe|BETA|sandbox|mock/i)
+    expect(i18n.t('passenger:payments.subtitle')).toMatch(/antes de pedir/i)
+    expect(i18n.t('passenger:payments.missingBlocked')).toMatch(/método de pagamento/i)
+    expect(i18n.t('passenger:payments.subtitle')).not.toMatch(/simulado|DEV\b|BETA|sandbox/i)
   })
 
   it('rates without BETA and names the screen and theme without lab words', async () => {

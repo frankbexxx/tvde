@@ -5,6 +5,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
+from app.db.dev_database import assert_dev_database_is_local
+
+assert_dev_database_is_local(
+    database_url=settings.DATABASE_URL,
+    is_development=settings.is_development_environment(),
+)
 
 
 def _fix_database_url(url: str) -> str:

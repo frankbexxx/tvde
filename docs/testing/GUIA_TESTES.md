@@ -194,6 +194,10 @@ Os serviços devem ser iniciados **por esta ordem** e **todos a correr em simult
 
 **Pytest / testes backend:** não uses a `DATABASE_URL` Render por engano. Ver [`BACKEND_PYTEST_SAFE.md`](BACKEND_PYTEST_SAFE.md) e o script `scripts/windows/Invoke-BackendPytest.ps1` (força `127.0.0.1` + `test_db`).
 
+### 5.6b Schema e DB em Dev
+
+Fonte única: `backend/.env`. Dev usa Postgres **local** `127.0.0.1`/`localhost` + `ride_db`. Se a URL apontar para Render, o backend **não arranca**. No startup Dev o Alembic corre `upgrade head` sozinho; se falhar, o servidor não sobe. Sem comandos manuais.
+
 ### 5.7 Iniciar o servidor
 
 1. Execute:

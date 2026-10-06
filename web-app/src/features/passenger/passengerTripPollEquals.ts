@@ -2,8 +2,22 @@ import type { TripDetailResponse } from '../../api/trips'
 
 /** Resultado do poll GET /trips/:id (passageiro). */
 export type PassengerTripPollResult = {
+  /** Trip id the poll was issued for — data for another id must be ignored. */
+  tripId: string
   trip: TripDetailResponse | null
   notFound: boolean
+}
+
+/** Only accept poll data that belongs to the current active trip id. */
+export function selectPassengerPollForTrip(
+  poll: PassengerTripPollResult | null,
+  activeTripId: string | null
+): { trip: TripDetailResponse | null; notFound: boolean } {
+  if (!poll || !activeTripId || poll.tripId !== activeTripId) {
+    return { trip: null, notFound: false }
+  }
+  const trip = poll.trip && poll.trip.trip_id === activeTripId ? poll.trip : null
+  return { trip, notFound: poll.notFound }
 }
 
 function sameNum(a: number, b: number, eps = 1e-5): boolean {
@@ -57,6 +71,7 @@ export function passengerTripPollEquals(
   prev: PassengerTripPollResult,
   next: PassengerTripPollResult
 ): boolean {
+  if (prev.tripId !== next.tripId) return false
   if (prev.notFound !== next.notFound) return false
   if (prev.trip == null && next.trip == null) return true
   if (prev.trip == null || next.trip == null) return false

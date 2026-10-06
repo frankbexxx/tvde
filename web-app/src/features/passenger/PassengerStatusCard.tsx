@@ -2,7 +2,7 @@
  * B002 / A014: Conteúdo visual por estado da viagem — clareza, sem depender só de logs.
  * USER-SHELL-B: moldura unificada via InfoPanel.
  */
-import { memo, useEffect, useState } from 'react'
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Spinner } from '../../components/ui/Spinner'
@@ -17,14 +17,13 @@ import { PassengerIntermediationRateLine } from './PassengerIntermediationRateLi
 import { passengerDriverVehicleCopy } from './passengerDriverVehicle'
 import { PassengerPriceDetails } from './PassengerPriceDetails'
 import { PriceFormulaBreakdown } from './PriceFormulaBreakdown'
-import { BTN_SECONDARY, INFO_BOX_PASSENGER } from '../../components/layout/infoBoxTemplate'
+import {
+  BTN_DANGER_OUTLINE,
+  BTN_PRIMARY_COMPACT,
+  INFO_BOX_PASSENGER,
+} from '../../components/layout/infoBoxTemplate'
 
 const ESTIMATE_FALLBACK = '4–6'
-
-/**
- * Segundos em `requested` antes de mostrar aviso de indisponibilidade (P24) e botão de retry (P36).
- */
-export const PASSENGER_SEARCH_FALLBACK_AFTER_SEC = 25
 
 function tripCardFooter(
   activeTrip: TripDetailResponse,
@@ -82,31 +81,19 @@ function buildTripMetaLines(
 }
 
 function SearchingDriverPhase({
-  tripCreatedAtIso,
-  onRetrySearch,
-  retrySearchPending,
+  showFallback,
+  onContinueWaiting,
+  onCancelTrip,
   compact = false,
   animalHint = null,
 }: {
-  tripCreatedAtIso: string
-  onRetrySearch?: () => void
-  retrySearchPending?: boolean
+  showFallback: boolean
+  onContinueWaiting?: () => void
+  onCancelTrip?: () => void
   compact?: boolean
   animalHint?: string | null
 }) {
   const { t } = useTranslation('passenger')
-  const [nowMs, setNowMs] = useState<number | null>(null)
-  useEffect(() => {
-    const tick = () => setNowMs(Date.now())
-    tick()
-    const id = window.setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [])
-  const elapsedSec =
-    nowMs == null
-      ? 0
-      : Math.max(0, (nowMs - new Date(tripCreatedAtIso).getTime()) / 1000)
-  const showFallback = elapsedSec >= PASSENGER_SEARCH_FALLBACK_AFTER_SEC
 
   const metaLines: string[] = []
   if (!showFallback) metaLines.push(passengerPaymentDisclosureSearching())
@@ -127,17 +114,31 @@ function SearchingDriverPhase({
           : t('statusCard.searchingSubtitle')
       }
       meta={meta}
-      testId={showFallback ? 'passenger-info-panel-empty' : 'passenger-info-panel-searching'}
+      testId={showFallback ? 'passenger-info-panel-searching-long' : 'passenger-info-panel-searching'}
       actions={
-        showFallback && onRetrySearch ? (
-          <button
-            type="button"
-            className={`mt-1 ${BTN_SECONDARY}`}
-            disabled={retrySearchPending}
-            onClick={onRetrySearch}
-          >
-            {retrySearchPending ? t('statusCard.retryPending') : t('statusCard.retry')}
-          </button>
+        showFallback && (onContinueWaiting || onCancelTrip) ? (
+          <div className="mt-1 flex w-full gap-2">
+            {onContinueWaiting ? (
+              <button
+                type="button"
+                className={`min-w-0 ${BTN_PRIMARY_COMPACT}`}
+                data-testid="passenger-search-continue"
+                onClick={onContinueWaiting}
+              >
+                {t('statusCard.continueWaiting')}
+              </button>
+            ) : null}
+            {onCancelTrip ? (
+              <button
+                type="button"
+                className={BTN_DANGER_OUTLINE}
+                data-testid="passenger-search-cancel"
+                onClick={onCancelTrip}
+              >
+                {t('statusCard.cancelTrip')}
+              </button>
+            ) : null}
+          </div>
         ) : undefined
       }
     />
@@ -148,8 +149,10 @@ export interface PassengerStatusCardProps {
   uxState: PassengerUxState | null
   activeTrip: TripDetailResponse | null | undefined
   isSubmittingTrip?: boolean
-  onRetrySearch?: () => void
-  retrySearchPending?: boolean
+  /** `requested` há tempo suficiente para mostrar «Ainda à procura de motorista». */
+  searchFallback?: boolean
+  onContinueWaiting?: () => void
+  onCancelTrip?: () => void
   /** G15/G23: distância estimada ao motorista. */
   trackingHint?: string | null
   /** Poll / sincronização (só falhas ou stall — não «A actualizar…» em cada poll). */
@@ -162,8 +165,9 @@ function PassengerStatusCardInner({
   uxState,
   activeTrip,
   isSubmittingTrip = false,
-  onRetrySearch,
-  retrySearchPending = false,
+  searchFallback = false,
+  onContinueWaiting,
+  onCancelTrip,
   trackingHint = null,
   pollHint = null,
   compact = false,
@@ -192,9 +196,9 @@ function PassengerStatusCardInner({
     case 'SEARCHING_DRIVER':
       return (
         <SearchingDriverPhase
-          tripCreatedAtIso={activeTrip.created_at}
-          onRetrySearch={onRetrySearch}
-          retrySearchPending={retrySearchPending}
+          showFallback={searchFallback}
+          onContinueWaiting={onContinueWaiting}
+          onCancelTrip={onCancelTrip}
           compact={compact}
           animalHint={
             activeTrip.is_assistance_animal

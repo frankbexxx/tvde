@@ -52,6 +52,9 @@ export interface TripPlannerPanelProps {
    * Em confirmação: bloqueia o botão «Confirmar viagem» e mostra aviso (ex.: recolha ≈ destino).
    */
   confirmBlockedReason?: string | null
+  /** Compact payment line on confirming screen (default card or add CTA). */
+  paymentMethodLabel?: string | null
+  onPaymentMethods?: () => void
   onChooseMap: () => void
   onSetDestinationHint: () => void
   onReset: () => void
@@ -110,6 +113,8 @@ function TripPlannerPanelInner({
   slowRequestHint = null,
   confirmTripPending = false,
   confirmBlockedReason = null,
+  paymentMethodLabel = null,
+  onPaymentMethods,
   onChooseMap,
   onSetDestinationHint,
   onReset,
@@ -303,25 +308,52 @@ function TripPlannerPanelInner({
               ) : null}
             </div>
           ) : null}
+          <div
+            className={`${BTN_SECONDARY_RADIUS} border border-border/70 bg-card/70 px-2.5 py-2 flex items-center justify-between gap-2`}
+            data-testid="passenger-confirm-payment-line"
+          >
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground/55">
+                {t('payments.lineLabel')}
+              </p>
+              <p
+                className="text-sm font-medium text-foreground break-words"
+                data-testid="passenger-confirm-payment-label"
+              >
+                {paymentMethodLabel ?? t('payments.none')}
+              </p>
+            </div>
+            {onPaymentMethods ? (
+              <button
+                type="button"
+                onClick={onPaymentMethods}
+                disabled={confirmTripPending}
+                className={`${BTN_COMPACT_HEIGHT} shrink-0 ${BTN_SECONDARY_RADIUS} border border-border px-2.5 text-xs font-semibold touch-manipulation`}
+                data-testid="passenger-confirm-payment-action"
+              >
+                {paymentMethodLabel ? t('payments.change') : t('payments.addCard')}
+              </button>
+            ) : null}
+          </div>
           <p
             className="text-xs text-foreground/60 leading-snug"
             data-testid="passenger-payment-disclosure-confirming"
           >
             {t('planner.paymentMockShort')}
           </p>
-          {confirmBlockedReason ? (
-            <div
-              className={`${BTN_SECONDARY_RADIUS} border border-warning/50 bg-warning/15 px-2 py-1.5 text-xs text-foreground leading-snug`}
-              role="status"
-              data-testid="passenger-confirm-blocked-hint"
-            >
-              {confirmBlockedReason}
-            </div>
-          ) : null}
           <div
             className="sticky bottom-0 z-[1] -mx-2 mt-1 border-t border-border/50 bg-[hsl(var(--color-chrome-sheet-bg))] px-2 pt-1.5 pb-0.5"
             data-testid="passenger-confirm-cta-row"
           >
+            {confirmBlockedReason ? (
+              <div
+                className={`mb-1.5 ${BTN_SECONDARY_RADIUS} border border-warning/50 bg-warning/15 px-2 py-1.5 text-xs text-foreground leading-snug`}
+                role="status"
+                data-testid="passenger-confirm-blocked-hint"
+              >
+                {confirmBlockedReason}
+              </div>
+            ) : null}
             <div className="flex flex-row gap-2">
               <button
                 type="button"

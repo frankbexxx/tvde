@@ -14,15 +14,26 @@ stateDiagram-v2
   failed --> [*]
 ```
 
-## Fluxo cartão V1 (manual capture)
+## Fluxo cartão V1 (manual capture) — pagamento preparado antes do pedido
 
-1. **Accept:** cria PaymentIntent `capture_method=manual`, `payment_method_types=["card"]`, amount **€0,50** (placeholder Stripe EUR). `Payment.status=processing`.
-2. **Passageiro (Stripe real / staging test):** a API expõe `payment_intent_client_secret`; o Passageiro **anexa** um PaymentMethod (`POST /trips/{id}/payment-method`) **sem** confirmar o €0,50 — assim o amount ainda pode ser actualizado no complete.
-3. **Complete:** calcula `final_price` → `update` amount → `confirm` (com PM anexado; se `requires_action` → 409 `payment_requires_action` para SCA no cliente) → `capture`. Sem PM → 409 `payment_method_required`.
-4. **Webhook** `payment_intent.succeeded`: marca `Payment.succeeded` **só** se amount/currency coincidem com `final_price` (ou `total_amount`).
-5. **Fail-closed:** PI em `requires_capture` com amount ≠ final (ex. placeholder ainda €0,50) → **não** capturar; log `payment_capture_blocked_amount_mismatch`; payment permanece `processing` para ops.
+1. **Wallet (pré-trip):** Passageiro cria SetupIntent (`POST /payments/setup-intent`), confirma cartão (SCA no SetupIntent se necessário), regista PM (`POST /payments/methods` só com SetupIntent `succeeded` do próprio Customer). Primeiro PM = default (Stripe autoridade + cache DB).
+2. **Create trip:** com `STRIPE_MOCK=false`, exige Customer + default PM → senão **402** `payment_method_required` (sem criar Trip). Mock não bloqueia.
+3. **Accept:** cria PaymentIntent `capture_method=manual`, `confirm=False`, amount **€0,50**, com `customer` + `payment_method` default. `Payment.status=processing`. Guarda `payments.stripe_payment_method_id`.
+4. **Complete:** calcula `final_price` → `update` amount → `confirm` (SCA possível → 409 `payment_requires_action`) → `capture`. Fallback defensivo `payment_method_required` se PM em falta. Attach tardio (`POST /trips/{id}/payment-method`) permanece só como fallback — **não** faz parte do fluxo normal.
+5. **Webhook** `payment_intent.succeeded`: marca `Payment.succeeded` **só** se amount/currency coincidem com `final_price` (ou `total_amount`).
+6. **Detach:** bloqueado se o PM estiver em Trip activa (`accepted` / `arriving` / `ongoing` / `assigned`) → `409 payment_method_in_use`.
+7. **Fail-closed:** PI em `requires_capture` com amount ≠ final → **não** capturar; log `payment_capture_blocked_amount_mismatch`.
 
-`ENABLE_CONFIRM_ON_ACCEPT` / confirm antecipado do placeholder: **continua desligado em prod e staging live** (bloqueio de early confirm). A exposição do `client_secret` em Stripe real serve para **attach**, não para confirmar o €0,50.
+### SCA / 3DS
+
+| Momento | Onde |
+|---------|------|
+| Adicionar cartão | `confirmCardSetup` (SetupIntent) |
+| Cobrança final | `PaymentIntent.confirm` no complete → cliente trata `payment_requires_action` |
+
+Não se pede introdução de cartão em `requested → matching → accepted → arriving → ongoing`.
+
+`ENABLE_CONFIRM_ON_ACCEPT` / confirm antecipado do placeholder: **continua desligado em prod e staging live**.
 
 **MB WAY:** fase 2 — não usa este fluxo de hold; ver discovery A1.2.
 
@@ -37,10 +48,15 @@ sequenceDiagram
   participant API as FastAPI
   participant S as Stripe
 
-  App->>API: criar / confirmar pagamento\n(conforme endpoint)
-  API->>S: API Stripe
-  S-->>API: webhook (eventos)
-  API->>API: idempotência + amount guard\n+ actualiza PaymentStatus
+  App->>API: SetupIntent / registar PM
+  API->>S: Customer + SetupIntent
+  App->>API: POST /trips
+  API-->>API: gate default PM
+  App->>API: accept
+  API->>S: PI customer+PM confirm false
+  App->>API: complete
+  API->>S: update confirm capture
+  S-->>API: webhook
 ```
 
 ## Eventos Stripe tratados no webhook

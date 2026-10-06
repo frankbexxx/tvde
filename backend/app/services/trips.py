@@ -254,6 +254,14 @@ async def create_trip(
     passenger_id: str,
     payload: TripCreateRequest,
 ) -> tuple[Trip, int]:
+    from app.db.models.user import User as UserModel
+    from app.services.passenger_payments import assert_passenger_ready_for_trip
+
+    passenger = db.get(UserModel, uuid.UUID(passenger_id))
+    if passenger is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+    assert_passenger_ready_for_trip(db, passenger)
+
     passenger_count = resolve_passenger_count(getattr(payload, "passenger_count", None))
     pet = resolve_trip_pet_create(
         vehicle_category=payload.vehicle_category,
@@ -1045,6 +1053,18 @@ def accept_trip(
     driver_amount = _money(total_amount - commission_amount)
 
     # STEP 1: Create Stripe PaymentIntent (or mock when STRIPE_MOCK).
+    from app.services.passenger_payments import resolve_default_pm_for_accept
+
+    stripe_customer_id, default_pm_id = resolve_default_pm_for_accept(
+        db, str(trip.passenger_id)
+    )
+    if not getattr(settings, "STRIPE_MOCK", False):
+        if not stripe_customer_id or not default_pm_id:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="payment_method_required",
+            )
+
     stripe_pi_id: str
     intent_obj: stripe.PaymentIntent | None = None
     if getattr(settings, "STRIPE_MOCK", False):
@@ -1057,6 +1077,8 @@ def accept_trip(
                 currency="EUR",
                 metadata={"trip_id": str(trip.id)},
                 idempotency_key=f"tvde-pi-auth-{trip.id}",
+                customer=stripe_customer_id,
+                payment_method=default_pm_id,
             )
             stripe_pi_id = intent_obj.id
             logger.info(
@@ -1088,6 +1110,7 @@ def accept_trip(
         currency="EUR",
         status=PaymentStatus.processing,
         stripe_payment_intent_id=stripe_pi_id,
+        stripe_payment_method_id=default_pm_id,
         authorization_expires_at=authorization_expires_at,
     )
     db.add(payment)
@@ -1247,11 +1270,23 @@ def accept_offer(
     offer.status = OfferStatus.accepted
 
     # Same payment + trip update logic as accept_trip
+    from app.services.passenger_payments import resolve_default_pm_for_accept
+
     amount_cents = 50
     total_amount = _money(Decimal("0.50"))
     commission_rate = commission_percent / Decimal("100")
     commission_amount = _money(total_amount * commission_rate)
     driver_amount = _money(total_amount - commission_amount)
+
+    stripe_customer_id, default_pm_id = resolve_default_pm_for_accept(
+        db, str(trip.passenger_id)
+    )
+    if not getattr(settings, "STRIPE_MOCK", False):
+        if not stripe_customer_id or not default_pm_id:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="payment_method_required",
+            )
 
     stripe_pi_id: str
     intent_obj: stripe.PaymentIntent | None = None
@@ -1264,6 +1299,8 @@ def accept_offer(
                 currency="EUR",
                 metadata={"trip_id": str(trip.id)},
                 idempotency_key=f"tvde-pi-auth-{trip.id}",
+                customer=stripe_customer_id,
+                payment_method=default_pm_id,
             )
             stripe_pi_id = intent_obj.id
         except stripe.error.StripeError as e:
@@ -1281,6 +1318,7 @@ def accept_offer(
         currency="EUR",
         status=PaymentStatus.processing,
         stripe_payment_intent_id=stripe_pi_id,
+        stripe_payment_method_id=default_pm_id,
         authorization_expires_at=None,
     )
     db.add(payment)
