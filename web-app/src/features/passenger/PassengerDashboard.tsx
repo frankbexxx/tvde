@@ -52,6 +52,7 @@ import {
 import { DestinationSearchField } from './DestinationSearchField'
 import { placeSearchShouldFetch } from './placeSearchFetch'
 import {
+  canAcceptPlanningMapClick,
   coordsToMapCandidate,
   resolvePlanningMapClickTarget,
 } from './passengerPlanningMapClick'
@@ -590,6 +591,7 @@ export function PassengerDashboard() {
     setPickupCandidate(null)
     setDestinationCandidate(null)
     setPlanningRouteGeoJSON(null)
+    setPlaceSearchUiActive(false)
     setPetBooking(DEFAULT_PET_BOOKING)
     setLastPetSurcharge(null)
     setLastFareSubtotal(null)
@@ -666,17 +668,32 @@ export function PassengerDashboard() {
 
   const clearPickupCandidate = useCallback(() => {
     setPickupCandidate(null)
+    setPickupQuery('')
+    setPickupGeoSuggestions([])
+    setPlaceSearchUiActive(false)
   }, [])
 
   const clearDestinationCandidate = useCallback(() => {
     setDestinationCandidate(null)
+    setDestinationQuery('')
+    setGeoSuggestions([])
+    setPlaceSearchUiActive(false)
   }, [])
 
   /**
    * Mapa = mesmo Candidate/preview que texto: seleccionar → preview → confirmar → commit.
    * Clique no mapa nunca grava pickup/dropoff definitivos.
+   * No ecrã final (ambos confirmados) o mapa não aceita selecção — usar Alterar.
    */
   const handlePlanningMapClick = useCallback((coords: { lat: number; lng: number }) => {
+    const gateState = {
+      pickup: pickupLocationRef.current,
+      dropoff: dropoffLocation,
+      pickupCandidate,
+      destinationCandidate,
+    }
+    if (!canAcceptPlanningMapClick(gateState)) return
+
     setIsPlanningMode(true)
     setPlaceSearchUiActive(false)
     const target = resolvePlanningMapClickTarget(Boolean(pickupLocationRef.current))
@@ -689,10 +706,6 @@ export function PassengerDashboard() {
       setMapRecenterKey((k) => k + 1)
       toast.success(t('trip.pickupPreview'))
     } else {
-      // Uncommit destino confirmado (se existir) para voltar ao preview + Confirmar destino
-      setDropoffLocation(null)
-      setDropoffAddress(null)
-      setConfirmRouteMeta(null)
       setDestinationCandidate(placeholder)
       setDestinationQuery(placeholder.primary)
       setGeoSuggestions([])
@@ -719,8 +732,7 @@ export function PassengerDashboard() {
         setDestinationQuery(label)
       }
     })
-  }, [t])
-
+  }, [t, dropoffLocation, pickupCandidate, destinationCandidate])
   const pickupDestinationTooClose = useMemo(() => {
     if (!pickupLocation || !dropoffLocation) return false
     return haversineKm(pickupLocation, dropoffLocation) < 0.025
@@ -1457,7 +1469,10 @@ export function PassengerDashboard() {
               mapVisualWeight: a021Layout.map,
               pickupSelection: isPickupPlanningMode ? pickupPreviewLocation : null,
               dropoffSelection: isPickupPlanningMode ? dropoffPreviewLocation : null,
-              onPlanningMapClick: isPickupPlanningMode ? handlePlanningMapClick : undefined,
+              onPlanningMapClick:
+                isPickupPlanningMode && passengerUiState !== 'confirming'
+                  ? handlePlanningMapClick
+                  : undefined,
               planningRouteGeometry: isPickupPlanningMode ? planningRouteGeoJSON : null,
               planningRecenter: dropoffPreviewLocation ?? pickupPreviewLocation,
               planningRecenterKey: mapRecenterKey,
@@ -1465,10 +1480,21 @@ export function PassengerDashboard() {
             bottomOverlay={
               isTripIdle ? (
                 <MapBottomSheet
-                  className={`pointer-events-auto ${MAP_SHEET_CLASS} ${passengerSheetMaxH}`}
+                  className={`relative pointer-events-auto ${MAP_SHEET_CLASS} ${passengerSheetMaxH}${isPlanningMode ? ' pr-11' : ''}`}
                   data-search-expanded={placeSearchUiActive ? 'true' : 'false'}
                   data-sheet-mode={passengerSheetMode}
                 >
+                  {isPlanningMode ? (
+                    <button
+                      type="button"
+                      onClick={resetPlanning}
+                      aria-label={t('planner.abandonPlanning')}
+                      data-testid="passenger-abandon-planning"
+                      className="absolute right-1.5 top-1.5 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-destructive/45 bg-background/95 text-destructive text-lg font-bold leading-none shadow-sm hover:bg-destructive/10 touch-manipulation"
+                    >
+                      ×
+                    </button>
+                  ) : null}
                   {showPickupSearch && (
                     <>
                       <DestinationSearchField

@@ -54,6 +54,7 @@
     "routeTitle": "Route",
     "tapMapForDestination": "You can also tap the map to set destination",
     "reset": "Reset",
+    "abandonPlanning": "Leave trip request",
     "confirmTripTitle": "Confirm trip",
     "calculatingRoute": "Calculating route…",
     "routeUnavailable": "Estimated route unavailable",

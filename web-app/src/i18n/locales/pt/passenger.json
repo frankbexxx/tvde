@@ -54,6 +54,7 @@
     "routeTitle": "Percurso",
     "tapMapForDestination": "Também podes tocar no mapa para marcar destino",
     "reset": "Repor",
+    "abandonPlanning": "Sair do pedido de viagem",
     "confirmTripTitle": "Confirma a viagem",
     "calculatingRoute": "A calcular percurso…",
     "routeUnavailable": "Percurso estimado indisponível",

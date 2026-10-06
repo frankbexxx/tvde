@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { GeocodeSuggestion } from '../../services/geocoding'
 import {
   applyMapSelection,
+  beginEditDestination,
+  canAcceptPlanningMapClick,
   clearDestinationCandidateOnly,
   clearPickupCandidateOnly,
   confirmDestinationCandidate,
@@ -10,6 +12,7 @@ import {
   planningReadyForTripConfig,
   resetPlanningState,
   resolvePlanningMapClickTarget,
+  resolvePlanningUiStep,
   type PassengerPlanningState,
 } from './passengerPlanningMapClick'
 
@@ -118,7 +121,6 @@ describe('passenger planning — texto e mapa → mesmo Candidate', () => {
     expect(s.dropoff).toBeNull()
     expect(planningReadyForTripConfig(s)).toBe(false)
 
-    // even with pickup confirmed, map dest click stays preview
     s = confirmPickupCandidate(s)
     s = applyMapSelection(s, { lat: 38.71, lng: -9.15 }, 'Ponto B')
     expect(s.dropoff).toBeNull()
@@ -137,12 +139,6 @@ describe('passenger planning — texto e mapa → mesmo Candidate', () => {
     expect(s.destinationCandidate).toBeNull()
     expect(s.pickup).toEqual({ lat: OEIRAS.lat, lng: OEIRAS.lng })
 
-    s = {
-      ...s,
-      pickupCandidate: coordsToMapCandidate({ lat: 38.7, lng: -9.2 }, 'Temp'),
-    }
-    // Limpar pickup candidate while a prior pickup is already committed is N/A
-    // for pickup search UI, but the helper must not touch confirmed pickup:
     const withConfirmed = {
       pickup: { lat: 1, lng: 2 },
       dropoff: null,
@@ -154,7 +150,7 @@ describe('passenger planning — texto e mapa → mesmo Candidate', () => {
     expect(cleared.pickup).toEqual({ lat: 1, lng: 2 })
   })
 
-  it('7) Repor limpa planeamento', () => {
+  it('7) Repor / X limpa planeamento', () => {
     const dirty: PassengerPlanningState = {
       pickup: { lat: 1, lng: 2 },
       dropoff: { lat: 3, lng: 4 },
@@ -179,7 +175,6 @@ describe('passenger planning — texto e mapa → mesmo Candidate', () => {
         },
       })
     )
-    // after pickup confirm, set dest via text
     const textFinal = confirmDestinationCandidate({
       ...viaText,
       destinationCandidate: {
@@ -206,14 +201,12 @@ describe('passenger planning — texto e mapa → mesmo Candidate', () => {
   })
 
   it('9) nenhuma transição de planeamento implica POST /trips (só config pronta)', () => {
-    // Planning helpers only mutate local planning state — trip create is a separate CTA.
     let s = empty()
     s = applyMapSelection(s, { lat: 38.69, lng: -9.31 }, 'A')
     s = confirmPickupCandidate(s)
     s = applyMapSelection(s, { lat: 38.708, lng: -9.137 }, 'B')
     s = confirmDestinationCandidate(s)
     expect(planningReadyForTripConfig(s)).toBe(true)
-    // Explicit: helpers have no side effects beyond state; createTrip is not imported/called here.
     expect(Object.keys(s).sort()).toEqual([
       'destinationCandidate',
       'dropoff',
@@ -221,18 +214,101 @@ describe('passenger planning — texto e mapa → mesmo Candidate', () => {
       'pickupCandidate',
     ])
   })
+})
 
-  it('mapa com pickup+dropoff confirmados: novo clique reabre preview de destino', () => {
+describe('UX follow-ups — Limpar, ecrã final, Alterar, X', () => {
+  it('1) Limpar em recolha → volta a escolher recolha', () => {
+    let s = applyMapSelection(empty(), { lat: 38.69, lng: -9.31 }, 'A')
+    expect(resolvePlanningUiStep(s)).toBe('choose_pickup')
+    s = clearPickupCandidateOnly(s)
+    expect(s.pickupCandidate).toBeNull()
+    expect(s.pickup).toBeNull()
+    expect(resolvePlanningUiStep(s)).toBe('choose_pickup')
+  })
+
+  it('2) Limpar em destino → volta a escolher destino', () => {
+    let s: PassengerPlanningState = {
+      pickup: { lat: OEIRAS.lat, lng: OEIRAS.lng },
+      dropoff: null,
+      pickupCandidate: null,
+      destinationCandidate: LISBOA,
+    }
+    s = clearDestinationCandidateOnly(s)
+    expect(s.destinationCandidate).toBeNull()
+    expect(s.pickup).toEqual({ lat: OEIRAS.lat, lng: OEIRAS.lng })
+    expect(resolvePlanningUiStep(s)).toBe('choose_destination')
+  })
+
+  it('3) novo clique após Limpar → preview normal', () => {
+    let s = applyMapSelection(empty(), { lat: 38.69, lng: -9.31 }, 'A')
+    s = clearPickupCandidateOnly(s)
+    s = applyMapSelection(s, { lat: 38.7, lng: -9.2 }, 'B, Oeiras')
+    expect(s.pickup).toBeNull()
+    expect(s.pickupCandidate?.primary).toBe('B')
+    expect(resolvePlanningUiStep(s)).toBe('choose_pickup')
+  })
+
+  it('4) ecrã final: clique no mapa não altera destino', () => {
+    const finalState: PassengerPlanningState = {
+      pickup: { lat: 38.69, lng: -9.31 },
+      dropoff: { lat: 38.708, lng: -9.137 },
+      pickupCandidate: null,
+      destinationCandidate: null,
+    }
+    expect(resolvePlanningUiStep(finalState)).toBe('configure_trip')
+    expect(canAcceptPlanningMapClick(finalState)).toBe(false)
+    const next = applyMapSelection(finalState, { lat: 38.72, lng: -9.14 }, 'Novo')
+    expect(next).toEqual(finalState)
+    expect(next.dropoff).toEqual(finalState.dropoff)
+    expect(next.destinationCandidate).toBeNull()
+  })
+
+  it('5) Alterar → permite novamente seleccionar destino', () => {
     let s: PassengerPlanningState = {
       pickup: { lat: 38.69, lng: -9.31 },
       dropoff: { lat: 38.708, lng: -9.137 },
       pickupCandidate: null,
       destinationCandidate: null,
     }
+    s = beginEditDestination(s)
+    expect(resolvePlanningUiStep(s)).toBe('choose_destination')
+    expect(canAcceptPlanningMapClick(s)).toBe(true)
     s = applyMapSelection(s, { lat: 38.72, lng: -9.14 }, 'Novo destino')
     expect(s.dropoff).toBeNull()
     expect(s.destinationCandidate?.primary).toBe('Novo destino')
     expect(s.pickup).toEqual({ lat: 38.69, lng: -9.31 })
-    expect(planningReadyForTripConfig(s)).toBe(false)
+  })
+
+  it('6) X → limpa todo o planeamento', () => {
+    const dirty: PassengerPlanningState = {
+      pickup: { lat: 1, lng: 2 },
+      dropoff: { lat: 3, lng: 4 },
+      pickupCandidate: OEIRAS,
+      destinationCandidate: LISBOA,
+    }
+    expect(resetPlanningState()).toEqual({
+      pickup: null,
+      dropoff: null,
+      pickupCandidate: null,
+      destinationCandidate: null,
+    })
+    expect(dirty.pickup).not.toBeNull()
+  })
+
+  it('7) X → volta ao estado inicial (escolher recolha)', () => {
+    expect(resolvePlanningUiStep(resetPlanningState())).toBe('choose_pickup')
+    expect(canAcceptPlanningMapClick(resetPlanningState())).toBe(true)
+    expect(planningReadyForTripConfig(resetPlanningState())).toBe(false)
+  })
+
+  it('8) X → não faz POST /trips (só reset local)', () => {
+    const after = resetPlanningState()
+    expect(Object.keys(after).sort()).toEqual([
+      'destinationCandidate',
+      'dropoff',
+      'pickup',
+      'pickupCandidate',
+    ])
+    expect(planningReadyForTripConfig(after)).toBe(false)
   })
 })
