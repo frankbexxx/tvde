@@ -51,6 +51,11 @@ import {
 } from '../../services/geocoding'
 import { DestinationSearchField } from './DestinationSearchField'
 import { placeSearchShouldFetch } from './placeSearchFetch'
+import {
+  canAcceptPlanningMapClick,
+  coordsToMapCandidate,
+  resolvePlanningMapClickTarget,
+} from './passengerPlanningMapClick'
 import { usePassengerDriverLocation, isPassengerDriverTrackingStatus } from '../../hooks/usePassengerDriverLocation'
 import { TripPlannerPanel, type PassengerUIState } from './TripPlannerPanel'
 import {
@@ -586,6 +591,7 @@ export function PassengerDashboard() {
     setPickupCandidate(null)
     setDestinationCandidate(null)
     setPlanningRouteGeoJSON(null)
+    setPlaceSearchUiActive(false)
     setPetBooking(DEFAULT_PET_BOOKING)
     setLastPetSurcharge(null)
     setLastFareSubtotal(null)
@@ -662,22 +668,71 @@ export function PassengerDashboard() {
 
   const clearPickupCandidate = useCallback(() => {
     setPickupCandidate(null)
+    setPickupQuery('')
+    setPickupGeoSuggestions([])
+    setPlaceSearchUiActive(false)
   }, [])
 
   const clearDestinationCandidate = useCallback(() => {
     setDestinationCandidate(null)
+    setDestinationQuery('')
+    setGeoSuggestions([])
+    setPlaceSearchUiActive(false)
   }, [])
 
-  /** A019: com pickup+dropoff, novo clique atualiza só o destino */
+  /**
+   * Mapa = mesmo Candidate/preview que texto: seleccionar → preview → confirmar → commit.
+   * Clique no mapa nunca grava pickup/dropoff definitivos.
+   * No ecrã final (ambos confirmados) o mapa não aceita selecção — usar Alterar.
+   */
   const handlePlanningMapClick = useCallback((coords: { lat: number; lng: number }) => {
-    if (!pickupLocationRef.current) {
-      pickupLocationRef.current = coords
-      setPickupLocation(coords)
-      return
+    const gateState = {
+      pickup: pickupLocationRef.current,
+      dropoff: dropoffLocation,
+      pickupCandidate,
+      destinationCandidate,
     }
-    setDropoffLocation(coords)
-  }, [])
+    if (!canAcceptPlanningMapClick(gateState)) return
 
+    setIsPlanningMode(true)
+    setPlaceSearchUiActive(false)
+    const target = resolvePlanningMapClickTarget(Boolean(pickupLocationRef.current))
+    const placeholder = coordsToMapCandidate(coords, 'Local selecionado')
+
+    if (target === 'pickup') {
+      setPickupCandidate(placeholder)
+      setPickupQuery(placeholder.primary)
+      setPickupGeoSuggestions([])
+      setMapRecenterKey((k) => k + 1)
+      toast.success(t('trip.pickupPreview'))
+    } else {
+      setDestinationCandidate(placeholder)
+      setDestinationQuery(placeholder.primary)
+      setGeoSuggestions([])
+      setMapRecenterKey((k) => k + 1)
+      toast.success(t('trip.dropoffPreview'))
+    }
+
+    void reverseGeocode(coords.lng, coords.lat).then((addr) => {
+      const suggestion = coordsToMapCandidate(coords, addr)
+      const label = suggestion.secondary
+        ? `${suggestion.primary}, ${suggestion.secondary}`
+        : suggestion.primary
+      if (target === 'pickup') {
+        setPickupCandidate((prev) => {
+          if (!prev || prev.lat !== coords.lat || prev.lng !== coords.lng) return prev
+          return suggestion
+        })
+        setPickupQuery(label)
+      } else {
+        setDestinationCandidate((prev) => {
+          if (!prev || prev.lat !== coords.lat || prev.lng !== coords.lng) return prev
+          return suggestion
+        })
+        setDestinationQuery(label)
+      }
+    })
+  }, [t, dropoffLocation, pickupCandidate, destinationCandidate])
   const pickupDestinationTooClose = useMemo(() => {
     if (!pickupLocation || !dropoffLocation) return false
     return haversineKm(pickupLocation, dropoffLocation) < 0.025
@@ -1266,12 +1321,12 @@ export function PassengerDashboard() {
     mapAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [])
 
-  const pickupPreviewLocation = pickupLocation ?? (pickupCandidate
+  const pickupPreviewLocation = pickupCandidate
     ? { lat: pickupCandidate.lat, lng: pickupCandidate.lng }
-    : null)
-  const dropoffPreviewLocation = dropoffLocation ?? (destinationCandidate
+    : pickupLocation
+  const dropoffPreviewLocation = destinationCandidate
     ? { lat: destinationCandidate.lat, lng: destinationCandidate.lng }
-    : null)
+    : dropoffLocation
 
   const passengerBottomNavEl = (
     <PassengerBottomNav active={passengerNavActive} onSelect={handlePassengerBottomNav} />
@@ -1414,7 +1469,10 @@ export function PassengerDashboard() {
               mapVisualWeight: a021Layout.map,
               pickupSelection: isPickupPlanningMode ? pickupPreviewLocation : null,
               dropoffSelection: isPickupPlanningMode ? dropoffPreviewLocation : null,
-              onPlanningMapClick: isPickupPlanningMode ? handlePlanningMapClick : undefined,
+              onPlanningMapClick:
+                isPickupPlanningMode && passengerUiState !== 'confirming'
+                  ? handlePlanningMapClick
+                  : undefined,
               planningRouteGeometry: isPickupPlanningMode ? planningRouteGeoJSON : null,
               planningRecenter: dropoffPreviewLocation ?? pickupPreviewLocation,
               planningRecenterKey: mapRecenterKey,
@@ -1422,10 +1480,26 @@ export function PassengerDashboard() {
             bottomOverlay={
               isTripIdle ? (
                 <MapBottomSheet
-                  className={`pointer-events-auto ${MAP_SHEET_CLASS} ${passengerSheetMaxH}`}
+                  className={`relative pointer-events-auto ${MAP_SHEET_CLASS} ${passengerSheetMaxH}${isPlanningMode ? ' pr-11' : ''}`}
                   data-search-expanded={placeSearchUiActive ? 'true' : 'false'}
                   data-sheet-mode={passengerSheetMode}
                 >
+                  {isPlanningMode ? (
+                    <button
+                      type="button"
+                      onClick={resetPlanning}
+                      aria-label={t('planner.abandonPlanning')}
+                      data-testid="passenger-abandon-planning"
+                      className="absolute right-1.5 top-1.5 z-20 inline-flex h-9 w-9 items-center justify-center touch-manipulation"
+                    >
+                      <span
+                        aria-hidden
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-destructive/45 bg-background/95 text-destructive text-sm font-bold leading-none shadow-sm"
+                      >
+                        ×
+                      </span>
+                    </button>
+                  ) : null}
                   {showPickupSearch && (
                     <>
                       <DestinationSearchField
