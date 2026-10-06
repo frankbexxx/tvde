@@ -1,6 +1,6 @@
 """Detect Alembic schema drift without applying migrations.
 
-Used by local/dev startup (warn-only) and Windows diagnostics.
+Used by Windows diagnostics.
 Never calls ``upgrade`` / ``downgrade``.
 """
 
@@ -37,8 +37,7 @@ def drift_warning_message(status: SchemaDriftStatus) -> str:
     return (
         f"[WARN] SCHEMA DRIFT: db={cur} code_head={heads} — "
         "ORM may 500 until alembic upgrade head "
-        "(requires explicit authorization; "
-        "dev startup will NOT auto-migrate)."
+        "(dev startup applies it on local ride_db)."
     )
 
 

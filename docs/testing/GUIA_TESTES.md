@@ -194,18 +194,9 @@ Os serviços devem ser iniciados **por esta ordem** e **todos a correr em simult
 
 **Pytest / testes backend:** não uses a `DATABASE_URL` Render por engano. Ver [`BACKEND_PYTEST_SAFE.md`](BACKEND_PYTEST_SAFE.md) e o script `scripts/windows/Invoke-BackendPytest.ps1` (força `127.0.0.1` + `test_db`).
 
-### 5.6b Schema Alembic = código (obrigatório antes de smoke manual)
+### 5.6b Schema e DB em Dev
 
-O uvicorn em **dev** **não** corre `alembic upgrade head` (só ambientes deployed). Se o código/ORM estiver à frente da DB, o login e outras queries podem falhar com **HTTP 500** (coluna em falta).
-
-1. Com o venv activo e `cd` em `backend`:
-   ```
-   alembic current
-   alembic heads
-   ```
-2. **Resultado esperado:** a revision em `current` é **igual** à de `heads` (um único head).
-3. Se divergirem: **não** continues o smoke. Com autorização explícita na DB **local** correcta: `alembic upgrade head`. Nunca aplicar migration a Render/staging/prod a partir deste passo.
-4. No arranque local, se houver drift, o backend imprime `[WARN] SCHEMA DRIFT: ...` e **continua** (não bloqueia; não auto-migra).
+Fonte única: `backend/.env`. Dev usa Postgres **local** `127.0.0.1`/`localhost` + `ride_db`. Se a URL apontar para Render, o backend **não arranca**. No startup Dev o Alembic corre `upgrade head` sozinho; se falhar, o servidor não sobe. Sem comandos manuais.
 
 ### 5.7 Iniciar o servidor
 

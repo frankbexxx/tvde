@@ -31,7 +31,7 @@ Mudar qualquer `VITE_*` no Render → **novo build** do static.
 
 | Variável | `.env` (local) | tvde-api | Nota |
 |----------|----------------|----------|------|
-| `DATABASE_URL` | **SIM** | **SIM** | Essencial. |
+| `DATABASE_URL` | **SIM** | **SIM** | Local Dev: só `127.0.0.1`/`localhost` + `ride_db`. Render neste ficheiro com `ENV=dev` aborta o arranque. |
 | `JWT_SECRET_KEY` | **SIM** | **SIM** | Essencial. |
 | `JWT_ALGORITHM` | Opcional | Opcional | Default `HS256` no código. |
 | `JWT_ACCESS_TOKEN_MINUTES` | Opcional | Opcional | Default no código. |

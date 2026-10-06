@@ -58,7 +58,7 @@ pytest tests/ -v --tb=short
 
 Postgres do job é **efémero** (serviço limpo no início de cada run). Isso **não** equivale a isolamento por teste.
 
-**Pytest vs smoke manual:** a suite aplica `alembic upgrade head` via `conftest` na `test_db`. O smoke manual contra `ride_db` / URL do `.env` **não** — confirma `alembic current` == `alembic heads` antes do login (ver [`GUIA_TESTES.md`](GUIA_TESTES.md) §5.6b).
+**Pytest vs smoke manual:** a suite aplica `alembic upgrade head` via `conftest` na `test_db`. Em Dev, o uvicorn aplica `upgrade head` na `ride_db` local do `.env` (ver [`GUIA_TESTES.md`](GUIA_TESTES.md) §5.6b).
 
 ---
 

@@ -64,7 +64,7 @@ print(json.dumps(payload))
         Write-Host ''
 
         if (-not $obj.in_sync) {
-            Write-Host '[WARN] SCHEMA DRIFT: alembic current != heads — ORM may 500; upgrade head so com autorizacao explicita (startup dev NAO auto-migra).' -ForegroundColor Yellow
+            Write-Host '[WARN] SCHEMA DRIFT: alembic current != heads — ORM may 500; o startup dev aplica upgrade head na ride_db local.' -ForegroundColor Yellow
             Write-Host ''
         }
 

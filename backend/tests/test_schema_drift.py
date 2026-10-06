@@ -33,6 +33,5 @@ def test_drift_warning_message_exact_shape() -> None:
     assert msg == (
         "[WARN] SCHEMA DRIFT: db=c4d5e6f7a8b9 code_head=f9a0b1c2d3e4 — "
         "ORM may 500 until alembic upgrade head "
-        "(requires explicit authorization; "
-        "dev startup will NOT auto-migrate)."
+        "(dev startup applies it on local ride_db)."
     )

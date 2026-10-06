@@ -99,27 +99,17 @@ async def lifespan(app: FastAPI):
         f"debug_routes={_debug} matching_fallbacks={_match_fb}"
     )
 
-    if settings.should_run_alembic_on_startup():
-        logger.info("[startup] alembic upgrade head (deployed)")
+    from app.db.dev_database import assert_dev_database_is_local
+
+    assert_dev_database_is_local(
+        database_url=settings.DATABASE_URL,
+        is_development=settings.is_development_environment(),
+    )
+    if settings.should_run_alembic_on_startup() or settings.is_development_environment():
+        where = "dev" if settings.is_development_environment() else "deployed"
+        logger.info("[startup] alembic upgrade head (%s)", where)
         upgrade_to_head()
         logger.info("[startup] alembic em head")
-    else:
-        # Dev/local: never auto-migrate; warn if ORM/code heads diverge from DB.
-        try:
-            from app.db.schema_drift import check_schema_drift, drift_warning_message
-
-            drift = check_schema_drift()
-            if not drift.in_sync:
-                warn = drift_warning_message(drift)
-                logger.warning(warn)
-                print(warn)
-        except Exception as exc:  # noqa: BLE001 — startup must not abort on check failure
-            fail_msg = (
-                f"[WARN] SCHEMA DRIFT check failed ({type(exc).__name__}): {exc} — "
-                "dev startup will NOT auto-migrate."
-            )
-            logger.warning(fail_msg)
-            print(fail_msg)
 
     stripe_mock = bool(getattr(settings, "STRIPE_MOCK", False))
     if not stripe_mock:

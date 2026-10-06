@@ -24,7 +24,7 @@ Substitui Bugbot / Cloud Agents / automações automáticas. Revisão humana, cu
 ## 3. Dados / histórico / migrações / backfills
 
 - [ ] Migrações reversíveis ou com plano claro; sem wipe acidental
-- [ ] **Gate migration → smoke local:** se a PR toca `backend/alembic/versions/` ou modelos ORM, **antes** do smoke manual: na DB usada pelo uvicorn local, `alembic current` == `alembic heads` (se divergir: **parar**; `alembic upgrade head` só com OK explícito — o startup **dev** não aplica migrations)
+- [ ] **Gate migration → smoke local:** se a PR toca `backend/alembic/versions/` ou modelos ORM, **antes** do smoke manual: na DB usada pelo uvicorn local, `alembic current` == `alembic heads` (o startup **dev** aplica `upgrade head` na `ride_db` local; se falhar, o backend não arranca — **parar** e reportar)
 - [ ] Histórico de viagens / pagamentos / audit preservado onde importa
 - [ ] Backfills: dry-run primeiro; apply só com confirmação explícita
 - [ ] Scripts destrutivos ou de prod **não** correm sem OK
