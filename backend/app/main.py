@@ -33,6 +33,7 @@ from app.api.routers import (
     health,
     logs,
     partner,
+    passenger_payments,
     passenger_trips,
     push_tokens,
     rotacional,
@@ -170,6 +171,7 @@ if settings.dev_tools_router_enabled():
     app.include_router(dev_tools.router)
 app.include_router(auth.router)
 app.include_router(push_tokens.router)
+app.include_router(passenger_payments.router)
 app.include_router(passenger_trips.router)
 app.include_router(driver_trips.router)
 app.include_router(complaints.router)

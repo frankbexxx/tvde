@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { History, QrCode, Settings, User } from 'lucide-react'
+import { CreditCard, History, QrCode, Settings, User } from 'lucide-react'
 import QRCode from 'react-qr-code'
 import { useTranslation } from 'react-i18next'
 import { getTheme } from '@/hooks/useTheme'
@@ -15,6 +15,7 @@ import { AccountPanel } from '../account/AccountPanel'
 import { AppAppearanceSettings } from '../settings/AppAppearanceSettings'
 import { AppRouteModeSwitch } from '../settings/AppRouteModeSwitch'
 import { PassengerHistoryDetailPanel } from './PassengerHistoryDetailPanel'
+import { PassengerPaymentMethodsPanel } from './PassengerPaymentMethodsPanel'
 import type { TripDetailResponse } from '../../api/trips'
 import {
   AppMenuBody,
@@ -33,6 +34,7 @@ export type PassengerMenuScreen =
   | 'history'
   | 'history_detail'
   | 'account'
+  | 'payments'
   | 'share_app'
   | 'settings'
 
@@ -64,7 +66,7 @@ export function PassengerSideMenu({
   onHistoryTripSelect: (tripId: string) => void
 }) {
   const { t } = useTranslation('passenger')
-  const { sessionDisplayName, sessionPhone, logout } = useAuth()
+  const { sessionDisplayName, sessionPhone, logout, token } = useAuth()
 
   const shareUrl = useMemo(() => {
     try {
@@ -144,6 +146,13 @@ export function PassengerSideMenu({
                 active={hl === 'account'}
                 onClick={() => onScreenChange('account')}
               />
+              <AppMenuRow
+                label={t('nav.payments')}
+                icon={<CreditCard className="h-4 w-4" />}
+                active={hl === 'account'}
+                testId="passenger-menu-payments"
+                onClick={() => onScreenChange('payments')}
+              />
             </AppMenuSection>
             <AppMenuSection title={t('sideMenu.sectionApp')}>
               <AppMenuRow
@@ -201,6 +210,10 @@ export function PassengerSideMenu({
         ) : screen === 'account' ? (
           <div className="space-y-3">
             <AccountPanel />
+          </div>
+        ) : screen === 'payments' ? (
+          <div className="space-y-3">
+            {token ? <PassengerPaymentMethodsPanel token={token} /> : null}
           </div>
         ) : screen === 'history_detail' ? (
           <PassengerHistoryDetailPanel

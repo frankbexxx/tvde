@@ -78,7 +78,11 @@ import { PassengerStatusCard } from './PassengerStatusCard'
 import { PassengerCancelPanel } from './PassengerCancelPanel'
 import { EmergencySosButton, EmergencySosPanel } from '../emergency/EmergencySosPanel'
 import { isPassengerEmergencyStatus } from '../emergency/emergencyShare'
-import { PassengerPaymentConfirmCard } from './PassengerPaymentConfirmCard'
+import {
+  formatPaymentMethodLabel,
+  getDefaultPaymentMethod,
+  type PassengerPaymentMethod,
+} from '../../api/payments'
 import {
   getPassengerBannerState,
   humanizeCancelError,
@@ -158,7 +162,7 @@ export function PassengerDashboard() {
   const passengerNavActive = useMemo((): PassengerShellTab => {
     if (!passengerMenuOpen) return 'home'
     if (passengerMenuScreen === 'history' || passengerMenuScreen === 'history_detail') return 'history'
-    if (passengerMenuScreen === 'account') return 'account'
+    if (passengerMenuScreen === 'account' || passengerMenuScreen === 'payments') return 'account'
     return 'menu'
   }, [passengerMenuOpen, passengerMenuScreen])
 
@@ -262,6 +266,7 @@ export function PassengerDashboard() {
   const [geoLoading, setGeoLoading] = useState(false)
   const [destinationCandidate, setDestinationCandidate] = useState<GeocodeSuggestion | null>(null)
   const [mapRecenterKey, setMapRecenterKey] = useState(0)
+  const [defaultPaymentMethod, setDefaultPaymentMethod] = useState<PassengerPaymentMethod | null>(null)
   /** Mobile: search field focused+typing → expand sheet / hide map CTA. */
   const [placeSearchUiActive, setPlaceSearchUiActive] = useState(false)
   /** P3: snapshot do POST /trips até o primeiro GET alinhar. */
@@ -287,6 +292,24 @@ export function PassengerDashboard() {
     setPassengerCancelPreset('')
     setPassengerCancelOther('')
   }, [activeTripId])
+
+  useEffect(() => {
+    if (!token) {
+      setDefaultPaymentMethod(null)
+      return
+    }
+    let cancelled = false
+    void getDefaultPaymentMethod(token)
+      .then((m) => {
+        if (!cancelled) setDefaultPaymentMethod(m)
+      })
+      .catch(() => {
+        if (!cancelled) setDefaultPaymentMethod(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [token, passengerMenuScreen])
 
   /** PASSENGER-REQUEST-TIMEOUT-UX-1: reconcile with GET /trips/active (Driver #398 pattern). */
   const restorePassengerActiveTrip = useCallback(async (): Promise<string | null> => {
@@ -1589,10 +1612,24 @@ export function PassengerDashboard() {
                     onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
                     onConfirmTrip={handleRequestTrip}
                     confirmTripPending={creating}
+                    paymentMethodLabel={
+                      defaultPaymentMethod
+                        ? formatPaymentMethodLabel(defaultPaymentMethod)
+                        : import.meta.env.VITE_STRIPE_MOCK === 'true'
+                          ? t('payments.defaultBadge')
+                          : null
+                    }
+                    onPaymentMethods={() => {
+                      setPassengerMenuOpen(true)
+                      setPassengerMenuScreen('payments')
+                    }}
                     confirmBlockedReason={
                       pickupDestinationTooClose
                         ? t('planner.confirmTooClose')
-                        : null
+                        : import.meta.env.VITE_STRIPE_MOCK !== 'true' &&
+                            !defaultPaymentMethod
+                          ? t('payments.missingBlocked')
+                          : null
                     }
                     visualWeight={a021Layout.panel}
                     inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
@@ -1639,17 +1676,6 @@ export function PassengerDashboard() {
                         <div className="flex justify-end">
                           <EmergencySosButton onClick={() => setEmergencySosOpen(true)} />
                         </div>
-                      ) : null}
-                      {activeTrip.payment_status === 'processing' &&
-                        typeof activeTrip.payment_intent_client_secret === 'string' &&
-                        activeTrip.payment_intent_client_secret.length > 0 ? (
-                        <PassengerPaymentConfirmCard
-                          tripId={activeTrip.trip_id}
-                          clientSecret={activeTrip.payment_intent_client_secret}
-                          token={token ?? ''}
-                          onConfirmed={() => void refetchActiveTrip()}
-                          onSkip={() => void refetchActiveTrip()}
-                        />
                       ) : null}
                       {passengerTripPrimaryInOverlay}
                     </div>

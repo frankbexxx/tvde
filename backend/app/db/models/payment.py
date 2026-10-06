@@ -72,6 +72,11 @@ class Payment(Base):
         nullable=True,
         comment="Stripe PaymentIntent identifier, when available.",
     )
+    stripe_payment_method_id: Mapped[str | None] = mapped_column(
+        String(128),
+        nullable=True,
+        comment="PaymentMethod id attached at accept (detach guard).",
+    )
     currency: Mapped[str] = mapped_column(
         String(3),
         nullable=False,

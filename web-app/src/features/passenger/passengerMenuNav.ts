@@ -30,7 +30,7 @@ export function passengerBottomNavTransition(
 export function passengerRootHighlightKey(screen: PassengerMenuScreen): string | null {
   if (screen === 'root') return null
   if (screen === 'history' || screen === 'history_detail' || screen === 'share_app') return 'trips'
-  if (screen === 'account') return 'account'
+  if (screen === 'account' || screen === 'payments') return 'account'
   if (screen === 'settings') return 'settings'
   return null
 }

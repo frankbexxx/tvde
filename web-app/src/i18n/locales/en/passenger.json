@@ -4,12 +4,14 @@
     "home": "Home",
     "history": "History",
     "account": "Account",
+    "payments": "Payments",
     "menu": "Menu"
   },
   "menuTitle": {
     "history": "History",
     "history_detail": "Trip details",
     "account": "Account",
+    "payments": "Payments",
     "share_app": "Share app",
     "settings": "Settings",
     "root": "Menu"
@@ -82,6 +84,29 @@
     "confirmPickup": "Confirm pickup",
     "confirmDestination": "Confirm destination",
     "clear": "Clear"
+  },
+  "payments": {
+    "title": "Payment methods",
+    "subtitle": "Add a card before requesting a trip. We never ask for card details during the trip.",
+    "loading": "Loading…",
+    "empty": "No saved card yet.",
+    "defaultBadge": "Default",
+    "setDefault": "Set as default",
+    "remove": "Remove",
+    "addCard": "Add card",
+    "saveCard": "Save card",
+    "saving": "Saving…",
+    "cardSaved": "Card saved.",
+    "addFailed": "Could not add the card.",
+    "loadFailed": "Could not load payment methods.",
+    "setDefaultFailed": "Could not set the default card.",
+    "removeFailed": "Could not remove the card.",
+    "inUse": "This card is linked to an active trip.",
+    "scaRequired": "Complete bank authentication to finish.",
+    "lineLabel": "Payment",
+    "change": "Change",
+    "addRequired": "Add payment method",
+    "missingBlocked": "Add a payment method before confirming the trip."
   },
   "statusCard": {
     "submittingTitle": "Sending request…",

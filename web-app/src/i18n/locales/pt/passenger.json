@@ -4,12 +4,14 @@
     "home": "Início",
     "history": "Histórico",
     "account": "Conta",
+    "payments": "Pagamentos",
     "menu": "Menu"
   },
   "menuTitle": {
     "history": "Histórico",
     "history_detail": "Detalhe da viagem",
     "account": "Conta",
+    "payments": "Pagamentos",
     "share_app": "Partilhar app",
     "settings": "Definições",
     "root": "Menu"
@@ -82,6 +84,29 @@
     "confirmPickup": "Confirmar recolha",
     "confirmDestination": "Confirmar destino",
     "clear": "Limpar"
+  },
+  "payments": {
+    "title": "Métodos de pagamento",
+    "subtitle": "Adiciona um cartão antes de pedir a viagem. Não pedimos dados durante a viagem.",
+    "loading": "A carregar…",
+    "empty": "Ainda sem cartão guardado.",
+    "defaultBadge": "Predefinido",
+    "setDefault": "Usar como predefinido",
+    "remove": "Remover",
+    "addCard": "Adicionar cartão",
+    "saveCard": "Guardar cartão",
+    "saving": "A guardar…",
+    "cardSaved": "Cartão guardado.",
+    "addFailed": "Não foi possível adicionar o cartão.",
+    "loadFailed": "Não foi possível carregar os métodos de pagamento.",
+    "setDefaultFailed": "Não foi possível definir o cartão predefinido.",
+    "removeFailed": "Não foi possível remover o cartão.",
+    "inUse": "Este cartão está associado a uma viagem activa.",
+    "scaRequired": "Confirma a autenticação do banco para concluir.",
+    "lineLabel": "Pagamento",
+    "change": "Alterar",
+    "addRequired": "Adicionar método de pagamento",
+    "missingBlocked": "Adiciona um método de pagamento antes de confirmar a viagem."
   },
   "statusCard": {
     "submittingTitle": "A enviar pedido…",
