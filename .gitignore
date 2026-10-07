@@ -54,6 +54,9 @@ tmp/
 temp/
 _temp/
 
+# Dev local — Stripe listen whsec (gerado pelo launcher; nunca commitar)
+.dev-local/
+
 # Word locks + DOCX research Perplexity (não normativo — nunca commit)
 ~$*
 docs/legal/research/docx/

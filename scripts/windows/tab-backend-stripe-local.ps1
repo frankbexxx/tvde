@@ -42,14 +42,17 @@ do {
 } while (-not $sk)
 $env:STRIPE_SECRET_KEY = $sk
 
-do {
-    $wh = Read-Host 'STRIPE_WEBHOOK_SECRET (whsec_... da aba Stripe_Listen)'
-    if ($wh -notmatch '^whsec_') {
-        Write-Host 'Esperado prefixo whsec_' -ForegroundColor Red
-        $wh = $null
-    }
-} while (-not $wh)
+. (Join-Path $lib 'Get-TvdeDevLocalPaths.ps1')
+. (Join-Path $lib 'Wait-TvdeStripeWebhookSecret.ps1')
+
+$secretPath = Get-TvdeStripeWebhookSecretPath -RepoRoot $root
+Write-Host 'A aguardar whsec automatico (aba Stripe_Listen / stripe listen)...' -ForegroundColor Cyan
+$wh = Wait-TvdeStripeWebhookSecret -SecretPath $secretPath -TimeoutSeconds 180
+if (-not $wh) {
+    throw 'INCOMPLETO: whsec nao recebido — confirma stripe listen e stripe login.'
+}
 $env:STRIPE_WEBHOOK_SECRET = $wh
+Write-Host 'STRIPE_WEBHOOK_SECRET: alinhado ao listener (sessao, nao logado).' -ForegroundColor Green
 
 Write-Host ''
 Write-Host 'A correr diagnostico runtime seguro...' -ForegroundColor Cyan

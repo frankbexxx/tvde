@@ -57,6 +57,18 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
         out["require_pending_approval"] = settings.require_pending_approval()
         out["enforce_pt_phone"] = settings.enforce_pt_phone()
         out["enable_demo_users"] = settings.enable_demo_users()
+        if settings.dev_tools_router_enabled():
+            sk = (settings.STRIPE_SECRET_KEY or "").strip()
+            wh = (settings.STRIPE_WEBHOOK_SECRET or "").strip()
+            stripe_mock = bool(getattr(settings, "STRIPE_MOCK", False))
+            stripe_test = sk.startswith("sk_test_")
+            stripe_webhook_set = wh.startswith("whsec_")
+            out["stripe_mock"] = stripe_mock
+            out["stripe_test_mode"] = stripe_test
+            out["stripe_webhook_secret_set"] = stripe_webhook_set
+            out["stripe_e2e_ready"] = (
+                (not stripe_mock) and stripe_test and stripe_webhook_set
+            )
     return out
 
 
