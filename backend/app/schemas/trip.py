@@ -245,6 +245,33 @@ class TripHistoryItem(BaseModel):
     vehicle_category: Optional[str] = None
 
 
+class PassengerTripHistoryItem(BaseModel):
+    """Passenger GET /trips/history — trip + payment summary (no ops fields)."""
+
+    trip_id: str
+    status: TripStatus
+    origin_lat: float
+    origin_lng: float
+    destination_lat: float
+    destination_lng: float
+    estimated_price: float
+    final_price: Optional[float] = None
+    completed_at: Optional[datetime] = None
+    payment_status: Optional[PaymentStatus] = None
+    payment_total_amount: Optional[float] = None
+    payment_method_display: Optional[str] = None
+    payment_method_unavailable: bool = False
+    intermediation_rate_percent: Optional[float] = None
+    cancellation_reason: Optional[str] = None
+    cancellation_reason_code: Optional[str] = None
+    cancelled_by: Optional[str] = None
+    passenger_count: int = 1
+    has_pet: bool = False
+    is_assistance_animal: bool = False
+    pet_surcharge: Optional[float] = None
+    vehicle_category: Optional[str] = None
+
+
 class TripDetailResponse(BaseModel):
     """Full trip detail with optional payment data."""
 
@@ -265,6 +292,18 @@ class TripDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     payment_status: Optional[PaymentStatus] = None
+    payment_total_amount: Optional[float] = Field(
+        default=None,
+        description="Total charged (Payment.total_amount) when present.",
+    )
+    payment_method_display: Optional[str] = Field(
+        default=None,
+        description="Brand •••• last4 from passenger wallet cache.",
+    )
+    payment_method_unavailable: bool = Field(
+        default=False,
+        description="True when Payment had a PM id but wallet row is gone.",
+    )
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
@@ -325,3 +364,46 @@ class TripDetailResponse(BaseModel):
         default_factory=list,
         description="Rejected offers with attendable reasons (Partner/Admin audit).",
     )
+
+
+class PassengerTripDetailResponse(BaseModel):
+    """Passenger GET /trips/:id — trip detail without ops/finance internals."""
+
+    trip_id: str
+    status: TripStatus
+    passenger_id: str
+    driver_id: Optional[str] = None
+    origin_lat: float
+    origin_lng: float
+    destination_lat: float
+    destination_lng: float
+    estimated_price: float
+    final_price: Optional[float] = None
+    distance_km: Optional[float] = None
+    duration_min: Optional[float] = None
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    payment_status: Optional[PaymentStatus] = None
+    payment_total_amount: Optional[float] = None
+    payment_method_display: Optional[str] = None
+    payment_method_unavailable: bool = False
+    intermediation_rate_percent: Optional[float] = None
+    driver_location: Optional[DriverLocationResponse] = None
+    driver_rating: Optional[int] = None
+    passenger_rating: Optional[int] = None
+    cancellation_reason: Optional[str] = None
+    cancellation_reason_code: Optional[str] = None
+    cancelled_by: Optional[str] = None
+    payment_intent_client_secret: Optional[str] = None
+    vehicle_category: Optional[str] = None
+    has_pet: bool = False
+    pet_size: Optional[str] = None
+    pet_transport: Optional[str] = None
+    is_assistance_animal: bool = False
+    pet_occupies_seat: bool = False
+    passenger_count: int = 1
+    pet_surcharge: Optional[float] = None
+    price_breakdown: Optional[PriceBreakdownSchema] = None
+    vehicle_plate: Optional[str] = None

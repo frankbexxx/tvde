@@ -1,9 +1,16 @@
 """Shared trip-to-response serializers. Used by passenger, driver, admin routers."""
 
 import logging
+import uuid
+
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.models.trip import Trip
+from app.services.passenger_trip_payment_view import (
+    passenger_payment_total,
+    resolve_passenger_payment_method_display,
+)
 from app.models.enums import PaymentStatus
 from app.services.stripe_service import retrieve_payment_intent
 from app.utils.stripe_links import stripe_payment_intent_dashboard_url
@@ -15,6 +22,8 @@ from app.services.pet_reporting import (
     vehicle_plate,
 )
 from app.schemas.trip import (
+    PassengerTripDetailResponse,
+    PassengerTripHistoryItem,
     PriceBreakdownSchema,
     TripDetailResponse,
     TripHistoryItem,
@@ -131,6 +140,81 @@ def trip_to_history_item(
         pet_surcharge=_pet_surcharge_value(trip),
         vehicle_category=getattr(trip, "vehicle_category", None),
     )
+
+
+def trip_to_passenger_history_item(
+    db: Session,
+    passenger_id: uuid.UUID,
+    trip: Trip,
+) -> PassengerTripHistoryItem:
+    payment = trip.payment
+    display, unavailable = resolve_passenger_payment_method_display(
+        db, passenger_id, payment
+    )
+    return PassengerTripHistoryItem(
+        trip_id=str(trip.id),
+        status=trip.status,
+        origin_lat=float(trip.origin_lat),
+        origin_lng=float(trip.origin_lng),
+        destination_lat=float(trip.destination_lat),
+        destination_lng=float(trip.destination_lng),
+        estimated_price=float(trip.estimated_price),
+        final_price=float(trip.final_price) if trip.final_price is not None else None,
+        completed_at=trip.completed_at,
+        payment_status=payment.status if payment else None,
+        payment_total_amount=passenger_payment_total(payment),
+        payment_method_display=display,
+        payment_method_unavailable=unavailable,
+        intermediation_rate_percent=intermediation_rate_percent_api(trip),
+        cancellation_reason=_passenger_visible_cancellation_reason(trip),
+        cancellation_reason_code=_cancellation_reason_code(trip),
+        cancelled_by=getattr(trip, "cancelled_by", None),
+        passenger_count=int(getattr(trip, "passenger_count", None) or 1),
+        has_pet=bool(getattr(trip, "has_pet", False)),
+        is_assistance_animal=bool(getattr(trip, "is_assistance_animal", False)),
+        pet_surcharge=_pet_surcharge_value(trip),
+        vehicle_category=getattr(trip, "vehicle_category", None),
+    )
+
+
+_PASSENGER_DETAIL_EXCLUDE = frozenset(
+    {
+        "commission_amount",
+        "driver_payout",
+        "stripe_payment_intent_id",
+        "stripe_dashboard_url",
+        "offer_rejections",
+        "cancellation_reason_detail",
+    }
+)
+
+
+def trip_to_passenger_detail(
+    db: Session,
+    passenger_id: uuid.UUID,
+    trip: Trip,
+    *,
+    driver_location: DriverLocationResponse | None = None,
+    include_passenger_payment_client_secret: bool = False,
+) -> PassengerTripDetailResponse:
+    detail = trip_to_detail(
+        trip,
+        include_stripe_pi=False,
+        driver_location=driver_location,
+        include_passenger_payment_client_secret=include_passenger_payment_client_secret,
+        include_cancellation_detail=False,
+        offer_rejections=None,
+        include_vehicle_plate=False,
+    )
+    payment = trip.payment
+    display, unavailable = resolve_passenger_payment_method_display(
+        db, passenger_id, payment
+    )
+    payload = detail.model_dump(exclude=_PASSENGER_DETAIL_EXCLUDE)
+    payload["payment_total_amount"] = passenger_payment_total(payment)
+    payload["payment_method_display"] = display
+    payload["payment_method_unavailable"] = unavailable
+    return PassengerTripDetailResponse.model_validate(payload)
 
 
 def trip_to_detail(

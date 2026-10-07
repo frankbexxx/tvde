@@ -7,7 +7,7 @@ import { themeUsesFlagAccent } from '@/design-system/ambianceMeta'
 import { useAuth } from '../../context/AuthContext'
 import type { TripHistoryItem } from '../../api/trips'
 import { formatPickup, formatDestination } from '../../utils/format'
-import { passengerTripStatusLabel } from '../../constants/tripStatusLabels'
+import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { passengerPlaceLabel } from './passengerPlaceLabel'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
 import { historyStatusDotColor } from '../../constants/tripStatus'
@@ -269,6 +269,14 @@ export function PassengerSideMenu({
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">{passengerTripStatusLabel(trip.status)}</p>
+                      {trip.payment_status ? (
+                        <p
+                          className="text-xs text-muted-foreground"
+                          data-testid={`passenger-history-payment-${trip.trip_id}`}
+                        >
+                          {paymentStatusLabel(trip.payment_status)}
+                        </p>
+                      ) : null}
                       <CancellationReasonMuted reason={trip.cancellation_reason} className="mt-0" />
                     </button>
                   </li>

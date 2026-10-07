@@ -1,4 +1,5 @@
 import time
+import uuid
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
@@ -10,20 +11,20 @@ from app.api.rate_limit import check_request_trip_rate_limit
 from app.db.models.trip import Trip
 from app.schemas.driver import DriverLocationResponse
 from app.schemas.trip import (
+    PassengerTripDetailResponse,
+    PassengerTripHistoryItem,
     PriceBreakdownSchema,
     TripAttachPaymentMethodRequest,
     TripCancelRequest,
     TripCreateRequest,
     TripCreateResponse,
-    TripDetailResponse,
-    TripHistoryItem,
     TripRateRequest,
     TripStatusResponse,
 )
 from app.api.serializers import (
     intermediation_rate_percent_api,
-    trip_to_detail,
-    trip_to_history_item,
+    trip_to_passenger_detail,
+    trip_to_passenger_history_item,
     trip_to_status_response,
 )
 from app.services.driver_location import (
@@ -45,40 +46,42 @@ from app.services.trips import (
 router = APIRouter(prefix="/trips", tags=["passenger"])
 
 
-@router.get("/history", response_model=List[TripHistoryItem])
+@router.get("/history", response_model=List[PassengerTripHistoryItem])
 async def trip_history(
     user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> List[TripHistoryItem]:
+) -> List[PassengerTripHistoryItem]:
     """Completed trips for passenger. Read-only."""
     trips = list_completed_trips_for_passenger(db=db, passenger_id=user.user_id)
-    return [trip_to_history_item(t, include_stripe_pi=False) for t in trips]
+    pid = uuid.UUID(user.user_id)
+    return [trip_to_passenger_history_item(db, pid, t) for t in trips]
 
 
-@router.get("/active", response_model=Optional[TripDetailResponse])
+@router.get("/active", response_model=Optional[PassengerTripDetailResponse])
 async def get_active_trip(
     user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> Optional[TripDetailResponse]:
+) -> Optional[PassengerTripDetailResponse]:
     """Current non-terminal trip for passenger dashboard bootstrap after reload."""
     trip = get_current_active_trip_for_passenger(db=db, passenger_id=user.user_id)
     if trip is None:
         return None
     emb = driver_location_embed_for_trip_detail(db, trip)
-    return trip_to_detail(
+    return trip_to_passenger_detail(
+        db,
+        uuid.UUID(user.user_id),
         trip,
-        include_stripe_pi=False,
         driver_location=emb,
         include_passenger_payment_client_secret=True,
     )
 
 
-@router.get("/{trip_id}", response_model=TripDetailResponse)
+@router.get("/{trip_id}", response_model=PassengerTripDetailResponse)
 async def get_trip_detail(
     trip_id: str,
     user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> TripDetailResponse:
+) -> PassengerTripDetailResponse:
     """Full trip detail for passenger (must own). Read-only."""
     trip = get_trip_for_passenger(
         db=db,
@@ -86,9 +89,10 @@ async def get_trip_detail(
         trip_id=trip_id.strip(),
     )
     emb = driver_location_embed_for_trip_detail(db, trip)
-    return trip_to_detail(
+    return trip_to_passenger_detail(
+        db,
+        uuid.UUID(user.user_id),
         trip,
-        include_stripe_pi=False,
         driver_location=emb,
         include_passenger_payment_client_secret=True,
     )
@@ -169,13 +173,13 @@ async def create_trip(
     )
 
 
-@router.post("/{trip_id}/payment-method", response_model=TripDetailResponse)
+@router.post("/{trip_id}/payment-method", response_model=PassengerTripDetailResponse)
 async def attach_trip_payment_method(
     trip_id: str,
     payload: TripAttachPaymentMethodRequest,
     user: UserContext = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> TripDetailResponse:
+) -> PassengerTripDetailResponse:
     """Attach card PaymentMethod to the trip PaymentIntent (no early confirm)."""
     trip = attach_payment_method_for_passenger_trip(
         db=db,
@@ -184,9 +188,10 @@ async def attach_trip_payment_method(
         payment_method_id=payload.payment_method_id,
     )
     emb = driver_location_embed_for_trip_detail(db, trip)
-    return trip_to_detail(
+    return trip_to_passenger_detail(
+        db,
+        uuid.UUID(user.user_id),
         trip,
-        include_stripe_pi=False,
         driver_location=emb,
         include_passenger_payment_client_secret=True,
     )
