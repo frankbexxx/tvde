@@ -237,10 +237,9 @@ class Settings(BaseSettings):
     def effective_stripe_webhook_secret(self) -> str | None:
         """Webhook signing secret for signature verification.
 
-        Local Dev + Stripe TEST real: prefer ``.dev-local/stripe-webhook-secret`` written by
-        ``stripe listen`` (launcher) so the backend stays aligned even when ``backend/.env``
-        holds a stale ``whsec`` or tabs race on startup.
-        Deployed / mock: use ``STRIPE_WEBHOOK_SECRET`` from env only.
+        Local Dev + Stripe TEST real: ``.dev-local/stripe-webhook-secret`` only when it matches
+        the active supervised listener session (see ``stripe-listen.json``). No fallback to stale
+        ``backend/.env`` whsec. Deployed / mock: ``STRIPE_WEBHOOK_SECRET`` from env only.
         """
         if self.is_deployed_environment() or bool(self.STRIPE_MOCK):
             wh = (self.STRIPE_WEBHOOK_SECRET or "").strip()
@@ -248,16 +247,24 @@ class Settings(BaseSettings):
         if not self.dev_tools_router_enabled():
             wh = (self.STRIPE_WEBHOOK_SECRET or "").strip()
             return wh or None
-        dev_file = _BASE_DIR.parent / ".dev-local" / "stripe-webhook-secret"
+        from app.services.stripe_e2e_dev import _dev_local_paths, _read_json
+
+        paths = _dev_local_paths(self)
+        listen = _read_json(paths.listen)
+        if not listen or listen.get("state") != "ready":
+            return None
+        session_id = str(listen.get("session_id") or "")
+        whsec_session = str(listen.get("whsec_session_id") or "")
+        if not session_id or whsec_session != session_id:
+            return None
         try:
-            if dev_file.is_file():
-                raw = dev_file.read_text(encoding="utf-8").strip()
+            if paths.secret.is_file():
+                raw = paths.secret.read_text(encoding="utf-8").strip()
                 if raw.startswith("whsec_"):
                     return raw
         except OSError:
-            pass
-        wh = (self.STRIPE_WEBHOOK_SECRET or "").strip()
-        return wh or None
+            return None
+        return None
 
     def resolved_enable_debug_routes(self) -> bool:
         """Effective debug-routes capability (explicit flag or BETA_MODE compat)."""

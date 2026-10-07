@@ -110,6 +110,25 @@ async def stripe_webhook(
     try:
         # One PI should map to one row; duplicates (tests / bad data) must not 500.
         pi_key = str(payment_intent_id)
+
+        # L-PAY-01: claim delivery before payment lookup (probe / unknown PI still idempotent).
+        if stripe_event_id:
+            ins = (
+                insert(StripeWebhookEvent)
+                .values(stripe_event_id=str(stripe_event_id))
+                .on_conflict_do_nothing()
+            )
+            ins_result = cast(CursorResult[Any], db.execute(ins))
+            if ins_result.rowcount == 0:
+                logger.info(
+                    "webhook: duplicate Stripe delivery (evt idempotent) "
+                    "stripe_event_id=%s event_type=%s",
+                    stripe_event_id,
+                    event_type,
+                )
+                db.rollback()
+                return {"status": "ok"}
+
         payment = db.execute(
             select(Payment)
             .options(joinedload(Payment.trip))
@@ -131,26 +150,8 @@ async def stripe_webhook(
                 payment_intent_id=str(payment_intent_id),
                 stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
             )
+            db.commit()
             return {"status": "ok"}
-
-        # L-PAY-01: claim delivery + Payment update in ONE transaction.
-        # ACK 2xx only after commit; DB errors → rollback + 5xx so Stripe retries.
-        if stripe_event_id:
-            ins = (
-                insert(StripeWebhookEvent)
-                .values(stripe_event_id=str(stripe_event_id))
-                .on_conflict_do_nothing()
-            )
-            ins_result = cast(CursorResult[Any], db.execute(ins))
-            if ins_result.rowcount == 0:
-                logger.info(
-                    "webhook: duplicate Stripe delivery (evt idempotent) "
-                    "stripe_event_id=%s event_type=%s",
-                    stripe_event_id,
-                    event_type,
-                )
-                db.rollback()
-                return {"status": "ok"}
 
         # Manual capture: only payment_intent.succeeded fires after capture.
         if event_type == "payment_intent.succeeded":

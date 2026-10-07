@@ -19,7 +19,23 @@ function Get-TvdeStripeWebhookStatePath {
         [Parameter(Mandatory = $true)]
         [string]$RepoRoot
     )
-    Join-Path (Get-TvdeDevLocalDir -RepoRoot $RepoRoot) 'stripe-webhook.state'
+    Join-Path (Get-TvdeDevLocalDir -RepoRoot $RepoRoot) 'stripe-listen.json'
+}
+
+function Get-TvdeStripeListenJsonPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoRoot
+    )
+    Join-Path (Get-TvdeDevLocalDir -RepoRoot $RepoRoot) 'stripe-listen.json'
+}
+
+function Get-TvdeStripeE2EProbePath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$RepoRoot
+    )
+    Join-Path (Get-TvdeDevLocalDir -RepoRoot $RepoRoot) 'stripe-e2e-probe.json'
 }
 
 function Set-TvdeStripeWebhookState {

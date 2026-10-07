@@ -42,16 +42,14 @@ do {
 } while (-not $sk)
 $env:STRIPE_SECRET_KEY = $sk
 
-. (Join-Path $lib 'Get-TvdeDevLocalPaths.ps1')
-. (Join-Path $lib 'Wait-TvdeStripeWebhookSecret.ps1')
+. (Join-Path $lib 'Wait-TvdeStripeE2EReady.ps1')
 
-Write-Host 'A aguardar whsec automatico (aba Stripe_Listen / stripe listen)...' -ForegroundColor Cyan
-$wh = Wait-TvdeStripeWebhookSecret -RepoRoot $root -TimeoutSeconds 180
-if (-not $wh) {
-    throw 'INCOMPLETO: whsec nao recebido — confirma stripe listen e stripe login.'
+Write-Host 'A aguardar Stripe TEST E2E READY (supervisor + probe)...' -ForegroundColor Cyan
+$wait = Wait-TvdeStripeE2EReady -TimeoutSeconds 300
+if (-not $wait.ready) {
+    throw "INCOMPLETO: Stripe E2E NOT READY ($($wait.reason)) — confirma supervisor stripe listen."
 }
-$env:STRIPE_WEBHOOK_SECRET = $wh
-Write-Host 'STRIPE_WEBHOOK_SECRET: alinhado ao listener (sessao, nao logado).' -ForegroundColor Green
+Write-Host 'Stripe TEST E2E: READY — backend usa whsec da sessao (.dev-local, nao .env).' -ForegroundColor Green
 
 Write-Host ''
 Write-Host 'A correr diagnostico runtime seguro...' -ForegroundColor Cyan

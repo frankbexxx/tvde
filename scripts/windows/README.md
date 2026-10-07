@@ -29,10 +29,10 @@ Se as abas do Windows Terminal mostram `Administrator: Backend_Dev` (etc.), a ca
 
 Com `STRIPE_MOCK=false` e `sk_test_*` em `backend/.env`, o launcher Dev:
 
-1. Arranca `stripe listen` na aba **Stripe_Webhook** (forward para `/webhooks/stripe`).
-2. Grava o `whsec` em `.dev-local/stripe-webhook-secret` (gitignored).
-3. A aba **Backend_Dev** espera `stripe-webhook.state=ready`, injecta o secret na sessão e o backend valida webhooks com o ficheiro `.dev-local` (não fica preso a `whsec` stale do `.env`).
+1. Arranca um **supervisor** `stripe listen` na aba **Stripe_Webhook** (PID, `session_id`, heartbeat em `.dev-local/stripe-listen.json`).
+2. Publica o `whsec` da sessão em `.dev-local/stripe-webhook-secret` (gitignored; **não** usa `backend/.env`).
+3. A aba **Backend_Dev** espera **`stripe_e2e_ready=true`** (listener vivo + probe E2E na sessão actual).
 
-Painel **Utils_Dev**: Postgres / Backend / Frontend / Stripe TEST webhook.
+Painel **Utils_Dev**: Postgres / Backend / Frontend / Stripe TEST listener / **Stripe E2E READY|NOT READY** + `reason`.
 
 Ver `docs/ops/O_STRIPE_1_RUNBOOK.md`.

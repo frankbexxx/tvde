@@ -17,81 +17,73 @@ function Show-TvdeDevEnvironmentStatus {
         $profileError = $_.Exception.Message
     }
 
-    $pg = '???'
+    $pg = 'FAIL'
     try {
-        $docker = Get-Command docker -ErrorAction Stop
+        $null = Get-Command docker -ErrorAction Stop
         $null = docker inspect ride_postgres 2>$null
         if ($LASTEXITCODE -eq 0) {
             $running = docker inspect -f '{{.State.Running}}' ride_postgres 2>$null
-            $pg = if ($running -eq 'true') { 'OK' } else { 'PARADO' }
-        } else {
-            $pg = 'SEM CONTAINER'
+            $pg = if ($running -eq 'true') { 'OK' } else { 'FAIL' }
         }
     } catch {
-        $pg = 'DOCKER?'
+        $pg = 'FAIL'
     }
 
-    $backend = '???'
-    $frontend = '???'
-    $stripeWh = 'N/A'
+    $backend = 'FAIL'
+    $frontend = 'FAIL'
+    $stripeListener = 'N/A'
+    $stripeE2E = 'N/A'
     $stripeDetail = ''
+    $diag = $null
 
     try {
-        $health = Invoke-RestMethod -Uri "$BackendBase/health?diagnostic=1" -TimeoutSec 3
-        if ($health.status -eq 'ok') { $backend = 'OK' }
+        $diag = Invoke-RestMethod -Uri "$BackendBase/health?diagnostic=1" -TimeoutSec 3
+        if ($diag.status -eq 'ok') { $backend = 'OK' }
     } catch {
-        $backend = 'OFF'
+        $backend = 'FAIL'
     }
 
     try {
         $null = Invoke-WebRequest -Uri 'http://127.0.0.1:5173/' -TimeoutSec 3 -UseBasicParsing
         $frontend = 'OK'
     } catch {
-        $frontend = 'OFF'
+        $frontend = 'FAIL'
     }
 
     if ($profileError) {
-        $stripeWh = 'ERRO'
+        $stripeListener = 'FAIL'
+        $stripeE2E = 'NOT READY'
         $stripeDetail = $profileError
     } elseif ($profile -and $profile.RealStripeTest) {
-        $statePath = Get-TvdeStripeWebhookStatePath -RepoRoot $RepoRoot
-        if (Test-Path -LiteralPath $statePath) {
-            try {
-                $st = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-                switch ($st.state) {
-                    'ready' { $stripeWh = 'OK' }
-                    'starting' { $stripeWh = 'A ARRANCAR' }
-                    'failed' {
-                        $stripeWh = 'FALHOU'
-                        $stripeDetail = [string]$st.detail
-                    }
-                    default { $stripeWh = [string]$st.state }
-                }
-            } catch {
-                $stripeWh = '???'
+        if ($diag) {
+            if ($diag.stripe_listener_alive -eq $true) {
+                $stripeListener = 'OK'
+            } else {
+                $stripeListener = 'FAIL'
+            }
+            if ($diag.stripe_e2e_ready -eq $true) {
+                $stripeE2E = 'READY'
+            } else {
+                $stripeE2E = 'NOT READY'
+                $stripeDetail = [string]$diag.stripe_e2e_reason
             }
         } else {
-            $stripeWh = 'A ARRANCAR'
-        }
-        if ($backend -eq 'OK') {
-            try {
-                $h = Invoke-RestMethod -Uri "$BackendBase/health?diagnostic=1" -TimeoutSec 3
-                if ($h.stripe_e2e_ready -eq $false) {
-                    $stripeWh = 'INCOMPLETO'
-                    $stripeDetail = 'webhook secret nao alinhado no backend'
-                }
-            } catch { }
+            $stripeListener = 'FAIL'
+            $stripeE2E = 'NOT READY'
+            $stripeDetail = 'backend_down'
         }
     } elseif ($profile -and $profile.StripeMock) {
-        $stripeWh = 'N/A (mock)'
+        $stripeListener = 'N/A'
+        $stripeE2E = 'N/A (mock)'
     }
 
     Write-Host ''
     Write-Host '=== Ambiente Dev TVDE ===' -ForegroundColor Cyan
-    Write-Host "  Postgres          : $pg"
-    Write-Host "  Backend           : $backend"
-    Write-Host "  Frontend          : $frontend"
-    Write-Host "  Stripe TEST webhook : $stripeWh"
+    Write-Host "  Postgres            : $pg"
+    Write-Host "  Backend             : $backend"
+    Write-Host "  Frontend            : $frontend"
+    Write-Host "  Stripe TEST listener: $stripeListener"
+    Write-Host "  Stripe E2E          : $stripeE2E"
     if ($stripeDetail) {
         Write-Host "                      ($stripeDetail)" -ForegroundColor Yellow
     }

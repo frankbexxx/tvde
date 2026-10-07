@@ -25,7 +25,24 @@ from app.db.migrations_runner import upgrade_to_head  # noqa: E402
 from app.db.models.driver import Driver  # noqa: E402
 from app.db.session import SessionLocal  # noqa: E402
 from app.main import app  # noqa: E402
+from app.core.config import Settings  # noqa: E402
 from app.services.driver_documents import approved_driver_documents_blob  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _pytest_stripe_webhook_secret_from_env(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Pytest has no supervised listener; use STRIPE_WEBHOOK_SECRET when set."""
+    mod = getattr(request.module, "__name__", "")
+    if mod.endswith("test_stripe_webhook_dev_secret"):
+        return
+
+    def _effective(self: Settings) -> str | None:
+        wh = (self.STRIPE_WEBHOOK_SECRET or "").strip()
+        return wh or None
+
+    monkeypatch.setattr(Settings, "effective_stripe_webhook_secret", _effective)
 
 
 @event.listens_for(Driver, "before_insert")

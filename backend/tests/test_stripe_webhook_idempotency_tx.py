@@ -280,10 +280,10 @@ def test_webhook_amount_mismatch_keeps_processing_and_persists_marker(
         db.close()
 
 
-def test_webhook_payment_not_found_acks_without_marker(
+def test_webhook_payment_not_found_acks_with_marker(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """L-PAY-02 accepted design: unknown PI → ACK 200, no marker, anti-retry for orphans."""
+    """Unknown PI → ACK 200 + idempotent marker (E2E probe / orphan evt persistence)."""
     db = _db()
     try:
         monkeypatch.setattr(settings, "STRIPE_WEBHOOK_SECRET", "whsec_test", raising=False)
@@ -305,7 +305,7 @@ def test_webhook_payment_not_found_acks_without_marker(
             r = _post_webhook(client, event)
         assert r.status_code == 200
         assert r.json() == {"status": "ok"}
-        assert not _marker_exists(db, evt_id)
+        assert _marker_exists(db, evt_id)
         mock_log.assert_any_call(
             "stripe_webhook_payment_not_found_ack",
             event_type="payment_intent.succeeded",

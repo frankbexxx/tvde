@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import anyio
 from fastapi import APIRouter, HTTPException, status
@@ -30,7 +31,7 @@ async def root() -> dict:
 
 @router.get("/health", operation_id="health_check_get")
 @router.head("/health", operation_id="health_check_head")
-async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
+async def health_check(diagnostic: bool = False) -> dict[str, Any]:
     """Health check. diagnostic=1 adds config hints for simulator/tools.
 
     Aceita GET e HEAD. Monitores externos (UptimeRobot free tier) enviam HEAD
@@ -58,17 +59,11 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
         out["enforce_pt_phone"] = settings.enforce_pt_phone()
         out["enable_demo_users"] = settings.enable_demo_users()
         if settings.dev_tools_router_enabled():
+            from app.services.stripe_e2e_dev import evaluate_stripe_e2e_readiness
+
             sk = (settings.STRIPE_SECRET_KEY or "").strip()
-            wh = (settings.effective_stripe_webhook_secret() or "").strip()
-            stripe_mock = bool(getattr(settings, "STRIPE_MOCK", False))
-            stripe_test = sk.startswith("sk_test_")
-            stripe_webhook_set = wh.startswith("whsec_")
-            out["stripe_mock"] = stripe_mock
-            out["stripe_test_mode"] = stripe_test
-            out["stripe_webhook_secret_set"] = stripe_webhook_set
-            out["stripe_e2e_ready"] = (
-                (not stripe_mock) and stripe_test and stripe_webhook_set
-            )
+            out["stripe_test_mode"] = sk.startswith("sk_test_")
+            out.update(evaluate_stripe_e2e_readiness(settings).to_diagnostic_dict())
     return out
 
 
