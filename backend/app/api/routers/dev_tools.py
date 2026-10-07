@@ -482,12 +482,14 @@ async def dev_list_trips(db: Session = Depends(get_db)) -> list[dict]:
 @router.post("/stripe-e2e/probe")
 async def dev_stripe_e2e_probe() -> dict:
     """DEV-only: prove Stripe CLI → listen → webhook → stripe_webhook_events for current session."""
+    import anyio
+
     _require_dev()
     from app.services.stripe_e2e_dev import run_stripe_e2e_probe
 
     if settings.is_deployed_environment() or bool(settings.STRIPE_MOCK):
         raise HTTPException(status_code=404)
-    out = run_stripe_e2e_probe(settings)
+    out = await anyio.to_thread.run_sync(run_stripe_e2e_probe, settings)
     if not out.get("ok"):
         raise HTTPException(status_code=503, detail=out)
     return out

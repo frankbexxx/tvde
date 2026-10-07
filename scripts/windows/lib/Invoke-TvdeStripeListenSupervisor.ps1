@@ -58,11 +58,19 @@ function Invoke-TvdeStripeListenSupervisor {
     $secretPath = Get-TvdeStripeWebhookSecretPath -RepoRoot $RepoRoot
     $probePath = Get-TvdeStripeE2EProbePath -RepoRoot $RepoRoot
     $restarts = 0
+    $script:StripeProbeJob = $null
 
     while ($restarts -le $MaxRestarts) {
+        if ($script:StripeProbeJob) {
+            Stop-Job -Job $script:StripeProbeJob -ErrorAction SilentlyContinue
+            Remove-Job -Job $script:StripeProbeJob -Force -ErrorAction SilentlyContinue
+            $script:StripeProbeJob = $null
+        }
         $sessionId = [guid]::NewGuid().ToString('N')
         if (Test-Path -LiteralPath $probePath) { Remove-Item -LiteralPath $probePath -Force -ErrorAction SilentlyContinue }
         if (Test-Path -LiteralPath $secretPath) { Remove-Item -LiteralPath $secretPath -Force -ErrorAction SilentlyContinue }
+        Get-Process -Name stripe -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Milliseconds 500
 
         $startedAt = (Get-Date).ToUniversalTime().ToString('o')
         Write-TvdeStripeListenJson -RepoRoot $RepoRoot -Payload @{
@@ -78,79 +86,57 @@ function Invoke-TvdeStripeListenSupervisor {
 
         $whsecWritten = $false
         $probeDone = $false
-        $psi = New-Object System.Diagnostics.ProcessStartInfo
-        $psi.FileName = 'stripe'
-        $psi.Arguments = "listen --forward-to $ForwardTo"
-        $psi.UseShellExecute = $false
-        $psi.RedirectStandardOutput = $true
-        $psi.RedirectStandardError = $true
-        $psi.CreateNoWindow = $true
-
-        $proc = New-Object System.Diagnostics.Process
-        $proc.StartInfo = $psi
-        if (-not $proc.Start()) {
-            throw 'Falha ao arrancar stripe listen.'
-        }
-
-        Write-Host "[TVDE] stripe listen PID=$($proc.Id) session=$sessionId" -ForegroundColor Cyan
-
-        $readerOut = $proc.StandardOutput
-        $readerErr = $proc.StandardError
+        $listenPid = 0
         $lastHeartbeat = Get-Date
 
-        while (-not $proc.HasExited) {
-            while ($readerOut.Peek() -ge 0) {
-                $line = $readerOut.ReadLine()
-                if ($line) {
-                    Write-Host $line
-                    if (-not $whsecWritten -and $line -match '(whsec_[A-Za-z0-9]+)') {
-                        $sec = $Matches[1]
-                        Set-Content -LiteralPath $secretPath -Value $sec -Encoding utf8 -NoNewline
-                        $whsecWritten = $true
-                        $now = (Get-Date).ToUniversalTime().ToString('o')
-                        Write-TvdeStripeListenJson -RepoRoot $RepoRoot -Payload @{
-                            session_id       = $sessionId
-                            pid              = $proc.Id
-                            started_at       = $startedAt
-                            heartbeat_at     = $now
-                            state            = 'ready'
-                            forward_url      = $ForwardTo
-                            whsec_session_id = $sessionId
-                            detail           = 'forwarding'
-                        }
-                        Write-Host '[TVDE] whsec publicado para sessao actual (prefixo whsec_***).' -ForegroundColor Green
+        # Pipeline 2>&1 (como Start-TvdeStripeListen): Redirect+Peek no Windows nao recebe whsec.
+        $listenJob = Start-Job -ScriptBlock {
+            param($ForwardTo)
+            stripe listen --forward-to $ForwardTo 2>&1
+        } -ArgumentList $ForwardTo
+
+        Start-Sleep -Milliseconds 800
+        $stripeProc = Get-Process -Name stripe -ErrorAction SilentlyContinue | Sort-Object StartTime -Descending | Select-Object -First 1
+        if ($stripeProc) {
+            $listenPid = $stripeProc.Id
+            Write-Host "[TVDE] stripe listen PID=$listenPid session=$sessionId" -ForegroundColor Cyan
+        }
+
+        while ($listenJob.State -eq 'Running') {
+            $lines = Receive-Job -Job $listenJob -ErrorAction SilentlyContinue
+            foreach ($item in @($lines)) {
+                if (-not $item) { continue }
+                $line = $item.ToString()
+                Write-Host $line
+                if (-not $whsecWritten -and $line -match '(whsec_[A-Za-z0-9]+)') {
+                    $sec = $Matches[1]
+                    Set-Content -LiteralPath $secretPath -Value $sec -Encoding utf8 -NoNewline
+                    $whsecWritten = $true
+                    if (-not $listenPid -and $stripeProc) { $listenPid = $stripeProc.Id }
+                    if (-not $listenPid) {
+                        $sp = Get-Process -Name stripe -ErrorAction SilentlyContinue | Sort-Object StartTime -Descending | Select-Object -First 1
+                        if ($sp) { $listenPid = $sp.Id }
                     }
-                }
-            }
-            while ($readerErr.Peek() -ge 0) {
-                $line = $readerErr.ReadLine()
-                if ($line) {
-                    Write-Host $line
-                    if (-not $whsecWritten -and $line -match '(whsec_[A-Za-z0-9]+)') {
-                        $sec = $Matches[1]
-                        Set-Content -LiteralPath $secretPath -Value $sec -Encoding utf8 -NoNewline
-                        $whsecWritten = $true
-                        $now = (Get-Date).ToUniversalTime().ToString('o')
-                        Write-TvdeStripeListenJson -RepoRoot $RepoRoot -Payload @{
-                            session_id       = $sessionId
-                            pid              = $proc.Id
-                            started_at       = $startedAt
-                            heartbeat_at     = $now
-                            state            = 'ready'
-                            forward_url      = $ForwardTo
-                            whsec_session_id = $sessionId
-                            detail           = 'forwarding'
-                        }
-                        Write-Host '[TVDE] whsec publicado para sessao actual (prefixo whsec_***).' -ForegroundColor Green
+                    $now = (Get-Date).ToUniversalTime().ToString('o')
+                    Write-TvdeStripeListenJson -RepoRoot $RepoRoot -Payload @{
+                        session_id       = $sessionId
+                        pid              = $listenPid
+                        started_at       = $startedAt
+                        heartbeat_at     = $now
+                        state            = 'ready'
+                        forward_url      = $ForwardTo
+                        whsec_session_id = $sessionId
+                        detail           = 'forwarding'
                     }
+                    Write-Host '[TVDE] whsec publicado para sessao actual (prefixo whsec_***).' -ForegroundColor Green
                 }
             }
 
-            if ($whsecWritten -and ((Get-Date) - $lastHeartbeat).TotalSeconds -ge 5) {
+            if ($whsecWritten -and $listenPid -gt 0 -and ((Get-Date) - $lastHeartbeat).TotalSeconds -ge 5) {
                 $now = (Get-Date).ToUniversalTime().ToString('o')
                 Write-TvdeStripeListenJson -RepoRoot $RepoRoot -Payload @{
                     session_id       = $sessionId
-                    pid              = $proc.Id
+                    pid              = $listenPid
                     started_at       = $startedAt
                     heartbeat_at     = $now
                     state            = 'ready'
@@ -161,26 +147,55 @@ function Invoke-TvdeStripeListenSupervisor {
                 $lastHeartbeat = Get-Date
             }
 
-            if ($whsecWritten -and -not $probeDone) {
+            if ($whsecWritten -and -not $probeDone -and -not $script:StripeProbeJob) {
                 try {
                     $h = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 3
                     if ($h.status -eq 'ok') {
-                        $null = Invoke-TvdeStripeE2EProbeHttp -TimeoutSec 90
-                        $probeDone = $true
-                        Write-Host '[TVDE] Stripe E2E probe OK nesta sessao.' -ForegroundColor Green
+                        $script:StripeProbeJob = Start-Job -ScriptBlock {
+                            param($BackendBase)
+                            $deadline = (Get-Date).AddSeconds(90)
+                            while ((Get-Date) -lt $deadline) {
+                                try {
+                                    return Invoke-RestMethod -Method POST -Uri "$BackendBase/dev/stripe-e2e/probe" -TimeoutSec 75
+                                } catch {
+                                    Start-Sleep -Seconds 2
+                                }
+                            }
+                            throw 'probe_timeout'
+                        } -ArgumentList 'http://127.0.0.1:8000'
                     }
                 } catch {
-                    # backend ainda a arrancar ou probe pendente
+                    # backend ainda a arrancar
                 }
+            }
+            if ($script:StripeProbeJob -and ($script:StripeProbeJob.State -eq 'Completed' -or $script:StripeProbeJob.State -eq 'Failed')) {
+                if ($script:StripeProbeJob.State -eq 'Completed') {
+                    $probeDone = $true
+                    Write-Host '[TVDE] Stripe E2E probe OK nesta sessao.' -ForegroundColor Green
+                } else {
+                    Write-Host '[TVDE] Stripe E2E probe falhou (retry quando backend estavel).' -ForegroundColor Yellow
+                }
+                Remove-Job -Job $script:StripeProbeJob -Force -ErrorAction SilentlyContinue
+                $script:StripeProbeJob = $null
             }
 
             Start-Sleep -Milliseconds 300
         }
 
+        $exitCode = 0
+        try {
+            Stop-Job -Job $listenJob -Force -ErrorAction SilentlyContinue
+            $null = Receive-Job -Job $listenJob -Wait -ErrorAction SilentlyContinue
+        } catch {
+            $exitCode = 1
+        }
+        Remove-Job -Job $listenJob -Force -ErrorAction SilentlyContinue
+        Get-Process -Name stripe -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+
         if (-not $whsecWritten) {
             Write-Host '[TVDE] stripe listen terminou sem whsec.' -ForegroundColor Red
         } else {
-            Write-Host "[TVDE] stripe listen terminou (exit=$($proc.ExitCode)) — a reiniciar..." -ForegroundColor Yellow
+            Write-Host "[TVDE] stripe listen terminou — a reiniciar..." -ForegroundColor Yellow
         }
 
         Write-TvdeStripeListenJson -RepoRoot $RepoRoot -Payload @{
@@ -191,7 +206,7 @@ function Invoke-TvdeStripeListenSupervisor {
             state            = 'restarting'
             forward_url      = $ForwardTo
             whsec_session_id = $null
-            detail           = "exit_$($proc.ExitCode)"
+            detail           = "exit_$exitCode"
         }
         if (Test-Path -LiteralPath $probePath) { Remove-Item -LiteralPath $probePath -Force -ErrorAction SilentlyContinue }
         if (Test-Path -LiteralPath $secretPath) { Remove-Item -LiteralPath $secretPath -Force -ErrorAction SilentlyContinue }
