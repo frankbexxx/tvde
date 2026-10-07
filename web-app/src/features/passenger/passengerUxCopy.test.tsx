@@ -28,6 +28,8 @@ function detail(): TripDetailResponse {
     created_at: '2026-09-30T10:00:00Z',
     updated_at: '2026-09-30T10:20:00Z',
     payment_status: 'succeeded',
+    payment_total_amount: 9,
+    payment_method_display: 'Visa •••• 4242',
   }
 }
 
@@ -67,6 +69,7 @@ describe('passenger UX copy', () => {
     wrap(<PassengerHistoryDetailPanel detail={detail()} loading={false} error={null} />)
     expect(screen.getByText('Viagem concluída')).toBeInTheDocument()
     expect(screen.getByText('Pagamento concluído')).toBeInTheDocument()
+    expect(screen.getByTestId('passenger-history-payment-method')).toHaveTextContent('Visa •••• 4242')
     expect(screen.getAllByText('Ponto no mapa').length).toBeGreaterThan(0)
     expect(document.body.textContent).not.toMatch(/41\.15|succeeded|completed/)
     expect(document.body.textContent).not.toContain(tripId)

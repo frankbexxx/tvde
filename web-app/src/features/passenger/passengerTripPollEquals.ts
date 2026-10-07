@@ -58,8 +58,9 @@ export function tripDetailPollSemanticallyEqual(
     (a.started_at ?? '') === (b.started_at ?? '') &&
     (a.completed_at ?? '') === (b.completed_at ?? '') &&
     (a.payment_status ?? undefined) === (b.payment_status ?? undefined) &&
-    optSameNum(a.commission_amount, b.commission_amount) &&
-    optSameNum(a.driver_payout, b.driver_payout) &&
+    optSameNum(a.payment_total_amount, b.payment_total_amount) &&
+    (a.payment_method_display ?? '') === (b.payment_method_display ?? '') &&
+    Boolean(a.payment_method_unavailable) === Boolean(b.payment_method_unavailable) &&
     optSameNum(a.intermediation_rate_percent, b.intermediation_rate_percent) &&
     (a.driver_rating ?? null) === (b.driver_rating ?? null) &&
     (a.passenger_rating ?? null) === (b.passenger_rating ?? null) &&

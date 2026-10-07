@@ -116,6 +116,10 @@ export interface TripHistoryItem {
   final_price?: number
   completed_at?: string
   payment_status?: PaymentStatus
+  payment_total_amount?: number | null
+  payment_method_display?: string | null
+  payment_method_unavailable?: boolean
+  /** Driver history / admin; omitted on passenger GET /trips/history. */
   commission_amount?: number
   driver_payout?: number
   intermediation_rate_percent?: number | null
@@ -161,6 +165,10 @@ export interface TripDetailResponse {
   created_at: string
   updated_at: string
   payment_status?: PaymentStatus
+  payment_total_amount?: number | null
+  payment_method_display?: string | null
+  payment_method_unavailable?: boolean
+  /** Driver/admin payloads; omitted on passenger GET /trips/:id. */
   commission_amount?: number
   driver_payout?: number
   intermediation_rate_percent?: number | null

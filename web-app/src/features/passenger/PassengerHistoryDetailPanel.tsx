@@ -61,6 +61,19 @@ export function PassengerHistoryDetailPanel({
         ? `~${detail.estimated_price} €`
         : '—'
 
+  const paymentTotal =
+    detail.payment_total_amount != null
+      ? `${detail.payment_total_amount} €`
+      : detail.final_price != null
+        ? `${detail.final_price} €`
+        : '—'
+
+  const paymentMethodLabel = detail.payment_method_display
+    ? detail.payment_method_display
+    : detail.payment_method_unavailable
+      ? t('historyDetail.paymentMethodUnavailable')
+      : '—'
+
   const canReport =
     Boolean(token) && (detail.status === 'completed' || detail.status === 'cancelled')
 
@@ -101,6 +114,34 @@ export function PassengerHistoryDetailPanel({
           )}
         </p>
       </div>
+      <div className="space-y-2 text-xs border-t border-border/50 pt-2">
+        <p className="text-sm font-semibold text-foreground">{t('historyDetail.paymentSection')}</p>
+        <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
+          <div>
+            <dt className="text-muted-foreground">{t('historyDetail.paymentTotal')}</dt>
+            <dd className="font-semibold tabular-nums text-foreground">{paymentTotal}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t('historyDetail.payment')}</dt>
+            <dd className="font-medium text-foreground" data-testid="passenger-history-payment-status">
+              {paymentStatusLabel(detail.payment_status) ?? '—'}
+            </dd>
+          </div>
+          <div className="col-span-2">
+            <dt className="text-muted-foreground">{t('historyDetail.paymentMethod')}</dt>
+            <dd className="font-medium text-foreground" data-testid="passenger-history-payment-method">
+              {paymentMethodLabel}
+            </dd>
+          </div>
+        </dl>
+        <p
+          className="text-muted-foreground text-[11px] hidden"
+          data-testid="passenger-history-payment-receipt-slot"
+          aria-hidden
+        >
+          {t('historyDetail.receiptFuture')}
+        </p>
+      </div>
       <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.price')}</dt>
@@ -109,12 +150,6 @@ export function PassengerHistoryDetailPanel({
             <PriceFormulaBreakdown breakdown={detail.price_breakdown} />
             <PassengerIntermediationRateLine rate={detail.intermediation_rate_percent} />
           </PassengerPriceDetails>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">{t('historyDetail.payment')}</dt>
-          <dd className="font-medium text-foreground">
-            {paymentStatusLabel(detail.payment_status) ?? '—'}
-          </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">{t('historyDetail.created')}</dt>
