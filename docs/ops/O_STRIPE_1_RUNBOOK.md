@@ -59,13 +59,21 @@ print({'host': h, 'port': u.port or 5432, 'database': (u.path or '').lstrip('/')
 
 ---
 
-## 2. Terminal 1 — `stripe listen`
+## 2. Webhook local — launcher Dev (preferido)
+
+**`Open-TVDE-Dev-WT.bat`** (com `STRIPE_MOCK=false` + `sk_test_*` em `backend/.env`):
+
+- Aba **Stripe_Webhook** — `stripe listen` + forward automático.
+- `whsec` → `.dev-local/stripe-webhook-secret` (gitignored); **Backend_Dev** alinha a sessão antes do uvicorn.
+- Painel **Utils_Dev** — estado Postgres / Backend / Frontend / Stripe TEST webhook.
+
+Manual (fallback / debug):
 
 ```powershell
 stripe listen --forward-to http://127.0.0.1:8000/webhooks/stripe
 ```
 
-Copiar `whsec_…` para `$env:STRIPE_WEBHOOK_SECRET` no Terminal 2 — **não** commitar nem colar em chat.
+Copiar `whsec_…` para `$env:STRIPE_WEBHOOK_SECRET` — **não** commitar nem colar em chat.
 
 ---
 

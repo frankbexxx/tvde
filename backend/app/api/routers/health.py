@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 import anyio
 from fastapi import APIRouter, HTTPException, status
@@ -30,7 +31,7 @@ async def root() -> dict:
 
 @router.get("/health", operation_id="health_check_get")
 @router.head("/health", operation_id="health_check_head")
-async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
+async def health_check(diagnostic: bool = False) -> dict[str, Any]:
     """Health check. diagnostic=1 adds config hints for simulator/tools.
 
     Aceita GET e HEAD. Monitores externos (UptimeRobot free tier) enviam HEAD
@@ -57,6 +58,12 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
         out["require_pending_approval"] = settings.require_pending_approval()
         out["enforce_pt_phone"] = settings.enforce_pt_phone()
         out["enable_demo_users"] = settings.enable_demo_users()
+        if settings.dev_tools_router_enabled():
+            from app.services.stripe_e2e_dev import evaluate_stripe_e2e_readiness
+
+            sk = (settings.STRIPE_SECRET_KEY or "").strip()
+            out["stripe_test_mode"] = sk.startswith("sk_test_")
+            out.update(evaluate_stripe_e2e_readiness(settings).to_diagnostic_dict())
     return out
 
 

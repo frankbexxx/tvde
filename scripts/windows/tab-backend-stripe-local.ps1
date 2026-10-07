@@ -42,14 +42,14 @@ do {
 } while (-not $sk)
 $env:STRIPE_SECRET_KEY = $sk
 
-do {
-    $wh = Read-Host 'STRIPE_WEBHOOK_SECRET (whsec_... da aba Stripe_Listen)'
-    if ($wh -notmatch '^whsec_') {
-        Write-Host 'Esperado prefixo whsec_' -ForegroundColor Red
-        $wh = $null
-    }
-} while (-not $wh)
-$env:STRIPE_WEBHOOK_SECRET = $wh
+. (Join-Path $lib 'Wait-TvdeStripeE2EReady.ps1')
+
+Write-Host 'A aguardar Stripe TEST E2E READY (supervisor + probe)...' -ForegroundColor Cyan
+$wait = Wait-TvdeStripeE2EReady -TimeoutSeconds 300
+if (-not $wait.ready) {
+    throw "INCOMPLETO: Stripe E2E NOT READY ($($wait.reason)) — confirma supervisor stripe listen."
+}
+Write-Host 'Stripe TEST E2E: READY — backend usa whsec da sessao (.dev-local, nao .env).' -ForegroundColor Green
 
 Write-Host ''
 Write-Host 'A correr diagnostico runtime seguro...' -ForegroundColor Cyan
