@@ -1,7 +1,5 @@
 """Dev local: effective webhook secret follows .dev-local/stripe listen file."""
 
-from pathlib import Path
-
 from app.core.config import Settings, settings
 
 
