@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 _DEV_LOCAL = "dev-local"
 _LISTEN_FILE = "stripe-listen.json"
-_SECRET_FILE = "stripe-webhook-secret"
+_SECRET_FILE = "stripe-webhook-secret"  # nosec B105  # filename, not a credential
 _PROBE_FILE = "stripe-e2e-probe.json"
 _HEARTBEAT_MAX_AGE_SEC = 15
 
@@ -327,7 +327,7 @@ def invalidate_probe_for_session_mismatch() -> None:
 def run_stripe_e2e_probe(cfg: Settings | None = None) -> dict[str, Any]:
     """Trigger Stripe TEST event through CLI forward path; require new stripe_webhook_events row."""
     import shutil
-    import subprocess
+    import subprocess  # nosec B404
     import time
 
     from sqlalchemy import func, select
@@ -343,7 +343,8 @@ def run_stripe_e2e_probe(cfg: Settings | None = None) -> dict[str, Any]:
     if not session_id:
         return {"ok": False, "reason": "no_listener_session"}
 
-    if not shutil.which("stripe"):
+    stripe_bin = shutil.which("stripe")
+    if not stripe_bin:
         return {"ok": False, "reason": "stripe_cli_missing"}
 
     db = SessionLocal()
@@ -353,8 +354,8 @@ def run_stripe_e2e_probe(cfg: Settings | None = None) -> dict[str, Any]:
         db.close()
 
     started = time.perf_counter()
-    proc = subprocess.run(
-        ["stripe", "trigger", "payment_intent.succeeded"],
+    proc = subprocess.run(  # nosec B603
+        [stripe_bin, "trigger", "payment_intent.succeeded"],
         capture_output=True,
         text=True,
         timeout=60,
