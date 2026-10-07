@@ -31,7 +31,7 @@ Com `STRIPE_MOCK=false` e `sk_test_*` em `backend/.env`, o launcher Dev:
 
 1. Arranca `stripe listen` na aba **Stripe_Webhook** (forward para `/webhooks/stripe`).
 2. Grava o `whsec` em `.dev-local/stripe-webhook-secret` (gitignored).
-3. A aba **Backend_Dev** injecta esse secret na sessão antes do uvicorn.
+3. A aba **Backend_Dev** espera `stripe-webhook.state=ready`, injecta o secret na sessão e o backend valida webhooks com o ficheiro `.dev-local` (não fica preso a `whsec` stale do `.env`).
 
 Painel **Utils_Dev**: Postgres / Backend / Frontend / Stripe TEST webhook.
 

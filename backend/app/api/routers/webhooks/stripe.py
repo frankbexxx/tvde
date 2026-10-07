@@ -54,8 +54,8 @@ async def stripe_webhook(
     """Handle Stripe webhook events - only source of truth for payment status."""
     payload = await request.body()
 
-    # Verify webhook secret is configured.
-    if not settings.STRIPE_WEBHOOK_SECRET:
+    webhook_secret = settings.effective_stripe_webhook_secret()
+    if not webhook_secret:
         logger.error("STRIPE_WEBHOOK_SECRET not configured")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -67,7 +67,7 @@ async def stripe_webhook(
         event = stripe.Webhook.construct_event(
             payload,
             stripe_signature,
-            settings.STRIPE_WEBHOOK_SECRET,
+            webhook_secret,
         )
     except ValueError as e:
         logger.error(f"Invalid payload: {e}")

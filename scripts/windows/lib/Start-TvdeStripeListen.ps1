@@ -17,10 +17,11 @@ function Start-TvdeStripeListen {
     $devDir = Split-Path -Parent $secretPath
     New-Item -ItemType Directory -Force -Path $devDir | Out-Null
 
+    # Backend waits on state=ready — publish starting before clearing stale whsec.
+    Set-TvdeStripeWebhookState -RepoRoot $RepoRoot -State 'starting' -Detail 'stripe_listen'
     if (Test-Path -LiteralPath $secretPath) {
         Remove-Item -LiteralPath $secretPath -Force
     }
-    Set-TvdeStripeWebhookState -RepoRoot $RepoRoot -State 'starting' -Detail 'stripe_listen'
 
     $written = $false
     $warned = $false

@@ -22,8 +22,7 @@ try {
     $profile = Get-TvdeStripeDevProfile -BackendDir $backendDir
     if ($profile.RealStripeTest) {
         Write-Host 'Stripe TEST real: a aguardar whsec da aba Stripe_Webhook...' -ForegroundColor Cyan
-        $secretPath = Get-TvdeStripeWebhookSecretPath -RepoRoot $root
-        $whsec = Wait-TvdeStripeWebhookSecret -SecretPath $secretPath -TimeoutSeconds 120
+        $whsec = Wait-TvdeStripeWebhookSecret -RepoRoot $root -TimeoutSeconds 180
         if ($whsec) {
             $env:STRIPE_WEBHOOK_SECRET = $whsec
             Write-Host 'Stripe TEST webhook: whsec de sessao alinhado ao listener (nao logado).' -ForegroundColor Green

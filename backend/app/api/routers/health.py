@@ -59,7 +59,7 @@ async def health_check(diagnostic: bool = False) -> dict[str, str | bool]:
         out["enable_demo_users"] = settings.enable_demo_users()
         if settings.dev_tools_router_enabled():
             sk = (settings.STRIPE_SECRET_KEY or "").strip()
-            wh = (settings.STRIPE_WEBHOOK_SECRET or "").strip()
+            wh = (settings.effective_stripe_webhook_secret() or "").strip()
             stripe_mock = bool(getattr(settings, "STRIPE_MOCK", False))
             stripe_test = sk.startswith("sk_test_")
             stripe_webhook_set = wh.startswith("whsec_")

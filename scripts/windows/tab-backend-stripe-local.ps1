@@ -45,9 +45,8 @@ $env:STRIPE_SECRET_KEY = $sk
 . (Join-Path $lib 'Get-TvdeDevLocalPaths.ps1')
 . (Join-Path $lib 'Wait-TvdeStripeWebhookSecret.ps1')
 
-$secretPath = Get-TvdeStripeWebhookSecretPath -RepoRoot $root
 Write-Host 'A aguardar whsec automatico (aba Stripe_Listen / stripe listen)...' -ForegroundColor Cyan
-$wh = Wait-TvdeStripeWebhookSecret -SecretPath $secretPath -TimeoutSeconds 180
+$wh = Wait-TvdeStripeWebhookSecret -RepoRoot $root -TimeoutSeconds 180
 if (-not $wh) {
     throw 'INCOMPLETO: whsec nao recebido — confirma stripe listen e stripe login.'
 }
