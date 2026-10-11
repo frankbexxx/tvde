@@ -2,7 +2,7 @@
 
 ## Objectivo da consulta
 
-A Ventos Férteis, Lda. (marca **VAMULÁ**) prepara a operação de uma plataforma de intermediação TVDE em fase controlada. Pretende-se obter **parecer jurídico** sobre um conjunto fechado de questões que bloqueiam decisões internas de produto, compliance e arranque operacional.
+A Ventos Férteis, Lda. (marca **VAMULÁ**) prepara a operação de uma plataforma de intermediação TVDE em fase controlada. Pretende-se obter **parecer jurídico** sobre um conjunto fechado de questões que bloqueiam decisões internas de produto, conformidade e arranque operacional.
 
 Este dossier:
 
@@ -10,7 +10,7 @@ Este dossier:
 - descreve apenas o **contexto factual** necessário ao advogado;
 - **não** antecipa conclusões legais nem substitui documentação interna completa.
 
-**Estado:** rascunho interno (`DRAFT`) — **não foi enviado** ao destinatário e **não constitui** pedido de parecer formal.
+**Estado:** em revisão interna (`REVIEW`) — **não enviado** ao destinatário e **não constitui ainda** pedido de parecer formal.
 
 ---
 
@@ -22,11 +22,11 @@ Este dossier:
 
 **Utilizadores.** Passageiros, motoristas e parceiros (gestão de frota) interagem através da aplicação. Termos e política de privacidade públicos existem no site institucional; o versionamento contratual na aplicação está parcial (ver lacunas abaixo).
 
-**Fase actual.** Piloto / fase controlada: funcionalidades de compliance e pagamentos estão **parcialmente** implementadas; alguns bloqueios automáticos de conformidade estão desactivados ou pendentes de validação externa antes de produção alargada.
+**Fase actual.** Piloto / fase controlada: funcionalidades de conformidade e pagamentos estão **parcialmente** implementadas; alguns bloqueios automáticos de conformidade estão desactivados ou pendentes de validação externa antes de produção alargada.
 
 **Pagamentos.** Cobrança ao passageiro via prestador de pagamentos (conta empresarial); operação em modo de testes até decisão interna de activação em ambiente real (DEC-PAY-001 — referência apenas; não objecto deste dossier).
 
-**Compliance viatura e documentos.** Existem controlos internos de documentação e aprovação administrativa de motoristas/veículos; **não** são equivalentes a validação IMT automática (lacunas FIND-LEG-IMT-* e FIND-LEG-DRV-01).
+**Conformidade viatura e documentos.** Existem controlos internos de documentação e aprovação administrativa de motoristas/veículos; **não** são equivalentes a validação IMT automática (lacunas FIND-LEG-IMT-* e FIND-LEG-DRV-01).
 
 **Dependência cruzada (não incluída como pergunta neste dossier).** Pedido técnico ao **IMT** sobre canal de validação (Q-EXT-IMT-001) corre em paralelo; a resposta pode informar a pergunta Q-EXT-LEG-001, sem substituir parecer jurídico.
 
@@ -36,8 +36,8 @@ Este dossier:
 
 | ID | Decisão (resumo) | Data | Impacto para este dossier |
 |----|------------------|------|---------------------------|
-| DEC-LEG-002 | Parceiro TVDE = titular/licenciado; plataforma = tecnologia | 2026-09-02 | Enquadra responsabilidades operador vs plataforma |
-| DEC-LEG-003 | Controlo de compliance viatura previsto; bloqueios automáticos podem estar desactivados | 2026-09-04 | Relaciona bloqueios internos vs obrigação legal |
+| DEC-LEG-002 | Parceiro TVDE = titular/licenciado; plataforma = tecnologia | 2026-09-02 | Enquadra responsabilidades operador face à plataforma |
+| DEC-LEG-003 | Controlo de conformidade viatura previsto; bloqueios automáticos podem estar desactivados | 2026-09-04 | Relaciona bloqueios internos face à obrigação legal |
 | DEC-LEG-004 | Limite 10 h / 24 h com registo; bloqueio efectivo antes de operação plena | 2026-09-04 | Base para Q-EXT-LEG-002 |
 | DEC-LEG-005 | Parceiro/frota = fonte operacional documental (≠ IMT) | 2026-09-02 | Q-EXT-LEG-001, Q-EXT-LEG-005 |
 | DEC-LEG-006 | Pedir validação jurídica externa (este exercício) | 2026-09-02 | Justifica consulta |
@@ -95,7 +95,7 @@ Bloqueia modelo operacional, comunicação a parceiros e critérios de **entrada
 Impacto da resposta
 :::
 
-Define procedimento manual documentado vs exigência de integração imediata; afecta activação de motoristas e veículos na plataforma.
+Define procedimento manual documentado face à exigência de integração imediata; afecta activação de motoristas e veículos na plataforma.
 
 ::: {custom-style="Q-EXT Label"}
 Prioridade
@@ -135,7 +135,7 @@ Necessário para desenhar política de bloqueio e prova documental perante autor
 Impacto da resposta
 :::
 
-Afecta regras de suspensão, reactivação e responsabilidade da plataforma vs operador.
+Afecta regras de suspensão, reactivação e responsabilidade da plataforma face ao operador.
 
 ::: {custom-style="Q-EXT Label"}
 Prioridade
@@ -289,7 +289,7 @@ Questões sobre **formulários, canais e prazos** junto de IMT e AMT serão trat
 Porque precisamos da resposta
 :::
 
-Evitar omissões de comunicação formal e calendário interno de compliance.
+Evitar omissões de comunicação formal e calendário interno de conformidade.
 
 ::: {custom-style="Q-EXT Label"}
 Impacto da resposta
@@ -325,8 +325,8 @@ Respostas podem ser entregues por email profissional ou documento separado; **n�
 | Ref. | Descrição | Nota |
 |------|-----------|------|
 | — | Resposta futura IMT (Q-EXT-IMT-001) | Referência cruzada quando existir |
-| — | Minutas contratuais | **Não** incluídas neste DRAFT |
-| — | Capturas ou dados de viagens reais | **Excluídos** (sem PII) |
+| — | Minutas contratuais | **Não** incluídas nesta versão em revisão |
+| — | Capturas ou dados de viagens reais | **Excluídos** (sem dados pessoais) |
 
 ---
 

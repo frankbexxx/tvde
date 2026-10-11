@@ -3,7 +3,7 @@ title: Consulta jurídica — enquadramento operacional TVDE
 version: v0.1
 created: "2026-10-11"
 updated: "2026-10-11"
-status: DRAFT
+status: REVIEW
 audience: Advogado
 confidentiality: EXTERNAL-CONFIDENTIAL
 owner: VAMULÁ / Ventos Férteis, Lda.
@@ -45,4 +45,4 @@ sources:
   - path: docs/business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md
 output:
   basename: EXT-LEG-2026-10-11
-  notes: Dossier jurídico DRAFT — não enviado; build fora do Git
+  notes: Dossier jurídico REVIEW — não enviado; build fora do Git
