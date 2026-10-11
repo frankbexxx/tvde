@@ -1,0 +1,48 @@
+external_id: EXT-LEG-2026-10-11
+title: Consulta jurídica — enquadramento operacional TVDE
+version: v0.1
+created: "2026-10-11"
+updated: "2026-10-11"
+status: DRAFT
+audience: Advogado
+confidentiality: EXTERNAL-CONFIDENTIAL
+owner: VAMULÁ / Ventos Férteis, Lda.
+profile: legal
+q_ext:
+  - Q-EXT-LEG-001
+  - Q-EXT-LEG-005
+  - Q-EXT-LEG-002
+  - Q-EXT-LEG-003
+  - Q-EXT-LEG-004
+  - Q-EXT-LEG-007
+dec_refs:
+  - DEC-LEG-002
+  - DEC-LEG-003
+  - DEC-LEG-004
+  - DEC-LEG-005
+  - DEC-LEG-006
+  - DEC-LEG-007
+  - DEC-LEG-010
+  - DEC-PROD-002
+find_refs:
+  - FIND-LEG-IMT-01
+  - FIND-LEG-IMT-02
+  - FIND-LEG-IMT-03
+  - FIND-LEG-GATE-01
+  - FIND-LEG-DRV-01
+  - FIND-LEG-HRS-01
+  - FIND-LEG-HRS-02
+  - FIND-LEG-SOS-01
+  - FIND-LEG-CTR-01
+sources:
+  - path: docs/registers/EXTERNAL_CONSULTATIONS.md
+  - path: docs/registers/DECISIONS.md
+  - path: docs/registers/FINDINGS.md
+  - path: docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md
+  - path: docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md
+  - path: docs/legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md
+  - path: docs/architecture/TVDE_59_2026_TECHNICAL_FINDINGS.md
+  - path: docs/business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md
+output:
+  basename: EXT-LEG-2026-10-11
+  notes: Dossier jurídico DRAFT — não enviado; build fora do Git
