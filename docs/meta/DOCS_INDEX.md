@@ -149,18 +149,16 @@ Histórico válido **fora** da documentação CURRENT. Ver [`../archive/README.m
 | [`archive/prompts/`](../archive/prompts/) | Piloto comercial (prompts agente) |
 | [`archive/ux/`](../archive/ux/) | Auditorias navegação Jul 2026 |
 | [`archive/reference/`](../archive/reference/) | Benchmark veículos Lisboa (MD) |
+| [`archive/plans/`](../archive/plans/) | FORWARD Jul · STATUS Set · PROXIMA_SESSAO · ENGINEERING · biblioteca Set |
+| [`archive/audits/P1_RUNTIME…`](../archive/audits/P1_RUNTIME_SECURITY_REVIEW_2026-09.md) | Segurança runtime Set 2026 (fechado) |
 
-## Histórico / pendente arquivo (ainda no path antigo)
+## Histórico no path antigo / LEGACY (banner)
 
 | Ficheiro | Nota |
 | -------- | ---- |
-| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | **REVIEW — não canónico** (GOV-DOC-004) |
-| [TVDE_STATUS_SETEMBRO_2026.md](../TVDE_STATUS_SETEMBRO_2026.md) | **Snapshot Setembro 2026** (GOV-DOC-005) |
-| [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops Jul 2026 — **Fase 2B** |
-| [TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico Mar 2026 + anexo A023–A035 |
 | [STRIPE_LIVE_READINESS_2026-10-08.md](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) | **AUDIT** snapshot (GOV-DOC-006) |
-| [P1_RUNTIME_SECURITY_REVIEW_2026-09.md](../analysis/P1_RUNTIME_SECURITY_REVIEW_2026-09.md) | **REVIEW** — segurança runtime |
-| [visao_cursor.md](../visao_cursor.md) · [PRICING_DECISION.md](../PRICING_DECISION.md) | **LEGACY** (ver banners) |
+| [visao_cursor.md](../visao_cursor.md) · [PRICING_DECISION.md](../PRICING_DECISION.md) | **LEGACY** |
+| [docs/audits/ux/2026-10/](../audits/ux/2026-10/) | **REVIEW** — auditoria UX Out (execução aberta) |
 
 ---
 

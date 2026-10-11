@@ -2,7 +2,7 @@
 
 Estrutura enxuta após auditoria docs 2026-06 (Lotes 1–4 concluídos).
 
-**Começar aqui:** [`TODOdoDIA.md`](../TODOdoDIA.md) (operacional) · [`meta/PROXIMA_SESSAO.md`](meta/PROXIMA_SESSAO.md) (handoff) · [`meta/DOCS_INDEX.md`](meta/DOCS_INDEX.md) (índice ~40 entradas).
+**Começar aqui:** [`TODOdoDIA.md`](../TODOdoDIA.md) · [`meta/DOCS_INDEX.md`](meta/DOCS_INDEX.md) · [`archive/README.md`](archive/README.md) (histórico).
 
 **`_local/`** — rascunhos pessoais em `docs/_local/`, ignorado pelo Git.
 

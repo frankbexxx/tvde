@@ -126,7 +126,7 @@ class Settings(BaseSettings):
     OSRM_BASE_URL: str | None = None
 
     # PORTAGENS V1 / HERE Routing v8 tolls (F0 client). Default OFF — no create/complete wire yet.
-    # See docs/analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md
+    # See docs/archive/audits/PORTAGENS_V1_ARCHITECTURE_2026-09.md
     ENABLE_HERE_TOLLS: bool = False
     HERE_API_KEY: str | None = None
 

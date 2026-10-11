@@ -3,7 +3,7 @@
 **Tipo:** backlog de produto a partir de inputs externos  
 **Estado:** **captura / organização** — **não** implementação · **não** compromisso técnico fechado  
 **Tip `main` (docs):** `2fc5155` (actualizar após pull)  
-**Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)
+**Handoff:** [`TODOdoDIA.md`](../../TODOdoDIA.md)
 
 Relacionado (já no repo, não substituído por este ficheiro):
 

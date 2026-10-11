@@ -1,7 +1,7 @@
 # Architecture docs — entry point
 
-Esta pasta mistura **documentação operacional actual** com **snapshots históricos**.  
-Começa aqui; **não** uses documentos SUPERSEDED como runbook.
+Esta pasta contém **documentação operacional actual** e pointers para histórico.  
+Começa aqui; **não** uses documentos SUPERSEDED / ARCHIVE como runbook.
 
 ## Current (usar)
 
@@ -12,17 +12,18 @@ Começa aqui; **não** uses documentos SUPERSEDED como runbook.
 | [`../testing/BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) | Pytest só contra BD local segura |
 | [`../deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md) | Deploy Render |
 | [`../diagrams/`](../diagrams/) | Fluxos actuais (pagamentos, cron, auth, …) |
-| [`TVDE_ENGINEERING_ROADMAP.md`](TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (rever datas; cruzar com código) |
+| [`../TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) | Checklist técnico pré-prod (substitui handoff A023–A035 operacional) |
 | [`I18N.md`](I18N.md) · [`I18N_NICHOS_EN.md`](I18N_NICHOS_EN.md) | i18n web-app |
-| [`USER_IDENTITIES.md`](USER_IDENTITIES.md) | Identidades de login — Fase I, II-A, II-B, S-ID-01 e Fase III **CLOSED**; Fase II-C Conta canónica única, listagem no Passageiro por confirmar, **OPEN**; Fase VI **OPEN** |
+| [`USER_IDENTITIES.md`](USER_IDENTITIES.md) | Identidades de login — fases I–III, II-C, VI |
 | [`../../TODOdoDIA.md`](../../TODOdoDIA.md) | Operação / estado diário (canónico) |
 | [`../meta/DOCUMENT_GOVERNANCE.md`](../meta/DOCUMENT_GOVERNANCE.md) | Governance documental |
 
-## Historical / superseded (não operar a partir daqui)
+## Historical / archive
 
 | Doc | Nota |
 |-----|------|
-| [`ARCHITECTURE_STATUS.md`](ARCHITECTURE_STATUS.md) | Snapshot **2026-03-12** — banner SUPERSEDED (ex.: “local DB = Render”) |
-| [`TVDE_SYSTEM_BLUEPRINT.md`](TVDE_SYSTEM_BLUEPRINT.md) | Blueprint aspiracional — referência, não arquitectura corrente |
+| [`../archive/plans/TVDE_ENGINEERING_ROADMAP.md`](../archive/plans/TVDE_ENGINEERING_ROADMAP.md) | Mar 2026 + matriz **A023–A035** (histórico) |
+| [`ARCHITECTURE_STATUS.md`](ARCHITECTURE_STATUS.md) | Snapshot **2026-03-12** — LEGACY |
+| [`TVDE_SYSTEM_BLUEPRINT.md`](TVDE_SYSTEM_BLUEPRINT.md) | Blueprint aspiracional — LEGACY |
 
 Índice geral: [`../meta/DOCS_INDEX.md`](../meta/DOCS_INDEX.md).

@@ -1,5 +1,8 @@
 # TVDE — Engineering Roadmap
 
+> **STATUS: ARCHIVE / LEGACY** (2026-10-11) — estado Março 2026 + matriz A023–A035 histórica.  
+> **Não** usar como fonte actual. Checklist técnico vivo: [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · plano: [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md).
+
 Objetivo:
 Transformar o sistema atual num MVP robusto sem reescrever arquitetura.
 

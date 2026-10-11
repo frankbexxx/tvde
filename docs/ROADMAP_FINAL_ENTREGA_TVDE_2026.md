@@ -11,7 +11,7 @@
 **Nota:** rename futuro para nome estável sem data (ex. `PLAN-TVDE-MASTER.md`) — **não executar** até Fase 5 (impacto HIGH em referências).
 
 **Documento canónico de execução:** CARRIL → ETAPA → PASSOS  
-**Fonte consolidada:** [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) · [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) · painéis/`TODOdoDIA.md` · docs pay/mobile/legal/business/ops  
+**Fonte consolidada:** [`TODOdoDIA.md`](../TODOdoDIA.md) (operacional) · histórico Set: [`TVDE_STATUS_SETEMBRO_2026.md`](archive/plans/TVDE_STATUS_SETEMBRO_2026.md) · [`SETEMBRO_2026_TODO_LIBRARY.md`](archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) · docs pay/mobile/legal/business/ops  
 **Regra:** itens já implementados / STALE **não** reentram. Não activar Stripe live / B2 / PF3D / Capacitor sem o passo correspondente.
 
 | Fecho já feito | Estado |
@@ -261,7 +261,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 ## A4 — Titularidade IP / contas
 
 - **Objectivo:** Inventário titularidade código/design/marca/contas/domínios.  
-- **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02` · *reminder* [`SEP-IP-05`](product/SETEMBRO_2026_TODO_LIBRARY.md) (OXS/VAMULÁ housekeeping — **não agora**)  
+- **IDs:** `S-IP-01` · `SEP-IP-01` · `SEP-IP-02` · *reminder* [`SEP-IP-05`](archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) (OXS/VAMULÁ housekeeping — **não agora**)  
 - **Dependências:** —  
 - **Nota domínio (2026-09-16):** **`vamula.pt` ACTIVO** · landing V1 **DEPLOYED** · páginas legais **DEPLOYED / VALIDATED** · emails `@vamula.pt` **activos** · LRE directo **CONFIGURADO** 2026-09-22 · ver [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) · **não** bloqueia APP.
 - **Conclusão:** Inventário assinado por Francisco (e Manel se aplicável).
@@ -820,8 +820,8 @@ Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual). iOS pós-
 
 | Tema | Doc |
 |------|-----|
-| Estado Setembro | [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) |
-| Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| Estado Setembro (arquivo) | [`TVDE_STATUS_SETEMBRO_2026.md`](archive/plans/TVDE_STATUS_SETEMBRO_2026.md) |
+| Biblioteca Set (arquivo) | [`SETEMBRO_2026_TODO_LIBRARY.md`](archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) |
 | Pricing híbrido | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
 | HERE tolls spike | [`HERE_TOLLS_SPIKE_2026-09.md`](archive/audits/HERE_TOLLS_SPIKE_2026-09.md) · **APROVADO COM RESERVAS PARA V1** · script `scripts/tolls/here_tolls_spike.py` |
 | Landing deploy | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |

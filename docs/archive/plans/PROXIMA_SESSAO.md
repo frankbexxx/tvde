@@ -1,15 +1,14 @@
 # PROXIMA_SESSAO.md — Handoff
 
-> **STATUS: REVIEW — NÃO CANÓNICO** (GOV-DOC-004 · 2026-10-11)  
-> Conteúdo **pode estar desactualizado** (última actualização significativa no corpo: 2026-08-11).  
-> **Fonte operacional actual:** [`TODOdoDIA.md`](../../TODOdoDIA.md).  
-> **Pendente:** arquivo na Fase 2 — não mover nesta fase.
+> **STATUS: ARCHIVE / FECHADO — NÃO CANÓNICO** (GOV-DOC-004 · 2026-10-11)  
+> Handoff histórico (corpo desactualizado desde 2026-08-11).  
+> **Fonte operacional actual:** [`TODOdoDIA.md`](../../TODOdoDIA.md) apenas.
 
 Contexto histórico para sessões anteriores. **Lista operacional:** painel em [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
 **Histórico completo (fechos Abril–Maio, Seções A–E):** `C:\dev\_archives\APP\docs-2026-06\lote-3\PROXIMA_SESSAO.md`
 
-**Plano operacional Julho:** [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md)
+**Plano operacional Julho:** [`FORWARD_PLAN_2026-07.md`](FORWARD_PLAN_2026-07.md)
 
 ---
 
@@ -22,7 +21,7 @@ Contexto histórico para sessões anteriores. **Lista operacional:** painel em [
 | **Agora** | **Pré-férias** — PC principal activo |
 | **MODO FÉRIAS** | **OFF** até gatilho 13/14 ago |
 | **Modelo** | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) |
-| **Até Setembro** | Docs / marca / intenções / legal / negócio / **MOBILE-001** — biblioteca [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| **Até Setembro** | Docs / marca / intenções / legal / negócio / **MOBILE-001** — biblioteca [`SETEMBRO_2026_TODO_LIBRARY.md`](SETEMBRO_2026_TODO_LIBRARY.md) |
 
 ### Checkpoint Git
 
@@ -58,7 +57,7 @@ Contexto histórico para sessões anteriores. **Lista operacional:** painel em [
 
 | Item | Estado |
 |------|--------|
-| Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](SETEMBRO_2026_TODO_LIBRARY.md) |
 | Mobile | **MOBILE-001** — pergunta Manel Android/iOS · spike Setembro · PWA/wrapper/Capacitor a avaliar · **sem** implementação agora |
 | Negócio | **BUSINESS-MANEL-001** · [`docs/business/`](../business/) · custos · preços/comissões · GTM/simulador |
 | Fonte legal | [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) · **LEGAL-TVDE-001** DL 84/2026 |
@@ -418,7 +417,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | SSD / férias readiness | [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md) |
 | DEMO MANEL 2 guião | [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md) |
 | Inputs Manel TODOs | [`MANEL_INPUTS_TODOS_2026-08-07.md`](../product/MANEL_INPUTS_TODOS_2026-08-07.md) |
-| Biblioteca Setembro 2026 | [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) |
+| Biblioteca Setembro 2026 | [`SETEMBRO_2026_TODO_LIBRARY.md`](SETEMBRO_2026_TODO_LIBRARY.md) |
 | Fontes legais (brutas) | [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md) |
 | Negócio Manel (hipóteses) | [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · preços · GTM/simulador |
 | Resumo não técnico Manel | [`MANEL_RESUMO_NAO_TECNICO_2026-08-07.md`](../product/MANEL_RESUMO_NAO_TECNICO_2026-08-07.md) |
@@ -440,7 +439,7 @@ Admin ≠ dispatcher; **Atribuir** = recovery SA; assign diário → Partner fle
 | Checkpoint Partner-Fleet 2026-07-22 | [`CHECKPOINT_2026-07-22_PARTNER_FLEET.md`](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) |
 | Stripe / mock / 1B API | [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §§9–10 |
 | Pytest BD segura | [`BACKEND_PYTEST_SAFE.md`](../testing/BACKEND_PYTEST_SAFE.md) |
-| Ops Julho | [`FORWARD_PLAN_2026-07.md`](../ops/FORWARD_PLAN_2026-07.md) |
+| Ops Julho | [`FORWARD_PLAN_2026-07.md`](FORWARD_PLAN_2026-07.md) |
 | Painel vivo | [`TODOdoDIA.md`](../../TODOdoDIA.md) |
 
 ---
@@ -489,7 +488,7 @@ Re-audit local [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](../ops/PF3D_DATA_1E_RE
 | Necessidade | Onde |
 |-------------|------|
 | Continuar amanhã | [`TODOdoDIA.md`](../../TODOdoDIA.md) + este ficheiro |
-| Roadmap engenharia | [`TVDE_ENGINEERING_ROADMAP.md`](../architecture/TVDE_ENGINEERING_ROADMAP.md) |
+| Roadmap engenharia | [`TVDE_ENGINEERING_ROADMAP.md`](TVDE_ENGINEERING_ROADMAP.md) |
 | Backlog pós-piloto | [`BACKLOG_POST_PILOTO.md`](BACKLOG_POST_PILOTO.md) |
 | TODO código | [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) |
 

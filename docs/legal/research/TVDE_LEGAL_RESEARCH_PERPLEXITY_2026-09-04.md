@@ -356,7 +356,7 @@ Directamente suportados pelo texto legal consultado na research:
 |-----------|---------------|--------------------------|
 | [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](../A3_REQUISITOS_TVDE_SETEMBRO_2026.md) | Lacuna de fontes; matriz R0x; A3-D01…D08 vs bloqueio/IMT/10h/retenção | Reabrir matriz / validar decisões após arquivo oficial — **sem** alterar ainda |
 | [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../../ROADMAP_FINAL_ENTREGA_TVDE_2026.md) | A3 / A6 / M2 compliance / driving-hours | Possível reordenação de passos pós-validação — **não** alterar ainda |
-| [`docs/TVDE_STATUS_SETEMBRO_2026.md`](../../TVDE_STATUS_SETEMBRO_2026.md) | Estado compliance / gaps Setembro | Actualizar status após arquivo + parecer |
+| [`docs/archive/plans/TVDE_STATUS_SETEMBRO_2026.md`](../../archive/plans/TVDE_STATUS_SETEMBRO_2026.md) | Estado compliance / gaps Setembro | Actualizar status após arquivo + parecer |
 | [`docs/ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](../../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | Gates viatura; idade 10/12 anos; IMT | Rever matriz PF3D vs art. 12.º / 14.º |
 | [`docs/ops/PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md`](../../ops/PARTNER_FLEET_3_VEHICLE_DOCUMENTS.md) | Docs viatura Partner | Alinhar campos/validades a requisitos oficiais |
 | [`docs/ops/PARTNER_FLEET_2_VEHICLES.md`](../../ops/PARTNER_FLEET_2_VEHICLES.md) | Frota / idade / registo | Possível ajuste de regras de frota |

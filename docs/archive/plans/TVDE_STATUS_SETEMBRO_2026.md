@@ -1,9 +1,8 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
-> **STATUS: SNAPSHOT / REVIEW** (GOV-DOC-005 · 2026-10-11)  
-> **Fotografia histórica** de Setembro 2026 — **não representa o estado actual** do projecto.  
-> Estado diário: [`TODOdoDIA.md`](../TODOdoDIA.md) · Plano mestre: [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md).  
-> **Pendente:** verificar factos ainda válidos vs TODO/ROADMAP; consolidação/arquivo **Fase 2**.
+> **STATUS: ARCHIVE / FECHADO** (GOV-DOC-005 · 2026-10-11)  
+> **Fotografia histórica** de Setembro 2026 — **não representa o estado actual**.  
+> Estado diário: [`TODOdoDIA.md`](../TODOdoDIA.md) · Plano mestre: [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md).
 
 **Data:** 2026-09-18 (**A1.4 DECIDIDA / CLOSED**) · 2026-09-16 (páginas legais públicas Hostinger **DEPLOYED / VALIDATED**) · 2026-09-14 (PORTAGENS V1 PROD VALIDATED · F5) · 2026-09-14 (fecho consolidado pricing + landing + HERE spike) · 2026-09-09 (decisões operacionais Manel) · 2026-09-05 (fecho M2-L0 oficial) · G3/M1 2026-09-03  
 **Tip `main`:** `b513d6c` (merge [#596](https://github.com/frankbexxx/tvde/pull/596) site legal pages; tip anterior F5 tolls `1382b35`)  
@@ -21,7 +20,7 @@ Relacionado (contexto Setembro, não substitui este relatório):
 - [`docs/archive/audits/HERE_TOLLS_SPIKE_2026-09.md`](archive/audits/HERE_TOLLS_SPIKE_2026-09.md) — HERE spike · **APROVADO COM RESERVAS PARA V1**
 - [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) — A3-D03-REV1 / A3-D04-REV1
 - [`docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
-- [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
+- [`SETEMBRO_2026_TODO_LIBRARY.md`](SETEMBRO_2026_TODO_LIBRARY.md)
 - [`TODOdoDIA.md`](../TODOdoDIA.md)
 - [`docs/archive/ops/DEMO_MANEL_2_SETEMBRO.md`](archive/ops/DEMO_MANEL_2_SETEMBRO.md)
 

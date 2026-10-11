@@ -2,7 +2,7 @@
 
 Runbook operacional para validar que a BD de produção (`tvde-db` no Render) tem backup utilizável e que conseguimos restaurar para uma base **isolada**.
 
-**Complementa:** [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §3 · [`FORWARD_PLAN_2026-07.md`](FORWARD_PLAN_2026-07.md) · [Render Postgres Recovery](https://render.com/docs/postgresql-backups)
+**Complementa:** [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §3 · [`FORWARD_PLAN_2026-07.md`](../archive/plans/FORWARD_PLAN_2026-07.md) · [Render Postgres Recovery](https://render.com/docs/postgresql-backups)
 
 ---
 

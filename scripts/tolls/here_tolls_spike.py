@@ -30,7 +30,7 @@ from typing import Any
 HERE_ROUTES_URL = "https://router.hereapi.com/v8/routes"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = REPO_ROOT / "tmp" / "here-tolls"
-REPORT_PATH = REPO_ROOT / "docs" / "analysis" / "HERE_TOLLS_SPIKE_2026-09.md"
+REPORT_PATH = REPO_ROOT / "docs" / "archive" / "audits" / "HERE_TOLLS_SPIKE_2026-09.md"
 
 # transportMode=car only (no taxi beta / truck)
 DEFAULT_RETURN = "summary,tolls,polyline"

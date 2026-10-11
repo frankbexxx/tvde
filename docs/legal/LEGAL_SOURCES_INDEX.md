@@ -3,7 +3,7 @@
 **Tipo:** inventário de fontes legais **brutas** arquivadas / referenciadas no repo  
 **Uso:** referência para leitura jurídica/operacional futura — **não** é parecer nem checklist de conformidade  
 **Actualização:** 2026-09-05 — lista IMT plataformas licenciadas + registo VAMULÁ/Ventos Férteis; 2026-09-04 — URLs DR / IMT / AMT / EUR-Lex  
-**Handoff:** [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) · research auxiliar [`research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md`](research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md) · matriz [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md) · registo entidade [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md)
+**Handoff:** [`SETEMBRO_2026_TODO_LIBRARY.md`](../archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) · research auxiliar [`research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md`](research/TVDE_LEGAL_RESEARCH_PERPLEXITY_2026-09-04.md) · matriz [`TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md) · registo entidade [`VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md`](VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md)
 
 **Regras:**
 

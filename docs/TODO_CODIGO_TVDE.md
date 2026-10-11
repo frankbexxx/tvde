@@ -1,6 +1,6 @@
 # TODO código — TVDE (versão final ajustada)
 
-Checklist **top-down** para fecho técnico até operação com confiança. Complementa o anexo A023–A035 em `docs/architecture/TVDE_ENGINEERING_ROADMAP.md` e a **Seção F** de `docs/meta/PROXIMA_SESSAO.md` (ex-`OPERATION_CHECKLIST.md`).
+Checklist **top-down** para fecho técnico até operação com confiança. Matriz histórica A023–A035: [`archive/plans/TVDE_ENGINEERING_ROADMAP.md`](archive/plans/TVDE_ENGINEERING_ROADMAP.md). Operação diária: [`../TODOdoDIA.md`](../TODOdoDIA.md).
 
 ---
 
@@ -229,4 +229,4 @@ Fila piloto comercial **arquivada:** [`archive/prompts/pilot-commercial/README.m
 
 ---
 
-**Ver também:** [visao_cursor.md](visao_cursor.md) (comercialização e checklist alargado), [architecture/TVDE_ENGINEERING_ROADMAP.md](architecture/TVDE_ENGINEERING_ROADMAP.md) (anexo pré-produção A023–A035).
+**Ver também:** [visao_cursor.md](visao_cursor.md) (LEGACY), [archive/plans/TVDE_ENGINEERING_ROADMAP.md](archive/plans/TVDE_ENGINEERING_ROADMAP.md) (A023–A035 histórico).

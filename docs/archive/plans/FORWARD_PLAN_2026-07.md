@@ -1,9 +1,11 @@
 # Plano operacional pós-piloto — Julho 2026
 
+> **STATUS: ARCHIVE / FECHADO** (2026-10-11) — snapshot Jul 2026. **Não** fonte actual. Ver [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md).
+
 **Objectivo:** inventário exaustivo do que está **aberto** nos `.md` do repo + visão de prioridades para partilha com ChatGPT / equipa.  
 **Última actualização:** 2026-07-19 (pagamentos + **O-SECURITY PASS**; Saúde **ok**; `main` @ `77ddfac`; PRs abertas **0**).
 
-**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
+**Ficheiros canónicos vivos:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) · [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) · [`CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · [`CHECKPOINT_2026-07-19_POST_415.md`](CHECKPOINT_2026-07-19_POST_415.md) · [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 
 ---
 
@@ -24,7 +26,7 @@
 
 **Próxima ordem recomendada:** (1) Admin Ops seguinte · (2) PARTNER-FLEET-1 · (3) Stripe live só com parceiro + docs.
 
-**Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md).
+**Higiene Git (futura, não urgente):** ~190 branches locais antigas; limpeza separada — ver [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md).
 
 ---
 
@@ -117,7 +119,7 @@
 
 ---
 
-## 3. Handoff — [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md)
+## 3. Handoff — [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md)
 
 Carrís sugeridos (actualizar após esta sessão):
 

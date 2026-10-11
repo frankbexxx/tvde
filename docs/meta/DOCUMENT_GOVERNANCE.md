@@ -111,7 +111,7 @@ A classificação pode constar de **banner/metadata** antes de mover ficheiros f
 | Findings (índice) | [`registers/FINDINGS.md`](../registers/FINDINGS.md) |
 | Consultas externas (índice) | [`registers/EXTERNAL_CONSULTATIONS.md`](../registers/EXTERNAL_CONSULTATIONS.md) |
 
-**Não canónicos (Fase 1):** [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) (REVIEW), [`TVDE_STATUS_SETEMBRO_2026.md`](../TVDE_STATUS_SETEMBRO_2026.md) (snapshot Setembro).
+**Arquivados (Fase 2B):** handoff [`PROXIMA_SESSAO.md`](../archive/plans/PROXIMA_SESSAO.md) · status Set [`TVDE_STATUS_SETEMBRO_2026.md`](../archive/plans/TVDE_STATUS_SETEMBRO_2026.md) — operação só [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
 ---
 

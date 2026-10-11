@@ -1,7 +1,8 @@
 # Auditoria UX humana — âmbito e regras
 
-Pasta temporária, fora do repositório `C:\dev\APP` e fora do Git.
-Nesta fase: observar, mapear e registar. Não corrigir.
+**Localização:** `docs/audits/ux/2026-10/` · **Tipo:** AUDIT (humano) · **Estado:** REVIEW — execução UX aberta (ver [`11_FINAL_EXECUTION_PLAN.md`](11_FINAL_EXECUTION_PLAN.md)).
+
+Nesta fase original: observar, mapear e registar. Implementação segue plano final.
 
 ## Princípio central
 

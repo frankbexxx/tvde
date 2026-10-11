@@ -1,6 +1,6 @@
 # UI — visibilidade, capacidades e implementação (TODO vivo)
 
-**Consulta ao abrir a sessão:** [`TODOdoDIA.md`](../../TODOdoDIA.md) painel **PRÓXIMA SESSÃO** + [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md). (Consulta Abril 2026 arquivada Lote 4.)
+**Consulta ao abrir a sessão:** [`TODOdoDIA.md`](../../TODOdoDIA.md). (Handoff histórico: [`archive/plans/PROXIMA_SESSAO.md`](../archive/plans/PROXIMA_SESSAO.md).)
 
 **Objectivo:** uma única referência para **o que falta no ecrã** (ou está incompleto) face ao backend / ao processo real. Quando um **smoke** ou uma operação exigir um controlo, implementa-se a partir daqui e marca-se o estado.
 
@@ -14,7 +14,7 @@
 | **Roles** | **Admin:** operações do dia-a-dia que **não** exigem “grande decisão” de sistema (ex.: aceitar novo utilizador, alterar password a pedido, estados legíveis). **Super admin:** **omnisciente** do processo — o que o admin **não** resolve (reconcile Stripe, stuck profundo, overrides perigosos, ferramentas de sistema). |
 | **Naming dos `.md`** | Mantém-se a estrutura actual do repo; **renomear** ficheiros de docs fica para **outra altura**. |
 
-**Ficheiros relacionados:** [`TODOdoDIA.md`](../../TODOdoDIA.md) (prioridades + abertos), [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) (handoff), [`GUIA_TESTES.md`](../testing/GUIA_TESTES.md) (passos manuais quando aplicável).
+**Ficheiros relacionados:** [`TODOdoDIA.md`](../../TODOdoDIA.md) (prioridades + abertos), [`GUIA_TESTES.md`](../testing/GUIA_TESTES.md) (passos manuais quando aplicável).
 
 ---
 

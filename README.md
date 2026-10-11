@@ -27,7 +27,7 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 4. **[docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)** — Git/GitHub para este repo (branches, PR, `main`; push directo a `main` está bloqueado).
 5. **[docs/IMPLEMENTACAO_E_TESTES.md](docs/IMPLEMENTACAO_E_TESTES.md)** — o que foi implementado (A000…), como testar, e **Parte II** (logs / pytest).
 
-_Handoff histórico (não canónico): [PROXIMA_SESSAO.md](docs/meta/PROXIMA_SESSAO.md) — ver governance._
+_Handoff histórico: [PROXIMA_SESSAO.md](docs/archive/plans/PROXIMA_SESSAO.md) (arquivo)._
 
 Guias operacionais rápidos:
 
