@@ -3,8 +3,8 @@
 **Estado actual: ainda NÃO estamos em MODO FÉRIAS.**  
 **Tip `main` referência:** `c22331d` (actualizar após pull)  
 **Calendário:** férias **14–31 agosto** · entrada oficial **13/14 ago** (após gatilho abaixo)  
-**Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)  
-**SSD detalhe:** [`SSD_FERIAS_READINESS.md`](SSD_FERIAS_READINESS.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](DEMO_MANEL_2_SETEMBRO.md)
+**Handoff:** painel [`TODOdoDIA.md`](../../TODOdoDIA.md) (canónico)  
+**SSD detalhe:** [`SSD_FERIAS_READINESS.md`](SSD_FERIAS_READINESS.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md)
 
 Sem passwords / valores de secrets neste ficheiro.
 

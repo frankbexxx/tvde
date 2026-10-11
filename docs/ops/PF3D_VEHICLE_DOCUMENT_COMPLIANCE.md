@@ -132,10 +132,10 @@ Listagem de candidatos — **não** implementar nesta fase:
 |------|------|---------------|---------------------|
 | **PF3D-0** | Docs-only — decisão / matriz (este ficheiro) | Não | **PASS** |
 | **PF3D-1** | Backend helper puro: `vehicle_compliance_status` · `vehicle_is_compliant` + pytest — **sem** wiring operacional | Não | **PASS** (#459) |
-| **DATA-1A…1E** | Audit / suggest / apply local / seed docs dummy / re-audit | Não (scripts) | **PASS** — [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](./PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
+| **DATA-1A…1E** | Audit / suggest / apply local / seed docs dummy / re-audit | Não (scripts) | **PASS** — [`PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md`](../archive/audits/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) |
 | **PF3D-2** | API read-only — expor `compliance_status` — **sem** bloqueio | Não | **PASS** (#466) |
 | **PF3D-3A** | Gates atrás de `ENABLE_VEHICLE_COMPLIANCE_GATES` (default código **false**) | Só se flag ON | **PASS** código (#467 + #468) · smoke OFF · **PROD ON** [`G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md`](./G_KYC_P0_04_GATE_ON_SMOKE_PASS_2026-09-09.md) |
-| **PF3D-3B** | Mensagens / observabilidade (i18n + CTA + logs) — **sem** activar flag | Não | **PASS** código (#486) · smoke **OFF** [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](./PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) · DIAG [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
+| **PF3D-3B** | Mensagens / observabilidade (i18n + CTA + logs) — **sem** activar flag | Não | **PASS** código (#486) · smoke **OFF** [`PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md`](../archive/ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) · DIAG [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../archive/audits/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) |
 | **PF3D-3** | Ligar gates globalmente / ON em prod | **Sim** | **DONE (G-KYC-P0-04)** — flag ON PROD + smoke PASS 2026-09-09; IMT/docs pessoais/PF3D-4 **não** incluídos |
 | **PF3D-4** | FE mensagens ricas Driver / Partner / Admin (além do mínimo 3B) | UX | **Parcial** — códigos bloqueantes (`vehicle_inactive` + compliance) mapeados PT/EN Driver/Partner (G-KYC-P0-04 FE); UX rica/Admin still pending |
 | **PF3D-5** | Override Admin / Partner — só se necessário | Controlo ops | Pendente |

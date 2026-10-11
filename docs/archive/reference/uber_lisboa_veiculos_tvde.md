@@ -6,8 +6,8 @@ Dados convertidos a partir de `C:/dev/_misc/carros_tvde_uber_Lisboa.txt` (marcas
 
 | Ficheiro | Formato |
 |----------|---------|
-| [uber_lisboa_veiculos_tvde.json](./uber_lisboa_veiculos_tvde.json) | JSON (`meta` + `vehicles[]`) |
-| [uber_lisboa_veiculos_tvde.csv](./uber_lisboa_veiculos_tvde.csv) | CSV (`make,model,year,categories`) |
+| [uber_lisboa_veiculos_tvde.json](../../reference/uber_lisboa_veiculos_tvde.json) | JSON (`meta` + `vehicles[]`) |
+| [uber_lisboa_veiculos_tvde.csv](../../reference/uber_lisboa_veiculos_tvde.csv) | CSV (`make,model,year,categories`) |
 
 ## Resumo
 

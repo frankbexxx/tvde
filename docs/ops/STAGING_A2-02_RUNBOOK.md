@@ -2,7 +2,7 @@
 
 **Objectivo:** segundo stack **PostgreSQL + API + Static Site**, isolado da produção, para OAuth com redirect “a sério”, smokes e merges sem tocar na BD de piloto.
 
-**Referências:** deploy prod exemplo [`docs/deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md); env [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md); URIs OAuth [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A2-03.
+**Referências:** deploy prod exemplo [`docs/deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md); env [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md); URIs OAuth [`docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A2-03.
 
 ---
 

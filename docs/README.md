@@ -14,7 +14,7 @@ Estrutura enxuta após auditoria docs 2026-06 (Lotes 1–4 concluídos).
 | `testing/` | Guias de teste, roster dev, validação campo |
 | `deploy/` | Render |
 | `ops/` | Cron, smokes W1, staging A2-02, logging |
-| `prompts/` | A000, A033, pilot-commercial, i18n index |
+| `prompts/` | A000, A033, i18n index (piloto comercial → `archive/prompts/`) |
 | `legal/` | Checklist operacional parceiro TVDE |
 | `diagrams/` | Fluxos Mermaid |
 | `meta/` | PROJECT, PROXIMA_SESSAO, DOCS_INDEX |

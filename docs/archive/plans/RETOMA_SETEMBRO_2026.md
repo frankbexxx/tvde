@@ -30,8 +30,8 @@
 
 **Fontes no repo (sem inventar letra/caminho além do documentado):**
 
-- [`docs/ops/SSD_FERIAS_READINESS.md`](SSD_FERIAS_READINESS.md)
-- [`docs/ops/MODO_FERIAS_2026.md`](MODO_FERIAS_2026.md)
+- [`SSD_FERIAS_READINESS.md`](SSD_FERIAS_READINESS.md)
+- [`MODO_FERIAS_2026.md`](MODO_FERIAS_2026.md)
 
 ### Procedimento documentado
 

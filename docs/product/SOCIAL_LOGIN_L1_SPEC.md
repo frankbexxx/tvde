@@ -2,7 +2,7 @@
 
 **Estado:** especificação **L1** — sem implementação obrigatória neste ficheiro.  
 **Próximo passo técnico:** **A3** (gate) → **L2** (backend + provedor).  
-**Relacionado:** [`docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md).
+**Relacionado:** [`docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md).
 
 ---
 

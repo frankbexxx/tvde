@@ -68,7 +68,7 @@
 |----|------|--------|-------|
 | **A2-02-1** | OAuth staging + URIs Google | **Em curso** | [`STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) |
 | **A2-02-2** | Smokes assertivos staging | **Por iniciar** | Depende A2-02-1 |
-| **A4** | Fecho onda auditoria A+L | **Por iniciar** | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+| **A4** | Fecho onda auditoria A+L | **Por iniciar** | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
 | **A3-R** | Gate §A3 checklist staging verde | **Em curso** | Humanos |
 
 ### P2 — UX / evolução
@@ -211,7 +211,7 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 
 ---
 
-## 8. Auditoria executável — [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md)
+## 8. Auditoria executável — [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md)
 
 ### A2 backlog (selecção P1/P2 ainda aberta)
 
@@ -263,7 +263,7 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 
 ---
 
-## 11. Piloto comercial (prompts) — [`prompts/pilot-commercial/`](../prompts/pilot-commercial/)
+## 11. Piloto comercial (prompts) — [`archive/prompts/pilot-commercial/`](../archive/prompts/pilot-commercial/)
 
 **Fase 0** (A001–A003) redigida; **A004+** em placeholder. Fila longa: partner UX, RBAC, multi-tenant, alertas, relatórios semanais, usage summary, etc. Ver [`IMPLEMENTATION_SEQUENCE.md`](../prompts/pilot-commercial/IMPLEMENTATION_SEQUENCE.md).
 

@@ -1,5 +1,8 @@
 # Estrutura da GUI — TVDE Web App
 
+> **STATUS: OBSOLETO / LEGACY** (2026-10-11)  
+> Mantido por rastreabilidade. UI actual: código + [`ux/navigation-inventory.md`](ux/navigation-inventory.md).
+
 Documento detalhado da estrutura da interface para **Web** e **Android** (PWA). Permite análise e correção de layout, responsividade e comportamento.
 
 ---

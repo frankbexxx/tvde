@@ -10,7 +10,7 @@ Relacionado (não substituído por este ficheiro):
 - [`MANEL_INPUTS_TODOS_2026-08-07.md`](MANEL_INPUTS_TODOS_2026-08-07.md)
 - [`MANEL_RESUMO_NAO_TECNICO_2026-08-07.md`](MANEL_RESUMO_NAO_TECNICO_2026-08-07.md)
 - [`DEMO_MANEL_2_SETEMBRO.md`](../ops/DEMO_MANEL_2_SETEMBRO.md)
-- [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) · [`SSD_FERIAS_READINESS.md`](../ops/SSD_FERIAS_READINESS.md)
+- [`MODO_FERIAS_2026.md`](../archive/plans/MODO_FERIAS_2026.md) · [`SSD_FERIAS_READINESS.md`](../archive/plans/SSD_FERIAS_READINESS.md)
 - Fontes legais: [`LEGAL_SOURCES_INDEX.md`](../legal/LEGAL_SOURCES_INDEX.md)
 - Negócio / custos: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COSTS_OPERATION_MODEL_2026-08.md) · [`MANEL_PRICING_COMMISSION_MODEL_2026-08.md`](../business/MANEL_PRICING_COMMISSION_MODEL_2026-08.md) · [`MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md`](../business/MANEL_GO_TO_MARKET_AND_SIMULATOR_2026-08.md)
 
@@ -418,7 +418,7 @@ Docs derivados: [`MANEL_COSTS_OPERATION_MODEL_2026-08.md`](../business/MANEL_COS
 
 | Campo | Conteúdo |
 |-------|----------|
-| **Origem** | [`MODO_FERIAS_2026.md`](../ops/MODO_FERIAS_2026.md) · SSD readiness |
+| **Origem** | [`MODO_FERIAS_2026.md`](../archive/plans/MODO_FERIAS_2026.md) · SSD readiness |
 | **Resumo** | Branches pequenas · push GitHub · GitHub = verdade · portátil MJ máquina activa · sem Docker/backend MJ · sem B2/Stripe live/PF3D |
 | **Estado actual** | MODO FÉRIAS ainda **OFF** até gatilho (refresh SSD + secrets cifrados) |
 | **Prioridade Setembro** | P0 (disciplina operacional) |

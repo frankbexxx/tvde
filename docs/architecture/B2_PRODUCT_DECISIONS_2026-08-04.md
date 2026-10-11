@@ -2,7 +2,7 @@
 
 **Estado:** **GROUNDWORK PRÉ-FÉRIAS FECHADO** · feature continua **OFF** · zero runtime writers  
 **Tip `main`:** `1671c9f` (#527)  
-**Base técnica:** [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md)  
+**Base técnica:** [`B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md`](../archive/audits/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)
 
 ---

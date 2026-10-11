@@ -1,4 +1,4 @@
-> **HISTORICAL / SUPERSEDED — DO NOT USE FOR OPERATIONS**
+> **STATUS: OBSOLETO / LEGACY — HISTORICAL / SUPERSEDED — DO NOT USE FOR OPERATIONS**
 >
 > Snapshot de **2026-03-12**. **Não** representa a arquitectura operacional actual.
 > **Não** uses comandos, env ou padrões deste ficheiro para local / staging / prod

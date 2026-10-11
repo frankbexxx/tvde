@@ -1,5 +1,9 @@
 # Visão geral do projeto TVDE — perspectiva Cursor
 
+> **STATUS: OBSOLETO / LEGACY** (2026-10-11)  
+> Mantido apenas por rastreabilidade histórica. **Não usar** como fonte de verdade actual.  
+> Substituído por: [`meta/PROJECT.md`](meta/PROJECT.md) · [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) · [`legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md).
+
 _Documento gerado como síntese de contexto de repositório, conversas de implementação e leitura de `README`, `docs/meta/PROJECT.md`, `docs/meta/PROXIMA_SESSAO.md` (Seção F), `docs/meta/DOCS_INDEX.md` e roadmap. Serve de handoff mental entre sessões e de quadro para decisões de comercialização._
 
 ---

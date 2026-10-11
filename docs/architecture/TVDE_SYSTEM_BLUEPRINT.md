@@ -1,4 +1,4 @@
-> **REFERENCE / SUPERSEDED AS CURRENT ARCHITECTURE**
+> **STATUS: OBSOLETO / LEGACY — REFERENCE / SUPERSEDED AS CURRENT ARCHITECTURE**
 >
 > Documento **aspiracional / de referência** (datado **2026-03-12**). **Não** é runbook.
 > Features e componentes aqui descritos podem nunca ter sido implementados ou já terem sido substituídos.
