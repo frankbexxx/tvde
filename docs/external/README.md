@@ -105,7 +105,26 @@ Blueprints (não finais): [`DRAFT_LEGAL_DOSSIER.md`](templates/DRAFT_LEGAL_DOSSI
 
 ---
 
-## 6. Fluxo operacional (resumo)
+## 6. Validation
+
+Antes de qualquer build DOCX/PDF (fase futura), validar o dossier:
+
+```bash
+pip install -r scripts/documents/requirements.txt
+python -m scripts.documents.cli validate docs/external/sources/EXT-FIXTURE-001/dossier.yaml
+```
+
+Opção `--json` para resultado estruturado (sem valores sensíveis completos).
+
+- **Validate não aprova** dossiers nem substitui revisão humana.
+- **Validate não envia** documentos nem altera [`registers/`](../registers/).
+- O scan PII/credenciais é **guardrail conservador**, não garantia legal ou de compliance.
+
+Fixture técnica: [`sources/EXT-FIXTURE-001/`](sources/EXT-FIXTURE-001/) · schema: [`scripts/documents/schemas/dossier.schema.json`](../../scripts/documents/schemas/dossier.schema.json)
+
+---
+
+## 7. Fluxo operacional (resumo)
 
 1. Seleccionar `Q-EXT-*` em estado `PRONTO ENVIO` / `PREPARAR` ([`EXTERNAL_CONSULTATIONS.md`](../registers/EXTERNAL_CONSULTATIONS.md)).
 2. Copiar template dossier → preencher **sem PII** desnecessária; exportar PDF **fora do repo** se necessário.
@@ -115,7 +134,7 @@ Blueprints (não finais): [`DRAFT_LEGAL_DOSSIER.md`](templates/DRAFT_LEGAL_DOSSI
 
 ---
 
-## 7. Fase actual (2026-10-11)
+## 8. Fase actual (2026-10-11)
 
 - Estrutura e templates **criados**.
 - **Nenhum** dossier final enviado; **nenhum** `Q-EXT` marcado como `ENVIADO`.

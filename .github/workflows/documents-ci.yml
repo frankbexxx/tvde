@@ -1,0 +1,37 @@
+# DOC-TOOL-2 — external dossier validator (no Pandoc/LibreOffice)
+name: documents-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/documents/**"
+      - "docs/external/sources/**"
+      - "docs/external/brand/**"
+      - ".github/workflows/documents-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/documents/**"
+      - "docs/external/sources/**"
+      - "docs/external/brand/**"
+      - ".github/workflows/documents-ci.yml"
+
+jobs:
+  documents-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install document tooling deps
+        run: pip install -r scripts/documents/requirements.txt
+
+      - name: Pytest (scripts/documents)
+        run: python -m pytest scripts/documents/tests/ -v
+
+      - name: Validate EXT-FIXTURE-001
+        run: python -m scripts.documents.cli validate docs/external/sources/EXT-FIXTURE-001/dossier.yaml

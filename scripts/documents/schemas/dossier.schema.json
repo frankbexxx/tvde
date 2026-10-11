@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vamula.pt/schemas/external-dossier.json",
+  "title": "ExternalDossier",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "external_id",
+    "title",
+    "version",
+    "created",
+    "updated",
+    "status",
+    "audience",
+    "confidentiality",
+    "owner",
+    "profile",
+    "q_ext",
+    "dec_refs",
+    "find_refs",
+    "sources",
+    "output"
+  ],
+  "properties": {
+    "external_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^EXT-[A-Z][A-Z0-9]*(-[A-Z0-9]+)+$"
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "version": {
+      "type": "string",
+      "pattern": "^v[0-9]+(\\.[0-9]+)*$"
+    },
+    "created": { "type": "string", "format": "date" },
+    "updated": { "type": "string", "format": "date" },
+    "status": {
+      "type": "string",
+      "enum": ["DRAFT", "REVIEW", "APPROVED"]
+    },
+    "audience": { "type": "string", "minLength": 1 },
+    "confidentiality": {
+      "type": "string",
+      "enum": ["INTERNAL", "EXTERNAL-CONFIDENTIAL", "PUBLIC"]
+    },
+    "owner": { "type": "string", "minLength": 1 },
+    "profile": {
+      "type": "string",
+      "enum": ["legal", "fiscal", "insurance", "regulator", "generic"]
+    },
+    "q_ext": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^Q-EXT-[A-Z]+-[0-9]{3}$" }
+    },
+    "dec_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "find_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "anchor": { "type": "string" }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "basename": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "markdown": {
+      "type": "string",
+      "default": "dossier.md"
+    }
+  }
+}
