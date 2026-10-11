@@ -10,23 +10,23 @@ Este dossier:
 - descreve apenas o **contexto factual** necessário ao advogado;
 - **não** antecipa conclusões legais nem substitui documentação interna completa.
 
-**Estado:** rascunho interno (`DRAFT`) — **não constitui pedido de parecer formalmente enviado**.
+**Estado:** rascunho interno (`DRAFT`) — **não foi enviado** ao destinatário e **não constitui** pedido de parecer formal.
 
 ---
 
 ## Contexto essencial da plataforma
 
-**Entidade e marca.** A plataforma é operada por **Ventos Férteis, Lda.**, designação comercial **VAMULÁ**. A licença de **gestor de plataforma eletrónica TVDE** junto do IMT (referência interna **354/2026**, documentada internamente) está registada; **não** confundir com integração técnica IMT para validação de operadores, motoristas ou veículos.
+**Entidade e marca.** A plataforma é operada por **Ventos Férteis, Lda.**, designação comercial **VAMULÁ**. A **licença n.º 354/2026** de **gestor de plataforma eletrónica TVDE** junto do IMT está documentada em registo interno alinhado com a lista oficial IMT; **não** confundir com integração técnica IMT para validação de operadores, motoristas ou veículos.
 
 **Modelo de papéis.** Decisão interna consolidada: o **parceiro TVDE (frota/operador licenciado)** é fonte de verdade **operacional** para documentação e relação com motoristas; a plataforma VAMULÁ presta **serviço tecnológico** de intermediação (decisão interna DEC-LEG-002).
 
-**Utilizadores.** Passageiros, motoristas e parceiros (gestão de frota) interagem através da aplicação. Termos e política de privacidade públicos existem no site institucional; versionamento contratual in-app é parcial (ver findings abaixo).
+**Utilizadores.** Passageiros, motoristas e parceiros (gestão de frota) interagem através da aplicação. Termos e política de privacidade públicos existem no site institucional; o versionamento contratual na aplicação está parcial (ver lacunas abaixo).
 
-**Fase actual.** Piloto / fase controlada: funcionalidades de compliance e pagamentos estão **parcialmente** implementadas; alguns mecanismos de enforcement estão desligados ou pendentes de validação externa antes de produção alargada.
+**Fase actual.** Piloto / fase controlada: funcionalidades de compliance e pagamentos estão **parcialmente** implementadas; alguns bloqueios automáticos de conformidade estão desactivados ou pendentes de validação externa antes de produção alargada.
 
-**Pagamentos.** Cobrança ao passageiro via prestador de pagamentos (conta business); operação em modo de testes até decisão interna de activação em ambiente real (DEC-PAY-001 — referência apenas; não objecto deste dossier).
+**Pagamentos.** Cobrança ao passageiro via prestador de pagamentos (conta empresarial); operação em modo de testes até decisão interna de activação em ambiente real (DEC-PAY-001 — referência apenas; não objecto deste dossier).
 
-**Compliance viatura e documentos.** Existem gates internos de documentação e aprovação administrativa de motoristas/veículos; **não** são equivalentes a validação IMT automática (findings FIND-LEG-IMT-* e FIND-LEG-DRV-01).
+**Compliance viatura e documentos.** Existem controlos internos de documentação e aprovação administrativa de motoristas/veículos; **não** são equivalentes a validação IMT automática (lacunas FIND-LEG-IMT-* e FIND-LEG-DRV-01).
 
 **Dependência cruzada (não incluída como pergunta neste dossier).** Pedido técnico ao **IMT** sobre canal de validação (Q-EXT-IMT-001) corre em paralelo; a resposta pode informar a pergunta Q-EXT-LEG-001, sem substituir parecer jurídico.
 
@@ -36,38 +36,36 @@ Este dossier:
 
 | ID | Decisão (resumo) | Data | Impacto para este dossier |
 |----|------------------|------|---------------------------|
-| DEC-LEG-002 | Partner = titular/licenciado; plataforma = tecnologia | 2026-09-02 | Enquadra responsabilidades operador vs plataforma |
-| DEC-LEG-003 | Gates compliance viatura previstos M2; flag de enforcement pode estar OFF | 2026-09-04 | Relaciona bloqueios internos vs obrigação legal |
-| DEC-LEG-004 | Limite 10 h / 24 h com registo; enforcement efectivo em M2 | 2026-09-04 | Base para Q-EXT-LEG-002 |
-| DEC-LEG-005 | Partner/frota = fonte operacional documental (≠ IMT) | 2026-09-02 | Q-EXT-LEG-001, Q-EXT-LEG-005 |
+| DEC-LEG-002 | Parceiro TVDE = titular/licenciado; plataforma = tecnologia | 2026-09-02 | Enquadra responsabilidades operador vs plataforma |
+| DEC-LEG-003 | Controlo de compliance viatura previsto; bloqueios automáticos podem estar desactivados | 2026-09-04 | Relaciona bloqueios internos vs obrigação legal |
+| DEC-LEG-004 | Limite 10 h / 24 h com registo; bloqueio efectivo antes de operação plena | 2026-09-04 | Base para Q-EXT-LEG-002 |
+| DEC-LEG-005 | Parceiro/frota = fonte operacional documental (≠ IMT) | 2026-09-02 | Q-EXT-LEG-001, Q-EXT-LEG-005 |
 | DEC-LEG-006 | Pedir validação jurídica externa (este exercício) | 2026-09-02 | Justifica consulta |
-| DEC-LEG-007 | Termos + privacidade bloqueantes M2 | 2026-09-02 | Contexto Q-EXT-LEG-004 |
+| DEC-LEG-007 | Termos + privacidade exigidos antes de operação plena | 2026-09-02 | Contexto Q-EXT-LEG-004 |
 | DEC-LEG-010 | Licença gestor plataforma IMT documentada (≠ API) | 2026-09-05 | Contexto licenciamento plataforma |
 | DEC-PROD-002 | Termos/privacidade: registo + reaceitação versionada | 2026-09-25 | Q-EXT-LEG-004 |
 
 ---
 
-## Findings jurídicos relevantes (selecção)
+## Lacunas identificadas internamente relevantes para a consulta
 
-*Findings descrevem lacunas técnicas/operacionais identificadas internamente — **não** são conclusões de direito.*
+*As entradas abaixo descrevem lacunas operacionais ou técnicas identificadas internamente — **não** constituem conclusões de direito.*
 
-| ID | Resumo | Gravidade | Impacto |
-|----|--------|-----------|---------|
+| ID | Resumo | Prioridade interna | Impacto |
+|----|--------|-------------------|---------|
 | FIND-LEG-IMT-01 | Integração IMT operador ausente | P0 | Q-EXT-LEG-001 |
 | FIND-LEG-IMT-02 | Integração IMT motorista ausente | P0 | Q-EXT-LEG-001 |
 | FIND-LEG-IMT-03 | Integração IMT veículo ausente | P0 | Q-EXT-LEG-001 |
-| FIND-LEG-GATE-01 | Gate bloqueio operador (licença frota) ausente | P1 | Q-EXT-LEG-005 |
+| FIND-LEG-GATE-01 | Bloqueio de operador (licença de frota) ausente | P1 | Q-EXT-LEG-005 |
 | FIND-LEG-DRV-01 | Bloqueio motorista/veículo parcial (aprovação interna) | P1 | Q-EXT-LEG-001, Q-EXT-LEG-005 |
-| FIND-LEG-HRS-01 | Enforcement 10 h/24 h desligado em runtime | P1 | Q-EXT-LEG-002 |
-| FIND-LEG-HRS-02 | Agregação cross-platform de tempos ausente | P2 | Q-EXT-LEG-002 |
-| FIND-LEG-SOS-01 | SOS com 112 + partilha; validação externa pendente | PENDENTE EXTERNO | Q-EXT-LEG-003 |
-| FIND-LEG-CTR-01 | Contratos adesão / versionamento in-app incompleto | P2 | Q-EXT-LEG-004 |
+| FIND-LEG-HRS-01 | Limite 10 h/24 h: bloqueio automático desactivado na configuração actual | P1 | Q-EXT-LEG-002 |
+| FIND-LEG-HRS-02 | Sem soma de tempos entre diferentes plataformas TVDE | P2 | Q-EXT-LEG-002 |
+| FIND-LEG-SOS-01 | SOS com 112 e partilha de viagem; **validação externa pendente** | — | Q-EXT-LEG-003 |
+| FIND-LEG-CTR-01 | Contratos de adesão / versionamento na aplicação incompleto | P2 | Q-EXT-LEG-004 |
 
 ---
 
 ## Perguntas jurídicas
-
-*Estado no registo interno: **PRONTO ENVIO** (ainda **não enviado** ao advogado).*
 
 ### Q-EXT-LEG-001
 
@@ -85,19 +83,19 @@ Como deve a plataforma cumprir a validação de **operador**, **motorista** e **
 Contexto mínimo
 :::
 
-A plataforma dispõe de fluxos de onboarding, upload documental e aprovação administrativa; **não** dispõe de integração automática com sistemas IMT para os três eixos. Existe pedido técnico separado ao IMT (Q-EXT-IMT-001).
+A plataforma dispõe de fluxos de registo, envio documental e aprovação administrativa; **não** dispõe de integração automática com sistemas IMT para os três eixos. Existe pedido técnico separado ao IMT (Q-EXT-IMT-001).
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
 :::
 
-Bloqueia modelo operacional, comunicação a parceiros e critérios de «go-live» sem exposição a incumprimento.
+Bloqueia modelo operacional, comunicação a parceiros e critérios de **entrada em produção** sem exposição a incumprimento.
 
 ::: {custom-style="Q-EXT Label"}
 Impacto da resposta
 :::
 
-Define procedimento manual documentado vs exigência de integração imediata; afecta gates de activação de motoristas e veículos.
+Define procedimento manual documentado vs exigência de integração imediata; afecta activação de motoristas e veículos na plataforma.
 
 ::: {custom-style="Q-EXT Label"}
 Prioridade
@@ -119,7 +117,7 @@ Q-EXT-LEG-005
 Pergunta
 :::
 
-Como interpretar, para efeitos de **bloqueios** de operador, motorista e veículo, o standard de **«conhecimento»** ou **«devia ter conhecimento»** previsto no artigo 14.º do regime TVDE?
+Como interpretar, para efeitos de **bloqueios** de operador, motorista e veículo, o **critério de «conhecimento» ou «devia ter conhecimento»** previsto no artigo 14.º do regime TVDE?
 
 ::: {custom-style="Q-EXT Label"}
 Contexto mínimo
@@ -159,19 +157,19 @@ Q-EXT-LEG-002
 Pergunta
 :::
 
-O que conta como **tempo de operação** para o limite de **10 horas em 24 horas**; qual o comportamento exigido **perto do limite** ou com viagem já iniciada; e como tratar **tempos agregados cross-platform**?
+O que conta como **tempo de operação** para o limite de **10 horas em 24 horas**; qual o comportamento exigido **perto do limite** ou com viagem já iniciada; e como tratar **tempos acumulados pelo motorista em diferentes plataformas TVDE**?
 
 ::: {custom-style="Q-EXT Label"}
 Contexto mínimo
 :::
 
-Existe registo interno de tempos de condução; o enforcement automático pode estar desactivado pending parecer. Não há agregação com outras plataformas.
+Existe registo interno de tempos de condução; o bloqueio automático pode estar desactivado, **pendente de parecer**. Não há soma de tempos **entre diferentes plataformas TVDE**.
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
 :::
 
-Decisão interna DEC-LEG-004 prevê enforcement em M2; activação sem enquadramento legal aumenta risco.
+A decisão interna DEC-LEG-004 prevê bloqueio efectivo antes da operação plena; activação sem enquadramento legal aumenta risco.
 
 ::: {custom-style="Q-EXT Label"}
 Impacto da resposta
@@ -199,19 +197,19 @@ Q-EXT-LEG-003
 Pergunta
 :::
 
-O mecanismo actual de **emergência** (contacto **112**, partilha de localização / snapshot de viagem) é **suficiente** enquanto requisito legal, ou exige integração PSAP, URL pública dedicada ou outro canal regulado?
+O mecanismo actual de **emergência** (contacto **112**, partilha de localização e **resumo da viagem em curso** para terceiros autorizados) é **suficiente** enquanto requisito legal, ou exige ligação a centros de atendimento de emergência (PSAP), página pública dedicada ou outro canal regulado?
 
 ::: {custom-style="Q-EXT Label"}
 Contexto mínimo
 :::
 
-Funcionalidade de SOS disponível na app; matriz legal interna (L-19 a L-22) identificou requisitos a validar externamente.
+Funcionalidade de SOS disponível na aplicação; análise legal interna (referências L-19 a L-22) identificou requisitos a validar externamente.
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
 :::
 
-Evitar lançamento com fundação incompleta ou investimento indevido em integrações não obrigatórias.
+Evitar início de operação com mecanismo juridicamente insuficiente ou investimento indevido em integrações não obrigatórias.
 
 ::: {custom-style="Q-EXT Label"}
 Impacto da resposta
@@ -245,19 +243,19 @@ Que **contratos** são juridicamente exigidos entre plataforma, operador, motori
 Contexto mínimo
 :::
 
-Termos gerais publicados no site; fluxo de aceitação versionada in-app está parcialmente implementado (M2.11). Não se junta minuta proposta neste dossier.
+Termos gerais publicados no site; o fluxo de aceitação versionada na aplicação está parcialmente implementado. Não se junta minuta proposta neste dossier.
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
 :::
 
-Contratos são pré-requisito M2 e comunicações AMT/IMT podem depender de modelo contratual.
+Contratos são pré-requisito para operação plena; comunicações AMT/IMT podem depender de modelo contratual.
 
 ::: {custom-style="Q-EXT Label"}
 Impacto da resposta
 :::
 
-Roadmap legal e desenho de UX de aceitação.
+Plano de implementação contratual e **fluxo de aceitação na aplicação**.
 
 ::: {custom-style="Q-EXT Label"}
 Prioridade
@@ -285,7 +283,7 @@ Que **comunicações** às entidades reguladoras (IMT, AMT) são **legalmente ob
 Contexto mínimo
 :::
 
-Consultas procedimentais AMT/IMT existem em dossiers separados; aqui pretende-se enquadramento **legal** de deveres de comunicação.
+Questões sobre **formulários, canais e prazos** junto de IMT e AMT serão tratadas **separadamente** em consultas procedimentais; neste dossier pretende-se o enquadramento **legal** dos deveres de comunicação.
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
@@ -297,7 +295,7 @@ Evitar omissões de comunicação formal e calendário interno de compliance.
 Impacto da resposta
 :::
 
-Processos internos, responsáveis e articulação com consultas fiscais/procedimentais.
+Processos internos, responsáveis e articulação com consultas fiscais e procedimentais.
 
 ::: {custom-style="Q-EXT Label"}
 Prioridade
@@ -318,7 +316,7 @@ Solicita-se, por pergunta ou globalmente:
 - indicação de documentação ou comunicações adicionais recomendadas;
 - referência a alterações legislativas relevantes se aplicável.
 
-Respostas podem ser entregues por email profissional ou documento separado; **não** se solicita nesta fase integração automática no registo interno.
+Respostas podem ser entregues por email profissional ou documento separado; **não** se solicita nesta fase registo automático das respostas nos sistemas internos.
 
 ---
 
@@ -334,5 +332,5 @@ Respostas podem ser entregues por email profissional ou documento separado; **n�
 
 ## Exclusões deliberadas deste dossier
 
-- **Q-EXT-LEG-006** (art. 17.º-A): estado interno **PREPARAR** — aguarda checklist objectivo.
-- Perguntas **fiscais**, **seguradora**, **Stripe** e procedimentos **AMT/IMT** puros: dossiers próprios.
+- **Q-EXT-LEG-006** (art. 17.º-A): consulta ainda em preparação interna — aguarda checklist objectivo.
+- Perguntas **fiscais**, **seguradora**, **pagamentos** e procedimentos **AMT/IMT** meramente procedimentais: tratadas noutras consultas.
