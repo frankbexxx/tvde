@@ -13,7 +13,9 @@
 
 Cada linha liga **pergunta → envio → resposta → decisão interna** ([`DOCUMENT_GOVERNANCE.md`](../meta/DOCUMENT_GOVERNANCE.md) princípio 3). Resposta externa **não** altera o projecto até [`DECISIONS.md`](DECISIONS.md) datada.
 
-**Working list (negócio):** [`TVDE_DECISOES_EXTERNAS_PENDENTES.md`](../business/TVDE_DECISOES_EXTERNAS_PENDENTES.md) · dossiers PDF = Fase 4 (`docs/external/`)
+**Working list (negócio):** [`TVDE_DECISOES_EXTERNAS_PENDENTES.md`](../business/TVDE_DECISOES_EXTERNAS_PENDENTES.md)
+
+**Política e dossiers (Fase 4):** [`external/README.md`](../external/README.md) · templates [`external/templates/`](../external/templates/) · blueprints [`DRAFT_LEGAL_DOSSIER.md`](../external/templates/DRAFT_LEGAL_DOSSIER.md) · [`DRAFT_FISCAL_DOSSIER.md`](../external/templates/DRAFT_FISCAL_DOSSIER.md)
 
 ---
 

@@ -18,6 +18,7 @@
 | **Decisões (índice)** | [`registers/DECISIONS.md`](../registers/DECISIONS.md) |
 | **Findings (índice)** | [`registers/FINDINGS.md`](../registers/FINDINGS.md) |
 | **Consultas externas (índice)** | [`registers/EXTERNAL_CONSULTATIONS.md`](../registers/EXTERNAL_CONSULTATIONS.md) |
+| **Documentação externa (política)** | [`external/README.md`](../external/README.md) |
 
 ---
 
