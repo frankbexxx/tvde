@@ -11,7 +11,7 @@ Substitui Bugbot / Cloud Agents / automações automáticas. Revisão humana, cu
 - [ ] Título/descrição batem certo com o diff
 - [ ] Diff só no que a PR promete (sem drive-by)
 - [ ] Sem alterações em `.cursor/rules/` salvo pedido explícito
-- [ ] Docs: só o necessário; `PROXIMA_SESSAO.md` só se for handoff desta sessão
+- [ ] Docs: só o necessário; handoff operacional em [`TODOdoDIA.md`](../../TODOdoDIA.md) (GOV-DOC-002). [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md): **REVIEW / NÃO CANÓNICO / pendente arquivo** — não actualizar como documento de PR (GOV-DOC-004)
 
 ## 2. Segurança / auth / RBAC / secrets
 
@@ -63,7 +63,7 @@ Substitui Bugbot / Cloud Agents / automações automáticas. Revisão humana, cu
 
 - [ ] Preferir squash + apagar branch
 - [ ] Após merge: sync `main` local (`fetch` → `checkout main` → `pull --ff-only`)
-- [ ] Handoff: o que mudou, o que falta, smokes se deploy relevante
+- [ ] Handoff: o que mudou, o que falta, smokes se deploy relevante — em [`TODOdoDIA.md`](../../TODOdoDIA.md) quando aplicável
 - [ ] **Não mergear** sem confirmação explícita do Frank
 
 ---
