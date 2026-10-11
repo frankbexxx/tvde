@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
+
+import yaml
 
 
 class PandocNotFoundError(FileNotFoundError):
@@ -15,7 +18,6 @@ def find_pandoc() -> Path:
     exe = shutil.which("pandoc")
     if exe:
         return Path(exe)
-    # Windows default install path (winget / MSI)
     win_default = Path.home() / "AppData" / "Local" / "Pandoc" / "pandoc.exe"
     if win_default.is_file():
         return win_default
@@ -55,8 +57,27 @@ def run_pandoc(
         "-o",
         str(output_docx),
     ]
-    for key, value in metadata.items():
-        if value:
-            cmd.extend(["-M", f"{key}={value}"])
-    subprocess.run(cmd, check=True, capture_output=True, text=True)
+    meta_file: Path | None = None
+    filtered = {k: v for k, v in metadata.items() if v}
+    if filtered:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".yaml",
+            delete=False,
+            encoding="utf-8",
+        ) as tmp:
+            yaml.safe_dump(filtered, tmp, allow_unicode=True)
+            meta_file = Path(tmp.name)
+        cmd.extend(["--metadata-file", str(meta_file)])
+
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        if proc.returncode != 0:
+            raise subprocess.CalledProcessError(
+                proc.returncode, cmd, proc.stdout, proc.stderr
+            )
+    finally:
+        if meta_file and meta_file.is_file():
+            meta_file.unlink(missing_ok=True)
+
     return cmd

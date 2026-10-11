@@ -84,6 +84,7 @@ def _cmd_build(args) -> int:
             out,
             repo_root=args.repo_root.resolve(),
             allow_in_repo=args.allow_in_repo,
+            formats=args.formats,
         )
     except OutputPathError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -98,8 +99,14 @@ def _cmd_build(args) -> int:
     print("DOC BUILD")
     print(f"ID: {result.output_dir.name}")
     print(f"DOCX: {result.docx_path}")
+    if result.pdf_generated and result.pdf_path:
+        print(f"PDF: {result.pdf_path}")
+    else:
+        print("PDF: (not generated)")
     print(f"MANIFEST: {result.manifest_path}")
     print(f"PANDOC: {result.pandoc_version}")
+    if result.libreoffice_version:
+        print(f"LIBREOFFICE: {result.libreoffice_version}")
     return 0
 
 
@@ -110,9 +117,14 @@ def _cmd_inspect(args) -> int:
     print(f"ID: {report.external_id or '(unknown)'}")
     print(f"MANIFEST: {report.manifest_path} ({'OK' if report.manifest_path.is_file() else 'MISSING'})")
     print(f"DOCX: {report.docx_path} ({'OK' if report.docx_exists else 'MISSING'})")
-    print(f"SIZE: {report.size_bytes} bytes")
-    print(f"HASH MATCH: {report.hash_match}")
+    print(f"DOCX SIZE: {report.docx_size_bytes} bytes")
+    print(f"DOCX HASH MATCH: {report.docx_hash_match}")
+    print(f"PDF GENERATED: {report.pdf_generated}")
+    print(f"PDF: {report.pdf_path} ({'OK' if report.pdf_exists else 'MISSING'})")
+    print(f"PDF SIZE: {report.pdf_size_bytes} bytes")
+    print(f"PDF HASH MATCH: {report.pdf_hash_match}")
     print(f"PANDOC (manifest): {report.pandoc_version or '(n/a)'}")
+    print(f"LIBREOFFICE (manifest): {report.libreoffice_version or '(n/a)'}")
     for msg in report.messages:
         print(f"- {msg}")
     return 0 if report.ok else 1
@@ -127,9 +139,14 @@ def main(argv: list[str] | None = None) -> int:
     val.add_argument("--json", action="store_true")
     val.add_argument("--repo-root", type=Path, default=REPO_ROOT)
 
-    bld = sub.add_parser("build", help="Validate then build DOCX via Pandoc")
+    bld = sub.add_parser("build", help="Validate then build DOCX (+ PDF if LO available)")
     bld.add_argument("yaml_path", type=Path)
     bld.add_argument("--out", type=Path, default=None, help="Output directory (outside repo)")
+    bld.add_argument(
+        "--formats",
+        default=None,
+        help="docx and/or docx,pdf (default: docx + pdf if LibreOffice available)",
+    )
     bld.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     bld.add_argument(
         "--allow-in-repo",
