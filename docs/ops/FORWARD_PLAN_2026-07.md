@@ -265,7 +265,7 @@ Gaps `parcial`: A3 saúde mobile device; A5 bulk/filtros; P2 erros acionáveis.
 
 ## 11. Piloto comercial (prompts) — [`archive/prompts/pilot-commercial/`](../archive/prompts/pilot-commercial/)
 
-**Fase 0** (A001–A003) redigida; **A004+** em placeholder. Fila longa: partner UX, RBAC, multi-tenant, alertas, relatórios semanais, usage summary, etc. Ver [`IMPLEMENTATION_SEQUENCE.md`](../prompts/pilot-commercial/IMPLEMENTATION_SEQUENCE.md).
+**Fase 0** (A001–A003) redigida; **A004+** em placeholder. Fila longa: partner UX, RBAC, multi-tenant, alertas, relatórios semanais, usage summary, etc. Ver [`IMPLEMENTATION_SEQUENCE.md`](../archive/prompts/pilot-commercial/IMPLEMENTATION_SEQUENCE.md).
 
 **Não duplicar aqui** — tratar como roadmap produto B2B separado do fecho ops P5.
 
