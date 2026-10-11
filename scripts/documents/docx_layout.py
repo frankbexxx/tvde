@@ -1,4 +1,4 @@
-"""DOCX layout post-process: table column widths and heading keep-with-next."""
+"""DOCX layout post-process: table column widths, typography, heading keep-with-next."""
 
 from __future__ import annotations
 
@@ -6,15 +6,15 @@ import re
 import zipfile
 from pathlib import Path
 
-# Usable width between margins (twips), aligned with Pandoc/reference.docx body tables.
-_TABLE_WIDTH_DXA = 9026
+# Half-points (Word sz): 16 = 8pt table body — matches manual review density.
+_TABLE_SZ = "16"
 
-# ID | decisão/resumo | data/prioridade | impacto/nota
+# Column widths (twips): content-driven totals, not forced full page width.
 _PROFILES: list[tuple[tuple[str, ...], list[int]]] = [
-    (("Campo", "Valor"), [2200, 6826]),
-    (("ID", "Decisão (resumo)", "Data", "Impacto para este dossier"), [1200, 3626, 1000, 3200]),
-    (("ID", "Resumo", "Prioridade interna", "Impacto"), [1200, 4206, 1100, 2520]),
-    (("Ref.", "Descrição", "Nota"), [1000, 5026, 3000]),
+    (("Campo", "Valor"), [1900, 5900]),
+    (("ID", "Decisão (resumo)", "Data", "Impacto para este dossier"), [1320, 3460, 756, 2264]),
+    (("ID", "Resumo", "Prioridade interna", "Impacto"), [1540, 3960, 580, 1720]),
+    (("Ref.", "Descrição", "Nota"), [760, 4540, 1900]),
 ]
 
 
@@ -39,24 +39,14 @@ def _header_signature(tbl_xml: str) -> tuple[str, ...] | None:
 def _match_widths(header: tuple[str, ...]) -> list[int] | None:
     h = list(header)
     if len(h) >= 2 and h[0] == "Campo" and h[1] == "Valor":
-        return _PROFILES[0][1]
+        return list(_PROFILES[0][1])
     if len(h) >= 4 and h[0] == "ID" and "Decis" in h[1]:
-        return _PROFILES[1][1]
+        return list(_PROFILES[1][1])
     if len(h) >= 4 and h[0] == "ID" and h[1] == "Resumo" and "Prioridade" in h[2]:
-        return _PROFILES[2][1]
+        return list(_PROFILES[2][1])
     if len(h) == 3 and h[0] == "Ref.":
-        return _PROFILES[3][1]
+        return list(_PROFILES[3][1])
     return None
-
-
-def _scale_widths(widths: list[int], total: int = _TABLE_WIDTH_DXA) -> list[int]:
-    s = sum(widths)
-    if s <= 0:
-        return widths
-    scaled = [max(600, int(w * total / s)) for w in widths]
-    delta = total - sum(scaled)
-    scaled[-1] += delta
-    return scaled
 
 
 def _set_tbl_pr(tbl_xml: str, total: int) -> str:
@@ -83,7 +73,40 @@ def _set_grid(tbl_xml: str, widths: list[int]) -> str:
             count=1,
             flags=re.DOTALL,
         )
-    return tbl_xml.replace("<w:tblPr>", f"<w:tblPr></w:tblPr><w:tblGrid>{grid}</w:tblGrid>", 1)
+    return tbl_xml.replace(
+        "<w:tblPr>",
+        f"<w:tblPr></w:tblPr><w:tblGrid>{grid}</w:tblGrid>",
+        1,
+    )
+
+
+def _inject_run_font_size(run_xml: str) -> str:
+    sz = f'<w:sz w:val="{_TABLE_SZ}"/><w:szCs w:val="{_TABLE_SZ}"/>'
+    if "<w:rPr>" in run_xml:
+        inner = re.sub(r"<w:sz[^/]*/>", "", run_xml)
+        inner = re.sub(r"<w:szCs[^/]*/>", "", inner)
+        return inner.replace("<w:rPr>", f"<w:rPr>{sz}", 1)
+    return run_xml.replace("<w:r>", f"<w:r><w:rPr>{sz}</w:rPr>", 1)
+
+
+def _typography_in_cell(cell_xml: str) -> str:
+    cell_xml = re.sub(
+        r"<w:r[\s>].*?</w:r>",
+        lambda m: _inject_run_font_size(m.group(0)),
+        cell_xml,
+        flags=re.DOTALL,
+    )
+
+    def tighten_paragraph(match: re.Match[str]) -> str:
+        p_xml = match.group(0)
+        spacing = '<w:spacing w:after="40" w:line="240" w:lineRule="auto"/>'
+        if "<w:pPr>" in p_xml:
+            if "<w:spacing" in p_xml:
+                return re.sub(r"<w:spacing[^/]*/>", spacing, p_xml, count=1)
+            return p_xml.replace("<w:pPr>", f"<w:pPr>{spacing}", 1)
+        return p_xml.replace("<w:p>", f"<w:p><w:pPr>{spacing}</w:pPr>", 1)
+
+    return re.sub(r"<w:p[\s>].*?</w:p>", tighten_paragraph, cell_xml, flags=re.DOTALL)
 
 
 def _patch_cell_widths(tbl_xml: str, widths: list[int]) -> str:
@@ -100,11 +123,14 @@ def _patch_cell_widths(tbl_xml: str, widths: list[int]) -> str:
                 if "tblHeader" not in row_xml:
                     row_xml = row_xml.replace("<w:trPr>", "<w:trPr><w:tblHeader/><w:cantSplit/>", 1)
             else:
-                row_xml = row_xml.replace("<w:tr>", "<w:tr><w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>", 1)
+                row_xml = row_xml.replace(
+                    "<w:tr>",
+                    "<w:tr><w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>",
+                    1,
+                )
 
         cells = list(re.finditer(r"<w:tc[\s>].*?</w:tc>", row_xml, re.DOTALL))
         new_cells: list[str] = []
-        c_last = 0
         for ci, cell_m in enumerate(cells):
             cell = cell_m.group(0)
             w = widths[ci] if ci < len(widths) else widths[-1]
@@ -116,8 +142,8 @@ def _patch_cell_widths(tbl_xml: str, widths: list[int]) -> str:
                 cell = cell.replace("<w:tcPr>", f"<w:tcPr>{tc_w}{v_top}", 1)
             else:
                 cell = cell.replace("<w:tc>", f"<w:tc><w:tcPr>{tc_w}{v_top}</w:tcPr>", 1)
+            cell = _typography_in_cell(cell)
             new_cells.append(cell)
-            c_last = cell_m.end()
         if cells:
             rebuilt = row_xml[: cells[0].start()] + "".join(new_cells) + row_xml[cells[-1].end() :]
         else:
@@ -136,7 +162,6 @@ def _patch_single_table(tbl_xml: str) -> str:
     widths = _match_widths(header)
     if not widths:
         return tbl_xml
-    widths = _scale_widths(widths)
     total = sum(widths)
     out = _set_tbl_pr(tbl_xml, total)
     out = _set_grid(out, widths)
@@ -150,11 +175,11 @@ def _patch_headings(xml: str) -> str:
         if "<w:keepNext" in block:
             return block
         if "<w:jc " in block and 'w:val="center"' in block:
-            block = re.sub(r"<w:jc w:val=\"center\"[^/]*/>", "", block)
+            block = re.sub(r'<w:jc w:val="center"[^/]*/>', "", block)
         return block.replace("</w:pPr>", "<w:keepNext/></w:pPr>", 1)
 
     return re.sub(
-        r"<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading[123]\" />(?:(?!</w:pPr>).)*</w:pPr>",
+        r'<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val="Heading[123]" />(?:(?!</w:pPr>).)*</w:pPr>',
         add_keep,
         xml,
         flags=re.DOTALL,

@@ -122,7 +122,7 @@ Opção `--json` para resultado estruturado (sem valores sensíveis completos).
 
 Fixture técnica: [`sources/EXT-FIXTURE-001/`](sources/EXT-FIXTURE-001/) · schema: [`scripts/documents/schemas/dossier.schema.json`](../../scripts/documents/schemas/dossier.schema.json)
 
-### Build DOCX (sem PDF)
+### Build — DOCX canónico
 
 Requisitos e Pandoc: [`scripts/documents/README.md`](../../scripts/documents/README.md).
 
@@ -130,11 +130,18 @@ Requisitos e Pandoc: [`scripts/documents/README.md`](../../scripts/documents/REA
 python -m scripts.documents.cli build docs/external/sources/EXT-FIXTURE-001/dossier.yaml
 ```
 
-Output **fora do Git** (por defeito `%LOCALAPPDATA%\TVDE\documents\<external_id>\`): `dossier.docx`, `dossier.pdf` (LibreOffice, derivado do DOCX) + `build-manifest.json` (hashes, commit, Pandoc/LO).
+Output **fora do Git** (por defeito `%LOCALAPPDATA%\TVDE\documents\<external_id>\`):
+
+| Artefacto | Papel |
+|-----------|--------|
+| **`dossier.docx`** | **Canónico externo** — revisão/aprovação no Word |
+| `build-manifest.json` | Proveniência (hashes sources + DOCX, Git, Pandoc) |
+| `dossier.pdf` | **Opcional** — só com `--formats docx,pdf` (LibreOffice preview/smoke). PDF de envio: export manual a partir do DOCX **aprovado** no Word |
 
 - **Build ≠ aprovação** — não muda `status` no YAML.
 - **Build ≠ envio** — não cria manifesto em `outbox/`.
 - **Build não altera** [`registers/`](../registers/).
+- Edições manuais significativas no DOCX devem ser repatriadas para source/template quando possível, para não ficarem órfãs.
 
 ---
 

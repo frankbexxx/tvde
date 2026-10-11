@@ -80,7 +80,7 @@ def _collect_source_hashes(
 def _parse_formats(formats: str | None) -> tuple[bool, bool, bool]:
     """Returns want_docx, want_pdf, pdf_required."""
     if formats is None:
-        return True, True, False
+        return True, False, False
     parts = {p.strip().lower() for p in formats.split(",") if p.strip()}
     if not parts or parts == {"docx"}:
         return True, False, False
@@ -292,6 +292,7 @@ def _manifest_payload(
         "output_pdf": str(pdf_path) if pdf_path else None,
         "output_pdf_sha256": sha256_file(pdf_path) if pdf_path and pdf_path.is_file() else None,
         "output_pdf_size_bytes": pdf_path.stat().st_size if pdf_path and pdf_path.is_file() else None,
+        "canonical_artifact": "docx",
     }
     if pdf_error:
         payload["pdf_error"] = pdf_error

@@ -45,4 +45,4 @@ def test_patch_docx_layout_on_minimal_docx(tmp_path: Path):
     with zipfile.ZipFile(docx) as z:
         xml = z.read("word/document.xml").decode("utf-8")
     assert 'tblLayout w:type="fixed"' in xml
-    assert "6826" in xml or "2200" in xml
+    assert "5900" in xml or "1900" in xml
