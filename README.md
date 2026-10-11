@@ -4,7 +4,9 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 
 **Estado:** MVP validado em campo (4 dispositivos, rede móvel, fluxo completo operacional).
 
-**Dia a dia:** [`TODOdoDIA.md`](TODOdoDIA.md) — prioridades do dia, método de trabalho e fecho.
+**Dia a dia:** [`TODOdoDIA.md`](TODOdoDIA.md) — única fonte operacional diária (estado, handoff, fecho).
+
+**Plano mestre:** [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md)
 
 ## Estrutura
 
@@ -19,11 +21,13 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 
 ## Documentação
 
-1. **[DOCS_INDEX.md](docs/meta/DOCS_INDEX.md)** — mapa da documentação no repo. Histórico antigo retirado do Git: **[docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)**.
-2. **[PROJECT.md](docs/meta/PROJECT.md)** — produto, modelo de dados, fluxo viagem/pagamento.
-3. **[docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)** — Git/GitHub para este repo (branches, PR, `main`; push directo a `main` está bloqueado).
-4. **[PROXIMA_SESSAO.md](docs/meta/PROXIMA_SESSAO.md)** — handoff entre sessões; operações do dia a dia na **Seção F**; relatório de alinhamento na **Seção G**.
+1. **[DOCS_INDEX.md](docs/meta/DOCS_INDEX.md)** — documentação **CURRENT** (não inventário histórico). Histórico fora do Git: **[docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)**.
+2. **[DOCUMENT_GOVERNANCE.md](docs/meta/DOCUMENT_GOVERNANCE.md)** — regras documentais canónicas.
+3. **[PROJECT.md](docs/meta/PROJECT.md)** — produto, modelo de dados, fluxo viagem/pagamento.
+4. **[docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)** — Git/GitHub para este repo (branches, PR, `main`; push directo a `main` está bloqueado).
 5. **[docs/IMPLEMENTACAO_E_TESTES.md](docs/IMPLEMENTACAO_E_TESTES.md)** — o que foi implementado (A000…), como testar, e **Parte II** (logs / pytest).
+
+_Handoff histórico (não canónico): [PROXIMA_SESSAO.md](docs/meta/PROXIMA_SESSAO.md) — ver governance._
 
 Guias operacionais rápidos:
 

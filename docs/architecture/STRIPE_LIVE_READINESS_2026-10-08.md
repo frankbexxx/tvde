@@ -1,5 +1,16 @@
 # Stripe Live — readiness (auditoria 2026-10-08)
 
+| Campo | Valor |
+|-------|--------|
+| **id** | AUD-PAY-STRIPE-LIVE-2026-10-08 |
+| **type** | AUDIT |
+| **created** | 2026-10-08 |
+| **status** | FECHADO (snapshot imutável) |
+| **owner** | Frank |
+
+> **Não é documento vivo** (GOV-DOC-006). Findings abertos → [`FINDINGS.md`](../registers/FINDINGS.md) (Fase 3).  
+> **Documento vivo futuro:** `STRIPE_LIVE_READINESS.md` (filename estável, sem data) — a criar quando aplicável.
+
 **Tipo:** factos técnicos e operacionais confirmados no repo  
 **Modo:** read-only persistido · **sem activação Live** · **sem alteração de código nesta tarefa**  
 **Contexto:** fase controlada inicial **sem** Stripe Live; Live só após GO explícito + decisões externas.

@@ -1,6 +1,14 @@
 # TODO do dia — TVDE
 
-Ficheiro **vivo** na raiz do repo. **Uma fonte operacional** — handoff curto em [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md).
+| Campo | Valor |
+|-------|--------|
+| **type** | PLAN (painel operacional) |
+| **status** | ACTIVO |
+| **updated** | 2026-10-11 |
+| **owner** | Frank |
+| **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
+
+Ficheiro **vivo** na raiz do repo. **Única fonte operacional diária** — handoff entre sessões absorvido por este painel ([`DOCUMENT_GOVERNANCE.md`](docs/meta/DOCUMENT_GOVERNANCE.md) · GOV-DOC-004). [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) **não é canónico**.
 
 **Fecho de etapas:** mal uma entrega estiver em `main` (ou smoke feito), **actualizar este painel sem pedir confirmação**.
 

@@ -15,7 +15,8 @@ Começa aqui; **não** uses documentos SUPERSEDED como runbook.
 | [`TVDE_ENGINEERING_ROADMAP.md`](TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico (rever datas; cruzar com código) |
 | [`I18N.md`](I18N.md) · [`I18N_NICHOS_EN.md`](I18N_NICHOS_EN.md) | i18n web-app |
 | [`USER_IDENTITIES.md`](USER_IDENTITIES.md) | Identidades de login — Fase I, II-A, II-B, S-ID-01 e Fase III **CLOSED**; Fase II-C Conta canónica única, listagem no Passageiro por confirmar, **OPEN**; Fase VI **OPEN** |
-| [`../../TODOdoDIA.md`](../../TODOdoDIA.md) · [`../meta/PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) | Operação / handoff |
+| [`../../TODOdoDIA.md`](../../TODOdoDIA.md) | Operação / estado diário (canónico) |
+| [`../meta/DOCUMENT_GOVERNANCE.md`](../meta/DOCUMENT_GOVERNANCE.md) | Governance documental |
 
 ## Historical / superseded (não operar a partir daqui)
 

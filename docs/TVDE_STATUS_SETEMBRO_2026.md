@@ -1,5 +1,10 @@
 # TVDE-APP — Ponto de situação Setembro 2026
 
+> **STATUS: SNAPSHOT / REVIEW** (GOV-DOC-005 · 2026-10-11)  
+> **Fotografia histórica** de Setembro 2026 — **não representa o estado actual** do projecto.  
+> Estado diário: [`TODOdoDIA.md`](../TODOdoDIA.md) · Plano mestre: [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md).  
+> **Pendente:** verificar factos ainda válidos vs TODO/ROADMAP; consolidação/arquivo **Fase 2**.
+
 **Data:** 2026-09-18 (**A1.4 DECIDIDA / CLOSED**) · 2026-09-16 (páginas legais públicas Hostinger **DEPLOYED / VALIDATED**) · 2026-09-14 (PORTAGENS V1 PROD VALIDATED · F5) · 2026-09-14 (fecho consolidado pricing + landing + HERE spike) · 2026-09-09 (decisões operacionais Manel) · 2026-09-05 (fecho M2-L0 oficial) · G3/M1 2026-09-03  
 **Tip `main`:** `b513d6c` (merge [#596](https://github.com/frankbexxx/tvde/pull/596) site legal pages; tip anterior F5 tolls `1382b35`)  
 **Marco 1:** **DONE** — APP TECHNICALLY COMPLETE (G3.1 PASS 2026-09-03) — **não reaberto**  
