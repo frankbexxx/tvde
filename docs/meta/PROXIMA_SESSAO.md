@@ -1,6 +1,11 @@
 # PROXIMA_SESSAO.md — Handoff
 
-Contexto curto para a próxima sessão. **Lista operacional:** painel **PRÓXIMA SESSÃO** em [`TODOdoDIA.md`](../../TODOdoDIA.md).
+> **STATUS: REVIEW — NÃO CANÓNICO** (GOV-DOC-004 · 2026-10-11)  
+> Conteúdo **pode estar desactualizado** (última actualização significativa no corpo: 2026-08-11).  
+> **Fonte operacional actual:** [`TODOdoDIA.md`](../../TODOdoDIA.md).  
+> **Pendente:** arquivo na Fase 2 — não mover nesta fase.
+
+Contexto histórico para sessões anteriores. **Lista operacional:** painel em [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
 **Histórico completo (fechos Abril–Maio, Seções A–E):** `C:\dev\_archives\APP\docs-2026-06\lote-3\PROXIMA_SESSAO.md`
 

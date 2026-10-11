@@ -1,96 +1,108 @@
-# Índice da Documentação — TVDE
+# Índice da Documentação — TVDE (CURRENT)
 
-~40 entradas activas (pós-auditoria Lotes 1–4). Histórico fora do Git: [`HISTORICO_FORA_DO_GIT.md`](../HISTORICO_FORA_DO_GIT.md).
+Índice de documentação **activa** — não inventário histórico. Regras: [`DOCUMENT_GOVERNANCE.md`](DOCUMENT_GOVERNANCE.md). Histórico fora do Git: [`HISTORICO_FORA_DO_GIT.md`](../HISTORICO_FORA_DO_GIT.md).
 
-**Começar aqui:** [`README.md`](../../README.md) → [`TODOdoDIA.md`](../../TODOdoDIA.md) → [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) → este índice.
+**Começar aqui:** [`README.md`](../../README.md) → [`TODOdoDIA.md`](../../TODOdoDIA.md) → [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md) → este índice.
 
 ---
 
-## Current operational sources
+## Fontes de verdade
 
-Fontes **activas** para local / CI / Render / pytest (não usar snapshots Março 2026 como runbook):
+| Papel | Ficheiro |
+|-------|----------|
+| **Estado actual (operacional diário)** | [`TODOdoDIA.md`](../../TODOdoDIA.md) |
+| **Plano mestre** | [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md) |
+| **Governance documental** | [`DOCUMENT_GOVERNANCE.md`](DOCUMENT_GOVERNANCE.md) |
+| **Arquitectura (entry)** | [`architecture/README.md`](../architecture/README.md) |
+| **Ambiente** | [`ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md) |
+| **Decisões (índice)** | [`registers/DECISIONS.md`](../registers/DECISIONS.md) |
+| **Findings (índice)** | [`registers/FINDINGS.md`](../registers/FINDINGS.md) |
+| **Consultas externas (índice)** | [`registers/EXTERNAL_CONSULTATIONS.md`](../registers/EXTERNAL_CONSULTATIONS.md) |
+
+---
+
+## Operação e checklist técnico
 
 | Ficheiro | Propósito |
 | -------- | --------- |
-| [ENV_SINGLE_REALITY.md](../env/ENV_SINGLE_REALITY.md) | Env local · CI · Render; hosts; Stripe mock |
-| [ENV_VARS_VERIFICATION.md](../env/ENV_VARS_VERIFICATION.md) | Cruzamento `.env` local vs Render |
-| [BACKEND_PYTEST_SAFE.md](../testing/BACKEND_PYTEST_SAFE.md) | Pytest só BD local; isolamento vs CI fresh |
-| [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md) | Deploy Render |
-| [diagrams/](../diagrams/) | Fluxos actuais (Mermaid) |
-| [architecture/README.md](../architecture/README.md) | Entry-point arquitectura (histórico vs actual) |
-| [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo |
-| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto |
+| [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional (IDs / Estado) |
+| [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) | Checklist pré-produção |
+| [PR_REVIEW_CHECKLIST.md](PR_REVIEW_CHECKLIST.md) | Revisão manual de PRs |
+| [GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md) | Git + GitHub TVDE |
+| [TODO_FUTURO.md](../TODO_FUTURO.md) | Backlog não urgente |
+| [todo-futuro-nuances.md](../todo-futuro-nuances.md) | Nuances futuras |
+| [BACKLOG_POST_PILOTO.md](BACKLOG_POST_PILOTO.md) | Pós-piloto |
 
 ---
 
-## Operação e handoff
+## Plano e negócio
 
 | Ficheiro | Propósito |
 | -------- | --------- |
-| [TODOdoDIA.md](../../TODOdoDIA.md) | Painel operacional vivo (tabelas ID/Estado) |
-| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | Handoff curto + Seções F/G resumo |
-| [PR_REVIEW_CHECKLIST.md](PR_REVIEW_CHECKLIST.md) | Checklist revisão manual de PRs (sem Bugbot/agents) |
-| [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 + checkpoint Julho 2026 |
-| [PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md](../ops/PF3D_DATA_1E_REAUDIT_AFTER_DEV_SEED.md) | PF3D-DATA-1E — re-audit pós DATA-1C/D (dev/test; sem gates) |
-| [PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | PF3D-0 — decisão/matriz compliance gates docs viatura |
-| [PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md](../ops/PF3D_3A_OFF_SMOKE_PASS_2026-07-26.md) | PF3D-3A/OFF PASS — smoke Pax/Driver/Partner com flag OFF 2026-07-26 |
-| [PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md](../ops/PF3D_3B_OFF_SMOKE_PASS_2026-07-27.md) | PF3D-3B/OFF PASS — #486 zero mudança operacional com gates OFF 2026-07-27 |
-| [AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md](../ops/AVAILABILITY_FORCE_ONLINE_SYNC_SMOKE_PASS_2026-07-26.md) | Availability Caso A PASS — Partner force-online ↔ Driver sync 2026-07-26 |
-| [AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md](../ops/AVAILABILITY_ACTIVE_TRIP_GUARD_SMOKE_PASS_2026-07-27.md) | Availability Caso B PASS — active trip guard (force-online bloqueado) 2026-07-27 |
-| [B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md](../architecture/B2_NEXT_TRIP_CHAINING_DIAG_2026-07-27.md) | B2-DIAG — next trip while ongoing / ETA ≤ 5 min (sem implementação) 2026-07-27 |
-| [PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md](../ops/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md) | PF3D-3B DIAG — mensagens/observabilidade gates (antes de ON) 2026-07-27 |
-| [PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md](../ops/PF3C_VEHICLE_DOCUMENT_ALERTS_SMOKE_PASS_2026-07-24.md) | PF3C PASS funcional — alertas/badges docs viatura 2026-07-24 |
-| [OPS_UX_1_SMOKE_PASS_2026-07-23.md](../ops/OPS_UX_1_SMOKE_PASS_2026-07-23.md) | OPS-UX-1 PASS funcional — smoke Pax/Driver/Partner 2026-07-23 |
-| [CHECKPOINT_2026-07-22_PARTNER_FLEET.md](../ops/CHECKPOINT_2026-07-22_PARTNER_FLEET.md) | Encerramento sessão Partner-Fleet 3B PASS + hardenings |
-| [D_DEMO_1_CHECKPOINT_2026-07-16.md](../ops/D_DEMO_1_CHECKPOINT_2026-07-16.md) | Fecho walkthrough multi-role D-DEMO-1 PASS |
-| [DEMO_4_PAPEIS.md](../ops/DEMO_4_PAPEIS.md) | Runbook demo/entrega 4 papéis (prod; sem passwords) |
-| [ROADMAP_POS_DEMO_SMOKE_2026-07-30.md](../ops/ROADMAP_POS_DEMO_SMOKE_2026-07-30.md) | Roadmap pós DEMO smoke (rascunho de trabalho 2026-07-30) |
-| [TODO_FUTURO.md](../TODO_FUTURO.md) | Backlog produto/técnico não urgente |
-| [todo-futuro-nuances.md](../todo-futuro-nuances.md) | Nuances e decisões futuras |
-| [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) | Checklist pré-produção (PROD, staging, backups) |
-| [GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md) | Git + GitHub — fluxo TVDE |
+| [ROADMAP_FINAL_ENTREGA_TVDE_2026.md](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md) | Carril mestre A–H |
+| [A1_MODELO_ECONOMICO_SETEMBRO_2026.md](../business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md) | Modelo económico |
+| [VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) | Decisões Manel |
+| [TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md](../business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md) | Decisões M2/M3 |
+| [TVDE_DECISOES_EXTERNAS_PENDENTES.md](../business/TVDE_DECISOES_EXTERNAS_PENDENTES.md) | Perguntas externas (working list) |
 
 ---
 
-## Produto (`docs/product/`)
+## Arquitectura, env, diagramas
+
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [architecture/README.md](../architecture/README.md) | Actual vs histórico |
+| [USER_IDENTITIES.md](../architecture/USER_IDENTITIES.md) | Identidades login |
+| [S-AUTH-01_OTP_SMS_DECISION.md](../architecture/S-AUTH-01_OTP_SMS_DECISION.md) | Decisão OTP/SMS |
+| [TVDE_59_2026_TECHNICAL_FINDINGS.md](../architecture/TVDE_59_2026_TECHNICAL_FINDINGS.md) | Findings Lei 59/2026 |
+| [I18N.md](../architecture/I18N.md) · [I18N_NICHOS_EN.md](../architecture/I18N_NICHOS_EN.md) | i18n |
+| [ENV_SINGLE_REALITY.md](../env/ENV_SINGLE_REALITY.md) | Env local / CI / Render |
+| [ENV_VARS_VERIFICATION.md](../env/ENV_VARS_VERIFICATION.md) | Cruzamento env |
+| [diagrams/](../diagrams/) | Fluxos Mermaid |
+
+---
+
+## Legal / compliance
+
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [LEGAL_SOURCES_INDEX.md](../legal/LEGAL_SOURCES_INDEX.md) | Fontes primárias (PDF) |
+| [TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md](../legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md) | Matriz L-xx |
+| [A3_REQUISITOS_TVDE_SETEMBRO_2026.md](../legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) | Requisitos A3 |
+| [VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md](../legal/VAMULA_VENTOS_FERTEIS_REGISTO_OFICIAL_2026.md) | Registo entidade |
+| [L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md](../legal/L25_LIVRO_RECLAMACOES_RAL_2026-09-07.md) | L25 / RAL |
+| [PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md) | Checklist parceiro |
+
+---
+
+## Runbooks e ops (CURRENT)
+
+| Ficheiro | Propósito |
+| -------- | --------- |
+| [runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) | Piloto Stripe staging |
+| [runbooks/PILOT_PAYMENT_RECONCILIATION.md](../runbooks/PILOT_PAYMENT_RECONCILIATION.md) | Reconciliação |
+| [runbooks/PILOT_STRIPE_REFUND.md](../runbooks/PILOT_STRIPE_REFUND.md) | Refund manual |
+| [O_STRIPE_1_RUNBOOK.md](../ops/O_STRIPE_1_RUNBOOK.md) | Stripe local test mode |
+| [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md) | Smoke W1 |
+| [W2_RUNBOOK.md](../ops/W2_RUNBOOK.md) | Onda W2 |
+| [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) | OAuth staging |
+| [TVDE_BKP_RUNBOOK.md](../ops/TVDE_BKP_RUNBOOK.md) | Backup Postgres |
+| [DEMO_4_PAPEIS.md](../ops/DEMO_4_PAPEIS.md) | Demo 4 papéis |
+| [PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md](../ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) | Gates docs viatura |
+| [CRON_JOB_ORG_INSTRUCOES.md](../CRON_JOB_ORG_INSTRUCOES.md) | Cron externo |
+| [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md) | Telemetria |
+
+---
+
+## Produto e UX
 
 | Ficheiro | Propósito |
 | -------- | --------- |
 | [DRIVER_MENU_SPEC.md](../product/DRIVER_MENU_SPEC.md) | Menu motorista |
-| [DRIVER_HOME_TOP3_MANEL.md](../product/DRIVER_HOME_TOP3_MANEL.md) | Ecrã principal motorista (2 passos) |
-| [DRIVER_UX_2_0.md](../product/DRIVER_UX_2_0.md) | Evolução UX motorista |
-| [PORTAGENS_SPEC.md](../product/PORTAGENS_SPEC.md) | Portagens em viagem |
-| [ROTACIONAL_V2_SPEC.md](../product/ROTACIONAL_V2_SPEC.md) | Rotacional v2/v3 |
-| [SOCIAL_LOGIN_L1_SPEC.md](../product/SOCIAL_LOGIN_L1_SPEC.md) | Login social Google L1 |
-| [MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md](../product/MANEL_E_LEGAL_EXTRA_BACKLOG_2026-05.md) | Backlog Manel/legal |
-
----
-
-## Arquitectura
-
-| Ficheiro | Propósito |
-| -------- | --------- |
-| [architecture/README.md](../architecture/README.md) | Entry-point — actual vs histórico |
-| [TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico + A023–A035 |
-| [TVDE_SYSTEM_BLUEPRINT.md](../architecture/TVDE_SYSTEM_BLUEPRINT.md) | **Reference / historical design** (SUPERSEDED as current arch) |
-| [ARCHITECTURE_STATUS.md](../architecture/ARCHITECTURE_STATUS.md) | **Historical architecture snapshot** (2026-03-12; SUPERSEDED) |
-| [I18N.md](../architecture/I18N.md) | i18n PT/EN web-app |
-| [I18N_NICHOS_EN.md](../architecture/I18N_NICHOS_EN.md) | Workflow nichos EN (screenshots) |
-
----
-
-## UX (`docs/ux/`)
-
-| Ficheiro | Propósito |
-| -------- | --------- |
-| [AUDIT_ADMIN_NAV_IA_2026-07-28.md](../ux/AUDIT_ADMIN_NAV_IA_2026-07-28.md) | NAV-3A — Admin IA / navegação / contrato query |
-| [AUDIT_NAV_4APPS_2026-07-28.md](../ux/AUDIT_NAV_4APPS_2026-07-28.md) | NAV-0 — contrato navegação 4 apps (audit 2026-07-28) |
-| [navigation-inventory.md](../ux/navigation-inventory.md) | Inventário navegação 4 apps |
-| [ambiance-chrome-contract.md](../ux/ambiance-chrome-contract.md) | Contrato ambiance/chrome |
-| [shell-menu-centric.md](../ux/shell-menu-centric.md) | Shell menu-centric partner |
-| [shell-menu-ia-canonical.md](../ux/shell-menu-ia-canonical.md) | IA menus canónica |
-| [driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md) | Backlog fixes motorista |
-| [screenshot-tweaks-g-matrix.md](../ux/screenshot-tweaks-g-matrix.md) | Matriz G01–G27 |
+| [DRIVER_HOME_TOP3_MANEL.md](../product/DRIVER_HOME_TOP3_MANEL.md) | Home motorista |
+| [PORTAGENS_SPEC.md](../product/PORTAGENS_SPEC.md) | Portagens |
+| [navigation-inventory.md](../ux/navigation-inventory.md) | Navegação 4 apps |
+| [driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md) | Backlog UX driver |
 
 ---
 
@@ -98,78 +110,64 @@ Fontes **activas** para local / CI / Render / pytest (não usar snapshots Março
 
 | Ficheiro | Propósito |
 | -------- | --------- |
-| [BACKEND_PYTEST_SAFE.md](../testing/BACKEND_PYTEST_SAFE.md) | Pytest BD local segura (TEST-DB-GUARD) |
-| [GUIA_TESTES.md](../testing/GUIA_TESTES.md) | Manual testes passo a passo |
-| [DEV_BASELINE_ROSTER.md](../testing/DEV_BASELINE_ROSTER.md) | Users baseline dev/Render |
-| [VALIDACAO_HUMANA_CAMPO.md](../testing/VALIDACAO_HUMANA_CAMPO.md) | Teste em campo |
+| [BACKEND_PYTEST_SAFE.md](../testing/BACKEND_PYTEST_SAFE.md) | Pytest BD local |
+| [GUIA_TESTES.md](../testing/GUIA_TESTES.md) | Manual testes |
+| [TESTE_STRIPE_COMPLETO.md](../testing/TESTE_STRIPE_COMPLETO.md) | Stripe E2E |
 | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md) | Deploy Render |
-| [IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md) | Implementação + Parte II logs/pytest |
+| [DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md) | Debug BETA |
 
 ---
 
-## Ops e staging
-
-| Ficheiro | Propósito |
-| -------- | --------- |
-| [CRON_JOB_ORG_INSTRUCOES.md](../CRON_JOB_ORG_INSTRUCOES.md) | Cron externo |
-| [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops pós-P5 · checkpoint Julho 2026 |
-| [O_STRIPE_1_RUNBOOK.md](../ops/O_STRIPE_1_RUNBOOK.md) | Webhook Stripe Fase A local (test mode) |
-| [TVDE_BKP_RUNBOOK.md](../ops/TVDE_BKP_RUNBOOK.md) | Backups Postgres + restore test |
-| [W1_PROD_SMOKE.md](../ops/W1_PROD_SMOKE.md) | Smoke W1 prod |
-| [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) | OAuth staging A2-02 |
-| [INTERACTION_LOGGING.md](../ops/INTERACTION_LOGGING.md) | Telemetria / export logs |
-| [DEBUG_BETA_RENDER.md](../DEBUG_BETA_RENDER.md) | Depuração BETA Render |
-| [scripts/windows/README.md](../../scripts/windows/README.md) | Launchers WT Dev + Stripe local |
-
----
-
-## Prompts e piloto
+## Prompts (agentes — não canónico produto)
 
 | Ficheiro | Propósito |
 | -------- | --------- |
 | [A000_SYSTEM_RULES.md](../prompts/A000_SYSTEM_RULES.md) | Regras agentes |
-| [A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Playbook validação PROD |
-| [pilot-commercial/README.md](../prompts/pilot-commercial/README.md) | Piloto comercial 4 superfícies |
-| [PILOT_COMMERCIAL_PLACEHOLDER_INDEX.md](../prompts/pilot-commercial/PILOT_COMMERCIAL_PLACEHOLDER_INDEX.md) | Índice placeholders arquivados L1 |
-| [PROMPT_I18N_INDEX.md](../prompts/i18n-v2/PROMPT_I18N_INDEX.md) | i18n v2 resumo |
+| [A033_B_VALIDATION_HARDENING_PLAYBOOK.md](../prompts/A033_B_VALIDATION_HARDENING_PLAYBOOK.md) | Validação PROD |
+| [PROMPT_I18N_INDEX.md](../prompts/i18n-v2/PROMPT_I18N_INDEX.md) | i18n v2 |
 
 ---
 
-## Meta, legal, diagramas
+## Meta
 
 | Ficheiro | Propósito |
 | -------- | --------- |
-| [PROJECT.md](PROJECT.md) | Visão produto + modelo dados |
-| [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) | Arquivo fora do Git (Lotes 1–3) |
-| [PARCEIRO_TVDE_CHECKLIST.md](../legal/PARCEIRO_TVDE_CHECKLIST.md) | Checklist operacional parceiro |
-| [diagrams/README.md](../diagrams/README.md) | Índice Mermaid fluxos TVDE |
-| [visao_cursor.md](../visao_cursor.md) | Visão + checklist comercialização |
+| [PROJECT.md](PROJECT.md) | Visão produto + dados |
+| [DOCUMENT_GOVERNANCE.md](DOCUMENT_GOVERNANCE.md) | Governance |
 
 ---
 
-## Lista numerada (referência rápida)
+## Histórico / pendente arquivo
+
+Não usar como fonte de verdade actual. Links mantidos para rastreabilidade (Fase 2: mover para `docs/archive/`).
+
+| Ficheiro | Nota |
+| -------- | ---- |
+| [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) | **REVIEW — não canónico** (GOV-DOC-004) |
+| [TVDE_STATUS_SETEMBRO_2026.md](../TVDE_STATUS_SETEMBRO_2026.md) | **Snapshot Setembro 2026** (GOV-DOC-005) |
+| [FORWARD_PLAN_2026-07.md](../ops/FORWARD_PLAN_2026-07.md) | Plano ops Jul 2026 |
+| [TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) | Roadmap técnico Mar 2026 + anexo A023–A035 |
+| [STRIPE_LIVE_READINESS_2026-10-08.md](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) | **AUDIT** snapshot (GOV-DOC-006) |
+| [visao_cursor.md](../visao_cursor.md) | LEGACY — visão comercial |
+| [TVDE_SYSTEM_BLUEPRINT.md](../architecture/TVDE_SYSTEM_BLUEPRINT.md) | SUPERSEDED |
+| [ARCHITECTURE_STATUS.md](../architecture/ARCHITECTURE_STATUS.md) | Snapshot 2026-03-12 |
+| [pilot-commercial/](../prompts/pilot-commercial/) | Prompts piloto — histórico execução |
+| [PROJECT_AUDIT_2026-05-02.md](../audit/PROJECT_AUDIT_2026-05-02.md) | Auditoria Mai 2026 |
+| Smokes / checkpoints em [`ops/`](../ops/) | PASS Jul–Set 2026 — ver ficheiros `*SMOKE*`, `*CHECKPOINT*` |
+
+---
+
+## Lista numerada (referência rápida — CURRENT)
 
 | # | Ficheiro |
 |---|----------|
 | 1 | [README.md](../../README.md) |
 | 2 | [TODOdoDIA.md](../../TODOdoDIA.md) |
-| 3 | [PROXIMA_SESSAO.md](PROXIMA_SESSAO.md) |
-| 4 | [DOCS_INDEX.md](DOCS_INDEX.md) |
-| 5 | [PROJECT.md](PROJECT.md) |
-| 6 | [GITHUB_MANUAL_TVDE.md](../GITHUB_MANUAL_TVDE.md) |
-| 7 | [TVDE_ENGINEERING_ROADMAP.md](../architecture/TVDE_ENGINEERING_ROADMAP.md) |
-| 8 | [I18N.md](../architecture/I18N.md) |
+| 3 | [ROADMAP_FINAL_ENTREGA_TVDE_2026.md](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md) |
+| 4 | [DOCUMENT_GOVERNANCE.md](DOCUMENT_GOVERNANCE.md) |
+| 5 | [DOCS_INDEX.md](DOCS_INDEX.md) |
+| 6 | [registers/DECISIONS.md](../registers/DECISIONS.md) |
+| 7 | [architecture/README.md](../architecture/README.md) |
+| 8 | [ENV_SINGLE_REALITY.md](../env/ENV_SINGLE_REALITY.md) |
 | 9 | [GUIA_TESTES.md](../testing/GUIA_TESTES.md) |
-| 10 | [PREPARACAO_RENDER.md](../deploy/PREPARACAO_RENDER.md) |
-| 11 | [IMPLEMENTACAO_E_TESTES.md](../IMPLEMENTACAO_E_TESTES.md) |
-| 12 | [TODO_CODIGO_TVDE.md](../TODO_CODIGO_TVDE.md) |
-| 13 | [driver-ux-fixes-backlog.md](../ux/driver-ux-fixes-backlog.md) |
-| 14 | [navigation-inventory.md](../ux/navigation-inventory.md) |
-| 15 | [STAGING_A2-02_RUNBOOK.md](../ops/STAGING_A2-02_RUNBOOK.md) |
-| 16 | [PROJECT_AUDIT_2026-05-02.md](../audit/PROJECT_AUDIT_2026-05-02.md) |
-| 17 | [AUDIT_EXEC_BACKLOG_AL_2026-05.md](../audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
-| 18 | [BACKLOG_POST_PILOTO.md](BACKLOG_POST_PILOTO.md) |
-| 19 | [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md) |
-| 20 | [pilot-commercial/README.md](../prompts/pilot-commercial/README.md) |
-
-_Arquivado Lotes 1–4: Alpha Abril, inventários UI Maio, test book EN, handoff histórico — ver HISTORICO._
+| 10 | [LEGAL_SOURCES_INDEX.md](../legal/LEGAL_SOURCES_INDEX.md) |

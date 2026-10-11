@@ -1,5 +1,15 @@
 # ROADMAP FINAL — Entrega TVDE-APP (Setembro 2026+)
 
+| Campo | Valor |
+|-------|--------|
+| **type** | PLAN |
+| **status** | ACTIVO |
+| **updated** | 2026-10-11 |
+| **owner** | Frank |
+| **source_of_truth** | Único plano mestre (GOV-DOC-003) |
+
+**Nota:** rename futuro para nome estável sem data (ex. `PLAN-TVDE-MASTER.md`) — **não executar** até Fase 5 (impacto HIGH em referências).
+
 **Documento canónico de execução:** CARRIL → ETAPA → PASSOS  
 **Fonte consolidada:** [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) · [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) · painéis/`TODOdoDIA.md` · docs pay/mobile/legal/business/ops  
 **Regra:** itens já implementados / STALE **não** reentram. Não activar Stripe live / B2 / PF3D / Capacitor sem o passo correspondente.
