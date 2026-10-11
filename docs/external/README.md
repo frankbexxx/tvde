@@ -122,6 +122,20 @@ Opção `--json` para resultado estruturado (sem valores sensíveis completos).
 
 Fixture técnica: [`sources/EXT-FIXTURE-001/`](sources/EXT-FIXTURE-001/) · schema: [`scripts/documents/schemas/dossier.schema.json`](../../scripts/documents/schemas/dossier.schema.json)
 
+### Build DOCX (sem PDF)
+
+Requisitos e Pandoc: [`scripts/documents/README.md`](../../scripts/documents/README.md).
+
+```bash
+python -m scripts.documents.cli build docs/external/sources/EXT-FIXTURE-001/dossier.yaml
+```
+
+Output **fora do Git** (por defeito `%LOCALAPPDATA%\TVDE\documents\<external_id>\`): `dossier.docx` + `build-manifest.json` (hashes, commit, comando Pandoc).
+
+- **Build ≠ aprovação** — não muda `status` no YAML.
+- **Build ≠ envio** — não cria manifesto em `outbox/`.
+- **Build não altera** [`registers/`](../registers/).
+
 ---
 
 ## 7. Fluxo operacional (resumo)
