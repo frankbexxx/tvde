@@ -1,0 +1,59 @@
+# VAMULÁ — tokens documentais externos (v0)
+# Consumo futuro: Pandoc + reference.docx + scripts/documents (não implementado em v0)
+
+brand:
+  name: VAMULÁ
+  legal_entity: Ventos Férteis, Lda.
+  site: https://vamula.pt
+
+font:
+  primary: Plus Jakarta Sans
+  fallback:
+    - Segoe UI
+    - Calibri
+    - sans-serif
+  embed_in_reference_docx: false
+
+colors:
+  primary: "#0B4F6C"
+  primary_dark: "#083A50"
+  text: "#14212B"
+  text_soft: "#3A4A57"
+  muted: "#5C6B78"
+  border: "#E0E4E8"
+  surface: "#EEF3F6"
+
+page:
+  size: A4
+  width_mm: 210
+  height_mm: 297
+  margin_mm:
+    top: 20
+    bottom: 22
+    left: 25
+    right: 25
+
+type:
+  body_pt: 11
+  body_line: 1.35
+  footer_pt: 8
+  header_pt: 8
+
+classification:
+  allowed:
+    - INTERNAL
+    - EXTERNAL-CONFIDENTIAL
+    - PUBLIC
+  default_external: EXTERNAL-CONFIDENTIAL
+
+assets:
+  iconmark_canonical_repo: site/assets/vamula-iconmark.png
+  iconmark_brand_copy: docs/external/brand/assets/vamula-iconmark.png
+  wordmark_repo: web-app/public/brand/vamula-wordmark.png
+
+reference_docx:
+  path: docs/external/brand/reference.docx
+  footer_placeholders:
+    dossier_id: EXT-YYYY-MM-DD-EXAMPLE
+    version: v0.1
+    classification: EXTERNAL-CONFIDENTIAL
