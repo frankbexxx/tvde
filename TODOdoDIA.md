@@ -20,7 +20,18 @@ Ficheiro **vivo** na raiz do repo. **Única fonte operacional diária** e handof
 
 **Estado (fixo):** Por iniciar · Em curso · Smoke pendente · Concluído · Bloqueado · N/A
 
-**Prefixos:** **A-** auditoria/gates · **X-** EXTRA produto · **TW-** tweaks UX · **G-** screenshot matrix · **R-** rasto técnico · **O-** opcional · **S-** smokes prod · **F-** fixes pós-smoke · **T-** test infra
+**Prefixos:** **A-** auditoria/gates · **X-** EXTRA produto · **TW-** tweaks UX · **G-** screenshot matrix · **R-** rasto técnico · **O-** opcional · **S-** smokes prod · **F-** fixes pós-smoke · **T-** test infra · **DOC-** documentação/governance
+
+---
+
+## Normalização documental (GOV Fases 1–5)
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **DOC-NORM-1** | Normalização documental Fases 1–5 | **Concluído** | 2026-10-11 · governance · archive · registers · external · audit refs |
+| **DOC-NEXT-1** | Preparar dossier advogado (blueprint) | Por iniciar | [`DRAFT_LEGAL_DOSSIER.md`](docs/external/templates/DRAFT_LEGAL_DOSSIER.md) · Q-EXT-LEG PRONTO ENVIO |
+| **DOC-NEXT-2** | Preparar dossier contabilista (blueprint) | Por iniciar | [`DRAFT_FISCAL_DOSSIER.md`](docs/external/templates/DRAFT_FISCAL_DOSSIER.md) |
+| **DOC-NEXT-3** | Dados internos Manel (O1–O3, O5) | Bloqueado | Bloqueia Q-EXT-INS-001 · ver [`EXTERNAL_CONSULTATIONS.md`](docs/registers/EXTERNAL_CONSULTATIONS.md) §3 |
 
 ---
 

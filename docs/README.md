@@ -17,7 +17,10 @@ Estrutura enxuta após auditoria docs 2026-06 (Lotes 1–4 concluídos).
 | `prompts/` | A000, A033, i18n index (piloto comercial → `archive/prompts/`) |
 | `legal/` | Checklist operacional parceiro TVDE |
 | `diagrams/` | Fluxos Mermaid |
-| `meta/` | PROJECT, PROXIMA_SESSAO, DOCS_INDEX |
+| `meta/` | PROJECT, DOCS_INDEX, DOCUMENT_GOVERNANCE |
+| `registers/` | DECISIONS, FINDINGS, EXTERNAL_CONSULTATIONS |
+| `external/` | Política dossiers + templates (sem PII) |
+| `archive/` | Histórico (smokes, plans, audits) |
 
 | Ficheiro raiz `docs/` | Uso |
 | --------------------- | --- |

@@ -22,10 +22,11 @@ App de partilha de viagens (tipo Uber/Bolt) com backend FastAPI, frontend React 
 ## Documentação
 
 1. **[DOCS_INDEX.md](docs/meta/DOCS_INDEX.md)** — documentação **CURRENT** (não inventário histórico). Histórico fora do Git: **[docs/HISTORICO_FORA_DO_GIT.md](docs/HISTORICO_FORA_DO_GIT.md)**.
-2. **[DOCUMENT_GOVERNANCE.md](docs/meta/DOCUMENT_GOVERNANCE.md)** — regras documentais canónicas.
-3. **[PROJECT.md](docs/meta/PROJECT.md)** — produto, modelo de dados, fluxo viagem/pagamento.
-4. **[docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)** — Git/GitHub para este repo (branches, PR, `main`; push directo a `main` está bloqueado).
-5. **[docs/IMPLEMENTACAO_E_TESTES.md](docs/IMPLEMENTACAO_E_TESTES.md)** — o que foi implementado (A000…), como testar, e **Parte II** (logs / pytest).
+2. **[DOCUMENT_GOVERNANCE.md](docs/meta/DOCUMENT_GOVERNANCE.md)** — regras documentais canónicas (Fases 1–5).
+3. **Registos:** [DECISIONS](docs/registers/DECISIONS.md) · [FINDINGS](docs/registers/FINDINGS.md) · [consultas externas](docs/registers/EXTERNAL_CONSULTATIONS.md) · [política external](docs/external/README.md).
+4. **[PROJECT.md](docs/meta/PROJECT.md)** — produto, modelo de dados, fluxo viagem/pagamento.
+5. **[docs/GITHUB_MANUAL_TVDE.md](docs/GITHUB_MANUAL_TVDE.md)** — Git/GitHub para este repo (branches, PR, `main`; push directo a `main` está bloqueado).
+6. **[docs/IMPLEMENTACAO_E_TESTES.md](docs/IMPLEMENTACAO_E_TESTES.md)** — o que foi implementado (A000…), como testar, e **Parte II** (logs / pytest).
 
 _Handoff histórico: [PROXIMA_SESSAO.md](docs/archive/plans/PROXIMA_SESSAO.md) (arquivo)._
 

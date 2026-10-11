@@ -93,7 +93,7 @@ Marca uma linha de decisão por tópico e regista em **Notas** (abaixo ou anexo)
 | Multi-frota / gestor `partner` | [`PARTNER_ONBOARDING.md`](../PARTNER_ONBOARDING.md), rotas `/partner/*` | Contratos e RGPD por escrito                   |
 | Motoristas                     | Aprovação admin, estados de viagem                                      | Processo documental formal por motorista       |
 | Pagamentos                     | Stripe, webhooks documentados                                           | Conta live, modelo fiscal, recibos             |
-| Operação                       | `PROXIMA_SESSAO` Seção F, cron, health                                  | Runbook sinistros + contacto 24h se necessário |
+| Operação                       | [`TODOdoDIA.md`](../../TODOdoDIA.md), cron, health · [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) | Runbook sinistros + contacto 24h se necessário |
 
 ---
 
