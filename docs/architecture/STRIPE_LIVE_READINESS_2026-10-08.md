@@ -8,7 +8,7 @@
 | **status** | FECHADO (snapshot imutável) |
 | **owner** | Frank |
 
-> **Não é documento vivo** (GOV-DOC-006). Findings abertos → [`FINDINGS.md`](../registers/FINDINGS.md) (Fase 3).  
+> **Não é documento vivo** (GOV-DOC-006). Findings abertos → [`FINDINGS.md`](../registers/FINDINGS.md) (`STRIPE-LIVE-01…03`).  
 > **Documento vivo futuro:** `STRIPE_LIVE_READINESS.md` (filename estável, sem data) — a criar quando aplicável.
 
 **Tipo:** factos técnicos e operacionais confirmados no repo  
