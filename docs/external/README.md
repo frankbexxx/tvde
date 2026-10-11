@@ -87,10 +87,13 @@ Por defeito: dossier advogado/contabilista = **EXTERNAL-CONFIDENTIAL**; response
 ```text
 docs/external/
 ├── README.md                 ← esta política
+├── brand/                    ← reference.docx, tokens, assets (Pandoc v0)
 ├── templates/                ← modelos reutilizáveis + DRAFT blueprints
 ├── outbox/                   ← manifestos de envio (EXT-*)
 └── responses/                ← resumos internos pós-resposta
 ```
+
+**Branding documental:** [`brand/README.md`](brand/README.md) · [`brand/reference.docx`](brand/reference.docx) · [`brand/tokens.yaml`](brand/tokens.yaml)
 
 | Artefacto | Template |
 |-----------|----------|

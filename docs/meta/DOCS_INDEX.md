@@ -19,6 +19,7 @@
 | **Findings (índice)** | [`registers/FINDINGS.md`](../registers/FINDINGS.md) |
 | **Consultas externas (índice)** | [`registers/EXTERNAL_CONSULTATIONS.md`](../registers/EXTERNAL_CONSULTATIONS.md) |
 | **Documentação externa (política)** | [`external/README.md`](../external/README.md) |
+| **Brand documental externa** | [`external/brand/README.md`](../external/brand/README.md) |
 
 ---
 
@@ -137,6 +138,7 @@
 | [DOCUMENT_GOVERNANCE.md](DOCUMENT_GOVERNANCE.md) | Governance |
 | [registers/](../registers/) | DECISIONS · FINDINGS · EXTERNAL_CONSULTATIONS |
 | [external/README.md](../external/README.md) | Política dossiers externos |
+| [external/brand/README.md](../external/brand/README.md) | Brand + reference.docx (Pandoc v0) |
 
 ---
 
