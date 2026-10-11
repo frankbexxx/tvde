@@ -51,7 +51,7 @@ Na máquina onde foi feita a remoção, cópia completa em:
 
 | Conteúdo | Nota |
 | -------- | ---- |
-| `docs/todo-em-curso.md` | Triple handoff eliminado — fonte única: `TODOdoDIA.md` + `PROXIMA_SESSAO.md` |
+| `docs/todo-em-curso.md` | Triple handoff eliminado — fonte única operacional: `TODOdoDIA.md` (2026-10: PROXIMA arquivada) |
 | Corpo histórico `TODOdoDIA.md` | Painéis Abril–Maio truncados (~1180 linhas → ~100) |
 | Corpo histórico `PROXIMA_SESSAO.md` | Fechos Abril/Alpha/duplicados truncados (~895 linhas → ~70) |
 
@@ -79,7 +79,7 @@ Na máquina onde foi feita a remoção, cópia completa em:
 | 3 | Handoff triple → único | ~3 + truncagem |
 | 4 | Alpha, inventários UI, test book EN | ~40 |
 
-**Activos canónicos:** `TODOdoDIA.md`, `PROXIMA_SESSAO.md`, `DOCS_INDEX.md`, `docs/ux/navigation-inventory.md`, `GUIA_TESTES.md`, `docs/audit/PROJECT_AUDIT_2026-05-02.md`, `AUDIT_EXEC_BACKLOG_AL_2026-05.md`.
+**Activos canónicos (2026-10 — pós Fases 1–5):** [`TODOdoDIA.md`](../TODOdoDIA.md), [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md), [`meta/DOCS_INDEX.md`](meta/DOCS_INDEX.md), [`meta/DOCUMENT_GOVERNANCE.md`](meta/DOCUMENT_GOVERNANCE.md), [`registers/`](registers/), [`external/README.md`](external/README.md), [`ux/navigation-inventory.md`](ux/navigation-inventory.md), [`testing/GUIA_TESTES.md`](testing/GUIA_TESTES.md).
 
 ## Referências úteis que continuam no repo
 

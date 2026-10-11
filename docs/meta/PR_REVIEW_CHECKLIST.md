@@ -11,7 +11,7 @@ Substitui Bugbot / Cloud Agents / automações automáticas. Revisão humana, cu
 - [ ] Título/descrição batem certo com o diff
 - [ ] Diff só no que a PR promete (sem drive-by)
 - [ ] Sem alterações em `.cursor/rules/` salvo pedido explícito
-- [ ] Docs: só o necessário; handoff operacional em [`TODOdoDIA.md`](../../TODOdoDIA.md) (GOV-DOC-002). [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md): **REVIEW / NÃO CANÓNICO / pendente arquivo** — não actualizar como documento de PR (GOV-DOC-004)
+- [ ] Docs: só o necessário; handoff operacional em [`TODOdoDIA.md`](../../TODOdoDIA.md) (GOV-DOC-002). Handoff histórico: [`archive/plans/PROXIMA_SESSAO.md`](../archive/plans/PROXIMA_SESSAO.md) — **não** actualizar em PRs (GOV-DOC-004)
 
 ## 2. Segurança / auth / RBAC / secrets
 

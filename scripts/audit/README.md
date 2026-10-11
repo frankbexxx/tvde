@@ -2,7 +2,7 @@
 
 **Não é runtime.** Não é chamado pela API, pelo Vite, pelo CI, nem por `package.json`.
 
-Gerado para a auditoria `docs/analysis/REPO_LATERAL_AUDIT_2026-09.md`.
+Auditorias Set 2026: [`docs/archive/audits/`](../../docs/archive/audits/) (ex.: P1 runtime). Índice findings: [`docs/registers/FINDINGS.md`](../../docs/registers/FINDINGS.md).
 
 | Artefacto | Destino |
 |-----------|---------|

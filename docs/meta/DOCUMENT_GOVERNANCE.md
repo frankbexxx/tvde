@@ -6,7 +6,7 @@
 | **title** | Governance documental TVDE |
 | **type** | REGISTER |
 | **created** | 2026-10-11 |
-| **updated** | 2026-10-11 |
+| **updated** | 2026-10-11 (Fases 1–5 normalização) |
 | **status** | ACTIVO |
 | **owner** | Frank / equipa TVDE |
 
@@ -110,6 +110,8 @@ A classificação pode constar de **banner/metadata** antes de mover ficheiros f
 | Decisões (índice) | [`registers/DECISIONS.md`](../registers/DECISIONS.md) |
 | Findings (índice) | [`registers/FINDINGS.md`](../registers/FINDINGS.md) |
 | Consultas externas (índice) | [`registers/EXTERNAL_CONSULTATIONS.md`](../registers/EXTERNAL_CONSULTATIONS.md) |
+| Política dossiers externos | [`external/README.md`](../external/README.md) |
+| Arquivo histórico | [`archive/README.md`](../archive/README.md) |
 
 **Arquivados (Fase 2B):** handoff [`PROXIMA_SESSAO.md`](../archive/plans/PROXIMA_SESSAO.md) · status Set [`TVDE_STATUS_SETEMBRO_2026.md`](../archive/plans/TVDE_STATUS_SETEMBRO_2026.md) — operação só [`TODOdoDIA.md`](../../TODOdoDIA.md).
 
@@ -123,7 +125,10 @@ A classificação pode constar de **banner/metadata** antes de mover ficheiros f
 | **2** | Arquivo físico snapshots / smokes |
 | **3** | Popular registos (decisões, findings, consultas) |
 | **4** | [`docs/external/`](../external/README.md) — política, templates, manifestos (`outbox/`), resumos (`responses/`) |
-| **5** | Actualizar referências quebradas; rename PLAN se aprovado |
+| **5** | Referências e consistência final (**concluída** 2026-10-11) — baseline documental normalizada |
+| **6+** | Rename PLAN mestre (se aprovado); dossiers externos reais; desagregação UX findings |
+
+**Baseline (2026-10-11):** Fases 1–5 fechadas. Alterações futuras seguem esta governance; registos (`DECISIONS`, `FINDINGS`, `EXTERNAL_CONSULTATIONS`) actualizam-se quando há decisão/resposta/consulta nova — não duplicar texto nos dossiers.
 
 ---
 

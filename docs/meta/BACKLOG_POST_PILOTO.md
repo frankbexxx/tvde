@@ -4,7 +4,7 @@
 >
 > **Objectivo:** parqueamento disciplinado de ideias e decisões pequenas que emergiram durante a preparação do piloto Alpha 2026-04-25, mas que foram **conscientemente adiadas** para não introduzir risco a D-2 / D-1 / D.
 >
-> **Não duplica** `PROXIMA_SESSAO.md` (handoff do dia). Pack Alpha Abril arquivado (auditoria Lote 4). Este ficheiro é o parking lot pós-piloto.
+> **Não duplica** [`TODOdoDIA.md`](../../TODOdoDIA.md) (handoff operacional). Handoff histórico: [`archive/plans/PROXIMA_SESSAO.md`](../archive/plans/PROXIMA_SESSAO.md). Pack Alpha Abril arquivado (Lote 4). Parking lot pós-piloto.
 >
 > **Regra:** ao mergear um destes items, remover daqui com `✅ fechado em #PR` + linha apontando para o commit.
 

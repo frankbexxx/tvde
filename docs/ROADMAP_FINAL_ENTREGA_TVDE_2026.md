@@ -8,7 +8,7 @@
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
-**Nota:** rename futuro para nome estável sem data (ex. `PLAN-TVDE-MASTER.md`) — **não executar** até Fase 5 (impacto HIGH em referências).
+**Nota:** rename futuro para nome estável sem data (ex. `PLAN-TVDE-MASTER.md`) — **opcional** pós-Fase 5; requer PR dedicado (impacto HIGH em referências).
 
 **Documento canónico de execução:** CARRIL → ETAPA → PASSOS  
 **Fonte consolidada:** [`TODOdoDIA.md`](../TODOdoDIA.md) (operacional) · histórico Set: [`TVDE_STATUS_SETEMBRO_2026.md`](archive/plans/TVDE_STATUS_SETEMBRO_2026.md) · [`SETEMBRO_2026_TODO_LIBRARY.md`](archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) · docs pay/mobile/legal/business/ops  

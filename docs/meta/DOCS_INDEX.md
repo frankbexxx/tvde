@@ -135,6 +135,8 @@
 | -------- | --------- |
 | [PROJECT.md](PROJECT.md) | Visão produto + dados |
 | [DOCUMENT_GOVERNANCE.md](DOCUMENT_GOVERNANCE.md) | Governance |
+| [registers/](../registers/) | DECISIONS · FINDINGS · EXTERNAL_CONSULTATIONS |
+| [external/README.md](../external/README.md) | Política dossiers externos |
 
 ---
 
@@ -145,13 +147,11 @@ Histórico válido **fora** da documentação CURRENT. Ver [`../archive/README.m
 | Pasta | Conteúdo (Fase 2A) |
 | ----- | ------------------- |
 | [`archive/ops/`](../archive/ops/) | Smokes PASS, checkpoints, demos/milestones fechados |
-| [`archive/plans/`](../archive/plans/) | MODO FÉRIAS, retoma Set, roadmap pós-demo Jul |
-| [`archive/audits/`](../archive/audits/) | Auditorias Mai/Set, portagens/HERE, relatório Jul |
+| [`archive/plans/`](../archive/plans/) | FORWARD Jul · STATUS Set · PROXIMA · ENGINEERING · biblioteca Set · MODO FÉRIAS · retoma Set |
+| [`archive/audits/`](../archive/audits/) | Auditorias Mai/Set · portagens/HERE · P1 runtime · relatório Jul |
 | [`archive/prompts/`](../archive/prompts/) | Piloto comercial (prompts agente) |
 | [`archive/ux/`](../archive/ux/) | Auditorias navegação Jul 2026 |
 | [`archive/reference/`](../archive/reference/) | Benchmark veículos Lisboa (MD) |
-| [`archive/plans/`](../archive/plans/) | FORWARD Jul · STATUS Set · PROXIMA_SESSAO · ENGINEERING · biblioteca Set |
-| [`archive/audits/P1_RUNTIME…`](../archive/audits/P1_RUNTIME_SECURITY_REVIEW_2026-09.md) | Segurança runtime Set 2026 (fechado) |
 
 ## Histórico no path antigo / LEGACY (banner)
 
