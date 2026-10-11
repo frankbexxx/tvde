@@ -139,13 +139,13 @@ def main(argv: list[str] | None = None) -> int:
     val.add_argument("--json", action="store_true")
     val.add_argument("--repo-root", type=Path, default=REPO_ROOT)
 
-    bld = sub.add_parser("build", help="Validate then build DOCX (+ PDF if LO available)")
+    bld = sub.add_parser("build", help="Validate then build DOCX (PDF optional via --formats)")
     bld.add_argument("yaml_path", type=Path)
     bld.add_argument("--out", type=Path, default=None, help="Output directory (outside repo)")
     bld.add_argument(
         "--formats",
         default=None,
-        help="docx and/or docx,pdf (default: docx + pdf if LibreOffice available)",
+        help="docx (default) or docx,pdf for LibreOffice preview/smoke PDF",
     )
     bld.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     bld.add_argument(

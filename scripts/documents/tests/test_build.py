@@ -37,6 +37,22 @@ def test_output_inside_repo_rejected(tmp_path):
 @patch("scripts.documents.build.pandoc_version", return_value="pandoc 3.12.1 (mock)")
 @patch("scripts.documents.build.run_pandoc", side_effect=_fake_pandoc_run)
 @patch("scripts.documents.build.find_pandoc")
+def test_default_build_docx_only_no_pdf(mock_find, mock_run, _mock_ver, tmp_path):
+    mock_find.return_value = Path("/usr/bin/pandoc")
+    out = tmp_path / "EXT-DOCX-ONLY"
+    build_dossier(FIXTURE_YAML, out, formats=None)
+    data = json.loads((out / MANIFEST_NAME).read_text(encoding="utf-8"))
+    assert data["pdf_generated"] is False
+    assert data.get("canonical_artifact") == "docx"
+    assert data["output_pdf_sha256"] is None
+    insp = inspect_output_dir(out)
+    assert insp.ok
+    assert "PDF not generated" in " ".join(insp.messages)
+
+
+@patch("scripts.documents.build.pandoc_version", return_value="pandoc 3.12.1 (mock)")
+@patch("scripts.documents.build.run_pandoc", side_effect=_fake_pandoc_run)
+@patch("scripts.documents.build.find_pandoc")
 def test_build_creates_manifest_and_docx(mock_find, mock_run, _mock_ver, tmp_path):
     mock_find.return_value = Path("/usr/bin/pandoc")
     out = tmp_path / "EXT-TEST-BUILD"

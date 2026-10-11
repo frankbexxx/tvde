@@ -1,9 +1,27 @@
 # Document tooling — dossiers externos
 
-Pipeline:
+## Artefacto canónico
+
+**DOCX** é o output externo principal (editável, revisão humana no Microsoft Word).
 
 ```text
-Markdown/YAML → validate → Pandoc → DOCX → layout post-process → LibreOffice → PDF
+Markdown/YAML
+  → validate
+  → Pandoc → DOCX → layout post-process
+  → revisão humana (Word)
+  → APPROVED DOCX (quando governance o permitir)
+
+PDF:
+  → opcional: --formats docx,pdf (LibreOffice preview / smoke / CI)
+  → envio: preferir PDF exportado manualmente a partir do DOCX aprovado no Word
+```
+
+O PDF automático via LibreOffice **não** é o artefacto visual autoritativo e **não bloqueia** aprovação do DOCX.
+
+## Pipeline técnico
+
+```text
+validate → Pandoc → DOCX → layout post-process → [LibreOffice → PDF opcional]
 → SHA-256 → build-manifest.json (output fora do Git)
 ```
 
@@ -12,7 +30,7 @@ Markdown/YAML → validate → Pandoc → DOCX → layout post-process → Libre
 - Python 3.12+
 - `pip install -r scripts/documents/requirements.txt`
 - **Pandoc 3.x** (DOCX)
-- **LibreOffice** (PDF derivado do DOCX — não gerar PDF directo do Markdown)
+- **LibreOffice** (opcional — só para `--formats docx,pdf`)
 
 ### Pandoc (Windows DEV)
 
@@ -31,23 +49,20 @@ winget install --id TheDocumentFoundation.LibreOffice -e --accept-source-agreeme
 
 - Versão referência: **26.8.x** · path: `%ProgramFiles%\LibreOffice\program\soffice.exe`
 - Reversível: «Apps & features» ou `winget uninstall TheDocumentFoundation.LibreOffice`
-- Impacto: suite completa (~600 MB); só `soffice --headless` é usada pelo pipeline.
+- Impacto: suite completa (~600 MB); só `soffice --headless` é usada quando PDF é pedido.
 
-Linux CI: `apt-get install pandoc libreoffice-writer`.
+Linux CI: `apt-get install pandoc libreoffice-writer` (fixture smoke com `docx,pdf`).
 
 ## Comandos
 
 ```bash
 python -m scripts.documents.cli validate docs/external/sources/EXT-FIXTURE-001/dossier.yaml
 
-# Default: DOCX + PDF se LibreOffice disponível
+# Default: só DOCX (+ manifest)
 python -m scripts.documents.cli build docs/external/sources/EXT-FIXTURE-001/dossier.yaml
 
-# PDF obrigatório (FAIL se LO falhar)
+# PDF preview/smoke (LibreOffice)
 python -m scripts.documents.cli build ... --formats docx,pdf
-
-# Só DOCX
-python -m scripts.documents.cli build ... --formats docx
 
 python -m scripts.documents.cli inspect "%LOCALAPPDATA%\TVDE\documents\EXT-FIXTURE-001"
 ```
@@ -58,11 +73,13 @@ python -m scripts.documents.cli inspect "%LOCALAPPDATA%\TVDE\documents\EXT-FIXTU
 
 | Ficheiro | Descrição |
 |----------|-----------|
-| `dossier.docx` | Primário (Pandoc + `reference.docx`) |
-| `dossier.pdf` | Derivado do DOCX (LibreOffice headless) |
-| `build-manifest.json` | Hashes, Git, versões Pandoc/LO, comandos |
+| `dossier.docx` | **Canónico** — Pandoc + `reference.docx` + pós-processamento layout |
+| `dossier.pdf` | Opcional — derivado LO do DOCX (preview; não substitui DOCX aprovado) |
+| `build-manifest.json` | Hashes sources/DOCX, Git, Pandoc; campos PDF opcionais |
 
 **Build ≠ aprovação ≠ envio.** Não altera YAML, registers ou `outbox/`.
+
+Edições manuais relevantes no Word devem, quando possível, ser reflectidas no source/template **antes** de APPROVED definitivo.
 
 ## Pós-render
 
@@ -72,6 +89,7 @@ Placeholders em **APPROVED** são re-verificados no texto extraído do DOCX apó
 
 - **Capa:** prepend automático em build a partir de [`docs/external/brand/cover_preamble.md`](../docs/external/brand/cover_preamble.md) + campos do `dossier.yaml` (iconmark, ID, classificação).
 - **Footer págs. 2+:** pós-processamento substitui placeholders demo do `reference.docx` pelos metadados reais.
+- **Tabelas:** larguras por perfil (DEC/FIND/anexos/capa) + tipografia 8pt em células + headings `keepNext`.
 - **Estilos custom** (`custom-style`): suporte parcial Pandoc — filtro Lua só se QA o exigir.
 
 ## Testes

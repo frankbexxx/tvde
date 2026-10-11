@@ -132,4 +132,19 @@ A classificação pode constar de **banner/metadata** antes de mover ficheiros f
 
 ---
 
+## 9. Dossiers externos — DOCX vs PDF (2026-10-11)
+
+| Artefacto | Papel |
+|-----------|--------|
+| **Source** (`docs/external/sources/EXT-*/`) | Markdown/YAML no Git — fonte reprodutível |
+| **`dossier.docx`** (fora do Git) | **Canónico externo** — revisão e aprovação no Word |
+| **`dossier.pdf`** | Derivado — preview/smoke (LibreOffice) ou export **manual** do DOCX aprovado para envio |
+| **`build-manifest.json`** | Proveniência (hashes, commit); PDF opcional no manifest |
+
+O PDF automático **não** substitui nem torna ambígua a proveniência do DOCX aprovado. Edições manuais relevantes no Word devem ser repatriadas para source/template quando possível.
+
+Detalhe operacional: [`external/README.md`](../external/README.md) · [`scripts/documents/README.md`](../../scripts/documents/README.md).
+
+---
+
 _Ver decisões GOV-DOC-001…009 em [`../registers/DECISIONS.md`](../registers/DECISIONS.md)._
