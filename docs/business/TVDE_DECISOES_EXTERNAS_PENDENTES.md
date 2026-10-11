@@ -4,6 +4,8 @@
 **Data:** 2026-10-08  
 **Complementa (não substitui):** [`TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md`](TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md) · [`TVDE_59_2026_TECHNICAL_FINDINGS.md`](../architecture/TVDE_59_2026_TECHNICAL_FINDINGS.md)
 
+**Registo canónico (índice):** [`registers/EXTERNAL_CONSULTATIONS.md`](../registers/EXTERNAL_CONSULTATIONS.md) (`Q-EXT-*`).
+
 **Legenda prioridade:** **P0** = antes de viagem real · **P1** = antes de Stripe Live · **P2** = pode esperar
 
 ---
