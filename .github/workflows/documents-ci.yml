@@ -35,3 +35,13 @@ jobs:
 
       - name: Validate EXT-FIXTURE-001
         run: python -m scripts.documents.cli validate docs/external/sources/EXT-FIXTURE-001/dossier.yaml
+
+      - name: Install Pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+
+      - name: Build fixture DOCX (ephemeral, outside repo)
+        run: |
+          python -m scripts.documents.cli build \
+            docs/external/sources/EXT-FIXTURE-001/dossier.yaml \
+            --out /tmp/tvde-documents/EXT-FIXTURE-001
+          python -m scripts.documents.cli inspect /tmp/tvde-documents/EXT-FIXTURE-001
