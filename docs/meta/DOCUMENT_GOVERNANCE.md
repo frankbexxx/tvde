@@ -122,7 +122,7 @@ A classificação pode constar de **banner/metadata** antes de mover ficheiros f
 | **1** | Governance + índice CURRENT + banners (esta fase) |
 | **2** | Arquivo físico snapshots / smokes |
 | **3** | Popular registos (decisões, findings, consultas) |
-| **4** | `docs/external/` — manifestos de envio |
+| **4** | [`docs/external/`](../external/README.md) — política, templates, manifestos (`outbox/`), resumos (`responses/`) |
 | **5** | Actualizar referências quebradas; rename PLAN se aprovado |
 
 ---
