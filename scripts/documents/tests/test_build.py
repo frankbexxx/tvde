@@ -40,7 +40,7 @@ def test_output_inside_repo_rejected(tmp_path):
 def test_build_creates_manifest_and_docx(mock_find, mock_run, _mock_ver, tmp_path):
     mock_find.return_value = Path("/usr/bin/pandoc")
     out = tmp_path / "EXT-TEST-BUILD"
-    result = build_dossier(FIXTURE_YAML, out, allow_in_repo=False)
+    result = build_dossier(FIXTURE_YAML, out, allow_in_repo=False, formats="docx")
     assert result.docx_path.is_file()
     assert result.manifest_path.is_file()
     data = json.loads(result.manifest_path.read_text(encoding="utf-8"))
@@ -81,7 +81,7 @@ def test_build_blocks_validation_fail(mock_find, mock_run, _mock_ver, tmp_path):
     )
     (tmp_path / "dossier.md").write_text("ok\n", encoding="utf-8")
     with pytest.raises(BuildError, match="validation FAIL"):
-        build_dossier(bad, tmp_path / "out", allow_in_repo=False)
+        build_dossier(bad, tmp_path / "out", allow_in_repo=False, formats="docx")
 
 
 @patch("scripts.documents.build.run_pandoc", side_effect=_fake_pandoc_run)
@@ -89,7 +89,7 @@ def test_build_blocks_validation_fail(mock_find, mock_run, _mock_ver, tmp_path):
 def test_build_requires_pandoc(mock_find, mock_run, tmp_path):
     mock_find.side_effect = FileNotFoundError("no pandoc")
     with pytest.raises(FileNotFoundError):
-        build_dossier(FIXTURE_YAML, tmp_path / "out")
+        build_dossier(FIXTURE_YAML, tmp_path / "out", formats="docx")
 
 
 @patch("scripts.documents.build.pandoc_version", return_value="pandoc 3.12.1 (mock)")
@@ -100,7 +100,7 @@ def test_dirty_flag_recorded(mock_dirty, mock_find, mock_run, _mock_ver, tmp_pat
     mock_find.return_value = Path("/usr/bin/pandoc")
     mock_dirty.return_value = ("abc123", True)
     out = tmp_path / "EXT-FIXTURE-001"
-    build_dossier(FIXTURE_YAML, out)
+    build_dossier(FIXTURE_YAML, out, formats="docx")
     data = json.loads((out / MANIFEST_NAME).read_text(encoding="utf-8"))
     assert data["git_dirty"] is True
     assert data["git_commit"] == "abc123"
@@ -112,14 +112,14 @@ def test_dirty_flag_recorded(mock_dirty, mock_find, mock_run, _mock_ver, tmp_pat
 def test_source_hash_changes_when_markdown_changes(mock_find, mock_run, _mock_ver, tmp_path):
     mock_find.return_value = Path("/usr/bin/pandoc")
     out = tmp_path / "EXT-FIXTURE-001"
-    build_dossier(FIXTURE_YAML, out)
+    build_dossier(FIXTURE_YAML, out, formats="docx")
     h1 = json.loads((out / MANIFEST_NAME).read_text())["source_hashes"]
 
     md = FIXTURE_YAML.parent / "dossier.md"
     original = md.read_text(encoding="utf-8")
     try:
         md.write_text(original + "\n<!-- touch -->\n", encoding="utf-8")
-        build_dossier(FIXTURE_YAML, out)
+        build_dossier(FIXTURE_YAML, out, formats="docx")
         h2 = json.loads((out / MANIFEST_NAME).read_text())["source_hashes"]
         md_key = "docs/external/sources/EXT-FIXTURE-001/dossier.md"
         assert h1[md_key] != h2[md_key]
@@ -136,7 +136,7 @@ def test_real_pandoc_build_if_available(tmp_path):
     except FileNotFoundError:
         pytest.skip("pandoc not installed")
     out = tmp_path / "EXT-FIXTURE-001"
-    result = build_dossier(FIXTURE_YAML, out)
+    result = build_dossier(FIXTURE_YAML, out, formats="docx")
     assert result.docx_path.stat().st_size > 1000
     with zipfile.ZipFile(result.docx_path) as zf:
         assert "word/document.xml" in zf.namelist()

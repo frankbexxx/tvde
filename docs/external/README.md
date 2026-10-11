@@ -130,7 +130,7 @@ Requisitos e Pandoc: [`scripts/documents/README.md`](../../scripts/documents/REA
 python -m scripts.documents.cli build docs/external/sources/EXT-FIXTURE-001/dossier.yaml
 ```
 
-Output **fora do Git** (por defeito `%LOCALAPPDATA%\TVDE\documents\<external_id>\`): `dossier.docx` + `build-manifest.json` (hashes, commit, comando Pandoc).
+Output **fora do Git** (por defeito `%LOCALAPPDATA%\TVDE\documents\<external_id>\`): `dossier.docx`, `dossier.pdf` (LibreOffice, derivado do DOCX) + `build-manifest.json` (hashes, commit, Pandoc/LO).
 
 - **Build ≠ aprovação** — não muda `status` no YAML.
 - **Build ≠ envio** — não cria manifesto em `outbox/`.

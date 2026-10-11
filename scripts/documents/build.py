@@ -1,7 +1,8 @@
-"""Build DOCX from validated dossier sources."""
+"""Build DOCX (+ optional PDF) from validated dossier sources."""
 
 from __future__ import annotations
 
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -10,9 +11,17 @@ import yaml
 
 from scripts.documents.git_state import git_commit_and_dirty
 from scripts.documents.hashes import sha256_file
-from scripts.documents.manifest import DOCX_NAME, MANIFEST_NAME, utc_now_iso, write_manifest
+from scripts.documents.libreoffice_util import (
+    LibreOfficeNotFoundError,
+    convert_docx_to_pdf,
+    find_soffice,
+    libreoffice_version,
+)
+from scripts.documents.manifest import DOCX_NAME, MANIFEST_NAME, PDF_NAME, utc_now_iso, write_manifest
 from scripts.documents.pandoc_util import find_pandoc, pandoc_version, run_pandoc
+from scripts.documents.pdf_check import validate_pdf_file
 from scripts.documents.paths import assert_output_allowed, default_output_dir
+from scripts.documents.post_render import assert_no_placeholders_post_render, extract_docx_text
 from scripts.documents.validator import BRAND_REFERENCE, BRAND_TOKENS, REPO_ROOT, validate_dossier
 
 
@@ -25,8 +34,12 @@ class BuildResult:
     output_dir: Path
     docx_path: Path
     manifest_path: Path
-    command: list[str]
+    pandoc_command: list[str]
     pandoc_version: str
+    pdf_path: Path | None = None
+    libreoffice_command: list[str] | None = None
+    libreoffice_version: str | None = None
+    pdf_generated: bool = False
 
 
 def _load_yaml(path: Path) -> dict[str, Any]:
@@ -61,6 +74,19 @@ def _collect_source_hashes(
     return files, hashes
 
 
+def _parse_formats(formats: str | None) -> tuple[bool, bool, bool]:
+    """Returns want_docx, want_pdf, pdf_required."""
+    if formats is None:
+        return True, True, False
+    parts = {p.strip().lower() for p in formats.split(",") if p.strip()}
+    if not parts or parts == {"docx"}:
+        return True, False, False
+    if "docx" not in parts:
+        raise BuildError("formats must include docx")
+    pdf_required = "pdf" in parts
+    return True, pdf_required, pdf_required
+
+
 def build_dossier(
     yaml_path: Path,
     out_dir: Path | None = None,
@@ -68,10 +94,16 @@ def build_dossier(
     repo_root: Path | None = None,
     allow_in_repo: bool = False,
     pandoc_exe: Path | None = None,
+    soffice_exe: Path | None = None,
+    formats: str | None = None,
 ) -> BuildResult:
     repo_root = repo_root or REPO_ROOT
     yaml_path = yaml_path.resolve()
     data = _load_yaml(yaml_path)
+
+    want_docx, want_pdf, pdf_required = _parse_formats(formats)
+    if not want_docx:
+        raise BuildError("docx output is required")
 
     report = validate_dossier(yaml_path, repo_root=repo_root)
     status = str(data.get("status", ""))
@@ -109,7 +141,7 @@ def build_dossier(
         "author": str(data.get("owner", "")),
         "date": str(data.get("updated", "")),
     }
-    cmd = run_pandoc(
+    pandoc_cmd = run_pandoc(
         pandoc=pandoc,
         markdown=md_path,
         reference_docx=BRAND_REFERENCE,
@@ -117,16 +149,116 @@ def build_dossier(
         metadata=metadata,
     )
 
+    docx_text = extract_docx_text(docx_path)
+    try:
+        assert_no_placeholders_post_render(docx_text, dossier_status=status)
+    except ValueError as exc:
+        raise BuildError(str(exc)) from exc
+
     source_files, source_hashes = _collect_source_hashes(
         repo_root, yaml_path, md_path, list(data.get("sources") or [])
     )
 
     ref_rel = BRAND_REFERENCE.resolve().relative_to(repo_root.resolve()).as_posix()
     tok_rel = BRAND_TOKENS.resolve().relative_to(repo_root.resolve()).as_posix()
-
     commit, dirty = git_commit_and_dirty(repo_root)
     manifest_path = output_dir / MANIFEST_NAME
-    payload = {
+
+    pdf_path: Path | None = None
+    lo_cmd: list[str] | None = None
+    lo_ver: str | None = None
+    pdf_generated = False
+    pdf_error: str | None = None
+
+    if want_pdf:
+        try:
+            soffice = soffice_exe or find_soffice()
+            lo_ver = libreoffice_version(soffice)
+            pdf_path, lo_cmd = convert_docx_to_pdf(docx_path, output_dir, soffice=soffice)
+            pdf_check = validate_pdf_file(pdf_path)
+            if not pdf_check.ok:
+                raise BuildError(f"PDF validation failed: {'; '.join(pdf_check.messages)}")
+            pdf_generated = True
+        except (LibreOfficeNotFoundError, FileNotFoundError, subprocess.CalledProcessError) as exc:
+            pdf_error = str(exc)
+            if pdf_required:
+                payload = _manifest_payload(
+                    external_id=external_id,
+                    data=data,
+                    status=status,
+                    commit=commit,
+                    dirty=dirty,
+                    source_files=source_files,
+                    source_hashes=source_hashes,
+                    ref_rel=ref_rel,
+                    tok_rel=tok_rel,
+                    p_version=p_version,
+                    pandoc_cmd=pandoc_cmd,
+                    docx_path=docx_path,
+                    pdf_generated=False,
+                    pdf_path=None,
+                    lo_ver=lo_ver,
+                    lo_cmd=lo_cmd,
+                    pdf_error=pdf_error,
+                )
+                write_manifest(manifest_path, payload)
+                raise BuildError(f"PDF conversion failed: {pdf_error}") from exc
+
+    payload = _manifest_payload(
+        external_id=external_id,
+        data=data,
+        status=status,
+        commit=commit,
+        dirty=dirty,
+        source_files=source_files,
+        source_hashes=source_hashes,
+        ref_rel=ref_rel,
+        tok_rel=tok_rel,
+        p_version=p_version,
+        pandoc_cmd=pandoc_cmd,
+        docx_path=docx_path,
+        pdf_generated=pdf_generated,
+        pdf_path=pdf_path,
+        lo_ver=lo_ver,
+        lo_cmd=lo_cmd,
+        pdf_error=pdf_error,
+    )
+    write_manifest(manifest_path, payload)
+
+    return BuildResult(
+        output_dir=output_dir,
+        docx_path=docx_path,
+        manifest_path=manifest_path,
+        pandoc_command=pandoc_cmd,
+        pandoc_version=p_version,
+        pdf_path=pdf_path,
+        libreoffice_command=lo_cmd,
+        libreoffice_version=lo_ver,
+        pdf_generated=pdf_generated,
+    )
+
+
+def _manifest_payload(
+    *,
+    external_id: str,
+    data: dict[str, Any],
+    status: str,
+    commit: str | None,
+    dirty: bool,
+    source_files: list[str],
+    source_hashes: dict[str, str],
+    ref_rel: str,
+    tok_rel: str,
+    p_version: str,
+    pandoc_cmd: list[str],
+    docx_path: Path,
+    pdf_generated: bool,
+    pdf_path: Path | None,
+    lo_ver: str | None,
+    lo_cmd: list[str] | None,
+    pdf_error: str | None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
         "external_id": external_id,
         "version": str(data.get("version", "")),
         "status": status,
@@ -140,17 +272,17 @@ def build_dossier(
         "tokens_file": tok_rel,
         "tokens_sha256": sha256_file(BRAND_TOKENS),
         "pandoc_version": p_version,
-        "command": cmd,
+        "command": pandoc_cmd,
         "output_docx": str(docx_path),
         "output_docx_sha256": sha256_file(docx_path),
         "output_size_bytes": docx_path.stat().st_size,
+        "libreoffice_version": lo_ver,
+        "libreoffice_command": lo_cmd,
+        "pdf_generated": pdf_generated,
+        "output_pdf": str(pdf_path) if pdf_path else None,
+        "output_pdf_sha256": sha256_file(pdf_path) if pdf_path and pdf_path.is_file() else None,
+        "output_pdf_size_bytes": pdf_path.stat().st_size if pdf_path and pdf_path.is_file() else None,
     }
-    write_manifest(manifest_path, payload)
-
-    return BuildResult(
-        output_dir=output_dir,
-        docx_path=docx_path,
-        manifest_path=manifest_path,
-        command=cmd,
-        pandoc_version=p_version,
-    )
+    if pdf_error:
+        payload["pdf_error"] = pdf_error
+    return payload
