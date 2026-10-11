@@ -1,0 +1,24 @@
+external_id: EXT-FIXTURE-001
+title: Fixture técnica — validação dossier externo
+version: v0.1
+created: "2026-10-11"
+updated: "2026-10-11"
+status: DRAFT
+audience: Equipa interna (testes validator)
+confidentiality: INTERNAL
+owner: Frank
+profile: generic
+q_ext:
+  - Q-EXT-LEG-007
+dec_refs:
+  - DEC-LEG-004
+find_refs:
+  - FIND-LEG-IMT-01
+sources:
+  - path: docs/registers/EXTERNAL_CONSULTATIONS.md
+  - path: docs/registers/DECISIONS.md
+  - path: docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md
+    anchor: governance
+output:
+  basename: EXT-FIXTURE-001
+  notes: Fixture only — no build output

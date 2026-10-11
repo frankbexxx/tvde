@@ -1,0 +1,4 @@
+# Document tooling only — not used by backend runtime.
+PyYAML>=6.0.1,<7
+jsonschema>=4.23,<5
+pytest>=8.0,<9
