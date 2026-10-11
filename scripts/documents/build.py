@@ -21,6 +21,8 @@ from scripts.documents.manifest import DOCX_NAME, MANIFEST_NAME, PDF_NAME, utc_n
 from scripts.documents.pandoc_util import find_pandoc, pandoc_version, run_pandoc
 from scripts.documents.pdf_check import validate_pdf_file
 from scripts.documents.paths import assert_output_allowed, default_output_dir
+from scripts.documents.docx_postprocess import patch_docx_header_footer
+from scripts.documents.md_compose import cleanup_compose_dir, compose_markdown
 from scripts.documents.post_render import assert_no_placeholders_post_render, extract_docx_text
 from scripts.documents.validator import BRAND_REFERENCE, BRAND_TOKENS, REPO_ROOT, validate_dossier
 
@@ -141,13 +143,19 @@ def build_dossier(
         "author": str(data.get("owner", "")),
         "date": str(data.get("updated", "")),
     }
-    pandoc_cmd = run_pandoc(
-        pandoc=pandoc,
-        markdown=md_path,
-        reference_docx=BRAND_REFERENCE,
-        output_docx=docx_path,
-        metadata=metadata,
-    )
+    composed_md, compose_tmp = compose_markdown(data, md_path)
+    try:
+        pandoc_cmd = run_pandoc(
+            pandoc=pandoc,
+            markdown=composed_md,
+            reference_docx=BRAND_REFERENCE,
+            output_docx=docx_path,
+            metadata=metadata,
+        )
+    finally:
+        cleanup_compose_dir(compose_tmp)
+
+    patch_docx_header_footer(docx_path, data)
 
     docx_text = extract_docx_text(docx_path)
     try:

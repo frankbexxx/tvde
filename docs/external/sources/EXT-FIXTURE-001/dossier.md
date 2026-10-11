@@ -1,9 +1,6 @@
----
-title: "Fixture técnica — validação dossier externo"
-subtitle: "Pipeline validate → build DOCX (sem PDF)"
----
+# Corpo do dossier
 
-# Identificação
+## Identificação
 
 | Campo | Valor |
 |-------|--------|
@@ -12,7 +9,7 @@ subtitle: "Pipeline validate → build DOCX (sem PDF)"
 
 ## Objectivo
 
-Validar pipeline **validate → build DOCX** antes de PDF e envio externo.
+Validar pipeline **validate → build DOCX → PDF** antes do primeiro dossier externo real.
 
 ### Contexto
 
@@ -40,8 +37,22 @@ Prioridade
 
 P1
 
+## Callouts (QA visual)
+
 ::: {custom-style="Callout Note"}
-NOTA — Callout de exemplo; estilo custom pode variar consoante Pandoc/reference.docx.
+NOTA — Contexto neutro para o destinatário.
+:::
+
+::: {custom-style="Callout Important"}
+IMPORTANTE — Dependência ou prazo relevante (exemplo).
+:::
+
+::: {custom-style="Callout Warning"}
+ATENÇÃO — Risco se não houver resposta (exemplo).
+:::
+
+::: {custom-style="Callout Confidential"}
+CONFIDENCIAL — Bloco reservado a dados sensíveis (exemplo).
 :::
 
 ## Decisões e findings (referência)
@@ -55,8 +66,10 @@ NOTA — Callout de exemplo; estilo custom pode variar consoante Pandoc/referenc
 
 TODO — remover placeholders antes de APPROVED.
 
----
+\newpage
 
 ## Anexo A1 — Material fictício
 
-Conteúdo de anexo **não** enviável. Fonte: documentação interna (referência sintética).
+Conteúdo de anexo **não** enviável.
+
+*Fonte: documentação interna (referência sintética).*

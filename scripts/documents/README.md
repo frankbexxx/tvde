@@ -68,9 +68,11 @@ python -m scripts.documents.cli inspect "%LOCALAPPDATA%\TVDE\documents\EXT-FIXTU
 
 Placeholders em **APPROVED** são re-verificados no texto extraído do DOCX após Pandoc (FAIL). PDF text scan opcional via `pypdf` quando disponível.
 
-## Capa / estilos custom
+## Capa / header / footer
 
-O `reference.docx` define estilos; o **corpo** vem do Markdown (a capa demo do template não é copiada automaticamente). `custom-style` (Q-EXT, callouts) tem suporte parcial no Pandoc — filtro Lua só se a QA visual o justificar.
+- **Capa:** prepend automático em build a partir de [`docs/external/brand/cover_preamble.md`](../docs/external/brand/cover_preamble.md) + campos do `dossier.yaml` (iconmark, ID, classificação).
+- **Footer págs. 2+:** pós-processamento substitui placeholders demo do `reference.docx` pelos metadados reais.
+- **Estilos custom** (`custom-style`): suporte parcial Pandoc — filtro Lua só se QA o exigir.
 
 ## Testes
 
