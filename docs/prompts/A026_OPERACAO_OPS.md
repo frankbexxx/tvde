@@ -112,7 +112,7 @@ O modelo usa `TripStatus`: `requested`, `assigned`, `accepted`, `arriving`, `ong
 
 # 5. OPERATION_CHECKLIST
 
-Ver **`docs/meta/PROXIMA_SESSAO.md`** Seção F — seção **A026 — Operação** (ex-`OPERATION_CHECKLIST`, arquivado Lote 1).
+Ver [`TODOdoDIA.md`](../../TODOdoDIA.md) e [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) — secção **A026 — Operação** (ex-`OPERATION_CHECKLIST`, arquivado Lote 1).
 
 Relatório de testes A026: arquivado fora do Git — [HISTORICO_FORA_DO_GIT.md](../HISTORICO_FORA_DO_GIT.md).
 

@@ -8,7 +8,7 @@
 | **owner** | Frank |
 | **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
 
-Ficheiro **vivo** na raiz do repo. **Única fonte operacional diária** — handoff entre sessões absorvido por este painel ([`DOCUMENT_GOVERNANCE.md`](docs/meta/DOCUMENT_GOVERNANCE.md) · GOV-DOC-004). [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) **não é canónico**.
+Ficheiro **vivo** na raiz do repo. **Única fonte operacional diária** e handoff entre sessões ([`DOCUMENT_GOVERNANCE.md`](docs/meta/DOCUMENT_GOVERNANCE.md) · GOV-DOC-002/004). Handoff histórico: [`docs/archive/plans/PROXIMA_SESSAO.md`](docs/archive/plans/PROXIMA_SESSAO.md).
 
 **Fecho de etapas:** mal uma entrega estiver em `main` (ou smoke feito), **actualizar este painel sem pedir confirmação**.
 
@@ -293,7 +293,7 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 
 **Objectivo imediato:** kit viagem (**cifrar `TVDE_SECRETS` pendente** · refresh SSD 13/14) · biblioteca Setembro (legal · negócio · **MOBILE-001**) · **sem** implementar / **sem** Capacitor / **sem** lojas. Em férias: branches + push · docs/marca leve · sem B2/Stripe live/PF3D/Docker MJ.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Biblioteca: [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · Negócio: [`docs/business/`](docs/business/) · Legal: [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](docs/archive/ops/DEMO_MANEL_2_SETEMBRO.md)
+**Referências:** Negócio [`docs/business/`](docs/business/) · Legal [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · Manel 2 [`DEMO_MANEL_2_SETEMBRO.md`](docs/archive/ops/DEMO_MANEL_2_SETEMBRO.md) · Biblioteca Set (arquivo) [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/archive/plans/SETEMBRO_2026_TODO_LIBRARY.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -323,7 +323,7 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 | **O-MJ-LIGHT-CLEAN** | Limpeza leve portátil MJ | Concluído | Startup reduzido · WPS tasks off · Chrome Memory Saver · ~3.4 GB RAM livre · nada desinstalado · críticos preservados |
 | **O-MODO-FERIAS** | Entrada oficial MODO FÉRIAS | Por iniciar | Gatilho 13/14: SSD actualizada + secrets cifrados + main alinhada PC/SSD |
 | **X-MANEL-INPUTS** | Backlog inputs Manel (pagamentos + app Driver) | Em curso | Docs [`MANEL_INPUTS_TODOS_2026-08-07.md`](docs/product/MANEL_INPUTS_TODOS_2026-08-07.md) · P0–P3 · perguntas abertas · **sem** implementação |
-| **X-SETEMBRO-LIB** | Biblioteca TODOs/intenções Setembro 2026 | Em curso | [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · IP · pay · Driver · marca · demo · **não** sprint fechado |
+| **X-SETEMBRO-LIB** | Biblioteca TODOs/intenções Setembro 2026 | N/A | **Arquivo** 2026-10-11 · carril activo = [`ROADMAP_FINAL…`](docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md) + este painel · [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) |
 | **LEGAL-TVDE-001** | DL 84/2026 — fonte legal bruta | Em curso | PDF em [`docs/legal/sources/`](docs/legal/sources/decreto-lei-84-2026-tvde-transporte-rodoviario.pdf) · índice [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · leitura Setembro P0 · **sem** parecer |
 | **BUSINESS-MANEL-001** | Custos / comissões / simulador (hipóteses) | Em curso | DOCX + 3 docs em [`docs/business/`](docs/business/) · P0 Setembro · **não** tarifário aprovado · **sem** campanha |
 | **MOBILE-001** | Android / iOS (PWA/wrapper/Capacitor) | Por iniciar | Pergunta Manel · spike Setembro P0/P1 · **sem** código · **sem** lojas · **sem** app nativa do zero |
@@ -468,7 +468,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **TVDE-PROD** | `PROD_VALIDATION` | **Concluído** | gate P5 beta ✅ · prod `STRIPE_MOCK=true` — [`FORWARD_PLAN_2026-07.md`](docs/ops/FORWARD_PLAN_2026-07.md) |
+| **TVDE-PROD** | `PROD_VALIDATION` | **Concluído** | gate P5 beta ✅ · prod `STRIPE_MOCK=true` · plano Jul arquivado [`FORWARD_PLAN_2026-07.md`](docs/archive/plans/FORWARD_PLAN_2026-07.md) |
 | **O-STRIPE-1** | Webhook Stripe (Fase A local) | **Concluído** | 2026-07-13 · [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) |
 | **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](docs/ops/TVDE_BKP_RUNBOOK.md) |
 | **TVDE-STG** | Staging smoke_validation | Por iniciar | [`TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md) §2 |
@@ -480,5 +480,5 @@ _Ver painel **2026-07-15** acima para estado actual._
 ## Ritual de fecho de sessão
 
 1. **Testes** → audits → correcções → merge/PR
-2. Actualizar **este ficheiro** (painel + abertos) e [`PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) (cabeça)
+2. Actualizar **este ficheiro** (painel + abertos) — único handoff operacional
 3. Operação cron/Render: [`CRON_JOB_ORG_INSTRUCOES.md`](docs/CRON_JOB_ORG_INSTRUCOES.md) · [`W1_PROD_SMOKE.md`](docs/ops/W1_PROD_SMOKE.md)

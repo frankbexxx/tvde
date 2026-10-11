@@ -1,5 +1,7 @@
 # Benchmarks e inspiração — app motorista / passageiro
 
+> **Tipo: REFERENCE / RESEARCH** — não fonte de verdade de produto ou compliance.
+
 Referências externas e notas de pesquisa (não são especificação implementável por si só). Última revisão: **2026-05-03**.
 
 ---

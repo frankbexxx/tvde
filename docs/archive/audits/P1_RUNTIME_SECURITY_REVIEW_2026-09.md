@@ -1,5 +1,7 @@
 # P1 Runtime Security Review — 2026-09
 
+> **STATUS: ARCHIVE / FECHADO** (2026-10-11) — auditoria Set 2026. Pendência **S-MAP-P1** (MapLibre) → [`registers/FINDINGS.md`](../registers/FINDINGS.md). Não reabrir como fonte activa salvo nova auditoria.
+
 **Base:** [`docs/archive/audits/REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md`](../archive/audits/REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md)  
 **Branch:** `audit/repo-runtime-hygiene-sep2026`  
 **Modo:** READ-ONLY (este ficheiro é o único artefacto novo; sem commits de código, upgrades, env writes, redeploy)  

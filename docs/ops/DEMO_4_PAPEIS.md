@@ -4,7 +4,7 @@ Documento curto para **apresentar / validar** Passenger · Driver · Partner · 
 
 **Não contém passwords nem secrets.** Passwords: gestor local / memória — não colar no chat nem neste ficheiro.
 
-**Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md) · review [`PR_REVIEW_CHECKLIST.md`](../meta/PR_REVIEW_CHECKLIST.md)
+**Handoff:** [`TODOdoDIA.md`](../../TODOdoDIA.md) · review [`PR_REVIEW_CHECKLIST.md`](../meta/PR_REVIEW_CHECKLIST.md)
 
 **Checkpoint histórico (local Dev):** [`D_DEMO_1_CHECKPOINT_2026-07-16.md`](D_DEMO_1_CHECKPOINT_2026-07-16.md)
 

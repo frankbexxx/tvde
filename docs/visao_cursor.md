@@ -4,7 +4,7 @@
 > Mantido apenas por rastreabilidade histórica. **Não usar** como fonte de verdade actual.  
 > Substituído por: [`meta/PROJECT.md`](meta/PROJECT.md) · [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) · [`legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md).
 
-_Documento gerado como síntese de contexto de repositório, conversas de implementação e leitura de `README`, `docs/meta/PROJECT.md`, `docs/meta/PROXIMA_SESSAO.md` (Seção F), `docs/meta/DOCS_INDEX.md` e roadmap. Serve de handoff mental entre sessões e de quadro para decisões de comercialização._
+_Documento gerado como síntese de contexto de repositório, conversas de implementação e leitura de `README`, `docs/meta/PROJECT.md`, `TODOdoDIA.md` (painel diário; handoff histórico em `docs/archive/plans/PROXIMA_SESSAO.md`), `docs/meta/DOCS_INDEX.md` e roadmap. Serve de handoff mental entre sessões e de quadro para decisões de comercialização._
 
 ---
 
@@ -32,7 +32,7 @@ Uma **plataforma de ride-sharing** orientada ao mercado português — **MVP tec
 
 ### 2.3 Documentação e operação
 
-- Índice em `docs/meta/DOCS_INDEX.md`; operação em `docs/meta/PROXIMA_SESSAO.md` Seção F, `docs/testing/GUIA_TESTES.md`, prompts A022/A026/A032, etc.
+- Índice em `docs/meta/DOCS_INDEX.md`; operação em `TODOdoDIA.md`, `docs/testing/GUIA_TESTES.md`, prompts A022/A026/A032, etc.
 - O projeto **não é** só código: há explícita preocupação com **deploy Render**, **Stripe**, **cron**, **migrações SQL** e **saúde operacional**.
 
 ---
@@ -147,7 +147,7 @@ Legenda: **Temos** = existe de forma utilizável ou documentada no repo / opera�
 Atualizar `docs/visao_cursor.md` quando:
 
 - mudar fase (ex. “pré-produção” → “piloto pago”);
-- fechar blocos A023–A035 (`docs/architecture/TVDE_ENGINEERING_ROADMAP.md`, anexo pré-produção);
+- fechar blocos A023–A035 (`docs/archive/plans/TVDE_ENGINEERING_ROADMAP.md`, anexo pré-produção);
 - entrar/sair de mercado (novo corredor, parceiro B2B, licença).
 
 ---

@@ -30,7 +30,7 @@ Passar de «funciona» a «previsível em produção» **sem**:
 
 1. **Pricing** — integridade (`distance_km` / `duration_min` obrigatórios no `complete_trip`).
 2. **Payments** — rastreabilidade (`log_event`) + confirmação operacional do webhook (manual/staging).
-3. **Operação** — cron / admin documentados (`docs/meta/PROXIMA_SESSAO.md` Seção F).
+3. **Operação** — cron / admin documentados (`TODOdoDIA.md` Seção F).
 4. **Testes** — mínimo crítico: webhook simulado + fluxo `ongoing` → `completed` com `STRIPE_MOCK`.
 
 ---
@@ -91,7 +91,7 @@ _(O `request_id` já pode existir via middleware; não obrigatório neste increm
 
 Frequência sugerida: **30–60 s** em produção (ajustar à carga).
 
-Documentação canónica: **`docs/meta/PROXIMA_SESSAO.md`** Seção F (ex-`OPERATION_CHECKLIST`, arquivado Lote 1).
+Documentação canónica: **`TODOdoDIA.md`** Seção F (ex-`OPERATION_CHECKLIST`, arquivado Lote 1).
 
 ---
 
@@ -140,7 +140,7 @@ Não exigir E2E browser neste incremento.
 - `docs/PRICING_DECISION.md`
 - `docs/DIAGNOSTICO_SISTEMA_TVDE.md`
 - `docs/testing/GUIA_TESTES.md`
-- `docs/meta/PROXIMA_SESSAO.md`
+- `TODOdoDIA.md`
 
 ---
 

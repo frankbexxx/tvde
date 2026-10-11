@@ -1,5 +1,7 @@
 # Consolidação preliminar
 
+> **Tipo:** FINDING (master) · **Estado:** REVIEW · Índice futuro: [`registers/FINDINGS.md`](../../../registers/FINDINGS.md) (UX-2026-10).
+
 Não resolve. Não ordena. Não propõe desenho.
 
 Os números contam findings, não ecrãs. Um finding com duas marcas entra na marca principal. «Coberto por teste» é marca extra e não entra na soma.

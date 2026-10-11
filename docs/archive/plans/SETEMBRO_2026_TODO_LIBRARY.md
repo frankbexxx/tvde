@@ -1,9 +1,10 @@
 # Biblioteca de TODOs / intenções — Setembro 2026
 
-**Tipo:** biblioteca de intenções, temas, riscos e decisões  
-**Estado:** captura viva — **não** sprint fechado · **não** promessa ao Manel · **não** implementação imediata  
-**Tip `main` (contexto):** `1cb01c5` (actualizar após pull)  
-**Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) · painel [`TODOdoDIA.md`](../../TODOdoDIA.md)
+> **STATUS: ARCHIVE / FECHADO** (2026-10-11) — snapshot biblioteca Setembro. Carril activo: [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md) · [`TODOdoDIA.md`](../../TODOdoDIA.md).
+
+**Tipo:** biblioteca de intenções, temas, riscos e decisões (histórico)  
+**Estado:** **arquivado** — não sprint fechado · não promessa ao Manel  
+**Handoff histórico:** [`PROXIMA_SESSAO.md`](PROXIMA_SESSAO.md) (arquivo)
 
 Relacionado (não substituído por este ficheiro):
 

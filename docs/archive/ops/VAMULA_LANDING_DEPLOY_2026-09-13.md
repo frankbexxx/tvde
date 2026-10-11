@@ -50,4 +50,4 @@
 - O-L25-04 **CONCLUÍDO** 2026-09-24 — notificações LRE em `legal@vamula.pt`; smoke de `legal@`, `reclamacoes@` e `manel@` recebido em `legal@`; backup do Francisco confirmado. **L-25 = FECHADO**
 - O email pessoal `frankbexxx@gmail.com` é assunto pessoal separado: o LRE confirmou em 2026-09-24 que já não está ligado à VAMULÁ/Ventos Férteis. Não pertence a O-L25-04 nem reabre L-25
 
-**Relacionado:** acta [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) §7–10 · status [`TVDE_STATUS_SETEMBRO_2026.md`](../TVDE_STATUS_SETEMBRO_2026.md) · roadmap [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md).
+**Relacionado:** acta [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](../business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) §7–10 · status [`TVDE_STATUS_SETEMBRO_2026.md`](../plans/TVDE_STATUS_SETEMBRO_2026.md) · roadmap [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md).

@@ -2,7 +2,7 @@
 
 Validação **local** do webhook Stripe em **test mode**: assinatura, entrega, `payment_intent.succeeded` → `Payment.succeeded`, fluxo PI real com `STRIPE_MOCK=false`.
 
-**Complementa:** [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 · [`TESTE_STRIPE_COMPLETO.md`](../testing/TESTE_STRIPE_COMPLETO.md) · [`diagrams/03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) · [`FORWARD_PLAN_2026-07.md`](FORWARD_PLAN_2026-07.md)
+**Complementa:** [`W1_PROD_SMOKE.md`](W1_PROD_SMOKE.md) §4 · [`TESTE_STRIPE_COMPLETO.md`](../testing/TESTE_STRIPE_COMPLETO.md) · [`diagrams/03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) · [`FORWARD_PLAN_2026-07.md`](../archive/plans/FORWARD_PLAN_2026-07.md)
 
 **Fora de scope deste gate:** `sk_live_*`, conta Stripe do parceiro, `STRIPE_MOCK=false` em produção.
 

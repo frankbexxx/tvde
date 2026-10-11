@@ -83,7 +83,7 @@ Na máquina onde foi feita a remoção, cópia completa em:
 
 ## Referências úteis que continuam no repo
 
-- Roadmap técnico + anexo A023–A035: `docs/architecture/TVDE_ENGINEERING_ROADMAP.md`
-- Handoff e operação: `docs/meta/PROXIMA_SESSAO.md` (Seção F e G)
+- Roadmap técnico + anexo A023–A035 (arquivo): `docs/archive/plans/TVDE_ENGINEERING_ROADMAP.md`
+- Handoff e operação: `TODOdoDIA.md` (vivo); histórico `docs/archive/plans/PROXIMA_SESSAO.md`
 - Confirmação Stripe (decisão futura): no snapshot, `archive/docs_nao_essenciais/STRIPE_CONFIRMACAO_FUTURA.md`
 - Roadmap histórico texto: no snapshot, `archive/docs_2026_03_22/ROADMAP.md`

@@ -48,7 +48,7 @@ Implementar A026 — OPERAÇÃO REAL (mínimo de código, alinhado ao existente)
 
 - `stuck_payments` e restantes listas coerentes com o código (read-only)
 
-### 5. Atualizar `docs/meta/PROXIMA_SESSAO.md` (Seção F — operação)
+### 5. Atualizar `TODOdoDIA.md` (operação / painel diário)
 
 - seção A026: cron, frequência, verificações diárias, alertas
 

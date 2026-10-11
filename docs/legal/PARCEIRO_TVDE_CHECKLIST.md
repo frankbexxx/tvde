@@ -11,7 +11,7 @@
 | [`docs/visao_cursor.md`](../visao_cursor.md) §4.2                  | Estado geral legal/compliance no projecto               |
 | [`docs/PARTNER_ONBOARDING.md`](../PARTNER_ONBOARDING.md)           | Fluxo técnico mínimo: org, gestor `partner`, motoristas |
 | [`docs/meta/PROJECT.md`](../meta/PROJECT.md)                       | Visão produto, comissão, stack                          |
-| [`docs/meta/PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md) Seção F | Operação diária (cron, Stripe, saúde)                   |
+| [`TODOdoDIA.md`](../../TODOdoDIA.md) | Operação diária (cron, Stripe, saúde)                   |
 
 ---
 

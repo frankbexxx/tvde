@@ -3,7 +3,7 @@
 **Tipo:** hipótese / estudo preliminar (não orçamento aprovado)  
 **Origem:** DOCX Manel/IA compilado pelo Francisco — [`sources/quais-os-custos-operacao-app-depois-construida.docx`](sources/quais-os-custos-operacao-app-depois-construida.docx)  
 **Estado:** números **não** validados · para discussão e simulador em **Setembro**  
-**Biblioteca:** [`SETEMBRO_2026_TODO_LIBRARY.md`](../product/SETEMBRO_2026_TODO_LIBRARY.md) · item **BUSINESS-MANEL-001**
+**Biblioteca:** [`SETEMBRO_2026_TODO_LIBRARY.md`](../archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) · item **BUSINESS-MANEL-001**
 
 ---
 
