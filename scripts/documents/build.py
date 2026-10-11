@@ -21,6 +21,7 @@ from scripts.documents.manifest import DOCX_NAME, MANIFEST_NAME, PDF_NAME, utc_n
 from scripts.documents.pandoc_util import find_pandoc, pandoc_version, run_pandoc
 from scripts.documents.pdf_check import validate_pdf_file
 from scripts.documents.paths import assert_output_allowed, default_output_dir
+from scripts.documents.docx_layout import patch_docx_layout
 from scripts.documents.docx_postprocess import patch_docx_header_footer
 from scripts.documents.md_compose import cleanup_compose_dir, compose_markdown
 from scripts.documents.post_render import assert_no_placeholders_post_render, extract_docx_text
@@ -156,6 +157,7 @@ def build_dossier(
         cleanup_compose_dir(compose_tmp)
 
     patch_docx_header_footer(docx_path, data)
+    patch_docx_layout(docx_path)
 
     docx_text = extract_docx_text(docx_path)
     try:

@@ -3,7 +3,7 @@
 Pipeline:
 
 ```text
-Markdown/YAML → validate → Pandoc → DOCX → LibreOffice → PDF
+Markdown/YAML → validate → Pandoc → DOCX → layout post-process → LibreOffice → PDF
 → SHA-256 → build-manifest.json (output fora do Git)
 ```
 
