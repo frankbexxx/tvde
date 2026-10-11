@@ -1,5 +1,8 @@
 # Decisão de pricing — modelo híbrido
 
+> **STATUS: OBSOLETO / LEGACY** (2026-10-11)  
+> Mantido por rastreabilidade. Decisão canónica actual: [`business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md) §6h (A1.4 CLOSED).
+
 **Data:** 2026-03-22 (consolidação A021→A022)  
 **Actualizado:** 2026-09-18 — **A1.4 DECIDIDA / CLOSED** (pricing + comissão) · A2.5 tarifário V1  
 **Estado:** decisão fechada — documento de referência para produto, UX e backend.

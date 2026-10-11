@@ -1,6 +1,9 @@
 # Manel, pedidos de produto e obrigações legais — backlog EXTRA (2026-05)
 
-Documento **canónico** para itens vindos de **feedback do Manel** (sessões, smoke, roadmap visível nos specs existentes) e para **riscos de conformidade** que o produto deve endereçar antes ou durante escala. **Não** substitui parecer jurídico: onde aparece *[Legal]*, a equipa deve validar texto e prazos com **assessoria**.
+> **STATUS: OBSOLETO / LEGACY** (2026-10-11)  
+> Mantido por rastreabilidade. Itens activos: [`legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](../legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) · [`legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](../legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md) · [`TODO_FUTURO.md`](../TODO_FUTURO.md).
+
+Documento histórico para itens vindos de **feedback do Manel** (sessões, smoke, roadmap visível nos specs existentes) e para **riscos de conformidade** que o produto deve endereçar antes ou durante escala. **Não** substitui parecer jurídico: onde aparece *[Legal]*, a equipa deve validar texto e prazos com **assessoria**.
 
 **Relacionado:** [`DRIVER_MENU_SPEC.md`](DRIVER_MENU_SPEC.md) (menu motorista, documentos §3), [`DRIVER_HOME_TOP3_MANEL.md`](DRIVER_HOME_TOP3_MANEL.md), [`PORTAGENS_SPEC.md`](PORTAGENS_SPEC.md), [`docs/research/driver-app-benchmarks.md`](../research/driver-app-benchmarks.md).
 

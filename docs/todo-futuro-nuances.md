@@ -19,7 +19,7 @@ Coisas que **não** vamos fazer neste momento, mas queremos **não esquecer** (c
 
 ## Produto / multi-superfície (piloto comercial)
 
-- [ ] [PRODUTO] Fila em [`prompts/pilot-commercial/`](prompts/pilot-commercial/README.md): **A001–A003** (Fase 0) redigidas; **A004 em diante** (resto da fila) por fases — **parceiro** como critical path antes de expandir polish nos outros papéis.
+- [ ] [PRODUTO] Fila em [`archive/prompts/pilot-commercial/`](archive/prompts/pilot-commercial/README.md): **A001–A003** (Fase 0) redigidas; **A004 em diante** (resto da fila) por fases — **parceiro** como critical path antes de expandir polish nos outros papéis.
 
 ---
 

@@ -222,7 +222,7 @@ Agrupamento por dependências reais (não altera IDs L-xx da matriz).
 - **V1 preços:** GO €1,50 + €0,60/km + €0,12/min · mín. €4,50 · Comfort €1,90 + €0,85/km + €0,15/min · mín. €5,50 · XL €3,00 + €1,05/km + €0,15/min · mín. €6,50 · Pet +€1,50 · cão assistência €0  
 - **Acta:** [`VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) · **A1.4** [`A1_MODELO…`](business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md) §6h  
 - **Nota:** [`PRICING_DECISION.md`](PRICING_DECISION.md) fecha o **modelo híbrido estimativa→preço final** + tarifário/comissão A1.4.  
-- **Portagens:** **HERE Tolls V1 PROD VALIDATED** (F0–F5) · charged=estimated · observed audit · comissão 0% sobre tolls · residual route variance **accepted for V1** · P2 `S-TOLLS-P2` determinism · fiscal pendente — ver [`PORTAGENS_V1_ARCHITECTURE_2026-09.md`](analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md).
+- **Portagens:** **HERE Tolls V1 PROD VALIDATED** (F0–F5) · charged=estimated · observed audit · comissão 0% sobre tolls · residual route variance **accepted for V1** · P2 `S-TOLLS-P2` determinism · fiscal pendente — ver [`PORTAGENS_V1_ARCHITECTURE_2026-09.md`](archive/audits/PORTAGENS_V1_ARCHITECTURE_2026-09.md).
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
@@ -823,7 +823,7 @@ Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual). iOS pós-
 | Estado Setembro | [`TVDE_STATUS_SETEMBRO_2026.md`](TVDE_STATUS_SETEMBRO_2026.md) |
 | Biblioteca | [`SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md) |
 | Pricing híbrido | [`PRICING_DECISION.md`](PRICING_DECISION.md) |
-| HERE tolls spike | [`HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) · **APROVADO COM RESERVAS PARA V1** · script `scripts/tolls/here_tolls_spike.py` |
+| HERE tolls spike | [`HERE_TOLLS_SPIKE_2026-09.md`](archive/audits/HERE_TOLLS_SPIKE_2026-09.md) · **APROVADO COM RESERVAS PARA V1** · script `scripts/tolls/here_tolls_spike.py` |
 | Landing deploy | [`VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) |
 | B2 produto | [`B2_PRODUCT_DECISIONS_2026-08-04.md`](architecture/B2_PRODUCT_DECISIONS_2026-08-04.md) |
 | PF3D | [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](ops/PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md) |

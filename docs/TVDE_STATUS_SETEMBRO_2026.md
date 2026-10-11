@@ -16,14 +16,14 @@ Relacionado (contexto Setembro, não substitui este relatório):
 
 - [`docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md) — canónico de execução + marcos
 - [`docs/business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md`](business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md) — decisões Manel 09/09/2026
-- [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) — landing PROD OK · páginas legais **DEPLOYED / VALIDATED**
-- [`docs/analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md`](analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md) — PORTAGENS V1 · **PROD VALIDATED** · P2 route variance
-- [`docs/analysis/HERE_TOLLS_SPIKE_2026-09.md`](analysis/HERE_TOLLS_SPIKE_2026-09.md) — HERE spike · **APROVADO COM RESERVAS PARA V1**
+- [`docs/archive/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](archive/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md) — landing PROD OK · páginas legais **DEPLOYED / VALIDATED**
+- [`docs/archive/audits/PORTAGENS_V1_ARCHITECTURE_2026-09.md`](archive/audits/PORTAGENS_V1_ARCHITECTURE_2026-09.md) — PORTAGENS V1 · **PROD VALIDATED** · P2 route variance
+- [`docs/archive/audits/HERE_TOLLS_SPIKE_2026-09.md`](archive/audits/HERE_TOLLS_SPIKE_2026-09.md) — HERE spike · **APROVADO COM RESERVAS PARA V1**
 - [`docs/legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md`](legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) — A3-D03-REV1 / A3-D04-REV1
 - [`docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md`](legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md)
 - [`docs/product/SETEMBRO_2026_TODO_LIBRARY.md`](product/SETEMBRO_2026_TODO_LIBRARY.md)
 - [`TODOdoDIA.md`](../TODOdoDIA.md)
-- [`docs/ops/DEMO_MANEL_2_SETEMBRO.md`](ops/DEMO_MANEL_2_SETEMBRO.md)
+- [`docs/archive/ops/DEMO_MANEL_2_SETEMBRO.md`](archive/ops/DEMO_MANEL_2_SETEMBRO.md)
 
 ---
 
@@ -132,7 +132,7 @@ Formato: `ID | Área | Item | Prioridade | Dependência`
 | **S-PRT-01** | Partner/Frota | Payouts/receitas Partner ainda não Stripe (copy honesta) | P1 — Necessário para fechar produto | S-PAY-03 |
 | **S-ADM-01** | Admin | `POST …/drivers/{id}/approve\|reject` | **DONE** (E5 · #544) | — |
 | **S-ADM-02** | Admin | Rastos R-ADMIN-ORPHAN / R-AGORA-SNAP / reassign copy | P3 — Pós-MVP | — |
-| **S-TOLLS-P2** | Backend/API | HERE routing determinism / toll variance (mesmo OD → €0.40 vs €2.55) | P2 — Melhoria importante | V1 PROD OK · ver [`PORTAGENS_V1…`](analysis/PORTAGENS_V1_ARCHITECTURE_2026-09.md) |
+| **S-TOLLS-P2** | Backend/API | HERE routing determinism / toll variance (mesmo OD → €0.40 vs €2.55) | P2 — Melhoria importante | V1 PROD OK · ver [`PORTAGENS_V1…`](archive/audits/PORTAGENS_V1_ARCHITECTURE_2026-09.md) |
 
 ### Negócio / marca / IP / demo
 

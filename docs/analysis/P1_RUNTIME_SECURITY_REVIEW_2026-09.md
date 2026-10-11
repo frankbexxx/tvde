@@ -1,6 +1,6 @@
 # P1 Runtime Security Review — 2026-09
 
-**Base:** `docs/analysis/REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md`  
+**Base:** [`docs/archive/audits/REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md`](../archive/audits/REPO_RUNTIME_HYGIENE_AUDIT_2026-09.md)  
 **Branch:** `audit/repo-runtime-hygiene-sep2026`  
 **Modo:** READ-ONLY (este ficheiro é o único artefacto novo; sem commits de código, upgrades, env writes, redeploy)  
 **Data:** 2026-09-16

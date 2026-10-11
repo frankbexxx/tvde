@@ -124,7 +124,7 @@ Telefone público **não** é gap obrigatório nesta fase.
 | `index.html.bak` | Mantido (backup) |
 | Custo contrato | Ainda **TBD** no modelo económico A1 (não inventar valor) |
 
-Fonte de deploy: [`docs/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](../ops/VAMULA_LANDING_DEPLOY_2026-09-13.md).
+Fonte de deploy: [`docs/archive/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md`](../archive/ops/VAMULA_LANDING_DEPLOY_2026-09-13.md).
 
 ---
 

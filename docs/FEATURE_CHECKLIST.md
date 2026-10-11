@@ -1,5 +1,8 @@
 # Checklist de Features (TVDE)
 
+> **STATUS: OBSOLETO / LEGACY** (2026-10-11)  
+> Mantido por rastreabilidade. Estado actual: [`TODOdoDIA.md`](../TODOdoDIA.md) · [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](ROADMAP_FINAL_ENTREGA_TVDE_2026.md).
+
 Formato:
 
 - **Sim**: existe e é utilizável no produto atual

@@ -285,7 +285,7 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 
 ## Painel — **PRÉ-FÉRIAS** (**2026-08-11** — tip `1cb01c5` · MODO FÉRIAS ainda **OFF**)
 
-**Modo:** **pré-férias** — PC principal = máquina activa. **MODO FÉRIAS** só a **13/14 ago** (após refresh SSD + cifrar secrets). Modelo: [`MODO_FERIAS_2026.md`](docs/ops/MODO_FERIAS_2026.md).
+**Modo:** **pré-férias** — PC principal = máquina activa. **MODO FÉRIAS** só a **13/14 ago** (após refresh SSD + cifrar secrets). Modelo: [`MODO_FERIAS_2026.md`](docs/archive/plans/MODO_FERIAS_2026.md).
 
 **`main` / `origin/main`:** `1cb01c5` · alinhado · #540 negócio Manel · #539 DL 84/2026 · #538 biblioteca Setembro.
 
@@ -293,12 +293,12 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 
 **Objectivo imediato:** kit viagem (**cifrar `TVDE_SECRETS` pendente** · refresh SSD 13/14) · biblioteca Setembro (legal · negócio · **MOBILE-001**) · **sem** implementar / **sem** Capacitor / **sem** lojas. Em férias: branches + push · docs/marca leve · sem B2/Stripe live/PF3D/Docker MJ.
 
-**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Biblioteca: [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · Negócio: [`docs/business/`](docs/business/) · Legal: [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md)
+**Handoff:** [`docs/meta/PROXIMA_SESSAO.md`](docs/meta/PROXIMA_SESSAO.md) · Biblioteca: [`SETEMBRO_2026_TODO_LIBRARY.md`](docs/product/SETEMBRO_2026_TODO_LIBRARY.md) · Negócio: [`docs/business/`](docs/business/) · Legal: [`LEGAL_SOURCES_INDEX.md`](docs/legal/LEGAL_SOURCES_INDEX.md) · Manel 2: [`DEMO_MANEL_2_SETEMBRO.md`](docs/archive/ops/DEMO_MANEL_2_SETEMBRO.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **S-DEMO-MANEL-1** | Demo Manel 1 (carro/telefone real) | Concluído | **COMPLETA** — o que deveria funcionar, funcionou; sem cobertura total / sem prints |
-| **O-DEMO-MANEL-2** | Demo Manel 2 (alargada) | Em curso | Guião #532 · [`DEMO_MANEL_2_SETEMBRO.md`](docs/ops/DEMO_MANEL_2_SETEMBRO.md) · smoke pré-demo = Setembro |
+| **O-DEMO-MANEL-2** | Demo Manel 2 (alargada) | Em curso | Guião #532 · [`DEMO_MANEL_2_SETEMBRO.md`](docs/archive/ops/DEMO_MANEL_2_SETEMBRO.md) · smoke pré-demo = Setembro |
 | **PR-517** / **S-PARTNER-517** | Partner labels + smoke | Concluído | `78fbd29` · PASS |
 | **PR-518** | Docs smoke Partner #517 | Concluído | `aadc57d` |
 | **PR-519** | Driver nav labels por fase | Concluído | `eb3c929` — recolha/destino |
@@ -348,7 +348,7 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 
 **Objectivo então:** Admin Ops seguinte · ou PARTNER-FLEET-1 · (Stripe live só com parceiro/docs).
 
-**Checkpoint:** [`docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](docs/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · pós-#415: [`docs/ops/CHECKPOINT_2026-07-19_POST_415.md`](docs/ops/CHECKPOINT_2026-07-19_POST_415.md)
+**Checkpoint:** [`docs/archive/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md`](docs/archive/ops/CHECKPOINT_2026-07-19_PAYMENTS_STUCK.md) · pós-#415: [`docs/archive/ops/CHECKPOINT_2026-07-19_POST_415.md`](docs/archive/ops/CHECKPOINT_2026-07-19_POST_415.md)
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
@@ -454,7 +454,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 |----|------|--------|-------|
 | **A2-02-1** | OAuth staging + URIs Google | Em curso | [`STAGING_A2-02_RUNBOOK.md`](docs/ops/STAGING_A2-02_RUNBOOK.md) |
 | **A2-02-2** | Smokes assertivos staging | Por iniciar | Depende A2-02-1 |
-| **A4** | Fecho onda auditoria A+L | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/audit/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
+| **A4** | Fecho onda auditoria A+L | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
 | **A3-R** | Gate §A3 checklist staging verde | Em curso | Humanos |
 
 ### P2 — UX / evolução (não urgente)

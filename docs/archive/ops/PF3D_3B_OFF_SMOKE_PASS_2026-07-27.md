@@ -4,7 +4,7 @@
 **`main` / `origin/main`:** ≥ `e404bcd` (merge [#486](https://github.com/frankbexxx/tvde/pull/486))  
 **Flag:** `ENABLE_VEHICLE_COMPLIANCE_GATES` — default código **`False`**; **sem** alteração de env nesta sessão  
 **Render env:** **não alterado**  
-**DIAG:** [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](./PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md)  
+**DIAG:** [`PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md`](../audits/PF3D_3B_GATE_MESSAGES_DIAG_2026-07-27.md)  
 **Spec / matriz:** [`PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md`](./PF3D_VEHICLE_DOCUMENT_COMPLIANCE.md)  
 **Handoff:** [`PROXIMA_SESSAO.md`](../meta/PROXIMA_SESSAO.md)
 
