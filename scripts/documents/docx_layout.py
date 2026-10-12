@@ -254,21 +254,45 @@ def _patch_single_table(tbl_xml: str) -> str:
     return out
 
 
-def _patch_cover_page_break(xml: str) -> str:
-    """Page 1 = first Heading1 (cover title); page 2 starts at second Heading1 (functional)."""
-    heading_pat = re.compile(
-        r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading1\" />(?:(?!</w:pPr>).)*</w:pPr>)",
-        re.DOTALL,
+def _is_metadata_table(tbl_xml: str) -> bool:
+    header = _header_signature(tbl_xml)
+    return bool(header and len(header) >= 2 and header[0] == "Campo" and header[1] == "Valor")
+
+
+def _patch_metadata_page_break(xml: str) -> str:
+    """Page 2 starts at ficha Campo/Valor (not a second cover block)."""
+
+    def break_before(m: re.Match[str]) -> str:
+        tbl = m.group(0)
+        if not _is_metadata_table(tbl):
+            return tbl
+        pre = xml[: m.start()]
+        if "pageBreakBefore" in pre[-400:]:
+            return tbl
+        return '<w:p><w:pPr><w:pageBreakBefore/></w:pPr></w:p>' + tbl
+
+    return re.sub(r"<w:tbl>.*?</w:tbl>", break_before, xml, count=1, flags=re.DOTALL)
+
+
+def _patch_heading2_before_table(xml: str) -> str:
+    """Heading2 stays separate from following table (no keepNext glue)."""
+
+    def fix(m: re.Match[str]) -> str:
+        heading = m.group(1)
+        heading = re.sub(r"<w:keepNext/>", "", heading)
+        spacing = '<w:spacing w:before="0" w:after="200" w:line="276" w:lineRule="auto"/>'
+        if "<w:spacing" in heading:
+            heading = re.sub(r"<w:spacing[^/]*/>", spacing, heading, count=1)
+        else:
+            heading = heading.replace("</w:pPr>", f"{spacing}</w:pPr>", 1)
+        return heading + m.group(2)
+
+    return re.sub(
+        r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*(<w:tbl>)",
+        fix,
+        xml,
+        flags=re.DOTALL,
     )
-    matches = list(heading_pat.finditer(xml))
-    if len(matches) < 2:
-        return xml
-    second = matches[1]
-    block = second.group(1)
-    if "<w:pageBreakBefore" in block:
-        return xml
-    new_block = block.replace("</w:pPr>", "<w:pageBreakBefore/></w:pPr>", 1)
-    return xml[: second.start()] + new_block + xml[second.end() :]
 
 
 def _patch_headings(xml: str) -> str:
@@ -280,20 +304,13 @@ def _patch_headings(xml: str) -> str:
             block = re.sub(r'<w:jc w:val="center"[^/]*/>', "", block)
         return block.replace("</w:pPr>", "<w:keepNext/></w:pPr>", 1)
 
-    xml = re.sub(
-        r'<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val="Heading[123]" />(?:(?!</w:pPr>).)*</w:pPr>',
-        add_keep,
-        xml,
-        flags=re.DOTALL,
-    )
-    # Q-EXT question headings (Heading 3)
-    xml = re.sub(
+    # Heading2 often precedes tables — keepNext skipped; Q-EXT use Heading3.
+    return re.sub(
         r'<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val="Heading3" />(?:(?!</w:pPr>).)*</w:pPr>',
         add_keep,
         xml,
         flags=re.DOTALL,
     )
-    return xml
 
 
 def patch_docx_layout(docx_path: Path) -> None:
@@ -306,8 +323,9 @@ def patch_docx_layout(docx_path: Path) -> None:
         return
     xml = doc.decode("utf-8")
     xml = re.sub(r"<w:tbl>.*?</w:tbl>", lambda m: _patch_single_table(m.group(0)), xml, flags=re.DOTALL)
+    xml = _patch_heading2_before_table(xml)
     xml = _patch_headings(xml)
-    xml = _patch_cover_page_break(xml)
+    xml = _patch_metadata_page_break(xml)
     buffers["word/document.xml"] = xml.encode("utf-8")
 
     tmp = docx_path.with_suffix(".layout.docx")

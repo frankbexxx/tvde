@@ -49,9 +49,28 @@ _EXTRA_STYLES = f"""
 
 
 def _ensure_extra_styles(styles_xml: str) -> str:
-    if "FactLabel" in styles_xml and "Q-EXTRef" in styles_xml:
-        return styles_xml
-    return styles_xml.replace("</w:styles>", _EXTRA_STYLES + "</w:styles>", 1)
+    if "FactLabel" not in styles_xml or "Q-EXTRef" not in styles_xml:
+        styles_xml = styles_xml.replace("</w:styles>", _EXTRA_STYLES + "</w:styles>", 1)
+    return _upsert_fact_styles(styles_xml)
+
+
+def _upsert_fact_styles(styles_xml: str) -> str:
+    """Ensure FactLabel/FactBody style defs keep bold 11pt / body 10pt."""
+    for sid, sz, bold in (("FactLabel", "22", True), ("FactBody", "20", False)):
+        if f'w:styleId="{sid}"' not in styles_xml:
+            continue
+        pattern = rf'(<w:style[^>]+w:styleId="{sid}"[^>]*>.*?<w:rPr>)(.*?)(</w:rPr>)'
+
+        def repl(m: re.Match[str], *, sz: str = sz, bold: bool = bold) -> str:
+            inner = re.sub(r"<w:sz[^/]*/>", "", m.group(2))
+            inner = re.sub(r"<w:szCs[^/]*/>", "", inner)
+            inner = re.sub(r"<w:b[^/]*/>", "", inner)
+            inner = re.sub(r"<w:b></w:b>", "", inner)
+            b = "<w:b/>" if bold else ""
+            return f'{m.group(1)}{inner}{b}<w:sz w:val="{sz}"/><w:szCs w:val="{sz}"/>{m.group(3)}'
+
+        styles_xml = re.sub(pattern, repl, styles_xml, count=1, flags=re.DOTALL)
+    return styles_xml
 
 
 def _set_style_color(styles_xml: str, style_id: str, color: str) -> str:
@@ -90,6 +109,7 @@ def patch_docx_theme(docx_path: Path) -> None:
     doc = buffers.get("word/document.xml")
     if doc:
         xml = doc.decode("utf-8")
+        xml = _enforce_fact_run_typography(xml)
         xml = _emphasis_bold_to_bold_italic_in_fact_body(xml)
         buffers["word/document.xml"] = xml.encode("utf-8")
 
@@ -98,6 +118,41 @@ def patch_docx_theme(docx_path: Path) -> None:
         for name, content in buffers.items():
             zout.writestr(name, content)
     tmp.replace(docx_path)
+
+
+def _enforce_run_pr(run_xml: str, *, sz: str, bold: bool, color: str | None = None) -> str:
+    b = "<w:b/>" if bold else ""
+    col = f'<w:color w:val="{color}"/>' if color else ""
+    sz_tag = f'<w:sz w:val="{sz}"/><w:szCs w:val="{sz}"/>'
+    if "<w:rPr>" in run_xml:
+        inner = run_xml
+        for tag in ("w:sz", "w:szCs", "w:b", "w:color"):
+            inner = re.sub(rf"<{tag}[^/]*/>", "", inner)
+            inner = re.sub(rf"<{tag}></{tag}>", "", inner)
+        return inner.replace("<w:rPr>", f"<w:rPr>{b}{sz_tag}{col}", 1)
+    return run_xml.replace("<w:r>", f"<w:r><w:rPr>{b}{sz_tag}{col}</w:rPr>", 1)
+
+
+def _enforce_fact_run_typography(document_xml: str) -> str:
+    def patch_para(m: re.Match[str]) -> str:
+        block = m.group(0)
+        if 'w:val="FactLabel"' in block:
+            return re.sub(
+                r"<w:r[\s>].*?</w:r>",
+                lambda rm: _enforce_run_pr(rm.group(0), sz="22", bold=True, color=_COLOR_PRIMARY_DARK),
+                block,
+                flags=re.DOTALL,
+            )
+        if 'w:val="FactBody"' in block:
+            return re.sub(
+                r"<w:r[\s>].*?</w:r>",
+                lambda rm: _enforce_run_pr(rm.group(0), sz="20", bold=False, color=_COLOR_TEXT),
+                block,
+                flags=re.DOTALL,
+            )
+        return block
+
+    return re.sub(r"<w:p[\s>].*?</w:p>", patch_para, document_xml, flags=re.DOTALL)
 
 
 def _emphasis_bold_to_bold_italic_in_fact_body(document_xml: str) -> str:

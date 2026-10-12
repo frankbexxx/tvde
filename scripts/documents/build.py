@@ -139,12 +139,8 @@ def build_dossier(
     p_version = pandoc_version(pandoc)
 
     docx_path = output_dir / DOCX_NAME
-    metadata = {
-        "title": str(data.get("title", "")),
-        "subtitle": str(data.get("audience", "")),
-        "author": str(data.get("owner", "")),
-        "date": str(data.get("updated", "")),
-    }
+    # Omit title/subtitle/author/date — evita bloco Title duplicado (capa já no Markdown).
+    metadata: dict[str, str] = {}
     composed_md, compose_tmp = compose_markdown(data, md_path)
     try:
         pandoc_cmd = run_pandoc(

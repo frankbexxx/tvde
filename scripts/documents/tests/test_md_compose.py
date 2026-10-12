@@ -28,12 +28,13 @@ def test_compose_cover_page_split():
     data = yaml.safe_load(FIS_YAML.read_text(encoding="utf-8"))
     composed, tmp = compose_markdown(data, FIS_MD)
     text = composed.read_text(encoding="utf-8")
-    idx = text.index("# Consulta fiscal TVDE")
-    pre, post = text[:idx], text[idx:]
+    split = "<!-- Page 2"
+    assert split in text
+    pre, post = text.split(split, 1)
     assert "| Campo | Valor |" not in pre
     assert "**Data:**" in pre
     assert "| Campo | Valor |" in post
-    assert "# Consulta fiscal TVDE" in post
+    assert "# Consulta fiscal TVDE" not in post.split("## Objectivo")[0]
     assert "## Objectivo da consulta" in post
     from scripts.documents.md_compose import cleanup_compose_dir
 

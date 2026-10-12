@@ -1,8 +1,4 @@
-<!-- Page 2+ — metadata and functional title (prepended at build). -->
-
-# {{DOCUMENT_TYPE}}
-
-*{{AUDIENCE}}*
+<!-- Page 2 — ficha documental (sem repetir capa). -->
 
 | Campo | Valor |
 |-------|--------|
@@ -11,7 +7,5 @@
 | Data | {{UPDATED}} |
 | Classificação | {{CONFIDENTIALITY}} |
 | Destinatário / audiência | {{AUDIENCE}} |
-
-Ventos Férteis, Lda. · vamula.pt
 
 ---
