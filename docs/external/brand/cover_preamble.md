@@ -1,4 +1,4 @@
-<!-- Generated cover block — prepended at build from dossier.yaml. Do not edit placeholders manually. -->
+<!-- Generated cover — page 1 only (prepended at build). -->
 
 ![]({{ICONMARK_PATH}}){ width=32mm }
 
@@ -10,14 +10,6 @@
 
 *{{AUDIENCE}}*
 
-| Campo | Valor |
-|-------|--------|
-| Document ID | {{EXTERNAL_ID}} |
-| Versão | {{VERSION}} |
-| Data | {{UPDATED}} |
-| Classificação | {{CONFIDENTIALITY}} |
-| Destinatário / audiência | {{AUDIENCE}} |
+**Data:** {{UPDATED}}
 
 Ventos Férteis, Lda. · vamula.pt
-
-\newpage

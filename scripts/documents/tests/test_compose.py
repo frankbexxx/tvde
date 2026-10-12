@@ -22,7 +22,9 @@ def test_compose_includes_cover_and_icon(tmp_path):
     assert "EXT-FIXTURE-001" in text
     assert "vamula-iconmark.png" in text
     assert (tmp_dir / "vamula-iconmark.png").is_file()
-    assert "\\newpage" in text
+    assert "## Objectivo" in text or "## Identificação" in text
+    assert "body_preamble" not in text
+    assert text.count("| Campo | Valor |") >= 1
     from scripts.documents.md_compose import cleanup_compose_dir
 
     cleanup_compose_dir(tmp_dir)

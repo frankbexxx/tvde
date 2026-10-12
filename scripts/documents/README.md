@@ -85,12 +85,15 @@ Edições manuais relevantes no Word devem, quando possível, ser reflectidas no
 
 Placeholders em **APPROVED** são re-verificados no texto extraído do DOCX após Pandoc (FAIL). PDF text scan opcional via `pypdf` quando disponível.
 
-## Capa / header / footer
+## Capa / header / footer (DOC-TOOL-7)
 
-- **Capa:** prepend automático em build a partir de [`docs/external/brand/cover_preamble.md`](../docs/external/brand/cover_preamble.md) + campos do `dossier.yaml` (iconmark, ID, classificação).
-- **Footer págs. 2+:** pós-processamento substitui placeholders demo do `reference.docx` pelos metadados reais.
-- **Tabelas:** larguras por perfil (DEC/FIND/anexos/capa) + tipografia 8pt em células + headings `keepNext`.
-- **Estilos custom** (`custom-style`): suporte parcial Pandoc — filtro Lua só se QA o exigir.
+- **Página 1:** [`cover_preamble.md`](../docs/external/brand/cover_preamble.md) — título YAML, destinatário, data, iconmark (sem tabela metadata).
+- **Página 2+:** [`body_preamble.md`](../docs/external/brand/body_preamble.md) — título funcional por `profile`, metadata Campo/Valor, depois corpo (sem H1 «Corpo do dossier…» — removido em compose).
+- **Quebra de página:** `pageBreakBefore` no segundo `Heading1` (pós-processamento DOCX).
+- **Footer págs. 2+:** metadados reais substituem demo no `reference.docx`.
+- **Tabelas:** ~98% largura útil A4; perfis metadata/DEC/lacunas/anexos; cabeçalho suave + zebra; coluna «Ref. interna» (compose).
+- **Q-EXT:** títulos externos «Questão N — …» + `Referência interna: Q-EXT-…` (mapa em `q_ext_titles.py`).
+- **Tema:** `docx_theme.py` — cores headings, estilos Fact Label/Body, Q-EXT Ref.
 
 ## Testes
 
