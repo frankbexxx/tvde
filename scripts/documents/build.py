@@ -22,6 +22,7 @@ from scripts.documents.pandoc_util import find_pandoc, pandoc_version, run_pando
 from scripts.documents.pdf_check import validate_pdf_file
 from scripts.documents.paths import assert_output_allowed, default_output_dir
 from scripts.documents.docx_layout import patch_docx_layout
+from scripts.documents.docx_theme import patch_docx_theme
 from scripts.documents.docx_postprocess import patch_docx_header_footer
 from scripts.documents.md_compose import cleanup_compose_dir, compose_markdown
 from scripts.documents.post_render import assert_no_placeholders_post_render, extract_docx_text
@@ -138,12 +139,8 @@ def build_dossier(
     p_version = pandoc_version(pandoc)
 
     docx_path = output_dir / DOCX_NAME
-    metadata = {
-        "title": str(data.get("title", "")),
-        "subtitle": str(data.get("audience", "")),
-        "author": str(data.get("owner", "")),
-        "date": str(data.get("updated", "")),
-    }
+    # Omit title/subtitle/author/date — evita bloco Title duplicado (capa já no Markdown).
+    metadata: dict[str, str] = {}
     composed_md, compose_tmp = compose_markdown(data, md_path)
     try:
         pandoc_cmd = run_pandoc(
@@ -157,6 +154,7 @@ def build_dossier(
         cleanup_compose_dir(compose_tmp)
 
     patch_docx_header_footer(docx_path, data)
+    patch_docx_theme(docx_path)
     patch_docx_layout(docx_path)
 
     docx_text = extract_docx_text(docx_path)

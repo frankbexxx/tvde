@@ -9,9 +9,10 @@ from scripts.documents.docx_layout import _match_widths, _patch_single_table, pa
 
 
 def test_match_decision_table_profile():
-    w = _match_widths(("ID", "Decisão (resumo)", "Data", "Impacto para este dossier"))
+    w = _match_widths(("Ref. interna", "Decisão (resumo)", "Data", "Impacto para este dossier"))
     assert w is not None
     assert len(w) == 4
+    assert sum(w) >= 8800
 
 
 def test_patch_table_sets_fixed_layout():
@@ -45,4 +46,4 @@ def test_patch_docx_layout_on_minimal_docx(tmp_path: Path):
     with zipfile.ZipFile(docx) as z:
         xml = z.read("word/document.xml").decode("utf-8")
     assert 'tblLayout w:type="fixed"' in xml
-    assert "5900" in xml or "1900" in xml
+    assert "8890" in xml or "2200" in xml

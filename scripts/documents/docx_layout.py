@@ -1,4 +1,4 @@
-"""DOCX layout post-process: table column widths, typography, heading keep-with-next."""
+"""DOCX layout post-process: tables, typography, heading keep-with-next (DOC-TOOL-7)."""
 
 from __future__ import annotations
 
@@ -6,16 +6,34 @@ import re
 import zipfile
 from pathlib import Path
 
-# Half-points (Word sz): 16 = 8pt table body — matches manual review density.
-_TABLE_SZ = "16"
+# ~16 cm usable on A4 with 25 mm margins (210−50 mm).
+_PAGE_CONTENT_TWIPS = 9070
+_TABLE_WIDTH = int(_PAGE_CONTENT_TWIPS * 0.98)
 
-# Column widths (twips): content-driven totals, not forced full page width.
+# Half-points: 16 = 8pt table body; header 18 = 9pt.
+_TABLE_BODY_SZ = "16"
+_TABLE_HEAD_SZ = "18"
+
+_SHADE_HEADER = "EEF3F6"
+_SHADE_ZEBRA = "F7F9FA"
+_BORDER_COLOR = "E0E4E8"
+
 _PROFILES: list[tuple[tuple[str, ...], list[int]]] = [
-    (("Campo", "Valor"), [1900, 5900]),
-    (("ID", "Decisão (resumo)", "Data", "Impacto para este dossier"), [1320, 3460, 756, 2264]),
-    (("ID", "Resumo", "Prioridade interna", "Impacto"), [1540, 3960, 580, 1720]),
-    (("Ref.", "Descrição", "Nota"), [760, 4540, 1900]),
+    (("Campo", "Valor"), [2200, _TABLE_WIDTH - 2200]),
+    (
+        ("Ref. interna", "Decisão (resumo)", "Data", "Impacto para este dossier"),
+        [1180, 4180, 1320, _TABLE_WIDTH - 1180 - 4180 - 1320],
+    ),
+    (
+        ("Ref. interna", "Resumo", "Prioridade interna", "Impacto"),
+        [1380, 3680, 1680, _TABLE_WIDTH - 1380 - 3680 - 1680],
+    ),
+    (("Ref.", "Descrição", "Nota"), [720, 4680, _TABLE_WIDTH - 720 - 4680]),
 ]
+
+# Legacy header (source MD before compose rename) — still match if present.
+_LEGACY_DEC = ("ID", "Decisão (resumo)", "Data", "Impacto para este dossier")
+_LEGACY_LAC = ("ID", "Resumo", "Prioridade interna", "Impacto")
 
 
 def _normalize_header(text: str) -> str:
@@ -40,27 +58,53 @@ def _match_widths(header: tuple[str, ...]) -> list[int] | None:
     h = list(header)
     if len(h) >= 2 and h[0] == "Campo" and h[1] == "Valor":
         return list(_PROFILES[0][1])
-    if len(h) >= 4 and h[0] == "ID" and "Decis" in h[1]:
+    if len(h) >= 4 and h[0] in ("Ref. interna", "ID") and "Decis" in h[1]:
         return list(_PROFILES[1][1])
-    if len(h) >= 4 and h[0] == "ID" and h[1] == "Resumo" and "Prioridade" in h[2]:
+    if len(h) >= 4 and h[0] in ("Ref. interna", "ID") and h[1] == "Resumo" and "Prioridade" in h[2]:
         return list(_PROFILES[2][1])
     if len(h) == 3 and h[0] == "Ref.":
         return list(_PROFILES[3][1])
     return None
 
 
+def _row_count(tbl_xml: str) -> int:
+    return len(re.findall(r"<w:tr[\s>]", tbl_xml))
+
+
+def _is_large_table(tbl_xml: str) -> bool:
+    return _row_count(tbl_xml) > 22
+
+
 def _set_tbl_pr(tbl_xml: str, total: int) -> str:
     layout = '<w:tblLayout w:type="fixed"/>'
     tbl_w = f'<w:tblW w:w="{total}" w:type="dxa"/>'
+    tbl_pos = '<w:tblInd w:w="0" w:type="dxa"/><w:jc w:val="left"/>'
+    borders = (
+        f'<w:tblBorders>'
+        f'<w:top w:val="single" w:sz="4" w:space="0" w:color="{_BORDER_COLOR}"/>'
+        f'<w:left w:val="single" w:sz="4" w:space="0" w:color="{_BORDER_COLOR}"/>'
+        f'<w:bottom w:val="single" w:sz="4" w:space="0" w:color="{_BORDER_COLOR}"/>'
+        f'<w:right w:val="single" w:sz="4" w:space="0" w:color="{_BORDER_COLOR}"/>'
+        f'<w:insideH w:val="single" w:sz="4" w:space="0" w:color="{_BORDER_COLOR}"/>'
+        f'<w:insideV w:val="single" w:sz="4" w:space="0" w:color="{_BORDER_COLOR}"/>'
+        f"</w:tblBorders>"
+    )
     if re.search(r"<w:tblPr>", tbl_xml):
         block = re.search(r"<w:tblPr>.*?</w:tblPr>", tbl_xml, re.DOTALL)
         assert block
         inner = block.group(0)
         inner = re.sub(r"<w:tblLayout[^/]*/>", "", inner)
         inner = re.sub(r"<w:tblW[^/]*/>", "", inner)
-        inner = inner.replace("</w:tblPr>", f"{layout}{tbl_w}</w:tblPr>")
+        inner = re.sub(r"<w:tblBorders>.*?</w:tblBorders>", "", inner, flags=re.DOTALL)
+        inner = re.sub(r"<w:tblInd[^/]*/>", "", inner)
+        inner = re.sub(r"<w:jc[^/]*/>", "", inner)
+        inner = inner.replace("</w:tblPr>", f"{layout}{tbl_w}{tbl_pos}{borders}</w:tblPr>")
         return tbl_xml[: block.start()] + inner + tbl_xml[block.end() :]
-    return tbl_xml.replace("<w:tbl>", f"<w:tbl><w:tblPr>{layout}{tbl_w}</w:tblPr>", 1)
+    return tbl_xml.replace(
+        "<w:tbl>",
+        f"<w:tbl><w:tblPr>{layout}{tbl_w}{tbl_pos}{borders}</w:tblPr>",
+        1,
+    )
 
 
 def _set_grid(tbl_xml: str, widths: list[int]) -> str:
@@ -80,8 +124,9 @@ def _set_grid(tbl_xml: str, widths: list[int]) -> str:
     )
 
 
-def _inject_run_font_size(run_xml: str) -> str:
-    sz = f'<w:sz w:val="{_TABLE_SZ}"/><w:szCs w:val="{_TABLE_SZ}"/>'
+def _inject_run_font_size(run_xml: str, *, header: bool) -> str:
+    sz_val = _TABLE_HEAD_SZ if header else _TABLE_BODY_SZ
+    sz = f'<w:sz w:val="{sz_val}"/><w:szCs w:val="{sz_val}"/>'
     if "<w:rPr>" in run_xml:
         inner = re.sub(r"<w:sz[^/]*/>", "", run_xml)
         inner = re.sub(r"<w:szCs[^/]*/>", "", inner)
@@ -89,17 +134,52 @@ def _inject_run_font_size(run_xml: str) -> str:
     return run_xml.replace("<w:r>", f"<w:r><w:rPr>{sz}</w:rPr>", 1)
 
 
-def _typography_in_cell(cell_xml: str) -> str:
+_TC_MAR = (
+    "<w:tcMar>"
+    '<w:top w:w="80" w:type="dxa"/>'
+    '<w:left w:w="100" w:type="dxa"/>'
+    '<w:bottom w:w="80" w:type="dxa"/>'
+    '<w:right w:w="100" w:type="dxa"/>'
+    "</w:tcMar>"
+)
+
+
+def _inject_cell_margins(cell_xml: str) -> str:
+    if "<w:tcMar>" in cell_xml:
+        return re.sub(r"<w:tcMar>.*?</w:tcMar>", _TC_MAR, cell_xml, count=1, flags=re.DOTALL)
+    if "<w:tcPr>" in cell_xml:
+        return cell_xml.replace("<w:tcPr>", f"<w:tcPr>{_TC_MAR}", 1)
+    return cell_xml
+
+
+def _cell_shading(cell_xml: str, fill: str | None) -> str:
+    if not fill:
+        cell_xml = re.sub(r"<w:shd[^/]*/>", "", cell_xml)
+        return cell_xml
+    shd = f'<w:shd w:val="clear" w:color="auto" w:fill="{fill}"/>'
+    if "<w:shd" in cell_xml:
+        return re.sub(r"<w:shd[^/]*/>", shd, cell_xml, count=1)
+    if "<w:tcPr>" in cell_xml:
+        return cell_xml.replace("<w:tcPr>", f"<w:tcPr>{shd}", 1)
+    return cell_xml.replace("<w:tc>", f"<w:tc><w:tcPr>{shd}</w:tcPr>", 1)
+
+
+def _typography_in_cell(cell_xml: str, *, header: bool) -> str:
     cell_xml = re.sub(
         r"<w:r[\s>].*?</w:r>",
-        lambda m: _inject_run_font_size(m.group(0)),
+        lambda m: _inject_run_font_size(m.group(0), header=header),
         cell_xml,
         flags=re.DOTALL,
     )
 
+    spacing = (
+        '<w:spacing w:before="60" w:after="60" w:line="240" w:lineRule="auto"/>'
+        if not header
+        else '<w:spacing w:before="80" w:after="80" w:line="260" w:lineRule="auto"/>'
+    )
+
     def tighten_paragraph(match: re.Match[str]) -> str:
         p_xml = match.group(0)
-        spacing = '<w:spacing w:after="40" w:line="240" w:lineRule="auto"/>'
         if "<w:pPr>" in p_xml:
             if "<w:spacing" in p_xml:
                 return re.sub(r"<w:spacing[^/]*/>", spacing, p_xml, count=1)
@@ -109,7 +189,7 @@ def _typography_in_cell(cell_xml: str) -> str:
     return re.sub(r"<w:p[\s>].*?</w:p>", tighten_paragraph, cell_xml, flags=re.DOTALL)
 
 
-def _patch_cell_widths(tbl_xml: str, widths: list[int]) -> str:
+def _patch_cell_widths(tbl_xml: str, widths: list[int], *, zebra: bool) -> str:
     rows = list(re.finditer(r"<w:tr[\s>].*?</w:tr>", tbl_xml, re.DOTALL))
     if not rows:
         return tbl_xml
@@ -118,7 +198,8 @@ def _patch_cell_widths(tbl_xml: str, widths: list[int]) -> str:
     last = 0
     for ri, row_m in enumerate(rows):
         row_xml = row_m.group(0)
-        if ri == 0:
+        is_header = ri == 0
+        if is_header:
             if "<w:trPr>" in row_xml:
                 if "tblHeader" not in row_xml:
                     row_xml = row_xml.replace("<w:trPr>", "<w:trPr><w:tblHeader/><w:cantSplit/>", 1)
@@ -128,6 +209,10 @@ def _patch_cell_widths(tbl_xml: str, widths: list[int]) -> str:
                     "<w:tr><w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>",
                     1,
                 )
+        elif "<w:trPr>" not in row_xml:
+            row_xml = row_xml.replace("<w:tr>", "<w:tr><w:trPr><w:cantSplit/></w:trPr>", 1)
+
+        fill = _SHADE_HEADER if is_header else (_SHADE_ZEBRA if zebra and ri % 2 == 1 else None)
 
         cells = list(re.finditer(r"<w:tc[\s>].*?</w:tc>", row_xml, re.DOTALL))
         new_cells: list[str] = []
@@ -140,9 +225,15 @@ def _patch_cell_widths(tbl_xml: str, widths: list[int]) -> str:
                 cell = re.sub(r"<w:tcW[^/]*/>", "", cell)
                 cell = re.sub(r"<w:vAlign[^/]*/>", "", cell)
                 cell = cell.replace("<w:tcPr>", f"<w:tcPr>{tc_w}{v_top}", 1)
+                cell = _inject_cell_margins(cell)
             else:
-                cell = cell.replace("<w:tc>", f"<w:tc><w:tcPr>{tc_w}{v_top}</w:tcPr>", 1)
-            cell = _typography_in_cell(cell)
+                cell = cell.replace(
+                    "<w:tc>",
+                    f"<w:tc><w:tcPr>{tc_w}{v_top}{_TC_MAR}</w:tcPr>",
+                    1,
+                )
+            cell = _cell_shading(cell, fill)
+            cell = _typography_in_cell(cell, header=is_header)
             new_cells.append(cell)
         if cells:
             rebuilt = row_xml[: cells[0].start()] + "".join(new_cells) + row_xml[cells[-1].end() :]
@@ -162,11 +253,163 @@ def _patch_single_table(tbl_xml: str) -> str:
     widths = _match_widths(header)
     if not widths:
         return tbl_xml
+    large = _is_large_table(tbl_xml)
     total = sum(widths)
     out = _set_tbl_pr(tbl_xml, total)
     out = _set_grid(out, widths)
-    out = _patch_cell_widths(out, widths)
+    out = _patch_cell_widths(out, widths, zebra=not large)
     return out
+
+
+def _is_metadata_table(tbl_xml: str) -> bool:
+    header = _header_signature(tbl_xml)
+    return bool(header and len(header) >= 2 and header[0] == "Campo" and header[1] == "Valor")
+
+
+def _patch_metadata_page_break(xml: str) -> str:
+    """Page 2 starts at ficha Campo/Valor (not a second cover block)."""
+
+    def break_before(m: re.Match[str]) -> str:
+        tbl = m.group(0)
+        if not _is_metadata_table(tbl):
+            return tbl
+        pre = xml[: m.start()]
+        if "pageBreakBefore" in pre[-400:]:
+            return tbl
+        return '<w:p><w:pPr><w:pageBreakBefore/></w:pPr></w:p>' + tbl
+
+    return re.sub(r"<w:tbl>.*?</w:tbl>", break_before, xml, count=1, flags=re.DOTALL)
+
+
+_H2_SPACER = (
+    '<w:p><w:pPr><w:spacing w:before="0" w:after="160" w:line="240" w:lineRule="auto"/>'
+    '<w:jc w:val="left"/></w:pPr></w:p>'
+)
+
+
+def _normalize_heading2_ppr(p_xml: str) -> str:
+    """Full-width left Heading2; override style keepNext that glues heading to table row."""
+    if 'w:val="Heading2"' not in p_xml:
+        return p_xml
+    ppr = re.search(r"<w:pPr>.*?</w:pPr>", p_xml, re.DOTALL)
+    if not ppr:
+        inner = (
+            "<w:pPr>"
+            '<w:pStyle w:val="Heading2" />'
+            '<w:keepNext w:val="0"/>'
+            '<w:keepLines w:val="0"/>'
+            '<w:jc w:val="left"/>'
+            '<w:ind w:left="0" w:right="0" w:firstLine="0" w:hanging="0"/>'
+            '<w:spacing w:before="280" w:after="240" w:line="276" w:lineRule="auto"/>'
+            "</w:pPr>"
+        )
+        return p_xml.replace("<w:p>", f"<w:p>{inner}", 1)
+
+    block = ppr.group(0)
+    block = re.sub(r"<w:keepNext[^/]*/>", "", block)
+    block = re.sub(r"<w:keepLines[^/]*/>", "", block)
+    block = re.sub(r"<w:jc[^/]*/>", "", block)
+    block = re.sub(r"<w:ind[^/]*/>", "", block)
+    block = re.sub(r"<w:spacing[^/]*/>", "", block)
+    inject = (
+        '<w:keepNext w:val="0"/>'
+        '<w:keepLines w:val="0"/>'
+        '<w:jc w:val="left"/>'
+        '<w:ind w:left="0" w:right="0" w:firstLine="0" w:hanging="0"/>'
+        '<w:spacing w:before="280" w:after="240" w:line="276" w:lineRule="auto"/>'
+    )
+    block = block.replace("</w:pPr>", f"{inject}</w:pPr>", 1)
+    out = p_xml[: ppr.start()] + block + p_xml[ppr.end() :]
+    return _apply_heading2_run_rpr(out)
+
+
+_H2_RUN_RPR = (
+    "<w:rPr>"
+    '<w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/>'
+    "<w:b/><w:bCs/>"
+    '<w:sz w:val="28"/><w:szCs w:val="26"/>'
+    '<w:color w:val="0B4F6C"/>'
+    "</w:rPr>"
+)
+
+
+def _apply_heading2_run_rpr(p_xml: str) -> str:
+    if 'w:val="Heading2"' not in p_xml:
+        return p_xml
+
+    def fix_run2(m: re.Match[str]) -> str:
+        run = m.group(0)
+        if "<w:t" not in run:
+            return run
+        run = re.sub(r"<w:rPr>.*?</w:rPr>", "", run, flags=re.DOTALL)
+        return run.replace("<w:r>", f"<w:r>{_H2_RUN_RPR}", 1)
+
+    return re.sub(r"<w:r[\s>].*?</w:r>", fix_run2, p_xml, flags=re.DOTALL)
+
+
+def _normalize_intro_after_heading2(p_xml: str) -> str:
+    """Pandoc FirstParagraph after H2 (Lacunas): style missing → layout gluado à tabela."""
+    p_xml = p_xml.replace('w:val="FirstParagraph"', 'w:val="BodyText"')
+    ppr = re.search(r"<w:pPr>.*?</w:pPr>", p_xml, re.DOTALL)
+    inject = (
+        '<w:keepNext w:val="0"/>'
+        '<w:keepLines w:val="0"/>'
+        '<w:jc w:val="left"/>'
+        '<w:ind w:left="0" w:right="0" w:firstLine="0" w:hanging="0"/>'
+        '<w:spacing w:before="0" w:after="160" w:line="276" w:lineRule="auto"/>'
+    )
+    if not ppr:
+        return p_xml.replace("<w:p>", f'<w:p><w:pPr><w:pStyle w:val="BodyText" />{inject}</w:pPr>', 1)
+    block = ppr.group(0)
+    block = re.sub(r"<w:keepNext[^/]*/>", "", block)
+    block = re.sub(r"<w:keepLines[^/]*/>", "", block)
+    block = re.sub(r"<w:jc[^/]*/>", "", block)
+    block = re.sub(r"<w:ind[^/]*/>", "", block)
+    block = re.sub(r"<w:spacing[^/]*/>", "", block)
+    block = re.sub(r"<w:tabs>.*?</w:tabs>", "", block, flags=re.DOTALL)
+    block = block.replace("</w:pPr>", f"{inject}</w:pPr>", 1)
+    return p_xml[: ppr.start()] + block + p_xml[ppr.end() :]
+
+
+def _patch_all_heading2_paragraphs(xml: str) -> str:
+    return re.sub(
+        r"<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>",
+        lambda m: _normalize_heading2_ppr(m.group(0)),
+        xml,
+        flags=re.DOTALL,
+    )
+
+
+def _patch_heading2_spacer_before_table(xml: str) -> str:
+    """Explicit spacer between Heading2 and immediately following table."""
+
+    def fix(m: re.Match[str]) -> str:
+        return m.group(1) + _H2_SPACER + m.group(2)
+
+    return re.sub(
+        r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*(<w:tbl>)",
+        fix,
+        xml,
+        flags=re.DOTALL,
+    )
+
+
+def _patch_heading2_intro_before_table(xml: str) -> str:
+    """H2 → intro (FirstParagraph) → table — normalizar intro + spacer antes da tabela."""
+
+    def fix(m: re.Match[str]) -> str:
+        h2 = m.group(1)
+        intro = _normalize_intro_after_heading2(m.group(2))
+        return h2 + intro + _H2_SPACER + m.group(3)
+
+    return re.sub(
+        r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*"
+        r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"FirstParagraph\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*"
+        r"(<w:tbl>)",
+        fix,
+        xml,
+        flags=re.DOTALL,
+    )
 
 
 def _patch_headings(xml: str) -> str:
@@ -178,8 +421,9 @@ def _patch_headings(xml: str) -> str:
             block = re.sub(r'<w:jc w:val="center"[^/]*/>', "", block)
         return block.replace("</w:pPr>", "<w:keepNext/></w:pPr>", 1)
 
+    # Heading2 often precedes tables — keepNext skipped; Q-EXT use Heading3.
     return re.sub(
-        r'<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val="Heading[123]" />(?:(?!</w:pPr>).)*</w:pPr>',
+        r'<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val="Heading3" />(?:(?!</w:pPr>).)*</w:pPr>',
         add_keep,
         xml,
         flags=re.DOTALL,
@@ -196,7 +440,11 @@ def patch_docx_layout(docx_path: Path) -> None:
         return
     xml = doc.decode("utf-8")
     xml = re.sub(r"<w:tbl>.*?</w:tbl>", lambda m: _patch_single_table(m.group(0)), xml, flags=re.DOTALL)
+    xml = _patch_all_heading2_paragraphs(xml)
+    xml = _patch_heading2_intro_before_table(xml)
+    xml = _patch_heading2_spacer_before_table(xml)
     xml = _patch_headings(xml)
+    xml = _patch_metadata_page_break(xml)
     buffers["word/document.xml"] = xml.encode("utf-8")
 
     tmp = docx_path.with_suffix(".layout.docx")
