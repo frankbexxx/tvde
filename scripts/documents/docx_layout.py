@@ -319,6 +319,55 @@ def _normalize_heading2_ppr(p_xml: str) -> str:
         '<w:spacing w:before="280" w:after="240" w:line="276" w:lineRule="auto"/>'
     )
     block = block.replace("</w:pPr>", f"{inject}</w:pPr>", 1)
+    out = p_xml[: ppr.start()] + block + p_xml[ppr.end() :]
+    return _apply_heading2_run_rpr(out)
+
+
+_H2_RUN_RPR = (
+    "<w:rPr>"
+    '<w:rFonts w:ascii="Plus Jakarta Sans" w:hAnsi="Plus Jakarta Sans"/>'
+    "<w:b/><w:bCs/>"
+    '<w:sz w:val="28"/><w:szCs w:val="26"/>'
+    '<w:color w:val="0B4F6C"/>'
+    "</w:rPr>"
+)
+
+
+def _apply_heading2_run_rpr(p_xml: str) -> str:
+    if 'w:val="Heading2"' not in p_xml:
+        return p_xml
+
+    def fix_run2(m: re.Match[str]) -> str:
+        run = m.group(0)
+        if "<w:t" not in run:
+            return run
+        run = re.sub(r"<w:rPr>.*?</w:rPr>", "", run, flags=re.DOTALL)
+        return run.replace("<w:r>", f"<w:r>{_H2_RUN_RPR}", 1)
+
+    return re.sub(r"<w:r[\s>].*?</w:r>", fix_run2, p_xml, flags=re.DOTALL)
+
+
+def _normalize_intro_after_heading2(p_xml: str) -> str:
+    """Pandoc FirstParagraph after H2 (Lacunas): style missing → layout gluado à tabela."""
+    p_xml = p_xml.replace('w:val="FirstParagraph"', 'w:val="BodyText"')
+    ppr = re.search(r"<w:pPr>.*?</w:pPr>", p_xml, re.DOTALL)
+    inject = (
+        '<w:keepNext w:val="0"/>'
+        '<w:keepLines w:val="0"/>'
+        '<w:jc w:val="left"/>'
+        '<w:ind w:left="0" w:right="0" w:firstLine="0" w:hanging="0"/>'
+        '<w:spacing w:before="0" w:after="160" w:line="276" w:lineRule="auto"/>'
+    )
+    if not ppr:
+        return p_xml.replace("<w:p>", f'<w:p><w:pPr><w:pStyle w:val="BodyText" />{inject}</w:pPr>', 1)
+    block = ppr.group(0)
+    block = re.sub(r"<w:keepNext[^/]*/>", "", block)
+    block = re.sub(r"<w:keepLines[^/]*/>", "", block)
+    block = re.sub(r"<w:jc[^/]*/>", "", block)
+    block = re.sub(r"<w:ind[^/]*/>", "", block)
+    block = re.sub(r"<w:spacing[^/]*/>", "", block)
+    block = re.sub(r"<w:tabs>.*?</w:tabs>", "", block, flags=re.DOTALL)
+    block = block.replace("</w:pPr>", f"{inject}</w:pPr>", 1)
     return p_xml[: ppr.start()] + block + p_xml[ppr.end() :]
 
 
@@ -339,6 +388,24 @@ def _patch_heading2_spacer_before_table(xml: str) -> str:
 
     return re.sub(
         r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*(<w:tbl>)",
+        fix,
+        xml,
+        flags=re.DOTALL,
+    )
+
+
+def _patch_heading2_intro_before_table(xml: str) -> str:
+    """H2 → intro (FirstParagraph) → table — normalizar intro + spacer antes da tabela."""
+
+    def fix(m: re.Match[str]) -> str:
+        h2 = m.group(1)
+        intro = _normalize_intro_after_heading2(m.group(2))
+        return h2 + intro + _H2_SPACER + m.group(3)
+
+    return re.sub(
+        r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*"
+        r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"FirstParagraph\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*"
+        r"(<w:tbl>)",
         fix,
         xml,
         flags=re.DOTALL,
@@ -374,6 +441,7 @@ def patch_docx_layout(docx_path: Path) -> None:
     xml = doc.decode("utf-8")
     xml = re.sub(r"<w:tbl>.*?</w:tbl>", lambda m: _patch_single_table(m.group(0)), xml, flags=re.DOTALL)
     xml = _patch_all_heading2_paragraphs(xml)
+    xml = _patch_heading2_intro_before_table(xml)
     xml = _patch_heading2_spacer_before_table(xml)
     xml = _patch_headings(xml)
     xml = _patch_metadata_page_break(xml)
