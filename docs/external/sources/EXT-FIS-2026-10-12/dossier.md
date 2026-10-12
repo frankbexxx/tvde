@@ -131,19 +131,31 @@ Q-EXT-FIS-002
 Pergunta
 :::
 
-Como tratar a **comissão de 15%**: **base sem IVA** (≤25%), **IVA** aplicável, **momento** de reconhecimento e **prova** da comissão?
+Como deve ser determinada a **base de cálculo** da comissão de intermediação de **15%**, acrescida de **IVA à taxa normal de 23%** (Portugal Continental), em que **momento** deve a receita ser reconhecida e que **documentação** deve suportar a operação?
 
 ::: {custom-style="Q-EXT Label"}
 Contexto mínimo
 :::
 
-Comissão piloto **15%** acordada; guard legal 0–25% implementado antes da captura de pagamento. **Divergência documental interna** sobre base: `final_price × percentagem` **vs** `(final_price − portagens) × percentagem` — ver secção de contexto. Fees Stripe tratadas como **fora** da base da comissão (DEC-FIS-002); plataforma **absorve** fee Stripe no piloto (DEC-FIS-009).
+Valores a **não confundir** (cada um com natureza distinta):
+
+- **15%** — comissão comercial de intermediação acordada para o piloto;
+- **23%** — IVA aplicável à comissão da plataforma (taxa normal, Portugal Continental), tratado como facto para este modelo;
+- **25%** — **limite máximo legal** da taxa de intermediação (guard implementado antes da captura de pagamento);
+- **5% AMT** — contribuição/obrigação **distinta** (consulta dedicada na Q-EXT-FIS-003).
+
+**Divergência documental interna** sobre a **base exacta** da comissão de 15% — é esta base que se pretende **validar contabilisticamente**, **sem** adoptar uma formulação nesta versão:
+
+- `final_price × commission_percent`;
+- **vs** `(final_price − portagens) × commission_percent` (ver também secção de contexto).
+
+Fees Stripe tratadas como **fora** da base da comissão (DEC-FIS-002); plataforma **absorve** fee Stripe no piloto (DEC-FIS-009).
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
 :::
 
-Bloqueia fecho fiscal do modelo de receita da plataforma e alinhamento com art. 15.º (matriz L-13).
+Bloqueia fecho contabilístico do modelo de receita da plataforma: base de cálculo, momento de reconhecimento, documentação de suporte e alinhamento com art. 15.º (matriz L-13). A **taxa de IVA (23%)** não está em dúvida para Portugal Continental nesta consulta.
 
 ::: {custom-style="Q-EXT Label"}
 Impacto da resposta
@@ -217,7 +229,7 @@ Qual a **base de cálculo** e o **tratamento contabilístico** da contribuição
 Contexto mínimo
 :::
 
-Regra económica interna: 5% sobre taxa de intermediação **sem IVA** (com 15% → 0,75% da base dos 15% em simulação documental). **Não** confundir com pedido de **formulário/canal AMT** (consulta procedimental separada). Apuramento **não** implementado no produto.
+Regra económica interna: contribuição **AMT 5%** sobre a taxa de intermediação **sem IVA**. Na simulação económica interna, uma comissão de **15%** conduz a uma contribuição equivalente a **0,75%** da respectiva base de cálculo. **Esta formulação não constitui conclusão fiscal** e é objecto da presente consulta. **Não** confundir com pedido de **formulário/canal AMT** (consulta procedimental separada). Apuramento **não** implementado no produto.
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
@@ -291,13 +303,13 @@ Q-EXT-FIS-005
 Pergunta
 :::
 
-Como registar **contabilisticamente** **refunds** e **chargebacks** e como **comunicar** ao passageiro?
+Como devem ser registados contabilisticamente **refunds** e **chargebacks** e que **documentos** ou **rectificações** devem ser emitidos ou comunicados ao passageiro?
 
 ::: {custom-style="Q-EXT Label"}
 Contexto mínimo
 :::
 
-Integração automática de reembolsos **incompleta**; reembolso manual via prestador de pagamentos possível em piloto (runbook interno). **Não** se pede ao contabilista desenho de software — apenas tratamento contabilístico e deveres de comunicação.
+No piloto podem ocorrer estornos e chargebacks; o processo operacional interno **ainda não está totalmente fechado**. A consulta limita-se ao **tratamento contabilístico-fiscal** e aos **deveres documentais** face ao passageiro (não inclui desenho de software ou fluxos de interface).
 
 ::: {custom-style="Q-EXT Label"}
 Porque precisamos da resposta
@@ -309,7 +321,7 @@ Operação piloto e Live futuro exigem política clara de estornos e prova.
 Impacto da resposta
 :::
 
-Procedimentos internos, contas e mensagens ao passageiro.
+Registos contabilísticos, documentos ou rectificações exigidos e comunicação ao passageiro.
 
 ::: {custom-style="Q-EXT Label"}
 Prioridade
@@ -317,7 +329,7 @@ Prioridade
 
 **P1**
 
-**Referências internas:** STRIPE-LIVE-02; DEC-PAY-001; runbook refund (referência interna, sem anexo sensível neste DRAFT).
+**Referências internas:** STRIPE-LIVE-02; DEC-PAY-001; runbook refund (referência interna, sem anexo sensível nesta versão).
 
 ---
 
@@ -338,7 +350,7 @@ Respostas por email profissional ou documento separado; **não** se solicita nes
 
 | Ref. | Descrição | Nota |
 |------|-----------|------|
-| — | Resumo tarifário A1.4 (15%, portagens, cancel fee) | A extrair de doc interno; **sem** IBAN |
+| — | Resumo tarifário A1.4 (15%, portagens, cancel fee) | Não incluído nesta versão; disponível se necessário. |
 | — | Exemplo **anonimizado** estrutura de preço viagem | Opcional v2 |
 | — | Runbook reembolso piloto | Referência interna; **não** incluído nesta versão |
 
