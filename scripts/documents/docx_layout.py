@@ -78,6 +78,7 @@ def _is_large_table(tbl_xml: str) -> bool:
 def _set_tbl_pr(tbl_xml: str, total: int) -> str:
     layout = '<w:tblLayout w:type="fixed"/>'
     tbl_w = f'<w:tblW w:w="{total}" w:type="dxa"/>'
+    tbl_pos = '<w:tblInd w:w="0" w:type="dxa"/><w:jc w:val="left"/>'
     borders = (
         f'<w:tblBorders>'
         f'<w:top w:val="single" w:sz="4" w:space="0" w:color="{_BORDER_COLOR}"/>'
@@ -95,9 +96,15 @@ def _set_tbl_pr(tbl_xml: str, total: int) -> str:
         inner = re.sub(r"<w:tblLayout[^/]*/>", "", inner)
         inner = re.sub(r"<w:tblW[^/]*/>", "", inner)
         inner = re.sub(r"<w:tblBorders>.*?</w:tblBorders>", "", inner, flags=re.DOTALL)
-        inner = inner.replace("</w:tblPr>", f"{layout}{tbl_w}{borders}</w:tblPr>")
+        inner = re.sub(r"<w:tblInd[^/]*/>", "", inner)
+        inner = re.sub(r"<w:jc[^/]*/>", "", inner)
+        inner = inner.replace("</w:tblPr>", f"{layout}{tbl_w}{tbl_pos}{borders}</w:tblPr>")
         return tbl_xml[: block.start()] + inner + tbl_xml[block.end() :]
-    return tbl_xml.replace("<w:tbl>", f"<w:tbl><w:tblPr>{layout}{tbl_w}{borders}</w:tblPr>", 1)
+    return tbl_xml.replace(
+        "<w:tbl>",
+        f"<w:tbl><w:tblPr>{layout}{tbl_w}{tbl_pos}{borders}</w:tblPr>",
+        1,
+    )
 
 
 def _set_grid(tbl_xml: str, widths: list[int]) -> str:
@@ -274,18 +281,61 @@ def _patch_metadata_page_break(xml: str) -> str:
     return re.sub(r"<w:tbl>.*?</w:tbl>", break_before, xml, count=1, flags=re.DOTALL)
 
 
-def _patch_heading2_before_table(xml: str) -> str:
-    """Heading2 stays separate from following table (no keepNext glue)."""
+_H2_SPACER = (
+    '<w:p><w:pPr><w:spacing w:before="0" w:after="160" w:line="240" w:lineRule="auto"/>'
+    '<w:jc w:val="left"/></w:pPr></w:p>'
+)
+
+
+def _normalize_heading2_ppr(p_xml: str) -> str:
+    """Full-width left Heading2; override style keepNext that glues heading to table row."""
+    if 'w:val="Heading2"' not in p_xml:
+        return p_xml
+    ppr = re.search(r"<w:pPr>.*?</w:pPr>", p_xml, re.DOTALL)
+    if not ppr:
+        inner = (
+            "<w:pPr>"
+            '<w:pStyle w:val="Heading2" />'
+            '<w:keepNext w:val="0"/>'
+            '<w:keepLines w:val="0"/>'
+            '<w:jc w:val="left"/>'
+            '<w:ind w:left="0" w:right="0" w:firstLine="0" w:hanging="0"/>'
+            '<w:spacing w:before="280" w:after="240" w:line="276" w:lineRule="auto"/>'
+            "</w:pPr>"
+        )
+        return p_xml.replace("<w:p>", f"<w:p>{inner}", 1)
+
+    block = ppr.group(0)
+    block = re.sub(r"<w:keepNext[^/]*/>", "", block)
+    block = re.sub(r"<w:keepLines[^/]*/>", "", block)
+    block = re.sub(r"<w:jc[^/]*/>", "", block)
+    block = re.sub(r"<w:ind[^/]*/>", "", block)
+    block = re.sub(r"<w:spacing[^/]*/>", "", block)
+    inject = (
+        '<w:keepNext w:val="0"/>'
+        '<w:keepLines w:val="0"/>'
+        '<w:jc w:val="left"/>'
+        '<w:ind w:left="0" w:right="0" w:firstLine="0" w:hanging="0"/>'
+        '<w:spacing w:before="280" w:after="240" w:line="276" w:lineRule="auto"/>'
+    )
+    block = block.replace("</w:pPr>", f"{inject}</w:pPr>", 1)
+    return p_xml[: ppr.start()] + block + p_xml[ppr.end() :]
+
+
+def _patch_all_heading2_paragraphs(xml: str) -> str:
+    return re.sub(
+        r"<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>",
+        lambda m: _normalize_heading2_ppr(m.group(0)),
+        xml,
+        flags=re.DOTALL,
+    )
+
+
+def _patch_heading2_spacer_before_table(xml: str) -> str:
+    """Explicit spacer between Heading2 and immediately following table."""
 
     def fix(m: re.Match[str]) -> str:
-        heading = m.group(1)
-        heading = re.sub(r"<w:keepNext/>", "", heading)
-        spacing = '<w:spacing w:before="0" w:after="200" w:line="276" w:lineRule="auto"/>'
-        if "<w:spacing" in heading:
-            heading = re.sub(r"<w:spacing[^/]*/>", spacing, heading, count=1)
-        else:
-            heading = heading.replace("</w:pPr>", f"{spacing}</w:pPr>", 1)
-        return heading + m.group(2)
+        return m.group(1) + _H2_SPACER + m.group(2)
 
     return re.sub(
         r"(<w:p>\s*<w:pPr>(?:(?!</w:pPr>).)*<w:pStyle w:val=\"Heading2\" />(?:(?!</w:pPr>).)*</w:pPr>(?:(?!</w:p>).)*</w:p>)\s*(<w:tbl>)",
@@ -323,7 +373,8 @@ def patch_docx_layout(docx_path: Path) -> None:
         return
     xml = doc.decode("utf-8")
     xml = re.sub(r"<w:tbl>.*?</w:tbl>", lambda m: _patch_single_table(m.group(0)), xml, flags=re.DOTALL)
-    xml = _patch_heading2_before_table(xml)
+    xml = _patch_all_heading2_paragraphs(xml)
+    xml = _patch_heading2_spacer_before_table(xml)
     xml = _patch_headings(xml)
     xml = _patch_metadata_page_break(xml)
     buffers["word/document.xml"] = xml.encode("utf-8")

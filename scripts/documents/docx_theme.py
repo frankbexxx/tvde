@@ -94,6 +94,19 @@ def _patch_heading_colors(styles_xml: str) -> str:
     return styles_xml
 
 
+def _patch_heading2_style_no_keep(styles_xml: str) -> str:
+    """Heading2 must not inherit keepNext/keepLines (avoids glue to tables)."""
+    pattern = r'(<w:style[^>]+w:styleId="Heading2"[^>]*>.*?<w:pPr>)(.*?)(</w:pPr>)'
+
+    def repl(m: re.Match[str]) -> str:
+        inner = m.group(2)
+        inner = re.sub(r"<w:keepNext[^/]*/>", "", inner)
+        inner = re.sub(r"<w:keepLines[^/]*/>", "", inner)
+        return f"{m.group(1)}{inner}{m.group(3)}"
+
+    return re.sub(pattern, repl, styles_xml, count=1, flags=re.DOTALL)
+
+
 def patch_docx_theme(docx_path: Path) -> None:
     with zipfile.ZipFile(docx_path, "r") as zin:
         names = zin.namelist()
@@ -104,6 +117,7 @@ def patch_docx_theme(docx_path: Path) -> None:
         xml = styles.decode("utf-8")
         xml = _ensure_extra_styles(xml)
         xml = _patch_heading_colors(xml)
+        xml = _patch_heading2_style_no_keep(xml)
         buffers["word/styles.xml"] = xml.encode("utf-8")
 
     doc = buffers.get("word/document.xml")
