@@ -1,0 +1,47 @@
+external_id: EXT-FIS-2026-10-12
+title: Consulta fiscal/contabilística — modelo TVDE piloto
+version: v0.1
+created: "2026-10-12"
+updated: "2026-10-12"
+status: REVIEW
+audience: Contabilista / TOC
+confidentiality: EXTERNAL-CONFIDENTIAL
+owner: VAMULÁ / Ventos Férteis, Lda.
+profile: fiscal
+q_ext:
+  - Q-EXT-FIS-004
+  - Q-EXT-FIS-002
+  - Q-EXT-FIS-001
+  - Q-EXT-FIS-003
+  - Q-EXT-FIS-006
+  - Q-EXT-FIS-005
+dec_refs:
+  - DEC-BIZ-001
+  - DEC-BIZ-002
+  - DEC-PAY-001
+  - DEC-FIS-001
+  - DEC-FIS-002
+  - DEC-FIS-003
+  - DEC-FIS-004
+  - DEC-FIS-005
+  - DEC-FIS-006
+  - DEC-FIS-009
+  - DEC-FIS-011
+  - DEC-LEG-008
+find_refs:
+  - FIND-LEG-FIS-01
+  - FIND-LEG-L13
+  - FIND-LEG-AMT-02
+  - STRIPE-LIVE-02
+sources:
+  - path: docs/registers/EXTERNAL_CONSULTATIONS.md
+  - path: docs/registers/DECISIONS.md
+  - path: docs/registers/FINDINGS.md
+  - path: docs/business/A1_MODELO_ECONOMICO_SETEMBRO_2026.md
+  - path: docs/business/VAMULA_DECISOES_OPERACIONAIS_2026-09-09.md
+  - path: docs/architecture/STRIPE_LIVE_READINESS_2026-10-08.md
+  - path: docs/legal/TVDE_LEGAL_IMPACT_MATRIX_2026-09-04.md
+  - path: docs/business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md
+output:
+  basename: EXT-FIS-2026-10-12
+  notes: Dossier fiscal REVIEW — não enviado; build fora do Git
