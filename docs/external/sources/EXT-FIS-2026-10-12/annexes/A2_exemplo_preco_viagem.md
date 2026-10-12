@@ -105,7 +105,7 @@ Valores intermédios antes de arredondamento:
 - **Objecto de IVA no exemplo:** apenas a **comissão de intermediação** (15%), à taxa **23%** (Portugal Continental), conforme enquadramento do dossier.
 - **Fórmula:** `IVA = comissão × 23%`, calculada **depois** de obter a comissão de cada variante.
 - **Não** se calcula IVA sobre portagens nem sobre o preço total da viagem neste exemplo.
-- **Quem suporta/recolhe o IVA** na cadeia real é matéria da consulta — este anexo só separa montantes para leitura.
+- O **tratamento contabilístico e documental do IVA** na relação entre plataforma e parceiro integra a consulta; a **taxa aplicável à comissão** neste modelo é **23%**.
 
 ---
 
