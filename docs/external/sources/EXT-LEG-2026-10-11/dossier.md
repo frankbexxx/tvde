@@ -34,7 +34,7 @@ Este dossier:
 
 **Livro de Reclamações / RAL.** Na matriz legal interna, o requisito **L-25** (Livro de Reclamações e informação RAL) figura como **fechado** do ponto de vista de implementação registada; existe documentação interna de apoio. **Não** há pergunta jurídica dedicada (Q-EXT) neste dossier — apenas contexto para evitar omissão aparente; **não** se junta aqui registo operacional nem dados pessoais.
 
-**Retenção de dados / evidência.** O finding interno **FIND-LEG-RET-01** identifica a obrigação de retenção de **2 anos** de actividade como **parcialmente** reflectida no produto (evidência e arquivo ainda incompletos face ao enquadramento L-11). A **conformidade jurídica plena** deste tema **não** está fechada neste dossier e **pode** depender de parecer ou evolução técnica.
+**Retenção de dados / evidência.** O finding interno **FIND-LEG-RET-01** regista internamente um período de retenção de **2 anos** para actividade/evidência. A **adequação jurídica** desse período e a **conformidade plena** da implementação **não** estão fechadas neste dossier e **podem** depender de parecer ou evolução técnica.
 
 ---
 
