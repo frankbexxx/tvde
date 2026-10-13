@@ -20,7 +20,7 @@ Fontes de referência interna (sem alteração de registos): FIND-LEG-* · TVDE_
 | **Validação motorista** | Registo, documentos, aprovação **administrativa** parcial | FIND-LEG-IMT-02; FIND-LEG-DRV-01 | **Q-EXT-LEG-001** | Processo manual temporário **não** fechado juridicamente |
 | **Validação veículo** | Dados de viatura na viagem; gates documentais viatura configuráveis | FIND-LEG-IMT-03 | **Q-EXT-LEG-001** | **Confirmação interna pendente** (O3) sobre frota real |
 | **Dever de diligência / bloqueios** | Bloqueios técnicos e approve admin previstos; política de «conhecimento» **não** fechada | FIND-LEG-GATE-01, FIND-LEG-DRV-01 | **Q-EXT-LEG-005** | Art. 14.º — interpretação **objecto da consulta** |
-| **10 h / 24 h — registo** | Foundation driving-hours (segmentos, rolling 24h) com compliance **ON** | — | **Q-EXT-LEG-002** | Registo **≠** bloqueio automático |
+| **10 h / 24 h — registo** | Foundation driving-hours (segmentos, rolling 24h) e registo activos | — | **Q-EXT-LEG-002** | Registo **≠** bloqueio automático |
 | **10 h / 24 h — enforcement** | Bloqueio automático **desactivado** na configuração actual | FIND-LEG-HRS-01 | **Q-EXT-LEG-002** | DEC-LEG-004: bloqueio efectivo antes de operação plena |
 | **Cross-platform** | **Sem** agregação de tempos entre plataformas TVDE | FIND-LEG-HRS-02 | **Q-EXT-LEG-002** | Parecer desejado antes de activar enforcement |
 | **SOS / emergência** | SOS passageiro/motorista: **112**, snapshot, partilha/resumo viagem | FIND-LEG-SOS-01 — validação externa **pendente**; matriz L-19…L-22 **PARCIAL** | **Q-EXT-LEG-003** | Foundation implementada; **suficiência legal não concluída** |

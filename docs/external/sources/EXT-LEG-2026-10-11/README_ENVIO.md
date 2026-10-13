@@ -16,7 +16,7 @@
 
 | Item | Ficheiro | Notas |
 |------|----------|--------|
-| Dossier principal | `%LOCALAPPDATA%\TVDE\documents\EXT-LEG-2026-10-11\dossier.docx` | Canónico; revisão cosmética Word em curso (Frank) |
+| Dossier principal | `%LOCALAPPDATA%\TVDE\documents\EXT-LEG-2026-10-11\dossier.docx` | Canónico; cópia manual revista por Frank — artefacto fora do Git |
 | **A1** Modelo de papéis | `annexes/A1_modelo_de_papeis.md` → DOCX local | Fonte Git |
 | **A2** Conformidade operacional | `annexes/A2_resumo_conformidade_operacional.md` → DOCX local | Contexto interno; não parecer |
 
