@@ -12,12 +12,12 @@ Q_EXT_EXTERNAL_TITLES: dict[str, str] = {
     "Q-EXT-FIS-006": "Portagens",
     "Q-EXT-FIS-005": "Refunds e chargebacks",
     # Legal (EXT-LEG v1)
-    "Q-EXT-LEG-001": "Validação operador, motorista e veículo",
-    "Q-EXT-LEG-005": "Licenciamento e responsabilidade do parceiro TVDE",
-    "Q-EXT-LEG-002": "Limite de 10 horas de condução",
-    "Q-EXT-LEG-003": "SOS e partilha de viagem",
-    "Q-EXT-LEG-004": "Termos, privacidade e contratos na aplicação",
-    "Q-EXT-LEG-007": "Comunicações regulatórias IMT/AMT",
+    "Q-EXT-LEG-001": "Validação de operador, motorista e veículo",
+    "Q-EXT-LEG-005": "Dever de diligência e bloqueios — artigo 14.º",
+    "Q-EXT-LEG-002": "Limite de 10 h / 24 h e operação em várias plataformas",
+    "Q-EXT-LEG-003": "Mecanismo SOS e requisitos de emergência",
+    "Q-EXT-LEG-004": "Contratos, versionamento e prova de aceitação",
+    "Q-EXT-LEG-007": "Comunicações obrigatórias a IMT e AMT",
     "Q-EXT-LEG-999": "Fixture técnica",
 }
 

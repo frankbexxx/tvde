@@ -12,6 +12,8 @@ Este dossier:
 
 **Estado:** em revisão interna (`REVIEW`) — **não enviado** ao destinatário e **não constitui ainda** pedido de parecer formal.
 
+**Regime legal considerado.** O enquadramento considerado neste dossier é o regime jurídico da actividade TVDE constante da **Lei n.º 45/2018**, na redacção vigente após as alterações introduzidas pela **Lei n.º 59/2026**. Esta referência **não** constitui interpretação legal nem substitui parecer.
+
 ---
 
 ## Contexto essencial da plataforma
@@ -22,13 +24,17 @@ Este dossier:
 
 **Utilizadores.** Passageiros, motoristas e parceiros (gestão de frota) interagem através da aplicação. Termos e política de privacidade públicos existem no site institucional; o versionamento contratual na aplicação está parcial (ver lacunas abaixo).
 
-**Fase actual.** Piloto / fase controlada: funcionalidades de conformidade e pagamentos estão **parcialmente** implementadas; alguns bloqueios automáticos de conformidade estão desactivados ou pendentes de validação externa antes de produção alargada.
+**Fase actual.** Piloto / fase controlada: funcionalidades de conformidade e pagamentos estão **parcialmente** implementadas; alguns bloqueios automáticos de conformidade estão desactivados ou pendentes de validação externa antes de produção alargada. A **definição operacional final** da composição do piloto (operador TVDE, motoristas, frota e veículos) e o **processo humano** de validação documental pré-activação **permanecem sujeitos a confirmação interna** — **sem** identificação de operador, matrículas ou dados pessoais neste dossier.
 
 **Pagamentos.** Cobrança ao passageiro via prestador de pagamentos (conta empresarial); operação em modo de testes até decisão interna de activação em ambiente real (DEC-PAY-001 — referência apenas; não objecto deste dossier).
 
 **Conformidade viatura e documentos.** Existem controlos internos de documentação e aprovação administrativa de motoristas/veículos; **não** são equivalentes a validação IMT automática (lacunas FIND-LEG-IMT-* e FIND-LEG-DRV-01).
 
 **Dependência cruzada (não incluída como pergunta neste dossier).** Pedido técnico ao **IMT** sobre canal de validação (Q-EXT-IMT-001) corre em paralelo; a resposta pode informar a pergunta Q-EXT-LEG-001, sem substituir parecer jurídico.
+
+**Livro de Reclamações / RAL.** Na matriz legal interna, o requisito **L-25** (Livro de Reclamações e informação RAL) figura como **fechado** do ponto de vista de implementação registada; existe documentação interna de apoio. **Não** há pergunta jurídica dedicada (Q-EXT) neste dossier — apenas contexto para evitar omissão aparente; **não** se junta aqui registo operacional nem dados pessoais.
+
+**Retenção de dados / evidência.** O finding interno **FIND-LEG-RET-01** regista internamente um período de retenção de **2 anos** para actividade/evidência. A **adequação jurídica** desse período e a **conformidade plena** da implementação **não** estão fechadas neste dossier e **podem** depender de parecer ou evolução técnica.
 
 ---
 
@@ -325,6 +331,7 @@ Respostas podem ser entregues por email profissional ou documento separado; **n�
 | Ref. | Descrição | Nota |
 |------|-----------|------|
 | — | Resposta futura IMT (Q-EXT-IMT-001) | Referência cruzada quando existir |
+| — | Registo interno L-25 (Livro de Reclamações / RAL) | Disponível **se pedido**; sem dados operacionais |
 | — | Minutas contratuais | **Não** incluídas nesta versão em revisão |
 | — | Capturas ou dados de viagens reais | **Excluídos** (sem dados pessoais) |
 
