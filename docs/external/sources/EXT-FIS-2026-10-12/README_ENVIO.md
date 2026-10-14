@@ -6,9 +6,12 @@
 |-------|--------|
 | **Data preparação** | 2026-10-12 |
 | **ID dossier** | EXT-FIS-2026-10-12 |
-| **Estado dossier** | **REVIEW** |
-| **Enviado** | **Não** |
-| **Destinatário previsto** | Contabilista / TOC (email a definir no envio) |
+| **Estado dossier (source)** | **REVIEW** |
+| **Pacote enviado** | **Não confirmado** |
+| **Revisão visual** | **Manel** — revisão final em curso |
+| **Destinatário previsto** | Contabilista / TOC (sem identificação até envio confirmado) |
+| **Parecer** | **Não recebido** |
+| **Consulta fechada** | **Não** |
 
 ---
 
@@ -88,7 +91,7 @@
 
 1. Gerar DOCX/PDF dos anexos (Pandoc/Word) para pasta local `…\EXT-FIS-2026-10-12\annexes\`.
 2. Revisão humana Frank + contabilista **antes** de email.
-3. **Não** alterar `status` para SENT sem decisão explícita.
+3. **Não** marcar envio confirmado nem `status` source **SENT** sem confirmação explícita de Francisco.
 4. Fecho O5 / Q-EXT-FIS-002 = respostas externas + registos (fora deste pacote).
 
 ---

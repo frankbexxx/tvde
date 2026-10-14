@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN (painel operacional) |
 | **status** | ACTIVO |
-| **updated** | 2026-10-11 |
+| **updated** | 2026-10-14 |
 | **owner** | Frank |
 | **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
 
@@ -29,8 +29,8 @@ Ficheiro **vivo** na raiz do repo. **Única fonte operacional diária** e handof
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **DOC-NORM-1** | Normalização documental Fases 1–5 | **Concluído** | 2026-10-11 · governance · archive · registers · external · audit refs |
-| **DOC-NEXT-1** | Preparar dossier advogado (blueprint) | Por iniciar | [`DRAFT_LEGAL_DOSSIER.md`](docs/external/templates/DRAFT_LEGAL_DOSSIER.md) · Q-EXT-LEG PRONTO ENVIO |
-| **DOC-NEXT-2** | Preparar dossier contabilista (blueprint) | Por iniciar | [`DRAFT_FISCAL_DOSSIER.md`](docs/external/templates/DRAFT_FISCAL_DOSSIER.md) |
+| **DOC-NEXT-1** | Dossier jurídico **EXT-LEG-2026-10-11** | **Concluído** | Pacote **enviado 2026-10-14** (dossier+A1+A2) · aceitação mandato **pendente** · parecer **pendente** · [`README_ENVIO.md`](docs/external/sources/EXT-LEG-2026-10-11/README_ENVIO.md) |
+| **DOC-NEXT-2** | Dossier fiscal **EXT-FIS-2026-10-12** | **Concluído** (preparação) | Dossier+A1–A3 **REVIEW** · Manel revisão visual · envio contabilista **pendente confirmação** · [`README_ENVIO.md`](docs/external/sources/EXT-FIS-2026-10-12/README_ENVIO.md) |
 | **DOC-NEXT-3** | Dados internos Manel (O1–O3, O5) | Bloqueado | Bloqueia Q-EXT-INS-001 · ver [`EXTERNAL_CONSULTATIONS.md`](docs/registers/EXTERNAL_CONSULTATIONS.md) §3 |
 
 ---

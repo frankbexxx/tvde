@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-11 |
+| **updated** | 2026-10-14 |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -13,6 +13,15 @@
 **Documento canónico de execução:** CARRIL → ETAPA → PASSOS  
 **Fonte consolidada:** [`TODOdoDIA.md`](../TODOdoDIA.md) (operacional) · histórico Set: [`TVDE_STATUS_SETEMBRO_2026.md`](archive/plans/TVDE_STATUS_SETEMBRO_2026.md) · [`SETEMBRO_2026_TODO_LIBRARY.md`](archive/plans/SETEMBRO_2026_TODO_LIBRARY.md) · docs pay/mobile/legal/business/ops  
 **Regra:** itens já implementados / STALE **não** reentram. Não activar Stripe live / B2 / PF3D / Capacitor sem o passo correspondente.
+
+### Consultas externas (resumo 2026-10-14)
+
+| Pacote | Estado operacional | Impacto nos marcos |
+|--------|-------------------|-------------------|
+| **EXT-LEG-2026-10-11** | Pacote **enviado 2026-10-14** (dossier + A1 + A2); mandato **pendente**; **sem parecer** | Bloqueios jurídicos / compliance M2 (**A3-REV**, **A6**, IMT, 10h/24h, SOS, contratos) **continuam abertos** — envio **não** fecha marco |
+| **EXT-FIS-2026-10-12** | Pacote preparado (**REVIEW**); revisão visual Manel; envio contabilista **não confirmado**; **sem resposta** | Bloqueios fiscais (factura, IVA comissão, AMT contabilístico, refunds) **continuam abertos** |
+
+Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATIONS.md) · **Q-EXT-LEG-006** fora do pacote v1.
 
 | Fecho já feito | Estado |
 |----------------|--------|
@@ -414,6 +423,7 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 - **Objectivo:** OTP por SMS fora de non-prod.  
 - **IDs:** `S-AUTH-01`  
+- **Prioridade canónica (2026-10-14):** **P1 Marco 2** — entra no caminho crítico piloto (`C1` · autenticação real); implementação **adiada** até go explícito [`S-AUTH-01_OTP_SMS_DECISION.md`](architecture/S-AUTH-01_OTP_SMS_DECISION.md) §13. *(Histórico Setembro «P0 bloqueador»:* [`TVDE_STATUS_SETEMBRO_2026.md`](archive/plans/TVDE_STATUS_SETEMBRO_2026.md) *— arquivo; lista P2 «produto» em* [`TVDE_DECISOES_EXTERNAS_PENDENTES.md`](business/TVDE_DECISOES_EXTERNAS_PENDENTES.md) *referia «pode esperar» vs consultas externas, não substitui Marco 2.)*  
 - **Dependências:** Provider SMS  
 - **Estado actual:** não implementado. Em deployed, `POST /auth/otp/request` e `/verify` respondem `503 otp_auth_unavailable`. O código OTP mantém-se para este carril.  
 - **L-SEC-12 = CLOSED** (consume atómico). OTP em deployed continua `503`. Reactivar exige provider SMS + smoke; esta linha não liga SMS.  

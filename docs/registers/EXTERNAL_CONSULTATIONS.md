@@ -6,7 +6,7 @@
 | **title** | Consultas a advogado, fiscal, IMT, AMT, Stripe, seguradora |
 | **type** | REGISTER |
 | **created** | 2026-10-11 |
-| **updated** | 2026-10-11 |
+| **updated** | 2026-10-14 |
 | **status** | ACTIVO |
 | **owner** | Frank |
 | **audience** | INTERNAL |
@@ -17,19 +17,32 @@ Cada linha liga **pergunta → envio → resposta → decisão interna** ([`DOCU
 
 **Política e dossiers (Fase 4):** [`external/README.md`](../external/README.md) · templates [`external/templates/`](../external/templates/) · blueprints [`DRAFT_LEGAL_DOSSIER.md`](../external/templates/DRAFT_LEGAL_DOSSIER.md) · [`DRAFT_FISCAL_DOSSIER.md`](../external/templates/DRAFT_FISCAL_DOSSIER.md)
 
+**Estados (pacote vs pergunta):** conteúdo source **`REVIEW`** · **`ENVIADO`** = pacote enviado (data) · aceitação mandato = campo separado · **`RESPONDIDO`/`INCORPORADO`/`FECHADO`** só após resposta e [`DECISIONS.md`](DECISIONS.md). Envio **não** fecha consulta nem incorpora decisão.
+
+---
+
+## Pacotes dossier (nível pacote)
+
+| Pacote | Source `status` | Pacote enviado | Conteúdo enviado | Destinatário | Aceitação / mandato | Parecer | Incorporação `DECISIONS` | Fechado |
+|--------|-----------------|----------------|------------------|--------------|---------------------|---------|--------------------------|---------|
+| **EXT-LEG-2026-10-11** | **REVIEW** | **2026-10-14** | Dossier + **A1** + **A2** | Advogado (sem identificação) | **Pendente** | **Não recebido** | **Pendente após parecer** | **Não** |
+| **EXT-FIS-2026-10-12** | **REVIEW** | — | Preparado: dossier + **A1–A3** (envio **não confirmado**) | Contabilista (sem identificação) | N/A | **Não recebido** | **N/A** | **Não** |
+
+Checklist envio LEG: [`sources/EXT-LEG-2026-10-11/README_ENVIO.md`](../external/sources/EXT-LEG-2026-10-11/README_ENVIO.md) · FIS: [`sources/EXT-FIS-2026-10-12/README_ENVIO.md`](../external/sources/EXT-FIS-2026-10-12/README_ENVIO.md)
+
 ---
 
 ## Tabela principal
 
 | ID | Data criação | Destinatário | Tema | Pergunta curta | Origem | Prioridade | Estado | Data envio | Data resposta | Decisão resultante | Evidência |
 |----|--------------|--------------|------|----------------|--------|------------|--------|------------|---------------|-------------------|-----------|
-| Q-EXT-LEG-001 | 2026-10-11 | Advogado | Validação IMT | Como cumprir validação **operador/motorista/veículo** (app actual); processo **manual temporário** aceitável? | `J1` · `J3` · `L-01`…`L-06` · `FIND-LEG-IMT-01`…`03` · `FIND-LEG-GATE-01` · `FIND-LEG-DRV-01` · `A3-D03-REV1` · [`TVDE_59_2026…`](../architecture/TVDE_59_2026_TECHNICAL_FINDINGS.md) §2 | P0 | PRONTO ENVIO | — | — | — | — |
-| Q-EXT-LEG-002 | 2026-10-11 | Advogado | 10 h / 24 h | O que conta como **tempo de operação**; comportamento **perto do limite** / viagem iniciada; **cross-platform** | `J4` · `J5` · `J6` · `L-07` · `L-08` · `L-10` · `DEC-LEG-004` · `FIND-LEG-HRS-01` · `FIND-LEG-HRS-02` | P0 | PRONTO ENVIO | — | — | — | — |
-| Q-EXT-LEG-003 | 2026-10-11 | Advogado | Emergência / SOS | SOS actual (**112** + snapshot + share) **suficiente**? Exige PSAP, URL pública ou outra integração? | `J7` · `L-19`…`L-22` · `FIND-LEG-SOS-01` · [`TVDE_DECISOES_PENDENTES…`](../business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md) §C2 | P0 | PRONTO ENVIO | — | — | — | — |
-| Q-EXT-LEG-004 | 2026-10-11 | Advogado | Contratos | Contratos **obrigatórios** (plataforma↔operador↔motorista↔passageiro); **minuta**, versionamento, **prova de aceitação** | `J8` · `L-23` · `L-24` · `FIND-LEG-CTR-01` · `DEC-PROD-002` | P0 | PRONTO ENVIO | — | — | — | — |
-| Q-EXT-LEG-005 | 2026-10-11 | Advogado | Bloqueios art. 14.º | Interpretação **«conhecimento / devia ter conhecimento»** para bloqueios operador/motorista/veículo | `J10` · `L-04` · `L-05` · `L-06` | P0 | PRONTO ENVIO | — | — | — | — |
+| Q-EXT-LEG-001 | 2026-10-11 | Advogado | Validação IMT | Como cumprir validação **operador/motorista/veículo** (app actual); processo **manual temporário** aceitável? | `J1` · `J3` · `L-01`…`L-06` · `FIND-LEG-IMT-01`…`03` · `FIND-LEG-GATE-01` · `FIND-LEG-DRV-01` · `A3-D03-REV1` · [`TVDE_59_2026…`](../architecture/TVDE_59_2026_TECHNICAL_FINDINGS.md) §2 | P0 | **ENVIADO** | 2026-10-14 | — | — | Pacote **EXT-LEG-2026-10-11** |
+| Q-EXT-LEG-002 | 2026-10-11 | Advogado | 10 h / 24 h | O que conta como **tempo de operação**; comportamento **perto do limite** / viagem iniciada; **cross-platform** | `J4` · `J5` · `J6` · `L-07` · `L-08` · `L-10` · `DEC-LEG-004` · `FIND-LEG-HRS-01` · `FIND-LEG-HRS-02` | P0 | **ENVIADO** | 2026-10-14 | — | — | Pacote **EXT-LEG-2026-10-11** |
+| Q-EXT-LEG-003 | 2026-10-11 | Advogado | Emergência / SOS | SOS actual (**112** + snapshot + share) **suficiente**? Exige PSAP, URL pública ou outra integração? | `J7` · `L-19`…`L-22` · `FIND-LEG-SOS-01` · [`TVDE_DECISOES_PENDENTES…`](../business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md) §C2 | P0 | **ENVIADO** | 2026-10-14 | — | — | Pacote **EXT-LEG-2026-10-11** |
+| Q-EXT-LEG-004 | 2026-10-11 | Advogado | Contratos | Contratos **obrigatórios** (plataforma↔operador↔motorista↔passageiro); **minuta**, versionamento, **prova de aceitação** | `J8` · `L-23` · `L-24` · `FIND-LEG-CTR-01` · `DEC-PROD-002` | P0 | **ENVIADO** | 2026-10-14 | — | — | Pacote **EXT-LEG-2026-10-11** |
+| Q-EXT-LEG-005 | 2026-10-11 | Advogado | Bloqueios art. 14.º | Interpretação **«conhecimento / devia ter conhecimento»** para bloqueios operador/motorista/veículo | `J10` · `L-04` · `L-05` · `L-06` | P0 | **ENVIADO** | 2026-10-14 | — | — | Pacote **EXT-LEG-2026-10-11** |
 | Q-EXT-LEG-006 | 2026-10-11 | Advogado | Capacidade tecnológica | Checklist objectiva **art. 17.º-A** vs implementação actual da plataforma | `L-27` · [`TVDE_DECISOES_PENDENTES…`](../business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md) §C2 · `L-30` *(matriz)* | P1 | PREPARAR | — | — | — | — |
-| Q-EXT-LEG-007 | 2026-10-11 | Advogado | Comunicações regulatórias | Que **comunicações IMT/AMT** são obrigatórias (alterações, reporte, prazos) — enquadramento legal | `J9` · `L-29` · [`A3_REQUISITOS…`](../legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) | P1 | PRONTO ENVIO | — | — | — | — |
+| Q-EXT-LEG-007 | 2026-10-11 | Advogado | Comunicações regulatórias | Que **comunicações IMT/AMT** são obrigatórias (alterações, reporte, prazos) — enquadramento legal | `J9` · `L-29` · [`A3_REQUISITOS…`](../legal/A3_REQUISITOS_TVDE_SETEMBRO_2026.md) | P1 | **ENVIADO** | 2026-10-14 | — | — | Pacote **EXT-LEG-2026-10-11** |
 | Q-EXT-IMT-001 | 2026-10-11 | IMT | Canal validação | **API/canal** oficial; identificadores; **periodicidade**; indisponibilidade; dados **cross-platform**; comunicações periódicas | `J2` · [`TVDE_DECISOES_PENDENTES…`](../business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md) §C1 · `L-01` · `L-02` · `L-03` · `L-08` · `L-29` | P0 | PRONTO ENVIO | — | — | — | — |
 | Q-EXT-AMT-001 | 2026-10-11 | AMT | Reporting mensal | **Formulário/modelo** TVDE vigente; **canal**; formato; **periodicidade**; requisitos de submissão | [`TVDE_DECISOES_PENDENTES…`](../business/TVDE_DECISOES_PENDENTES_M2_M3_2026-09-25.md) §C4 · `L-17` · `FIND-LEG-AMT-01` | P1 | PRONTO ENVIO | — | — | — | — |
 | Q-EXT-AMT-002 | 2026-10-11 | AMT | Contratos | Requisitos de **comunicação dos contratos** de adesão (formato, canal, prazos) | §C4 · `L-23` · `J8` *(aspecto operacional AMT)* | P1 | PREPARAR | — | — | — | — |
@@ -47,7 +60,7 @@ Cada linha liga **pergunta → envio → resposta → decisão interna** ([`DOCU
 | Q-EXT-STRIPE-002 | 2026-10-11 | Stripe | KYB / KYC | Requisitos e estado **KYB/KYC** necessários antes de **Live** | `ST2` · `DEC-PAY-001` | P1 | PREPARAR | — | — | — | — |
 | Q-EXT-STRIPE-003 | 2026-10-11 | Stripe | IBAN | **IBAN** e conta de liquidação associada à conta business | `ST3` | P1 | PREPARAR | — | — | — | — |
 
-_Nenhum envio efectuado (2026-10-11). Campos **Decisão resultante** e **Evidência** de resposta ficam vazios até incorporação em [`DECISIONS.md`](DECISIONS.md)._
+**EXT-LEG-2026-10-11:** pacote completo **enviado 2026-10-14** (dossier + A1 + A2); aceitação mandato **pendente**; **sem parecer**. **EXT-FIS-2026-10-12:** pacote preparado; **sem envio confirmado**. Campos **Decisão resultante** e **Data resposta** vazios até resposta externa e incorporação em [`DECISIONS.md`](DECISIONS.md). **Nenhuma** consulta **FECHADA**.
 
 ---
 
@@ -65,16 +78,25 @@ _Nenhum envio efectuado (2026-10-11). Campos **Decisão resultante** e **Evidên
 
 ---
 
-## 2. Prontas para envio (`PRONTO ENVIO`)
+## 2. Enviadas — aguardam resposta (`ENVIADO`)
+
+| ID | Destinatário | Data envio | Nota |
+|----|--------------|------------|------|
+| Q-EXT-LEG-001 | Advogado | 2026-10-14 | Pacote EXT-LEG; consolidar com resposta IMT quando existir |
+| Q-EXT-LEG-002 | Advogado | 2026-10-14 | Alinhar com parecer antes de `ENABLE_DRIVING_HOURS_ENFORCEMENT` |
+| Q-EXT-LEG-003 | Advogado | 2026-10-14 | Foundation SOS/112/snapshot no dossier |
+| Q-EXT-LEG-004 | Advogado | 2026-10-14 | M2.11 como contexto, não minuta |
+| Q-EXT-LEG-005 | Advogado | 2026-10-14 | Gates PF3D / approve admin |
+| Q-EXT-LEG-007 | Advogado | 2026-10-14 | Complementa Q-EXT-AMT-* (legal vs procedimento) |
+
+**Fora do pacote v1:** **Q-EXT-LEG-006** (art. 17.º-A) — continua **PREPARAR**.
+
+---
+
+## 2b. Prontas para envio (`PRONTO ENVIO`)
 
 | ID | Destinatário | Nota |
 |----|--------------|------|
-| Q-EXT-LEG-001 | Advogado | Consolidar com resposta IMT quando existir |
-| Q-EXT-LEG-002 | Advogado | Alinhar com parecer antes de `ENABLE_DRIVING_HOURS_ENFORCEMENT` |
-| Q-EXT-LEG-003 | Advogado | Descrever foundation actual (SOS/112/snapshot) |
-| Q-EXT-LEG-004 | Advogado | Incluir M2.11 versionado como contexto, não como minuta |
-| Q-EXT-LEG-005 | Advogado | Relacionar com gates PF3D / approve admin |
-| Q-EXT-LEG-007 | Advogado | Complementa Q-EXT-AMT-* (legal vs procedimento) |
 | Q-EXT-IMT-001 | IMT | Pedido técnico único (§C1 M2) |
 | Q-EXT-AMT-001 | AMT | Não implementar export inventado antes do modelo |
 | Q-EXT-FIS-001 | Contabilista | Nota 1 pág. modelo comercial A1.4 |
@@ -107,7 +129,7 @@ Consultas em **PREPARAR** (dossier incompleto): Q-EXT-LEG-006, Q-EXT-AMT-002, Q-
 
 ## 4. Respostas recebidas
 
-*(vazio — 2026-10-11)*
+*(vazio — 2026-10-14; envio LEG ≠ resposta)*
 
 ---
 
@@ -118,7 +140,7 @@ Consultas em **PREPARAR** (dossier incompleto): Q-EXT-LEG-006, Q-EXT-AMT-002, Q-
 | Sinistro **deslocação para pickup** (fora viagem activa) | Não há pergunta explícita equivalente a `S1`/`S2` nas fontes prioritárias; só checklist Partner genérico |
 | **L-28** marca registada — obrigações extra | Matriz `DEPENDE PARECER`; não consta em [`TVDE_DECISOES_EXTERNAS_PENDENTES.md`](../business/TVDE_DECISOES_EXTERNAS_PENDENTES.md) |
 | **STRIPE-LIVE-01** / **STRIPE-LIVE-03** | Resolução **técnica/smoke** interna; não Q-EXT-STRIPE |
-| OTP **S-AUTH-01** | P2 produto; não consulta externa nesta fase |
+| OTP **S-AUTH-01** | **Prioridade canónica P1 Marco 2** (carril **C1**, [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md)); implementação **adiada** até go [`S-AUTH-01_OTP_SMS_DECISION.md`](../architecture/S-AUTH-01_OTP_SMS_DECISION.md) §13 · não consulta externa · histórico Setembro P0 = [`TVDE_STATUS_SETEMBRO_2026.md`](../archive/plans/TVDE_STATUS_SETEMBRO_2026.md) (arquivo) |
 
 ---
 
@@ -128,5 +150,7 @@ Consultas em **PREPARAR** (dossier incompleto): Q-EXT-LEG-006, Q-EXT-AMT-002, Q-
 |---------|------:|
 | **Total consultas** | **23** |
 | **PREPARAR** | **8** |
-| **PRONTO ENVIO** | **15** |
-| **ENVIADO / AGUARDA / RESPONDIDO / INCORPORADO / FECHADO** | **0** |
+| **PRONTO ENVIO** | **9** |
+| **ENVIADO** (aguarda resposta) | **6** |
+| **RESPONDIDO / INCORPORADO / FECHADO** | **0** |
+| **Total consolidado aberto** | *não calculado* (métricas por estado `Q-EXT` apenas) |
