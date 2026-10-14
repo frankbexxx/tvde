@@ -43,10 +43,11 @@ def create_setup_intent(
     metadata: dict | None = None,
     idempotency_key: str | None = None,
 ) -> stripe.SetupIntent:
+    # Dashboard-managed payment methods (Stripe API 2026+ rejects payment_method_types here).
     params: dict[str, Any] = {
         "customer": customer_id,
         "usage": "off_session",
-        "payment_method_types": ["card"],
+        "automatic_payment_methods": {"enabled": True},
         "metadata": metadata or {},
     }
     if idempotency_key:
