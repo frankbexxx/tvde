@@ -25,7 +25,7 @@ Cada linha liga **pergunta → envio → resposta → decisão interna** ([`DOCU
 
 | Pacote | Source `status` | Pacote enviado | Conteúdo enviado | Destinatário | Aceitação / mandato | Parecer | Incorporação `DECISIONS` | Fechado |
 |--------|-----------------|----------------|------------------|--------------|---------------------|---------|--------------------------|---------|
-| **EXT-LEG-2026-10-11** | **REVIEW** | **2026-10-14** | Dossier + **A1** + **A2** | Advogado (sem identificação) | **Pendente** | **Não recebido** | **N/A** | **Não** |
+| **EXT-LEG-2026-10-11** | **REVIEW** | **2026-10-14** | Dossier + **A1** + **A2** | Advogado (sem identificação) | **Pendente** | **Não recebido** | **Pendente após parecer** | **Não** |
 | **EXT-FIS-2026-10-12** | **REVIEW** | — | Preparado: dossier + **A1–A3** (envio **não confirmado**) | Contabilista (sem identificação) | N/A | **Não recebido** | **N/A** | **Não** |
 
 Checklist envio LEG: [`sources/EXT-LEG-2026-10-11/README_ENVIO.md`](../external/sources/EXT-LEG-2026-10-11/README_ENVIO.md) · FIS: [`sources/EXT-FIS-2026-10-12/README_ENVIO.md`](../external/sources/EXT-FIS-2026-10-12/README_ENVIO.md)

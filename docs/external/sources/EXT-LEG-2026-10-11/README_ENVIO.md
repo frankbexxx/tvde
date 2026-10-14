@@ -12,7 +12,7 @@
 | **Destinatário** | Advogado (sem identificação pessoal) |
 | **Aceitação / mandato** | **Pendente** |
 | **Parecer** | **Não recebido** |
-| **Incorporação `DECISIONS.md`** | **N/A** |
+| **Incorporação `DECISIONS.md`** | **Pendente após parecer** |
 | **Consulta fechada** | **Não** |
 
 ---
