@@ -198,7 +198,7 @@ def _stripe_customer_default_pm_id(customer: Any) -> str | None:
 
 
 def reconcile_default_payment_method_from_stripe(
-    db: Session, user: User
+    db: Session, user: User, *, commit: bool = True
 ) -> PassengerPaymentMethod | None:
     """
     Live only: Stripe Customer.invoice_settings.default_payment_method is authority.
@@ -219,7 +219,10 @@ def reconcile_default_payment_method_from_stripe(
     stripe_pm_id = _stripe_customer_default_pm_id(customer)
     if not stripe_pm_id:
         _clear_defaults(db, user.id)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         return None
 
     row = db.execute(
@@ -261,7 +264,10 @@ def reconcile_default_payment_method_from_stripe(
         row.is_default = True
         db.add(row)
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(row)
     return row
 
@@ -281,7 +287,7 @@ def list_payment_methods(db: Session, user: User) -> list[dict]:
 
 
 def get_default_payment_method(
-    db: Session, user: User
+    db: Session, user: User, *, commit: bool = True
 ) -> PassengerPaymentMethod | None:
     """
     Mock: DB cache only.
@@ -289,7 +295,7 @@ def get_default_payment_method(
     """
     if _stripe_mock():
         return _db_default_only(db, user)
-    return reconcile_default_payment_method_from_stripe(db, user)
+    return reconcile_default_payment_method_from_stripe(db, user, commit=commit)
 
 
 def assert_passenger_ready_for_trip(db: Session, user: User) -> None:
@@ -546,13 +552,13 @@ def detach_passenger_payment_method(
 
 
 def resolve_default_pm_for_accept(
-    db: Session, passenger_id: str
+    db: Session, passenger_id: str, *, commit_pm_reconcile: bool = True
 ) -> tuple[str | None, str | None]:
     """Return (customer_id, payment_method_id) for accept PI binding."""
     user = db.get(User, uuid.UUID(passenger_id))
     if user is None:
         return None, None
     cus = (user.stripe_customer_id or "").strip() or None
-    default = get_default_payment_method(db, user)
+    default = get_default_payment_method(db, user, commit=commit_pm_reconcile)
     pm = default.stripe_payment_method_id if default else None
     return cus, pm

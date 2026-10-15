@@ -1256,20 +1256,7 @@ def accept_offer(
             detail="Payment already exists for this trip.",
         )
 
-    # Expire other offers for this trip
-    for o in (
-        db.execute(
-            select(TripOffer).where(
-                TripOffer.trip_id == trip.id, TripOffer.id != offer.id
-            )
-        )
-        .scalars()
-        .all()
-    ):
-        o.status = OfferStatus.expired
-    offer.status = OfferStatus.accepted
-
-    # Same payment + trip update logic as accept_trip
+    # Same payment + trip update logic as accept_trip (PM + Stripe before mutating offer/trip).
     from app.services.passenger_payments import resolve_default_pm_for_accept
 
     amount_cents = 50
@@ -1279,7 +1266,7 @@ def accept_offer(
     driver_amount = _money(total_amount - commission_amount)
 
     stripe_customer_id, default_pm_id = resolve_default_pm_for_accept(
-        db, str(trip.passenger_id)
+        db, str(trip.passenger_id), commit_pm_reconcile=False
     )
     if not getattr(settings, "STRIPE_MOCK", False):
         if not stripe_customer_id or not default_pm_id:
@@ -1309,6 +1296,18 @@ def accept_offer(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail="Payment authorization failed.",
             ) from e
+
+    for o in (
+        db.execute(
+            select(TripOffer).where(
+                TripOffer.trip_id == trip.id, TripOffer.id != offer.id
+            )
+        )
+        .scalars()
+        .all()
+    ):
+        o.status = OfferStatus.expired
+    offer.status = OfferStatus.accepted
 
     payment = Payment(
         trip_id=trip.id,
