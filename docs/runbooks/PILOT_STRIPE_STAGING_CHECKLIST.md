@@ -3,7 +3,7 @@
 **Objectivo:** validar o fluxo com **Stripe Test keys** em staging.  
 **Proibido nesta fase:** `sk_live` / `pk_live` / dinheiro real / Connect.
 
-**Última actualização:** 2026-10-15 (cenário **A** fechado; **B** preparado, não executado).
+**Última actualização:** 2026-10-15 (cenários **A** e **B v1** fechados; **C–J** por correr).
 
 ## Variáveis externas (nomes — sem valores)
 
@@ -40,7 +40,7 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | Cenário | Resultado | Notas |
 |---------|-----------|-------|
 | **A. Cartão normal** | **PASS** · 2026-10-15 | Manual UI (Francisco) + evidência técnica prévia/API. Visa `4242` · 4,50 € · motorista 3,82 € / comissão 0,68 € · «Pagamento concluído» · sem `502 Payment confirmation failed`. Fix #750. |
-| **B. Cartão 3DS** | **NOT RUN** | Preparado abaixo; executar na ronda seguinte |
+| **B. Cartão 3DS** | **PASS v1** · 2026-10-15 | Manual UI · PM default `4000000000003220` · complete **409** `payment_requires_action` · trip **ongoing** · sem capture/completed/502 · UI erro técnico · gap **STRIPE-LIVE-01** confirmado |
 | C. Cancel antes de captura | NOT RUN | Taxa 3 € registada, não cobrada |
 | D. Webhook | NOT RUN | Assinatura + succeeded *(A já viu webhook 200 no complete)* |
 | E. Webhook retry | NOT RUN | Idempotência `evt_` |
@@ -50,7 +50,7 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | I. Refund manual test | procedimento PRONTO | Dashboard Test; app pode não reflectir |
 | J. Logs/audit | código PRONTO | `payment_*` events sem secrets |
 
-**B1 piloto Stripe staging:** **não fechado** enquanto **B–J** (ou o subconjunto acordado) não correrem. **Cenário A (B1-A)** está **fechado**.
+**B1 piloto Stripe staging:** **não fechado** enquanto **C–J** (ou o subconjunto acordado) não correrem. **Cenários A (B1-A)** e **B v1 (3DS gap conhecido)** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
 
 ---
 
@@ -73,11 +73,30 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | **MAPTILER-403** | `GET api.maptiler.com/…` 403 no console; mapa via fallback/OSM | Infra FE · investigar depois · não blocker B1-A |
 | **SESSION-PRIVATE** | Sessão partilhada entre janelas privadas do mesmo browser | Regra operacional de teste |
 
-Relacionado **B (futuro):** **STRIPE-LIVE-01** — 409 `payment_requires_action` no complete **sem** UI web de recovery (`handleCardAction` / retry).
+**STRIPE-LIVE-01 (3DS UX):** reproduzido no smoke **B v1** — ver secção B abaixo.
 
 ---
 
-## Cenário B — 3DS (preparação; **não executado** nesta ronda)
+## Cenário B — evidência consolidada **PASS v1** (2026-10-15)
+
+| Campo | Valor |
+|-------|--------|
+| **Veredito** | **B — PASS v1** (comportamento actual documentado; não PASS ideal) |
+| **Cartão** | `4000 0000 0000 3220` (default na wallet) |
+| **trip_id** | `660feccc-d52e-4119-a34a-3f57f650faf6` |
+| **payment_id** | `0a8841c3-69e6-4cbe-8ef6-662b2770fcdb` |
+| **payment_intent_id** | `pi_3UQpjJ8jcCqT4zTo1r5vYEBb` |
+
+| Camada | Evidência |
+|--------|-----------|
+| **Manual UI** | Viagem criada → accept → chegada → início → complete · motorista vê erro técnico `payment_requires_action` · viagem **não** concluída |
+| **API** | `POST …/complete` → **409** · `detail`: `payment_requires_action` (ex. 14:34:47 UTC staging) |
+| **Backend logs** | `payment_confirm_requires_action` · **sem** `payment_capture_success` nesta trip |
+| **Estado esperado pós-smoke** | **Trip:** `ongoing` · **Payment:** incompleto (ex. `processing`) · **PI Stripe:** `requires_action` (confirm server-side bloqueado até SCA client-side) |
+
+**Pós-smoke ops:** viagem `660feccc-…` pode ficar **ongoing** — cancelar/limpar em staging quando conveniente; **não** repetir complete nem confirm/capture manual no PI.
+
+### Referência — definição e critérios B (pré-execução)
 
 Definição alinhada a este checklist + [`03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) + [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §STRIPE-LIVE-01.
 
@@ -107,7 +126,7 @@ Backend: [`trips.py`](../../backend/app/services/trips.py) — se `conf_status =
 | **502** | `Payment confirmation failed.` | **FAIL** inesperado para B (erro Stripe genérico) |
 | **200** complete + succeeded | — | **Ambíguo/FAIL** se o cartão 3220 exigir SCA no confirm e não houver challenge concluído |
 
-**Nota técnica:** PI auth com `allow_redirects=never` (#750) — validar na execução de B se 3DS2 no confirm continua possível sem redirect (iframe/challenge) ou se o cenário fica **BLOCKED** até produto decidir fluxo client-side.
+**Nota técnica (#750):** Smoke B v1 **não** ficou BLOCKED — Stripe devolveu `requires_action` no confirm server-side; fluxo client-side 3DS da viagem continua **em falta** (STRIPE-LIVE-01).
 
 ### Comportamento UI actual esperado (web-app staging)
 
@@ -124,15 +143,14 @@ Backend: [`trips.py`](../../backend/app/services/trips.py) — se `conf_status =
 | **FAIL** | 502 inesperado · trip completed com pagamento inconsistente · succeeded sem autenticação quando Stripe exige action · crash UI silencioso |
 | **BLOCKED** | Impossível registar cartão 3DS na wallet · staging keys/mock · ou Stripe recusa confirm/3DS por `allow_redirects=never` sem alternativa |
 
-### Passos manuais recomendados (Francisco — ronda B)
+### Próximo bloco recomendado (produto / engenharia)
 
-1. Browsers **distintos** (ex. Chrome pax · Firefox driver) — **SESSION-PRIVATE**.
-2. Passageiro: remover/default PM 4242 se necessário; adicionar cartão **`4000000000003220`** na wallet (completar 3DS no setup se pedido).
-3. Criar viagem manual staging (mesmo perfil demo que A, se aplicável).
-4. Motorista: accept → arriving → start.
-5. Motorista: **complete** — observar resposta API/UI; **não** forçar refresh repetido como workaround.
-6. Registar: HTTP status, corpo `detail`, estado trip (pax + driver), Payment no admin/BD se acessível, PI no Stripe Test Dashboard (`status`, `last_payment_error`, `next_action`).
-7. **Não** marcar B1 global fechado; actualizar apenas linha **B** desta tabela.
+| Prioridade | Bloco | Notas |
+|------------|-------|-------|
+| **P1** | **STRIPE-LIVE-01 / 3DS UX** | Tratar `409 payment_requires_action` no complete: expor `client_secret` ao passageiro, `confirmCardPayment` / `handleCardAction`, copy humana, retry complete pós-SCA |
+| **P2** | **C. Cancel antes de captura** | Próximo smoke checklist C–J |
+| **P2** | **UX-PAY-COPY** | Copy «A confirmar pagamento…» vs confirm só no complete |
+| **Ops** | Trip `660feccc-…` ongoing | Cancel staging controlado; browsers separados nos smokes |
 
 ---
 
