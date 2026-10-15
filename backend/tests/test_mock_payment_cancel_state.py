@@ -150,7 +150,7 @@ def test_admin_cancel_mock_processing_marks_payment_failed_no_stripe(
         db.close()
 
 
-def test_passenger_cancel_real_pi_keeps_processing_and_cancels_stripe(
+def test_passenger_cancel_real_pi_marks_payment_failed_and_cancels_stripe(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     db = _db()
@@ -169,9 +169,45 @@ def test_passenger_cancel_real_pi_keeps_processing_and_cancels_stripe(
         )
         assert cancelled.status == TripStatus.cancelled
         pay = db.execute(select(Payment).where(Payment.id == payment_id)).scalar_one()
-        assert pay.status == PaymentStatus.processing
+        assert pay.status == PaymentStatus.failed
+        assert pay.status != PaymentStatus.succeeded
         retrieve.assert_called_once_with(pi_id)
         cancel_pi.assert_called_once_with(pi_id)
+    finally:
+        db.close()
+
+
+def test_passenger_cancel_ongoing_requires_action_pi_marks_payment_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: 3DS stuck trip cancel (PI requires_action released, payment not left processing)."""
+    db = _db()
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    pi_id = f"pi_3ds_{uuid.uuid4().hex[:20]}"
+    passenger_id, _d, trip_id, payment_id = _accepted_trip_with_payment(
+        db, pi_id=pi_id, payment_status=PaymentStatus.processing
+    )
+    trip = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one()
+    trip.status = TripStatus.ongoing
+    db.commit()
+    retrieve = MagicMock(
+        return_value=SimpleNamespace(status="requires_action", id=pi_id)
+    )
+    cancel_pi = MagicMock(return_value=SimpleNamespace(status="canceled", id=pi_id))
+    monkeypatch.setattr(trip_service, "retrieve_payment_intent", retrieve)
+    monkeypatch.setattr(trip_service, "cancel_payment_intent", cancel_pi)
+    try:
+        cancelled = trip_service.cancel_trip_by_passenger(
+            db=db, passenger_id=passenger_id, trip_id=trip_id, reason="3ds_cleanup"
+        )
+        assert cancelled.status == TripStatus.cancelled
+        pay = db.execute(select(Payment).where(Payment.id == payment_id)).scalar_one()
+        assert pay.status == PaymentStatus.failed
+        cancel_pi.assert_called_once_with(pi_id)
+        # Idempotent: second cancel blocked by trip status, payment stays failed
+        trip2 = db.execute(select(Trip).where(Trip.id == trip_id)).scalar_one()
+        assert trip2.status == TripStatus.cancelled
+        assert pay.status == PaymentStatus.failed
     finally:
         db.close()
 
@@ -323,7 +359,7 @@ def test_passenger_cancel_terminal_canceled_pi_allows_local_cancel(
         )
         assert cancelled.status == TripStatus.cancelled
         pay = db.execute(select(Payment).where(Payment.id == payment_id)).scalar_one()
-        assert pay.status == PaymentStatus.processing
+        assert pay.status == PaymentStatus.failed
         cancel_pi.assert_not_called()
     finally:
         db.close()
