@@ -101,11 +101,12 @@ def create_authorization_payment_intent(
     Status: requires_confirmation (amount can be updated before confirm).
     Optionally bind Customer + PaymentMethod (prepared wallet) without confirming.
     """
+    # Dashboard-managed payment methods (Stripe API 2026+ rejects payment_method_types here).
     params: dict = {
         "amount": amount_cents,
         "currency": currency,
         "capture_method": "manual",
-        "payment_method_types": ["card"],
+        "automatic_payment_methods": {"enabled": True},
         "confirm": False,
         "metadata": metadata,
     }
