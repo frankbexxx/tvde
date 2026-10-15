@@ -460,22 +460,23 @@ PI_CANCEL_CANCELED = "canceled"
 PI_CANCEL_FAILED = "failed"
 
 
-def fail_mock_processing_payment_on_cancel(payment: Payment | None) -> bool:
+def fail_processing_payment_on_cancel(payment: Payment | None) -> bool:
     """
-    On trip cancel (or timeout cancel): mock ``processing`` → ``failed``.
+    On trip cancel (or timeout cancel): ``processing`` → ``failed``.
 
-    Same outcome as PAYMENTS-STUCK-1B for cancelled trips. No Stripe calls.
-    Real PIs and non-processing statuses are untouched. Idempotent.
+    Runs after Stripe PI release succeeds (real PI) or without Stripe (mock).
+    Does not downgrade ``succeeded`` or other statuses. Idempotent.
     """
     if payment is None:
         return False
     if payment.status != PaymentStatus.processing:
         return False
-    pi_id = (payment.stripe_payment_intent_id or "").strip()
-    if not pi_id.startswith(_MOCK_PI_PREFIX):
-        return False
     payment.status = PaymentStatus.failed
     return True
+
+
+# Back-compat alias (tests/imports).
+fail_mock_processing_payment_on_cancel = fail_processing_payment_on_cancel
 
 
 def cancel_real_payment_intent_if_needed(
@@ -605,7 +606,7 @@ def cancel_trip_by_passenger(
     )
 
     trip.status = TripStatus.cancelled
-    fail_mock_processing_payment_on_cancel(payment)
+    fail_processing_payment_on_cancel(payment)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
@@ -710,7 +711,7 @@ def cancel_trip_by_driver(
         driver.cancellation_count = (driver.cancellation_count or 0) + 1
 
     trip.status = TripStatus.cancelled
-    fail_mock_processing_payment_on_cancel(payment)
+    fail_processing_payment_on_cancel(payment)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()
@@ -796,7 +797,7 @@ def cancel_trip_by_admin(
         cr = cancellation_reason.strip()
         if cr:
             trip.cancellation_reason = cr[:280]
-    fail_mock_processing_payment_on_cancel(payment)
+    fail_processing_payment_on_cancel(payment)
     on_trip_status_change_for_driving_compliance(db, trip, old_status, trip.status)
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     db.commit()

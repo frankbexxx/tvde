@@ -230,7 +230,7 @@ def test_accepted_real_pi_cancel_success_times_out(
         assert counts["timeout_payment_cancel_failed"] == 0
         assert trip.status == TripStatus.cancelled
         assert driver.is_available is True
-        assert pay.status == PaymentStatus.processing
+        assert pay.status == PaymentStatus.failed
         retrieve.assert_called_once_with(pi_id)
         cancel_pi.assert_called_once_with(pi_id)
     finally:
@@ -286,7 +286,7 @@ def test_ongoing_real_pi_cancel_success_times_out(
         assert counts["timeout_payment_cancel_failed"] == 0
         assert trip.status == TripStatus.failed
         assert driver.is_available is True
-        assert pay.status == PaymentStatus.processing
+        assert pay.status == PaymentStatus.failed
         retrieve.assert_called_once_with(pi_id)
         cancel_pi.assert_called_once_with(pi_id)
     finally:
