@@ -24,7 +24,6 @@ from app.db.models.user import User
 from app.models.enums import DriverStatus, OfferStatus, Role, TripStatus, UserStatus
 from app.services import passenger_payments
 from app.services import trips as trips_service
-from app.services import stripe_service
 from tests.support.unique_phone import unique_test_phone
 
 
