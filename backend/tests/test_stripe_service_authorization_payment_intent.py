@@ -39,7 +39,10 @@ def test_create_authorization_payment_intent_uses_automatic_payment_methods() ->
     assert captured["currency"] == "EUR"
     assert captured["capture_method"] == "manual"
     assert captured["confirm"] is False
-    assert captured["automatic_payment_methods"] == {"enabled": True}
+    assert captured["automatic_payment_methods"] == {
+        "enabled": True,
+        "allow_redirects": "never",
+    }
     assert captured["metadata"] == {"trip_id": "trip-1"}
     assert captured["idempotency_key"] == "idem-auth-1"
     assert captured["customer"] == "cus_abc"

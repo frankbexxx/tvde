@@ -102,11 +102,12 @@ def create_authorization_payment_intent(
     Optionally bind Customer + PaymentMethod (prepared wallet) without confirming.
     """
     # Dashboard-managed payment methods (Stripe API 2026+ rejects payment_method_types here).
+    # allow_redirects=never: server-side confirm at complete_trip has no return_url.
     params: dict = {
         "amount": amount_cents,
         "currency": currency,
         "capture_method": "manual",
-        "automatic_payment_methods": {"enabled": True},
+        "automatic_payment_methods": {"enabled": True, "allow_redirects": "never"},
         "confirm": False,
         "metadata": metadata,
     }
