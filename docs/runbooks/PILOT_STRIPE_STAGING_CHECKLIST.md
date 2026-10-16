@@ -3,7 +3,7 @@
 **Objectivo:** validar o fluxo com **Stripe Test keys** em staging.  
 **Proibido nesta fase:** `sk_live` / `pk_live` / dinheiro real / Connect.
 
-**Última actualização:** 2026-10-15 (cenários **A** e **B v1** fechados; **C–J** por correr).
+**Última actualização:** 2026-10-16 (cenários **A**, **B v1** e **C** fechados; **D–J** por correr).
 
 ## Variáveis externas (nomes — sem valores)
 
@@ -19,7 +19,7 @@
 - `VITE_STRIPE_MOCK` = `false`
 - `VITE_STRIPE_PUBLISHABLE_KEY` = `pk_test_…`
 
-**Staging actual (B1-A):** API `tvde-staging-api` · deploy live @ merge `8155e893` ([PR #750](https://github.com/frankbexxx/tvde/pull/750)) — auth PI com `automatic_payment_methods.allow_redirects = never` para confirm server-side no complete sem `return_url`.
+**Staging actual:** API `tvde-staging-api` · auth PI `allow_redirects=never` ([PR #750](https://github.com/frankbexxx/tvde/pull/750)) · Payment `failed` após cancel com PI real ([PR #753](https://github.com/frankbexxx/tvde/pull/753)).
 
 ## Fluxo esperado (test mode)
 
@@ -41,8 +41,8 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 |---------|-----------|-------|
 | **A. Cartão normal** | **PASS** · 2026-10-15 | Manual UI (Francisco) + evidência técnica prévia/API. Visa `4242` · 4,50 € · motorista 3,82 € / comissão 0,68 € · «Pagamento concluído» · sem `502 Payment confirmation failed`. Fix #750. |
 | **B. Cartão 3DS** | **PASS v1** · 2026-10-15 | Manual UI · PM default `4000000000003220` · complete **409** `payment_requires_action` · trip **ongoing** · sem capture/completed/502 · UI erro técnico · gap **STRIPE-LIVE-01** confirmado |
-| C. Cancel antes de captura | NOT RUN | Taxa 3 € registada, não cobrada |
-| D. Webhook | NOT RUN | Assinatura + succeeded *(A já viu webhook 200 no complete)* |
+| **C. Cancel antes de captura** | **PASS** · 2026-10-16 | Pax cancel pós-accept · taxa **3 €** na Trip · **não** cobrada Stripe · PI `canceled` · Payment `failed` · trip `ad242d60-…` · #753 |
+| D. Webhook | NOT RUN | Assinatura + succeeded *(A viu webhook 200 no complete; C viu webhook 200 no PI cancel)* |
 | E. Webhook retry | NOT RUN | Idempotência `evt_` |
 | F. Falha captura | NOT RUN | Trip não completed; Admin vê processing |
 | G. Completed + payment inconsistente | NOT RUN | Ver runbook reconciliação |
@@ -50,7 +50,7 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | I. Refund manual test | procedimento PRONTO | Dashboard Test; app pode não reflectir |
 | J. Logs/audit | código PRONTO | `payment_*` events sem secrets |
 
-**B1 piloto Stripe staging:** **não fechado** enquanto **C–J** (ou o subconjunto acordado) não correrem. **Cenários A (B1-A)** e **B v1 (3DS gap conhecido)** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
+**B1 piloto Stripe staging:** **não fechado** enquanto **D–J** (ou o subconjunto acordado) não correrem. **A**, **B v1** e **C** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
 
 ---
 
@@ -65,7 +65,7 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 
 ---
 
-## Findings separados (não bloqueiam A)
+## Findings separados (não bloqueiam A/B/C)
 
 | ID | Resumo | Classificação |
 |----|--------|---------------|
@@ -94,7 +94,29 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | **Backend logs** | `payment_confirm_requires_action` · **sem** `payment_capture_success` nesta trip |
 | **Estado esperado pós-smoke** | **Trip:** `ongoing` · **Payment:** incompleto (ex. `processing`) · **PI Stripe:** `requires_action` (confirm server-side bloqueado até SCA client-side) |
 
-**Pós-smoke ops:** viagem `660feccc-…` pode ficar **ongoing** — cancelar/limpar em staging quando conveniente; **não** repetir complete nem confirm/capture manual no PI.
+**Pós-smoke ops:** viagem `660feccc-…` **cancelada em ops** (2026-10-16); **não** repetir complete nem confirm/capture manual no PI.
+
+---
+
+## Cenário C — evidência consolidada **PASS** (2026-10-16)
+
+Cancelamento **passageiro** após **accept**, **antes** de complete/capture.
+
+| Campo | Valor |
+|-------|--------|
+| **Trip** | `ad242d60-5ef0-4441-a5d8-f237c5ecfe8b` |
+| **PaymentIntent** | `pi_3UR6dE8jcCqT4zTo0yRTWk4m` |
+| **Cancel HTTP** | **200** (`accepted → cancelled`) |
+
+| Entidade | Estado |
+|----------|--------|
+| **Trip** | `cancelled` · `cancelled_by=passenger` · **`cancellation_fee=3.00`** · `final_price=null` |
+| **Payment** | **`failed`** (pós #753) · **não** `succeeded` |
+| **PI Stripe** | **`canceled`** · `amount_received=0` · `amount_capturable=0` · `latest_charge=null` |
+
+**Interpretação V1:** taxa 3 € **registada** na Trip (`CANCELLATION_FEE_EUR`); **não** cobrada via Stripe neste fluxo (PI cancelado, sem capture). **Sem refund** (nunca houve capture/succeeded).
+
+**Logs:** sem `payment_capture_success` · sem `payment_intent.succeeded` para este PI · webhook **200** no cancel do PI. Pax/motorista **sem** trip activa.
 
 ### Referência — definição e critérios B (pré-execução)
 
@@ -147,10 +169,10 @@ Backend: [`trips.py`](../../backend/app/services/trips.py) — se `conf_status =
 
 | Prioridade | Bloco | Notas |
 |------------|-------|-------|
-| **P1** | **STRIPE-LIVE-01 / 3DS UX** | Tratar `409 payment_requires_action` no complete: expor `client_secret` ao passageiro, `confirmCardPayment` / `handleCardAction`, copy humana, retry complete pós-SCA |
-| **P2** | **C. Cancel antes de captura** | Próximo smoke checklist C–J |
+| **P1** | **D. Webhook** | Succeeded idempotente; C já viu **200** no cancel do PI |
+| **P2** | **STRIPE-LIVE-01 / 3DS UX** | Tratar `409 payment_requires_action` no complete: `client_secret`, `confirmCardPayment` / `handleCardAction`, retry complete pós-SCA |
+| **P2** | **E–J** | Conforme checklist |
 | **P2** | **UX-PAY-COPY** | Copy «A confirmar pagamento…» vs confirm só no complete |
-| **Ops** | Trip `660feccc-…` ongoing | Cancel staging controlado; browsers separados nos smokes |
 
 ---
 
