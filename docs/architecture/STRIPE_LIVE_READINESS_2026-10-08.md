@@ -54,6 +54,8 @@
 
 **Evidência:** `backend/app/services/trips.py` · `backend/tests/test_passenger_payment_attach.py` · ausência de `payment_requires_action` no web-app.
 
+**Reprodução staging (2026-10-15, smoke B v1):** cartão `4000000000003220` · complete **409** `payment_requires_action` · trip `660feccc-d52e-4119-a34a-3f57f650faf6` · PI `pi_3UQpjJ8jcCqT4zTo1r5vYEBb` · UI mostra string técnica — ver [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md).
+
 ---
 
 ### FINDING STRIPE-LIVE-02 — refunds
