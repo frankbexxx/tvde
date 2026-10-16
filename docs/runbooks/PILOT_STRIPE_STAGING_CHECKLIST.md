@@ -3,7 +3,7 @@
 **Objectivo:** validar o fluxo com **Stripe Test keys** em staging.  
 **Proibido nesta fase:** `sk_live` / `pk_live` / dinheiro real / Connect.
 
-**Última actualização:** 2026-10-16 (cenários **A**, **B v1** e **C** fechados; **D–J** por correr).
+**Última actualização:** 2026-10-16 (cenários **A**, **B v1**, **C**, **D** e **E** fechados; **F–J** por correr).
 
 ## Variáveis externas (nomes — sem valores)
 
@@ -42,15 +42,15 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | **A. Cartão normal** | **PASS** · 2026-10-15 | Manual UI (Francisco) + evidência técnica prévia/API. Visa `4242` · 4,50 € · motorista 3,82 € / comissão 0,68 € · «Pagamento concluído» · sem `502 Payment confirmation failed`. Fix #750. |
 | **B. Cartão 3DS** | **PASS v1** · 2026-10-15 | Manual UI · PM default `4000000000003220` · complete **409** `payment_requires_action` · trip **ongoing** · sem capture/completed/502 · UI erro técnico · gap **STRIPE-LIVE-01** confirmado |
 | **C. Cancel antes de captura** | **PASS** · 2026-10-16 | Pax cancel pós-accept · taxa **3 €** na Trip · **não** cobrada Stripe · PI `canceled` · Payment `failed` · trip `ad242d60-…` · #753 |
-| D. Webhook | NOT RUN | Assinatura + succeeded *(A viu webhook 200 no complete; C viu webhook 200 no PI cancel)* |
-| E. Webhook retry | NOT RUN | Idempotência `evt_` |
+| **D. Webhook succeeded** | **PASS** · 2026-10-16 | Viagem `144fb05d-…` · PI `pi_3UR8Sr…` · `evt_3UR8Sr…KlUxy8E` · 1.ª entrega **200** · `processing→succeeded` · marker `stripe_webhook_events` = 1 |
+| **E. Webhook retry (`evt_`)** | **PASS** · 2026-10-16 | Resend **mesmo** `evt_…` · 2.ª entrega **200** · count evt **1** · sem 2.º succeeded/capture/trip change *(log textual duplicate não indexado Render)* |
 | F. Falha captura | NOT RUN | Trip não completed; Admin vê processing |
 | G. Completed + payment inconsistente | NOT RUN | Ver runbook reconciliação |
 | H. Admin reconciliação | código PRONTO | Ops + detail |
 | I. Refund manual test | procedimento PRONTO | Dashboard Test; app pode não reflectir |
 | J. Logs/audit | código PRONTO | `payment_*` events sem secrets |
 
-**B1 piloto Stripe staging:** **não fechado** enquanto **D–J** (ou o subconjunto acordado) não correrem. **A**, **B v1** e **C** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
+**B1 piloto Stripe staging:** **não fechado** enquanto **F–J** (ou o subconjunto acordado) não correrem. **A**, **B v1**, **C**, **D** e **E** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
 
 ---
 
@@ -65,7 +65,7 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 
 ---
 
-## Findings separados (não bloqueiam A/B/C)
+## Findings separados (não bloqueiam A–E)
 
 | ID | Resumo | Classificação |
 |----|--------|---------------|
@@ -118,6 +118,42 @@ Cancelamento **passageiro** após **accept**, **antes** de complete/capture.
 
 **Logs:** sem `payment_capture_success` · sem `payment_intent.succeeded` para este PI · webhook **200** no cancel do PI. Pax/motorista **sem** trip activa.
 
+---
+
+## Cenário D — evidência consolidada **PASS** (2026-10-16)
+
+Webhook **`payment_intent.succeeded`** após complete/capture (viagem dedicada smoke D; cartão normal 4242).
+
+| Campo | Valor |
+|-------|--------|
+| **Trip** | `144fb05d-88d0-4438-b152-2b3afb986ac9` · `completed` · **`final_price=4.50`** |
+| **Payment** | `794a7c55-e3e4-47a5-a022-4c229699c8ca` · **`succeeded`** |
+| **PaymentIntent** | `pi_3UR8Sr8jcCqT4zTo0g04knVw` · Stripe **`succeeded`** |
+| **Stripe event** | `evt_3UR8Sr8jcCqT4zTo0KlUxy8E` |
+
+| Camada | Evidência |
+|--------|-----------|
+| **Complete** | `payment_capture_success` · `trip_completion_commit` com **`payment_status=processing`** |
+| **1.ª entrega webhook** | `POST /webhooks/stripe` **200** (10:34:36 UTC) · `stripe_webhook_payment_succeeded` · **`processing→succeeded`** · 450/450 ct |
+| **Idempotência (marker)** | **`stripe_webhook_events`:** **1** linha para `evt_…` |
+
+Endpoint staging: `https://tvde-staging-api.onrender.com/webhooks/stripe`.
+
+---
+
+## Cenário E — evidência consolidada **PASS** (2026-10-16)
+
+**Resend** Stripe Dashboard do **mesmo** `evt_3UR8Sr8jcCqT4zTo0KlUxy8E` (idempotência `evt_`).
+
+| Verificação | Resultado |
+|-------------|-----------|
+| **2.ª entrega HTTP** | **200** · 10:53:07 UTC · IP Stripe |
+| **Payment.status** | Permanece **`succeeded`** |
+| **`stripe_webhook_events`** | Count **`evt_…` = 1** (sem duplicar linha) |
+| **Sem efeitos duplicados** | **Sem** 2.º `stripe_webhook_payment_succeeded` · **sem** nova `state_changed` / complete · **sem** 2.ª capture |
+
+**Observabilidade:** mensagem `webhook: duplicate Stripe delivery (evt idempotent)` **não** apareceu nos logs Render indexados; **não** abre finding — idempotência confirmada por BD + ausência de reprocessamento + 2.º **200**.
+
 ### Referência — definição e critérios B (pré-execução)
 
 Definição alinhada a este checklist + [`03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) + [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §STRIPE-LIVE-01.
@@ -169,9 +205,9 @@ Backend: [`trips.py`](../../backend/app/services/trips.py) — se `conf_status =
 
 | Prioridade | Bloco | Notas |
 |------------|-------|-------|
-| **P1** | **D. Webhook** | Succeeded idempotente; C já viu **200** no cancel do PI |
+| **P1** | **F. Falha captura** | Próximo smoke checklist F–J |
 | **P2** | **STRIPE-LIVE-01 / 3DS UX** | Tratar `409 payment_requires_action` no complete: `client_secret`, `confirmCardPayment` / `handleCardAction`, retry complete pós-SCA |
-| **P2** | **E–J** | Conforme checklist |
+| **P2** | **G–J** | Conforme checklist |
 | **P2** | **UX-PAY-COPY** | Copy «A confirmar pagamento…» vs confirm só no complete |
 
 ---

@@ -79,9 +79,10 @@
 **Facto:**
 
 - checklist STAGING existe ([`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md));
-- smokes humanos Stripe TEST na tabela continuam **`NOT RUN`**.
+- smokes **A–E PASS** em staging (2026-10-15/16); **F–J** por correr;
+- webhook Test: `payment_intent.succeeded` → `Payment.succeeded` + tabela **`stripe_webhook_events`** validados (D/E).
 
-**Estado:** `PENDENTE EXECUÇÃO`
+**Estado:** `PARCIAL` (STAGING TEST)
 
 ---
 
