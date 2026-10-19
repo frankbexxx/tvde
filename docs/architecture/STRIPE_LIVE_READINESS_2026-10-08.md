@@ -68,9 +68,9 @@
 - UI passageiro **não** mostra refund;
 - divergência Stripe ↔ BD/UI depende de processo manual + notas ops.
 
-**Estado:** `GAP TÉCNICO + OPERACIONAL CONFIRMADO`
+**Estado:** `GAP TÉCNICO + OPERACIONAL CONFIRMADO` — smoke staging **I PASS** 2026-10-19 (refund TEST OK; BD/UI inalterados).
 
-**Evidência:** `backend/app/api/routers/webhooks/stripe.py` · [`docs/runbooks/PILOT_STRIPE_REFUND.md`](../runbooks/PILOT_STRIPE_REFUND.md).
+**Evidência:** `backend/app/api/routers/webhooks/stripe.py` · [`PILOT_STRIPE_REFUND.md`](../runbooks/PILOT_STRIPE_REFUND.md) · checklist §I · trip `390f3924-…` · refund `re_3USCzT8jcCqT4zTo0J4uexOX`.
 
 ---
 
@@ -79,8 +79,8 @@
 **Facto:**
 
 - checklist STAGING existe ([`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md));
-- smokes **A–F PASS** em staging (2026-10-15/19); **G–J** por correr;
-- webhook Test: `payment_intent.succeeded` / **`payment_failed`** + tabela **`stripe_webhook_events`** (D/E/F).
+- smokes **A–I PASS** em staging (2026-10-15/19); **J** por correr;
+- webhook Test: `payment_intent.succeeded` / **`payment_failed`** + tabela **`stripe_webhook_events`** (D/E/F); reconcile G/H; refund manual I.
 
 **Estado:** `PARCIAL` (STAGING TEST)
 
