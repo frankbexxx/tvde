@@ -3,7 +3,7 @@
 **Objectivo:** validar o fluxo com **Stripe Test keys** em staging.  
 **Proibido nesta fase:** `sk_live` / `pk_live` / dinheiro real / Connect.
 
-**Última actualização:** 2026-10-16 (cenários **A**, **B v1**, **C**, **D** e **E** fechados; **F–J** por correr).
+**Última actualização:** 2026-10-19 (cenários **A**–**F** fechados; **G–J** por correr).
 
 ## Variáveis externas (nomes — sem valores)
 
@@ -44,13 +44,13 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | **C. Cancel antes de captura** | **PASS** · 2026-10-16 | Pax cancel pós-accept · taxa **3 €** na Trip · **não** cobrada Stripe · PI `canceled` · Payment `failed` · trip `ad242d60-…` · #753 |
 | **D. Webhook succeeded** | **PASS** · 2026-10-16 | Viagem `144fb05d-…` · PI `pi_3UR8Sr…` · `evt_3UR8Sr…KlUxy8E` · 1.ª entrega **200** · `processing→succeeded` · marker `stripe_webhook_events` = 1 |
 | **E. Webhook retry (`evt_`)** | **PASS** · 2026-10-16 | Resend **mesmo** `evt_…` · 2.ª entrega **200** · count evt **1** · sem 2.º succeeded/capture/trip change *(log textual duplicate não indexado Render)* |
-| F. Falha captura | NOT RUN | Trip não completed; Admin vê processing |
+| **F. Falha confirm/capture no complete** | **PASS** · 2026-10-19 | Cartão **0341** · complete **502** `Payment confirmation failed.` · trip `80a24f0c-…` · Payment **`failed`** (webhook) · sem capture/commit |
 | G. Completed + payment inconsistente | NOT RUN | Ver runbook reconciliação |
 | H. Admin reconciliação | código PRONTO | Ops + detail |
 | I. Refund manual test | procedimento PRONTO | Dashboard Test; app pode não reflectir |
 | J. Logs/audit | código PRONTO | `payment_*` events sem secrets |
 
-**B1 piloto Stripe staging:** **não fechado** enquanto **F–J** (ou o subconjunto acordado) não correrem. **A**, **B v1**, **C**, **D** e **E** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
+**B1 piloto Stripe staging:** **não fechado** enquanto **G–J** (ou o subconjunto acordado) não correrem. **A**–**F** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
 
 ---
 
@@ -65,7 +65,7 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 
 ---
 
-## Findings separados (não bloqueiam A–E)
+## Findings separados (não bloqueiam A–F)
 
 | ID | Resumo | Classificação |
 |----|--------|---------------|
@@ -154,6 +154,30 @@ Endpoint staging: `https://tvde-staging-api.onrender.com/webhooks/stripe`.
 
 **Observabilidade:** mensagem `webhook: duplicate Stripe delivery (evt idempotent)` **não** apareceu nos logs Render indexados; **não** abre finding — idempotência confirmada por BD + ausência de reprocessamento + 2.º **200**.
 
+---
+
+## Cenário F — evidência consolidada **PASS** (2026-10-19)
+
+Falha Stripe no **`complete`** (confirm server-side) com cartão TEST **decline after attach** · **0341**.
+
+| Campo | Valor |
+|-------|--------|
+| **Trip** | `80a24f0c-d6ea-44c9-9c20-0dfbcc994b62` |
+| **Payment** | `75b59754-db07-40ca-89a3-512ebaa452d4` |
+| **PaymentIntent** | `pi_3USBaq8jcCqT4zTo0wezaHyZ` |
+| **Webhook** | `evt_3USBaq8jcCqT4zTo0J8sEC5d` · `payment_intent.payment_failed` |
+
+| Camada | Evidência |
+|--------|-----------|
+| **Complete** | **502** · `Payment confirmation failed.` · log `Stripe confirm failed` · **`payment_capture_started`** · **sem** `payment_capture_success` · **sem** `trip_completion_commit` |
+| **Trip pós-falha** | **`ongoing`** · `final_price=null` · `completed_at=null` |
+| **Payment pós-falha** | **`failed`** (webhook **`processing→failed`**) · PI **`requires_payment_method`** · `card_declined` / `generic_decline` · PM **•••• 0341** |
+| **Webhook** | Entrega **200** (08:07:15 UTC) · `stripe_webhook_payment_failed` |
+
+**Nota checklist:** linha histórica «Admin vê processing» reflecte o instante pós-502; neste smoke o webhook marcou **`failed`** segundos depois — ambos coerentes com fail-closed (trip **não** completed).
+
+**Pós-smoke ops:** cancel **passageiro** (mesmo fluxo que C) · 2026-10-19 · trip **`cancelled`** · Payment **`failed`** · PI **`canceled`** · sem retry complete / confirm / capture manual.
+
 ### Referência — definição e critérios B (pré-execução)
 
 Definição alinhada a este checklist + [`03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) + [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §STRIPE-LIVE-01.
@@ -205,9 +229,9 @@ Backend: [`trips.py`](../../backend/app/services/trips.py) — se `conf_status =
 
 | Prioridade | Bloco | Notas |
 |------------|-------|-------|
-| **P1** | **F. Falha captura** | Próximo smoke checklist F–J |
+| **P1** | **G. Completed + payment inconsistente** | Reconciliação admin · runbook |
 | **P2** | **STRIPE-LIVE-01 / 3DS UX** | Tratar `409 payment_requires_action` no complete: `client_secret`, `confirmCardPayment` / `handleCardAction`, retry complete pós-SCA |
-| **P2** | **G–J** | Conforme checklist |
+| **P2** | **H–J** | Conforme checklist |
 | **P2** | **UX-PAY-COPY** | Copy «A confirmar pagamento…» vs confirm só no complete |
 
 ---
