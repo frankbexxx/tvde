@@ -26,6 +26,7 @@ import { usePolling } from '../../hooks/usePolling'
 import { usePollStallHint } from '../../hooks/usePollStallHint'
 import {
   mergePassengerPolledWithPending,
+  overlayPassengerPaymentPollFields,
   tripDetailFromCreateResponse,
   tripStateRank,
   passengerTripStatusLabel,
@@ -353,7 +354,11 @@ export function PassengerDashboard() {
           setPassengerPendingTripDetail(trip)
           setStatus(passengerTripStatusLabel(trip.status))
         } else if (next && next === passengerActiveTripId) {
-          setPassengerPendingTripDetail((prev) => prev ?? trip)
+          setPassengerPendingTripDetail((prev) => {
+            if (!prev) return trip
+            if (prev.trip_id !== trip.trip_id) return trip
+            return overlayPassengerPaymentPollFields(prev, trip)
+          })
         }
         return next
       }

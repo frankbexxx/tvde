@@ -78,6 +78,42 @@ describe('mergePassengerPolledWithPending', () => {
   it('returns null without an active trip id', () => {
     expect(mergePassengerPolledWithPending(pending, pending, null)).toBeNull()
   })
+
+  it('STRIPE-LIVE-01: poll requires_action overlays pending without PI fields', () => {
+    const pendingOngoing: TripDetailResponse = {
+      ...pending,
+      trip_id: 't1',
+      status: 'ongoing',
+      payment_status: 'processing',
+    }
+    const polled: TripDetailResponse = {
+      ...pendingOngoing,
+      payment_intent_status: 'requires_action',
+      payment_intent_client_secret: 'pi_sec',
+    }
+    const merged = mergePassengerPolledWithPending(polled, pendingOngoing, 't1')
+    expect(merged?.payment_intent_status).toBe('requires_action')
+    expect(merged?.payment_intent_client_secret).toBe('pi_sec')
+  })
+
+  it('STRIPE-LIVE-01: optimistic ongoing pending + lower-rank poll still receives PI overlay', () => {
+    const pendingOngoing: TripDetailResponse = {
+      ...pending,
+      trip_id: 't1',
+      status: 'ongoing',
+      payment_status: 'processing',
+    }
+    const polledAccepted: TripDetailResponse = {
+      ...pendingOngoing,
+      status: 'accepted',
+      payment_intent_status: 'requires_action',
+      payment_intent_client_secret: 'pi_sec',
+    }
+    const merged = mergePassengerPolledWithPending(polledAccepted, pendingOngoing, 't1')
+    expect(merged?.status).toBe('ongoing')
+    expect(merged?.payment_intent_status).toBe('requires_action')
+    expect(merged?.payment_intent_client_secret).toBe('pi_sec')
+  })
 })
 
 describe('tripDetailFromCreateResponse', () => {

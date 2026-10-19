@@ -43,6 +43,34 @@ export function mergeDriverPolledWithOverride(
   return override
 }
 
+/** Prefer Stripe PI poll fields from GET /trips/:id over stale pending/bootstrap snapshots. */
+export function overlayPassengerPaymentPollFields(
+  base: TripDetailResponse,
+  poll: TripDetailResponse | null | undefined
+): TripDetailResponse {
+  if (!poll) return base
+  const pollSecret = poll.payment_intent_client_secret?.trim()
+  const pollStatus = poll.payment_intent_status
+  const pollPay = poll.payment_status
+  const hasPollPi =
+    Boolean(pollSecret) ||
+    (pollStatus != null && pollStatus !== '') ||
+    pollPay != null
+  if (!hasPollPi) return base
+  return {
+    ...base,
+    payment_status: pollPay ?? base.payment_status,
+    payment_intent_status:
+      pollStatus != null && pollStatus !== ''
+        ? pollStatus
+        : base.payment_intent_status,
+    payment_intent_client_secret:
+      pollSecret != null && pollSecret !== ''
+        ? poll.payment_intent_client_secret
+        : base.payment_intent_client_secret,
+  }
+}
+
 export function mergePassengerPolledWithPending(
   polled: TripDetailResponse | null,
   pending: TripDetailResponse | null,
@@ -51,12 +79,16 @@ export function mergePassengerPolledWithPending(
   if (!tripId) return null
   // A poll answer for another trip (e.g. the previous one) must never stand in for the active trip.
   const polledForTrip = polled && polled.trip_id === tripId ? polled : null
-  if (!pending || pending.trip_id !== tripId) return polledForTrip
-  if (!polledForTrip) return pending
-  const pr = tripStateRank(polledForTrip.status)
-  const pe = tripStateRank(pending.status)
-  if (pr >= pe) return polledForTrip
-  return { ...polledForTrip, status: pending.status }
+  let merged: TripDetailResponse | null
+  if (!pending || pending.trip_id !== tripId) merged = polledForTrip
+  else if (!polledForTrip) merged = pending
+  else {
+    const pr = tripStateRank(polledForTrip.status)
+    const pe = tripStateRank(pending.status)
+    merged = pr >= pe ? polledForTrip : { ...polledForTrip, status: pending.status }
+  }
+  if (!merged) return null
+  return overlayPassengerPaymentPollFields(merged, polledForTrip)
 }
 
 const PASSENGER_STATUS_KEYS = [

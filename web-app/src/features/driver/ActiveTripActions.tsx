@@ -36,7 +36,11 @@ import {
   validateAttendableReasonInput,
 } from '../../constants/attendableReasons'
 import { AttendableReasonFields } from '../../components/trips/AttendableReasonFields'
-import { resolveApiErrorDetail } from '../../i18n/apiErrors'
+import {
+  formatPaymentRequiresActionDriverMessage,
+  isPaymentRequiresActionDetail,
+  resolveApiErrorDetail,
+} from '../../i18n/apiErrors'
 import type { DriverActiveTripPollState } from './useDriverActiveTripPoll'
 import { useDriverActiveTripPoll } from './useDriverActiveTripPoll'
 
@@ -232,14 +236,10 @@ export function ActiveTripActions({
       return true
     } catch (err: unknown) {
       const e = err as { status?: number; detail?: unknown }
-      if (
-        e?.status === 409 &&
-        typeof e.detail === 'string' &&
-        e.detail.trim() === 'payment_requires_action'
-      ) {
+      if (isPaymentRequiresActionDetail(e?.detail)) {
+        const msg = formatPaymentRequiresActionDriverMessage()
         const title = t('actions.paymentRequiresActionTitle')
         const message = t('actions.paymentRequiresActionMessage')
-        const msg = `${title}\n${message}`
         onError(msg)
         setStatus(t('actions.paymentRequiresActionWaiting'))
         addLog(`${title}: ${message}`, 'error')
