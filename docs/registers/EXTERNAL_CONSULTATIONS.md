@@ -139,7 +139,7 @@ Consultas em **PREPARAR** (dossier incompleto): Q-EXT-LEG-006, Q-EXT-AMT-002, Q-
 |------|--------|
 | Sinistro **deslocação para pickup** (fora viagem activa) | Não há pergunta explícita equivalente a `S1`/`S2` nas fontes prioritárias; só checklist Partner genérico |
 | **L-28** marca registada — obrigações extra | Matriz `DEPENDE PARECER`; não consta em [`TVDE_DECISOES_EXTERNAS_PENDENTES.md`](../business/TVDE_DECISOES_EXTERNAS_PENDENTES.md) |
-| **STRIPE-LIVE-01** / **STRIPE-LIVE-03** | Resolução **técnica/smoke** interna; não Q-EXT-STRIPE |
+| ~~**STRIPE-LIVE-01**~~ / **STRIPE-LIVE-03** | **01 fechado** B v2 STAGING · **03** fechado B1; não Q-EXT-STRIPE |
 | OTP **S-AUTH-01** | **Prioridade canónica P1 Marco 2** (carril **C1**, [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](../ROADMAP_FINAL_ENTREGA_TVDE_2026.md)); implementação **adiada** até go [`S-AUTH-01_OTP_SMS_DECISION.md`](../architecture/S-AUTH-01_OTP_SMS_DECISION.md) §13 · não consulta externa · histórico Setembro P0 = [`TVDE_STATUS_SETEMBRO_2026.md`](../archive/plans/TVDE_STATUS_SETEMBRO_2026.md) (arquivo) |
 
 ---
