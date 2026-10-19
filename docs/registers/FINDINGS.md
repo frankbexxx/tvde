@@ -6,7 +6,7 @@
 | **title** | Índice de findings abertos e fechados |
 | **type** | REGISTER |
 | **created** | 2026-10-11 |
-| **updated** | 2026-10-19 |
+| **updated** | 2026-10-19 (STRIPE-LIVE-01 fechado) |
 | **status** | ACTIVO |
 | **owner** | Frank |
 
@@ -20,7 +20,7 @@
 
 | ID | Data | Finding | Estado | Domínio | Severidade | Documento fonte | Related decision | Evidence |
 |----|------|---------|--------|---------|------------|-----------------|------------------|----------|
-| STRIPE-LIVE-01 | 2026-10-08 | **3DS UX:** `complete_trip` → 409 `payment_requires_action`; web-app sem fluxo 3DS da viagem, retry pós-SCA, nem copy humana (mensagem técnica) | ABERTO | PAY | P1 | [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 · [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §B | DEC-PAY-001 | Código: `trips.py` · testes · **staging B v1** 2026-10-15 trip `660feccc-…` PI `pi_3UQpjJ…` |
+| STRIPE-LIVE-01 | 2026-10-08 | **3DS/SCA V1:** `complete_trip` → 409 `payment_requires_action`; recovery passageiro (poll + `handleNextAction`) + copy motorista; smokes **B v2** happy + fail SCA **PASS** STAGING 2026-10-19 | FECHADO | PAY | P1 | [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 · [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §B | DEC-PAY-001 | **B v1** histórico `660feccc-…` · **B v2** `59ddcd8f-…` / `f852e935-…` · PR [#758](https://github.com/frankbexxx/tvde/pull/758) `974dc061` · [#759](https://github.com/frankbexxx/tvde/pull/759) `f3b48447` · retry abandono challenge **não** validado (modal TEST só FAIL/COMPLETE) |
 | STRIPE-LIVE-02 | 2026-10-08 | Refunds: webhook `charge.refunded`/`refund.*` não tratados; `Payment.status`/UI desalinhados — **confirmado smoke I** 2026-10-19 | ABERTO | PAY | P1 | [`STRIPE_LIVE_READINESS…`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 | DEC-PAY-001 | I `390f3924-…` · `re_…J4uexOX` · BD `succeeded` pós-refund |
 | STRIPE-LIVE-03 | 2026-10-08 | Smokes Stripe **TEST** STAGING: **A–J PASS** (2026-10-15/19); checklist **B1 completo** | FECHADO | PAY | P2 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) | DEC-PAY-001 | A–J smokes · J logs `390f3924-…` · secrets audit 0 hits · G/H/I como acima |
 | UX-PAY-COPY | 2026-10-15 | Copy «A confirmar pagamento…» antes do complete; V1 confirma PI só no complete | ABERTO | UX | P2 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §A findings | — | Smoke A manual staging |
@@ -86,15 +86,15 @@ _Detalhe atómico permanece no master UX; Fase 3B pode desagregar IDs prioritár
 | Métrica | Valor |
 |---------|------:|
 | **Total entradas** | **24** |
-| **ABERTO** | **22** |
+| **ABERTO** | **21** |
 | **PARCIAL** | **0** |
 | **PENDENTE EXTERNO** | **1** (`FIND-LEG-SOS-01`) |
-| **MITIGADO / ACEITE RISCO / FECHADO** | **1** (`STRIPE-LIVE-03`) *(histórico técnico menor permanece em audits/archive)* |
+| **MITIGADO / ACEITE RISCO / FECHADO** | **2** (`STRIPE-LIVE-01`, `STRIPE-LIVE-03`) *(histórico técnico menor permanece em audits/archive)* |
 
 | Severidade | Contagem |
 |------------|------:|
 | **P0** | 3 |
-| **P1** | 7 |
+| **P1** | 8 |
 | **P2** | 6 |
 | **P3** | 2 |
 | **N/D** | 5 |

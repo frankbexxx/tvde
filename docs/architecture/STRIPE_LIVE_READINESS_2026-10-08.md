@@ -28,8 +28,8 @@
 | Webhook principal | **READY** (código) · **PARCIAL** (configuração endpoint/secret **Live** no Stripe + Render) |
 | Reconciliação | **PARCIAL** (ferramenta admin + runbook; execução manual) |
 | Refund | **PARCIAL** (runbook manual; BD/UI não seguem) |
-| 3DS/SCA | **PARCIAL / RISCO** |
-| UI | **PARCIAL** (wallet + histórico; sem refund / SCA no complete) |
+| 3DS/SCA | **READY (V1 STAGING TEST)** — fluxo complete → SCA passageiro → retry complete validado **B v2** 2026-10-19; abandono/cancel challenge **não** smokeado |
+| UI | **PARCIAL** (wallet + histórico + SCA no complete **V1**; sem refund) |
 | Rollback | **PARCIAL** (procedimento mock documentado; PIs Live permanecem no Stripe) |
 | 1.º teste Live | **PARCIAL / DEPENDE MANEL** |
 
@@ -41,20 +41,23 @@
 
 ### FINDING STRIPE-LIVE-01 — 3DS/SCA no `complete_trip`
 
-**Facto:**
+**Facto (histórico 2026-10-08 / B v1):**
 
-- `complete_trip` pode devolver **409** `payment_requires_action`;
-- o backend detecta `requires_action` após `confirm_payment_intent`;
-- web-app / fluxo motorista **não** tem UI para concluir novo challenge SCA nesse momento;
-- refresh / recovery desse estado **não** está implementado.
+- `complete_trip` devolve **409** `payment_requires_action` quando Stripe exige SCA no confirm server-side;
+- **B v1 (2026-10-15):** gap confirmado — FE sem recovery 3DS da viagem · copy motorista técnica.
 
-**Impacto:** cartão que exija autenticação adicional **no confirm do complete** pode deixar pagamento incompleto (viagem não fecha pagamento de forma autónoma).
+**Resolução V1 (2026-10-19, STAGING TEST):**
 
-**Estado:** `GAP TÉCNICO CONFIRMADO`
+- PR [#758](https://github.com/frankbexxx/tvde/pull/758) (`974dc061`): `payment_intent_status` + secret no GET passageiro; copy motorista; painel passageiro + `stripe.handleNextAction`.
+- PR [#759](https://github.com/frankbexxx/tvde/pull/759) (`f3b48447`): merge poll/bootstrap preserva campos PI; `payment_requires_action` nunca cru no motorista.
+- **Smoke B v2 — happy path PASS:** trip `59ddcd8f-ac75-44f7-95e2-a24ed68bbbcd` · PI `pi_3USEzh8jcCqT4zTo1AcafJge` · 3220 · 3DS COMPLETE → retry complete → capture · trip **completed** · payment **succeeded** · 4,50 €.
+- **Smoke B v2 — SCA fail PASS:** trip `f852e935-ffc3-4442-924d-a530ac131160` · PI `pi_3USFul8jcCqT4zTo0r8r2fTJ` · 3DS FAIL → webhook `payment_failed` · payment **failed** · trip **ongoing** · copy humana pax/motorista · sem capture.
 
-**Evidência:** `backend/app/services/trips.py` · `backend/tests/test_passenger_payment_attach.py` · ausência de `payment_requires_action` no web-app.
+**Fora de scope V1 validado:** retry após **abandono/cancelamento** do challenge (modal TEST Stripe expôs apenas **FAIL** / **COMPLETE**, sem acção distinta de abandon).
 
-**Reprodução staging (2026-10-15, smoke B v1):** cartão `4000000000003220` · complete **409** `payment_requires_action` · trip `660feccc-d52e-4119-a34a-3f57f650faf6` · PI `pi_3UQpjJ8jcCqT4zTo1r5vYEBb` · UI mostra string técnica — ver [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md).
+**Estado:** **`FECHADO`** (scope V1 STAGING TEST) — registo [`FINDINGS.md`](../registers/FINDINGS.md).
+
+**Evidência:** [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §B v1 + §B v2 · `backend/app/services/trips.py` (fail-closed inalterado) · web-app STRIPE-LIVE-01.
 
 ---
 
@@ -82,7 +85,7 @@
 - smokes **A–J PASS** em staging (2026-10-15/19); checklist **B1 completo**;
 - webhook Test: `payment_intent.succeeded` / **`payment_failed`** + tabela **`stripe_webhook_events`** (D/E/F); reconcile G/H; refund manual I; logs/audit J (viagem `390f3924-…`, secrets audit **0 hits**, read-only).
 
-**Estado:** `FECHADO` (STAGING TEST checklist B1) — registo [`FINDINGS.md`](../registers/FINDINGS.md) · gaps **STRIPE-LIVE-01** e **STRIPE-LIVE-02** permanecem **ABERTOS**
+**Estado:** `FECHADO` (STAGING TEST checklist B1) — registo [`FINDINGS.md`](../registers/FINDINGS.md) · gap **STRIPE-LIVE-02** permanece **ABERTO**
 
 ---
 
@@ -149,7 +152,7 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 
 ### Técnicos
 
-- Resolver ou decidir fluxo para **`payment_requires_action`** no complete (**STRIPE-LIVE-01** — **ABERTO**).
+- ~~Resolver fluxo **`payment_requires_action`** / SCA no complete (**STRIPE-LIVE-01**).~~ **Fechado** V1 STAGING 2026-10-19 (B v2).
 - Tratar refund → BD/UI/webhook (**STRIPE-LIVE-02** — **ABERTO**).
 - ~~Executar smokes Stripe **TEST** em STAGING (STRIPE-LIVE-03).~~ **Concluído** 2026-10-19 (**A–J PASS**).
 - Validar **URL webhook PROD** actual (host pode diferir de exemplos antigos em docs de deploy).
@@ -175,9 +178,9 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 
 1. Persistir esta auditoria (este documento).
 2. ~~Executar smokes Stripe TEST em STAGING; actualizar checklist.~~ **Feito** (B1 **A–J** · 2026-10-19).
-3. Reavaliar findings STRIPE-LIVE-01…02 (03 fechado).
-4. Corrigir 3DS/SCA no complete **se** STAGING/Live exigir (produto).
-5. Corrigir refund → BD/UI/webhook **se** necessário para Live/piloto pago.
+3. ~~Reavaliar STRIPE-LIVE-01.~~ **Fechado** (B v2 STAGING). Reavaliar **STRIPE-LIVE-02** (03 fechado).
+4. Corrigir refund → BD/UI/webhook **se** necessário para Live/piloto pago.
+5. Live: repetir smoke B (3DS) em ambiente Live **após** GO — TEST passado não prova Live.
 6. Reavaliar readiness por área (§1).
 7. Só então preparar activação Live (keys + webhook Live + GO).
 
@@ -195,4 +198,4 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 
 ## Estado (uma linha)
 
-**Estado:** circuito PaymentIntent + manual capture + webhook principal **tecnicamente sólido**; smokes STAGING **A–J PASS** (STRIPE-LIVE-03 fechado); readiness Live **parcial** — bloqueado por **STRIPE-LIVE-01** (3DS/SCA), **STRIPE-LIVE-02** (refunds) e decisões externas.
+**Estado:** circuito PaymentIntent + manual capture + webhook principal **tecnicamente sólido**; smokes STAGING **A–J PASS** + **B v2 3DS PASS** (STRIPE-LIVE-01 e **03** fechados); readiness Live **parcial** — bloqueado por **STRIPE-LIVE-02** (refunds), decisões externas e validação Live explícita.
