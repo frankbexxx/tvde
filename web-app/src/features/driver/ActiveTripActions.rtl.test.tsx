@@ -220,7 +220,7 @@ describe('ActiveTripActions (RTL)', () => {
     expect(screen.queryByRole('button', { name: /iniciar viagem/i })).not.toBeInTheDocument()
   })
 
-  it('409 payment_requires_action: copy humana e estado de espera', async () => {
+  it('409 payment_requires_action: copy humana e estado de espera (detail string STAGING)', async () => {
     pollingCtx.trip = minimalTrip('ongoing')
     vi.mocked(driverTripActions.driverPerformComplete).mockRejectedValueOnce({
       status: 409,
@@ -238,6 +238,33 @@ describe('ActiveTripActions (RTL)', () => {
       expect(setStatus).toHaveBeenCalledWith('A aguardar autenticação do passageiro.')
     })
     expect(screen.getByRole('button', { name: /terminar viagem/i })).toBeInTheDocument()
+  })
+
+  it('payment_requires_action nested detail: copy humana sem código cru', async () => {
+    pollingCtx.trip = minimalTrip('ongoing')
+    vi.mocked(driverTripActions.driverPerformComplete).mockRejectedValueOnce({
+      status: 409,
+      detail: { detail: 'payment_requires_action' },
+    })
+    const { onError } = renderActions()
+    fireEvent.click(screen.getByRole('button', { name: /terminar viagem/i }))
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(expect.stringContaining('Pagamento por autenticar'))
+    })
+    expect(onError).not.toHaveBeenCalledWith('payment_requires_action')
+  })
+
+  it('payment_requires_action via resolveApiErrorDetail fallback (sem ramo dedicado simulado)', async () => {
+    pollingCtx.trip = minimalTrip('ongoing')
+    vi.mocked(driverTripActions.driverPerformComplete).mockRejectedValueOnce({
+      status: 502,
+      detail: 'payment_requires_action',
+    })
+    const { onError } = renderActions()
+    fireEvent.click(screen.getByRole('button', { name: /terminar viagem/i }))
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(expect.stringContaining('Pagamento por autenticar'))
+    })
   })
 
   it('estado ongoing: Terminar viagem chama driverPerformComplete e onTripCompleted (não onComplete)', async () => {

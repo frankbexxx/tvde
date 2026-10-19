@@ -1,3 +1,25 @@
+/** FastAPI / API error code from `detail` (string or nested object). */
+export function extractApiDetailCode(detail: unknown): string | null {
+  if (detail == null || detail === '') return null
+  if (typeof detail === 'string') {
+    const s = detail.trim()
+    return s.length > 0 ? s : null
+  }
+  if (typeof detail === 'object') {
+    const o = detail as Record<string, unknown>
+    if (typeof o.code === 'string') {
+      const c = o.code.trim()
+      if (c) return c
+    }
+    if (typeof o.detail === 'string') {
+      const nested = o.detail.trim()
+      if (nested) return nested
+    }
+    if ('detail' in o) return extractApiDetailCode(o.detail)
+  }
+  return null
+}
+
 /**
  * Converte `detail` de respostas HTTP (FastAPI: string, lista de erros de validação, objecto aninhado)
  * em texto legível para o ecrã.

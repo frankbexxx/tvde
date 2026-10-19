@@ -1,5 +1,5 @@
 import i18n from './index'
-import { formatApiErrorDetail } from '../utils/apiErrorDetail'
+import { extractApiDetailCode, formatApiErrorDetail } from '../utils/apiErrorDetail'
 
 const KNOWN_CODES = new Set([
   'pending_approval',
@@ -17,17 +17,33 @@ const KNOWN_CODES = new Set([
 ])
 
 function normalizeDetailCode(detail: unknown): string | null {
-  if (typeof detail !== 'string') return null
-  const s = detail.trim()
+  const extracted = extractApiDetailCode(detail)
+  if (!extracted) return null
+  const s = extracted
   if (s === 'BETA cheio' || s.includes('cheio')) return 'beta_full'
   if (s.toLowerCase() === 'not available') return 'beta_login_unavailable'
   if (KNOWN_CODES.has(s)) return s
+  if (s === 'payment_requires_action') return s
   return null
+}
+
+/** Driver complete: passenger must complete SCA (STAGING shape + nested detail). */
+export function formatPaymentRequiresActionDriverMessage(): string {
+  const title = i18n.t('driver:actions.paymentRequiresActionTitle')
+  const message = i18n.t('driver:actions.paymentRequiresActionMessage')
+  return `${title}\n${message}`
+}
+
+export function isPaymentRequiresActionDetail(detail: unknown): boolean {
+  return extractApiDetailCode(detail) === 'payment_requires_action'
 }
 
 /** Maps API `detail` (code or rare PT string) to localized message; falls back to raw detail. */
 export function resolveApiErrorDetail(detail: unknown): string {
   const code = normalizeDetailCode(detail)
+  if (code === 'payment_requires_action') {
+    return formatPaymentRequiresActionDriverMessage()
+  }
   if (code) {
     const key = `errors:${code}`
     if (i18n.exists(key)) return i18n.t(key)
