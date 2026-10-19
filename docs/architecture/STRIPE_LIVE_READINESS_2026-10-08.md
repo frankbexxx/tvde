@@ -79,8 +79,8 @@
 **Facto:**
 
 - checklist STAGING existe ([`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md));
-- smokes **A–E PASS** em staging (2026-10-15/16); **F–J** por correr;
-- webhook Test: `payment_intent.succeeded` → `Payment.succeeded` + tabela **`stripe_webhook_events`** validados (D/E).
+- smokes **A–F PASS** em staging (2026-10-15/19); **G–J** por correr;
+- webhook Test: `payment_intent.succeeded` / **`payment_failed`** + tabela **`stripe_webhook_events`** (D/E/F).
 
 **Estado:** `PARCIAL` (STAGING TEST)
 
