@@ -92,8 +92,12 @@ import {
 } from './passengerBanner'
 import { toast } from 'sonner'
 import { PassengerPaymentStatusNotice } from './PassengerPaymentStatusNotice'
-import { PassengerPaymentAuthBanner } from './PassengerPaymentAuthBanner'
-import { isPaymentAuthenticationRequired } from './passengerPaymentAuthentication'
+import { PassengerTripPaymentAuthPanel } from './PassengerTripPaymentAuthPanel'
+import {
+  shouldShowPassengerPaymentAuthPrompt,
+  shouldShowPassengerPaymentAuthSuccess,
+} from './passengerPaymentIntentAuth'
+import { usePassengerStripePromise } from './passengerStripe'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { PassengerSideMenu, type PassengerMenuScreen } from './PassengerSideMenu'
@@ -1062,8 +1066,14 @@ export function PassengerDashboard() {
     return ps === 'pending' || ps === 'processing' || ps === 'failed'
   }, [passengerUiState, uxState, activeTrip])
 
-  const paymentAuthenticationRequired = useMemo(
-    () => isPaymentAuthenticationRequired(activeTrip),
+  const passengerStripePromise = usePassengerStripePromise()
+  const showTripPaymentAuthPanel = useMemo(
+    () =>
+      Boolean(
+        activeTrip &&
+        (shouldShowPassengerPaymentAuthPrompt(activeTrip) ||
+          shouldShowPassengerPaymentAuthSuccess(activeTrip, false))
+      ),
     [activeTrip]
   )
 
@@ -1618,7 +1628,13 @@ export function PassengerDashboard() {
                     </div>
                   ) : uxState && activeTrip ? (
                     <div className="space-y-2">
-                      {paymentAuthenticationRequired ? <PassengerPaymentAuthBanner /> : null}
+                      {showTripPaymentAuthPanel && activeTrip ? (
+                        <PassengerTripPaymentAuthPanel
+                          trip={activeTrip}
+                          stripePromise={passengerStripePromise}
+                          onPollRefresh={() => void refetchActiveTrip()}
+                        />
+                      ) : null}
                       <PassengerStatusCard
                         compact
                         uxState={uxState}
