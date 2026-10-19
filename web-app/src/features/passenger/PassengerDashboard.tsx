@@ -92,6 +92,8 @@ import {
 } from './passengerBanner'
 import { toast } from 'sonner'
 import { PassengerPaymentStatusNotice } from './PassengerPaymentStatusNotice'
+import { PassengerPaymentAuthBanner } from './PassengerPaymentAuthBanner'
+import { isPaymentAuthenticationRequired } from './passengerPaymentAuthentication'
 import { log as devLog } from '../../utils/logger'
 import { formatApproxDistanceKm, haversineKm } from '../../utils/geo'
 import { PassengerSideMenu, type PassengerMenuScreen } from './PassengerSideMenu'
@@ -1060,6 +1062,11 @@ export function PassengerDashboard() {
     return ps === 'pending' || ps === 'processing' || ps === 'failed'
   }, [passengerUiState, uxState, activeTrip])
 
+  const paymentAuthenticationRequired = useMemo(
+    () => isPaymentAuthenticationRequired(activeTrip),
+    [activeTrip]
+  )
+
   /** USER-SHELL-B: InfoPanel substitui StatusHeader + meta solta no planner. */
   const passengerInfoPanelCoversBanner = useMemo(
     () =>
@@ -1536,65 +1543,65 @@ export function PassengerDashboard() {
                     </>
                   )}
                   {!placeSearchUiActive ? (
-                  <TripPlannerPanel
-                    embedded
-                    uiState={passengerUiState}
-                    emphasis={plannerEmphasis}
-                    hasPickup={!!pickupLocation}
-                    hasDropoff={!!dropoffLocation}
-                    pickupAddress={pickupAddress}
-                    dropoffAddress={dropoffAddress}
-                    pickupAddressLoading={pickupAddressLoading}
-                    dropoffAddressLoading={dropoffAddressLoading}
-                    routeMeta={confirmRouteMeta}
-                    routeMetaLoading={confirmRouteMetaLoading}
-                    activeTrip={activeTrip ?? null}
-                    tripPollHint={tripPollFootnote}
-                    driverTrackingHint={driverTrackingHint}
-                    slowRequestHint={
-                      creating && createTakingLong
-                        ? t('planner.slowRequestHint')
-                        : null
-                    }
-                    onChooseMap={onChoosePlanningModeAndScrollToMap}
-                    onSetDestinationHint={onScrollToMapAnchor}
-                    onReset={resetPlanning}
-                    onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
-                    onConfirmTrip={handleRequestTrip}
-                    confirmTripPending={creating}
-                    paymentMethodLabel={
-                      defaultPaymentMethod
-                        ? formatPaymentMethodLabel(defaultPaymentMethod)
-                        : import.meta.env.VITE_STRIPE_MOCK === 'true'
-                          ? t('payments.defaultBadge')
+                    <TripPlannerPanel
+                      embedded
+                      uiState={passengerUiState}
+                      emphasis={plannerEmphasis}
+                      hasPickup={!!pickupLocation}
+                      hasDropoff={!!dropoffLocation}
+                      pickupAddress={pickupAddress}
+                      dropoffAddress={dropoffAddress}
+                      pickupAddressLoading={pickupAddressLoading}
+                      dropoffAddressLoading={dropoffAddressLoading}
+                      routeMeta={confirmRouteMeta}
+                      routeMetaLoading={confirmRouteMetaLoading}
+                      activeTrip={activeTrip ?? null}
+                      tripPollHint={tripPollFootnote}
+                      driverTrackingHint={driverTrackingHint}
+                      slowRequestHint={
+                        creating && createTakingLong
+                          ? t('planner.slowRequestHint')
                           : null
-                    }
-                    onPaymentMethods={openPassengerPayments}
-                    confirmBlockedReason={
-                      pickupDestinationTooClose
-                        ? t('planner.confirmTooClose')
-                        : stripeLive && !defaultPaymentMethod
-                          ? paymentMethodStatus === 'loading'
-                            ? t('payments.checking')
-                            : paymentMethodStatus === 'error'
-                              ? t('payments.statusError')
-                              : t('payments.missingBlocked')
-                          : null
-                    }
-                    visualWeight={a021Layout.panel}
-                    inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
-                    inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
-                    inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
-                    petBooking={petBooking}
-                    onPetBookingChange={setPetBooking}
-                    lastPetSurcharge={lastPetSurcharge}
-                    lastFareSubtotal={lastFareSubtotal}
-                    lastEstimatedTotal={lastEstimatedTotal}
-                    lastEstimatedTolls={lastEstimatedTolls}
-                    lastTollsUnavailable={lastTollsUnavailable}
-                    lastIntermediationRate={lastIntermediationRate}
-                    lastPriceBreakdown={lastPriceBreakdown}
-                  />
+                      }
+                      onChooseMap={onChoosePlanningModeAndScrollToMap}
+                      onSetDestinationHint={onScrollToMapAnchor}
+                      onReset={resetPlanning}
+                      onEditDestination={passengerUiState === 'confirming' ? handleEditDestinationOnly : undefined}
+                      onConfirmTrip={handleRequestTrip}
+                      confirmTripPending={creating}
+                      paymentMethodLabel={
+                        defaultPaymentMethod
+                          ? formatPaymentMethodLabel(defaultPaymentMethod)
+                          : import.meta.env.VITE_STRIPE_MOCK === 'true'
+                            ? t('payments.defaultBadge')
+                            : null
+                      }
+                      onPaymentMethods={openPassengerPayments}
+                      confirmBlockedReason={
+                        pickupDestinationTooClose
+                          ? t('planner.confirmTooClose')
+                          : stripeLive && !defaultPaymentMethod
+                            ? paymentMethodStatus === 'loading'
+                              ? t('payments.checking')
+                              : paymentMethodStatus === 'error'
+                                ? t('payments.statusError')
+                                : t('payments.missingBlocked')
+                            : null
+                      }
+                      visualWeight={a021Layout.panel}
+                      inTripSuppressEstadoEcho={inTripSuppressPlannerEstadoEcho}
+                      inTripSuppressPaymentEcho={inTripSuppressPlannerPaymentEcho}
+                      inTripSuppressMetaEcho={inTripSuppressPlannerMetaEcho}
+                      petBooking={petBooking}
+                      onPetBookingChange={setPetBooking}
+                      lastPetSurcharge={lastPetSurcharge}
+                      lastFareSubtotal={lastFareSubtotal}
+                      lastEstimatedTotal={lastEstimatedTotal}
+                      lastEstimatedTolls={lastEstimatedTolls}
+                      lastTollsUnavailable={lastTollsUnavailable}
+                      lastIntermediationRate={lastIntermediationRate}
+                      lastPriceBreakdown={lastPriceBreakdown}
+                    />
                   ) : null}
                 </MapBottomSheet>
               ) : (activeTripId || creating) && !showPassengerRatingPanel ? (
@@ -1611,6 +1618,7 @@ export function PassengerDashboard() {
                     </div>
                   ) : uxState && activeTrip ? (
                     <div className="space-y-2">
+                      {paymentAuthenticationRequired ? <PassengerPaymentAuthBanner /> : null}
                       <PassengerStatusCard
                         compact
                         uxState={uxState}

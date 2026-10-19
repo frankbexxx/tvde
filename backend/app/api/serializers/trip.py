@@ -71,41 +71,46 @@ def _pet_surcharge_value(trip: Trip) -> float | None:
 logger = logging.getLogger(__name__)
 
 
-def _payment_intent_client_secret_for_passenger_poll(trip: Trip) -> str | None:
+def _passenger_stripe_pi_poll_fields(trip: Trip) -> tuple[str | None, str | None]:
     """
-    Expose client_secret for Stripe.js.
+    Stripe PI snapshot for passenger GET (poll): client_secret + status.
+
+    Single retrieve per response. Never log client_secret.
 
     - Mock: only when confirm_on_accept_effective (dev/UI tests).
-    - Real Stripe (incl. staging test keys): while Payment.processing, so the
-      passenger can attach a card without confirming the €0.50 placeholder.
+    - Real Stripe: while Payment.processing — attach/SCA at complete.
     """
     payment = trip.payment
     if not payment or not payment.stripe_payment_intent_id:
-        return None
+        return None, None
     if payment.status != PaymentStatus.processing:
-        return None
+        return None, None
     pi_id = payment.stripe_payment_intent_id
     if getattr(settings, "STRIPE_MOCK", False):
         if not settings.confirm_on_accept_effective():
-            return None
-        return f"{pi_id}_secret_mock"
+            return None, None
+        return f"{pi_id}_secret_mock", "requires_confirmation"
     try:
         pi = retrieve_payment_intent(pi_id)
         pi_status = getattr(pi, "status", None) or (
             pi.get("status") if isinstance(pi, dict) else None
         )
-        if pi_status in ("succeeded", "canceled"):
-            return None
-        return getattr(pi, "client_secret", None) or (
-            pi.get("client_secret") if isinstance(pi, dict) else None
-        )
+        if not pi_status:
+            return None, None
+        status_str = str(pi_status)
+        client_secret: str | None = None
+        if status_str not in ("succeeded", "canceled"):
+            client_secret = getattr(pi, "client_secret", None) or (
+                pi.get("client_secret") if isinstance(pi, dict) else None
+            )
+        return client_secret, status_str
     except Exception as e:
         logger.warning(
             "retrieve_payment_intent failed for passenger poll trip_id=%s: %s",
             trip.id,
             e,
         )
-        return None
+        return None, None
 
 
 def trip_to_history_item(
@@ -227,11 +232,10 @@ def trip_to_detail(
     include_vehicle_plate: bool = False,
 ) -> TripDetailResponse:
     payment = trip.payment
-    client_secret = (
-        _payment_intent_client_secret_for_passenger_poll(trip)
-        if include_passenger_payment_client_secret
-        else None
-    )
+    client_secret: str | None = None
+    payment_intent_status: str | None = None
+    if include_passenger_payment_client_secret:
+        client_secret, payment_intent_status = _passenger_stripe_pi_poll_fields(trip)
     return TripDetailResponse(
         trip_id=str(trip.id),
         status=trip.status,
@@ -281,6 +285,7 @@ def trip_to_detail(
         ),
         cancelled_by=trip.cancelled_by,
         payment_intent_client_secret=client_secret,
+        payment_intent_status=payment_intent_status,
         vehicle_category=trip.vehicle_category,
         has_pet=bool(getattr(trip, "has_pet", False)),
         pet_size=getattr(trip, "pet_size", None),

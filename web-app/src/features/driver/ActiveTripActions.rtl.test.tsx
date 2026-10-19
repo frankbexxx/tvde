@@ -220,6 +220,26 @@ describe('ActiveTripActions (RTL)', () => {
     expect(screen.queryByRole('button', { name: /iniciar viagem/i })).not.toBeInTheDocument()
   })
 
+  it('409 payment_requires_action: copy humana e estado de espera', async () => {
+    pollingCtx.trip = minimalTrip('ongoing')
+    vi.mocked(driverTripActions.driverPerformComplete).mockRejectedValueOnce({
+      status: 409,
+      detail: 'payment_requires_action',
+    })
+    const { onError, setStatus } = renderActions()
+    fireEvent.click(screen.getByRole('button', { name: /terminar viagem/i }))
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        expect.stringContaining('Pagamento por autenticar')
+      )
+      expect(onError).toHaveBeenCalledWith(
+        expect.stringContaining('O passageiro precisa de autenticar')
+      )
+      expect(setStatus).toHaveBeenCalledWith('A aguardar autenticação do passageiro.')
+    })
+    expect(screen.getByRole('button', { name: /terminar viagem/i })).toBeInTheDocument()
+  })
+
   it('estado ongoing: Terminar viagem chama driverPerformComplete e onTripCompleted (não onComplete)', async () => {
     const onTripCompleted = vi.fn()
     pollingCtx.trip = minimalTrip('ongoing')

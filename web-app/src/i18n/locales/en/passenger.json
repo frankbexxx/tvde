@@ -111,6 +111,7 @@
     "noneHint": "Add a card so you can request a trip.",
     "checking": "Checking payment method…",
     "statusError": "Could not check your payment method.",
+    "authRequiredBanner": "Authentication is required to complete payment.",
     "retry": "Try again",
     "opening": "Opening secure form…",
     "formLoadFailed": "Could not open the card form. Please try again.",

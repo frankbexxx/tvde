@@ -111,6 +111,7 @@
     "noneHint": "Adiciona um cartão para poderes pedir a viagem.",
     "checking": "A verificar método de pagamento…",
     "statusError": "Não foi possível verificar o método de pagamento.",
+    "authRequiredBanner": "É necessária autenticação para concluir o pagamento.",
     "retry": "Tentar novamente",
     "opening": "A abrir formulário seguro…",
     "formLoadFailed": "Não foi possível abrir o formulário do cartão. Tenta novamente.",

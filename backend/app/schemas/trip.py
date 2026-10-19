@@ -347,6 +347,10 @@ class TripDetailResponse(BaseModel):
         default=None,
         description="Secret para Stripe.js (só GET /trips/:id como passageiro; requer confirm_on_accept_effective — nunca em prod/staging live).",
     )
+    payment_intent_status: Optional[str] = Field(
+        default=None,
+        description="Stripe PaymentIntent.status (read-only; só GET passageiro com Payment.processing).",
+    )
     vehicle_category: Optional[str] = Field(
         default=None,
         description="Fare category (x=GO, …). Legacy may still show pet.",
@@ -397,6 +401,7 @@ class PassengerTripDetailResponse(BaseModel):
     cancellation_reason_code: Optional[str] = None
     cancelled_by: Optional[str] = None
     payment_intent_client_secret: Optional[str] = None
+    payment_intent_status: Optional[str] = None
     vehicle_category: Optional[str] = None
     has_pet: bool = False
     pet_size: Optional[str] = None

@@ -49,6 +49,20 @@ describe('passengerTripPollEquals', () => {
     expect(passengerTripPollEquals(a, b)).toBe(false)
   })
 
+  it('returns false when payment_intent_status changes', () => {
+    const a: PassengerTripPollResult = {
+      tripId: 't1',
+      notFound: false,
+      trip: baseTrip({ status: 'ongoing', payment_intent_status: 'requires_confirmation' }),
+    }
+    const b: PassengerTripPollResult = {
+      tripId: 't1',
+      notFound: false,
+      trip: baseTrip({ status: 'ongoing', payment_intent_status: 'requires_action' }),
+    }
+    expect(passengerTripPollEquals(a, b)).toBe(false)
+  })
+
   it('returns false when notFound differs', () => {
     const t = baseTrip()
     expect(
