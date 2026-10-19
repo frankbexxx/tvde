@@ -3,7 +3,7 @@
 **Objectivo:** validar o fluxo com **Stripe Test keys** em staging.  
 **Proibido nesta fase:** `sk_live` / `pk_live` / dinheiro real / Connect.
 
-**Última actualização:** 2026-10-19 (cenários **A**–**F** fechados; **G–J** por correr).
+**Última actualização:** 2026-10-19 (cenários **A**–**J** fechados · **B1** completo operacionalmente).
 
 ## Variáveis externas (nomes — sem valores)
 
@@ -45,12 +45,12 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | **D. Webhook succeeded** | **PASS** · 2026-10-16 | Viagem `144fb05d-…` · PI `pi_3UR8Sr…` · `evt_3UR8Sr…KlUxy8E` · 1.ª entrega **200** · `processing→succeeded` · marker `stripe_webhook_events` = 1 |
 | **E. Webhook retry (`evt_`)** | **PASS** · 2026-10-16 | Resend **mesmo** `evt_…` · 2.ª entrega **200** · count evt **1** · sem 2.º succeeded/capture/trip change *(log textual duplicate não indexado Render)* |
 | **F. Falha confirm/capture no complete** | **PASS** · 2026-10-19 | Cartão **0341** · complete **502** `Payment confirmation failed.` · trip `80a24f0c-…` · Payment **`failed`** (webhook) · sem capture/commit |
-| G. Completed + payment inconsistente | NOT RUN | Ver runbook reconciliação |
-| H. Admin reconciliação | código PRONTO | Ops + detail |
-| I. Refund manual test | procedimento PRONTO | Dashboard Test; app pode não reflectir |
-| J. Logs/audit | código PRONTO | `payment_*` events sem secrets |
+| **G. Completed + payment inconsistente** | **PASS** · 2026-10-19 | Single-trip reconcile · `144fb05d-…` · dry-run → apply · Trip **`completed`** · Payment **`processing→succeeded`** |
+| **H. Admin reconciliação (batch)** | **PASS** · 2026-10-19 | Preview + `stripe-sync` dry-run/apply · mesma trip (setup one-off) · `updated_succeeded` · preview **0** pós-apply |
+| **I. Refund manual test** | **PASS** · 2026-10-19 | Viagem descartável `390f3924-…` · refund TEST **450 eur** · app **`succeeded`** · gap **STRIPE-LIVE-02** confirmado |
+| **J. Logs/audit** | **PASS** · 2026-10-19 | Viagem I `390f3924-…` · cadeia `payment_*` + webhook · grep secrets **0 hits** · read-only |
 
-**B1 piloto Stripe staging:** **não fechado** enquanto **G–J** (ou o subconjunto acordado) não correrem. **A**–**F** estão **fechados**. **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda.
+**B1 piloto Stripe staging:** **PASS / COMPLETO** (**A**–**J** · 2026-10-15/19). **PASS ideal B** (SCA + retry + viagem paga) **não** existe ainda — gap **STRIPE-LIVE-01** permanece.
 
 ---
 
@@ -178,6 +178,92 @@ Falha Stripe no **`complete`** (confirm server-side) com cartão TEST **decline 
 
 **Pós-smoke ops:** cancel **passageiro** (mesmo fluxo que C) · 2026-10-19 · trip **`cancelled`** · Payment **`failed`** · PI **`canceled`** · sem retry complete / confirm / capture manual.
 
+---
+
+## Cenário G — evidência consolidada **PASS** (2026-10-19)
+
+Reconcile **single-trip** · viagem **`completed`** + Payment **`processing`** · PI Stripe **`succeeded`** (setup controlado pós-smoke D).
+
+| Campo | Valor |
+|-------|--------|
+| **Trip** | `144fb05d-88d0-4438-b152-2b3afb986ac9` |
+| **Payment** | `794a7c55-e3e4-47a5-a022-4c229699c8ca` |
+| **PI** | `pi_3UR8Sr8jcCqT4zTo0g04knVw` |
+
+| Acção | Evidência |
+|-------|-----------|
+| **Dry-run** | `POST …/reconcile-payment-stripe` · **200** · `dry_run_succeeded` · amount **450/450** |
+| **Apply** | **200** · `updated_succeeded` · Trip **`completed`** · Payment **`succeeded`** |
+| **Idempotência** | 2.º apply · **200** · `skipped` · `payment_not_processing` |
+| **Audit** | `admin.reconcile_single_payment_stripe_succeeded` |
+
+---
+
+## Cenário H — evidência consolidada **PASS** (2026-10-19)
+
+Reconcile **batch** · `POST /admin/ops/reconcile-payments/stripe-sync`.
+
+| Acção | Evidência |
+|-------|-----------|
+| **Preview** | `count=1` · trip `144fb05d-…` |
+| **Dry-run** | **200** · item `dry_run_succeeded` |
+| **Apply** | **200** · item `updated_succeeded` |
+| **Pós-apply** | preview **`count=0`** · 2.º apply **`items=[]`** |
+| **Audit / log** | `admin.reconcile_payment_stripe_succeeded` · `admin_reconcile_stripe_sync` |
+
+---
+
+## Cenário I — evidência consolidada **PASS** (2026-10-19)
+
+Refund manual **Stripe Dashboard TEST** · runbook [`PILOT_STRIPE_REFUND.md`](PILOT_STRIPE_REFUND.md) · **sem** alterar BD.
+
+| Campo | Valor |
+|-------|--------|
+| **Trip** | `390f3924-d9e6-439d-bf28-ec933d505caf` |
+| **Payment** | `7e2e72fa-3d89-4ab7-a3d8-74c2a4a1b58b` |
+| **PI** | `pi_3USCzT8jcCqT4zTo0YzU4bp2` |
+| **Charge** | `ch_3USCzT8jcCqT4zTo0BYof19D` |
+| **Refund** | `re_3USCzT8jcCqT4zTo0J4uexOX` · **450 eur** · **succeeded** |
+
+| Camada | Evidência |
+|--------|-----------|
+| **Stripe** | `charge.refunded=true` · `amount_refunded=450` · PI **`succeeded`** |
+| **BD** | Trip **`completed`** · Payment **`succeeded`** (gap V1 — **não** FAIL) |
+| **Eventos Stripe** | `refund.created` · `charge.refunded` · `refund.updated` (`evt_…CnnY3JX` · `…Uf76nY5` · `…04CYjoow`) |
+| **Webhook staging** | Entrega refund **não evidenciada** em logs/`stripe_webhook_events` — **observação ops**; **não** invalida I-PASS |
+| **2.º refund** | Dashboard · **`charge_already_refunded`** |
+| **Finding** | **STRIPE-LIVE-02** confirmado (webhook refund não actualiza `Payment`/UI) |
+
+---
+
+## Cenário J — evidência consolidada **PASS** (2026-10-19)
+
+Observabilidade read-only · logs `tvde-staging-api` (Render) · **sem** writes BD/Stripe/reconcile.
+
+| Campo | Valor |
+|-------|--------|
+| **Trip** | `390f3924-d9e6-439d-bf28-ec933d505caf` |
+| **Payment** | `7e2e72fa-3d89-4ab7-a3d8-74c2a4a1b58b` |
+| **PI** | `pi_3USCzT8jcCqT4zTo0YzU4bp2` |
+| **Janela** | ~**09:36 UTC** 2026-10-19 |
+
+| Evento (UTC) | Evidência |
+|--------------|-----------|
+| 09:36:24 | `payment_method_attached` |
+| 09:36:25 | `payment_capture_started` |
+| 09:36:27 | `payment_capture_success` · `stripe_mock=False` |
+| 09:36:27 | `trip_completion_commit` · `payment_status=processing` |
+| 09:36:28 | `stripe_webhook_payment_succeeded` · **450/450** ct · `processing→succeeded` |
+
+| Camada | Evidência |
+|--------|-----------|
+| **Webhook** | `payment_intent.succeeded` · `POST /webhooks/stripe` **200** · `evt_3USCzT8jcCqT4zTo0vTasBpB` · sem payload Stripe bruto nos logs amostrados |
+| **Correlação** | trip / payment / `pi_` presentes nos eventos críticos |
+| **Secrets audit** | `client_secret` · `whsec_` · `sk_*` · `pk_*` · Bearer/JWT · PAN completo → **0 hits** (índice Render, janela viagem) |
+| **Admin audit (G/H)** | `admin.reconcile_single_payment_stripe_succeeded` · `admin.reconcile_payment_stripe_succeeded` (trip `144fb05d-…`; evidência prévia, **sem** novo reconcile em J) |
+
+**Observabilidade menor:** cada `log_event` pode aparecer duplicado (plain + `INFO [tvde]`) — não bloqueia J.
+
 ### Referência — definição e critérios B (pré-execução)
 
 Definição alinhada a este checklist + [`03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) + [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §STRIPE-LIVE-01.
@@ -229,9 +315,8 @@ Backend: [`trips.py`](../../backend/app/services/trips.py) — se `conf_status =
 
 | Prioridade | Bloco | Notas |
 |------------|-------|-------|
-| **P1** | **G. Completed + payment inconsistente** | Reconciliação admin · runbook |
-| **P2** | **STRIPE-LIVE-01 / 3DS UX** | Tratar `409 payment_requires_action` no complete: `client_secret`, `confirmCardPayment` / `handleCardAction`, retry complete pós-SCA |
-| **P2** | **H–J** | Conforme checklist |
+| **P1** | **STRIPE-LIVE-01 / 3DS UX** | Tratar `409 payment_requires_action` no complete: `client_secret`, `confirmCardPayment` / `handleCardAction`, retry complete pós-SCA |
+| **P2** | **STRIPE-LIVE-02** | Refund → BD/UI (pós-piloto) |
 | **P2** | **UX-PAY-COPY** | Copy «A confirmar pagamento…» vs confirm só no complete |
 
 ---
