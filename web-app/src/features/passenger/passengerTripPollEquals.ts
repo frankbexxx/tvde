@@ -64,7 +64,8 @@ export function tripDetailPollSemanticallyEqual(
     optSameNum(a.intermediation_rate_percent, b.intermediation_rate_percent) &&
     (a.driver_rating ?? null) === (b.driver_rating ?? null) &&
     (a.passenger_rating ?? null) === (b.passenger_rating ?? null) &&
-    (a.payment_intent_client_secret ?? '') === (b.payment_intent_client_secret ?? '')
+    (a.payment_intent_client_secret ?? '') === (b.payment_intent_client_secret ?? '') &&
+    (a.payment_intent_status ?? '') === (b.payment_intent_status ?? '')
   )
 }
 

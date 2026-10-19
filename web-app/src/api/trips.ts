@@ -183,6 +183,8 @@ export interface TripDetailResponse {
   cancelled_by?: string | null
   /** Quando o backend expõe confirmação Stripe (ENABLE_CONFIRM_ON_ACCEPT). */
   payment_intent_client_secret?: string | null
+  /** Stripe PaymentIntent.status (passageiro GET, Payment.processing). */
+  payment_intent_status?: string | null
   vehicle_category?: string | null
   has_pet?: boolean
   pet_size?: string | null
