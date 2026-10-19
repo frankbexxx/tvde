@@ -79,10 +79,10 @@
 **Facto:**
 
 - checklist STAGING existe ([`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md));
-- smokes **A–I PASS** em staging (2026-10-15/19); **J** por correr;
-- webhook Test: `payment_intent.succeeded` / **`payment_failed`** + tabela **`stripe_webhook_events`** (D/E/F); reconcile G/H; refund manual I.
+- smokes **A–J PASS** em staging (2026-10-15/19); checklist **B1 completo**;
+- webhook Test: `payment_intent.succeeded` / **`payment_failed`** + tabela **`stripe_webhook_events`** (D/E/F); reconcile G/H; refund manual I; logs/audit J (viagem `390f3924-…`, secrets audit **0 hits**, read-only).
 
-**Estado:** `PARCIAL` (STAGING TEST)
+**Estado:** `FECHADO` (STAGING TEST checklist B1) — registo [`FINDINGS.md`](../registers/FINDINGS.md) · gaps **STRIPE-LIVE-01** e **STRIPE-LIVE-02** permanecem **ABERTOS**
 
 ---
 
@@ -149,8 +149,9 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 
 ### Técnicos
 
-- Resolver ou decidir fluxo para **`payment_requires_action`** no complete (STRIPE-LIVE-01).
-- Executar smokes Stripe **TEST** em STAGING (STRIPE-LIVE-03).
+- Resolver ou decidir fluxo para **`payment_requires_action`** no complete (**STRIPE-LIVE-01** — **ABERTO**).
+- Tratar refund → BD/UI/webhook (**STRIPE-LIVE-02** — **ABERTO**).
+- ~~Executar smokes Stripe **TEST** em STAGING (STRIPE-LIVE-03).~~ **Concluído** 2026-10-19 (**A–J PASS**).
 - Validar **URL webhook PROD** actual (host pode diferir de exemplos antigos em docs de deploy).
 - Preparar **rebuild frontend** Live (`pk_live`, `VITE_STRIPE_MOCK=false`).
 
@@ -173,8 +174,8 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 ## 7. Ordem recomendada
 
 1. Persistir esta auditoria (este documento).
-2. Executar smokes Stripe TEST em STAGING; actualizar checklist.
-3. Reavaliar findings STRIPE-LIVE-01…03.
+2. ~~Executar smokes Stripe TEST em STAGING; actualizar checklist.~~ **Feito** (B1 **A–J** · 2026-10-19).
+3. Reavaliar findings STRIPE-LIVE-01…02 (03 fechado).
 4. Corrigir 3DS/SCA no complete **se** STAGING/Live exigir (produto).
 5. Corrigir refund → BD/UI/webhook **se** necessário para Live/piloto pago.
 6. Reavaliar readiness por área (§1).
@@ -194,4 +195,4 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 
 ## Estado (uma linha)
 
-**Estado:** circuito PaymentIntent + manual capture + webhook principal **tecnicamente sólido**; readiness Live **parcial** — bloqueado por findings 01–03, smokes STAGING pendentes e decisões externas.
+**Estado:** circuito PaymentIntent + manual capture + webhook principal **tecnicamente sólido**; smokes STAGING **A–J PASS** (STRIPE-LIVE-03 fechado); readiness Live **parcial** — bloqueado por **STRIPE-LIVE-01** (3DS/SCA), **STRIPE-LIVE-02** (refunds) e decisões externas.

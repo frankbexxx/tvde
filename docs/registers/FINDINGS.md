@@ -22,7 +22,7 @@
 |----|------|---------|--------|---------|------------|-----------------|------------------|----------|
 | STRIPE-LIVE-01 | 2026-10-08 | **3DS UX:** `complete_trip` → 409 `payment_requires_action`; web-app sem fluxo 3DS da viagem, retry pós-SCA, nem copy humana (mensagem técnica) | ABERTO | PAY | P1 | [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 · [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §B | DEC-PAY-001 | Código: `trips.py` · testes · **staging B v1** 2026-10-15 trip `660feccc-…` PI `pi_3UQpjJ…` |
 | STRIPE-LIVE-02 | 2026-10-08 | Refunds: webhook `charge.refunded`/`refund.*` não tratados; `Payment.status`/UI desalinhados — **confirmado smoke I** 2026-10-19 | ABERTO | PAY | P1 | [`STRIPE_LIVE_READINESS…`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 | DEC-PAY-001 | I `390f3924-…` · `re_…J4uexOX` · BD `succeeded` pós-refund |
-| STRIPE-LIVE-03 | 2026-10-08 | Smokes Stripe **TEST** STAGING: **A–I PASS** (2026-10-15/19); **J NOT RUN** | PARCIAL | PAY | P2 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) | DEC-PAY-001 | G/H reconcile · I refund manual |
+| STRIPE-LIVE-03 | 2026-10-08 | Smokes Stripe **TEST** STAGING: **A–J PASS** (2026-10-15/19); checklist **B1 completo** | FECHADO | PAY | P2 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) | DEC-PAY-001 | A–J smokes · J logs `390f3924-…` · secrets audit 0 hits · G/H/I como acima |
 | UX-PAY-COPY | 2026-10-15 | Copy «A confirmar pagamento…» antes do complete; V1 confirma PI só no complete | ABERTO | UX | P2 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §A findings | — | Smoke A manual staging |
 | MAPTILER-403 | 2026-10-15 | `api.maptiler.com` 403 no console; mapa via fallback | ABERTO | FE | P3 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §A findings | — | Console staging; não blocker B1-A |
 | SESSION-PRIVATE | 2026-10-15 | Duas janelas privadas do mesmo browser partilham sessão pax/driver | ABERTO | OPS | P3 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §Regras operacionais | — | Regra: browsers separados nos smokes |
@@ -81,15 +81,15 @@ _Detalhe atómico permanece no master UX; Fase 3B pode desagregar IDs prioritár
 
 ---
 
-## Resumo (2026-10-15)
+## Resumo (2026-10-19)
 
 | Métrica | Valor |
 |---------|------:|
 | **Total entradas** | **24** |
 | **ABERTO** | **22** |
-| **PARCIAL** | **1** (`STRIPE-LIVE-03`) |
+| **PARCIAL** | **0** |
 | **PENDENTE EXTERNO** | **1** (`FIND-LEG-SOS-01`) |
-| **MITIGADO / ACEITE RISCO / FECHADO** | **0** *(histórico técnico menor permanece em audits/archive)* |
+| **MITIGADO / ACEITE RISCO / FECHADO** | **1** (`STRIPE-LIVE-03`) *(histórico técnico menor permanece em audits/archive)* |
 
 | Severidade | Contagem |
 |------------|------:|
