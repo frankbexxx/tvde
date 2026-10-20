@@ -4,9 +4,9 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 from app.models.enums import PaymentStatus, TripStatus
+from app.schemas.driver import DriverLocationResponse
 
 RefundStatus = Literal["none", "partial", "full"]
-from app.schemas.driver import DriverLocationResponse
 
 
 class PriceBreakdownSchema(BaseModel):
