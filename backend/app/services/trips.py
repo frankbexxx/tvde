@@ -52,6 +52,7 @@ from app.utils.state_machine import validate_trip_transition
 from app.services.driver_zones import maybe_consume_zone_session_on_trip_complete
 from app.services.driving_compliance import (
     assert_driver_can_accept_by_driving_hours,
+    close_active_driving_segment,
     on_trip_status_change_for_driving_compliance,
     apply_availability_after_trip_ends_with_compliance,
 )
@@ -499,6 +500,11 @@ def terminate_ongoing_trip_after_terminal_payment_failure(
     trip.status = TripStatus.failed
     on_trip_status_change_for_driving_compliance(
         db, trip, old_status, TripStatus.failed
+    )
+    close_active_driving_segment(
+        db,
+        trip_id=trip.id,
+        at=datetime.now(timezone.utc),
     )
     _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
     log_event(
