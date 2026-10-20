@@ -27,7 +27,7 @@ from tests.support.unique_phone import unique_test_phone
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 ALEMBIC_INI = BACKEND_ROOT / "alembic.ini"
 REV_BEFORE = "a2b3c4d5e6f7"
-REV_HEAD = "f9a0b1c2d3e4"
+REV_HEAD = "a0b1c2d3e4f6"
 
 
 def _alembic_cfg() -> Config:
