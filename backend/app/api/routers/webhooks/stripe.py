@@ -21,6 +21,11 @@ from app.services.payment_amount_guards import (
     expected_payment_cents,
     validate_stripe_amount_matches_expected,
 )
+from app.services.payment_refund import (
+    apply_stripe_charge_refunded_to_payment,
+    derive_refund_status,
+    stripe_amount_refunded_cents_to_eur,
+)
 from app.utils.logging import log_event
 
 logger = logging.getLogger(__name__)
@@ -274,8 +279,76 @@ async def stripe_webhook(
                     f"stripe_event_id={stripe_event_id}"
                 )
                 db.commit()
+
+        elif event_type == "charge.refunded":
+            # V1 canonical refund sync — see docs/runbooks/PILOT_STRIPE_REFUND.md.
+            # refund.created/updated/failed are not applied (avoid double counting).
+            raw_cents = obj.get("amount_refunded")
+            try:
+                amount_refunded_cents = int(raw_cents) if raw_cents is not None else 0
+            except (TypeError, ValueError):
+                amount_refunded_cents = 0
+            charge_currency = obj.get("currency")
+            previous, new_amount, changed, skip_reason = (
+                apply_stripe_charge_refunded_to_payment(
+                    payment,
+                    amount_refunded_cents=amount_refunded_cents,
+                    currency=str(charge_currency) if charge_currency else None,
+                )
+            )
+            stripe_refunded_eur = stripe_amount_refunded_cents_to_eur(
+                amount_refunded_cents
+            )
+            if skip_reason:
+                log_event(
+                    "stripe_webhook_refund_skipped",
+                    trip_id=str(payment.trip_id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=str(payment_intent_id),
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                    reason=skip_reason,
+                    payment_status=payment.status.value,
+                )
+                logger.warning(
+                    "webhook: charge.refunded skipped reason=%s payment_intent_id=%s",
+                    skip_reason,
+                    payment_intent_id,
+                )
+            else:
+                log_event(
+                    "stripe_webhook_payment_refunded",
+                    trip_id=str(payment.trip_id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=str(payment_intent_id),
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                    previous_refunded_amount=float(previous),
+                    stripe_refunded_amount=float(stripe_refunded_eur),
+                    refunded_amount_after=float(new_amount),
+                    refund_status=derive_refund_status(
+                        new_amount, payment.total_amount
+                    ),
+                    payment_status=payment.status.value,
+                    changed=changed,
+                )
+                if changed:
+                    logger.info(
+                        "webhook: charge.refunded updated payment_id=%s "
+                        "refunded_amount=%s refund_status=%s",
+                        payment.id,
+                        new_amount,
+                        derive_refund_status(new_amount, payment.total_amount),
+                    )
+                else:
+                    logger.info(
+                        "webhook: charge.refunded idempotent (no amount change) "
+                        "payment_id=%s",
+                        payment.id,
+                    )
+            db.commit()
+
         else:
             # Delivery claimed for an unhandled type with a valid PI — keep marker.
+            # refund.* events without charge object PI path are ignored earlier.
             if stripe_event_id:
                 db.commit()
 

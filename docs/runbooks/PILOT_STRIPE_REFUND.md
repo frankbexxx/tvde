@@ -31,9 +31,13 @@
 ## O que verificar depois
 
 1. Stripe: Charge/PaymentIntent reflecte refund.  
-2. Webhook: a app **não** trata hoje um evento dedicado de refund para actualizar `Payment` — o estado interno pode continuar `succeeded`.  
-3. Não “corrigir” a BD à mão sem procedimento. Registar o incidente e, se necessário, nota operacional no Admin.  
-4. Informar o passageiro pelo canal de suporte.
+2. Webhook (V1): a app sincroniza **`charge.refunded`** → `payments.refunded_amount` + `refund_status` derivado na API. **`Payment.status` mantém-se** (ex.: `succeeded` após reembolso total).  
+3. **Pré-condição smoke / staging:** o endpoint  
+   `https://tvde-staging-api.onrender.com/webhooks/stripe`  
+   deve estar subscrito a **`charge.refunded`** no Stripe Dashboard (Test) — **não assumir** que já está activo; confirmar manualmente antes do smoke I′.  
+4. Eventos `refund.created` / `refund.updated` / `refund.failed` **não** actualizam a BD (fonte canónica V1 = **`charge.refunded`** apenas).  
+5. Reconcile admin **não** substitui webhook para refunds (fase posterior).  
+6. Informar o passageiro pelo canal de suporte (UI dedicada a refunds = fase posterior).
 
 ## O que não fazer
 
