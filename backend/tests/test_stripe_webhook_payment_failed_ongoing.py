@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import UserContext, get_current_user, get_db
 from app.core.config import settings
+from app.core.partner_constants import DEFAULT_PARTNER_UUID
 from app.db.models.driver import Driver
 from app.db.models.driver_active_driving_segment import DriverActiveDrivingSegment
 from app.db.models.payment import Payment
@@ -62,6 +63,7 @@ def _seed_ongoing_with_payment(
     db.add(driver_user)
     db.flush()
     driver = Driver(
+        partner_id=DEFAULT_PARTNER_UUID,
         user_id=driver_user.id,
         is_available=False,
         status=DriverStatus.approved,
