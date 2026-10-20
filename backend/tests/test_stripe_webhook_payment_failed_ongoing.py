@@ -167,6 +167,7 @@ def test_webhook_payment_failed_ongoing_closes_trip_segment_and_driver(
         evt_id = f"evt_failongo_{uuid.uuid4().hex}"
         assert _post_webhook(client, _payment_failed_event(pay, evt_id=evt_id)).status_code == 200
 
+        db.expire_all()
         db.refresh(pay)
         db.refresh(trip)
         db.refresh(driver)
