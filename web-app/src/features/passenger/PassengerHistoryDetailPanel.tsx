@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TripDetailResponse } from '../../api/trips'
 import { formatPickup, formatDestination } from '../../utils/format'
+import { formatRefundDisplayLine } from '../../constants/paymentRefundDisplay'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { passengerPlaceLabel } from './passengerPlaceLabel'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
@@ -68,6 +69,8 @@ export function PassengerHistoryDetailPanel({
         ? `${detail.final_price} €`
         : '—'
 
+  const refundLine = formatRefundDisplayLine(detail.refund_status, detail.refunded_amount)
+
   const paymentMethodLabel = detail.payment_method_display
     ? detail.payment_method_display
     : detail.payment_method_unavailable
@@ -127,6 +130,13 @@ export function PassengerHistoryDetailPanel({
               {paymentStatusLabel(detail.payment_status) ?? '—'}
             </dd>
           </div>
+          {refundLine ? (
+            <div className="col-span-2">
+              <dd className="font-medium text-foreground/90" data-testid="passenger-history-refund-line">
+                {refundLine}
+              </dd>
+            </div>
+          ) : null}
           <div className="col-span-2">
             <dt className="text-muted-foreground">{t('historyDetail.paymentMethod')}</dt>
             <dd className="font-medium text-foreground" data-testid="passenger-history-payment-method">

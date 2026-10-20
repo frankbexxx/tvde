@@ -13,6 +13,8 @@ export type TripStatus =
 
 export type PaymentStatus = 'pending' | 'processing' | 'succeeded' | 'failed'
 
+export type RefundStatus = 'none' | 'partial' | 'full'
+
 export interface TripCreateRequest {
   origin_lat: number
   origin_lng: number
@@ -119,6 +121,8 @@ export interface TripHistoryItem {
   payment_total_amount?: number | null
   payment_method_display?: string | null
   payment_method_unavailable?: boolean
+  refunded_amount?: number | null
+  refund_status?: RefundStatus | null
   /** Driver history / admin; omitted on passenger GET /trips/history. */
   commission_amount?: number
   driver_payout?: number
@@ -168,6 +172,8 @@ export interface TripDetailResponse {
   payment_total_amount?: number | null
   payment_method_display?: string | null
   payment_method_unavailable?: boolean
+  refunded_amount?: number | null
+  refund_status?: RefundStatus | null
   /** Driver/admin payloads; omitted on passenger GET /trips/:id. */
   commission_amount?: number
   driver_payout?: number

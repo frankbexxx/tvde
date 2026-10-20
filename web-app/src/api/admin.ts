@@ -2,7 +2,7 @@
  * Admin API — all endpoints needed for mobile admin management.
  */
 import { apiFetch, API_BASE, type ApiError } from './client'
-import type { TripHistoryItem } from './trips'
+import type { RefundStatus, TripHistoryItem } from './trips'
 
 /** Motivo mínimo SP-F (10+ chars) para POST operacionais quando a UI não recolhe texto (ex.: DevTools). */
 export const DEFAULT_ADMIN_GOVERNANCE_REASON =
@@ -44,6 +44,8 @@ export interface TripDetailAdmin {
   /** Só se a API o enviar — a BD actual não tem coluna dedicada. */
   cancelled_at?: string | null
   payment_status?: string | null
+  refunded_amount?: number | null
+  refund_status?: RefundStatus | null
   created_at?: string
   updated_at?: string
   started_at?: string | null

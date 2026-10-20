@@ -7,6 +7,7 @@ import { themeUsesFlagAccent } from '@/design-system/ambianceMeta'
 import { useAuth } from '../../context/AuthContext'
 import type { TripHistoryItem } from '../../api/trips'
 import { formatPickup, formatDestination } from '../../utils/format'
+import { formatRefundDisplayLine } from '../../constants/paymentRefundDisplay'
 import { passengerTripStatusLabel, paymentStatusLabel } from '../../constants/tripStatusLabels'
 import { passengerPlaceLabel } from './passengerPlaceLabel'
 import { CancellationReasonMuted } from '../../components/trips/CancellationReasonMuted'
@@ -238,7 +239,9 @@ export function PassengerSideMenu({
             ) : null}
             {history && history.length > 0 ? (
               <ul className="space-y-2">
-                {history.map((trip) => (
+                {history.map((trip) => {
+                  const refundLine = formatRefundDisplayLine(trip.refund_status, trip.refunded_amount)
+                  return (
                   <li key={trip.trip_id}>
                     <button
                       type="button"
@@ -277,10 +280,19 @@ export function PassengerSideMenu({
                           {paymentStatusLabel(trip.payment_status)}
                         </p>
                       ) : null}
+                      {refundLine ? (
+                        <p
+                          className="text-[11px] text-muted-foreground/90"
+                          data-testid={`passenger-history-refund-${trip.trip_id}`}
+                        >
+                          {refundLine}
+                        </p>
+                      ) : null}
                       <CancellationReasonMuted reason={trip.cancellation_reason} className="mt-0" />
                     </button>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             ) : null}
           </div>
