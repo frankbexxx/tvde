@@ -47,7 +47,8 @@ Cartões de teste Stripe: normal (`4242…`), 3DS (`4000000000003220` ou documen
 | **F. Falha confirm/capture no complete** | **PASS** · 2026-10-19 | Cartão **0341** · complete **502** `Payment confirmation failed.` · trip `80a24f0c-…` · Payment **`failed`** (webhook) · sem capture/commit |
 | **G. Completed + payment inconsistente** | **PASS** · 2026-10-19 | Single-trip reconcile · `144fb05d-…` · dry-run → apply · Trip **`completed`** · Payment **`processing→succeeded`** |
 | **H. Admin reconciliação (batch)** | **PASS** · 2026-10-19 | Preview + `stripe-sync` dry-run/apply · mesma trip (setup one-off) · `updated_succeeded` · preview **0** pós-apply |
-| **I. Refund manual test** | **PASS** · 2026-10-19 | Viagem descartável `390f3924-…` · refund TEST **450 eur** · app **`succeeded`** · gap **STRIPE-LIVE-02** confirmado |
+| **I. Refund manual test** | **PASS** · 2026-10-19 | Gap pré-sync: `390f3924-…` · refund TEST **450 eur** · BD **`succeeded`** sem `refunded_amount` |
+| **I′. Refund webhook sync** | **PASS** · 2026-10-20 | `2bf290b8-…` · evt `…1nVuAYkt` · `refunded_amount=4,50` · **STRIPE-LIVE-02** fechado tecnicamente |
 | **J. Logs/audit** | **PASS** · 2026-10-19 | Viagem I `390f3924-…` · cadeia `payment_*` + webhook · grep secrets **0 hits** · read-only |
 
 **B1 piloto Stripe staging:** **PASS / COMPLETO** (**A**–**J** · 2026-10-15/19). **B v2 3DS/SCA** (**happy + fail**) **PASS** 2026-10-19 — [`FINDINGS.md`](../registers/FINDINGS.md) **STRIPE-LIVE-01 FECHADO**.
@@ -279,7 +280,30 @@ Refund manual **Stripe Dashboard TEST** · runbook [`PILOT_STRIPE_REFUND.md`](PI
 | **Eventos Stripe** | `refund.created` · `charge.refunded` · `refund.updated` (`evt_…CnnY3JX` · `…Uf76nY5` · `…04CYjoow`) |
 | **Webhook staging** | Entrega refund **não evidenciada** em logs/`stripe_webhook_events` — **observação ops**; **não** invalida I-PASS |
 | **2.º refund** | Dashboard · **`charge_already_refunded`** |
-| **Finding** | **STRIPE-LIVE-02** confirmado (webhook refund não actualiza `Payment`/UI) |
+| **Finding** | **STRIPE-LIVE-02** gap confirmado (pré #761) — ver **I′** para fechamento sync |
+
+---
+
+## Cenário I′ — evidência consolidada **PASS** (2026-10-20)
+
+Refund manual **Stripe Dashboard TEST** · webhook **`charge.refunded`** · pós-merge **B4 F1/F2** ([#761](https://github.com/frankbexxx/tvde/pull/761)).
+
+| Campo | Valor |
+|-------|--------|
+| **Trip** | `2bf290b8-af20-45fe-8a94-9f088d7aec03` |
+| **Payment** | `93332b24-f8ee-4f10-a491-7ec550b16fa1` |
+| **PI** | `pi_3USbkn8jcCqT4zTo1yNByk6r` |
+| **Evento** | `evt_3USbkn8jcCqT4zTo1nVuAYkt` |
+| **Valor** | **4,50 EUR** refund total |
+
+| Camada | Evidência |
+|--------|-----------|
+| **Antes** | Trip **`completed`** · `final_price` 4,50 · Payment **`succeeded`** · `refunded_amount` 0 |
+| **Stripe / webhook** | `charge.refunded` entregue STAGING · processado OK · log **`stripe_webhook_payment_refunded`** (`refund_status=full`, `changed=True`) |
+| **Depois (BD/API)** | Trip **`completed`** · `final_price` 4,50 · Payment **`succeeded`** · **`refunded_amount` 4,50** · `refund_status` derivado **`full`** |
+| **Finding** | **STRIPE-LIVE-02** = **FECHADO tecnicamente** (sync); UI refund = **F3** |
+
+Detalhe: [`PILOT_STRIPE_REFUND.md`](PILOT_STRIPE_REFUND.md) §Smoke I′.
 
 ---
 
@@ -361,7 +385,7 @@ Backend: [`trips.py`](../../backend/app/services/trips.py) — se `conf_status =
 | Prioridade | Bloco | Notas |
 |------------|-------|-------|
 | ~~**P1** STRIPE-LIVE-01~~ | **FECHADO** B v2 2026-10-19 |
-| **P1** | **STRIPE-LIVE-02** | Refund → BD/UI (pós-piloto) |
+| ~~**P1** STRIPE-LIVE-02~~ | **FECHADO tecnicamente** · smoke I′ 2026-10-20 · UI **F3** pendente |
 | **P2** | **UX-PAY-COPY** | Copy «A confirmar pagamento…» vs confirm só no complete |
 | **P3** | Retry pós-abandono challenge 3DS | Não smokeado (modal TEST) |
 

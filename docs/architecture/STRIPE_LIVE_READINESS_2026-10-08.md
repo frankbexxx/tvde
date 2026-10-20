@@ -63,17 +63,22 @@
 
 ### FINDING STRIPE-LIVE-02 — refunds
 
-**Facto:**
+**Facto (pré-F1/F2 · smoke I · 2026-10-19):**
 
-- refund manual via Stripe Dashboard está no runbook;
-- eventos `charge.refunded` / `refund.*` **não** são tratados no webhook;
-- `Payment.status` **não** muda após refund;
-- UI passageiro **não** mostra refund;
-- divergência Stripe ↔ BD/UI depende de processo manual + notas ops.
+- refund manual via Stripe Dashboard no runbook;
+- webhook **não** sincronizava refund → BD;
+- divergência Stripe ↔ BD confirmada na viagem `390f3924-…`.
 
-**Estado:** `GAP TÉCNICO + OPERACIONAL CONFIRMADO` — smoke staging **I PASS** 2026-10-19 (refund TEST OK; BD/UI inalterados).
+**Resolução técnica V1 (F1/F2 · PR #761 · smoke I′ · 2026-10-20):**
 
-**Evidência:** `backend/app/api/routers/webhooks/stripe.py` · [`PILOT_STRIPE_REFUND.md`](../runbooks/PILOT_STRIPE_REFUND.md) · checklist §I · trip `390f3924-…` · refund `re_3USCzT8jcCqT4zTo0J4uexOX`.
+- webhook **`charge.refunded`** activo STAGING; assinatura validada;
+- sync `amount_refunded` → `payments.refunded_amount`; `refund_status` derivado na API;
+- **`Payment.status`** mantém-se (ex. `succeeded` após refund total); Trip/`final_price` inalterados;
+- idempotência por evento; logs `stripe_webhook_payment_refunded`.
+
+**Estado:** **`FECHADO` tecnicamente** · 2026-10-20 (sync Stripe → webhook → BD/API). **UI refund (F3), botão Refund Admin, fiscal/NC e reconcile refund-aware** — scope separado / fase posterior.
+
+**Evidência:** [`PILOT_STRIPE_REFUND.md`](../runbooks/PILOT_STRIPE_REFUND.md) smoke I′ · trip `2bf290b8-af20-45fe-8a94-9f088d7aec03` · PI `pi_3USbkn8jcCqT4zTo1yNByk6r` · evt `evt_3USbkn8jcCqT4zTo1nVuAYkt` · checklist §I′.
 
 ---
 
@@ -85,7 +90,7 @@
 - smokes **A–J PASS** em staging (2026-10-15/19); checklist **B1 completo**;
 - webhook Test: `payment_intent.succeeded` / **`payment_failed`** + tabela **`stripe_webhook_events`** (D/E/F); reconcile G/H; refund manual I; logs/audit J (viagem `390f3924-…`, secrets audit **0 hits**, read-only).
 
-**Estado:** `FECHADO` (STAGING TEST checklist B1) — registo [`FINDINGS.md`](../registers/FINDINGS.md) · gap **STRIPE-LIVE-02** permanece **ABERTO**
+**Estado:** `FECHADO` (STAGING TEST checklist B1) — registo [`FINDINGS.md`](../registers/FINDINGS.md) · **STRIPE-LIVE-02** fechado tecnicamente 2026-10-20 (smoke I′)
 
 ---
 
@@ -142,7 +147,8 @@
 | `payment_intent.succeeded` | **Sim** | `Payment` → succeeded se amount/currency OK |
 | `payment_intent.payment_failed` | **Sim** | `Payment` → failed |
 | `charge.payment_failed` | **Sim** | `Payment` → failed (resolve `pi_` do charge) |
-| `charge.refunded` / `refund.*` | **Não** | — |
+| `charge.refunded` | **Sim** | `refunded_amount` + `refund_status` derivado; `Payment.status` inalterado |
+| `refund.created` / `refund.updated` / `refund.failed` | **Não** (V1) | Fonte canónica = `charge.refunded` apenas |
 
 Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip documentado.
 
@@ -153,7 +159,7 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 ### Técnicos
 
 - ~~Resolver fluxo **`payment_requires_action`** / SCA no complete (**STRIPE-LIVE-01**).~~ **Fechado** V1 STAGING 2026-10-19 (B v2).
-- Tratar refund → BD/UI/webhook (**STRIPE-LIVE-02** — **ABERTO**).
+- ~~Tratar refund → BD/webhook (**STRIPE-LIVE-02**).~~ **Fechado tecnicamente** 2026-10-20 (smoke I′ STAGING). UI refund / botão Admin = fase **F3**.
 - ~~Executar smokes Stripe **TEST** em STAGING (STRIPE-LIVE-03).~~ **Concluído** 2026-10-19 (**A–J PASS**).
 - Validar **URL webhook PROD** actual (host pode diferir de exemplos antigos em docs de deploy).
 - Preparar **rebuild frontend** Live (`pk_live`, `VITE_STRIPE_MOCK=false`).
@@ -178,8 +184,8 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 
 1. Persistir esta auditoria (este documento).
 2. ~~Executar smokes Stripe TEST em STAGING; actualizar checklist.~~ **Feito** (B1 **A–J** · 2026-10-19).
-3. ~~Reavaliar STRIPE-LIVE-01.~~ **Fechado** (B v2 STAGING). Reavaliar **STRIPE-LIVE-02** (03 fechado).
-4. Corrigir refund → BD/UI/webhook **se** necessário para Live/piloto pago.
+3. ~~Reavaliar STRIPE-LIVE-01.~~ **Fechado** (B v2 STAGING). ~~**STRIPE-LIVE-02** sync refund.~~ **Fechado tecnicamente** 2026-10-20 (I′).
+4. UI refund / comunicação passageiro (**F3**) e fiscal (**Q-EXT-FIS-005**) — fora do fechamento técnico 02.
 5. Live: repetir smoke B (3DS) em ambiente Live **após** GO — TEST passado não prova Live.
 6. Reavaliar readiness por área (§1).
 7. Só então preparar activação Live (keys + webhook Live + GO).
@@ -198,4 +204,4 @@ Outros tipos: ack 200 sem alterar pagamento quando há `pi_` válido ou skip doc
 
 ## Estado (uma linha)
 
-**Estado:** circuito PaymentIntent + manual capture + webhook principal **tecnicamente sólido**; smokes STAGING **A–J PASS** + **B v2 3DS PASS** (STRIPE-LIVE-01 e **03** fechados); readiness Live **parcial** — bloqueado por **STRIPE-LIVE-02** (refunds), decisões externas e validação Live explícita.
+**Estado:** circuito PaymentIntent + manual capture + webhooks principais **tecnicamente sólido**; smokes STAGING **A–J PASS** + **B v2 3DS PASS** + **I′ refund sync PASS** (STRIPE-LIVE-01, **02** e **03** fechados tecnicamente em STAGING); readiness Live **parcial** — UI refund/F3, fiscal, decisões externas e validação Live explícita.
