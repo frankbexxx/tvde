@@ -11,6 +11,11 @@ import {
   type TollAuditBreakdown,
 } from '../trips/tollAuditDisplay'
 import {
+  formatRefundDisplayLine,
+  formatRefundStatusLabel,
+} from '../../constants/paymentRefundDisplay'
+import { formatMoneyEur } from '../../i18n/format'
+import {
   adminCancelledByLabel,
   adminPaymentStatusLabel,
   adminTripStatusLabel,
@@ -47,6 +52,14 @@ export function AdminTripDetailSupportFields(props: AdminTripDetailSupportFields
       ? (d.price_breakdown as Record<string, unknown>)
       : null
   const rejections = Array.isArray(d.offer_rejections) ? d.offer_rejections : []
+  const refundStatus =
+    d.refund_status === 'partial' || d.refund_status === 'full' ? d.refund_status : null
+  const refundedAmount =
+    typeof d.refunded_amount === 'number' && Number.isFinite(d.refunded_amount)
+      ? d.refunded_amount
+      : null
+  const showRefund = formatRefundDisplayLine(refundStatus, refundedAmount) != null
+  const refundStatusLabel = formatRefundStatusLabel(refundStatus)
 
   return (
     <div className="space-y-2" data-testid="admin-trip-detail-support">
@@ -55,6 +68,12 @@ export function AdminTripDetailSupportFields(props: AdminTripDetailSupportFields
       ) : null}
       <DetailRow label="Estado:" value={`${statusLabel} (${d.status})`} />
       <DetailRow label="Pagamento:" value={`${paymentLabel}${d.payment_status ? ` (${d.payment_status})` : ''}`} />
+      {showRefund && refundedAmount != null && refundStatusLabel ? (
+        <div className="space-y-0" data-testid="admin-trip-refund-block">
+          <DetailRow label="Reembolsado:" value={formatMoneyEur(refundedAmount)} />
+          <DetailRow label="Estado reembolso:" value={refundStatusLabel} />
+        </div>
+      ) : null}
       <DetailRow
         label="Preço:"
         value={`Estimativa ${d.estimated_price} €${d.final_price != null ? ` · Final ${d.final_price} €` : ''}`}
