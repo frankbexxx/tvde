@@ -65,6 +65,7 @@ def _seed_ongoing_with_payment(
         user_id=driver_user.id,
         is_available=False,
         status=DriverStatus.approved,
+        commission_percent=15.0,
     )
     db.add(driver)
     db.flush()
