@@ -6,7 +6,7 @@
 | **title** | Índice de findings abertos e fechados |
 | **type** | REGISTER |
 | **created** | 2026-10-11 |
-| **updated** | 2026-10-19 (STRIPE-LIVE-01 fechado) |
+| **updated** | 2026-10-20 (STRIPE-LIVE-02 fechado tecnicamente) |
 | **status** | ACTIVO |
 | **owner** | Frank |
 
@@ -21,7 +21,7 @@
 | ID | Data | Finding | Estado | Domínio | Severidade | Documento fonte | Related decision | Evidence |
 |----|------|---------|--------|---------|------------|-----------------|------------------|----------|
 | STRIPE-LIVE-01 | 2026-10-08 | **3DS/SCA V1:** `complete_trip` → 409 `payment_requires_action`; recovery passageiro (poll + `handleNextAction`) + copy motorista; smokes **B v2** happy + fail SCA **PASS** STAGING 2026-10-19 | FECHADO | PAY | P1 | [`STRIPE_LIVE_READINESS_2026-10-08.md`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 · [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §B | DEC-PAY-001 | **B v1** histórico `660feccc-…` · **B v2** `59ddcd8f-…` / `f852e935-…` · PR [#758](https://github.com/frankbexxx/tvde/pull/758) `974dc061` · [#759](https://github.com/frankbexxx/tvde/pull/759) `f3b48447` · retry abandono challenge **não** validado (modal TEST só FAIL/COMPLETE) |
-| STRIPE-LIVE-02 | 2026-10-08 | Refunds: webhook `charge.refunded`/`refund.*` não tratados; `Payment.status`/UI desalinhados — **confirmado smoke I** 2026-10-19 | ABERTO | PAY | P1 | [`STRIPE_LIVE_READINESS…`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 | DEC-PAY-001 | I `390f3924-…` · `re_…J4uexOX` · BD `succeeded` pós-refund |
+| STRIPE-LIVE-02 | 2026-10-08 | **Refunds sync V1:** webhook `charge.refunded` → `refunded_amount` + API; smoke **I′ PASS** STAGING 2026-10-20. Gap I (2026-10-19) fechado por #761. **UI refund / botão Admin / fiscal NC** permanecem fora de scope | FECHADO (técnico) | PAY | P1 | [`STRIPE_LIVE_READINESS…`](../architecture/STRIPE_LIVE_READINESS_2026-10-08.md) §2 · [`PILOT_STRIPE_REFUND.md`](../runbooks/PILOT_STRIPE_REFUND.md) | DEC-PAY-001 | **I′** trip `2bf290b8-…` · pay `93332b24-…` · `pi_3USbkn8…` · evt `…1nVuAYkt` · log `stripe_webhook_payment_refunded` · PR [#761](https://github.com/frankbexxx/tvde/pull/761) |
 | STRIPE-LIVE-03 | 2026-10-08 | Smokes Stripe **TEST** STAGING: **A–J PASS** (2026-10-15/19); checklist **B1 completo** | FECHADO | PAY | P2 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) | DEC-PAY-001 | A–J smokes · J logs `390f3924-…` · secrets audit 0 hits · G/H/I como acima |
 | UX-PAY-COPY | 2026-10-15 | Copy «A confirmar pagamento…» antes do complete; V1 confirma PI só no complete | ABERTO | UX | P2 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §A findings | — | Smoke A manual staging |
 | MAPTILER-403 | 2026-10-15 | `api.maptiler.com` 403 no console; mapa via fallback | ABERTO | FE | P3 | [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) §A findings | — | Console staging; não blocker B1-A |
