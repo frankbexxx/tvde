@@ -89,6 +89,13 @@ class Payment(Base):
         nullable=False,
         comment="Payment status.",
     )
+    refunded_amount: Mapped[float] = mapped_column(
+        Numeric(10, 2),
+        nullable=False,
+        default=0,
+        server_default="0",
+        comment="Cumulative refunded amount (EUR); synced from Stripe charge.refunded.",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

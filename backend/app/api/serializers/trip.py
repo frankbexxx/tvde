@@ -12,6 +12,7 @@ from app.services.passenger_trip_payment_view import (
     resolve_passenger_payment_method_display,
 )
 from app.models.enums import PaymentStatus
+from app.services.payment_refund import payment_refund_api_fields
 from app.services.stripe_service import retrieve_payment_intent
 from app.utils.stripe_links import stripe_payment_intent_dashboard_url
 from app.schemas.driver import DriverLocationResponse
@@ -117,6 +118,7 @@ def trip_to_history_item(
     trip: Trip, include_stripe_pi: bool = False
 ) -> TripHistoryItem:
     payment = trip.payment
+    refunded_amount, refund_status = payment_refund_api_fields(payment)
     return TripHistoryItem(
         trip_id=str(trip.id),
         status=trip.status,
@@ -128,6 +130,8 @@ def trip_to_history_item(
         final_price=float(trip.final_price) if trip.final_price is not None else None,
         completed_at=trip.completed_at,
         payment_status=payment.status if payment else None,
+        refunded_amount=refunded_amount,
+        refund_status=refund_status,
         commission_amount=float(payment.commission_amount) if payment else None,
         driver_payout=float(payment.driver_payout)
         if payment and payment.driver_payout
@@ -156,6 +160,7 @@ def trip_to_passenger_history_item(
     display, unavailable = resolve_passenger_payment_method_display(
         db, passenger_id, payment
     )
+    refunded_amount, refund_status = payment_refund_api_fields(payment)
     return PassengerTripHistoryItem(
         trip_id=str(trip.id),
         status=trip.status,
@@ -167,6 +172,8 @@ def trip_to_passenger_history_item(
         final_price=float(trip.final_price) if trip.final_price is not None else None,
         completed_at=trip.completed_at,
         payment_status=payment.status if payment else None,
+        refunded_amount=refunded_amount,
+        refund_status=refund_status,
         payment_total_amount=passenger_payment_total(payment),
         payment_method_display=display,
         payment_method_unavailable=unavailable,
@@ -236,6 +243,7 @@ def trip_to_detail(
     payment_intent_status: str | None = None
     if include_passenger_payment_client_secret:
         client_secret, payment_intent_status = _passenger_stripe_pi_poll_fields(trip)
+    refunded_amount, refund_status = payment_refund_api_fields(payment)
     return TripDetailResponse(
         trip_id=str(trip.id),
         status=trip.status,
@@ -256,6 +264,8 @@ def trip_to_detail(
         created_at=trip.created_at,
         updated_at=trip.updated_at,
         payment_status=payment.status if payment else None,
+        refunded_amount=refunded_amount,
+        refund_status=refund_status,
         commission_amount=float(payment.commission_amount) if payment else None,
         driver_payout=float(payment.driver_payout)
         if payment and payment.driver_payout
@@ -306,10 +316,13 @@ def trip_to_status_response(
     payment_intent_client_secret: str | None = None,
 ) -> TripStatusResponse:
     payment = trip.payment
+    refunded_amount, refund_status = payment_refund_api_fields(payment)
     return TripStatusResponse(
         trip_id=str(trip.id),
         status=trip.status,
         payment_status=payment.status if payment else None,
+        refunded_amount=refunded_amount,
+        refund_status=refund_status,
         final_price=float(trip.final_price) if trip.final_price is not None else None,
         commission_amount=float(payment.commission_amount) if payment else None,
         driver_payout=float(payment.driver_payout)

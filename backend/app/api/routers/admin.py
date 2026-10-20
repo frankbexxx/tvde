@@ -90,6 +90,7 @@ from app.services.vehicle_operational import (
     CODE_VEHICLE_INACTIVE,
     evaluate_driver_vehicle_operational,
 )
+from app.services.payment_refund import derive_refund_status
 from app.services.admin_payment_reconciliation import (
     close_completed_processing_without_pi,
     close_mock_processing_payments,
@@ -1527,6 +1528,11 @@ async def get_trip_debug(
                 "status": trip.payment.status.value,
                 "stripe_payment_intent_id": trip.payment.stripe_payment_intent_id,
                 "total_amount": float(trip.payment.total_amount),
+                "refunded_amount": float(trip.payment.refunded_amount),
+                "refund_status": derive_refund_status(
+                    trip.payment.refunded_amount,
+                    trip.payment.total_amount,
+                ),
             }
             if trip.payment
             else None

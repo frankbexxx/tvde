@@ -1,10 +1,12 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
 from app.models.enums import PaymentStatus, TripStatus
 from app.schemas.driver import DriverLocationResponse
+
+RefundStatus = Literal["none", "partial", "full"]
 
 
 class PriceBreakdownSchema(BaseModel):
@@ -141,6 +143,14 @@ class TripStatusResponse(BaseModel):
     trip_id: str
     status: TripStatus
     payment_status: Optional[PaymentStatus] = None
+    refunded_amount: Optional[float] = Field(
+        default=None,
+        description="Cumulative refunded amount (EUR) when payment exists.",
+    )
+    refund_status: Optional[RefundStatus] = Field(
+        default=None,
+        description="Derived: none | partial | full from refunded_amount vs total.",
+    )
     final_price: Optional[float] = None
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
@@ -222,6 +232,8 @@ class TripHistoryItem(BaseModel):
     final_price: Optional[float] = None
     completed_at: Optional[datetime] = None
     payment_status: Optional[PaymentStatus] = None
+    refunded_amount: Optional[float] = None
+    refund_status: Optional[RefundStatus] = None
     commission_amount: Optional[float] = None
     driver_payout: Optional[float] = None
     stripe_payment_intent_id: Optional[str] = None  # Only for admin
@@ -258,6 +270,8 @@ class PassengerTripHistoryItem(BaseModel):
     final_price: Optional[float] = None
     completed_at: Optional[datetime] = None
     payment_status: Optional[PaymentStatus] = None
+    refunded_amount: Optional[float] = None
+    refund_status: Optional[RefundStatus] = None
     payment_total_amount: Optional[float] = None
     payment_method_display: Optional[str] = None
     payment_method_unavailable: bool = False
@@ -292,6 +306,14 @@ class TripDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     payment_status: Optional[PaymentStatus] = None
+    refunded_amount: Optional[float] = Field(
+        default=None,
+        description="Cumulative refunded amount (EUR) when payment exists.",
+    )
+    refund_status: Optional[RefundStatus] = Field(
+        default=None,
+        description="Derived refund state: none | partial | full.",
+    )
     payment_total_amount: Optional[float] = Field(
         default=None,
         description="Total charged (Payment.total_amount) when present.",
@@ -390,6 +412,8 @@ class PassengerTripDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     payment_status: Optional[PaymentStatus] = None
+    refunded_amount: Optional[float] = None
+    refund_status: Optional[RefundStatus] = None
     payment_total_amount: Optional[float] = None
     payment_method_display: Optional[str] = None
     payment_method_unavailable: bool = False
