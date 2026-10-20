@@ -1,5 +1,6 @@
 """Stripe webhook endpoint - single source of truth for payment status."""
 
+import importlib
 import logging
 from typing import Any, cast
 
@@ -17,7 +18,6 @@ from app.core.config import settings
 from app.db.models.payment import Payment
 from app.db.models.stripe_webhook_event import StripeWebhookEvent
 from app.models.enums import PaymentStatus, TripStatus
-from app.services.trips import terminate_ongoing_trip_after_terminal_payment_failure
 from app.services.payment_amount_guards import (
     expected_payment_cents,
     validate_stripe_amount_matches_expected,
@@ -280,7 +280,10 @@ async def stripe_webhook(
                     f"stripe_event_id={stripe_event_id}"
                 )
             if trip is not None and trip.status == TripStatus.ongoing:
-                terminated = terminate_ongoing_trip_after_terminal_payment_failure(
+                terminate_ongoing = importlib.import_module(
+                    "app.services.trips"
+                ).terminate_ongoing_trip_after_terminal_payment_failure
+                terminated = terminate_ongoing(
                     db,
                     trip,
                     payment=payment,
