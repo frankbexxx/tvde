@@ -23,10 +23,7 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, PaymentStatus, Role, TripStatus, UserStatus
-from app.services.driving_compliance import (
-    active_driving_seconds_in_rolling_24h,
-    on_trip_status_change_for_driving_compliance,
-)
+from app.services.driving_compliance import active_driving_seconds_in_rolling_24h
 from app.services.trip_timeouts import run_trip_timeouts
 from app.services.trips import (
     complete_trip,
@@ -102,19 +99,13 @@ def _seed_ongoing_with_payment(
     db.refresh(pay)
     db.refresh(driver)
     if with_open_segment and trip_status == TripStatus.ongoing:
-        on_trip_status_change_for_driving_compliance(
-            db,
-            trip,
-            TripStatus.accepted,
-            TripStatus.arriving,
-            at=started - timedelta(minutes=5),
-        )
-        on_trip_status_change_for_driving_compliance(
-            db,
-            trip,
-            TripStatus.arriving,
-            TripStatus.ongoing,
-            at=started,
+        db.add(
+            DriverActiveDrivingSegment(
+                driver_id=driver_user.id,
+                trip_id=trip.id,
+                started_at=started - timedelta(hours=5),
+                ended_at=None,
+            )
         )
         db.commit()
     return trip, pay, driver, passenger
@@ -343,6 +334,7 @@ def test_timeout_ongoing_to_failed_regression_unchanged(
     try:
         monkeypatch.setattr(settings, "STRIPE_MOCK", True, raising=False)
         trip, pay, driver, _ = _seed_ongoing_with_payment(db)
+        pay.stripe_payment_intent_id = f"pi_mock_failongo_{uuid.uuid4().hex[:12]}"
         old_start = datetime.now(timezone.utc) - timedelta(hours=7)
         trip.started_at = old_start
         db.commit()
