@@ -52,6 +52,7 @@ from app.utils.state_machine import validate_trip_transition
 from app.services.driver_zones import maybe_consume_zone_session_on_trip_complete
 from app.services.driving_compliance import (
     assert_driver_can_accept_by_driving_hours,
+    close_active_driving_segment,
     on_trip_status_change_for_driving_compliance,
     apply_availability_after_trip_ends_with_compliance,
 )
@@ -477,6 +478,48 @@ def fail_processing_payment_on_cancel(payment: Payment | None) -> bool:
 
 # Back-compat alias (tests/imports).
 fail_mock_processing_payment_on_cancel = fail_processing_payment_on_cancel
+
+
+def terminate_ongoing_trip_after_terminal_payment_failure(
+    db: Session,
+    trip: Trip,
+    *,
+    payment: Payment,
+    source: str,
+    stripe_event_id: str | None = None,
+) -> bool:
+    """
+    Close an ongoing trip when Stripe reports terminal payment failure.
+
+    Same driving-hours and driver-availability side effects as
+    ``trip_timeouts._apply_ongoing_timeout`` (without Stripe PI cancel gate).
+    """
+    if trip.status != TripStatus.ongoing:
+        return False
+    old_status = trip.status
+    trip.status = TripStatus.failed
+    on_trip_status_change_for_driving_compliance(
+        db, trip, old_status, TripStatus.failed
+    )
+    close_active_driving_segment(
+        db,
+        trip_id=trip.id,
+        at=datetime.now(timezone.utc),
+    )
+    _set_driver_available(db, str(trip.driver_id) if trip.driver_id else None)
+    log_event(
+        "trip_payment_failed_terminal",
+        trip_id=str(trip.id),
+        payment_id=str(payment.id),
+        payment_intent_id=(payment.stripe_payment_intent_id or ""),
+        from_trip_status=old_status.value,
+        to_trip_status=TripStatus.failed.value,
+        payment_status=payment.status.value,
+        reason="payment_failed_terminal",
+        source=source,
+        stripe_event_id=stripe_event_id or "",
+    )
+    return True
 
 
 def cancel_real_payment_intent_if_needed(
