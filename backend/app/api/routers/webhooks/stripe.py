@@ -16,7 +16,8 @@ from app.api.deps import get_db
 from app.core.config import settings
 from app.db.models.payment import Payment
 from app.db.models.stripe_webhook_event import StripeWebhookEvent
-from app.models.enums import PaymentStatus
+from app.models.enums import PaymentStatus, TripStatus
+from app.services.trips import terminate_ongoing_trip_after_terminal_payment_failure
 from app.services.payment_amount_guards import (
     expected_payment_cents,
     validate_stripe_amount_matches_expected,
@@ -240,10 +241,10 @@ async def stripe_webhook(
                 db.commit()
 
         elif event_type in ("payment_intent.payment_failed", "charge.payment_failed"):
+            trip = payment.trip
             if payment.status != PaymentStatus.failed:
                 status_before_failed = payment.status
                 payment.status = PaymentStatus.failed
-                db.commit()
                 log_event(
                     "stripe_webhook_payment_failed",
                     trip_id=str(payment.trip_id),
@@ -278,7 +279,22 @@ async def stripe_webhook(
                     f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
                     f"stripe_event_id={stripe_event_id}"
                 )
-                db.commit()
+            if trip is not None and trip.status == TripStatus.ongoing:
+                terminated = terminate_ongoing_trip_after_terminal_payment_failure(
+                    db,
+                    trip,
+                    payment=payment,
+                    source=f"stripe_webhook:{event_type}",
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
+                )
+                if terminated:
+                    logger.info(
+                        "webhook: ongoing trip terminated after payment failure "
+                        "trip_id=%s payment_id=%s",
+                        trip.id,
+                        payment.id,
+                    )
+            db.commit()
 
         elif event_type == "charge.refunded":
             # V1 canonical refund sync — see docs/runbooks/PILOT_STRIPE_REFUND.md.
