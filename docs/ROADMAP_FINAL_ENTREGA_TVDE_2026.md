@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-14 |
+| **updated** | 2026-10-21 |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -48,11 +48,11 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 | Carril | Etapas |
 |--------|--------|
 | **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
-| **B** Pagamentos / Financeiro | B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · **B5 fase 2** (MB WAY) |
-| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · C3 OAuth staging · **C4 Fase I, II-A, II-B, S-ID-01 e Fase III CLOSED / Fase II-C Conta canónica única, listagem no Passageiro por confirmar, OPEN / Fase VI OPEN** |
+| **B** Pagamentos / Financeiro | **B-STG Stripe TEST staging DONE (2026-10-21)** · B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · **B5 fase 2** (MB WAY) |
+| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE (STAGING 2026-10-21)** · **C4 … Fase VI Concluído STAGING (#765) · smoke PROD pendente** · **R-OAUTH-UX P2** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
-| **F** Infra / Segurança / Operação | F1 Restore drill · F2 Staging · F3 Sentry · F4 Higiene mock GPS |
+| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 Staging PARCIAL (baseline #766 · OAuth/logout 21/10)** · F3 Sentry · F4 Higiene mock GPS |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
 | **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
 
@@ -366,6 +366,17 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | B2.3 | Se override: flag + FE `client_secret` | Fluxo completo | CONFIG · CÓDIGO | B2.2 |
 | B2.4 | Se override: smoke 3DS | PASS | TESTE | B2.3 |
 
+## B-STG — Stripe TEST em staging (não substitui B1 live)
+
+- **Objectivo:** Validar fluxos de pagamento em STAGING com chaves **TEST** / política mock conforme [`ENV_SINGLE_REALITY.md`](env/ENV_SINGLE_REALITY.md) — **sem** activar B1 live.  
+- **Estado (2026-10-21):** **DONE** em STAGING — pagamento, 3DS e reembolsos; UI reembolso Passageiro + Admin PR [#764](https://github.com/frankbexxx/tvde/pull/764); FINDINGS STRIPE-LIVE-01/02/03 fechados em TEST. **B1 / `sk_live_*` / prod `STRIPE_MOCK=false` continuam bloqueados.**
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| B-STG.1 | Smoke pagamento TEST staging | Payment succeeded | TESTE | F2.1 | **DONE** 2026-10-21 |
+| B-STG.2 | Smoke 3DS TEST staging | PASS | TESTE | B-STG.1 | **DONE** 2026-10-21 |
+| B-STG.3 | Smoke reembolso + UI Pax/Admin | PASS | TESTE · CÓDIGO | #764 | **DONE** 2026-10-21 |
+
 ## B3 — Stripe Connect + split automático
 
 - **Objectivo:** Split automático conforme A2 — **só crítico se modelo exigir automatização**.  
@@ -448,13 +459,17 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 ## C3 — Google OAuth staging
 
-- **IDs:** `S-AUTH-02`  
-- **Conclusão:** Smoke staging PASS **ou** pós-Marco 3.
+- **IDs:** `S-AUTH-02` · `A2-02-1`  
+- **Estado (2026-10-21):** **DONE** em STAGING — Console URIs + Render `GOOGLE_OAUTH_REDIRECT_URIS`; smoke login Google **PASS** (incl. staff/super_admin). Runbook: [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md).  
+- **Conclusão:** Smoke staging PASS *(atingida 2026-10-21)* — não reabrir salvo regressão.
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| C3.1 | Config URIs Google staging | Console OK | CONFIG | — |
-| C3.2 | Smoke login Google passenger | PASS | TESTE | C3.1 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| C3.1 | Config URIs Google staging | Console OK | CONFIG | — | **DONE** |
+| C3.2 | Smoke login Google (passageiro / roles STAGING) | PASS | TESTE | C3.1 | **DONE** 2026-10-21 |
+| C3.3 | Env Render `GOOGLE_OAUTH_REDIRECT_URIS` alinhado | Backend aceita callback | CONFIG | C3.1 | **DONE** 2026-10-21 |
+
+- **R-OAUTH-UX (P2):** após falha no **exchange** Google, o callback pode mostrar erro de **correspondência de sessão** em vez do erro real (`GoogleOAuthCallback.tsx` / ordem de branches). **Correcção pendente** — não invalida C3 STAGING ([`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-21**).
 
 ## C4 — Identidades de login (`user_identities`)
 
@@ -470,7 +485,7 @@ Uma pessoa = um `User`. Vários emails / Google vivem em `user_identities`. O te
 | III | Mover a mesma linha de identity e bloquear a origem. `bf19df73` em `09c539d1`; `35ddb821` `blocked` | **CLOSED** 2026-09-30 · transferência PROD **PASS** · smoke Google humano **PASS** · PR #680 |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
-| VI | Logout em todos os shells e revogação de sessão. Admin em prod sem botão Sair; não reabre a II-B | **OPEN** |
+| VI | Logout em todos os shells e revogação de sessão (Admin). **Concluído STAGING** PR [#765](https://github.com/frankbexxx/tvde/pull/765) · smoke **PROD** pendente; não reabre a II-B | **Concluído STAGING** · smoke **PROD** pendente |
 
 A Fase I não fundiu `35ddb821` com `09c539d1`.
 
@@ -634,12 +649,14 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 
 ## F2 — Staging OAuth / smoke staging
 
-- **IDs:** `S-OPS-02`
+- **IDs:** `S-OPS-02` · `A2-02-2` · `TVDE-STG`  
+- **Estado (2026-10-21):** **PARTIAL** — baseline documental **DONE** PR [#766](https://github.com/frankbexxx/tvde/pull/766) (**5 utilizadores efectivos** STAGING); C3 + logout Admin STAGING + B-STG fechados; pack assertivo restante **Em curso** ([`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-21**).
 
-| Passo | Acção | Resultado esperado | Tipo | Dep. |
-|-------|--------|-------------------|------|------|
-| F2.1 | Stack staging viva | URLs OK | CONFIG | — |
-| F2.2 | Smoke curto | PASS | TESTE | F2.1 · C3 |
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| F2.1 | Stack staging viva | URLs OK | CONFIG | — | **DONE** |
+| F2.2 | Smoke curto (OAuth + pagamentos TEST) | PASS | TESTE | F2.1 · C3 · B-STG | **PARTIAL** 2026-10-21 |
+| F2.3 | Baseline roster STAGING vs DEV documentado | 5 users efectivos; MISSING = gap vs DEV | DOCS | F2.1 | **DONE** #766 |
 
 ## F3 — Sentry prod FE/BE
 
@@ -820,7 +837,7 @@ Além de M2:
 
 # PÓS-ENTREGA / BACKLOG FUTURO
 
-Carril **H** + itens adiados (B5 fase 2, C2, C3, F2, F4, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
+Carril **H** + itens adiados (B5 fase 2, C2, **F2 parcial** — C3 STAGING **DONE** 2026-10-21, F4, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
 
 **Não** reabre Demo Manel 2 / retoma como pendência.
 
