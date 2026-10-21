@@ -1,8 +1,21 @@
 # Baseline de utilizadores (dev / teste)
 
-**Verdade canónica** para «casa limpa»: mesma lógica em **código** (`app/services/baseline_reset.py` → `BASELINE_USERS`) e neste quadro.
+## DEV vs STAGING — dois rosters
 
-## Quadro (E.164)
+| Ambiente | Roster | Onde aplicar |
+|----------|--------|----------------|
+| **DEV (local / CI com wipe)** | **11 utilizadores** (quadro abaixo) | `POST /dev/baseline-reset`, `scripts/baseline_reset.py` — ver secção «Como aplicar» |
+| **STAGING (`tvde_staging_db`)** | **Baseline efectivo mínimo** — **5 utilizadores activos** (não os 11) | **Não** usar wipe/reset global; ver [`STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md) § «Baseline efectivo» |
+
+Em auditorias read-only (ex. `tools/_staging_integrity_audit_readonly.py`), a classe **`MISSING`** significa **telefone previsto no roster DEV de 11** que **não existe** na BD STAGING — **não** indica corrupção, FK órfãos ou duplicados.
+
+**STAGING (estado documentado 2026-10-21):** 1 passageiro, 1 motorista, 1 parceiro, 1 admin, 1 super_admin; frota reduzida (1 motorista aprovado, 1 viatura activa). Os **6** telefones do quadro DEV em falta **não foram seedados** neste ambiente. Seed selectivo desses utilizadores fica **adiado** até haver necessidade funcional demonstrada (teste E2E/smoke).
+
+---
+
+**Verdade canónica DEV** para «casa limpa»: mesma lógica em **código** (`app/services/baseline_reset.py` → `BASELINE_USERS`) e no quadro seguinte.
+
+## Quadro DEV — 11 utilizadores (E.164)
 
 | Telemóvel | Papel | Nome em ecrã | Notas |
 |-----------|--------|--------------|--------|
@@ -80,7 +93,9 @@ python scripts/baseline_reset.py --confirm WIPE_ALL_TVDE_BASELINE
 O CLI **recusa** hosts remotos salvo `ALLOW_REMOTE_BASELINE_WIPE=YES` (wipe remoto intencional).  
 O flag `--confirm` tem de corresponder **exactamente**.
 
-**Não** usar este wipe em produção como forma de «só corrigir docs» — ver procedimento separado para demo prod.
+**Não** usar este wipe em **produção** como forma de «só corrigir docs» — ver procedimento separado para demo prod.
+
+**Não** usar `POST /dev/baseline-reset` nem `baseline_reset.py` contra **`tvde_staging_db`** salvo decisão explícita de **wipe total** (destrói viagens, pagamentos, webhooks Stripe TEST, eventos de auditoria e contas reais incl. staff/Google). STAGING mantém-se como baseline mínimo funcional; ver runbook A2-02.
 
 ### O que é apagado
 

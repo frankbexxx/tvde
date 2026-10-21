@@ -2,7 +2,37 @@
 
 **Objectivo:** segundo stack **PostgreSQL + API + Static Site**, isolado da produção, para OAuth com redirect “a sério”, smokes e merges sem tocar na BD de piloto.
 
-**Referências:** deploy prod exemplo [`docs/deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md); env [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md); URIs OAuth [`docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A2-03.
+**Referências:** deploy prod exemplo [`docs/deploy/PREPARACAO_RENDER.md`](../deploy/PREPARACAO_RENDER.md); env [`docs/env/ENV_SINGLE_REALITY.md`](../env/ENV_SINGLE_REALITY.md); URIs OAuth [`docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A2-03; roster DEV (11 users) [`docs/testing/DEV_BASELINE_ROSTER.md`](../testing/DEV_BASELINE_ROSTER.md).
+
+---
+
+## Baseline efectivo STAGING (não confundir com DEV)
+
+A BD **`tvde_staging_db`** **não** replica o wipe+seed de 11 utilizadores de DEV. Mantém-se um **baseline mínimo funcional** para OAuth, staff, Stripe TEST e smokes já validados.
+
+| Item | STAGING efectivo (2026-10-21) | Notas |
+|------|-------------------------------|--------|
+| Utilizadores `active` | **5** | 1× passenger, driver, partner, admin, **super_admin** |
+| Roster DEV completo | **11** previstos em [`DEV_BASELINE_ROSTER.md`](../testing/DEV_BASELINE_ROSTER.md) | **6 telefones ausentes** em STAGING (nunca seedados aqui) |
+| Frota | **1** motorista aprovado, **1** viatura activa | DEV baseline prevê 4 drivers / 4 viaturas DEMO |
+| Integridade | FK órfãos **0** (auditoria read-only) | `MISSING` ≠ corrupção — gap vs roster DEV |
+
+**Telefones presentes (E.164, sem passwords):** `+351912345678` (passenger) · `+351911111111` (driver) · `+351955555502` (partner) · `+351900000000` (admin) · `+351924075365` (super_admin, conta staff + Google).
+
+**Telefones DEV em falta em STAGING:** `+351911111114`, `+351938874006`, `+351918304615`, `+351918870365`, `+351967330628`, `+351939694569` — ver quadro DEV para papéis/nomes.
+
+**Nomes:** podem diferir do label DEV (ex. super_admin com nome de perfil real vs `frank`; passageiro teste com nome = telefone). **Não** implica conta incorrecta.
+
+### Preservar em STAGING (política)
+
+Qualquer regularização futura **deve** preservar, salvo wipe explícito e aprovado:
+
+- Conta **super_admin** staff existente e identidade **Google** associada.
+- Histórico de **viagens**, **pagamentos**, **reembolsos** Stripe TEST, **`stripe_webhook_events`**, **audit_events**.
+
+**Proibido por defeito:** reset global (`baseline_reset` / wipe de tabelas de negócio) em STAGING. Seed selectivo dos 6 utilizadores em falta: **adiado** até necessidade funcional demonstrada (E2E/smoke que exija um desses telefones).
+
+Inventário read-only: `python tools/_staging_integrity_audit_readonly.py` (Render job, sem writes).
 
 ---
 
@@ -81,6 +111,7 @@ Executar **só com staging já criado** (e redirects Google actualizados):
 - [ ] Fluxo Google: início → Google → retorno à app → sessão passageiro (ou erro controlado se conta em estado intermédio).
 - [ ] OTP/login clássico ainda funciona (regressão rápida).
 - [ ] (Opcional) Seed / dev tools conforme política de `ENABLE_DEV_TOOLS` na staging — **não** espelhar prod se for público.
+- [ ] Roster: confirmar que testes usam o **baseline efectivo** (5 users) ou telefones listados acima — **não** assumir os 11 de DEV sem seed.
 
 ---
 
