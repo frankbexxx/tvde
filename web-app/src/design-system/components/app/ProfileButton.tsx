@@ -25,7 +25,7 @@ export function ProfileButton() {
   const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 639px)')
-  const { betaMode, logout } = useAuth()
+  const { isAuthenticated, logout } = useAuth()
 
   useEffect(() => {
     const onOpen = () => setOpen(true)
@@ -36,11 +36,12 @@ export function ProfileButton() {
   const body = (
     <div className="mt-4 flex flex-col gap-4">
       <AccountPanel />
-      {betaMode ? (
+      {isAuthenticated ? (
         <Button
           type="button"
           variant="destructive"
           className="w-full font-semibold min-h-[48px]"
+          data-testid="profile-logout"
           onClick={() => {
             logout()
             setOpen(false)
