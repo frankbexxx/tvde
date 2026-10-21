@@ -70,7 +70,7 @@
       "confirmRevoke": "Confirm revoke",
       "cancel": "Cancel",
       "addGoogle": "Add Google",
-      "empty": "There are no sign-in methods yet.",
+      "empty": "You don't have any linked Google accounts or email addresses. You can still sign in using your usual methods.",
       "providerGoogle": "Google",
       "providerEmail": "Email",
       "errors": {

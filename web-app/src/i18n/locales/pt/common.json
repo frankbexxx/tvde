@@ -70,7 +70,7 @@
       "confirmRevoke": "Confirmar revogação",
       "cancel": "Cancelar",
       "addGoogle": "Adicionar Google",
-      "empty": "Ainda não há métodos de início de sessão.",
+      "empty": "Não tens contas Google ou endereços de email associados. Podes continuar a iniciar sessão com os teus métodos habituais.",
       "providerGoogle": "Google",
       "providerEmail": "Email",
       "errors": {
