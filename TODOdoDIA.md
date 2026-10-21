@@ -45,6 +45,9 @@ Confronto código / PRs / smokes manuais STAGING. **PROD**, jurídico, fiscal, S
 | **A2-02-2** | Smokes assertivos STAGING | **Em curso** | **PARCIAL** — OAuth + logout admin + Stripe TEST validados 21/10 · restante pack runbook / gates humanos por fechar |
 | **A-STG-BASE** | Baseline STAGING (roster efectivo) | **Concluído** | Documental PR [#766](https://github.com/frankbexxx/tvde/pull/766) · **5 utilizadores efectivos** (decisão A+D) · [`DEV_BASELINE_ROSTER.md`](docs/testing/DEV_BASELINE_ROSTER.md) · [`ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) |
 | **A-ID-08** | Fase VI logout Admin | **Smoke pendente** | **Concluído STAGING** · smoke **PROD** pendente · PR [#765](https://github.com/frankbexxx/tvde/pull/765) · não reabre II-C |
+| **A-ID-06** | Painel Conta PROD (acesso / listagem técnica) | **Concluído** | Smoke manual **21/10** · Passageiro → Conta → métodos · `test_passenger` (`+351912345678`) · listagem vazia = 0 identities (esperado) · **≠** validação visual da copy |
+| **A-ID-06-UX** | Correcção UX lista vazia (II-C) | **Concluído** | STAGING smoke visual **PASS** **21/10** · PR [#768](https://github.com/frankbexxx/tvde/pull/768) · hard refresh · conta `test_passenger` · sem alteração a identities/BD |
+| **A-ID-06-PROD-UX** | Smoke UX copy PROD | **Smoke pendente** | Mesma verificação visual após bundle #768 em `tvde-app` PROD |
 | **S-STRIPE-TEST** | Stripe TEST STAGING (pay / 3DS / reembolso) | **Concluído** | FINDINGS STRIPE-LIVE-01/02/03 fechados em TEST · PR [#764](https://github.com/frankbexxx/tvde/pull/764) UI reembolso Passageiro + Admin · smokes I′ / B4 F3 **PASS** 21/10 |
 | **C1** | OTP SMS real (prod) | **Bloqueado** | `503 otp_auth_unavailable` · provider + go explícito — [`S-AUTH-01_OTP_SMS_DECISION.md`](docs/architecture/S-AUTH-01_OTP_SMS_DECISION.md) |
 | **O-STRIPE-LIVE** | Stripe live / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · parceiro + `sk_live_*` · [`ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) |
@@ -55,23 +58,23 @@ Confronto código / PRs / smokes manuais STAGING. **PROD**, jurídico, fiscal, S
 
 ## Painel — **Identidades de login / Fase II-C** (**2026-09-30**)
 
-O painel Conta lista os métodos de início de sessão, muda a primary, revoga e adiciona Google. Sem password, a única acção é «Definir palavra-passe». Google não serve de step-up. Estas operações não mudam `token_version` nem o logout. Testes automatizados feitos. Smoke prod humano por fazer. Fase VI logout Admin: **Concluído STAGING** · smoke **PROD** pendente (painel **2026-10-21**).
+O painel Conta lista os métodos de início de sessão, muda a primary, revoga e adiciona Google. Sem password, a única acção é «Definir palavra-passe». Google não serve de step-up. Estas operações não mudam `token_version` nem o logout. Testes automatizados feitos. **A-ID-06:** PROD listagem técnica **validada** · STAGING UX copy **PASS** (#768) · smoke UX **PROD** pendente (painel **2026-10-21**). Fase VI logout Admin: **Concluído STAGING** · smoke **PROD** pendente.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Conta canónica única · listagem no Passageiro (barra inferior Conta) por confirmar em PROD · **OPEN** · não usar `09c539d1` nem `35ddb821` |
+| **A-ID-06** | Fase II-C gestão no perfil | **Em curso** | **PARCIAL** — painel Conta PROD + listagem técnica OK · UX STAGING #768 PASS 21/10 · **smoke UX PROD pendente** · primary/revoke/Google add não revalidados · ver painel **2026-10-21** · não usar `09c539d1` nem `35ddb821` |
 | **A-ID-08** | Fase VI logout / sessões | Smoke pendente | **Concluído STAGING** · smoke **PROD** pendente · PR #765 · painel **2026-10-21** · não reabre a II-C |
 
 ---
 
 ## Painel — **Identidades de login / Fase III** (**2026-09-30**)
 
-A identity `bf19df73` foi movida para `09c539d1` e ficou não-primária. A origem `35ddb821` existe, ficou `blocked`, sem identities activas e sem email. O destino continua `super_admin` e `active`, com 2 identities activas e a primary original. Nenhum User foi apagado. Continuam 20 Users. O histórico ficou no dono. `oauth_google_sub` não foi alterado. II-C e Fase VI continuam **OPEN**.
+A identity `bf19df73` foi movida para `09c539d1` e ficou não-primária. A origem `35ddb821` existe, ficou `blocked`, sem identities activas e sem email. O destino continua `super_admin` e `active`, com 2 identities activas e a primary original. Nenhum User foi apagado. Continuam 20 Users. O histórico ficou no dono. `oauth_google_sub` não foi alterado. II-C **PARCIAL** (painel **2026-10-21**); Fase VI smoke **PROD** **OPEN**.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-ID-07** | Fase III transferir identity | Concluído | **CLOSED** 2026-09-30 · PR #680 · transferência PROD HTTP 200 **PASS** · audit **PASS** · smoke Google humano **PASS** (`frankbex.dev@gmail.com` em Passageiro, sem onboarding nem linking) |
-| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Estado actual no painel Fase II-C |
+| **A-ID-06** | Fase II-C gestão no perfil | Em curso | Estado actual no painel Fase II-C / **2026-10-21** |
 | **A-ID-08** | Fase VI logout / sessões | Smoke pendente | **Concluído STAGING** · smoke **PROD** pendente · PR #765 · painel **2026-10-21** · não reabre a II-B nem a III |
 
 ---
@@ -83,7 +86,7 @@ A auth Google lê `user_identities`. Google desconhecido pede criar conta ou lig
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-ID-05** | Fase II-B leitura de identidades | Concluído | **CLOSED** · sem migration · escolha criar/ligar · prova curta · sem auto-link |
-| **A-ID-06** | Fase II-C gestão no perfil | Smoke pendente | Estado actual no painel Fase II-C |
+| **A-ID-06** | Fase II-C gestão no perfil | Em curso | Estado actual no painel Fase II-C / **2026-10-21** |
 | **A-ID-07** | Fase III transferir identity | Concluído | Fechada no painel Fase III acima |
 | **S-ID-01** | Smoke prod da II-B | Concluído | **CLOSED** 2026-09-29 · Google QA sem User novo · link à fixture `dev_admin` · login seguinte na mesma conta · contas intactas à data deste smoke |
 | **A-ID-08** | Fase VI logout / sessões | Smoke pendente | **Concluído STAGING** · smoke **PROD** pendente · PR #765 · painel **2026-10-21** · não reabre a II-B |
