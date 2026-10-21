@@ -15,7 +15,7 @@ Em docs genéricos, preferir o padrão `https://tvde-api-XXXX.onrender.com` quan
 
 ### Staging (A2-02)
 
-Stack **separada** da tabela acima (**exemplos actuais:** `tvde-staging-db` / `tvde-staging-api` / `tvde-staging-app`). **Não** reutilizar `DATABASE_URL` de produção. App: `https://tvde-staging-app.onrender.com` · API: `https://tvde-staging-api.onrender.com`. Guia: [`docs/ops/STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md). Redirect OAuth: [`docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A2-03.
+Stack **separada** da tabela acima (**exemplos actuais:** `tvde-staging-db` / `tvde-staging-api` / `tvde-staging-app`). **Não** reutilizar `DATABASE_URL` de produção. App: `https://tvde-staging-app.onrender.com` · API: `https://tvde-staging-api.onrender.com`. Guia: [`docs/ops/STAGING_A2-02_RUNBOOK.md`](../ops/STAGING_A2-02_RUNBOOK.md) (incl. **baseline efectivo** STAGING vs 11 users DEV). Redirect OAuth: [`docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md`](../archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) §A2-03.
 
 ## Nota `STRIPE_MOCK` (código vs template)
 
