@@ -33,11 +33,11 @@ export const PB_TRIPS_ONGOING_LONG: HealthAnomalyPlaybook = {
 }
 
 export const PB_DRIVERS_UNAVAILABLE: HealthAnomalyPlaybook = {
-  what: 'Motoristas marcados indisponíveis há muito tempo sem viagem ativa associada — podem estar «presos» após falha ou timeout.',
+  what: 'Motoristas indisponíveis há muito tempo sem viagem activa. Isto é informação operacional — offline voluntário ou conta demo é normal e não degrada o serviço.',
   steps: [
-    'Vai a Operações → «Recuperar motorista» para os UUID sugeridos (só com segurança: sem viagem activa).',
-    'Se o caso não aparece na lista, usa UUID manual na mesma secção após confirmar no JSON da Saúde.',
-    'Depois de recuperar, confirma na tab Frota / motorista que voltaram disponíveis e re-corre Saúde.',
+    'Confirma se é offline voluntário, fim de turno ou conta demo (badge «Conta demo») antes de qualquer acção.',
+    'Só considera «Recuperar motorista» em Operações se houver evidência de bloqueio (viagem terminada mas app presa, inconsistência confirmada) — nunca só por tempo offline.',
+    'Se for demo ou offline esperado, documenta e ignora; se for anomalia real, recupera com motivo e re-lê a Saúde.',
   ],
 }
 

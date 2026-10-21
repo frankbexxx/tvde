@@ -62,7 +62,10 @@ export interface SystemHealthResponse {
   /** Presentes na API; listas de anomalias financeiras / pagamento em falta. */
   missing_payment_records?: Array<Record<string, unknown>>
   inconsistent_financial_state?: Array<Record<string, unknown>>
+  /** Avisos críticos (pagamentos, viagens presas, integridade). */
   warnings: string[]
+  /** Avisos informativos (ex.: motoristas offline prolongados). */
+  informational_warnings?: string[]
 }
 
 export interface AdminMetricsResponse {

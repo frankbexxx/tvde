@@ -43,7 +43,6 @@ describe('admin copy', () => {
       <AdminTabAgora
         activeTrips={[]}
         adminAlerts={{ zero_drivers_available: false, zero_trips_today: true }}
-        countHealthSignalRows={() => 2}
         health={{
           status: 'degraded',
           warnings: [],
@@ -80,6 +79,31 @@ describe('admin copy', () => {
     expect(document.body.textContent).not.toMatch(/Saúde API|stuck|SP-D|JWT/)
   })
 
+  it('Agora operacional com só informação offline (sem «Com problema» visual)', () => {
+    render(
+      <AdminTabAgora
+        activeTrips={[]}
+        adminAlerts={{ zero_drivers_available: false, zero_trips_today: false }}
+        health={{
+          status: 'ok',
+          warnings: [],
+          informational_warnings: ['1 driver(s) unavailable without trip'],
+          stuck_payments: [],
+          trips_accepted_too_long: [],
+          trips_ongoing_too_long: [],
+          drivers_unavailable_too_long: [{ driver_id: 'd1', is_test_account: true }],
+        }}
+        metrics={null}
+        onRefresh={vi.fn(async (): Promise<'ok' | 'error'> => 'ok')}
+        pending={[]}
+        syncAdminUrl={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/Serviço:/)).toHaveTextContent('Operacional')
+    expect(screen.getByText(/informação operacional/i)).toBeInTheDocument()
+    expect(screen.getByText(/sem problemas nesta leitura/i)).toBeInTheDocument()
+  })
+
   it('Saúde mostra operacional, com problema e o estado técnico', () => {
     const { rerender } = render(
       <AdminTabHealth
@@ -98,6 +122,28 @@ describe('admin copy', () => {
       />,
     )
     expect(screen.getByTestId('admin-health-status')).toHaveTextContent('Operacional')
+
+    rerender(
+      <AdminTabHealth
+        fetchHealth={vi.fn()}
+        health={{
+          status: 'ok',
+          warnings: [],
+          informational_warnings: ['1 driver(s) unavailable without trip'],
+          stuck_payments: [],
+          trips_accepted_too_long: [],
+          trips_ongoing_too_long: [],
+          drivers_unavailable_too_long: [
+            { driver_id: 'd1', is_available: false, is_test_account: true },
+          ],
+          missing_payment_records: [],
+          inconsistent_financial_state: [],
+        }}
+        syncAdminUrl={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Informações')).toBeInTheDocument()
+    expect(screen.getByText('Conta demo')).toBeInTheDocument()
     expect(screen.getByTestId('admin-health-status')).toHaveTextContent('ok')
 
     rerender(

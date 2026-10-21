@@ -18,6 +18,7 @@ class SystemHealthResponse(BaseModel):
     inconsistent_financial_state: list[dict[str, Any]] = []
     orphan_payments: list[dict[str, Any]] = []  # deprecated
     warnings: list[str] = []
+    informational_warnings: list[str] = []
 
 
 class RunTimeoutsResponse(BaseModel):

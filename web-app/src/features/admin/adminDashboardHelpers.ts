@@ -147,19 +147,29 @@ export function readInitialAdminQuery(): ReturnType<typeof parseAdminDashboardQu
   return parseAdminDashboardQuery(new URLSearchParams(window.location.search))
 }
 
-/** SP-G: contagens de linhas de anomalia + avisos (alinhado a system-health). */
-export function countHealthSignalRows(h: SystemHealthResponse | null): number {
+const _rowCount = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0)
+
+/** Problemas críticos (degradam status na API). */
+export function countCriticalHealthSignalRows(h: SystemHealthResponse | null): number {
   if (!h) return 0
-  const n = (a: unknown[] | undefined) => (Array.isArray(a) ? a.length : 0)
   return (
-    n(h.trips_accepted_too_long) +
-    n(h.trips_ongoing_too_long) +
-    n(h.stuck_payments) +
-    n(h.drivers_unavailable_too_long) +
-    n(h.missing_payment_records) +
-    n(h.inconsistent_financial_state) +
-    (h.warnings?.length ?? 0)
+    _rowCount(h.trips_accepted_too_long) +
+    _rowCount(h.trips_ongoing_too_long) +
+    _rowCount(h.stuck_payments) +
+    _rowCount(h.missing_payment_records) +
+    _rowCount(h.inconsistent_financial_state)
   )
+}
+
+/** Informação operacional (não degrada status). */
+export function countInformationalHealthSignalRows(h: SystemHealthResponse | null): number {
+  if (!h) return 0
+  return _rowCount(h.drivers_unavailable_too_long)
+}
+
+/** @deprecated Prefer countCriticalHealthSignalRows for severity. */
+export function countHealthSignalRows(h: SystemHealthResponse | null): number {
+  return countCriticalHealthSignalRows(h)
 }
 
 export function healthRowTimestamp(row: Record<string, unknown>): string {

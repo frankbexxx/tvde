@@ -9,8 +9,20 @@ export function HealthAnomalyBlock(props: {
   onOpenTrip: (tripId: string) => void
   pageSize?: number
   playbook?: HealthAnomalyPlaybook
+  variant?: 'critical' | 'informational'
+  demoAccountField?: string
+  demoAccountLabel?: string
 }) {
-  const { title, rows, onOpenTrip, pageSize = 20, playbook } = props
+  const {
+    title,
+    rows,
+    onOpenTrip,
+    pageSize = 20,
+    playbook,
+    variant = 'critical',
+    demoAccountField,
+    demoAccountLabel = 'Conta demo',
+  } = props
   const [sortRecent, setSortRecent] = useState(true)
   const [shown, setShown] = useState(pageSize)
 
@@ -23,8 +35,12 @@ export function HealthAnomalyBlock(props: {
   const canShowMore = shown < sortedRows.length
 
   if (!rows.length) return null
+  const borderClass =
+    variant === 'informational'
+      ? 'border-info/40 bg-info/5'
+      : 'border-border bg-card/50'
   return (
-    <div className="rounded-xl border border-border bg-card/50 p-3 space-y-2 touch-manipulation">
+    <div className={`rounded-xl border p-3 space-y-2 touch-manipulation ${borderClass}`}>
       {playbook ? (
         <details className="rounded-lg border border-info/40 bg-info/10 px-2 py-1.5 text-xs">
           <summary className="cursor-pointer font-medium text-foreground select-none min-h-10 flex items-center py-1">
@@ -75,9 +91,16 @@ export function HealthAnomalyBlock(props: {
         {slice.map((row, i) => {
           const tid = tripIdFromHealthRow(row)
           const key = tid ? `${title}-${tid}-${i}` : `${title}-row-${i}`
+          const isDemo =
+            demoAccountField && row[demoAccountField] === true
           return (
             <li key={key} className="rounded-lg border border-border/80 bg-background p-2 space-y-2">
               <div className="flex flex-wrap gap-2 items-center justify-between">
+                {isDemo ? (
+                  <span className="text-xs font-medium rounded-md border border-info/50 bg-info/10 text-foreground px-2 py-0.5">
+                    {demoAccountLabel}
+                  </span>
+                ) : null}
                 {tid ? (
                   <button
                     type="button"

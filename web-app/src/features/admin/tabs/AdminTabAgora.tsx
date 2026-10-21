@@ -4,6 +4,10 @@ import type { AdminAlertsResponse, AdminMetricsResponse, SystemHealthResponse, T
 import { ErrorBanner } from '../../../components/feedback/ErrorBanner'
 import type { AdminDashboardUrlUpdate } from '../useAdminDashboardNavigation'
 import { adminHealthStatusLabel } from '../adminCopy'
+import {
+  countCriticalHealthSignalRows,
+  countInformationalHealthSignalRows,
+} from '../adminDashboardHelpers'
 
 interface PendingUser {
   phone: string
@@ -17,7 +21,6 @@ const AGORA_FEEDBACK_MS = 2500
 export type AdminTabAgoraProps = {
   activeTrips: TripActiveItem[]
   adminAlerts: AdminAlertsResponse | null
-  countHealthSignalRows: (h: SystemHealthResponse | null) => number
   health: SystemHealthResponse | null
   metrics: AdminMetricsResponse | null
   onRefresh: () => Promise<'ok' | 'error'>
@@ -30,7 +33,6 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
   const {
     activeTrips,
     adminAlerts,
-    countHealthSignalRows,
     health,
     metrics,
     onRefresh,
@@ -103,10 +105,11 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
 
         {(() => {
           const stuckN = health?.stuck_payments?.length ?? 0
-          const signalRows = countHealthSignalRows(health)
+          const criticalRows = countCriticalHealthSignalRows(health)
+          const infoRows = countInformationalHealthSignalRows(health)
           const hStatus = health?.status ?? null
           const healthLabel = adminHealthStatusLabel(hStatus)
-          const degraded = hStatus === 'degraded' || signalRows > 0
+          const degraded = hStatus === 'degraded' || criticalRows > 0
           const activeN = metrics?.active_trips ?? activeTrips.length
           const pendingN = pending.length
 
@@ -123,10 +126,10 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
                   {healthLabel.technical ? (
                     <span className="text-muted-foreground font-normal"> · estado técnico: {healthLabel.technical}</span>
                   ) : null}
-                  {signalRows > 0 ? (
+                  {criticalRows > 0 ? (
                     <span className="text-warning">
                       {' '}
-                      · {signalRows} {signalRows === 1 ? 'problema' : 'problemas'} nesta leitura
+                      · {criticalRows} {criticalRows === 1 ? 'problema' : 'problemas'} nesta leitura
                     </span>
                   ) : (
                     <span className="text-muted-foreground"> · sem problemas nesta leitura</span>
@@ -139,9 +142,17 @@ export function AdminTabAgora(props: AdminTabAgoraProps) {
                 ) : (
                   <p className="text-xs text-foreground/65 mt-1">Pagamentos que não avançaram: 0</p>
                 )}
-                {signalRows > 0 ? (
+                {criticalRows > 0 ? (
                   <p className="text-xs text-foreground/75 mt-2">
-                    Em <strong>Saúde</strong>, cada bloco diz o que se passa e o que fazer a seguir.
+                    Em <strong>Saúde</strong>, cada bloco em Problemas diz o que se passa e o que fazer a
+                    seguir.
+                  </p>
+                ) : null}
+                {infoRows > 0 && criticalRows === 0 ? (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    · {infoRows}{' '}
+                    {infoRows === 1 ? 'informação operacional' : 'informações operacionais'} (ex. motoristas
+                    offline) — ver <strong>Saúde</strong>.
                   </p>
                 ) : null}
               </div>

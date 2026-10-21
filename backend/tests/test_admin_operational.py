@@ -74,6 +74,7 @@ def test_system_health_returns_expected_structure(client: TestClient) -> None:
         "missing_payment_records",
         "inconsistent_financial_state",
         "warnings",
+        "informational_warnings",
     ):
         assert key in data
 
