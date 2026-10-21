@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.db.models.driver import Driver
 from app.db.models.payment import Payment
 from app.db.models.trip import Trip
+from app.db.models.user import User
 from app.models.enums import PaymentStatus, TripStatus
 
 
@@ -56,6 +57,7 @@ def get_system_health(db: Session) -> dict[str, Any]:
     inconsistent_financial_state: list[dict[str, Any]] = []
     missing_payment_records: list[dict[str, Any]] = []
     warnings: list[str] = []
+    informational_warnings: list[str] = []
 
     # 1) Payments in status=processing for more than 10 min
     payments_processing = (
@@ -129,17 +131,15 @@ def get_system_health(db: Session) -> dict[str, Any]:
         TripStatus.arriving,
         TripStatus.ongoing,
     )
-    drivers_busy = (
-        db.execute(
-            select(Driver).where(
-                Driver.is_available.is_(False),
-                Driver.updated_at < driver_unavailable_cutoff,
-            )
+    drivers_busy = db.execute(
+        select(Driver, User.is_test_account).join(
+            User, User.id == Driver.user_id
+        ).where(
+            Driver.is_available.is_(False),
+            Driver.updated_at < driver_unavailable_cutoff,
         )
-        .scalars()
-        .all()
-    )
-    for d in drivers_busy:
+    ).all()
+    for d, is_test_account in drivers_busy:
         has_active_trip = (
             db.execute(
                 select(Trip).where(
@@ -155,6 +155,7 @@ def get_system_health(db: Session) -> dict[str, Any]:
                     "driver_id": str(d.user_id),
                     "is_available": d.is_available,
                     "updated_at": _to_iso(d.updated_at),
+                    "is_test_account": bool(is_test_account),
                 }
             )
 
@@ -225,7 +226,7 @@ def get_system_health(db: Session) -> dict[str, Any]:
     if trips_ongoing_too_long:
         warnings.append(f"{len(trips_ongoing_too_long)} trip(s) ongoing too long")
     if drivers_unavailable_too_long:
-        warnings.append(
+        informational_warnings.append(
             f"{len(drivers_unavailable_too_long)} driver(s) unavailable without trip"
         )
     if inconsistent_financial_state:
@@ -235,17 +236,16 @@ def get_system_health(db: Session) -> dict[str, Any]:
     if missing_payment_records:
         warnings.append(f"{len(missing_payment_records)} trip(s) missing payment")
 
-    all_ok = not any(
+    critical_present = any(
         [
             stuck_payments,
             trips_accepted_too_long,
             trips_ongoing_too_long,
-            drivers_unavailable_too_long,
             inconsistent_financial_state,
             missing_payment_records,
         ]
     )
-    status = "ok" if all_ok else "degraded"
+    status = "ok" if not critical_present else "degraded"
 
     return {
         "status": status,
@@ -258,4 +258,5 @@ def get_system_health(db: Session) -> dict[str, Any]:
         "inconsistent_financial_state": inconsistent_financial_state,
         "orphan_payments": [],  # deprecated, kept for compatibility
         "warnings": warnings,
+        "informational_warnings": informational_warnings,
     }

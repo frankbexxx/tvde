@@ -5,7 +5,6 @@ import { AdminTabAgora } from './AdminTabAgora'
 const baseProps = {
   activeTrips: [],
   adminAlerts: null,
-  countHealthSignalRows: () => 0,
   health: null,
   metrics: null,
   pending: [],

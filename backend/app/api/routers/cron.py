@@ -214,6 +214,11 @@ async def run_scheduled_jobs(
                 system_health.get("missing_payment_records") or []
             ),
             "warnings": system_health.get("warnings") or [],
+            "informational_warnings": system_health.get("informational_warnings")
+            or [],
+            "drivers_unavailable_too_long_count": len(
+                system_health.get("drivers_unavailable_too_long") or []
+            ),
         },
         "driver_zones": {
             "expired_sessions": zone_sessions_expired,

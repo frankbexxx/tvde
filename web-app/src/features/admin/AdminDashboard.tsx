@@ -5,7 +5,7 @@ import { AppRouteModeSwitch } from '../settings/AppRouteModeSwitch'
 import { isBackofficeStaffRole, useAuth } from '../../context/AuthContext'
 import {
   adminErrDetail,
-  countHealthSignalRows,
+  countCriticalHealthSignalRows,
   promptGovernanceReason,
   sessionJwtIsSuperAdmin,
 } from './adminDashboardHelpers'
@@ -748,7 +748,9 @@ export function AdminDashboard() {
     () =>
       Boolean(
         health &&
-        (countHealthSignalRows(health) > 0 || (health.warnings?.length ?? 0) > 0)
+        (countCriticalHealthSignalRows(health) > 0 ||
+          health.status === 'degraded' ||
+          (health.warnings?.length ?? 0) > 0)
       ),
     [health]
   )
@@ -887,7 +889,6 @@ export function AdminDashboard() {
         <AdminTabAgora
           activeTrips={activeTrips}
           adminAlerts={adminAlerts}
-          countHealthSignalRows={countHealthSignalRows}
           health={health}
           metrics={metrics}
           onRefresh={refreshAgora}
