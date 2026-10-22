@@ -21,7 +21,11 @@ from app.db.models.user import User
 from app.db.session import SessionLocal
 from app.main import app
 from app.models.enums import DriverStatus, PaymentStatus, Role, TripStatus, UserStatus
-from app.services.orphan_payment_intent_scan import preview_orphan_payment_intents
+from app.services.orphan_payment_intent_scan import (
+    _pi_dict_from_stripe,
+    _stripe_mapping_to_dict,
+    preview_orphan_payment_intents,
+)
 from tests.support.unique_phone import unique_test_phone
 
 
@@ -426,6 +430,82 @@ def test_stripe_rate_limit_failed(monkeypatch: pytest.MonkeyPatch) -> None:
             )
         assert out["scan_status"] == "failed"
         assert "stripe_rate_limit" in out["errors"]
+    finally:
+        db.close()
+
+
+def test_stripe_mapping_to_dict_variants() -> None:
+    assert _stripe_mapping_to_dict(None) == {}
+    assert _stripe_mapping_to_dict({}) == {}
+    assert _stripe_mapping_to_dict({"trip_id": "x"}) == {"trip_id": "x"}
+    meta_obj = stripe.PaymentIntent.construct_from(
+        {
+            "id": "pi_meta_only",
+            "object": "payment_intent",
+            "metadata": {"trip_id": "from-stripe-object"},
+        },
+        "sk_test_fake",
+    ).metadata
+    assert _stripe_mapping_to_dict(meta_obj) == {"trip_id": "from-stripe-object"}
+
+
+def test_pi_dict_from_stripe_sdk_payment_intent() -> None:
+    trip_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    pi = stripe.PaymentIntent.construct_from(
+        {
+            "id": "pi_sdk_obj",
+            "object": "payment_intent",
+            "status": "requires_capture",
+            "metadata": {"trip_id": trip_id},
+            "amount": 1500,
+            "currency": "eur",
+            "created": 1700000000,
+        },
+        "sk_test_fake",
+    )
+    out = _pi_dict_from_stripe(pi)
+    assert out["id"] == "pi_sdk_obj"
+    assert out["metadata"] == {"trip_id": trip_id}
+
+
+def test_preview_with_stripe_object_list_items(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: STAGING SDK returns StripeObject, not plain dict (PR4 hotfix)."""
+    monkeypatch.setattr(settings, "STRIPE_MOCK", False, raising=False)
+    monkeypatch.setattr(settings, "STRIPE_SECRET_KEY", "sk_test_xxx", raising=False)
+    monkeypatch.setattr(settings, "ENV", "staging", raising=False)
+    monkeypatch.setattr(settings, "ENVIRONMENT", "staging", raising=False)
+    db = SessionLocal()
+    pi_id = f"pi_test_{uuid.uuid4().hex[:12]}"
+    try:
+        trip, _ = _seed_trip(db)
+        pi = stripe.PaymentIntent.construct_from(
+            {
+                "id": pi_id,
+                "object": "payment_intent",
+                "status": "requires_capture",
+                "metadata": {"trip_id": str(trip.id)},
+                "amount": 1500,
+                "currency": "eur",
+                "created": int(datetime.now(timezone.utc).timestamp()) - 3600,
+            },
+            "sk_test_fake",
+        )
+
+        def _fake_list(**_kwargs: object) -> dict:
+            return {"data": [pi], "has_more": False}
+
+        with patch(
+            "app.services.orphan_payment_intent_scan.list_payment_intents_page",
+            side_effect=_fake_list,
+        ):
+            out = preview_orphan_payment_intents(
+                db, window_days=7, grace_minutes=5, limit=100
+            )
+        assert out["scan_status"] == "ok"
+        assert len(out["confirmed_orphans"]) == 1
+        assert out["confirmed_orphans"][0]["payment_intent_id"] == pi_id
     finally:
         db.close()
 

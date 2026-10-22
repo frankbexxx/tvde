@@ -103,13 +103,40 @@ def stripe_orphan_scan_skip_reason() -> tuple[str | None, str | None]:
     return None, None
 
 
+def _stripe_mapping_to_dict(value: object) -> dict[str, Any]:
+    """Normalize Stripe metadata (dict, StripeObject.to_dict(), None)."""
+    if value is None:
+        return {}
+    if isinstance(value, dict):
+        return dict(value)
+    if hasattr(value, "to_dict"):
+        converted = value.to_dict()
+        if isinstance(converted, dict):
+            return dict(converted)
+        return {}
+    return {}
+
+
+def _stripe_item_id(obj: object) -> str:
+    if isinstance(obj, dict):
+        return str(obj.get("id") or "")
+    return str(getattr(obj, "id", "") or "")
+
+
 def _pi_dict_from_stripe(obj: Any) -> dict[str, Any]:
     if isinstance(obj, dict):
-        return obj
+        return {
+            "id": obj.get("id"),
+            "status": obj.get("status"),
+            "metadata": _stripe_mapping_to_dict(obj.get("metadata")),
+            "amount": obj.get("amount"),
+            "currency": obj.get("currency"),
+            "created": obj.get("created"),
+        }
     return {
         "id": getattr(obj, "id", None),
         "status": getattr(obj, "status", None),
-        "metadata": dict(getattr(obj, "metadata", None) or {}),
+        "metadata": _stripe_mapping_to_dict(getattr(obj, "metadata", None)),
         "amount": getattr(obj, "amount", None),
         "currency": getattr(obj, "currency", None),
         "created": getattr(obj, "created", None),
@@ -193,10 +220,10 @@ def preview_orphan_payment_intents(
             data = page.get("data") or []
             for item in data:
                 collected.append(_pi_dict_from_stripe(item))
-                last_id = str(item.get("id") or getattr(item, "id", "") or "")
+                last_id = _stripe_item_id(item) or None
             if page.get("has_more"):
                 if data:
-                    cursor = str(data[-1].get("id") or getattr(data[-1], "id", ""))
+                    cursor = _stripe_item_id(data[-1]) or None
                 stripe_has_more = True
                 if len(collected) >= list_cap:
                     break
