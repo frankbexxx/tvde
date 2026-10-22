@@ -1,9 +1,9 @@
 # Fiabilidade dos pagamentos — especificação técnica (Fase 0)
 
 **Data:** 2026-10-22  
-**Baseline código:** `main` @ `edc666cc` (pós PR #779)  
-**Estado:** especificação **Fase 0** — decisões **Q1–Q8 aprovadas** (Frank, 2026-10-22). **Implementado em `main`:** PR1 (#774) · PR2 (#775) · PR4 (#776) + hotfix (#777) · **PR3 (#779)**. **PR5** não autorizado. Registo operacional (deploy vs smoke PR3): [`TODOdoDIA.md`](../../TODOdoDIA.md) **Fiabilidade pagamentos 22/10**.  
-**Itens de backlog:** `R-PAY-ORPHAN-PI` (cancel/recover automático) · activar `ENABLE_PAYMENT_ANOMALY_PERSIST` (decisão ops) · smoke funcional PR3 STAGING.
+**Baseline:** `main` @ `ef615599` (docs #780) · código PR3 @ `edc666cc` (#779)  
+**Estado:** especificação **Fase 0** — decisões **Q1–Q8 aprovadas** (Frank, 2026-10-22). **Implementado em `main`:** PR1 (#774) · PR2 (#775) · PR4 (#776) + hotfix (#777) · **PR3 (#779)** — **técnico concluído** · **fecho operacional STAGING 22/10** (preflight PASS; smoke E2E dispensado). **PR5** não autorizado. Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) **Fiabilidade pagamentos 22/10**.  
+**Itens de backlog:** `R-PAY-ORPHAN-PI` (cancel/recover automático) · activar `ENABLE_PAYMENT_ANOMALY_PERSIST` (decisão ops) · smoke B-lite PR3 STAGING **opcional** (não planeado nesta fase).
 
 **Relacionado:** [`diagrams/03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) · [`PILOT_PAYMENT_RECONCILIATION.md`](PILOT_PAYMENT_RECONCILIATION.md) · [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §11 (L-PAY-02) · [`TODOdoDIA.md`](../../TODOdoDIA.md) (R/O-PAY)
 
@@ -19,7 +19,7 @@ A plataforma TVDE trata o **webhook Stripe** como fonte de verdade para transiç
 
 1. **Persistência anomalies** — código PR1 + UI PR2 em `main`; **`ENABLE_PAYMENT_ANOMALY_PERSIST=false`** por defeito (sem rows até activação explícita).
 2. **PI órfão** — detector read-only PR4; cancel/recover automático continua backlog (`R-PAY-ORPHAN-PI`).
-3. **Validação STAGING PR3** — deploy **22/10** + health **200**; **smoke funcional** webhook (ordem/recovery) **não executado** (ver painel `S-PAY-PR3-STG`).
+3. **STAGING PR3 (ops 22/10)** — deploy + health **200** · preflight read-only **PASS** (`S-PAY-PR3-STG-PRE`: `phase0` staging, mock off, whsec set) · smoke webhook assinado E2E **dispensado nesta fase** (`S-PAY-PR3-STG` **N/A**, **≠ PASS**) · guards cobertos por **CI + 80 testes**; `whsec` presente **≠** match endpoint Stripe TEST.
 
 ---
 
@@ -379,7 +379,7 @@ Ver **§9** — plano técnico detalhado PR1.
 | **Entrega** | PR [#779](https://github.com/frankbexxx/tvde/pull/779) · merge `edc666cc` · `webhooks/stripe.py` · `payment_anomalies.py` · `test_webhook_payment_status_guards_pr3.py` |
 | **Scope** | Q2 A: bloqueio `succeeded→failed`; Q1 B: `failed→succeeded` com guards + `webhook_status_recovery`; `FOR UPDATE`; anomalies via `begin_nested()` |
 | **Testes** | **80** locais PASS (17 PR3 + regressões); CI backend-ci + web-e2e **PASS** |
-| **STAGING** | Deploy Live **22/10/2026** · health **200** · smoke funcional PR3 **não executado** — [`TODOdoDIA.md`](../../TODOdoDIA.md) `S-PAY-PR3-STG` |
+| **STAGING** | Deploy Live **22/10/2026** @ `edc666cc` · health **200** · preflight **PASS** (`S-PAY-PR3-STG-PRE`) · smoke E2E **dispensado** (`S-PAY-PR3-STG`) — [`TODOdoDIA.md`](../../TODOdoDIA.md) |
 | **Aceitação** | L-PAY-02 ACK inalterado; flag anomalies **off** |
 | **Rollback** | Revert PR #779 |
 
@@ -420,7 +420,7 @@ Ver **§9** — plano técnico detalhado PR1.
 | **Q7** | **A** — runbook §11 corrigido (marker `evt_*` em not-found) | Alinha ops ao código L-PAY-01 | Doc ✓ |
 | **Q8** | **A** — **sem** compensação automática pós-crash accept | Risco duplicar Payment / amounts errados; detector + manual | — |
 
-**Estado implementação (22/10/2026):** PR1 · PR2 · PR3 · PR4 **merged** em `main`; ciclo Fase 0 **código completo**; PR5 excluído; **`ENABLE_PAYMENT_ANOMALY_PERSIST=false`**; Stripe LIVE **não** autorizado.
+**Estado implementação (22/10/2026):** PR1 · PR2 · PR3 · PR4 **merged** em `main`; ciclo Fase 0 **código completo**; **PR3 STAGING** fechado operacionalmente (preflight PASS; smoke E2E dispensado); PR5 excluído; **`ENABLE_PAYMENT_ANOMALY_PERSIST=false`**; Stripe LIVE **não** autorizado.
 
 ---
 

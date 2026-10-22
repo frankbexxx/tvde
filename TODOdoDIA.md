@@ -71,15 +71,16 @@ Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/
 
 ## Painel — **Fiabilidade pagamentos (Fase 0)** (**2026-10-22**)
 
-`main` @ `edc666cc` · spec [`PAYMENT_RELIABILITY_PHASE0_SPEC.md`](docs/runbooks/PAYMENT_RELIABILITY_PHASE0_SPEC.md). **Ciclo Fase 0 PR1–PR4:** código em STAGING (deploy **22/10** pós-#779). **Stripe TEST** em STAGING; **PROD** pagamentos neste carril **não** validados. **Stripe LIVE**, PR5 e `ENABLE_PAYMENT_ANOMALY_PERSIST=true` **não autorizados**.
+`main` @ `ef615599` (docs #780) · código PR3 @ `edc666cc` (#779) · spec [`PAYMENT_RELIABILITY_PHASE0_SPEC.md`](docs/runbooks/PAYMENT_RELIABILITY_PHASE0_SPEC.md). **Fase 0 PR1–PR4** em `main`; **PR3 técnico + fecho operacional STAGING (22/10)** registados abaixo. **Stripe TEST** em STAGING (`STRIPE_MOCK=false` confirmado no preflight); **PROD** pagamentos neste carril **não** validados. **Stripe LIVE**, PR5 e `ENABLE_PAYMENT_ANOMALY_PERSIST=true` **não autorizados**.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A-PAY-PR1** | Persistência `payment_anomalies` (webhook not-found / mismatch) | **Concluído** | PR [#774](https://github.com/frankbexxx/tvde/pull/774) · merge `88e0d31b` · flag **`ENABLE_PAYMENT_ANOMALY_PERSIST=false`** (default) |
 | **A-PAY-PR2** | Admin Saúde — bloco `payment_webhook_anomalies` | **Concluído** | PR [#775](https://github.com/frankbexxx/tvde/pull/775) · merge `3cf666d9` · CI PASS · smokes Saúde STG+PROD 22/10 |
 | **A-PAY-PR3** | Webhook anti-regressão (Q1 B + Q2 A+B) | **Concluído** | PR [#779](https://github.com/frankbexxx/tvde/pull/779) · merge `edc666cc` · Q1 recovery auditada · Q2 bloqueio `succeeded→failed` · `FOR UPDATE` · savepoint anomalies · **80** testes locais + CI backend/web-e2e **PASS** |
-| **S-PAY-PR3-STG-DEP** | Deploy STAGING pós-PR3 | **Concluído** | **22/10/2026** · STAGING Live · FastAPI arrancou · health HTTP **200** · **≠** validação funcional dos guards webhook |
-| **S-PAY-PR3-STG** | Smoke funcional PR3 em STAGING | **Smoke pendente** | **Não executado** 22/10 · sem cenários webhook fora de ordem / recovery em STAGING |
+| **S-PAY-PR3-STG-DEP** | Deploy STAGING pós-PR3 | **Concluído** | **22/10/2026** · STAGING Live · FastAPI arrancou · health HTTP **200** · deploy live @ `edc666cc` |
+| **S-PAY-PR3-STG-PRE** | Preflight STAGING PR3 (read-only) | **Concluído** | **22/10/2026 PASS** · Superadmin `GET /admin/phase0` · `ENV=staging` · `stripe_mock=false` · `stripe_webhook_secret_set=true` · `beta_mode=false` · logs pós-deploy sem erros relevantes · **≠** prova whsec↔endpoint Stripe TEST · sem viagens/pagamentos/webhooks |
+| **S-PAY-PR3-STG** | Smoke funcional PR3 em STAGING (webhooks assinados E2E) | **N/A** | **Dispensado nesta fase** (decisão ops 22/10) · **≠ PASS** · guards validados por **80** testes + CI · B-lite só com nova autorização |
 | **A-PAY-PR4** | Detector órfãos PI — preview read-only (super_admin) | **Concluído** | PR [#776](https://github.com/frankbexxx/tvde/pull/776) · merge `fee08863` · **sem** cron · **zero** writes Stripe |
 | **A-PAY-PR4-HF** | Hotfix `StripeObject.metadata` no preview órfãos | **Concluído** | PR [#777](https://github.com/frankbexxx/tvde/pull/777) · merge `820e4a33` · CI backend + web-e2e PASS |
 | **S-PAY-PR4-STG** | Smoke manual STAGING preview órfãos (Admin Saúde) | **Concluído** | **22/10/2026** · `scan_status=ok` · **0** órfãos confirmados e **0** inconclusivos **na página/janela consultadas** · HTTP 500 pré-#777 **resolvido** · **≠** ausência global de órfãos na conta Stripe |
