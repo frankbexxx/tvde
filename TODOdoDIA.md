@@ -35,19 +35,19 @@ Ficheiro **vivo** na raiz do repo. **Única fonte operacional diária** e handof
 
 ---
 
-## Painel — **Sincronização operacional STAGING** (**2026-10-21**)
+## Painel — **Sincronização operacional STAGING** (**2026-10-22**)
 
 Confronto código / PRs / smokes manuais STAGING. **PROD**, jurídico, fiscal, SMS OTP e Stripe **LIVE** mantêm-se abertos — não marcar como concluídos sem evidência.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A2-02-1** | OAuth Google STAGING | **Concluído** | Console URIs + Render `GOOGLE_OAUTH_REDIRECT_URIS` (não `…_URLS`) · smoke login Google **PASS** 21/10 (ex. super_admin) · [`STAGING_A2-02_RUNBOOK.md`](docs/ops/STAGING_A2-02_RUNBOOK.md) |
-| **A2-02-2** | Smokes assertivos STAGING | **Em curso** | **PARCIAL** — OAuth + logout admin + Stripe TEST validados 21/10 · restante pack runbook / gates humanos por fechar |
+| **A2-02-2** | Smokes assertivos STAGING | **Concluído** | **Fecho documental 22/10** · acta §8 runbook A2-02 · evidências #766 · OAuth 21/10 · #765 · #757–764 · #768 · #770/#771 · **sem novos testes** · ressalva partner (confirmação humana) |
 | **A-STG-BASE** | Baseline STAGING (roster efectivo) | **Concluído** | Documental PR [#766](https://github.com/frankbexxx/tvde/pull/766) · **5 utilizadores efectivos** (decisão A+D) · [`DEV_BASELINE_ROSTER.md`](docs/testing/DEV_BASELINE_ROSTER.md) · [`ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) |
-| **A-ID-08** | Fase VI logout Admin | **Smoke pendente** | **Concluído STAGING** · smoke **PROD** pendente · PR [#765](https://github.com/frankbexxx/tvde/pull/765) · não reabre II-C |
+| **A-ID-08** | Fase VI logout Admin | **Concluído** | STAGING + smoke **PROD PASS** **22/10** · PR [#765](https://github.com/frankbexxx/tvde/pull/765) · não reabre II-C |
 | **A-ID-06** | Painel Conta PROD (acesso / listagem técnica) | **Concluído** | Smoke manual **21/10** · Passageiro → Conta → métodos · `test_passenger` (`+351912345678`) · listagem vazia = 0 identities (esperado) · **≠** validação visual da copy |
 | **A-ID-06-UX** | Correcção UX lista vazia (II-C) | **Concluído** | STAGING smoke visual **PASS** **21/10** · PR [#768](https://github.com/frankbexxx/tvde/pull/768) · hard refresh · conta `test_passenger` · sem alteração a identities/BD |
-| **A-ID-06-PROD-UX** | Smoke UX copy PROD | **Smoke pendente** | Mesma verificação visual após bundle #768 em `tvde-app` PROD |
+| **A-ID-06-PROD-UX** | Smoke UX copy PROD | **Concluído** | Smoke visual **PASS** **22/10** · pós-bundle #768 em `tvde-app` PROD |
 | **S-STRIPE-TEST** | Stripe TEST STAGING (pay / 3DS / reembolso) | **Concluído** | FINDINGS STRIPE-LIVE-01/02/03 fechados em TEST · PR [#764](https://github.com/frankbexxx/tvde/pull/764) UI reembolso Passageiro + Admin · smokes I′ / B4 F3 **PASS** 21/10 |
 | **C1** | OTP SMS real (prod) | **Bloqueado** | `503 otp_auth_unavailable` · provider + go explícito — [`S-AUTH-01_OTP_SMS_DECISION.md`](docs/architecture/S-AUTH-01_OTP_SMS_DECISION.md) |
 | **O-STRIPE-LIVE** | Stripe live / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · parceiro + `sk_live_*` · [`ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) |
@@ -71,12 +71,12 @@ Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/
 
 ## Painel — **Identidades de login / Fase II-C** (**2026-09-30**)
 
-O painel Conta lista os métodos de início de sessão, muda a primary, revoga e adiciona Google. Sem password, a única acção é «Definir palavra-passe». Google não serve de step-up. Estas operações não mudam `token_version` nem o logout. Testes automatizados feitos. **A-ID-06:** PROD listagem técnica **validada** · STAGING UX copy **PASS** (#768) · smoke UX **PROD** pendente (painel **2026-10-21**). Fase VI logout Admin: **Concluído STAGING** · smoke **PROD** pendente.
+O painel Conta lista os métodos de início de sessão, muda a primary, revoga e adiciona Google. Sem password, a única acção é «Definir palavra-passe». Google não serve de step-up. Estas operações não mudam `token_version` nem o logout. Testes automatizados feitos. **A-ID-06:** PROD listagem técnica **validada** · UX copy STAGING/PROD **PASS** (#768 · 22/10). Fase VI logout Admin: **Concluído** STAGING + PROD **22/10**.
 
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
-| **A-ID-06** | Fase II-C gestão no perfil | **Em curso** | **PARCIAL** — painel Conta PROD + listagem técnica OK · UX STAGING #768 PASS 21/10 · **smoke UX PROD pendente** · primary/revoke/Google add não revalidados · ver painel **2026-10-21** · não usar `09c539d1` nem `35ddb821` |
-| **A-ID-08** | Fase VI logout / sessões | Smoke pendente | **Concluído STAGING** · smoke **PROD** pendente · PR #765 · painel **2026-10-21** · não reabre a II-C |
+| **A-ID-06** | Fase II-C gestão no perfil | **Em curso** | **PARCIAL** — painel Conta + UX copy STG/PROD OK · primary/revoke/Google add não revalidados · ver painel **2026-10-22** · não usar `09c539d1` nem `35ddb821` |
+| **A-ID-08** | Fase VI logout / sessões | Concluído | STAGING + **PROD PASS** **22/10** · PR #765 · não reabre a II-C |
 
 ---
 
@@ -498,7 +498,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 | ID | Item | Estado | Notas |
 |----|------|--------|-------|
 | **A2-02-1** | OAuth staging + URIs Google | Concluído | PASS 21/10 · [`STAGING_A2-02_RUNBOOK.md`](docs/ops/STAGING_A2-02_RUNBOOK.md) · painel **2026-10-21** |
-| **A2-02-2** | Smokes assertivos staging | Em curso | **PARCIAL** 21/10 · OAuth + Stripe TEST + logout admin · restante pack runbook |
+| **A2-02-2** | Smokes assertivos staging | Concluído | **Fecho 22/10** · acta runbook A2-02 §8 · painel **2026-10-22** |
 | **A4** | Fecho onda auditoria A+L | Por iniciar | [`AUDIT_EXEC_BACKLOG_AL_2026-05.md`](docs/archive/audits/AUDIT_EXEC_BACKLOG_AL_2026-05.md) |
 | **A3-R** | Gate §A3 checklist staging verde | Em curso | Humanos |
 
@@ -517,7 +517,7 @@ _Ver painel **2026-07-15** acima para estado actual._
 | **TVDE-PROD** | `PROD_VALIDATION` | **Concluído** | gate P5 beta ✅ · prod `STRIPE_MOCK=true` · plano Jul arquivado [`FORWARD_PLAN_2026-07.md`](docs/archive/plans/FORWARD_PLAN_2026-07.md) |
 | **O-STRIPE-1** | Webhook Stripe (Fase A local) | **Concluído** | 2026-07-13 · [`O_STRIPE_1_RUNBOOK.md`](docs/ops/O_STRIPE_1_RUNBOOK.md) |
 | **TVDE-BKP** | Backups + restore test | **Concluído** | 2026-07-12 · [`TVDE_BKP_RUNBOOK.md`](docs/ops/TVDE_BKP_RUNBOOK.md) |
-| **TVDE-STG** | Staging smoke_validation | Em curso | **PARCIAL** · alinhado **A2-02-2** · painel **2026-10-21** · [`TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md) §2 |
+| **TVDE-STG** | Staging smoke_validation | Em curso | **PARCIAL** · **A2-02-2 / F2.2 fechados 22/10** · **cron STAGING** (ops) ainda sem acta dedicada · [`TODO_CODIGO_TVDE.md`](docs/TODO_CODIGO_TVDE.md) §2 |
 
 **Regra:** Frank + agente **escolhem 1 carril** (P0 vs P1 vs P5) antes de codar.
 
