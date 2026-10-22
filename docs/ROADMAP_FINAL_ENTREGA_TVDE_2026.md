@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-22 |
+| **updated** | 2026-10-22 (A2-02-2 acta) |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -49,10 +49,10 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 |--------|--------|
 | **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
 | **B** Pagamentos / Financeiro | **B-STG Stripe TEST staging DONE (2026-10-21)** · B1 Stripe live (Pax) · B2 Confirm/3DS · B3 Connect/split · B4 Payouts · **B5 fase 2** (MB WAY) |
-| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE (STAGING 2026-10-21)** · **C4 II-C PARCIAL (#768 UX STAGING PASS · PROD UX smoke OPEN)** · **Fase VI STAGING #765 · smoke PROD OPEN** · **R-OAUTH-UX P2** |
+| **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE (STAGING 2026-10-21)** · **C4 II-C PARCIAL (#768 UX STG+PROD PASS 22/10)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX P2** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
-| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 Staging PARCIAL (baseline #766 · OAuth/logout 21/10)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** |
+| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 assertivo DONE 22/10 (#766 · acta A2-02 §8)** · **TVDE-STG cron STG ops pendente** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
 | **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
 
@@ -481,11 +481,11 @@ Uma pessoa = um `User`. Vários emails / Google vivem em `user_identities`. O te
 | II-A | Repetir o backfill e dual-write. Auth continua a ler `users`. `oauth_google_sub` continua activo | **CLOSED** 2026-09-29 · revisão `c4d5e6f7a8b9` |
 | II-B | Login Google lê `user_identities`. Sem auto-link. Escolha criar/ligar. `oauth_google_sub` deprecated. Prova curta | **CLOSED** 2026-09-29 · sem migration · [`USER_IDENTITIES.md`](architecture/USER_IDENTITIES.md) |
 | S-ID-01 | Smoke prod: Google desconhecido sem User; link QA à fixture `dev_admin`; login seguinte na mesma conta | **CLOSED** 2026-09-29 |
-| II-C | Listar, mudar primary, revogar e adicionar Google na Conta canónica. Sem password, definir password primeiro. Sem Google como step-up | **PARTIAL** 2026-10-21 — PROD: acesso Conta + listagem técnica validados · STAGING: copy lista vazia **PASS** PR [#768](https://github.com/frankbexxx/tvde/pull/768) · **smoke UX PROD pendente** · gestão primary/revoke/add Google não fechada · [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-21** |
+| II-C | Listar, mudar primary, revogar e adicionar Google na Conta canónica. Sem password, definir password primeiro. Sem Google como step-up | **PARTIAL** — UX copy STG+PROD **PASS** (#768 · **22/10**) · gestão primary/revoke/add Google **não fechada** · [`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-22** |
 | III | Mover a mesma linha de identity e bloquear a origem. `bf19df73` em `09c539d1`; `35ddb821` `blocked` | **CLOSED** 2026-09-30 · transferência PROD **PASS** · smoke Google humano **PASS** · PR #680 |
 | IV | `BillingProfile` | Por iniciar |
 | V | Documentos / KYC por domínio | Por iniciar |
-| VI | Logout em todos os shells e revogação de sessão (Admin). **Concluído STAGING** PR [#765](https://github.com/frankbexxx/tvde/pull/765) · smoke **PROD** pendente; não reabre a II-B | **Concluído STAGING** · smoke **PROD** pendente |
+| VI | Logout em todos os shells e revogação de sessão (Admin). PR [#765](https://github.com/frankbexxx/tvde/pull/765) · STG+PROD **PASS 22/10**; não reabre a II-B | **Concluído** |
 
 A Fase I não fundiu `35ddb821` com `09c539d1`.
 
@@ -650,12 +650,13 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 ## F2 — Staging OAuth / smoke staging
 
 - **IDs:** `S-OPS-02` · `A2-02-2` · `TVDE-STG`  
-- **Estado (2026-10-21):** **PARTIAL** — baseline documental **DONE** PR [#766](https://github.com/frankbexxx/tvde/pull/766) (**5 utilizadores efectivos** STAGING); C3 + logout Admin STAGING + B-STG fechados; pack assertivo restante **Em curso** ([`TODOdoDIA.md`](../TODOdoDIA.md) painel **2026-10-21**).
+- **Estado assertivo (2026-10-22):** **F2.2 / A2-02-2 DONE** — acta [`STAGING_A2-02_RUNBOOK.md`](ops/STAGING_A2-02_RUNBOOK.md) **§8** (consolidação evidências 15–22/10; **sem novos testes**). Baseline **DONE** [#766](https://github.com/frankbexxx/tvde/pull/766). C3 · B-STG · logout Admin · II-C UX · System Health — ver acta.  
+- **Pendência independente:** **`TVDE-STG` cron STAGING** ([`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2) — **não** bloqueia F2.2; cron **PROD** validado à parte.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
 |-------|--------|-------------------|------|------|--------|
 | F2.1 | Stack staging viva | URLs OK | CONFIG | — | **DONE** |
-| F2.2 | Smoke curto (OAuth + pagamentos TEST) | PASS | TESTE | F2.1 · C3 · B-STG | **PARTIAL** 2026-10-21 |
+| F2.2 | Smoke curto (OAuth + pagamentos TEST + §6 runbook) | PASS | TESTE | F2.1 · C3 · B-STG | **DONE** 2026-10-22 · acta §8 |
 | F2.3 | Baseline roster STAGING vs DEV documentado | 5 users efectivos; MISSING = gap vs DEV | DOCS | F2.1 | **DONE** #766 |
 
 ## F3 — Sentry prod FE/BE
@@ -859,7 +860,7 @@ Além de M2:
 
 # PÓS-ENTREGA / BACKLOG FUTURO
 
-Carril **H** + itens adiados (B5 fase 2, C2, **F2 parcial** — C3 STAGING **DONE** 2026-10-21, F4, **F5 Fase 2** `X-SYSHEALTH-2`, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
+Carril **H** + itens adiados (B5 fase 2, C2, **F2.2 DONE 22/10** · **TVDE-STG cron STG** ops, F4, **F5 Fase 2** `X-SYSHEALTH-2`, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
 
 **Não** reabre Demo Manel 2 / retoma como pendência.
 

@@ -107,11 +107,13 @@ Alinhar com a tabela §A2-03 no backlog de auditoria: após criar serviços, **p
 
 Executar **só com staging já criado** (e redirects Google actualizados):
 
-- [ ] `/config` mostra Google disponível se quiseres OAuth ligado em staging.
-- [ ] Fluxo Google: início → Google → retorno à app → sessão passageiro (ou erro controlado se conta em estado intermédio).
-- [ ] OTP/login clássico ainda funciona (regressão rápida).
-- [ ] (Opcional) Seed / dev tools conforme política de `ENABLE_DEV_TOOLS` na staging — **não** espelhar prod se for público.
-- [ ] Roster: confirmar que testes usam o **baseline efectivo** (5 users) ou telefones listados acima — **não** assumir os 11 de DEV sem seed.
+- [x] `/config` mostra Google disponível se quiseres OAuth ligado em staging. *(Evidência: OAuth STG **PASS 21/10** · A2-02-1.)*
+- [x] Fluxo Google: início → Google → retorno à app → sessão (staff / **super_admin** documentado **21/10**; callback sem `redirect_uri_mismatch`). *(Não exige repetição.)*
+- [x] Login clássico / sessões por perfil (regressão §6 «OTP/login clássico» = **password** em deployed; **OTP signup** = **N/A** — ver §8). *(Acta consolidada **22/10** · §8 matriz.)*
+- [x] *(Opcional — **N/A** fecho)* Seed / dev tools / `ENABLE_DEV_TOOLS` — política: staging deployed-safe; **não** espelhar prod público; item **opcional** do checklist.
+- [x] Roster: testes usam **baseline efectivo** (5 users) — PR [#766](https://github.com/frankbexxx/tvde/pull/766); **não** seed dos 6 DEV em falta.
+
+**Verificação operacional independente (fora deste fecho):** cron agendado em **`tvde-staging-api`** — ver [`TODO_CODIGO_TVDE.md`](../TODO_CODIGO_TVDE.md) §2 · [`TODOdoDIA.md`](../../TODOdoDIA.md) **TVDE-STG**.
 
 ---
 
@@ -120,3 +122,52 @@ Executar **só com staging já criado** (e redirects Google actualizados):
 - Staging **deployada** (DB + API + app).
 - URLs documentadas na §A2-03 do ficheiro de backlog (substituir *a definir*).
 - Pelo menos uma passagem dos smokes da secção 6 registada (ex. no [`TODOdoDIA.md`](../TODOdoDIA.md) ou nota de sessão).
+
+**Estado 2026-10-22:** critérios **satistfeitos** — registo canónico: **§8** abaixo + painel [`TODOdoDIA.md`](../../TODOdoDIA.md) **2026-10-22** (**A2-02-2 Concluído**).
+
+---
+
+## 8. Acta de encerramento — smokes assertivos A2-02-2 / F2.2 (**2026-10-22**)
+
+**Decisão:** fecho **documental** de **A2-02-2** e roadmap **F2.2**, por **consolidação** de evidências **15–22/10/2026** — **sem novos testes** nesta acta.
+
+### Referências (PRs / relatórios)
+
+| Área | Referência |
+|------|------------|
+| Baseline STAGING (5 users) | PR [#766](https://github.com/frankbexxx/tvde/pull/766) · § baseline deste runbook |
+| OAuth Google STAGING | **21/10/2026** · A2-02-1 · ROADMAP C3 |
+| Logout Admin STG/PROD | PR [#765](https://github.com/frankbexxx/tvde/pull/765) · **PASS 22/10** |
+| Stripe TEST / 3DS / reembolsos | PRs [#757](https://github.com/frankbexxx/tvde/pull/757)–[#764](https://github.com/frankbexxx/tvde/pull/764) · [`PILOT_STRIPE_STAGING_CHECKLIST.md`](../runbooks/PILOT_STRIPE_STAGING_CHECKLIST.md) **A–J** |
+| II-C UX lista vazia | PR [#768](https://github.com/frankbexxx/tvde/pull/768) · STG 21/10 · PROD **22/10** |
+| System Health Fase 1 | PR [#770](https://github.com/frankbexxx/tvde/pull/770) · doc [#771](https://github.com/frankbexxx/tvde/pull/771) · smokes STG/PROD **22/10** |
+
+### Matriz consolidada — sessões STAGING (baseline § telefones)
+
+**Legenda:** «Sessão autenticada documentada» = evidência de uso UI/API com JWT válido no host STAGING; **não** equivale, por si só, a acta técnica explícita «login password com telefone X». «Confirmação humana» = validação Frank **22/10** sem acta técnica dedicada no repo.
+
+| Perfil | Login previsto | Evidência | Tipo de prova |
+|--------|----------------|-----------|---------------|
+| **Passageiro** (`+351912345678`) | Clássico (password demo) | #768 STG Conta `test_passenger` **21/10**; Manual UI pax Stripe **15–19/10**; confirmação navegação **22/10** | Sessão autenticada **documentada** + confirmação humana |
+| **Motorista** (`+351911111111`) | Clássico (password demo) | Manual UI motorista Stripe **15–19/10**; confirmação **22/10** | Sessão autenticada **documentada** + confirmação humana |
+| **Parceiro** (`+351955555502`) | Clássico (password) | **Sem** acta técnica STG datada 19–22/10 no repo | **Confirmação humana 22/10** apenas |
+| **Admin** (`+351900000000`) | Clássico (password) | Reconcile Admin G/H **19/10**; System Health Admin **22/10** (#770); logout **#765** | Sessão autenticada **documentada** + confirmação humana |
+| **Super_admin** (`+351924075365`) | **Google OAuth** (distinto de clássico) | OAuth **PASS 21/10** (A2-02-1) | **PASS documentado** (método Google) |
+
+### Itens §6 classificados como N/A no fecho
+
+| Item | Justificação |
+|------|----------------|
+| **OTP signup** em STAGING deployed | `503 otp_auth_unavailable` — [`S-AUTH-01_OTP_SMS_DECISION.md`](../architecture/S-AUTH-01_OTP_SMS_DECISION.md); critério §6 «clássico» = **password**, não OTP SMS |
+| **Seed / dev tools** (opcional §6) | Opcional; staging **sem** wipe/seed global; `/dev` off em deployed |
+
+### Ressalvas preservadas
+
+1. **Parceiro:** fecho aceita **confirmação humana 22/10**; não há relatório técnico dedicado na janela 19–22/10.
+2. **Password vs sessão:** a matriz **não** declara PASS técnico isolado de «password» onde só existe prova de **sessão autenticada** ou UI manual.
+3. **Cron STAGING:** permanece **verificação operacional independente** (`TVDE-STG`); **não** condiciona este fecho.
+4. **Não repetir** smokes já encerrados (Stripe A–J, OAuth SA, logout, Health, UX copy) salvo regressão comprovada.
+
+### Fora de scope desta acta
+
+- Stripe **LIVE** · SMS OTP real · reset BD STAGING · seed dos 6 utilizadores DEV em falta.
