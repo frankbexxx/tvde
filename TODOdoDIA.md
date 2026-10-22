@@ -69,6 +69,26 @@ Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/
 
 ---
 
+## Painel — **Fiabilidade pagamentos (Fase 0)** (**2026-10-22**)
+
+`main` @ `820e4a33` · spec [`PAYMENT_RELIABILITY_PHASE0_SPEC.md`](docs/runbooks/PAYMENT_RELIABILITY_PHASE0_SPEC.md). **Stripe TEST** em STAGING; **PROD não** validado neste carril. **Stripe LIVE**, reconciliação automática (PR5) e `ENABLE_PAYMENT_ANOMALY_PERSIST=true` **não autorizados**.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **A-PAY-PR1** | Persistência `payment_anomalies` (webhook not-found / mismatch) | **Concluído** | PR [#774](https://github.com/frankbexxx/tvde/pull/774) · merge `88e0d31b` · flag **`ENABLE_PAYMENT_ANOMALY_PERSIST=false`** (default) |
+| **A-PAY-PR2** | Admin Saúde — bloco `payment_webhook_anomalies` | **Concluído** | PR [#775](https://github.com/frankbexxx/tvde/pull/775) · merge `3cf666d9` · CI PASS · smokes Saúde STG+PROD 22/10 |
+| **A-PAY-PR4** | Detector órfãos PI — preview read-only (super_admin) | **Concluído** | PR [#776](https://github.com/frankbexxx/tvde/pull/776) · merge `fee08863` · **sem** cron · **zero** writes Stripe |
+| **A-PAY-PR4-HF** | Hotfix `StripeObject.metadata` no preview órfãos | **Concluído** | PR [#777](https://github.com/frankbexxx/tvde/pull/777) · merge `820e4a33` · CI backend + web-e2e PASS |
+| **S-PAY-PR4-STG** | Smoke manual STAGING preview órfãos (Admin Saúde) | **Concluído** | **22/10/2026** · `scan_status=ok` · **0** órfãos confirmados e **0** inconclusivos **na página/janela consultadas** · HTTP 500 pré-#777 **resolvido** · **≠** ausência global de órfãos na conta Stripe |
+| **A-PAY-PR3** | Webhook anti-regressão (Q1 B + Q2 A+B) | **Por iniciar** | Auditoria técnica 22/10 — ver entrega sessão · **sem** implementação |
+| **O-PAY-PR5** | Reconcile batch automático (cron) | **N/A** | **Q6 A — não autorizado** |
+| **O-STRIPE-LIVE** | Stripe LIVE / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · inalterado |
+| **R-PAY-ORPHAN-PI** | Cancel/recover automático PI órfão aberto | **Por iniciar** | PR4 = **detector manual** only; reconcile **não** cancela PIs abertos |
+
+**Limitações PR4 (registo):** só PIs com `metadata.trip_id` UUID válido entram na classificação TVDE; PIs externos ignorados; janela `window_days` ≤ 7 · grace ≥ 5 min; paginação cap **500**/run (`scan_status=partial` se `has_more`); atribuição conservadora (`confirmed_orphan` vs `inconclusive_*`).
+
+---
+
 ## Painel — **Identidades de login / Fase II-C** (**2026-09-30**)
 
 O painel Conta lista os métodos de início de sessão, muda a primary, revoga e adiciona Google. Sem password, a única acção é «Definir palavra-passe». Google não serve de step-up. Estas operações não mudam `token_version` nem o logout. Testes automatizados feitos. **A-ID-06:** PROD listagem técnica **validada** · UX copy STAGING/PROD **PASS** (#768 · 22/10). Fase VI logout Admin: **Concluído** STAGING + PROD **22/10**.
@@ -309,10 +329,10 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 |----|------|--------|-------|
 | **PR-628** | L-PAY-03 cancel manual fail-closed | Concluído | passenger/driver/admin |
 | **PR-629** | Timeout Stripe cancel fail-closed | Concluído | `1b58627` · per-trip; batch continua; cron HTTP intacto |
-| **L-PAY-02** | Webhook ACK 200 not-found / amount-mismatch | Concluído | **ACCEPTED DESIGN** · HTTP intacto · ver `O-PAY-WEBHOOK-ANOMALY` |
-| **R-PAY-ORPHAN-PI** | Reconciliação activa de PI aberto órfão | Por iniciar | Reconcile observa terminal; **não** cancela PIs abertos hoje |
+| **L-PAY-02** | Webhook ACK 200 not-found / amount-mismatch | Concluído | **ACCEPTED DESIGN** · HTTP intacto · persistência opcional PR1 (#774) · painel **Fiabilidade pagamentos 22/10** |
+| **R-PAY-ORPHAN-PI** | Cancel/recover automático PI órfão aberto | Por iniciar | PR4 detector **read-only** DONE (#776/#777); reconcile **não** cancela abertos |
 | **O-CRON-TIMEOUT-PARTIAL** | `timeout_payment_cancel_failed > 0` → cron `partial_error`? | Por iniciar | Decisão explícita · muda HTTP semantics do `/cron/jobs` |
-| **O-PAY-WEBHOOK-ANOMALY** | Alerta/runbook `stripe_webhook_payment_not_found_ack` + `stripe_webhook_succeeded_amount_mismatch` | Por iniciar | Runbook em `docs/ops/O_STRIPE_1_RUNBOOK.md` §11 · **sem** mudar ACK 200 · orphan sem Payment = revisão manual |
+| **O-PAY-WEBHOOK-ANOMALY** | Superfície ops anomalias webhook | **Concluído** (core) | PR1+PR2 em `main` · runbook §11 · flag persist **off** · alertas/monitor extra = backlog ops |
 
 ---
 

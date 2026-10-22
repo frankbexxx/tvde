@@ -1,8 +1,8 @@
 # Fiabilidade dos pagamentos — especificação técnica (Fase 0)
 
 **Data:** 2026-10-22  
-**Baseline código:** `main` @ `2c2fb8c6` (pós PR #772)  
-**Estado:** especificação **Fase 0** — decisões **Q1–Q8 aprovadas** (Frank, 2026-10-22); **sem implementação de código** neste documento.  
+**Baseline código:** `main` @ `820e4a33` (pós PR #777)  
+**Estado:** especificação **Fase 0** — decisões **Q1–Q8 aprovadas** (Frank, 2026-10-22). **Implementado em `main`:** PR1 (#774) · PR2 (#775) · PR4 (#776) + hotfix (#777). **Pendente:** PR3 (webhook guards). Este documento **não** substitui o painel operacional — ver [`TODOdoDIA.md`](../../TODOdoDIA.md) **Fiabilidade pagamentos 22/10**.  
 **Itens de backlog:** `O-PAY-WEBHOOK-ANOMALY` · `R-PAY-ORPHAN-PI` · protecção contra regressões por webhooks fora de ordem (PR3).
 
 **Relacionado:** [`diagrams/03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) · [`PILOT_PAYMENT_RECONCILIATION.md`](PILOT_PAYMENT_RECONCILIATION.md) · [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §11 (L-PAY-02) · [`TODOdoDIA.md`](../../TODOdoDIA.md) (R/O-PAY)
@@ -18,7 +18,7 @@ A plataforma TVDE trata o **webhook Stripe** como fonte de verdade para transiç
 **Lacunas confirmadas no código actual:**
 
 1. Anomalias webhook (`not-found`, `amount mismatch`) só existem como **`log_event`** — sem agregação persistida nem painel dedicado (`O-PAY-WEBHOOK-ANOMALY`).
-2. **PI Stripe sem linha `Payment`** (órfão externo ou crash pós-`PaymentIntent.create` pré-commit) não tem detector nem runbook machine-readable (`R-PAY-ORPHAN-PI`).
+2. **PI Stripe sem linha `Payment`** — detector **read-only PR4** em `orphan_payment_intent_scan.py` + Admin preview; **sem** cancelamento automático (`R-PAY-ORPHAN-PI` cancel/recover continua backlog).
 3. **Webhooks fora de ordem** — hoje `succeeded` → `failed` é possível no código; **política aprovada (Q2):** bloquear essa regressão no webhook (PR3). **`failed` → `succeeded`** mantém-se com auditoria (Q1, PR3 + linhas em `payment_anomalies`).
 
 ---
@@ -270,7 +270,7 @@ Objectivo: comportamento **seguro** acordado (Q1, Q2); código actual diverge at
 
 **Não aprovado:** cancelamento automático de PI aberto órfão (backlog [`TODOdoDIA.md`](../../TODOdoDIA.md): reconcile observa terminal; não cancela abertos).
 
-### 3.2 Detector read-only (proposta Fase 2)
+### 3.2 Detector read-only (**implementado PR4** — merge #776, hotfix #777)
 
 **Pré-condições (fail-safe):**
 
@@ -301,6 +301,7 @@ Objectivo: comportamento **seguro** acordado (Q1, Q2); código actual diverge at
 
 - Admin `GET /admin/ops/orphan-payment-intents/preview` (super_admin) — JSON only (**PR4**).
 - **Sem cron** Render na V1; execução sob pedido ops.
+- **Smoke STAGING (22/10/2026):** consulta manual Admin Saúde · `scan_status=ok` · nenhum órfão confirmado nem inconclusivo **na janela/página analisadas** · pós-#777 HTTP 500 por `StripeObject.metadata` **resolvido**. **Não** implica ausência global de órfãos na conta Stripe; **PROD não** testado. Registo canónico: [`TODOdoDIA.md`](../../TODOdoDIA.md) **`S-PAY-PR4-STG`** — **não** duplicar acta completa em [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §11 (mantém runbook webhook L-PAY-02).
 
 ### 3.3 PI com metadata `trip_id` sem Payment — cenário crash
 
@@ -383,15 +384,16 @@ Ver **§9** — plano técnico detalhado PR1.
 | **Risco** | Disputa Stripe modelada como failed event — bloqueio correcto por Q2; ops trata separadamente |
 | **Rollback** | Revert guards webhook |
 
-### PR4 — Detector órfãos read-only (R-PAY) — **Q5 A: só preview manual**
+### PR4 — Detector órfãos read-only (R-PAY) — **Q5 A: só preview manual** — **DONE**
 
 | Item | Detalhe |
 |------|---------|
 | **Scope** | `orphan_payment_intent_scan.py` + **`GET /admin/ops/orphan-payment-intents/preview`** (super_admin); **sem cron** Render na V1 |
-| **Ficheiros** | novo service, `admin.py`, tests T-O8/T-O9 |
+| **Entrega** | PR [#776](https://github.com/frankbexxx/tvde/pull/776) · hotfix [#777](https://github.com/frankbexxx/tvde/pull/777) (`StripeObject.metadata` via `.to_dict()`) · `main` @ `820e4a33` |
+| **Smoke STAGING** | **22/10/2026 PASS** (consulta efectuada; ver §3.2) |
 | **Dependências** | Stripe TEST API quota; skip `STRIPE_MOCK` |
-| **Aceitação** | Zero mutações Stripe; grace 5 min |
-| **Risco** | Rate limit — cap 500/run |
+| **Aceitação** | Zero mutações Stripe; grace ≥ 5 min; paginação SDK |
+| **Risco** | Rate limit — cap 500/run; cobertura parcial por janela/página |
 | **Rollback** | Remove route; sem migration |
 
 ### PR5 — Recuperação automática — **opcional, NÃO autorizado (Q6 A)**
@@ -419,7 +421,7 @@ Ver **§9** — plano técnico detalhado PR1.
 | **Q7** | **A** — runbook §11 corrigido (marker `evt_*` em not-found) | Alinha ops ao código L-PAY-01 | Doc ✓ |
 | **Q8** | **A** — **sem** compensação automática pós-crash accept | Risco duplicar Payment / amounts errados; detector + manual | — |
 
-**Início de implementação:** apenas **PR1** está desbloqueado; PR2–PR4 seguem ordem acima; PR5 explícitamente excluído.
+**Estado implementação (22/10/2026):** PR1 · PR2 · PR4 **merged**; **PR3** desbloqueado para implementação local após auditoria; PR5 explícitamente excluído; **`ENABLE_PAYMENT_ANOMALY_PERSIST`** permanece **false** até decisão ops.
 
 ---
 
