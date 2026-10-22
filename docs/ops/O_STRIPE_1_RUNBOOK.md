@@ -280,10 +280,12 @@ Sem Stripe API · `STRIPE_MOCK` intocado · sem reconcile lote.
 
 HTTP semantics **intencionais** (não mudar sem decisão explícita):
 
-| Evento estruturado | ACK | Marker | Efeito local |
-|--------------------|-----|--------|--------------|
-| `stripe_webhook_payment_not_found_ack` | 200 | não | Nenhum Payment local para aquele `pi_` |
+| Evento estruturado | ACK | Marker (`stripe_webhook_events`) | Efeito local |
+|--------------------|-----|----------------------------------|--------------|
+| `stripe_webhook_payment_not_found_ack` | 200 | **sim**, se o payload traz `evt_*` (claim L-PAY-01 antes do lookup) | Nenhum Payment local para aquele `pi_` |
 | `stripe_webhook_succeeded_amount_mismatch` | 200 | sim | Payment fica `processing` (não `succeeded`) |
+
+Sem `evt_*` no evento: não há linha em `stripe_webhook_events` (L-PAY-01 só com id Stripe).
 
 Follow-up operacional: **`O-PAY-WEBHOOK-ANOMALY`** (alerta/volume; **sem** novo sistema de alertas obrigatório nesta fase).
 
