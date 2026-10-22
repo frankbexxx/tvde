@@ -306,7 +306,7 @@ Follow-up operacional: **`O-PAY-WEBHOOK-ANOMALY`** (alerta/volume; **sem** novo 
 | **O-SECURITY** | **PASS** 2026-07-19 — password SA rodada via `/auth/me/password` (sem env) |
 | **O-PAY-WEBHOOK-ANOMALY** | Superfície PR1/PR2 em Admin Saúde · flag persist default off · alertas extra = ops |
 | Preview órfãos PI (PR4) | Smoke STAGING **22/10 PASS** — [`PAYMENT_RELIABILITY_PHASE0_SPEC.md`](../runbooks/PAYMENT_RELIABILITY_PHASE0_SPEC.md) §3.2 · **≠** scan global Stripe |
-| Guards webhook PR3 (#779) | Deploy STAGING **22/10** + health **200** — detalhe e smoke pendente em [`TODOdoDIA.md`](../../TODOdoDIA.md) **S-PAY-PR3-STG-*** · matriz §1.4 spec Fase 0 |
+| Guards webhook PR3 (#779) | PR3 técnico **concluído** (#779) · deploy STAGING **22/10** + health **200** · **`S-PAY-PR3-STG-PRE` PASS** (22/10) · **`S-PAY-PR3-STG` N/A** (smoke financeiro E2E **dispensado** nesta fase · **≠ PASS**) — [`TODOdoDIA.md`](../../TODOdoDIA.md) · matriz §1.4 [`PAYMENT_RELIABILITY_PHASE0_SPEC.md`](../runbooks/PAYMENT_RELIABILITY_PHASE0_SPEC.md) |
 | Webhook endpoint **produção** com `STRIPE_MOCK=true` | Smoke opcional (Send test event → 200) |
 | `STRIPE_MOCK=false` + `sk_live_*` em prod | Futuro — conta Stripe do parceiro + docs |
 | Fase B staging | [`STAGING_A2-02_RUNBOOK.md`](STAGING_A2-02_RUNBOOK.md) |
