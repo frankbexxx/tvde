@@ -10,6 +10,7 @@ from app.db.models.partner_message import DriverMessageRead, PartnerMessage
 from app.db.models.interaction_log import InteractionLog
 from app.db.models.otp import OtpCode
 from app.db.models.payment import Payment
+from app.db.models.payment_anomaly import PaymentAnomaly
 from app.db.models.passenger_payment_method import PassengerPaymentMethod
 from app.db.models.rotacional_external_cache import RotacionalExternalCache
 from app.db.models.stripe_webhook_event import StripeWebhookEvent
@@ -39,6 +40,7 @@ __all__ = [
     "VehicleDocument",
     "Trip",
     "Payment",
+    "PaymentAnomaly",
     "PassengerPaymentMethod",
     "TripOffer",
     "OtpCode",
