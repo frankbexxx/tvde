@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN (painel operacional) |
 | **status** | ACTIVO |
-| **updated** | 2026-10-21 |
+| **updated** | 2026-10-22 |
 | **owner** | Frank |
 | **source_of_truth** | Estado operacional diário (GOV-DOC-002) |
 
@@ -53,6 +53,19 @@ Confronto código / PRs / smokes manuais STAGING. **PROD**, jurídico, fiscal, S
 | **O-STRIPE-LIVE** | Stripe live / B1 | **Bloqueado** | Prod `STRIPE_MOCK=true` · parceiro + `sk_live_*` · [`ENV_SINGLE_REALITY.md`](docs/env/ENV_SINGLE_REALITY.md) |
 | **DOC-NEXT-1** / **DOC-NEXT-2** | Consultas EXT-LEG / EXT-FIS | **Bloqueado** (externo) | Mandato / parecer jurídico e envio fiscal **sem fecho** — registo inalterado |
 | **R-OAUTH-UX** | Mensagem OAuth pós-exchange (P2) | **Por iniciar** | Falha no exchange Google apresentada como «sessão não corresponde» · `GoogleOAuthCallback.tsx` · correcção pendente · não bloqueia C3 STAGING |
+
+---
+
+## Painel — **System Health Admin** (**2026-10-22**)
+
+Fase 1 integrada em `main` · PR [#770](https://github.com/frankbexxx/tvde/pull/770) · merge `f12c294a` · CI backend / web-app / web-e2e **PASS** · smokes manuais **STAGING + PROD PASS** (22/10). **Sem migrations.** Matching, disponibilidade, compliance e recuperação administrativa **inalterados**.
+
+| ID | Item | Estado | Notas |
+|----|------|--------|-------|
+| **X-SYSHEALTH-1** | Fase 1 — alertas críticos vs informativos | **Concluído** | `warnings` = só críticos · offline prolongado → `informational_warnings` + lista com `is_test_account` · Admin Saúde/Agora · cron propaga contadores · secção **F5** em [`ROADMAP_FINAL_ENTREGA_TVDE_2026.md`](docs/ROADMAP_FINAL_ENTREGA_TVDE_2026.md) |
+| **X-SYSHEALTH-2** | Fase 2 — indisponibilidade anómala | **Por iniciar** | Distinguir offline voluntário vs bloqueado após erros, viagens ou timeouts · arquitectura **TBD** · migrations **não** assumidas |
+| **S-SYSHEALTH-1-STG** | Smoke manual STAGING Saúde/Agora | **Concluído** | 22/10 · 4 pagamentos `processing` = **críticos** · `status=degraded` **correcto** · separação crítico/informativo **validada** |
+| **S-SYSHEALTH-1-PROD** | Smoke manual PROD Saúde/Agora | **Concluído** | 22/10 · `status=ok` · «Operacional» · 0 críticos · motorista Marly offline em **Informações** · badge **Conta demo** · **sem** recover admin |
 
 ---
 
@@ -409,7 +422,7 @@ Manual cancel (#628) + timeout (#629) fecham PI real cancelável antes da transi
 | **S-ADMIN-OPS-0** | Smoke Fase 0 B/C (force / gap ongoing) | Concluído | PASS; nota ops **SKIP**; 1B Assign SKIP |
 | **R-ADMIN-ORPHAN-PANEL** | «Viagem aberta fora da lista» pós-completed | Por iniciar | Observação UX; não blocker |
 | **R-AGORA-SNAP** | Agora vs Viagens (contagens) | Por iniciar | Observação snapshot/manual; **não** bug confirmado |
-| **BACKEND-DBPOOL-2** / **ADMIN-HEALTH-1** | Optimizar system-health / pool local | Por iniciar | Saúde **ok** pós-edges; optimização só se saturar |
+| **BACKEND-DBPOOL-2** | Optimizar pool BD / latência system-health local | Por iniciar | **≠** Fase 1 #770 · optimização só se saturar · PROD/STG smokes Saúde **PASS** 22/10 |
 | **CI-MAINT-1** | Warning Actions Node 20 deprecated | Por iniciar | Baixa prioridade — ver painel 2026-07-29 |
 | **PARTNER-FLEET-1** | Viaturas, docs, associação, reassign ops | Concluído | Evoluiu para PF3* / PF3D (gates OFF) — ver handoff |
 | **NAV-WAZE-2** / **NAV-ROUTE-STOPS** | Nav manual nextStop + trip_stops | Por iniciar | Decisão Manel: botão sempre visível; sem auto-cadeia |
