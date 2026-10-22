@@ -2,7 +2,39 @@
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class PaymentWebhookAnomalyTypeCount(BaseModel):
+    anomaly_type: str
+    count: int
+
+
+class PaymentWebhookAnomalyRecentItem(BaseModel):
+    id: str
+    anomaly_type: str
+    severity: str
+    created_at: str
+    payment_intent_id: str | None = None
+    trip_id: str | None = None
+    payment_id: str | None = None
+    event_type: str | None = None
+    stripe_event_id: str | None = None
+    environment: str | None = None
+    stripe_mode: str | None = None
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class PaymentWebhookAnomaliesHealthBlock(BaseModel):
+    """Read-only O-PAY PR2 summary (does not affect health status)."""
+
+    persist_enabled: bool
+    data_available: bool = True
+    window_hours: int = 24
+    total_in_window: int = 0
+    counts_by_type: list[PaymentWebhookAnomalyTypeCount] = Field(default_factory=list)
+    counts_by_severity: dict[str, int] = Field(default_factory=dict)
+    recent: list[PaymentWebhookAnomalyRecentItem] = Field(default_factory=list)
 
 
 class SystemHealthResponse(BaseModel):
@@ -19,6 +51,7 @@ class SystemHealthResponse(BaseModel):
     orphan_payments: list[dict[str, Any]] = []  # deprecated
     warnings: list[str] = []
     informational_warnings: list[str] = []
+    payment_webhook_anomalies: PaymentWebhookAnomaliesHealthBlock | None = None
 
 
 class RunTimeoutsResponse(BaseModel):
