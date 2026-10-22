@@ -68,6 +68,15 @@ export const PB_WEBHOOK_ANOMALIES: HealthAnomalyPlaybook = {
   ],
 }
 
+export const PB_ORPHAN_PAYMENT_INTENTS: HealthAnomalyPlaybook = {
+  what: 'PaymentIntents na conta Stripe TEST com metadata trip_id TVDE mas sem linha Payment correspondente — possível crash pós-create ou inconsistência. Preview read-only; nunca cancelar PI daqui.',
+  steps: [
+    'Confirma trip_id no Stripe Dashboard e na BD (trips / payments); verifica se a viagem ainda está activa ou se houve accept incompleto.',
+    'Cruza com webhooks / anomalias webhook (24h) e runbook L-PAY-02; documenta antes de qualquer acção manual no Stripe.',
+    'Não captures nem canceles PI por este ecrã; escala engenharia se o padrão se repetir após deploy.',
+  ],
+}
+
 export const PB_INCONSISTENT_FINANCIAL: HealthAnomalyPlaybook = {
   what: 'Incoerência entre viagem concluída e valores de pagamento (totais, comissão, payout) face às regras actuais.',
   steps: [

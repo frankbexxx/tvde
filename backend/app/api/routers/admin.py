@@ -99,6 +99,8 @@ from app.services.admin_payment_reconciliation import (
     reconcile_single_trip_payment_with_stripe,
     reconcile_stripe_for_completed_processing,
 )
+from app.services.orphan_payment_intent_scan import preview_orphan_payment_intents
+from app.schemas.orphan_payment_intents import OrphanPaymentIntentPreviewResponse
 from app.utils.logging import log_event
 
 
@@ -2132,6 +2134,44 @@ async def admin_reconcile_payments_preview(
     rid = getattr(getattr(request, "state", None), "request_id", "") or ""
     _ = user
     return {**preview_reconciliation(db, limit=limit), "request_id": rid}
+
+
+@router.get(
+    "/ops/orphan-payment-intents/preview",
+    response_model=OrphanPaymentIntentPreviewResponse,
+)
+async def admin_orphan_payment_intents_preview(
+    request: Request,
+    window_days: int = Query(7, ge=1, le=7),
+    grace_minutes: int = Query(5, ge=5, le=60),
+    limit: int = Query(100, ge=1, le=500),
+    starting_after: str | None = Query(None),
+    user: UserContext = Depends(get_current_super_admin),
+    db: Session = Depends(get_db),
+) -> OrphanPaymentIntentPreviewResponse:
+    """Preview read-only: PIs Stripe (TEST) com metadata TVDE sem Payment (PR4)."""
+    rid = getattr(getattr(request, "state", None), "request_id", "") or ""
+    _ = user
+    data = preview_orphan_payment_intents(
+        db,
+        window_days=window_days,
+        grace_minutes=grace_minutes,
+        limit=limit,
+        starting_after=starting_after,
+    )
+    log_event(
+        "admin_orphan_payment_intents_preview",
+        scan_run_id=data.get("scan_run_id"),
+        scan_status=data.get("scan_status"),
+        skipped=data.get("skipped"),
+        skip_reason=data.get("skip_reason"),
+        confirmed_count=len(data.get("confirmed_orphans") or []),
+        inconclusive_count=len(data.get("inconclusive") or []),
+        pis_listed=data.get("pis_listed"),
+        request_id=rid,
+    )
+    data["request_id"] = rid
+    return OrphanPaymentIntentPreviewResponse(**data)
 
 
 @router.post("/ops/reconcile-payments/stripe-sync")

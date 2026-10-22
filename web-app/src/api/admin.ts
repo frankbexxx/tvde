@@ -631,6 +631,74 @@ export async function postReconcilePaymentsStripeSync(
   })
 }
 
+export interface OrphanPaymentIntentFinding {
+  payment_intent_id: string
+  stripe_status: string
+  orphan_class: string
+  finding_kind: string
+  trip_id_metadata?: string | null
+  trip_exists?: boolean | null
+  amount_cents?: number | null
+  currency?: string | null
+  stripe_created?: number | null
+  payment_row_found?: boolean
+}
+
+export interface OrphanPaymentIntentInconclusive {
+  payment_intent_id: string
+  finding_kind: string
+  detail: string
+  trip_id_metadata?: string | null
+  stripe_status?: string | null
+}
+
+export interface OrphanPaymentIntentPreviewResponse {
+  scan_run_id: string
+  scanned_at: string
+  scan_status: string
+  skipped: boolean
+  skip_reason?: string | null
+  skip_message?: string | null
+  environment: string
+  stripe_mode: string
+  window_days: number
+  grace_minutes: number
+  stripe_list_cap: number
+  stripe_pages_fetched: number
+  pis_listed: number
+  pis_tvde_attributed: number
+  ignored_external_count: number
+  skipped_grace_count: number
+  linked_count: number
+  confirmed_orphans: OrphanPaymentIntentFinding[]
+  inconclusive: OrphanPaymentIntentInconclusive[]
+  errors: string[]
+  has_more: boolean
+  next_starting_after?: string | null
+  request_id?: string
+}
+
+export async function getOrphanPaymentIntentsPreview(
+  token: string,
+  opts?: {
+    window_days?: number
+    grace_minutes?: number
+    limit?: number
+    starting_after?: string
+  }
+): Promise<OrphanPaymentIntentPreviewResponse> {
+  const q = new URLSearchParams()
+  if (opts?.window_days != null) q.set('window_days', String(opts.window_days))
+  if (opts?.grace_minutes != null) q.set('grace_minutes', String(opts.grace_minutes))
+  if (opts?.limit != null) q.set('limit', String(opts.limit))
+  if (opts?.starting_after?.trim()) q.set('starting_after', opts.starting_after.trim())
+  const qs = q.toString()
+  return apiFetch<OrphanPaymentIntentPreviewResponse>(
+    `/admin/ops/orphan-payment-intents/preview${qs ? `?${qs}` : ''}`,
+    { token }
+  )
+}
+
 export async function postReconcilePaymentsCloseNoPi(
   token: string,
   body: { governance_reason: string; dry_run: boolean; limit?: number }
