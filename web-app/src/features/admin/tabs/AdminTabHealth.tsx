@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { AdminPaymentWebhookAnomaliesSection } from '../AdminPaymentWebhookAnomaliesSection'
+import { AdminOrphanPaymentIntentsSection } from '../AdminOrphanPaymentIntentsSection'
 import { HealthAnomalyBlock } from '../AdminHealthAnomalyBlocks'
 import {
   healthBlockKey,
@@ -23,11 +24,13 @@ export type AdminTabHealthProps = {
   fetchHealth: () => void | Promise<void>
   health: SystemHealthResponse | null
   syncAdminUrl: (next: AdminDashboardUrlUpdate) => void
+  token?: string | null
+  isSuperAdmin?: boolean
 }
 
 export function AdminTabHealth(props: AdminTabHealthProps) {
   const { t } = useTranslation('admin')
-  const { fetchHealth, health, syncAdminUrl } = props
+  const { fetchHealth, health, syncAdminUrl, token = null, isSuperAdmin = false } = props
 
   const criticalCount = countCriticalHealthSignalRows(health)
   const infoCount = countInformationalHealthSignalRows(health)
@@ -135,6 +138,7 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
               <AdminPaymentWebhookAnomaliesSection
                 block={health.payment_webhook_anomalies}
               />
+              <AdminOrphanPaymentIntentsSection token={token} isSuperAdmin={isSuperAdmin} />
               {infoWarnings.length > 0 && (
                 <ul className="text-sm text-foreground/80 space-y-1">
                   {infoWarnings.map((w, i) => (

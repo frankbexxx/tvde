@@ -180,6 +180,25 @@ def retrieve_payment_intent(payment_intent_id: str) -> stripe.PaymentIntent:
     return stripe.PaymentIntent.retrieve(payment_intent_id)
 
 
+def list_payment_intents_page(
+    *,
+    created: dict[str, int],
+    limit: int,
+    starting_after: str | None = None,
+) -> dict[str, Any]:
+    """Read-only paginated PaymentIntent.list (PR4 orphan preview)."""
+    lim = max(1, min(int(limit), 100))
+    params: dict[str, Any] = {"limit": lim, "created": created}
+    if starting_after:
+        params["starting_after"] = starting_after
+    _ensure_stripe_ready()
+    result = stripe.PaymentIntent.list(**params)
+    return {
+        "data": list(result.data),
+        "has_more": bool(getattr(result, "has_more", False)),
+    }
+
+
 def attach_payment_method_to_intent(
     payment_intent_id: str,
     payment_method_id: str,

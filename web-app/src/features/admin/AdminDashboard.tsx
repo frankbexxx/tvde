@@ -1046,6 +1046,8 @@ export function AdminDashboard() {
           fetchHealth={fetchHealthVoid}
           health={health}
           syncAdminUrl={syncAdminUrl}
+          token={token}
+          isSuperAdmin={isSuperAdminSession}
         />
       )}
 
