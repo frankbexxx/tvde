@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-22 (PR4 fiabilidade pagamentos) |
+| **updated** | 2026-10-22 (PR3 fiabilidade pagamentos) |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -48,7 +48,7 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 | Carril | Etapas |
 |--------|--------|
 | **A** Negócio / Legal / Compliance | **A1 PARCIAL** *(A1.2/A1.3 modelagem DONE; **A1.4 DECIDIDA / CLOSED** 2026-09-18)* · **A2 PARCIAL** (15% + settlement + **A2.5 tarifário DONE**; **A2.6** alinhado a A1.4) · **A3 PARCIAL** · A4 · A5 · **A6 PARCIAL** *(vehicle gates ON / G-KYC-P0-04 CLOSED; IMT/docs pessoais abertos)* |
-| **B** Pagamentos / Financeiro | **B-STG DONE (2026-10-21)** · **B-PAY-REL PR1/PR2/PR4 DONE (22/10)** · PR3 webhook guards **Por iniciar** · B1 live · B2 · B3 · B4 · **B5** (MB WAY) |
+| **B** Pagamentos / Financeiro | **B-STG DONE (2026-10-21)** · **B-PAY-REL PR1–PR4 DONE (22/10)** · smoke funcional PR3 STG **pendente** · B1 live · B2 · B3 · B4 · **B5** (MB WAY) |
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE (STAGING 2026-10-21)** · **C4 II-C PARCIAL (#768 UX STG+PROD PASS 22/10)** · **Fase VI #765 STG+PROD PASS 22/10** · **R-OAUTH-UX P2** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
@@ -379,8 +379,8 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 
 ## B-PAY-REL — Fiabilidade pagamentos (Fase 0 spec)
 
-- **Objectivo:** observabilidade webhook, detector órfãos read-only, e (futuro PR3) protecção contra regressões de `Payment.status` por webhooks fora de ordem.  
-- **Baseline:** `main` @ `820e4a33` · [`PAYMENT_RELIABILITY_PHASE0_SPEC.md`](runbooks/PAYMENT_RELIABILITY_PHASE0_SPEC.md) · painel [`TODOdoDIA.md`](../TODOdoDIA.md) **Fiabilidade pagamentos 22/10**.  
+- **Objectivo:** observabilidade webhook, detector órfãos read-only, guards webhook anti-regressão (PR3).  
+- **Baseline:** `main` @ `edc666cc` · [`PAYMENT_RELIABILITY_PHASE0_SPEC.md`](runbooks/PAYMENT_RELIABILITY_PHASE0_SPEC.md) · painel [`TODOdoDIA.md`](../TODOdoDIA.md) **Fiabilidade pagamentos 22/10**.  
 - **Fora de scope:** Stripe LIVE · PR5 reconcile cron · activar `ENABLE_PAYMENT_ANOMALY_PERSIST` sem smoke dedicado · cancelamento automático de PI órfão.
 
 | Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
@@ -389,7 +389,9 @@ Piloto pode usar **B1 + liquidação manual** se legal/ops o permitirem — docu
 | B-PAY-REL.2 | PR2 — Admin Saúde anomalies 24h | Super_admin vê bloco; `data_available` | CÓDIGO · TESTE | B-PAY-REL.1 | **DONE** [#775](https://github.com/frankbexxx/tvde/pull/775) |
 | B-PAY-REL.3 | PR4 — preview órfãos PI (manual, read-only) | Zero mutações Stripe; grace ≥ 5 min | CÓDIGO · TESTE | B-STG | **DONE** [#776](https://github.com/frankbexxx/tvde/pull/776) + HF [#777](https://github.com/frankbexxx/tvde/pull/777) |
 | B-PAY-REL.4 | Smoke STAGING preview órfãos | `scan_status=ok`; sem 500 pós-HF | TESTE | B-PAY-REL.3 | **DONE** **22/10/2026** · **≠** prova de zero órfãos globais na conta |
-| B-PAY-REL.5 | PR3 — guards webhook Q1/Q2 | Bloquear `succeeded→failed`; audit `failed→succeeded` | CÓDIGO · TESTE | B-PAY-REL.1 (recom.) | **Por iniciar** |
+| B-PAY-REL.5 | PR3 — guards webhook Q1/Q2 | Bloquear `succeeded→failed`; audit `failed→succeeded`; `FOR UPDATE` | CÓDIGO · TESTE | B-PAY-REL.1 (recom.) | **DONE** [#779](https://github.com/frankbexxx/tvde/pull/779) · merge `edc666cc` |
+| B-PAY-REL.5-STG | Deploy STAGING pós-PR3 | Health **200**; app Live | CONFIG | B-PAY-REL.5 | **DONE** **22/10/2026** |
+| B-PAY-REL.5-SMOKE | Smoke funcional PR3 STAGING | Webhooks fora de ordem / recovery | TESTE | B-PAY-REL.5-STG | **Por iniciar** · **não** executado 22/10 |
 | B-PAY-REL.6 | PR5 reconcile automático | — | — | — | **N/A** (Q6 A — manual only) |
 
 ## B3 — Stripe Connect + split automático
