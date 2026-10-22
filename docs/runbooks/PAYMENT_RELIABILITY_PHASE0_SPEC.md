@@ -1,9 +1,9 @@
 # Fiabilidade dos pagamentos — especificação técnica (Fase 0)
 
 **Data:** 2026-10-22  
-**Baseline código:** `main` @ `820e4a33` (pós PR #777)  
-**Estado:** especificação **Fase 0** — decisões **Q1–Q8 aprovadas** (Frank, 2026-10-22). **Implementado em `main`:** PR1 (#774) · PR2 (#775) · PR4 (#776) + hotfix (#777). **Pendente:** PR3 (webhook guards). Este documento **não** substitui o painel operacional — ver [`TODOdoDIA.md`](../../TODOdoDIA.md) **Fiabilidade pagamentos 22/10**.  
-**Itens de backlog:** `O-PAY-WEBHOOK-ANOMALY` · `R-PAY-ORPHAN-PI` · protecção contra regressões por webhooks fora de ordem (PR3).
+**Baseline código:** `main` @ `edc666cc` (pós PR #779)  
+**Estado:** especificação **Fase 0** — decisões **Q1–Q8 aprovadas** (Frank, 2026-10-22). **Implementado em `main`:** PR1 (#774) · PR2 (#775) · PR4 (#776) + hotfix (#777) · **PR3 (#779)**. **PR5** não autorizado. Registo operacional (deploy vs smoke PR3): [`TODOdoDIA.md`](../../TODOdoDIA.md) **Fiabilidade pagamentos 22/10**.  
+**Itens de backlog:** `R-PAY-ORPHAN-PI` (cancel/recover automático) · activar `ENABLE_PAYMENT_ANOMALY_PERSIST` (decisão ops) · smoke funcional PR3 STAGING.
 
 **Relacionado:** [`diagrams/03_PAYMENTS.md`](../diagrams/03_PAYMENTS.md) · [`PILOT_PAYMENT_RECONCILIATION.md`](PILOT_PAYMENT_RECONCILIATION.md) · [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §11 (L-PAY-02) · [`TODOdoDIA.md`](../../TODOdoDIA.md) (R/O-PAY)
 
@@ -15,11 +15,11 @@
 
 A plataforma TVDE trata o **webhook Stripe** como fonte de verdade para transições terminais de `Payment.status` (`succeeded` / `failed`), com **idempotência por `evt_*`**, **fail-closed** em divergência de montante no `payment_intent.succeeded`, e **reembolsos** sincronizados apenas via `charge.refunded`. A reconciliação Admin alinha pares `Trip.completed` + `Payment.processing` com o estado Stripe, com as mesmas guardas de amount/currency.
 
-**Lacunas confirmadas no código actual:**
+**Lacunas / follow-ups (pós PR1–PR4):**
 
-1. Anomalias webhook (`not-found`, `amount mismatch`) só existem como **`log_event`** — sem agregação persistida nem painel dedicado (`O-PAY-WEBHOOK-ANOMALY`).
-2. **PI Stripe sem linha `Payment`** — detector **read-only PR4** em `orphan_payment_intent_scan.py` + Admin preview; **sem** cancelamento automático (`R-PAY-ORPHAN-PI` cancel/recover continua backlog).
-3. **Webhooks fora de ordem** — hoje `succeeded` → `failed` é possível no código; **política aprovada (Q2):** bloquear essa regressão no webhook (PR3). **`failed` → `succeeded`** mantém-se com auditoria (Q1, PR3 + linhas em `payment_anomalies`).
+1. **Persistência anomalies** — código PR1 + UI PR2 em `main`; **`ENABLE_PAYMENT_ANOMALY_PERSIST=false`** por defeito (sem rows até activação explícita).
+2. **PI órfão** — detector read-only PR4; cancel/recover automático continua backlog (`R-PAY-ORPHAN-PI`).
+3. **Validação STAGING PR3** — deploy **22/10** + health **200**; **smoke funcional** webhook (ordem/recovery) **não executado** (ver painel `S-PAY-PR3-STG`).
 
 ---
 
@@ -71,17 +71,17 @@ Implementação: `backend/app/api/routers/webhooks/stripe.py`.
 | `event.type` | Lookup | Efeito em `Payment.status` | Efeito refund |
 |--------------|--------|----------------------------|---------------|
 | `payment_intent.succeeded` | `pi_` do objecto | → `succeeded` se `!= succeeded` **e** guard amount/currency OK; senão mantém `processing` | — |
-| `payment_intent.payment_failed` | idem | → `failed` se `!= failed` | — |
-| `charge.payment_failed` | `charge.payment_intent` → `pi_` | idem failed | — |
+| `payment_intent.payment_failed` | idem | → `failed` se `!= failed` **e** `!= succeeded` (PR3: bloqueio regressão) | — |
+| `charge.payment_failed` | `charge.payment_intent` → `pi_` | idem failed (PR3 se já `succeeded`) | — |
 | `charge.refunded` | idem | **Inalterado** (`succeeded` típico) | `refunded_amount = max(atual, Stripe)` |
 | Outros com `pi_` válido | idem | Sem mudança de status; marker `evt_*` commit se aplicável | — |
 | Sem `pi_` válido | — | Ack 200, skip | — |
 
 **Política V1 refunds:** não aplicar `refund.created` / `refund.updated` no webhook (evitar double count) — ver comentário em `stripe.py` e [`PILOT_STRIPE_REFUND.md`](PILOT_STRIPE_REFUND.md).
 
-### 1.4 Transições BD — válidas, inválidas e regressivas (comportamento **actual**)
+### 1.4 Transições BD — válidas, inválidas e regressivas (comportamento **pós-PR3** `#779`)
 
-Legenda: **V** = observado no código · **R** = regressivo / risco · **B** = bloqueado por guard ou fluxo.
+Legenda: **V** = implementado · **B** = bloqueado por guard ou fluxo.
 
 #### 1.4.1 Máquina `Payment.status` (webhook + reconcile + complete mock)
 
@@ -90,26 +90,26 @@ stateDiagram-v2
   [*] --> processing: accept_trip
   processing --> succeeded: webhook succeeded + guard OK\nou reconcile + guard OK\nou complete STRIPE_MOCK
   processing --> failed: webhook failed\nou reconcile terminal\nou close-no-pi\nou timeout mock
-  succeeded --> failed: webhook failed (R-atual)
-  failed --> succeeded: webhook succeeded + guard OK (R-atual)
+  succeeded --> succeeded: webhook failed bloqueado (PR3 Q2)
+  failed --> succeeded: webhook succeeded + guard + audit recovery (PR3 Q1)
   pending --> processing: legado/testes apenas
 ```
 
 | Transição | Mecanismo | Classificação |
 |-----------|-----------|---------------|
-| `processing` → `succeeded` | Webhook / reconcile / mock complete | **V — desejado** |
-| `processing` → `failed` | Webhook failed / reconcile / close-no-pi | **V — desejado** |
+| `processing` → `succeeded` | Webhook / reconcile / mock complete | **V** |
+| `processing` → `failed` | Webhook failed / reconcile / close-no-pi | **V** |
 | `processing` → `processing` | Mismatch amount no succeeded; duplicate evt já succeeded | **V — fail-closed** |
-| `succeeded` → `succeeded` | Duplicate `payment_intent.succeeded` | **V — idempotente** (`already_succeeded`) |
+| `succeeded` → `succeeded` | Duplicate succeeded; failed tardio **ignorado** (PR3) | **V — idempotente / bloqueio** |
 | `failed` → `failed` | Duplicate failed | **V — idempotente** |
-| `failed` → `succeeded` | `payment_intent.succeeded` tardio (retry SCA) | **R-atual** — pode ser desejado operacionalmente; **requer decisão produto** |
-| `succeeded` → `failed` | `payment_intent.payment_failed` / `charge.payment_failed` tardio | **R-atual — alto risco** de inconsistência com viagem `completed` |
-| `succeeded` → `processing` | — | **B** — não implementado |
-| Qualquer → via refund webhook | Só `refunded_amount`; status mantém-se | **V — separação captura/reembolso** |
+| `failed` → `succeeded` | Webhook succeeded + guard + `webhook_status_recovery` (flag anomalies opcional) | **V — Q1 B** |
+| `succeeded` → `failed` | Webhook failed tardio | **B — Q2 A** (`webhook_status_regression_blocked`) |
+| `succeeded` → `processing` | — | **B** |
+| Qualquer → via refund webhook | Só `refunded_amount`; status mantém-se | **V** |
 
-#### 1.4.2 Matriz alvo (**aprovada** — implementação em **PR3**, não em PR1)
+**Concorrência (PR3):** lookup `Payment` no webhook com **`SELECT … FOR UPDATE`** antes de mutar estado.
 
-Objectivo: comportamento **seguro** acordado (Q1, Q2); código actual diverge até PR3.
+#### 1.4.2 Matriz alvo (**Q1/Q2** — **implementada PR3**)
 
 | De \ Para | `processing` | `succeeded` | `failed` |
 |-----------|----------------|-------------|----------|
@@ -132,9 +132,9 @@ Objectivo: comportamento **seguro** acordado (Q1, Q2); código actual diverge at
 | **Reentrega mesmo `evt_*`** | `INSERT stripe_webhook_events ON CONFLICT DO NOTHING`; se rowcount 0 → rollback + **200** (`stripe_webhook_duplicate_event` implícito no path early) |
 | **Novo `evt_*`, mesmo PI, segundo succeeded** | Payment já `succeeded` → log `stripe_webhook_duplicate_event` note=`already_succeeded` |
 | **Webhook antes da linha Payment** | PI desconhecido → **200** + `stripe_webhook_payment_not_found_ack`; se `evt_*` presente, **marker persistido** (commit L120–159) — Stripe **não** reentrega esse evento |
-| **Webhook atrasado após reconcile manual** | Idempotente se status já terminal; senão aplica mesmas regras de transição (incl. regressões R-atual) |
-| **Ordem failed → succeeded** | **Actual:** permitido se guard OK · **Alvo (Q1 B):** permitido + registo auditável (`payment_anomalies` / PR3) |
-| **Ordem succeeded → failed** | **Actual:** permitido · **Alvo (Q2 A):** **bloquear** no webhook; log + anomaly `webhook_status_regression_blocked` |
+| **Webhook atrasado após reconcile manual** | Idempotente se status já terminal; senão regras PR3 |
+| **Ordem failed → succeeded** | Permitido se guard OK + audit recovery (Q1 B) |
+| **Ordem succeeded → failed** | **Bloqueado** no webhook (Q2 A); log + anomaly `webhook_status_regression_blocked` |
 | **Sem `stripe_event_id` no payload** | Não claim L-PAY-01; processamento pode repetir efeitos idempotentes por status |
 
 **Documentação L-PAY-02 (Q7 A):** [`O_STRIPE_1_RUNBOOK.md`](../ops/O_STRIPE_1_RUNBOOK.md) §11 alinhado ao código — `not_found` **persiste** marker quando `evt_*` presente.
@@ -177,7 +177,7 @@ Objectivo: comportamento **seguro** acordado (Q1, Q2); código actual diverge at
 | `orphan_stripe_pi` | (futuro detector R-PAY) | PI Stripe sem row TVDE — ver §3 |
 | `webhook_status_recovery` | Webhook PR3 (Q1 B) | `failed` → `succeeded` legítimo (ex. retry SCA) |
 | `webhook_status_regression_blocked` | Webhook PR3 (Q2 A) | Evento failed ignorado com payment já `succeeded` |
-| `webhook_status_regression` | (legado / testes pré-PR3) | Transição succeeded→failed ainda possível no código actual |
+| `webhook_status_regression` | — | **Obsoleto** pós-PR3; usar `webhook_status_regression_blocked` |
 
 ### 2.3 Registo auditável (proposta Fase 1)
 
@@ -333,15 +333,15 @@ Ordem accept (`trips.py`): **Stripe create → add Payment → commit**. Se **co
 | T-O1 | Duplicate `evt_*` | 200; single row marker; single status change | extend `test_stripe_webhook_idempotency_tx.py` |
 | T-O2 | not_found + evt | 200; marker; anomaly row (Fase 1) | `test_payment_anomaly_not_found.py` |
 | T-O3 | mismatch succeeded | processing; anomaly; 200 | `test_payment_anomaly_mismatch.py` |
-| T-O4 | failed → succeeded | Política **actual** documentada | `test_webhook_order_failed_then_succeeded.py` |
-| T-O5 | succeeded → failed | Política **actual** + flag future deny | `test_webhook_order_succeeded_then_failed.py` |
+| T-O4 | failed → succeeded | Guard OK → `succeeded`; audit `webhook_status_recovery` (Q1 B) | `backend/tests/test_webhook_payment_status_guards_pr3.py` |
+| T-O5 | succeeded → failed | Regressão **bloqueada**; `webhook_status_regression_blocked` (Q2 A) | `backend/tests/test_webhook_payment_status_guards_pr3.py` |
 | T-O6 | Reconcile idempotent | second call skip | `test_admin_payment_reconciliation.py` |
 | T-O7 | accept Stripe ok, commit fail | Órfão simulado (mock rollback) | extend `test_accept_offer_stripe_failure_atomicity.py` |
 | T-O8 | Orphan scanner | mock list → preview JSON | `test_orphan_pi_scanner.py` |
 | T-O9 | STRIPE_MOCK skip scan | skipped reason | idem |
 | T-O10 | Refund out-of-order | refunded_amount monotonic | `test_stripe_webhook_charge_refunded.py` |
 
-**Regressão obrigatória CI:** suite `test_stripe_webhook_*`, `test_admin_payment_reconciliation.py`, `test_timeout_stripe_cancel_fail_closed.py`.
+**Regressão obrigatória CI:** `test_webhook_payment_status_guards_pr3.py`, suite `test_stripe_webhook_*`, `test_admin_payment_reconciliation.py`, `test_timeout_stripe_cancel_fail_closed.py`.
 
 ---
 
@@ -372,17 +372,16 @@ Ver **§9** — plano técnico detalhado PR1.
 | **Risco** | Performance query — index `(created_at, anomaly_type)` |
 | **Rollback** | Revert UI + API field optional |
 
-### PR3 — Matriz webhook anti-regressão (**Q1 B + Q2 A+B**)
+### PR3 — Matriz webhook anti-regressão (**Q1 B + Q2 A+B**) — **DONE**
 
 | Item | Detalhe |
 |------|---------|
-| **Scope** | **Q2 A:** ignorar `payment_failed` / `charge.payment_failed` se `payment.status == succeeded` (log + `webhook_status_regression_blocked`). **Q1 B:** em `failed`→`succeeded`, manter transição se guard OK + insert `webhook_status_recovery`. **Q2 B:** documentar que chargeback/disputa não passa por este webhook — [`PILOT_STRIPE_REFUND.md`](PILOT_STRIPE_REFUND.md) / ops |
-| **Ficheiros** | `webhooks/stripe.py`, `admin_payment_reconciliation.py` (paridade onde aplicável) |
-| **Dependências** | PR1 recomendado (tabela anomalies); **não** bloqueante se flag off |
-| **Testes** | T-O4, T-O5 |
-| **Aceitação** | Sem alteração L-PAY-02 HTTP |
-| **Risco** | Disputa Stripe modelada como failed event — bloqueio correcto por Q2; ops trata separadamente |
-| **Rollback** | Revert guards webhook |
+| **Entrega** | PR [#779](https://github.com/frankbexxx/tvde/pull/779) · merge `edc666cc` · `webhooks/stripe.py` · `payment_anomalies.py` · `test_webhook_payment_status_guards_pr3.py` |
+| **Scope** | Q2 A: bloqueio `succeeded→failed`; Q1 B: `failed→succeeded` com guards + `webhook_status_recovery`; `FOR UPDATE`; anomalies via `begin_nested()` |
+| **Testes** | **80** locais PASS (17 PR3 + regressões); CI backend-ci + web-e2e **PASS** |
+| **STAGING** | Deploy Live **22/10/2026** · health **200** · smoke funcional PR3 **não executado** — [`TODOdoDIA.md`](../../TODOdoDIA.md) `S-PAY-PR3-STG` |
+| **Aceitação** | L-PAY-02 ACK inalterado; flag anomalies **off** |
+| **Rollback** | Revert PR #779 |
 
 ### PR4 — Detector órfãos read-only (R-PAY) — **Q5 A: só preview manual** — **DONE**
 
@@ -421,7 +420,7 @@ Ver **§9** — plano técnico detalhado PR1.
 | **Q7** | **A** — runbook §11 corrigido (marker `evt_*` em not-found) | Alinha ops ao código L-PAY-01 | Doc ✓ |
 | **Q8** | **A** — **sem** compensação automática pós-crash accept | Risco duplicar Payment / amounts errados; detector + manual | — |
 
-**Estado implementação (22/10/2026):** PR1 · PR2 · PR4 **merged**; **PR3** desbloqueado para implementação local após auditoria; PR5 explícitamente excluído; **`ENABLE_PAYMENT_ANOMALY_PERSIST`** permanece **false** até decisão ops.
+**Estado implementação (22/10/2026):** PR1 · PR2 · PR3 · PR4 **merged** em `main`; ciclo Fase 0 **código completo**; PR5 excluído; **`ENABLE_PAYMENT_ANOMALY_PERSIST=false`**; Stripe LIVE **não** autorizado.
 
 ---
 
