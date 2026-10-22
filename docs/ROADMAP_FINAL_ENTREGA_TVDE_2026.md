@@ -4,7 +4,7 @@
 |-------|--------|
 | **type** | PLAN |
 | **status** | ACTIVO |
-| **updated** | 2026-10-21 |
+| **updated** | 2026-10-22 |
 | **owner** | Frank |
 | **source_of_truth** | Único plano mestre (GOV-DOC-003) |
 
@@ -52,7 +52,7 @@ Registo: [`registers/EXTERNAL_CONSULTATIONS.md`](registers/EXTERNAL_CONSULTATION
 | **C** Autenticação / Comunicação | C1 SMS OTP · C2 SMS ops · **C3 OAuth staging DONE (STAGING 2026-10-21)** · **C4 II-C PARCIAL (#768 UX STAGING PASS · PROD UX smoke OPEN)** · **Fase VI STAGING #765 · smoke PROD OPEN** · **R-OAUTH-UX P2** |
 | **D** Mobile / Push / Distribuição | **D0 DONE (HÍBRIDO)** · D1 Spike Android · D2 Device · D3 Push · D4 stores *(landing institucional `vamula.pt` = **DONE**)* |
 | **E** Produto final (4 papéis) | E1 Driver piloto · E2 Nav Driver · E3 Copy pay Pax · E4 Copy Partner · **E5 DONE** |
-| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 Staging PARCIAL (baseline #766 · OAuth/logout 21/10)** · F3 Sentry · F4 Higiene mock GPS |
+| **F** Infra / Segurança / Operação | F1 Restore drill · **F2 Staging PARCIAL (baseline #766 · OAuth/logout 21/10)** · F3 Sentry · F4 Higiene mock GPS · **F5 System Health F1 DONE (#770 · 22/10)** |
 | **G** QA / Hardening / Go-live | G1 E2E comercial · G2 QA devices · G3 Checklist marcos |
 | **H** Pós-entrega / Futuro | H1 B2 next-trip · H2 Redispatch · H3 Dead code/CI · H4 Admin rastos · H5 Futuro |
 
@@ -681,6 +681,28 @@ Push P1 / foundation = **CLOSED**. Push P2 / oferta ao motorista = **CLOSED**. P
 | F4.1 | Política mock GPS prod | Regra | DECISÃO | — |
 | F4.2 | Restrição | Sem abuso público | CÓDIGO | F4.1 |
 
+## F5 — Admin System Health (cron `/cron/jobs`)
+
+- **IDs:** `X-SYSHEALTH-1` · `X-SYSHEALTH-2` · `S-SYSHEALTH-1-STG` · `S-SYSHEALTH-1-PROD`
+- **Implementação Fase 1:** alertas críticos vs informativos separados; `informational_warnings`; motoristas offline prolongados com `is_test_account`; contadores/indicadores Admin (Saúde · Agora); cron propaga contagens **sem** novos logs informativos; **sem migrations**; matching · disponibilidade · compliance · recover admin **inalterados**.
+- **Entrega:** PR [#770](https://github.com/frankbexxx/tvde/pull/770) · merge `f12c294a` · CI backend / frontend / web-e2e **PASS**.
+
+| Passo | Acção | Resultado esperado | Tipo | Dep. | Estado |
+|-------|--------|-------------------|------|------|--------|
+| F5.1 | Fase 1 — `degraded` só buckets críticos; offline → informativo | Admin distingue Problemas vs Informações | CÓDIGO · TESTE | — | **DONE** 2026-10-22 |
+| F5.2 | Smoke manual STAGING Admin Saúde | Críticos vs informativos coerentes | TESTE | F5.1 | **DONE** 2026-10-22 |
+| F5.3 | Smoke manual PROD Admin Saúde | Operacional quando só informativos | TESTE | F5.1 | **DONE** 2026-10-22 |
+| F5.4 | Fase 2 — detecção indisponibilidade anómala | Offline voluntário vs bloqueio real pós-erro/viagem/timeout | CÓDIGO · DOCS | F5.1 | **Por iniciar** |
+
+**Evidência smokes (2026-10-22):**
+
+| Ambiente | Leitura | Notas |
+|----------|---------|--------|
+| **STAGING** | `status=degraded` | Quatro pagamentos em `processing` classificados como **críticos**; separação crítico/informativo **validada**. |
+| **PROD** | `status=ok` · «Operacional» | Zero críticos; motorista Marly offline em **Informações**; badge **Conta demo**; **nenhuma** recuperação administrativa executada. |
+
+**Fase 2 (evolução):** objectivo = distinguir motoristas voluntariamente offline de situações realmente bloqueadas após erros, viagens ou timeouts. Arquitectura decidida **numa análise posterior**; **não** se assume obrigatoriedade de migrations.
+
 ---
 
 # CARRIL G — QA / Hardening / Go-live
@@ -837,7 +859,7 @@ Além de M2:
 
 # PÓS-ENTREGA / BACKLOG FUTURO
 
-Carril **H** + itens adiados (B5 fase 2, C2, **F2 parcial** — C3 STAGING **DONE** 2026-10-21, F4, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
+Carril **H** + itens adiados (B5 fase 2, C2, **F2 parcial** — C3 STAGING **DONE** 2026-10-21, F4, **F5 Fase 2** `X-SYSHEALTH-2`, E2 residual). iOS pós-Android e D4/stores ficam no carril D conforme necessidade — não “adiados por WEB/PWA”.
 
 **Não** reabre Demo Manel 2 / retoma como pendência.
 
