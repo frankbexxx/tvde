@@ -40,6 +40,7 @@ __all__ = [
     "VehicleDocument",
     "Trip",
     "Payment",
+    "PaymentAnomaly",
     "PassengerPaymentMethod",
     "TripOffer",
     "OtpCode",
