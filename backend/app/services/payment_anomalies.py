@@ -22,6 +22,8 @@ _PG_UNDEFINED_TABLE = "42P01"
 
 ANOMALY_WEBHOOK_PAYMENT_NOT_FOUND = "webhook_payment_not_found"
 ANOMALY_WEBHOOK_SUCCEEDED_AMOUNT_MISMATCH = "webhook_succeeded_amount_mismatch"
+ANOMALY_WEBHOOK_STATUS_RECOVERY = "webhook_status_recovery"
+ANOMALY_WEBHOOK_STATUS_REGRESSION_BLOCKED = "webhook_status_regression_blocked"
 ANOMALY_WEBHOOK_DB_ERROR = "webhook_db_error"
 
 SEVERITY_CRITICAL = "critical"
@@ -41,6 +43,8 @@ _SAFE_PAYLOAD_KEYS = frozenset(
         "stripe_currency",
         "expected_currency",
         "payment_status",
+        "from_status",
+        "to_status",
     }
 )
 

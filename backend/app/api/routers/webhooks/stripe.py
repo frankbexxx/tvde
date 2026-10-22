@@ -1,5 +1,7 @@
 """Stripe webhook endpoint - single source of truth for payment status."""
 
+from __future__ import annotations
+
 import importlib
 import logging
 from typing import Any, cast
@@ -24,7 +26,10 @@ from app.services.payment_amount_guards import (
 )
 from app.services.payment_anomalies import (
     ANOMALY_WEBHOOK_PAYMENT_NOT_FOUND,
+    ANOMALY_WEBHOOK_STATUS_RECOVERY,
+    ANOMALY_WEBHOOK_STATUS_REGRESSION_BLOCKED,
     ANOMALY_WEBHOOK_SUCCEEDED_AMOUNT_MISMATCH,
+    SEVERITY_INFO,
     SEVERITY_WARNING,
     record_payment_anomaly,
 )
@@ -55,6 +60,29 @@ def _payment_intent_from_charge_field(raw: object) -> str | None:
         return str(rid) if rid and str(rid).startswith("pi_") else None
     s = str(raw)
     return s if s.startswith("pi_") else None
+
+
+def _load_payment_for_webhook_update(db: Session, pi_key: str) -> Payment | None:
+    """Lock Payment row for update (PR3 — serialize concurrent evt_* on same PI)."""
+    return db.execute(
+        select(Payment)
+        .options(joinedload(Payment.trip))
+        .where(Payment.stripe_payment_intent_id == pi_key)
+        .order_by(Payment.id.desc())
+        .limit(1)
+        .with_for_update(of=Payment)
+    ).scalar_one_or_none()
+
+
+def _try_record_payment_anomaly(db: Session, **kwargs: Any) -> None:
+    try:
+        record_payment_anomaly(db, **kwargs)
+    except Exception:
+        logger.exception(
+            "webhook: anomaly persist failed (non-fatal) type=%s pi=%s",
+            kwargs.get("anomaly_type"),
+            kwargs.get("payment_intent_id"),
+        )
 
 
 @router.post("/stripe")
@@ -141,13 +169,7 @@ async def stripe_webhook(
                 db.rollback()
                 return {"status": "ok"}
 
-        payment = db.execute(
-            select(Payment)
-            .options(joinedload(Payment.trip))
-            .where(Payment.stripe_payment_intent_id == pi_key)
-            .order_by(Payment.id.desc())
-            .limit(1)
-        ).scalar_one_or_none()
+        payment = _load_payment_for_webhook_update(db, pi_key)
 
         if not payment:
             logger.warning(
@@ -162,24 +184,18 @@ async def stripe_webhook(
                 payment_intent_id=str(payment_intent_id),
                 stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
             )
-            try:
-                record_payment_anomaly(
-                    db,
-                    anomaly_type=ANOMALY_WEBHOOK_PAYMENT_NOT_FOUND,
-                    severity=SEVERITY_WARNING,
-                    stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
-                    payment_intent_id=str(payment_intent_id),
-                    event_type=event_type,
-                    payload_json={
-                        "ack": "200",
-                        "note": "payment_not_found",
-                    },
-                )
-            except Exception:
-                logger.exception(
-                    "webhook: anomaly persist failed (non-fatal) path=not_found pi=%s",
-                    payment_intent_id,
-                )
+            _try_record_payment_anomaly(
+                db,
+                anomaly_type=ANOMALY_WEBHOOK_PAYMENT_NOT_FOUND,
+                severity=SEVERITY_WARNING,
+                stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
+                payment_intent_id=str(payment_intent_id),
+                event_type=event_type,
+                payload_json={
+                    "ack": "200",
+                    "note": "payment_not_found",
+                },
+            )
             db.commit()
             return {"status": "ok"}
 
@@ -219,30 +235,24 @@ async def stripe_webhook(
                         guard.stripe_amount_cents,
                         guard.expected_amount_cents,
                     )
-                    try:
-                        record_payment_anomaly(
-                            db,
-                            anomaly_type=ANOMALY_WEBHOOK_SUCCEEDED_AMOUNT_MISMATCH,
-                            severity=SEVERITY_WARNING,
-                            stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
-                            payment_intent_id=str(payment_intent_id),
-                            payment_id=payment.id,
-                            trip_id=payment.trip_id,
-                            event_type=event_type,
-                            payload_json={
-                                "reason": guard.reason,
-                                "stripe_amount_cents": guard.stripe_amount_cents,
-                                "expected_amount_cents": guard.expected_amount_cents,
-                                "stripe_currency": guard.stripe_currency or "",
-                                "expected_currency": guard.expected_currency,
-                                "payment_status": payment.status.value,
-                            },
-                        )
-                    except Exception:
-                        logger.exception(
-                            "webhook: anomaly persist failed (non-fatal) path=mismatch pi=%s",
-                            payment_intent_id,
-                        )
+                    _try_record_payment_anomaly(
+                        db,
+                        anomaly_type=ANOMALY_WEBHOOK_SUCCEEDED_AMOUNT_MISMATCH,
+                        severity=SEVERITY_WARNING,
+                        stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
+                        payment_intent_id=str(payment_intent_id),
+                        payment_id=payment.id,
+                        trip_id=payment.trip_id,
+                        event_type=event_type,
+                        payload_json={
+                            "reason": guard.reason,
+                            "stripe_amount_cents": guard.stripe_amount_cents,
+                            "expected_amount_cents": guard.expected_amount_cents,
+                            "stripe_currency": guard.stripe_currency or "",
+                            "expected_currency": guard.expected_currency,
+                            "payment_status": payment.status.value,
+                        },
+                    )
                     # Fail-closed: do not mark succeeded; keep processing for ops review.
                     # Persist delivery marker (if any) so Stripe does not poison-retry forever.
                     db.commit()
@@ -250,22 +260,53 @@ async def stripe_webhook(
 
                 status_before_succeeded = payment.status
                 payment.status = PaymentStatus.succeeded
-                db.commit()
+                from_status_val = (
+                    status_before_succeeded.value
+                    if hasattr(status_before_succeeded, "value")
+                    else str(status_before_succeeded)
+                )
                 log_event(
                     "stripe_webhook_payment_succeeded",
                     trip_id=str(payment.trip_id),
                     payment_id=str(payment.id),
                     payment_intent_id=str(payment_intent_id),
                     stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
-                    from_status=(
-                        status_before_succeeded.value
-                        if hasattr(status_before_succeeded, "value")
-                        else str(status_before_succeeded)
-                    ),
+                    from_status=from_status_val,
                     to_status=payment.status.value,
                     stripe_amount_cents=guard.stripe_amount_cents,
                     expected_amount_cents=guard.expected_amount_cents,
                 )
+                if status_before_succeeded == PaymentStatus.failed:
+                    log_event(
+                        "stripe_webhook_status_recovery",
+                        trip_id=str(payment.trip_id),
+                        payment_id=str(payment.id),
+                        payment_intent_id=str(payment_intent_id),
+                        stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                        from_status=from_status_val,
+                        to_status=payment.status.value,
+                        stripe_amount_cents=guard.stripe_amount_cents,
+                        expected_amount_cents=guard.expected_amount_cents,
+                    )
+                    _try_record_payment_anomaly(
+                        db,
+                        anomaly_type=ANOMALY_WEBHOOK_STATUS_RECOVERY,
+                        severity=SEVERITY_INFO,
+                        stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
+                        payment_intent_id=str(payment_intent_id),
+                        payment_id=payment.id,
+                        trip_id=payment.trip_id,
+                        event_type=event_type,
+                        payload_json={
+                            "from_status": from_status_val,
+                            "to_status": payment.status.value,
+                            "stripe_amount_cents": guard.stripe_amount_cents,
+                            "expected_amount_cents": guard.expected_amount_cents,
+                            "stripe_currency": guard.stripe_currency or "",
+                            "expected_currency": guard.expected_currency,
+                        },
+                    )
+                db.commit()
                 logger.info(
                     f"webhook: Payment marked as succeeded event_type={event_type}, "
                     f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
@@ -290,7 +331,43 @@ async def stripe_webhook(
 
         elif event_type in ("payment_intent.payment_failed", "charge.payment_failed"):
             trip = payment.trip
-            if payment.status != PaymentStatus.failed:
+            apply_failed_transition = False
+            if payment.status == PaymentStatus.succeeded:
+                from_status_val = payment.status.value
+                log_event(
+                    "stripe_webhook_status_regression_blocked",
+                    trip_id=str(payment.trip_id),
+                    payment_id=str(payment.id),
+                    payment_intent_id=str(payment_intent_id),
+                    event_type=event_type,
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
+                    from_status=from_status_val,
+                    to_status=from_status_val,
+                    note="succeeded_to_failed_denied",
+                )
+                _try_record_payment_anomaly(
+                    db,
+                    anomaly_type=ANOMALY_WEBHOOK_STATUS_REGRESSION_BLOCKED,
+                    severity=SEVERITY_WARNING,
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
+                    payment_intent_id=str(payment_intent_id),
+                    payment_id=payment.id,
+                    trip_id=payment.trip_id,
+                    event_type=event_type,
+                    payload_json={
+                        "from_status": from_status_val,
+                        "to_status": from_status_val,
+                        "payment_status": from_status_val,
+                        "note": "succeeded_to_failed_denied",
+                    },
+                )
+                logger.info(
+                    "webhook: regression blocked succeeded→failed pi=%s payment_id=%s",
+                    payment_intent_id,
+                    payment.id,
+                )
+            elif payment.status != PaymentStatus.failed:
+                apply_failed_transition = True
                 status_before_failed = payment.status
                 payment.status = PaymentStatus.failed
                 log_event(
@@ -327,7 +404,11 @@ async def stripe_webhook(
                     f"payment_intent_id={payment_intent_id}, payment_id={payment.id}, "
                     f"stripe_event_id={stripe_event_id}"
                 )
-            if trip is not None and trip.status == TripStatus.ongoing:
+            if (
+                apply_failed_transition
+                and trip is not None
+                and trip.status == TripStatus.ongoing
+            ):
                 terminate_ongoing = importlib.import_module(
                     "app.services.trips"
                 ).terminate_ongoing_trip_after_terminal_payment_failure
