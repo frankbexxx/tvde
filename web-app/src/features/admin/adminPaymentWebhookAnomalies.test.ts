@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolvePaymentWebhookAnomaliesUxState } from './AdminPaymentWebhookAnomaliesSection'
+import { resolvePaymentWebhookAnomaliesUxState } from './adminPaymentWebhookAnomaliesUx'
 import type { PaymentWebhookAnomaliesHealthBlock } from '../../api/admin'
 import { countCriticalHealthSignalRows } from './adminDashboardHelpers'
 import type { SystemHealthResponse } from '../../api/admin'
