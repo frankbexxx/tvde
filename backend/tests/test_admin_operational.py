@@ -75,8 +75,13 @@ def test_system_health_returns_expected_structure(client: TestClient) -> None:
         "inconsistent_financial_state",
         "warnings",
         "informational_warnings",
+        "payment_webhook_anomalies",
     ):
         assert key in data
+    wh = data["payment_webhook_anomalies"]
+    assert "persist_enabled" in wh
+    assert wh.get("data_available") is True
+    assert "total_in_window" in wh
 
 
 @pytest.mark.usefixtures("admin_auth_override")

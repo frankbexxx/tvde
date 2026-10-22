@@ -53,6 +53,32 @@ export interface TripDetailAdmin {
   [key: string]: unknown
 }
 
+export interface PaymentWebhookAnomalyRecentItem {
+  id: string
+  anomaly_type: string
+  severity: string
+  created_at: string
+  payment_intent_id?: string | null
+  trip_id?: string | null
+  payment_id?: string | null
+  event_type?: string | null
+  stripe_event_id?: string | null
+  environment?: string | null
+  stripe_mode?: string | null
+  payload: Record<string, unknown>
+}
+
+export interface PaymentWebhookAnomaliesHealthBlock {
+  persist_enabled: boolean
+  /** False when payment_anomalies table is missing (partial deploy) or read failed for that reason. */
+  data_available: boolean
+  window_hours: number
+  total_in_window: number
+  counts_by_type: Array<{ anomaly_type: string; count: number }>
+  counts_by_severity: Record<string, number>
+  recent: PaymentWebhookAnomalyRecentItem[]
+}
+
 export interface SystemHealthResponse {
   status: string
   trips_accepted_too_long: Array<Record<string, unknown>>
@@ -66,6 +92,8 @@ export interface SystemHealthResponse {
   warnings: string[]
   /** Avisos informativos (ex.: motoristas offline prolongados). */
   informational_warnings?: string[]
+  /** O-PAY PR2: read-only webhook anomaly summary (does not affect status). */
+  payment_webhook_anomalies?: PaymentWebhookAnomaliesHealthBlock | null
 }
 
 export interface AdminMetricsResponse {

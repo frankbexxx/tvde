@@ -59,6 +59,15 @@ export const PB_MISSING_PAYMENT: HealthAnomalyPlaybook = {
   ],
 }
 
+export const PB_WEBHOOK_ANOMALIES: HealthAnomalyPlaybook = {
+  what: 'Registos persistidos de webhooks Stripe atípicos (ex.: payment not found, amount mismatch). Informação operacional — não altera o estado global de Saúde.',
+  steps: [
+    'Com recolha desactivada, zero linhas aqui não prova que tudo está bem — consulta logs `stripe_webhook_*` e o runbook O_STRIPE_1 §11.',
+    'Abre o PaymentIntent no Stripe Dashboard; cruza com viagem/pagamento na BD por `payment_intent_id` ou `trip_id`.',
+    'Se houver mismatch ou órfão, segue reconciliação manual (Operações) — não forces 5xx no webhook.',
+  ],
+}
+
 export const PB_INCONSISTENT_FINANCIAL: HealthAnomalyPlaybook = {
   what: 'Incoerência entre viagem concluída e valores de pagamento (totais, comissão, payout) face às regras actuais.',
   steps: [

@@ -14,6 +14,7 @@ from app.db.models.payment import Payment
 from app.db.models.trip import Trip
 from app.db.models.user import User
 from app.models.enums import PaymentStatus, TripStatus
+from app.services.payment_anomalies import get_payment_webhook_anomalies_health_summary
 
 
 # Statuses where a trip must have an associated Payment (created at accept_trip)
@@ -247,6 +248,8 @@ def get_system_health(db: Session) -> dict[str, Any]:
     )
     status = "ok" if not critical_present else "degraded"
 
+    payment_webhook_anomalies = get_payment_webhook_anomalies_health_summary(db)
+
     return {
         "status": status,
         "stuck_trips": [],  # deprecated, kept for compatibility
@@ -259,4 +262,5 @@ def get_system_health(db: Session) -> dict[str, Any]:
         "orphan_payments": [],  # deprecated, kept for compatibility
         "warnings": warnings,
         "informational_warnings": informational_warnings,
+        "payment_webhook_anomalies": payment_webhook_anomalies,
     }

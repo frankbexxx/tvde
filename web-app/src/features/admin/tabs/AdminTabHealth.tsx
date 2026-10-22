@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { AdminPaymentWebhookAnomaliesSection } from '../AdminPaymentWebhookAnomaliesSection'
 import { HealthAnomalyBlock } from '../AdminHealthAnomalyBlocks'
 import {
   healthBlockKey,
@@ -129,34 +130,46 @@ export function AdminTabHealth(props: AdminTabHealthProps) {
               ) : null}
             </div>
 
-            {(infoCount > 0 || infoWarnings.length > 0) && (
-              <div className="space-y-3">
-                <h3 className="text-sm font-semibold text-foreground">Informações</h3>
-                {infoWarnings.length > 0 && (
-                  <ul className="text-sm text-foreground/80 space-y-1">
-                    {infoWarnings.map((w, i) => (
-                      <li key={i}>{w}</li>
-                    ))}
-                  </ul>
-                )}
-                <HealthAnomalyBlock
-                  key={healthBlockKey('offline', health.drivers_unavailable_too_long)}
-                  title="Motoristas offline há muito (sem viagem ativa)"
-                  rows={health.drivers_unavailable_too_long}
-                  onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
-                  playbook={PB_DRIVERS_UNAVAILABLE}
-                  variant="informational"
-                  demoAccountField="is_test_account"
-                />
-              </div>
-            )}
-
-            {criticalCount === 0 &&
-              infoCount === 0 &&
-              health.warnings.length === 0 &&
-              infoWarnings.length === 0 && (
-                <p className="text-foreground/75">Nada a assinalar nesta leitura.</p>
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Informações</h3>
+              <AdminPaymentWebhookAnomaliesSection
+                block={health.payment_webhook_anomalies}
+              />
+              {infoWarnings.length > 0 && (
+                <ul className="text-sm text-foreground/80 space-y-1">
+                  {infoWarnings.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
               )}
+              <HealthAnomalyBlock
+                key={healthBlockKey('offline', health.drivers_unavailable_too_long)}
+                title="Motoristas offline há muito (sem viagem ativa)"
+                rows={health.drivers_unavailable_too_long}
+                onOpenTrip={(tripId: string) => syncAdminUrl({ tab: 'trips', tripId })}
+                playbook={PB_DRIVERS_UNAVAILABLE}
+                variant="informational"
+                demoAccountField="is_test_account"
+              />
+            </div>
+
+            {(() => {
+              const wh = health.payment_webhook_anomalies
+              const webhookBlocksGlobalAllClear =
+                wh != null &&
+                (wh.data_available === false ||
+                  !wh.persist_enabled ||
+                  wh.total_in_window > 0)
+              return (
+                criticalCount === 0 &&
+                infoCount === 0 &&
+                health.warnings.length === 0 &&
+                infoWarnings.length === 0 &&
+                !webhookBlocksGlobalAllClear
+              )
+            })() ? (
+              <p className="text-foreground/75">Nada a assinalar nesta leitura.</p>
+            ) : null}
           </div>
         ) : (
           <p className="text-foreground/75">A carregar a última verificação…</p>
