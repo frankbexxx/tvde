@@ -22,6 +22,12 @@ from app.services.payment_amount_guards import (
     expected_payment_cents,
     validate_stripe_amount_matches_expected,
 )
+from app.services.payment_anomalies import (
+    ANOMALY_WEBHOOK_PAYMENT_NOT_FOUND,
+    ANOMALY_WEBHOOK_SUCCEEDED_AMOUNT_MISMATCH,
+    SEVERITY_WARNING,
+    record_payment_anomaly,
+)
 from app.services.payment_refund import (
     apply_stripe_charge_refunded_to_payment,
     derive_refund_status,
@@ -156,6 +162,24 @@ async def stripe_webhook(
                 payment_intent_id=str(payment_intent_id),
                 stripe_event_id=str(stripe_event_id) if stripe_event_id else "",
             )
+            try:
+                record_payment_anomaly(
+                    db,
+                    anomaly_type=ANOMALY_WEBHOOK_PAYMENT_NOT_FOUND,
+                    severity=SEVERITY_WARNING,
+                    stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
+                    payment_intent_id=str(payment_intent_id),
+                    event_type=event_type,
+                    payload_json={
+                        "ack": "200",
+                        "note": "payment_not_found",
+                    },
+                )
+            except Exception:
+                logger.exception(
+                    "webhook: anomaly persist failed (non-fatal) path=not_found pi=%s",
+                    payment_intent_id,
+                )
             db.commit()
             return {"status": "ok"}
 
@@ -195,6 +219,30 @@ async def stripe_webhook(
                         guard.stripe_amount_cents,
                         guard.expected_amount_cents,
                     )
+                    try:
+                        record_payment_anomaly(
+                            db,
+                            anomaly_type=ANOMALY_WEBHOOK_SUCCEEDED_AMOUNT_MISMATCH,
+                            severity=SEVERITY_WARNING,
+                            stripe_event_id=str(stripe_event_id) if stripe_event_id else None,
+                            payment_intent_id=str(payment_intent_id),
+                            payment_id=payment.id,
+                            trip_id=payment.trip_id,
+                            event_type=event_type,
+                            payload_json={
+                                "reason": guard.reason,
+                                "stripe_amount_cents": guard.stripe_amount_cents,
+                                "expected_amount_cents": guard.expected_amount_cents,
+                                "stripe_currency": guard.stripe_currency or "",
+                                "expected_currency": guard.expected_currency,
+                                "payment_status": payment.status.value,
+                            },
+                        )
+                    except Exception:
+                        logger.exception(
+                            "webhook: anomaly persist failed (non-fatal) path=mismatch pi=%s",
+                            payment_intent_id,
+                        )
                     # Fail-closed: do not mark succeeded; keep processing for ops review.
                     # Persist delivery marker (if any) so Stripe does not poison-retry forever.
                     db.commit()

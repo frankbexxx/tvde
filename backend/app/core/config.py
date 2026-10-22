@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     STRIPE_MOCK: bool = (
         False  # When True, skip Stripe API calls (simulator/testing only)
     )
+    # PR1 O-PAY: persist webhook anomalies to payment_anomalies (default off).
+    ENABLE_PAYMENT_ANOMALY_PERSIST: bool = False
 
     ENV: str = "dev"
     # Optional override for environment policy (CORS, alembic, routers). Takes precedence over ENV.
