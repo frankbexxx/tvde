@@ -144,6 +144,11 @@ export function AppRoutes() {
     )
   }
 
+  // OAuth Google: add identity (JWT activo) ou login — antes do shell autenticado ou LoginScreen.
+  if (pathname.startsWith('/auth/google/callback')) {
+    return <GoogleOAuthCallback />
+  }
+
   // LoginScreen: independente de BETA — qualquer bootstrap `login_session` (deployed ou beta).
   if (authBootstrapMode === 'login_session' && !isAuthenticated) {
     if (pathname === '/dl' || pathname === '/app') {
@@ -151,9 +156,6 @@ export function AppRoutes() {
     }
     if (pathname === '/download') {
       return <AppDownloadLanding />
-    }
-    if (pathname.startsWith('/auth/google/callback')) {
-      return <GoogleOAuthCallback />
     }
     const requestedRole = pathname.startsWith('/partner')
       ? 'partner'
@@ -172,85 +174,85 @@ export function AppRoutes() {
 
   return (
     <LegalAcceptanceBoundary>
-    <div className={appShellClass}>
-      <AppHeaderBar
-        variant={
-          pathname.startsWith('/driver') ||
-            pathname.startsWith('/passenger') ||
-            pathname.startsWith('/partner')
-            ? 'userCompact'
-            : 'default'
-        }
-      />
-      <div className="flex flex-1 min-h-0 flex-col md:flex-row">
-        <main
-          className={`flex min-h-0 min-w-0 flex-1 flex-col ${immersiveMapShell ? 'overflow-hidden' : 'overflow-y-auto'}`}
-        >
-          {/* Repassa altura aos ecrãs com mapa fillContainer (motorista + passageiro). */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <Routes>
-              <Route path="/dl" element={<AppDownloadRedirect />} />
-              <Route path="/app" element={<AppDownloadRedirect />} />
-              <Route path="/download" element={<AppDownloadLanding />} />
-              <Route path="/" element={<RootRedirect />} />
-              <Route
-                path="/passenger"
-                element={
-                  <PassengerOnly>
-                    {withRouteSuspense(<PassengerDashboard />)}
-                  </PassengerOnly>
-                }
-              />
-              <Route
-                path="/driver"
-                element={
-                  <DriverOnly>
-                    {withRouteSuspense(<DriverDashboard />)}
-                  </DriverOnly>
-                }
-              />
-              <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
-              <Route
-                path="/admin"
-                element={
-                  isAdmin ? (
-                    <ShellSync shell="admin">{withRouteSuspense(<AdminDashboard />)}</ShellSync>
-                  ) : (
-                    <AdminDeniedRedirect />
-                  )
-                }
-              />
-              <Route
-                path="/partner"
-                element={
-                  <PartnerGate>
-                    {withRouteSuspense(<PartnerLayout />)}
-                  </PartnerGate>
-                }
-              >
-                <Route index element={withRouteSuspense(<PartnerHome />)} />
+      <div className={appShellClass}>
+        <AppHeaderBar
+          variant={
+            pathname.startsWith('/driver') ||
+              pathname.startsWith('/passenger') ||
+              pathname.startsWith('/partner')
+              ? 'userCompact'
+              : 'default'
+          }
+        />
+        <div className="flex flex-1 min-h-0 flex-col md:flex-row">
+          <main
+            className={`flex min-h-0 min-w-0 flex-1 flex-col ${immersiveMapShell ? 'overflow-hidden' : 'overflow-y-auto'}`}
+          >
+            {/* Repassa altura aos ecrãs com mapa fillContainer (motorista + passageiro). */}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <Routes>
+                <Route path="/dl" element={<AppDownloadRedirect />} />
+                <Route path="/app" element={<AppDownloadRedirect />} />
+                <Route path="/download" element={<AppDownloadLanding />} />
+                <Route path="/" element={<RootRedirect />} />
                 <Route
-                  path="drivers/:userId"
-                  element={withRouteSuspense(<PartnerDriverDetail />)}
+                  path="/passenger"
+                  element={
+                    <PassengerOnly>
+                      {withRouteSuspense(<PassengerDashboard />)}
+                    </PassengerOnly>
+                  }
                 />
                 <Route
-                  path="trips/:tripId"
-                  element={withRouteSuspense(<PartnerTripDetail />)}
+                  path="/driver"
+                  element={
+                    <DriverOnly>
+                      {withRouteSuspense(<DriverDashboard />)}
+                    </DriverOnly>
+                  }
                 />
-              </Route>
-              <Route
-                path="/debug/map"
-                element={
-                  import.meta.env.DEV
-                    ? withRouteSuspense(<DebugMapPage />)
-                    : <Navigate to="/" replace />
-                }
-              />
-            </Routes>
-          </div>
-        </main>
+                <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
+                <Route
+                  path="/admin"
+                  element={
+                    isAdmin ? (
+                      <ShellSync shell="admin">{withRouteSuspense(<AdminDashboard />)}</ShellSync>
+                    ) : (
+                      <AdminDeniedRedirect />
+                    )
+                  }
+                />
+                <Route
+                  path="/partner"
+                  element={
+                    <PartnerGate>
+                      {withRouteSuspense(<PartnerLayout />)}
+                    </PartnerGate>
+                  }
+                >
+                  <Route index element={withRouteSuspense(<PartnerHome />)} />
+                  <Route
+                    path="drivers/:userId"
+                    element={withRouteSuspense(<PartnerDriverDetail />)}
+                  />
+                  <Route
+                    path="trips/:tripId"
+                    element={withRouteSuspense(<PartnerTripDetail />)}
+                  />
+                </Route>
+                <Route
+                  path="/debug/map"
+                  element={
+                    import.meta.env.DEV
+                      ? withRouteSuspense(<DebugMapPage />)
+                      : <Navigate to="/" replace />
+                  }
+                />
+              </Routes>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
     </LegalAcceptanceBoundary>
   )
 }
