@@ -7,6 +7,7 @@ import {
   GOOGLE_OAUTH_PENDING_KEY,
   GOOGLE_OAUTH_PENDING_TTL_MS,
   GOOGLE_OAUTH_STATE_KEY,
+  peekGoogleOAuthPending,
   resolveGoogleOAuthPending,
   saveGoogleOAuthPending,
 } from './googleOauthState'
@@ -69,6 +70,12 @@ describe('google OAuth pending (atomic state)', () => {
   it('state without intent and without JSON does not guess login (T2 gap)', () => {
     sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, 'split-bug')
     expect(resolveGoogleOAuthPending('split-bug')).toBeNull()
+  })
+
+  it('peekGoogleOAuthPending reads active flow without URL state', () => {
+    beginGoogleOAuthFlow('add_identity', '/passenger/account')
+    expect(peekGoogleOAuthPending()?.flow).toBe('add_identity')
+    expect(peekGoogleOAuthPending()?.returnPath).toBe('/passenger/account')
   })
 
   it('saveGoogleOAuthPending keeps legacy keys aligned', () => {

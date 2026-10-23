@@ -1,14 +1,11 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import '../../i18n'
 import { GoogleOAuthCallback } from './GoogleOAuthCallback'
 import { beginGoogleOAuthFlow } from './googleOauthState'
 
 const loginGoogle = vi.fn()
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'pt' } }),
-}))
 
 vi.mock('../../context/AuthContext', () => ({
   useAuth: () => ({
@@ -31,7 +28,7 @@ describe('GoogleOAuthCallback add identity', () => {
         <GoogleOAuthCallback />
       </MemoryRouter>
     )
-    expect(screen.getByPlaceholderText('profilePanel.loginMethods.confirmLabel')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Palavra-passe para confirmar')).toBeInTheDocument()
     expect(loginGoogle).not.toHaveBeenCalled()
     expect(screen.queryByText('Criar nova conta')).not.toBeInTheDocument()
   })
