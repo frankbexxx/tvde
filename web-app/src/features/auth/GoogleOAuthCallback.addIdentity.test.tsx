@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GoogleOAuthCallback } from './GoogleOAuthCallback'
-import { ADD_IDENTITY_INTENT, GOOGLE_OAUTH_INTENT_KEY, GOOGLE_OAUTH_STATE_KEY } from './googleOauthState'
+import { beginGoogleOAuthFlow } from './googleOauthState'
 
 const loginGoogle = vi.fn()
 
@@ -25,10 +25,9 @@ describe('GoogleOAuthCallback add identity', () => {
   })
 
   it('asks for the password and does not start login or onboarding', () => {
-    sessionStorage.setItem(GOOGLE_OAUTH_STATE_KEY, 'state-1')
-    sessionStorage.setItem(GOOGLE_OAUTH_INTENT_KEY, ADD_IDENTITY_INTENT)
+    const state = beginGoogleOAuthFlow('add_identity')
     render(
-      <MemoryRouter initialEntries={['/auth/google/callback?code=abc&state=state-1']}>
+      <MemoryRouter initialEntries={[`/auth/google/callback?code=abc&state=${state}`]}>
         <GoogleOAuthCallback />
       </MemoryRouter>
     )

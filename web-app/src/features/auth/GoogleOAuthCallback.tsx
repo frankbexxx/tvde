@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { homePathForSessionRole } from '../../context/authBootstrap'
 import { useAuth } from '../../context/AuthContext'
+import { getStoredAccessToken } from '../../utils/authStorage'
 import { LEGAL_ACCEPT_REGISTER_KEY } from './legalLinks'
 import { AddGoogleIdentityReturn } from './AddGoogleIdentityReturn'
 import {
-  ADD_IDENTITY_INTENT,
-  GOOGLE_OAUTH_INTENT_KEY,
-  GOOGLE_OAUTH_STATE_KEY,
+  clearGoogleOAuthPending,
+  GOOGLE_OAUTH_RETURN_KEY,
+  resolveGoogleOAuthPending,
 } from './googleOauthState'
 import { GooglePassengerOnboarding } from './GooglePassengerOnboarding'
 import {
@@ -56,19 +57,32 @@ export function GoogleOAuthCallback() {
   const oauthErr = search.get('error')
   const code = search.get('code')
   const state = search.get('state')
-  const expectedState = sessionStorage.getItem(GOOGLE_OAUTH_STATE_KEY)
-  const stateOk = !!state && state === expectedState
-  const addingIdentity = sessionStorage.getItem(GOOGLE_OAUTH_INTENT_KEY) === ADD_IDENTITY_INTENT
+  const pending = useMemo(() => resolveGoogleOAuthPending(state), [state])
+  const stateOk = pending !== null
+  const addingIdentity = pending?.flow === 'add_identity'
+  const hasExistingSession = !!getStoredAccessToken()
+  const blockedLoggedInLogin =
+    Boolean(code && stateOk && pending?.flow === 'login' && hasExistingSession && !oauthErr && !held)
+  const resolvedFetchErr =
+    fetchErr ?? (blockedLoggedInLogin ? 'google_add_identity_session_lost' : null)
+
+  useEffect(() => {
+    if (oauthErr) {
+      clearGoogleOAuthPending()
+    }
+  }, [oauthErr])
 
   useEffect(() => {
     if (addingIdentity || oauthErr || !code || !stateOk || held) return
+    if (pending?.flow !== 'login') return
+    if (hasExistingSession) return
     let alive = true
     const redirectUri = `${window.location.origin}/auth/google/callback`
     void (async () => {
       try {
         const acceptLegal = sessionStorage.getItem(LEGAL_ACCEPT_REGISTER_KEY) === '1'
         const session = await loginGoogle(code, redirectUri, acceptLegal)
-        sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
+        clearGoogleOAuthPending()
         sessionStorage.removeItem(LEGAL_ACCEPT_REGISTER_KEY)
         if (alive) navigate(homePathForSessionRole(session.role), { replace: true })
       } catch (e: unknown) {
@@ -76,7 +90,7 @@ export function GoogleOAuthCallback() {
         const choice = readGoogleAccountChoice(e)
         const onboard = readGoogleOnboarding(e)
         const link = readExistingAccountLink(e)
-        sessionStorage.removeItem(GOOGLE_OAUTH_STATE_KEY)
+        clearGoogleOAuthPending()
         sessionStorage.removeItem(LEGAL_ACCEPT_REGISTER_KEY)
         window.history.replaceState({}, '', '/auth/google/callback')
         if (choice?.idToken) {
@@ -107,13 +121,24 @@ export function GoogleOAuthCallback() {
     return () => {
       alive = false
     }
-  }, [addingIdentity, oauthErr, code, stateOk, navigate, loginGoogle, held])
+  }, [
+    addingIdentity,
+    oauthErr,
+    code,
+    stateOk,
+    navigate,
+    loginGoogle,
+    held,
+    pending?.flow,
+    hasExistingSession,
+  ])
 
   if (addingIdentity && code && stateOk) {
     return (
       <AddGoogleIdentityReturn
         code={code}
         redirectUri={`${window.location.origin}/auth/google/callback`}
+        returnPath={pending?.returnPath ?? sessionStorage.getItem(GOOGLE_OAUTH_RETURN_KEY) ?? '/passenger'}
       />
     )
   }
@@ -143,7 +168,10 @@ export function GoogleOAuthCallback() {
         <button
           type="button"
           className="rounded-lg bg-primary px-4 py-2 text-primary-foreground font-medium"
-          onClick={() => navigate('/passenger', { replace: true })}
+          onClick={() => {
+            clearGoogleOAuthPending()
+            navigate('/passenger', { replace: true })
+          }}
         >
           Voltar ao início de sessão
         </button>
@@ -155,31 +183,47 @@ export function GoogleOAuthCallback() {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-background px-4">
         <p className="text-destructive text-center text-sm max-w-sm">
-          {fetchErr === 'google_onboarding_restart'
+          {resolvedFetchErr === 'google_onboarding_restart'
             ? 'A sessão Google expirou. Entra outra vez com Google para continuar o registo.'
-            : code
-              ? 'O pedido Google não corresponde a esta sessão.'
-              : 'Código de autorização em falta.'}
+            : resolvedFetchErr === 'google_add_identity_session_lost'
+              ? 'O pedido para adicionar Google expirou ou não corresponde a esta sessão. Volta à Conta e tenta outra vez.'
+              : code
+                ? 'O pedido Google não corresponde a esta sessão.'
+                : 'Código de autorização em falta.'}
         </p>
         <button
           type="button"
           className="rounded-lg bg-primary px-4 py-2 text-primary-foreground font-medium"
-          onClick={() => navigate('/passenger', { replace: true })}
+          onClick={() => {
+            clearGoogleOAuthPending()
+            const back =
+              hasExistingSession && pending?.flow === 'add_identity'
+                ? pending.returnPath ?? '/passenger'
+                : '/passenger'
+            navigate(back, { replace: true })
+          }}
         >
-          Voltar ao início de sessão
+          {hasExistingSession ? 'Voltar à conta' : 'Voltar ao início de sessão'}
         </button>
       </div>
     )
   }
 
-  if (fetchErr) {
+  if (resolvedFetchErr) {
+    const fetchMessage =
+      resolvedFetchErr === 'google_add_identity_session_lost'
+        ? 'O pedido para adicionar Google expirou ou não corresponde a esta sessão. Volta à Conta e tenta outra vez.'
+        : resolvedFetchErr
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-background px-4">
-        <p className="text-destructive text-center text-sm max-w-sm">{fetchErr}</p>
+        <p className="text-destructive text-center text-sm max-w-sm">{fetchMessage}</p>
         <button
           type="button"
           className="rounded-lg bg-primary px-4 py-2 text-primary-foreground font-medium"
-          onClick={() => navigate('/passenger', { replace: true })}
+          onClick={() => {
+            clearGoogleOAuthPending()
+            navigate('/passenger', { replace: true })
+          }}
         >
           Voltar ao início de sessão
         </button>
